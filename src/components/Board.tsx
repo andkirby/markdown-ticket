@@ -30,7 +30,7 @@ const TicketItem: React.FC<TicketItemProps> = ({ ticket, index, onMove, onEdit }
 };
 
 const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
-  const { tickets, loading, error, createTicket, refreshTickets } = useTicketData({
+  const { tickets, loading, error, createTicket, refreshTickets, updateTicket } = useTicketData({
     autoRefresh: true,
     pollingInterval: 5000,
     enableFileWatcher: true
@@ -40,13 +40,26 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
   
   const handleDrop = useCallback(async (status: Status, ticket: Ticket) => {
     console.log('Board: handleDrop called with:', { status, ticketCode: ticket.code, ticketStatus: ticket.status });
+    
     try {
-      await moveTicket(ticket.code, status);
+      // Use direct updateTicket to ensure immediate UI state update
+      await updateTicket(ticket.code, { status });
       console.log('Board: Ticket moved successfully');
+      
+      // Auto-set implementation date when status changes to "Implemented" (replicate moveTicket logic)
+      if (status === 'Implemented' || status === 'Partially Implemented') {
+        await updateTicket(ticket.code, {
+          implementationDate: new Date(),
+          implementationNotes: `Status changed to ${status} on ${new Date().toLocaleDateString()}`
+        });
+        console.log('Board: Implementation date set');
+      }
     } catch (error) {
       console.error('Board: Failed to move ticket:', error);
+      // Refresh to ensure UI is in sync with backend
+      await refreshTickets();
     }
-  }, [moveTicket]);
+  }, [updateTicket, refreshTickets]);
 
   const handleTicketCreate = useCallback(async () => {
     try {
