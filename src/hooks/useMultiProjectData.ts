@@ -15,7 +15,40 @@ interface Project {
     lastAccessed: string;
     version: string;
   };
+  tickets?: {
+    codePattern?: string;
+  };
   autoDiscovered?: boolean;
+}
+
+interface ProjectConfig {
+  project: {
+    name: string;
+    code: string;
+    path: string;
+    startNumber: number;
+    counterFile: string;
+    description?: string;
+    repository?: string;
+  };
+}
+
+// Helper function to generate ticket codes based on project configuration
+function generateTicketCode(project: Project, projectConfig: ProjectConfig | null, existingTicketCount: number): string {
+  const projectCode = projectConfig?.project?.code || project.id.toUpperCase();
+  const nextNumber = existingTicketCount + 1;
+  
+  // If project has a specific code pattern that includes letters, use it
+  if (project.tickets?.codePattern && project.tickets.codePattern.includes('[A-Z]')) {
+    // For patterns like "^CR-[A-Z]\d{3}$", generate CR-A001, CR-A002, etc.
+    const letterIndex = Math.floor((nextNumber - 1) / 999); // Every 999 tickets, increment letter
+    const numberPart = ((nextNumber - 1) % 999) + 1;
+    const letter = String.fromCharCode(65 + letterIndex); // A, B, C, etc.
+    return `${projectCode}-${letter}${String(numberPart).padStart(3, '0')}`;
+  }
+  
+  // Default format: PROJECT-001, PROJECT-002, etc.
+  return `${projectCode}-${String(nextNumber).padStart(3, '0')}`;
 }
 
 interface UseMultiProjectDataOptions {
@@ -27,6 +60,7 @@ interface UseMultiProjectDataReturn {
   projects: Project[];
   selectedProject: Project | null;
   setSelectedProject: (project: Project | null) => void;
+  projectConfig: ProjectConfig | null;
   
   // Ticket data for selected project
   tickets: Ticket[];
@@ -34,13 +68,16 @@ interface UseMultiProjectDataReturn {
   error: Error | null;
   
   // Ticket operations (work on selected project)
-  createTicket: (ticketCode: string, title: string, type: string) => Promise<Ticket>;
+  createTicket: (title: string, type: string) => Promise<Ticket>; // Removed ticketCode param - will be auto-generated
   updateTicket: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>;
   deleteTicket: (ticketCode: string) => Promise<void>;
   
   // Refresh operations
   refreshProjects: () => Promise<void>;
   refreshTickets: () => Promise<void>;
+  
+  // Helper functions
+  generateNextTicketCode: () => string;
   
   // Error handling
   clearError: () => void;
@@ -51,6 +88,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -80,6 +118,28 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       throw error;
     }
   }, [autoSelectFirst, selectedProject]);
+
+  // Fetch project configuration
+  const fetchProjectConfig = useCallback(async (project: Project) => {
+    try {
+      setError(null);
+      
+      const response = await fetch(`/api/projects/${project.id}/config`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch project config: ${response.statusText}`);
+      }
+      
+      const configData = await response.json();
+      setProjectConfig(configData.config);
+      
+      return configData.config;
+    } catch (err) {
+      const error = err as Error;
+      console.warn('Failed to fetch project config:', error.message);
+      setProjectConfig(null);
+      return null;
+    }
+  }, []);
 
   // Fetch tickets for a specific project
   const fetchTicketsForProject = useCallback(async (project: Project) => {
@@ -129,23 +189,38 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     });
   }, [fetchProjects]);
 
-  // Load tickets when project changes
+  // Load project config and tickets when project changes
   useEffect(() => {
     if (selectedProject) {
-      fetchTicketsForProject(selectedProject).catch(err => {
-        console.error('Failed to load tickets for project:', selectedProject.project.name, err);
+      Promise.all([
+        fetchProjectConfig(selectedProject),
+        fetchTicketsForProject(selectedProject)
+      ]).catch(err => {
+        console.error('Failed to load project data:', selectedProject.project.name, err);
       });
     } else {
       setTickets([]);
+      setProjectConfig(null);
       setLoading(false);
     }
-  }, [selectedProject, fetchTicketsForProject]);
+  }, [selectedProject, fetchTicketsForProject, fetchProjectConfig]);
+
+  // Generate next ticket code based on project configuration
+  const generateNextTicketCode = useCallback((): string => {
+    if (!selectedProject) {
+      return 'UNKNOWN-001';
+    }
+    
+    return generateTicketCode(selectedProject, projectConfig, tickets.length);
+  }, [selectedProject, projectConfig, tickets.length]);
 
   // Create a new ticket in the selected project
-  const createTicket = useCallback(async (ticketCode: string, title: string, type: string): Promise<Ticket> => {
+  const createTicket = useCallback(async (title: string, type: string): Promise<Ticket> => {
     if (!selectedProject) {
       throw new Error('No project selected');
     }
+    
+    const ticketCode = generateNextTicketCode();
     
     try {
       setError(null);
@@ -193,7 +268,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       setError(error);
       throw error;
     }
-  }, [selectedProject]);
+  }, [selectedProject, generateNextTicketCode]);
 
   // Update a ticket in the selected project
   const updateTicket = useCallback(async (ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> => {
@@ -294,6 +369,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     projects,
     selectedProject,
     setSelectedProject,
+    projectConfig,
     
     // Ticket data
     tickets,
@@ -308,6 +384,9 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     // Refresh operations
     refreshProjects,
     refreshTickets,
+    
+    // Helper functions
+    generateNextTicketCode,
     
     // Error handling
     clearError

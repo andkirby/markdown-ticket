@@ -4,6 +4,7 @@ import path from 'path';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import FileWatcherService from './fileWatcherService.js';
+import ProjectDiscoveryService from './projectDiscovery.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -22,6 +23,26 @@ const DEFAULT_TICKETS_DIR = './sample-tasks';
 
 // Initialize file watcher service
 const fileWatcher = new FileWatcherService();
+
+// Initialize project discovery service
+const projectDiscovery = new ProjectDiscoveryService();
+
+// Helper function to generate project-specific ticket codes
+function generateProjectSpecificCode(project, config, nextNumber) {
+  const projectCode = config.project.code || project.id.toUpperCase();
+  
+  // Check if project has specific code pattern requirements
+  if (project.tickets?.codePattern && project.tickets.codePattern.includes('[A-Z]')) {
+    // For patterns like "^CR-[A-Z]\\d{3}$", generate CR-A001, CR-A002, etc.
+    const letterIndex = Math.floor((nextNumber - 1) / 999); // Every 999 tickets, increment letter
+    const numberPart = ((nextNumber - 1) % 999) + 1;
+    const letter = String.fromCharCode(65 + letterIndex); // A, B, C, etc.
+    return `${projectCode}-${letter}${String(numberPart).padStart(3, '0')}`;
+  }
+  
+  // Default format: PROJECT-001, PROJECT-002, etc.
+  return `${projectCode}-${String(nextNumber).padStart(3, '0')}`;
+}
 
 // Ensure sample-tasks directory exists
 async function ensureTasksDirectory() {
@@ -343,6 +364,356 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// ========================================
+// Multi-Project API Routes
+// ========================================
+
+// Get all registered projects
+app.get('/api/projects', async (req, res) => {
+  try {
+    const projects = await projectDiscovery.getAllProjects();
+    res.json(projects);
+  } catch (error) {
+    console.error('Error getting projects:', error);
+    res.status(500).json({ error: 'Failed to get projects' });
+  }
+});
+
+// Get specific project configuration
+app.get('/api/projects/:projectId/config', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const projects = await projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const config = projectDiscovery.getProjectConfig(project.project.path);
+    if (!config) {
+      return res.status(404).json({ error: 'Project configuration not found' });
+    }
+
+    res.json({ project, config });
+  } catch (error) {
+    console.error('Error getting project config:', error);
+    res.status(500).json({ error: 'Failed to get project configuration' });
+  }
+});
+
+// Get CRs for a specific project
+app.get('/api/projects/:projectId/crs', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const projects = await projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const crs = projectDiscovery.getProjectCRs(project.project.path);
+    res.json(crs);
+  } catch (error) {
+    console.error('Error getting project CRs:', error);
+    res.status(500).json({ error: 'Failed to get project CRs' });
+  }
+});
+
+// Get specific CR from a project
+app.get('/api/projects/:projectId/crs/:crId', async (req, res) => {
+  try {
+    const { projectId, crId } = req.params;
+    const projects = await projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const crs = projectDiscovery.getProjectCRs(project.project.path);
+    const cr = crs.find(c => c.code === crId || c.filename.includes(crId));
+    
+    if (!cr) {
+      return res.status(404).json({ error: 'CR not found' });
+    }
+
+    res.json(cr);
+  } catch (error) {
+    console.error('Error getting CR:', error);
+    res.status(500).json({ error: 'Failed to get CR' });
+  }
+});
+
+// Create new CR in a project
+app.post('/api/projects/:projectId/crs', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { code, title, type, priority, description } = req.body;
+    
+    if (!title || !type) {
+      return res.status(400).json({ error: 'Title and type are required' });
+    }
+
+    const projects = await projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const config = projectDiscovery.getProjectConfig(project.project.path);
+    if (!config) {
+      return res.status(400).json({ error: 'Project configuration not found' });
+    }
+
+    // Get next CR number
+    const counterPath = path.join(project.project.path, '.mdt-next');
+    let nextNumber = 1;
+    
+    try {
+      const counterContent = await fs.readFile(counterPath, 'utf8');
+      nextNumber = parseInt(counterContent.trim()) || 1;
+    } catch (error) {
+      // Counter file doesn't exist, start with 1
+    }
+
+    // Generate CR code based on project configuration or use provided code
+    let crCode;
+    if (code) {
+      // Use provided code
+      crCode = code;
+    } else {
+      // Generate code based on project pattern
+      crCode = generateProjectSpecificCode(project, config, nextNumber);
+    }
+    const titleSlug = title.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .substring(0, 50);
+    const filename = `${crCode}-${titleSlug}.md`;
+
+    const crContent = `- **Code**: ${crCode}
+- **Title/Summary**: ${title}
+- **Status**: Proposed
+- **Date Created**: ${new Date().toISOString().split('T')[0]}
+- **Type**: ${type}
+- **Priority**: ${priority || 'Medium'}
+- **Phase/Epic**: Phase A (Foundation)
+
+# ${title}
+
+## 1. Description
+
+### Problem Statement
+${description || 'Please provide a detailed problem statement.'}
+
+### Current State
+Please describe the current behavior/implementation.
+
+### Desired State
+Please describe what the new behavior/implementation should be.
+
+### Rationale
+Please explain why this change is important and why now.
+
+### Impact Areas
+Please list what parts of the system will be affected.
+
+## 2. Solution Analysis
+
+### Approaches Considered
+Please list alternative solutions that were evaluated.
+
+### Trade-offs Analysis
+Please provide pros/cons of different approaches.
+
+### Decision Factors
+Please list technical constraints, timeline, resources, user impact.
+
+### Chosen Approach
+Please explain why this solution was selected.
+
+### Rejected Alternatives
+Please explain why other approaches were not chosen.
+
+## 3. Implementation Specification
+
+### Technical Requirements
+Please list specific technical changes needed.
+
+### UI/UX Changes
+Please describe user interface modifications (if applicable).
+
+### API Changes
+Please describe new endpoints, modified responses, breaking changes (if applicable).
+
+### Database Changes
+Please describe schema modifications, data migrations (if applicable).
+
+### Configuration
+Please describe new settings, environment variables, deployment changes (if applicable).
+
+## 4. Acceptance Criteria
+
+Please list specific, testable conditions that must be met for completion:
+- [ ] Condition 1
+- [ ] Condition 2
+- [ ] Condition 3
+
+## 5. Implementation Notes
+*To be filled during/after implementation*
+
+## 6. References
+
+### Related Tasks
+- Link to specific implementation tasks
+
+### Code Changes
+- Reference commits, pull requests, or branches
+
+### Documentation Updates
+- Links to updated documentation sections
+
+### Related CRs
+- Cross-references to dependent or related change requests
+`;
+
+    // Write CR file
+    const crPath = path.join(project.project.path, config.project.path || 'docs/CRs');
+    await fs.mkdir(crPath, { recursive: true });
+    const crFilePath = path.join(crPath, filename);
+    await fs.writeFile(crFilePath, crContent, 'utf8');
+
+    // Update counter
+    await fs.writeFile(counterPath, String(nextNumber + 1), 'utf8');
+
+    console.log(`Created CR: ${filename} in project ${projectId}`);
+    res.json({ 
+      success: true, 
+      message: 'CR created successfully',
+      crCode,
+      filename,
+      path: crFilePath
+    });
+  } catch (error) {
+    console.error('Error creating CR:', error);
+    res.status(500).json({ error: 'Failed to create CR' });
+  }
+});
+
+// Update CR in a project
+app.put('/api/projects/:projectId/crs/:crId', async (req, res) => {
+  try {
+    const { projectId, crId } = req.params;
+    const { content } = req.body;
+    
+    if (!content) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+
+    const projects = await projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const crs = projectDiscovery.getProjectCRs(project.project.path);
+    const cr = crs.find(c => c.code === crId || c.filename.includes(crId));
+    
+    if (!cr) {
+      return res.status(404).json({ error: 'CR not found' });
+    }
+
+    // Update CR file
+    await fs.writeFile(cr.path, content, 'utf8');
+
+    console.log(`Updated CR: ${cr.filename} in project ${projectId}`);
+    res.json({ 
+      success: true, 
+      message: 'CR updated successfully',
+      filename: cr.filename
+    });
+  } catch (error) {
+    console.error('Error updating CR:', error);
+    res.status(500).json({ error: 'Failed to update CR' });
+  }
+});
+
+// Delete CR from a project
+app.delete('/api/projects/:projectId/crs/:crId', async (req, res) => {
+  try {
+    const { projectId, crId } = req.params;
+    
+    const projects = await projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const crs = projectDiscovery.getProjectCRs(project.project.path);
+    const cr = crs.find(c => c.code === crId || c.filename.includes(crId));
+    
+    if (!cr) {
+      return res.status(404).json({ error: 'CR not found' });
+    }
+
+    // Delete CR file
+    await fs.unlink(cr.path);
+
+    console.log(`Deleted CR: ${cr.filename} from project ${projectId}`);
+    res.json({ 
+      success: true, 
+      message: 'CR deleted successfully',
+      filename: cr.filename
+    });
+  } catch (error) {
+    console.error('Error deleting CR:', error);
+    res.status(500).json({ error: 'Failed to delete CR' });
+  }
+});
+
+// Register a new project
+app.post('/api/projects/register', async (req, res) => {
+  try {
+    const { name, path: projectPath, description, configFile } = req.body;
+    
+    if (!name || !projectPath) {
+      return res.status(400).json({ error: 'Name and path are required' });
+    }
+
+    // Verify project path exists and has .mdt-config.toml
+    const configPath = path.join(projectPath, configFile || '.mdt-config.toml');
+    try {
+      await fs.access(configPath);
+    } catch (error) {
+      return res.status(400).json({ error: 'Project path does not contain .mdt-config.toml' });
+    }
+
+    const projectInfo = {
+      id: path.basename(projectPath),
+      name,
+      path: projectPath,
+      description: description || '',
+      configFile: configFile || '.mdt-config.toml',
+      active: true
+    };
+
+    const success = projectDiscovery.registerProject(projectInfo);
+    if (success) {
+      res.json({ success: true, message: 'Project registered successfully', project: projectInfo });
+    } else {
+      res.status(500).json({ error: 'Failed to register project' });
+    }
+  } catch (error) {
+    console.error('Error registering project:', error);
+    res.status(500).json({ error: 'Failed to register project' });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
@@ -358,13 +729,22 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Ticket board server running on port ${PORT}`);
   console.log(`📁 Tasks directory: ${TICKETS_DIR}`);
-  console.log(`🌐 API endpoints:`);
+  console.log(`🌐 Single Project API endpoints:`);
   console.log(`   GET  /api/tasks - List all task files`);
   console.log(`   GET  /api/tasks/:filename - Get specific task`);
   console.log(`   POST /api/tasks/save - Save task file`);
   console.log(`   DELETE /api/tasks/:filename - Delete task file`);
   console.log(`   GET  /api/events - Server-Sent Events for real-time updates`);
   console.log(`   GET  /api/status - Server status`);
+  console.log(`🌐 Multi-Project API endpoints:`);
+  console.log(`   GET  /api/projects - List all registered projects`);
+  console.log(`   GET  /api/projects/:id/config - Get project configuration`);
+  console.log(`   GET  /api/projects/:id/crs - List CRs for project`);
+  console.log(`   GET  /api/projects/:id/crs/:crId - Get specific CR`);
+  console.log(`   POST /api/projects/:id/crs - Create new CR`);
+  console.log(`   PUT  /api/projects/:id/crs/:crId - Update CR`);
+  console.log(`   DELETE /api/projects/:id/crs/:crId - Delete CR`);
+  console.log(`   POST /api/projects/register - Register new project`);
   
   // Initialize the server
   initializeServer()

@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Read(/Users/kirby/home/**)",
+      "Read(/Users/kirby/home/browser-translator-ollama/macos-app/LlmTranslator/docs/CRs/**)",
+      "Read(/Users/kirby/home/browser-translator-ollama/macos-app/LlmTranslator/docs/CRs/**)",
+      "Read(/Users/kirby/home/browser-translator-ollama/macos-app/LlmTranslator/docs/CRs/**)",
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(npm start)",
+      "Bash(curl:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git commit:*)",
+      "Read(/Users/kirby/home/LlmTranslator/**)",
+      "Bash(node:*)",
+      "Read(/Users/kirby/.config/markdown-ticket/projects/**)",
+      "Bash(chmod:*)",
+      "Read(/private/tmp/**)",
+      "Read(/private/tmp/**)",
+      "Read(/Users/kirby/.config/markdown-ticket/projects/**)",
+      "Read(/Users/kirby/home/browser-translator-ollama/macos-app/LlmTranslator/docs/CRs/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

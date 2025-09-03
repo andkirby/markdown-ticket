@@ -1,0 +1,79 @@
+fileWatcher.ts:101 Detected 4 file changes
+fileWatcher.ts:216 Ticket CR-A002 was modified
+fileWatcher.ts:216 Ticket CR-A001 was modified
+fileWatcher.ts:216 Ticket CR-A003 was modified
+fileWatcher.ts:216 Ticket CR-B001 was modified
+fileWatcher.ts:101 Detected 4 file changes
+fileWatcher.ts:216 Ticket CR-A002 was modified
+fileWatcher.ts:216 Ticket CR-A001 was modified
+fileWatcher.ts:216 Ticket CR-A003 was modified
+fileWatcher.ts:216 Ticket CR-B001 was modified
+Column.tsx:50 Dropped ticket: {code: 'CR-A002', title: 'Fix responsive design issues on mobile', status: 'Proposed', dateCreated: Thu Jan 18 2024 01:00:00 GMT+0100 (Central European Standard Time), type: 'Bug Fix', …} on column: undefined
+Board.tsx:155 Board: Column onDrop called with: {status: undefined, ticketCode: 'CR-A002'}
+Board.tsx:42 Board: handleDrop called with: {status: undefined, ticketCode: 'CR-A002', ticketStatus: 'Proposed'}
+useTicketData.ts:328 useTicketStatusAutomation: moveTicket called with: {ticketCode: 'CR-A002', newStatus: undefined}
+useTicketData.ts:136 useTicketData: updateTicket called with: {ticketCode: 'CR-A002', updates: {…}}
+fileService.ts:292 FileService: updateTicket called with: {ticketCode: 'CR-A002', updates: {…}}
+fileWatcher.ts:101 Detected 4 file changes
+fileWatcher.ts:216 Ticket CR-A002 was modified
+fileWatcher.ts:216 Ticket CR-A001 was modified
+fileWatcher.ts:216 Ticket CR-A003 was modified
+fileWatcher.ts:216 Ticket CR-B001 was modified
+fileWatcher.ts:101 Detected 4 file changes
+fileWatcher.ts:216 Ticket CR-A002 was modified
+fileWatcher.ts:216 Ticket CR-A001 was modified
+fileWatcher.ts:216 Ticket CR-A003 was modified
+fileWatcher.ts:216 Ticket CR-B001 was modified
+fileWatcher.ts:101 Detected 4 file changes
+fileWatcher.ts:216 Ticket CR-A002 was modified
+fileWatcher.ts:216 Ticket CR-A001 was modified
+fileWatcher.ts:216 Ticket CR-A003 was modified
+fileWatcher.ts:216 Ticket CR-B001 was modified
+fileWatcher.ts:101 Detected 4 file changes
+fileWatcher.ts:216 Ticket CR-A002 was modified
+fileWatcher.ts:216 Ticket CR-A001 was modified
+fileWatcher.ts:216 Ticket CR-A003 was modified
+fileWatcher.ts:216 Ticket CR-B001 was modified
+fileService.ts:306 FileService: Updated ticket created: {code: 'CR-A002', title: 'Fix responsive design issues on mobile', status: undefined, dateCreated: Thu Jan 18 2024 01:00:00 GMT+0100 (Central European Standard Time), type: 'Bug Fix', …}
+fileService.ts:225 FileService: saveTicket called with: {code: 'CR-A002', title: 'Fix responsive design issues on mobile', status: undefined, dateCreated: Thu Jan 18 2024 01:00:00 GMT+0100 (Central European Standard Time), type: 'Bug Fix', …}
+fileService.ts:228 FileService: Current tickets count: 4
+fileService.ts:234 FileService: Updated existing ticket at index: 0
+fileService.ts:246 FileService: Ticket saved to localStorage
+fileService.ts:249 FileService: Ticket CR-A002 saved successfully
+fileService.ts:348 FileService: Ticket CR-A002 saved to file: ./tasks/CR-A002.md
+fileService.ts:314 FileService: Ticket saved to file successfully
+fileService.ts:319 FileService: Ticket saved successfully
+useTicketData.ts:141 useTicketData: Ticket updated successfully: {code: 'CR-A002', title: 'Fix responsive design issues on mobile', status: undefined, dateCreated: Thu Jan 18 2024 01:00:00 GMT+0100 (Central European Standard Time), type: 'Bug Fix', …}
+useTicketData.ts:331 useTicketStatusAutomation: Ticket status updated successfully
+Board.tsx:45 Board: Ticket moved successfully
+fileWatcher.ts:101 Detected 4 file changes
+fileWatcher.ts:216 Ticket CR-A002 was modified
+fileWatcher.ts:216 Ticket CR-A001 was modified
+fileWatcher.ts:216 Ticket CR-A003 was modified
+fileWatcher.ts:216 Ticket CR-B001 was modified
+fileWatcher.ts:101 Detected 4 file changes
+fileWatcher.ts:216 Ticket CR-A002 was modified
+fileWatcher.ts:216 Ticket CR-A001 was modified
+fileWatcher.ts:216 Ticket CR-A003 was modified
+fileWatcher.ts:216 Ticket CR-B001 was modified
+fileWatcher.ts:101 Detected 4 file changes
+fileWatcher.ts:216 Ticket CR-A002 was modified
+fileWatcher.ts:216 Ticket CR-A001 was modified
+fileWatcher.ts:216 Ticket CR-A003 was modified
+fileWatcher.ts:216 Ticket CR-B001 was modified
+ Detected 4 file changes
+ Ticket CR-A002 was modified
+ Ticket CR-A001 was modified
+ Ticket CR-A003 was modified
+ Ticket CR-B001 was modified
+ Detected 4 file changes
+ Ticket CR-A002 was modified
+ Ticket CR-A001 was modified
+ Ticket CR-A003 was modified
+ Ticket CR-B001 was modified
+ Detected 4 file changes
+ Ticket CR-A002 was modified
+ Ticket CR-A001 was modified
+ Ticket CR-A003 was modified
+ Ticket CR-B001 was modified
+

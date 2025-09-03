@@ -1,0 +1,8 @@
+[project]
+name = "Markdown Ticket Board"
+code = "MDT"
+path = "docs/CRs"
+startNumber = 1
+counterFile = ".mdt-next"
+description = "Kanban-style ticket board with markdown storage"
+repository = "https://github.com/user/markdown-ticket"

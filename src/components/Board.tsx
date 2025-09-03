@@ -20,12 +20,14 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
     projects, 
     selectedProject, 
     setSelectedProject, 
+    projectConfig,
     tickets, 
     loading, 
     error, 
     createTicket, 
     refreshTickets: refreshProjectTickets, 
     updateTicket,
+    generateNextTicketCode,
     clearError
   } = useMultiProjectData({ autoSelectFirst: true });
   
@@ -59,14 +61,12 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
     }
     
     try {
-      // Generate a unique ticket code based on project prefix
-      const projectCode = selectedProject.id.toUpperCase();
-      const ticketCode = `${projectCode}-${String(tickets.length + 1).padStart(3, '0')}`;
-      await createTicket(ticketCode, 'New Change Request', 'Feature Enhancement');
+      // Ticket code will be auto-generated based on project configuration
+      await createTicket('New Change Request', 'Feature Enhancement');
     } catch (error) {
       console.error('Failed to create ticket:', error);
     }
-  }, [selectedProject, tickets.length, createTicket]);
+  }, [selectedProject, createTicket]);
 
   const handleTicketEdit = useCallback((ticket: Ticket) => {
     onTicketClick(ticket);
