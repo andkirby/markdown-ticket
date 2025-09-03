@@ -1,42 +1,33 @@
-import React, { useState, useCallback } from 'react';
-import { DndProvider, useDrop } from 'react-dnd';
+import React, { useCallback } from 'react';
+import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Ticket, Status } from '../types';
-import { BOARD_COLUMNS, getVisibleColumns, getColumnForStatus } from '../config';
+import { getVisibleColumns, getColumnForStatus } from '../config';
 import Column from './Column';
 import TicketCard from './TicketCard';
 import { Button } from './UI/index';
-import { useTicketData, useTicketStatusAutomation } from '../hooks/useTicketData';
+import { useMultiProjectData } from '../hooks/useMultiProjectData';
 
 interface BoardProps {
   onTicketClick: (ticket: Ticket) => void;
+  enableProjectSwitching?: boolean;
 }
 
-interface TicketItemProps {
-  ticket: Ticket;
-  index: number;
-  onMove: (newStatus: Status) => void;
-  onEdit: () => void;
-}
+// Note: TicketItem removed - drag functionality handled in Column.tsx
 
-// Note: Drag functionality is now handled in Column.tsx with DraggableTicketCard
-// This component is kept for compatibility but doesn't handle drag anymore
-const TicketItem: React.FC<TicketItemProps> = ({ ticket, index, onMove, onEdit }) => {
-  return (
-    <div>
-      <TicketCard ticket={ticket} onMove={(newStatus: string) => onMove(newStatus as Status)} onEdit={onEdit} />
-    </div>
-  );
-};
-
-const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
-  const { tickets, loading, error, createTicket, refreshTickets, updateTicket } = useTicketData({
-    autoRefresh: true,
-    pollingInterval: 5000,
-    enableFileWatcher: true
-  });
-  
-  const { moveTicket } = useTicketStatusAutomation();
+const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitching = true }) => {
+  const { 
+    projects, 
+    selectedProject, 
+    setSelectedProject, 
+    tickets, 
+    loading, 
+    error, 
+    createTicket, 
+    refreshTickets: refreshProjectTickets, 
+    updateTicket,
+    clearError
+  } = useMultiProjectData({ autoSelectFirst: true });
   
   const handleDrop = useCallback(async (status: Status, ticket: Ticket) => {
     console.log('Board: handleDrop called with:', { status, ticketCode: ticket.code, ticketStatus: ticket.status });
@@ -46,7 +37,7 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
       await updateTicket(ticket.code, { status });
       console.log('Board: Ticket moved successfully');
       
-      // Auto-set implementation date when status changes to "Implemented" (replicate moveTicket logic)
+      // Auto-set implementation date when status changes to "Implemented"
       if (status === 'Implemented' || status === 'Partially Implemented') {
         await updateTicket(ticket.code, {
           implementationDate: new Date(),
@@ -57,19 +48,25 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
     } catch (error) {
       console.error('Board: Failed to move ticket:', error);
       // Refresh to ensure UI is in sync with backend
-      await refreshTickets();
+      await refreshProjectTickets();
     }
-  }, [updateTicket, refreshTickets]);
+  }, [updateTicket, refreshProjectTickets]);
 
   const handleTicketCreate = useCallback(async () => {
+    if (!selectedProject) {
+      console.error('No project selected');
+      return;
+    }
+    
     try {
-      // Generate a unique ticket code
-      const ticketCode = `CR-${String(tickets.length + 1).padStart(3, '0')}`;
+      // Generate a unique ticket code based on project prefix
+      const projectCode = selectedProject.id.toUpperCase();
+      const ticketCode = `${projectCode}-${String(tickets.length + 1).padStart(3, '0')}`;
       await createTicket(ticketCode, 'New Change Request', 'Feature Enhancement');
     } catch (error) {
       console.error('Failed to create ticket:', error);
     }
-  }, [tickets.length, createTicket]);
+  }, [selectedProject, tickets.length, createTicket]);
 
   const handleTicketEdit = useCallback((ticket: Ticket) => {
     onTicketClick(ticket);
@@ -77,18 +74,18 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
 
   const handleRefresh = useCallback(async () => {
     try {
-      await refreshTickets();
+      await refreshProjectTickets();
     } catch (error) {
       console.error('Failed to refresh tickets:', error);
     }
-  }, [refreshTickets]);
+  }, [refreshProjectTickets]);
 
   // Group tickets by column
   const ticketsByColumn: Record<string, Ticket[]> = {};
   const visibleColumns = getVisibleColumns();
 
   // Initialize with empty arrays
-  visibleColumns.forEach((column: any) => {
+  visibleColumns.forEach((column) => {
     ticketsByColumn[column.label] = [];
   });
 
@@ -109,7 +106,58 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
       <div className="flex items-center justify-center min-h-[400px] p-6">
         <div className="flex items-center space-x-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <div className="text-lg text-gray-600">Loading tickets...</div>
+          <div className="text-lg text-gray-600">
+            {projects.length === 0 ? 'Loading projects...' : 'Loading tickets...'}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show no project selected state
+  if (enableProjectSwitching && !selectedProject) {
+    return (
+      <div className="p-6 space-y-6">
+        {/* Header with project selector */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex-1">
+            <div className="flex items-center space-x-4 mb-2">
+              <h1 className="text-2xl font-bold text-gray-800">Change Request Board</h1>
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Project:</label>
+                <select
+                  value={selectedProject?.id || ''}
+                  onChange={(e) => {
+                    const project = projects.find(p => p.id === e.target.value);
+                    setSelectedProject(project || null);
+                    clearError();
+                  }}
+                  className="border border-gray-300 rounded-md px-3 py-1 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a project...</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.project.name} ({project.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 font-normal">
+              Select a project to view and manage change requests
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-center min-h-[300px]">
+          <div className="text-center">
+            <div className="text-6xl text-gray-300 mb-4">📋</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h3>
+            <p className="text-sm text-gray-600 mb-4">Choose a project from the dropdown above to view its change requests.</p>
+            {projects.length === 0 && (
+              <p className="text-sm text-red-600">No projects found. Make sure projects are properly configured.</p>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -137,9 +185,38 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Change Request Board</h1>
-          <p className="text-sm text-gray-600 font-normal">Track and manage your change requests</p>
+        <div className="flex-1">
+          <div className="flex items-center space-x-4 mb-2">
+            <h1 className="text-2xl font-bold text-gray-800">Change Request Board</h1>
+            {enableProjectSwitching && (
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Project:</label>
+                <select
+                  value={selectedProject?.id || ''}
+                  onChange={(e) => {
+                    const project = projects.find(p => p.id === e.target.value);
+                    setSelectedProject(project || null);
+                    clearError();
+                  }}
+                  className="border border-gray-300 rounded-md px-3 py-1 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={loading}
+                >
+                  <option value="">Select a project...</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.project.name} ({project.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 font-normal">
+            {selectedProject ? 
+              `Track and manage change requests for ${selectedProject.project.name}` :
+              'Select a project to view and manage change requests'
+            }
+          </p>
         </div>
         <div className="flex space-x-4">
           <Button 
@@ -151,6 +228,7 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
           <Button 
             onClick={handleTicketCreate}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-lg"
+            disabled={!selectedProject}
           >
             Add Ticket
           </Button>
@@ -159,7 +237,7 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick }) => {
 
       {/* Board Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full overflow-x-auto">
-        {visibleColumns.map((column: any) => (
+        {visibleColumns.map((column) => (
           <Column
             key={column.label}
             column={column}
