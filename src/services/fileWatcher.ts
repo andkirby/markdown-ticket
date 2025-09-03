@@ -19,13 +19,13 @@ export class FileWatcher {
   private enableAutoRefresh: boolean;
   private onChange?: (tickets: Ticket[]) => void;
   private onError?: (error: Error) => void;
-  private intervalId: number | null = null;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
   private lastUpdateTime: number = 0;
   private eventQueue: WatcherEvent[] = [];
   private isProcessing: boolean = false;
 
   constructor(options: FileWatcherOptions = {}) {
-    this.pollingInterval = options.pollingInterval || 5000; // 5 seconds default
+    this.pollingInterval = options.pollingInterval || 1000; // 1 second for faster updates
     this.enableAutoRefresh = options.enableAutoRefresh ?? true;
     this.onChange = options.onChange;
     this.onError = options.onError;
@@ -80,7 +80,7 @@ export class FileWatcher {
     try {
       this.isProcessing = true;
       
-      // Get current tickets
+      // Get current tickets directly from server
       const currentTickets = await defaultFileService.loadAllTickets();
       const currentTime = Date.now();
       
@@ -115,9 +115,16 @@ export class FileWatcher {
         // Update last update time
         this.lastUpdateTime = currentTime;
         
-        // Notify callback
+        // Immediately notify callback with fresh data
         if (this.onChange) {
-          this.onChange(currentTickets);
+          const freshTickets = await defaultFileService.loadAllTickets();
+          this.onChange(freshTickets);
+        }
+      } else {
+        // Even if no changes detected, refresh the data to ensure consistency
+        if (this.onChange) {
+          const freshTickets = await defaultFileService.loadAllTickets();
+          this.onChange(freshTickets);
         }
       }
     } catch (error) {
@@ -137,7 +144,7 @@ export class FileWatcher {
     const changes: Array<{ type: 'created' | 'modified' | 'deleted'; ticketCode: string }> = [];
     
     try {
-      // Get previously stored tickets (simulate by checking localStorage)
+      // Get previously stored tickets from localStorage
       const storedTickets = this.getStoredTickets();
       
       // Check for new tickets
@@ -150,7 +157,7 @@ export class FileWatcher {
             ticketCode: currentTicket.code
           });
         } else {
-          // Check if ticket was modified
+          // Check if ticket was modified by comparing lastModified timestamps
           const currentModified = currentTicket.lastModified.getTime();
           const existingModified = existingTicket.lastModified.getTime();
           
@@ -174,6 +181,9 @@ export class FileWatcher {
           });
         }
       }
+      
+      // Update stored tickets with current state
+      this.updateStoredTickets(currentTickets);
       
       return changes;
     } catch (error) {
@@ -355,7 +365,7 @@ export class FileWatcher {
 
 // Default file watcher instance
 export const defaultFileWatcher = new FileWatcher({
-  pollingInterval: 5000,
+  pollingInterval: 1000, // 1 second for faster updates
   enableAutoRefresh: true
 });
 

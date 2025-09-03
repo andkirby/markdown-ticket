@@ -1,0 +1,1 @@
+/Users/kirby/.ai/manual_ticket_creation.md

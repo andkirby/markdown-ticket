@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Ticket, Status } from '../types';
 import { defaultFileService } from '../services/fileService';
-import { defaultFileWatcher } from '../services/fileWatcher';
+import { defaultRealtimeFileWatcher } from '../services/realtimeFileWatcher';
 import { createTicketTemplate } from '../services/markdownParser';
 
 interface UseTicketDataOptions {
@@ -53,7 +53,7 @@ export function useTicketData(options: UseTicketDataOptions = {}): UseTicketData
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const fileWatcherRef = useRef(defaultFileWatcher);
+  const fileWatcherRef = useRef(defaultRealtimeFileWatcher);
   const isMounted = useRef(true);
 
   // Initialize services
@@ -73,9 +73,10 @@ export function useTicketData(options: UseTicketDataOptions = {}): UseTicketData
 
         // Setup file watcher if enabled
         if (enableFileWatcher && autoRefresh) {
-          fileWatcherRef.current = new (defaultFileWatcher.constructor as any)({
+          fileWatcherRef.current = new (defaultRealtimeFileWatcher.constructor as any)({
             pollingInterval,
             enableAutoRefresh: true,
+            enableSSE: true,
             onChange: (updatedTickets: Ticket[]) => {
               if (isMounted.current) {
                 setTickets(updatedTickets);

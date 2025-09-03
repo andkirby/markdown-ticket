@@ -1,0 +1,1 @@
+/Users/kirby/.ai/create_ticket.md

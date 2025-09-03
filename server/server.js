@@ -1,7 +1,9 @@
-const express = require('express');
-const fs = require('fs').promises;
-const path = require('path');
-const cors = require('cors');
+import express from 'express';
+import fs from 'fs/promises';
+import path from 'path';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import FileWatcherService from './fileWatcherService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -10,16 +12,23 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Configuration
-const TICKETS_DIR = path.join(__dirname, 'tasks');
-const DEFAULT_TICKETS_DIR = './tasks';
+// ES module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Ensure tasks directory exists
+// Configuration
+const TICKETS_DIR = path.join(__dirname, 'sample-tasks');
+const DEFAULT_TICKETS_DIR = './sample-tasks';
+
+// Initialize file watcher service
+const fileWatcher = new FileWatcherService();
+
+// Ensure sample-tasks directory exists
 async function ensureTasksDirectory() {
   try {
     await fs.access(TICKETS_DIR);
   } catch (error) {
-    console.log(`Creating tasks directory at: ${TICKETS_DIR}`);
+    console.log(`Creating sample-tasks directory at: ${TICKETS_DIR}`);
     await fs.mkdir(TICKETS_DIR, { recursive: true });
   }
 }
@@ -306,13 +315,31 @@ app.delete('/api/tasks/:filename', async (req, res) => {
   }
 });
 
+// Server-Sent Events endpoint for real-time file updates
+app.get('/api/events', (req, res) => {
+  // Set SSE headers
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Cache-Control'
+  });
+
+  // Add client to file watcher service
+  fileWatcher.addClient(res);
+
+  console.log(`SSE client connected. Total clients: ${fileWatcher.getClientCount()}`);
+});
+
 // Get server status
 app.get('/api/status', (req, res) => {
   res.json({ 
     status: 'ok', 
     message: 'Ticket board server is running',
     tasksDir: TICKETS_DIR,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    sseClients: fileWatcher.getClientCount()
   });
 });
 
@@ -336,19 +363,30 @@ app.listen(PORT, () => {
   console.log(`   GET  /api/tasks/:filename - Get specific task`);
   console.log(`   POST /api/tasks/save - Save task file`);
   console.log(`   DELETE /api/tasks/:filename - Delete task file`);
+  console.log(`   GET  /api/events - Server-Sent Events for real-time updates`);
   console.log(`   GET  /api/status - Server status`);
   
   // Initialize the server
-  initializeServer().catch(console.error);
+  initializeServer()
+    .then(() => {
+      // Initialize file watcher after server is ready
+      const watchPath = path.join(TICKETS_DIR, '*.md');
+      fileWatcher.initFileWatcher(watchPath);
+      fileWatcher.startHeartbeat();
+      console.log(`📡 File watcher initialized for: ${watchPath}`);
+    })
+    .catch(console.error);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('Received SIGTERM, shutting down gracefully...');
+  fileWatcher.stop();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   console.log('Received SIGINT, shutting down gracefully...');
+  fileWatcher.stop();
   process.exit(0);
 });

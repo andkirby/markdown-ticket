@@ -7,7 +7,7 @@ import TicketCard from './TicketCard';
 interface ColumnProps {
   column: {
     label: string;
-    status: string;
+    statuses: string[];
     color: string;
   };
   tickets: Ticket[];
@@ -47,8 +47,8 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'ticket',
     drop: (item: any) => {
-      console.log('Dropped ticket:', item.ticket, 'on column:', column.status);
-      onDrop(column.status, item.ticket);
+      console.log('Dropped ticket:', item.ticket, 'on column:', column.label);
+      onDrop(column.statuses[0], item.ticket);
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
