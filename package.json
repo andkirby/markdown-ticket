@@ -35,6 +35,7 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
+    "showdown": "^2.1.0",
     "tailgrids": "^2.3.0",
     "tailwindcss": "^3.4.17",
     "zod": "^3.22.4"
@@ -44,6 +45,7 @@
     "@types/node": "^24.3.0",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
+    "@types/showdown": "^2.0.6",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
     "@vitejs/plugin-react": "^4.2.1",

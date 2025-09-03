@@ -7,7 +7,7 @@ interface TicketCardProps {
   onEdit: () => void;
 }
 
-const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove, onEdit }) => {
+const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High':
@@ -39,7 +39,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove, onEdit }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+    <div 
+      className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      onClick={onEdit}
+    >
       <div className="flex items-start justify-between mb-2">
         <h4 className="font-semibold text-gray-900 text-sm truncate">{ticket.title}</h4>
         <span className="text-xs font-medium text-gray-500 ml-2 flex-shrink-0">

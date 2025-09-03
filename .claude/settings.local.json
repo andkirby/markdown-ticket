@@ -24,7 +24,8 @@
       "Read(/private/tmp/**)",
       "Read(/private/tmp/**)",
       "Read(/Users/kirby/.config/markdown-ticket/projects/**)",
-      "Read(/Users/kirby/home/browser-translator-ollama/macos-app/LlmTranslator/docs/CRs/**)"
+      "Read(/Users/kirby/home/browser-translator-ollama/macos-app/LlmTranslator/docs/CRs/**)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

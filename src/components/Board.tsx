@@ -4,7 +4,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Ticket, Status } from '../types';
 import { getVisibleColumns, getColumnForStatus } from '../config';
 import Column from './Column';
-import TicketCard from './TicketCard';
 import { Button } from './UI/index';
 import { useMultiProjectData } from '../hooks/useMultiProjectData';
 
@@ -99,6 +98,23 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
       ticketsByColumn['Backlog'].push(ticket);
     }
   });
+
+  // Check for duplicate tickets by code and log warnings
+  const ticketCodes = new Set<string>();
+  let hasDuplicates = false;
+  tickets.forEach(ticket => {
+    console.log(`Ticket ${ticket.code}: status=${ticket.status}, column=${getColumnForStatus(ticket.status as Status).label}`);
+    if (ticketCodes.has(ticket.code)) {
+      console.error(`WARNING: Duplicate ticket found: ${ticket.code} with status ${ticket.status}`);
+      hasDuplicates = true;
+    } else {
+      ticketCodes.add(ticket.code);
+    }
+  });
+
+  if (hasDuplicates) {
+    console.error('DUPLICATE TICKETS DETECTED: This may cause React key conflicts');
+  }
 
   // Show loading state
   if (loading) {

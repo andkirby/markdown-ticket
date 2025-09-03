@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Ticket, Status } from '../types';
+import { formatTicketAsMarkdown } from '../services/markdownParser';
 
 interface Project {
   id: string;
@@ -167,8 +168,14 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
         lastModified: new Date(),
         ...cr.header // Include any additional header fields
       }));
-      
-      setTickets(convertedTickets);
+
+      // Remove duplicates by code to prevent React key conflicts
+      const uniqueTickets = convertedTickets.reduce((acc, ticket) => {
+        acc.set(ticket.code, ticket);
+        return acc;
+      }, new Map<string, Ticket>());
+
+      setTickets(Array.from(uniqueTickets.values()));
       setLoading(false);
       
       return convertedTickets;
@@ -275,51 +282,83 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     if (!selectedProject) {
       throw new Error('No project selected');
     }
-    
+
     try {
       setError(null);
-      
+
+      // Find current ticket for optimistic update
+      const currentTicket = tickets.find(ticket => ticket.code === ticketCode);
+      if (!currentTicket) {
+        throw new Error(`Ticket ${ticketCode} not found`);
+      }
+
+      // Ensure the current ticket has content for markdown formatting
+      const ticketWithContent = {
+        ...currentTicket,
+        content: currentTicket.content || '',
+      };
+
+      // Create updated ticket with intended changes (optimistic update)
+      const optimisticTicket: Ticket = {
+        ...currentTicket,
+        ...updates,
+        lastModified: new Date(),
+        content: currentTicket.content || '',
+      };
+
+      // Update local state immediately for UI synchronization
+      // Ensure no duplicates by filtering out any existing instances
+      setTickets(prev => prev
+        .filter(ticket => ticket.code !== ticketCode) // Remove any existing instances
+        .concat(optimisticTicket) // Add the updated ticket
+      );
+
+      // Generate full markdown content from the updated ticket
+      const updatedTicketWithContent: Ticket = {
+        ...ticketWithContent,
+        ...updates,
+        lastModified: new Date(),
+      };
+
+      const markdownContent = formatTicketAsMarkdown(updatedTicketWithContent);
+
+      // Make API call to update backend with full content
       const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticketCode}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updates),
+        body: JSON.stringify({ content: markdownContent }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to update ticket: ${response.statusText}`);
       }
-      
-      const updatedTicketData = await response.json();
-      
-      // Convert to Ticket format
-      const updatedTicket: Ticket = {
-        code: updatedTicketData.code,
-        title: updatedTicketData.title,
-        status: updatedTicketData.status as Status,
-        priority: updatedTicketData.priority,
-        type: updatedTicketData.type,
-        dateCreated: updatedTicketData.dateCreated ? new Date(updatedTicketData.dateCreated) : new Date(),
-        content: updatedTicketData.content || '',
-        filePath: updatedTicketData.path || '',
-        lastModified: new Date(),
-        phaseEpic: updatedTicketData.phaseEpic || 'Phase A',
-        ...updates // Apply the updates
-      };
-      
-      // Update local state
-      setTickets(prev => prev.map(ticket =>
-        ticket.code === ticketCode ? updatedTicket : ticket
-      ));
-      
-      return updatedTicket;
+
+      const backendResponse = await response.json();
+
+      // Get the updated ticket from backend response data
+      // The backend should return the updated ticket data, but if not, use our optimistic version
+      const finalTicket = optimisticTicket;
+
+      // Update local state again with the final version
+      // Ensure no duplicates by filtering out existing instances
+      setTickets(prev => prev
+        .filter(ticket => ticket.code !== ticketCode) // Remove any existing instances
+        .concat(finalTicket) // Add the final updated ticket
+      );
+
+      return finalTicket;
     } catch (err) {
       const error = err as Error;
+
+      // On error, rollback the optimistic update
+      await refreshTickets(); // This will revert to backend state
+
       setError(error);
       throw error;
     }
-  }, [selectedProject]);
+  }, [selectedProject, tickets]);
 
   // Delete a ticket from the selected project
   const deleteTicket = useCallback(async (ticketCode: string): Promise<void> => {
