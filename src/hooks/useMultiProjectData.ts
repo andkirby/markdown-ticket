@@ -155,6 +155,17 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       
       const crsData = await response.json();
       
+      // Helper function to safely convert date strings to Date objects
+      const parseDate = (dateValue: any): Date => {
+        if (!dateValue) return new Date();
+        if (dateValue instanceof Date) return dateValue;
+        if (typeof dateValue === 'string') {
+          const parsed = new Date(dateValue);
+          return isNaN(parsed.getTime()) ? new Date() : parsed;
+        }
+        return new Date();
+      };
+
       // Convert CR data to Ticket format
       const convertedTickets: Ticket[] = crsData.map((cr: any) => ({
         code: cr.code || 'Unknown',
@@ -162,11 +173,22 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
         status: cr.status || 'Pending',
         priority: cr.priority || 'Medium',
         type: cr.type || 'Feature Enhancement',
-        dateCreated: cr.dateCreated ? new Date(cr.dateCreated) : new Date(),
+        dateCreated: parseDate(cr.dateCreated),
         content: cr.content || '',
         filePath: cr.path || '',
-        lastModified: new Date(),
-        ...cr.header // Include any additional header fields
+        lastModified: parseDate(cr.lastModified),
+        // Convert additional header fields with proper date handling
+        phaseEpic: cr.header?.phaseEpic || cr.phaseEpic || '',
+        source: cr.header?.source || cr.source || '',
+        impact: cr.header?.impact || cr.impact || '',
+        effort: cr.header?.effort || cr.effort || '',
+        implementationDate: cr.header?.implementationDate ? parseDate(cr.header.implementationDate) : undefined,
+        implementationNotes: cr.header?.implementationNotes || cr.implementationNotes || '',
+        relatedTickets: [],
+        supersedes: cr.header?.supersedes || '',
+        dependsOn: [],
+        blocks: [],
+        relatedDocuments: []
       }));
 
       // Remove duplicates by code to prevent React key conflicts
@@ -307,11 +329,10 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       };
 
       // Update local state immediately for UI synchronization
-      // Ensure no duplicates by filtering out any existing instances
-      setTickets(prev => prev
-        .filter(ticket => ticket.code !== ticketCode) // Remove any existing instances
-        .concat(optimisticTicket) // Add the updated ticket
-      );
+      // Preserve the ticket's position in the array to avoid visual jumping
+      setTickets(prev => prev.map(ticket => 
+        ticket.code === ticketCode ? optimisticTicket : ticket
+      ));
 
       // Generate full markdown content from the updated ticket
       const updatedTicketWithContent: Ticket = {
@@ -337,18 +358,10 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
 
       const backendResponse = await response.json();
 
-      // Get the updated ticket from backend response data
-      // The backend should return the updated ticket data, but if not, use our optimistic version
-      const finalTicket = optimisticTicket;
-
-      // Update local state again with the final version
-      // Ensure no duplicates by filtering out existing instances
-      setTickets(prev => prev
-        .filter(ticket => ticket.code !== ticketCode) // Remove any existing instances
-        .concat(finalTicket) // Add the final updated ticket
-      );
-
-      return finalTicket;
+      // The API call was successful, the file has been updated
+      // Let the file watcher/SSE handle synchronization with fresh data
+      // Return the optimistic ticket for immediate feedback
+      return optimisticTicket;
     } catch (err) {
       const error = err as Error;
 

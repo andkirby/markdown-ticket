@@ -78,15 +78,23 @@ Describe the implementation approach and technical details.
  */
 export function parseMarkdownTicket(content: string): Partial<Ticket> | null {
   try {
-    // Extract frontmatter
-    const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/);
-    
-    if (!frontmatterMatch) {
+    // Find all frontmatter blocks (handle multiple consecutive frontmatter sections)
+    const frontmatterBlocks: string[] = [];
+    const frontmatterPattern = /^---\s*\n([\s\S]*?)\n---\s*\n/g;
+    let match;
+
+    while ((match = frontmatterPattern.exec(content)) !== null) {
+      frontmatterBlocks.push(match[1]);
+    }
+
+    if (frontmatterBlocks.length === 0) {
       return null;
     }
 
-    const frontmatter = frontmatterMatch[1];
-    const body = frontmatterMatch[2];
+    // Use the LAST (most recent) frontmatter block for final status
+    const frontmatter = frontmatterBlocks[frontmatterBlocks.length - 1];
+    const bodyContent = content.replace(/---\s*\n([\s\S]*?)\n---\s*\n/g, '').trim();
+    const body = '---\n' + frontmatter + '\n---\n\n' + bodyContent;
     
     // Parse frontmatter
     const frontmatterData: Record<string, any> = {};
@@ -191,33 +199,47 @@ export function validateMarkdownTicket(ticketData: Partial<Ticket>): { isValid: 
 }
 
 /**
- * Format ticket data as markdown
+ * Format ticket data as markdown (generates clean single frontmatter block)
  */
 export function formatTicketAsMarkdown(ticket: Ticket): string {
+  // Helper function to safely convert date to ISO string
+  const formatDate = (date: Date | string | undefined | null): string => {
+    if (!date) return '';
+    if (typeof date === 'string') return date;
+    if (date instanceof Date) return date.toISOString();
+    return '';
+  };
+
   const frontmatter = `---
 code: ${ticket.code}
 title: ${ticket.title}
 status: ${ticket.status}
-dateCreated: ${ticket.dateCreated.toISOString()}
+dateCreated: ${formatDate(ticket.dateCreated)}
 type: ${ticket.type}
 priority: ${ticket.priority}
-phaseEpic: ${ticket.phaseEpic}
-source: ${ticket.source}
-impact: ${ticket.impact}
-effort: ${ticket.effort}
+phaseEpic: ${ticket.phaseEpic || ''}
+source: ${ticket.source || ''}
+impact: ${ticket.impact || ''}
+effort: ${ticket.effort || ''}
 relatedTickets: ${ticket.relatedTickets?.join(', ') || ''}
 supersedes: ${ticket.supersedes || ''}
 dependsOn: ${ticket.dependsOn?.join(', ') || ''}
 blocks: ${ticket.blocks?.join(', ') || ''}
 relatedDocuments: ${ticket.relatedDocuments?.join(', ') || ''}
-implementationDate: ${ticket.implementationDate ? ticket.implementationDate.toISOString() : ''}
+implementationDate: ${formatDate(ticket.implementationDate)}
 implementationNotes: ${ticket.implementationNotes || ''}
-lastModified: ${ticket.lastModified.toISOString()}
+lastModified: ${formatDate(ticket.lastModified)}
 ---
 
 `;
 
-  return frontmatter + ticket.content;
+  // Clean the content to ensure no duplicate frontmatter blocks
+  let cleanContent = ticket.content;
+
+  // Remove any existing frontmatter blocks from the content to prevent duplicates
+  cleanContent = cleanContent.replace(/---\s*\n([\s\S]*?)\n---\s*\n/g, '').trim();
+
+  return frontmatter + cleanContent;
 }
 
 /**

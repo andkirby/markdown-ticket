@@ -32,14 +32,23 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
   
   const handleDrop = useCallback(async (status: Status, ticket: Ticket) => {
     console.log('Board: handleDrop called with:', { status, ticketCode: ticket.code, ticketStatus: ticket.status });
-    
+
+    // Don't process if status is the same
+    if (ticket.status === status) {
+      console.log('Board: No status change needed');
+      return;
+    }
+
     try {
       // Use direct updateTicket to ensure immediate UI state update
-      await updateTicket(ticket.code, { status });
+      console.log('Board: Starting updateTicket call...');
+      const result = await updateTicket(ticket.code, { status });
+      console.log('Board: updateTicket completed, result:', result);
       console.log('Board: Ticket moved successfully');
-      
+
       // Auto-set implementation date when status changes to "Implemented"
       if (status === 'Implemented' || status === 'Partially Implemented') {
+        console.log('Board: Setting implementation date...');
         await updateTicket(ticket.code, {
           implementationDate: new Date(),
           implementationNotes: `Status changed to ${status} on ${new Date().toLocaleDateString()}`
@@ -49,7 +58,9 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
     } catch (error) {
       console.error('Board: Failed to move ticket:', error);
       // Refresh to ensure UI is in sync with backend
+      console.log('Board: Refreshing tickets after error...');
       await refreshProjectTickets();
+      console.log('Board: Refresh completed');
     }
   }, [updateTicket, refreshProjectTickets]);
 
@@ -252,7 +263,7 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
       </div>
 
       {/* Board Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full overflow-x-auto">
+      <div className="board-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full overflow-x-auto">
         {visibleColumns.map((column) => (
           <Column
             key={column.label}
