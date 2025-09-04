@@ -28,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Architecture Overview
 
 ### Core Concept
-This is a Kanban-style ticket board application where tickets are stored as Markdown files in the `server/tasks/` directory. The application provides real-time synchronization between the file system and the React frontend.
+This is a Kanban-style ticket board application where tickets are stored as Markdown files in the `docs/CRs/` directory. The application provides real-time synchronization between the file system and the React frontend.
 
 ### Frontend Architecture (src/)
 - **React Components**: Board, Column, TicketCard components for Kanban interface
@@ -41,7 +41,7 @@ This is a Kanban-style ticket board application where tickets are stored as Mark
 
 ### Backend Architecture (server/)
 - **Express.js API**: RESTful endpoints for file operations
-- **File System Storage**: Direct markdown file manipulation in `server/tasks/`
+- **File System Storage**: Direct markdown file manipulation in `docs/CRs/`
 - **API Endpoints**:
   - `GET /api/tasks` - List all ticket files
   - `GET /api/tasks/:filename` - Get specific ticket content
@@ -50,7 +50,7 @@ This is a Kanban-style ticket board application where tickets are stored as Mark
   - `GET /api/status` - Server health check
 
 ### Data Flow
-1. Tickets stored as `.md` files with YAML frontmatter in `server/tasks/`
+1. Tickets stored as `.md` files with YAML frontmatter in `docs/CRs/`
 2. Backend API provides file system access
 3. Frontend `fileService` loads tickets via API with localStorage fallback
 4. `fileWatcher` polls for changes and triggers UI updates
@@ -81,10 +81,11 @@ Strict TypeScript with bundler module resolution, targeting ES2020, configured f
 Always use `npm run dev:full` to start both servers simultaneously. Frontend runs on port 5173, backend on port 3001.
 
 ### File Watching Behavior
-The file watcher automatically detects changes to `.md` files in `server/tasks/`. You can edit tickets directly in the file system or through the UI.
+The file watcher automatically detects changes to `.md` files in `docs/CRs/`. You can edit tickets directly in the file system or through the UI.
 
 ### API Integration
 Frontend uses fetch() to communicate with backend. All file operations go through the API layer with localStorage as fallback for offline functionality.
 
 ### Build and Deployment
 Run `npm run build` for production build. The application expects the backend server to be running and accessible for full functionality.
+- Always follow @docs/create_ticket.md document for managing CRs/bugs, etc.

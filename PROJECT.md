@@ -58,14 +58,14 @@ server/
 ```
 
 ### Data Storage
-- **Tickets**: Individual markdown files in `server/tasks/`
+- **Tickets**: Individual markdown files in `docs/CRs/`
 - **File Structure**: Each ticket is a separate `.md` file
 - **Metadata**: Frontmatter contains ticket properties (title, priority, status, etc.)
 - **Real-time Updates**: File watcher detects changes and updates UI automatically
 
 ### Configuration
 #### Task File Path Configuration
-The application uses a hardcoded path for task files located at `server/tasks/`. To configure a different path:
+The application uses a hardcoded path for task files located at `docs/CRs/`. To configure a different path:
 
 1. **Backend Configuration** (`server/server.js`):
    - The `tasksDirectory` variable is set to `path.join(__dirname, 'tasks')`

@@ -6,7 +6,7 @@ This is a Markdown-based ticket board application with a React frontend and Expr
 ## Architecture
 - **Frontend**: React + TypeScript + Vite + Tailwind CSS
 - **Backend**: Express.js server with file system integration
-- **Data Storage**: Markdown files in the `server/tasks/` directory
+- **Data Storage**: Markdown files in the `docs/CRs/` directory
 - **Real-time Updates**: File watcher for automatic ticket updates
 
 ## Prerequisites
@@ -33,7 +33,7 @@ cd server
 npm run create-samples
 ```
 
-This will create 4 sample tickets in the `server/tasks/` directory:
+This will create 4 sample tickets in the `docs/CRs/` directory:
 - CR-A001: User authentication system (In Progress)
 - CR-A002: Mobile responsive design fixes (Proposed)
 - CR-A003: Comprehensive error handling (Approved)
@@ -93,12 +93,12 @@ md-ticket-board/
 ## Development Workflow
 
 ### Adding New Tickets
-1. Create a new Markdown file in the `server/tasks/` directory
+1. Create a new Markdown file in the `docs/CRs/` directory
 2. Follow the front matter format shown in existing tickets
 3. The file watcher will automatically detect and load the new ticket
 
 ### Modifying Existing Tickets
-1. Edit the Markdown files directly in `server/tasks/`
+1. Edit the Markdown files directly in `docs/CRs/`
 2. Changes are automatically detected and reflected in the UI
 3. Or use the web interface to modify tickets
 
@@ -169,7 +169,7 @@ The application uses Tailwind CSS for styling. Configuration is in:
    - Or kill the existing process: `lsof -ti:5173 | xargs kill -9`
 
 2. **File Permission Issues**
-   - Ensure the `server/tasks/` directory is writable
+   - Ensure the `docs/CRs/` directory is writable
    - Check file permissions on the project directory
 
 3. **CORS Issues**

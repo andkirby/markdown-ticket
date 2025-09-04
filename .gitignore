@@ -46,5 +46,6 @@ junit.xml
 # Temporary files
 tmp/
 temp/
-server/tasks
+# Legacy path - CRs now stored in docs/CRs/
+# server/tasks
 **/debug-tasks/

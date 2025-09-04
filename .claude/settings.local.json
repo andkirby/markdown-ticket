@@ -29,7 +29,21 @@
       "Read(/Users/kirby/home/LlmTranslator/docs/CRs/**)",
       "Bash(npm run test:e2e:headed:*)",
       "Bash(npx playwright test:*)",
-      "Bash(open http://localhost:5173)"
+      "Bash(open http://localhost:5173)",
+      "Bash(timeout 5s npm run dev)",
+      "Bash(timeout:*)",
+      "Bash(claude mcp get:*)",
+      "Read(//Users/kirby/Library/Application Support/Claude/**)",
+      "mcp__markdown-ticket__list_projects",
+      "mcp__markdown-ticket__get_project_info",
+      "Read(//Users/kirby/**)",
+      "mcp__markdown-ticket__list_crs",
+      "Bash(for:*)",
+      "Bash(do)",
+      "Bash(head:*)",
+      "Bash(done)",
+      "Bash(echo \"=== $file ===\")",
+      "Bash(do echo \"=== $file ===\")"
     ],
     "deny": [],
     "ask": []
