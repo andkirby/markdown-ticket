@@ -40,18 +40,19 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
 
   return (
     <div 
-      className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="ticket-card bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       onClick={onEdit}
     >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="font-semibold text-gray-900 text-sm truncate">{ticket.title}</h4>
+        <h4 className="ticket-title font-semibold text-gray-900 text-sm truncate">{ticket.code}: {ticket.title}</h4>
         <span className="text-xs font-medium text-gray-500 ml-2 flex-shrink-0">
           {ticket.code}
         </span>
       </div>
       
-      <p className="text-gray-600 text-xs mb-3 line-clamp-2">
-        {ticket.content.substring(0, 100)}...
+      <p className="ticket-content text-gray-600 text-xs mb-3 line-clamp-2">
+        {ticket.content ? ticket.content.substring(0, 100) + '...' : 'No content'}
+        {ticket.implementationDate && <><br/>implementationDate: {ticket.implementationDate.toString()}</>}
       </p>
       
       <div className="flex items-center justify-between">

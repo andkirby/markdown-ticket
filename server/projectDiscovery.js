@@ -144,22 +144,52 @@ class ProjectDiscoveryService {
           const filePath = path.join(fullCRPath, file);
           const content = fs.readFileSync(filePath, 'utf8');
           
-          // Parse the CR header (first few lines with metadata)
+          // Parse YAML frontmatter
           const lines = content.split('\n');
           const header = {};
           let contentStart = 0;
           
-          for (let i = 0; i < Math.min(20, lines.length); i++) {
-            const line = lines[i].trim();
-            if (line.startsWith('- **') && line.includes('**:')) {
-              const match = line.match(/- \*\*([^*]+)\*\*:\s*(.+)/);
-              if (match) {
-                const key = match[1].toLowerCase().replace(/[^a-z0-9]/g, '');
-                header[key] = match[2].trim();
+          // Check if file starts with YAML frontmatter
+          if (lines[0] && lines[0].trim() === '---') {
+            // Find the closing ---
+            let frontmatterEnd = -1;
+            for (let i = 1; i < lines.length; i++) {
+              if (lines[i].trim() === '---') {
+                frontmatterEnd = i;
+                break;
               }
-            } else if (line.startsWith('#') && !line.startsWith('- **')) {
-              contentStart = i;
-              break;
+            }
+            
+            if (frontmatterEnd > 0) {
+              // Parse YAML frontmatter
+              const frontmatterLines = lines.slice(1, frontmatterEnd);
+              for (const line of frontmatterLines) {
+                const trimmed = line.trim();
+                if (trimmed && trimmed.includes(':')) {
+                  const colonIndex = trimmed.indexOf(':');
+                  const key = trimmed.substring(0, colonIndex).trim();
+                  const value = trimmed.substring(colonIndex + 1).trim();
+                  if (key && value) {
+                    header[key] = value;
+                  }
+                }
+              }
+              contentStart = frontmatterEnd + 1;
+            }
+          } else {
+            // Fallback to old markdown-style parsing
+            for (let i = 0; i < Math.min(20, lines.length); i++) {
+              const line = lines[i].trim();
+              if (line.startsWith('- **') && line.includes('**:')) {
+                const match = line.match(/- \*\*([^*]+)\*\*:\s*(.+)/);
+                if (match) {
+                  const key = match[1].toLowerCase().replace(/[^a-z0-9]/g, '');
+                  header[key] = match[2].trim();
+                }
+              } else if (line.startsWith('#') && !line.startsWith('- **')) {
+                contentStart = i;
+                break;
+              }
             }
           }
 

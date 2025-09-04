@@ -28,7 +28,8 @@
       "Bash(pkill:*)",
       "Read(/Users/kirby/home/LlmTranslator/docs/CRs/**)",
       "Bash(npm run test:e2e:headed:*)",
-      "Bash(npx playwright test:*)"
+      "Bash(npx playwright test:*)",
+      "Bash(open http://localhost:5173)"
     ],
     "deny": [],
     "ask": []

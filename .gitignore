@@ -47,3 +47,4 @@ junit.xml
 tmp/
 temp/
 server/tasks
+**/debug-tasks/

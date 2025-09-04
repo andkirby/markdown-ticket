@@ -264,7 +264,7 @@ const MultiProjectDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project) => (
             <div
-              key={project.id}
+              key={project.id || project.project?.path || Math.random().toString()}
               className={`border rounded-lg p-4 cursor-pointer transition-colors ${
                 selectedProject?.id === project.id
                   ? 'border-blue-500 bg-blue-50'
@@ -272,11 +272,11 @@ const MultiProjectDashboard: React.FC = () => {
               }`}
               onClick={() => handleProjectSelect(project)}
             >
-              <div className="font-medium text-gray-800">{project.project.name}</div>
-              <div className="text-sm text-gray-600 mt-1">{project.project.description}</div>
+              <div className="font-medium text-gray-800">{project.project?.name || 'Unnamed Project'}</div>
+              <div className="text-sm text-gray-600 mt-1">{project.project?.description || 'No description'}</div>
               <div className="text-xs text-gray-500 mt-2">
-                <div>Path: {project.project.path}</div>
-                <div>Registered: {project.metadata.dateRegistered}</div>
+                <div>Path: {project.project?.path || 'N/A'}</div>
+                <div>Registered: {project.metadata?.dateRegistered || 'N/A'}</div>
                 {project.autoDiscovered && (
                   <span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mt-1">
                     Auto-discovered

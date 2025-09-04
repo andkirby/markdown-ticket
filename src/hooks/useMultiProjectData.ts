@@ -89,6 +89,9 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  
+  // localStorage keys for persistence
+  const SELECTED_PROJECT_KEY = 'markdown-ticket-selected-project';
   const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,18 +110,13 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       const projectsData = await response.json();
       setProjects(projectsData);
       
-      // Auto-select first project if none selected and autoSelectFirst is true
-      if (autoSelectFirst && projectsData.length > 0 && !selectedProject) {
-        setSelectedProject(projectsData[0]);
-      }
-      
       return projectsData;
     } catch (err) {
       const error = err as Error;
       setError(error);
       throw error;
     }
-  }, [autoSelectFirst, selectedProject]);
+  }, []);
 
   // Fetch project configuration
   const fetchProjectConfig = useCallback(async (project: Project) => {
@@ -210,13 +208,62 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     }
   }, []);
 
+  // Load stored project selection from localStorage
+  const loadStoredProjectSelection = useCallback((availableProjects: Project[]) => {
+    try {
+      const storedProjectId = localStorage.getItem(SELECTED_PROJECT_KEY);
+      if (storedProjectId) {
+        const storedProject = availableProjects.find(project => project.id === storedProjectId);
+        if (storedProject) {
+          setSelectedProject(storedProject);
+          return storedProject;
+        } else {
+          // Stored project no longer exists, clear from localStorage
+          localStorage.removeItem(SELECTED_PROJECT_KEY);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load project selection from localStorage:', error);
+      // Clear potentially corrupted data
+      localStorage.removeItem(SELECTED_PROJECT_KEY);
+    }
+    return null;
+  }, []);
+
+  // Save project selection to localStorage
+  const saveProjectSelection = useCallback((project: Project | null) => {
+    try {
+      if (project) {
+        localStorage.setItem(SELECTED_PROJECT_KEY, project.id);
+      } else {
+        localStorage.removeItem(SELECTED_PROJECT_KEY);
+      }
+    } catch (error) {
+      console.warn('Failed to save project selection to localStorage:', error);
+    }
+  }, []);
+
+  // Enhanced setSelectedProject with localStorage persistence
+  const setSelectedProjectWithPersistence = useCallback((project: Project | null) => {
+    setSelectedProject(project);
+    saveProjectSelection(project);
+  }, [saveProjectSelection]);
+
   // Load initial projects
   useEffect(() => {
-    fetchProjects().catch(err => {
+    fetchProjects().then((projectsData) => {
+      // Try to restore previous selection first
+      const restoredProject = loadStoredProjectSelection(projectsData);
+      
+      // If no stored selection and autoSelectFirst is true, select first project
+      if (!restoredProject && autoSelectFirst && projectsData.length > 0) {
+        setSelectedProjectWithPersistence(projectsData[0]);
+      }
+    }).catch(err => {
       console.error('Failed to load initial projects:', err);
       setLoading(false);
     });
-  }, [fetchProjects]);
+  }, [fetchProjects, loadStoredProjectSelection, autoSelectFirst, setSelectedProjectWithPersistence]);
 
   // Load project config and tickets when project changes
   useEffect(() => {
@@ -420,7 +467,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     // Project management
     projects,
     selectedProject,
-    setSelectedProject,
+    setSelectedProject: setSelectedProjectWithPersistence,
     projectConfig,
     
     // Ticket data
