@@ -238,9 +238,13 @@ export class RealtimeFileWatcher {
       timestamp: Date.now()
     });
 
-    // Process the event and refresh tickets
+    // Process the event and refresh tickets with a small delay
+    // This prevents race conditions where SSE events triggered by user actions
+    // reload stale data before the API changes have propagated
     this.processEventQueue().then(() => {
-      this.loadAndNotifyTickets();
+      setTimeout(() => {
+        this.loadAndNotifyTickets();
+      }, 500); // 500ms delay to allow API/backend to propagate changes
     });
   }
 

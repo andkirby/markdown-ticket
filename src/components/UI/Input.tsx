@@ -43,7 +43,7 @@ export interface InputProps
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({
-    className,
+    _className, // Not used - using variant and size instead
     variant,
     size,
     state,
@@ -60,7 +60,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   }, ref) => {
     const [inputValue, setInputValue] = useState(value || '');
     const [showPassword, setShowPassword] = useState(false);
-    const [isFocused, setIsFocused] = useState(false);
+    const [_isFocused, setIsFocused] = useState(false); // Not used - could be removed
 
     useEffect(() => {
       setInputValue(value || '');

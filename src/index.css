@@ -1,48 +1,93 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom base styles */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+}
+
 @layer base {
   * {
-    @apply border-gray-200;
+    @apply border-border;
   }
-  
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
   html {
     @apply scroll-smooth;
   }
-  
-  body {
-    @apply bg-gray-50 text-gray-900 antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
-  
+
   h1 {
     @apply text-3xl lg:text-4xl;
   }
-  
+
   h2 {
     @apply text-2xl lg:text-3xl;
   }
-  
+
   h3 {
     @apply text-xl lg:text-2xl;
   }
-  
+
   h4 {
     @apply text-lg lg:text-xl;
   }
-  
+
   h5 {
     @apply text-base lg:text-lg;
   }
-  
+
   h6 {
     @apply text-sm lg:text-base;
   }
@@ -51,171 +96,174 @@
 /* Custom components */
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    border: 1px solid hsl(var(--border));
   }
-  
+
   .btn-primary {
-    @apply btn bg-blue-600 text-white hover:bg-blue-700 h-10 py-2 px-4;
+    @apply btn bg-primary text-primary-foreground hover:bg-primary/90 h-10 py-2 px-4;
   }
-  
+
   .btn-secondary {
-    @apply btn bg-gray-100 text-gray-900 hover:bg-gray-200 h-10 py-2 px-4;
+    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 py-2 px-4;
+    border: 1px solid hsl(var(--border));
   }
-  
+
+
   .btn-outline {
-    @apply btn border border-gray-300 bg-transparent hover:bg-gray-50 h-10 py-2 px-4;
+    @apply btn border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 py-2 px-4;
   }
-  
+
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 h-10 py-2 px-4;
+    @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 py-2 px-4;
   }
-  
+
   .btn-sm {
     @apply h-8 px-3 text-xs;
   }
-  
+
   .btn-lg {
     @apply h-12 px-6 text-base;
   }
-  
+
   .card {
-    @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
   }
-  
+
   .card-header {
-    @apply flex items-center justify-between p-6 border-b border-gray-200;
+    @apply flex items-center justify-between p-6 border-b;
   }
-  
+
   .card-body {
     @apply p-6;
   }
-  
+
   .card-footer {
-    @apply flex items-center justify-between p-6 border-t border-gray-200;
+    @apply flex items-center justify-between p-6 border-t;
   }
-  
+
   .input {
-    @apply flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
-  
+
   .input-error {
-    @apply border-red-500 focus-visible:ring-red-500;
+    @apply border-destructive focus-visible:ring-destructive;
   }
-  
+
   .label {
     @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
   }
-  
+
   .badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
   }
-  
+
   .badge-primary {
-    @apply bg-blue-100 text-blue-800;
+    @apply border-transparent bg-primary text-primary-foreground hover:bg-primary/80;
   }
-  
+
   .badge-secondary {
-    @apply bg-gray-100 text-gray-800;
+    @apply border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80;
   }
-  
+
   .badge-success {
-    @apply bg-green-100 text-green-800;
+    @apply bg-success-100 text-success-800 border-transparent;
   }
-  
+
   .badge-warning {
-    @apply bg-yellow-100 text-yellow-800;
+    @apply bg-warning-100 text-warning-800 border-transparent;
   }
-  
+
   .badge-error {
-    @apply bg-red-100 text-red-800;
+    @apply bg-error-100 text-error-800 border-transparent;
   }
-  
+
   .badge-outline {
-    @apply border border-gray-300 bg-transparent text-gray-700;
+    @apply text-foreground border;
   }
-  
+
   .avatar {
-    @apply inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-600 font-medium text-sm;
+    @apply relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full;
   }
-  
+
   .avatar-sm {
-    @apply w-8 h-8 text-xs;
+    @apply h-8 w-8;
   }
-  
+
   .avatar-md {
-    @apply w-10 h-10 text-sm;
+    @apply h-10 w-10;
   }
-  
+
   .avatar-lg {
-    @apply w-12 h-12 text-base;
+    @apply h-12 w-12;
   }
-  
+
   .avatar-xl {
-    @apply w-16 h-16 text-lg;
+    @apply h-16 w-16;
   }
-  
+
   .dropdown {
     @apply relative;
   }
-  
+
   .dropdown-menu {
-    @apply absolute right-0 z-50 mt-2 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none;
+    @apply z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2;
   }
-  
+
   .dropdown-item {
-    @apply block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900;
+    @apply relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
   }
-  
+
   .modal {
     @apply fixed inset-0 z-50 overflow-y-auto;
   }
-  
+
   .modal-overlay {
     @apply fixed inset-0 bg-black bg-opacity-50 transition-opacity;
   }
-  
+
   .modal-content {
-    @apply relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg;
+    @apply relative transform overflow-hidden rounded-lg bg-card text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg;
   }
-  
+
   .modal-header {
-    @apply bg-gray-50 px-6 py-4 border-b border-gray-200;
+    @apply bg-muted px-6 py-4 border-b;
   }
-  
+
   .modal-body {
     @apply px-6 py-4;
   }
-  
+
   .modal-footer {
-    @apply bg-gray-50 px-6 py-4 border-t border-gray-200;
+    @apply bg-muted px-6 py-4 border-t;
   }
-  
+
   .tooltip {
     @apply relative;
   }
-  
+
   .tooltip-content {
-    @apply absolute z-10 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg opacity-0 invisible transition-opacity duration-200;
+    @apply z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95;
   }
-  
+
   .tooltip:hover .tooltip-content {
     @apply opacity-100 visible;
   }
-  
+
   .skeleton {
-    @apply animate-pulse bg-gray-200 rounded;
+    @apply animate-pulse rounded-md bg-muted;
   }
-  
+
   .skeleton-text {
-    @apply h-4 bg-gray-200 rounded;
+    @apply h-4 bg-muted rounded;
   }
-  
+
   .skeleton-title {
-    @apply h-6 bg-gray-200 rounded w-3/4;
+    @apply h-6 bg-muted rounded w-3/4;
   }
-  
+
   .skeleton-button {
-    @apply h-10 bg-gray-200 rounded w-24;
+    @apply h-10 bg-muted rounded w-24;
   }
 }
 
@@ -262,37 +310,7 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .dark {
-    @apply bg-gray-900 text-gray-100;
-  }
-  
-  .dark .card {
-    @apply bg-gray-800 border-gray-700;
-  }
-  
-  .dark .input {
-    @apply bg-gray-800 border-gray-700 text-gray-100 placeholder-gray-500;
-  }
-  
-  .dark .dropdown-menu {
-    @apply bg-gray-800 border-gray-700;
-  }
-  
-  .dark .dropdown-item {
-    @apply text-gray-100 hover:bg-gray-700 hover:text-white;
-  }
-  
-  .dark .modal-content {
-    @apply bg-gray-800;
-  }
-  
-  .dark .modal-header,
-  .dark .modal-footer {
-    @apply bg-gray-700 border-gray-600;
-  }
-}
+/* Dark mode is now handled by CSS variables */
 
 /* Animation utilities */
 @keyframes spin {

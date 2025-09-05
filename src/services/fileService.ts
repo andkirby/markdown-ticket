@@ -39,6 +39,31 @@ export class FileService {
   }
 
   /**
+   * Get the current project ID (temporary implementation)
+   * This should be passed from the caller in a real implementation
+   */
+  private getCurrentProject(): string | null {
+    // For now, try to get from URL or localStorage
+    if (typeof window !== 'undefined') {
+      // Try to get project from URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectFromUrl = urlParams.get('project');
+      if (projectFromUrl) {
+        return projectFromUrl;
+      }
+
+      // Try to get from localStorage (if set by multi-project hook)
+      const currentProject = localStorage.getItem('current-project');
+      if (currentProject) {
+        return currentProject;
+      }
+    }
+
+    // Default to first available project
+    return 'debug'; // This matches the DEB project we've been testing with
+  }
+
+  /**
    * Load all tickets from localStorage
    */
   async loadAllTickets(): Promise<Ticket[]> {
@@ -115,7 +140,7 @@ export class FileService {
   private parseMarkdownTicket(content: string, filename: string): Ticket | null {
     try {
       const lines = content.split('\n');
-      let ticket: Partial<Ticket> = {};
+      const ticket: Partial<Ticket> = {};
       let contentStart = -1;
 
       // Parse front matter and headers
@@ -290,6 +315,96 @@ export class FileService {
    */
   async updateTicket(ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> {
     console.log('FileService: updateTicket called with:', { ticketCode, updates });
+    
+    // For status-only updates, use the new PATCH endpoint for better performance
+    if (Object.keys(updates).length <= 3 && updates.status && !updates.content) {
+      console.log('FileService: Using PATCH endpoint for small update');
+      return await this.updateTicketPartial(ticketCode, updates);
+    }
+    
+    // For larger updates, use the existing method
+    return await this.updateTicketFull(ticketCode, updates);
+  }
+
+  /**
+   * Update ticket using PATCH endpoint (optimized for small changes)
+   */
+  private async updateTicketPartial(ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> {
+    try {
+      // Get the current project and ticket to determine the correct endpoint
+      const currentProject = this.getCurrentProject();
+      if (!currentProject) {
+        throw new Error('No project selected');
+      }
+
+      // Convert date objects to ISO strings for the API
+      const apiUpdates: Record<string, any> = {};
+      for (const [key, value] of Object.entries(updates)) {
+        if (value instanceof Date) {
+          apiUpdates[key] = value.toISOString();
+        } else {
+          apiUpdates[key] = value;
+        }
+      }
+
+      // Add lastModified if not included
+      if (!apiUpdates.lastModified) {
+        apiUpdates.lastModified = new Date().toISOString();
+      }
+
+      console.log('FileService: Making PATCH request with:', apiUpdates);
+
+      const response = await fetch(`/api/projects/${currentProject}/crs/${ticketCode}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiUpdates)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('FileService: PATCH request failed:', response.status, errorData);
+        throw new Error(`Failed to update ticket: ${errorData.error || response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('FileService: PATCH request successful:', result);
+
+      // For performance, we'll update localStorage but may not reload the full ticket
+      const existingTicket = await this.loadTicket(ticketCode);
+      if (existingTicket) {
+        const updatedTicket: Ticket = {
+          ...existingTicket,
+          ...updates,
+          code: ticketCode,
+          lastModified: new Date(apiUpdates.lastModified)
+        };
+        
+        // Update localStorage
+        await this.saveTicket(updatedTicket);
+      }
+
+      // Return a minimal ticket object with the updated info
+      return {
+        ...(existingTicket || {}),
+        code: ticketCode,
+        status: updates.status,
+        lastModified: new Date(apiUpdates.lastModified)
+      } as Ticket;
+
+    } catch (error) {
+      console.error('FileService: Partial update failed, falling back to full update:', error);
+      // Fall back to full update if PATCH fails
+      return await this.updateTicketFull(ticketCode, updates);
+    }
+  }
+
+  /**
+   * Update ticket using full content (existing method)
+   */
+  private async updateTicketFull(ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> {
+    console.log('FileService: Full update called with:', { ticketCode, updates });
     const existingTicket = await this.loadTicket(ticketCode);
     if (!existingTicket) {
       console.error(`FileService: Ticket ${ticketCode} not found`);

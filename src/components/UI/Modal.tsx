@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const modalVariants = cva(
-  'relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg',
+  'relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg',
   {
     variants: {
       size: {
@@ -49,11 +49,11 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     onClose,
     closeOnOverlayClick = true,
     closeOnEscape = true,
-    showCloseButton = true,
+    _showCloseButton = true, // TODO: Implement close button functionality
     overlayClassName,
     children,
     ...props
-  }, ref) => {
+  }, _ref) => { // ref not used
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -143,17 +143,17 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
     return (
       <div
         ref={ref}
-        className={`flex items-start justify-between p-6 border-b border-gray-200 ${className}`}
+        className={`flex items-start justify-between p-6 border-b border-gray-200 dark:border-gray-700 ${className}`}
         {...props}
       >
         <div className="flex-1">
           {title && (
-            <h3 className="text-lg font-semibold leading-6 text-gray-900">
+            <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-white">
               {title}
             </h3>
           )}
           {description && (
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {description}
             </p>
           )}
@@ -162,7 +162,7 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
         {showCloseButton && (
           <button
             type="button"
-            className="ml-4 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="ml-4 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
             onClick={onClose}
           >
             <svg
@@ -221,7 +221,7 @@ const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
     return (
       <div
         ref={ref}
-        className={`flex items-center ${justifyClasses[justify]} p-6 border-t border-gray-200 ${className}`}
+        className={`flex items-center ${justifyClasses[justify]} p-6 border-t border-gray-200 dark:border-gray-700 ${className}`}
         {...props}
       >
         {children}

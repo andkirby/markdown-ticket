@@ -4,49 +4,61 @@ import { EventEmitter } from 'events';
 class FileWatcherService extends EventEmitter {
   constructor() {
     super();
-    this.watcher = null;
+    this.watchers = new Map(); // Map of projectId -> watcher instance
     this.eventQueue = [];
     this.clients = new Set();
     this.debounceTimers = new Map();
-    this.watchPath = null;
+    this.watchPaths = new Map(); // Map of projectId -> watchPath
   }
 
   initFileWatcher(watchPath = './sample-tasks/*.md') {
-    if (this.watcher) {
-      console.log('FileWatcher already initialized');
-      return;
-    }
+    // Backward compatibility - single path watcher
+    return this.initMultiProjectWatcher([{ id: 'default', path: watchPath }]);
+  }
 
-    this.watchPath = watchPath;
-    console.log(`Initializing file watcher for: ${watchPath}`);
+  initMultiProjectWatcher(projectPaths) {
+    console.log(`Initializing multi-project file watchers for ${projectPaths.length} projects`);
 
-    this.watcher = chokidar.watch(watchPath, {
-      ignoreInitial: true,
-      persistent: true,
-      awaitWriteFinish: { 
-        stabilityThreshold: 100,
-        pollInterval: 100 
+    for (const project of projectPaths) {
+      if (this.watchers.has(project.id)) {
+        console.log(`FileWatcher already initialized for project: ${project.id}`);
+        continue;
       }
-    });
 
-    // Set up event handlers
-    this.watcher
-      .on('add', (filePath) => this.handleFileEvent('add', filePath))
-      .on('change', (filePath) => this.handleFileEvent('change', filePath))
-      .on('unlink', (filePath) => this.handleFileEvent('unlink', filePath))
-      .on('error', (error) => {
-        console.error('File watcher error:', error);
-        this.emit('error', error);
-      })
-      .on('ready', () => {
-        console.log('File watcher is ready');
-        this.emit('ready');
+      const watchPath = project.path;
+      this.watchPaths.set(project.id, watchPath);
+      console.log(`Initializing file watcher for project ${project.id}: ${watchPath}`);
+
+      const watcher = chokidar.watch(watchPath, {
+        ignoreInitial: true,
+        persistent: true,
+        awaitWriteFinish: { 
+          stabilityThreshold: 100,
+          pollInterval: 100 
+        }
       });
+
+      // Set up event handlers for this watcher
+      watcher
+        .on('add', (filePath) => this.handleFileEvent('add', filePath, project.id))
+        .on('change', (filePath) => this.handleFileEvent('change', filePath, project.id))
+        .on('unlink', (filePath) => this.handleFileEvent('unlink', filePath, project.id))
+        .on('error', (error) => {
+          console.error(`File watcher error for project ${project.id}:`, error);
+          this.emit('error', { error, projectId: project.id });
+        })
+        .on('ready', () => {
+          console.log(`File watcher ready for project: ${project.id}`);
+          this.emit('ready', { projectId: project.id });
+        });
+
+      this.watchers.set(project.id, watcher);
+    }
 
     return this;
   }
 
-  handleFileEvent(eventType, filePath) {
+  handleFileEvent(eventType, filePath, projectId) {
     const filename = filePath.split('/').pop();
     
     // Only process .md files
@@ -54,10 +66,10 @@ class FileWatcherService extends EventEmitter {
       return;
     }
 
-    console.log(`File ${eventType}: ${filename}`);
+    console.log(`File ${eventType} in project ${projectId}: ${filename}`);
 
     // Debounce rapid file changes
-    const debounceKey = `${eventType}:${filePath}`;
+    const debounceKey = `${eventType}:${filePath}:${projectId}`;
     
     if (this.debounceTimers.has(debounceKey)) {
       clearTimeout(this.debounceTimers.get(debounceKey));
@@ -65,18 +77,19 @@ class FileWatcherService extends EventEmitter {
 
     const timer = setTimeout(() => {
       this.debounceTimers.delete(debounceKey);
-      this.broadcastFileChange(eventType, filename);
+      this.broadcastFileChange(eventType, filename, projectId);
     }, 100);
 
     this.debounceTimers.set(debounceKey, timer);
   }
 
-  broadcastFileChange(eventType, filename) {
+  broadcastFileChange(eventType, filename, projectId) {
     const event = {
       type: 'file-change',
       data: {
         eventType,
         filename,
+        projectId,
         timestamp: Date.now()
       }
     };
@@ -170,11 +183,13 @@ class FileWatcherService extends EventEmitter {
   }
 
   stop() {
-    if (this.watcher) {
-      console.log('Stopping file watcher');
-      this.watcher.close();
-      this.watcher = null;
-    }
+    // Stop all watchers
+    this.watchers.forEach((watcher, projectId) => {
+      console.log(`Stopping file watcher for project: ${projectId}`);
+      watcher.close();
+    });
+    this.watchers.clear();
+    this.watchPaths.clear();
 
     // Clear all debounce timers
     this.debounceTimers.forEach(timer => clearTimeout(timer));

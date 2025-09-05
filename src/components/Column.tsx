@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { useDrag } from 'react-dnd';
-import { Ticket } from '../types';
+import { Ticket, Status } from '../types';
 import TicketCard from './TicketCard';
+import { ResolutionDialog } from './ResolutionDialog';
 
 interface ColumnProps {
   column: {
     label: string;
-    statuses: string[];
+    statuses: Status[];
     color: string;
   };
   tickets: Ticket[];
-  onDrop: (status: string, ticket: Ticket) => void;
+  onDrop: (status: Status, ticket: Ticket) => void;
   onTicketEdit: (ticket: Ticket) => void;
 }
 
@@ -52,19 +53,54 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
 };
 
 const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }) => {
+  const [resolutionDialog, setResolutionDialog] = useState<{
+    isOpen: boolean;
+    ticket: Ticket | null;
+  }>({
+    isOpen: false,
+    ticket: null,
+  });
+
+  const handleDrop = (ticket: Ticket) => {
+    // If this is the "Done" column with multiple statuses, show resolution dialog
+    if (column.label === 'Done' && column.statuses.length > 1) {
+      console.log('Column: Showing resolution dialog for Done column');
+      setResolutionDialog({
+        isOpen: true,
+        ticket: ticket,
+      });
+    } else {
+      // For other columns, use the first (and usually only) status
+      console.log('Column: Direct drop to', column.statuses[0]);
+      onDrop(column.statuses[0], ticket);
+    }
+  };
+
+  const handleResolutionChoice = (status: Status) => {
+    if (resolutionDialog.ticket) {
+      console.log('Column: Resolution chosen:', status);
+      onDrop(status, resolutionDialog.ticket);
+    }
+    setResolutionDialog({ isOpen: false, ticket: null });
+  };
+
+  const handleResolutionCancel = () => {
+    console.log('Column: Resolution dialog cancelled');
+    setResolutionDialog({ isOpen: false, ticket: null });
+  };
+
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'ticket',
     drop: (item: any) => {
       console.log('Column: Drop event triggered');
       console.log('Column: Dropped ticket:', item.ticket);
       console.log('Column: Target column:', column.label, 'with statuses:', column.statuses);
-      console.log('Column: Calling onDrop with:', column.statuses[0], item.ticket.code);
 
       try {
-        onDrop(column.statuses[0], item.ticket);
-        console.log('Column: onDrop callback completed');
+        handleDrop(item.ticket);
+        console.log('Column: Drop handling completed');
       } catch (error) {
-        console.error('Column: Error in onDrop callback:', error);
+        console.error('Column: Error in drop handler:', error);
       }
     },
     collect: (monitor) => ({
@@ -72,18 +108,6 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }
     }),
   }));
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'Medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Low':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
 
   return (
     <div
@@ -96,8 +120,8 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }
       {/* Column Header */}
       <div className={`p-4 rounded-t-lg ${column.color}`}>
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-white">{column.label}</h3>
-          <span className="bg-white bg-opacity-20 text-white text-xs px-2 py-1 rounded-full">
+          <h3 className="font-semibold text-foreground">{column.label}</h3>
+          <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
             {tickets.length}
           </span>
         </div>
@@ -120,6 +144,18 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }
           </div>
         )}
       </div>
+
+      {/* Resolution Dialog for Done column */}
+      {resolutionDialog.ticket && (
+        <ResolutionDialog
+          isOpen={resolutionDialog.isOpen}
+          ticketCode={resolutionDialog.ticket.code}
+          ticketTitle={resolutionDialog.ticket.title}
+          availableStatuses={column.statuses}
+          onResolve={handleResolutionChoice}
+          onCancel={handleResolutionCancel}
+        />
+      )}
     </div>
   );
 };

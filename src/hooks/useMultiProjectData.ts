@@ -361,49 +361,86 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
         throw new Error(`Ticket ${ticketCode} not found`);
       }
 
-      // Ensure the current ticket has content for markdown formatting
-      const ticketWithContent = {
-        ...currentTicket,
-        content: currentTicket.content || '',
-      };
+      console.log('updateTicket: Current ticket:', currentTicket);
+      console.log('updateTicket: Updates:', updates);
 
       // Create updated ticket with intended changes (optimistic update)
       const optimisticTicket: Ticket = {
         ...currentTicket,
         ...updates,
         lastModified: new Date(),
-        content: currentTicket.content || '',
       };
 
+      console.log('updateTicket: Optimistic ticket:', optimisticTicket);
+
       // Update local state immediately for UI synchronization
-      // Preserve the ticket's position in the array to avoid visual jumping
       setTickets(prev => prev.map(ticket => 
         ticket.code === ticketCode ? optimisticTicket : ticket
       ));
 
-      // Generate full markdown content from the updated ticket
-      const updatedTicketWithContent: Ticket = {
-        ...ticketWithContent,
-        ...updates,
-        lastModified: new Date(),
-      };
+      // Determine if we should use PATCH (for small updates) or PUT (for large updates)
+      const shouldUsePatch = Object.keys(updates).length <= 3 && 
+                           !updates.content && 
+                           (updates.status || updates.priority || updates.implementationDate || updates.implementationNotes);
 
-      const markdownContent = formatTicketAsMarkdown(updatedTicketWithContent);
+      let response;
+      const apiUrl = `/api/projects/${selectedProject.id}/crs/${ticketCode}`;
+      
+      if (shouldUsePatch) {
+        console.log('updateTicket: Using PATCH for efficient update');
+        
+        // Prepare minimal update data for PATCH
+        const patchData: Record<string, any> = {};
+        for (const [key, value] of Object.entries(updates)) {
+          if (value instanceof Date) {
+            patchData[key] = value.toISOString();
+          } else if (value !== undefined) {
+            patchData[key] = value;
+          }
+        }
 
-      // Make API call to update backend with full content
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticketCode}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: markdownContent }),
-      });
+        console.log('updateTicket: PATCH data:', patchData);
+
+        response = await fetch(apiUrl, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(patchData),
+        });
+      } else {
+        console.log('updateTicket: Using PUT for full content update');
+        
+        // Generate full markdown content from the updated ticket
+        const updatedTicketWithContent: Ticket = {
+          ...currentTicket,
+          ...updates,
+          lastModified: new Date(),
+          content: currentTicket.content || '',
+        };
+
+        const markdownContent = formatTicketAsMarkdown(updatedTicketWithContent);
+        console.log('updateTicket: Generated markdown content:', markdownContent.substring(0, 200) + '...');
+
+        response = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content: markdownContent }),
+        });
+      }
+
+      console.log('updateTicket: API response status:', response.status);
 
       if (!response.ok) {
-        throw new Error(`Failed to update ticket: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('updateTicket: API error response:', errorText);
+        throw new Error(`Failed to update ticket: ${response.statusText} - ${errorText}`);
       }
 
       const backendResponse = await response.json();
+      console.log('updateTicket: Backend response:', backendResponse);
 
       // The API call was successful, the file has been updated
       // Let the file watcher/SSE handle synchronization with fresh data
@@ -411,6 +448,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       return optimisticTicket;
     } catch (err) {
       const error = err as Error;
+      console.error('updateTicket: Error occurred:', error);
 
       // On error, rollback the optimistic update
       await refreshTickets(); // This will revert to backend state

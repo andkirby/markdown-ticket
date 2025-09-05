@@ -210,6 +210,21 @@ export function formatTicketAsMarkdown(ticket: Ticket): string {
     return '';
   };
 
+  // Helper function to format date for markdown display
+  const formatDisplayDate = (date: Date | string | undefined | null): string => {
+    if (!date) return '';
+    if (typeof date === 'string') {
+      try {
+        const parsedDate = new Date(date);
+        return parsedDate.toLocaleDateString();
+      } catch {
+        return date;
+      }
+    }
+    if (date instanceof Date) return date.toLocaleDateString();
+    return '';
+  };
+
   const frontmatter = `---
 code: ${ticket.code}
 title: ${ticket.title}
@@ -239,7 +254,58 @@ lastModified: ${formatDate(ticket.lastModified)}
   // Remove any existing frontmatter blocks from the content to prevent duplicates
   cleanContent = cleanContent.replace(/---\s*\n([\s\S]*?)\n---\s*\n/g, '').trim();
 
+  // Update markdown body attributes to keep them in sync with YAML frontmatter
+  cleanContent = updateMarkdownBodyAttributes(cleanContent, {
+    code: ticket.code,
+    title: ticket.title,
+    status: ticket.status,
+    dateCreated: formatDisplayDate(ticket.dateCreated),
+    type: ticket.type,
+    priority: ticket.priority,
+    phaseEpic: ticket.phaseEpic || '',
+    implementationDate: formatDisplayDate(ticket.implementationDate),
+    implementationNotes: ticket.implementationNotes || ''
+  });
+
   return frontmatter + cleanContent;
+}
+
+/**
+ * Update markdown body attributes to keep them synchronized with YAML frontmatter
+ */
+export function updateMarkdownBodyAttributes(content: string, attributes: Record<string, string>): string {
+  let updatedContent = content;
+
+  // Mapping of attribute keys to their markdown display names
+  const attributeMapping: Record<string, string> = {
+    code: 'Code',
+    title: 'Title/Summary', 
+    status: 'Status',
+    dateCreated: 'Date Created',
+    type: 'Type',
+    priority: 'Priority',
+    phaseEpic: 'Phase/Epic',
+    implementationDate: 'Implementation Date',
+    implementationNotes: 'Implementation Notes'
+  };
+
+  // Update each attribute in the markdown body
+  for (const [key, value] of Object.entries(attributes)) {
+    if (value && attributeMapping[key]) {
+      const displayName = attributeMapping[key];
+      // Escape special regex characters in displayName
+      const escapedDisplayName = displayName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Pattern to match: - **Attribute Name**: old value
+      const pattern = new RegExp(`^(- \\*\\*${escapedDisplayName}\\*\\*:).*$`, 'gm');
+      const replacement = `$1 ${value}`;
+      
+      if (pattern.test(updatedContent)) {
+        updatedContent = updatedContent.replace(pattern, replacement);
+      }
+    }
+  }
+
+  return updatedContent;
 }
 
 /**

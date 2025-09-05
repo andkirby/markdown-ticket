@@ -70,6 +70,84 @@ async function initializeServer() {
   }
 }
 
+// Initialize multi-project file watchers
+async function initializeMultiProjectWatchers() {
+  try {
+    console.log('🔍 Discovering projects for file watching...');
+    
+    // Get all projects from the discovery service
+    const projects = await projectDiscovery.getAllProjects();
+    console.log(`Found ${projects.length} projects for file watching`);
+    
+    const projectPaths = [];
+    
+    // Add default/legacy project (sample-tasks)
+    projectPaths.push({
+      id: 'sample-tasks',
+      path: path.join(TICKETS_DIR, '*.md')
+    });
+    
+    // Add configured projects
+    for (const project of projects) {
+      try {
+        if (!project.project.active) {
+          console.log(`Skipping inactive project: ${project.project.name}`);
+          continue;
+        }
+
+        const projectPath = project.project.path;
+        const config = projectDiscovery.getProjectConfig(projectPath);
+        
+        if (!config || !config.project) {
+          console.log(`No config found for project: ${project.project.name}`);
+          continue;
+        }
+
+        // Construct the full path to the CRs directory
+        const crPath = config.project.path || 'docs/CRs';
+        const fullCRPath = path.resolve(projectPath, crPath);
+        const watchPath = path.join(fullCRPath, '*.md');
+        
+        // Check if the directory exists
+        try {
+          await fs.access(fullCRPath);
+          projectPaths.push({
+            id: project.id,
+            path: watchPath
+          });
+          console.log(`✅ Will watch project ${project.project.name} at: ${watchPath}`);
+        } catch (accessError) {
+          console.log(`⚠️  CR directory not found for project ${project.project.name}: ${fullCRPath}`);
+        }
+      } catch (error) {
+        console.error(`Error setting up watcher for project ${project.project.name}:`, error);
+      }
+    }
+
+    if (projectPaths.length === 0) {
+      console.log('⚠️  No valid project paths found, falling back to single watcher');
+      const watchPath = path.join(TICKETS_DIR, '*.md');
+      fileWatcher.initFileWatcher(watchPath);
+      console.log(`📡 Single file watcher initialized for: ${watchPath}`);
+    } else {
+      // Initialize multi-project watchers
+      fileWatcher.initMultiProjectWatcher(projectPaths);
+      console.log(`📡 Multi-project file watchers initialized for ${projectPaths.length} directories`);
+      
+      // Log all watched paths
+      projectPaths.forEach(project => {
+        console.log(`   📂 ${project.id}: ${project.path}`);
+      });
+    }
+  } catch (error) {
+    console.error('Error initializing multi-project watchers:', error);
+    // Fallback to single watcher
+    const watchPath = path.join(TICKETS_DIR, '*.md');
+    fileWatcher.initFileWatcher(watchPath);
+    console.log(`📡 Fallback file watcher initialized for: ${watchPath}`);
+  }
+}
+
 // Create sample tickets for demonstration
 async function createSampleTickets() {
   const sampleTickets = [
@@ -603,13 +681,167 @@ Please list specific, testable conditions that must be met for completion:
   }
 });
 
+// Partially update CR fields in a project (PATCH for specific fields)
+app.patch('/api/projects/:projectId/crs/:crId', async (req, res) => {
+  try {
+    const { projectId, crId } = req.params;
+    const updates = req.body;
+    
+    console.log(`PATCH /api/projects/${projectId}/crs/${crId} - Partial update request`);
+    console.log('Updates received:', Object.keys(updates));
+
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No fields provided for update' });
+    }
+
+    const projects = await projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+    
+    if (!project) {
+      console.log(`ERROR: Project not found: ${projectId}`);
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    console.log(`Found project: ${project.project.name} at ${project.project.path}`);
+
+    const crs = projectDiscovery.getProjectCRs(project.project.path);
+    console.log(`Found ${crs.length} CRs in project`);
+    
+    const cr = crs.find(c => c.code === crId || c.filename.includes(crId));
+    
+    if (!cr) {
+      console.log(`ERROR: CR not found: ${crId}`);
+      console.log(`Available CRs:`, crs.map(c => `${c.code} (${c.filename})`));
+      return res.status(404).json({ error: 'CR not found' });
+    }
+    
+    console.log(`Found CR: ${cr.code} in file ${cr.path}`);
+
+    // Read current content
+    const currentContent = await fs.readFile(cr.path, 'utf8');
+    console.log('Current content length:', currentContent.length);
+    
+    // Parse YAML frontmatter
+    const lines = currentContent.split('\n');
+    
+    // Find the frontmatter boundaries more carefully
+    let frontmatterStart = -1;
+    let frontmatterEnd = -1;
+    
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].trim() === '---') {
+        if (frontmatterStart === -1) {
+          frontmatterStart = i;
+        } else if (frontmatterEnd === -1) {
+          frontmatterEnd = i;
+          break;
+        }
+      }
+    }
+    
+    console.log('Frontmatter parsing:', { frontmatterStart, frontmatterEnd, lines: lines.length });
+    
+    if (frontmatterStart === -1 || frontmatterEnd === -1) {
+      console.log('ERROR: Invalid ticket format - no YAML frontmatter found');
+      return res.status(400).json({ error: 'Invalid ticket format' });
+    }
+    
+    // Extract and update frontmatter
+    const frontmatterLines = lines.slice(1, frontmatterEnd);
+    const updatedFrontmatter = [...frontmatterLines];
+    
+    // Auto-add implementation fields when status changes to Implemented/Partially Implemented
+    if (updates.status === 'Implemented' || updates.status === 'Partially Implemented') {
+      if (!updates.implementationDate) {
+        updates.implementationDate = new Date().toISOString();
+        console.log(`Auto-set implementationDate for status: ${updates.status}`);
+      }
+      if (!updates.implementationNotes) {
+        updates.implementationNotes = `Status changed to ${updates.status} on ${new Date().toLocaleDateString()}`;
+        console.log(`Auto-set implementationNotes for status: ${updates.status}`);
+      }
+    }
+    
+    // Update only the specified fields
+    let updatedFields = [];
+    for (const [key, value] of Object.entries(updates)) {
+      // Special handling for date fields
+      let processedValue = value;
+      if (key.includes('Date') && typeof value === 'string' && !value.includes('T')) {
+        // Convert simple date string to ISO format
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          processedValue = date.toISOString();
+          console.log(`Converted date ${key} from ${value} to ${processedValue}`);
+        }
+      } else if (key === 'lastModified') {
+        processedValue = new Date().toISOString();
+        console.log(`Set ${key} to current time: ${processedValue}`);
+      }
+      
+      const existingIndex = updatedFrontmatter.findIndex(line => 
+        line.trim().startsWith(key + ':')
+      );
+      
+      if (existingIndex >= 0) {
+        updatedFrontmatter[existingIndex] = `${key}: ${processedValue}`;
+        console.log(`Updated existing field: ${key}`);
+      } else {
+        updatedFrontmatter.push(`${key}: ${processedValue}`);
+        console.log(`Added new field: ${key}`);
+      }
+      updatedFields.push(key);
+    }
+
+    // Reconstruct the file content
+    const updatedContent = [
+      '---',
+      ...updatedFrontmatter,
+      '---',
+      '',
+      ...lines.slice(frontmatterEnd + 1)
+    ].join('\n');
+
+    console.log(`Updated content length: ${updatedContent.length}`);
+    console.log('Updated fields:', updatedFields);
+
+    // Write back to file
+    await fs.writeFile(cr.path, updatedContent, 'utf8');
+    
+    // Verify the file was written by reading it back
+    try {
+      const writtenContent = await fs.readFile(cr.path, 'utf8');
+      console.log(`VERIFY: File length after write: ${writtenContent.length}`);
+      console.log('VERIFY: Content preview (first 200 chars):', writtenContent.substring(0, 200) + '...');
+    } catch (verifyError) {
+      console.log('ERROR: Could not verify file write:', verifyError);
+    }
+
+    console.log(`Successfully updated CR: ${cr.filename} in project ${projectId}`);
+    res.json({ 
+      success: true, 
+      message: 'CR updated successfully',
+      updatedFields,
+      projectId,
+      crId
+    });
+  } catch (error) {
+    console.error('Error updating CR partially:', error);
+    res.status(500).json({ error: 'Failed to update CR' });
+  }
+});
+
 // Update CR in a project
 app.put('/api/projects/:projectId/crs/:crId', async (req, res) => {
   try {
     const { projectId, crId } = req.params;
     const { content } = req.body;
     
+    console.log(`PUT /api/projects/${projectId}/crs/${crId} - Received update request`);
+    console.log('Request body content length:', content ? content.length : 0);
+    
     if (!content) {
+      console.log('ERROR: No content provided in request body');
       return res.status(400).json({ error: 'Content is required' });
     }
 
@@ -617,24 +849,45 @@ app.put('/api/projects/:projectId/crs/:crId', async (req, res) => {
     const project = projects.find(p => p.id === projectId);
     
     if (!project) {
+      console.log(`ERROR: Project not found: ${projectId}`);
       return res.status(404).json({ error: 'Project not found' });
     }
+    
+    console.log(`Found project: ${project.project.name} at ${project.project.path}`);
 
     const crs = projectDiscovery.getProjectCRs(project.project.path);
+    console.log(`Found ${crs.length} CRs in project`);
+    
     const cr = crs.find(c => c.code === crId || c.filename.includes(crId));
     
     if (!cr) {
+      console.log(`ERROR: CR not found: ${crId}`);
+      console.log(`Available CRs:`, crs.map(c => `${c.code} (${c.filename})`));
       return res.status(404).json({ error: 'CR not found' });
     }
+    
+    console.log(`Found CR: ${cr.code} in file ${cr.path}`);
+    console.log('Content preview (first 200 chars):', content.substring(0, 200) + '...');
 
     // Update CR file
     await fs.writeFile(cr.path, content, 'utf8');
+    console.log(`SUCCESS: File written to ${cr.path}`);
+    
+    // Verify the file was written by reading it back
+    try {
+      const writtenContent = await fs.readFile(cr.path, 'utf8');
+      console.log(`VERIFY: File length after write: ${writtenContent.length}`);
+      console.log('VERIFY: Content preview (first 200 chars):', writtenContent.substring(0, 200) + '...');
+    } catch (verifyError) {
+      console.log('ERROR: Could not verify file write:', verifyError);
+    }
 
     console.log(`Updated CR: ${cr.filename} in project ${projectId}`);
     res.json({ 
       success: true, 
       message: 'CR updated successfully',
-      filename: cr.filename
+      filename: cr.filename,
+      path: cr.path
     });
   } catch (error) {
     console.error('Error updating CR:', error);
@@ -742,18 +995,17 @@ app.listen(PORT, () => {
   console.log(`   GET  /api/projects/:id/crs - List CRs for project`);
   console.log(`   GET  /api/projects/:id/crs/:crId - Get specific CR`);
   console.log(`   POST /api/projects/:id/crs - Create new CR`);
+  console.log(`   PATCH  /api/projects/:id/crs/:crId - Partial update CR (NEW!)`);
   console.log(`   PUT  /api/projects/:id/crs/:crId - Update CR`);
   console.log(`   DELETE /api/projects/:id/crs/:crId - Delete CR`);
   console.log(`   POST /api/projects/register - Register new project`);
   
   // Initialize the server
   initializeServer()
-    .then(() => {
-      // Initialize file watcher after server is ready
-      const watchPath = path.join(TICKETS_DIR, '*.md');
-      fileWatcher.initFileWatcher(watchPath);
+    .then(async () => {
+      // Initialize multi-project file watchers
+      await initializeMultiProjectWatchers();
       fileWatcher.startHeartbeat();
-      console.log(`📡 File watcher initialized for: ${watchPath}`);
     })
     .catch(console.error);
 });

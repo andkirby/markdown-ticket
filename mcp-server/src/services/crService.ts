@@ -103,8 +103,20 @@ export class CRService {
       // Generate markdown content
       const markdownContent = this.formatCRAsMarkdown(cr, data);
       
-      // Write file
-      await fs.writeFile(filePath, markdownContent, 'utf-8');
+      console.error(`🔍 DEBUG: Creating CR file at: ${filePath}`);
+      console.error(`🔍 DEBUG: Directory exists: ${await fs.pathExists(project.project.path)}`);
+      console.error(`🔍 DEBUG: Content length: ${markdownContent.length}`);
+      
+      // Write file (fs-extra uses outputFile for creating files with directory creation)
+      await fs.outputFile(filePath, markdownContent, 'utf-8');
+
+      // Verify file was created
+      const fileExists = await fs.pathExists(filePath);
+      console.error(`🔍 DEBUG: File exists after write: ${fileExists}`);
+      if (fileExists) {
+        const writtenContent = await readFile(filePath, 'utf-8');
+        console.error(`🔍 DEBUG: Written content length: ${writtenContent.length}`);
+      }
 
       // Update counter
       await this.updateCounter(project, nextNumber + 1);
@@ -132,7 +144,7 @@ export class CRService {
       const lastModifiedContent = this.updateYAMLField(updatedContent, 'lastModified', new Date().toISOString());
 
       // Write back to file
-      await fs.writeFile(cr.filePath, lastModifiedContent, 'utf-8');
+      await fs.outputFile(cr.filePath, lastModifiedContent, 'utf-8');
 
       console.error(`✅ Updated CR ${crKey} status to ${status}`);
       return true;
@@ -160,17 +172,38 @@ export class CRService {
 
   async getNextCRNumber(project: Project): Promise<number> {
     try {
-      const counterPath = path.join(path.dirname(project.configPath), project.project.counterFile);
+      // Scan existing CR files to find the highest number
+      const crFiles = await glob('*.md', { cwd: project.project.path });
+      let highestExistingNumber = 0;
       
+      for (const filename of crFiles) {
+        const match = filename.match(new RegExp(`${project.project.code}-(\\d+)-`, 'i'));
+        if (match) {
+          const number = parseInt(match[1], 10);
+          if (!isNaN(number) && number > highestExistingNumber) {
+            highestExistingNumber = number;
+          }
+        }
+      }
+      
+      // Also check counter file
+      let counterNumber = project.project.startNumber;
+      const counterPath = path.join(path.dirname(project.configPath), project.project.counterFile);
       if (await fs.pathExists(counterPath)) {
         const content = await readFile(counterPath, 'utf-8');
         const number = parseInt(content.trim(), 10);
-        return isNaN(number) ? project.project.startNumber : number;
+        if (!isNaN(number)) {
+          counterNumber = number;
+        }
       }
       
-      return project.project.startNumber;
+      // Use the higher of the two (existing files + 1, or counter file)
+      const nextNumber = Math.max(highestExistingNumber + 1, counterNumber);
+      console.error(`🔍 DEBUG: Highest existing: ${highestExistingNumber}, Counter: ${counterNumber}, Next: ${nextNumber}`);
+      
+      return nextNumber;
     } catch (error) {
-      console.warn(`Failed to read counter file, using start number: ${(error as Error).message}`);
+      console.warn(`Failed to get next CR number: ${(error as Error).message}`);
       return project.project.startNumber;
     }
   }
@@ -178,7 +211,7 @@ export class CRService {
   private async updateCounter(project: Project, newValue: number): Promise<void> {
     try {
       const counterPath = path.join(path.dirname(project.configPath), project.project.counterFile);
-      await fs.writeFile(counterPath, newValue.toString(), 'utf-8');
+      await fs.outputFile(counterPath, newValue.toString(), 'utf-8');
     } catch (error) {
       console.warn(`Failed to update counter file: ${(error as Error).message}`);
     }

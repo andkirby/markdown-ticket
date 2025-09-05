@@ -292,7 +292,7 @@ test.describe('Ticket Move E2E Tests', () => {
       await page.waitForSelector('.grid', { timeout: 10000 });
 
       // Find ticket with CR-A001 code anywhere on the page
-      let crA001Ticket = page.locator('.bg-white.border.border-gray-200').filter({ hasText: 'CR-A001' }).first();
+      const crA001Ticket = page.locator('.bg-white.border.border-gray-200').filter({ hasText: 'CR-A001' }).first();
 
       if (await crA001Ticket.count() === 0) {
         console.log('⚠️ CR-A001 ticket not found on page, skipping test');

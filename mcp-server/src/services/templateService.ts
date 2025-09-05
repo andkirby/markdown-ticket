@@ -324,14 +324,17 @@ export class TemplateService {
       warnings.push({ field: 'title', message: 'Title is very long, consider shortening' });
     }
 
-    if (!data.type) {
+    // Use type parameter if data.type is not provided (common in MCP calls)
+    const effectiveType = data.type || type;
+    
+    if (!effectiveType) {
       errors.push({ field: 'type', message: 'Type is required' });
     } else {
       const validTypes: CRType[] = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'];
-      if (!validTypes.includes(data.type)) {
+      if (!validTypes.includes(effectiveType)) {
         errors.push({ 
           field: 'type', 
-          message: `Invalid type '${data.type}'. Must be one of: ${validTypes.join(', ')}` 
+          message: `Invalid type '${effectiveType}'. Must be one of: ${validTypes.join(', ')}` 
         });
       }
     }
@@ -349,12 +352,12 @@ export class TemplateService {
     }
 
     // Type-specific validation
-    if (data.type && type) {
-      const template = this.templates.get(type);
+    if (effectiveType) {
+      const template = this.templates.get(effectiveType);
       if (template) {
         for (const field of template.requiredFields) {
           if (field === 'description' && (!data.description || data.description.trim().length === 0)) {
-            if (type === 'Bug Fix') {
+            if (effectiveType === 'Bug Fix') {
               errors.push({ field: 'description', message: 'Description with reproduction steps is required for bug fixes' });
             } else {
               warnings.push({ field: 'description', message: 'Description recommended for better CR quality' });

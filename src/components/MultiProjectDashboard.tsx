@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import showdown from 'showdown';
 import { Button } from './UI/index';
 
 interface Project {
@@ -32,6 +33,8 @@ interface CR {
 }
 
 const MultiProjectDashboard: React.FC = () => {
+  const STORAGE_KEY = 'multiProjectDashboard.selectedProjectId';
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [crs, setCrs] = useState<CR[]>([]);
@@ -49,23 +52,54 @@ const MultiProjectDashboard: React.FC = () => {
     description: ''
   });
 
+  // Markdown converter for ticket content
+  const converter = useMemo(() => {
+    return new showdown.Converter({
+      tables: true,
+      tasklists: true,
+      ghCodeBlocks: true,
+      simpleLineBreaks: true,
+      headerLevelStart: 3, // Start headers from h3 to avoid conflicts
+    });
+  }, []);
+
+  // Convert selected CR content to HTML
+  const selectedCRContentHtml = useMemo(() => {
+    if (!selectedCR?.content) return '';
+    return converter.makeHtml(selectedCR.content);
+  }, [selectedCR?.content, converter]);
+
   // Fetch projects on component mount
   const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch('/api/projects');
       if (!response.ok) {
         throw new Error(`Failed to fetch projects: ${response.statusText}`);
       }
-      
+
       const projectsData = await response.json();
       setProjects(projectsData);
-      
-      // Auto-select first project if none selected
+
+      // Try to restore selected project from localStorage
       if (projectsData.length > 0 && !selectedProject) {
-        setSelectedProject(projectsData[0]);
+        const storedProjectId = localStorage.getItem(STORAGE_KEY);
+        if (storedProjectId) {
+          const foundProject = projectsData.find((project: Project) => project.id === storedProjectId);
+          if (foundProject) {
+            setSelectedProject(foundProject);
+          } else {
+            // Stored project not found, select first available
+            setSelectedProject(projectsData[0]);
+            // Clear invalid stored project
+            localStorage.removeItem(STORAGE_KEY);
+          }
+        } else {
+          // No stored project, select first available
+          setSelectedProject(projectsData[0]);
+        }
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -73,7 +107,7 @@ const MultiProjectDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedProject]);
+  }, [selectedProject, STORAGE_KEY]);
 
   // Fetch CRs for selected project
   const fetchCRs = useCallback(async (project: Project) => {
@@ -103,7 +137,10 @@ const MultiProjectDashboard: React.FC = () => {
     setSelectedCR(null);
     setView('list');
     fetchCRs(project);
-  }, [fetchCRs]);
+
+    // Save selected project to localStorage
+    localStorage.setItem(STORAGE_KEY, project.id);
+  }, [fetchCRs, STORAGE_KEY]);
 
   // Create new CR
   const handleCreateCR = useCallback(async () => {
@@ -187,23 +224,23 @@ const MultiProjectDashboard: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Proposed': return 'bg-blue-100 text-blue-800';
-      case 'Approved': return 'bg-green-100 text-green-800';
-      case 'In Progress': return 'bg-yellow-100 text-yellow-800';
-      case 'Implemented': return 'bg-purple-100 text-purple-800';
-      case 'On Hold': return 'bg-gray-100 text-gray-800';
-      case 'Rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Proposed': return 'bg-blue-50 text-blue-700 border border-blue-200';
+      case 'Approved': return 'bg-green-50 text-green-700 border border-green-200';
+      case 'In Progress': return 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+      case 'Implemented': return 'bg-purple-50 text-purple-700 border border-purple-200';
+      case 'On Hold': return 'bg-gray-50 text-gray-700 border border-gray-200';
+      case 'Rejected': return 'bg-red-50 text-red-700 border border-red-200';
+      default: return 'bg-gray-50 text-gray-700 border border-gray-200';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'Critical': return 'text-red-600';
+      case 'Critical': return 'text-destructive';
       case 'High': return 'text-orange-600';
       case 'Medium': return 'text-yellow-600';
       case 'Low': return 'text-green-600';
-      default: return 'text-gray-600';
+      default: return 'text-muted-foreground';
     }
   };
 
@@ -211,8 +248,8 @@ const MultiProjectDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px] p-6">
         <div className="flex items-center space-x-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <div className="text-lg text-gray-600">Loading projects...</div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="text-lg text-muted-foreground">Loading projects...</div>
         </div>
       </div>
     );
@@ -223,20 +260,20 @@ const MultiProjectDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Multi-Project CR Dashboard</h1>
-          <p className="text-sm text-gray-600">Manage Change Requests across multiple projects</p>
+          <h1 className="text-2xl font-bold text-foreground">Multi-Project CR Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Manage Change Requests across multiple projects</p>
         </div>
         <div className="flex space-x-4">
-          <Button 
+          <Button
             onClick={fetchProjects}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+            variant="secondary"
           >
             Refresh Projects
           </Button>
           {selectedProject && view === 'list' && (
-            <Button 
+            <Button
               onClick={() => setView('create')}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+              variant="default"
             >
               Create CR
             </Button>
@@ -259,26 +296,26 @@ const MultiProjectDashboard: React.FC = () => {
       )}
 
       {/* Project Selector */}
-      <div className="bg-white rounded-lg shadow-sm border p-4">
-        <h3 className="text-lg font-medium text-gray-800 mb-3">Select Project</h3>
+      <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+        <h3 className="text-lg font-medium text-card-foreground mb-3">Select Project</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project) => (
             <div
               key={project.id || project.project?.path || Math.random().toString()}
               className={`border rounded-lg p-4 cursor-pointer transition-colors ${
                 selectedProject?.id === project.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-primary bg-accent'
+                  : 'border-border hover:border-border/80 hover:bg-accent/50'
               }`}
               onClick={() => handleProjectSelect(project)}
             >
-              <div className="font-medium text-gray-800">{project.project?.name || 'Unnamed Project'}</div>
-              <div className="text-sm text-gray-600 mt-1">{project.project?.description || 'No description'}</div>
-              <div className="text-xs text-gray-500 mt-2">
+              <div className="font-medium text-card-foreground">{project.project?.name || 'Unnamed Project'}</div>
+              <div className="text-sm text-muted-foreground mt-1">{project.project?.description || 'No description'}</div>
+              <div className="text-xs text-muted-foreground/80 mt-2">
                 <div>Path: {project.project?.path || 'N/A'}</div>
                 <div>Registered: {project.metadata?.dateRegistered || 'N/A'}</div>
                 {project.autoDiscovered && (
-                  <span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mt-1">
+                  <span className="inline-block bg-warning-50 text-warning-800 px-2 py-1 rounded text-xs mt-1 border border-warning-200">
                     Auto-discovered
                   </span>
                 )}
@@ -290,37 +327,34 @@ const MultiProjectDashboard: React.FC = () => {
 
       {/* Main Content */}
       {selectedProject && (
-        <div className="bg-white rounded-lg shadow-sm border">
+        <div className="bg-card rounded-lg shadow-sm border border-border">
           {/* Navigation */}
-          <div className="border-b px-6 py-4">
+          <div className="border-b border-border px-6 py-4">
             <div className="flex items-center space-x-4">
-              <h2 className="text-xl font-medium text-gray-800">
+              <h2 className="text-xl font-medium text-card-foreground">
                 {selectedProject.project.name}
               </h2>
               <div className="flex space-x-2">
                 <Button
                   onClick={() => setView('list')}
-                  className={`px-3 py-1 rounded text-sm ${
-                    view === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  variant={view === 'list' ? 'default' : 'secondary'}
+                  className="px-3 py-1 text-sm"
                 >
                   CR List
                 </Button>
                 {selectedCR && (
                   <Button
                     onClick={() => setView('detail')}
-                    className={`px-3 py-1 rounded text-sm ${
-                      view === 'detail' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                    variant={view === 'detail' ? 'default' : 'secondary'}
+                    className="px-3 py-1 text-sm"
                   >
                     CR Detail
                   </Button>
                 )}
                 <Button
                   onClick={() => setView('create')}
-                  className={`px-3 py-1 rounded text-sm ${
-                    view === 'create' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  variant={view === 'create' ? 'default' : 'secondary'}
+                  className="px-3 py-1 text-sm"
                 >
                   Create CR
                 </Button>
@@ -333,11 +367,11 @@ const MultiProjectDashboard: React.FC = () => {
             {view === 'list' && (
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-800">Change Requests</h3>
+                  <h3 className="text-lg font-medium text-card-foreground">Change Requests</h3>
                   {selectedProject && (
                     <Button
                       onClick={() => fetchCRs(selectedProject)}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm"
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
                     >
                       Refresh
                     </Button>
@@ -346,11 +380,11 @@ const MultiProjectDashboard: React.FC = () => {
 
                 {crLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                    <span className="ml-3 text-gray-600">Loading CRs...</span>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span className="ml-3 text-muted-foreground">Loading CRs...</span>
                   </div>
                 ) : crs.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-muted-foreground">
                     <div className="text-lg mb-2">No Change Requests found</div>
                     <div className="text-sm">Create your first CR to get started</div>
                   </div>
@@ -358,22 +392,22 @@ const MultiProjectDashboard: React.FC = () => {
                   <div className="overflow-x-auto">
                     <table className="min-w-full table-auto">
                       <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-2 px-4 font-medium text-gray-700">Code</th>
-                          <th className="text-left py-2 px-4 font-medium text-gray-700">Title</th>
-                          <th className="text-left py-2 px-4 font-medium text-gray-700">Status</th>
-                          <th className="text-left py-2 px-4 font-medium text-gray-700">Priority</th>
-                          <th className="text-left py-2 px-4 font-medium text-gray-700">Type</th>
-                          <th className="text-left py-2 px-4 font-medium text-gray-700">Created</th>
-                          <th className="text-left py-2 px-4 font-medium text-gray-700">Actions</th>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-2 px-4 font-medium text-muted-foreground">Code</th>
+                          <th className="text-left py-2 px-4 font-medium text-muted-foreground">Title</th>
+                          <th className="text-left py-2 px-4 font-medium text-muted-foreground">Status</th>
+                          <th className="text-left py-2 px-4 font-medium text-muted-foreground">Priority</th>
+                          <th className="text-left py-2 px-4 font-medium text-muted-foreground">Type</th>
+                          <th className="text-left py-2 px-4 font-medium text-muted-foreground">Created</th>
+                          <th className="text-left py-2 px-4 font-medium text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {crs.map((cr) => (
-                          <tr key={cr.code} className="border-b hover:bg-gray-50">
-                            <td className="py-3 px-4 font-medium text-blue-600">{cr.code}</td>
+                          <tr key={cr.code} className="border-b border-border hover:bg-accent/50">
+                            <td className="py-3 px-4 font-medium text-primary">{cr.code}</td>
                             <td className="py-3 px-4">
-                              <div className="font-medium text-gray-800">{cr.title}</div>
+                              <div className="font-medium text-card-foreground">{cr.title}</div>
                             </td>
                             <td className="py-3 px-4">
                               <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(cr.status)}`}>
@@ -383,8 +417,8 @@ const MultiProjectDashboard: React.FC = () => {
                             <td className={`py-3 px-4 font-medium ${getPriorityColor(cr.priority)}`}>
                               {cr.priority}
                             </td>
-                            <td className="py-3 px-4 text-gray-600">{cr.type}</td>
-                            <td className="py-3 px-4 text-gray-600 text-sm">
+                            <td className="py-3 px-4 text-muted-foreground">{cr.type}</td>
+                            <td className="py-3 px-4 text-muted-foreground text-sm">
                               {cr.dateCreated || 'N/A'}
                             </td>
                             <td className="py-3 px-4">
@@ -394,13 +428,13 @@ const MultiProjectDashboard: React.FC = () => {
                                     setSelectedCR(cr);
                                     setView('detail');
                                   }}
-                                  className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                                  className="btn btn-primary px-2 py-1 text-xs"
                                 >
                                   View
                                 </Button>
                                 <Button
                                   onClick={() => handleDeleteCR(cr)}
-                                  className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
+                                  className="btn btn-destructive px-2 py-1 text-xs"
                                 >
                                   Delete
                                 </Button>
@@ -418,10 +452,10 @@ const MultiProjectDashboard: React.FC = () => {
             {view === 'detail' && selectedCR && (
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-800">{selectedCR.title}</h3>
+                  <h3 className="text-lg font-medium text-card-foreground">{selectedCR.title}</h3>
                   <Button
                     onClick={() => setView('list')}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm"
+                    variant="secondary"
                   >
                     Back to List
                   </Button>
@@ -429,36 +463,34 @@ const MultiProjectDashboard: React.FC = () => {
 
                 <div className="space-y-4">
                   {/* CR Header */}
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-accent rounded-lg p-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
-                        <div className="text-sm font-medium text-gray-600">Code</div>
-                        <div className="text-lg font-bold text-blue-600">{selectedCR.code}</div>
+                        <div className="text-sm font-medium text-muted-foreground">Code</div>
+                        <div className="text-lg font-bold text-primary">{selectedCR.code}</div>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-600">Status</div>
+                        <div className="text-sm font-medium text-muted-foreground">Status</div>
                         <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedCR.status)}`}>
                           {selectedCR.status}
                         </span>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-600">Priority</div>
+                        <div className="text-sm font-medium text-muted-foreground">Priority</div>
                         <div className={`font-medium ${getPriorityColor(selectedCR.priority)}`}>
                           {selectedCR.priority}
                         </div>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-600">Type</div>
-                        <div className="text-gray-800">{selectedCR.type}</div>
+                        <div className="text-sm font-medium text-muted-foreground">Type</div>
+                        <div className="text-card-foreground">{selectedCR.type}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* CR Content */}
-                  <div className="prose max-w-none">
-                    <pre className="whitespace-pre-wrap bg-white border rounded-lg p-4 text-sm text-gray-700">
-                      {selectedCR.content}
-                    </pre>
+                  <div className="prose prose-sm max-w-none prose-headings:text-card-foreground dark:prose-headings:text-white prose-p:text-card-foreground/80 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-card-foreground dark:prose-strong:text-gray-100 prose-code:bg-gray-100 dark:prose-code:bg-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-gray-900 dark:prose-code:text-gray-100 prose-pre:bg-gray-100 dark:prose-pre:bg-slate-800 prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-slate-700 prose-blockquote:text-card-foreground/70 dark:prose-blockquote:text-gray-300 prose-li:text-card-foreground/80 dark:prose-li:text-gray-300 prose-ol:text-card-foreground/80 dark:prose-ol:text-gray-300 prose-ul:text-card-foreground/80 dark:prose-ul:text-gray-300 bg-card border border-border rounded-lg p-4">
+                    <div className="text-sm" dangerouslySetInnerHTML={{ __html: selectedCRContentHtml }} />
                   </div>
                 </div>
               </div>
@@ -467,10 +499,10 @@ const MultiProjectDashboard: React.FC = () => {
             {view === 'create' && (
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-800">Create New Change Request</h3>
+                  <h3 className="text-lg font-medium text-card-foreground">Create New Change Request</h3>
                   <Button
                     onClick={() => setView('list')}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm"
+                    variant="secondary"
                   >
                     Cancel
                   </Button>
@@ -478,14 +510,14 @@ const MultiProjectDashboard: React.FC = () => {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       Title *
                     </label>
                     <input
                       type="text"
                       value={newCR.title}
                       onChange={(e) => setNewCR({ ...newCR, title: e.target.value })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-input rounded-md px-3 py-2 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                       placeholder="Enter CR title"
                       required
                     />
@@ -493,13 +525,13 @@ const MultiProjectDashboard: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-card-foreground mb-1">
                         Type *
                       </label>
                       <select
                         value={newCR.type}
                         onChange={(e) => setNewCR({ ...newCR, type: e.target.value })}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-input rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                         required
                       >
                         <option value="Feature Enhancement">Feature Enhancement</option>
@@ -511,13 +543,13 @@ const MultiProjectDashboard: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-card-foreground mb-1">
                         Priority
                       </label>
                       <select
                         value={newCR.priority}
                         onChange={(e) => setNewCR({ ...newCR, priority: e.target.value })}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border border-input rounded-md px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                       >
                         <option value="Low">Low</option>
                         <option value="Medium">Medium</option>
@@ -528,14 +560,14 @@ const MultiProjectDashboard: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       Description
                     </label>
                     <textarea
                       value={newCR.description}
                       onChange={(e) => setNewCR({ ...newCR, description: e.target.value })}
                       rows={4}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-input rounded-md px-3 py-2 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                       placeholder="Describe the problem statement and requirements"
                     />
                   </div>
@@ -543,14 +575,14 @@ const MultiProjectDashboard: React.FC = () => {
                   <div className="flex justify-end space-x-3">
                     <Button
                       onClick={() => setView('list')}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+                      variant="secondary"
                     >
                       Cancel
                     </Button>
                     <Button
                       onClick={handleCreateCR}
                       disabled={!newCR.title || !newCR.type}
-                      className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-4 py-2 rounded-md"
+                      variant="default"
                     >
                       Create CR
                     </Button>
