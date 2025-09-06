@@ -16,6 +16,7 @@ document_paths = [
 exclude_folders = [
     "docs/CRs",           # Exclude tickets folder
     "node_modules",
-    ".git"
+    ".git",
+    "test-results"
 ]
 max_depth = 3

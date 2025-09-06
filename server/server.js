@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
+import { glob } from 'glob';
 import FileWatcherService from './fileWatcherService.js';
 import ProjectDiscoveryService from './projectDiscovery.js';
 
@@ -461,17 +462,24 @@ app.get('/api/filesystem', async (req, res) => {
   try {
     const { path: requestPath } = req.query;
     
+    console.log(`🗂️ Filesystem API called for: ${requestPath}`);
+    
     if (!requestPath) {
       return res.status(400).json({ error: 'Path is required' });
     }
 
     const fullPath = path.resolve(requestPath);
+    console.log(`🗂️ Resolved path: ${fullPath}`);
     
-    if (!fs.existsSync(fullPath)) {
+    try {
+      await fs.access(fullPath);
+    } catch {
+      console.log(`🗂️ Path not found: ${fullPath}`);
       return res.status(404).json({ error: 'Path not found' });
     }
 
     const items = await buildFileSystemTree(fullPath);
+    console.log(`🗂️ Found ${items.length} items`);
     res.json(items);
   } catch (error) {
     console.error('Error loading file system:', error);
@@ -484,6 +492,9 @@ app.post('/api/documents/configure', async (req, res) => {
   try {
     const { projectPath, documentPaths } = req.body;
     
+    console.log(`📝 Configure documents for: ${projectPath}`);
+    console.log(`📝 Document paths: ${JSON.stringify(documentPaths)}`);
+    
     if (!projectPath || !Array.isArray(documentPaths)) {
       return res.status(400).json({ error: 'Project path and document paths are required' });
     }
@@ -493,19 +504,29 @@ app.post('/api/documents/configure', async (req, res) => {
     // Create or update config file
     let configContent = '';
     
-    if (fs.existsSync(configPath)) {
-      configContent = fs.readFileSync(configPath, 'utf8');
+    try {
+      configContent = await fs.readFile(configPath, 'utf8');
+    } catch {
+      // Config doesn't exist, start with empty content
     }
 
     // Remove existing document_paths if present
     configContent = configContent.replace(/document_paths\s*=\s*\[.*?\]/s, '');
     
-    // Add new document_paths
-    const pathsString = documentPaths.map(p => `"${path.relative(projectPath, p)}"`).join(', ');
+    // Add new document_paths (convert absolute paths to relative)
+    const relativePaths = documentPaths.map(p => path.relative(projectPath, p));
+    const pathsString = relativePaths.map(p => `"${p}"`).join(', ');
+    
+    // Add to config content
+    if (!configContent.includes('[project]')) {
+      configContent = '[project]\n' + configContent;
+    }
+    
     configContent += `\ndocument_paths = [${pathsString}]\n`;
     
-    fs.writeFileSync(configPath, configContent.trim() + '\n', 'utf8');
+    await fs.writeFile(configPath, configContent.trim() + '\n', 'utf8');
     
+    console.log(`✅ Document paths configured successfully`);
     res.json({ success: true });
   } catch (error) {
     console.error('Error configuring documents:', error);
@@ -1045,55 +1066,130 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Helper function to build file system tree for path selection
-async function buildFileSystemTree(dirPath, maxDepth = 3, currentDepth = 0) {
-  const items = [];
-  
-  if (currentDepth >= maxDepth) {
-    return items;
-  }
-  
+// Helper function to build file system tree for path selection using glob
+async function buildFileSystemTree(dirPath, maxDepth = 3) {
   try {
-    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    // Read project config to get tickets path for ignoring
+    const configPath = path.join(dirPath, '.mdt-config.toml');
+    let ticketsPath = null;
     
-    for (const entry of entries) {
-      // Skip hidden files and common ignore patterns
-      if (entry.name.startsWith('.') || 
-          entry.name === 'node_modules' || 
-          entry.name === 'dist' || 
-          entry.name === 'build') {
-        continue;
+    try {
+      const configContent = await fs.readFile(configPath, 'utf8');
+      const pathMatch = configContent.match(/path\s*=\s*["']?([^"'\n\r]+)["']?/);
+      if (pathMatch) {
+        ticketsPath = pathMatch[1].trim();
       }
-      
-      const fullPath = path.join(dirPath, entry.name);
-      
-      if (entry.isDirectory()) {
-        const children = await buildFileSystemTree(fullPath, maxDepth, currentDepth + 1);
-        items.push({
-          name: entry.name,
-          path: fullPath,
-          type: 'folder',
-          children
-        });
-      } else if (entry.isFile() && entry.name.endsWith('.md')) {
-        items.push({
-          name: entry.name,
-          path: fullPath,
-          type: 'file'
-        });
-      }
+    } catch {
+      // Config doesn't exist or can't be read, continue without tickets path
     }
+
+    // Build ignore patterns
+    const ignorePatterns = [
+      '**/.*/**',           // Hidden folders (.git, .vscode, etc.)
+      '**/node_modules/**', // Node.js dependencies
+      '**/dist/**',         // Build output
+      '**/build/**',        // Build output
+      '**/target/**',       // Rust/Java build output
+      '**/bin/**',          // Binary output
+      '**/obj/**',          // C#/C++ object files
+      '**/out/**',          // General output folder
+      '**/tmp/**',          // Temporary files
+      '**/temp/**',         // Temporary files
+      '**/cache/**',        // Cache folders
+      '**/test*/**',        // Test folders (tests, test-data, etc.)
+      '**/spec*/**',        // Spec folders
+      '**/coverage/**',     // Test coverage
+      '**/vendor/**',       // Third-party dependencies
+      '**/packages/**',     // Package managers
+      '**/DerivedData/**',  // Xcode build data
+      '**/__pycache__/**',  // Python cache
+      '**/venv/**',         // Python virtual env
+      '**/.env/**'          // Environment folders
+    ];
+
+    // Add tickets path to ignore list if found
+    if (ticketsPath) {
+      ignorePatterns.push(`**/${ticketsPath}/**`);
+      console.log(`🚫 Ignoring tickets path: ${ticketsPath}`);
+    }
+
+    // Find all .md files up to maxDepth levels
+    const pattern = path.join(dirPath, '**/*.md');
+    let mdFiles = await glob(pattern, { 
+      maxDepth,
+      ignore: ignorePatterns
+    });
+
+    // Additional filtering to remove files in tickets path (in case glob didn't catch it)
+    if (ticketsPath) {
+      const ticketsFullPath = path.join(dirPath, ticketsPath);
+      mdFiles = mdFiles.filter(filePath => !filePath.startsWith(ticketsFullPath));
+      console.log(`🚫 Filtered out ${ticketsPath} files, remaining: ${mdFiles.length}`);
+    }
+    
+    // Build tree structure from file paths
+    const tree = {};
+    
+    for (const filePath of mdFiles) {
+      const relativePath = path.relative(dirPath, filePath);
+      const parts = relativePath.split(path.sep);
+      
+      let current = tree;
+      
+      // Build nested structure
+      for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (!current[part]) {
+          current[part] = { type: 'folder', children: {}, path: path.join(dirPath, ...parts.slice(0, i + 1)) };
+        }
+        current = current[part].children;
+      }
+      
+      // Add the file
+      const fileName = parts[parts.length - 1];
+      current[fileName] = {
+        type: 'file',
+        path: filePath
+      };
+    }
+    
+    // Convert tree object to array format
+    function treeToArray(obj, basePath = '') {
+      const items = [];
+      
+      for (const [name, item] of Object.entries(obj)) {
+        if (item.type === 'folder') {
+          const children = treeToArray(item.children);
+          if (children.length > 0) { // Only include folders with .md files
+            items.push({
+              name,
+              path: item.path,
+              type: 'folder',
+              children
+            });
+          }
+        } else {
+          items.push({
+            name,
+            path: item.path,
+            type: 'file'
+          });
+        }
+      }
+      
+      return items.sort((a, b) => {
+        if (a.type !== b.type) {
+          return a.type === 'folder' ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name);
+      });
+    }
+    
+    return treeToArray(tree);
   } catch (error) {
-    console.error(`Error reading directory ${dirPath}:`, error);
+    console.error(`Error building file system tree for ${dirPath}:`, error);
+    return [];
   }
-  
-  return items.sort((a, b) => {
-    // Folders first, then files, both alphabetically
-    if (a.type !== b.type) {
-      return a.type === 'folder' ? -1 : 1;
-    }
-    return a.name.localeCompare(b.name);
-  });
 }
 
 // Documents API endpoints
@@ -1104,15 +1200,29 @@ app.get('/api/documents', async (req, res) => {
       return res.status(400).json({ error: 'Project path is required' });
     }
 
-    const documents = await discoverDocuments(projectPath);
-    res.json(documents);
-  } catch (error) {
-    console.error('Error discovering documents:', error);
+    console.log(`🔍 Documents API called for: ${projectPath}`);
     
-    if (error.message === 'CONFIG_NOT_FOUND' || error.message === 'NO_DOCUMENT_PATHS') {
+    // Check if config exists and has document_paths
+    const configPath = path.join(projectPath, '.mdt-config.toml');
+    try {
+      await fs.access(configPath);
+      const configContent = await fs.readFile(configPath, 'utf8');
+      const pathsMatch = configContent.match(/document_paths\s*=\s*\[(.*?)\]/s);
+      
+      if (!pathsMatch || pathsMatch[1].trim().length === 0) {
+        console.log(`🚫 No document_paths found, returning 404`);
+        return res.status(404).json({ error: 'No document configuration found' });
+      }
+    } catch {
+      console.log(`🚫 No config file found, returning 404`);
       return res.status(404).json({ error: 'No document configuration found' });
     }
     
+    const documents = await discoverDocuments(projectPath);
+    console.log(`✅ Documents found: ${documents.length}`);
+    res.json(documents);
+  } catch (error) {
+    console.error('Error discovering documents:', error.message);
     res.status(500).json({ error: 'Failed to discover documents' });
   }
 });
@@ -1183,16 +1293,16 @@ async function discoverDocuments(projectPath, currentDepth = 0, maxDepth = 3) {
         console.log(`🚫 Exclude folders: ${JSON.stringify(excludeFolders)}`);
       }
     } catch (configError) {
-      // Config file doesn't exist or no document_paths defined
-      console.log(`❌ No .mdt-config.toml or document_paths found in ${projectPath}`);
-      return [];
+      // Only catch file reading errors, not our intentional errors
+      if (configError.message === 'NO_DOCUMENT_PATHS') {
+        throw configError; // Re-throw our intentional error
+      }
+      // Config file doesn't exist or can't be read
+      console.log(`❌ No .mdt-config.toml found in ${projectPath}`);
+      throw new Error('CONFIG_NOT_FOUND');
     }
 
-    if (documentPaths.length === 0) {
-      console.log(`❌ No document paths configured`);
-      return [];
-    }
-
+    // documentPaths should have content at this point due to earlier error check
     const documents = [];
 
     for (const docPath of documentPaths) {
