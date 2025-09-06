@@ -425,10 +425,24 @@ app.get('/api/events', (req, res) => {
     'Access-Control-Allow-Headers': 'Cache-Control'
   });
 
+  // Send initial connection event
+  res.write('data: {"type":"connection","data":{"status":"connected","timestamp":' + Date.now() + '}}\n\n');
+
   // Add client to file watcher service
   fileWatcher.addClient(res);
 
   console.log(`SSE client connected. Total clients: ${fileWatcher.getClientCount()}`);
+
+  // Handle client disconnect
+  req.on('close', () => {
+    console.log('SSE client disconnected');
+    fileWatcher.removeClient(res);
+  });
+
+  req.on('aborted', () => {
+    console.log('SSE client aborted');
+    fileWatcher.removeClient(res);
+  });
 });
 
 // Get server status
@@ -775,8 +789,9 @@ app.patch('/api/projects/:projectId/crs/:crId', async (req, res) => {
           console.log(`Converted date ${key} from ${value} to ${processedValue}`);
         }
       } else if (key === 'lastModified') {
-        processedValue = new Date().toISOString();
-        console.log(`Set ${key} to current time: ${processedValue}`);
+        // Skip manual lastModified - will be derived from file modification time
+        console.log(`Skipping manual ${key} - using file modification time instead`);
+        continue;
       }
       
       const existingIndex = updatedFrontmatter.findIndex(line => 
@@ -973,6 +988,192 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// Documents API endpoints
+app.get('/api/documents', async (req, res) => {
+  try {
+    const { projectPath } = req.query;
+    if (!projectPath) {
+      return res.status(400).json({ error: 'Project path is required' });
+    }
+
+    const documents = await discoverDocuments(projectPath);
+    res.json(documents);
+  } catch (error) {
+    console.error('Error discovering documents:', error);
+    res.status(500).json({ error: 'Failed to discover documents' });
+  }
+});
+
+app.get('/api/documents/content', async (req, res) => {
+  try {
+    const { filePath } = req.query;
+    if (!filePath) {
+      return res.status(400).json({ error: 'File path is required' });
+    }
+
+    // Security check - ensure file is within allowed paths and is markdown
+    const resolvedPath = path.resolve(filePath);
+    if (!resolvedPath.endsWith('.md')) {
+      return res.status(400).json({ error: 'Only markdown files are allowed' });
+    }
+
+    const content = await fs.readFile(resolvedPath, 'utf8');
+    res.send(content);
+  } catch (error) {
+    console.error('Error reading document:', error);
+    res.status(500).json({ error: 'Failed to read document' });
+  }
+});
+
+async function discoverDocuments(projectPath, currentDepth = 0, maxDepth = 3) {
+  try {
+    console.log(`🔍 Discovering documents in: ${projectPath}`);
+    
+    // Read document paths from .mdt-config.toml
+    const configPath = path.join(projectPath, '.mdt-config.toml');
+    let documentPaths = [];
+    let excludeFolders = ['docs/CRs', 'node_modules', '.git'];
+    
+    try {
+      const configContent = await fs.readFile(configPath, 'utf8');
+      console.log(`📄 Config content: ${configContent.substring(0, 200)}...`);
+      
+      // Parse document_paths (now under [project] section)
+      const pathsMatch = configContent.match(/document_paths\s*=\s*\[(.*?)\]/s);
+      if (pathsMatch) {
+        documentPaths = pathsMatch[1]
+          .split(/[,\n]/)
+          .map(s => s.trim().replace(/['"]/g, '').replace(/#.*$/, '').trim())
+          .filter(s => s.length > 0);
+        console.log(`📁 Found document paths: ${JSON.stringify(documentPaths)}`);
+      }
+      
+      // Parse exclude_folders (still used for folder exclusions)
+      const excludeMatch = configContent.match(/exclude_folders\s*=\s*\[(.*?)\]/s);
+      if (excludeMatch) {
+        excludeFolders = excludeMatch[1]
+          .split(/[,\n]/)
+          .map(s => s.trim().replace(/['"]/g, '').replace(/#.*$/, '').trim())
+          .filter(s => s.length > 0);
+        console.log(`🚫 Exclude folders: ${JSON.stringify(excludeFolders)}`);
+      }
+    } catch (configError) {
+      // Config file doesn't exist or no document_paths defined
+      console.log(`❌ No .mdt-config.toml or document_paths found in ${projectPath}`);
+      return [];
+    }
+
+    if (documentPaths.length === 0) {
+      console.log(`❌ No document paths configured`);
+      return [];
+    }
+
+    const documents = [];
+
+    for (const docPath of documentPaths) {
+      const fullPath = path.resolve(projectPath, docPath);
+      console.log(`🔍 Checking path: ${docPath} -> ${fullPath}`);
+      
+      try {
+        const stats = await fs.stat(fullPath);
+        
+        if (stats.isFile() && docPath.endsWith('.md')) {
+          console.log(`📄 Adding file: ${docPath}`);
+          // Single file - extract H1 title
+          const h1Title = await extractH1Title(fullPath);
+          documents.push({
+            name: path.basename(docPath),
+            title: h1Title,
+            path: fullPath,
+            type: 'file'
+          });
+        } else if (stats.isDirectory()) {
+          console.log(`📁 Scanning directory: ${docPath}`);
+          // Directory - scan for .md files and preserve folder structure
+          const dirDocs = await scanDirectory(fullPath, docPath, excludeFolders, 0, maxDepth);
+          if (dirDocs.length > 0) {
+            // Create folder node with children
+            documents.push({
+              name: path.basename(docPath),
+              path: fullPath,
+              type: 'folder',
+              children: dirDocs
+            });
+          }
+          console.log(`📁 Found ${dirDocs.length} documents in ${docPath}`);
+        }
+      } catch (error) {
+        console.warn(`⚠️  Document path not found: ${fullPath}`);
+      }
+    }
+
+    console.log(`✅ Total documents found: ${documents.length}`);
+    return documents.sort((a, b) => {
+      // Folders first, then files
+      if (a.type !== b.type) {
+        return a.type === 'folder' ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  } catch (error) {
+    console.error(`Error discovering documents in ${projectPath}:`, error);
+    return [];
+  }
+}
+
+async function extractH1Title(filePath) {
+  try {
+    const content = await fs.readFile(filePath, 'utf8');
+    // Look for first H1 (# Title)
+    const h1Match = content.match(/^#\s+(.+)$/m);
+    return h1Match ? h1Match[1].trim() : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function scanDirectory(dirPath, relativePath, excludeFolders, currentDepth, maxDepth) {
+  if (currentDepth >= maxDepth) {
+    return [];
+  }
+
+  const documents = [];
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry.name);
+    const entryRelativePath = path.join(relativePath, entry.name);
+
+    // Skip excluded folders
+    if (excludeFolders.some(exclude => entryRelativePath.startsWith(exclude))) {
+      continue;
+    }
+
+    if (entry.isDirectory()) {
+      const children = await scanDirectory(fullPath, entryRelativePath, excludeFolders, currentDepth + 1, maxDepth);
+      if (children.length > 0) {
+        documents.push({
+          name: entry.name,
+          path: fullPath,
+          type: 'folder',
+          children
+        });
+      }
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      // Extract H1 title for files
+      const h1Title = await extractH1Title(fullPath);
+      documents.push({
+        name: entry.name,
+        title: h1Title,
+        path: fullPath,
+        type: 'file'
+      });
+    }
+  }
+
+  return documents;
+}
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
@@ -989,6 +1190,8 @@ app.listen(PORT, () => {
   console.log(`   DELETE /api/tasks/:filename - Delete task file`);
   console.log(`   GET  /api/events - Server-Sent Events for real-time updates`);
   console.log(`   GET  /api/status - Server status`);
+  console.log(`   GET  /api/documents - Discover project documents`);
+  console.log(`   GET  /api/documents/content - Get document content`);
   console.log(`🌐 Multi-Project API endpoints:`);
   console.log(`   GET  /api/projects - List all registered projects`);
   console.log(`   GET  /api/projects/:id/config - Get project configuration`);

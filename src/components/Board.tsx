@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Ticket, Status } from '../types';
@@ -6,15 +6,21 @@ import { getVisibleColumns, getColumnForStatus } from '../config';
 import Column from './Column';
 import { Button } from './UI/index';
 import { useMultiProjectData } from '../hooks/useMultiProjectData';
+import { SortControls } from './SortControls';
+import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
+import { sortTickets } from '../utils/sorting';
 
 interface BoardProps {
   onTicketClick: (ticket: Ticket) => void;
   enableProjectSwitching?: boolean;
+  showHeader?: boolean;
 }
 
 // Note: TicketItem removed - drag functionality handled in Column.tsx
 
-const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitching = true }) => {
+const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitching = true, showHeader = true }) => {
+  const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
+  
   const {
     projects,
     selectedProject,
@@ -29,9 +35,15 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
     // generateNextTicketCode, // TODO: Implement ticket code generation
     clearError
   } = useMultiProjectData({ autoSelectFirst: true });
+
+  // Save preferences when they change
+  const handleSortPreferencesChange = (newPreferences: SortPreferences) => {
+    setSortPreferencesState(newPreferences);
+    setSortPreferences(newPreferences);
+  };
   
   const handleDrop = useCallback(async (status: Status, ticket: Ticket) => {
-    console.log('Board: handleDrop called with:', { status, ticketCode: ticket.code, ticketStatus: ticket.status });
+    console.log('Board: handleDrop called with:', { status, ticketKey: ticket.code, ticketStatus: ticket.status });
 
     // Don't process if status is the same
     if (ticket.status === status) {
@@ -84,7 +96,7 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
     }
   }, [refreshProjectTickets]);
 
-  // Group tickets by column
+  // Group tickets by column with sorting
   const ticketsByColumn: Record<string, Ticket[]> = {};
   const visibleColumns = getVisibleColumns();
 
@@ -104,7 +116,16 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
     }
   });
 
-  // Check for duplicate tickets by code and log warnings
+  // Sort tickets in each column
+  Object.keys(ticketsByColumn).forEach(columnLabel => {
+    ticketsByColumn[columnLabel] = sortTickets(
+      ticketsByColumn[columnLabel],
+      sortPreferences.selectedAttribute,
+      sortPreferences.selectedDirection
+    );
+  });
+
+  // Check for duplicate tickets by key and log warnings
   const ticketCodes = new Set<string>();
   let hasDuplicates = false;
   tickets.forEach(ticket => {
@@ -146,22 +167,21 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
               <h1 className="text-2xl font-bold text-foreground">Change Request Board</h1>
               <div className="flex items-center space-x-2">
                 <label className="text-sm font-medium text-muted-foreground">Project:</label>
-                <select
-                  value={selectedProject?.id || ''}
-                  onChange={(e) => {
-                    const project = projects.find(p => p.id === e.target.value);
-                    setSelectedProject(project || null);
-                    clearError();
-                  }}
-                  className="border border-border rounded-md px-3 py-1 text-sm bg-background shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-border"
-                >
-                  <option value="">Select a project...</option>
+                <div className="flex gap-2">
                   {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.project.name} ({project.id})
-                    </option>
+                    <button
+                      key={project.id}
+                      onClick={() => {
+                        setSelectedProject(project);
+                        clearError();
+                      }}
+                      className="h-12 px-3 py-1 border border-border rounded-md text-center transition-colors bg-background hover:bg-muted cursor-pointer"
+                    >
+                      <div className="text-sm font-medium">{project.id}</div>
+                      <div className="text-xs text-muted-foreground truncate max-w-20">{project.project.name}</div>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
             </div>
             <p className="text-sm text-muted-foreground font-normal">
@@ -212,23 +232,26 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
             {enableProjectSwitching && (
               <div className="flex items-center space-x-2">
                 <label className="text-sm font-medium text-muted-foreground">Project:</label>
-                <select
-                  value={selectedProject?.id || ''}
-                  onChange={(e) => {
-                    const project = projects.find(p => p.id === e.target.value);
-                    setSelectedProject(project || null);
-                    clearError();
-                  }}
-                  className="border border-border rounded-md px-3 py-1 text-sm bg-background shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-border"
-                  disabled={loading}
-                >
-                  <option value="">Select a project...</option>
+                <div className="flex gap-2">
                   {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.project.name} ({project.id})
-                    </option>
+                    <button
+                      key={project.id}
+                      onClick={() => {
+                        setSelectedProject(project);
+                        clearError();
+                      }}
+                      disabled={loading}
+                      className={`h-12 px-3 py-1 border rounded-md text-center transition-colors ${
+                        selectedProject?.id === project.id
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background border-border hover:bg-muted'
+                      } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <div className="text-sm font-medium">{project.id}</div>
+                      <div className="text-xs text-muted-foreground truncate max-w-20">{project.project.name}</div>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
             )}
           </div>
@@ -240,6 +263,10 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
           </p>
         </div>
         <div className="flex space-x-4">
+          <SortControls
+            preferences={sortPreferences}
+            onPreferencesChange={handleSortPreferencesChange}
+          />
           <Button
             onClick={handleRefresh}
             variant="secondary"
@@ -251,7 +278,7 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
             className="btn btn-primary btn-lg"
             disabled={!selectedProject}
           >
-            Add Ticket
+            Create
           </Button>
         </div>
       </div>
@@ -264,7 +291,7 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
             column={column}
             tickets={ticketsByColumn[column.label]}
             onDrop={(status: Status, ticket: Ticket) => {
-              console.log('Board: Column onDrop called with:', { status, ticketCode: ticket.code });
+              console.log('Board: Column onDrop called with:', { status, ticketKey: ticket.code });
               handleDrop(status, ticket);
             }}
             onTicketEdit={handleTicketEdit}

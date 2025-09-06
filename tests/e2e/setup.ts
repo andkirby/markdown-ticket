@@ -46,8 +46,8 @@ export class TestSetup {
     console.log('🚀 Starting backend server...');
     
     return new Promise<void>((resolve, reject) => {
-      this.serverProcess = spawn('npm', ['run', 'start'], {
-        cwd: join(__dirname, '..', 'server'),
+      this.serverProcess = spawn('node', ['server.js'], {
+        cwd: join(__dirname, '..', '..', 'server'),
         stdio: 'pipe',
       });
 
@@ -82,8 +82,8 @@ export class TestSetup {
     console.log('🚀 Starting frontend server...');
     
     return new Promise<void>((resolve, reject) => {
-      const frontendProcess = spawn('npm', ['run', 'dev'], {
-        cwd: join(__dirname, '..'),
+      const frontendProcess = spawn('npx', ['vite'], {
+        cwd: join(__dirname, '..', '..'),
         stdio: 'pipe',
         env: {
           ...process.env,

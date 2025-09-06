@@ -6,3 +6,16 @@ startNumber = 1
 counterFile = ".mdt-next"
 description = "Kanban-style ticket board with markdown storage"
 repository = "https://github.com/user/markdown-ticket"
+
+# Documents configuration
+document_paths = [
+    "PROJECT.md",        # Single file from root
+    "README.md",         # Single file from root
+    "docs"               # Directory (will scan for .md files)
+]
+exclude_folders = [
+    "docs/CRs",           # Exclude tickets folder
+    "node_modules",
+    ".git"
+]
+max_depth = 3

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Ticket, Status } from '../types';
 import { formatTicketAsMarkdown } from '../services/markdownParser';
+import { defaultRealtimeFileWatcher } from '../services/realtimeFileWatcher';
 
 interface Project {
   id: string;
@@ -265,7 +266,74 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     });
   }, [fetchProjects, loadStoredProjectSelection, autoSelectFirst, setSelectedProjectWithPersistence]);
 
-  // Load project config and tickets when project changes
+  // Set up realtime file watcher (once, not per project)
+  useEffect(() => {
+    console.log('🎯 useMultiProjectData: Setting up realtime file watcher...');
+    
+    // Set up the onChange callback to refresh tickets when files change
+    const handleTicketsChange = (updatedTickets: Ticket[]) => {
+      console.log('🔄 Realtime watcher: Tickets updated, refreshing UI');
+      
+      // Get the current selected project at the time of the event
+      // Use a closure to capture the current state
+      const currentProject = selectedProject;
+      
+      if (currentProject) {
+        console.log('📡 Fetching fresh tickets for project:', currentProject.project.name);
+        fetchTicketsForProject(currentProject).catch(err => {
+          console.error('❌ Failed to refresh tickets after file change:', err);
+        });
+      } else {
+        console.log('⚠️ No selected project at event time, will refresh when project is selected');
+        // Force a refresh of all projects or try to refresh the current view
+        // This handles the case where events come before project selection
+        if (projects.length > 0) {
+          console.log('🔄 Refreshing first available project as fallback');
+          const firstProject = projects[0];
+          fetchTicketsForProject(firstProject).catch(err => {
+            console.error('❌ Failed to refresh fallback project:', err);
+          });
+        }
+      }
+    };
+
+    // Set up the error callback
+    const handleError = (error: Error) => {
+      console.error('❌ Realtime watcher error:', error);
+      setError(error);
+    };
+
+    // Configure and start the watcher (only once)
+    console.log('🎯 Setting up realtime file watcher callbacks...');
+    defaultRealtimeFileWatcher.on('change', handleTicketsChange);
+    defaultRealtimeFileWatcher.on('error', handleError);
+    
+    // Start the watcher if not already started
+    const stats = defaultRealtimeFileWatcher.getStats();
+    console.log('📊 Watcher stats:', stats);
+    
+    if (!stats.isRunning && !stats.isSSEConnected) {
+      console.log('🚀 Starting realtime file watcher...');
+      defaultRealtimeFileWatcher.start().then(() => {
+        console.log('✅ Realtime file watcher started successfully');
+        const newStats = defaultRealtimeFileWatcher.getStats();
+        console.log('📊 New watcher stats:', newStats);
+      }).catch(err => {
+        console.error('❌ Failed to start realtime file watcher:', err);
+      });
+    } else {
+      console.log('✅ Realtime file watcher already running or connected');
+    }
+
+    // Cleanup function
+    return () => {
+      console.log('🧹 Cleaning up realtime file watcher callbacks');
+      defaultRealtimeFileWatcher.off();
+      // Don't stop the watcher here as it should remain running for other components
+    };
+  }, [projects]); // Add projects as dependency to handle fallback refresh
+
+  // Separate effect to handle project changes
   useEffect(() => {
     if (selectedProject) {
       Promise.all([

@@ -63,18 +63,22 @@ export class RealtimeFileWatcher {
    */
   async start(): Promise<void> {
     try {
+      console.log('🚀 Starting realtime file watcher...');
+      
       // Initialize file service
       await defaultFileService.initialize();
       
       if (this.enableSSE) {
+        console.log('📡 SSE enabled, starting SSE connection...');
         await this.startSSE();
       } else {
+        console.log('📊 SSE disabled, starting polling fallback...');
         this.startPolling();
       }
       
-      console.log('Realtime file watcher started');
+      console.log('✅ Realtime file watcher started');
     } catch (error) {
-      console.error('Failed to start realtime file watcher:', error);
+      console.error('❌ Failed to start realtime file watcher:', error);
       if (this.onError) {
         this.onError(error as Error);
       }
@@ -95,20 +99,21 @@ export class RealtimeFileWatcher {
    */
   private async startSSE(): Promise<void> {
     if (this.eventSource) {
-      console.warn('SSE connection already exists');
-      return;
+      console.warn('⚠️ SSE connection already exists, closing old one first');
+      this.stopSSE();
     }
 
     try {
       const baseUrl = this.getBaseUrl();
       const sseUrl = `${baseUrl}${this.sseEndpoint}`;
       
-      console.log(`Connecting to SSE endpoint: ${sseUrl}`);
+      console.log(`🔌 Connecting to SSE endpoint: ${sseUrl}`);
       
       this.eventSource = new EventSource(sseUrl);
       
       this.eventSource.onopen = () => {
-        console.log('SSE connection established');
+        console.log('✅ SSE connection established');
+        console.log('📊 SSE readyState:', this.eventSource?.readyState);
         this.isSSEConnected = true;
         this.reconnectAttempts = 0;
         
@@ -122,24 +127,29 @@ export class RealtimeFileWatcher {
       this.eventSource.onmessage = (event) => {
         try {
           const sseEvent: SSEEvent = JSON.parse(event.data);
+          console.log('📨 Received SSE event:', sseEvent);
+          console.log('📊 SSE readyState after message:', this.eventSource?.readyState);
           this.handleSSEEvent(sseEvent);
         } catch (error) {
-          console.error('Error parsing SSE event:', error);
+          console.error('❌ Error parsing SSE event:', error);
         }
       };
 
       this.eventSource.onerror = (error) => {
-        console.error('SSE connection error:', error);
+        console.error('❌ SSE connection error:', error);
+        console.log('📊 SSE readyState on error:', this.eventSource?.readyState);
         this.isSSEConnected = false;
         
         if (this.eventSource?.readyState === EventSource.CLOSED) {
-          console.log('SSE connection closed, attempting to reconnect...');
+          console.log('🔄 SSE connection closed, attempting to reconnect...');
           this.handleSSEReconnect();
+        } else if (this.eventSource?.readyState === EventSource.CONNECTING) {
+          console.log('🔄 SSE still connecting, will retry...');
         }
       };
 
     } catch (error) {
-      console.error('Failed to start SSE connection:', error);
+      console.error('❌ Failed to start SSE connection:', error);
       this.handleSSEReconnect();
     }
   }
@@ -229,7 +239,7 @@ export class RealtimeFileWatcher {
         break;
     }
 
-    console.log(`File ${changeType}: ${ticketCode}`);
+    console.log(`📝 File ${changeType}: ${ticketCode}`);
 
     // Add to event queue
     this.eventQueue.push({
@@ -243,6 +253,7 @@ export class RealtimeFileWatcher {
     // reload stale data before the API changes have propagated
     this.processEventQueue().then(() => {
       setTimeout(() => {
+        console.log('🔄 Refreshing tickets after file change...');
         this.loadAndNotifyTickets();
       }, 500); // 500ms delay to allow API/backend to propagate changes
     });

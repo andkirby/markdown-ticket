@@ -86,8 +86,7 @@ export class CRService {
         status: 'Proposed',
         type: crType,
         priority: data.priority || 'Medium',
-        dateCreated: now,
-        lastModified: now,
+        // dateCreated and lastModified will be derived from file stats
         content: data.content || '',
         filePath,
         phaseEpic: data.phaseEpic,
@@ -141,10 +140,10 @@ export class CRService {
       
       // Update status in YAML frontmatter
       const updatedContent = this.updateYAMLField(content, 'status', status);
-      const lastModifiedContent = this.updateYAMLField(updatedContent, 'lastModified', new Date().toISOString());
+      // lastModified will be automatically set from file modification time
 
       // Write back to file
-      await fs.outputFile(cr.filePath, lastModifiedContent, 'utf-8');
+      await fs.outputFile(cr.filePath, updatedContent, 'utf-8');
 
       console.error(`✅ Updated CR ${crKey} status to ${status}`);
       return true;

@@ -46,6 +46,8 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
         opacity: isDragging ? 0.5 : 1,
         cursor: 'move',
       }}
+      data-testid="ticket-card"
+      data-ticket-key={ticket.code}
     >
       <TicketCard ticket={ticket} onMove={onMove} onEdit={onEdit} />
     </div>

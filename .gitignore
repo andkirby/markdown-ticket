@@ -50,3 +50,5 @@ temp/
 # server/tasks
 **/debug-tasks/
 server/sample-tasks
+playwright-report
+test-results

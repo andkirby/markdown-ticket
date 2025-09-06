@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
-import Board from './components/Board';
+import SingleProjectView from './components/SingleProjectView';
 import MultiProjectDashboard from './components/MultiProjectDashboard';
 import TicketViewer from './components/TicketViewer';
 import { Ticket } from './types';
@@ -140,7 +140,7 @@ function App() {
           </div>
         </div>
       </nav>
-      <Board onTicketClick={handleTicketClick} enableProjectSwitching={true} />
+      <SingleProjectView onTicketClick={handleTicketClick} />
       <TicketViewer 
         ticket={selectedTicket} 
         isOpen={isViewerOpen} 

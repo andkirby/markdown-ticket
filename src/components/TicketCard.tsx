@@ -59,6 +59,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
     <div 
       className="ticket-card bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       onClick={onEdit}
+      data-testid="ticket-card"
+      data-ticket-key={ticket.code}
     >
       <div className="flex items-start justify-between mb-2">
         <h4 className="ticket-title font-semibold text-gray-900 dark:text-white text-sm truncate">{ticket.code}: {ticket.title}</h4>

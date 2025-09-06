@@ -143,6 +143,7 @@ class ProjectDiscoveryService {
         try {
           const filePath = path.join(fullCRPath, file);
           const content = fs.readFileSync(filePath, 'utf8');
+          const stats = fs.statSync(filePath);
           
           // Parse YAML frontmatter
           const lines = content.split('\n');
@@ -202,7 +203,8 @@ class ProjectDiscoveryService {
             status: header.status || 'Unknown',
             priority: header.priority || 'Medium',
             type: header.type || 'Feature Enhancement',
-            dateCreated: header.datecreated || null,
+            dateCreated: header.datecreated || stats.birthtime,
+            lastModified: header.lastmodified ? new Date(header.lastmodified) : stats.mtime,
             content: lines.slice(contentStart).join('\n').trim()
           });
         } catch (error) {

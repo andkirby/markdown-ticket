@@ -7,6 +7,7 @@ type: Bug Fix
 priority: High
 phaseEpic: Core Functionality
 relatedTickets: MDT-003
+lastModified: 2025-09-05T15:02:43.052Z
 ---
 
 # Drag-drop file synchronization regression

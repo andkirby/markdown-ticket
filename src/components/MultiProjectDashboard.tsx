@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import showdown from 'showdown';
 import { Button } from './UI/index';
+import { defaultRealtimeFileWatcher } from '../services/realtimeFileWatcher';
+import { SortControls } from './SortControls';
+import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
+import { sortTickets } from '../utils/sorting';
 
 interface Project {
   id: string;
@@ -43,6 +47,7 @@ const MultiProjectDashboard: React.FC = () => {
   const [crLoading, setCrLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'detail' | 'create'>('list');
+  const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
 
   // Form state for CR creation
   const [newCR, setNewCR] = useState({
@@ -51,6 +56,12 @@ const MultiProjectDashboard: React.FC = () => {
     priority: 'Medium',
     description: ''
   });
+
+  // Save preferences when they change
+  const handleSortPreferencesChange = (newPreferences: SortPreferences) => {
+    setSortPreferencesState(newPreferences);
+    setSortPreferences(newPreferences);
+  };
 
   // Markdown converter for ticket content
   const converter = useMemo(() => {
@@ -222,6 +233,53 @@ const MultiProjectDashboard: React.FC = () => {
     }
   }, [selectedProject, fetchCRs]);
 
+  // Set up realtime file watcher for multi-project dashboard
+  useEffect(() => {
+    console.log('🎯 MultiProjectDashboard: Setting up realtime file watcher...');
+    
+    const handleTicketsChange = () => {
+      console.log('🔄 MultiProject realtime: Files changed, refreshing data');
+      
+      // Refresh current project's CRs if one is selected
+      if (selectedProject) {
+        console.log('📡 Refreshing CRs for project:', selectedProject.project.name);
+        fetchCRs(selectedProject).catch(err => {
+          console.error('❌ Failed to refresh CRs after file change:', err);
+        });
+      }
+      
+      // Also refresh the projects list in case new projects were added
+      fetchProjects().catch(err => {
+        console.error('❌ Failed to refresh projects after file change:', err);
+      });
+    };
+
+    const handleError = (error: Error) => {
+      console.error('❌ MultiProject realtime watcher error:', error);
+      setError(error.message);
+    };
+
+    // Set up callbacks
+    defaultRealtimeFileWatcher.on('change', handleTicketsChange);
+    defaultRealtimeFileWatcher.on('error', handleError);
+    
+    // Start watcher if not running
+    const stats = defaultRealtimeFileWatcher.getStats();
+    if (!stats.isRunning && !stats.isSSEConnected) {
+      console.log('🚀 Starting realtime file watcher for MultiProject...');
+      defaultRealtimeFileWatcher.start().catch(err => {
+        console.error('❌ Failed to start realtime file watcher:', err);
+      });
+    } else {
+      console.log('✅ Realtime file watcher already running for MultiProject');
+    }
+
+    return () => {
+      console.log('🧹 MultiProject: Cleaning up realtime file watcher callbacks');
+      defaultRealtimeFileWatcher.off();
+    };
+  }, [selectedProject, fetchCRs, fetchProjects]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Proposed': return 'bg-blue-50 text-blue-700 border border-blue-200';
@@ -264,6 +322,12 @@ const MultiProjectDashboard: React.FC = () => {
           <p className="text-sm text-muted-foreground">Manage Change Requests across multiple projects</p>
         </div>
         <div className="flex space-x-4">
+          {selectedProject && view === 'list' && (
+            <SortControls
+              preferences={sortPreferences}
+              onPreferencesChange={handleSortPreferencesChange}
+            />
+          )}
           <Button
             onClick={fetchProjects}
             variant="secondary"
@@ -403,7 +467,7 @@ const MultiProjectDashboard: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {crs.map((cr) => (
+                        {sortTickets(crs, sortPreferences.selectedAttribute, sortPreferences.selectedDirection).map((cr) => (
                           <tr key={cr.code} className="border-b border-border hover:bg-accent/50">
                             <td className="py-3 px-4 font-medium text-primary">{cr.code}</td>
                             <td className="py-3 px-4">

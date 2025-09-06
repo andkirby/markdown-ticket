@@ -94,7 +94,8 @@ class FileWatcherService extends EventEmitter {
       }
     };
 
-    console.log(`Broadcasting event:`, event);
+    console.log(`📡 Event happened: ${eventType} - ${filename} in project ${projectId}`);
+    console.log(`📤 Broadcasting to ${this.clients.size} SSE clients:`, event);
 
     // Add to event queue for new connections
     this.eventQueue.push(event);
@@ -105,16 +106,37 @@ class FileWatcherService extends EventEmitter {
     }
 
     // Broadcast to all connected clients
+    let successCount = 0;
+    let failCount = 0;
+    let clientIndex = 0;
+    const staleClients = [];
+    
     this.clients.forEach(client => {
+      clientIndex++;
       try {
-        if (!client.headersSent) {
+        if (client.destroyed || client.closed) {
+          console.log(`⚠️ Client #${clientIndex} is stale (destroyed: ${client.destroyed}, closed: ${client.closed}), marking for removal`);
+          staleClients.push(client);
+          failCount++;
+        } else {
           this.sendSSEEvent(client, event);
+          successCount++;
+          console.log(`✅ SSE pushed to client #${clientIndex}`);
         }
       } catch (error) {
-        console.error('Error broadcasting to client:', error);
-        this.removeClient(client);
+        console.error(`❌ Failed to push SSE to client #${clientIndex}:`, error);
+        staleClients.push(client);
+        failCount++;
       }
     });
+
+    // Remove stale clients
+    staleClients.forEach(client => {
+      console.log(`🧹 Removing stale SSE client`);
+      this.removeClient(client);
+    });
+
+    console.log(`📊 SSE push summary: ${successCount} successful, ${failCount} failed, ${this.clients.size} active clients`);
 
     // Emit event for other parts of the application
     this.emit('file-change', event.data);
