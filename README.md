@@ -111,7 +111,7 @@ selected_direction = "desc"
 ### System Attributes Protection
 System attributes (`code`, `title`, `dateCreated`, `lastModified`) cannot be removed from the configuration to ensure core functionality remains intact.
 
-## MCP Server Integration
+## MCP Integration
 
 The project includes an MCP (Model Context Protocol) server for AI assistant integration:
 
@@ -121,6 +121,60 @@ cd mcp-server
 npm run build
 npm start
 ```
+
+### Adding MCP to AI Assistants
+
+**Pre-conditions:**
+- Markdown-ticket project installed in `~/markdown-ticket`
+- MCP server built (`npm run build` in mcp-server directory)
+- Your project has a project code (e.g., "COD")
+
+**Setup from your project directory:**
+```bash
+cd /path/to/my-project
+```
+
+#### Amazon Q CLI
+
+**Local scope** (project-specific, **🔴 currently not working - keep for future**):
+```bash
+q mcp add --name mdt-tickets \
+  --command "node" \
+  --args $HOME/markdown-ticket/mcp-server/dist/index.js \
+  --env MCP_PROJECT_FILTER=COD \
+  --env MCP_SCAN_PATHS="$(pwd)" \
+  --scope workspace --force
+```
+
+**Global scope** (works, access all projects):
+```bash
+q mcp add --name mdt-all \
+  --command "node" \
+  --args $HOME/markdown-ticket/mcp-server/dist/index.js \
+  --scope global --force
+```
+
+#### Claude Code
+
+**Local scope** (recommended, LLM sees only one project):
+```bash
+claude mcp add mdt-tickets node $HOME/markdown-ticket/mcp-server/dist/index.js \
+  --env MCP_PROJECT_FILTER=COD \
+  --env MCP_SCAN_PATHS=$(pwd)
+```
+
+**Global scope** (access any project from anywhere):
+```bash
+claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
+```
+
+**Environment Variables:**
+- `MCP_PROJECT_FILTER=COD` - Limits MCP to specific project code
+- `MCP_SCAN_PATHS=$(pwd)` - Sets project path for scanning
+
+**Scopes Explained:**
+- **Local/Workspace**: MCP only available in current project directory
+- **Global**: MCP available from any directory, can access all configured projects
 
 ### Available MCP Tools
 - `list_projects` - List all discovered projects

@@ -1,10 +1,13 @@
-- **Code**: MDT-016
-- **Title/Summary**: New Change Request
-- **Status**: Proposed
-- **Date Created**: 2025-09-06
-- **Type**: Feature Enhancement
-- **Priority**: Medium
-- **Phase/Epic**: Phase A (Foundation)
+---
+code: MDT-016
+title: New Change Request
+status: Proposed
+dateCreated: 2025-09-06T00:00:00.000Z
+type: Feature Enhancement
+priority: Medium
+phaseEpic: Phase A (Foundation)
+lastModified: 2025-09-06T16:24:27.469Z
+---
 
 # New Change Request
 

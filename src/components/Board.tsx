@@ -10,31 +10,74 @@ import { SortControls } from './SortControls';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 
+interface Project {
+  id: string;
+  project: {
+    name: string;
+    path: string;
+    configFile: string;
+    active: boolean;
+    description: string;
+  };
+  metadata: {
+    dateRegistered: string;
+    lastAccessed: string;
+    version: string;
+  };
+  tickets?: {
+    codePattern?: string;
+  };
+  autoDiscovered?: boolean;
+}
+
 interface BoardProps {
   onTicketClick: (ticket: Ticket) => void;
   enableProjectSwitching?: boolean;
   showHeader?: boolean;
+  selectedProject?: Project | null;
+  tickets?: Ticket[];
+  loading?: boolean;
+  sortPreferences?: SortPreferences;
 }
 
 // Note: TicketItem removed - drag functionality handled in Column.tsx
 
-const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitching = true, showHeader = true }) => {
-  const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
+const BoardContent: React.FC<BoardProps> = ({ 
+  onTicketClick, 
+  enableProjectSwitching = true, 
+  showHeader = true, 
+  selectedProject: propSelectedProject,
+  tickets: propTickets,
+  loading: propLoading,
+  sortPreferences: propSortPreferences
+}) => {
+  const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(
+    propSortPreferences || getSortPreferences
+  );
   
-  const {
-    projects,
-    selectedProject,
-    setSelectedProject,
-    // projectConfig, // TODO: Implement project config usage
-    tickets,
-    loading,
-    error,
-    createTicket,
-    refreshTickets: refreshProjectTickets,
-    updateTicket,
-    // generateNextTicketCode, // TODO: Implement ticket code generation
-    clearError
-  } = useMultiProjectData({ autoSelectFirst: true });
+  // Only use the hook when no selectedProject prop is provided (multi-project mode)
+  const hookData = useMultiProjectData({ autoSelectFirst: enableProjectSwitching });
+  
+  // Use prop data if provided, otherwise use hook data
+  const selectedProject = propSelectedProject !== undefined ? propSelectedProject : hookData.selectedProject;
+  const tickets = propTickets !== undefined ? propTickets : hookData.tickets;
+  const loading = propLoading !== undefined ? propLoading : hookData.loading;
+  
+  // Update sortPreferences when prop changes
+  React.useEffect(() => {
+    if (propSortPreferences) {
+      setSortPreferencesState(propSortPreferences);
+    }
+  }, [propSortPreferences]);
+  
+  // Use hook data for project switching functionality
+  const projects = hookData.projects;
+  const setSelectedProject = hookData.setSelectedProject;
+  const error = hookData.error;
+  const createTicket = hookData.createTicket;
+  const refreshProjectTickets = hookData.refreshTickets;
+  const updateTicket = hookData.updateTicket;
+  const clearError = hookData.clearError;
 
   // Save preferences when they change
   const handleSortPreferencesChange = (newPreferences: SortPreferences) => {
@@ -157,48 +200,16 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
   }
 
   // Show no project selected state
-  if (enableProjectSwitching && !selectedProject) {
+  if (!selectedProject) {
     return (
-      <div className="p-6 space-y-6">
-        {/* Header with project selector */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex-1">
-            <div className="flex items-center space-x-4 mb-2">
-              <h1 className="text-2xl font-bold text-foreground">Change Request Board</h1>
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-muted-foreground">Project:</label>
-                <div className="flex gap-2">
-                  {projects.map((project) => (
-                    <button
-                      key={project.id}
-                      onClick={() => {
-                        setSelectedProject(project);
-                        clearError();
-                      }}
-                      className="h-12 px-3 py-1 border border-border rounded-md text-center transition-colors bg-background hover:bg-muted cursor-pointer"
-                    >
-                      <div className="text-sm font-medium">{project.id}</div>
-                      <div className="text-xs text-muted-foreground truncate max-w-20">{project.project.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground font-normal">
-              Select a project to view and manage change requests
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-center min-h-[300px]">
-          <div className="text-center">
-            <div className="text-6xl text-gray-300 mb-4">📋</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h3>
-            <p className="text-sm text-gray-600 mb-4">Choose a project from the dropdown above to view its change requests.</p>
-            {projects.length === 0 && (
-              <p className="text-sm text-red-600">No projects found. Make sure projects are properly configured.</p>
-            )}
-          </div>
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="text-center">
+          <div className="text-6xl text-gray-300 mb-4">📋</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h3>
+          <p className="text-sm text-gray-600 mb-4">Choose a project from the header to view its change requests.</p>
+          {projects.length === 0 && (
+            <p className="text-sm text-red-600">No projects found. Make sure projects are properly configured.</p>
+          )}
         </div>
       </div>
     );
@@ -223,89 +234,94 @@ const BoardContent: React.FC<BoardProps> = ({ onTicketClick, enableProjectSwitch
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex-1">
-          <div className="flex items-center space-x-4 mb-2">
-            <h1 className="text-2xl font-bold text-foreground">Change Request Board</h1>
-            {enableProjectSwitching && (
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-muted-foreground">Project:</label>
-                <div className="flex gap-2">
-                  {projects.map((project) => (
-                    <button
-                      key={project.id}
-                      onClick={() => {
-                        setSelectedProject(project);
-                        clearError();
-                      }}
-                      disabled={loading}
-                      className={`h-12 px-3 py-1 border rounded-md text-center transition-colors ${
-                        selectedProject?.id === project.id
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-background border-border hover:bg-muted'
-                      } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                    >
-                      <div className="text-sm font-medium">{project.id}</div>
-                      <div className="text-xs text-muted-foreground truncate max-w-20">{project.project.name}</div>
-                    </button>
-                  ))}
+    <div className={showHeader ? "p-6 space-y-6" : "p-2"}>
+      {showHeader && (
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex-1">
+            <div className="flex items-center space-x-4 mb-2">
+              <h1 className="text-2xl font-bold text-foreground">Change Request Board</h1>
+              {enableProjectSwitching && (
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-medium text-muted-foreground">Project:</label>
+                  <div className="flex gap-2">
+                    {projects.map((project) => (
+                      <button
+                        key={project.id}
+                        onClick={() => {
+                          setSelectedProject(project);
+                          clearError();
+                        }}
+                        disabled={loading}
+                        className={`h-12 px-3 py-1 border rounded-md text-center transition-colors ${
+                          selectedProject?.id === project.id
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-background border-border hover:bg-muted'
+                        } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        <div className="text-sm font-medium">{project.id}</div>
+                        <div className="text-xs text-muted-foreground truncate max-w-20">{project.project.name}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground font-normal">
+              {selectedProject ?
+                `Track and manage change requests for ${selectedProject.project.name}` :
+                'Select a project to view and manage change requests'
+              }
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground font-normal">
-            {selectedProject ?
-              `Track and manage change requests for ${selectedProject.project.name}` :
-              'Select a project to view and manage change requests'
-            }
-          </p>
+          <div className="flex space-x-4">
+            <SortControls
+              preferences={sortPreferences}
+              onPreferencesChange={handleSortPreferencesChange}
+            />
+            <Button
+              onClick={handleRefresh}
+              variant="secondary"
+            >
+              Refresh
+            </Button>
+            <Button
+              onClick={handleTicketCreate}
+              className="btn btn-primary btn-lg"
+              disabled={!selectedProject}
+            >
+              Create
+            </Button>
+          </div>
         </div>
-        <div className="flex space-x-4">
-          <SortControls
-            preferences={sortPreferences}
-            onPreferencesChange={handleSortPreferencesChange}
-          />
-          <Button
-            onClick={handleRefresh}
-            variant="secondary"
-          >
-            Refresh
-          </Button>
-          <Button
-            onClick={handleTicketCreate}
-            className="btn btn-primary btn-lg"
-            disabled={!selectedProject}
-          >
-            Create
-          </Button>
-        </div>
-      </div>
+      )}
 
-      {/* Board Grid */}
-      <div className="board-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full overflow-x-auto">
-        {visibleColumns.map((column) => (
-          <Column
-            key={column.label}
-            column={column}
-            tickets={ticketsByColumn[column.label]}
-            onDrop={(status: Status, ticket: Ticket) => {
-              console.log('Board: Column onDrop called with:', { status, ticketKey: ticket.code });
-              handleDrop(status, ticket);
-            }}
-            onTicketEdit={handleTicketEdit}
-          />
-        ))}
-      </div>
+      {!showHeader && (
+        <div>
+          {/* Board Grid */}
+          <div className="board-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full overflow-x-auto">
+            {visibleColumns.map((column) => (
+              <Column
+                key={column.label}
+                column={column}
+                tickets={ticketsByColumn[column.label]}
+                onDrop={(status: Status, ticket: Ticket) => {
+                  console.log('Board: Column onDrop called with:', { status, ticketKey: ticket.code });
+                  handleDrop(status, ticket);
+                }}
+                onTicketEdit={handleTicketEdit}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const Board: React.FC<BoardProps> = ({ onTicketClick }) => {
+const Board: React.FC<BoardProps> = (props) => {
   return (
     <DndProvider backend={HTML5Backend}>
-      <BoardContent onTicketClick={onTicketClick} />
+      <BoardContent {...props} />
     </DndProvider>
   );
 };

@@ -4,15 +4,88 @@ This guide provides complete instructions for installing, configuring, and using
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Prerequisites](#Prerequisites)
-3. [Installation](#installation)
-4. [Configuration](#configuration)
-5. [Getting Started](#getting-started)
-6. [Tool Reference](#tool-reference)
-7. [Integration Setup](#integration-setup)
-8. [Troubleshooting](#troubleshooting)
-9. [Advanced Usage](#advanced-usage)
+1. [Quick Setup Guide](#quick-setup-guide)
+2. [Overview](#overview)
+3. [Prerequisites](#Prerequisites)
+4. [Installation](#installation)
+5. [Configuration](#configuration)
+6. [Getting Started](#getting-started)
+7. [Tool Reference](#tool-reference)
+8. [Integration Setup](#integration-setup)
+9. [Troubleshooting](#troubleshooting)
+10. [Advanced Usage](#advanced-usage)
+
+## Quick Setup Guide
+
+### Pre-conditions
+- Markdown-ticket project installed in `~/markdown-ticket`
+- MCP server built (`npm run build` in mcp-server directory)
+- Your project has a project code (e.g., "COD")
+
+### Setup Process
+1. Navigate to your project directory:
+   ```bash
+   cd /path/to/my-project
+   ```
+
+2. Choose your AI assistant and scope:
+
+#### Amazon Q CLI
+
+**Local scope** (project-specific, **🔴 currently not working - keep for future**):
+```bash
+q mcp add --name mdt-tickets \
+  --command "node" \
+  --args $HOME/markdown-ticket/mcp-server/dist/index.js \
+  --env MCP_PROJECT_FILTER=COD \
+  --env MCP_SCAN_PATHS="$(pwd)" \
+  --scope workspace --force
+```
+
+**Global scope** (works, access all projects):
+```bash
+q mcp add --name mdt-all \
+  --command "node" \
+  --args $HOME/markdown-ticket/mcp-server/dist/index.js \
+  --scope global --force
+```
+
+#### Claude Code
+
+**Local scope** (recommended, LLM sees only one project):
+```bash
+claude mcp add mdt-tickets node $HOME/markdown-ticket/mcp-server/dist/index.js \
+  --env MCP_PROJECT_FILTER=COD \
+  --env MCP_SCAN_PATHS=$(pwd)
+```
+
+**Global scope** (access any project from anywhere):
+```bash
+claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
+```
+
+### Configuration Explained
+
+**Environment Variables:**
+- `MCP_PROJECT_FILTER=COD` - Limits MCP to specific project code (replace "COD" with your project code)
+- `MCP_SCAN_PATHS=$(pwd)` - Sets project path for scanning (uses current directory)
+
+**Scopes:**
+- **Local/Workspace**: MCP only available in current project directory
+  - ✅ **Security**: Only sees one project
+  - ✅ **Focus**: LLM context limited to current project
+  - ❌ **Limitation**: Must be run from project directory
+  
+- **Global**: MCP available from any directory
+  - ✅ **Convenience**: Access from anywhere
+  - ✅ **Multi-project**: Can work with all configured projects
+  - ⚠️ **Security**: LLM can see all projects
+
+**Recommendations:**
+- Use **Local scope** for project-specific work (more secure)
+- Use **Global scope** for multi-project management
+- Replace "COD" with your actual project code
+- For Amazon Q, use global scope until local scope is fixed
 
 ## Overview
 

@@ -1,12 +1,15 @@
-- **Code**: MDT-001
-- **Title/Summary**: Multi-Project CR Management Dashboard
-- **Status**: Implemented
-- **Date Created**: 2025-08-31
-- **Type**: Feature Enhancement
-- **Priority**: High
-- **Phase/Epic**: Phase A (Foundation)
-- **Implementation Date**: 2025-09-03
-- **Implementation Notes**: Complete multi-project CR dashboard with API backend and React frontend
+---
+code: MDT-001
+title: Multi-Project CR Management Dashboard
+status: Implemented
+dateCreated: 2025-08-31T00:00:00.000Z
+type: Feature Enhancement
+priority: High
+phaseEpic: Phase A (Foundation)
+lastModified: 2025-09-03T19:02:02.079Z
+implementationDate: 2025-09-03T00:00:00.000Z
+implementationNotes: Complete multi-project CR dashboard with API backend and React frontend
+---
 
 # Multi-Project CR Management Dashboard
 

@@ -3,8 +3,10 @@ import { Moon, Sun } from 'lucide-react';
 import SingleProjectView from './components/SingleProjectView';
 import MultiProjectDashboard from './components/MultiProjectDashboard';
 import TicketViewer from './components/TicketViewer';
+import { ProjectSelector } from './components/ProjectSelector';
 import { Ticket } from './types';
 import { useTheme } from './hooks/useTheme';
+import { useMultiProjectData } from './hooks/useMultiProjectData';
 
 type ViewMode = 'single-project' | 'multi-project';
 
@@ -26,7 +28,7 @@ function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
             : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
         }`}
       >
-        Single Project
+        Board
       </button>
       <button
         onClick={() => onViewModeChange('multi-project')}
@@ -36,7 +38,7 @@ function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
             : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
         }`}
       >
-        Multi Project
+        List
       </button>
     </div>
   );
@@ -51,6 +53,9 @@ function App() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  
+  // Project management at app level
+  const { projects, selectedProject, setSelectedProject, loading: projectsLoading } = useMultiProjectData({ autoSelectFirst: true });
 
   // Custom setter that saves to localStorage
   const setViewMode = (mode: ViewMode) => {
@@ -83,24 +88,30 @@ function App() {
                 <div className="flex justify-center">
                   <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
                 </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleTheme}
-                className="btn btn-ghost p-2 h-10 w-10"
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </button>
+                <ProjectSelector 
+                  projects={projects}
+                  selectedProject={selectedProject}
+                  onProjectSelect={setSelectedProject}
+                  loading={projectsLoading}
+                />
+              </div>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={toggleTheme}
+                  className="btn btn-ghost p-2 h-10 w-10"
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="h-5 w-5" />
+                  ) : (
+                    <Moon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
-      <MultiProjectDashboard />
+        </nav>
+        <MultiProjectDashboard selectedProject={selectedProject} />
         <TicketViewer 
           ticket={selectedTicket} 
           isOpen={isViewerOpen} 
@@ -123,6 +134,12 @@ function App() {
               <div className="flex justify-center">
                 <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
               </div>
+              <ProjectSelector 
+                projects={projects}
+                selectedProject={selectedProject}
+                onProjectSelect={setSelectedProject}
+                loading={projectsLoading}
+              />
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -140,7 +157,7 @@ function App() {
           </div>
         </div>
       </nav>
-      <SingleProjectView onTicketClick={handleTicketClick} />
+      <SingleProjectView onTicketClick={handleTicketClick} selectedProject={selectedProject} />
       <TicketViewer 
         ticket={selectedTicket} 
         isOpen={isViewerOpen} 

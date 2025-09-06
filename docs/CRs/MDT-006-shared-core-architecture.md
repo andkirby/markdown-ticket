@@ -1,10 +1,13 @@
-- **Code**: MDT-006
-- **Title/Summary**: Create Shared Core Architecture to Eliminate Code Duplication
-- **Status**: Proposed
-- **Date Created**: 2025-09-04
-- **Type**: Architecture
-- **Priority**: Medium
-- **Phase/Epic**: Phase A (Foundation)
+---
+code: MDT-006
+title: Create Shared Core Architecture to Eliminate Code Duplication
+status: Proposed
+dateCreated: 2025-09-04T00:00:00.000Z
+type: Architecture
+priority: Medium
+phaseEpic: Phase A (Foundation)
+lastModified: 2025-09-04T12:34:56.618Z
+---
 
 # Create Shared Core Architecture to Eliminate Code Duplication
 

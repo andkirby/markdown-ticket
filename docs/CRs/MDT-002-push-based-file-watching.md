@@ -1,10 +1,13 @@
-- **Code**: MDT-002
-- **Title/Summary**: Push-Based File Watching Architecture
-- **Status**: Implemented
-- **Date Created**: 2025-08-31
-- **Type**: Architecture
-- **Priority**: High
-- **Phase/Epic**: Phase A (Foundation)
+---
+code: MDT-002
+title: Push-Based File Watching Architecture
+status: Implemented
+dateCreated: 2025-08-31T00:00:00.000Z
+type: Architecture
+priority: High
+phaseEpic: Phase A (Foundation)
+lastModified: 2025-09-03T13:48:14.745Z
+---
 
 # Push-Based File Watching Architecture
 

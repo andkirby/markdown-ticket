@@ -1,12 +1,15 @@
-- **Code**: MDT-004
-- **Title/Summary**: MCP Server for Universal CR Management
-- **Status**: Implemented
-- **Date Created**: 2025-09-01
-- **Type**: Architecture
-- **Priority**: High
-- **Phase/Epic**: Phase A (Foundation)
-- **Implementation Date**: 2025-09-04
-- **Implementation Notes**: Full MCP server implemented with all 12 tools, project discovery, templates, and validation
+---
+code: MDT-004
+title: MCP Server for Universal CR Management
+status: Implemented
+dateCreated: 2025-09-01T00:00:00.000Z
+type: Architecture
+priority: High
+phaseEpic: Phase A (Foundation)
+lastModified: 2025-09-04T19:29:17.147Z
+implementationDate: 2025-09-04T00:00:00.000Z
+implementationNotes: Full MCP server implemented with all 12 tools, project discovery, templates, and validation
+---
 
 # MCP Server for Universal CR Management
 

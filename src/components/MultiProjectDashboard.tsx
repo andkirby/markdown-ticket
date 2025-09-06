@@ -36,13 +36,19 @@ interface CR {
   content: string;
 }
 
-const MultiProjectDashboard: React.FC = () => {
+interface MultiProjectDashboardProps {
+  selectedProject?: Project | null;
+}
+
+const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedProject: propSelectedProject }) => {
   const STORAGE_KEY = 'multiProjectDashboard.selectedProjectId';
 
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [crs, setCrs] = useState<CR[]>([]);
   const [selectedCR, setSelectedCR] = useState<CR | null>(null);
+  
+  // Use prop selectedProject if provided, otherwise use internal state
+  const selectedProject = propSelectedProject || null;
   const [loading, setLoading] = useState(true);
   const [crLoading, setCrLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,32 +99,13 @@ const MultiProjectDashboard: React.FC = () => {
 
       const projectsData = await response.json();
       setProjects(projectsData);
-
-      // Try to restore selected project from localStorage
-      if (projectsData.length > 0 && !selectedProject) {
-        const storedProjectId = localStorage.getItem(STORAGE_KEY);
-        if (storedProjectId) {
-          const foundProject = projectsData.find((project: Project) => project.id === storedProjectId);
-          if (foundProject) {
-            setSelectedProject(foundProject);
-          } else {
-            // Stored project not found, select first available
-            setSelectedProject(projectsData[0]);
-            // Clear invalid stored project
-            localStorage.removeItem(STORAGE_KEY);
-          }
-        } else {
-          // No stored project, select first available
-          setSelectedProject(projectsData[0]);
-        }
-      }
     } catch (error) {
       console.error('Error fetching projects:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch projects');
     } finally {
       setLoading(false);
     }
-  }, [selectedProject, STORAGE_KEY]);
+  }, []);
 
   // Fetch CRs for selected project
   const fetchCRs = useCallback(async (project: Project) => {
@@ -141,17 +128,6 @@ const MultiProjectDashboard: React.FC = () => {
       setCrLoading(false);
     }
   }, []);
-
-  // Handle project selection
-  const handleProjectSelect = useCallback((project: Project) => {
-    setSelectedProject(project);
-    setSelectedCR(null);
-    setView('list');
-    fetchCRs(project);
-
-    // Save selected project to localStorage
-    localStorage.setItem(STORAGE_KEY, project.id);
-  }, [fetchCRs, STORAGE_KEY]);
 
   // Create new CR
   const handleCreateCR = useCallback(async () => {
@@ -314,40 +290,33 @@ const MultiProjectDashboard: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Multi-Project CR Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Manage Change Requests across multiple projects</p>
-        </div>
-        <div className="flex space-x-4">
-          {selectedProject && view === 'list' && (
-            <SortControls
-              preferences={sortPreferences}
-              onPreferencesChange={handleSortPreferencesChange}
-            />
-          )}
-          <Button
-            onClick={fetchProjects}
-            variant="secondary"
-          >
-            Refresh Projects
-          </Button>
-          {selectedProject && view === 'list' && (
+    <div className="h-full flex flex-col">
+      <div className="px-6 py-3 border-b border-border">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-foreground">
+            {selectedProject?.project.name || 'List View'}
+          </h1>
+          <div className="flex items-center space-x-4">
+            {selectedProject && view === 'list' && (
+              <SortControls
+                preferences={sortPreferences}
+                onPreferencesChange={handleSortPreferencesChange}
+              />
+            )}
             <Button
-              onClick={() => setView('create')}
-              variant="default"
+              onClick={fetchProjects}
+              variant="secondary"
             >
-              Create CR
+              Refresh
             </Button>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="flex-1 overflow-hidden px-6 py-3 space-y-6">
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="text-red-800 text-md font-medium mb-2">Error</div>
           <div className="text-red-600">{error}</div>
           <Button 
@@ -359,89 +328,13 @@ const MultiProjectDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Project Selector */}
-      <div className="bg-card rounded-lg shadow-sm border border-border p-4">
-        <h3 className="text-lg font-medium text-card-foreground mb-3">Select Project</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => (
-            <div
-              key={project.id || project.project?.path || Math.random().toString()}
-              className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                selectedProject?.id === project.id
-                  ? 'border-primary bg-accent'
-                  : 'border-border hover:border-border/80 hover:bg-accent/50'
-              }`}
-              onClick={() => handleProjectSelect(project)}
-            >
-              <div className="font-medium text-card-foreground">{project.project?.name || 'Unnamed Project'}</div>
-              <div className="text-sm text-muted-foreground mt-1">{project.project?.description || 'No description'}</div>
-              <div className="text-xs text-muted-foreground/80 mt-2">
-                <div>Path: {project.project?.path || 'N/A'}</div>
-                <div>Registered: {project.metadata?.dateRegistered || 'N/A'}</div>
-                {project.autoDiscovered && (
-                  <span className="inline-block bg-warning-50 text-warning-800 px-2 py-1 rounded text-xs mt-1 border border-warning-200">
-                    Auto-discovered
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Main Content */}
       {selectedProject && (
         <div className="bg-card rounded-lg shadow-sm border border-border">
-          {/* Navigation */}
-          <div className="border-b border-border px-6 py-4">
-            <div className="flex items-center space-x-4">
-              <h2 className="text-xl font-medium text-card-foreground">
-                {selectedProject.project.name}
-              </h2>
-              <div className="flex space-x-2">
-                <Button
-                  onClick={() => setView('list')}
-                  variant={view === 'list' ? 'default' : 'secondary'}
-                  className="px-3 py-1 text-sm"
-                >
-                  CR List
-                </Button>
-                {selectedCR && (
-                  <Button
-                    onClick={() => setView('detail')}
-                    variant={view === 'detail' ? 'default' : 'secondary'}
-                    className="px-3 py-1 text-sm"
-                  >
-                    CR Detail
-                  </Button>
-                )}
-                <Button
-                  onClick={() => setView('create')}
-                  variant={view === 'create' ? 'default' : 'secondary'}
-                  className="px-3 py-1 text-sm"
-                >
-                  Create CR
-                </Button>
-              </div>
-            </div>
-          </div>
-
           {/* Content Area */}
           <div className="p-6">
             {view === 'list' && (
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-card-foreground">Change Requests</h3>
-                  {selectedProject && (
-                    <Button
-                      onClick={() => fetchCRs(selectedProject)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Refresh
-                    </Button>
-                  )}
-                </div>
-
                 {crLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -664,6 +557,7 @@ const MultiProjectDashboard: React.FC = () => {
           <div className="text-sm">Register a project to get started</div>
         </div>
       )}
+      </div>
     </div>
   );
 };

@@ -52,3 +52,4 @@ temp/
 server/sample-tasks
 playwright-report
 test-results
+.amazonq

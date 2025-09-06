@@ -456,6 +456,63 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// New endpoint for file system browsing
+app.get('/api/filesystem', async (req, res) => {
+  try {
+    const { path: requestPath } = req.query;
+    
+    if (!requestPath) {
+      return res.status(400).json({ error: 'Path is required' });
+    }
+
+    const fullPath = path.resolve(requestPath);
+    
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ error: 'Path not found' });
+    }
+
+    const items = await buildFileSystemTree(fullPath);
+    res.json(items);
+  } catch (error) {
+    console.error('Error loading file system:', error);
+    res.status(500).json({ error: 'Failed to load file system' });
+  }
+});
+
+// New endpoint for configuring document paths
+app.post('/api/documents/configure', async (req, res) => {
+  try {
+    const { projectPath, documentPaths } = req.body;
+    
+    if (!projectPath || !Array.isArray(documentPaths)) {
+      return res.status(400).json({ error: 'Project path and document paths are required' });
+    }
+
+    const configPath = path.join(projectPath, '.mdt-config.toml');
+    
+    // Create or update config file
+    let configContent = '';
+    
+    if (fs.existsSync(configPath)) {
+      configContent = fs.readFileSync(configPath, 'utf8');
+    }
+
+    // Remove existing document_paths if present
+    configContent = configContent.replace(/document_paths\s*=\s*\[.*?\]/s, '');
+    
+    // Add new document_paths
+    const pathsString = documentPaths.map(p => `"${path.relative(projectPath, p)}"`).join(', ');
+    configContent += `\ndocument_paths = [${pathsString}]\n`;
+    
+    fs.writeFileSync(configPath, configContent.trim() + '\n', 'utf8');
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error configuring documents:', error);
+    res.status(500).json({ error: 'Failed to configure documents' });
+  }
+});
+
 // ========================================
 // Multi-Project API Routes
 // ========================================
@@ -988,6 +1045,57 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// Helper function to build file system tree for path selection
+async function buildFileSystemTree(dirPath, maxDepth = 3, currentDepth = 0) {
+  const items = [];
+  
+  if (currentDepth >= maxDepth) {
+    return items;
+  }
+  
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      // Skip hidden files and common ignore patterns
+      if (entry.name.startsWith('.') || 
+          entry.name === 'node_modules' || 
+          entry.name === 'dist' || 
+          entry.name === 'build') {
+        continue;
+      }
+      
+      const fullPath = path.join(dirPath, entry.name);
+      
+      if (entry.isDirectory()) {
+        const children = await buildFileSystemTree(fullPath, maxDepth, currentDepth + 1);
+        items.push({
+          name: entry.name,
+          path: fullPath,
+          type: 'folder',
+          children
+        });
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        items.push({
+          name: entry.name,
+          path: fullPath,
+          type: 'file'
+        });
+      }
+    }
+  } catch (error) {
+    console.error(`Error reading directory ${dirPath}:`, error);
+  }
+  
+  return items.sort((a, b) => {
+    // Folders first, then files, both alphabetically
+    if (a.type !== b.type) {
+      return a.type === 'folder' ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name);
+  });
+}
+
 // Documents API endpoints
 app.get('/api/documents', async (req, res) => {
   try {
@@ -1000,6 +1108,11 @@ app.get('/api/documents', async (req, res) => {
     res.json(documents);
   } catch (error) {
     console.error('Error discovering documents:', error);
+    
+    if (error.message === 'CONFIG_NOT_FOUND' || error.message === 'NO_DOCUMENT_PATHS') {
+      return res.status(404).json({ error: 'No document configuration found' });
+    }
+    
     res.status(500).json({ error: 'Failed to discover documents' });
   }
 });
@@ -1034,6 +1147,13 @@ async function discoverDocuments(projectPath, currentDepth = 0, maxDepth = 3) {
     let documentPaths = [];
     let excludeFolders = ['docs/CRs', 'node_modules', '.git'];
     
+    // Check if config exists
+    try {
+      await fs.access(configPath);
+    } catch {
+      throw new Error('CONFIG_NOT_FOUND');
+    }
+    
     try {
       const configContent = await fs.readFile(configPath, 'utf8');
       console.log(`📄 Config content: ${configContent.substring(0, 200)}...`);
@@ -1046,6 +1166,11 @@ async function discoverDocuments(projectPath, currentDepth = 0, maxDepth = 3) {
           .map(s => s.trim().replace(/['"]/g, '').replace(/#.*$/, '').trim())
           .filter(s => s.length > 0);
         console.log(`📁 Found document paths: ${JSON.stringify(documentPaths)}`);
+      }
+      
+      // If no document paths configured, throw error
+      if (documentPaths.length === 0) {
+        throw new Error('NO_DOCUMENT_PATHS');
       }
       
       // Parse exclude_folders (still used for folder exclusions)

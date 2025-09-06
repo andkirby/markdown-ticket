@@ -58,8 +58,25 @@ DocumentsView/
 ├── DocumentsLayout.tsx      # Main layout with sidebar + content
 ├── FileTree.tsx            # Tree navigation component
 ├── MarkdownViewer.tsx      # Markdown content renderer
+├── PathSelector.tsx        # Phase 1.2: Path selection interface
 └── ViewToggle.tsx          # Board/Documents toggle
 ```
+
+### Phase 1.2: Path Selection Interface
+**Components Added:**
+- `PathSelector.tsx` - Checkbox-based file/folder selection interface
+- Enhanced `DocumentsLayout.tsx` - Detects unconfigured projects and shows PathSelector
+
+**API Endpoints Added:**
+- `GET /api/filesystem` - Browse file system with tree structure
+- `POST /api/documents/configure` - Save selected paths to project configuration
+- Enhanced `GET /api/documents` - Returns 404 for unconfigured projects
+
+**Workflow:**
+1. When opening Documents view, check if `document_paths` exists in `.mdt-config.toml`
+2. If not configured, show PathSelector with checkbox tree of project files
+3. User selects desired files/folders and clicks "Save Selection"
+4. Configuration is saved to `.mdt-config.toml` and Documents view reloads
 
 ### File Discovery Logic
 - Read `document_paths` from `.mdt-config.toml` in project root
@@ -118,6 +135,10 @@ max_depth = 3
 - [x] Read `document_paths` from `.mdt-config.toml` in project root
 - [x] Support single files (README.md) and directories (docs/)
 - [x] Tree navigation shows configured paths and .md files only
+- [x] **Phase 1.2**: Path selection interface for unconfigured projects
+- [x] **Phase 1.2**: Checkbox-based file/folder selection
+- [x] **Phase 1.2**: Automatic configuration persistence
+- [x] **Phase 1.2**: Project switching with proper state clearing
 - [x] Click on .md file renders content using showdown converter
 - [x] Board/Documents view toggle in single project view
 - [x] Extract H1 titles from markdown files for display labels
