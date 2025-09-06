@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Board from './Board';
 import { DocumentsLayout } from './DocumentsView';
+import { DuplicateResolver } from './DuplicateResolver';
 import { Ticket } from '../types';
 import { SortControls } from './SortControls';
 import { Button } from './UI/index';
@@ -77,6 +78,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject }: Si
   const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showDuplicateResolver, setShowDuplicateResolver] = useState(false);
 
   const handleViewModeChange = (mode: SingleProjectViewMode) => {
     setViewMode(mode);
@@ -119,6 +121,13 @@ export default function SingleProjectView({ onTicketClick, selectedProject }: Si
       }));
 
       setTickets(convertedTickets);
+      
+      // Check for duplicates
+      const codes = convertedTickets.map(t => t.code);
+      const duplicateCodes = codes.filter((code, index) => codes.indexOf(code) !== index);
+      if (duplicateCodes.length > 0) {
+        setShowDuplicateResolver(true);
+      }
     } catch (error) {
       console.error('Failed to fetch tickets:', error);
       setTickets([]);
@@ -187,6 +196,17 @@ export default function SingleProjectView({ onTicketClick, selectedProject }: Si
           )
         )}
       </div>
+      
+      {/* Duplicate Resolver Modal */}
+      {showDuplicateResolver && selectedProject && (
+        <DuplicateResolver
+          projectId={selectedProject.id}
+          onResolved={() => {
+            setShowDuplicateResolver(false);
+            fetchTickets(); // Reload tickets after resolution
+          }}
+        />
+      )}
     </div>
   );
 }

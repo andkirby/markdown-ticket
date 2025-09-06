@@ -534,8 +534,258 @@ app.post('/api/documents/configure', async (req, res) => {
   }
 });
 
-// ========================================
-// Multi-Project API Routes
+// Helper function to get next ticket number
+async function getNextTicketNumber(projectPath, projectCode) {
+  try {
+    // Load all existing tickets to find the highest number
+    const tickets = await loadTickets(projectPath);
+    let maxNumber = 0;
+    
+    // Find the highest existing ticket number for this project code
+    tickets.forEach(ticket => {
+      if (ticket.code.startsWith(projectCode + '-')) {
+        const numberPart = ticket.code.split('-')[1];
+        const number = parseInt(numberPart);
+        if (!isNaN(number) && number > maxNumber) {
+          maxNumber = number;
+        }
+      }
+    });
+    
+    // Also check the counter file  
+    const counterFile = path.join(projectPath, '.mdt-next');
+    let counterNumber = 0;
+    try {
+      const content = await fs.readFile(counterFile, 'utf8');
+      counterNumber = parseInt(content.trim()) || 0;
+    } catch {
+      // Counter file doesn't exist
+    }
+    
+    const nextNumber = Math.max(maxNumber + 1, counterNumber);
+    return nextNumber;
+  } catch (error) {
+    console.error('Error getting next ticket number:', error);
+    return 1;
+  }
+}
+
+// Helper function to update ticket counter
+async function updateTicketCounter(projectPath, nextNumber) {
+  try {
+    const counterFile = path.join(projectPath, '.mdt-next');
+    await fs.writeFile(counterFile, nextNumber.toString(), 'utf8');
+  } catch (error) {
+    console.error('Error updating ticket counter:', error);
+  }
+}
+
+// Helper function to load tickets from a project directory
+async function loadTickets(projectPath) {
+  const tickets = [];
+  
+  try {
+    const files = await fs.readdir(projectPath);
+    const mdFiles = files.filter(file => file.endsWith('.md'));
+    
+    for (const filename of mdFiles) {
+      const filePath = path.join(projectPath, filename);
+      const content = await fs.readFile(filePath, 'utf8');
+      
+      let code = null;
+      let title = '';
+      
+      // Try YAML frontmatter first
+      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      if (frontmatterMatch) {
+        const lines = frontmatterMatch[1].split('\n');
+        
+        for (const line of lines) {
+          const match = line.match(/^(\w+):\s*(.+)$/);
+          if (match) {
+            if (match[1] === 'code') {
+              code = match[2].trim();
+            } else if (match[1] === 'title') {
+              title = match[2].trim();
+            }
+          }
+        }
+      } else {
+        // Try markdown format (- **Code**: DEB-016)
+        const codeMatch = content.match(/^-\s*\*\*Code\*\*:\s*(.+)$/m);
+        if (codeMatch) {
+          code = codeMatch[1].trim();
+        }
+        
+        const titleMatch = content.match(/^-\s*\*\*Title\/Summary\*\*:\s*(.+)$/m);
+        if (titleMatch) {
+          title = titleMatch[1].trim();
+        }
+      }
+      
+      if (code) {
+        tickets.push({
+          code,
+          title,
+          filename: filePath
+        });
+      }
+    }
+  } catch (error) {
+    console.error(`Error loading tickets from ${projectPath}:`, error);
+  }
+  
+  return tickets;
+}
+
+// Duplicate detection and resolution endpoint
+app.get('/api/duplicates/:projectId', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    
+    // Map project IDs to paths (simplified for now)
+    const projectPaths = {
+      'debug-tasks': '/Users/kirby/home/markdown-ticket/debug-tasks',
+      'markdown-ticket': '/Users/kirby/home/markdown-ticket/docs/CRs'
+    };
+    
+    const projectPath = projectPaths[projectId];
+    if (!projectPath) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const tickets = await loadTickets(projectPath);
+    const duplicates = {};
+    
+    // Group tickets by code to find duplicates
+    tickets.forEach(ticket => {
+      if (!duplicates[ticket.code]) {
+        duplicates[ticket.code] = [];
+      }
+      duplicates[ticket.code].push({
+        filename: path.basename(ticket.filename),
+        filepath: ticket.filename,
+        title: ticket.title,
+        code: ticket.code
+      });
+    });
+    
+    // Filter to only duplicates (more than 1 ticket per code)
+    const duplicateGroups = Object.entries(duplicates)
+      .filter(([code, tickets]) => tickets.length > 1)
+      .map(([code, tickets]) => ({ code, tickets }));
+    
+    res.json({ duplicates: duplicateGroups });
+  } catch (error) {
+    console.error('Error checking duplicates:', error);
+    res.status(500).json({ error: 'Failed to check duplicates' });
+  }
+});
+
+// Preview rename changes
+app.post('/api/duplicates/preview', async (req, res) => {
+  try {
+    const { projectId, filepath } = req.body;
+    
+    // Map project IDs to paths and codes
+    const projectInfo = {
+      'debug-tasks': { path: '/Users/kirby/home/markdown-ticket/debug-tasks', code: 'DEB' },
+      'markdown-ticket': { path: '/Users/kirby/home/markdown-ticket/docs/CRs', code: 'MDT' }
+    };
+    
+    const project = projectInfo[projectId];
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Get next available ticket number
+    const nextNumber = await getNextTicketNumber(project.path, project.code);
+    const newCode = `${project.code}-${String(nextNumber).padStart(3, '0')}`;
+    
+    // Read current file to get old code
+    const content = await fs.readFile(filepath, 'utf8');
+    const codeMatch = content.match(/^code:\s*(.+)$/m) || content.match(/^-\s*\*\*Code\*\*:\s*(.+)$/m);
+    const oldCode = codeMatch ? codeMatch[1].trim() : '';
+    
+    // Generate new filename
+    const oldFilename = path.basename(filepath);
+    const newFilename = oldFilename.replace(oldCode, newCode);
+    
+    res.json({
+      newCode,
+      newFilename,
+      oldCode,
+      oldFilename
+    });
+  } catch (error) {
+    console.error('Error generating preview:', error);
+    res.status(500).json({ error: 'Failed to generate preview' });
+  }
+});
+
+// Resolve duplicate by renaming
+app.post('/api/duplicates/resolve', async (req, res) => {
+  try {
+    const { projectId, oldFilepath, action } = req.body; // action: 'rename' or 'delete'
+    
+    // Map project IDs to paths and codes
+    const projectInfo = {
+      'debug-tasks': { path: '/Users/kirby/home/markdown-ticket/debug-tasks', code: 'DEB' },
+      'markdown-ticket': { path: '/Users/kirby/home/markdown-ticket/docs/CRs', code: 'MDT' }
+    };
+    
+    const project = projectInfo[projectId];
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (action === 'delete') {
+      await fs.unlink(oldFilepath);
+      res.json({ success: true, action: 'deleted' });
+      return;
+    }
+
+    if (action === 'rename') {
+      // Get next available ticket number
+      const nextNumber = await getNextTicketNumber(project.path, project.code);
+      const newCode = `${project.code}-${String(nextNumber).padStart(3, '0')}`;
+      
+      // Read current file content
+      const content = await fs.readFile(oldFilepath, 'utf8');
+      
+      // Extract current code from content
+      const codeMatch = content.match(/^code:\s*(.+)$/m);
+      const oldCode = codeMatch ? codeMatch[1].trim() : '';
+      
+      // Replace code in content
+      const newContent = content.replace(/^code:\s*.+$/m, `code: ${newCode}`);
+      
+      // Generate new filename
+      const oldFilename = path.basename(oldFilepath);
+      const newFilename = oldFilename.replace(oldCode, newCode);
+      const newFilepath = path.join(path.dirname(oldFilepath), newFilename);
+      
+      // Write new file and delete old one
+      await fs.writeFile(newFilepath, newContent, 'utf8');
+      await fs.unlink(oldFilepath);
+      
+      // Update counter
+      await updateTicketCounter(project.path, nextNumber + 1);
+      
+      res.json({ 
+        success: true, 
+        action: 'renamed',
+        oldCode,
+        newCode,
+        oldFilename,
+        newFilename
+      });
+    }
+  } catch (error) {
+    console.error('Error resolving duplicate:', error);
+    res.status(500).json({ error: 'Failed to resolve duplicate' });
+  }
+});
 // ========================================
 
 // Get all registered projects
@@ -638,16 +888,8 @@ app.post('/api/projects/:projectId/crs', async (req, res) => {
       return res.status(400).json({ error: 'Project configuration not found' });
     }
 
-    // Get next CR number
-    const counterPath = path.join(project.project.path, '.mdt-next');
-    let nextNumber = 1;
-    
-    try {
-      const counterContent = await fs.readFile(counterPath, 'utf8');
-      nextNumber = parseInt(counterContent.trim()) || 1;
-    } catch (error) {
-      // Counter file doesn't exist, start with 1
-    }
+    // Get next CR number using smart logic
+    const nextNumber = await getNextTicketNumber(project.project.path, config.code);
 
     // Generate CR code based on project configuration or use provided code
     let crCode;

@@ -1,11 +1,12 @@
 ---
 code: MDT-019
 title: Markdown document viewer with tree navigation
-status: In Progress
+status: Implemented
 dateCreated: 2025-09-06T16:37:05.822Z
 type: Feature Enhancement
 priority: Medium
 phaseEpic: Documentation Features
+lastModified: 2025-09-06T21:43:22.000Z
 ---
 
 # Markdown document viewer with tree navigation
@@ -62,7 +63,7 @@ DocumentsView/
 └── ViewToggle.tsx          # Board/Documents toggle
 ```
 
-### Phase 1.2: Path Selection Interface
+### Phase 1.2: Path Selection Interface (✅ Completed)
 **Components Added:**
 - `PathSelector.tsx` - Checkbox-based file/folder selection interface
 - Enhanced `DocumentsLayout.tsx` - Detects unconfigured projects and shows PathSelector
@@ -135,10 +136,12 @@ max_depth = 3
 - [x] Read `document_paths` from `.mdt-config.toml` in project root
 - [x] Support single files (README.md) and directories (docs/)
 - [x] Tree navigation shows configured paths and .md files only
-- [x] **Phase 1.2**: Path selection interface for unconfigured projects
-- [x] **Phase 1.2**: Checkbox-based file/folder selection
-- [x] **Phase 1.2**: Automatic configuration persistence
-- [x] **Phase 1.2**: Project switching with proper state clearing
+- [x] **Phase 1.2**: Path selection interface for unconfigured projects ✅
+- [x] **Phase 1.2**: Checkbox-based file/folder selection ✅
+- [x] **Phase 1.2**: Automatic configuration persistence ✅
+- [x] **Phase 1.2**: Project switching with proper state clearing ✅
+- [x] **Phase 1.2**: Smart filtering (excludes tickets folder and dev directories) ✅
+- [x] **Phase 1.2**: Glob-based file discovery with `**/*.md` patterns ✅
 - [x] Click on .md file renders content using showdown converter
 - [x] Board/Documents view toggle in single project view
 - [x] Extract H1 titles from markdown files for display labels
