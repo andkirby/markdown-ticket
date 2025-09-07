@@ -308,7 +308,8 @@ export class TemplateService {
   getTemplate(type: CRType): Template {
     const template = this.templates.get(type);
     if (!template) {
-      throw new Error(`No template found for CR type: ${type}`);
+      const validTypes = Array.from(this.templates.keys());
+      throw new Error(`Invalid CR type '${type}'. Must be one of: ${validTypes.join(', ')}`);
     }
     return template;
   }

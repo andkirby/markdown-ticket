@@ -89,12 +89,12 @@ export class MCPTools {
               type: 'string',
               description: 'Project key'
             },
-            crKey: {
+            key: {
               type: 'string',
               description: 'CR key (e.g., MDT-004, API-123)'
             }
           },
-          required: ['project', 'crKey']
+          required: ['project', 'key']
         }
       },
       {
@@ -162,7 +162,7 @@ export class MCPTools {
               type: 'string',
               description: 'Project key'
             },
-            crKey: {
+            key: {
               type: 'string',
               description: 'CR key'
             },
@@ -172,7 +172,7 @@ export class MCPTools {
               description: 'New status for the CR'
             }
           },
-          required: ['project', 'crKey', 'status']
+          required: ['project', 'key', 'status']
         }
       },
       {
@@ -185,16 +185,25 @@ export class MCPTools {
               type: 'string',
               description: 'Project key'
             },
-            crKey: {
+            key: {
               type: 'string',
               description: 'CR key'
             }
           },
-          required: ['project', 'crKey']
+          required: ['project', 'key']
         }
       },
 
       // Template System
+      {
+        name: 'list_cr_templates',
+        description: 'List all available CR template types',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+          required: []
+        }
+      },
       {
         name: 'get_cr_template',
         description: 'Get the template structure for a specific CR type',
@@ -279,12 +288,12 @@ export class MCPTools {
               type: 'string',
               description: 'Project key'
             },
-            crKey: {
+            key: {
               type: 'string',
               description: 'CR key to analyze'
             }
           },
-          required: ['project', 'crKey']
+          required: ['project', 'key']
         }
       }
     ];
@@ -303,16 +312,19 @@ export class MCPTools {
           return await this.handleListCRs(args.project, args.filters);
         
         case 'get_cr':
-          return await this.handleGetCR(args.project, args.crKey);
+          return await this.handleGetCR(args.project, args.key);
         
         case 'create_cr':
           return await this.handleCreateCR(args.project, args.type, args.data);
         
         case 'update_cr_status':
-          return await this.handleUpdateCRStatus(args.project, args.crKey, args.status);
+          return await this.handleUpdateCRStatus(args.project, args.key, args.status);
         
         case 'delete_cr':
-          return await this.handleDeleteCR(args.project, args.crKey);
+          return await this.handleDeleteCR(args.project, args.key);
+        
+        case 'list_cr_templates':
+          return await this.handleListCRTemplates();
         
         case 'get_cr_template':
           return await this.handleGetCRTemplate(args.type);
@@ -327,15 +339,26 @@ export class MCPTools {
           return await this.handleFindRelatedCRs(args.project, args.keywords);
         
         case 'suggest_cr_improvements':
-          return await this.handleSuggestCRImprovements(args.project, args.crKey);
+          return await this.handleSuggestCRImprovements(args.project, args.key);
         
         default:
-          throw new Error(`Unknown tool: ${name}`);
+          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr', 'create_cr', 'update_cr_status', 'delete_cr', 'list_cr_templates', 'get_cr_template', 'validate_cr_data', 'get_next_cr_number', 'find_related_crs', 'suggest_cr_improvements'];
+          throw new Error(`Unknown tool '${name}'. Available tools: ${availableTools.join(', ')}`);
       }
     } catch (error) {
       console.error(`Error handling tool ${name}:`, error);
       throw error;
     }
+  }
+
+  private async validateProject(projectKey: string): Promise<any> {
+    const project = this.projectDiscovery.getProject(projectKey);
+    if (!project) {
+      const projects = await this.projectDiscovery.discoverProjects();
+      const availableKeys = projects.map(p => p.id).join(', ');
+      throw new Error(`Project '${projectKey}' not found. Available projects: ${availableKeys}`);
+    }
+    return project;
   }
 
   private async handleListProjects(): Promise<string> {
@@ -366,12 +389,7 @@ export class MCPTools {
   }
 
   private async handleGetProjectInfo(key: string): Promise<string> {
-    const project = this.projectDiscovery.getProject(key);
-    if (!project) {
-      const projects = await this.projectDiscovery.discoverProjects();
-      const availableKeys = projects.map(p => p.id).join(', ');
-      throw new Error(`Project '${key}' not found. Available projects: ${availableKeys}`);
-    }
+    const project = await this.validateProject(key);
 
     const info = await this.projectDiscovery.getProjectInfo(key);
     if (!info) {
@@ -401,10 +419,7 @@ export class MCPTools {
   }
 
   private async handleListCRs(projectKey: string, filters?: CRFilters): Promise<string> {
-    const project = this.projectDiscovery.getProject(projectKey);
-    if (!project) {
-      throw new Error(`Project '${projectKey}' not found`);
-    }
+    const project = await this.validateProject(projectKey);
 
     const crs = await this.crService.listCRs(project, filters);
     
@@ -432,15 +447,12 @@ export class MCPTools {
     return lines.join('\n');
   }
 
-  private async handleGetCR(projectKey: string, crKey: string): Promise<string> {
-    const project = this.projectDiscovery.getProject(projectKey);
-    if (!project) {
-      throw new Error(`Project '${projectKey}' not found`);
-    }
+  private async handleGetCR(projectKey: string, key: string): Promise<string> {
+    const project = await this.validateProject(projectKey);
 
-    const cr = await this.crService.getCR(project, crKey);
+    const cr = await this.crService.getCR(project, key);
     if (!cr) {
-      throw new Error(`CR '${crKey}' not found in project '${projectKey}'`);
+      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
     const lines = [
@@ -460,7 +472,12 @@ export class MCPTools {
     if (cr.effort) lines.push(`- Effort: ${cr.effort}`);
 
     if (cr.content) {
-      lines.push('', '**Content:**', cr.content.substring(0, 500) + (cr.content.length > 500 ? '...' : ''));
+      const contentLength = cr.content.length;
+      if (contentLength > 500) {
+        lines.push('', `**Content (${contentLength} chars, showing first 500):**`, cr.content.substring(0, 500) + '...');
+      } else {
+        lines.push('', `**Content (${contentLength} chars):**`, cr.content);
+      }
     }
 
     lines.push('', `**File:** ${cr.filePath}`);
@@ -469,10 +486,7 @@ export class MCPTools {
   }
 
   private async handleCreateCR(projectKey: string, type: CRType, data: CRData): Promise<string> {
-    const project = this.projectDiscovery.getProject(projectKey);
-    if (!project) {
-      throw new Error(`Project '${projectKey}' not found`);
-    }
+    const project = await this.validateProject(projectKey);
 
     // Validate data first
     const validation = this.templateService.validateCRData(data, type);
@@ -514,27 +528,22 @@ export class MCPTools {
     return lines.join('\n');
   }
 
-  private async handleUpdateCRStatus(projectKey: string, crKey: string, status: CRStatus): Promise<string> {
-    const project = this.projectDiscovery.getProject(projectKey);
-    if (!project) {
-      throw new Error(`Project '${projectKey}' not found`);
-    }
+  private async handleUpdateCRStatus(projectKey: string, key: string, status: CRStatus): Promise<string> {
+    const project = await this.validateProject(projectKey);
 
     // Get current CR to show old status
-    const cr = await this.crService.getCR(project, crKey);
+    const cr = await this.crService.getCR(project, key);
     if (!cr) {
-      throw new Error(`CR '${crKey}' not found in project '${projectKey}'`);
+      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
     const oldStatus = cr.status;
-    const success = await this.crService.updateCRStatus(project, crKey, status);
-
-    if (!success) {
-      throw new Error(`Failed to update CR '${crKey}' status`);
-    }
+    
+    // The service now throws specific errors instead of returning false
+    await this.crService.updateCRStatus(project, key, status);
 
     const lines = [
-      `✅ **Updated CR ${crKey}** status`,
+      `✅ **Updated CR ${key}** status`,
       '',
       `**Change:** ${oldStatus} → ${status}`,
       `- Title: ${cr.title}`,
@@ -554,25 +563,22 @@ export class MCPTools {
     return lines.join('\n');
   }
 
-  private async handleDeleteCR(projectKey: string, crKey: string): Promise<string> {
-    const project = this.projectDiscovery.getProject(projectKey);
-    if (!project) {
-      throw new Error(`Project '${projectKey}' not found`);
-    }
+  private async handleDeleteCR(projectKey: string, key: string): Promise<string> {
+    const project = await this.validateProject(projectKey);
 
     // Get CR info before deletion
-    const cr = await this.crService.getCR(project, crKey);
+    const cr = await this.crService.getCR(project, key);
     if (!cr) {
-      throw new Error(`CR '${crKey}' not found in project '${projectKey}'`);
+      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
-    const success = await this.crService.deleteCR(project, crKey);
+    const success = await this.crService.deleteCR(project, key);
     if (!success) {
-      throw new Error(`Failed to delete CR '${crKey}'`);
+      throw new Error(`Failed to delete CR '${key}'`);
     }
 
     const lines = [
-      `🗑️ **Deleted CR ${crKey}**`,
+      `🗑️ **Deleted CR ${key}**`,
       '',
       `- Title: ${cr.title}`,
       `- Type: ${cr.type}`,
@@ -583,6 +589,46 @@ export class MCPTools {
       lines.push('', 'The bug fix CR has been deleted as it was implemented and verified. Bug CRs are typically removed after successful implementation to reduce clutter, as documented in the CR lifecycle.');
     }
 
+    return lines.join('\n');
+  }
+
+  private async handleListCRTemplates(): Promise<string> {
+    const templateTypes = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'];
+    
+    const lines = [
+      '📋 **Available CR Template Types**',
+      '',
+      '**Template Types:**'
+    ];
+    
+    templateTypes.forEach((type, index) => {
+      lines.push(`${index + 1}. **${type}**`);
+      
+      // Add brief description for each type
+      switch(type) {
+        case 'Architecture':
+          lines.push('   - High-level system design and structural changes');
+          break;
+        case 'Feature Enhancement':
+          lines.push('   - New functionality or improvements to existing features');
+          break;
+        case 'Bug Fix':
+          lines.push('   - Correcting defects and resolving issues');
+          break;
+        case 'Technical Debt':
+          lines.push('   - Code quality improvements and refactoring');
+          break;
+        case 'Documentation':
+          lines.push('   - Creating or updating project documentation');
+          break;
+      }
+      lines.push('');
+    });
+    
+    lines.push('**Usage:**');
+    lines.push('Use `get_cr_template(type: "<template_type>")` to get the specific template structure.');
+    lines.push('Use `create_cr(type: "<template_type>", data: {...})` to create a new CR.');
+    
     return lines.join('\n');
   }
 
@@ -603,10 +649,7 @@ export class MCPTools {
   }
 
   private async handleValidateCRData(projectKey: string, data: any): Promise<string> {
-    const project = this.projectDiscovery.getProject(projectKey);
-    if (!project) {
-      throw new Error(`Project '${projectKey}' not found`);
-    }
+    const project = await this.validateProject(projectKey);
 
     const validation = this.templateService.validateCRData(data, data.type);
     
@@ -652,10 +695,7 @@ export class MCPTools {
   }
 
   private async handleGetNextCRNumber(projectKey: string): Promise<string> {
-    const project = this.projectDiscovery.getProject(projectKey);
-    if (!project) {
-      throw new Error(`Project '${projectKey}' not found`);
-    }
+    const project = await this.validateProject(projectKey);
 
     const nextNumber = await this.crService.getNextCRNumber(project);
     const nextKey = `${project.project.code}-${String(nextNumber).padStart(3, '0')}`;
@@ -677,10 +717,7 @@ export class MCPTools {
   }
 
   private async handleFindRelatedCRs(projectKey: string, keywords: string[]): Promise<string> {
-    const project = this.projectDiscovery.getProject(projectKey);
-    if (!project) {
-      throw new Error(`Project '${projectKey}' not found`);
-    }
+    const project = await this.validateProject(projectKey);
 
     const allCRs = await this.crService.listCRs(project);
     const related = this.findRelatedCRs(allCRs, keywords);
@@ -711,21 +748,18 @@ export class MCPTools {
     return lines.join('\n');
   }
 
-  private async handleSuggestCRImprovements(projectKey: string, crKey: string): Promise<string> {
-    const project = this.projectDiscovery.getProject(projectKey);
-    if (!project) {
-      throw new Error(`Project '${projectKey}' not found`);
-    }
+  private async handleSuggestCRImprovements(projectKey: string, key: string): Promise<string> {
+    const project = await this.validateProject(projectKey);
 
-    const cr = await this.crService.getCR(project, crKey);
+    const cr = await this.crService.getCR(project, key);
     if (!cr) {
-      throw new Error(`CR '${crKey}' not found in project '${projectKey}'`);
+      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
     const suggestions = this.templateService.suggestImprovements(cr);
 
     return [
-      `💡 **CR Improvement Suggestions for ${crKey}**`,
+      `💡 **CR Improvement Suggestions for ${key}**`,
       '',
       `**Current CR:** ${cr.title}`,
       '',

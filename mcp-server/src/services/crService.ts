@@ -45,12 +45,12 @@ export class CRService {
     }
   }
 
-  async getCR(project: Project, crKey: string): Promise<CR | null> {
+  async getCR(project: Project, key: string): Promise<CR | null> {
     try {
       // Find the file matching the CR key
       const crFiles = await glob('*.md', { cwd: project.project.path });
       const targetFile = crFiles.find(file => 
-        path.basename(file, '.md').toUpperCase().includes(crKey.toUpperCase())
+        path.basename(file, '.md').toUpperCase().includes(key.toUpperCase())
       );
 
       if (!targetFile) {
@@ -59,7 +59,7 @@ export class CRService {
 
       return await this.loadCR(project, targetFile);
     } catch (error) {
-      console.error(`Failed to get CR ${crKey} for project ${project.id}:`, error);
+      console.error(`Failed to get CR ${key} for project ${project.id}:`, error);
       return null;
     }
   }
@@ -86,7 +86,8 @@ export class CRService {
         status: 'Proposed',
         type: crType,
         priority: data.priority || 'Medium',
-        // dateCreated and lastModified will be derived from file stats
+        dateCreated: now,
+        lastModified: now,
         content: data.content || '',
         filePath,
         phaseEpic: data.phaseEpic,
@@ -128,12 +129,15 @@ export class CRService {
     }
   }
 
-  async updateCRStatus(project: Project, crKey: string, status: CRStatus): Promise<boolean> {
+  async updateCRStatus(project: Project, key: string, status: CRStatus): Promise<boolean> {
     try {
-      const cr = await this.getCR(project, crKey);
+      const cr = await this.getCR(project, key);
       if (!cr) {
-        return false;
+        throw new Error(`CR '${key}' not found in project '${project.id}'`);
       }
+
+      // Validate status transition
+      this.validateStatusTransition(cr.status, status);
 
       // Read current file content
       const content = await readFile(cr.filePath, 'utf-8');
@@ -145,26 +149,63 @@ export class CRService {
       // Write back to file
       await fs.outputFile(cr.filePath, updatedContent, 'utf-8');
 
-      console.error(`✅ Updated CR ${crKey} status to ${status}`);
+      console.error(`✅ Updated CR ${key} status to ${status}`);
       return true;
     } catch (error) {
-      console.error(`Failed to update CR ${crKey} status:`, error);
-      return false;
+      // Enhanced error handling with specific failure types
+      if (error instanceof Error) {
+        if (error.message.includes('ENOENT')) {
+          throw new Error(`Failed to update CR '${key}': File not found or deleted`);
+        }
+        if (error.message.includes('EACCES') || error.message.includes('EPERM')) {
+          throw new Error(`Failed to update CR '${key}': Permission denied. Check file permissions`);
+        }
+        if (error.message.includes('EBUSY') || error.message.includes('EMFILE')) {
+          throw new Error(`Failed to update CR '${key}': File locked or in use by another process`);
+        }
+        if (error.message.includes('Invalid status transition')) {
+          throw error; // Re-throw validation errors as-is
+        }
+        if (error.message.includes('not found')) {
+          throw error; // Re-throw CR not found errors as-is
+        }
+        // Generic file system or parsing errors
+        throw new Error(`Failed to update CR '${key}': ${error.message}`);
+      }
+      throw new Error(`Failed to update CR '${key}': Unknown error occurred`);
     }
   }
 
-  async deleteCR(project: Project, crKey: string): Promise<boolean> {
+  private validateStatusTransition(currentStatus: CRStatus, newStatus: CRStatus): void {
+    // Define valid status transitions
+    const validTransitions: Record<CRStatus, CRStatus[]> = {
+      'Proposed': ['Approved', 'Rejected'],
+      'Approved': ['In Progress', 'Rejected'],
+      'In Progress': ['Implemented', 'Approved'], // Allow going back to approved for issues
+      'Implemented': ['In Progress'], // Allow reopening if issues found
+      'Rejected': ['Proposed'] // Allow re-proposing rejected CRs
+    };
+
+    const allowedTransitions = validTransitions[currentStatus] || [];
+    
+    if (!allowedTransitions.includes(newStatus)) {
+      const validOptions = allowedTransitions.join(', ');
+      throw new Error(`Invalid status transition from '${currentStatus}' to '${newStatus}'. Valid transitions from '${currentStatus}': ${validOptions}`);
+    }
+  }
+
+  async deleteCR(project: Project, key: string): Promise<boolean> {
     try {
-      const cr = await this.getCR(project, crKey);
+      const cr = await this.getCR(project, key);
       if (!cr) {
         return false;
       }
 
       await fs.remove(cr.filePath);
-      console.error(`🗑️ Deleted CR ${crKey}`);
+      console.error(`🗑️ Deleted CR ${key}`);
       return true;
     } catch (error) {
-      console.error(`Failed to delete CR ${crKey}:`, error);
+      console.error(`Failed to delete CR ${key}:`, error);
       return false;
     }
   }
