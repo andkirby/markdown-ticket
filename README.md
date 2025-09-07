@@ -2,6 +2,34 @@
 
 A Kanban-style ticket board system that uses markdown files for storage, providing a lightweight and version-control-friendly approach to project management.
 
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Getting Started](#getting-started)
+  - [First Time Setup](#first-time-setup)
+  - [Creating Tickets](#creating-tickets)
+  - [Ticket Format](#ticket-format)
+  - [Ticket Statuses](#ticket-statuses)
+- [Sorting Configuration](#sorting-configuration)
+  - [Default Sort Attributes](#default-sort-attributes)
+  - [Custom Sorting Configuration](#custom-sorting-configuration)
+  - [Configuration Options](#configuration-options)
+  - [System Attributes Protection](#system-attributes-protection)
+- [MCP Integration](#mcp-integration)
+  - [Adding MCP to AI Assistants](#adding-mcp-to-ai-assistants)
+  - [Available MCP Tools](#available-mcp-tools)
+- [Project Management](#project-management)
+  - [Creating Projects](#creating-projects)
+  - [Project Configuration](#project-configuration)
+- [Development](#development)
+  - [Frontend Development](#frontend-development)
+  - [Backend Development](#backend-development)
+  - [Testing](#testing)
+- [File System Integration](#file-system-integration)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Features
 
 - **Kanban Board Interface**: Visual drag-and-drop ticket management
