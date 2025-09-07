@@ -1,7 +1,7 @@
 ---
 code: MDT-020
 title: Configuration Management Improvements and Add Project UI
-status: Proposed
+status: Implemented
 dateCreated: 2025-09-06T18:00:18.457Z
 type: Feature Enhancement
 priority: Medium

@@ -1,6 +1,7 @@
 import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { glob } from 'glob';
@@ -1302,6 +1303,136 @@ app.post('/api/projects/register', async (req, res) => {
   }
 });
 
+// Create new project with UI form data
+app.post('/api/projects/create', async (req, res) => {
+  try {
+    const { name, code, path: projectPath, description, repositoryUrl } = req.body;
+    
+    if (!name || !projectPath) {
+      return res.status(400).json({ error: 'Name and path are required' });
+    }
+
+    // Verify project path exists
+    try {
+      const stats = await fs.stat(projectPath);
+      if (!stats.isDirectory()) {
+        return res.status(400).json({ error: 'Project path must be a directory' });
+      }
+    } catch (error) {
+      return res.status(400).json({ error: 'Project path does not exist' });
+    }
+
+    // Generate project code if not provided
+    const projectCode = code || name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6);
+    
+    // Create project config directory
+    const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket', 'projects');
+    await fs.mkdir(configDir, { recursive: true });
+    
+    // Create project config file
+    const configFileName = `${projectCode.toLowerCase()}.toml`;
+    const configFilePath = path.join(configDir, configFileName);
+    
+    // Check if project already exists
+    try {
+      await fs.access(configFilePath);
+      return res.status(400).json({ error: 'Project with this code already exists' });
+    } catch (error) {
+      // File doesn't exist, which is what we want
+    }
+
+    // Create CRs directory if it doesn't exist
+    const crsDir = path.join(projectPath, 'docs', 'CRs');
+    await fs.mkdir(crsDir, { recursive: true });
+
+    // Create project config content
+    const configContent = `# Project Configuration for ${name}
+[project]
+id = "${projectCode}"
+name = "${name}"
+description = "${description || ''}"
+${repositoryUrl ? `repository = "${repositoryUrl}"` : ''}
+
+[tickets]
+path = "docs/CRs"
+pattern = "*.md"
+codePattern = "^${projectCode}-\\\\d{3}$"
+
+[metadata]
+created = "${new Date().toISOString()}"
+version = "1.0"
+`;
+
+    // Write config file
+    await fs.writeFile(configFilePath, configContent, 'utf8');
+
+    // Create counter file
+    const counterFile = path.join(projectPath, '.mdt-next');
+    await fs.writeFile(counterFile, '1', 'utf8');
+
+    // Register project with discovery service
+    const projectInfo = {
+      id: projectCode,
+      name,
+      path: projectPath,
+      description: description || '',
+      configFile: configFileName,
+      active: true
+    };
+
+    projectDiscovery.registerProject(projectInfo);
+
+    res.json({ 
+      success: true, 
+      message: 'Project created successfully', 
+      project: projectInfo,
+      configPath: configFilePath
+    });
+  } catch (error) {
+    console.error('Error creating project:', error);
+    res.status(500).json({ error: 'Failed to create project' });
+  }
+});
+
+// Get system directories for project path selection
+app.get('/api/system/directories', async (req, res) => {
+  try {
+    const { path: requestPath } = req.query;
+    const basePath = requestPath || process.env.HOME || os.homedir();
+    
+    // Security check - only allow paths under home directory
+    const homedir = process.env.HOME || os.homedir();
+    const resolvedPath = path.resolve(basePath);
+    if (!resolvedPath.startsWith(homedir)) {
+      return res.status(403).json({ error: 'Access denied to path outside home directory' });
+    }
+
+    try {
+      const entries = await fs.readdir(resolvedPath, { withFileTypes: true });
+      const directories = entries
+        .filter(entry => entry.isDirectory())
+        .filter(entry => !entry.name.startsWith('.') || entry.name === '.config')
+        .map(entry => ({
+          name: entry.name,
+          path: path.join(resolvedPath, entry.name),
+          isDirectory: true
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      res.json({
+        currentPath: resolvedPath,
+        parentPath: path.dirname(resolvedPath),
+        directories
+      });
+    } catch (error) {
+      res.status(404).json({ error: 'Directory not found or not accessible' });
+    }
+  } catch (error) {
+    console.error('Error listing directories:', error);
+    res.status(500).json({ error: 'Failed to list directories' });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
@@ -1679,6 +1810,8 @@ app.listen(PORT, () => {
   console.log(`   PUT  /api/projects/:id/crs/:crId - Update CR`);
   console.log(`   DELETE /api/projects/:id/crs/:crId - Delete CR`);
   console.log(`   POST /api/projects/register - Register new project`);
+  console.log(`   POST /api/projects/create - Create new project with UI`);
+  console.log(`   GET  /api/system/directories - List directories for project selection`);
   
   // Initialize the server
   initializeServer()

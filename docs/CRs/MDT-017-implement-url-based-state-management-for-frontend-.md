@@ -164,7 +164,31 @@ Essential for professional user experience - users need to bookmark specific vie
 - [ ] Real-time updates integrate smoothly with URL state
 
 ## 5. Implementation Notes
-*To be filled during/after implementation*
+
+### Technical Concerns
+
+**State Management Complexity**: The hybrid approach (URL + React state + localStorage + SSE) could create race conditions. When SSE updates come in, URL state might conflict with real-time data. Need careful state reconciliation strategy.
+
+**Performance**: URL updates on every sort/filter change could spam browser history. Debouncing implementation needs to balance responsiveness with history pollution.
+
+**SSE Integration**: Current real-time file watcher might not play well with URL-driven state. If a ticket updates via SSE while user is on a specific URL, we need to handle state reconciliation carefully without breaking navigation.
+
+### Implementation Concerns
+
+**Scope Creep**: This is a massive change touching every component. The "comprehensive" approach might be too ambitious for a single CR. Consider breaking into smaller incremental changes.
+
+**Breaking Changes**: Current localStorage-based project selection will need migration strategy. Users might lose their preferences during transition.
+
+**Testing Complexity**: The acceptance criteria list is extensive - this could take significant time to validate all edge cases and navigation scenarios.
+
+### Alternative Approach
+
+Consider more incremental implementation:
+1. Start with basic project routing (`/project/{code}`) and ticket deep links (`/t/{code}`)
+2. Add sorting/filtering URL parameters in separate CR
+3. Add advanced features (save defaults, documents deep linking) in final phase
+
+Current app works well - need to ensure URL routing doesn't introduce bugs for features that aren't broken.
 
 ## 6. References
 

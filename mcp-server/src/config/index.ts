@@ -52,14 +52,13 @@ export class ConfigService {
   private getConfigPath(): string {
     // Check for config file in order of preference
     const possiblePaths = [
-      // Current directory
-      path.join(process.cwd(), 'mcp-server-config.toml'),
-      // User config directory
+      // New unified location (preferred)
+      path.join(os.homedir(), '.config', 'markdown-ticket', 'mcp-server.toml'),
+      // Legacy locations for backward compatibility
+      path.join(os.homedir(), '.mcp-server.toml'),
       path.join(os.homedir(), '.config', 'mcp-server', 'config.toml'),
-      // XDG config
-      path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'mcp-server', 'config.toml'),
-      // Home directory
-      path.join(os.homedir(), '.mcp-server.toml')
+      // Current directory
+      path.join(process.cwd(), 'mcp-server-config.toml')
     ];
 
     for (const configPath of possiblePaths) {
@@ -69,8 +68,8 @@ export class ConfigService {
       }
     }
 
-    // Return default path for creation
-    const defaultPath = path.join(os.homedir(), '.config', 'mcp-server', 'config.toml');
+    // Return new unified path for creation
+    const defaultPath = path.join(os.homedir(), '.config', 'markdown-ticket', 'mcp-server.toml');
     console.error(`📋 No config file found, will use defaults. Config can be created at: ${defaultPath}`);
     return defaultPath;
   }

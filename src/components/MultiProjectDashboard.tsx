@@ -3,6 +3,8 @@ import showdown from 'showdown';
 import { Button } from './UI/index';
 import { defaultRealtimeFileWatcher } from '../services/realtimeFileWatcher';
 import { SortControls } from './SortControls';
+import { HamburgerMenu } from './HamburgerMenu';
+import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 
@@ -46,6 +48,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
   const [projects, setProjects] = useState<Project[]>([]);
   const [crs, setCrs] = useState<CR[]>([]);
   const [selectedCR, setSelectedCR] = useState<CR | null>(null);
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   
   // Use prop selectedProject if provided, otherwise use internal state
   const selectedProject = propSelectedProject || null;
@@ -309,6 +312,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
             >
               Refresh
             </Button>
+            <HamburgerMenu onAddProject={() => setShowAddProjectModal(true)} />
           </div>
         </div>
       </div>
@@ -558,6 +562,15 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
         </div>
       )}
       </div>
+
+      <AddProjectModal
+        isOpen={showAddProjectModal}
+        onClose={() => setShowAddProjectModal(false)}
+        onProjectCreated={() => {
+          fetchProjects();
+          setShowAddProjectModal(false);
+        }}
+      />
     </div>
   );
 };
