@@ -89,3 +89,16 @@ Frontend uses fetch() to communicate with backend. All file operations go throug
 ### Build and Deployment
 Run `npm run build` for production build. The application expects the backend server to be running and accessible for full functionality.
 - Always follow @docs/create_ticket.md document for managing CRs/bugs, etc.
+
+## MCP Server Operations
+
+### Ticket Operations Priority
+1. **FIRST**: Always attempt MCP functions (mcp__markdown-ticket__*)
+2. **IF MCP fails**: Ask user "The MCP server appears disconnected. Please run `/mcp` to reconnect the markdown-ticket server, then try again."
+3. **ONLY after user confirms MCP restart**: Fallback to manual file operations
+4. **Never skip step 2** - always request MCP reconnection before manual fallback
+
+### MCP Server Requirements
+- Required MCP server: "markdown-ticket" for all ticket operations (create, read, update, delete, list, validate)
+- If MCP functions return "No such tool available", the server connection has failed
+- User must reconnect via `/mcp` command before proceeding with ticket operations
