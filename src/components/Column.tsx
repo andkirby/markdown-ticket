@@ -114,8 +114,8 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }
   return (
     <div
       ref={drop}
-      className={`column flex flex-col rounded-lg border-2 ${
-        isOver ? 'border-primary-400 bg-primary-50 drag-over' : 'border-gray-200'
+      className={`column flex flex-col rounded-lg border-2 transition-colors ${
+        isOver ? 'border-blue-400 bg-blue-50 dark:bg-blue-950/20' : 'border-gray-200 dark:border-gray-700'
       }`}
       style={{ minHeight: '400px' }}
     >

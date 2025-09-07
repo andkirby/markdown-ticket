@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import showdown from 'showdown';
 import { Ticket } from '../types/ticket';
 import { Modal, ModalHeader, ModalBody } from './UI/Modal';
+import TicketAttributes from './TicketAttributes';
 
 interface TicketViewerProps {
   ticket: Ticket | null;
@@ -37,21 +38,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
       <ModalBody>
         <div className="space-y-4">
           {/* Ticket Metadata */}
-          <div className="flex flex-wrap gap-2 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
-            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 rounded-full border border-blue-200 dark:border-blue-700">
-              {ticket.status}
-            </span>
-            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200 rounded-full border border-green-200 dark:border-green-700">
-              {ticket.priority}
-            </span>
-            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 rounded-full border border-purple-200 dark:border-purple-700">
-              {ticket.type}
-            </span>
-            {ticket.phaseEpic && (
-              <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 rounded-full border border-gray-200 dark:border-gray-700">
-                {ticket.phaseEpic}
-              </span>
-            )}
+          <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+            <TicketAttributes ticket={ticket} />
           </div>
 
           {/* Rendered Markdown Content */}

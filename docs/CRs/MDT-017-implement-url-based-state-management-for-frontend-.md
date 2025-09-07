@@ -8,6 +8,15 @@ priority: High
 lastModified: 2025-09-06T15:43:02.550Z
 ---
 
+
+
+
+
+
+
+
+
+
 # Implement URL-based state management for frontend routing and deep linking
 
 ## 1. Description
@@ -51,17 +60,34 @@ Essential for professional user experience - users need to bookmark specific vie
 
 ### URL Structure Design
 ```
+# Dashboard
 /                                    # Multi-project dashboard
 ├── ?sort={field}-{direction}        # Global sorting
 ├── ?filter={status}                 # Global filtering
 
-/project/{projectCode}               # Single project view
+# Project Views  
+/project/{projectCode}               # Single project - Board view (default)
 ├── ?sort={field}-{direction}        # Project-specific sorting
 ├── ?filter={status}                 # Project-specific filtering
-├── /ticket/{ticketCode}             # Specific ticket detail
-└── /create                          # Create new ticket
+├── ?view=board                      # Explicit board view
 
-/create                              # Global ticket creation
+/project/{projectCode}/list          # Single project - List view
+├── ?sort={field}-{direction}        # List-specific sorting
+├── ?filter={status}                 # List-specific filtering
+
+/project/{projectCode}/documents     # Single project - Documents view
+├── ?file={encodedPath}              # Specific document deep link
+
+# Ticket Detail (Shareable)
+/t/{ticketCode}                      # Ticket detail, returns to List
+/t/{ticketCode}?board                # Ticket detail, returns to Board
+
+# Error/Fallback
+/404                                 # Not found page
+/*                                   # Catch-all redirect to dashboard
+
+# Note: Create functionality removed - no create routes needed
+# All ticket creation happens via external tools/MCP
 ```
 
 ### State Management Approach
@@ -113,8 +139,12 @@ Essential for professional user experience - users need to bookmark specific vie
 ### View States
 - [ ] Multi-project vs single-project view persisted in URL
 - [ ] Selected project reflected in URL path
-- [ ] Opened ticket shows in URL with deep linking support
-- [ ] Create CR page accessible via dedicated route
+- [ ] Current view (Board/List/Documents) reflected in URL
+- [ ] Board view accessible via `/project/{code}` (default) and `?view=board`
+- [ ] List view accessible via `/project/{code}/list` and `?view=list`
+- [ ] Documents view accessible via `/project/{code}/documents`
+- [ ] Opened ticket shows in URL with deep linking support (both project-scoped and global)
+- [ ] Opened document shows in URL with deep linking support
 
 ### Sorting and Filtering
 - [ ] Sort parameters reflected in URL query string

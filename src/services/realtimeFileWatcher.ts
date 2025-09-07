@@ -248,14 +248,14 @@ export class RealtimeFileWatcher {
       timestamp: Date.now()
     });
 
-    // Process the event and refresh tickets with a small delay
+    // Process the event and refresh tickets with a longer delay
     // This prevents race conditions where SSE events triggered by user actions
     // reload stale data before the API changes have propagated
     this.processEventQueue().then(() => {
       setTimeout(() => {
         console.log('🔄 Refreshing tickets after file change...');
         this.loadAndNotifyTickets();
-      }, 500); // 500ms delay to allow API/backend to propagate changes
+      }, 1500); // 1500ms delay to allow API/backend to propagate changes and avoid overriding optimistic updates
     });
   }
 
