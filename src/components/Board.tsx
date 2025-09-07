@@ -32,6 +32,7 @@ interface Project {
 
 interface BoardProps {
   onTicketClick: (ticket: Ticket) => void;
+  onTicketUpdate?: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>;
   enableProjectSwitching?: boolean;
   showHeader?: boolean;
   selectedProject?: Project | null;
@@ -44,6 +45,7 @@ interface BoardProps {
 
 const BoardContent: React.FC<BoardProps> = ({ 
   onTicketClick, 
+  onTicketUpdate,
   enableProjectSwitching = true, 
   showHeader = true, 
   selectedProject: propSelectedProject,
@@ -58,10 +60,15 @@ const BoardContent: React.FC<BoardProps> = ({
   // Only use the hook when no selectedProject prop is provided (multi-project mode)
   const hookData = useMultiProjectData({ autoSelectFirst: enableProjectSwitching });
   
-  // Use prop data if provided, otherwise use hook data
+  // IMPORTANT: Always use hook data for multi-project mode to ensure fresh state
+  // Prop data should only be used in single-project mode (when props are explicitly passed)
   const selectedProject = propSelectedProject !== undefined ? propSelectedProject : hookData.selectedProject;
   const tickets = propTickets !== undefined ? propTickets : hookData.tickets;
   const loading = propLoading !== undefined ? propLoading : hookData.loading;
+  
+  
+  // IMPORTANT: Always use hookData functions for state management operations
+  // This ensures drag-and-drop operations work correctly even when using prop data
   
   // Update sortPreferences when prop changes
   React.useEffect(() => {
@@ -95,23 +102,21 @@ const BoardContent: React.FC<BoardProps> = ({
     }
 
     try {
-      // Use direct updateTicket to ensure immediate UI state update
       console.log('Board: Starting updateTicket call...');
       
       // Send only the status - let backend handle implementation fields automatically
       const updateData: Partial<Ticket> = { status };
       
-      const result = await updateTicket(ticket.code, updateData);
+      // Use the appropriate update function based on mode
+      const updateFunction = onTicketUpdate || updateTicket;
+      const result = await updateFunction(ticket.code, updateData);
       console.log('Board: updateTicket completed, result:', result);
+      
       console.log('Board: Ticket moved successfully');
     } catch (error) {
       console.error('Board: Failed to move ticket:', error);
-      // Refresh to ensure UI is in sync with backend
-      console.log('Board: Refreshing tickets after error...');
-      await refreshProjectTickets();
-      console.log('Board: Refresh completed');
     }
-  }, [updateTicket, refreshProjectTickets]);
+  }, [onTicketUpdate, updateTicket]);
 
   const handleTicketCreate = useCallback(async () => {
     if (!selectedProject) {

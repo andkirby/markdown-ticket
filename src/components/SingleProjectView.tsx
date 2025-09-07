@@ -140,6 +140,36 @@ export default function SingleProjectView({ onTicketClick, selectedProject }: Si
     await fetchTickets();
   }, [fetchTickets]);
 
+  const handleTicketUpdate = useCallback(async (ticketCode: string, updates: Partial<Ticket>) => {
+    if (!selectedProject) {
+      throw new Error('No project selected');
+    }
+
+    try {
+      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticketCode}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update ticket: ${response.statusText}`);
+      }
+
+      const updatedTicket = await response.json();
+      
+      // Refresh tickets to get the latest state
+      await fetchTickets();
+      
+      return updatedTicket;
+    } catch (error) {
+      console.error('Failed to update ticket:', error);
+      throw error;
+    }
+  }, [selectedProject, fetchTickets]);
+
   // Fetch tickets when selected project changes
   useEffect(() => {
     fetchTickets();
@@ -179,9 +209,10 @@ export default function SingleProjectView({ onTicketClick, selectedProject }: Si
         {viewMode === 'board' ? (
           <Board 
             onTicketClick={onTicketClick} 
+            onTicketUpdate={handleTicketUpdate}
             showHeader={false} 
-            selectedProject={selectedProject} 
             enableProjectSwitching={false}
+            selectedProject={selectedProject}
             tickets={tickets}
             loading={loading}
             sortPreferences={sortPreferences}

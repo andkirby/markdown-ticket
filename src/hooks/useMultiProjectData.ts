@@ -196,7 +196,8 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
         return acc;
       }, new Map<string, Ticket>());
 
-      setTickets(Array.from(uniqueTickets.values()));
+      const finalTickets = Array.from(uniqueTickets.values());
+      setTickets(finalTickets);
       setLoading(false);
       
       return convertedTickets;
