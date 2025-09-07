@@ -37,13 +37,17 @@ interface SingleProjectViewProps {
   onTicketClick: (ticket: Ticket) => void;
   selectedProject: Project | null;
   onAddProject?: () => void;
+  viewMode?: string;
 }
 
-export default function SingleProjectView({ onTicketClick, selectedProject, onAddProject }: SingleProjectViewProps) {
-  const [viewMode, setViewMode] = useState<SingleProjectViewMode>(() => {
+export default function SingleProjectView({ onTicketClick, selectedProject, onAddProject, viewMode: externalViewMode }: SingleProjectViewProps) {
+  // Use external viewMode if provided, otherwise fall back to internal state
+  const [internalViewMode, setInternalViewMode] = useState<SingleProjectViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return (saved as SingleProjectViewMode) || 'board';
   });
+  
+  const viewMode = externalViewMode || internalViewMode;
 
   const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
@@ -211,7 +215,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
               ))}
             </div>
           </div>
-        ) : (
+        ) : viewMode === 'docs' || viewMode === 'documents' ? (
           selectedProject ? (
             <DocumentsLayout projectPath={selectedProject.project.path} />
           ) : (
@@ -219,7 +223,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
               No project selected
             </div>
           )
-        )}
+        ) : null}
       </div>
       
       {/* Duplicate Resolver Modal */}

@@ -22,55 +22,49 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
     <div className="flex space-x-1">
       <button
         onClick={() => onViewModeChange('board')}
-        className={`p-2 rounded-md transition-all ${
+        className={`h-12 w-12 rounded-md transition-all ${
           viewMode === 'board'
             ? 'border-2 border-primary'
             : 'border-2 border-transparent hover:border-muted-foreground/30'
         }`}
         title="Board View"
-        style={{
-          backgroundImage: 'url(/icon_board_col_64.webp)',
-          backgroundSize: '20px 20px',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          width: '32px',
-          height: '32px'
-        }}
-      />
+      >
+        <img 
+          src="/icon_board_col_64.webp" 
+          alt="Board" 
+          className="w-6 h-6 mx-auto dark:invert"
+        />
+      </button>
       <button
         onClick={() => onViewModeChange('list')}
-        className={`p-2 rounded-md transition-all ${
+        className={`h-12 w-12 rounded-md transition-all ${
           viewMode === 'list'
             ? 'border-2 border-primary'
             : 'border-2 border-transparent hover:border-muted-foreground/30'
         }`}
         title="List View"
-        style={{
-          backgroundImage: 'url(/icon_list_64.webp)',
-          backgroundSize: '20px 20px',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          width: '32px',
-          height: '32px'
-        }}
-      />
+      >
+        <img 
+          src="/icon_list_64.webp" 
+          alt="List" 
+          className="w-6 h-6 mx-auto dark:invert"
+        />
+      </button>
       <button
         onClick={() => onViewModeChange('docs')}
-        className={`p-2 rounded-md transition-all ${
+        className={`h-12 w-12 rounded-md transition-all ${
           viewMode === 'docs'
             ? 'border-2 border-primary'
             : 'border-2 border-transparent hover:border-muted-foreground/30'
         }`}
         title="Documents View"
-        style={{
-          backgroundImage: 'url(/icon_docs_64.webp)',
-          backgroundSize: '20px 20px',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          width: '32px',
-          height: '32px'
-        }}
-      />
+      >
+        <img 
+          src="/icon_docs_64.webp" 
+          alt="Documents" 
+          className="w-6 h-6 mx-auto dark:invert"
+        />
+      </button>
     </div>
   );
 }
@@ -83,6 +77,13 @@ function App() {
   });
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  
+  // Add internal view mode state for Board/List/Docs
+  const [internalViewMode, setInternalViewMode] = useState<string>(() => {
+    const saved = localStorage.getItem('internal-view-mode');
+    return saved || 'board';
+  });
+  
   const { theme, toggleTheme } = useTheme();
   
   // Project management at app level
@@ -92,6 +93,12 @@ function App() {
   const setViewMode = (mode: ViewMode) => {
     setViewModeState(mode);
     localStorage.setItem(VIEW_MODE_KEY, mode);
+  };
+
+  // Custom setter for internal view mode
+  const setInternalViewModeWithStorage = (mode: string) => {
+    setInternalViewMode(mode);
+    localStorage.setItem('internal-view-mode', mode);
   };
 
   const handleTicketClick = (ticket: Ticket) => {
@@ -116,7 +123,7 @@ function App() {
                 <div className="flex-shrink-0">
                   <img src="/logo.jpeg" alt="Logo" className="w-auto dark:invert" style={{ height: '3.8rem' }} />
                 </div>
-                <ViewModeSwitcher viewMode="board" onViewModeChange={() => {}} />
+                <ViewModeSwitcher viewMode={internalViewMode} onViewModeChange={setInternalViewModeWithStorage} />
                 <ProjectSelector 
                   projects={projects}
                   selectedProject={selectedProject}
@@ -160,7 +167,7 @@ function App() {
               <div className="flex-shrink-0">
                 <img src="/logo.jpeg" alt="Logo" className="w-auto dark:invert" style={{ height: '3.8rem' }} />
               </div>
-              <ViewModeSwitcher viewMode="board" onViewModeChange={() => {}} />
+              <ViewModeSwitcher viewMode={internalViewMode} onViewModeChange={setInternalViewModeWithStorage} />
               <ProjectSelector 
                 projects={projects}
                 selectedProject={selectedProject}
@@ -188,6 +195,7 @@ function App() {
         onTicketClick={handleTicketClick} 
         selectedProject={selectedProject} 
         onAddProject={() => console.log('Add Project from SingleProjectView - need to implement')}
+        viewMode={internalViewMode}
       />
       <TicketViewer 
         ticket={selectedTicket} 
