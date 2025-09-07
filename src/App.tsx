@@ -10,36 +10,67 @@ import { useMultiProjectData } from './hooks/useMultiProjectData';
 
 type ViewMode = 'single-project' | 'multi-project';
 
-interface ViewModeToggleProps {
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
-}
-
 const VIEW_MODE_KEY = 'markdown-ticket-view-mode';
 
-function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
+interface ViewModeSwitcherProps {
+  viewMode: string;
+  onViewModeChange: (mode: string) => void;
+}
+
+function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps) {
   return (
-    <div className="flex rounded-md border border-border bg-muted p-1">
+    <div className="flex space-x-1">
       <button
-        onClick={() => onViewModeChange('single-project')}
-        className={`flex-1 px-3 py-2 text-sm font-medium rounded-sm transition-all ${
-          viewMode === 'single-project'
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+        onClick={() => onViewModeChange('board')}
+        className={`p-2 rounded-md transition-all ${
+          viewMode === 'board'
+            ? 'border-2 border-primary'
+            : 'border-2 border-transparent hover:border-muted-foreground/30'
         }`}
-      >
-        Board
-      </button>
+        title="Board View"
+        style={{
+          backgroundImage: 'url(/icon_board_col_64.webp)',
+          backgroundSize: '20px 20px',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          width: '32px',
+          height: '32px'
+        }}
+      />
       <button
-        onClick={() => onViewModeChange('multi-project')}
-        className={`flex-1 px-3 py-2 text-sm font-medium rounded-sm transition-all ${
-          viewMode === 'multi-project'
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+        onClick={() => onViewModeChange('list')}
+        className={`p-2 rounded-md transition-all ${
+          viewMode === 'list'
+            ? 'border-2 border-primary'
+            : 'border-2 border-transparent hover:border-muted-foreground/30'
         }`}
-      >
-        List
-      </button>
+        title="List View"
+        style={{
+          backgroundImage: 'url(/icon_list_64.webp)',
+          backgroundSize: '20px 20px',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          width: '32px',
+          height: '32px'
+        }}
+      />
+      <button
+        onClick={() => onViewModeChange('docs')}
+        className={`p-2 rounded-md transition-all ${
+          viewMode === 'docs'
+            ? 'border-2 border-primary'
+            : 'border-2 border-transparent hover:border-muted-foreground/30'
+        }`}
+        title="Documents View"
+        style={{
+          backgroundImage: 'url(/icon_docs_64.webp)',
+          backgroundSize: '20px 20px',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          width: '32px',
+          height: '32px'
+        }}
+      />
     </div>
   );
 }
@@ -85,9 +116,7 @@ function App() {
                 <div className="flex-shrink-0">
                   <img src="/logo.jpeg" alt="Logo" className="w-auto dark:invert" style={{ height: '3.8rem' }} />
                 </div>
-                <div className="flex justify-center">
-                  <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-                </div>
+                <ViewModeSwitcher viewMode="board" onViewModeChange={() => {}} />
                 <ProjectSelector 
                   projects={projects}
                   selectedProject={selectedProject}
@@ -131,9 +160,7 @@ function App() {
               <div className="flex-shrink-0">
                 <img src="/logo.jpeg" alt="Logo" className="w-auto dark:invert" style={{ height: '3.8rem' }} />
               </div>
-              <div className="flex justify-center">
-                <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-              </div>
+              <ViewModeSwitcher viewMode="board" onViewModeChange={() => {}} />
               <ProjectSelector 
                 projects={projects}
                 selectedProject={selectedProject}

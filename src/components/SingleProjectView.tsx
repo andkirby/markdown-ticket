@@ -9,7 +9,7 @@ import { SecondaryHeader } from './SecondaryHeader';
 import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 
-type SingleProjectViewMode = 'board' | 'documents';
+type SingleProjectViewMode = 'board' | 'list' | 'documents';
 
 const VIEW_MODE_KEY = 'single-project-view-mode';
 
@@ -31,39 +31,6 @@ interface Project {
     codePattern?: string;
   };
   autoDiscovered?: boolean;
-}
-
-function ViewModeToggle({ 
-  viewMode, 
-  onViewModeChange 
-}: { 
-  viewMode: SingleProjectViewMode; 
-  onViewModeChange: (mode: SingleProjectViewMode) => void; 
-}) {
-  return (
-    <div className="flex rounded-md border border-border bg-muted p-1">
-      <button
-        onClick={() => onViewModeChange('board')}
-        className={`flex-1 px-3 py-2 text-sm font-medium rounded-sm transition-all ${
-          viewMode === 'board'
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-        }`}
-      >
-        Board
-      </button>
-      <button
-        onClick={() => onViewModeChange('documents')}
-        className={`flex-1 px-3 py-2 text-sm font-medium rounded-sm transition-all ${
-          viewMode === 'documents'
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-        }`}
-      >
-        Documents
-      </button>
-    </div>
-  );
 }
 
 interface SingleProjectViewProps {
@@ -189,15 +156,11 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
           <div className="flex items-center space-x-4">
             <SecondaryHeader
               viewMode={viewMode}
-              sortPreferences={viewMode === 'board' ? sortPreferences : undefined}
-              onSortPreferencesChange={viewMode === 'board' ? handleSortPreferencesChange : undefined}
+              sortPreferences={(viewMode === 'board' || viewMode === 'list') ? sortPreferences : undefined}
+              onSortPreferencesChange={(viewMode === 'board' || viewMode === 'list') ? handleSortPreferencesChange : undefined}
               onRefresh={handleRefresh}
               onAddProject={() => setShowAddProjectModal(true)}
               selectedProject={selectedProject}
-            />
-            <ViewModeToggle 
-              viewMode={viewMode} 
-              onViewModeChange={handleViewModeChange} 
             />
           </div>
         </div>
@@ -215,6 +178,39 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
             loading={loading}
             sortPreferences={sortPreferences}
           />
+        ) : viewMode === 'list' ? (
+          <div className="h-full overflow-auto p-6">
+            <div className="space-y-2">
+              {tickets.map((ticket) => (
+                <div
+                  key={ticket.code}
+                  onClick={() => onTicketClick(ticket)}
+                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3">
+                      <span className="font-mono text-sm text-muted-foreground">{ticket.code}</span>
+                      <span className="font-medium">{ticket.title}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      ticket.status === 'Proposed' ? 'bg-blue-100 text-blue-800' :
+                      ticket.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                      ticket.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                      ticket.status === 'Implemented' ? 'bg-purple-100 text-purple-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {ticket.status}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(ticket.lastModified).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           selectedProject ? (
             <DocumentsLayout projectPath={selectedProject.project.path} />
