@@ -19,30 +19,33 @@ A Kanban-style ticket board system that uses markdown files for storage, providi
    npm install
    ```
 
-2. **Start the development server**:
+2. **Start the backend server**:
+   ```bash
+   cd server
+   node server.js
+   ```
+
+3. **Start the development server** (in another terminal):
    ```bash
    npm run dev
    ```
 
-3. **Access the application**:
+4. **Access the application**:
    - Open http://localhost:5173 in your browser
-   - Choose between Single Project or Multi Project view
+   - Use the "Add New Project" button to create your first project
+   - Switch between Board, List, and Documents views using the icon switcher
 
-## Project Structure
+## Getting Started
 
-```
-docs/CRs/           # Change Request files for this project
-debug-tasks/        # Debug ticket files
-src/                # Frontend React application
-server/             # Backend Node.js server
-mcp-server/         # MCP server for AI integration
-```
-
-## Ticket Management
+### First Time Setup
+1. Create your first project using the "Add New Project" button in the UI
+2. The system will create both global registry and local project configuration files
+3. Start creating tickets using the UI or by following the guide in `docs/create_ticket.md`
 
 ### Creating Tickets
-- Use the "Create" button in the UI
-- Or create markdown files directly in the project's CR directory
+- **UI Method**: Use the "Create" button in the application interface
+- **Manual Method**: Create markdown files directly in your project's ticket directory
+- **Detailed Instructions**: See `docs/create_ticket.md` for comprehensive ticket creation guidelines
 - Files follow the naming pattern: `PROJECT-###-title.md`
 
 ### Ticket Format
