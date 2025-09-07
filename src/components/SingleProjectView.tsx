@@ -5,6 +5,8 @@ import { DuplicateResolver } from './DuplicateResolver';
 import { Ticket } from '../types';
 import { SortControls } from './SortControls';
 import { Button } from './UI/index';
+import { SecondaryHeader } from './SecondaryHeader';
+import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 
 type SingleProjectViewMode = 'board' | 'documents';
@@ -67,15 +69,17 @@ function ViewModeToggle({
 interface SingleProjectViewProps {
   onTicketClick: (ticket: Ticket) => void;
   selectedProject: Project | null;
+  onAddProject?: () => void;
 }
 
-export default function SingleProjectView({ onTicketClick, selectedProject }: SingleProjectViewProps) {
+export default function SingleProjectView({ onTicketClick, selectedProject, onAddProject }: SingleProjectViewProps) {
   const [viewMode, setViewMode] = useState<SingleProjectViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return (saved as SingleProjectViewMode) || 'board';
   });
 
   const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDuplicateResolver, setShowDuplicateResolver] = useState(false);
@@ -183,20 +187,14 @@ export default function SingleProjectView({ onTicketClick, selectedProject }: Si
             {selectedProject?.project.name || 'Board View'}
           </h1>
           <div className="flex items-center space-x-4">
-            {viewMode === 'board' && (
-              <>
-                <SortControls
-                  preferences={sortPreferences}
-                  onPreferencesChange={handleSortPreferencesChange}
-                />
-                <Button
-                  onClick={handleRefresh}
-                  variant="secondary"
-                >
-                  Refresh
-                </Button>
-              </>
-            )}
+            <SecondaryHeader
+              viewMode={viewMode}
+              sortPreferences={viewMode === 'board' ? sortPreferences : undefined}
+              onSortPreferencesChange={viewMode === 'board' ? handleSortPreferencesChange : undefined}
+              onRefresh={handleRefresh}
+              onAddProject={() => setShowAddProjectModal(true)}
+              selectedProject={selectedProject}
+            />
             <ViewModeToggle 
               viewMode={viewMode} 
               onViewModeChange={handleViewModeChange} 
@@ -238,6 +236,15 @@ export default function SingleProjectView({ onTicketClick, selectedProject }: Si
           }}
         />
       )}
+
+      <AddProjectModal
+        isOpen={showAddProjectModal}
+        onClose={() => setShowAddProjectModal(false)}
+        onProjectCreated={() => {
+          setShowAddProjectModal(false);
+          // Optionally refresh projects or show success message
+        }}
+      />
     </div>
   );
 }

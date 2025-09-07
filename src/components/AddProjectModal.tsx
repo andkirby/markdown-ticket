@@ -29,6 +29,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     name: '',
     code: '',
     path: '',
+    crsPath: 'docs/CRs',
     description: '',
     repositoryUrl: ''
   });
@@ -41,6 +42,32 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const [loadingDirectories, setLoadingDirectories] = useState(false);
   const [directoryFilter, setDirectoryFilter] = useState('');
   const [filterBasePath, setFilterBasePath] = useState('');
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [createdFiles, setCreatedFiles] = useState<string[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const hasFormData = () => {
+    return formData.name.trim() !== '' || 
+           formData.code.trim() !== '' || 
+           formData.description.trim() !== '' || 
+           formData.path.trim() !== '';
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      if (hasFormData()) {
+        setShowConfirmClose(true);
+      } else {
+        onClose();
+      }
+    }
+  };
+
+  const handleConfirmClose = () => {
+    setShowConfirmClose(false);
+    onClose();
+  };
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -49,11 +76,15 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
         name: '',
         code: '',
         path: '',
+        crsPath: 'docs/CRs',
         description: '',
         repositoryUrl: ''
       });
       setErrors({});
       setShowDirectoryPicker(false);
+      setShowConfirmation(false);
+      setShowSuccess(false);
+      setCreatedFiles([]);
       loadDirectories(); // Load home directory initially
     }
   }, [isOpen]);
@@ -122,6 +153,10 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     
     if (!validateForm()) return;
 
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmCreate = async () => {
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/projects/create', {
@@ -137,13 +172,31 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
         throw new Error(errorData.error || 'Failed to create project');
       }
 
-      onProjectCreated();
-      onClose();
+      const result = await response.json();
+      
+      // Generate list of created files
+      const files = [
+        `${formData.path}/.mdt-config.toml`,
+        `${formData.path}/.mdt-next`,
+        `${formData.path}/${formData.crsPath}/`,
+        result.configPath
+      ];
+      
+      setCreatedFiles(files);
+      setShowConfirmation(false);
+      setShowSuccess(true);
     } catch (error) {
       setErrors({ submit: error instanceof Error ? error.message : 'Failed to create project' });
+      setShowConfirmation(false);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    onProjectCreated();
+    onClose();
   };
 
   const handleDirectorySelect = (directory: Directory) => {
@@ -169,7 +222,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 pointer-events-auto" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 bg-black/50 z-50 pointer-events-auto" onClick={handleOverlayClick}>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background border border-border rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-stretch border-b border-border" style={{ padding: '0' }}>
           <div style={{ padding: '24px', flex: 1, display: 'flex', alignItems: 'center' }}>
@@ -313,6 +366,22 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">
+                  Tickets Directory
+                </label>
+                <input
+                  type="text"
+                  value={formData.crsPath}
+                  onChange={(e) => setFormData(prev => ({ ...prev, crsPath: e.target.value }))}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="docs/CRs"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Relative path inside the project where tickets will be stored
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Description
                 </label>
                 <textarea
@@ -345,15 +414,6 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
 
               <div className="flex justify-end space-x-3" style={{ padding: '16px 0 0 0' }}>
                 <div style={{ minWidth: '80px' }}>
-                  <Button
-                    onClick={() => console.log('Refresh clicked')}
-                    variant="secondary"
-                    style={{ width: '100%' }}
-                  >
-                    Refresh
-                  </Button>
-                </div>
-                <div style={{ minWidth: '80px' }}>
                   <Button type="button" variant="outline" onClick={onClose} style={{ width: '100%' }}>
                     Cancel
                   </Button>
@@ -368,6 +428,76 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirmClose && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center">
+          <div className="bg-background border border-border rounded-lg shadow-lg p-6 max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Discard Changes?</h3>
+            <p className="text-muted-foreground mb-6">
+              You have unsaved changes. Are you sure you want to close without saving?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowConfirmClose(false)}>
+                Keep Editing
+              </Button>
+              <Button variant="destructive" onClick={handleConfirmClose}>
+                Discard Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Project Creation Confirmation */}
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center">
+          <div className="bg-background border border-border rounded-lg shadow-lg p-6 max-w-lg">
+            <h3 className="text-lg font-semibold mb-4">Confirm Project Creation</h3>
+            <div className="space-y-3 mb-6">
+              <div><strong>Name:</strong> {formData.name}</div>
+              <div><strong>Code:</strong> {formData.code}</div>
+              <div><strong>Path:</strong> {formData.path}</div>
+              <div><strong>Tickets Directory:</strong> {formData.crsPath}</div>
+              {formData.description && <div><strong>Description:</strong> {formData.description}</div>}
+              {formData.repositoryUrl && <div><strong>Repository:</strong> {formData.repositoryUrl}</div>}
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              This will create the project configuration files and directory structure.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setShowConfirmation(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleConfirmCreate} disabled={isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Confirm Create'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Dialog */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center">
+          <div className="bg-background border border-border rounded-lg shadow-lg p-6 max-w-lg">
+            <h3 className="text-lg font-semibold mb-4 text-green-600">Project Created Successfully!</h3>
+            <p className="mb-4">The following files have been created:</p>
+            <div className="bg-muted p-3 rounded-md mb-6 max-h-48 overflow-y-auto">
+              {createdFiles.map((file, index) => (
+                <div key={index} className="text-sm font-mono py-1">
+                  {file}
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={handleSuccessClose}>
+                OK
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

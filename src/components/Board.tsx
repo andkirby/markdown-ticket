@@ -7,6 +7,7 @@ import Column from './Column';
 import { Button } from './UI/index';
 import { useMultiProjectData } from '../hooks/useMultiProjectData';
 import { SortControls } from './SortControls';
+import { HamburgerMenu } from './HamburgerMenu';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 
@@ -296,6 +297,7 @@ const BoardContent: React.FC<BoardProps> = ({
             >
               Create
             </Button>
+            <HamburgerMenu onAddProject={() => console.log('Add Project clicked from Board')} />
           </div>
         </div>
       )}

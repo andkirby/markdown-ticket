@@ -157,7 +157,11 @@ function App() {
           </div>
         </div>
       </nav>
-      <SingleProjectView onTicketClick={handleTicketClick} selectedProject={selectedProject} />
+      <SingleProjectView 
+        onTicketClick={handleTicketClick} 
+        selectedProject={selectedProject} 
+        onAddProject={() => console.log('Add Project from SingleProjectView - need to implement')}
+      />
       <TicketViewer 
         ticket={selectedTicket} 
         isOpen={isViewerOpen} 

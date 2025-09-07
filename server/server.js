@@ -1306,7 +1306,7 @@ app.post('/api/projects/register', async (req, res) => {
 // Create new project with UI form data
 app.post('/api/projects/create', async (req, res) => {
   try {
-    const { name, code, path: projectPath, description, repositoryUrl } = req.body;
+    const { name, code, path: projectPath, crsPath = 'docs/CRs', description, repositoryUrl } = req.body;
     
     if (!name || !projectPath) {
       return res.status(400).json({ error: 'Name and path are required' });
@@ -1329,42 +1329,64 @@ app.post('/api/projects/create', async (req, res) => {
     const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket', 'projects');
     await fs.mkdir(configDir, { recursive: true });
     
-    // Create project config file
-    const configFileName = `${projectCode.toLowerCase()}.toml`;
+    // Create project config file using directory name, fallback to project code
+    const projectDirName = path.basename(projectPath);
+    const configFileName = `${projectDirName}.toml`;
     const configFilePath = path.join(configDir, configFileName);
     
     // Check if project already exists
     try {
       await fs.access(configFilePath);
-      return res.status(400).json({ error: 'Project with this code already exists' });
+      return res.status(400).json({ error: 'Project with this directory name already exists' });
     } catch (error) {
-      // File doesn't exist, which is what we want
+      if (error.code !== 'ENOENT') {
+        throw error; // Re-throw non-file-not-found errors
+      }
+      // File doesn't exist, check fallback with project code
+      try {
+        const fallbackConfigFileName = `${projectCode.toLowerCase()}.toml`;
+        const fallbackConfigFilePath = path.join(configDir, fallbackConfigFileName);
+        await fs.access(fallbackConfigFilePath);
+        return res.status(400).json({ error: 'Project with this code already exists' });
+      } catch (fallbackError) {
+        if (fallbackError.code !== 'ENOENT') {
+          throw fallbackError; // Re-throw non-file-not-found errors
+        }
+        // Neither file exists, proceed with creation
+      }
     }
 
     // Create CRs directory if it doesn't exist
-    const crsDir = path.join(projectPath, 'docs', 'CRs');
+    const crsDir = path.join(projectPath, crsPath);
     await fs.mkdir(crsDir, { recursive: true });
 
-    // Create project config content
-    const configContent = `# Project Configuration for ${name}
-[project]
-id = "${projectCode}"
-name = "${name}"
-description = "${description || ''}"
-${repositoryUrl ? `repository = "${repositoryUrl}"` : ''}
-
-[tickets]
-path = "docs/CRs"
-pattern = "*.md"
-codePattern = "^${projectCode}-\\\\d{3}$"
+    // Create minimal global config content
+    const globalConfigContent = `[project]
+path = "${projectPath}"
+active = true
 
 [metadata]
-created = "${new Date().toISOString()}"
-version = "1.0"
+dateRegistered = "${new Date().toISOString().split('T')[0]}"
+lastAccessed = "${new Date().toISOString().split('T')[0]}"
 `;
 
-    // Write config file
-    await fs.writeFile(configFilePath, configContent, 'utf8');
+    // Write global config file
+    await fs.writeFile(configFilePath, globalConfigContent, 'utf8');
+
+    // Create local project config content
+    const localConfigContent = `[project]
+name = "${name}"
+code = "${projectCode}"
+path = "${crsPath}"
+startNumber = 1
+counterFile = ".mdt-next"
+description = "${description || ''}"
+${repositoryUrl ? `repository = "${repositoryUrl}"` : 'repository = ""'}
+`;
+
+    // Write local config file
+    const localConfigPath = path.join(projectPath, '.mdt-config.toml');
+    await fs.writeFile(localConfigPath, localConfigContent, 'utf8');
 
     // Create counter file
     const counterFile = path.join(projectPath, '.mdt-next');
@@ -1373,10 +1395,8 @@ version = "1.0"
     // Register project with discovery service
     const projectInfo = {
       id: projectCode,
-      name,
       path: projectPath,
-      description: description || '',
-      configFile: configFileName,
+      configFile: '.mdt-config.toml',
       active: true
     };
 

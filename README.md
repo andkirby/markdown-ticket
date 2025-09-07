@@ -184,21 +184,41 @@ claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 - `update_cr_status` - Update CR status
 - `delete_cr` - Delete CRs (for implemented bug fixes)
 
-## Project Configuration
+## Project Management
 
-Projects are automatically discovered from:
-- `docs/CRs/` directories
-- Custom paths defined in `~/.config/markdown-ticket/config.toml`
+### Creating Projects
+- Use the "Add New Project" UI with form validation and confirmation
+- Automatically creates both global registry and local project configuration
+- Supports custom ticket directory paths (defaults to `docs/CRs`)
+- Validates project codes and provides immediate feedback
 
-### Manual Project Configuration
+### Project Configuration
+Projects use a dual-configuration approach:
+
+**Global Registry** (`~/.config/markdown-ticket/projects/{project-dir}.toml`):
 ```toml
-# ~/.config/markdown-ticket/config.toml
-[[projects]]
-id = "MYPROJ"
-name = "My Project"
-path = "/path/to/project/docs/CRs"
-description = "Project description"
+[project]
+path = "/path/to/project"
+active = true
+
+[metadata]
+dateRegistered = "2025-09-07"
+lastAccessed = "2025-09-07"
 ```
+
+**Local Configuration** (`{project}/.mdt-config.toml`):
+```toml
+[project]
+name = "My Project"
+code = "MYPROJ"
+path = "docs/CRs"
+startNumber = 1
+counterFile = ".mdt-next"
+description = "Project description"
+repository = "https://github.com/user/repo"
+```
+
+The global registry provides minimal discovery information, while local configuration contains operational details.
 
 ## Development
 

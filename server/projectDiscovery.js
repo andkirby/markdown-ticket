@@ -302,13 +302,11 @@ class ProjectDiscoveryService {
           name: projectInfo.name,
           path: projectInfo.path,
           configFile: projectInfo.configFile || '.mdt-config.toml',
-          active: projectInfo.active !== false,
-          description: projectInfo.description || ''
+          active: projectInfo.active !== false
         },
         metadata: {
           dateRegistered: new Date().toISOString().split('T')[0],
-          lastAccessed: new Date().toISOString().split('T')[0],
-          version: projectInfo.version || '1.0.0'
+          lastAccessed: new Date().toISOString().split('T')[0]
         }
       };
 
@@ -317,12 +315,10 @@ class ProjectDiscoveryService {
       tomlContent += `name = "${registration.project.name}"\n`;
       tomlContent += `path = "${registration.project.path}"\n`;
       tomlContent += `configFile = "${registration.project.configFile}"\n`;
-      tomlContent += `active = ${registration.project.active}\n`;
-      tomlContent += `description = "${registration.project.description}"\n\n`;
+      tomlContent += `active = ${registration.project.active}\n\n`;
       tomlContent += '[metadata]\n';
       tomlContent += `dateRegistered = "${registration.metadata.dateRegistered}"\n`;
       tomlContent += `lastAccessed = "${registration.metadata.lastAccessed}"\n`;
-      tomlContent += `version = "${registration.metadata.version}"\n`;
 
       fs.writeFileSync(registrationPath, tomlContent, 'utf8');
       return true;
@@ -355,13 +351,11 @@ class ProjectDiscoveryService {
               name: disc.name,
               path: disc.path,
               configFile: '.mdt-config.toml',
-              active: true,
-              description: 'Auto-discovered project'
+              active: true
             },
             metadata: {
               dateRegistered: 'auto-discovered',
-              lastAccessed: new Date().toISOString().split('T')[0],
-              version: disc.config.project.version || '1.0.0'
+              lastAccessed: new Date().toISOString().split('T')[0]
             },
             config: disc.config,
             autoDiscovered: true
