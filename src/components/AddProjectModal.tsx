@@ -39,6 +39,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const [parentPath, setParentPath] = useState('');
   const [directories, setDirectories] = useState<Directory[]>([]);
   const [loadingDirectories, setLoadingDirectories] = useState(false);
+  const [directoryFilter, setDirectoryFilter] = useState('');
+  const [filterBasePath, setFilterBasePath] = useState('');
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -81,6 +83,12 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       setCurrentPath(data.currentPath);
       setParentPath(data.parentPath);
       setDirectories(data.directories);
+      
+      // Set filter base path on initial load or reset filter when navigating
+      if (!filterBasePath || path) {
+        setFilterBasePath(data.currentPath);
+        setDirectoryFilter('');
+      }
     } catch (error) {
       console.error('Error loading directories:', error);
     } finally {
@@ -147,16 +155,31 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     loadDirectories(path);
   };
 
+  // Filter directories based on current filter (only when in filter base path)
+  const filteredDirectories = React.useMemo(() => {
+    if (!directoryFilter || currentPath !== filterBasePath) {
+      return directories;
+    }
+    
+    return directories.filter(dir => 
+      dir.name.toLowerCase().includes(directoryFilter.toLowerCase())
+    );
+  }, [directories, directoryFilter, currentPath, filterBasePath]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-background border border-border rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-foreground">Add New Project</h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+    <div className="fixed inset-0 bg-black/50 z-50 pointer-events-auto" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background border border-border rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-stretch border-b border-border" style={{ padding: '0' }}>
+          <div style={{ padding: '24px', flex: 1, display: 'flex', alignItems: 'center' }}>
+            <h2 className="text-xl font-semibold text-foreground">Add New Project</h2>
+          </div>
+          <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Button variant="ghost" size="sm" onClick={onClose} style={{ width: '40px', height: '40px' }}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <div className="p-6 overflow-y-auto">
@@ -173,8 +196,19 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 </Button>
               </div>
 
-              <div className="text-sm text-muted-foreground">
-                Current: {currentPath}
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-muted-foreground">
+                  Current: {currentPath}
+                </div>
+                {currentPath === filterBasePath && (
+                  <input
+                    type="text"
+                    value={directoryFilter}
+                    onChange={(e) => setDirectoryFilter(e.target.value)}
+                    placeholder="Filter"
+                    className="px-2 py-1 text-sm border border-border rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-24"
+                  />
+                )}
               </div>
 
               <div className="border border-border rounded-md max-h-64 overflow-y-auto">
@@ -193,24 +227,27 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                     Loading directories...
                   </div>
                 ) : (
-                  directories.map((dir) => (
-                    <div key={dir.path} className="flex items-center">
+                  filteredDirectories.map((dir) => (
+                    <div key={dir.path} className="flex items-center border-b border-border last:border-b-0">
                       <button
                         onClick={() => navigateToDirectory(dir.path)}
-                        className="flex items-center flex-1 p-3 text-left hover:bg-muted transition-colors"
+                        className="flex items-center flex-1 p-3 text-left hover:bg-muted transition-colors min-w-0"
                       >
-                        <Folder className="h-4 w-4 mr-2 text-blue-500" />
-                        <span>{dir.name}</span>
-                        <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+                        <Folder className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
+                        <span className="truncate">{dir.name}</span>
+                        <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground flex-shrink-0" />
                       </button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDirectorySelect(dir)}
-                        className="mr-2"
-                      >
-                        Select
-                      </Button>
+                      <div className="flex-shrink-0" style={{ padding: '8px', minWidth: '80px' }}>
+                        <Button
+                          type="button"
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleDirectorySelect(dir)}
+                          style={{ width: '100%' }}
+                        >
+                          Select
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -306,13 +343,26 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 </div>
               )}
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Creating...' : 'Create Project'}
-                </Button>
+              <div className="flex justify-end space-x-3" style={{ padding: '16px 0 0 0' }}>
+                <div style={{ minWidth: '80px' }}>
+                  <Button
+                    onClick={() => console.log('Refresh clicked')}
+                    variant="secondary"
+                    style={{ width: '100%' }}
+                  >
+                    Refresh
+                  </Button>
+                </div>
+                <div style={{ minWidth: '80px' }}>
+                  <Button type="button" variant="outline" onClick={onClose} style={{ width: '100%' }}>
+                    Cancel
+                  </Button>
+                </div>
+                <div style={{ minWidth: '120px' }}>
+                  <Button type="submit" disabled={isSubmitting} style={{ width: '100%' }}>
+                    {isSubmitting ? 'Creating...' : 'Create Project'}
+                  </Button>
+                </div>
               </div>
             </form>
           )}

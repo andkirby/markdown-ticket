@@ -5,6 +5,7 @@ import { defaultRealtimeFileWatcher } from '../services/realtimeFileWatcher';
 import { SortControls } from './SortControls';
 import { HamburgerMenu } from './HamburgerMenu';
 import { AddProjectModal } from './AddProjectModal';
+import { TestModal } from './TestModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 
@@ -49,6 +50,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
   const [crs, setCrs] = useState<CR[]>([]);
   const [selectedCR, setSelectedCR] = useState<CR | null>(null);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [showTestModal, setShowTestModal] = useState(false);
   
   // Use prop selectedProject if provided, otherwise use internal state
   const selectedProject = propSelectedProject || null;
@@ -312,6 +314,12 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
             >
               Refresh
             </Button>
+            <Button
+              onClick={() => setShowTestModal(true)}
+              variant="outline"
+            >
+              Test Modal
+            </Button>
             <HamburgerMenu onAddProject={() => setShowAddProjectModal(true)} />
           </div>
         </div>
@@ -570,6 +578,11 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
           fetchProjects();
           setShowAddProjectModal(false);
         }}
+      />
+
+      <TestModal
+        isOpen={showTestModal}
+        onClose={() => setShowTestModal(false)}
       />
     </div>
   );
