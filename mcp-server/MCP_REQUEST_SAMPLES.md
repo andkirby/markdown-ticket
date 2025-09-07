@@ -137,7 +137,7 @@ This document provides sample request and response data for the MCP CR Managemen
     "name": "get_cr",
     "arguments": {
       "project": "MDT",
-      "crKey": "MDT-004"
+      "key": "MDT-004"
     }
   }
 }
@@ -216,7 +216,7 @@ This document provides sample request and response data for the MCP CR Managemen
     "name": "update_cr_status",
     "arguments": {
       "project": "MDT",
-      "crKey": "MDT-006",
+      "key": "MDT-006",
       "status": "Approved"
     }
   }
@@ -250,7 +250,7 @@ This document provides sample request and response data for the MCP CR Managemen
     "name": "delete_cr",
     "arguments": {
       "project": "MDT",
-      "crKey": "MDT-003"
+      "key": "MDT-003"
     }
   }
 }
@@ -422,7 +422,7 @@ This document provides sample request and response data for the MCP CR Managemen
     "name": "suggest_cr_improvements",
     "arguments": {
       "project": "MDT",
-      "crKey": "MDT-004"
+      "key": "MDT-004"
     }
   }
 }
@@ -473,7 +473,7 @@ This document provides sample request and response data for the MCP CR Managemen
     "message": "CR not found",
     "data": {
       "project": "MDT",
-      "crKey": "MDT-999",
+      "key": "MDT-999",
       "suggestion": "Use list_crs to see available CRs in this project"
     }
   }

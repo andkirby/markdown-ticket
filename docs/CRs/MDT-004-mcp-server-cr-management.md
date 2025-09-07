@@ -111,10 +111,10 @@ get_project_info(key: string): ProjectInfo
 
 // CR Operations  
 list_crs(project: string, filters?: CRFilters): CR[]
-get_cr(project: string, crKey: string): CR
+get_cr(project: string, key: string): CR
 create_cr(project: string, type: CRType, data: CRData): CR
-update_cr_status(project: string, crKey: string, status: Status): boolean
-delete_cr(project: string, crKey: string): boolean
+update_cr_status(project: string, key: string, status: Status): boolean
+delete_cr(project: string, key: string): boolean
 
 // Template System
 get_cr_template(type: CRType): Template
@@ -123,7 +123,7 @@ get_next_cr_number(project: string): string
 
 // Advanced Operations
 find_related_crs(project: string, keywords: string[]): CR[]
-suggest_cr_improvements(project: string, crKey: string): Suggestion[]
+suggest_cr_improvements(project: string, key: string): Suggestion[]
 ```
 
 **Project Discovery Engine**:

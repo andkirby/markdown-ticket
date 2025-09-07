@@ -350,13 +350,13 @@ Get detailed information about a specific CR.
 
 **Parameters:**
 - `project` (string): Project key
-- `crKey` (string): CR key (e.g., "MDT-004")
+- `key` (string): CR key (e.g., "MDT-004")
 
 **Example:**
 ```json
 {
   "project": "MDT",
-  "crKey": "MDT-004"
+  "key": "MDT-004"
 }
 ```
 
@@ -394,14 +394,14 @@ Update the status of an existing CR.
 
 **Parameters:**
 - `project` (string): Project key
-- `crKey` (string): CR key
+- `key` (string): CR key
 - `status` (string): New status ("Proposed", "Approved", "In Progress", "Implemented", "Rejected")
 
 **Example:**
 ```json
 {
   "project": "MDT",
-  "crKey": "MDT-006",
+  "key": "MDT-006",
   "status": "Approved"
 }
 ```
@@ -411,13 +411,13 @@ Delete a CR (typically used for implemented bug fixes).
 
 **Parameters:**
 - `project` (string): Project key
-- `crKey` (string): CR key
+- `key` (string): CR key
 
 **Example:**
 ```json
 {
   "project": "MDT",
-  "crKey": "MDT-003"
+  "key": "MDT-003"
 }
 ```
 
@@ -490,13 +490,13 @@ Get suggestions for improving an existing CR.
 
 **Parameters:**
 - `project` (string): Project key
-- `crKey` (string): CR key to analyze
+- `key` (string): CR key to analyze
 
 **Example:**
 ```json
 {
   "project": "MDT", 
-  "crKey": "MDT-004"
+  "key": "MDT-004"
 }
 ```
 
@@ -732,7 +732,7 @@ Use the MCP tools programmatically for batch operations:
 // (This would be done through your MCP client)
 
 1. list_crs(project="MDT", filters={status: "Proposed"})
-2. For each CR: update_cr_status(project="MDT", crKey=cr.key, status="Approved")
+2. For each CR: update_cr_status(project="MDT", key=cr.key, status="Approved")
 ```
 
 ### Integration with CI/CD
