@@ -18,6 +18,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
       ghCodeBlocks: true,
       simpleLineBreaks: true,
       headerLevelStart: 3, // Start headers from h3 to avoid conflicts with modal title
+      ghCompatibleHeaderId: true,
     });
   }, []);
 
