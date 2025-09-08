@@ -311,6 +311,9 @@ const BoardContent: React.FC<BoardProps> = ({
                 key={column.label}
                 column={column}
                 tickets={ticketsByColumn[column.label]}
+                allTickets={tickets}
+                sortAttribute={sortPreferences.selectedAttribute}
+                sortDirection={sortPreferences.selectedDirection}
                 onDrop={(status: Status, ticket: Ticket) => {
                   console.log('Board: Column onDrop called with:', { status, ticketKey: ticket.code });
                   handleDrop(status, ticket);

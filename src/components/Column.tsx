@@ -4,6 +4,7 @@ import { useDrag } from 'react-dnd';
 import { Ticket, Status } from '../types';
 import TicketCard from './TicketCard';
 import { ResolutionDialog } from './ResolutionDialog';
+import { sortTickets } from '../utils/sorting';
 
 interface ColumnProps {
   column: {
@@ -12,9 +13,64 @@ interface ColumnProps {
     color: string;
   };
   tickets: Ticket[];
+  allTickets: Ticket[]; // All tickets to access deferred ones
   onDrop: (status: Status, ticket: Ticket) => void;
   onTicketEdit: (ticket: Ticket) => void;
+  sortAttribute?: string;
+  sortDirection?: 'asc' | 'desc';
 }
+
+interface StatusToggleProps {
+  status: Status;
+  isActive: boolean;
+  ticketCount: number;
+  onToggle: () => void;
+  onDrop: (status: Status, ticket: Ticket) => void;
+}
+
+const StatusToggle: React.FC<StatusToggleProps> = ({ status, isActive, ticketCount, onToggle, onDrop }) => {
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: 'ticket',
+    drop: (item: any) => {
+      onDrop(status, item.ticket);
+    },
+    collect: (monitor) => ({
+      isOver: !!monitor.isOver(),
+    }),
+  }));
+
+  const getIcon = () => {
+    if (status === 'On Hold') return '⏸';
+    if (status === 'Rejected') return '✕';
+    return '';
+  };
+
+  return (
+    <button
+      ref={drop}
+      onClick={onToggle}
+      className={`
+        flex items-center justify-between px-3 py-2 text-sm rounded-md border transition-all
+        ${isActive 
+          ? 'bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-900/20 dark:border-orange-700 dark:text-orange-300' 
+          : 'bg-gray-100 border-gray-300 text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400'
+        }
+        ${isOver ? 'ring-2 ring-blue-400 bg-blue-50 dark:bg-blue-950/20' : ''}
+        hover:bg-opacity-80
+      `}
+    >
+      <span className="flex items-center space-x-1">
+        <span>{getIcon()}</span>
+        <span>{status}</span>
+      </span>
+      {ticketCount > 0 && (
+        <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-white/50 dark:bg-black/20">
+          {ticketCount}
+        </span>
+      )}
+    </button>
+  );
+};
 
 interface DraggableTicketCardProps {
   ticket: Ticket;
@@ -54,7 +110,7 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
   );
 };
 
-const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }) => {
+const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, onTicketEdit, sortAttribute = 'code', sortDirection = 'desc' }) => {
   const [resolutionDialog, setResolutionDialog] = useState<{
     isOpen: boolean;
     ticket: Ticket | null;
@@ -63,6 +119,51 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }
     ticket: null,
   });
 
+  // Toggle states for status filters
+  const [toggleStates, setToggleStates] = useState<Record<Status, boolean>>({
+    'On Hold': false,
+    'Rejected': false,
+  } as Record<Status, boolean>);
+
+  // Get toggle status for this column
+  const getToggleStatus = (): Status | null => {
+    if (column.label === 'In Progress') return 'On Hold';
+    if (column.label === 'Done') return 'Rejected';
+    return null;
+  };
+
+  const toggleStatus = getToggleStatus();
+
+  // Filter tickets based on toggle state
+  const getVisibleTickets = () => {
+    const toggleTickets = allTickets.filter(ticket => ticket.status === toggleStatus);
+    
+    if (!toggleStatus) return tickets;
+    
+    const isToggleActive = toggleStates[toggleStatus];
+    if (isToggleActive) {
+      // Show main tickets + toggle tickets, then sort the combined list
+      const combinedTickets = [...tickets, ...toggleTickets];
+      return sortTickets(combinedTickets, sortAttribute, sortDirection);
+    } else {
+      // Show only main tickets (default)
+      return tickets;
+    }
+  };
+
+  const visibleTickets = getVisibleTickets();
+  const toggleTicketCount = allTickets.filter(ticket => ticket.status === toggleStatus).length;
+
+  const handleToggle = (status: Status) => {
+    setToggleStates(prev => ({
+      ...prev,
+      [status]: !prev[status]
+    }));
+  };
+
+  const handleToggleDrop = (status: Status, ticket: Ticket) => {
+    onDrop(status, ticket);
+  };
   const handleDrop = (ticket: Ticket) => {
     // If this is the "Done" column with multiple statuses, show resolution dialog
     if (column.label === 'Done' && column.statuses.length > 1) {
@@ -122,16 +223,28 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }
       {/* Column Header */}
       <div className={`p-4 rounded-t-lg ${column.color}`}>
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-foreground">{column.label}</h3>
+          <div className="flex items-center space-x-3">
+            <h3 className="font-semibold text-foreground">{column.label}</h3>
+            {/* Status Toggle */}
+            {toggleStatus && (
+              <StatusToggle
+                status={toggleStatus}
+                isActive={toggleStates[toggleStatus]}
+                ticketCount={toggleTicketCount}
+                onToggle={() => handleToggle(toggleStatus)}
+                onDrop={handleToggleDrop}
+              />
+            )}
+          </div>
           <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
-            {tickets.length}
+            {visibleTickets.length}
           </span>
         </div>
       </div>
 
       {/* Column Content */}
       <div className="column-drop-zone flex-1 p-4 space-y-3 overflow-y-auto" style={{ minHeight: '300px' }}>
-        {tickets.map((ticket) => (
+        {visibleTickets.map((ticket) => (
           <DraggableTicketCard
             key={ticket.code}
             ticket={ticket}
@@ -140,7 +253,7 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, onDrop, onTicketEdit }
           />
         ))}
         
-        {tickets.length === 0 && (
+        {visibleTickets.length === 0 && (
           <div className="flex items-center justify-center h-32 text-gray-400">
             <p className="text-sm">No tickets</p>
           </div>
