@@ -176,6 +176,48 @@ export class CRService {
     }
   }
 
+  async updateCRAttrs(project: Project, key: string, attributes: Partial<CRData>): Promise<boolean> {
+    try {
+      const cr = await this.getCR(project, key);
+      if (!cr) {
+        throw new Error(`CR '${key}' not found in project '${project.id}'`);
+      }
+
+      // Read current file content
+      const content = await readFile(cr.filePath, 'utf-8');
+      let updatedContent = content;
+
+      // Update each attribute in YAML frontmatter
+      for (const [field, value] of Object.entries(attributes)) {
+        if (value !== undefined && value !== null) {
+          // Convert arrays to comma-separated strings for YAML
+          const stringValue = Array.isArray(value) ? value.join(',') : String(value);
+          updatedContent = this.updateYAMLField(updatedContent, field, stringValue);
+        }
+      }
+
+      // Write back to file
+      await fs.outputFile(cr.filePath, updatedContent, 'utf-8');
+
+      console.error(`✅ Updated CR ${key} attributes`);
+      return true;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('ENOENT')) {
+          throw new Error(`Failed to update CR '${key}': File not found or deleted`);
+        }
+        if (error.message.includes('EACCES') || error.message.includes('EPERM')) {
+          throw new Error(`Failed to update CR '${key}': Permission denied. Check file permissions`);
+        }
+        if (error.message.includes('not found')) {
+          throw error; // Re-throw CR not found errors as-is
+        }
+        throw new Error(`Failed to update CR '${key}': ${error.message}`);
+      }
+      throw new Error(`Failed to update CR '${key}': Unknown error occurred`);
+    }
+  }
+
   private validateStatusTransition(currentStatus: CRStatus, newStatus: CRStatus): void {
     // Define valid status transitions
     const validTransitions: Record<CRStatus, CRStatus[]> = {

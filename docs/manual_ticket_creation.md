@@ -49,14 +49,7 @@ Every CR must include a standardized header with required and optional attribute
 - `relatedTickets`: Comma-separated list of related CR codes (e.g., "CR-A001,CR-A002")
 - `dependsOn`: Comma-separated list of CR keys this depends on (e.g., "MDT-001,MDT-005")
 - `blocks`: Comma-separated list of CR keys this blocks (e.g., "MDT-010,MDT-015")
-- `impact`: Major | Minor | Breaking | Patch
-- `effort`: Small | Medium | Large
 - `assignee`: Person responsible for implementation
-- `reviewers`: Comma-separated list of reviewers
-- `dependencies`: External dependencies or prerequisites
-- `riskLevel`: Low | Medium | High
-- `tags`: Comma-separated tags for categorization
-- `impactAreas`: Areas of the system that will be impacted (YAML array format)
 - `lastModified`: Date when CR was last updated (ISO format) - auto-managed by system
 - `implementationDate`: Date when implementation was completed
 - `implementationNotes`: Brief notes about implementation completion
@@ -65,6 +58,20 @@ Every CR must include a standardized header with required and optional attribute
 - ~~`estimatedHours`~~ - Use `effort` instead (Small/Medium/Large)
 - ~~`actualHours`~~ - Use `implementationNotes` for time tracking
 - ~~`supersedes`~~ - Use `relatedTickets` for CR relationships
+- ~~`effort`~~ - Simplified, use description if needed
+- ~~`reviewers`~~ - Use description or implementation notes
+- ~~`dependencies`~~ - Use `dependsOn` for CR relationships
+- ~~`riskLevel`~~ - Use description if risk assessment needed
+- ~~`tags`~~ - Use type/priority classification instead
+
+**Affected Areas:** These attributes were used in:
+- MCP server schemas (mcp-server/src/tools/index.ts)
+- Frontend forms (may show validation errors)
+- Existing CR files (attributes will be ignored, not removed)
+
+#### Future Features (not currently implemented):
+- `impact`: Major | Minor | Breaking | Patch - Impact level classification
+- `impactAreas`: Areas of the system that will be impacted - Structured impact tracking
 
 ## Status Workflow
 

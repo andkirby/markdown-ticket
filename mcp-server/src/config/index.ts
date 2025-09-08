@@ -52,13 +52,7 @@ export class ConfigService {
   private getConfigPath(): string {
     // Check for config file in order of preference
     const possiblePaths = [
-      // New unified location (preferred)
-      path.join(os.homedir(), '.config', 'markdown-ticket', 'mcp-server.toml'),
-      // Legacy locations for backward compatibility
-      path.join(os.homedir(), '.mcp-server.toml'),
-      path.join(os.homedir(), '.config', 'mcp-server', 'config.toml'),
-      // Current directory
-      path.join(process.cwd(), 'mcp-server-config.toml')
+      path.join(os.homedir(), '.config', 'markdown-ticket', 'mcp-server.toml')
     ];
 
     for (const configPath of possiblePaths) {

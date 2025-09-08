@@ -54,28 +54,16 @@ export const CR_ATTRIBUTES: Record<string, AttributeConfig> = {
   },
 
   // Optional Attributes
-  source: {
-    type: 'enum',
-    required: false,
-    values: ['User Request', 'Technical Debt', 'Bug Report', 'Performance Issue']
+  description: {
+    type: 'string',
+    required: false
   },
-  impact: {
-    type: 'enum',
-    required: false,
-    values: ['Major', 'Minor', 'Patch']
-  },
-  effort: {
-    type: 'enum',
-    required: false,
-    values: ['Small', 'Medium', 'Large']
+  rationale: {
+    type: 'string',
+    required: false
   },
   relatedTickets: {
     type: 'array<string>',
-    pattern: '^[A-Z]{2,}-[A-Z]\\d{3}$',
-    required: false
-  },
-  supersedes: {
-    type: 'string',
     pattern: '^[A-Z]{2,}-[A-Z]\\d{3}$',
     required: false
   },
@@ -89,8 +77,8 @@ export const CR_ATTRIBUTES: Record<string, AttributeConfig> = {
     pattern: '^[A-Z]{2,}-[A-Z]\\d{3}$',
     required: false
   },
-  relatedDocuments: {
-    type: 'array<string>',
+  assignee: {
+    type: 'string',
     required: false
   },
   implementationDate: {
@@ -235,9 +223,8 @@ export const getEnumValues = (attribute: string): string[] | undefined => {
 export const isAttributeEditable = (attribute: string): boolean => {
   const editableAttributes = [
     'title', 'status', 'type', 'priority', 'phaseEpic',
-    'source', 'impact', 'effort', 'relatedTickets', 
-    'supersedes', 'dependsOn', 'blocks', 'relatedDocuments',
-    'implementationNotes'
+    'description', 'rationale', 'relatedTickets', 
+    'dependsOn', 'blocks', 'assignee', 'implementationNotes'
   ];
   return editableAttributes.includes(attribute);
 };
@@ -253,8 +240,8 @@ export const isAttributeReadOnly = (attribute: string): boolean => {
 // Group attributes by section
 export const attributeSections = {
   core: ['code', 'title', 'status', 'dateCreated', 'type', 'priority', 'phaseEpic'],
-  optional: ['source', 'impact', 'effort'],
-  relationships: ['relatedTickets', 'supersedes', 'dependsOn', 'blocks', 'relatedDocuments'],
+  optional: ['description', 'rationale', 'assignee'],
+  relationships: ['relatedTickets', 'dependsOn', 'blocks'],
   implementation: ['implementationDate', 'implementationNotes']
 } as const;
 

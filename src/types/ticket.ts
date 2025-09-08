@@ -12,14 +12,12 @@ export interface Ticket {
   phaseEpic: string;
 
   // Optional Attributes
-  source?: string;
-  impact?: string;
-  effort?: string;
+  description?: string;
+  rationale?: string;
   relatedTickets?: string[];
-  supersedes?: string;
   dependsOn?: string[];
   blocks?: string[];
-  relatedDocuments?: string[];
+  assignee?: string;
   implementationDate?: Date;
   implementationNotes?: string;
 
@@ -64,14 +62,12 @@ export const TicketSchema = z.object({
   phaseEpic: z.string().min(1, 'Phase epic is required'),
 
   // Optional Attributes
-  source: z.string().optional(),
-  impact: z.string().optional(),
-  effort: z.string().optional(),
+  description: z.string().optional(),
+  rationale: z.string().optional(),
   relatedTickets: z.array(z.string()).optional(),
-  supersedes: z.string().regex(/^[A-Z]{2,}-[A-Z]\d{3}$/, 'Invalid ticket code format').optional(),
   dependsOn: z.array(z.string()).optional(),
   blocks: z.array(z.string()).optional(),
-  relatedDocuments: z.array(z.string()).optional(),
+  assignee: z.string().optional(),
   implementationDate: z.date().optional(),
   implementationNotes: z.string().optional(),
 
@@ -114,33 +110,3 @@ export type Type = typeof TYPES[number];
 export const PRIORITIES = ['Low', 'Medium', 'High', 'Critical'] as const;
 
 export type Priority = typeof PRIORITIES[number];
-
-// Phase Epic Enum Values
-export const PHASE_EPICS = [
-  'Phase A (Foundation)',
-  'Phase B (Enhancement)',
-  'Phase C',
-  'Phase D',
-] as const;
-
-export type PhaseEpic = typeof PHASE_EPICS[number];
-
-// Source Enum Values
-export const SOURCES = [
-  'User Request',
-  'Technical Debt',
-  'Bug Report',
-  'Performance Issue',
-] as const;
-
-export type Source = typeof SOURCES[number];
-
-// Impact Enum Values
-export const IMPACTS = ['Major', 'Minor', 'Patch'] as const;
-
-export type Impact = typeof IMPACTS[number];
-
-// Effort Enum Values
-export const EFFORTS = ['Small', 'Medium', 'Large'] as const;
-
-export type Effort = typeof EFFORTS[number];

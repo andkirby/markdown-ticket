@@ -155,36 +155,9 @@ export class MCPTools {
                   type: 'string',
                   description: 'Comma-separated list of CR keys this blocks (e.g., "MDT-010,MDT-015")'
                 },
-                impact: {
-                  type: 'string',
-                  enum: ['Major', 'Minor', 'Breaking', 'Patch'],
-                  description: 'Impact level of the change'
-                },
-                effort: {
-                  type: 'string',
-                  enum: ['Small', 'Medium', 'Large'],
-                  description: 'Effort estimation for implementation'
-                },
                 assignee: {
                   type: 'string',
                   description: 'Person responsible for implementation'
-                },
-                reviewers: {
-                  type: 'string',
-                  description: 'Comma-separated list of reviewers'
-                },
-                dependencies: {
-                  type: 'string',
-                  description: 'External dependencies or prerequisites'
-                },
-                riskLevel: {
-                  type: 'string',
-                  enum: ['Low', 'Medium', 'High'],
-                  description: 'Risk level of the change'
-                },
-                tags: {
-                  type: 'string',
-                  description: 'Comma-separated tags for categorization'
                 },
                 content: {
                   type: 'string',
@@ -245,13 +218,7 @@ export class MCPTools {
                 relatedTickets: { type: 'string', description: 'Comma-separated list of related CR codes' },
                 dependsOn: { type: 'string', description: 'Comma-separated list of CR keys this depends on' },
                 blocks: { type: 'string', description: 'Comma-separated list of CR keys this blocks' },
-                impact: { type: 'string', enum: ['Major', 'Minor', 'Breaking', 'Patch'], description: 'Impact level' },
-                effort: { type: 'string', enum: ['Small', 'Medium', 'Large'], description: 'Effort estimation' },
-                assignee: { type: 'string', description: 'Person responsible for implementation' },
-                reviewers: { type: 'string', description: 'Comma-separated list of reviewers' },
-                dependencies: { type: 'string', description: 'External dependencies or prerequisites' },
-                riskLevel: { type: 'string', enum: ['Low', 'Medium', 'High'], description: 'Risk level' },
-                tags: { type: 'string', description: 'Comma-separated tags for categorization' }
+                assignee: { type: 'string', description: 'Person responsible for implementation' }
               }
             }
           },
@@ -303,65 +270,6 @@ export class MCPTools {
         }
       },
       {
-        name: 'validate_cr_data',
-        description: 'Validate CR data before creation',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            project: {
-              type: 'string',
-              description: 'Project key'
-            },
-            data: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                type: { type: 'string' },
-                priority: { type: 'string' },
-                description: { type: 'string' }
-              },
-              required: ['title', 'type']
-            }
-          },
-          required: ['project', 'data']
-        }
-      },
-      {
-        name: 'get_next_cr_number',
-        description: 'Get the next available CR number for a project. Returns an object with nextNumber (integer) and nextCode (string, e.g. "MDT-028"). Used for creating new CRs with proper sequencing.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            project: {
-              type: 'string',
-              description: 'Project key (e.g., "MDT", "API")'
-            }
-          },
-          required: ['project']
-        }
-      },
-
-      // Advanced Operations
-      {
-        name: 'find_related_crs',
-        description: 'Find CRs related to given keywords',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            project: {
-              type: 'string',
-              description: 'Project key'
-            },
-            keywords: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Keywords to search for'
-            }
-          },
-          required: ['project', 'keywords']
-        }
-      },
-      {
         name: 'suggest_cr_improvements',
         description: 'Get suggestions for improving an existing CR. Returns an object with suggestions array (each with category, priority, suggestion, reason), overallScore (0-10), strengths array, and weaknesses array. Analyzes content structure, completeness, and clarity.',
         inputSchema: {
@@ -403,6 +311,9 @@ export class MCPTools {
         case 'update_cr_status':
           return await this.handleUpdateCRStatus(args.project, args.key, args.status);
         
+        case 'update_cr_attrs':
+          return await this.handleUpdateCRAttrs(args.project, args.key, args.attributes);
+        
         case 'delete_cr':
           return await this.handleDeleteCR(args.project, args.key);
         
@@ -412,20 +323,11 @@ export class MCPTools {
         case 'get_cr_template':
           return await this.handleGetCRTemplate(args.type);
         
-        case 'validate_cr_data':
-          return await this.handleValidateCRData(args.project, args.data);
-        
-        case 'get_next_cr_number':
-          return await this.handleGetNextCRNumber(args.project);
-        
-        case 'find_related_crs':
-          return await this.handleFindRelatedCRs(args.project, args.keywords);
-        
         case 'suggest_cr_improvements':
           return await this.handleSuggestCRImprovements(args.project, args.key);
         
         default:
-          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr', 'create_cr', 'update_cr_status', 'delete_cr', 'list_cr_templates', 'get_cr_template', 'validate_cr_data', 'get_next_cr_number', 'find_related_crs', 'suggest_cr_improvements'];
+          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr', 'create_cr', 'update_cr_attrs', 'update_cr_status', 'delete_cr', 'list_cr_templates', 'get_cr_template', 'suggest_cr_improvements'];
           throw new Error(`Unknown tool '${name}'. Available tools: ${availableTools.join(', ')}`);
       }
     } catch (error) {
@@ -640,6 +542,38 @@ export class MCPTools {
       lines.push('', 'The CR has been marked as implemented.');
       if (cr.type === 'Bug Fix') {
         lines.push('Consider deleting this bug fix CR after verification period.');
+      }
+    }
+
+    return lines.join('\n');
+  }
+
+  private async handleUpdateCRAttrs(projectKey: string, key: string, attributes: any): Promise<string> {
+    const project = await this.validateProject(projectKey);
+
+    // Get current CR info
+    const cr = await this.crService.getCR(project, key);
+    if (!cr) {
+      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
+    }
+
+    const success = await this.crService.updateCRAttrs(project, key, attributes);
+    if (!success) {
+      throw new Error(`Failed to update CR '${key}' attributes`);
+    }
+
+    const lines = [
+      `✅ **Updated CR ${key} Attributes**`,
+      '',
+      `- Title: ${cr.title}`,
+      `- Status: ${cr.status}`,
+      '',
+      '**Updated Fields:**'
+    ];
+
+    for (const [field, value] of Object.entries(attributes)) {
+      if (value !== undefined && value !== null) {
+        lines.push(`- ${field}: ${value}`);
       }
     }
 

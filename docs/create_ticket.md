@@ -24,18 +24,15 @@ Mandatory fields:
 
 #### Optional Attributes (include only if they have values):
 - `phaseEpic`: Project phase/epic (e.g., "Phase A (Foundation)", "Phase B (Enhancement)")
+- `description`: Problem statement or description
+- `rationale`: Rationale for this CR
 - `relatedTickets`: Comma-separated list of related CR codes (e.g., "CR-A001,CR-A002")
-- `impact`: Major | Minor | Breaking | Patch
-- `lastModified`: Date when CR was last updated (ISO format)
+- `dependsOn`: Comma-separated list of CR keys this depends on (e.g., "MDT-001,MDT-005")
+- `blocks`: Comma-separated list of CR keys this blocks (e.g., "MDT-010,MDT-015")
+- `assignee`: Person responsible for implementation
+- `lastModified`: Date when CR was last updated (ISO format) - auto-managed by system
 - `implementationDate`: Date when implementation was completed
 - `implementationNotes`: Brief notes about implementation completion
-- `assignee`: Person responsible for implementation
-- `estimatedHours`: Time estimate for implementation
-- `actualHours`: Actual time spent on implementation
-- `reviewers`: Comma-separated list of reviewers
-- `dependencies`: External dependencies or prerequisites
-- `riskLevel`: Low | Medium | High
-- `tags`: Comma-separated tags for categorization
 
 CR Sections
 	•	For Bug Fixes: Problem Statement, Current Behavior, Expected Behavior, Root Cause, Impact Assessment
@@ -61,24 +58,28 @@ When to Use MCP
 Always use MCP functions for CR activities: create, read, update, delete, list, validate, analyze.
 Fallback: If MCP fails, follow manual spec (Part 1).
 
-Core MCP Calls
-	•	Project Discovery
-	•	mcp__markdown-ticket__list_projects
-	•	mcp__markdown-ticket__get_project_info
-	•	CR Creation
-	1.	mcp__markdown-ticket__list_cr_templates (discover available types)
-	2.	mcp__markdown-ticket__get_cr_template
-	3.	mcp__markdown-ticket__validate_cr_data
-	4.	mcp__markdown-ticket__create_cr
-	5.	Confirm to user
-	•	CR Research/Analysis
-	•	mcp__markdown-ticket__list_crs
-	•	mcp__markdown-ticket__get_cr
-	•	mcp__markdown-ticket__find_related_crs
-	•	mcp__markdown-ticket__suggest_cr_improvements
-	•	Status Management
-	•	mcp__markdown-ticket__update_cr_status
-	•	For implemented bug fixes → mcp__markdown-ticket__delete_cr (after verification)
+## MCP Function Workflows
+
+All functions are provided by the **`mdt-ticket` MCP server**.
+
+**Core MCP Tools:**
+- `list_projects` - List all discovered projects
+- `get_project_info` - Get detailed project information
+- `list_crs` - List CRs for a project with filtering
+- `get_cr` - Get detailed CR information
+- `create_cr` - Create new change requests
+- `update_cr_attrs` - Update CR attributes (excludes status)
+- `update_cr_status` - Update CR status
+- `delete_cr` - Delete CRs (for implemented bug fixes)
+- `get_cr_template` - Get template for CR type
+- `suggest_cr_improvements` - Get suggestions for improving CRs
+
+**Typical Workflow:**
+1. `list_projects` → `get_project_info` (discovery)
+2. `get_cr_template` → `create_cr` (creation)
+3. `list_crs` → `get_cr` (research)
+4. `update_cr_attrs` / `update_cr_status` (updates)
+5. `delete_cr` (cleanup for bug fixes)
 
 CR Code Format:
 Each Change Request code is auto-generated using the project’s code prefix and numbering scheme.

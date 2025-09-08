@@ -6,10 +6,6 @@ export type {
   Status,
   Type,
   Priority,
-  PhaseEpic,
-  Source,
-  Impact,
-  Effort,
 } from './ticket';
 
 // File Event Types
@@ -26,8 +22,4 @@ export {
   STATUSES,
   TYPES,
   PRIORITIES,
-  PHASE_EPICS,
-  SOURCES,
-  IMPACTS,
-  EFFORTS,
 } from './ticket';

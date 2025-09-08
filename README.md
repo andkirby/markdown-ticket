@@ -212,8 +212,11 @@ claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 - `list_crs` - List CRs for a project with filtering
 - `get_cr` - Get detailed CR information
 - `create_cr` - Create new change requests
+- `update_cr_attrs` - Update CR attributes (excludes status)
 - `update_cr_status` - Update CR status
 - `delete_cr` - Delete CRs (for implemented bug fixes)
+- `get_project_info` - Get detailed project information
+- `suggest_cr_improvements` - Get suggestions for improving CRs
 
 **📖 Complete Documentation**: See `mcp-server/MCP_TOOLS.md` for detailed API reference including response formats, examples, and error handling.
 

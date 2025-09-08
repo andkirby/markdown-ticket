@@ -54,22 +54,6 @@ Complete reference for all available MCP tools with input parameters, response f
 }
 ```
 
-### `get_next_cr_number`
-**Description**: Get the next available CR number for sequencing
-
-**Parameters**:
-- `project` (string, required): Project key
-
-**Response Format**:
-```json
-{
-  "nextNumber": 28,
-  "nextCode": "MDT-028"
-}
-```
-
-**Example**: If MDT-001, MDT-002, MDT-027 exist, returns `28`
-
 ## CR Management
 
 ### `list_crs`
@@ -232,44 +216,6 @@ Complete reference for all available MCP tools with input parameters, response f
 ```
 
 ## Utility Tools
-
-### `validate_cr_data`
-**Description**: Validate CR data before creation
-
-**Parameters**:
-- `project` (string, required): Project key
-- `data` (object, required): CR data to validate
-
-**Response Format**:
-```json
-{
-  "valid": true,
-  "errors": [],
-  "warnings": ["Title could be more descriptive"]
-}
-```
-
-### `find_related_crs`
-**Description**: Find CRs related to given keywords
-
-**Parameters**:
-- `project` (string, required): Project key
-- `keywords` (array, required): Keywords to search for
-
-**Response Format**:
-```json
-{
-  "relatedCRs": [
-    {
-      "code": "MDT-001",
-      "title": "Related Ticket",
-      "relevanceScore": 0.85,
-      "matchedKeywords": ["authentication", "login"]
-    }
-  ],
-  "searchKeywords": ["authentication", "login", "security"]
-}
-```
 
 ### `suggest_cr_improvements`
 **Description**: Get suggestions for improving an existing CR
