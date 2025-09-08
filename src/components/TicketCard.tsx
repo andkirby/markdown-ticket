@@ -1,5 +1,6 @@
 import React from 'react';
 import { Ticket } from '../types';
+import { TicketCode } from './TicketCode';
 import TicketAttributes from './TicketAttributes';
 
 interface TicketCardProps {
@@ -18,16 +19,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
       data-ticket-key={ticket.code}
     >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="ticket-title font-semibold text-gray-900 dark:text-white text-sm truncate">{ticket.code}: {ticket.title}</h4>
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
-          {ticket.code}
-        </span>
+        <h4 className="ticket-title font-semibold text-gray-900 dark:text-white text-sm">
+          <TicketCode code={ticket.code} /> • {ticket.title}
+        </h4>
       </div>
-      
-      <p className="ticket-content text-gray-600 dark:text-gray-300 text-xs mb-3 line-clamp-2">
-        {ticket.content ? ticket.content.substring(0, 100) + '...' : 'No content'}
-        {ticket.implementationDate && <><br/>implementationDate: {ticket.implementationDate.toString()}</>}
-      </p>
       
       <div className="flex items-center justify-between">
         <TicketAttributes ticket={ticket} />

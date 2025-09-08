@@ -9,6 +9,7 @@ import { SecondaryHeader } from './SecondaryHeader';
 import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
+import { TicketCode } from './TicketCode';
 
 type SingleProjectViewMode = 'board' | 'list' | 'documents';
 
@@ -194,7 +195,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
-                      <span className="font-mono text-sm text-muted-foreground">{ticket.code}</span>
+                      <TicketCode code={ticket.code} />
                       <span className="font-medium">{ticket.title}</span>
                     </div>
                   </div>

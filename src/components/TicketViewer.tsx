@@ -3,6 +3,7 @@ import showdown from 'showdown';
 import { Ticket } from '../types/ticket';
 import { Modal, ModalHeader, ModalBody } from './UI/Modal';
 import TicketAttributes from './TicketAttributes';
+import { TicketCode } from './TicketCode';
 
 interface TicketViewerProps {
   ticket: Ticket | null;
@@ -32,8 +33,11 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalHeader
-        title={ticket.title}
-        description={`${ticket.code} • ${ticket.type} • ${ticket.priority} Priority`}
+        title={
+          <span>
+            <TicketCode code={ticket.code} /> • {ticket.title}
+          </span>
+        }
         onClose={onClose}
       />
       <ModalBody>
