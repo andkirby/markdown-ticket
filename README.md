@@ -215,6 +215,8 @@ claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 - `update_cr_status` - Update CR status
 - `delete_cr` - Delete CRs (for implemented bug fixes)
 
+**📖 Complete Documentation**: See `mcp-server/MCP_TOOLS.md` for detailed API reference including response formats, examples, and error handling.
+
 ## Project Management
 
 ### Creating Projects

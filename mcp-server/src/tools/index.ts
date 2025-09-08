@@ -245,13 +245,13 @@ export class MCPTools {
       },
       {
         name: 'get_next_cr_number',
-        description: 'Get the next available CR number for a project',
+        description: 'Get the next available CR number for a project. Returns an object with nextNumber (integer) and nextCode (string, e.g. "MDT-028"). Used for creating new CRs with proper sequencing.',
         inputSchema: {
           type: 'object',
           properties: {
             project: {
               type: 'string',
-              description: 'Project key'
+              description: 'Project key (e.g., "MDT", "API")'
             }
           },
           required: ['project']
@@ -280,17 +280,17 @@ export class MCPTools {
       },
       {
         name: 'suggest_cr_improvements',
-        description: 'Get suggestions for improving an existing CR',
+        description: 'Get suggestions for improving an existing CR. Returns an object with suggestions array (each with category, priority, suggestion, reason), overallScore (0-10), strengths array, and weaknesses array. Analyzes content structure, completeness, and clarity.',
         inputSchema: {
           type: 'object',
           properties: {
             project: {
               type: 'string',
-              description: 'Project key'
+              description: 'Project key (e.g., "MDT", "API")'
             },
             key: {
               type: 'string',
-              description: 'CR key to analyze'
+              description: 'CR key to analyze (e.g., "MDT-001")'
             }
           },
           required: ['project', 'key']
