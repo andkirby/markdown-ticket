@@ -115,6 +115,7 @@ export class MCPTools {
             data: {
               type: 'object',
               properties: {
+                // Mandatory fields
                 title: {
                   type: 'string',
                   description: 'CR title/summary'
@@ -124,6 +125,7 @@ export class MCPTools {
                   enum: ['Low', 'Medium', 'High', 'Critical'],
                   description: 'CR priority (defaults to Medium)'
                 },
+                // Optional fields
                 phaseEpic: {
                   type: 'string',
                   description: 'Phase or epic this CR belongs to'
@@ -140,6 +142,49 @@ export class MCPTools {
                   type: 'array',
                   items: { type: 'string' },
                   description: 'Areas of the system that will be impacted'
+                },
+                relatedTickets: {
+                  type: 'string',
+                  description: 'Comma-separated list of related CR codes (e.g., "CR-A001,CR-A002")'
+                },
+                dependsOn: {
+                  type: 'string',
+                  description: 'Comma-separated list of CR keys this depends on (e.g., "MDT-001,MDT-005")'
+                },
+                blocks: {
+                  type: 'string',
+                  description: 'Comma-separated list of CR keys this blocks (e.g., "MDT-010,MDT-015")'
+                },
+                impact: {
+                  type: 'string',
+                  enum: ['Major', 'Minor', 'Breaking', 'Patch'],
+                  description: 'Impact level of the change'
+                },
+                effort: {
+                  type: 'string',
+                  enum: ['Small', 'Medium', 'Large'],
+                  description: 'Effort estimation for implementation'
+                },
+                assignee: {
+                  type: 'string',
+                  description: 'Person responsible for implementation'
+                },
+                reviewers: {
+                  type: 'string',
+                  description: 'Comma-separated list of reviewers'
+                },
+                dependencies: {
+                  type: 'string',
+                  description: 'External dependencies or prerequisites'
+                },
+                riskLevel: {
+                  type: 'string',
+                  enum: ['Low', 'Medium', 'High'],
+                  description: 'Risk level of the change'
+                },
+                tags: {
+                  type: 'string',
+                  description: 'Comma-separated tags for categorization'
                 },
                 content: {
                   type: 'string',
@@ -168,11 +213,49 @@ export class MCPTools {
             },
             status: {
               type: 'string',
-              enum: ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected'],
+              enum: ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold'],
               description: 'New status for the CR'
             }
           },
           required: ['project', 'key', 'status']
+        }
+      },
+      {
+        name: 'update_cr_attrs',
+        description: 'Update attributes of an existing CR (excludes status - use update_cr_status for workflow)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            project: {
+              type: 'string',
+              description: 'Project key'
+            },
+            key: {
+              type: 'string',
+              description: 'CR key'
+            },
+            attributes: {
+              type: 'object',
+              properties: {
+                title: { type: 'string', description: 'CR title/summary' },
+                priority: { type: 'string', enum: ['Low', 'Medium', 'High', 'Critical'], description: 'CR priority' },
+                phaseEpic: { type: 'string', description: 'Phase or epic this CR belongs to' },
+                description: { type: 'string', description: 'Problem statement or description' },
+                rationale: { type: 'string', description: 'Rationale for this CR' },
+                relatedTickets: { type: 'string', description: 'Comma-separated list of related CR codes' },
+                dependsOn: { type: 'string', description: 'Comma-separated list of CR keys this depends on' },
+                blocks: { type: 'string', description: 'Comma-separated list of CR keys this blocks' },
+                impact: { type: 'string', enum: ['Major', 'Minor', 'Breaking', 'Patch'], description: 'Impact level' },
+                effort: { type: 'string', enum: ['Small', 'Medium', 'Large'], description: 'Effort estimation' },
+                assignee: { type: 'string', description: 'Person responsible for implementation' },
+                reviewers: { type: 'string', description: 'Comma-separated list of reviewers' },
+                dependencies: { type: 'string', description: 'External dependencies or prerequisites' },
+                riskLevel: { type: 'string', enum: ['Low', 'Medium', 'High'], description: 'Risk level' },
+                tags: { type: 'string', description: 'Comma-separated tags for categorization' }
+              }
+            }
+          },
+          required: ['project', 'key', 'attributes']
         }
       },
       {

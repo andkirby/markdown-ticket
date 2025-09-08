@@ -63,7 +63,8 @@ export type CRStatus =
   | 'Approved' 
   | 'In Progress' 
   | 'Implemented' 
-  | 'Rejected';
+  | 'Rejected'
+  | 'On Hold';
 
 export type CRType = 
   | 'Architecture' 
@@ -89,13 +90,26 @@ export interface CRFilters {
 }
 
 export interface CRData {
+  // Mandatory fields
   title: string;
   type: CRType;
   priority?: CRPriority;
+  
+  // Optional fields
   phaseEpic?: string;
   description?: string;
   rationale?: string;
   impactAreas?: string[];
+  relatedTickets?: string;
+  dependsOn?: string;
+  blocks?: string;
+  impact?: 'Major' | 'Minor' | 'Breaking' | 'Patch';
+  effort?: 'Small' | 'Medium' | 'Large';
+  assignee?: string;
+  reviewers?: string;
+  dependencies?: string;
+  riskLevel?: 'Low' | 'Medium' | 'High';
+  tags?: string;
   content?: string;
 }
 

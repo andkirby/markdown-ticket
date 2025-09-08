@@ -181,9 +181,10 @@ export class CRService {
     const validTransitions: Record<CRStatus, CRStatus[]> = {
       'Proposed': ['Approved', 'Rejected'],
       'Approved': ['In Progress', 'Rejected'],
-      'In Progress': ['Implemented', 'Approved'], // Allow going back to approved for issues
+      'In Progress': ['Implemented', 'Approved', 'On Hold'], // Can pause work
       'Implemented': ['In Progress'], // Allow reopening if issues found
-      'Rejected': ['Proposed'] // Allow re-proposing rejected CRs
+      'Rejected': ['Proposed'], // Allow re-proposing rejected CRs
+      'On Hold': ['In Progress', 'Approved'] // Can resume or go back to approved
     };
 
     const allowedTransitions = validTransitions[currentStatus] || [];
