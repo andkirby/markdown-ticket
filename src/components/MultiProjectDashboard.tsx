@@ -212,16 +212,11 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
     }
   }, [selectedProject, fetchCRs]);
 
-  // Set up realtime file watcher for multi-project dashboard
+  // Set up realtime file watcher for multi-project dashboard (once only)
   useEffect(() => {
-    console.log('🎯 MultiProjectDashboard: Setting up realtime file watcher...');
-    
     const handleTicketsChange = () => {
-      console.log('🔄 MultiProject realtime: Files changed, refreshing data');
-      
       // Refresh current project's CRs if one is selected
       if (selectedProject) {
-        console.log('📡 Refreshing CRs for project:', selectedProject.project.name);
         fetchCRs(selectedProject).catch(err => {
           console.error('❌ Failed to refresh CRs after file change:', err);
         });
@@ -245,19 +240,15 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
     // Start watcher if not running
     const stats = defaultRealtimeFileWatcher.getStats();
     if (!stats.isRunning && !stats.isSSEConnected) {
-      console.log('🚀 Starting realtime file watcher for MultiProject...');
       defaultRealtimeFileWatcher.start().catch(err => {
         console.error('❌ Failed to start realtime file watcher:', err);
       });
-    } else {
-      console.log('✅ Realtime file watcher already running for MultiProject');
     }
 
     return () => {
-      console.log('🧹 MultiProject: Cleaning up realtime file watcher callbacks');
       defaultRealtimeFileWatcher.off();
     };
-  }, [selectedProject, fetchCRs, fetchProjects]);
+  }, []); // Empty dependency array - run only once
 
   const getStatusColor = (status: string) => {
     switch (status) {

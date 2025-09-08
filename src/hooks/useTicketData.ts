@@ -134,12 +134,10 @@ export function useTicketData(options: UseTicketDataOptions = {}): UseTicketData
 
   // Update an existing ticket
   const updateTicket = useCallback(async (ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> => {
-    console.log('useTicketData: updateTicket called with:', { ticketCode, updates });
     try {
       setError(null);
       
       const updatedTicket = await defaultFileService.updateTicket(ticketCode, updates);
-      console.log('useTicketData: Ticket updated successfully:', updatedTicket);
       
       // Update local state
       setTickets(prev => prev.map(ticket =>
@@ -326,10 +324,8 @@ export function useTicketStatusAutomation() {
   const { updateTicket } = useTicketData();
   
   const moveTicket = useCallback(async (ticketCode: string, newStatus: Status): Promise<void> => {
-    console.log('useTicketStatusAutomation: moveTicket called with:', { ticketCode, newStatus });
     try {
       await updateTicket(ticketCode, { status: newStatus });
-      console.log('useTicketStatusAutomation: Ticket status updated successfully');
       
       // Auto-set implementation date when status changes to "Implemented"
       if (newStatus === 'Implemented' || newStatus === 'Partially Implemented') {
@@ -337,7 +333,6 @@ export function useTicketStatusAutomation() {
           implementationDate: new Date(),
           implementationNotes: `Status changed to ${newStatus} on ${new Date().toLocaleDateString()}`
         });
-        console.log('useTicketStatusAutomation: Implementation date set');
       }
       
       // Auto-set status to "On Hold" if ticket has been in progress for too long

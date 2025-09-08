@@ -94,26 +94,18 @@ const BoardContent: React.FC<BoardProps> = ({
   };
   
   const handleDrop = useCallback(async (status: Status, ticket: Ticket) => {
-    console.log('Board: handleDrop called with:', { status, ticketKey: ticket.code, ticketStatus: ticket.status });
-
     // Don't process if status is the same
     if (ticket.status === status) {
-      console.log('Board: No status change needed');
       return;
     }
 
     try {
-      console.log('Board: Starting updateTicket call...');
-      
       // Send only the status - let backend handle implementation fields automatically
       const updateData: Partial<Ticket> = { status };
       
       // Use the appropriate update function based on mode
       const updateFunction = onTicketUpdate || updateTicket;
       const result = await updateFunction(ticket.code, updateData);
-      console.log('Board: updateTicket completed, result:', result);
-      
-      console.log('Board: Ticket moved successfully');
     } catch (error) {
       console.error('Board: Failed to move ticket:', error);
     }
@@ -178,7 +170,7 @@ const BoardContent: React.FC<BoardProps> = ({
   const ticketCodes = new Set<string>();
   let hasDuplicates = false;
   tickets.forEach(ticket => {
-    console.log(`Ticket ${ticket.code}: status=${ticket.status}, column=${getColumnForStatus(ticket.status as Status).label}`);
+    // Validate ticket placement
     if (ticketCodes.has(ticket.code)) {
       console.error(`WARNING: Duplicate ticket found: ${ticket.code} with status ${ticket.status}`);
       hasDuplicates = true;

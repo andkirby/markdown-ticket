@@ -31,7 +31,7 @@ export class FileService {
         return;
       }
       
-      console.log(`File service initialized with storage key: ${this.storageKey}`);
+      // Initialize file service silently
     } catch (error) {
       console.error('Failed to initialize file service:', error);
       throw error;
@@ -245,19 +245,15 @@ export class FileService {
    * Save a ticket to localStorage
    */
   async saveTicket(ticket: Ticket): Promise<void> {
-    console.log('FileService: saveTicket called with:', ticket);
     try {
       const tickets = await this.loadAllTickets();
-      console.log('FileService: Current tickets count:', tickets.length);
       
       // Update existing ticket or add new one
       const existingIndex = tickets.findIndex(t => t.code === ticket.code);
       if (existingIndex >= 0) {
         tickets[existingIndex] = ticket;
-        console.log('FileService: Updated existing ticket at index:', existingIndex);
       } else {
         tickets.push(ticket);
-        console.log('FileService: Added new ticket');
       }
 
       if (this.autoSave && typeof window !== 'undefined' && window.localStorage) {
@@ -266,10 +262,8 @@ export class FileService {
           timestamp: Date.now()
         }));
         localStorage.setItem(this.storageKey, JSON.stringify(storedData));
-        console.log('FileService: Ticket saved to localStorage');
       }
 
-      console.log(`FileService: Ticket ${ticket.code} saved successfully`);
     } catch (error) {
       console.error(`FileService: Failed to save ticket ${ticket.code}:`, error);
       throw error;
@@ -310,11 +304,9 @@ export class FileService {
    * Update an existing ticket
    */
   async updateTicket(ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> {
-    console.log('FileService: updateTicket called with:', { ticketCode, updates });
     
     // For status-only updates, use the new PATCH endpoint for better performance
     if (Object.keys(updates).length <= 3 && updates.status && !updates.content) {
-      console.log('FileService: Using PATCH endpoint for small update');
       return await this.updateTicketPartial(ticketCode, updates);
     }
     
@@ -348,7 +340,6 @@ export class FileService {
         apiUpdates.lastModified = new Date().toISOString();
       }
 
-      console.log('FileService: Making PATCH request with:', apiUpdates);
 
       const response = await fetch(`/api/projects/${currentProject}/crs/${ticketCode}`, {
         method: 'PATCH',
@@ -365,7 +356,6 @@ export class FileService {
       }
 
       const result = await response.json();
-      console.log('FileService: PATCH request successful:', result);
 
       // For performance, we'll update localStorage but may not reload the full ticket
       const existingTicket = await this.loadTicket(ticketCode);
@@ -400,7 +390,6 @@ export class FileService {
    * Update ticket using full content (existing method)
    */
   private async updateTicketFull(ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> {
-    console.log('FileService: Full update called with:', { ticketCode, updates });
     const existingTicket = await this.loadTicket(ticketCode);
     if (!existingTicket) {
       console.error(`FileService: Ticket ${ticketCode} not found`);
@@ -414,7 +403,6 @@ export class FileService {
       lastModified: new Date()
     };
 
-    console.log('FileService: Updated ticket created:', updatedTicket);
     
     // Save to localStorage first
     await this.saveTicket(updatedTicket);
@@ -422,12 +410,10 @@ export class FileService {
     // Try to save to actual markdown file if it exists
     try {
       await this.saveTicketToFile(updatedTicket);
-      console.log('FileService: Ticket saved to file successfully');
     } catch (fileError) {
       console.warn('FileService: Failed to save ticket to file, using localStorage fallback:', fileError);
     }
     
-    console.log('FileService: Ticket saved successfully');
     return updatedTicket;
   }
 
@@ -456,7 +442,6 @@ export class FileService {
         throw new Error(`Failed to save ticket file: ${response.statusText}`);
       }
 
-      console.log(`FileService: Ticket ${ticket.code} saved to file: ${ticket.filePath}`);
     } catch (error) {
       console.error(`FileService: Failed to save ticket ${ticket.code} to file:`, error);
       throw error;

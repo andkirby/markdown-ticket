@@ -1,12 +1,13 @@
 ---
 code: MDT-028
 title: MCP configuration changes
-status: Approved
+status: Proposed
 dateCreated: 2025-09-08T12:56:51.581Z
 type: Feature Enhancement
 priority: Medium
 dependsOn: ["MDT-006"]
 ---
+
 
 
 # MCP configuration changes

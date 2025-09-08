@@ -87,7 +87,14 @@ function App() {
   const { theme, toggleTheme } = useTheme();
   
   // Project management at app level
-  const { projects, selectedProject, setSelectedProject, loading: projectsLoading } = useMultiProjectData({ autoSelectFirst: true });
+  const { 
+    projects, 
+    selectedProject, 
+    setSelectedProject, 
+    tickets,
+    updateTicketOptimistic,
+    loading: projectsLoading 
+  } = useMultiProjectData({ autoSelectFirst: true });
 
   // Custom setter that saves to localStorage
   const setViewMode = (mode: ViewMode) => {
@@ -194,6 +201,8 @@ function App() {
       <SingleProjectView 
         onTicketClick={handleTicketClick} 
         selectedProject={selectedProject} 
+        tickets={tickets}
+        updateTicketOptimistic={updateTicketOptimistic}
         onAddProject={() => console.log('Add Project from SingleProjectView - need to implement')}
         viewMode={internalViewMode}
       />

@@ -1,12 +1,13 @@
 ---
 code: MDT-017
 title: Implement URL-based state management for frontend routing and deep linking
-status: Proposed
+status: Approved
 dateCreated: 2025-09-06T15:42:22.523Z
 type: Feature Enhancement
 priority: High
 lastModified: 2025-09-07T00:20:40.485Z
 ---
+
 
 
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import Board from './Board';
 import { DocumentsLayout } from './DocumentsView';
 import { DuplicateResolver } from './DuplicateResolver';
@@ -39,11 +39,13 @@ interface Project {
 interface SingleProjectViewProps {
   onTicketClick: (ticket: Ticket) => void;
   selectedProject: Project | null;
+  tickets?: Ticket[];
+  updateTicketOptimistic?: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>;
   onAddProject?: () => void;
   viewMode?: string;
 }
 
-export default function SingleProjectView({ onTicketClick, selectedProject, onAddProject, viewMode: externalViewMode }: SingleProjectViewProps) {
+export default function SingleProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, onAddProject, viewMode: externalViewMode }: SingleProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
   const [internalViewMode, setInternalViewMode] = useState<SingleProjectViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
@@ -54,7 +56,6 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
 
   const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDuplicateResolver, setShowDuplicateResolver] = useState(false);
 
@@ -68,44 +69,9 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
     setSortPreferences(newPreferences);
   }, []);
 
-  // Fetch tickets for the selected project
-  const fetchTickets = useCallback(async () => {
-    if (!selectedProject) {
-      setTickets([]);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch tickets: ${response.statusText}`);
-      }
-      
-      const crsData = await response.json();
-      
-      // Convert CR data to Ticket format using shared DTO
-      const convertedTickets: Ticket[] = crsData.map((cr: any) => normalizeTicket(cr) as Ticket);
-
-      setTickets(convertedTickets);
-      
-      // Check for duplicates
-      const codes = convertedTickets.map(t => t.code);
-      const duplicateCodes = codes.filter((code, index) => codes.indexOf(code) !== index);
-      if (duplicateCodes.length > 0) {
-        setShowDuplicateResolver(true);
-      }
-    } catch (error) {
-      console.error('Failed to fetch tickets:', error);
-      setTickets([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedProject]);
-
   const handleRefresh = useCallback(async () => {
-    await fetchTickets();
-  }, [fetchTickets]);
+    // Refresh is now handled by the parent component
+  }, []);
 
   const handleTicketUpdate = useCallback(async (ticketCode: string, updates: Partial<Ticket>) => {
     if (!selectedProject) {
@@ -127,20 +93,14 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
 
       const updatedTicket = await response.json();
       
-      // Refresh tickets to get the latest state
-      await fetchTickets();
+      // Ticket updates are now handled by SSE events automatically
       
       return updatedTicket;
     } catch (error) {
       console.error('Failed to update ticket:', error);
       throw error;
     }
-  }, [selectedProject, fetchTickets]);
-
-  // Fetch tickets when selected project changes
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+  }, [selectedProject]);
 
   return (
     <div className="h-full flex flex-col">
@@ -166,11 +126,11 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
         {viewMode === 'board' ? (
           <Board 
             onTicketClick={onTicketClick} 
-            onTicketUpdate={handleTicketUpdate}
+            onTicketUpdate={updateTicketOptimistic || handleTicketUpdate}
             showHeader={false} 
             enableProjectSwitching={false}
             selectedProject={selectedProject}
-            tickets={tickets}
+            tickets={propTickets || []}
             loading={loading}
             sortPreferences={sortPreferences}
           />
@@ -224,7 +184,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
           projectId={selectedProject.id}
           onResolved={() => {
             setShowDuplicateResolver(false);
-            fetchTickets(); // Reload tickets after resolution
+            // Ticket updates are now handled by SSE events automatically
           }}
         />
       )}

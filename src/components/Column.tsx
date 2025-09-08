@@ -90,7 +90,7 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
   // Monitor drag state changes for debugging
   useEffect(() => {
     if (isDragging) {
-      console.log('Drag: Ticket', ticket.code, 'is being dragged');
+      // Ticket being dragged
     }
   }, [isDragging, ticket.code]);
 
@@ -167,41 +167,36 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
   const handleDrop = (ticket: Ticket) => {
     // If this is the "Done" column with multiple statuses, show resolution dialog
     if (column.label === 'Done' && column.statuses.length > 1) {
-      console.log('Column: Showing resolution dialog for Done column');
+      // Show resolution dialog for Done column
       setResolutionDialog({
         isOpen: true,
         ticket: ticket,
       });
     } else {
       // For other columns, use the first (and usually only) status
-      console.log('Column: Direct drop to', column.statuses[0]);
+      // Direct drop to first status
       onDrop(column.statuses[0], ticket);
     }
   };
 
   const handleResolutionChoice = (status: Status) => {
     if (resolutionDialog.ticket) {
-      console.log('Column: Resolution chosen:', status);
+      // Resolution chosen
       onDrop(status, resolutionDialog.ticket);
     }
     setResolutionDialog({ isOpen: false, ticket: null });
   };
 
   const handleResolutionCancel = () => {
-    console.log('Column: Resolution dialog cancelled');
+    // Resolution dialog cancelled
     setResolutionDialog({ isOpen: false, ticket: null });
   };
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'ticket',
     drop: (item: any) => {
-      console.log('Column: Drop event triggered');
-      console.log('Column: Dropped ticket:', item.ticket);
-      console.log('Column: Target column:', column.label, 'with statuses:', column.statuses);
-
       try {
         handleDrop(item.ticket);
-        console.log('Column: Drop handling completed');
       } catch (error) {
         console.error('Column: Error in drop handler:', error);
       }

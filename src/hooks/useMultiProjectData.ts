@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Ticket, Status } from '../types';
 import { formatTicketAsMarkdown } from '../services/markdownParser';
 import { defaultRealtimeFileWatcher } from '../services/realtimeFileWatcher';
@@ -90,6 +90,12 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const selectedProjectRef = useRef<Project | null>(null);
+  
+  // Update ref when selectedProject changes
+  useEffect(() => {
+    selectedProjectRef.current = selectedProject;
+  }, [selectedProject]);
   
   // localStorage keys for persistence
   const SELECTED_PROJECT_KEY = 'markdown-ticket-selected-project';
@@ -216,7 +222,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
 
         // Debug logging for DEB-894
         if (normalized.code === 'DEB-894') {
-          console.log('🔍 Full normalized ticket:', normalized);
+          // Debug logging removed
         }
         
         return normalized;
@@ -230,17 +236,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
 
       const finalTickets = Array.from(uniqueTickets.values());
       
-      // Debug final tickets
-      const deb894Final = finalTickets.find(t => t.code === 'DEB-894');
-      if (deb894Final) {
-        console.log('🔍 Final DEB-894 after deduplication:', {
-          relatedTickets: deb894Final.relatedTickets,
-          dependsOn: deb894Final.dependsOn,
-          blocks: deb894Final.blocks
-        });
-      }
-      
-      setTickets(finalTickets);
+      setTickets([...finalTickets]);
       setLoading(false);
       
       return convertedTickets;
@@ -310,72 +306,40 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     });
   }, [fetchProjects, loadStoredProjectSelection, autoSelectFirst, setSelectedProjectWithPersistence]);
 
-  // Set up realtime file watcher (once, not per project)
+  // Set up realtime file watcher (once only)
   useEffect(() => {
-    console.log('🎯 useMultiProjectData: Setting up realtime file watcher...');
-    
-    // Set up the onChange callback to refresh tickets when files change
     const handleTicketsChange = (updatedTickets: Ticket[]) => {
-      console.log('🔄 Realtime watcher: Tickets updated, refreshing UI');
-      
-      // Get the current selected project at the time of the event
-      // Use a closure to capture the current state
-      const currentProject = selectedProject;
-      
+      const currentProject = selectedProjectRef.current;
       if (currentProject) {
-        console.log('📡 Fetching fresh tickets for project:', currentProject.project.name);
         fetchTicketsForProject(currentProject).catch(err => {
           console.error('❌ Failed to refresh tickets after file change:', err);
         });
-      } else {
-        console.log('⚠️ No selected project at event time, will refresh when project is selected');
-        // Force a refresh of all projects or try to refresh the current view
-        // This handles the case where events come before project selection
-        if (projects.length > 0) {
-          console.log('🔄 Refreshing first available project as fallback');
-          const firstProject = projects[0];
-          fetchTicketsForProject(firstProject).catch(err => {
-            console.error('❌ Failed to refresh fallback project:', err);
-          });
-        }
       }
     };
 
-    // Set up the error callback
     const handleError = (error: Error) => {
       console.error('❌ Realtime watcher error:', error);
       setError(error);
     };
 
     // Configure and start the watcher (only once)
-    console.log('🎯 Setting up realtime file watcher callbacks...');
     defaultRealtimeFileWatcher.on('change', handleTicketsChange);
     defaultRealtimeFileWatcher.on('error', handleError);
     
     // Start the watcher if not already started
     const stats = defaultRealtimeFileWatcher.getStats();
-    console.log('📊 Watcher stats:', stats);
     
     if (!stats.isRunning && !stats.isSSEConnected) {
-      console.log('🚀 Starting realtime file watcher...');
-      defaultRealtimeFileWatcher.start().then(() => {
-        console.log('✅ Realtime file watcher started successfully');
-        const newStats = defaultRealtimeFileWatcher.getStats();
-        console.log('📊 New watcher stats:', newStats);
-      }).catch(err => {
+      defaultRealtimeFileWatcher.start().catch(err => {
         console.error('❌ Failed to start realtime file watcher:', err);
       });
-    } else {
-      console.log('✅ Realtime file watcher already running or connected');
     }
 
     // Cleanup function
     return () => {
-      console.log('🧹 Cleaning up realtime file watcher callbacks');
       defaultRealtimeFileWatcher.off();
-      // Don't stop the watcher here as it should remain running for other components
     };
-  }, [projects]); // Add projects as dependency to handle fallback refresh
+  }, []); // Empty dependency array - run only once
 
   // Separate effect to handle project changes
   useEffect(() => {
@@ -467,28 +431,28 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     try {
       setError(null);
 
-      // Find current ticket for optimistic update
-      const currentTicket = tickets.find(ticket => ticket.code === ticketCode);
-      if (!currentTicket) {
-        throw new Error(`Ticket ${ticketCode} not found`);
-      }
-
-      console.log('updateTicket: Current ticket:', currentTicket);
-      console.log('updateTicket: Updates:', updates);
-
-      // Create updated ticket with intended changes (optimistic update)
+      // Create optimistic ticket for return value
       const optimisticTicket: Ticket = {
-        ...currentTicket,
-        ...updates,
+        code: ticketCode,
+        title: '', // Will be filled by backend response
+        status: 'Proposed',
+        type: 'Feature Enhancement', 
+        priority: 'Medium',
+        content: '',
+        filePath: '',
+        dateCreated: new Date(),
         lastModified: new Date(),
+        implementationDate: null,
+        phaseEpic: '',
+        description: '',
+        rationale: '',
+        assignee: '',
+        implementationNotes: '',
+        relatedTickets: [],
+        dependsOn: [],
+        blocks: [],
+        ...updates,
       };
-
-      console.log('updateTicket: Optimistic ticket:', optimisticTicket);
-
-      // Update local state immediately for UI synchronization
-      setTickets(prev => prev.map(ticket => 
-        ticket.code === ticketCode ? optimisticTicket : ticket
-      ));
 
       // Determine if we should use PATCH (for small updates) or PUT (for large updates)
       const shouldUsePatch = Object.keys(updates).length <= 3 && 
@@ -499,7 +463,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       const apiUrl = `/api/projects/${selectedProject.id}/crs/${ticketCode}`;
       
       if (shouldUsePatch) {
-        console.log('updateTicket: Using PATCH for efficient update');
+        // Using PATCH for efficient update
         
         // Prepare minimal update data for PATCH
         const patchData: Record<string, any> = {};
@@ -570,6 +534,27 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     }
   }, [selectedProject, tickets]);
 
+  // Optimistic update for immediate UI feedback
+  const updateTicketOptimistic = useCallback(async (ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> => {
+    // Immediately update local state for instant UI feedback
+    setTickets(prevTickets => 
+      prevTickets.map(ticket => 
+        ticket.code === ticketCode 
+          ? { ...ticket, ...updates, lastModified: new Date() }
+          : ticket
+      )
+    );
+
+    // Then make the API call (SSE will handle the final state)
+    try {
+      return await updateTicket(ticketCode, updates);
+    } catch (error) {
+      // Revert optimistic update on error
+      await fetchTicketsForProject(selectedProjectRef.current!);
+      throw error;
+    }
+  }, [updateTicket]);
+
   // Delete a ticket from the selected project
   const deleteTicket = useCallback(async (ticketCode: string): Promise<void> => {
     if (!selectedProject) {
@@ -628,6 +613,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     // Ticket operations
     createTicket,
     updateTicket,
+    updateTicketOptimistic,
     deleteTicket,
     
     // Refresh operations

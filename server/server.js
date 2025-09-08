@@ -854,7 +854,7 @@ app.get('/api/projects/:projectId/crs/:crId', async (req, res) => {
     }
 
     const crs = projectDiscovery.getProjectCRs(project.project.path);
-    const cr = crs.find(c => c.code === crId || c.filename.includes(crId));
+    const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
     
     if (!cr) {
       return res.status(404).json({ error: 'CR not found' });
@@ -1042,18 +1042,18 @@ app.patch('/api/projects/:projectId/crs/:crId', async (req, res) => {
     const crs = projectDiscovery.getProjectCRs(project.project.path);
     console.log(`Found ${crs.length} CRs in project`);
     
-    const cr = crs.find(c => c.code === crId || c.filename.includes(crId));
+    const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
     
     if (!cr) {
       console.log(`ERROR: CR not found: ${crId}`);
-      console.log(`Available CRs:`, crs.map(c => `${c.code} (${c.filename})`));
+      console.log(`Available CRs:`, crs.map(c => `${c.code} (${c.filePath})`));
       return res.status(404).json({ error: 'CR not found' });
     }
     
-    console.log(`Found CR: ${cr.code} in file ${cr.path}`);
+    console.log(`Found CR: ${cr.code} in file ${cr.filePath}`);
 
     // Read current content
-    const currentContent = await fs.readFile(cr.path, 'utf8');
+    const currentContent = await fs.readFile(cr.filePath, 'utf8');
     console.log('Current content length:', currentContent.length);
     
     // Parse YAML frontmatter
@@ -1142,11 +1142,11 @@ app.patch('/api/projects/:projectId/crs/:crId', async (req, res) => {
     console.log('Updated fields:', updatedFields);
 
     // Write back to file
-    await fs.writeFile(cr.path, updatedContent, 'utf8');
+    await fs.writeFile(cr.filePath, updatedContent, 'utf8');
     
     // Verify the file was written by reading it back
     try {
-      const writtenContent = await fs.readFile(cr.path, 'utf8');
+      const writtenContent = await fs.readFile(cr.filePath, 'utf8');
       console.log(`VERIFY: File length after write: ${writtenContent.length}`);
       console.log('VERIFY: Content preview (first 200 chars):', writtenContent.substring(0, 200) + '...');
     } catch (verifyError) {
@@ -1194,36 +1194,36 @@ app.put('/api/projects/:projectId/crs/:crId', async (req, res) => {
     const crs = projectDiscovery.getProjectCRs(project.project.path);
     console.log(`Found ${crs.length} CRs in project`);
     
-    const cr = crs.find(c => c.code === crId || c.filename.includes(crId));
+    const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
     
     if (!cr) {
       console.log(`ERROR: CR not found: ${crId}`);
-      console.log(`Available CRs:`, crs.map(c => `${c.code} (${c.filename})`));
+      console.log(`Available CRs:`, crs.map(c => `${c.code} (${c.filePath})`));
       return res.status(404).json({ error: 'CR not found' });
     }
     
-    console.log(`Found CR: ${cr.code} in file ${cr.path}`);
+    console.log(`Found CR: ${cr.code} in file ${cr.filePath}`);
     console.log('Content preview (first 200 chars):', content.substring(0, 200) + '...');
 
     // Update CR file
-    await fs.writeFile(cr.path, content, 'utf8');
-    console.log(`SUCCESS: File written to ${cr.path}`);
+    await fs.writeFile(cr.filePath, content, 'utf8');
+    console.log(`SUCCESS: File written to ${cr.filePath}`);
     
     // Verify the file was written by reading it back
     try {
-      const writtenContent = await fs.readFile(cr.path, 'utf8');
+      const writtenContent = await fs.readFile(cr.filePath, 'utf8');
       console.log(`VERIFY: File length after write: ${writtenContent.length}`);
       console.log('VERIFY: Content preview (first 200 chars):', writtenContent.substring(0, 200) + '...');
     } catch (verifyError) {
       console.log('ERROR: Could not verify file write:', verifyError);
     }
 
-    console.log(`Updated CR: ${cr.filename} in project ${projectId}`);
+    console.log(`Updated CR: ${path.basename(cr.filePath)} in project ${projectId}`);
     res.json({ 
       success: true, 
       message: 'CR updated successfully',
-      filename: cr.filename,
-      path: cr.path
+      filename: path.basename(cr.filePath),
+      path: cr.filePath
     });
   } catch (error) {
     console.error('Error updating CR:', error);
@@ -1244,20 +1244,20 @@ app.delete('/api/projects/:projectId/crs/:crId', async (req, res) => {
     }
 
     const crs = projectDiscovery.getProjectCRs(project.project.path);
-    const cr = crs.find(c => c.code === crId || c.filename.includes(crId));
+    const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
     
     if (!cr) {
       return res.status(404).json({ error: 'CR not found' });
     }
 
     // Delete CR file
-    await fs.unlink(cr.path);
+    await fs.unlink(cr.filePath);
 
-    console.log(`Deleted CR: ${cr.filename} from project ${projectId}`);
+    console.log(`Deleted CR: ${path.basename(cr.filePath)} from project ${projectId}`);
     res.json({ 
       success: true, 
       message: 'CR deleted successfully',
-      filename: cr.filename
+      filename: path.basename(cr.filePath)
     });
   } catch (error) {
     console.error('Error deleting CR:', error);

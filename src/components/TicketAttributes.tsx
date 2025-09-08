@@ -7,18 +7,7 @@ interface TicketAttributesProps {
 }
 
 const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className = '' }) => {
-  // Debug logging for relationship attributes
-  if (ticket.code === 'DEB-894') {
-    console.log('🎯 TicketAttributes received ticket object:', ticket);
-    console.log('🎯 TicketAttributes relationship check:', {
-      relatedTickets: ticket.relatedTickets,
-      dependsOn: ticket.dependsOn,
-      blocks: ticket.blocks,
-      hasRelated: ticket.relatedTickets && ticket.relatedTickets.length > 0,
-      hasDepends: ticket.dependsOn && ticket.dependsOn.length > 0,
-      hasBlocks: ticket.blocks && ticket.blocks.length > 0
-    });
-  }
+  // Debug logging removed
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {

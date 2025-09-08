@@ -1,0 +1,414 @@
+[vite] connecting...
+client:618 [vite] connected.
+useMultiProjectData.ts:315 🎯 useMultiProjectData: Setting up realtime file watcher...
+useMultiProjectData.ts:351 🎯 Setting up realtime file watcher callbacks...
+useMultiProjectData.ts:357 📊 Watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:360 🚀 Starting realtime file watcher...
+realtimeFileWatcher.ts:66 🚀 Starting realtime file watcher...
+fileService.ts:34 File service initialized with storage key: md-tickets
+useMultiProjectData.ts:315 🎯 useMultiProjectData: Setting up realtime file watcher...
+useMultiProjectData.ts:351 🎯 Setting up realtime file watcher callbacks...
+useMultiProjectData.ts:357 📊 Watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:360 🚀 Starting realtime file watcher...
+realtimeFileWatcher.ts:66 🚀 Starting realtime file watcher...
+fileService.ts:34 File service initialized with storage key: md-tickets
+2useMultiProjectData.ts:374 🧹 Cleaning up realtime file watcher callbacks
+useMultiProjectData.ts:315 🎯 useMultiProjectData: Setting up realtime file watcher...
+useMultiProjectData.ts:351 🎯 Setting up realtime file watcher callbacks...
+useMultiProjectData.ts:357 📊 Watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:360 🚀 Starting realtime file watcher...
+realtimeFileWatcher.ts:66 🚀 Starting realtime file watcher...
+fileService.ts:34 File service initialized with storage key: md-tickets
+useMultiProjectData.ts:315 🎯 useMultiProjectData: Setting up realtime file watcher...
+useMultiProjectData.ts:351 🎯 Setting up realtime file watcher callbacks...
+useMultiProjectData.ts:357 📊 Watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:360 🚀 Starting realtime file watcher...
+realtimeFileWatcher.ts:66 🚀 Starting realtime file watcher...
+fileService.ts:34 File service initialized with storage key: md-tickets
+realtimeFileWatcher.ts:72 📡 SSE enabled, starting SSE connection...
+realtimeFileWatcher.ts:110 🔌 Connecting to SSE endpoint: http://localhost:3001/api/events
+realtimeFileWatcher.ts:72 📡 SSE enabled, starting SSE connection...
+realtimeFileWatcher.ts:102 ⚠️ SSE connection already exists, closing old one first
+overrideMethod @ hook.js:608
+startSSE @ realtimeFileWatcher.ts:102
+start @ realtimeFileWatcher.ts:73
+await in start
+(anonymous) @ useMultiProjectData.ts:361
+commitHookEffectListMount @ chunk-PJEEZAML.js?v=9ff0530c:16915
+commitPassiveMountOnFiber @ chunk-PJEEZAML.js?v=9ff0530c:18156
+commitPassiveMountEffects_complete @ chunk-PJEEZAML.js?v=9ff0530c:18129
+commitPassiveMountEffects_begin @ chunk-PJEEZAML.js?v=9ff0530c:18119
+commitPassiveMountEffects @ chunk-PJEEZAML.js?v=9ff0530c:18109
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=9ff0530c:19490
+flushPassiveEffects @ chunk-PJEEZAML.js?v=9ff0530c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=9ff0530c:19328
+workLoop @ chunk-PJEEZAML.js?v=9ff0530c:197
+flushWork @ chunk-PJEEZAML.js?v=9ff0530c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=9ff0530c:384
+realtimeFileWatcher.ts:165 SSE connection closed
+realtimeFileWatcher.ts:110 🔌 Connecting to SSE endpoint: http://localhost:3001/api/events
+realtimeFileWatcher.ts:72 📡 SSE enabled, starting SSE connection...
+realtimeFileWatcher.ts:102 ⚠️ SSE connection already exists, closing old one first
+overrideMethod @ hook.js:608
+startSSE @ realtimeFileWatcher.ts:102
+start @ realtimeFileWatcher.ts:73
+await in start
+(anonymous) @ useMultiProjectData.ts:361
+commitHookEffectListMount @ chunk-PJEEZAML.js?v=9ff0530c:16915
+invokePassiveEffectMountInDEV @ chunk-PJEEZAML.js?v=9ff0530c:18324
+invokeEffectsInDev @ chunk-PJEEZAML.js?v=9ff0530c:19701
+commitDoubleInvokeEffectsInDEV @ chunk-PJEEZAML.js?v=9ff0530c:19686
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=9ff0530c:19503
+flushPassiveEffects @ chunk-PJEEZAML.js?v=9ff0530c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=9ff0530c:19328
+workLoop @ chunk-PJEEZAML.js?v=9ff0530c:197
+flushWork @ chunk-PJEEZAML.js?v=9ff0530c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=9ff0530c:384
+realtimeFileWatcher.ts:165 SSE connection closed
+realtimeFileWatcher.ts:110 🔌 Connecting to SSE endpoint: http://localhost:3001/api/events
+realtimeFileWatcher.ts:72 📡 SSE enabled, starting SSE connection...
+realtimeFileWatcher.ts:102 ⚠️ SSE connection already exists, closing old one first
+overrideMethod @ hook.js:608
+startSSE @ realtimeFileWatcher.ts:102
+start @ realtimeFileWatcher.ts:73
+await in start
+(anonymous) @ useMultiProjectData.ts:361
+commitHookEffectListMount @ chunk-PJEEZAML.js?v=9ff0530c:16915
+invokePassiveEffectMountInDEV @ chunk-PJEEZAML.js?v=9ff0530c:18324
+invokeEffectsInDev @ chunk-PJEEZAML.js?v=9ff0530c:19701
+commitDoubleInvokeEffectsInDEV @ chunk-PJEEZAML.js?v=9ff0530c:19686
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=9ff0530c:19503
+flushPassiveEffects @ chunk-PJEEZAML.js?v=9ff0530c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=9ff0530c:19328
+workLoop @ chunk-PJEEZAML.js?v=9ff0530c:197
+flushWork @ chunk-PJEEZAML.js?v=9ff0530c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=9ff0530c:384
+realtimeFileWatcher.ts:165 SSE connection closed
+realtimeFileWatcher.ts:110 🔌 Connecting to SSE endpoint: http://localhost:3001/api/events
+4realtimeFileWatcher.ts:79 ✅ Realtime file watcher started
+useMultiProjectData.ts:362 ✅ Realtime file watcher started successfully
+useMultiProjectData.ts:364 📊 New watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:362 ✅ Realtime file watcher started successfully
+useMultiProjectData.ts:364 📊 New watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:362 ✅ Realtime file watcher started successfully
+useMultiProjectData.ts:364 📊 New watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:362 ✅ Realtime file watcher started successfully
+useMultiProjectData.ts:364 📊 New watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:374 🧹 Cleaning up realtime file watcher callbacks
+useMultiProjectData.ts:315 🎯 useMultiProjectData: Setting up realtime file watcher...
+useMultiProjectData.ts:351 🎯 Setting up realtime file watcher callbacks...
+useMultiProjectData.ts:357 📊 Watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:360 🚀 Starting realtime file watcher...
+realtimeFileWatcher.ts:66 🚀 Starting realtime file watcher...
+fileService.ts:34 File service initialized with storage key: md-tickets
+realtimeFileWatcher.ts:72 📡 SSE enabled, starting SSE connection...
+realtimeFileWatcher.ts:102 ⚠️ SSE connection already exists, closing old one first
+overrideMethod @ hook.js:608
+startSSE @ realtimeFileWatcher.ts:102
+start @ realtimeFileWatcher.ts:73
+await in start
+(anonymous) @ useMultiProjectData.ts:361
+commitHookEffectListMount @ chunk-PJEEZAML.js?v=9ff0530c:16915
+commitPassiveMountOnFiber @ chunk-PJEEZAML.js?v=9ff0530c:18156
+commitPassiveMountEffects_complete @ chunk-PJEEZAML.js?v=9ff0530c:18129
+commitPassiveMountEffects_begin @ chunk-PJEEZAML.js?v=9ff0530c:18119
+commitPassiveMountEffects @ chunk-PJEEZAML.js?v=9ff0530c:18109
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=9ff0530c:19490
+flushPassiveEffects @ chunk-PJEEZAML.js?v=9ff0530c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=9ff0530c:19328
+workLoop @ chunk-PJEEZAML.js?v=9ff0530c:197
+flushWork @ chunk-PJEEZAML.js?v=9ff0530c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=9ff0530c:384
+realtimeFileWatcher.ts:165 SSE connection closed
+realtimeFileWatcher.ts:110 🔌 Connecting to SSE endpoint: http://localhost:3001/api/events
+realtimeFileWatcher.ts:79 ✅ Realtime file watcher started
+useMultiProjectData.ts:362 ✅ Realtime file watcher started successfully
+useMultiProjectData.ts:364 📊 New watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:374 🧹 Cleaning up realtime file watcher callbacks
+useMultiProjectData.ts:315 🎯 useMultiProjectData: Setting up realtime file watcher...
+useMultiProjectData.ts:351 🎯 Setting up realtime file watcher callbacks...
+useMultiProjectData.ts:357 📊 Watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:360 🚀 Starting realtime file watcher...
+realtimeFileWatcher.ts:66 🚀 Starting realtime file watcher...
+fileService.ts:34 File service initialized with storage key: md-tickets
+realtimeFileWatcher.ts:72 📡 SSE enabled, starting SSE connection...
+realtimeFileWatcher.ts:102 ⚠️ SSE connection already exists, closing old one first
+overrideMethod @ hook.js:608
+startSSE @ realtimeFileWatcher.ts:102
+start @ realtimeFileWatcher.ts:73
+await in start
+(anonymous) @ useMultiProjectData.ts:361
+commitHookEffectListMount @ chunk-PJEEZAML.js?v=9ff0530c:16915
+commitPassiveMountOnFiber @ chunk-PJEEZAML.js?v=9ff0530c:18156
+commitPassiveMountEffects_complete @ chunk-PJEEZAML.js?v=9ff0530c:18129
+commitPassiveMountEffects_begin @ chunk-PJEEZAML.js?v=9ff0530c:18119
+commitPassiveMountEffects @ chunk-PJEEZAML.js?v=9ff0530c:18109
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=9ff0530c:19490
+flushPassiveEffects @ chunk-PJEEZAML.js?v=9ff0530c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=9ff0530c:19328
+workLoop @ chunk-PJEEZAML.js?v=9ff0530c:197
+flushWork @ chunk-PJEEZAML.js?v=9ff0530c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=9ff0530c:384
+realtimeFileWatcher.ts:165 SSE connection closed
+realtimeFileWatcher.ts:110 🔌 Connecting to SSE endpoint: http://localhost:3001/api/events
+realtimeFileWatcher.ts:79 ✅ Realtime file watcher started
+useMultiProjectData.ts:362 ✅ Realtime file watcher started successfully
+useMultiProjectData.ts:364 📊 New watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:374 🧹 Cleaning up realtime file watcher callbacks
+useMultiProjectData.ts:315 🎯 useMultiProjectData: Setting up realtime file watcher...
+useMultiProjectData.ts:351 🎯 Setting up realtime file watcher callbacks...
+useMultiProjectData.ts:357 📊 Watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:360 🚀 Starting realtime file watcher...
+realtimeFileWatcher.ts:66 🚀 Starting realtime file watcher...
+fileService.ts:34 File service initialized with storage key: md-tickets
+realtimeFileWatcher.ts:72 📡 SSE enabled, starting SSE connection...
+realtimeFileWatcher.ts:102 ⚠️ SSE connection already exists, closing old one first
+overrideMethod @ hook.js:608
+startSSE @ realtimeFileWatcher.ts:102
+start @ realtimeFileWatcher.ts:73
+await in start
+(anonymous) @ useMultiProjectData.ts:361
+commitHookEffectListMount @ chunk-PJEEZAML.js?v=9ff0530c:16915
+commitPassiveMountOnFiber @ chunk-PJEEZAML.js?v=9ff0530c:18156
+commitPassiveMountEffects_complete @ chunk-PJEEZAML.js?v=9ff0530c:18129
+commitPassiveMountEffects_begin @ chunk-PJEEZAML.js?v=9ff0530c:18119
+commitPassiveMountEffects @ chunk-PJEEZAML.js?v=9ff0530c:18109
+flushPassiveEffectsImpl @ chunk-PJEEZAML.js?v=9ff0530c:19490
+flushPassiveEffects @ chunk-PJEEZAML.js?v=9ff0530c:19447
+(anonymous) @ chunk-PJEEZAML.js?v=9ff0530c:19328
+workLoop @ chunk-PJEEZAML.js?v=9ff0530c:197
+flushWork @ chunk-PJEEZAML.js?v=9ff0530c:176
+performWorkUntilDeadline @ chunk-PJEEZAML.js?v=9ff0530c:384
+realtimeFileWatcher.ts:165 SSE connection closed
+realtimeFileWatcher.ts:110 🔌 Connecting to SSE endpoint: http://localhost:3001/api/events
+realtimeFileWatcher.ts:79 ✅ Realtime file watcher started
+useMultiProjectData.ts:362 ✅ Realtime file watcher started successfully
+useMultiProjectData.ts:364 📊 New watcher stats: {isRunning: false, isSSEConnected: false, pollingInterval: 5000, lastUpdateTime: 0, eventQueueLength: 0, …}
+useMultiProjectData.ts:219 🔍 Full normalized ticket: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+useMultiProjectData.ts:236 🔍 Final DEB-894 after deduplication: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1)}
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+useMultiProjectData.ts:219 🔍 Full normalized ticket: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+useMultiProjectData.ts:236 🔍 Final DEB-894 after deduplication: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1)}
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+realtimeFileWatcher.ts:115 ✅ SSE connection established
+realtimeFileWatcher.ts:116 📊 SSE readyState: 1
+realtimeFileWatcher.ts:130 📨 Received SSE event: {type: 'connection', data: {…}}
+realtimeFileWatcher.ts:131 📊 SSE readyState after message: 1
+realtimeFileWatcher.ts:200 Received SSE event: {type: 'connection', data: {…}}
+realtimeFileWatcher.ts:204 SSE connection confirmed
+realtimeFileWatcher.ts:130 📨 Received SSE event: {type: 'connection', data: {…}}
+realtimeFileWatcher.ts:131 📊 SSE readyState after message: 1
+realtimeFileWatcher.ts:200 Received SSE event: {type: 'connection', data: {…}}
+realtimeFileWatcher.ts:204 SSE connection confirmed
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+useMultiProjectData.ts:219 🔍 Full normalized ticket: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+useMultiProjectData.ts:236 🔍 Final DEB-894 after deduplication: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1)}
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+useMultiProjectData.ts:319 🔄 Realtime watcher: Tickets updated, refreshing UI
+useMultiProjectData.ts:326 📡 Fetching fresh tickets for project: DEBUG for markdown project
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+useMultiProjectData.ts:219 🔍 Full normalized ticket: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+useMultiProjectData.ts:236 🔍 Final DEB-894 after deduplication: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1)}
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-001: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-024: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-025: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-026: status=Approved, column=Open
+Board.tsx:181 Ticket DEB-027: status=Implemented, column=Done
+Board.tsx:181 Ticket DEB-028: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-890: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-891: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-892: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-893: status=Proposed, column=Backlog
+Board.tsx:181 Ticket DEB-894: status=Proposed, column=Backlog
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
+TicketAttributes.tsx:12 🎯 TicketAttributes received ticket object: {code: 'DEB-894', title: 'Test Feature Enhancement with relationships', status: 'Proposed', type: 'Feature Enhancement', priority: 'Medium', …}
+TicketAttributes.tsx:13 🎯 TicketAttributes relationship check: {relatedTickets: Array(2), dependsOn: Array(1), blocks: Array(1), hasRelated: true, hasDepends: true, …}
