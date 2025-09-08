@@ -68,6 +68,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
 
   // Save preferences when they change
   const handleSortPreferencesChange = (newPreferences: SortPreferences) => {
+    console.log('MultiProjectDashboard: Sort preferences changed', newPreferences);
     setSortPreferencesState(newPreferences);
     setSortPreferences(newPreferences);
   };
