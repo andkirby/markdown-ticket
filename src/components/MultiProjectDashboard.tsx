@@ -367,8 +367,8 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
                         {sortTickets(
                           crs.map(cr => ({
                             ...cr,
-                            dateCreated: cr.dateCreated ? new Date(cr.dateCreated) : new Date(),
-                            lastModified: cr.header?.lastModified ? new Date(cr.header.lastModified) : new Date()
+                            dateCreated: cr.dateCreated instanceof Date ? cr.dateCreated : new Date(cr.dateCreated || 0),
+                            lastModified: cr.lastModified instanceof Date ? cr.lastModified : new Date(cr.lastModified || 0)
                           })) as any[], 
                           sortPreferences.selectedAttribute, 
                           sortPreferences.selectedDirection
