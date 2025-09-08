@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import toml from 'toml';
 import os from 'os';
+import { normalizeTicket } from '../shared/ticketDto.js';
 
 class ProjectDiscoveryService {
   constructor() {
@@ -171,7 +172,12 @@ class ProjectDiscoveryService {
                   const key = trimmed.substring(0, colonIndex).trim();
                   const value = trimmed.substring(colonIndex + 1).trim();
                   if (key && value) {
-                    header[key] = value;
+                    // Handle array fields (comma-separated values)
+                    if (['relatedTickets', 'dependsOn', 'blocks'].includes(key)) {
+                      header[key] = value.split(',').map(v => v.trim()).filter(v => v);
+                    } else {
+                      header[key] = value;
+                    }
                   }
                 }
               }
@@ -194,7 +200,7 @@ class ProjectDiscoveryService {
             }
           }
 
-          crs.push({
+          const rawCR = {
             filename: file,
             path: filePath,
             header,
@@ -205,8 +211,18 @@ class ProjectDiscoveryService {
             type: header.type || 'Feature Enhancement',
             dateCreated: header.datecreated || stats.birthtime,
             lastModified: header.lastmodified ? new Date(header.lastmodified) : stats.mtime,
+            phaseEpic: header.phaseEpic || header.phaseepic || '',
+            relatedTickets: header.relatedTickets || [],
+            dependsOn: header.dependsOn || [],
+            blocks: header.blocks || [],
+            assignee: header.assignee || '',
+            description: header.description || '',
+            rationale: header.rationale || '',
             content: lines.slice(contentStart).join('\n').trim()
-          });
+          };
+
+          // Use shared DTO to normalize the data
+          crs.push(normalizeTicket(rawCR));
         } catch (error) {
           console.error(`Error parsing CR file ${file}:`, error);
         }

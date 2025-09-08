@@ -10,6 +10,7 @@ import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 import { TicketCode } from './TicketCode';
+import { normalizeTicket } from '../../shared/ticketDto';
 
 type SingleProjectViewMode = 'board' | 'list' | 'documents';
 
@@ -83,19 +84,8 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
       
       const crsData = await response.json();
       
-      // Convert CR data to Ticket format
-      const convertedTickets: Ticket[] = crsData.map((cr: any) => ({
-        code: cr.code || 'Unknown',
-        title: cr.title || 'Untitled',
-        status: cr.status || 'Pending',
-        priority: cr.priority || 'Medium',
-        type: cr.type || 'Feature Enhancement',
-        dateCreated: new Date(cr.dateCreated || Date.now()),
-        content: cr.content || '',
-        filePath: cr.path || '',
-        lastModified: new Date(cr.lastModified || Date.now()),
-        phaseEpic: cr.header?.phaseEpic || cr.phaseEpic || '',
-      }));
+      // Convert CR data to Ticket format using shared DTO
+      const convertedTickets: Ticket[] = crsData.map((cr: any) => normalizeTicket(cr) as Ticket);
 
       setTickets(convertedTickets);
       
@@ -210,7 +200,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
                       {ticket.status}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {new Date(ticket.lastModified).toLocaleDateString()}
+                      {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
                     </span>
                   </div>
                 </div>

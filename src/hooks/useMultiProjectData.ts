@@ -165,28 +165,62 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
         return new Date();
       };
 
-      // Convert CR data to Ticket format
-      const convertedTickets: Ticket[] = crsData.map((cr: any) => ({
-        code: cr.code || 'Unknown',
-        title: cr.title || 'Untitled',
-        status: cr.status || 'Pending',
-        priority: cr.priority || 'Medium',
-        type: cr.type || 'Feature Enhancement',
-        dateCreated: parseDate(cr.dateCreated),
-        content: cr.content || '',
-        filePath: cr.path || '',
-        lastModified: parseDate(cr.lastModified),
-        // Convert additional header fields with proper date handling
-        phaseEpic: cr.header?.phaseEpic || cr.phaseEpic || '',
-        implementationDate: cr.header?.implementationDate ? parseDate(cr.header.implementationDate) : undefined,
-        implementationNotes: cr.header?.implementationNotes || cr.implementationNotes || '',
-        description: cr.header?.description || cr.description || '',
-        rationale: cr.header?.rationale || cr.rationale || '',
-        relatedTickets: cr.header?.relatedTickets || cr.relatedTickets || [],
-        dependsOn: cr.header?.dependsOn || cr.dependsOn || [],
-        blocks: cr.header?.blocks || cr.blocks || [],
-        assignee: cr.header?.assignee || cr.assignee || ''
-      }));
+      // Convert CR data to Ticket format with inline normalization
+      const convertedTickets: Ticket[] = crsData.map((cr: any) => {
+        // Inline normalization function
+        const normalizeArray = (value: any): string[] => {
+          if (Array.isArray(value)) return value.filter(Boolean);
+          if (typeof value === 'string' && value.trim()) {
+            return value.split(',').map(s => s.trim()).filter(Boolean);
+          }
+          return [];
+        };
+
+        const parseDate = (dateValue: any): Date | null => {
+          if (!dateValue) return null;
+          if (dateValue instanceof Date) return dateValue;
+          if (typeof dateValue === 'string') {
+            const parsed = new Date(dateValue);
+            return isNaN(parsed.getTime()) ? null : parsed;
+          }
+          return null;
+        };
+
+        const normalized: Ticket = {
+          // Map core fields
+          code: cr.code || cr.key || '',
+          title: cr.title || '',
+          status: cr.status || 'Proposed',
+          type: cr.type || 'Feature Enhancement',
+          priority: cr.priority || 'Medium',
+          content: cr.content || '',
+          filePath: cr.filePath || cr.path || '',
+          
+          // Handle dates
+          dateCreated: parseDate(cr.dateCreated),
+          lastModified: parseDate(cr.lastModified),
+          implementationDate: parseDate(cr.implementationDate),
+          
+          // Map optional fields
+          phaseEpic: cr.phaseEpic || '',
+          description: cr.description || '',
+          rationale: cr.rationale || '',
+          assignee: cr.assignee || '',
+          implementationNotes: cr.implementationNotes || '',
+          
+          // Normalize relationship fields to arrays
+          relatedTickets: normalizeArray(cr.relatedTickets),
+          dependsOn: normalizeArray(cr.dependsOn),
+          blocks: normalizeArray(cr.blocks)
+        };
+
+        // Debug logging for DEB-894
+        if (normalized.code === 'DEB-894') {
+          console.log('🔍 Full normalized ticket:', normalized);
+        }
+        
+        return normalized;
+      });
 
       // Remove duplicates by code to prevent React key conflicts
       const uniqueTickets = convertedTickets.reduce((acc, ticket) => {
@@ -195,6 +229,17 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       }, new Map<string, Ticket>());
 
       const finalTickets = Array.from(uniqueTickets.values());
+      
+      // Debug final tickets
+      const deb894Final = finalTickets.find(t => t.code === 'DEB-894');
+      if (deb894Final) {
+        console.log('🔍 Final DEB-894 after deduplication:', {
+          relatedTickets: deb894Final.relatedTickets,
+          dependsOn: deb894Final.dependsOn,
+          blocks: deb894Final.blocks
+        });
+      }
+      
       setTickets(finalTickets);
       setLoading(false);
       

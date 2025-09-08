@@ -38,6 +38,8 @@ export interface CR {
   content: string;
   filePath: string;
   phaseEpic?: string;
+  description?: string;
+  rationale?: string;
   source?: string;
   impact?: string;
   effort?: string;

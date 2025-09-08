@@ -3,6 +3,7 @@ import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
 import { CR, CRFilters, CRData, CRType, CRStatus, Project } from '../types/index.js';
+import { normalizeTicket, arrayToString } from '../shared/ticketDto.js';
 
 export class CRService {
   async listCRs(project: Project, filters?: CRFilters): Promise<CR[]> {
@@ -91,12 +92,15 @@ export class CRService {
         content: data.content || '',
         filePath,
         phaseEpic: data.phaseEpic,
+        description: data.description,
+        rationale: data.rationale,
+        assignee: data.assignee,
         source: 'MCP Server',
         impact: 'Minor',
         effort: 'Low',
-        relatedTickets: [],
-        dependsOn: [],
-        blocks: [],
+        relatedTickets: this.parseArrayField(data.relatedTickets),
+        dependsOn: this.parseArrayField(data.dependsOn),
+        blocks: this.parseArrayField(data.blocks),
         relatedDocuments: []
       };
 
@@ -466,7 +470,12 @@ export class CRService {
     
     // Optional fields - only include if they have values
     if (cr.phaseEpic) sections.push(`phaseEpic: ${cr.phaseEpic}`);
-    if (cr.relatedTickets && cr.relatedTickets.length > 0) sections.push(`relatedTickets: ${cr.relatedTickets.join(',')}`);
+    if (cr.description) sections.push(`description: ${cr.description}`);
+    if (cr.rationale) sections.push(`rationale: ${cr.rationale}`);
+    if (cr.relatedTickets && cr.relatedTickets.length > 0) sections.push(`relatedTickets: ${arrayToString(cr.relatedTickets)}`);
+    if (cr.dependsOn && cr.dependsOn.length > 0) sections.push(`dependsOn: ${arrayToString(cr.dependsOn)}`);
+    if (cr.blocks && cr.blocks.length > 0) sections.push(`blocks: ${arrayToString(cr.blocks)}`);
+    if (cr.assignee) sections.push(`assignee: ${cr.assignee}`);
     if (cr.impact && cr.impact !== 'Minor') sections.push(`impact: ${cr.impact}`);
     if (cr.implementationDate) sections.push(`implementationDate: ${cr.implementationDate.toISOString()}`);
     if (cr.implementationNotes) sections.push(`implementationNotes: ${cr.implementationNotes}`);
@@ -532,18 +541,29 @@ export class CRService {
     
     // Find the YAML frontmatter section
     let inFrontmatter = false;
+    let frontmatterStart = -1;
+    let frontmatterEnd = -1;
     
     for (let i = 0; i < lines.length; i++) {
       if (lines[i]?.trim() === '---') {
         if (!inFrontmatter) {
           inFrontmatter = true;
+          frontmatterStart = i;
         } else {
+          frontmatterEnd = i;
           break;
         }
       } else if (inFrontmatter && lines[i]?.startsWith(`${field}:`)) {
+        // Update existing field
         lines[i] = `${field}: ${value}`;
         return lines.join('\n');
       }
+    }
+
+    // If field doesn't exist, add it before the closing ---
+    if (frontmatterStart !== -1 && frontmatterEnd !== -1) {
+      lines.splice(frontmatterEnd, 0, `${field}: ${value}`);
+      return lines.join('\n');
     }
 
     return content;

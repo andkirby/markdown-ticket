@@ -7,6 +7,19 @@ interface TicketAttributesProps {
 }
 
 const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className = '' }) => {
+  // Debug logging for relationship attributes
+  if (ticket.code === 'DEB-894') {
+    console.log('🎯 TicketAttributes received ticket object:', ticket);
+    console.log('🎯 TicketAttributes relationship check:', {
+      relatedTickets: ticket.relatedTickets,
+      dependsOn: ticket.dependsOn,
+      blocks: ticket.blocks,
+      hasRelated: ticket.relatedTickets && ticket.relatedTickets.length > 0,
+      hasDepends: ticket.dependsOn && ticket.dependsOn.length > 0,
+      hasBlocks: ticket.blocks && ticket.blocks.length > 0
+    });
+  }
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High':
@@ -68,6 +81,21 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
       {ticket.phaseEpic && (
         <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 rounded-full border border-gray-200 dark:border-gray-700">
           {ticket.phaseEpic}
+        </span>
+      )}
+      {ticket.relatedTickets && ticket.relatedTickets.length > 0 && (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-200 rounded-full border border-cyan-200 dark:border-cyan-700" title={`Related: ${ticket.relatedTickets.join(', ')}`}>
+          🔗 {ticket.relatedTickets.join(', ')}
+        </span>
+      )}
+      {ticket.dependsOn && ticket.dependsOn.length > 0 && (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 rounded-full border border-amber-200 dark:border-amber-700" title={`Depends on: ${ticket.dependsOn.join(', ')}`}>
+          ⬅️ {ticket.dependsOn.join(', ')}
+        </span>
+      )}
+      {ticket.blocks && ticket.blocks.length > 0 && (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200 rounded-full border border-rose-200 dark:border-rose-700" title={`Blocks: ${ticket.blocks.join(', ')}`}>
+          ➡️ {ticket.blocks.join(', ')}
         </span>
       )}
     </div>

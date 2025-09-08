@@ -1,30 +1,30 @@
 import { z } from 'zod';
 
-// Core Ticket Interface
+// Core Ticket Interface - matches shared DTO
 export interface Ticket {
   // Required Core Attributes
   code: string;
   title: string;
   status: string;
-  dateCreated: Date;
   type: string;
   priority: string;
-  phaseEpic: string;
+  dateCreated: Date | null;
+  lastModified: Date | null;
+  content: string;
+  filePath: string;
 
   // Optional Attributes
+  phaseEpic?: string;
   description?: string;
   rationale?: string;
-  relatedTickets?: string[];
-  dependsOn?: string[];
-  blocks?: string[];
   assignee?: string;
-  implementationDate?: Date;
+  implementationDate?: Date | null;
   implementationNotes?: string;
-
-  // Derived/System Fields
-  filePath: string;
-  lastModified: Date;
-  content: string; // Full markdown content
+  
+  // Relationship fields (always arrays)
+  relatedTickets: string[];
+  dependsOn: string[];
+  blocks: string[];
 }
 
 // Ticket Update Interface
