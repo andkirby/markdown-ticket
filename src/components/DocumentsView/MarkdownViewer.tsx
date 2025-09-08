@@ -12,6 +12,12 @@ const converter = new showdown.Converter({
   ghCodeBlocks: true,
   smoothLivePreview: true,
   simpleLineBreaks: true,
+  headerLevelStart: 1,
+  parseImgDimensions: true,
+  simplifiedAutoLink: true,
+  excludeTrailingPunctuationFromURLs: true,
+  literalMidWordUnderscores: true,
+  ghCompatibleHeaderId: true,
 });
 
 export default function MarkdownViewer({ filePath }: MarkdownViewerProps) {
