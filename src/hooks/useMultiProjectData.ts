@@ -178,16 +178,14 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
         lastModified: parseDate(cr.lastModified),
         // Convert additional header fields with proper date handling
         phaseEpic: cr.header?.phaseEpic || cr.phaseEpic || '',
-        source: cr.header?.source || cr.source || '',
-        impact: cr.header?.impact || cr.impact || '',
-        effort: cr.header?.effort || cr.effort || '',
         implementationDate: cr.header?.implementationDate ? parseDate(cr.header.implementationDate) : undefined,
         implementationNotes: cr.header?.implementationNotes || cr.implementationNotes || '',
-        relatedTickets: [],
-        supersedes: cr.header?.supersedes || '',
-        dependsOn: [],
-        blocks: [],
-        relatedDocuments: []
+        description: cr.header?.description || cr.description || '',
+        rationale: cr.header?.rationale || cr.rationale || '',
+        relatedTickets: cr.header?.relatedTickets || cr.relatedTickets || [],
+        dependsOn: cr.header?.dependsOn || cr.dependsOn || [],
+        blocks: cr.header?.blocks || cr.blocks || [],
+        assignee: cr.header?.assignee || cr.assignee || ''
       }));
 
       // Remove duplicates by code to prevent React key conflicts

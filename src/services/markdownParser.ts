@@ -14,14 +14,12 @@ dateCreated: ${new Date().toISOString()}
 type: ${type}
 priority: Medium
 phaseEpic: Phase A (Foundation)
-source: User Request
-impact: Minor
-effort: Medium
+description: 
+rationale: 
 relatedTickets: 
-supersedes: 
 dependsOn: 
 blocks: 
-relatedDocuments: 
+assignee: 
 implementationDate: 
 implementationNotes: 
 lastModified: ${new Date().toISOString()}
@@ -50,11 +48,6 @@ Describe the implementation approach and technical details.
 
 ## Related Tickets
 - Related ticket codes (if any)
-
-## Impact Assessment
-- **Impact**: Describe the impact on users, systems, or processes
-- **Effort**: Estimate of effort required (Low/Medium/High)
-- **Risk**: Any potential risks or concerns
 
 ## Testing Plan
 - [ ] Unit tests completed
@@ -120,14 +113,12 @@ export function parseMarkdownTicket(content: string): Partial<Ticket> | null {
       type: frontmatterData.type || 'Feature Enhancement',
       priority: frontmatterData.priority || 'Medium',
       phaseEpic: frontmatterData.phaseEpic || 'Phase A (Foundation)',
-      source: frontmatterData.source || 'User Request',
-      impact: frontmatterData.impact || 'Minor',
-      effort: frontmatterData.effort || 'Medium',
+      description: frontmatterData.description || '',
+      rationale: frontmatterData.rationale || '',
       relatedTickets: frontmatterData.relatedTickets ? frontmatterData.relatedTickets.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-      supersedes: frontmatterData.supersedes || undefined,
       dependsOn: frontmatterData.dependsOn ? frontmatterData.dependsOn.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
       blocks: frontmatterData.blocks ? frontmatterData.blocks.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-      relatedDocuments: frontmatterData.relatedDocuments ? frontmatterData.relatedDocuments.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+      assignee: frontmatterData.assignee || '',
       implementationDate: frontmatterData.implementationDate ? new Date(frontmatterData.implementationDate) : undefined,
       implementationNotes: frontmatterData.implementationNotes || undefined,
       content: content.trim()
@@ -180,18 +171,6 @@ export function validateMarkdownTicket(ticketData: Partial<Ticket>): { isValid: 
     errors.push(`Type must be one of: ${validTypes.join(', ')}`);
   }
 
-  // Validate impact
-  const validImpacts = ['Critical', 'Major', 'Minor', 'Trivial'];
-  if (ticketData.impact && !validImpacts.includes(ticketData.impact)) {
-    errors.push(`Impact must be one of: ${validImpacts.join(', ')}`);
-  }
-
-  // Validate effort
-  const validEfforts = ['Very High', 'High', 'Medium', 'Low', 'Very Low'];
-  if (ticketData.effort && !validEfforts.includes(ticketData.effort)) {
-    errors.push(`Effort must be one of: ${validEfforts.join(', ')}`);
-  }
-
   return {
     isValid: errors.length === 0,
     errors
@@ -233,14 +212,12 @@ dateCreated: ${formatDate(ticket.dateCreated)}
 type: ${ticket.type}
 priority: ${ticket.priority}
 phaseEpic: ${ticket.phaseEpic || ''}
-source: ${ticket.source || ''}
-impact: ${ticket.impact || ''}
-effort: ${ticket.effort || ''}
+description: ${ticket.description || ''}
+rationale: ${ticket.rationale || ''}
 relatedTickets: ${ticket.relatedTickets?.join(', ') || ''}
-supersedes: ${ticket.supersedes || ''}
 dependsOn: ${ticket.dependsOn?.join(', ') || ''}
 blocks: ${ticket.blocks?.join(', ') || ''}
-relatedDocuments: ${ticket.relatedDocuments?.join(', ') || ''}
+assignee: ${ticket.assignee || ''}
 implementationDate: ${formatDate(ticket.implementationDate)}
 implementationNotes: ${ticket.implementationNotes || ''}
 lastModified: ${formatDate(ticket.lastModified)}

@@ -208,14 +208,12 @@ export class FileService {
         type: ticket.type || 'General',
         priority: ticket.priority || 'Medium',
         phaseEpic: 'Phase A (Foundation)',
-        source: 'File Import',
-        impact: 'Minor',
-        effort: 'Medium',
-        relatedTickets: [],
-        supersedes: undefined,
-        dependsOn: [],
-        blocks: [],
-        relatedDocuments: [],
+        description: ticket.description || '',
+        rationale: ticket.rationale || '',
+        relatedTickets: ticket.relatedTickets || [],
+        dependsOn: ticket.dependsOn || [],
+        blocks: ticket.blocks || [],
+        assignee: ticket.assignee || '',
         implementationDate: ticket.implementationDate,
         implementationNotes: ticket.implementationNotes,
         filePath: `./tasks/${filename}`,
@@ -291,14 +289,12 @@ export class FileService {
       type,
       priority: 'Medium',
       phaseEpic: 'Phase A (Foundation)',
-      source: 'User Request',
-      impact: 'Minor',
-      effort: 'Medium',
+      description: '',
+      rationale: '',
       relatedTickets: [],
-      supersedes: undefined,
       dependsOn: [],
       blocks: [],
-      relatedDocuments: [],
+      assignee: '',
       implementationDate: undefined,
       implementationNotes: undefined,
       filePath: `./tickets/${ticketCode}.md`,
@@ -474,7 +470,6 @@ export class FileService {
     const relatedTickets = ticket.relatedTickets || [];
     const dependsOn = ticket.dependsOn || [];
     const blocks = ticket.blocks || [];
-    const relatedDocuments = ticket.relatedDocuments || [];
 
     const frontMatter = `---
 code: ${ticket.code}
@@ -484,14 +479,12 @@ dateCreated: ${ticket.dateCreated.toISOString()}
 type: ${ticket.type}
 priority: ${ticket.priority}
 phaseEpic: ${ticket.phaseEpic}
-source: ${ticket.source}
-impact: ${ticket.impact}
-effort: ${ticket.effort}
+description: ${ticket.description || ''}
+rationale: ${ticket.rationale || ''}
 relatedTickets: ${relatedTickets.join(', ') || ''}
-supersedes: ${ticket.supersedes || ''}
 dependsOn: ${dependsOn.join(', ') || ''}
 blocks: ${blocks.join(', ') || ''}
-relatedDocuments: ${relatedDocuments.join(', ') || ''}
+assignee: ${ticket.assignee || ''}
 implementationDate: ${ticket.implementationDate ? ticket.implementationDate.toISOString() : ''}
 implementationNotes: ${ticket.implementationNotes || ''}
 lastModified: ${ticket.lastModified.toISOString()}
@@ -509,10 +502,6 @@ ${ticket.title}
 - **Type:** ${ticket.type}
 - **Priority:** ${ticket.priority}
 - **Phase/Epic:** ${ticket.phaseEpic}
-- **Source:** ${ticket.source}
-- **Impact:** ${ticket.impact}
-- **Effort:** ${ticket.effort}
-
 ## Timeline
 - **Created:** ${ticket.dateCreated.toLocaleDateString()}
 - **Last Modified:** ${ticket.lastModified.toLocaleDateString()}
@@ -520,10 +509,15 @@ ${ticket.implementationDate ? `- **Implemented:** ${ticket.implementationDate.to
 
 ## Related Information
 ${relatedTickets.length > 0 ? `- **Related Tickets:** ${relatedTickets.join(', ')}` : ''}
-${ticket.supersedes ? `- **Supersedes:** ${ticket.supersedes}` : ''}
 ${dependsOn.length > 0 ? `- **Depends On:** ${dependsOn.join(', ')}` : ''}
 ${blocks.length > 0 ? `- **Blocks:** ${blocks.join(', ')}` : ''}
-${relatedDocuments.length > 0 ? `- **Related Documents:** ${relatedDocuments.join(', ')}` : ''}
+${ticket.assignee ? `- **Assignee:** ${ticket.assignee}` : ''}
+
+${ticket.description ? `## Description
+${ticket.description}` : ''}
+
+${ticket.rationale ? `## Rationale
+${ticket.rationale}` : ''}
 
 ${ticket.implementationNotes ? `## Implementation Notes
 ${ticket.implementationNotes}` : ''}
@@ -699,14 +693,12 @@ ${ticket.content || ''}
         type: 'Feature Enhancement',
         priority: 'High',
         phaseEpic: 'Phase A (Foundation)',
-        source: 'User Request',
-        impact: 'Major',
-        effort: 'High',
+        description: 'Implement a comprehensive user authentication system for the application',
+        rationale: 'Users need secure access to the application',
         relatedTickets: [],
-        supersedes: undefined,
         dependsOn: [],
         blocks: [],
-        relatedDocuments: [],
+        assignee: 'dev-team',
         implementationDate: new Date('2024-02-01'),
         implementationNotes: 'Authentication system implemented with JWT tokens',
         filePath: './tickets/CR-A001.md',
@@ -719,14 +711,12 @@ dateCreated: 2024-01-15T00:00:00.000Z
 type: Feature Enhancement
 priority: High
 phaseEpic: Phase A (Foundation)
-source: User Request
-impact: Major
-effort: High
+description: Implement a comprehensive user authentication system for the application
+rationale: Users need secure access to the application
 relatedTickets:
-supersedes:
 dependsOn:
 blocks:
-relatedDocuments:
+assignee: dev-team
 implementationDate: 2024-02-01T00:00:00.000Z
 implementationNotes: Authentication system implemented with JWT tokens
 lastModified: 2024-01-20T00:00:00.000Z
@@ -762,14 +752,12 @@ Authentication system implemented with JWT tokens.
         type: 'Bug Fix',
         priority: 'Medium',
         phaseEpic: 'Phase A (Foundation)',
-        source: 'User Feedback',
-        impact: 'Minor',
-        effort: 'Low',
+        description: 'Fix responsive design issues that occur on mobile devices',
+        rationale: 'Mobile users are experiencing usability issues',
         relatedTickets: [],
-        supersedes: undefined,
         dependsOn: [],
         blocks: [],
-        relatedDocuments: [],
+        assignee: '',
         implementationDate: undefined,
         implementationNotes: undefined,
         filePath: './tickets/CR-A002.md',
@@ -782,14 +770,12 @@ dateCreated: 2024-01-18T00:00:00.000Z
 type: Bug Fix
 priority: Medium
 phaseEpic: Phase A (Foundation)
-source: User Feedback
-impact: Minor
-effort: Low
+description: Fix responsive design issues that occur on mobile devices
+rationale: Mobile users are experiencing usability issues
 relatedTickets:
-supersedes:
 dependsOn:
 blocks:
-relatedDocuments:
+assignee:
 implementationDate:
 implementationNotes:
 lastModified: 2024-01-18T00:00:00.000Z
@@ -817,14 +803,12 @@ Fix responsive design issues that occur on mobile devices.
         type: 'Technical Debt',
         priority: 'Medium',
         phaseEpic: 'Phase A (Foundation)',
-        source: 'Development Team',
-        impact: 'Major',
-        effort: 'Medium',
+        description: 'Add comprehensive error handling throughout the application',
+        rationale: 'Better error handling improves user experience and debugging',
         relatedTickets: [],
-        supersedes: undefined,
         dependsOn: [],
         blocks: [],
-        relatedDocuments: [],
+        assignee: 'dev-team',
         implementationDate: undefined,
         implementationNotes: undefined,
         filePath: './tickets/CR-A003.md',
@@ -837,14 +821,12 @@ dateCreated: 2024-01-10T00:00:00.000Z
 type: Technical Debt
 priority: Medium
 phaseEpic: Phase A (Foundation)
-source: Development Team
-impact: Major
-effort: Medium
+description: Add comprehensive error handling throughout the application
+rationale: Better error handling improves user experience and debugging
 relatedTickets:
-supersedes:
 dependsOn:
 blocks:
-relatedDocuments:
+assignee: dev-team
 implementationDate:
 implementationNotes:
 lastModified: 2024-01-10T00:00:00.000Z
@@ -873,14 +855,12 @@ Add comprehensive error handling throughout the application to improve user expe
         type: 'Feature Enhancement',
         priority: 'Low',
         phaseEpic: 'Phase B (Enhancement)',
-        source: 'User Request',
-        impact: 'Minor',
-        effort: 'Low',
+        description: 'Implement dark mode support for the application to improve user experience in low-light environments',
+        rationale: 'Users requested dark mode for better accessibility',
         relatedTickets: [],
-        supersedes: undefined,
         dependsOn: [],
         blocks: [],
-        relatedDocuments: [],
+        assignee: '',
         implementationDate: new Date('2024-01-05'),
         implementationNotes: 'Dark mode implemented with CSS variables',
         filePath: './tickets/CR-B001.md',
@@ -893,14 +873,12 @@ dateCreated: 2023-12-20T00:00:00.000Z
 type: Feature Enhancement
 priority: Low
 phaseEpic: Phase B (Enhancement)
-source: User Request
-impact: Minor
-effort: Low
+description: Implement dark mode support for the application to improve user experience in low-light environments
+rationale: Users requested dark mode for better accessibility
 relatedTickets:
-supersedes:
 dependsOn:
 blocks:
-relatedDocuments:
+assignee:
 implementationDate: 2024-01-05T00:00:00.000Z
 implementationNotes: Dark mode implemented with CSS variables
 lastModified: 2024-01-05T00:00:00.000Z
