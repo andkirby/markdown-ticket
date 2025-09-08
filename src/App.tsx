@@ -32,7 +32,7 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
         <img 
           src="/icon_board_col_64.webp" 
           alt="Board" 
-          className="w-6 h-6 mx-auto dark:invert"
+          className="w-8 h-8 mx-auto dark:invert"
         />
       </button>
       <button
@@ -47,7 +47,7 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
         <img 
           src="/icon_list_64.webp" 
           alt="List" 
-          className="w-6 h-6 mx-auto dark:invert"
+          className="w-8 h-8 mx-auto dark:invert"
         />
       </button>
       <button
@@ -62,7 +62,7 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
         <img 
           src="/icon_docs_64.webp" 
           alt="Documents" 
-          className="w-6 h-6 mx-auto dark:invert"
+          className="w-8 h-8 mx-auto dark:invert"
         />
       </button>
     </div>
