@@ -8,6 +8,7 @@ import { Button } from './UI/index';
 import { SecondaryHeader } from './SecondaryHeader';
 import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
+import { sortTickets } from '../utils/sorting';
 
 type SingleProjectViewMode = 'board' | 'list' | 'documents';
 
@@ -185,7 +186,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, onAd
         ) : viewMode === 'list' ? (
           <div className="h-full overflow-auto p-6">
             <div className="space-y-2">
-              {tickets.map((ticket) => (
+              {sortTickets(tickets, sortPreferences.selectedAttribute, sortPreferences.selectedDirection).map((ticket) => (
                 <div
                   key={ticket.code}
                   onClick={() => onTicketClick(ticket)}
