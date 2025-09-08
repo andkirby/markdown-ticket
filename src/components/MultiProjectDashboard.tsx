@@ -364,7 +364,15 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
                         </tr>
                       </thead>
                       <tbody>
-                        {sortTickets(crs, sortPreferences.selectedAttribute, sortPreferences.selectedDirection).map((cr) => (
+                        {sortTickets(
+                          crs.map(cr => ({
+                            ...cr,
+                            dateCreated: cr.dateCreated ? new Date(cr.dateCreated) : new Date(),
+                            lastModified: cr.header?.lastModified ? new Date(cr.header.lastModified) : new Date()
+                          })) as any[], 
+                          sortPreferences.selectedAttribute, 
+                          sortPreferences.selectedDirection
+                        ).map((cr) => (
                           <tr key={cr.code} className="border-b border-border hover:bg-accent/50">
                             <td className="py-3 px-4 font-medium text-primary">{cr.code}</td>
                             <td className="py-3 px-4">
