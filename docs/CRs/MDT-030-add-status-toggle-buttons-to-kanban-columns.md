@@ -1,12 +1,12 @@
 ---
 code: MDT-030
 title: Add status toggle buttons to Kanban columns
-status: Implemented
+status: In Progress
 dateCreated: 2025-09-08T17:20:43.229Z
 type: Feature Enhancement
 priority: Medium
 implementationDate: 2025-09-08T19:46:07.934Z
-implementationNotes: Status changed to Implemented on 9/8/2025
+implementationNotes: Status changed to Implemented on 9/8/2025. Reopened for bug fix.
 ---
 
 
@@ -27,6 +27,17 @@ Add toggle buttons for On Hold and Rejected statuses in Kanban columns. In Progr
 
 ### Rationale
 Provide clean UX for handling edge case statuses without cluttering main workflow or adding extra columns
+
+## Bug Report (Reopened)
+
+**Steps to reproduce:**
+1. Move a ticket onto On Hold toggle
+2. Enable On Hold toggle and move ticket back to In Progress area
+3. Repeat step #1
+
+**Actual behavior:** Ticket doesn't get "On Hold" status and stays in In Progress.
+
+**Expected behavior:** Ticket should change to "On Hold" status when dragged onto the toggle.
 
 ## 2. Solution Analysis
 *To be filled during implementation*

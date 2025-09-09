@@ -1,19 +1,29 @@
-# TOML Configuration Specification for Ticket Board
+# TOML Configuration Specification for Markdown Ticket Board
 
 ## Overview
 
-This document specifies the simplified TOML configuration file format for the md-ticket-board application, focusing on the essential features for project management and UI preferences.
+This document specifies the TOML configuration file format for the markdown-ticket application, covering project discovery, management, and UI preferences.
 
-## Configuration File Location
+## Configuration File Locations
 
-**Client Configuration**: `~/.config/md-ticket/config.toml`
-
-This is where users define their projects and preferences.
+**Global Configuration**: `~/.config/markdown-ticket/config.toml`
+**User Preferences**: `~/.config/markdown-ticket/user.toml`
+**Project Registry**: `~/.config/markdown-ticket/projects/{project-dir}.toml`
+**Local Project Config**: `{project}/.mdt-config.toml`
 
 ## Configuration Structure
 
-### Server Configuration (Server-side only)
+### Global Configuration (`~/.config/markdown-ticket/config.toml`)
+
 ```toml
+# Project Discovery Settings
+[discovery]
+autoDiscover = true
+searchPaths = [
+    "/Users/username/home",
+    "/Users/username/projects"
+]
+
 # Server Configuration
 [server]
 port = 3001 
@@ -21,259 +31,267 @@ host = "localhost"
 cors = { origin = ["http://localhost:5173"], credentials = true }
 ```
 
-### Client Configuration (Frontend-side)
+### Discovery Configuration
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `autoDiscover` | boolean | Optional | `true` | Enable automatic project discovery in search paths |
+| `searchPaths` | array | Optional | `[]` | Directories to scan for projects with `.mdt-config.toml` files |
+
+**Example:**
 ```toml
-# Project definitions - stored in ~/.config/md-ticket/config.toml
-[[projects]]
-path = "/path/to/super_project"
+[discovery]
+autoDiscover = true
+searchPaths = [
+    "/Users/kirby/home",
+    "/Users/kirby/projects",
+    "/opt/work"
+]
+```
 
-[[projects]]
-name = "Awesome Project!"
-path = "/my/dir"
+When `autoDiscover` is enabled, the system scans `searchPaths` for directories containing `.mdt-config.toml` files and automatically registers them as available projects.
 
-# Ticket defaults
-[tickets]
-defaultStatus = "Proposed"
-codePattern = "^[A-Z]{2,}-[A-Z]\\d{3}$"
+### User Preferences (`~/.config/markdown-ticket/user.toml`)
+
+```toml
+# Sorting Configuration
+[sorting]
+attributes = [
+    { name = "code", label = "Key", default_direction = "desc", system = true },
+    { name = "title", label = "Title", default_direction = "asc", system = true },
+    { name = "dateCreated", label = "Created Date", default_direction = "desc", system = true },
+    { name = "lastModified", label = "Update Date", default_direction = "desc", system = true },
+    { name = "priority", label = "Priority", default_direction = "desc", system = false }
+]
+
+[sorting.preferences]
+selected_attribute = "lastModified"
+selected_direction = "desc"
 
 # UI preferences
 [ui]
 autoRefresh = true
 refreshInterval = 30
+```
+
+### Project Registry (`~/.config/markdown-ticket/projects/{project-dir}.toml`)
+
+```toml
+[project]
+path = "/path/to/project"
+active = true
+
+[metadata]
+dateRegistered = "2025-09-07"
+lastAccessed = "2025-09-07"
+```
+
+### Local Project Configuration (`{project}/.mdt-config.toml`)
+
+```toml
+[project]
+name = "My Project"
+code = "MYPROJ"
+path = "docs/CRs"
+startNumber = 1
+counterFile = ".mdt-next"
+description = "Project description"
+repository = "https://github.com/user/repo"
+activeMcp = true
+
+# Documentation Configuration
+document_paths = [
+    "README.md",           # Single file from root
+    "docs",               # Directory (scans for .md files)
+    "guides/*.md",        # Glob pattern for specific files
+    "architecture"        # Directory with subdirectories
+]
+max_depth = 3             # Maximum directory depth for scanning
 ```
 
 ## Project Configuration
 
-### Project Schema
+The system uses a dual-configuration approach:
+
+1. **Global Registry**: Minimal discovery information in `~/.config/markdown-ticket/projects/`
+2. **Local Configuration**: Operational details in each project's `.mdt-config.toml`
+
+### Local Project Schema
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | Optional | Display name for the project. If not provided, derived from the last directory name in `path` |
-| `path` | string | Required | File system path to the project directory |
+| `name` | string | Required | Display name for the project |
+| `code` | string | Required | Unique project identifier (e.g., "MDT", "API") |
+| `path` | string | Optional | Relative path to tickets directory (default: "docs/CRs") |
+| `startNumber` | number | Optional | Starting ticket number (default: 1) |
+| `counterFile` | string | Optional | Counter file name (default: ".mdt-next") |
+| `description` | string | Optional | Project description |
+| `repository` | string | Optional | Repository URL |
+| `activeMcp` | boolean | Optional | Enable MCP access (default: true) |
+| `document_paths` | array | Optional | Paths to documentation files/directories |
+| `max_depth` | number | Optional | Maximum directory depth for document scanning (default: 3) |
+
+### Project Registry Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `path` | string | Required | Absolute path to project directory |
+| `active` | boolean | Optional | Whether project is active (default: true) |
+| `dateRegistered` | string | Auto | Date project was registered |
+| `lastAccessed` | string | Auto | Last access timestamp |
 
 ### Project Examples
 
+**Local Project Configuration** (`.mdt-config.toml`):
 ```toml
-# Unnamed project (name derived from directory)
-[[projects]]
-path = "/home/user/projects/my-tickets"
-
-# Named project
-[[projects]]
-name = "Client Work"
-path = "/home/user/projects/client-tasks"
-
-# Named project with description (future enhancement)
-[[projects]]
-name = "Development"
-path = "/home/user/projects/dev"
+[project]
+name = "Markdown Ticket Board"
+code = "MDT"
+path = "docs/CRs"
+startNumber = 1
+counterFile = ".mdt-next"
+description = "Kanban-style ticket board using markdown files"
+repository = "https://github.com/user/markdown-ticket"
+activeMcp = true
 ```
 
-## Frontend Configuration
+**Project Registry Entry** (`~/.config/markdown-ticket/projects/markdown-ticket.toml`):
+```toml
+[project]
+path = "/Users/kirby/home/markdown-ticket"
+active = true
 
-The frontend will read from `~/.config/md-ticket/config.toml` to:
-
-1. **Populate Project Dropdown**: Show list of available projects in the top-left corner
-2. **Filter Tasks**: When a project is selected, show only tasks from that project's path
-3. **Apply UI Preferences**: Use `autoRefresh` and `refreshInterval` settings
-
-### UI Implementation
-
-```typescript
-// Project dropdown component (top-left corner)
-interface Project {
-  name: string;
-  path: string;
-  displayName: string; // Derived from name or directory
-}
-
-// Configuration state
-interface AppConfig {
-  projects: Project[];
-  tickets: {
-    defaultStatus: string;
-    codePattern: string;
-  };
-  ui: {
-    autoRefresh: boolean;
-    refreshInterval: number;
-  };
-}
+[metadata]
+dateRegistered = "2025-09-07"
+lastAccessed = "2025-09-09"
 ```
 
-## How Project Paths Work
+## Documentation Configuration
 
-When a user selects a project from the dropdown:
+The system includes an integrated markdown document viewer with configurable document discovery.
 
-1. **Frontend**: Stores the selected project path in local state/session storage
-2. **Backend API**: All API calls include the selected project path as a query parameter
-3. **File Operations**: The server reads/write tickets from the selected project's directory
+### Document Path Configuration
 
-### API Integration
-
-```typescript
-// Frontend API calls
-const getTasks = async (projectPath: string) => {
-  const response = await fetch(`/api/tasks?projectPath=${encodeURIComponent(projectPath)}`);
-  return response.json();
-};
-
-// Backend route modification
-app.get('/api/tasks', async (req, res) => {
-  const projectPath = req.query.projectPath || defaultProjectPath;
-  const ticketsDir = path.join(projectPath, 'tasks');
-  // ... rest of logic
-});
-```
-
-## Configuration Loading
-
-### Frontend Configuration Loading
-
-```typescript
-const loadConfig = async (): Promise<AppConfig> => {
-  try {
-    const response = await fetch('/api/config');
-    const config = await response.json();
-    
-    // Apply project name fallback
-    config.projects = config.projects.map(project => ({
-      ...project,
-      displayName: project.name || path.basename(project.path)
-    }));
-    
-    return config;
-  } catch (error) {
-    console.error('Failed to load config:', error);
-    return getDefaultConfig();
-  }
-};
-```
-
-### Backend Configuration Loading
-
-```typescript
-const loadClientConfig = (): AppConfig => {
-  const configPath = path.join(os.homedir(), '.config', 'md-ticket', 'config.toml');
-  
-  try {
-    const configContent = fs.readFileSync(configPath, 'utf8');
-    const config = toml.parse(configContent);
-    
-    // Validate and return config
-    return validateConfig(config);
-  } catch (error) {
-    console.error('Failed to load client config:', error);
-    return getDefaultConfig();
-  }
-};
-```
-
-## Default Configuration
+Projects can specify which files and directories to include in the Documents view:
 
 ```toml
-# Default configuration if no config file exists
-[tickets]
-defaultStatus = "Proposed"
-codePattern = "^[A-Z]{2,}-[A-Z]\\d{3}$"
+[project]
+# ... other project settings
 
+# Documentation paths - supports files, directories, and glob patterns
+document_paths = [
+    "README.md",           # Single file from project root
+    "docs",               # Directory (scans for .md files)
+    "guides/*.md",        # Glob pattern for specific files
+    "architecture",       # Directory with subdirectories
+    "specs/api.md"        # Specific file in subdirectory
+]
+
+# Maximum directory depth for scanning (default: 3)
+max_depth = 3
+```
+
+### Document Discovery Rules
+
+1. **Single Files**: Direct path to specific markdown files
+2. **Directories**: Scans directory up to `max_depth` levels for `.md` files
+3. **Glob Patterns**: Supports `*.md` patterns for flexible file matching
+4. **Exclusions**: Only `.md` files are displayed in the document tree
+
+### Document Viewer Features
+
+- **Tree Navigation**: Collapsible folder structure showing configured paths
+- **H1 Title Extraction**: Uses first `# Title` from markdown files as display labels
+- **Filename Footnotes**: Shows actual filename below extracted titles
+- **Integrated Rendering**: Markdown content rendered within the application
+- **View Toggle**: Seamless switching between Board and Documents views
+
+### Configuration Workflow
+
+1. **Unconfigured Projects**: Show PathSelector with checkbox tree interface
+2. **User Selection**: Select desired files/folders from project structure
+3. **Auto-Configuration**: Selected paths saved to `.mdt-config.toml`
+4. **Document Access**: Documents view loads configured content
+
+## System Integration
+
+The configuration system supports:
+
+1. **Automatic Project Discovery**: Scans configured paths for `.mdt-config.toml` files
+2. **Project Management**: Dual-config approach with global registry and local settings
+3. **User Preferences**: Customizable sorting and UI settings
+4. **MCP Integration**: Per-project MCP access control
+
+### Configuration Loading Priority
+
+1. **Discovery**: Auto-discover projects in `searchPaths`
+2. **Registry**: Load registered projects from global registry
+3. **Local Config**: Read project-specific settings from `.mdt-config.toml`
+4. **User Preferences**: Apply user sorting and UI preferences
+
+## Configuration Examples
+
+### Complete Global Configuration (`~/.config/markdown-ticket/config.toml`)
+
+```toml
+# Project Discovery
+[discovery]
+autoDiscover = true
+searchPaths = [
+    "/Users/username/home",
+    "/Users/username/projects",
+    "/opt/work"
+]
+
+# Server Configuration
+[server]
+port = 3001
+host = "localhost"
+cors = { origin = ["http://localhost:5173"], credentials = true }
+```
+
+### Complete User Preferences (`~/.config/markdown-ticket/user.toml`)
+
+```toml
+# Sorting Configuration
+[sorting]
+attributes = [
+    { name = "code", label = "Key", default_direction = "desc", system = true },
+    { name = "title", label = "Title", default_direction = "asc", system = true },
+    { name = "dateCreated", label = "Created Date", default_direction = "desc", system = true },
+    { name = "lastModified", label = "Update Date", default_direction = "desc", system = true },
+    { name = "priority", label = "Priority", default_direction = "desc", system = false },
+    { name = "type", label = "Type", default_direction = "asc", system = false }
+]
+
+[sorting.preferences]
+selected_attribute = "lastModified"
+selected_direction = "desc"
+
+# UI Preferences
 [ui]
 autoRefresh = true
 refreshInterval = 30
-
-# No projects by default - user must add them
-[[projects]]
-```
-
-## Environment Variable Support
-
-```toml
-# Optional environment variable substitution
-[server]
-port = "${PORT:-3001}"
-host = "${HOST:-localhost}"
-
-[ui]
-refreshInterval = "${REFRESH_INTERVAL:-30}"
 ```
 
 ## Configuration Validation
 
-### Path Validation
-- Must be an absolute path
-- Must exist and be readable
-- Must be a directory
-
-### Pattern Validation
-- `codePattern` must be a valid regex
-- `refreshInterval` must be a positive number
+### Discovery Validation
+- `searchPaths` must contain valid, readable directory paths
+- `autoDiscover` must be boolean
 
 ### Project Validation
-- No duplicate project paths
-- Project names should be unique (if provided)
+- Project `code` must be unique across all projects
+- Project `path` must exist and be readable
+- `activeMcp` must be boolean
 
-## Implementation Plan
+### Documentation Validation
+- `document_paths` entries must be valid file/directory paths relative to project root
+- `max_depth` must be a positive integer (1-10)
+- Glob patterns in `document_paths` must be valid
+- Referenced files/directories in `document_paths` should exist
 
-### Phase 1: Configuration System
-1. Add TOML dependencies to both frontend and backend
-2. Create configuration loader for backend
-3. Create configuration API endpoint
-4. Add frontend configuration loading
-
-### Phase 2: Project Management
-1. Create project dropdown component (top-left)
-2. Implement project selection state management
-3. Modify API calls to include project path
-4. Update file operations to use project-specific paths
-
-### Phase 3: UI Preferences
-1. Implement auto-refresh functionality
-2. Apply refresh interval setting
-3. Add configuration validation errors
-4. Create configuration file creation wizard
-
-## Migration Path
-
-The current hardcoded configurations will be migrated:
-
-1. **Server Settings**: Move from `server.js` to `[server]` section
-2. **Ticket Attributes**: Keep in `src/config/` but make them overridable via `[tickets]`
-3. **Status/Workflow**: Keep in `src/config/` but make them overridable via `[tickets]`
-4. **UI Preferences**: Move from hardcoded values to `[ui]` section
-
-## Example Configuration Files
-
-### Basic Client Configuration (`~/.config/md-ticket/config.toml`)
-
-```toml
-# Project definitions
-[[projects]]
-path = "/home/user/projects/work-tickets"
-
-[[projects]]
-name = "Personal Projects"
-path = "/home/user/projects/personal"
-
-[[projects]]
-name = "Client A"
-path = "/home/user/projects/client-a"
-
-# Ticket defaults
-[tickets]
-defaultStatus = "Proposed"
-codePattern = "^[A-Z]{2,}-[A-Z]\\d{3}$"
-
-# UI preferences
-[ui]
-autoRefresh = true
-refreshInterval = 30
-```
-
-### Development Server Configuration (Optional)
-
-```toml
-# Server configuration (server-side only)
-[server]
-port = 3001
-host = "localhost"
-cors = { origin = ["http://localhost:5173", "http://localhost:3000"], credentials = true }
+### Sorting Validation
+- System attributes (`code`, `title`, `dateCreated`, `lastModified`) cannot be removed
+- Custom attributes must have valid `name`, `label`, and `default_direction`
+- `default_direction` must be "asc" or "desc"

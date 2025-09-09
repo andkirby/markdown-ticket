@@ -152,10 +152,102 @@ core/
 - [ ] Code coverage maintained or improved
 - [ ] Documentation updated to reflect new architecture
 
-## 5. Implementation Notes
+## 5. Implementation Plan
+
+### Phase 1: Foundation Setup (Days 1-2)
+**Goal**: Establish shared module structure and basic models
+
+**Tasks**:
+- [ ] Create `shared/` directory structure
+- [ ] Move existing `shared/ticketDto.ts` into `shared/models/Ticket.ts`
+- [ ] Extract common types from server/ and mcp-server/
+- [ ] Create `shared/models/Project.ts` with unified project model
+- [ ] Create `shared/utils/constants.ts` for shared constants
+- [ ] Set up basic exports in `shared/index.js`
+
+**Deliverables**: 
+- Working shared module with basic models
+- No breaking changes to existing systems
+
+**Risk Mitigation**: 
+- Keep existing code intact during extraction
+- Test imports work from both server/ and mcp-server/
+
+### Phase 2: Project Discovery Unification (Days 3-4)
+**Goal**: Eliminate project discovery duplication
+
+**Tasks**:
+- [ ] Extract logic from `server/projectDiscovery.js`
+- [ ] Extract logic from `mcp-server/src/services/projectDiscovery.ts`
+- [ ] Create unified `shared/services/ProjectService.ts`
+- [ ] Update server/ to use shared ProjectService
+- [ ] Update mcp-server/ to use shared ProjectService
+- [ ] Remove duplicate projectDiscovery files
+
+**Deliverables**:
+- Single project discovery implementation
+- Both systems use identical project scanning logic
+
+**Risk Mitigation**:
+- Compare outputs before/after to ensure consistency
+- Keep fallback to original code during transition
+
+### Phase 3: Markdown Processing Unification (Days 5-6)
+**Goal**: Consistent markdown parsing across systems
+
+**Tasks**:
+- [ ] Extract markdown parsing from server/server.js
+- [ ] Extract markdown parsing from mcp-server/src/services/crService.ts
+- [ ] Create `shared/services/MarkdownService.ts`
+- [ ] Create `shared/services/FileService.ts` for file operations
+- [ ] Update both systems to use shared services
+- [ ] Remove duplicate parsing logic
+
+**Deliverables**:
+- Unified markdown parsing and file operations
+- Consistent YAML frontmatter handling
+
+**Risk Mitigation**:
+- Test with existing ticket files to ensure no data loss
+- Validate parsing results match exactly
+
+### Phase 4: Integration & Testing (Days 7-8)
+**Goal**: Complete integration and validation
+
+**Tasks**:
+- [ ] Update all imports in server/ to use shared modules
+- [ ] Update all imports in mcp-server/ to use shared modules
+- [ ] Run full test suite for both systems
+- [ ] Performance testing and optimization
+- [ ] Clean up any remaining duplicate code
+- [ ] Update documentation
+
+**Deliverables**:
+- Fully integrated shared core architecture
+- All tests passing
+- Performance maintained or improved
+
+**Risk Mitigation**:
+- Comprehensive testing before removing old code
+- Rollback plan if integration issues arise
+
+### Migration Strategy
+1. **Incremental Approach**: Move one service at a time
+2. **Parallel Development**: Keep old code until new code is proven
+3. **Testing First**: Validate each phase before proceeding
+4. **Rollback Ready**: Maintain ability to revert changes
+
+### Success Metrics
+- [ ] Zero code duplication between server/ and mcp-server/
+- [ ] All existing functionality preserved
+- [ ] Test coverage maintained (>90%)
+- [ ] Performance within 5% of baseline
+- [ ] Both systems can be developed independently
+
+## 6. Implementation Notes
 *To be filled during/after implementation*
 
-## 6. References
+## 7. References
 
 ### Related CRs
 - MDT-003: UI sync bug (revealed parsing inconsistencies)
