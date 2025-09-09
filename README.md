@@ -27,15 +27,19 @@ A Kanban-style ticket board system that uses markdown files for storage, providi
   - [Backend Development](#backend-development)
   - [Testing](#testing)
 - [File System Integration](#file-system-integration)
+- [Release Notes](#release-notes)
 - [Contributing](#contributing)
 - [License](#license)
 
 ## Features
 
-- **Kanban Board Interface**: Visual drag-and-drop ticket management
+- **Kanban Board Interface**: Visual drag-and-drop ticket management with status toggle buttons
 - **Multi-Project Support**: Manage multiple projects from a single dashboard
+- **Enhanced Ticket Viewer**: Comprehensive attribute display with structured layout
+- **Ticket Relationships**: Full support for dependencies, blocks, and related tickets
 - **Markdown Storage**: All tickets stored as markdown files with YAML frontmatter
-- **Real-time Updates**: File system watching for live updates
+- **Real-time Updates**: SSE-based live updates with optimistic UI
+- **Multiple View Modes**: Board, List, and Documents views with seamless switching
 - **Sortable Tickets**: Sort by Key, Title, Created Date, or Update Date
 - **MCP Integration**: Model Context Protocol server for AI assistant integration
 - **Project Discovery**: Automatic detection of project configurations
@@ -282,6 +286,13 @@ npm run test:e2e     # Run end-to-end tests
 - **Automatic Timestamps**: `dateCreated` and `lastModified` are automatically managed from file system timestamps
 - **Real-time Updates**: File changes are detected and reflected in the UI immediately
 - **Version Control Friendly**: All data stored in markdown files, perfect for Git workflows
+
+## Release Notes
+
+See [RELEASE_NOTES.md](RELEASE_NOTES.md) for detailed information about each version:
+
+- **v0.2.0** (2025-09-09): Enhanced ticket viewer, relationship management, real-time updates
+- **v0.1.0** (2025-09-07): Core Kanban board, multi-project support, MCP integration
 
 ## Contributing
 
