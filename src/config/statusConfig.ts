@@ -121,7 +121,7 @@ export const BOARD_COLUMNS = {
     label: 'In Progress',
     color: 'blue',
     description: 'Work currently being done',
-    statuses: ['In Progress'] as Status[],
+    statuses: ['In Progress', 'On Hold'] as Status[],
     visible: true,
     order: 3
   },
@@ -141,8 +141,8 @@ export const BOARD_COLUMNS = {
     label: 'Deferred',
     color: 'orange',
     description: 'Work that is paused or cancelled',
-    statuses: ['On Hold', 'Rejected', 'Superseded', 'Duplicate'] as Status[],
-    visible: false,
+    statuses: ['Rejected', 'Superseded', 'Duplicate'] as Status[],
+    visible: true,
     order: 5
   }
 };

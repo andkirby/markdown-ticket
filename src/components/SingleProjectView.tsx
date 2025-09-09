@@ -137,7 +137,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, tick
         ) : viewMode === 'list' ? (
           <div className="h-full overflow-auto p-6">
             <div className="space-y-2">
-              {sortTickets(tickets, sortPreferences.selectedAttribute, sortPreferences.selectedDirection).map((ticket) => (
+              {sortTickets(propTickets || [], sortPreferences.selectedAttribute, sortPreferences.selectedDirection).map((ticket) => (
                 <div
                   key={ticket.code}
                   onClick={() => onTicketClick(ticket)}

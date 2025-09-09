@@ -7,6 +7,24 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
+// Import frontend tools
+import { 
+  stopFrontendLogging, 
+  getFrontendSessionStatus,
+  handleStopFrontendLogging,
+  handleGetFrontendSessionStatus
+} from './tools/frontend-session.js';
+
+import {
+  getFrontendLogs,
+  handleGetFrontendLogs
+} from './tools/frontend-logs.js';
+
+import {
+  streamFrontendUrl,
+  handleStreamFrontendUrl
+} from './tools/stream-urls.js';
+
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 const server = new Server(
@@ -44,7 +62,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         }
       },
       {
-        name: 'stream_logs',
+        name: 'stream_url',
         description: 'Get SSE endpoint URL for real-time log streaming',
         inputSchema: {
           type: 'object',
@@ -55,7 +73,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           }
         }
-      }
+      },
+      // Frontend tools
+      stopFrontendLogging,
+      getFrontendSessionStatus,
+      getFrontendLogs,
+      streamFrontendUrl
     ]
   };
 });
@@ -104,7 +127,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
     }
 
-    case 'stream_logs': {
+    case 'stream_url': {
       const filter = args?.filter as string;
       const url = new URL('/api/logs/stream', BACKEND_URL);
       if (filter) {
@@ -119,6 +142,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         ]
       };
+    }
+
+    // Frontend session tools
+    case 'stop_frontend_logging': {
+      const result = await handleStopFrontendLogging(args as any);
+      return { content: [{ type: 'text', text: result }] };
+    }
+
+    case 'get_frontend_session_status': {
+      const result = await handleGetFrontendSessionStatus(args as any);
+      return { content: [{ type: 'text', text: result }] };
+    }
+
+    case 'get_frontend_logs': {
+      const result = await handleGetFrontendLogs(args as any);
+      return { content: [{ type: 'text', text: result }] };
+    }
+
+    case 'stream_frontend_url': {
+      const result = await handleStreamFrontendUrl(args as any);
+      return { content: [{ type: 'text', text: result }] };
     }
 
     default:

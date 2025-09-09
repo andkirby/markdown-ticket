@@ -1964,6 +1964,91 @@ app.listen(PORT, () => {
     .catch(console.error);
 });
 
+// Frontend logging session management
+let frontendSessionActive = false;
+let frontendSessionStart = null;
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const frontendLogs = [];
+const MAX_FRONTEND_LOGS = 1000;
+
+// Frontend session status
+app.get('/api/frontend/logs/status', (req, res) => {
+  res.json({ 
+    active: frontendSessionActive,
+    sessionStart: frontendSessionStart,
+    timeRemaining: frontendSessionActive ? (SESSION_TIMEOUT - (Date.now() - frontendSessionStart)) : null
+  });
+});
+
+// Start frontend logging session
+app.post('/api/frontend/logs/start', (req, res) => {
+  frontendSessionActive = true;
+  frontendSessionStart = Date.now();
+  console.log('🔍 Frontend logging session started');
+  res.json({ status: 'started', sessionStart: frontendSessionStart });
+});
+
+// Stop frontend logging session
+app.post('/api/frontend/logs/stop', (req, res) => {
+  frontendSessionActive = false;
+  frontendSessionStart = null;
+  console.log('🔍 Frontend logging session stopped');
+  res.json({ status: 'stopped' });
+});
+
+// Receive frontend logs
+app.post('/api/frontend/logs', (req, res) => {
+  const { logs } = req.body;
+  if (logs && Array.isArray(logs)) {
+    frontendLogs.push(...logs);
+    // Trim buffer if too large
+    if (frontendLogs.length > MAX_FRONTEND_LOGS) {
+      frontendLogs.splice(0, frontendLogs.length - MAX_FRONTEND_LOGS);
+    }
+    console.log(`📝 Received ${logs.length} frontend log entries`);
+  }
+  res.json({ received: logs?.length || 0 });
+});
+
+// Get frontend logs
+app.get('/api/frontend/logs', (req, res) => {
+  const lines = Math.min(parseInt(req.query.lines) || 20, MAX_FRONTEND_LOGS);
+  const filter = req.query.filter;
+  
+  let filteredLogs = frontendLogs;
+  if (filter) {
+    filteredLogs = frontendLogs.filter(log => 
+      log.message.toLowerCase().includes(filter.toLowerCase())
+    );
+  }
+  
+  const recentLogs = filteredLogs.slice(-lines);
+  res.json({ logs: recentLogs, total: filteredLogs.length });
+});
+
+// Clear config cache
+app.post('/api/cache/clear', async (req, res) => {
+  try {
+    // Clear project discovery cache if it has one
+    if (projectDiscovery.clearCache) {
+      await projectDiscovery.clearCache();
+    }
+    
+    // Reinitialize file watchers with fresh config
+    await initializeMultiProjectWatchers();
+    
+    console.log('🔄 Config cache cleared and file watchers reinitialized');
+    res.json({ 
+      success: true, 
+      message: 'Config cache cleared successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error clearing config cache:', error);
+    res.status(500).json({ error: 'Failed to clear config cache' });
+  }
+});
+
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('Received SIGTERM, shutting down gracefully...');
