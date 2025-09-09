@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Plus } from 'lucide-react';
+import { Menu, Plus, RefreshCw } from 'lucide-react';
 import { Button } from './UI/index';
 
 interface HamburgerMenuProps {
@@ -8,6 +8,7 @@ interface HamburgerMenuProps {
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onAddProject }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,6 +25,25 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onAddProject }) =>
   const handleAddProject = () => {
     setIsOpen(false);
     onAddProject();
+  };
+
+  const handleRefreshConfig = async () => {
+    setIsRefreshing(true);
+    try {
+      const response = await fetch('/api/cache/clear', { method: 'POST' });
+      if (response.ok) {
+        console.log('Config cache cleared successfully');
+        // Refresh the page to reload projects
+        window.location.reload();
+      } else {
+        console.error('Failed to clear config cache');
+      }
+    } catch (error) {
+      console.error('Error clearing config cache:', error);
+    } finally {
+      setIsRefreshing(false);
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -46,6 +66,14 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onAddProject }) =>
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Project
+            </button>
+            <button
+              onClick={handleRefreshConfig}
+              disabled={isRefreshing}
+              className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh Config
             </button>
           </div>
         </div>

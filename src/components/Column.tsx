@@ -142,12 +142,14 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
     
     const isToggleActive = toggleStates[toggleStatus];
     if (isToggleActive) {
-      // Show main tickets + toggle tickets, then sort the combined list
-      const combinedTickets = [...tickets, ...toggleTickets];
+      // Show main tickets (excluding toggle status) + toggle tickets, then sort the combined list
+      const mainTickets = tickets.filter(ticket => ticket.status !== toggleStatus);
+      const combinedTickets = [...mainTickets, ...toggleTickets];
       return sortTickets(combinedTickets, sortAttribute, sortDirection);
     } else {
-      // Show only main tickets (default)
-      return tickets;
+      // Show only main tickets, excluding toggle status tickets
+      const mainTickets = tickets.filter(ticket => ticket.status !== toggleStatus);
+      return mainTickets;
     }
   };
 

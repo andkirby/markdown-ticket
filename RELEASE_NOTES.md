@@ -1,5 +1,16 @@
 # Release Notes
 
+## v0.2.1 (2025-09-09)
+
+### Bug Fixes
+- **On Hold Status**: Fixed visibility of tickets with "On Hold" status in the board view
+- **Documentation**: Updated ticket creation guide for better clarity and consistency
+
+### Known Issues
+- **Cache Clean Button**: Currently non-functional, will be addressed in future release
+
+---
+
 ## v0.2.0 (2025-09-09)
 
 ### New Features
