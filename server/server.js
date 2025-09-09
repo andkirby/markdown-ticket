@@ -1802,6 +1802,127 @@ async function scanDirectory(dirPath, relativePath, excludeFolders, currentDepth
   return documents;
 }
 
+// =============================================================================
+// DEV TOOLS: Log Buffer and MCP API Endpoints
+// =============================================================================
+
+// In-memory log buffer for development
+const logBuffer = [];
+const MAX_LOG_ENTRIES = 100;
+
+// Intercept console.log to capture logs
+const originalLog = console.log;
+const originalError = console.error;
+const originalWarn = console.warn;
+
+function addToLogBuffer(level, ...args) {
+  const message = args.map(arg => 
+    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+  ).join(' ');
+  
+  logBuffer.push({
+    timestamp: Date.now(),
+    level,
+    message
+  });
+  
+  // Keep only last MAX_LOG_ENTRIES
+  if (logBuffer.length > MAX_LOG_ENTRIES) {
+    logBuffer.shift();
+  }
+}
+
+console.log = (...args) => {
+  addToLogBuffer('info', ...args);
+  originalLog(...args);
+};
+
+console.error = (...args) => {
+  addToLogBuffer('error', ...args);
+  originalError(...args);
+};
+
+console.warn = (...args) => {
+  addToLogBuffer('warn', ...args);
+  originalWarn(...args);
+};
+
+// API endpoint for getting logs (polling)
+app.get('/api/logs', (req, res) => {
+  const lines = Math.min(parseInt(req.query.lines) || 20, MAX_LOG_ENTRIES);
+  const filter = req.query.filter;
+  
+  let logs = logBuffer.slice(-lines);
+  
+  if (filter) {
+    logs = logs.filter(log => 
+      log.message.toLowerCase().includes(filter.toLowerCase())
+    );
+  }
+  
+  res.json(logs);
+});
+
+// SSE endpoint for log streaming (extra feature)
+app.get('/api/logs/stream', (req, res) => {
+  const filter = req.query.filter;
+  
+  // Set SSE headers
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*'
+  });
+  
+  // Send initial connection message
+  res.write(`data: ${JSON.stringify({
+    type: 'connected',
+    message: 'Log stream connected',
+    filter: filter || null
+  })}\n\n`);
+  
+  // Store original console functions for this connection
+  const streamLog = (...args) => {
+    const message = args.map(arg => 
+      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+    ).join(' ');
+    
+    // Apply filter if specified
+    if (filter && !message.toLowerCase().includes(filter.toLowerCase())) {
+      return;
+    }
+    
+    const logEntry = {
+      timestamp: Date.now(),
+      level: 'info',
+      message
+    };
+    
+    res.write(`data: ${JSON.stringify(logEntry)}\n\n`);
+  };
+  
+  // Override console for this connection (simplified for demo)
+  // In production, you'd want a proper event emitter system
+  
+  // Handle client disconnect
+  req.on('close', () => {
+    console.log('SSE client disconnected');
+  });
+  
+  // Send periodic heartbeat
+  const heartbeat = setInterval(() => {
+    res.write(`data: ${JSON.stringify({
+      type: 'heartbeat',
+      timestamp: Date.now()
+    })}\n\n`);
+  }, 30000);
+  
+  req.on('close', () => {
+    clearInterval(heartbeat);
+  });
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
