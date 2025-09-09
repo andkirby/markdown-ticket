@@ -1,7 +1,7 @@
 import React from 'react';
 import { Ticket } from '../types';
 import { TicketCode } from './TicketCode';
-import TicketAttributes from './TicketAttributes';
+import TicketAttributeTags from './TicketAttributeTags';
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -25,7 +25,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
       </div>
       
       <div className="flex items-center justify-between">
-        <TicketAttributes ticket={ticket} />
+        <TicketAttributeTags ticket={ticket} />
         
         <div className="flex items-center space-x-1">
           <button

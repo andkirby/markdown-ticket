@@ -53,51 +53,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
 
-          {/* Additional Information */}
-          {(ticket.implementationDate || ticket.implementationNotes || ticket.relatedTickets?.length || ticket.dependsOn?.length || ticket.blocks?.length) && (
-            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Additional Details</h4>
-              
-              {/* Relationship Information */}
-              {(ticket.relatedTickets?.length || ticket.dependsOn?.length || ticket.blocks?.length) && (
-                <div className="mb-4">
-                  <h5 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Ticket Relationships</h5>
-                  {ticket.relatedTickets && ticket.relatedTickets.length > 0 && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      <strong className="text-gray-900 dark:text-gray-100">🔗 Related to:</strong> {ticket.relatedTickets.join(', ')}
-                    </p>
-                  )}
-                  {ticket.dependsOn && ticket.dependsOn.length > 0 && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      <strong className="text-gray-900 dark:text-gray-100">⬅️ Depends on:</strong> {ticket.dependsOn.join(', ')}
-                    </p>
-                  )}
-                  {ticket.blocks && ticket.blocks.length > 0 && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      <strong className="text-gray-900 dark:text-gray-100">➡️ Blocks:</strong> {ticket.blocks.join(', ')}
-                    </p>
-                  )}
-                </div>
-              )}
 
-              {/* Implementation Information */}
-              {(ticket.implementationDate || ticket.implementationNotes) && (
-                <div>
-                  <h5 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Implementation Details</h5>
-                  {ticket.implementationDate && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="text-gray-900 dark:text-gray-100">Implementation Date:</strong> {ticket.implementationDate.toLocaleDateString()}
-                    </p>
-                  )}
-                  {ticket.implementationNotes && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      <strong>Notes:</strong> {ticket.implementationNotes}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </ModalBody>
     </Modal>
