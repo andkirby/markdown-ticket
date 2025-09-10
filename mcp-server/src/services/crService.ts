@@ -3,6 +3,8 @@ import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
 import { CR, CRFilters, CRData, CRType, CRStatus, Project } from '../types/index.js';
+// Use shared services for consistency
+import { MarkdownService } from '../../../shared/services/MarkdownService.js';
 import { normalizeTicket, arrayToString } from '../shared/ticketDto.js';
 
 export class CRService {

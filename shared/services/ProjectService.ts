@@ -2,18 +2,18 @@ import fs from 'fs';
 import path from 'path';
 import toml from 'toml';
 import os from 'os';
-import { MarkdownService } from '../shared/services/MarkdownService.js';
-
-const CONFIG_FILES = {
-  PROJECT_CONFIG: '.mdt-config.toml',
-  COUNTER_FILE: '.mdt-next'
-};
+import { Project, ProjectConfig, validateProjectConfig } from '../models/Project';
+import { CONFIG_FILES } from '../utils/constants';
 
 /**
- * Unified Project Discovery Service (Server Implementation)
- * Uses shared logic but with server dependencies
+ * Unified Project Discovery Service
+ * Handles project scanning, configuration, and management
  */
-class ProjectDiscoveryService {
+export class ProjectService {
+  private globalConfigDir: string;
+  private projectsDir: string;
+  private globalConfigPath: string;
+
   constructor() {
     this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
@@ -46,13 +46,13 @@ class ProjectDiscoveryService {
   /**
    * Get all registered projects
    */
-  getRegisteredProjects() {
+  getRegisteredProjects(): Project[] {
     try {
       if (!fs.existsSync(this.projectsDir)) {
         return [];
       }
 
-      const projects = [];
+      const projects: Project[] = [];
       const projectFiles = fs.readdirSync(this.projectsDir)
         .filter(file => file.endsWith('.toml'));
 
@@ -62,7 +62,8 @@ class ProjectDiscoveryService {
           const content = fs.readFileSync(projectPath, 'utf8');
           const projectData = toml.parse(content);
           
-          const project = {
+          // Convert to Project interface
+          const project: Project = {
             id: path.basename(file, '.toml'),
             project: {
               name: projectData.project?.name || 'Unknown Project',
@@ -94,7 +95,7 @@ class ProjectDiscoveryService {
   /**
    * Get project configuration from local .mdt-config.toml
    */
-  getProjectConfig(projectPath) {
+  getProjectConfig(projectPath: string): ProjectConfig | null {
     try {
       const configPath = path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG);
       
@@ -105,9 +106,7 @@ class ProjectDiscoveryService {
       const content = fs.readFileSync(configPath, 'utf8');
       const config = toml.parse(content);
       
-      if (config && config.project && 
-          typeof config.project.name === 'string' &&
-          typeof config.project.code === 'string') {
+      if (validateProjectConfig(config)) {
         return config;
       }
       
@@ -119,47 +118,13 @@ class ProjectDiscoveryService {
   }
 
   /**
-   * Get all projects (registered + auto-discovered)
-   */
-  async getAllProjects() {
-    const registered = this.getRegisteredProjects();
-    const globalConfig = this.getGlobalConfig();
-    
-    if (globalConfig.discovery?.autoDiscover) {
-      const discovered = this.autoDiscoverProjects(globalConfig.discovery?.searchPaths || []);
-      
-      // Create sets for both path and id to avoid duplicates
-      const registeredPaths = new Set(registered.map(p => p.project.path));
-      const registeredIds = new Set(registered.map(p => p.id));
-      
-      const uniqueDiscovered = discovered.filter(p => 
-        !registeredPaths.has(p.project.path) && !registeredIds.has(p.id)
-      );
-      
-      // Combine and deduplicate by id (in case of any remaining duplicates)
-      const allProjects = [...registered, ...uniqueDiscovered];
-      const seenIds = new Set();
-      
-      return allProjects.filter(project => {
-        if (seenIds.has(project.id)) {
-          return false;
-        }
-        seenIds.add(project.id);
-        return true;
-      });
-    }
-    
-    return registered;
-  }
-
-  /**
    * Auto-discover projects by scanning for .mdt-config.toml files
    */
-  autoDiscoverProjects(searchPaths = []) {
-    const discovered = [];
+  autoDiscoverProjects(searchPaths: string[] = []): Project[] {
+    const discovered: Project[] = [];
     const defaultPaths = [
       os.homedir(),
-      path.join(os.homedir(), 'Documents'), 
+      path.join(os.homedir(), 'Documents'),
       path.join(os.homedir(), 'Projects'),
       process.cwd()
     ];
@@ -169,7 +134,7 @@ class ProjectDiscoveryService {
     for (const searchPath of pathsToSearch) {
       try {
         if (fs.existsSync(searchPath)) {
-          this.scanDirectoryForProjects(searchPath, discovered, 3);
+          this.scanDirectoryForProjects(searchPath, discovered, 3); // Max depth 3
         }
       } catch (error) {
         console.error(`Error scanning ${searchPath}:`, error);
@@ -182,7 +147,7 @@ class ProjectDiscoveryService {
   /**
    * Recursively scan directory for project configurations
    */
-  scanDirectoryForProjects(dirPath, discovered, maxDepth) {
+  private scanDirectoryForProjects(dirPath: string, discovered: Project[], maxDepth: number): void {
     if (maxDepth <= 0) return;
 
     try {
@@ -191,7 +156,7 @@ class ProjectDiscoveryService {
       if (fs.existsSync(configPath)) {
         const config = this.getProjectConfig(dirPath);
         if (config) {
-          const project = {
+          const project: Project = {
             id: path.basename(dirPath),
             project: {
               name: config.project.name,
@@ -212,6 +177,7 @@ class ProjectDiscoveryService {
         }
       }
 
+      // Continue scanning subdirectories
       const entries = fs.readdirSync(dirPath, { withFileTypes: true });
       for (const entry of entries) {
         if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
@@ -222,30 +188,60 @@ class ProjectDiscoveryService {
       // Silently skip directories we can't read
     }
   }
+
   /**
-   * Get CRs for a specific project using shared MarkdownService
+   * Register a project in the global registry
    */
-  getProjectCRs(projectPath) {
+  registerProject(project: Project): void {
     try {
-      const config = this.getProjectConfig(projectPath);
-      if (!config || !config.project) {
-        return [];
+      // Ensure projects directory exists
+      if (!fs.existsSync(this.projectsDir)) {
+        fs.mkdirSync(this.projectsDir, { recursive: true });
       }
 
-      const crPath = config.project.path || 'docs/CRs';
-      const fullCRPath = path.resolve(projectPath, crPath);
-      
-      if (!fs.existsSync(fullCRPath)) {
-        return [];
-      }
+      const projectFile = path.join(this.projectsDir, `${project.id}.toml`);
+      const projectData = {
+        project: {
+          name: project.project.name,
+          path: project.project.path,
+          active: project.project.active,
+          description: project.project.description
+        },
+        metadata: {
+          dateRegistered: project.metadata.dateRegistered,
+          lastAccessed: new Date().toISOString().split('T')[0],
+          version: project.metadata.version
+        }
+      };
 
-      // Use shared MarkdownService for consistent parsing
-      return MarkdownService.scanMarkdownFiles(fullCRPath);
+      const tomlContent = this.objectToToml(projectData);
+      fs.writeFileSync(projectFile, tomlContent, 'utf8');
     } catch (error) {
-      console.error(`Error getting CRs for project ${projectPath}:`, error);
-      return [];
+      console.error('Error registering project:', error);
+      throw error;
     }
   }
-}
 
-export default ProjectDiscoveryService;
+  /**
+   * Simple TOML serializer for project data
+   */
+  private objectToToml(obj: any): string {
+    let toml = '';
+    
+    for (const [section, data] of Object.entries(obj)) {
+      toml += `[${section}]\n`;
+      for (const [key, value] of Object.entries(data as any)) {
+        if (typeof value === 'string') {
+          toml += `${key} = "${value}"\n`;
+        } else if (typeof value === 'boolean') {
+          toml += `${key} = ${value}\n`;
+        } else {
+          toml += `${key} = "${value}"\n`;
+        }
+      }
+      toml += '\n';
+    }
+    
+    return toml;
+  }
+}

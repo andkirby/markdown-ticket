@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import toml from 'toml';
 import os from 'os';
-import { MarkdownService } from '../shared/services/MarkdownService.js';
 
 const CONFIG_FILES = {
   PROJECT_CONFIG: '.mdt-config.toml',
@@ -10,10 +9,10 @@ const CONFIG_FILES = {
 };
 
 /**
- * Unified Project Discovery Service (Server Implementation)
- * Uses shared logic but with server dependencies
+ * Unified Project Discovery Service
+ * Handles project scanning, configuration, and management
  */
-class ProjectDiscoveryService {
+export class ProjectService {
   constructor() {
     this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
@@ -105,6 +104,7 @@ class ProjectDiscoveryService {
       const content = fs.readFileSync(configPath, 'utf8');
       const config = toml.parse(content);
       
+      // Basic validation
       if (config && config.project && 
           typeof config.project.name === 'string' &&
           typeof config.project.code === 'string') {
@@ -128,25 +128,11 @@ class ProjectDiscoveryService {
     if (globalConfig.discovery?.autoDiscover) {
       const discovered = this.autoDiscoverProjects(globalConfig.discovery?.searchPaths || []);
       
-      // Create sets for both path and id to avoid duplicates
+      // Merge, preferring registered projects
       const registeredPaths = new Set(registered.map(p => p.project.path));
-      const registeredIds = new Set(registered.map(p => p.id));
+      const uniqueDiscovered = discovered.filter(p => !registeredPaths.has(p.project.path));
       
-      const uniqueDiscovered = discovered.filter(p => 
-        !registeredPaths.has(p.project.path) && !registeredIds.has(p.id)
-      );
-      
-      // Combine and deduplicate by id (in case of any remaining duplicates)
-      const allProjects = [...registered, ...uniqueDiscovered];
-      const seenIds = new Set();
-      
-      return allProjects.filter(project => {
-        if (seenIds.has(project.id)) {
-          return false;
-        }
-        seenIds.add(project.id);
-        return true;
-      });
+      return [...registered, ...uniqueDiscovered];
     }
     
     return registered;
@@ -159,7 +145,7 @@ class ProjectDiscoveryService {
     const discovered = [];
     const defaultPaths = [
       os.homedir(),
-      path.join(os.homedir(), 'Documents'), 
+      path.join(os.homedir(), 'Documents'),
       path.join(os.homedir(), 'Projects'),
       process.cwd()
     ];
@@ -212,6 +198,7 @@ class ProjectDiscoveryService {
         }
       }
 
+      // Continue scanning subdirectories
       const entries = fs.readdirSync(dirPath, { withFileTypes: true });
       for (const entry of entries) {
         if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
@@ -222,30 +209,4 @@ class ProjectDiscoveryService {
       // Silently skip directories we can't read
     }
   }
-  /**
-   * Get CRs for a specific project using shared MarkdownService
-   */
-  getProjectCRs(projectPath) {
-    try {
-      const config = this.getProjectConfig(projectPath);
-      if (!config || !config.project) {
-        return [];
-      }
-
-      const crPath = config.project.path || 'docs/CRs';
-      const fullCRPath = path.resolve(projectPath, crPath);
-      
-      if (!fs.existsSync(fullCRPath)) {
-        return [];
-      }
-
-      // Use shared MarkdownService for consistent parsing
-      return MarkdownService.scanMarkdownFiles(fullCRPath);
-    } catch (error) {
-      console.error(`Error getting CRs for project ${projectPath}:`, error);
-      return [];
-    }
-  }
 }
-
-export default ProjectDiscoveryService;

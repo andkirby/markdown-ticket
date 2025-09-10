@@ -10,7 +10,7 @@ import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 import { TicketCode } from './TicketCode';
-import { normalizeTicket } from '../../shared/ticketDto';
+import { normalizeTicket } from '../../shared';
 
 type SingleProjectViewMode = 'board' | 'list' | 'documents';
 
