@@ -5,6 +5,7 @@ import { Ticket, Status } from '../types';
 import TicketCard from './TicketCard';
 import { ResolutionDialog } from './ResolutionDialog';
 import { sortTickets } from '../utils/sorting';
+import { ScrollArea } from './ui/scroll-area';
 
 interface ColumnProps {
   column: {
@@ -218,10 +219,9 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
   return (
     <div
       ref={drop}
-      className={`column flex flex-col rounded-lg border-2 transition-colors ${
+      className={`column flex flex-col rounded-lg border-2 transition-colors h-full ${
         isOver ? 'border-blue-400 bg-blue-50 dark:bg-blue-950/20' : 'border-gray-200 dark:border-gray-700'
       }`}
-      style={{ minHeight: '400px' }}
     >
       {/* Column Header */}
       <div className={`p-4 rounded-t-lg ${column.color}`}>
@@ -246,22 +246,29 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
       </div>
 
       {/* Column Content */}
-      <div className="column-drop-zone flex-1 p-4 space-y-3 overflow-y-auto" style={{ minHeight: '300px' }}>
-        {visibleTickets.map((ticket) => (
-          <DraggableTicketCard
-            key={ticket.code}
-            ticket={ticket}
-            onMove={() => {}} // Not needed since drop is handled by column
-            onEdit={() => onTicketEdit(ticket)}
-          />
-        ))}
-        
-        {visibleTickets.length === 0 && (
-          <div className="flex items-center justify-center h-32 text-gray-400">
-            <p className="text-sm">No tickets</p>
-          </div>
-        )}
-      </div>
+      <ScrollArea 
+        type="hover" 
+        scrollHideDelay={600}
+        className="h-full" 
+        style={{ height: 'calc(100vh - 220px)' }}
+      >
+        <div className="column-drop-zone p-4 space-y-3">
+          {visibleTickets.map((ticket) => (
+            <DraggableTicketCard
+              key={ticket.code}
+              ticket={ticket}
+              onMove={() => {}} // Not needed since drop is handled by column
+              onEdit={() => onTicketEdit(ticket)}
+            />
+          ))}
+          
+          {visibleTickets.length === 0 && (
+            <div className="flex items-center justify-center h-32 text-gray-400">
+              <p className="text-sm">No tickets</p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
 
       {/* Resolution Dialog for Done column */}
       {resolutionDialog.ticket && (
