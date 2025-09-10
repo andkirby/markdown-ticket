@@ -3,7 +3,9 @@ import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
 import * as toml from 'toml';
-import { Project, ProjectInfo, ServerConfig } from '../types/index.js';
+import { ProjectInfo } from '../../../shared/models/Types.js';
+import { Project } from '../../../shared/models/Project.js';
+import { ServerConfig } from '../../../shared/models/Config.js';
 
 export class ProjectDiscoveryService {
   private projects: Map<string, Project> = new Map();

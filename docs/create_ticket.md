@@ -2,6 +2,8 @@
 
 This manual describes how to create, manage, and maintain Change Requests (CRs) in any project. CRs serve a dual purpose as both implementation specifications and permanent Architectural Decision Records (ADRs).
 
+⸻
+
 ## What is a Change Request (CR)?
 A Change Request (CR) is a permanent documentation artifact that:
 - Documents new requirements, features, or architectural decisions
@@ -20,39 +22,26 @@ Each CR is a Markdown file in the project's CR directory (typically `docs/CRs/`)
 
 ## CR Header Format
 
-Every CR must include a standardized header with required and optional attributes:
-
-### Required Core Attributes
-```markdown
-- **Code**: {project.code}-### (unique identifier from project config)
-- **Title/Summary**: Brief descriptive title
-- **Status**: [See Status Workflow below]
-- **Date Created**: YYYY-MM-DD
-- **Type**: Feature Enhancement | Bug Fix | Technical Debt | Architecture | Documentation
-- **Priority**: Low | Medium | High | Critical (defaults to Medium)
-```
+Every CR includes YAML frontmatter with standardized attributes (handled automatically by MCP tools):
 
 ### Complete Attribute Reference
 
-#### Mandatory Attributes (always include):
-- `code`: CR identifier (e.g., "MDT-001", "CR-A007")
-- `title`: Brief descriptive title
-- `status`: Proposed | Approved | In Progress | Implemented | Rejected | On Hold
-- `dateCreated`: Date in YYYY-MM-DD or ISO format
-- `type`: Architecture | Feature Enhancement | Bug Fix | Technical Debt | Documentation
-- `priority`: Low | Medium | High | Critical (defaults to Medium)
-
-#### Optional Attributes (include only if they have values):
-- `phaseEpic`: Project phase/epic (e.g., "Phase A (Foundation)", "Phase B (Enhancement)")
-- `description`: Problem statement or description
-- `rationale`: Rationale for this CR
-- `relatedTickets`: Comma-separated list of related CR codes (e.g., "CR-A001,CR-A002")
-- `dependsOn`: Comma-separated list of CR keys this depends on (e.g., "MDT-001,MDT-005")
-- `blocks`: Comma-separated list of CR keys this blocks (e.g., "MDT-010,MDT-015")
-- `assignee`: Person responsible for implementation
-- `lastModified`: Date when CR was last updated (ISO format) - auto-managed by system
-- `implementationDate`: Date when implementation was completed
-- `implementationNotes`: Brief notes about implementation completion
+| Attribute | Required | Description | Example |
+|-----------|----------|-------------|---------|
+| `code` | Yes | CR identifier | "MDT-001", "CR-A007" |
+| `title` | Yes | Brief descriptive title | "Push-based file watching" |
+| `status` | Yes | Current status | Proposed, Approved, In Progress, Implemented, Rejected, On Hold |
+| `type` | Yes | CR category | Architecture, Feature Enhancement, Bug Fix, Technical Debt, Documentation |
+| `priority` | Yes | Priority level | P1 (Critical), P2 (High), P3 (Medium), P4 (Low) |
+| `phaseEpic` | No | Project phase/epic | "Phase A (Foundation)", "Phase B (Enhancement)" |
+| `description` | No | Problem statement or description | Brief problem overview |
+| `rationale` | No | Rationale for this CR | Why this change is needed |
+| `relatedTickets` | No | Related CR codes | "CR-A001,CR-A002" |
+| `dependsOn` | No | Dependencies | "MDT-001,MDT-005" |
+| `blocks` | No | CRs blocked by this | "MDT-010,MDT-015" |
+| `assignee` | No | Person responsible for implementation | "Alice Smith" |
+| `implementationDate` | No | Date when implementation was completed | "2025-09-20" |
+| `implementationNotes` | No | Brief notes about implementation completion | Post-implementation details |
 
 ## Status Workflow
 
@@ -127,70 +116,64 @@ After completion, add:
 - **Documentation Updates**: Links to updated documentation
 - **Related CRs**: Cross-references to dependent or related change requests
 
-## MCP Integration
+⸻
 
-All CR operations can be performed using MCP (Model Context Protocol) tools:
+## CR Content Structure
 
-**Core MCP Tools:**
-- `list_projects` - List all discovered projects
-- `get_project_info` - Get detailed project information
-- `list_crs` - List CRs for a project with filtering
-- `get_cr` - Get detailed CR information
-- `create_cr` - Create new change requests
-- `update_cr_attrs` - Update CR attributes (excludes status)
-- `update_cr_status` - Update CR status
-- `delete_cr` - Delete CRs (for implemented bug fixes)
-- `get_cr_template` - Get template for CR type
-- `suggest_cr_improvements` - Get suggestions for improving CRs
+### 1. Description
+- **Problem Statement**: What problem are we solving?
+- **Current State**: What is the current behavior/implementation?
+- **Desired State**: What should the new behavior/implementation be?
+- **Rationale**: Why is this change important? Why now?
+- **Impact Areas**: What parts of the system will be affected?
 
-**Typical Workflow:**
-1. `list_projects` → `get_project_info` (discovery)
-2. `get_cr_template` → `create_cr` (creation)
-3. `list_crs` → `get_cr` (research)
-4. `update_cr_attrs` / `update_cr_status` (updates)
-5. `delete_cr` (cleanup for bug fixes)
+### 2. Solution Analysis
+- **Approaches Considered**: List alternative solutions evaluated
+- **Trade-offs Analysis**: Pros/cons of different approaches
+- **Decision Factors**: Technical constraints, timeline, resources, user impact
+- **Chosen Approach**: Why this solution was selected
+- **Rejected Alternatives**: Why other approaches were not chosen
 
-## CR Lifecycle Management
+### 3. Implementation Specification
+- **Technical Requirements**: Specific technical changes needed
+- **UI/UX Changes**: User interface modifications
+- **API Changes**: New endpoints, modified responses, breaking changes
+- **Database Changes**: Schema modifications, data migrations
+- **Configuration**: New settings, environment variables, deployment changes
 
-### During Development
-1. **Create CR** with `Proposed` status and comprehensive context
-2. **Review and approve** CR, updating status to `Approved`
-3. **Begin implementation**, updating status to `In Progress`
-4. **Implement** directly from CR as authoritative specification
-5. **Complete implementation**, updating status to `Implemented`
-6. **Add implementation notes** with completion details and lessons learned
+### 4. Acceptance Criteria
+- List specific conditions that must be met
+- Include both functional and non-functional requirements
+- Specify testing requirements and success metrics
+- Define rollback criteria if applicable
 
-### After Implementation
-- **DO NOT archive or move implemented CRs** - they serve as permanent ADRs
-- **Update main documents** during quarterly consolidation using CRs as source material
-- **Reference CRs** in main documentation for detailed decision context
-- **Keep CRs searchable** for future architectural decisions
+⸻
 
-#### Special Case: Bug Fix CRs
-- **Bug Fix CRs can be deleted** after successful implementation and verification
-- Keep for 30-90 days after implementation to ensure no regression
-- Unlike architectural CRs, bug fixes are temporary problems, not permanent decisions
-- Delete to reduce clutter and keep focus on architectural decisions
+## Priority Guidelines
 
-## Best Practices
+| Priority | When to Use | Examples |
+|----------|-------------|----------|
+| **P1 (Critical)** | System down, security issues, data loss | Production outages, security vulnerabilities |
+| **P2 (High)** | Major features, significant improvements | Core functionality, performance issues |
+| **P3 (Medium)** | Standard features, enhancements | New features, UI improvements |
+| **P4 (Low)** | Nice-to-have, technical debt | Code cleanup, documentation updates |
 
-### CR Creation
-- **Be comprehensive**: Include full context and decision-making rationale
-- **Consider alternatives**: Document approaches considered and why they were rejected
-- **Think future-self**: Write for developers who will read this months or years later
-- **Cross-reference**: Link to related CRs, documents, and code changes
+⸻
+
+## Best Practices for LLMs
 
 ### Content Quality
-- **Clear problem statements**: Make the need obvious to future readers
-- **Detailed specifications**: Provide enough detail for implementation without CR author
-- **Decision context**: Explain why this approach over alternatives
-- **Implementation guidance**: Include technical details and architectural considerations
+- **Be comprehensive**: Include full context and decision-making rationale
+- **Document alternatives**: Record all approaches considered and why they were rejected
+- **Think long-term**: Write for developers who will read this months or years later
+- **Cross-reference**: Link to related CRs using markdown links
 
-### Maintenance
-- **Keep status current**: Update status promptly as work progresses
-- **Add implementation notes**: Capture lessons learned and deviations
-- **Update cross-references**: Maintain accurate links to related CRs
-- **Review regularly**: Periodically assess active CRs for relevance and progress
+### Implementation Notes (Post-Implementation)
+Always add after completion:
+- **Completion Date**: When implementation was finished
+- **Deviations**: Any changes from original specification
+- **Lessons Learned**: Insights gained during implementation
+- **Follow-up Actions**: Any related work or technical debt created
 
 ## Project Configuration
 

@@ -3,7 +3,9 @@ import { existsSync, readFileSync } from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as toml from 'toml';
-import { ServerConfig } from '../types/index.js';
+import { ServerConfig } from '../../../shared/models/Config.js';
+// @ts-ignore
+import { DEFAULT_PATHS } from '../../../shared/utils/constants.js';
 
 const DEFAULT_CONFIG: ServerConfig = {
   server: {
@@ -12,11 +14,7 @@ const DEFAULT_CONFIG: ServerConfig = {
   },
   discovery: {
     scanPaths: [
-      os.homedir(),
-      path.join(os.homedir(), 'projects'),
-      path.join(os.homedir(), 'work'),
-      path.join(os.homedir(), 'Documents'),
-      '/Users/kirby/home' // Add current working area
+      // No default scan paths - require explicit configuration for security
     ],
     excludePaths: [
       'node_modules',
@@ -36,7 +34,7 @@ const DEFAULT_CONFIG: ServerConfig = {
     cacheTimeout: 300 // 5 minutes
   },
   templates: {
-    customPath: path.join(os.homedir(), '.config', 'mcp-server', 'templates')
+    customPath: DEFAULT_PATHS.TEMPLATES_DIR
   }
 };
 
@@ -52,7 +50,7 @@ export class ConfigService {
   private getConfigPath(): string {
     // Check for config file in order of preference
     const possiblePaths = [
-      path.join(os.homedir(), '.config', 'markdown-ticket', 'mcp-server.toml')
+      DEFAULT_PATHS.MCP_CONFIG
     ];
 
     for (const configPath of possiblePaths) {
@@ -62,10 +60,9 @@ export class ConfigService {
       }
     }
 
-    // Return new unified path for creation
-    const defaultPath = path.join(os.homedir(), '.config', 'markdown-ticket', 'mcp-server.toml');
-    console.error(`📋 No config file found, will use defaults. Config can be created at: ${defaultPath}`);
-    return defaultPath;
+    // Return unified path for creation
+    console.error(`📋 No config file found, will use defaults. Config can be created at: ${DEFAULT_PATHS.MCP_CONFIG}`);
+    return DEFAULT_PATHS.MCP_CONFIG;
   }
 
   private loadConfig(): ServerConfig {
@@ -102,25 +99,6 @@ export class ConfigService {
     return this.config;
   }
 
-  async createDefaultConfig(): Promise<void> {
-    try {
-      // Ensure config directory exists
-      const configDir = path.dirname(this.configPath);
-      await fs.ensureDir(configDir);
-
-      // Generate config content
-      const configContent = this.generateConfigContent();
-      
-      // Write config file
-      await fs.writeFile(this.configPath, configContent, 'utf-8');
-      
-      console.error(`✅ Created default config at: ${this.configPath}`);
-    } catch (error) {
-      console.error(`❌ Failed to create config file: ${(error as Error).message}`);
-      throw error;
-    }
-  }
-
   private generateConfigContent(): string {
     return `# MCP CR Server Configuration
 # This file configures the Model Context Protocol server for Change Request management
@@ -133,11 +111,11 @@ logLevel = "${this.config.server.logLevel}"
 
 [discovery]
 # Paths to scan for project configuration files (*-config.toml)
+# SECURITY: Only add paths you explicitly want to scan
 scanPaths = [
-  "${os.homedir()}",
-  "${path.join(os.homedir(), 'projects')}",
-  "${path.join(os.homedir(), 'work')}",
-  "${path.join(os.homedir(), 'Documents')}"
+  # Add your project directories here, e.g.:
+  # "${path.join(os.homedir(), 'my-projects')}",
+  # "/path/to/specific/project"
 ]
 
 # Directories to exclude from scanning
@@ -250,22 +228,5 @@ cacheTimeout = ${this.config.discovery.cacheTimeout}
       return path.join(os.homedir(), inputPath.slice(2));
     }
     return path.resolve(inputPath);
-  }
-
-  async reloadConfig(): Promise<void> {
-    console.error('🔄 Reloading configuration...');
-    this.config = this.loadConfig();
-    
-    const validation = await this.validateConfig();
-    if (!validation.valid) {
-      console.warn('⚠️ Configuration validation failed:', validation.errors);
-    }
-    if (validation.warnings.length > 0) {
-      console.warn('⚠️ Configuration warnings:', validation.warnings);
-    }
-  }
-
-  getConfigFilePath(): string {
-    return this.configPath;
   }
 }

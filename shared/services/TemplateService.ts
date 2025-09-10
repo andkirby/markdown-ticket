@@ -1,14 +1,58 @@
-import { Template, ValidationResult, CRType, CRData, CR, Suggestion } from '../types/index.js';
+import { Template, ValidationResult, CRType, CRData, CR, Suggestion } from '../models/Types.js';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class TemplateService {
   private templates: Map<CRType, Template> = new Map();
+  private templatesPath: string;
 
-  constructor() {
-    this.initializeTemplates();
+  constructor(templatesPath?: string) {
+    // Default to shared templates directory
+    this.templatesPath = templatesPath || path.join(__dirname, '..', 'templates');
+    this.loadTemplates();
   }
 
-  private initializeTemplates(): void {
-    // Bug Fix Template
+  private loadTemplates(): void {
+    try {
+      const configPath = path.join(this.templatesPath, 'templates.json');
+      
+      if (!fs.existsSync(configPath)) {
+        console.warn(`Templates config not found at ${configPath}, using fallback`);
+        this.initializeFallbackTemplates();
+        return;
+      }
+
+      const configContent = fs.readFileSync(configPath, 'utf-8');
+      const templatesConfig = JSON.parse(configContent);
+
+      for (const [type, config] of Object.entries(templatesConfig)) {
+        const templatePath = path.join(this.templatesPath, (config as any).file);
+        
+        if (fs.existsSync(templatePath)) {
+          const templateContent = fs.readFileSync(templatePath, 'utf-8');
+          
+          this.templates.set(type as CRType, {
+            type: type as CRType,
+            requiredFields: (config as any).requiredFields,
+            sections: (config as any).sections,
+            template: templateContent
+          });
+        } else {
+          console.warn(`Template file not found: ${templatePath}`);
+        }
+      }
+
+      console.log(`Loaded ${this.templates.size} templates from ${this.templatesPath}`);
+    } catch (error) {
+      console.error('Failed to load templates from files:', error);
+      this.initializeFallbackTemplates();
+    }
+  }
+
+  private initializeFallbackTemplates(): void {
+    console.log('Using fallback hardcoded templates');
+    
+    // Bug Fix Template (fallback)
     this.templates.set('Bug Fix', {
       type: 'Bug Fix',
       requiredFields: ['title', 'description', 'priority'],

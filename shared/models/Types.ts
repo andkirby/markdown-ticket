@@ -1,32 +1,31 @@
-export interface Project {
-  id: string;
-  project: {
-    name: string;
-    code: string;
-    path: string;
-    startNumber: number;
-    counterFile: string;
-    description?: string;
-    repository?: string;
-  };
-  metadata: {
-    dateRegistered: string;
-    lastAccessed: string;
-    version: string;
-  };
-  autoDiscovered?: boolean;
-  configPath: string;
-}
+/**
+ * Comprehensive Type Definitions for Markdown Ticket System
+ * Unified types for Frontend, Backend, and MCP systems
+ */
 
-export interface ProjectInfo {
-  key: string;
-  name: string;
-  description?: string;
-  path: string;
-  crCount: number;
-  lastAccessed: string;
-}
+// Core Status Types
+export type CRStatus = 
+  | 'Proposed' 
+  | 'Approved' 
+  | 'In Progress' 
+  | 'Implemented' 
+  | 'Rejected'
+  | 'On Hold';
 
+export type CRType = 
+  | 'Architecture' 
+  | 'Feature Enhancement' 
+  | 'Bug Fix' 
+  | 'Technical Debt' 
+  | 'Documentation';
+
+export type CRPriority = 
+  | 'Low' 
+  | 'Medium' 
+  | 'High' 
+  | 'Critical';
+
+// Enhanced CR Interface (from MCP server)
 export interface CR {
   key: string;
   title: string;
@@ -60,27 +59,7 @@ export interface CR {
   tags?: string[];
 }
 
-export type CRStatus = 
-  | 'Proposed' 
-  | 'Approved' 
-  | 'In Progress' 
-  | 'Implemented' 
-  | 'Rejected'
-  | 'On Hold';
-
-export type CRType = 
-  | 'Architecture' 
-  | 'Feature Enhancement' 
-  | 'Bug Fix' 
-  | 'Technical Debt' 
-  | 'Documentation';
-
-export type CRPriority = 
-  | 'Low' 
-  | 'Medium' 
-  | 'High' 
-  | 'Critical';
-
+// Filtering Interface
 export interface CRFilters {
   status?: CRStatus | CRStatus[];
   type?: CRType | CRType[];
@@ -91,6 +70,7 @@ export interface CRFilters {
   };
 }
 
+// Creation Data Interface
 export interface CRData {
   // Mandatory fields
   title: string;
@@ -115,6 +95,17 @@ export interface CRData {
   content?: string;
 }
 
+// Project Information Interface
+export interface ProjectInfo {
+  key: string;
+  name: string;
+  description?: string;
+  path: string;
+  crCount: number;
+  lastAccessed: string;
+}
+
+// Template Interfaces
 export interface Template {
   type: CRType;
   requiredFields: string[];
@@ -128,6 +119,7 @@ export interface TemplateSection {
   placeholder?: string;
 }
 
+// Validation Interfaces
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
@@ -144,25 +136,11 @@ export interface ValidationWarning {
   message: string;
 }
 
+// Suggestion Interface
 export interface Suggestion {
   type: 'improvement' | 'related' | 'validation';
   title: string;
   description: string;
-  actionable?: boolean;
-}
-
-export interface ServerConfig {
-  server: {
-    port: number;
-    logLevel: 'debug' | 'info' | 'warn' | 'error';
-  };
-  discovery: {
-    scanPaths: string[];
-    excludePaths: string[];
-    maxDepth: number;
-    cacheTimeout: number;
-  };
-  templates: {
-    customPath?: string;
-  };
+  priority: 'low' | 'medium' | 'high';
+  actionable: boolean;
 }

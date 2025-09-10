@@ -1,7 +1,7 @@
 ---
 code: MDT-011
 title: MCP server file creation silent failure bug
-status: Proposed
+status: Rejected
 dateCreated: 2025-09-05
 type: Bug Fix
 priority: High
@@ -9,6 +9,7 @@ phaseEpic: MCP Integration
 relatedTickets: MDT-008,MDT-010
 lastModified: 2025-09-05T18:46:00.000Z
 ---
+
 
 # MCP server file creation silent failure bug
 

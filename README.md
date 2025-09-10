@@ -262,24 +262,25 @@ The global registry provides minimal discovery information, while local configur
 
 ## Development
 
-### Frontend Development
+### Quick Start
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
+npm install                    # Install dependencies
+cd server && node server.js   # Start backend (Terminal 1)
+npm run dev                    # Start frontend (Terminal 2)
 ```
 
-### Backend Development
-```bash
-cd server
-node server.js       # Start backend server
-```
+### MCP Development Tools
+The project includes MCP servers for AI assistant integration:
+- **CR Management**: `mcp-server/` - Full CR management via MCP tools
+- **Development Logging**: `server/mcp-dev-tools/` - Real-time log access during development
 
-### Testing
-```bash
-npm run test         # Run tests
-npm run test:e2e     # Run end-to-end tests
-```
+### Complete Development Guide
+See **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** for:
+- Full development environment setup
+- MCP server configuration and usage
+- Testing procedures and workflows
+- Architecture overview and code organization
+- Common development tasks and troubleshooting
 
 ## File System Integration
 

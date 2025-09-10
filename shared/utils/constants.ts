@@ -1,3 +1,6 @@
+import * as path from 'path';
+import * as os from 'os';
+
 /**
  * Shared Constants for Frontend, Backend, and MCP
  * Ensures consistent values across all systems
@@ -38,6 +41,14 @@ export type Priority = typeof PRIORITIES[number];
 
 // File Extensions
 export const SUPPORTED_EXTENSIONS = ['.md', '.markdown'] as const;
+
+// Default configuration paths
+export const DEFAULT_PATHS = {
+  CONFIG_DIR: path.join(os.homedir(), '.config', 'markdown-ticket'),
+  TEMPLATES_DIR: path.join(os.homedir(), '.config', 'markdown-ticket', 'templates'),
+  MCP_CONFIG: path.join(os.homedir(), '.config', 'markdown-ticket', 'mcp-server.toml'),
+  USER_CONFIG: path.join(os.homedir(), '.config', 'markdown-ticket', 'user.toml')
+} as const;
 
 // Configuration Files
 export const CONFIG_FILES = {

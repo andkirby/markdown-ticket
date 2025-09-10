@@ -87,6 +87,8 @@ export function normalizeTicket(rawTicket: any): Ticket {
 }
 
 /**
- * Legacy export for backward compatibility
+ * Convert arrays back to comma-separated strings for YAML
  */
-export type TicketDTO = Ticket;
+export function arrayToString(arr: string[]): string {
+  return Array.isArray(arr) ? arr.join(',') : '';
+}

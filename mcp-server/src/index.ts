@@ -10,7 +10,8 @@ import {
 import { ConfigService } from './config/index.js';
 import { ProjectDiscoveryService } from './services/projectDiscovery.js';
 import { CRService } from './services/crService.js';
-import { TemplateService } from './services/templateService.js';
+// @ts-ignore
+import { TemplateService } from '../../shared/services/TemplateService.js';
 import { MCPTools } from './tools/index.js';
 
 class MCPCRServer {

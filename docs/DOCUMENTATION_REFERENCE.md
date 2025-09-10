@@ -28,7 +28,7 @@ This document provides a quick reference to all documentation files in the proje
 
 **CONFIG_SPECIFICATION.md**: TOML configuration file format specification for project discovery, management, and UI preferences
 
-**create_ticket.md**: Manual for creating, managing, and maintaining Change Requests (CRs) as implementation specs and ADRs
+**create_ticket.md**: Basic manual for creating, managing, and maintaining Change Requests (CRs) with MCP integration
 
 **FILE_WATCHING_ARCHITECTURE_SUMMARY.md**: Comprehensive summary of the file watching architecture using SSE and chokidar monitoring
 
@@ -36,7 +36,7 @@ This document provides a quick reference to all documentation files in the proje
 
 **implementation-tasks.md**: Implementation tasks and phases for the CR Task Board project
 
-**manual_ticket_creation.md**: Manual for creating, managing, and maintaining Change Requests (CRs) in projects
+**manual_ticket_creation.md**: Comprehensive manual for Change Request management including archival policy, documentation integration, and project configuration
 
 **MCP_API_ERROR_STANDARDS.md**: Standardized error message format for MCP API responses
 

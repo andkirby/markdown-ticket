@@ -1,8 +1,8 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { ProjectDiscoveryService } from '../services/projectDiscovery.js';
 import { CRService } from '../services/crService.js';
-import { TemplateService } from '../services/templateService.js';
-import { CRFilters, CRData, CRType, CRStatus } from '../types/index.js';
+import { TemplateService } from '../../../shared/services/TemplateService.js';
+import { CRFilters, CRData, CRType, CRStatus } from '../../../shared/models/Types.js';
 
 export class MCPTools {
   constructor(

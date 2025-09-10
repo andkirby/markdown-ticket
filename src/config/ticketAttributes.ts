@@ -1,16 +1,9 @@
 import { z } from 'zod';
+import { AttributeConfig } from '../../shared/models/Config';
 
-// Attribute Configuration Interface
-export interface AttributeConfig {
-  type: 'string' | 'number' | 'date' | 'enum' | 'array<string>';
-  required: boolean;
-  values?: string[];
-  pattern?: string;
-  min?: number;
-  max?: number;
-}
+export type { AttributeConfig };
 
-// CR Attribute Configuration
+// CR Attribute Configuration using shared interface
 export const CR_ATTRIBUTES: Record<string, AttributeConfig> = {
   // Required Core Attributes
   code: {

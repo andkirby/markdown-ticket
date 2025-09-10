@@ -2,10 +2,14 @@ import * as fs from 'fs-extra';
 import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
-import { CR, CRFilters, CRData, CRType, CRStatus, Project } from '../types/index.js';
+import { CR, CRFilters, CRData, CRType, CRStatus } from '../../../shared/models/Types.js';
+import { Project } from '../../../shared/models/Project.js';
 // Use shared services for consistency
+// @ts-ignore
 import { MarkdownService } from '../../../shared/services/MarkdownService.js';
-import { normalizeTicket, arrayToString } from '../shared/ticketDto.js';
+import { normalizeTicket, arrayToString } from '../../../shared/models/Ticket.js';
+// @ts-ignore
+import { CRService } from '../../../shared/services/CRService.js';
 
 export class CRService {
   async listCRs(project: Project, filters?: CRFilters): Promise<CR[]> {
@@ -81,30 +85,8 @@ export class CRService {
       // Ensure CR directory exists
       await fs.ensureDir(project.project.path);
 
-      // Create CR object
-      const now = new Date();
-      const cr: CR = {
-        key: crKey,
-        title: data.title,
-        status: 'Proposed',
-        type: crType,
-        priority: data.priority || 'Medium',
-        dateCreated: now,
-        lastModified: now,
-        content: data.content || '',
-        filePath,
-        phaseEpic: data.phaseEpic,
-        description: data.description,
-        rationale: data.rationale,
-        assignee: data.assignee,
-        source: 'MCP Server',
-        impact: 'Minor',
-        effort: 'Low',
-        relatedTickets: this.parseArrayField(data.relatedTickets),
-        dependsOn: this.parseArrayField(data.dependsOn),
-        blocks: this.parseArrayField(data.blocks),
-        relatedDocuments: []
-      };
+      // Create CR object using shared service
+      const cr = CRService.createCR(data, crKey, crType, filePath);
 
       // Generate markdown content
       const markdownContent = this.formatCRAsMarkdown(cr, data);
@@ -334,19 +316,19 @@ export class CRService {
         effort: frontmatter.effort,
         implementationDate: this.parseDate(frontmatter.implementationDate),
         implementationNotes: frontmatter.implementationNotes,
-        relatedTickets: this.parseArrayField(frontmatter.relatedTickets),
+        relatedTickets: CRService.parseArrayField(frontmatter.relatedTickets),
         supersedes: frontmatter.supersedes,
-        dependsOn: this.parseArrayField(frontmatter.dependsOn),
-        blocks: this.parseArrayField(frontmatter.blocks),
-        relatedDocuments: this.parseArrayField(frontmatter.relatedDocuments),
+        dependsOn: CRService.parseArrayField(frontmatter.dependsOn),
+        blocks: CRService.parseArrayField(frontmatter.blocks),
+        relatedDocuments: CRService.parseArrayField(frontmatter.relatedDocuments),
         // Additional optional attributes
         assignee: frontmatter.assignee,
         estimatedHours: frontmatter.estimatedHours ? Number(frontmatter.estimatedHours) : undefined,
         actualHours: frontmatter.actualHours ? Number(frontmatter.actualHours) : undefined,
-        reviewers: this.parseArrayField(frontmatter.reviewers),
-        dependencies: this.parseArrayField(frontmatter.dependencies),
+        reviewers: CRService.parseArrayField(frontmatter.reviewers),
+        dependencies: CRService.parseArrayField(frontmatter.dependencies),
         riskLevel: frontmatter.riskLevel,
-        tags: this.parseArrayField(frontmatter.tags)
+        tags: CRService.parseArrayField(frontmatter.tags)
       };
     } catch (error) {
       console.warn(`Failed to load CR ${filename}:`, error);
@@ -422,14 +404,6 @@ export class CRService {
       return isNaN(parsed.getTime()) ? undefined : parsed;
     }
     return undefined;
-  }
-
-  private parseArrayField(field: any): string[] {
-    if (Array.isArray(field)) return field;
-    if (typeof field === 'string' && field.trim()) {
-      return field.split(',').map(item => item.trim()).filter(Boolean);
-    }
-    return [];
   }
 
   private matchesFilters(cr: CR, filters?: CRFilters): boolean {

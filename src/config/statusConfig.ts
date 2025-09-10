@@ -1,17 +1,9 @@
-import { Status } from '../types';
+import { StatusConfig, CRStatus } from '../../shared/models/Config';
 
-// Status Configuration Interface
-export interface StatusConfig {
-  label: string;
-  color: string;
-  description: string;
-  isTerminal: boolean;
-  canTransitionTo: Status[];
-  order: number;
-}
+export type { StatusConfig };
 
-// Status Configuration
-export const STATUS_CONFIG: Record<Status, StatusConfig> = {
+// Status Configuration using shared interface
+export const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
   Proposed: {
     label: 'Proposed',
     color: 'gray',
