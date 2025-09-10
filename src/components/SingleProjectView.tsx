@@ -56,8 +56,6 @@ export default function SingleProjectView({ onTicketClick, selectedProject, tick
   
   const viewMode = externalViewMode || internalViewMode;
 
-  console.log('SingleProjectView render - selectedProject:', selectedProject?.project.name);
-
   const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);

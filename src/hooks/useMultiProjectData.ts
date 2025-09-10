@@ -107,7 +107,6 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
   // Fetch all projects
   const fetchProjects = useCallback(async () => {
     try {
-      console.log('fetchProjects: Making API call to /api/projects');
       setError(null);
       
       const response = await fetch('/api/projects');
@@ -116,7 +115,6 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       }
       
       const projectsData = await response.json();
-      console.log('fetchProjects: Received projects data:', projectsData.length, 'projects');
       setProjects(projectsData);
       
       return projectsData;

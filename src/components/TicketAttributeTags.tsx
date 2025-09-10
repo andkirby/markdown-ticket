@@ -1,5 +1,6 @@
 import React from 'react';
 import { Ticket } from '../types';
+import { Badge } from './UI/badge';
 
 interface TicketAttributeTagsProps {
   ticket: Ticket;
@@ -56,34 +57,34 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, class
 
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
-      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(ticket.status)}`}>
+      <Badge variant="outline" className={getStatusColor(ticket.status)}>
         {ticket.status}
-      </span>
-      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(ticket.priority)}`}>
+      </Badge>
+      <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
         {ticket.priority}
-      </span>
-      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border ${getTypeColor(ticket.type || 'Unknown')}`}>
+      </Badge>
+      <Badge variant="outline" className={getTypeColor(ticket.type || 'Unknown')}>
         {ticket.type || 'Unknown'}
-      </span>
+      </Badge>
       {ticket.phaseEpic && (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 rounded-full border border-gray-200 dark:border-gray-700">
+        <Badge variant="outline" className="bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700">
           {ticket.phaseEpic}
-        </span>
+        </Badge>
       )}
       {ticket.relatedTickets && ticket.relatedTickets.length > 0 && (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-200 rounded-full border border-cyan-200 dark:border-cyan-700" title={`Related: ${ticket.relatedTickets.join(', ')}`}>
+        <Badge variant="outline" className="bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-700" title={`Related: ${ticket.relatedTickets.join(', ')}`}>
           🔗 {ticket.relatedTickets.join(', ')}
-        </span>
+        </Badge>
       )}
       {ticket.dependsOn && ticket.dependsOn.length > 0 && (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 rounded-full border border-amber-200 dark:border-amber-700" title={`Depends on: ${ticket.dependsOn.join(', ')}`}>
+        <Badge variant="outline" className="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-700" title={`Depends on: ${ticket.dependsOn.join(', ')}`}>
           ⬅️ {ticket.dependsOn.join(', ')}
-        </span>
+        </Badge>
       )}
       {ticket.blocks && ticket.blocks.length > 0 && (
-        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200 rounded-full border border-rose-200 dark:border-rose-700" title={`Blocks: ${ticket.blocks.join(', ')}`}>
+        <Badge variant="outline" className="bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-700" title={`Blocks: ${ticket.blocks.join(', ')}`}>
           ➡️ {ticket.blocks.join(', ')}
-        </span>
+        </Badge>
       )}
     </div>
   );
