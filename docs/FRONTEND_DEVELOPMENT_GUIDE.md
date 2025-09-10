@@ -2,6 +2,53 @@
 
 This guide documents common issues, best practices, and solutions for frontend development in the markdown-ticket project.
 
+## UI Components and Styling
+
+### Installed UI Components (shadcn/ui)
+
+The project uses **shadcn/ui** components with Tailwind CSS. Available components include:
+
+**Currently Installed**:
+- `Badge` - Status indicators and labels
+- `Button` - Primary interaction elements
+- `Card` - Content containers
+- `Input` - Form input fields
+- `Modal` - Dialog overlays
+- `Select` - Dropdown selections
+- `Separator` - Visual dividers
+- `Toast` - Notification messages
+- `Tooltip` - Hover information displays
+
+**Configuration**: See `components.json` for shadcn/ui setup
+- Style: default
+- Base color: slate
+- CSS variables: enabled
+- Icon library: lucide
+
+### Tailwind CSS Usage
+
+**⚠️ Important**: Always use the **same Tailwind CSS library** that's configured in the project:
+- Configuration: `tailwind.config.js`
+- CSS file: `src/index.css`
+- Base color: slate with CSS variables
+
+**Adding New Components**:
+```bash
+# Use npx shadcn-ui to add components
+npx shadcn-ui@latest add [component-name]
+
+# Example: Add a new dialog component
+npx shadcn-ui@latest add dialog
+```
+
+**Styling Guidelines**:
+1. **Use existing Tailwind classes** from the configured setup
+2. **Prefer CSS variables** over hardcoded colors (already enabled)
+3. **Follow the slate color scheme** for consistency
+4. **Use shadcn/ui components** instead of custom implementations when possible
+
+**Available Components List**: See `ui.shadcn.components.txt` for full list of available shadcn/ui components that can be added to the project.
+
 ## Common Issues and Solutions
 
 ### Button Clickability Issues in Modals
@@ -113,6 +160,18 @@ const TestModal = ({ isOpen, onClose }) => {
 
 ## Best Practices
 
+### UI Component Usage
+1. **Use shadcn/ui components** instead of building custom ones
+2. **Check existing components** before adding new ones (`src/components/ui/`)
+3. **Follow shadcn/ui patterns** for component structure and styling
+4. **Import from configured aliases**: `@/components/ui/[component]`
+
+### Tailwind CSS
+1. **Use configured color scheme** (slate with CSS variables)
+2. **Prefer utility classes** over custom CSS when possible
+3. **Follow responsive design patterns** with Tailwind breakpoints
+4. **Use consistent spacing scale** (Tailwind's default spacing)
+
 ### Modal Development
 1. **Always test button clickability** across the entire button area
 2. **Use consistent container patterns** for buttons
@@ -129,6 +188,7 @@ const TestModal = ({ isOpen, onClose }) => {
 1. **Separate concerns**: Container handles layout, button handles interaction
 2. **Consistent patterns**: Use same button container approach across components
 3. **Accessibility**: Ensure adequate click target sizes (minimum 44px recommended)
+4. **Use TypeScript interfaces** for component props
 
 ## Incident Report: Modal Button Clickability (2025-09-07)
 
