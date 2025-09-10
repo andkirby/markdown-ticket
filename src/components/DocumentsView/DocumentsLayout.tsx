@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Pencil } from 'lucide-react';
 import FileTree from './FileTree';
 import MarkdownViewer from './MarkdownViewer';
 import PathSelector from './PathSelector';
@@ -123,7 +124,16 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
     <div className="flex h-full">
       <div className="w-1/3 border-r border-border bg-muted/30">
         <div className="p-4 border-b border-border">
-          <h3 className="font-semibold text-foreground">Documents</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-foreground">Documents</h3>
+            <button
+              onClick={() => setShowPathSelector(true)}
+              className="p-1 hover:bg-muted rounded transition-colors"
+              title="Configure document paths"
+            >
+              <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+            </button>
+          </div>
         </div>
         <div className="p-2">
           <FileTree 

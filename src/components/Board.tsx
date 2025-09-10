@@ -287,7 +287,11 @@ const BoardContent: React.FC<BoardProps> = ({
             >
               Create
             </Button>
-            <HamburgerMenu onAddProject={() => console.log('Add Project clicked from Board')} />
+            <HamburgerMenu 
+              onAddProject={() => console.log('Add Project clicked from Board')}
+              onEditProject={() => console.log('Edit Project clicked from Board')}
+              hasActiveProject={true}
+            />
           </div>
         </div>
       )}

@@ -18,12 +18,23 @@ interface AddProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
   onProjectCreated: () => void;
+  editMode?: boolean;
+  editProject?: {
+    name: string;
+    code: string;
+    path: string;
+    crsPath: string;
+    description: string;
+    repositoryUrl: string;
+  };
 }
 
 export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   isOpen,
   onClose,
-  onProjectCreated
+  onProjectCreated,
+  editMode = false,
+  editProject
 }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -72,14 +83,25 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      setFormData({
-        name: '',
-        code: '',
-        path: '',
-        crsPath: 'docs/CRs',
-        description: '',
-        repositoryUrl: ''
-      });
+      if (editMode && editProject) {
+        setFormData({
+          name: editProject.name,
+          code: editProject.code,
+          path: editProject.path,
+          crsPath: editProject.crsPath,
+          description: editProject.description,
+          repositoryUrl: editProject.repositoryUrl
+        });
+      } else {
+        setFormData({
+          name: '',
+          code: '',
+          path: '',
+          crsPath: 'docs/CRs',
+          description: '',
+          repositoryUrl: ''
+        });
+      }
       setErrors({});
       setShowDirectoryPicker(false);
       setShowConfirmation(false);
@@ -89,16 +111,16 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     }
   }, [isOpen]);
 
-  // Auto-generate project code from name
+  // Auto-generate project code from name (only in add mode)
   useEffect(() => {
-    if (formData.name && !formData.code) {
+    if (!editMode && formData.name && !formData.code) {
       const generatedCode = formData.name
         .toUpperCase()
         .replace(/[^A-Z0-9]/g, '')
         .substring(0, 6);
       setFormData(prev => ({ ...prev, code: generatedCode }));
     }
-  }, [formData.name, formData.code]);
+  }, [formData.name, formData.code, editMode]);
 
   const loadDirectories = async (path?: string) => {
     setLoadingDirectories(true);
@@ -153,7 +175,13 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     
     if (!validateForm()) return;
 
-    setShowConfirmation(true);
+    if (editMode) {
+      // Skip confirmation for edit mode and save directly
+      await handleSave();
+    } else {
+      // Show confirmation for create mode
+      setShowConfirmation(true);
+    }
   };
 
   const handleConfirmCreate = async () => {
@@ -193,6 +221,41 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     }
   };
 
+  const handleSave = async () => {
+    setIsSubmitting(true);
+    try {
+      // For edit mode, we only update the editable fields
+      const updateData = {
+        name: formData.name,
+        crsPath: formData.crsPath,
+        description: formData.description,
+        repositoryUrl: formData.repositoryUrl
+      };
+
+      const response = await fetch(`/api/projects/${formData.code}/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update project');
+      }
+
+      console.log('Project update successful, calling onProjectCreated...');
+      // Close modal and trigger refresh
+      onProjectCreated();
+      onClose();
+    } catch (error) {
+      setErrors({ submit: error instanceof Error ? error.message : 'Failed to update project' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSuccessClose = () => {
     setShowSuccess(false);
     onProjectCreated();
@@ -226,7 +289,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background border border-border rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-stretch border-b border-border" style={{ padding: '0' }}>
           <div style={{ padding: '24px', flex: 1, display: 'flex', alignItems: 'center' }}>
-            <h2 className="text-xl font-semibold text-foreground">Add New Project</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              {editMode ? 'Edit Project' : 'Add New Project'}
+            </h2>
           </div>
           <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Button variant="ghost" size="sm" onClick={onClose} style={{ width: '40px', height: '40px' }}>
@@ -330,9 +395,15 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                   type="text"
                   value={formData.code}
                   onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className={`w-full px-3 py-2 border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                    editMode 
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                      : 'bg-background'
+                  }`}
                   placeholder="MYPROJ"
                   maxLength={6}
+                  readOnly={editMode}
+                  disabled={editMode}
                 />
                 {errors.code && <p className="text-sm text-destructive mt-1">{errors.code}</p>}
                 <p className="text-xs text-muted-foreground mt-1">
@@ -349,17 +420,25 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                     type="text"
                     value={formData.path}
                     onChange={(e) => setFormData(prev => ({ ...prev, path: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className={`flex-1 px-3 py-2 border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                      editMode 
+                        ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                        : 'bg-background'
+                    }`}
                     placeholder="/path/to/project"
+                    readOnly={editMode}
+                    disabled={editMode}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowDirectoryPicker(true)}
-                  >
-                    <Folder className="h-4 w-4 mr-1" />
-                    Browse
-                  </Button>
+                  {!editMode && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowDirectoryPicker(true)}
+                    >
+                      <Folder className="h-4 w-4 mr-1" />
+                      Browse
+                    </Button>
+                  )}
                 </div>
                 {errors.path && <p className="text-sm text-destructive mt-1">{errors.path}</p>}
               </div>
@@ -420,7 +499,10 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 </div>
                 <div style={{ minWidth: '120px' }}>
                   <Button type="submit" disabled={isSubmitting} style={{ width: '100%' }}>
-                    {isSubmitting ? 'Creating...' : 'Create Project'}
+                    {isSubmitting 
+                      ? (editMode ? 'Saving...' : 'Creating...') 
+                      : (editMode ? 'Save' : 'Create Project')
+                    }
                   </Button>
                 </div>
               </div>

@@ -22,7 +22,33 @@ export default function PathSelector({ projectPath, onPathsSelected, onCancel }:
 
   useEffect(() => {
     loadFileSystem();
+    loadCurrentDocumentPaths();
   }, [projectPath]);
+
+  const loadCurrentDocumentPaths = async () => {
+    try {
+      // Try to get current document configuration
+      const response = await fetch(`/api/documents?projectPath=${encodeURIComponent(projectPath)}`);
+      
+      if (response.ok) {
+        const documents = await response.json();
+        
+        // Extract the configured paths from the documents
+        const configuredPaths = new Set<string>();
+        documents.forEach((doc: any) => {
+          if (doc.path) {
+            // Convert absolute path back to relative path for selection
+            const relativePath = doc.path.replace(projectPath + '/', '');
+            configuredPaths.add(relativePath);
+          }
+        });
+        
+        setSelectedPaths(configuredPaths);
+      }
+    } catch (error) {
+      console.log('No existing document configuration found');
+    }
+  };
 
   const loadFileSystem = async () => {
     try {
@@ -60,9 +86,12 @@ export default function PathSelector({ projectPath, onPathsSelected, onCancel }:
   };
 
   const renderItem = (item: PathItem, depth = 0) => {
-    const isSelected = selectedPaths.has(item.path);
+    // Convert absolute path to relative path for comparison
+    const relativePath = item.path.replace(projectPath + '/', '');
+    const isSelected = selectedPaths.has(relativePath);
+    
     const hasSelectedChildren = Array.from(selectedPaths).some(path => 
-      path.startsWith(item.path + '/') && path !== item.path
+      path.startsWith(relativePath + '/') && path !== relativePath
     );
 
     return (
@@ -71,7 +100,7 @@ export default function PathSelector({ projectPath, onPathsSelected, onCancel }:
           <input
             type="checkbox"
             checked={isSelected}
-            onChange={() => toggleSelection(item.path, item.type === 'folder')}
+            onChange={() => toggleSelection(relativePath, item.type === 'folder')}
             className="mr-2"
           />
           <span className={`text-sm ${item.type === 'folder' ? 'font-medium' : ''} ${hasSelectedChildren ? 'text-primary' : ''}`}>

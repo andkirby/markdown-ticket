@@ -29,7 +29,7 @@ interface ProjectSelectorProps {
 }
 
 // Helper function to get project code from project data
-const getProjectCode = (project: Project): string => {
+export const getProjectCode = (project: Project): string => {
   // Map known project IDs to their codes
   const codeMap: Record<string, string> = {
     'debug': 'DEB',

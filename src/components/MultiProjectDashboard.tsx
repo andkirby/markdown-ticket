@@ -7,6 +7,7 @@ import { HamburgerMenu } from './HamburgerMenu';
 import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
+import { getProjectCode } from './ProjectSelector';
 
 interface Project {
   id: string;
@@ -49,6 +50,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
   const [crs, setCrs] = useState<CR[]>([]);
   const [selectedCR, setSelectedCR] = useState<CR | null>(null);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   
   // Use prop selectedProject if provided, otherwise use internal state
   const selectedProject = propSelectedProject || null;
@@ -303,7 +305,11 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
             >
               Refresh
             </Button>
-            <HamburgerMenu onAddProject={() => setShowAddProjectModal(true)} />
+            <HamburgerMenu 
+              onAddProject={() => setShowAddProjectModal(true)}
+              onEditProject={() => setShowEditProjectModal(true)}
+              hasActiveProject={!!selectedProject}
+            />
           </div>
         </div>
       </div>
@@ -570,6 +576,26 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
           setShowAddProjectModal(false);
         }}
       />
+
+      {selectedProject && (
+        <AddProjectModal
+          isOpen={showEditProjectModal}
+          onClose={() => setShowEditProjectModal(false)}
+          onProjectCreated={() => {
+            fetchProjects();
+            setShowEditProjectModal(false);
+          }}
+          editMode={true}
+          editProject={{
+            name: selectedProject.project.name,
+            code: getProjectCode(selectedProject),
+            path: selectedProject.project.path,
+            crsPath: 'docs/CRs',
+            description: selectedProject.project.description || '',
+            repositoryUrl: ''
+          }}
+        />
+      )}
     </div>
   );
 };

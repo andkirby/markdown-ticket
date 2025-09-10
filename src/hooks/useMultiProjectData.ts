@@ -107,6 +107,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
   // Fetch all projects
   const fetchProjects = useCallback(async () => {
     try {
+      console.log('fetchProjects: Making API call to /api/projects');
       setError(null);
       
       const response = await fetch('/api/projects');
@@ -115,6 +116,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       }
       
       const projectsData = await response.json();
+      console.log('fetchProjects: Received projects data:', projectsData.length, 'projects');
       setProjects(projectsData);
       
       return projectsData;
@@ -305,6 +307,18 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       setLoading(false);
     });
   }, [fetchProjects, loadStoredProjectSelection, autoSelectFirst, setSelectedProjectWithPersistence]);
+
+  // Update selectedProject when projects array changes (after refresh)
+  useEffect(() => {
+    if (selectedProject && projects.length > 0) {
+      const updatedProject = projects.find(p => p.id === selectedProject.id);
+      if (updatedProject && updatedProject !== selectedProject) {
+        console.log('Updating selectedProject after refresh:', updatedProject.project.name);
+        setSelectedProject(updatedProject);
+        selectedProjectRef.current = updatedProject;
+      }
+    }
+  }, [projects, selectedProject]);
 
   // Set up realtime file watcher (once only)
   useEffect(() => {
@@ -583,7 +597,9 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
 
   // Refresh projects
   const refreshProjects = useCallback(async (): Promise<void> => {
+    console.log('refreshProjects called, fetching projects...');
     await fetchProjects();
+    console.log('refreshProjects completed, projects updated');
   }, [fetchProjects]);
 
   // Refresh tickets for current project

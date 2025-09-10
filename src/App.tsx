@@ -93,6 +93,7 @@ function App() {
     setSelectedProject, 
     tickets,
     updateTicketOptimistic,
+    refreshProjects,
     loading: projectsLoading 
   } = useMultiProjectData({ autoSelectFirst: true });
 
@@ -205,6 +206,7 @@ function App() {
         updateTicketOptimistic={updateTicketOptimistic}
         onAddProject={() => console.log('Add Project from SingleProjectView - need to implement')}
         viewMode={internalViewMode}
+        refreshProjects={refreshProjects}
       />
       <TicketViewer 
         ticket={selectedTicket} 

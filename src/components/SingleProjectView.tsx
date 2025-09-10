@@ -11,6 +11,7 @@ import { getSortPreferences, setSortPreferences, SortPreferences } from '../conf
 import { sortTickets } from '../utils/sorting';
 import { TicketCode } from './TicketCode';
 import { normalizeTicket } from '../../shared';
+import { getProjectCode } from './ProjectSelector';
 
 type SingleProjectViewMode = 'board' | 'list' | 'documents';
 
@@ -43,9 +44,10 @@ interface SingleProjectViewProps {
   updateTicketOptimistic?: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>;
   onAddProject?: () => void;
   viewMode?: string;
+  refreshProjects?: () => Promise<void>;
 }
 
-export default function SingleProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, onAddProject, viewMode: externalViewMode }: SingleProjectViewProps) {
+export default function SingleProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, onAddProject, viewMode: externalViewMode, refreshProjects }: SingleProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
   const [internalViewMode, setInternalViewMode] = useState<SingleProjectViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
@@ -54,8 +56,11 @@ export default function SingleProjectView({ onTicketClick, selectedProject, tick
   
   const viewMode = externalViewMode || internalViewMode;
 
+  console.log('SingleProjectView render - selectedProject:', selectedProject?.project.name);
+
   const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showDuplicateResolver, setShowDuplicateResolver] = useState(false);
 
@@ -116,6 +121,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, tick
               onSortPreferencesChange={(viewMode === 'board' || viewMode === 'list') ? handleSortPreferencesChange : undefined}
               onRefresh={handleRefresh}
               onAddProject={() => setShowAddProjectModal(true)}
+              onEditProject={() => setShowEditProjectModal(true)}
               selectedProject={selectedProject}
             />
           </div>
@@ -197,6 +203,33 @@ export default function SingleProjectView({ onTicketClick, selectedProject, tick
           // Optionally refresh projects or show success message
         }}
       />
+
+      {selectedProject && (
+        <AddProjectModal
+          isOpen={showEditProjectModal}
+          onClose={() => setShowEditProjectModal(false)}
+          onProjectCreated={async () => {
+            console.log('Edit project onProjectCreated called');
+            setShowEditProjectModal(false);
+            if (refreshProjects) {
+              console.log('Calling refreshProjects...');
+              await refreshProjects();
+              console.log('refreshProjects completed');
+            } else {
+              console.log('refreshProjects not available');
+            }
+          }}
+          editMode={true}
+          editProject={{
+            name: selectedProject.project.name,
+            code: getProjectCode(selectedProject),
+            path: selectedProject.project.path,
+            crsPath: 'docs/CRs',
+            description: selectedProject.project.description || '',
+            repositoryUrl: ''
+          }}
+        />
+      )}
     </div>
   );
 }

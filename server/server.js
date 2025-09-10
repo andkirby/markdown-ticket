@@ -511,21 +511,34 @@ app.post('/api/documents/configure', async (req, res) => {
       // Config doesn't exist, start with empty content
     }
 
-    // Remove existing document_paths if present
-    configContent = configContent.replace(/document_paths\s*=\s*\[.*?\]/s, '');
+    // Remove existing document configuration section entirely
+    configContent = configContent.replace(/\n*# Documentation Configuration[\s\S]*?(?=\n\n|\n$|$)/g, '');
+    configContent = configContent.replace(/\n*document_paths\s*=\s*\[[\s\S]*?\]/g, '');
+    configContent = configContent.replace(/\n*max_depth\s*=.*$/gm, '');
     
-    // Add new document_paths (convert absolute paths to relative)
-    const relativePaths = documentPaths.map(p => path.relative(projectPath, p));
-    const pathsString = relativePaths.map(p => `"${p}"`).join(', ');
+    // Clean up extra newlines
+    configContent = configContent.replace(/\n{3,}/g, '\n\n').trim();
+    
+    // Add new document_paths (convert absolute paths to relative, keep relative paths as-is)
+    const relativePaths = documentPaths.map(p => {
+      // If path is already relative, keep it as-is
+      if (!path.isAbsolute(p)) {
+        return p;
+      }
+      // Convert absolute path to relative
+      return path.relative(projectPath, p);
+    });
+    const pathsString = relativePaths.map(p => `    "${p}"`).join(',\n');
     
     // Add to config content
     if (!configContent.includes('[project]')) {
       configContent = '[project]\n' + configContent;
     }
     
-    configContent += `\ndocument_paths = [${pathsString}]\n`;
+    // Add document configuration section
+    configContent += `\n\n# Documentation Configuration\ndocument_paths = [\n${pathsString}\n]\nmax_depth = 3             # Maximum directory depth for scanning`;
     
-    await fs.writeFile(configPath, configContent.trim() + '\n', 'utf8');
+    await fs.writeFile(configPath, configContent + '\n', 'utf8');
     
     console.log(`✅ Document paths configured successfully`);
     res.json({ success: true });
@@ -1414,6 +1427,75 @@ ${repositoryUrl ? `repository = "${repositoryUrl}"` : 'repository = ""'}
   }
 });
 
+// Update existing project
+app.put('/api/projects/:code/update', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const { name, crsPath, description, repositoryUrl } = req.body;
+    
+    console.log(`Updating project ${code} with data:`, { name, crsPath, description, repositoryUrl });
+    
+    // Find project by code - need to map code back to project ID
+    const projects = await projectDiscovery.getAllProjects();
+    console.log(`Available projects:`, projects.map(p => ({ id: p.id, name: p.project.name })));
+    
+    // Map known project codes to IDs (reverse of getProjectCode logic)
+    const codeToIdMap = {
+      'DEB': 'debug',
+      'MDT': 'markdown-ticket', 
+      'CR': 'LlmTranslator',
+      'GT': 'goto_dir',
+      'SB': 'sentence-breakdown'
+    };
+    
+    const projectId = codeToIdMap[code] || code.toLowerCase();
+    console.log(`Looking for project with code ${code}, mapped to ID: ${projectId}`);
+    
+    const project = projects.find(p => p.id === projectId);
+    
+    if (!project) {
+      console.log(`Project ${code} not found in discovered projects:`, projects.map(p => p.id));
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    console.log(`Found project:`, project);
+
+    // Read current local config
+    const localConfigPath = path.join(project.project.path, '.mdt-config.toml');
+    console.log(`Reading config from: ${localConfigPath}`);
+    
+    let configContent = await fs.readFile(localConfigPath, 'utf8');
+    console.log(`Current config content:`, configContent);
+    
+    // Update editable fields
+    if (name) {
+      configContent = configContent.replace(/^name = ".*"$/m, `name = "${name}"`);
+    }
+    if (crsPath) {
+      configContent = configContent.replace(/^path = ".*"$/m, `path = "${crsPath}"`);
+    }
+    if (description !== undefined) {
+      configContent = configContent.replace(/^description = ".*"$/m, `description = "${description}"`);
+    }
+    if (repositoryUrl !== undefined) {
+      configContent = configContent.replace(/^repository = ".*"$/m, `repository = "${repositoryUrl}"`);
+    }
+    
+    console.log(`Updated config content:`, configContent);
+    
+    // Write updated config
+    await fs.writeFile(localConfigPath, configContent, 'utf8');
+    console.log(`Config written successfully`);
+    
+    res.json({ success: true, message: 'Project updated successfully' });
+  } catch (error) {
+    console.error('Error updating project:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    res.status(500).json({ error: 'Failed to update project' });
+  }
+});
+
 // Get system directories for project path selection
 app.get('/api/system/directories', async (req, res) => {
   try {
@@ -1501,9 +1583,13 @@ async function buildFileSystemTree(dirPath, maxDepth = 3) {
     ];
 
     // Add tickets path to ignore list if found
-    if (ticketsPath) {
+    if (ticketsPath && ticketsPath !== '.') {
       ignorePatterns.push(`**/${ticketsPath}/**`);
       console.log(`🚫 Ignoring tickets path: ${ticketsPath}`);
+    } else if (ticketsPath === '.') {
+      // When tickets are in root directory, ignore ticket files by pattern
+      ignorePatterns.push('**/*-[0-9][0-9][0-9]-*.md');
+      console.log(`🚫 Ignoring ticket files in root directory`);
     }
 
     // Find all .md files up to maxDepth levels
@@ -1514,10 +1600,17 @@ async function buildFileSystemTree(dirPath, maxDepth = 3) {
     });
 
     // Additional filtering to remove files in tickets path (in case glob didn't catch it)
-    if (ticketsPath) {
+    if (ticketsPath && ticketsPath !== '.') {
       const ticketsFullPath = path.join(dirPath, ticketsPath);
       mdFiles = mdFiles.filter(filePath => !filePath.startsWith(ticketsFullPath));
       console.log(`🚫 Filtered out ${ticketsPath} files, remaining: ${mdFiles.length}`);
+    } else if (ticketsPath === '.') {
+      // Filter out ticket files by pattern when in root directory
+      mdFiles = mdFiles.filter(filePath => {
+        const fileName = path.basename(filePath);
+        return !fileName.match(/^[A-Z]+-\d{3}-.*\.md$/);
+      });
+      console.log(`🚫 Filtered out ticket files from root, remaining: ${mdFiles.length}`);
     }
     
     // Build tree structure from file paths
@@ -1952,6 +2045,7 @@ app.listen(PORT, () => {
   console.log(`   DELETE /api/projects/:id/crs/:crId - Delete CR`);
   console.log(`   POST /api/projects/register - Register new project`);
   console.log(`   POST /api/projects/create - Create new project with UI`);
+  console.log(`   PUT  /api/projects/:code/update - Update existing project`);
   console.log(`   GET  /api/system/directories - List directories for project selection`);
   
   // Initialize the server

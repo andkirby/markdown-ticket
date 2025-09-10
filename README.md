@@ -21,6 +21,7 @@ A Kanban-style ticket board system that uses markdown files for storage, providi
   - [Available MCP Tools](#available-mcp-tools)
 - [Project Management](#project-management)
   - [Creating Projects](#creating-projects)
+  - [Editing Projects](#editing-projects)
   - [Project Configuration](#project-configuration)
 - [Development](#development)
   - [Frontend Development](#frontend-development)
@@ -227,10 +228,10 @@ claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 ## Project Management
 
 ### Creating Projects
-- Use the "Add New Project" UI with form validation and confirmation
-- Automatically creates both global registry and local project configuration
-- Supports custom ticket directory paths (defaults to `docs/CRs`)
-- Validates project codes and provides immediate feedback
+- Use the "Add New Project" button in the UI to create new projects with automatic configuration setup
+
+### Editing Projects
+- Click the edit button (pencil icon) next to any project to modify name, description, CRs path, and repository URL
 
 ### Project Configuration
 Projects use a dual-configuration approach:

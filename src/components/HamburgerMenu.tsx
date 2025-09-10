@@ -1,12 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Plus } from 'lucide-react';
+import { Menu, Plus, Edit } from 'lucide-react';
 import { Button } from './UI/index';
 
 interface HamburgerMenuProps {
   onAddProject: () => void;
+  onEditProject?: () => void;
+  hasActiveProject?: boolean;
 }
 
-export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onAddProject }) => {
+export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ 
+  onAddProject, 
+  onEditProject, 
+  hasActiveProject = false 
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -24,6 +30,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onAddProject }) =>
   const handleAddProject = () => {
     setIsOpen(false);
     onAddProject();
+  };
+
+  const handleEditProject = () => {
+    setIsOpen(false);
+    onEditProject?.();
   };
 
   return (
@@ -47,6 +58,15 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onAddProject }) =>
               <Plus className="h-4 w-4 mr-2" />
               Add Project
             </button>
+            {hasActiveProject && onEditProject && (
+              <button
+                onClick={handleEditProject}
+                className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Project
+              </button>
+            )}
           </div>
         </div>
       )}

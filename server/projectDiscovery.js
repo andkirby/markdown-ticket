@@ -62,14 +62,22 @@ class ProjectDiscoveryService {
           const content = fs.readFileSync(projectPath, 'utf8');
           const projectData = toml.parse(content);
           
+          // Read the actual project data from local config file
+          const localConfig = this.getProjectConfig(projectData.project?.path || '');
+          
           const project = {
             id: path.basename(file, '.toml'),
             project: {
-              name: projectData.project?.name || 'Unknown Project',
+              name: localConfig?.project?.name || projectData.project?.name || 'Unknown Project',
               path: projectData.project?.path || '',
               configFile: path.join(projectData.project?.path || '', CONFIG_FILES.PROJECT_CONFIG),
               active: projectData.project?.active !== false,
-              description: projectData.project?.description || ''
+              description: localConfig?.project?.description || projectData.project?.description || '',
+              code: localConfig?.project?.code || '',
+              crsPath: localConfig?.project?.path || 'docs/CRs',
+              repository: localConfig?.project?.repository || '',
+              startNumber: localConfig?.project?.startNumber || 1,
+              counterFile: localConfig?.project?.counterFile || '.mdt-next'
             },
             metadata: {
               dateRegistered: projectData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
