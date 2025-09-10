@@ -1,7 +1,7 @@
 ---
 code: MDT-030
 title: Add status toggle buttons to Kanban columns
-status: In Progress
+status: Implemented
 dateCreated: 2025-09-08T17:20:43.229Z
 type: Feature Enhancement
 priority: Medium

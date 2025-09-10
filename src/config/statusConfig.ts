@@ -131,7 +131,7 @@ export const BOARD_COLUMNS = {
     label: 'Done',
     color: 'teal',
     description: 'Completed work',
-    statuses: ['Implemented', 'Partially Implemented'] as Status[],
+    statuses: ['Implemented', 'Partially Implemented', 'Rejected'] as Status[],
     visible: true,
     order: 4
   },
