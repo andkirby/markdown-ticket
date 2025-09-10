@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Ticket, Status } from '../types';
@@ -94,18 +94,16 @@ const BoardContent: React.FC<BoardProps> = ({
   };
   
   const handleDrop = useCallback(async (status: Status, ticket: Ticket) => {
-    // Don't process if status is the same
-    if (ticket.status === status) {
-      return;
-    }
-
+    // Always allow the drop - remove the status check that was causing issues
+    // The backend and file system are the source of truth, not the potentially stale UI state
+    
     try {
       // Send only the status - let backend handle implementation fields automatically
       const updateData: Partial<Ticket> = { status };
       
       // Use the appropriate update function based on mode
       const updateFunction = onTicketUpdate || updateTicket;
-      const result = await updateFunction(ticket.code, updateData);
+      await updateFunction(ticket.code, updateData);
     } catch (error) {
       console.error('Board: Failed to move ticket:', error);
     }
@@ -294,28 +292,24 @@ const BoardContent: React.FC<BoardProps> = ({
         </div>
       )}
 
-      {!showHeader && (
-        <div>
-          {/* Board Grid */}
-          <div className="board-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full overflow-x-auto">
-            {visibleColumns.map((column) => (
-              <Column
-                key={column.label}
-                column={column}
-                tickets={ticketsByColumn[column.label]}
-                allTickets={tickets}
-                sortAttribute={sortPreferences.selectedAttribute}
-                sortDirection={sortPreferences.selectedDirection}
-                onDrop={(status: Status, ticket: Ticket) => {
-                  console.log('Board: Column onDrop called with:', { status, ticketKey: ticket.code });
-                  handleDrop(status, ticket);
-                }}
-                onTicketEdit={handleTicketEdit}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Board Grid - render regardless of showHeader */}
+      <div className="board-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full overflow-x-auto">
+        {visibleColumns.map((column) => (
+          <Column
+            key={column.label}
+            column={column}
+            tickets={ticketsByColumn[column.label]}
+            allTickets={tickets}
+            sortAttribute={sortPreferences.selectedAttribute}
+            sortDirection={sortPreferences.selectedDirection}
+            onDrop={(status: Status, ticket: Ticket) => {
+              console.log('Board: Column onDrop called with:', { status, ticketKey: ticket.code });
+              handleDrop(status, ticket);
+            }}
+            onTicketEdit={handleTicketEdit}
+          />
+        ))}
+      </div>
     </div>
   );
 };

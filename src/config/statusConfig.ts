@@ -142,7 +142,7 @@ export const BOARD_COLUMNS = {
     color: 'orange',
     description: 'Work that is paused or cancelled',
     statuses: ['Rejected', 'Superseded', 'Duplicate'] as Status[],
-    visible: true,
+    visible: false,
     order: 5
   }
 };

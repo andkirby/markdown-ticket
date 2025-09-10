@@ -31,8 +31,9 @@ interface StatusToggleProps {
 const StatusToggle: React.FC<StatusToggleProps> = ({ status, isActive, ticketCount, onToggle, onDrop }) => {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'ticket',
-    drop: (item: any) => {
+    drop: (item: any, _monitor) => {
       onDrop(status, item.ticket);
+      return { handled: true }; // Prevent further drop handling
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
@@ -196,8 +197,13 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'ticket',
-    drop: (item: any) => {
+    drop: (item: any, monitor) => {
       try {
+        const dropResult = monitor.getDropResult();
+        if (dropResult && dropResult.handled) {
+          // Drop was already handled by a child component (like StatusToggle)
+          return;
+        }
         handleDrop(item.ticket);
       } catch (error) {
         console.error('Column: Error in drop handler:', error);
