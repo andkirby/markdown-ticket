@@ -24,8 +24,8 @@ export function sortTickets(
         bValue = b.dateCreated;
         break;
       case 'lastModified':
-        aValue = a.lastModified;
-        bValue = b.lastModified;
+        aValue = a.lastModified || a.dateCreated;
+        bValue = b.lastModified || b.dateCreated;
         break;
       default:
         // For custom attributes, try to access them directly
