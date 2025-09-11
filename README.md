@@ -35,14 +35,15 @@ A Kanban-style ticket board system that uses markdown files for storage, providi
 ## Features
 
 - **Kanban Board Interface**: Visual drag-and-drop ticket management with status toggle buttons
-- **Multi-Project Support**: Manage multiple projects from a single dashboard
-- **Enhanced Ticket Viewer**: Comprehensive attribute display with structured layout
+- **Multi-Project Support**: Manage multiple projects from a single dashboard with project editing capabilities
+- **Enhanced Ticket Viewer**: Comprehensive attribute display with styled badges and structured layout
 - **Ticket Relationships**: Full support for dependencies, blocks, and related tickets
+- **Backlog Management**: Hide/show backlog tickets for cleaner board views
 - **Markdown Storage**: All tickets stored as markdown files with YAML frontmatter
 - **Real-time Updates**: SSE-based live updates with optimistic UI
 - **Multiple View Modes**: Board, List, and Documents views with seamless switching
 - **Sortable Tickets**: Sort by Key, Title, Created Date, or Update Date
-- **MCP Integration**: Model Context Protocol server for AI assistant integration
+- **MCP Integration**: Model Context Protocol server for AI assistant integration with development tools
 - **Project Discovery**: Automatic detection of project configurations
 
 ## Quick Start
@@ -293,6 +294,7 @@ See **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** for:
 
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for detailed information about each version:
 
+- **v0.3.0** (2025-09-11): Badge components, project editing, backlog management, MCP development tools
 - **v0.2.0** (2025-09-09): Enhanced ticket viewer, relationship management, real-time updates
 - **v0.1.0** (2025-09-07): Core Kanban board, multi-project support, MCP integration
 

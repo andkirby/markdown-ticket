@@ -1,5 +1,29 @@
 # Release Notes
 
+## v0.3.0 (2025-09-11)
+
+### New Features
+- **Badge Components**: Enhanced visual display of ticket attributes with styled badges
+- **Project Editing**: Added capability to edit project names and document paths
+- **Backlog Management**: Hide/show functionality for backlog tickets in board view
+- **MCP Development Tools**: New MCP server for real-time development log access
+- **Shared Core Architecture**: Unified architecture across frontend and backend components
+
+### Improvements
+- **ScrollArea Enhancement**: Implemented auto-hide scrollbars with improved UX
+- **Project Selector**: Enhanced hover effects and improved layout design
+- **Sorting Fixes**: Resolved sorting issues for newly created tickets
+- **On Hold Status**: Fixed drag-and-drop functionality and UI improvements for On Hold tickets
+- **Documentation**: Updated ticket creation guides for better consistency
+
+### Bug Fixes
+- Fixed Rejected tickets appearing in wrong Kanban column
+- Resolved On Hold ticket visibility issues in board view
+- Improved drag-and-drop behavior for On Hold status tickets
+- Removed non-functional cache clear button
+
+---
+
 ## v0.2.1 (2025-09-09)
 
 ### Bug Fixes
