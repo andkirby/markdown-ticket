@@ -21,7 +21,18 @@ export class MarkdownService {
       }
 
       const content = fs.readFileSync(filePath, 'utf8');
-      return this.parseMarkdownContent(content, filePath);
+      const stats = fs.statSync(filePath);
+      
+      const ticket = this.parseMarkdownContent(content, filePath);
+      if (ticket) {
+        // Add file system timestamps
+        ticket.lastModified = stats.mtime.toISOString();
+        if (!ticket.dateCreated) {
+          ticket.dateCreated = stats.birthtime.toISOString();
+        }
+      }
+      
+      return ticket;
     } catch (error) {
       console.error(`Error parsing markdown file ${filePath}:`, error);
       return null;

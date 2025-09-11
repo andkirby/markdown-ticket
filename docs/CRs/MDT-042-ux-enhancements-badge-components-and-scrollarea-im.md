@@ -92,3 +92,60 @@ Comprehensive UX improvements to enhance visual consistency and user experience 
 - Consider extending Badge component usage to other UI elements
 - Evaluate ScrollArea implementation for other scrollable areas
 - Monitor user feedback on scrolling behavior preferences
+
+## Pending Work
+
+### 4. Backlog Hide/Show Toggle
+**User Story**: As a user I want to be able to hide backlog so that my view will have only open/in-progress/done columns.
+
+**Requirements**:
+- **Sticky toggle button** positioned on the left side of the board
+- **90-degree rotated text** displaying "Backlog"
+- **Toggle functionality** to show/hide the backlog column
+- **Persistent state** - remember user preference across sessions
+- **Smooth transition** when showing/hiding the column
+
+**Implementation Notes**:
+- Button should be positioned absolutely on the left edge
+- Use CSS transform for 90-degree text rotation
+- Store toggle state in localStorage for persistence
+- Consider animation/transition effects for column visibility
+- Ensure responsive behavior on different screen sizes
+
+**Column Configuration Integration**:
+- Leverage existing `BOARD_COLUMNS.backlog.visible` property
+- Use existing `toggleColumnVisibility('backlog')` function
+- Extend `getVisibleColumns()` to respect backlog toggle state
+- Persist backlog visibility in localStorage (separate from column config)
+- Consider impact on drag-and-drop when backlog is hidden
+- Handle tickets in hidden backlog column gracefully
+
+**Technical Approach**:
+```tsx
+// New hook for backlog visibility
+const useBacklogVisibility = () => {
+  const [showBacklog, setShowBacklog] = useState(() => 
+    localStorage.getItem('showBacklog') !== 'false'
+  );
+  
+  const toggleBacklog = () => {
+    const newState = !showBacklog;
+    setShowBacklog(newState);
+    localStorage.setItem('showBacklog', String(newState));
+    toggleColumnVisibility('backlog');
+  };
+  
+  return { showBacklog, toggleBacklog };
+};
+```
+
+**Acceptance Criteria**:
+- [ ] Sticky button appears on left side with rotated "Backlog" text
+- [ ] Clicking toggles backlog column visibility
+- [ ] State persists across browser sessions
+- [ ] Smooth visual transition when toggling
+- [ ] Works on mobile and desktop viewports
+- [ ] Integrates with existing column configuration system
+- [ ] Drag-and-drop still works when backlog is hidden
+- [ ] No impact on ticket data or status transitions
+- [ ] Button state reflects current backlog visibility
