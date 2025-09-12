@@ -1,5 +1,7 @@
 # Markdown Ticket Board
 
+<img alt="Markdown Ticket - Board, support dark/light theme" src="https://github.com/user-attachments/assets/f682104e-0e74-45b7-a6d4-b72142441b39" width="500"> <img alt="Markdown Ticket - Board, support dark/light theme" src="https://github.com/user-attachments/assets/4440a05e-6ec8-40ca-a08d-6d2d833b9561" width="500">
+
 A Kanban-style ticket board system that uses markdown files for storage, providing a lightweight and version-control-friendly approach to project management.
 
 ## Table of Contents
@@ -24,9 +26,6 @@ A Kanban-style ticket board system that uses markdown files for storage, providi
   - [Editing Projects](#editing-projects)
   - [Project Configuration](#project-configuration)
 - [Development](#development)
-  - [Frontend Development](#frontend-development)
-  - [Backend Development](#backend-development)
-  - [Testing](#testing)
 - [File System Integration](#file-system-integration)
 - [Release Notes](#release-notes)
 - [Contributing](#contributing)
