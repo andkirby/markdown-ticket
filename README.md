@@ -1,8 +1,17 @@
 # Markdown Ticket Board
 
+ > **🚀 The developer-friendly project management tool that speaks your language!**<br>
+> AI powered Kanban board that stores tickets as markdown files, integrating project management with your existing Git workflow.
+
 <img alt="Markdown Ticket - Board, support dark/light theme" src="https://github.com/user-attachments/assets/f682104e-0e74-45b7-a6d4-b72142441b39" width="500"> <img alt="Markdown Ticket - Board, support dark/light theme" src="https://github.com/user-attachments/assets/4440a05e-6ec8-40ca-a08d-6d2d833b9561" width="500">
 
-A Kanban-style ticket board system that uses markdown files for storage, providing a lightweight and version-control-friendly approach to project management.
+**Key capabilities:**
+- Store tickets as markdown files with YAML frontmatter
+- Version control your project management alongside code
+- Drag-and-drop Kanban interface with real-time updates
+- MCP integration for AI assistant workflows
+- Multi-project support from a single interface
+- No external dependencies or cloud services required
 
 ## Table of Contents
 
