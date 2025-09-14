@@ -6,7 +6,7 @@
 <img alt="Markdown Ticket - Board, support dark/light theme" src="https://github.com/user-attachments/assets/f682104e-0e74-45b7-a6d4-b72142441b39" width="500"> <img alt="Markdown Ticket - Board, support dark/light theme" src="https://github.com/user-attachments/assets/4440a05e-6ec8-40ca-a08d-6d2d833b9561" width="500">
 
 **Key capabilities:**
-- Store tickets as markdown files with YAML frontmatter
+- Store tickets as markdown files with YAML frontmatter (for attributes part)
 - Version control your project management alongside code
 - Drag-and-drop Kanban interface with real-time updates
 - MCP integration for AI assistant workflows
