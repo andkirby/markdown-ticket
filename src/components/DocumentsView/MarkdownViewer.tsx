@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import showdown from 'showdown';
 
+interface DocumentFile {
+  name: string;
+  path: string;
+  type: 'file' | 'folder';
+  title?: string;
+  children?: DocumentFile[];
+  dateCreated?: Date | string;
+  lastModified?: Date | string;
+}
+
 interface MarkdownViewerProps {
   filePath: string;
+  fileInfo?: DocumentFile | null;
 }
 
 const converter = new showdown.Converter({
@@ -20,7 +31,7 @@ const converter = new showdown.Converter({
   ghCompatibleHeaderId: true,
 });
 
-export default function MarkdownViewer({ filePath }: MarkdownViewerProps) {
+export default function MarkdownViewer({ filePath, fileInfo }: MarkdownViewerProps) {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,10 +77,40 @@ export default function MarkdownViewer({ filePath }: MarkdownViewerProps) {
 
   const htmlContent = converter.makeHtml(content);
 
+  // Format date helper
+  const formatDate = (date: Date | string | undefined): string => {
+    if (!date) return 'Unknown';
+    try {
+      const d = new Date(date);
+      return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Unknown';
+    }
+  };
+
   return (
     <div className="h-full overflow-auto">
       <div className="p-6">
-        <div 
+        {fileInfo && (
+          <div className="mb-4 pb-3 border-b border-border">
+            <div className="text-xs text-muted-foreground space-x-4">
+              <span>
+                <strong>Created:</strong> {formatDate(fileInfo.dateCreated)}
+              </span>
+              <span className="text-muted-foreground/60">|</span>
+              <span>
+                <strong>Updated:</strong> {formatDate(fileInfo.lastModified)}
+              </span>
+            </div>
+          </div>
+        )}
+        <div
           className="prose prose-sm max-w-none dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
