@@ -7,6 +7,7 @@ import Column from './Column';
 import { Button } from './UI/index';
 import { useMultiProjectData } from '../hooks/useMultiProjectData';
 import { SortControls } from './SortControls';
+import { FilterControls } from './FilterControls';
 import { HamburgerMenu } from './HamburgerMenu';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
@@ -44,11 +45,11 @@ interface BoardProps {
 
 // Note: TicketItem removed - drag functionality handled in Column.tsx
 
-const BoardContent: React.FC<BoardProps> = ({ 
-  onTicketClick, 
+const BoardContent: React.FC<BoardProps> = ({
+  onTicketClick,
   onTicketUpdate,
-  enableProjectSwitching = true, 
-  showHeader = true, 
+  enableProjectSwitching = true,
+  showHeader = true,
   selectedProject: propSelectedProject,
   tickets: propTickets,
   loading: propLoading,
@@ -57,6 +58,7 @@ const BoardContent: React.FC<BoardProps> = ({
   const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(
     propSortPreferences || getSortPreferences
   );
+  const [filterQuery, setFilterQuery] = useState('');
   
   // Only use the hook when no selectedProject prop is provided (multi-project mode)
   const hookData = useMultiProjectData({ autoSelectFirst: enableProjectSwitching });
@@ -135,7 +137,28 @@ const BoardContent: React.FC<BoardProps> = ({
     }
   }, [refreshProjectTickets]);
 
-  // Group tickets by column with sorting
+  // Filter tickets based on search query
+  const filteredTickets = React.useMemo(() => {
+    if (!filterQuery.trim()) {
+      return tickets;
+    }
+
+    const searchTerms = filterQuery.toLowerCase().trim().split(/\s+/);
+    return tickets.filter(ticket => {
+      const title = ticket.title?.toLowerCase() || '';
+      const code = ticket.code?.toLowerCase() || '';
+      const description = ticket.description?.toLowerCase() || '';
+
+      // Check if all search terms match at least one of: title, code, or description
+      return searchTerms.every(term =>
+        title.includes(term) ||
+        code.includes(term) ||
+        description.includes(term)
+      );
+    });
+  }, [tickets, filterQuery]);
+
+  // Group filtered tickets by column with sorting
   const ticketsByColumn: Record<string, Ticket[]> = {};
   const visibleColumns = getVisibleColumns();
 
@@ -144,8 +167,8 @@ const BoardContent: React.FC<BoardProps> = ({
     ticketsByColumn[column.label] = [];
   });
 
-  // Group tickets by their column
-  tickets.forEach(ticket => {
+  // Group filtered tickets by their column
+  filteredTickets.forEach(ticket => {
     const column = getColumnForStatus(ticket.status as Status);
     if (ticketsByColumn[column.label]) {
       ticketsByColumn[column.label].push(ticket);
@@ -270,6 +293,11 @@ const BoardContent: React.FC<BoardProps> = ({
             </p>
           </div>
           <div className="flex space-x-4">
+            <FilterControls
+              searchQuery={filterQuery}
+              onSearchChange={setFilterQuery}
+              placeholder="Filter tickets..."
+            />
             <SortControls
               preferences={sortPreferences}
               onPreferencesChange={handleSortPreferencesChange}
@@ -287,9 +315,10 @@ const BoardContent: React.FC<BoardProps> = ({
             >
               Create
             </Button>
-            <HamburgerMenu 
+            <HamburgerMenu
               onAddProject={() => console.log('Add Project clicked from Board')}
               onEditProject={() => console.log('Edit Project clicked from Board')}
+              onCounterAPI={() => console.log('Counter API clicked from Board')}
               hasActiveProject={true}
             />
           </div>
