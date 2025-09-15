@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { glob } from 'glob';
 import FileWatcherService from './fileWatcherService.js';
 import ProjectDiscoveryService from './projectDiscovery.js';
+import counterRoutes from './routes/counter.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,6 +15,9 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Counter API routes
+app.use('/api/counter', counterRoutes);
 
 // ES module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -1802,11 +1806,14 @@ async function discoverDocuments(projectPath, currentDepth = 0, maxDepth = 3) {
           console.log(`📄 Adding file: ${docPath}`);
           // Single file - extract H1 title
           const h1Title = await extractH1Title(fullPath);
+          const fileStats = await fs.stat(fullPath);
           documents.push({
             name: path.basename(docPath),
             title: h1Title,
             path: fullPath,
-            type: 'file'
+            type: 'file',
+            dateCreated: fileStats.birthtime || fileStats.ctime,
+            lastModified: fileStats.mtime
           });
         } else if (stats.isDirectory()) {
           console.log(`📁 Scanning directory: ${docPath}`);
@@ -1883,11 +1890,14 @@ async function scanDirectory(dirPath, relativePath, excludeFolders, currentDepth
     } else if (entry.isFile() && entry.name.endsWith('.md')) {
       // Extract H1 title for files
       const h1Title = await extractH1Title(fullPath);
+      const fileStats = await fs.stat(fullPath);
       documents.push({
         name: entry.name,
         title: h1Title,
         path: fullPath,
-        type: 'file'
+        type: 'file',
+        dateCreated: fileStats.birthtime || fileStats.ctime,
+        lastModified: fileStats.mtime
       });
     }
   }
@@ -2016,6 +2026,88 @@ app.get('/api/logs/stream', (req, res) => {
   });
 });
 
+// Global configuration endpoint
+app.get('/api/config/global', async (req, res) => {
+  try {
+    const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket');
+    const configPath = path.join(configDir, 'config.toml');
+
+    console.log(`Reading global config from: ${configPath}`);
+
+    try {
+      const configContent = await fs.readFile(configPath, 'utf8');
+
+      // Basic TOML parsing for all sections
+      const config = {};
+
+      // Parse dashboard section
+      const dashboardMatch = configContent.match(/\[dashboard\]([\s\S]*?)(?=\[|$)/);
+      if (dashboardMatch) {
+        const section = dashboardMatch[1];
+        config.dashboard = {
+          port: parseInt(section.match(/port\s*=\s*(\d+)/)?.[1] || '3002'),
+          autoRefresh: section.match(/autoRefresh\s*=\s*(true|false)/)?.[1] === 'true',
+          refreshInterval: parseInt(section.match(/refreshInterval\s*=\s*(\d+)/)?.[1] || '5000')
+        };
+      }
+
+      // Parse discovery section
+      const discoveryMatch = configContent.match(/\[discovery\]([\s\S]*?)(?=\[|$)/);
+      if (discoveryMatch) {
+        const section = discoveryMatch[1];
+        config.discovery = {
+          autoDiscover: section.match(/autoDiscover\s*=\s*(true|false)/)?.[1] === 'true',
+          searchPaths: []
+        };
+
+        // Parse search paths array
+        const pathsMatch = section.match(/searchPaths\s*=\s*\[([\s\S]*?)\]/);
+        if (pathsMatch) {
+          const pathsStr = pathsMatch[1];
+          const paths = pathsStr.match(/"([^"]+)"/g);
+          if (paths) {
+            config.discovery.searchPaths = paths.map(p => p.replace(/"/g, ''));
+          }
+        }
+      }
+
+      // Parse counter_api section
+      const counterApiMatch = configContent.match(/\[counter_api\]([\s\S]*?)(?=\[|$)/);
+      if (counterApiMatch) {
+        const section = counterApiMatch[1];
+        config.counter_api = {
+          enabled: section.match(/enabled\s*=\s*(true|false)/)?.[1] === 'true',
+          endpoint: section.match(/endpoint\s*=\s*"([^"]+)"/)?.[1] || '',
+          api_key: section.match(/api_key\s*=\s*"([^"]+)"/)?.[1] || ''
+        };
+      }
+
+      res.json(config);
+    } catch (error) {
+      // Config file doesn't exist, return default config
+      res.json({
+        dashboard: {
+          port: 3002,
+          autoRefresh: true,
+          refreshInterval: 5000
+        },
+        discovery: {
+          autoDiscover: true,
+          searchPaths: []
+        },
+        counter_api: {
+          enabled: false,
+          endpoint: '',
+          api_key: ''
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error reading global config:', error);
+    res.status(500).json({ error: 'Failed to read global config' });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
@@ -2065,6 +2157,16 @@ const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const frontendLogs = [];
 const MAX_FRONTEND_LOGS = 1000;
 
+// DEV mode logging state management
+let devModeActive = false;
+let devModeStart = null;
+const DEV_MODE_TIMEOUT = 60 * 60 * 1000; // 1 hour
+const devModeLogs = [];
+const MAX_DEV_MODE_LOGS = 1000;
+const DEV_MODE_RATE_LIMIT = 300; // 300 logs per minute
+let devModeLogCount = 0;
+let devModeRateLimitStart = Date.now();
+
 // Frontend session status
 app.get('/api/frontend/logs/status', (req, res) => {
   res.json({ 
@@ -2108,16 +2210,223 @@ app.post('/api/frontend/logs', (req, res) => {
 app.get('/api/frontend/logs', (req, res) => {
   const lines = Math.min(parseInt(req.query.lines) || 20, MAX_FRONTEND_LOGS);
   const filter = req.query.filter;
-  
+
   let filteredLogs = frontendLogs;
   if (filter) {
-    filteredLogs = frontendLogs.filter(log => 
+    filteredLogs = frontendLogs.filter(log =>
       log.message.toLowerCase().includes(filter.toLowerCase())
     );
   }
-  
+
   const recentLogs = filteredLogs.slice(-lines);
   res.json({ logs: recentLogs, total: filteredLogs.length });
+});
+
+// =============================================================================
+// DEV MODE LOGGING ENDPOINTS
+// =============================================================================
+
+// Rate limiting middleware for DEV endpoints
+function devModeRateLimit(req, res, next) {
+  const now = Date.now();
+
+  // Reset counter every minute
+  if (now - devModeRateLimitStart > 60000) {
+    devModeLogCount = 0;
+    devModeRateLimitStart = now;
+  }
+
+  // Check rate limit
+  if (devModeLogCount >= DEV_MODE_RATE_LIMIT) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: 'DEV mode logging rate limit of 300 logs per minute exceeded'
+    });
+  }
+
+  next();
+}
+
+// DEV mode logging status
+app.get('/api/frontend/dev-logs/status', (req, res) => {
+  const now = Date.now();
+
+  // Auto-disable after timeout
+  if (devModeActive && devModeStart && (now - devModeStart) > DEV_MODE_TIMEOUT) {
+    devModeActive = false;
+    devModeStart = null;
+    console.log('🔍 DEV mode logging auto-disabled after 1 hour timeout');
+  }
+
+  res.json({
+    active: devModeActive,
+    sessionStart: devModeStart,
+    timeRemaining: devModeActive && devModeStart ? (DEV_MODE_TIMEOUT - (now - devModeStart)) : null,
+    rateLimit: {
+      limit: DEV_MODE_RATE_LIMIT,
+      current: devModeLogCount,
+      resetTime: devModeRateLimitStart + 60000
+    }
+  });
+});
+
+// Receive DEV mode frontend logs
+app.post('/api/frontend/dev-logs', devModeRateLimit, (req, res) => {
+  const { logs } = req.body;
+
+  if (!devModeActive) {
+    return res.status(403).json({
+      error: 'DEV mode not active',
+      message: 'DEV mode logging is not currently active'
+    });
+  }
+
+  if (logs && Array.isArray(logs)) {
+    devModeLogs.push(...logs);
+    devModeLogCount += logs.length;
+
+    // Trim buffer if too large
+    if (devModeLogs.length > MAX_DEV_MODE_LOGS) {
+      devModeLogs.splice(0, devModeLogs.length - MAX_DEV_MODE_LOGS);
+    }
+
+    console.log(`🛠️ DEV: Received ${logs.length} frontend log entries`);
+  }
+
+  res.json({
+    received: logs?.length || 0,
+    rateLimit: {
+      remaining: DEV_MODE_RATE_LIMIT - devModeLogCount,
+      resetTime: devModeRateLimitStart + 60000
+    }
+  });
+});
+
+// Get DEV mode frontend logs
+app.get('/api/frontend/dev-logs', (req, res) => {
+  if (!devModeActive) {
+    return res.status(403).json({
+      error: 'DEV mode not active',
+      message: 'DEV mode logging is not currently active'
+    });
+  }
+
+  const lines = Math.min(parseInt(req.query.lines) || 20, MAX_DEV_MODE_LOGS);
+  const filter = req.query.filter;
+
+  let filteredLogs = devModeLogs;
+  if (filter) {
+    filteredLogs = devModeLogs.filter(log =>
+      log.message.toLowerCase().includes(filter.toLowerCase())
+    );
+  }
+
+  const recentLogs = filteredLogs.slice(-lines);
+  res.json({
+    logs: recentLogs,
+    total: filteredLogs.length,
+    devMode: true,
+    timeRemaining: devModeStart ? (DEV_MODE_TIMEOUT - (Date.now() - devModeStart)) : null
+  });
+});
+
+// Counter API Configuration endpoints
+app.get('/api/config/counter', async (req, res) => {
+  try {
+    const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket');
+    const configPath = path.join(configDir, 'config.toml');
+
+    console.log(`Reading Counter API config from: ${configPath}`);
+
+    try {
+      const configContent = await fs.readFile(configPath, 'utf8');
+
+      // Parse TOML (basic parsing for counter_api section)
+      const counterApiMatch = configContent.match(/\[counter_api\]([\s\S]*?)(?=\[|$)/);
+
+      if (counterApiMatch) {
+        const section = counterApiMatch[1];
+        const enabled = section.match(/enabled\s*=\s*(true|false)/)?.[1] === 'true';
+        const endpoint = section.match(/endpoint\s*=\s*"([^"]+)"/)?.[1] || '';
+        const apiKey = section.match(/api_key\s*=\s*"([^"]+)"/)?.[1] || '';
+
+        res.json({
+          enabled,
+          endpoint,
+          api_key: apiKey ? '•'.repeat(apiKey.length - 4) + apiKey.slice(-4) : null // Masked
+        });
+      } else {
+        res.json({
+          enabled: false,
+          endpoint: 'https://your-lambda-api.com',
+          api_key: null
+        });
+      }
+    } catch (error) {
+      // Config file doesn't exist
+      res.json({
+        enabled: false,
+        endpoint: 'https://your-lambda-api.com',
+        api_key: null
+      });
+    }
+  } catch (error) {
+    console.error('Error reading Counter API config:', error);
+    res.status(500).json({ error: 'Failed to read config' });
+  }
+});
+
+app.post('/api/config/counter', async (req, res) => {
+  try {
+    const { enabled, endpoint, api_key } = req.body;
+
+    if (typeof enabled !== 'boolean' || !endpoint) {
+      return res.status(400).json({ error: 'enabled (boolean) and endpoint are required' });
+    }
+
+    const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket');
+    const configPath = path.join(configDir, 'config.toml');
+
+    console.log(`Saving Counter API config to: ${configPath}`);
+
+    // Ensure config directory exists
+    await fs.mkdir(configDir, { recursive: true });
+
+    let configContent = '';
+
+    // Read existing config if it exists
+    try {
+      configContent = await fs.readFile(configPath, 'utf8');
+    } catch (error) {
+      // Config doesn't exist, start fresh
+    }
+
+    // Remove existing counter_api section
+    configContent = configContent.replace(/\[counter_api\][\s\S]*?(?=\[|$)/g, '');
+
+    // Clean up extra newlines
+    configContent = configContent.replace(/\n{3,}/g, '\n\n').trim();
+
+    // Add new counter_api section
+    const newSection = `
+[counter_api]
+enabled = ${enabled}
+endpoint = "${endpoint}"
+api_key = "${api_key || ''}"
+`;
+
+    configContent += newSection;
+
+    // Write config file with restricted permissions
+    await fs.writeFile(configPath, configContent, 'utf8');
+    await fs.chmod(configPath, 0o600); // User read/write only
+
+    console.log('Counter API config saved successfully');
+    res.json({ success: true, message: 'Counter API config saved' });
+  } catch (error) {
+    console.error('Error saving Counter API config:', error);
+    res.status(500).json({ error: 'Failed to save config' });
+  }
 });
 
 // Clear config cache
@@ -2127,13 +2436,13 @@ app.post('/api/cache/clear', async (req, res) => {
     if (projectDiscovery.clearCache) {
       await projectDiscovery.clearCache();
     }
-    
+
     // Reinitialize file watchers with fresh config
     await initializeMultiProjectWatchers();
-    
+
     console.log('🔄 Config cache cleared and file watchers reinitialized');
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: 'Config cache cleared successfully',
       timestamp: new Date().toISOString()
     });
