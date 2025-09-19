@@ -1,4 +1,4 @@
-import type { CounterResponse } from '../models/Counter';
+import type { CounterResponse } from '../models/Counter.js';
 
 export class CounterService {
   static async generateTicket(projectId: string): Promise<CounterResponse | null> {
