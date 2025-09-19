@@ -441,7 +441,8 @@ export class TemplateService {
         type: 'improvement',
         title: 'Expand Content',
         description: 'CR content is minimal. Consider adding more detailed description, analysis, and implementation notes.',
-        actionable: true
+        actionable: true,
+        priority: 'medium'
       });
     }
 
@@ -452,7 +453,7 @@ export class TemplateService {
           type: 'improvement',
           title: 'Add Architecture Diagrams',
           description: 'Architecture CRs benefit from visual diagrams showing system structure and data flow.',
-          actionable: true
+          actionable: true, priority: 'medium'
         });
       }
     }
@@ -464,7 +465,7 @@ export class TemplateService {
           type: 'improvement',
           title: 'Add Reproduction Steps',
           description: 'Bug fix CRs should include clear steps to reproduce the issue.',
-          actionable: true
+          actionable: true, priority: 'medium'
         });
       }
 
@@ -473,7 +474,7 @@ export class TemplateService {
           type: 'improvement',
           title: 'Root Cause Analysis',
           description: 'Identify and document the root cause, not just the symptoms.',
-          actionable: true
+          actionable: true, priority: 'medium'
         });
       }
     }
@@ -484,7 +485,7 @@ export class TemplateService {
         type: 'improvement',
         title: 'Define Acceptance Criteria',
         description: 'Add specific, testable criteria that define when this CR is complete.',
-        actionable: true
+        actionable: true, priority: 'medium'
       });
     }
 
@@ -493,7 +494,7 @@ export class TemplateService {
         type: 'improvement',
         title: 'Assign to Phase/Epic',
         description: 'Link this CR to a specific project phase or epic for better planning.',
-        actionable: true
+        actionable: true, priority: 'medium'
       });
     }
 
@@ -502,7 +503,7 @@ export class TemplateService {
         type: 'improvement',
         title: 'Add Implementation Notes',
         description: 'Document what was actually implemented, any deviations from the plan, and lessons learned.',
-        actionable: true
+        actionable: true, priority: 'medium'
       });
     }
 
@@ -511,7 +512,7 @@ export class TemplateService {
       type: 'related',
       title: 'Find Related CRs',
       description: 'Use find_related_crs tool to discover CRs that might be related to this one.',
-      actionable: true
+      actionable: true, priority: 'medium'
     });
 
     // Priority and urgency
@@ -520,7 +521,7 @@ export class TemplateService {
         type: 'improvement',
         title: 'Consider Priority',
         description: 'Technical debt often has compound effects. Consider if priority should be higher.',
-        actionable: true
+        actionable: true, priority: 'medium'
       });
     }
 

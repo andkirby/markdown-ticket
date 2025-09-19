@@ -8,8 +8,9 @@ import { Project } from '../../../shared/models/Project.js';
 // @ts-ignore
 import { MarkdownService } from '../../../shared/services/MarkdownService.js';
 import { normalizeTicket, arrayToString } from '../../../shared/models/Ticket.js';
+// Import shared service with different name to avoid conflict
 // @ts-ignore
-import { CRService } from '../../../shared/services/CRService.js';
+import { CRService as SharedCRService } from '../../../shared/services/CRService.js';
 
 export class CRService {
   async listCRs(project: Project, filters?: CRFilters): Promise<CR[]> {
@@ -86,7 +87,7 @@ export class CRService {
       await fs.ensureDir(project.project.path);
 
       // Create CR object using shared service
-      const cr = CRService.createCR(data, crKey, crType, filePath);
+      const cr = SharedCRService.createCR(data, crKey, crType, filePath);
 
       // Generate markdown content
       const markdownContent = this.formatCRAsMarkdown(cr, data);
@@ -258,8 +259,8 @@ export class CRService {
       }
       
       // Also check counter file
-      let counterNumber = project.project.startNumber;
-      const counterPath = path.join(path.dirname(project.configPath), project.project.counterFile);
+      let counterNumber = project.project.startNumber || 1;
+      const counterPath = path.join(path.dirname(project.configPath || project.project.path), project.project.counterFile || '.mdt-next');
       if (await fs.pathExists(counterPath)) {
         const content = await readFile(counterPath, 'utf-8');
         const number = parseInt(content.trim(), 10);
@@ -275,13 +276,13 @@ export class CRService {
       return nextNumber;
     } catch (error) {
       console.warn(`Failed to get next CR number: ${(error as Error).message}`);
-      return project.project.startNumber;
+      return project.project.startNumber || 1;
     }
   }
 
   private async updateCounter(project: Project, newValue: number): Promise<void> {
     try {
-      const counterPath = path.join(path.dirname(project.configPath), project.project.counterFile);
+      const counterPath = path.join(path.dirname(project.configPath || project.project.path), project.project.counterFile || '.mdt-next');
       await fs.outputFile(counterPath, newValue.toString(), 'utf-8');
     } catch (error) {
       console.warn(`Failed to update counter file: ${(error as Error).message}`);
@@ -316,19 +317,19 @@ export class CRService {
         effort: frontmatter.effort,
         implementationDate: this.parseDate(frontmatter.implementationDate),
         implementationNotes: frontmatter.implementationNotes,
-        relatedTickets: CRService.parseArrayField(frontmatter.relatedTickets),
+        relatedTickets: SharedCRService.parseArrayField(frontmatter.relatedTickets),
         supersedes: frontmatter.supersedes,
-        dependsOn: CRService.parseArrayField(frontmatter.dependsOn),
-        blocks: CRService.parseArrayField(frontmatter.blocks),
-        relatedDocuments: CRService.parseArrayField(frontmatter.relatedDocuments),
+        dependsOn: SharedCRService.parseArrayField(frontmatter.dependsOn),
+        blocks: SharedCRService.parseArrayField(frontmatter.blocks),
+        relatedDocuments: SharedCRService.parseArrayField(frontmatter.relatedDocuments),
         // Additional optional attributes
         assignee: frontmatter.assignee,
         estimatedHours: frontmatter.estimatedHours ? Number(frontmatter.estimatedHours) : undefined,
         actualHours: frontmatter.actualHours ? Number(frontmatter.actualHours) : undefined,
-        reviewers: CRService.parseArrayField(frontmatter.reviewers),
-        dependencies: CRService.parseArrayField(frontmatter.dependencies),
+        reviewers: SharedCRService.parseArrayField(frontmatter.reviewers),
+        dependencies: SharedCRService.parseArrayField(frontmatter.dependencies),
         riskLevel: frontmatter.riskLevel,
-        tags: CRService.parseArrayField(frontmatter.tags)
+        tags: SharedCRService.parseArrayField(frontmatter.tags)
       };
     } catch (error) {
       console.warn(`Failed to load CR ${filename}:`, error);
