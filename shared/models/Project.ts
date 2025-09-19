@@ -7,10 +7,14 @@ export interface Project {
   id: string;
   project: {
     name: string;
+    code?: string;
     path: string;
     configFile: string;
+    counterFile?: string;
+    startNumber?: number;
     active: boolean;
     description: string;
+    repository?: string;
   };
   metadata: {
     dateRegistered: string;
@@ -21,6 +25,7 @@ export interface Project {
     codePattern?: string;
   };
   autoDiscovered?: boolean;
+  configPath?: string;
 }
 
 export interface ProjectConfig {
