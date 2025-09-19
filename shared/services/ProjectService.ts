@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import toml from 'toml';
 import os from 'os';
-import { Project, ProjectConfig, validateProjectConfig } from '../models/Project';
+import { Project, ProjectConfig, validateProjectConfig } from '../models/Project.js';
 import { CONFIG_FILES } from '../utils/constants';
 
 /**

@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import { Ticket, normalizeTicket } from '../models/Ticket';
-import { PATTERNS } from '../utils/constants';
+import * as fs from 'fs';
+import * as path from 'path';
+import { Ticket, normalizeTicket } from '../models/Ticket.js';
+import { PATTERNS } from '../utils/constants.js';
 
 /**
  * Unified Markdown Processing Service
