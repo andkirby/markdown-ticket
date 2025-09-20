@@ -1,6 +1,10 @@
 import { Template, ValidationResult, CRType, CRData, CR, Suggestion } from '../models/Types.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class TemplateService {
   private templates: Map<CRType, Template> = new Map();
