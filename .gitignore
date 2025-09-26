@@ -10,6 +10,11 @@ dist/
 build/
 .next/
 .nuxt/
+**/.js
+**/.d.ts
+**/.js.map
+**/.d.ts.map
+/*.*
 
 # Environment variables
 .env
@@ -54,3 +59,5 @@ playwright-report
 test-results
 .amazonq
 .mcp.json
+/*.md
+/*.txt
