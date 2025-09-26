@@ -1,5 +1,5 @@
-import { Badge } from './ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Badge } from './UI/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './UI/tooltip';
 
 interface Project {
   id: string;
@@ -59,7 +59,10 @@ export function ProjectSelector({ projects, selectedProject, onProjectSelect, lo
               return (
                 <button
                   key={project.id}
-                  onClick={() => onProjectSelect(project)}
+                  onClick={() => {
+                    console.log('ProjectSelector: Selecting project:', { id: project.id, name: project.project.name });
+                    onProjectSelect(project);
+                  }}
                   disabled={loading}
                   className={`h-12 px-3 py-1.5 border-2 rounded-md text-center transition-colors bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-900 dark:text-blue-100 dark:border-blue-700 shadow-md w-[40%] ${
                     loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
@@ -80,7 +83,10 @@ export function ProjectSelector({ projects, selectedProject, onProjectSelect, lo
               <Tooltip key={project.id}>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => onProjectSelect(project)}
+                    onClick={() => {
+                      console.log('ProjectSelector: Selecting project:', { id: project.id, name: project.project.name });
+                      onProjectSelect(project);
+                    }}
                     disabled={loading}
                     className={`h-12 px-2 py-1.5 border-2 border-transparent rounded-md text-center transition-colors hover:bg-accent hover:text-accent-foreground hover:border-blue-300 dark:hover:border-blue-700 ${
                       loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'

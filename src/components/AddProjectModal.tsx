@@ -213,6 +213,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       setCreatedFiles(files);
       setShowConfirmation(false);
       setShowSuccess(true);
+      
+      // Notify parent component to refresh projects list
+      onProjectCreated();
     } catch (error) {
       setErrors({ submit: error instanceof Error ? error.message : 'Failed to create project' });
       setShowConfirmation(false);

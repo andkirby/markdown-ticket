@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import SingleProjectView from './components/SingleProjectView';
 import MultiProjectDashboard from './components/MultiProjectDashboard';
@@ -13,8 +13,8 @@ type ViewMode = 'single-project' | 'multi-project';
 const VIEW_MODE_KEY = 'markdown-ticket-view-mode';
 
 interface ViewModeSwitcherProps {
-  viewMode: string;
-  onViewModeChange: (mode: string) => void;
+  viewMode: 'board' | 'list' | 'documents';
+  onViewModeChange: (mode: 'board' | 'list' | 'documents') => void;
 }
 
 function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps) {
@@ -51,9 +51,9 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
         />
       </button>
       <button
-        onClick={() => onViewModeChange('docs')}
+        onClick={() => onViewModeChange('documents')}
         className={`h-12 w-12 rounded-md transition-all ${
-          viewMode === 'docs'
+          viewMode === 'documents'
             ? 'border-2 border-primary'
             : 'border-2 border-transparent hover:border-muted-foreground/30'
         }`}
@@ -79,9 +79,10 @@ function App() {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   
   // Add internal view mode state for Board/List/Docs
-  const [internalViewMode, setInternalViewMode] = useState<string>(() => {
+  const [internalViewMode, setInternalViewMode] = useState<'board' | 'list' | 'documents'>(() => {
     const saved = localStorage.getItem('internal-view-mode');
-    return saved || 'board';
+    const validModes = ['board', 'list', 'documents'];
+    return (saved && validModes.includes(saved)) ? saved as 'board' | 'list' | 'documents' : 'board';
   });
   
   const { theme, toggleTheme } = useTheme();
@@ -92,19 +93,29 @@ function App() {
     selectedProject, 
     setSelectedProject, 
     tickets,
-    updateTicketOptimistic,
     refreshProjects,
     loading: projectsLoading 
   } = useMultiProjectData({ autoSelectFirst: true });
 
+  // Listen for project creation events from SSE
+  useEffect(() => {
+    const handleProjectCreated = () => {
+      console.log('Project created event received, refreshing projects...');
+      refreshProjects();
+    };
+
+    window.addEventListener('projectCreated', handleProjectCreated);
+    return () => window.removeEventListener('projectCreated', handleProjectCreated);
+  }, [refreshProjects]);
+
   // Custom setter that saves to localStorage
-  const setViewMode = (mode: ViewMode) => {
+  const _setViewMode = (mode: ViewMode) => {
     setViewModeState(mode);
     localStorage.setItem(VIEW_MODE_KEY, mode);
   };
 
   // Custom setter for internal view mode
-  const setInternalViewModeWithStorage = (mode: string) => {
+  const setInternalViewModeWithStorage = (mode: 'board' | 'list' | 'documents') => {
     setInternalViewMode(mode);
     localStorage.setItem('internal-view-mode', mode);
   };
@@ -203,7 +214,6 @@ function App() {
         onTicketClick={handleTicketClick} 
         selectedProject={selectedProject} 
         tickets={tickets}
-        updateTicketOptimistic={updateTicketOptimistic}
         onAddProject={() => console.log('Add Project from SingleProjectView - need to implement')}
         viewMode={internalViewMode}
         refreshProjects={refreshProjects}
