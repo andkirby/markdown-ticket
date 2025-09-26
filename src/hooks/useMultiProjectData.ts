@@ -448,7 +448,8 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
 
   // Update a ticket in the selected project
   const updateTicket = useCallback(async (ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> => {
-    if (!selectedProject) {
+    const currentProject = selectedProjectRef.current;
+    if (!currentProject) {
       throw new Error('No project selected');
     }
 
@@ -484,8 +485,8 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
                            (updates.status || updates.priority || updates.implementationDate || updates.implementationNotes);
 
       let response;
-      const apiUrl = `/api/projects/${selectedProject.id}/crs/${ticketCode}`;
-      console.log('updateTicket: Using selectedProject.id =', selectedProject.id, 'for ticket', ticketCode);
+      const apiUrl = `/api/projects/${currentProject.id}/crs/${ticketCode}`;
+      console.log('updateTicket: Using selectedProject.id =', currentProject.id, 'for ticket', ticketCode);
       console.log('updateTicket: API URL =', apiUrl);
       
       if (shouldUsePatch) {
@@ -564,10 +565,33 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       setError(error);
       throw error;
     }
-  }, [selectedProject, tickets]);
+  }, [tickets]);
 
   // Optimistic update for immediate UI feedback
   const updateTicketOptimistic = useCallback(async (ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> => {
+    // Create optimistic ticket for immediate return
+    const optimisticTicket: Ticket = {
+      code: ticketCode,
+      title: '',
+      status: 'Proposed',
+      type: 'Feature Enhancement', 
+      priority: 'Medium',
+      content: '',
+      filePath: '',
+      dateCreated: new Date(),
+      lastModified: new Date(),
+      implementationDate: null,
+      phaseEpic: '',
+      description: '',
+      rationale: '',
+      assignee: '',
+      implementationNotes: '',
+      relatedTickets: [],
+      dependsOn: [],
+      blocks: [],
+      ...updates,
+    };
+
     // Immediately update local state for instant UI feedback
     setTickets(prevTickets => 
       prevTickets.map(ticket => 
@@ -577,14 +601,15 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       )
     );
 
-    // Then make the API call (SSE will handle the final state)
-    try {
-      return await updateTicket(ticketCode, updates);
-    } catch (error) {
+    // Fire-and-forget API call - don't await it
+    updateTicket(ticketCode, updates).catch(error => {
+      console.error('Optimistic update failed, reverting:', error);
       // Revert optimistic update on error
-      await fetchTicketsForProject(selectedProjectRef.current!);
-      throw error;
-    }
+      fetchTicketsForProject(selectedProjectRef.current!);
+    });
+
+    // Return immediately with optimistic data
+    return optimisticTicket;
   }, [updateTicket]);
 
   // Delete a ticket from the selected project
@@ -647,6 +672,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     // Ticket operations
     createTicket,
     updateTicket,
+    updateTicketOptimistic,
     deleteTicket,
     
     // Refresh operations
