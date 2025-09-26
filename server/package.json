@@ -13,11 +13,12 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@iarna/toml": "^2.2.5",
+    "axios": "^1.12.2",
     "chokidar": "^3.6.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "glob": "^11.0.3",
-    "toml": "^3.0.0"
+    "glob": "^11.0.3"
   },
   "devDependencies": {
     "eslint": "^8.50.0",

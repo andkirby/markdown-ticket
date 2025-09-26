@@ -20,12 +20,30 @@ let devModeLogCount = 0;
 let devModeRateLimitStart = Date.now();
 const devStreamClients = new Set(); // DEV mode SSE clients
 
+// Status endpoint rate limiting
+const statusRequestTimes = new Map(); // IP -> last request time
+const STATUS_RATE_LIMIT = 10000; // 10 seconds minimum between requests
+
 // Vite plugin for frontend logging endpoints
 const frontendLoggingPlugin = () => ({
   name: 'frontend-logging',
   configureServer(server) {
     server.middlewares.use('/api/frontend/logs/status', (req, res, next) => {
       if (req.method === 'GET') {
+        // Rate limiting for status endpoint
+        const clientIP = req.connection?.remoteAddress || 'unknown';
+        const now = Date.now();
+        const lastRequest = statusRequestTimes.get(clientIP);
+        
+        if (lastRequest && (now - lastRequest) < STATUS_RATE_LIMIT) {
+          res.statusCode = 429;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'Rate limited' }));
+          return;
+        }
+        
+        statusRequestTimes.set(clientIP, now);
+        
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ 
           active: frontendSessionActive,
