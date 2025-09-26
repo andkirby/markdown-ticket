@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Ticket, Status } from '../types';
@@ -66,8 +66,19 @@ const BoardContent: React.FC<BoardProps> = ({
   // IMPORTANT: Always use hook data for multi-project mode to ensure fresh state
   // Prop data should only be used in single-project mode (when props are explicitly passed)
   const selectedProject = propSelectedProject !== undefined ? propSelectedProject : hookData.selectedProject;
-  const tickets = propTickets !== undefined ? propTickets : hookData.tickets;
+  const baseTickets = propTickets !== undefined ? propTickets : hookData.tickets;
   const loading = propLoading !== undefined ? propLoading : hookData.loading;
+  
+  // Local state for immediate UI updates during drag-and-drop
+  const [localTicketUpdates, setLocalTicketUpdates] = useState<Record<string, Partial<Ticket>>>({});
+  
+  // Merge base tickets with local updates for immediate UI feedback
+  const tickets = useMemo(() => {
+    return baseTickets.map(ticket => ({
+      ...ticket,
+      ...localTicketUpdates[ticket.code]
+    }));
+  }, [baseTickets, localTicketUpdates]);
   
   
   // IMPORTANT: Always use hookData functions for state management operations
@@ -87,6 +98,7 @@ const BoardContent: React.FC<BoardProps> = ({
   const createTicket = hookData.createTicket;
   const refreshProjectTickets = hookData.refreshTickets;
   const updateTicket = hookData.updateTicket;
+  const updateTicketOptimistic = hookData.updateTicketOptimistic;
   const clearError = hookData.clearError;
 
   // Save preferences when they change
@@ -95,21 +107,20 @@ const BoardContent: React.FC<BoardProps> = ({
     setSortPreferences(newPreferences);
   };
   
-  const handleDrop = useCallback(async (status: Status, ticket: Ticket) => {
-    // Always allow the drop - remove the status check that was causing issues
-    // The backend and file system are the source of truth, not the potentially stale UI state
+  const handleDrop = useCallback((status: Status, ticket: Ticket) => {
+    // Just update local state immediately - no backend calls, no events
+    setLocalTicketUpdates(prev => ({
+      ...prev,
+      [ticket.code]: { status }
+    }));
     
-    try {
-      // Send only the status - let backend handle implementation fields automatically
-      const updateData: Partial<Ticket> = { status };
-      
-      // Use the appropriate update function based on mode
-      const updateFunction = onTicketUpdate || updateTicket;
-      await updateFunction(ticket.code, updateData);
-    } catch (error) {
-      console.error('Board: Failed to move ticket:', error);
-    }
-  }, [onTicketUpdate, updateTicket]);
+    // Send update to backend (fire and forget)
+    const updateData: Partial<Ticket> = { status };
+    const updateFunction = onTicketUpdate || updateTicketOptimistic;
+    updateFunction(ticket.code, updateData);
+    
+    console.log('Board: Ticket moved locally:', ticket.code, 'to', status);
+  }, [onTicketUpdate, updateTicketOptimistic]);
 
   const handleTicketCreate = useCallback(async () => {
     if (!selectedProject) {
