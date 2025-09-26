@@ -286,6 +286,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
 
   // Enhanced setSelectedProject with localStorage persistence
   const setSelectedProjectWithPersistence = useCallback((project: Project | null) => {
+    console.log('setSelectedProjectWithPersistence called with:', project ? { id: project.id, name: project.project.name } : null);
     setSelectedProject(project);
     saveProjectSelection(project);
   }, [saveProjectSelection]);
@@ -320,7 +321,13 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
 
   // Set up realtime file watcher (once only)
   useEffect(() => {
-    const handleTicketsChange = (updatedTickets: Ticket[]) => {
+    const handleTicketsChange = (data: Ticket[] | Error) => {
+      if (data instanceof Error) {
+        console.error('❌ Realtime watcher error:', data);
+        setError(data);
+        return;
+      }
+      
       const currentProject = selectedProjectRef.current;
       if (currentProject) {
         fetchTicketsForProject(currentProject).catch(err => {
@@ -329,9 +336,11 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       }
     };
 
-    const handleError = (error: Error) => {
-      console.error('❌ Realtime watcher error:', error);
-      setError(error);
+    const handleError = (data: Ticket[] | Error) => {
+      if (data instanceof Error) {
+        console.error('❌ Realtime watcher error:', data);
+        setError(data);
+      }
     };
 
     // Configure and start the watcher (only once)
@@ -420,7 +429,10 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
         content: newTicketData.content || '',
         filePath: newTicketData.path || '',
         lastModified: new Date(),
-        phaseEpic: 'Phase A'
+        phaseEpic: 'Phase A',
+        relatedTickets: [],
+        dependsOn: [],
+        blocks: []
       };
       
       // Update local state
@@ -473,6 +485,8 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
 
       let response;
       const apiUrl = `/api/projects/${selectedProject.id}/crs/${ticketCode}`;
+      console.log('updateTicket: Using selectedProject.id =', selectedProject.id, 'for ticket', ticketCode);
+      console.log('updateTicket: API URL =', apiUrl);
       
       if (shouldUsePatch) {
         // Using PATCH for efficient update
@@ -499,12 +513,18 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       } else {
         console.log('updateTicket: Using PUT for full content update');
         
+        // Find the current ticket to get its existing data
+        const existingTicket = tickets.find(t => t.code === ticketCode);
+        if (!existingTicket) {
+          throw new Error(`Ticket ${ticketCode} not found`);
+        }
+        
         // Generate full markdown content from the updated ticket
         const updatedTicketWithContent: Ticket = {
-          ...currentTicket,
+          ...existingTicket,
           ...updates,
           lastModified: new Date(),
-          content: currentTicket.content || '',
+          content: existingTicket.content || '',
         };
 
         const markdownContent = formatTicketAsMarkdown(updatedTicketWithContent);
@@ -627,7 +647,6 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
     // Ticket operations
     createTicket,
     updateTicket,
-    updateTicketOptimistic,
     deleteTicket,
     
     // Refresh operations

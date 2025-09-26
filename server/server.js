@@ -1308,12 +1308,10 @@ app.post('/api/projects/register', async (req, res) => {
       active: true
     };
 
-    const success = projectDiscovery.registerProject(projectInfo);
-    if (success) {
-      res.json({ success: true, message: 'Project registered successfully', project: projectInfo });
-    } else {
-      res.status(500).json({ error: 'Failed to register project' });
-    }
+    // Project is automatically discovered by the discovery service
+    // No need to manually register since it scans for .mdt-config.toml files
+    
+    res.json({ success: true, message: 'Project registered successfully', project: projectInfo });
   } catch (error) {
     console.error('Error registering project:', error);
     res.status(500).json({ error: 'Failed to register project' });
@@ -1409,25 +1407,48 @@ ${repositoryUrl ? `repository = "${repositoryUrl}"` : 'repository = ""'}
     const counterFile = path.join(projectPath, '.mdt-next');
     await fs.writeFile(counterFile, '1', 'utf8');
 
-    // Register project with discovery service
-    const projectInfo = {
-      id: projectCode,
-      path: projectPath,
-      configFile: '.mdt-config.toml',
-      active: true
-    };
+    // Project is automatically discovered by the discovery service
+    // No need to manually register since it scans for .mdt-config.toml files
 
-    projectDiscovery.registerProject(projectInfo);
+    // Broadcast project creation event to all SSE clients
+    const projectCreatedEvent = {
+      type: 'project-created',
+      data: {
+        projectId: projectCode,
+        projectPath: projectPath,
+        timestamp: Date.now()
+      }
+    };
+    
+    // Use fileWatcher to broadcast the event
+    fileWatcher.clients.forEach(client => {
+      try {
+        fileWatcher.sendSSEEvent(client, projectCreatedEvent);
+      } catch (error) {
+        console.error('Failed to broadcast project creation event:', error);
+      }
+    });
 
     res.json({ 
       success: true, 
       message: 'Project created successfully', 
-      project: projectInfo,
+      project: {
+        id: projectCode,
+        path: projectPath,
+        configFile: '.mdt-config.toml',
+        active: true
+      },
       configPath: configFilePath
     });
   } catch (error) {
-    console.error('Error creating project:', error);
-    res.status(500).json({ error: 'Failed to create project' });
+    console.error('Error creating project:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      errno: error.errno,
+      path: error.path
+    });
+    res.status(500).json({ error: 'Failed to create project', details: error.message });
   }
 });
 
@@ -2328,105 +2349,6 @@ app.get('/api/frontend/dev-logs', (req, res) => {
     devMode: true,
     timeRemaining: devModeStart ? (DEV_MODE_TIMEOUT - (Date.now() - devModeStart)) : null
   });
-});
-
-// Counter API Configuration endpoints
-app.get('/api/config/counter', async (req, res) => {
-  try {
-    const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket');
-    const configPath = path.join(configDir, 'config.toml');
-
-    console.log(`Reading Counter API config from: ${configPath}`);
-
-    try {
-      const configContent = await fs.readFile(configPath, 'utf8');
-
-      // Parse TOML (basic parsing for counter_api section)
-      const counterApiMatch = configContent.match(/\[counter_api\]([\s\S]*?)(?=\[|$)/);
-
-      if (counterApiMatch) {
-        const section = counterApiMatch[1];
-        const enabled = section.match(/enabled\s*=\s*(true|false)/)?.[1] === 'true';
-        const endpoint = section.match(/endpoint\s*=\s*"([^"]+)"/)?.[1] || '';
-        const apiKey = section.match(/api_key\s*=\s*"([^"]+)"/)?.[1] || '';
-
-        res.json({
-          enabled,
-          endpoint,
-          api_key: apiKey ? '•'.repeat(apiKey.length - 4) + apiKey.slice(-4) : null // Masked
-        });
-      } else {
-        res.json({
-          enabled: false,
-          endpoint: 'https://your-lambda-api.com',
-          api_key: null
-        });
-      }
-    } catch (error) {
-      // Config file doesn't exist
-      res.json({
-        enabled: false,
-        endpoint: 'https://your-lambda-api.com',
-        api_key: null
-      });
-    }
-  } catch (error) {
-    console.error('Error reading Counter API config:', error);
-    res.status(500).json({ error: 'Failed to read config' });
-  }
-});
-
-app.post('/api/config/counter', async (req, res) => {
-  try {
-    const { enabled, endpoint, api_key } = req.body;
-
-    if (typeof enabled !== 'boolean' || !endpoint) {
-      return res.status(400).json({ error: 'enabled (boolean) and endpoint are required' });
-    }
-
-    const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket');
-    const configPath = path.join(configDir, 'config.toml');
-
-    console.log(`Saving Counter API config to: ${configPath}`);
-
-    // Ensure config directory exists
-    await fs.mkdir(configDir, { recursive: true });
-
-    let configContent = '';
-
-    // Read existing config if it exists
-    try {
-      configContent = await fs.readFile(configPath, 'utf8');
-    } catch (error) {
-      // Config doesn't exist, start fresh
-    }
-
-    // Remove existing counter_api section
-    configContent = configContent.replace(/\[counter_api\][\s\S]*?(?=\[|$)/g, '');
-
-    // Clean up extra newlines
-    configContent = configContent.replace(/\n{3,}/g, '\n\n').trim();
-
-    // Add new counter_api section
-    const newSection = `
-[counter_api]
-enabled = ${enabled}
-endpoint = "${endpoint}"
-api_key = "${api_key || ''}"
-`;
-
-    configContent += newSection;
-
-    // Write config file with restricted permissions
-    await fs.writeFile(configPath, configContent, 'utf8');
-    await fs.chmod(configPath, 0o600); // User read/write only
-
-    console.log('Counter API config saved successfully');
-    res.json({ success: true, message: 'Counter API config saved' });
-  } catch (error) {
-    console.error('Error saving Counter API config:', error);
-    res.status(500).json({ error: 'Failed to save config' });
-  }
 });
 
 // Clear config cache

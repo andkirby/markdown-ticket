@@ -214,6 +214,14 @@ export class RealtimeFileWatcher {
         }
         break;
         
+      case 'project-created':
+        console.log('Project created event received:', event.data);
+        // Dispatch custom event to trigger projects refresh
+        window.dispatchEvent(new CustomEvent('projectCreated', { 
+          detail: event.data 
+        }));
+        break;
+        
       default:
         console.log('Unknown SSE event type:', event.type);
     }
@@ -378,8 +386,8 @@ export class RealtimeFileWatcher {
             ticketCode: currentTicket.code
           });
         } else {
-          const currentModified = currentTicket.lastModified.getTime();
-          const existingModified = existingTicket.lastModified.getTime();
+          const currentModified = currentTicket.lastModified?.getTime() || 0;
+          const existingModified = existingTicket.lastModified?.getTime() || 0;
           
           if (currentModified > existingModified) {
             changes.push({
