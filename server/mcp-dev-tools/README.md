@@ -101,6 +101,20 @@ npm install
 npm run build
 ```
 
+### Health Check
+```bash
+# Run health check via npm
+npm run health-check
+
+# Or use the shell wrapper
+./health-check.sh
+```
+
+The health check verifies that:
+- MCP server builds and starts correctly
+- Server responds to initialization requests
+- No critical startup errors occur
+
 ### Start Development Environment
 ```bash
 # Terminal 1: Start backend
