@@ -158,8 +158,8 @@ export class FileWatcher {
           });
         } else {
           // Check if ticket was modified by comparing lastModified timestamps
-          const currentModified = currentTicket.lastModified.getTime();
-          const existingModified = existingTicket.lastModified.getTime();
+          const currentModified = currentTicket.lastModified?.getTime() || 0;
+          const existingModified = existingTicket.lastModified?.getTime() || 0;
           
           if (currentModified > existingModified) {
             changes.push({
