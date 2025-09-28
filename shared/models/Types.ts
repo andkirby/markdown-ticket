@@ -10,7 +10,11 @@ export type CRStatus =
   | 'In Progress' 
   | 'Implemented' 
   | 'Rejected'
-  | 'On Hold';
+  | 'On Hold'
+  | 'Superseded'
+  | 'Deprecated'
+  | 'Duplicate'
+  | 'Partially Implemented';
 
 export type CRType = 
   | 'Architecture' 

@@ -7,6 +7,7 @@
 export * from './models/Ticket';
 export * from './models/Project';
 export * from './models/Config';
+export * from './models/Counter';
 
 // Types
 export type {
@@ -30,6 +31,7 @@ export * from './services/ProjectService';
 export * from './services/MarkdownService';
 export * from './services/TemplateService';
 export * from './services/CRService';
+export * from './services/CounterService';
 
 // Constants
 export * from './utils/constants';

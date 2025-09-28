@@ -46,7 +46,7 @@ export class TemplateService {
         }
       }
 
-      console.log(`Loaded ${this.templates.size} templates from ${this.templatesPath}`);
+      console.error(`Loaded ${this.templates.size} templates from ${this.templatesPath}`);
     } catch (error) {
       console.error('Failed to load templates from files:', error);
       this.initializeFallbackTemplates();
@@ -54,7 +54,7 @@ export class TemplateService {
   }
 
   private initializeFallbackTemplates(): void {
-    console.log('Using fallback hardcoded templates');
+    console.error('Using fallback hardcoded templates');
     
     // Bug Fix Template (fallback)
     this.templates.set('Bug Fix', {
