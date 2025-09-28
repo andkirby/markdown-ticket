@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import showdown from 'showdown';
+import { initMermaid, processMermaidBlocks } from '../../utils/mermaid';
 
 interface DocumentFile {
   name: string;
@@ -76,6 +77,13 @@ export default function MarkdownViewer({ filePath, fileInfo }: MarkdownViewerPro
   }
 
   const htmlContent = converter.makeHtml(content);
+  const processedHtml = processMermaidBlocks(htmlContent);
+
+  useEffect(() => {
+    if (processedHtml) {
+      initMermaid();
+    }
+  }, [processedHtml]);
 
   // Format date helper
   const formatDate = (date: Date | string | undefined): string => {
@@ -112,7 +120,7 @@ export default function MarkdownViewer({ filePath, fileInfo }: MarkdownViewerPro
         )}
         <div
           className="prose prose-sm max-w-none dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
+          dangerouslySetInnerHTML={{ __html: processedHtml }}
         />
       </div>
     </div>
