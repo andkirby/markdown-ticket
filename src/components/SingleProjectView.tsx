@@ -1,19 +1,17 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Board from './Board';
 import { DocumentsLayout } from './DocumentsView';
 import { DuplicateResolver } from './DuplicateResolver';
+import { CounterAPI } from './CounterAPI';
 import { Ticket } from '../types';
-import { SortControls } from './SortControls';
-import { Button } from './UI/index';
 import { SecondaryHeader } from './SecondaryHeader';
 import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 import { TicketCode } from './TicketCode';
-import { normalizeTicket } from '../../shared';
 import { getProjectCode } from './ProjectSelector';
 
-type SingleProjectViewMode = 'board' | 'list' | 'documents';
+type ViewMode = 'board' | 'list' | 'documents';
 
 const VIEW_MODE_KEY = 'single-project-view-mode';
 
@@ -43,15 +41,18 @@ interface SingleProjectViewProps {
   tickets?: Ticket[];
   updateTicketOptimistic?: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>;
   onAddProject?: () => void;
-  viewMode?: string;
+  viewMode?: ViewMode;
   refreshProjects?: () => Promise<void>;
 }
 
 export default function SingleProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, onAddProject, viewMode: externalViewMode, refreshProjects }: SingleProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
-  const [internalViewMode, setInternalViewMode] = useState<SingleProjectViewMode>(() => {
+  const [internalViewMode, setInternalViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
-    return (saved as SingleProjectViewMode) || 'board';
+    const validModes: ViewMode[] = ['board', 'list', 'documents'];
+    return (saved && validModes.includes(saved as ViewMode)) 
+      ? (saved as ViewMode) 
+      : 'board';
   });
   
   const viewMode = externalViewMode || internalViewMode;
@@ -60,10 +61,11 @@ export default function SingleProjectView({ onTicketClick, selectedProject, tick
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showCounterAPIModal, setShowCounterAPIModal] = useState(false);
   const [showDuplicateResolver, setShowDuplicateResolver] = useState(false);
 
-  const handleViewModeChange = (mode: SingleProjectViewMode) => {
-    setViewMode(mode);
+  const handleViewModeChange = (mode: ViewMode) => {
+    setInternalViewMode(mode);
     localStorage.setItem(VIEW_MODE_KEY, mode);
   };
 
@@ -120,6 +122,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, tick
               onRefresh={handleRefresh}
               onAddProject={() => setShowAddProjectModal(true)}
               onEditProject={() => setShowEditProjectModal(true)}
+              onCounterAPI={() => setShowCounterAPIModal(true)}
               selectedProject={selectedProject}
             />
           </div>
@@ -171,7 +174,7 @@ export default function SingleProjectView({ onTicketClick, selectedProject, tick
               ))}
             </div>
           </div>
-        ) : viewMode === 'docs' || viewMode === 'documents' ? (
+        ) : viewMode === 'documents' ? (
           selectedProject ? (
             <DocumentsLayout projectPath={selectedProject.project.path} />
           ) : (
@@ -181,6 +184,26 @@ export default function SingleProjectView({ onTicketClick, selectedProject, tick
           )
         ) : null}
       </div>
+      
+      {/* Counter API Modal */}
+      {showCounterAPIModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-background border border-border rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto m-4">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-semibold">Counter API</h2>
+              <button
+                onClick={() => setShowCounterAPIModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4">
+              <CounterAPI />
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Duplicate Resolver Modal */}
       {showDuplicateResolver && selectedProject && (

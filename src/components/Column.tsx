@@ -5,7 +5,7 @@ import { Ticket, Status } from '../types';
 import TicketCard from './TicketCard';
 import { ResolutionDialog } from './ResolutionDialog';
 import { sortTickets } from '../utils/sorting';
-import { ScrollArea } from './ui/scroll-area';
+import { ScrollArea } from './UI/scroll-area';
 
 interface ColumnProps {
   column: {
@@ -200,7 +200,7 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
     accept: 'ticket',
     drop: (item: any, monitor) => {
       try {
-        const dropResult = monitor.getDropResult();
+        const dropResult = monitor.getDropResult() as { handled?: boolean } | null;
         if (dropResult && dropResult.handled) {
           // Drop was already handled by a child component (like StatusToggle)
           return;

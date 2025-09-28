@@ -13,6 +13,7 @@ interface SecondaryHeaderProps {
   onRefresh?: () => void;
   onAddProject?: () => void;
   onEditProject?: () => void;
+  onCounterAPI?: () => void;
   selectedProject?: any;
 }
 
@@ -23,6 +24,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   onRefresh,
   onAddProject,
   onEditProject,
+  onCounterAPI,
   selectedProject
 }) => {
   return (
@@ -47,9 +49,10 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
 
       {/* Hamburger Menu - visible in all views */}
       {onAddProject && (
-        <HamburgerMenu 
+        <HamburgerMenu
           onAddProject={onAddProject}
           onEditProject={onEditProject}
+          onCounterAPI={onCounterAPI}
           hasActiveProject={!!selectedProject}
         />
       )}

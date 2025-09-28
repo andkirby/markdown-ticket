@@ -1,20 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Plus, Edit } from 'lucide-react';
+import { Menu, Plus, Edit, Hash } from 'lucide-react';
 import { Button } from './UI/index';
+import { useConfig } from '../hooks/useConfig';
 
 interface HamburgerMenuProps {
   onAddProject: () => void;
   onEditProject?: () => void;
+  onCounterAPI?: () => void;
   hasActiveProject?: boolean;
 }
 
-export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ 
-  onAddProject, 
-  onEditProject, 
-  hasActiveProject = false 
+export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
+  onAddProject,
+  onEditProject,
+  onCounterAPI,
+  hasActiveProject = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { isCounterAPIEnabled } = useConfig();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,6 +39,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   const handleEditProject = () => {
     setIsOpen(false);
     onEditProject?.();
+  };
+
+  const handleCounterAPI = () => {
+    setIsOpen(false);
+    onCounterAPI?.();
   };
 
   return (
@@ -65,6 +74,15 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Project
+              </button>
+            )}
+            {isCounterAPIEnabled() && onCounterAPI && (
+              <button
+                onClick={handleCounterAPI}
+                className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Hash className="h-4 w-4 mr-2" />
+                Counter API
               </button>
             )}
           </div>

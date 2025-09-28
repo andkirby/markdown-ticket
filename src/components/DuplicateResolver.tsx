@@ -71,7 +71,7 @@ export const DuplicateResolver: React.FC<DuplicateResolverProps> = ({ projectId,
       preview = await getPreviewInfo(filepath);
     }
     
-    setShowConfirm({ action, filepath, filename, preview });
+    setShowConfirm({ action, filepath, filename, preview: preview || undefined });
   };
 
   const confirmAction = async () => {
