@@ -34,7 +34,7 @@ This guide provides complete instructions for installing, configuring, and using
 
 **Local scope** (project-specific, **🔴 currently not working - keep for future**):
 ```bash
-q mcp add --name mdt-tickets \
+q mcp add --name mdt-all \
   --command "node" \
   --args $HOME/markdown-ticket/mcp-server/dist/index.js \
   --env MCP_PROJECT_FILTER=COD \
@@ -54,7 +54,7 @@ q mcp add --name mdt-all \
 
 **Local scope** (recommended, LLM sees only one project):
 ```bash
-claude mcp add mdt-tickets node $HOME/markdown-ticket/mcp-server/dist/index.js \
+claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js \
   --env MCP_PROJECT_FILTER=COD \
   --env MCP_SCAN_PATHS=$(pwd)
 ```
