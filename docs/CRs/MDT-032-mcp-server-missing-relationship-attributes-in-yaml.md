@@ -33,7 +33,21 @@ Relationship attributes are essential for ticket dependency tracking and UI disp
 *To be filled during implementation*
 
 ## 5. Implementation Notes
-*To be filled during/after implementation*
+
+### 2025-09-19: YAML Frontmatter Validation Issue Discovered
+**Problem**: LLMs are putting multi-line markdown content with `\n` characters into YAML frontmatter attributes like `description`, causing formatting issues.
+
+**Example Issue**: SEB-002 ticket update attempted to put entire markdown content into `description` frontmatter field instead of ticket body.
+
+**Root Cause**: 
+- `description` field documented as "Problem statement or description" - should be brief single-line text
+- No validation exists to prevent multi-line content in frontmatter attributes
+- LLMs confuse frontmatter attributes with markdown body content
+
+**Required Validation**:
+- Add validation for plain-text-only attributes: `description`, `title`, `rationale`, `assignee`, `phaseEpic`
+- Return error when `\n` characters detected in these fields
+- Provide clear error message explaining frontmatter vs body content distinction
 
 ## 6. References
 *To be filled during implementation*
