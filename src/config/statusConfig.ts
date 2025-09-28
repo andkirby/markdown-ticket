@@ -1,4 +1,5 @@
-import { StatusConfig, CRStatus } from '../../shared/models/Config';
+import { StatusConfig } from '../../shared/models/Config';
+import { CRStatus } from '../../shared/models/Types';
 
 export type { StatusConfig };
 
@@ -93,7 +94,7 @@ export const BOARD_COLUMNS = {
     label: 'Backlog',
     color: 'gray',
     description: 'Work that needs to be done',
-    statuses: ['Proposed'] as Status[],
+    statuses: ['Proposed'] as CRStatus[],
     visible: true,
     order: 1
   },
@@ -103,7 +104,7 @@ export const BOARD_COLUMNS = {
     label: 'Open',
     color: 'green',
     description: 'Work that is ready to start',
-    statuses: ['Approved'] as Status[],
+    statuses: ['Approved'] as CRStatus[],
     visible: true,
     order: 2
   },
@@ -113,7 +114,7 @@ export const BOARD_COLUMNS = {
     label: 'In Progress',
     color: 'blue',
     description: 'Work currently being done',
-    statuses: ['In Progress', 'On Hold'] as Status[],
+    statuses: ['In Progress', 'On Hold'] as CRStatus[],
     visible: true,
     order: 3
   },
@@ -123,7 +124,7 @@ export const BOARD_COLUMNS = {
     label: 'Done',
     color: 'teal',
     description: 'Completed work',
-    statuses: ['Implemented', 'Partially Implemented', 'Rejected'] as Status[],
+    statuses: ['Implemented', 'Partially Implemented', 'Rejected'] as CRStatus[],
     visible: true,
     order: 4
   },
@@ -133,7 +134,7 @@ export const BOARD_COLUMNS = {
     label: 'Deferred',
     color: 'orange',
     description: 'Work that is paused or cancelled',
-    statuses: ['Rejected', 'Superseded', 'Duplicate'] as Status[],
+    statuses: ['Rejected', 'Superseded', 'Duplicate'] as CRStatus[],
     visible: false,
     order: 5
   }
@@ -142,22 +143,22 @@ export const BOARD_COLUMNS = {
 // Status Groupings (for compatibility)
 export const STATUS_GROUPS = {
   // Active statuses that can be worked on
-  active: ['Proposed', 'Approved', 'In Progress', 'On Hold', 'Deprecated'] as Status[],
+  active: ['Proposed', 'Approved', 'In Progress', 'On Hold', 'Deprecated'] as CRStatus[],
   
   // Completed/terminal statuses
-  completed: ['Implemented', 'Rejected', 'Superseded', 'Duplicate'] as Status[],
+  completed: ['Implemented', 'Rejected', 'Superseded', 'Duplicate'] as CRStatus[],
   
   // Statuses that require review
-  review: ['Proposed'] as Status[],
+  review: ['Proposed'] as CRStatus[],
   
   // Statuses that are in development
-  development: ['In Progress', 'Partially Implemented'] as Status[],
+  development: ['In Progress', 'Partially Implemented'] as CRStatus[],
   
   // Statuses that are blocked or paused
-  blocked: ['On Hold', 'Rejected', 'Deprecated'] as Status[],
+  blocked: ['On Hold', 'Rejected', 'Deprecated'] as CRStatus[],
   
   // Statuses that are final
-  final: ['Implemented', 'Rejected', 'Superseded', 'Duplicate'] as Status[]
+  final: ['Implemented', 'Rejected', 'Superseded', 'Duplicate'] as CRStatus[]
 };
 
 // Get visible columns for the board
@@ -166,7 +167,7 @@ export const getVisibleColumns = () => {
 };
 
 // Get column for a specific status
-export const getColumnForStatus = (status: Status) => {
+export const getColumnForStatus = (status: CRStatus) => {
   for (const column of Object.values(BOARD_COLUMNS)) {
     if (column.statuses.includes(status)) {
       return column;
@@ -176,7 +177,7 @@ export const getColumnForStatus = (status: Status) => {
 };
 
 // Check if status is visible on main board
-export const isStatusVisible = (status: Status) => {
+export const isStatusVisible = (status: CRStatus) => {
   const column = getColumnForStatus(status);
   return column.visible;
 };
@@ -187,83 +188,83 @@ export const toggleColumnVisibility = (columnName: keyof typeof BOARD_COLUMNS) =
 };
 
 // Status Transitions
-export const canTransitionFromTo = (fromStatus: Status, toStatus: Status): boolean => {
+export const canTransitionFromTo = (fromStatus: CRStatus, toStatus: CRStatus): boolean => {
   const config = STATUS_CONFIG[fromStatus];
   return config.canTransitionTo.includes(toStatus);
 };
 
 // Get valid transitions for a status
-export const getValidTransitions = (fromStatus: Status): Status[] => {
+export const getValidTransitions = (fromStatus: CRStatus): CRStatus[] => {
   return STATUS_CONFIG[fromStatus].canTransitionTo;
 };
 
 // Get status by order
-export const getStatusByOrder = (order: number): Status | undefined => {
-  return Object.entries(STATUS_CONFIG).find(([_, config]) => config.order === order)?.[0] as Status;
+export const getStatusByOrder = (order: number): CRStatus | undefined => {
+  return Object.entries(STATUS_CONFIG).find(([_, config]) => config.order === order)?.[0] as CRStatus;
 };
 
 // Get next status in workflow
-export const getNextStatus = (currentStatus: Status): Status | undefined => {
+export const getNextStatus = (currentStatus: CRStatus): CRStatus | undefined => {
   const currentOrder = STATUS_CONFIG[currentStatus].order;
   const nextStatus = getStatusByOrder(currentOrder + 1);
   return nextStatus && canTransitionFromTo(currentStatus, nextStatus) ? nextStatus : undefined;
 };
 
 // Get previous status in workflow
-export const getPreviousStatus = (currentStatus: Status): Status | undefined => {
+export const getPreviousStatus = (currentStatus: CRStatus): CRStatus | undefined => {
   const currentOrder = STATUS_CONFIG[currentStatus].order;
   const previousStatus = getStatusByOrder(currentOrder - 1);
   return previousStatus && canTransitionFromTo(previousStatus, currentStatus) ? previousStatus : undefined;
 };
 
 // Check if status is editable
-export const isStatusEditable = (status: Status): boolean => {
+export const isStatusEditable = (status: CRStatus): boolean => {
   return !STATUS_CONFIG[status].isTerminal;
 };
 
 // Get status color for UI
-export const getStatusColor = (status: Status): string => {
+export const getStatusColor = (status: CRStatus): string => {
   return STATUS_CONFIG[status].color;
 };
 
 // Get status description
-export const getStatusDescription = (status: Status): string => {
+export const getStatusDescription = (status: CRStatus): string => {
   return STATUS_CONFIG[status].description;
 };
 
 // Get status label
-export const getStatusLabel = (status: Status): string => {
+export const getStatusLabel = (status: CRStatus): string => {
   return STATUS_CONFIG[status].label;
 };
 
 // Sort statuses by order
-export const sortStatusesByOrder = (statuses: Status[]): Status[] => {
+export const sortStatusesByOrder = (statuses: CRStatus[]): CRStatus[] => {
   return statuses.sort((a, b) => STATUS_CONFIG[a].order - STATUS_CONFIG[b].order);
 };
 
 // Get initial statuses for new tickets
-export const getInitialStatuses = (): Status[] => {
+export const getInitialStatuses = (): CRStatus[] => {
   return ['Proposed'];
 };
 
 // Get statuses that can be set for new tickets
-export const getNewTicketStatuses = (): Status[] => {
+export const getNewTicketStatuses = (): CRStatus[] => {
   return ['Proposed'];
 };
 
 // Check if status change requires implementation date update
-export const shouldUpdateImplementationDate = (oldStatus: Status, newStatus: Status): boolean => {
+export const shouldUpdateImplementationDate = (oldStatus: CRStatus, newStatus: CRStatus): boolean => {
   // Update implementation date when transitioning to "In Progress" or "Implemented"
   const statusesThatTriggerUpdate = ['In Progress', 'Implemented'];
   return statusesThatTriggerUpdate.includes(newStatus) && oldStatus !== newStatus;
 };
 
 // Get workflow suggestions for a status
-export const getWorkflowSuggestions = (currentStatus: Status): Status[] => {
+export const getWorkflowSuggestions = (currentStatus: CRStatus): CRStatus[] => {
   const config = STATUS_CONFIG[currentStatus];
   
   // Common workflow suggestions based on current status
-  const suggestions: Status[] = [];
+  const suggestions: CRStatus[] = [];
   
   if (currentStatus === 'Proposed') {
     suggestions.push('Approved');
@@ -273,8 +274,6 @@ export const getWorkflowSuggestions = (currentStatus: Status): Status[] => {
     suggestions.push('Implemented', 'On Hold');
   } else if (currentStatus === 'On Hold') {
     suggestions.push('Approved', 'Rejected', 'In Progress');
-  } else if (currentStatus === 'Deprecated') {
-    suggestions.push('Rejected');
   }
   
   return suggestions.filter(status => canTransitionFromTo(currentStatus, status));

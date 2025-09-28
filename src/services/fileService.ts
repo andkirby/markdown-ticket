@@ -81,11 +81,11 @@ export class FileService {
           const data: StoredTicket[] = JSON.parse(stored);
           const tickets = data.map(item => ({
             ...item.ticket,
-            dateCreated: new Date(item.ticket.dateCreated),
+            dateCreated: item.ticket.dateCreated ? new Date(item.ticket.dateCreated) : new Date(),
             implementationDate: item.ticket.implementationDate ? new Date(item.ticket.implementationDate) : undefined,
-            lastModified: new Date(item.ticket.lastModified)
+            lastModified: item.ticket.lastModified ? new Date(item.ticket.lastModified) : new Date()
           }));
-          return tickets.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
+          return tickets.sort((a, b) => (b.dateCreated?.getTime() || 0) - (a.dateCreated?.getTime() || 0));
         }
       }
 
@@ -127,7 +127,7 @@ export class FileService {
         }
       }
 
-      return tickets.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
+      return tickets.sort((a, b) => (b.dateCreated?.getTime() || 0) - (a.dateCreated?.getTime() || 0));
     } catch (error) {
       console.warn('Failed to load tickets from files:', error);
       return [];
@@ -460,7 +460,7 @@ export class FileService {
 code: ${ticket.code}
 title: ${ticket.title}
 status: ${ticket.status}
-dateCreated: ${ticket.dateCreated.toISOString()}
+dateCreated: ${ticket.dateCreated?.toISOString() || new Date().toISOString()}
 type: ${ticket.type}
 priority: ${ticket.priority}
 phaseEpic: ${ticket.phaseEpic}
@@ -472,7 +472,7 @@ blocks: ${blocks.join(', ') || ''}
 assignee: ${ticket.assignee || ''}
 implementationDate: ${ticket.implementationDate ? ticket.implementationDate.toISOString() : ''}
 implementationNotes: ${ticket.implementationNotes || ''}
-lastModified: ${ticket.lastModified.toISOString()}
+lastModified: ${ticket.lastModified?.toISOString() || new Date().toISOString()}
 ---
 
 # Change Request: ${ticket.code}
@@ -488,8 +488,8 @@ ${ticket.title}
 - **Priority:** ${ticket.priority}
 - **Phase/Epic:** ${ticket.phaseEpic}
 ## Timeline
-- **Created:** ${ticket.dateCreated.toLocaleDateString()}
-- **Last Modified:** ${ticket.lastModified.toLocaleDateString()}
+- **Created:** ${ticket.dateCreated?.toLocaleDateString() || 'Unknown'}
+- **Last Modified:** ${ticket.lastModified?.toLocaleDateString() || 'Unknown'}
 ${ticket.implementationDate ? `- **Implemented:** ${ticket.implementationDate.toLocaleDateString()}` : ''}
 
 ## Related Information
@@ -571,9 +571,9 @@ ${ticket.content || ''}
       // Validate and convert date strings
       const validatedTickets = importedTickets.map(ticket => ({
         ...ticket,
-        dateCreated: new Date(ticket.dateCreated),
+        dateCreated: ticket.dateCreated ? new Date(ticket.dateCreated) : new Date(),
         implementationDate: ticket.implementationDate ? new Date(ticket.implementationDate) : undefined,
-        lastModified: new Date(ticket.lastModified)
+        lastModified: ticket.lastModified ? new Date(ticket.lastModified) : new Date()
       }));
 
       // Merge with existing tickets
@@ -625,10 +625,10 @@ ${ticket.content || ''}
         const ticketSize = JSON.stringify(ticket).length;
         totalSize += ticketSize;
         
-        if (!oldestTicket || ticket.dateCreated < oldestTicket) {
+        if (ticket.dateCreated && (!oldestTicket || ticket.dateCreated < oldestTicket)) {
           oldestTicket = ticket.dateCreated;
         }
-        if (!newestTicket || ticket.dateCreated > newestTicket) {
+        if (ticket.dateCreated && (!newestTicket || ticket.dateCreated > newestTicket)) {
           newestTicket = ticket.dateCreated;
         }
       }
