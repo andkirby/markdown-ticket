@@ -2,17 +2,16 @@ import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const cardVariants = cva(
-  'bg-white rounded-lg border border-gray-200 shadow-sm',
+  'bg-card text-card-foreground rounded-lg border shadow-sm',
   {
     variants: {
       variant: {
-        default: 'bg-white border-gray-200',
-        dark: 'bg-gray-800 border-gray-700',
-        success: 'bg-green-50 border-green-200',
-        warning: 'bg-yellow-50 border-yellow-200',
-        error: 'bg-red-50 border-red-200',
-        outlined: 'bg-white border-2 border-gray-300',
-        ghost: 'bg-transparent border border-gray-200',
+        default: 'bg-card border-border',
+        success: 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800',
+        warning: 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800',
+        error: 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800',
+        outlined: 'bg-card border-2 border-border',
+        ghost: 'bg-transparent border border-border',
       },
       size: {
         sm: 'p-3',
@@ -74,7 +73,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           size, 
           shadow,
           className: `
-            ${hoverable ? 'transition-all duration-200 hover:shadow-md hover:border-gray-300' : ''}
+            ${hoverable ? 'transition-all duration-200 hover:shadow-md hover:border-border/80' : ''}
             ${clickable ? 'cursor-pointer' : ''}
             ${loading ? 'opacity-60 pointer-events-none' : ''}
             ${className}
@@ -84,13 +83,13 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         {...props}
       >
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          <div className="absolute inset-0 flex items-center justify-center bg-card/75 rounded-lg">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         )}
 
         {header && (
-          <div className="mb-4 pb-4 border-b border-gray-200">
+          <div className="mb-4 pb-4 border-b border-border">
             {header}
           </div>
         )}
@@ -100,7 +99,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         </div>
 
         {footer && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-border">
             {footer}
           </div>
         )}
@@ -127,12 +126,12 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
       >
         <div className="flex-1">
           {title && (
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-foreground">
               {title}
             </h3>
           )}
           {subtitle && (
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               {subtitle}
             </p>
           )}
@@ -195,4 +194,36 @@ const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
 
 CardFooter.displayName = 'CardFooter';
 
-export { Card, CardHeader, CardBody, CardFooter, cardVariants };
+const CardTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={`text-2xl font-semibold leading-none tracking-tight ${className}`}
+    {...props}
+  />
+));
+CardTitle.displayName = 'CardTitle';
+
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={`text-sm text-muted-foreground ${className}`}
+    {...props}
+  />
+));
+CardDescription.displayName = 'CardDescription';
+
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={`p-6 pt-0 ${className}`} {...props} />
+));
+CardContent.displayName = 'CardContent';
+
+export { Card, CardHeader, CardBody, CardFooter, CardTitle, CardDescription, CardContent, cardVariants };

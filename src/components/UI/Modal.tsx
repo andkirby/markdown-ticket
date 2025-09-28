@@ -49,7 +49,6 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     onClose,
     closeOnOverlayClick = true,
     closeOnEscape = true,
-    _showCloseButton = true, // TODO: Implement close button functionality
     overlayClassName,
     children,
     ...props

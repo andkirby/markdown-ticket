@@ -53,7 +53,6 @@ export interface SelectProps
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({
-    _className, // Not used - using variant and size instead
     variant,
     size,
     state,
@@ -69,6 +68,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     value,
     onChange,
     disabled,
+    className,
     ...props
   }, _ref) => { // ref not used
     const [isOpen, setIsOpen] = useState(false);

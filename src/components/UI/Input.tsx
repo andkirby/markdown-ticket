@@ -43,7 +43,6 @@ export interface InputProps
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({
-    _className, // Not used - using variant and size instead
     variant,
     size,
     state,
