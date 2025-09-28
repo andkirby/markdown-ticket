@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import showdown from 'showdown';
 import { Ticket } from '../types/ticket';
 import { Modal, ModalHeader, ModalBody } from './UI/Modal';
 import TicketAttributes from './TicketAttributes';
 import { TicketCode } from './TicketCode';
+import { initMermaid, processMermaidBlocks } from '../utils/mermaid';
 
 interface TicketViewerProps {
   ticket: Ticket | null;
@@ -25,8 +26,15 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
 
   const htmlContent = useMemo(() => {
     if (!ticket?.content) return '';
-    return converter.makeHtml(ticket.content);
+    const html = converter.makeHtml(ticket.content);
+    return processMermaidBlocks(html);
   }, [ticket?.content, converter]);
+
+  useEffect(() => {
+    if (isOpen && htmlContent) {
+      initMermaid();
+    }
+  }, [isOpen, htmlContent]);
 
   if (!ticket) return null;
 
