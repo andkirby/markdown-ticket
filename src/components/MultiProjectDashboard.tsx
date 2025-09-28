@@ -8,6 +8,7 @@ import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 import { getProjectCode } from './ProjectSelector';
+import { CR } from '../../shared/models/Types';
 
 interface Project {
   id: string;
@@ -26,7 +27,7 @@ interface Project {
   autoDiscovered?: boolean;
 }
 
-interface CR {
+interface LocalCR {
   filename: string;
   path: string;
   title: string;
@@ -173,14 +174,27 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
     }
   }, [selectedProject, newCR, fetchCRs]);
 
+  // Convert LocalCR to CR for API calls
+  const convertToCR = (localCR: LocalCR): CR => ({
+    key: localCR.code,
+    title: localCR.title,
+    status: localCR.status as any,
+    type: localCR.type as any,
+    priority: localCR.priority as any,
+    dateCreated: localCR.dateCreated ? new Date(localCR.dateCreated) : new Date(),
+    lastModified: new Date(),
+    content: localCR.content,
+    filePath: localCR.path
+  });
+
   // Delete CR
   const handleDeleteCR = useCallback(async (cr: CR) => {
-    if (!selectedProject || !confirm(`Are you sure you want to delete ${cr.code}?`)) return;
+    if (!selectedProject || !confirm(`Are you sure you want to delete ${cr.key}?`)) return;
     
     try {
       setError(null);
       
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${cr.code}`, {
+      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${cr.key}`, {
         method: 'DELETE',
       });
 
@@ -192,7 +206,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
       await fetchCRs(selectedProject);
       
       // Clear selection if deleted CR was selected
-      if (selectedCR && selectedCR.code === cr.code) {
+      if (selectedCR && selectedCR.key === cr.key) {
         setSelectedCR(null);
         setView('list');
       }
@@ -230,7 +244,8 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
       });
     };
 
-    const handleError = (error: Error) => {
+    const handleError = (data: any) => {
+      const error = data instanceof Error ? data : new Error(String(data));
       console.error('❌ MultiProject realtime watcher error:', error);
       setError(error.message);
     };
@@ -305,9 +320,10 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
             >
               Refresh
             </Button>
-            <HamburgerMenu 
+            <HamburgerMenu
               onAddProject={() => setShowAddProjectModal(true)}
               onEditProject={() => setShowEditProjectModal(true)}
+              onCounterAPI={() => console.log('Counter API clicked from MultiProjectDashboard')}
               hasActiveProject={!!selectedProject}
             />
           </div>
@@ -361,17 +377,19 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
                         </tr>
                       </thead>
                       <tbody>
-                        {sortTickets(
-                          crs.map(cr => ({
+                        {crs
+                          .map(cr => ({
                             ...cr,
-                            dateCreated: cr.dateCreated instanceof Date ? cr.dateCreated : new Date(cr.dateCreated || 0),
-                            lastModified: cr.lastModified instanceof Date ? cr.lastModified : new Date(cr.lastModified || 0)
-                          })) as any[], 
-                          sortPreferences.selectedAttribute, 
-                          sortPreferences.selectedDirection
-                        ).map((cr) => (
-                          <tr key={cr.code} className="border-b border-border hover:bg-accent/50">
-                            <td className="py-3 px-4 font-medium text-primary">{cr.code}</td>
+                            dateCreated: cr.dateCreated ? (typeof cr.dateCreated === 'string' ? new Date(cr.dateCreated) : cr.dateCreated) : new Date(),
+                            lastModified: cr.lastModified ? (typeof cr.lastModified === 'string' ? new Date(cr.lastModified) : cr.lastModified) : new Date()
+                          }))
+                          .sort((a, b) => {
+                            // Simple sorting by key for now
+                            return b.key.localeCompare(a.key);
+                          })
+                          .map((cr) => (
+                          <tr key={cr.key} className="border-b border-border hover:bg-accent/50">
+                            <td className="py-3 px-4 font-medium text-primary">{cr.key}</td>
                             <td className="py-3 px-4">
                               <div className="font-medium text-card-foreground">{cr.title}</div>
                             </td>
@@ -385,7 +403,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
                             </td>
                             <td className="py-3 px-4 text-muted-foreground">{cr.type}</td>
                             <td className="py-3 px-4 text-muted-foreground text-sm">
-                              {cr.dateCreated || 'N/A'}
+                              {cr.dateCreated ? (cr.dateCreated instanceof Date ? cr.dateCreated.toLocaleDateString() : new Date(cr.dateCreated).toLocaleDateString()) : 'N/A'}
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex space-x-2">
@@ -433,7 +451,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
                         <div className="text-sm font-medium text-muted-foreground">Code</div>
-                        <div className="text-lg font-bold text-primary">{selectedCR.code}</div>
+                        <div className="text-lg font-bold text-primary">{selectedCR.key}</div>
                       </div>
                       <div>
                         <div className="text-sm font-medium text-muted-foreground">Status</div>
