@@ -4,7 +4,7 @@ import { Ticket } from '../types/ticket';
 import { Modal, ModalHeader, ModalBody } from './UI/Modal';
 import TicketAttributes from './TicketAttributes';
 import { TicketCode } from './TicketCode';
-import { initMermaid, processMermaidBlocks } from '../utils/mermaid';
+import { processMermaidBlocks, renderMermaid } from '../utils/mermaid';
 
 interface TicketViewerProps {
   ticket: Ticket | null;
@@ -32,7 +32,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
 
   useEffect(() => {
     if (isOpen && htmlContent) {
-      initMermaid();
+      setTimeout(() => renderMermaid(), 100);
     }
   }, [isOpen, htmlContent]);
 

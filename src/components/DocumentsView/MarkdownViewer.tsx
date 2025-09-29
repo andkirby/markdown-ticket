@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import showdown from 'showdown';
-import { initMermaid, processMermaidBlocks } from '../../utils/mermaid';
+import { processMermaidBlocks, renderMermaid } from '../../utils/mermaid';
 
 interface DocumentFile {
   name: string;
@@ -41,6 +41,18 @@ export default function MarkdownViewer({ filePath, fileInfo }: MarkdownViewerPro
     loadFile();
   }, [filePath]);
 
+  const processedHtml = useMemo(() => {
+    if (!content) return '';
+    const htmlContent = converter.makeHtml(content);
+    return processMermaidBlocks(htmlContent);
+  }, [content]);
+
+  useEffect(() => {
+    if (processedHtml) {
+      setTimeout(() => renderMermaid(), 100);
+    }
+  }, [processedHtml]);
+
   const loadFile = async () => {
     try {
       setLoading(true);
@@ -76,15 +88,6 @@ export default function MarkdownViewer({ filePath, fileInfo }: MarkdownViewerPro
     );
   }
 
-  const htmlContent = converter.makeHtml(content);
-  const processedHtml = processMermaidBlocks(htmlContent);
-
-  useEffect(() => {
-    if (processedHtml) {
-      initMermaid();
-    }
-  }, [processedHtml]);
-
   // Format date helper
   const formatDate = (date: Date | string | undefined): string => {
     if (!date) return 'Unknown';
@@ -119,7 +122,7 @@ export default function MarkdownViewer({ filePath, fileInfo }: MarkdownViewerPro
           </div>
         )}
         <div
-          className="prose prose-sm max-w-none dark:prose-invert"
+          className="prose prose-sm w-full max-w-full dark:prose-invert prose-pre:overflow-x-auto prose-table:overflow-x-auto break-words overflow-hidden"
           dangerouslySetInnerHTML={{ __html: processedHtml }}
         />
       </div>
