@@ -3,14 +3,14 @@ import { createPortal } from 'react-dom';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const modalVariants = cva(
-  'relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg',
+  'relative overflow-hidden rounded-lg bg-white dark:bg-slate-900 shadow-xl transition-all sm:my-8 sm:w-full',
   {
     variants: {
       size: {
-        sm: 'sm:max-w-md',
-        md: 'sm:max-w-lg',
-        lg: 'sm:max-w-xl',
-        xl: 'sm:max-w-2xl',
+        sm: 'sm:max-w-lg',
+        md: 'sm:max-w-xl', 
+        lg: 'sm:max-w-3xl',
+        xl: 'sm:max-w-5xl',
         full: 'sm:max-w-full',
       },
       variant: {

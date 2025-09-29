@@ -28,6 +28,7 @@ export {
   ToastContainer,
   toastVariants
 } from './Toast';
+export { default as FullscreenWrapper } from './FullscreenWrapper';
 
 // Re-export types
 export type {

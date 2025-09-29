@@ -3,6 +3,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Remove backticks and padding for Mermaid code blocks */
+.prose code.mermaid::before,
+.prose code.mermaid::after {
+  content: none !important;
+}
+
+.prose code.mermaid {
+  padding: 0 !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
