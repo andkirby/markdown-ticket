@@ -1,5 +1,5 @@
-import React from 'react';
-import { File, Folder } from 'lucide-react';
+import React, { useState } from 'react';
+import { File, Folder, ChevronRight, ChevronDown } from 'lucide-react';
 
 interface DocumentFile {
   name: string;
@@ -17,9 +17,34 @@ interface FileTreeProps {
 }
 
 export default function FileTree({ files, onFileSelect, selectedFile, level = 0 }: FileTreeProps) {
+  const getAllFolderPaths = (fileList: DocumentFile[]): string[] => {
+    const paths: string[] = [];
+    fileList.forEach(file => {
+      if (file.type === 'folder') {
+        paths.push(file.path);
+        if (file.children) {
+          paths.push(...getAllFolderPaths(file.children));
+        }
+      }
+    });
+    return paths;
+  };
+
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => new Set(getAllFolderPaths(files)));
+
   const handleFileClick = (file: DocumentFile) => {
     if (file.type === 'file') {
       onFileSelect(file.path);
+    } else {
+      setExpandedFolders(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(file.path)) {
+          newSet.delete(file.path);
+        } else {
+          newSet.add(file.path);
+        }
+        return newSet;
+      });
     }
   };
 
@@ -35,7 +60,14 @@ export default function FileTree({ files, onFileSelect, selectedFile, level = 0 
             onClick={() => handleFileClick(file)}
           >
             {file.type === 'folder' ? (
-              <Folder className="w-4 h-4 text-muted-foreground" />
+              <>
+                {expandedFolders.has(file.path) ? (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                )}
+                <Folder className="w-4 h-4 text-muted-foreground" />
+              </>
             ) : (
               <File className="w-4 h-4 text-muted-foreground" />
             )}
@@ -50,7 +82,7 @@ export default function FileTree({ files, onFileSelect, selectedFile, level = 0 
               )}
             </div>
           </div>
-          {file.children && file.children.length > 0 && (
+          {file.children && file.children.length > 0 && expandedFolders.has(file.path) && (
             <FileTree
               files={file.children}
               onFileSelect={onFileSelect}
