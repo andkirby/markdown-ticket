@@ -58,7 +58,7 @@ export function addFullscreenButtons() {
     if (container.querySelector('.mermaid-fullscreen-btn')) return;
 
     const button = document.createElement('button');
-    button.className = 'mermaid-fullscreen-btn absolute top-2 right-2 z-10 px-2 py-1 bg-black/20 hover:bg-black/30 text-white text-xs rounded transition-colors duration-200 backdrop-blur-sm';
+    button.className = 'mermaid-fullscreen-btn absolute top-2 left-2 z-10 px-2 py-1 bg-black/20 hover:bg-black/30 text-white text-xs rounded transition-colors duration-200 backdrop-blur-sm';
     button.title = 'Enter fullscreen';
     button.type = 'button';
 
@@ -157,13 +157,52 @@ function updateFullscreenButtons() {
       (container as HTMLElement).style.boxSizing = 'border-box';
       (container as HTMLElement).style.overflow = 'hidden';
 
-      // Ensure mermaid SVG has transparent background
+      // Ensure mermaid SVG has transparent background and adaptive scale
       const diagram = container.querySelector('.mermaid') as HTMLElement;
       if (diagram) {
         const svg = diagram.querySelector('svg');
         if (svg) {
           svg.style.backgroundColor = 'transparent';
         }
+
+        // Calculate adaptive scale based on container context
+        const parentContainer = diagram.closest('.prose');
+        const isInModal = !!diagram.closest('[role="dialog"]') || !!diagram.closest('.modal');
+
+        // Calculate adaptive scale by comparing rendered sizes
+        let adaptiveScale = 2.3; // Fallback default
+
+        // Get current rendered dimensions
+        const containerRect = container.getBoundingClientRect();
+        const diagramRect = diagram.getBoundingClientRect();
+
+        if (containerRect.width > 0 && containerRect.height > 0 && diagramRect.width > 0 && diagramRect.height > 0) {
+          // Get available screen space (90% of viewport)
+          const maxWidth = window.innerWidth * 0.9;
+          const maxHeight = window.innerHeight * 0.9;
+
+          // Calculate what scale would make the current diagram fit the target size
+          const scaleX = maxWidth / diagramRect.width;
+          const scaleY = maxHeight / diagramRect.height;
+
+          // Use the smaller scale to ensure it fits in both dimensions
+          const calculatedScale = Math.min(scaleX, scaleY);
+
+          // Apply reasonable bounds to the calculated scale
+          adaptiveScale = Math.max(0.5, Math.min(8, calculatedScale));
+        } else {
+          // Fallback to context-based scaling if no dimensions available
+          if (parentContainer && !isInModal) {
+            adaptiveScale = 3.0; // Documents view
+          }
+        }
+
+        // Set adaptive scale for fullscreen
+        diagram.style.transform = `scale(${adaptiveScale})`;
+        diagram.style.transformOrigin = 'center center';
+
+        // Store the scale for zoom functionality
+        diagram.dataset.fullscreenScale = adaptiveScale.toString();
       }
 
       enableZoom(container as HTMLElement);
@@ -177,6 +216,13 @@ function updateFullscreenButtons() {
       (container as HTMLElement).style.boxSizing = '';
       (container as HTMLElement).style.overflow = '';
 
+      // Reset diagram transform
+      const diagram = container.querySelector('.mermaid') as HTMLElement;
+      if (diagram) {
+        diagram.style.transform = '';
+        diagram.style.transformOrigin = '';
+        delete diagram.dataset.fullscreenScale;
+      }
 
       disableZoom(container as HTMLElement);
     }
@@ -189,33 +235,49 @@ function enableZoom(container: HTMLElement) {
   const diagram = container.querySelector('.mermaid') as HTMLElement;
   if (!diagram) return;
 
-  let scale = 1;
+  // Get the adaptive scale that was set during fullscreen entry
+  const adaptiveScale = parseFloat(diagram.dataset.fullscreenScale || '2.3');
+  let scale = adaptiveScale;
   let isDragging = false;
   let dragStart = { x: 0, y: 0 };
   let translate = { x: 0, y: 0 };
 
-  // Initial transform
+  // Initial transform (use the existing transform from fullscreen setup)
   diagram.style.transformOrigin = 'center center';
-  diagram.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`;
   diagram.style.transition = 'transform 0.1s ease-out';
   diagram.style.cursor = 'grab';
 
   const handleWheel = (e: WheelEvent) => {
     e.preventDefault();
 
+    // Get adaptive max zoom based on current rendered dimensions
+    const diagramRect = diagram.getBoundingClientRect();
+    let maxZoom = 10; // Default higher limit
+
+    if (diagramRect.width > 800 || diagramRect.height > 600) {
+      maxZoom = 15; // Very wide/tall diagrams get higher zoom
+    }
+    if (diagramRect.width > 1200 || diagramRect.height > 800) {
+      maxZoom = 20; // Extremely wide diagrams get even higher zoom
+    }
+
+    // Use percentage-based scaling (10% of current scale)
+    const scaleStep = scale * 0.1; // 10% of current scale
+    const pinchScaleStep = scale * 0.15; // 15% of current scale for pinch
+
     // Handle pinch-to-zoom on trackpads (ctrlKey is set during pinch gestures)
     if (e.ctrlKey) {
-      const delta = e.deltaY > 0 ? -0.15 : 0.15;
-      const newScale = Math.max(0.1, Math.min(5, scale + delta));
+      const delta = e.deltaY > 0 ? -pinchScaleStep : pinchScaleStep;
+      const newScale = Math.max(0.1, Math.min(maxZoom, scale + delta));
 
       if (newScale !== scale) {
         scale = newScale;
         diagram.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`;
       }
     } else {
-      // Regular scroll wheel zoom
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      const newScale = Math.max(0.1, Math.min(5, scale + delta));
+      // Regular scroll wheel zoom - 10% of current scale
+      const delta = e.deltaY > 0 ? -scaleStep : scaleStep;
+      const newScale = Math.max(0.1, Math.min(maxZoom, scale + delta));
 
       if (newScale !== scale) {
         scale = newScale;
@@ -281,8 +343,21 @@ function enableZoom(container: HTMLElement) {
       );
 
       if (lastTouchDistance > 0) {
-        const delta = (distance - lastTouchDistance) * 0.01;
-        const newScale = Math.max(0.1, Math.min(5, scale + delta));
+        // Get adaptive zoom limits for touch as well using rendered dimensions
+        const diagramRect = diagram.getBoundingClientRect();
+        let maxZoom = 10;
+
+        if (diagramRect.width > 800 || diagramRect.height > 600) {
+          maxZoom = 15;
+        }
+        if (diagramRect.width > 1200 || diagramRect.height > 800) {
+          maxZoom = 20;
+        }
+
+        // Use percentage-based scaling for touch as well (10% of current scale)
+        const touchScaleStep = scale * 0.1;
+        const delta = (distance - lastTouchDistance) > 0 ? touchScaleStep : -touchScaleStep;
+        const newScale = Math.max(0.1, Math.min(maxZoom, scale + delta));
 
         if (newScale !== scale) {
           scale = newScale;
@@ -308,7 +383,7 @@ function enableZoom(container: HTMLElement) {
 
   // Reset zoom with double-click
   const handleDoubleClick = () => {
-    scale = 1;
+    scale = adaptiveScale; // Reset to the adaptive fullscreen scale
     translate = { x: 0, y: 0 };
     diagram.style.transition = 'transform 0.3s ease-out';
     diagram.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`;
@@ -368,4 +443,87 @@ function disableZoom(container: HTMLElement) {
 
   container.setAttribute('data-zoom-enabled', 'false');
   delete (container as any)._zoomHandlers;
+}
+
+// Debug function to analyze mermaid diagram sizing (for development use)
+export function debugMermaidSizing() {
+  const containers = document.querySelectorAll('.mermaid-container');
+
+  if (containers.length === 0) {
+    console.log('❌ No mermaid containers found');
+    return;
+  }
+
+  console.log('📊 MERMAID SIZING DEBUG REPORT');
+  console.log('='.repeat(50));
+
+  containers.forEach((container, index) => {
+    const diagram = container.querySelector('.mermaid') as HTMLElement;
+    const svg = diagram?.querySelector('svg');
+
+    if (!diagram || !svg) {
+      console.log(`❌ Container ${index + 1}: No diagram/SVG found`);
+      return;
+    }
+
+    console.log(`\n🔍 DIAGRAM ${index + 1}:`);
+
+    // Screen information
+    console.log(`📺 Screen: ${window.innerWidth}x${window.innerHeight}`);
+    console.log(`📺 Available (90%): ${(window.innerWidth * 0.9).toFixed(0)}x${(window.innerHeight * 0.9).toFixed(0)}`);
+    console.log(`📺 Available (80%): ${(window.innerWidth * 0.8).toFixed(0)}x${(window.innerHeight * 0.8).toFixed(0)}`);
+
+    // SVG dimensions
+    const viewBox = svg.getAttribute('viewBox');
+    const widthAttr = svg.getAttribute('width');
+    const heightAttr = svg.getAttribute('height');
+
+    let contentWidth = 0;
+    let contentHeight = 0;
+
+    if (viewBox) {
+      const [x, y, width, height] = viewBox.split(' ').map(Number);
+      contentWidth = width;
+      contentHeight = height;
+      console.log(`📐 SVG Content (viewBox): ${contentWidth.toFixed(0)}x${contentHeight.toFixed(0)}`);
+    } else {
+      contentWidth = widthAttr ? parseFloat(widthAttr) : 0;
+      contentHeight = heightAttr ? parseFloat(heightAttr) : 0;
+      console.log(`📐 SVG Content (attributes): ${contentWidth.toFixed(0)}x${contentHeight.toFixed(0)}`);
+    }
+
+    // Rendered dimensions
+    const rect = svg.getBoundingClientRect();
+    console.log(`📐 SVG Rendered: ${rect.width.toFixed(0)}x${rect.height.toFixed(0)}`);
+
+    // Current transform
+    const currentTransform = diagram.style.transform || 'none';
+    console.log(`🎭 Current Transform: ${currentTransform}`);
+
+    // Stored scale
+    const storedScale = diagram.dataset.fullscreenScale;
+    console.log(`💾 Stored Scale: ${storedScale || 'none'}`);
+
+    // Calculate what scales would be needed
+    const scale90X = (window.innerWidth * 0.9) / contentWidth;
+    const scale90Y = (window.innerHeight * 0.9) / contentHeight;
+    const scale90 = Math.min(scale90X, scale90Y);
+
+    const scale80X = (window.innerWidth * 0.8) / contentWidth;
+    const scale80Y = (window.innerHeight * 0.8) / contentHeight;
+    const scale80 = Math.min(scale80X, scale80Y);
+
+    console.log(`🧮 Calculated Scales:`);
+    console.log(`   90% fit: ${scale90.toFixed(3)} (${(contentWidth * scale90).toFixed(0)}x${(contentHeight * scale90).toFixed(0)})`);
+    console.log(`   80% fit: ${scale80.toFixed(3)} (${(contentWidth * scale80).toFixed(0)}x${(contentHeight * scale80).toFixed(0)})`);
+
+    // Context detection
+    const parentContainer = diagram.closest('.prose');
+    const isInModal = !!diagram.closest('[role="dialog"]') || !!diagram.closest('.modal');
+    console.log(`🏠 Context: ${isInModal ? 'Modal/Ticket View' : 'Documents View'}`);
+
+    console.log('-'.repeat(30));
+  });
+
+  console.log('\n✅ Debug report complete. Call debugMermaidSizing() again after changes.');
 }
