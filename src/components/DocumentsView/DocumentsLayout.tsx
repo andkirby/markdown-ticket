@@ -286,7 +286,7 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
           />
         </div>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 min-w-0 overflow-hidden">
         {selectedFile ? (
           <MarkdownViewer
             filePath={selectedFile}

@@ -8,15 +8,18 @@ description = "Kanban-style ticket board with markdown storage"
 repository = "https://github.com/user/markdown-ticket"
 
 # Documents configuration
-document_paths = [
-    "PROJECT.md",        # Single file from root
-    "README.md",         # Single file from root
-    "docs"               # Directory (will scan for .md files)
-]
 exclude_folders = [
     "docs/CRs",           # Exclude tickets folder
     "node_modules",
     ".git",
     "test-results"
 ]
-max_depth = 3
+
+# Documentation Configuration
+document_paths = [
+    "docs",
+    "PROJECT.md",
+    "README.md",
+    "logger-tree"
+]
+max_depth = 3             # Maximum directory depth for scanning
