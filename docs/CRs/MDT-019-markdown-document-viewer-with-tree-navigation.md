@@ -177,10 +177,13 @@ max_depth = 3
 
 **Benefits**:
 - Explicit control over what documents are shown
-- Better performance (only scan configured paths)  
+- Better performance (only scan configured paths)
 - Support for individual files from any location
 - User-friendly labels with H1 titles
 - Maintains security through path configuration
+
+### Phase 1.5 Enhancement (2025-09-30)
+**✅ Collapsible Folders**: Added expand/collapse functionality to folder navigation with chevron icons. All folders start expanded by default. (`src/components/DocumentsView/FileTree.tsx`)
 
 ### Original Decisions (2025-09-06)
 1. **UI**: Board/Documents toggle within single project view
