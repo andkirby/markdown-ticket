@@ -34,14 +34,26 @@ Every CR includes YAML frontmatter with standardized attributes (handled automat
 | `type` | Yes | CR category | Architecture, Feature Enhancement, Bug Fix, Technical Debt, Documentation |
 | `priority` | Yes | Priority level | P1 (Critical), P2 (High), P3 (Medium), P4 (Low) |
 | `phaseEpic` | No | Project phase/epic | "Phase A (Foundation)", "Phase B (Enhancement)" |
-| `description` | No | Problem statement or description | Brief problem overview |
-| `rationale` | No | Rationale for this CR | Why this change is needed |
 | `relatedTickets` | No | Related CR codes | "CR-A001,CR-A002" |
 | `dependsOn` | No | Dependencies | "MDT-001,MDT-005" |
 | `blocks` | No | CRs blocked by this | "MDT-010,MDT-015" |
 | `assignee` | No | Person responsible for implementation | "Alice Smith" |
 | `implementationDate` | No | Date when implementation was completed | "2025-09-20" |
 | `implementationNotes` | No | Brief notes about implementation completion | Post-implementation details |
+
+### YAML Frontmatter vs Markdown Content
+
+**YAML Frontmatter** contains only **metadata**:
+- System fields: `code`, `dateCreated`, `lastModified`
+- Required: `title`, `status`, `type`, `priority`
+- Optional: `phaseEpic`, `assignee`, `relatedTickets`, `dependsOn`, `blocks`, `implementationDate`, `implementationNotes`
+
+**Markdown Content** contains all **descriptive text**:
+- `## 1. Description` - Problem statement, current state, desired state, impact areas
+- `## 2. Rationale` - Why this change is needed
+- `## 3. Solution Analysis` - Approaches considered, trade-offs, chosen solution
+- `## 4. Implementation Specification` - Technical requirements
+- `## 5. Acceptance Criteria` - Testable completion criteria
 
 ## Status Workflow
 

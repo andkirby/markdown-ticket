@@ -8,7 +8,7 @@ import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 import { getProjectCode } from './ProjectSelector';
-import { CR } from '../../shared/models/Types';
+import { Ticket } from '../../shared/models/Ticket';
 
 interface Project {
   id: string;
@@ -48,8 +48,8 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
   const STORAGE_KEY = 'multiProjectDashboard.selectedProjectId';
 
   const [projects, setProjects] = useState<Project[]>([]);
-  const [crs, setCrs] = useState<CR[]>([]);
-  const [selectedCR, setSelectedCR] = useState<CR | null>(null);
+  const [crs, setCrs] = useState<Ticket[]>([]);
+  const [selectedCR, setSelectedCR] = useState<Ticket | null>(null);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   
@@ -174,27 +174,30 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
     }
   }, [selectedProject, newCR, fetchCRs]);
 
-  // Convert LocalCR to CR for API calls
-  const convertToCR = (localCR: LocalCR): CR => ({
-    key: localCR.code,
+  // Convert LocalCR to Ticket for API calls
+  const convertToTicket = (localCR: LocalCR): Ticket => ({
+    code: localCR.code,
     title: localCR.title,
-    status: localCR.status as any,
-    type: localCR.type as any,
-    priority: localCR.priority as any,
-    dateCreated: localCR.dateCreated ? new Date(localCR.dateCreated) : new Date(),
-    lastModified: new Date(),
+    status: localCR.status,
+    type: localCR.type,
+    priority: localCR.priority,
+    dateCreated: localCR.dateCreated ? new Date(localCR.dateCreated) : null,
+    lastModified: null,
     content: localCR.content,
-    filePath: localCR.path
+    filePath: localCR.path,
+    relatedTickets: [],
+    dependsOn: [],
+    blocks: []
   });
 
   // Delete CR
-  const handleDeleteCR = useCallback(async (cr: CR) => {
-    if (!selectedProject || !confirm(`Are you sure you want to delete ${cr.key}?`)) return;
-    
+  const handleDeleteCR = useCallback(async (ticket: Ticket) => {
+    if (!selectedProject || !confirm(`Are you sure you want to delete ${ticket.code}?`)) return;
+
     try {
       setError(null);
-      
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${cr.key}`, {
+
+      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticket.code}`, {
         method: 'DELETE',
       });
 
@@ -204,9 +207,9 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
 
       // Refresh CRs
       await fetchCRs(selectedProject);
-      
+
       // Clear selection if deleted CR was selected
-      if (selectedCR && selectedCR.key === cr.key) {
+      if (selectedCR && selectedCR.code === ticket.code) {
         setSelectedCR(null);
         setView('list');
       }
@@ -384,32 +387,32 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
                             lastModified: cr.lastModified ? (typeof cr.lastModified === 'string' ? new Date(cr.lastModified) : cr.lastModified) : new Date()
                           }))
                           .sort((a, b) => {
-                            // Simple sorting by key for now
-                            return b.key.localeCompare(a.key);
+                            // Simple sorting by code for now
+                            return b.code.localeCompare(a.code);
                           })
-                          .map((cr) => (
-                          <tr key={cr.key} className="border-b border-border hover:bg-accent/50">
-                            <td className="py-3 px-4 font-medium text-primary">{cr.key}</td>
+                          .map((ticket) => (
+                          <tr key={ticket.code} className="border-b border-border hover:bg-accent/50">
+                            <td className="py-3 px-4 font-medium text-primary">{ticket.code}</td>
                             <td className="py-3 px-4">
-                              <div className="font-medium text-card-foreground">{cr.title}</div>
+                              <div className="font-medium text-card-foreground">{ticket.title}</div>
                             </td>
                             <td className="py-3 px-4">
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(cr.status)}`}>
-                                {cr.status}
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                                {ticket.status}
                               </span>
                             </td>
-                            <td className={`py-3 px-4 font-medium ${getPriorityColor(cr.priority)}`}>
-                              {cr.priority}
+                            <td className={`py-3 px-4 font-medium ${getPriorityColor(ticket.priority)}`}>
+                              {ticket.priority}
                             </td>
-                            <td className="py-3 px-4 text-muted-foreground">{cr.type}</td>
+                            <td className="py-3 px-4 text-muted-foreground">{ticket.type}</td>
                             <td className="py-3 px-4 text-muted-foreground text-sm">
-                              {cr.dateCreated ? (cr.dateCreated instanceof Date ? cr.dateCreated.toLocaleDateString() : new Date(cr.dateCreated).toLocaleDateString()) : 'N/A'}
+                              {ticket.dateCreated ? (ticket.dateCreated instanceof Date ? ticket.dateCreated.toLocaleDateString() : new Date(ticket.dateCreated).toLocaleDateString()) : 'N/A'}
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex space-x-2">
                                 <Button
                                   onClick={() => {
-                                    setSelectedCR(cr);
+                                    setSelectedCR(ticket);
                                     setView('detail');
                                   }}
                                   className="btn btn-primary px-2 py-1 text-xs"
@@ -417,7 +420,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
                                   View
                                 </Button>
                                 <Button
-                                  onClick={() => handleDeleteCR(cr)}
+                                  onClick={() => handleDeleteCR(ticket)}
                                   className="btn btn-destructive px-2 py-1 text-xs"
                                 >
                                   Delete
@@ -451,7 +454,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
                         <div className="text-sm font-medium text-muted-foreground">Code</div>
-                        <div className="text-lg font-bold text-primary">{selectedCR.key}</div>
+                        <div className="text-lg font-bold text-primary">{selectedCR.code}</div>
                       </div>
                       <div>
                         <div className="text-sm font-medium text-muted-foreground">Status</div>

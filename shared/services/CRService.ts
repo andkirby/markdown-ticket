@@ -1,31 +1,28 @@
-import { CR, CRData, CRType } from '../models/Types.js';
+import { Ticket, TicketData } from '../models/Ticket.js';
 
 export class CRService {
-  
+
   /**
-   * Create a new CR object from input data
+   * Create a new ticket object from input data
    */
-  static createCR(data: CRData, crKey: string, crType: CRType, filePath: string): CR {
+  static createTicket(data: TicketData, ticketCode: string, ticketType: string, filePath: string): Ticket {
     const now = new Date();
-    
+
     return {
-      key: crKey,
+      code: ticketCode,
       title: data.title,
       status: 'Proposed',
-      type: crType,
+      type: ticketType,
       priority: data.priority || 'Medium',
       dateCreated: now,
       lastModified: now,
       content: data.content || '',
       filePath,
       phaseEpic: data.phaseEpic,
-      description: data.description,
-      rationale: data.rationale,
       assignee: data.assignee,
       relatedTickets: this.parseArrayField(data.relatedTickets),
       dependsOn: this.parseArrayField(data.dependsOn),
-      blocks: this.parseArrayField(data.blocks),
-      relatedDocuments: []
+      blocks: this.parseArrayField(data.blocks)
     };
   }
 
