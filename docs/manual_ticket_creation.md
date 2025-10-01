@@ -44,8 +44,6 @@ Every CR must include a standardized header with required and optional attribute
 
 #### Optional Attributes (include only if they have values):
 - `phaseEpic`: Project phase/epic (e.g., "Phase A (Foundation)", "Phase B (Enhancement)")
-- `description`: Problem statement or description
-- `rationale`: Rationale for this CR
 - `relatedTickets`: Comma-separated list of related CR codes (e.g., "CR-A001,CR-A002")
 - `dependsOn`: Comma-separated list of CR keys this depends on (e.g., "MDT-001,MDT-005")
 - `blocks`: Comma-separated list of CR keys this blocks (e.g., "MDT-010,MDT-015")

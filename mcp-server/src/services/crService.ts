@@ -2,21 +2,21 @@ import * as fs from 'fs-extra';
 import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
-import { CR, CRFilters, CRData, CRType, CRStatus } from '../../../shared/models/Types.js';
+import { Ticket, TicketFilters, TicketData, normalizeTicket, arrayToString } from '../../../shared/models/Ticket.js';
+import { CRStatus } from '../../../shared/models/Types.js';
 import { Project } from '../../../shared/models/Project.js';
 // Use shared services for consistency
 // @ts-ignore
 import { MarkdownService } from '../../../shared/services/MarkdownService.js';
-import { normalizeTicket, arrayToString } from '../../../shared/models/Ticket.js';
 // Import shared service with different name to avoid conflict
 // @ts-ignore
 import { CRService as SharedCRService } from '../../../shared/services/CRService.js';
 
 export class CRService {
-  async listCRs(project: Project, filters?: CRFilters): Promise<CR[]> {
+  async listCRs(project: Project, filters?: TicketFilters): Promise<Ticket[]> {
     try {
       const crFiles = await glob('*.md', { cwd: project.project.path });
-      const crs: CR[] = [];
+      const crs: Ticket[] = [];
 
       for (const filename of crFiles) {
         try {
@@ -29,23 +29,23 @@ export class CRService {
         }
       }
 
-      // Sort by CR key (natural sort, DESC - newest/highest numbers first)
+      // Sort by ticket code (natural sort, DESC - newest/highest numbers first)
       return crs.sort((a, b) => {
         // Extract the numeric part for proper sorting (e.g., CR-A001 vs CR-A010)
-        const extractNumber = (key: string) => {
-          const match = key.match(/(\d+)/);
+        const extractNumber = (code: string) => {
+          const match = code.match(/(\d+)/);
           return match ? parseInt(match[1], 10) : 0;
         };
-        
-        const aNum = extractNumber(a.key);
-        const bNum = extractNumber(b.key);
-        
+
+        const aNum = extractNumber(a.code);
+        const bNum = extractNumber(b.code);
+
         if (aNum !== bNum) {
           return bNum - aNum; // DESC: higher numbers first
         }
-        
+
         // Fallback to reverse string comparison if numbers are equal
-        return b.key.localeCompare(a.key);
+        return b.code.localeCompare(a.code);
       });
     } catch (error) {
       console.error(`Failed to list CRs for project ${project.id}:`, error);
@@ -53,7 +53,7 @@ export class CRService {
     }
   }
 
-  async getCR(project: Project, key: string): Promise<CR | null> {
+  async getCR(project: Project, key: string): Promise<Ticket | null> {
     try {
       // Find the file matching the CR key
       const crFiles = await glob('*.md', { cwd: project.project.path });
@@ -72,7 +72,7 @@ export class CRService {
     }
   }
 
-  async createCR(project: Project, crType: CRType, data: CRData): Promise<CR> {
+  async createCR(project: Project, crType: string, data: TicketData): Promise<Ticket> {
     try {
       // Generate next CR number
       const nextNumber = await this.getNextCRNumber(project);
@@ -86,11 +86,11 @@ export class CRService {
       // Ensure CR directory exists
       await fs.ensureDir(project.project.path);
 
-      // Create CR object using shared service
-      const cr = SharedCRService.createCR(data, crKey, crType, filePath);
+      // Create ticket object using shared service
+      const ticket = SharedCRService.createTicket(data, crKey, crType, filePath);
 
       // Generate markdown content
-      const markdownContent = this.formatCRAsMarkdown(cr, data);
+      const markdownContent = this.formatCRAsMarkdown(ticket, data);
       
       console.error(`🔍 DEBUG: Creating CR file at: ${filePath}`);
       console.error(`🔍 DEBUG: Directory exists: ${await fs.pathExists(project.project.path)}`);
@@ -111,7 +111,7 @@ export class CRService {
       await this.updateCounter(project, nextNumber + 1);
 
       console.error(`✅ Created CR ${crKey}: ${data.title}`);
-      return cr;
+      return ticket;
     } catch (error) {
       console.error(`Failed to create CR for project ${project.id}:`, error);
       throw new Error(`Failed to create CR: ${(error as Error).message}`);
@@ -165,7 +165,7 @@ export class CRService {
     }
   }
 
-  async updateCRAttrs(project: Project, key: string, attributes: Partial<CRData>): Promise<boolean> {
+  async updateCRAttrs(project: Project, key: string, attributes: Partial<TicketData>): Promise<boolean> {
     try {
       const cr = await this.getCR(project, key);
       if (!cr) {
@@ -207,19 +207,23 @@ export class CRService {
     }
   }
 
-  private validateStatusTransition(currentStatus: CRStatus, newStatus: CRStatus): void {
+  private validateStatusTransition(currentStatus: string, newStatus: string): void {
     // Define valid status transitions
-    const validTransitions: Record<CRStatus, CRStatus[]> = {
+    const validTransitions: Record<string, string[]> = {
       'Proposed': ['Approved', 'Rejected'],
       'Approved': ['In Progress', 'Rejected'],
       'In Progress': ['Implemented', 'Approved', 'On Hold'], // Can pause work
       'Implemented': ['In Progress'], // Allow reopening if issues found
       'Rejected': ['Proposed'], // Allow re-proposing rejected CRs
-      'On Hold': ['In Progress', 'Approved'] // Can resume or go back to approved
+      'On Hold': ['In Progress', 'Approved'], // Can resume or go back to approved
+      'Superseded': [], // Terminal state
+      'Deprecated': [], // Terminal state
+      'Duplicate': [], // Terminal state
+      'Partially Implemented': ['Implemented', 'In Progress'] // Can be completed or continued
     };
 
     const allowedTransitions = validTransitions[currentStatus] || [];
-    
+
     if (!allowedTransitions.includes(newStatus)) {
       const validOptions = allowedTransitions.join(', ');
       throw new Error(`Invalid status transition from '${currentStatus}' to '${newStatus}'. Valid transitions from '${currentStatus}': ${validOptions}`);
@@ -289,7 +293,7 @@ export class CRService {
     }
   }
 
-  private async loadCR(project: Project, filename: string): Promise<CR | null> {
+  private async loadCR(project: Project, filename: string): Promise<Ticket | null> {
     try {
       const filePath = path.join(project.project.path, filename);
       const content = await readFile(filePath, 'utf-8');
@@ -300,9 +304,9 @@ export class CRService {
       }
 
       const stats = await stat(filePath);
-      
+
       return {
-        key: frontmatter.code || path.basename(filename, '.md'),
+        code: frontmatter.code || path.basename(filename, '.md'),
         title: frontmatter.title || 'Untitled',
         status: frontmatter.status || 'Proposed',
         type: frontmatter.type || 'Feature Enhancement',
@@ -312,24 +316,12 @@ export class CRService {
         content: this.extractContent(content),
         filePath,
         phaseEpic: frontmatter.phaseEpic,
-        source: frontmatter.source,
-        impact: frontmatter.impact,
-        effort: frontmatter.effort,
         implementationDate: this.parseDate(frontmatter.implementationDate),
         implementationNotes: frontmatter.implementationNotes,
         relatedTickets: SharedCRService.parseArrayField(frontmatter.relatedTickets),
-        supersedes: frontmatter.supersedes,
         dependsOn: SharedCRService.parseArrayField(frontmatter.dependsOn),
         blocks: SharedCRService.parseArrayField(frontmatter.blocks),
-        relatedDocuments: SharedCRService.parseArrayField(frontmatter.relatedDocuments),
-        // Additional optional attributes
-        assignee: frontmatter.assignee,
-        estimatedHours: frontmatter.estimatedHours ? Number(frontmatter.estimatedHours) : undefined,
-        actualHours: frontmatter.actualHours ? Number(frontmatter.actualHours) : undefined,
-        reviewers: SharedCRService.parseArrayField(frontmatter.reviewers),
-        dependencies: SharedCRService.parseArrayField(frontmatter.dependencies),
-        riskLevel: frontmatter.riskLevel,
-        tags: SharedCRService.parseArrayField(frontmatter.tags)
+        assignee: frontmatter.assignee
       };
     } catch (error) {
       console.warn(`Failed to load CR ${filename}:`, error);
@@ -397,71 +389,68 @@ export class CRService {
     return lines.slice(startIndex).join('\n').trim();
   }
 
-  private parseDate(dateString: any): Date | undefined {
-    if (!dateString) return undefined;
+  private parseDate(dateString: any): Date | null {
+    if (!dateString) return null;
     if (dateString instanceof Date) return dateString;
     if (typeof dateString === 'string') {
       const parsed = new Date(dateString);
-      return isNaN(parsed.getTime()) ? undefined : parsed;
+      return isNaN(parsed.getTime()) ? null : parsed;
     }
-    return undefined;
+    return null;
   }
 
-  private matchesFilters(cr: CR, filters?: CRFilters): boolean {
+  private matchesFilters(ticket: Ticket, filters?: TicketFilters): boolean {
     if (!filters) return true;
 
     if (filters.status) {
       const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
-      if (!statuses.includes(cr.status)) return false;
+      if (!statuses.includes(ticket.status)) return false;
     }
 
     if (filters.type) {
       const types = Array.isArray(filters.type) ? filters.type : [filters.type];
-      if (!types.includes(cr.type)) return false;
+      if (!types.includes(ticket.type)) return false;
     }
 
     if (filters.priority) {
       const priorities = Array.isArray(filters.priority) ? filters.priority : [filters.priority];
-      if (!priorities.includes(cr.priority)) return false;
+      if (!priorities.includes(ticket.priority)) return false;
     }
 
     if (filters.dateRange) {
-      if (filters.dateRange.start && cr.dateCreated < filters.dateRange.start) return false;
-      if (filters.dateRange.end && cr.dateCreated > filters.dateRange.end) return false;
+      if (filters.dateRange.start && ticket.dateCreated && ticket.dateCreated < filters.dateRange.start) return false;
+      if (filters.dateRange.end && ticket.dateCreated && ticket.dateCreated > filters.dateRange.end) return false;
     }
 
     return true;
   }
 
-  private formatCRAsMarkdown(cr: CR, data: CRData): string {
+  private formatCRAsMarkdown(ticket: Ticket, data: TicketData): string {
     const sections = [];
 
     // YAML frontmatter - only mandatory fields + optional fields with values
     sections.push('---');
-    sections.push(`code: ${cr.key}`);
-    sections.push(`title: ${cr.title}`);
-    sections.push(`status: ${cr.status}`);
-    sections.push(`dateCreated: ${cr.dateCreated.toISOString()}`);
-    sections.push(`type: ${cr.type}`);
-    sections.push(`priority: ${cr.priority}`);
-    
+    sections.push(`code: ${ticket.code}`);
+    sections.push(`title: ${ticket.title}`);
+    sections.push(`status: ${ticket.status}`);
+    sections.push(`dateCreated: ${ticket.dateCreated?.toISOString() || new Date().toISOString()}`);
+    sections.push(`type: ${ticket.type}`);
+    sections.push(`priority: ${ticket.priority}`);
+
     // Optional fields - only include if they have values
-    if (cr.phaseEpic) sections.push(`phaseEpic: ${cr.phaseEpic}`);
-    if (cr.description) sections.push(`description: ${cr.description}`);
-    if (cr.rationale) sections.push(`rationale: ${cr.rationale}`);
-    if (cr.relatedTickets && cr.relatedTickets.length > 0) sections.push(`relatedTickets: ${arrayToString(cr.relatedTickets)}`);
-    if (cr.dependsOn && cr.dependsOn.length > 0) sections.push(`dependsOn: ${arrayToString(cr.dependsOn)}`);
-    if (cr.blocks && cr.blocks.length > 0) sections.push(`blocks: ${arrayToString(cr.blocks)}`);
-    if (cr.assignee) sections.push(`assignee: ${cr.assignee}`);
-    if (cr.impact && cr.impact !== 'Minor') sections.push(`impact: ${cr.impact}`);
-    if (cr.implementationDate) sections.push(`implementationDate: ${cr.implementationDate.toISOString()}`);
-    if (cr.implementationNotes) sections.push(`implementationNotes: ${cr.implementationNotes}`);
-    
+    if (ticket.phaseEpic) sections.push(`phaseEpic: ${ticket.phaseEpic}`);
+    if (ticket.relatedTickets && ticket.relatedTickets.length > 0) sections.push(`relatedTickets: ${arrayToString(ticket.relatedTickets)}`);
+    if (ticket.dependsOn && ticket.dependsOn.length > 0) sections.push(`dependsOn: ${arrayToString(ticket.dependsOn)}`);
+    if (ticket.blocks && ticket.blocks.length > 0) sections.push(`blocks: ${arrayToString(ticket.blocks)}`);
+    if (ticket.assignee) sections.push(`assignee: ${ticket.assignee}`);
+    if (ticket.implementationDate) sections.push(`implementationDate: ${ticket.implementationDate.toISOString()}`);
+    if (ticket.implementationNotes) sections.push(`implementationNotes: ${ticket.implementationNotes}`);
+
     sections.push('---');
     sections.push('');
 
     // Title
-    sections.push(`# ${cr.title}`);
+    sections.push(`# ${ticket.title}`);
     sections.push('');
 
     // Content
@@ -472,11 +461,7 @@ export class CRService {
       sections.push('## 1. Description');
       sections.push('');
       sections.push('### Problem Statement');
-      if (data.description) {
-        sections.push(data.description);
-      } else {
-        sections.push('*To be filled*');
-      }
+      sections.push('*To be filled*');
       sections.push('');
       sections.push('### Current State');
       sections.push('*To be filled*');
@@ -484,11 +469,9 @@ export class CRService {
       sections.push('### Desired State');
       sections.push('*To be filled*');
       sections.push('');
-      if (data.rationale) {
-        sections.push('### Rationale');
-        sections.push(data.rationale);
-        sections.push('');
-      }
+      sections.push('### Rationale');
+      sections.push('*To be filled*');
+      sections.push('');
       if (data.impactAreas && data.impactAreas.length > 0) {
         sections.push('### Impact Areas');
         data.impactAreas.forEach(area => sections.push(`- ${area}`));

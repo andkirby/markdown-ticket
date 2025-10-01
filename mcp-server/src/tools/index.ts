@@ -2,7 +2,8 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { ProjectDiscoveryService } from '../services/projectDiscovery.js';
 import { CRService } from '../services/crService.js';
 import { TemplateService } from '../../../shared/services/TemplateService.js';
-import { CRFilters, CRData, CRType, CRStatus } from '../../../shared/models/Types.js';
+import { TicketFilters, TicketData } from '../../../shared/models/Ticket.js';
+import { CRStatus } from '../../../shared/models/Types.js';
 
 export class MCPTools {
   constructor(
@@ -130,14 +131,6 @@ export class MCPTools {
                   type: 'string',
                   description: 'Phase or epic this CR belongs to'
                 },
-                description: {
-                  type: 'string',
-                  description: 'Problem statement or description'
-                },
-                rationale: {
-                  type: 'string',
-                  description: 'Rationale for this CR'
-                },
                 impactAreas: {
                   type: 'array',
                   items: { type: 'string' },
@@ -161,7 +154,7 @@ export class MCPTools {
                 },
                 content: {
                   type: 'string',
-                  description: 'Full markdown content (overrides template if provided)'
+                  description: 'FULL markdown document with ## Description, ## Rationale, ## Solution Analysis, ## Implementation, ## Acceptance Criteria sections. USE THIS FIELD for ALL detailed content including problem statements, rationale, and specifications. If omitted, a complete template will be generated.'
                 }
               },
               required: ['title']
@@ -213,8 +206,6 @@ export class MCPTools {
                 title: { type: 'string', description: 'CR title/summary' },
                 priority: { type: 'string', enum: ['Low', 'Medium', 'High', 'Critical'], description: 'CR priority' },
                 phaseEpic: { type: 'string', description: 'Phase or epic this CR belongs to' },
-                description: { type: 'string', description: 'Problem statement or description' },
-                rationale: { type: 'string', description: 'Rationale for this CR' },
                 relatedTickets: { type: 'string', description: 'Comma-separated list of related CR codes' },
                 dependsOn: { type: 'string', description: 'Comma-separated list of CR keys this depends on' },
                 blocks: { type: 'string', description: 'Comma-separated list of CR keys this blocks' },
@@ -403,7 +394,7 @@ export class MCPTools {
     return lines.join('\n');
   }
 
-  private async handleListCRs(projectKey: string, filters?: CRFilters): Promise<string> {
+  private async handleListCRs(projectKey: string, filters?: TicketFilters): Promise<string> {
     const project = await this.validateProject(projectKey);
 
     const crs = await this.crService.listCRs(project, filters);
@@ -417,14 +408,14 @@ export class MCPTools {
 
     const lines = [`🎫 Found ${crs.length} CR${crs.length === 1 ? '' : 's'}${filters ? ' matching filters' : ''}:`, ''];
 
-    for (const cr of crs) {
-      lines.push(`**${cr.key}** - ${cr.title}`);
-      lines.push(`- Status: ${cr.status}`);
-      lines.push(`- Type: ${cr.type}`);
-      lines.push(`- Priority: ${cr.priority}`);
-      lines.push(`- Created: ${cr.dateCreated.toISOString().split('T')[0]}`);
-      if (cr.phaseEpic) {
-        lines.push(`- Phase: ${cr.phaseEpic}`);
+    for (const ticket of crs) {
+      lines.push(`**${ticket.code}** - ${ticket.title}`);
+      lines.push(`- Status: ${ticket.status}`);
+      lines.push(`- Type: ${ticket.type}`);
+      lines.push(`- Priority: ${ticket.priority}`);
+      lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString().split('T')[0] : 'N/A'}`);
+      if (ticket.phaseEpic) {
+        lines.push(`- Phase: ${ticket.phaseEpic}`);
       }
       lines.push('');
     }
@@ -435,67 +426,64 @@ export class MCPTools {
   private async handleGetCR(projectKey: string, key: string): Promise<string> {
     const project = await this.validateProject(projectKey);
 
-    const cr = await this.crService.getCR(project, key);
-    if (!cr) {
+    const ticket = await this.crService.getCR(project, key);
+    if (!ticket) {
       throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
     const lines = [
-      `📄 **${cr.key}** - ${cr.title}`,
+      `📄 **${ticket.code}** - ${ticket.title}`,
       '',
       '**Metadata:**',
-      `- Status: ${cr.status}`,
-      `- Type: ${cr.type}`,
-      `- Priority: ${cr.priority}`,
-      `- Created: ${cr.dateCreated.toISOString()}`,
-      `- Modified: ${cr.lastModified.toISOString()}`,
+      `- Status: ${ticket.status}`,
+      `- Type: ${ticket.type}`,
+      `- Priority: ${ticket.priority}`,
+      `- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString() : 'N/A'}`,
+      `- Modified: ${ticket.lastModified ? ticket.lastModified.toISOString() : 'N/A'}`,
     ];
 
-    if (cr.phaseEpic) lines.push(`- Phase: ${cr.phaseEpic}`);
-    if (cr.source) lines.push(`- Source: ${cr.source}`);
-    if (cr.impact) lines.push(`- Impact: ${cr.impact}`);
-    if (cr.effort) lines.push(`- Effort: ${cr.effort}`);
+    if (ticket.phaseEpic) lines.push(`- Phase: ${ticket.phaseEpic}`);
 
-    if (cr.content) {
-      const contentLength = cr.content.length;
+    if (ticket.content) {
+      const contentLength = ticket.content.length;
       if (contentLength > 500) {
-        lines.push('', `**Content (${contentLength} chars, showing first 500):**`, cr.content.substring(0, 500) + '...');
+        lines.push('', `**Content (${contentLength} chars, showing first 500):**`, ticket.content.substring(0, 500) + '...');
       } else {
-        lines.push('', `**Content (${contentLength} chars):**`, cr.content);
+        lines.push('', `**Content (${contentLength} chars):**`, ticket.content);
       }
     }
 
-    lines.push('', `**File:** ${cr.filePath}`);
+    lines.push('', `**File:** ${ticket.filePath}`);
 
     return lines.join('\n');
   }
 
-  private async handleCreateCR(projectKey: string, type: CRType, data: CRData): Promise<string> {
+  private async handleCreateCR(projectKey: string, type: string, data: TicketData): Promise<string> {
     const project = await this.validateProject(projectKey);
 
     // Validate data first
-    const validation = this.templateService.validateCRData(data, type);
+    const validation = this.templateService.validateTicketData(data, type);
     if (!validation.valid) {
       const errors = validation.errors.map(e => `- ❌ ${e.field}: ${e.message}`).join('\n');
       throw new Error(`CR data validation failed:\n${errors}`);
     }
 
-    const cr = await this.crService.createCR(project, type, data);
+    const ticket = await this.crService.createCR(project, type, data);
 
     const lines = [
-      `✅ **Created CR ${cr.key}**: ${cr.title}`,
+      `✅ **Created CR ${ticket.code}**: ${ticket.title}`,
       '',
       '**Details:**',
-      `- Key: ${cr.key}`,
-      `- Status: ${cr.status}`,
-      `- Type: ${cr.type}`,
-      `- Priority: ${cr.priority}`,
+      `- Key: ${ticket.code}`,
+      `- Status: ${ticket.status}`,
+      `- Type: ${ticket.type}`,
+      `- Priority: ${ticket.priority}`,
     ];
 
-    if (cr.phaseEpic) lines.push(`- Phase: ${cr.phaseEpic}`);
-    lines.push(`- Created: ${cr.dateCreated.toISOString()}`);
+    if (ticket.phaseEpic) lines.push(`- Phase: ${ticket.phaseEpic}`);
+    lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString() : 'N/A'}`);
     lines.push('');
-    lines.push(`**File Created:** ${cr.filePath}`);
+    lines.push(`**File Created:** ${ticket.filePath}`);
 
     if (!data.content) {
       lines.push('');
@@ -517,13 +505,13 @@ export class MCPTools {
     const project = await this.validateProject(projectKey);
 
     // Get current CR to show old status
-    const cr = await this.crService.getCR(project, key);
-    if (!cr) {
+    const ticket = await this.crService.getCR(project, key);
+    if (!ticket) {
       throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
-    const oldStatus = cr.status;
-    
+    const oldStatus = ticket.status;
+
     // The service now throws specific errors instead of returning false
     await this.crService.updateCRStatus(project, key, status);
 
@@ -531,7 +519,7 @@ export class MCPTools {
       `✅ **Updated CR ${key}** status`,
       '',
       `**Change:** ${oldStatus} → ${status}`,
-      `- Title: ${cr.title}`,
+      `- Title: ${ticket.title}`,
       `- Updated: ${new Date().toISOString()}`,
       '- File: Updated YAML frontmatter and lastModified timestamp'
     ];
@@ -540,7 +528,7 @@ export class MCPTools {
       lines.push('', 'The CR is now approved and ready for implementation.');
     } else if (status === 'Implemented') {
       lines.push('', 'The CR has been marked as implemented.');
-      if (cr.type === 'Bug Fix') {
+      if (ticket.type === 'Bug Fix') {
         lines.push('Consider deleting this bug fix CR after verification period.');
       }
     }
@@ -552,8 +540,8 @@ export class MCPTools {
     const project = await this.validateProject(projectKey);
 
     // Get current CR info
-    const cr = await this.crService.getCR(project, key);
-    if (!cr) {
+    const ticket = await this.crService.getCR(project, key);
+    if (!ticket) {
       throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
@@ -565,8 +553,8 @@ export class MCPTools {
     const lines = [
       `✅ **Updated CR ${key} Attributes**`,
       '',
-      `- Title: ${cr.title}`,
-      `- Status: ${cr.status}`,
+      `- Title: ${ticket.title}`,
+      `- Status: ${ticket.status}`,
       '',
       '**Updated Fields:**'
     ];
@@ -584,8 +572,8 @@ export class MCPTools {
     const project = await this.validateProject(projectKey);
 
     // Get CR info before deletion
-    const cr = await this.crService.getCR(project, key);
-    if (!cr) {
+    const ticket = await this.crService.getCR(project, key);
+    if (!ticket) {
       throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
@@ -597,12 +585,12 @@ export class MCPTools {
     const lines = [
       `🗑️ **Deleted CR ${key}**`,
       '',
-      `- Title: ${cr.title}`,
-      `- Type: ${cr.type}`,
-      `- Status: ${cr.status}`
+      `- Title: ${ticket.title}`,
+      `- Type: ${ticket.type}`,
+      `- Status: ${ticket.status}`
     ];
 
-    if (cr.type === 'Bug Fix') {
+    if (ticket.type === 'Bug Fix') {
       lines.push('', 'The bug fix CR has been deleted as it was implemented and verified. Bug CRs are typically removed after successful implementation to reduce clutter, as documented in the CR lifecycle.');
     }
 
@@ -649,7 +637,7 @@ export class MCPTools {
     return lines.join('\n');
   }
 
-  private async handleGetCRTemplate(type: CRType): Promise<string> {
+  private async handleGetCRTemplate(type: string): Promise<string> {
     const template = this.templateService.getTemplate(type);
     
     return [
@@ -668,7 +656,7 @@ export class MCPTools {
   private async handleValidateCRData(projectKey: string, data: any): Promise<string> {
     const project = await this.validateProject(projectKey);
 
-    const validation = this.templateService.validateCRData(data, data.type);
+    const validation = this.templateService.validateTicketData(data, data.type);
     
     const lines = [
       '✅ **CR Data Validation Results**',
@@ -768,17 +756,17 @@ export class MCPTools {
   private async handleSuggestCRImprovements(projectKey: string, key: string): Promise<string> {
     const project = await this.validateProject(projectKey);
 
-    const cr = await this.crService.getCR(project, key);
-    if (!cr) {
+    const ticket = await this.crService.getCR(project, key);
+    if (!ticket) {
       throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
-    const suggestions = this.templateService.suggestImprovements(cr);
+    const suggestions = this.templateService.suggestImprovements(ticket);
 
     return [
       `💡 **CR Improvement Suggestions for ${key}**`,
       '',
-      `**Current CR:** ${cr.title}`,
+      `**Current CR:** ${ticket.title}`,
       '',
       ...suggestions.map((suggestion, index) => {
         const priority = index < 3 ? 'High-Priority' : index < 6 ? 'Medium-Priority' : 'Low-Priority';
@@ -794,11 +782,11 @@ export class MCPTools {
     ].join('\n');
   }
 
-  private findRelatedCRs(crs: any[], keywords: string[]): Array<{cr: any, score: number, matchedKeywords: string[]}> {
+  private findRelatedCRs(tickets: any[], keywords: string[]): Array<{cr: any, score: number, matchedKeywords: string[]}> {
     const results: Array<{cr: any, score: number, matchedKeywords: string[]}> = [];
 
-    for (const cr of crs) {
-      const text = `${cr.title} ${cr.content}`.toLowerCase();
+    for (const ticket of tickets) {
+      const text = `${ticket.title} ${ticket.content}`.toLowerCase();
       const matchedKeywords: string[] = [];
       let score = 0;
 
@@ -806,9 +794,9 @@ export class MCPTools {
         const keywordLower = keyword.toLowerCase();
         if (text.includes(keywordLower)) {
           matchedKeywords.push(keyword);
-          
+
           // Title matches are worth more
-          if (cr.title.toLowerCase().includes(keywordLower)) {
+          if (ticket.title.toLowerCase().includes(keywordLower)) {
             score += 0.5;
           } else {
             score += 0.2;
@@ -818,7 +806,7 @@ export class MCPTools {
 
       if (matchedKeywords.length > 0) {
         results.push({
-          cr,
+          cr: ticket,
           score: score / keywords.length, // Normalize by keyword count
           matchedKeywords
         });

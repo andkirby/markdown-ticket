@@ -1,4 +1,5 @@
-import { Template, ValidationResult, CRType, CRData, CR, Suggestion } from '../models/Types.js';
+import { Template, ValidationResult, Suggestion } from '../models/Types.js';
+import { Ticket, TicketData } from '../models/Ticket.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -7,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export class TemplateService {
-  private templates: Map<CRType, Template> = new Map();
+  private templates: Map<string, Template> = new Map();
   private templatesPath: string;
 
   constructor(templatesPath?: string) {
@@ -31,12 +32,12 @@ export class TemplateService {
 
       for (const [type, config] of Object.entries(templatesConfig)) {
         const templatePath = path.join(this.templatesPath, (config as any).file);
-        
+
         if (fs.existsSync(templatePath)) {
           const templateContent = fs.readFileSync(templatePath, 'utf-8');
-          
-          this.templates.set(type as CRType, {
-            type: type as CRType,
+
+          this.templates.set(type, {
+            type: type as any,
             requiredFields: (config as any).requiredFields,
             sections: (config as any).sections,
             template: templateContent
@@ -353,7 +354,7 @@ export class TemplateService {
     });
   }
 
-  getTemplate(type: CRType): Template {
+  getTemplate(type: string): Template {
     const template = this.templates.get(type);
     if (!template) {
       const validTypes = Array.from(this.templates.keys());
@@ -362,7 +363,7 @@ export class TemplateService {
     return template;
   }
 
-  validateCRData(data: CRData, type?: CRType): ValidationResult {
+  validateTicketData(data: TicketData, type?: string): ValidationResult {
     const errors: Array<{field: string, message: string}> = [];
     const warnings: Array<{field: string, message: string}> = [];
 
@@ -379,11 +380,11 @@ export class TemplateService {
     if (!effectiveType) {
       errors.push({ field: 'type', message: 'Type is required' });
     } else {
-      const validTypes: CRType[] = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'];
+      const validTypes: string[] = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'];
       if (!validTypes.includes(effectiveType)) {
-        errors.push({ 
-          field: 'type', 
-          message: `Invalid type '${effectiveType}'. Must be one of: ${validTypes.join(', ')}` 
+        errors.push({
+          field: 'type',
+          message: `Invalid type '${effectiveType}'. Must be one of: ${validTypes.join(', ')}`
         });
       }
     }
@@ -405,11 +406,11 @@ export class TemplateService {
       const template = this.templates.get(effectiveType);
       if (template) {
         for (const field of template.requiredFields) {
-          if (field === 'description' && (!data.description || data.description.trim().length === 0)) {
+          if (field === 'content' && (!data.content || data.content.trim().length === 0)) {
             if (effectiveType === 'Bug Fix') {
-              errors.push({ field: 'description', message: 'Description with reproduction steps is required for bug fixes' });
+              warnings.push({ field: 'content', message: 'Consider providing full content with ## Description (including reproduction steps) for bug fixes' });
             } else {
-              warnings.push({ field: 'description', message: 'Description recommended for better CR quality' });
+              warnings.push({ field: 'content', message: 'Consider providing full content with ## Description and ## Rationale sections for better CR quality' });
             }
           }
         }
@@ -417,8 +418,8 @@ export class TemplateService {
     }
 
     // General recommendations
-    if (!data.description) {
-      warnings.push({ field: 'description', message: 'Consider adding a description for better context' });
+    if (!data.content) {
+      warnings.push({ field: 'content', message: 'Consider adding full markdown content with ## Description and ## Rationale sections for better context' });
     }
 
     if (!data.impactAreas || data.impactAreas.length === 0) {
@@ -436,11 +437,11 @@ export class TemplateService {
     };
   }
 
-  suggestImprovements(cr: CR): Suggestion[] {
+  suggestImprovements(ticket: Ticket): Suggestion[] {
     const suggestions: Suggestion[] = [];
 
     // Content analysis
-    if (!cr.content || cr.content.length < 200) {
+    if (!ticket.content || ticket.content.length < 200) {
       suggestions.push({
         type: 'improvement',
         title: 'Expand Content',
@@ -451,8 +452,8 @@ export class TemplateService {
     }
 
     // Architecture-specific suggestions
-    if (cr.type === 'Architecture') {
-      if (!cr.content.includes('diagram') && !cr.content.includes('architecture')) {
+    if (ticket.type === 'Architecture') {
+      if (!ticket.content.includes('diagram') && !ticket.content.includes('architecture')) {
         suggestions.push({
           type: 'improvement',
           title: 'Add Architecture Diagrams',
@@ -463,8 +464,8 @@ export class TemplateService {
     }
 
     // Bug Fix specific suggestions
-    if (cr.type === 'Bug Fix') {
-      if (!cr.content.includes('reproduction') && !cr.content.includes('steps')) {
+    if (ticket.type === 'Bug Fix') {
+      if (!ticket.content.includes('reproduction') && !ticket.content.includes('steps')) {
         suggestions.push({
           type: 'improvement',
           title: 'Add Reproduction Steps',
@@ -473,7 +474,7 @@ export class TemplateService {
         });
       }
 
-      if (!cr.content.includes('root cause')) {
+      if (!ticket.content.includes('root cause')) {
         suggestions.push({
           type: 'improvement',
           title: 'Root Cause Analysis',
@@ -484,7 +485,7 @@ export class TemplateService {
     }
 
     // General improvements
-    if (cr.status === 'Proposed' && !cr.content.includes('acceptance criteria')) {
+    if (ticket.status === 'Proposed' && !ticket.content.includes('acceptance criteria')) {
       suggestions.push({
         type: 'improvement',
         title: 'Define Acceptance Criteria',
@@ -493,7 +494,7 @@ export class TemplateService {
       });
     }
 
-    if (!cr.phaseEpic || cr.phaseEpic.includes('undefined')) {
+    if (!ticket.phaseEpic || ticket.phaseEpic.includes('undefined')) {
       suggestions.push({
         type: 'improvement',
         title: 'Assign to Phase/Epic',
@@ -502,7 +503,7 @@ export class TemplateService {
       });
     }
 
-    if (!cr.implementationNotes && cr.status === 'Implemented') {
+    if (!ticket.implementationNotes && ticket.status === 'Implemented') {
       suggestions.push({
         type: 'improvement',
         title: 'Add Implementation Notes',
@@ -520,7 +521,7 @@ export class TemplateService {
     });
 
     // Priority and urgency
-    if (cr.type === 'Technical Debt' && cr.priority === 'Low') {
+    if (ticket.type === 'Technical Debt' && ticket.priority === 'Low') {
       suggestions.push({
         type: 'improvement',
         title: 'Consider Priority',

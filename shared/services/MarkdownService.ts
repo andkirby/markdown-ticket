@@ -156,8 +156,6 @@ export class MarkdownService {
 
     // Optional fields
     if (ticket.phaseEpic) lines.push(`phaseEpic: ${ticket.phaseEpic}`);
-    if (ticket.description) lines.push(`description: ${ticket.description}`);
-    if (ticket.rationale) lines.push(`rationale: ${ticket.rationale}`);
     if (ticket.assignee) lines.push(`assignee: ${ticket.assignee}`);
     if (ticket.implementationNotes) lines.push(`implementationNotes: ${ticket.implementationNotes}`);
 

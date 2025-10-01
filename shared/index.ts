@@ -12,11 +12,8 @@ export * from './models/Counter';
 // Types
 export type {
   CRStatus,
-  CRType, 
+  CRType,
   CRPriority,
-  CR,
-  CRFilters,
-  CRData,
   ProjectInfo,
   Template,
   TemplateSection,

@@ -12,13 +12,19 @@ export interface Ticket {
   priority: string;
   dateCreated: Date | null;
   lastModified: Date | null;
+  /**
+   * Full markdown content including:
+   * - ## Description section (problem statement, current/desired state)
+   * - ## Rationale section (why this change is needed)
+   * - ## Solution Analysis
+   * - ## Implementation Specification
+   * - ## Acceptance Criteria
+   */
   content: string;
   filePath: string;
-  
+
   // Optional fields
   phaseEpic?: string;
-  description?: string;
-  rationale?: string;
   assignee?: string;
   implementationDate?: Date | null;
   implementationNotes?: string;
@@ -74,8 +80,6 @@ export function normalizeTicket(rawTicket: any): Ticket {
     
     // Map optional fields
     phaseEpic: rawTicket.phaseEpic || '',
-    description: rawTicket.description || '',
-    rationale: rawTicket.rationale || '',
     assignee: rawTicket.assignee || '',
     implementationNotes: rawTicket.implementationNotes || '',
     
@@ -91,4 +95,33 @@ export function normalizeTicket(rawTicket: any): Ticket {
  */
 export function arrayToString(arr: string[]): string {
   return Array.isArray(arr) ? arr.join(',') : '';
+}
+
+/**
+ * Data interface for creating new tickets
+ */
+export interface TicketData {
+  title: string;
+  type: string;
+  priority?: string;
+  phaseEpic?: string;
+  impactAreas?: string[];
+  relatedTickets?: string;
+  dependsOn?: string;
+  blocks?: string;
+  assignee?: string;
+  content?: string;
+}
+
+/**
+ * Filtering interface for ticket queries
+ */
+export interface TicketFilters {
+  status?: string | string[];
+  type?: string | string[];
+  priority?: string | string[];
+  dateRange?: {
+    start?: Date;
+    end?: Date;
+  };
 }
