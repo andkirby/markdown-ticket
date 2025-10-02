@@ -2,6 +2,7 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { ProjectDiscoveryService } from '../services/projectDiscovery.js';
 import { CRService } from '../services/crService.js';
 import { TemplateService } from '../../../shared/services/TemplateService.js';
+import { MarkdownSectionService } from '../../../shared/services/MarkdownSectionService.js';
 import { TicketFilters, TicketData } from '../../../shared/models/Ticket.js';
 import { CRStatus } from '../../../shared/models/Types.js';
 
@@ -234,6 +235,77 @@ export class MCPTools {
           required: ['project', 'key']
         }
       },
+      {
+        name: 'list_cr_sections',
+        description: 'List all sections in a CR document with their hierarchical paths. Use this to discover available sections before updating. Much more efficient than reading the full document.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            project: {
+              type: 'string',
+              description: 'Project key (e.g., "MDT", "SEB")'
+            },
+            key: {
+              type: 'string',
+              description: 'CR key (e.g., "MDT-001", "SEB-010")'
+            }
+          },
+          required: ['project', 'key']
+        }
+      },
+      {
+        name: 'get_cr_section',
+        description: 'Read the content of a specific section from a CR document. Much more efficient than reading the full document when you only need one section. Use list_cr_sections first to discover available sections.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            project: {
+              type: 'string',
+              description: 'Project key (e.g., "MDT", "SEB")'
+            },
+            key: {
+              type: 'string',
+              description: 'CR key (e.g., "MDT-001", "SEB-010")'
+            },
+            section: {
+              type: 'string',
+              description: 'Section to read. Can be: (1) Simple name: "Problem Statement" or "Requirements", (2) Markdown header: "### Problem Statement" or "## 2. Solution Analysis", (3) Hierarchical path for duplicates: "## Feature AA / ### Requirements". If multiple sections match, an error will list all available hierarchical paths.'
+            }
+          },
+          required: ['project', 'key', 'section']
+        }
+      },
+      {
+        name: 'update_cr_section',
+        description: 'Update a specific section of a CR document efficiently. Saves 90-98% of tokens compared to updating the full document. Use this for targeted edits, incremental document building, or appending to existing sections.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            project: {
+              type: 'string',
+              description: 'Project key (e.g., "MDT", "SEB")'
+            },
+            key: {
+              type: 'string',
+              description: 'CR key (e.g., "MDT-001", "SEB-010")'
+            },
+            section: {
+              type: 'string',
+              description: 'Section to update. Can be: (1) Simple name: "Problem Statement" or "Requirements", (2) Markdown header: "### Problem Statement" or "## 2. Solution Analysis", (3) Hierarchical path for duplicates: "## Feature AA / ### Requirements". If multiple sections match, an error will list all available hierarchical paths.'
+            },
+            operation: {
+              type: 'string',
+              enum: ['replace', 'append', 'prepend'],
+              description: 'Operation type: "replace" = Replace entire section content. "append" = Add content to end of section. "prepend" = Add content to beginning of section.'
+            },
+            content: {
+              type: 'string',
+              description: 'Content to apply. For "replace", this is the complete new content for the section (excluding header). For "append"/"prepend", this is the additional content to add.'
+            }
+          },
+          required: ['project', 'key', 'section', 'operation', 'content']
+        }
+      },
 
       // Template System
       {
@@ -307,7 +379,16 @@ export class MCPTools {
         
         case 'delete_cr':
           return await this.handleDeleteCR(args.project, args.key);
-        
+
+        case 'list_cr_sections':
+          return await this.handleListCRSections(args.project, args.key);
+
+        case 'get_cr_section':
+          return await this.handleGetCRSection(args.project, args.key, args.section);
+
+        case 'update_cr_section':
+          return await this.handleUpdateCRSection(args.project, args.key, args.section, args.operation, args.content);
+
         case 'list_cr_templates':
           return await this.handleListCRTemplates();
         
@@ -318,7 +399,7 @@ export class MCPTools {
           return await this.handleSuggestCRImprovements(args.project, args.key);
         
         default:
-          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr', 'create_cr', 'update_cr_attrs', 'update_cr_status', 'delete_cr', 'list_cr_templates', 'get_cr_template', 'suggest_cr_improvements'];
+          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr', 'create_cr', 'update_cr_attrs', 'update_cr_status', 'delete_cr', 'list_cr_sections', 'get_cr_section', 'update_cr_section', 'list_cr_templates', 'get_cr_template', 'suggest_cr_improvements'];
           throw new Error(`Unknown tool '${name}'. Available tools: ${availableTools.join(', ')}`);
       }
     } catch (error) {
@@ -592,6 +673,225 @@ export class MCPTools {
 
     if (ticket.type === 'Bug Fix') {
       lines.push('', 'The bug fix CR has been deleted as it was implemented and verified. Bug CRs are typically removed after successful implementation to reduce clutter, as documented in the CR lifecycle.');
+    }
+
+    return lines.join('\n');
+  }
+
+  private async handleListCRSections(projectKey: string, key: string): Promise<string> {
+    const project = await this.validateProject(projectKey);
+
+    // Get CR
+    const ticket = await this.crService.getCR(project, key);
+    if (!ticket) {
+      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
+    }
+
+    // Read file content
+    const fs = await import('fs/promises');
+    const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
+
+    // Extract markdown body (after YAML frontmatter)
+    const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    if (!frontmatterMatch) {
+      throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+    }
+
+    const markdownBody = frontmatterMatch[2];
+
+    // Get all sections
+    const allSections = MarkdownSectionService.findSection(markdownBody, '');
+
+    if (allSections.length === 0) {
+      return [
+        `📑 **Sections in CR ${key}**`,
+        '',
+        `- Title: ${ticket.title}`,
+        '',
+        '*(No sections found - document may be empty or improperly formatted)*'
+      ].join('\n');
+    }
+
+    const lines = [
+      `📑 **Sections in CR ${key}** - ${ticket.title}`,
+      '',
+      `Found ${allSections.length} section${allSections.length === 1 ? '' : 's'}:`,
+      ''
+    ];
+
+    // Build tree structure based on header levels
+    for (const section of allSections) {
+      // Calculate indentation based on header level (# = 0, ## = 1, ### = 2, etc.)
+      const indent = '  '.repeat(Math.max(0, section.headerLevel - 1));
+
+      const contentPreview = section.content.trim() ?
+        ` (${section.content.length} chars)` :
+        ' (empty)';
+
+      lines.push(`${indent}- ${section.headerText}${contentPreview}`);
+    }
+
+    lines.push('');
+    lines.push('**Usage:**');
+    lines.push('To read or update a section, use the **exact header text** shown above (with # symbols).');
+    lines.push('');
+    lines.push('**Examples:**');
+    lines.push('- `section: "## 1. Feature Description"` - reads/updates that section');
+    lines.push('- `section: "### Key Features"` - reads/updates the subsection');
+
+    return lines.join('\n');
+  }
+
+  private async handleGetCRSection(projectKey: string, key: string, section: string): Promise<string> {
+    const project = await this.validateProject(projectKey);
+
+    // Get CR
+    const ticket = await this.crService.getCR(project, key);
+    if (!ticket) {
+      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
+    }
+
+    // Read file content
+    const fs = await import('fs/promises');
+    const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
+
+    // Extract markdown body (after YAML frontmatter)
+    const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    if (!frontmatterMatch) {
+      throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+    }
+
+    const markdownBody = frontmatterMatch[2];
+
+    // Find section
+    const matches = MarkdownSectionService.findSection(markdownBody, section);
+
+    if (matches.length === 0) {
+      throw new Error(`Section "${section}" not found in CR ${key}. Use list_cr_sections to see available sections.`);
+    }
+
+    if (matches.length > 1) {
+      const paths = matches.map(m => m.hierarchicalPath).join('\n  - ');
+      throw new Error(
+        `Multiple sections match "${section}". Please use a hierarchical path:\n  - ${paths}`
+      );
+    }
+
+    const matchedSection = matches[0];
+
+    return [
+      `📖 **Section Content from CR ${key}**`,
+      '',
+      `**Section:** ${matchedSection.hierarchicalPath}`,
+      `**Content Length:** ${matchedSection.content.length} characters`,
+      '',
+      '---',
+      '',
+      matchedSection.content,
+      '',
+      '---',
+      '',
+      `Use \`update_cr_section\` to modify this section.`
+    ].join('\n');
+  }
+
+  private async handleUpdateCRSection(projectKey: string, key: string, section: string, operation: string, content: string): Promise<string> {
+    const project = await this.validateProject(projectKey);
+
+    // Get CR
+    const ticket = await this.crService.getCR(project, key);
+    if (!ticket) {
+      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
+    }
+
+    // Read file content
+    const fs = await import('fs/promises');
+    const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
+
+    // Extract markdown body (after YAML frontmatter)
+    const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    if (!frontmatterMatch) {
+      throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+    }
+
+    const yamlFrontmatter = frontmatterMatch[1];
+    const markdownBody = frontmatterMatch[2];
+
+    // Find section
+    const matches = MarkdownSectionService.findSection(markdownBody, section);
+
+    if (matches.length === 0) {
+      // Section not found - list available sections
+      const allSections = MarkdownSectionService.findSection(markdownBody, '');
+      const sectionList = allSections
+        .map(s => `  - "${s.hierarchicalPath}"`)
+        .join('\n');
+
+      throw new Error(
+        `Section '${section}' not found in CR ${key}.\n\n` +
+        `Available sections:\n${sectionList || '  (none)'}`
+      );
+    }
+
+    if (matches.length > 1) {
+      // Multiple matches - require hierarchical path
+      const paths = matches.map(m => `  - "${m.hierarchicalPath}"`).join('\n');
+      throw new Error(
+        `Multiple sections found matching '${section}'.\n\n` +
+        `Please specify which one using hierarchical path:\n${paths}`
+      );
+    }
+
+    // Single match - proceed with update
+    const matchedSection = matches[0];
+    let updatedBody: string;
+
+    switch (operation) {
+      case 'replace':
+        updatedBody = MarkdownSectionService.replaceSection(markdownBody, matchedSection, content);
+        break;
+      case 'append':
+        updatedBody = MarkdownSectionService.appendToSection(markdownBody, matchedSection, content);
+        break;
+      case 'prepend':
+        updatedBody = MarkdownSectionService.prependToSection(markdownBody, matchedSection, content);
+        break;
+      default:
+        throw new Error(`Invalid operation '${operation}'. Must be: replace, append, or prepend`);
+    }
+
+    // Update lastModified in YAML
+    const now = new Date().toISOString();
+    const updatedYaml = yamlFrontmatter.replace(
+      /lastModified:.*$/m,
+      `lastModified: ${now}`
+    );
+
+    // Reconstruct full document
+    const updatedContent = `---\n${updatedYaml}\n---\n${updatedBody}`;
+
+    // Write back to file
+    await fs.writeFile(ticket.filePath, updatedContent, 'utf-8');
+
+    const lines = [
+      `✅ **Updated Section in CR ${key}**`,
+      '',
+      `**Section:** ${matchedSection.hierarchicalPath}`,
+      `**Operation:** ${operation}`,
+      `**Content Length:** ${content.length} characters`,
+      '',
+      `- Title: ${ticket.title}`,
+      `- Updated: ${now}`,
+      `- File: ${ticket.filePath}`
+    ];
+
+    // Add helpful message based on operation
+    if (operation === 'replace') {
+      lines.push('', `The section content has been completely replaced.`);
+    } else if (operation === 'append') {
+      lines.push('', `Content has been added to the end of the section.`);
+    } else if (operation === 'prepend') {
+      lines.push('', `Content has been added to the beginning of the section.`);
     }
 
     return lines.join('\n');
