@@ -9,23 +9,7 @@ import { getSortPreferences, setSortPreferences, SortPreferences } from '../conf
 import { sortTickets } from '../utils/sorting';
 import { getProjectCode } from './ProjectSelector';
 import { Ticket } from '../../shared/models/Ticket';
-
-interface Project {
-  id: string;
-  project: {
-    name: string;
-    path: string;
-    configFile: string;
-    active: boolean;
-    description: string;
-  };
-  metadata: {
-    dateRegistered: string;
-    lastAccessed: string;
-    version: string;
-  };
-  autoDiscovered?: boolean;
-}
+import { Project } from '../../shared/models/Project';
 
 interface LocalCR {
   filename: string;
@@ -40,12 +24,12 @@ interface LocalCR {
   content: string;
 }
 
-interface MultiProjectDashboardProps {
+interface ListProps {
   selectedProject?: Project | null;
 }
 
-const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedProject: propSelectedProject }) => {
-  const STORAGE_KEY = 'multiProjectDashboard.selectedProjectId';
+const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => {
+  const STORAGE_KEY = 'list.selectedProjectId';
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [crs, setCrs] = useState<Ticket[]>([]);
@@ -326,7 +310,7 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
             <HamburgerMenu
               onAddProject={() => setShowAddProjectModal(true)}
               onEditProject={() => setShowEditProjectModal(true)}
-              onCounterAPI={() => console.log('Counter API clicked from MultiProjectDashboard')}
+              onCounterAPI={() => console.log('Counter API clicked from List')}
               hasActiveProject={!!selectedProject}
             />
           </div>
@@ -621,4 +605,4 @@ const MultiProjectDashboard: React.FC<MultiProjectDashboardProps> = ({ selectedP
   );
 };
 
-export default MultiProjectDashboard;
+export default List;

@@ -11,26 +11,7 @@ import { FilterControls } from './FilterControls';
 import { HamburgerMenu } from './HamburgerMenu';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
-
-interface Project {
-  id: string;
-  project: {
-    name: string;
-    path: string;
-    configFile: string;
-    active: boolean;
-    description: string;
-  };
-  metadata: {
-    dateRegistered: string;
-    lastAccessed: string;
-    version: string;
-  };
-  tickets?: {
-    codePattern?: string;
-  };
-  autoDiscovered?: boolean;
-}
+import { Project } from '../../shared/models/Project';
 
 interface BoardProps {
   onTicketClick: (ticket: Ticket) => void;
