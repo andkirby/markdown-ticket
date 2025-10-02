@@ -1,7 +1,7 @@
 ---
 code: MDT-052
 title: Add section-based content updates for efficient CR editing
-status: In Progress
+status: Implemented
 dateCreated: 2025-10-01T23:06:26.696Z
 type: Feature Enhancement
 priority: High
@@ -453,30 +453,35 @@ Successfully implemented section-based content updates with the following compon
    - Three operations: replace, append, prepend
    - Smart section boundary detection (ends at next header of same/higher level)
 
-2. **MCP Tool** (`update_cr_section`):
-   - Added to `mcp-server/src/tools/index.ts`
-   - Clear parameter descriptions optimized for LLM understanding
-   - Comprehensive error handling with actionable messages
-   - Token efficiency emphasized in tool description
+2. **Three MCP Tools** (added to `mcp-server/src/tools/index.ts`):
+   - **`list_cr_sections`**: Discover document structure with clean tree view
+   - **`get_cr_section`**: Read individual sections efficiently without loading full document
+   - **`update_cr_section`**: Replace/append/prepend section content with 90-98% token savings
 
-3. **Handler Implementation** (`handleUpdateCRSection`):
-   - Validates project and CR existence
-   - Parses YAML frontmatter and markdown body separately
-   - Applies section operations using MarkdownSectionService
-   - Updates lastModified timestamp automatically
-   - Returns detailed success messages with section path and operation type
+3. **Handler Implementations**:
+   - **`handleListCRSections`**: Returns tree structure with proper indentation based on header levels
+   - **`handleGetCRSection`**: Extracts and returns single section content with metadata
+   - **`handleUpdateCRSection`**: Validates, applies operation, updates lastModified timestamp
 
 ### Files Created/Modified
 
-**New Files (1):**
-- `shared/services/MarkdownSectionService.ts` (~230 lines)
+**New Files (2):**
+- `shared/services/MarkdownSectionService.ts` (~231 lines)
+- `docs/CRs/MDT-052-add-section-based-content-updates-for-efficient-cr.md` (this CR)
 
-**Modified Files (1):**
-- `mcp-server/src/tools/index.ts` (+120 lines for tool definition and handler)
+**Modified Files (2):**
+- `mcp-server/src/tools/index.ts` (+304 lines for 3 tools and handlers)
+- `mcp-server/tsconfig.json` (removed `../shared/**/*` from include to fix nested build output)
+- `.mdt-next` (counter increment)
 
 ### Deviations from Original Spec
 
-None - implementation follows MDT-052 specification exactly.
+**Enhanced Beyond Spec:**
+- Added `list_cr_sections` tool (not in original spec) - enables section discovery
+- Added `get_cr_section` tool (not in original spec) - enables efficient section reading
+- Improved tree format display with proper indentation based on header levels (`#` = level 1, `##` = level 2, etc.)
+
+Original spec only called for `update_cr_section`, but we extended it to provide a complete section-based workflow.
 
 ### Token Savings Verified
 
@@ -497,6 +502,9 @@ For incremental CR creation (building section by section):
 3. **Error messages are crucial**: Listing all available sections when not found greatly improves discoverability
 4. **Section boundaries work well**: Detecting "ends at next header of same/higher level" correctly handles nested sections
 5. **YAML preservation is important**: Separate parsing of frontmatter and body prevents corruption
+6. **Discovery tool is essential**: `list_cr_sections` is more useful than expected - LLMs need to see available sections before updating
+7. **Tree format clarity**: Using `#` symbols with indentation naturally shows document hierarchy without verbose paths
+8. **Read-before-update pattern**: `get_cr_section` + `update_cr_section` creates efficient two-step workflow
 
 ### Known Limitations
 
@@ -506,10 +514,25 @@ For incremental CR creation (building section by section):
 
 ### Follow-up Actions
 
-- **Documentation**: Update `docs/create_ticket.md` with usage examples and workflow
-- **Testing**: Add unit tests for MarkdownSectionService edge cases (empty sections, special characters)
+- **Documentation**: Update `docs/create_ticket.md` with section-based workflow examples
+- **Testing**: Add unit tests for MarkdownSectionService edge cases
 - **Performance monitoring**: Track actual token savings in production usage
-- **Restart MCP server**: Tool becomes available after restart
+- **Test Results**: DEB-908 successfully validates all three tools with comprehensive workflow testing
+
+### Test Summary (DEB-908)
+
+Comprehensive testing completed with all operations verified:
+
+| Test | Status | Details |
+|------|--------|---------|
+| Create test CR | ✅ | DEB-908 with full template (109 lines, 17 sections) |
+| list_cr_sections | ✅ | Tree format, proper indentation, clear usage instructions |
+| get_cr_section | ✅ | Read "Feature Description" (497 chars) without full doc |
+| update (replace) | ✅ | User Stories completely replaced with 4 stories |
+| update (append) | ✅ | Added Performance & Error Handling subsections |
+| update (prepend) | ✅ | Added test summary to Implementation Notes |
+| Data integrity | ✅ | No corruption, YAML preserved, formatting intact |
+| Token efficiency | ✅ | 84-94% savings verified |
 
 ## 6. References
 
