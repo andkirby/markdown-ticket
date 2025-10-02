@@ -1,5 +1,35 @@
 # Release Notes
 
+## v0.4.0 (2025-10-02)
+
+### New Features
+- **URL-based Routing**: Navigate directly to specific tickets and views using URLs. Share links to tickets or open them directly from the address bar.
+- **Mermaid Diagram Support**: Render Mermaid diagrams in markdown documents with fullscreen viewing, adaptive scaling, and intuitive zoom controls.
+- **Document Filtering**: Filter documents and tickets by multiple criteria for easier navigation in large projects.
+- **Collapsible Directories**: Organize document view with collapsible directory trees for better navigation.
+- **Section-based MCP Updates**: Efficient CR updates through MCP tools that modify specific sections instead of entire documents, saving up to 98% of tokens.
+
+### Improvements
+- **Document Sorting**: Added date display and sorting functionality for documents in the document view.
+- **Frontend Logging**: Implemented autostart feature for early log capture during development.
+- **MCP Documentation**: Comprehensive updates to MCP tools documentation with section-based operations.
+- **Ticket Interface**: Consolidated description and rationale fields into unified Ticket interface.
+
+### Bug Fixes
+- **Date Sorting**: Fixed broken date sorting for ISO strings and missing lastModified fields.
+- **Drag-and-Drop**: Resolved drag-and-drop issues with optimistic UI updates.
+- **Event System**: Fixed bugs in event handling and project creation.
+- **MCP Server**: Resolved ES modules import issues and stdout contamination.
+- **Counter API**: Fixed syntax errors in counter API implementation.
+
+### Technical Improvements
+- Rate-limiting for status endpoint to improve performance
+- Enhanced frontend logger with better debugging capabilities
+- Upgraded dependencies and configurations
+- TypeScript ES modules compilation fixes
+
+---
+
 ## v0.3.0 (2025-09-11)
 
 ### New Features
