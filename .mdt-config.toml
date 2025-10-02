@@ -18,8 +18,9 @@ exclude_folders = [
 # Documentation Configuration
 document_paths = [
     "docs",
+    "logger-tree",
     "PROJECT.md",
     "README.md",
-    "logger-tree"
+    "generated-docs"
 ]
 max_depth = 3             # Maximum directory depth for scanning

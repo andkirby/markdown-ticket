@@ -11,21 +11,15 @@ interface ProjectSelectorProps {
 
 // Helper function to get project code from project data
 export const getProjectCode = (project: Project): string => {
+  // Safety check for undefined/null project
+  if (!project || !project.project) {
+    console.error('getProjectCode called with invalid project object:', project);
+    return 'UNKNOWN';
+  }
+  
   // Use the project.code from config if available
   if (project.project.code) {
     return project.project.code;
-  }
-  
-  // HOTFIX: Temporary hardcoded mappings for backend parsing issue
-  // TODO: Remove when backend config parsing is fixed for these projects
-  const hotfixMap: Record<string, string> = {
-    'goto_dir': 'GT',
-    'sentence-breakdown': 'SEB'
-  };
-  
-  if (hotfixMap[project.id]) {
-    console.warn(`Using hotfix mapping for ${project.id} -> ${hotfixMap[project.id]} (backend config parsing issue)`);
-    return hotfixMap[project.id];
   }
   
   console.warn(`Project ${project.id} missing code in .mdt-config.toml`);

@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Plus, Edit, Hash } from 'lucide-react';
+import { Menu, Plus, Edit, Hash, Trash2 } from 'lucide-react';
 import { Button } from './UI/index';
 import { useConfig } from '../hooks/useConfig';
+import { clearAllCache, nuclearCacheClear } from '../utils/cache';
 
 interface HamburgerMenuProps {
   onAddProject: () => void;
@@ -46,6 +47,12 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     onCounterAPI?.();
   };
 
+  const handleClearCache = () => {
+    console.log('🔧 Cache clear button clicked');
+    setIsOpen(false);
+    nuclearCacheClear();
+  };
+
   return (
     <div className="relative" ref={menuRef}>
       <Button
@@ -85,6 +92,13 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                 Counter API
               </button>
             )}
+            <button
+              onClick={handleClearCache}
+              className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear Cache
+            </button>
           </div>
         </div>
       )}

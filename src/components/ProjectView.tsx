@@ -55,10 +55,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
     setSortPreferences(newPreferences);
   }, []);
 
-  const handleRefresh = useCallback(async () => {
-    // Refresh is now handled by the parent component
-  }, []);
-
   const handleTicketUpdate = useCallback(async (ticketCode: string, updates: Partial<Ticket>) => {
     if (!selectedProject) {
       throw new Error('No project selected');
@@ -100,7 +96,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
               viewMode={viewMode}
               sortPreferences={(viewMode === 'board' || viewMode === 'list') ? sortPreferences : undefined}
               onSortPreferencesChange={(viewMode === 'board' || viewMode === 'list') ? handleSortPreferencesChange : undefined}
-              onRefresh={handleRefresh}
               onAddProject={() => setShowAddProjectModal(true)}
               onEditProject={() => setShowEditProjectModal(true)}
               onCounterAPI={() => setShowCounterAPIModal(true)}
