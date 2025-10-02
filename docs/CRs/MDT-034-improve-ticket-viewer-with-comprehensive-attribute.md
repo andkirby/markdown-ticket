@@ -1,7 +1,7 @@
 ---
 code: MDT-034
 title: Improve ticket viewer with comprehensive attribute display
-status: On Hold
+status: Proposed
 dateCreated: 2025-09-09T08:27:45.290Z
 type: Feature Enhancement
 priority: Medium
@@ -10,6 +10,7 @@ rationale: Users need to see all ticket attributes clearly when viewing tickets,
 implementationDate: 2025-09-10T19:18:44.326Z
 implementationNotes: Status changed to Implemented on 9/10/2025
 ---
+
 
 
 
