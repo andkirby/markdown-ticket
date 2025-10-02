@@ -45,6 +45,7 @@
 - **Kanban Board Interface**: Visual drag-and-drop ticket management with status toggle buttons
 - **Multi-Project Support**: Manage multiple projects from a single dashboard with project editing capabilities
 - **Enhanced Ticket Viewer**: Comprehensive attribute display with styled badges and structured layout
+- **Syntax Highlighting**: Code blocks with syntax highlighting for 8+ languages (JS, TS, Python, Bash, JSON, YAML, PHP, Go)
 - **Ticket Relationships**: Full support for dependencies, blocks, and related tickets
 - **Backlog Management**: Hide/show backlog tickets for cleaner board views
 - **Markdown Storage**: All tickets stored as markdown files with YAML frontmatter
