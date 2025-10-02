@@ -2,38 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Ticket, Status } from '../types';
 import { formatTicketAsMarkdown } from '../services/markdownParser';
 import { defaultRealtimeFileWatcher } from '../services/realtimeFileWatcher';
-
-interface Project {
-  id: string;
-  project: {
-    name: string;
-    path: string;
-    configFile: string;
-    active: boolean;
-    description: string;
-  };
-  metadata: {
-    dateRegistered: string;
-    lastAccessed: string;
-    version: string;
-  };
-  tickets?: {
-    codePattern?: string;
-  };
-  autoDiscovered?: boolean;
-}
-
-interface ProjectConfig {
-  project: {
-    name: string;
-    code: string;
-    path: string;
-    startNumber: number;
-    counterFile: string;
-    description?: string;
-    repository?: string;
-  };
-}
+import { Project, ProjectConfig } from '../../shared/models/Project';
 
 // Helper function to generate ticket codes based on project configuration
 function generateTicketCode(project: Project, projectConfig: ProjectConfig | null, existingTicketCount: number): string {

@@ -1,25 +1,6 @@
 import { Badge } from './UI/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './UI/tooltip';
-
-interface Project {
-  id: string;
-  project: {
-    name: string;
-    path: string;
-    configFile: string;
-    active: boolean;
-    description: string;
-  };
-  metadata: {
-    dateRegistered: string;
-    lastAccessed: string;
-    version: string;
-  };
-  tickets?: {
-    codePattern?: string;
-  };
-  autoDiscovered?: boolean;
-}
+import { Project } from '../../shared/models/Project';
 
 interface ProjectSelectorProps {
   projects: Project[];
@@ -30,16 +11,25 @@ interface ProjectSelectorProps {
 
 // Helper function to get project code from project data
 export const getProjectCode = (project: Project): string => {
-  // Map known project IDs to their codes
-  const codeMap: Record<string, string> = {
-    'debug': 'DEB',
-    'markdown-ticket': 'MDT', 
-    'LlmTranslator': 'CR',
+  // Use the project.code from config if available
+  if (project.project.code) {
+    return project.project.code;
+  }
+  
+  // HOTFIX: Temporary hardcoded mappings for backend parsing issue
+  // TODO: Remove when backend config parsing is fixed for these projects
+  const hotfixMap: Record<string, string> = {
     'goto_dir': 'GT',
-    'sentence-breakdown': 'SB'
+    'sentence-breakdown': 'SEB'
   };
   
-  return codeMap[project.id] || project.id.toUpperCase().slice(0, 3);
+  if (hotfixMap[project.id]) {
+    console.warn(`Using hotfix mapping for ${project.id} -> ${hotfixMap[project.id]} (backend config parsing issue)`);
+    return hotfixMap[project.id];
+  }
+  
+  console.warn(`Project ${project.id} missing code in .mdt-config.toml`);
+  return project.id; // Return ID as-is, don't modify
 };
 
 export function ProjectSelector({ projects, selectedProject, onProjectSelect, loading = false }: ProjectSelectorProps) {

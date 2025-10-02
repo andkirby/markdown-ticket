@@ -10,32 +10,13 @@ import { getSortPreferences, setSortPreferences, SortPreferences } from '../conf
 import { sortTickets } from '../utils/sorting';
 import { TicketCode } from './TicketCode';
 import { getProjectCode } from './ProjectSelector';
+import { Project } from '../../shared/models/Project';
 
 type ViewMode = 'board' | 'list' | 'documents';
 
 const VIEW_MODE_KEY = 'single-project-view-mode';
 
-interface Project {
-  id: string;
-  project: {
-    name: string;
-    path: string;
-    configFile: string;
-    active: boolean;
-    description: string;
-  };
-  metadata: {
-    dateRegistered: string;
-    lastAccessed: string;
-    version: string;
-  };
-  tickets?: {
-    codePattern?: string;
-  };
-  autoDiscovered?: boolean;
-}
-
-interface SingleProjectViewProps {
+interface ProjectViewProps {
   onTicketClick: (ticket: Ticket) => void;
   selectedProject: Project | null;
   tickets?: Ticket[];
@@ -45,7 +26,7 @@ interface SingleProjectViewProps {
   refreshProjects?: () => Promise<void>;
 }
 
-export default function SingleProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, onAddProject, viewMode: externalViewMode, refreshProjects }: SingleProjectViewProps) {
+export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, onAddProject, viewMode: externalViewMode, refreshProjects }: ProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
   const [internalViewMode, setInternalViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
