@@ -40,8 +40,21 @@ export function sortTickets(
 
     // Compare values
     let comparison = 0;
-    if (aValue instanceof Date && bValue instanceof Date) {
-      comparison = aValue.getTime() - bValue.getTime();
+    
+    // Handle date comparison (both Date objects and ISO strings)
+    if ((aValue instanceof Date && bValue instanceof Date) ||
+        (typeof aValue === 'string' && typeof bValue === 'string' && 
+         attribute.includes('Date') || attribute.includes('Modified') || attribute.includes('Created'))) {
+      
+      const aTime = aValue instanceof Date ? aValue.getTime() : new Date(aValue).getTime();
+      const bTime = bValue instanceof Date ? bValue.getTime() : new Date(bValue).getTime();
+      
+      // Handle invalid dates
+      if (isNaN(aTime) && isNaN(bTime)) comparison = 0;
+      else if (isNaN(aTime)) comparison = direction === 'asc' ? -1 : 1;
+      else if (isNaN(bTime)) comparison = direction === 'asc' ? 1 : -1;
+      else comparison = aTime - bTime;
+      
     } else if (typeof aValue === 'string' && typeof bValue === 'string') {
       comparison = aValue.localeCompare(bValue);
     } else {
