@@ -72,6 +72,7 @@ interface UseMultiProjectDataReturn {
   // Ticket operations (work on selected project)
   createTicket: (title: string, type: string) => Promise<Ticket>; // Removed ticketCode param - will be auto-generated
   updateTicket: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>;
+  updateTicketOptimistic: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>;
   deleteTicket: (ticketCode: string) => Promise<void>;
   
   // Refresh operations
