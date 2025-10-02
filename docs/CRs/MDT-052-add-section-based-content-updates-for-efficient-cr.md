@@ -535,7 +535,15 @@ Comprehensive testing completed with all operations verified:
 | Token efficiency | ✅ | 84-94% savings verified |
 
 ## 6. References
+**Related Documents:**
+- **MCP Tools Reference**: `mcp-server/MCP_TOOLS.md` - Complete tool documentation with parameters and examples
+- **MCP Request Samples**: `mcp-server/MCP_REQUEST_SAMPLES.md` - JSON-RPC request/response examples
+- **MCP Server Guide**: `docs/MCP_SERVER_GUIDE.md` - User guide with integration setup and workflow examples
+- **MCP Inspector**: https://modelcontextprotocol.io/docs/tools/inspector - Interactive tool for testing MCP tools and viewing payloads
 
-- **Related CR:** MDT-050 (removed description/rationale, enabling better section-based workflows)
-- **Token Efficiency Analysis:** See "Description" section for detailed token comparison
-- **Use Case:** Building CRs incrementally, fixing specific sections without full document updates
+**Related CRs:**
+- **MDT-050**: Removed description/rationale fields, enabling cleaner section-based workflows
+
+**Implementation:**
+- **Core Service**: `shared/services/MarkdownSectionService.ts` - Section parsing and manipulation logic
+- **MCP Tools**: `mcp-server/src/tools/index.ts` - MCP tool definitions and handlers
