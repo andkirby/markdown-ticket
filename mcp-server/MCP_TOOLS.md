@@ -116,10 +116,8 @@ The MCP server uses the **shared core architecture** with unified types, service
 - `type` (string, required): CR type ("Architecture", "Feature Enhancement", "Bug Fix", "Technical Debt", "Documentation")
 - `data` (object, required): CR data
   - `title` (string, required): CR title/summary
-  - `description` (string, optional): Problem statement or description
   - `priority` (string, optional): CR priority (defaults to "Medium")
   - `phaseEpic` (string, optional): Phase or epic this CR belongs to
-  - `rationale` (string, optional): Rationale for this CR
   - `assignee` (string, optional): Person responsible for implementation
   - `relatedTickets` (string, optional): Comma-separated list of related CR codes
   - `dependsOn` (string, optional): Comma-separated list of CR keys this depends on
@@ -169,6 +167,126 @@ The MCP server uses the **shared core architecture** with unified types, service
 **Parameters**:
 - `project` (string, required): Project key
 - `key` (string, required): CR key
+
+## Section-Based Content Tools
+
+### `list_cr_sections`
+**Description**: List all sections in a CR document with their hierarchical paths. Enables section discovery before updating. Much more efficient than reading the full document.
+
+**Parameters**:
+- `project` (string, required): Project key (e.g., "MDT", "SEB")
+- `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
+
+**Response Format**:
+```
+📑 **Sections in CR MDT-052** - Add section-based content updates
+
+Found 17 sections:
+
+- # Add section-based content updates (empty)
+  - ## 1. Description (1234 chars)
+    - ### Problem Statement (567 chars)
+    - ### Current State (345 chars)
+  - ## 2. Solution Analysis (890 chars)
+  - ## 3. Implementation Specification (1567 chars)
+
+**Usage:**
+To read or update a section, use the **exact header text** shown above (with # symbols).
+
+**Examples:**
+- `section: "## 1. Description"` - reads/updates that section
+- `section: "### Problem Statement"` - reads/updates the subsection
+```
+
+**Token Efficiency**: Uses ~150 tokens vs ~2500 for full document read (94% savings)
+
+### `get_cr_section`
+**Description**: Read the content of a specific section from a CR document. Much more efficient than reading the full document when you only need one section. Use `list_cr_sections` first to discover available sections.
+
+**Parameters**:
+- `project` (string, required): Project key (e.g., "MDT", "SEB")
+- `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
+- `section` (string, required): Section to read. Can be:
+  - Simple name: "Problem Statement" or "Requirements"
+  - Markdown header: "### Problem Statement" or "## 2. Solution Analysis"
+  - Hierarchical path for duplicates: "## Feature AA / ### Requirements"
+
+**Response Format**:
+```
+📖 **Section Content from CR MDT-052**
+
+**Section:** # Add section-based content updates / ## 1. Description / ### Problem Statement
+**Content Length:** 567 characters
+
+---
+
+LLMs currently waste 90-98% of tokens when updating CR documents because they must send the entire document content even when changing a single section...
+
+---
+
+Use `update_cr_section` to modify this section.
+```
+
+**Token Efficiency**: Reading a single section uses ~125 tokens vs ~800 for full document (84% savings)
+
+**Error Handling**:
+- Section not found: Returns error with list of available sections
+- Multiple matches: Returns error with hierarchical paths to disambiguate
+
+### `update_cr_section`
+**Description**: Update a specific section of a CR document efficiently. Saves 90-98% of tokens compared to updating the full document. Use this for targeted edits, incremental document building, or appending to existing sections.
+
+**Parameters**:
+- `project` (string, required): Project key (e.g., "MDT", "SEB")
+- `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
+- `section` (string, required): Section to update (same format as `get_cr_section`)
+- `operation` (string, required): Operation type:
+  - `"replace"` - Replace entire section content
+  - `"append"` - Add content to end of section
+  - `"prepend"` - Add content to beginning of section
+- `content` (string, required): Content to apply
+  - For "replace": Complete new content for the section (excluding header)
+  - For "append"/"prepend": Additional content to add
+
+**Response Format**:
+```
+✅ **Updated Section in CR MDT-052**
+
+**Section:** # Add section-based content updates / ## 5. Implementation Notes
+**Operation:** append
+**Content Length:** 234 characters
+
+- Title: Add section-based content updates
+- Updated: 2025-10-02T00:06:19.706Z
+- File: /Users/kirby/home/markdown-ticket/docs/CRs/MDT-052-add-section-based-content-updates.md
+
+Content has been added to the end of the section.
+```
+
+**Token Efficiency**: Section update uses ~150 tokens vs ~2500 for full document update (94% savings)
+
+**Workflow Example**:
+```javascript
+// 1. Discover sections
+list_cr_sections({ project: "MDT", key: "MDT-052" })
+
+// 2. Read specific section
+get_cr_section({ project: "MDT", key: "MDT-052", section: "## 1. Description" })
+
+// 3. Update section
+update_cr_section({
+  project: "MDT",
+  key: "MDT-052",
+  section: "## 5. Implementation Notes",
+  operation: "append",
+  content: "Additional implementation details..."
+})
+```
+
+**Error Handling**:
+- Section not found: Returns error with available sections
+- Multiple matches: Returns error with hierarchical paths
+- Invalid operation: Returns error listing valid operations
 
 ## Template Tools
 
