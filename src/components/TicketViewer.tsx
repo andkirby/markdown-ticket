@@ -5,6 +5,7 @@ import { Modal, ModalHeader, ModalBody } from './UI/Modal';
 import TicketAttributes from './TicketAttributes';
 import { TicketCode } from './TicketCode';
 import { processMermaidBlocks, renderMermaid } from '../utils/mermaid';
+import { highlightCodeBlocks } from '../utils/syntaxHighlight';
 
 interface TicketViewerProps {
   ticket: Ticket | null;
@@ -27,7 +28,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
   const htmlContent = useMemo(() => {
     if (!ticket?.content) return '';
     const html = converter.makeHtml(ticket.content);
-    return processMermaidBlocks(html);
+    const mermaidProcessed = processMermaidBlocks(html);
+    return highlightCodeBlocks(mermaidProcessed);
   }, [ticket?.content, converter]);
 
   useEffect(() => {

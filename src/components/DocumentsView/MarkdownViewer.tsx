@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import showdown from 'showdown';
 import { processMermaidBlocks, renderMermaid } from '../../utils/mermaid';
+import { highlightCodeBlocks } from '../../utils/syntaxHighlight';
 
 interface DocumentFile {
   name: string;
@@ -44,7 +45,8 @@ export default function MarkdownViewer({ filePath, fileInfo }: MarkdownViewerPro
   const processedHtml = useMemo(() => {
     if (!content) return '';
     const htmlContent = converter.makeHtml(content);
-    return processMermaidBlocks(htmlContent);
+    const mermaidProcessed = processMermaidBlocks(htmlContent);
+    return highlightCodeBlocks(mermaidProcessed);
   }, [content]);
 
   useEffect(() => {
