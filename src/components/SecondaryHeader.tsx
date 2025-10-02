@@ -10,7 +10,6 @@ interface SecondaryHeaderProps {
   viewMode: ViewMode;
   sortPreferences?: SortPreferences;
   onSortPreferencesChange?: (preferences: SortPreferences) => void;
-  onRefresh?: () => void;
   onAddProject?: () => void;
   onEditProject?: () => void;
   onCounterAPI?: () => void;
@@ -21,7 +20,6 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   viewMode,
   sortPreferences,
   onSortPreferencesChange,
-  onRefresh,
   onAddProject,
   onEditProject,
   onCounterAPI,
@@ -35,16 +33,6 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
           preferences={sortPreferences}
           onPreferencesChange={onSortPreferencesChange}
         />
-      )}
-
-      {/* Refresh Button - visible in all views */}
-      {onRefresh && (
-        <Button
-          onClick={onRefresh}
-          variant="secondary"
-        >
-          Refresh
-        </Button>
       )}
 
       {/* Hamburger Menu - visible in all views */}

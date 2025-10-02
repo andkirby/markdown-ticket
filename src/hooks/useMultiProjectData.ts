@@ -78,6 +78,7 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
   const fetchProjects = useCallback(async () => {
     try {
       setError(null);
+      console.log('🔍 DEBUG: Fetching projects from /api/projects');
       
       const response = await fetch('/api/projects');
       if (!response.ok) {
@@ -85,11 +86,15 @@ export function useMultiProjectData(options: UseMultiProjectDataOptions = {}): U
       }
       
       const projectsData = await response.json();
+      console.log('🔍 DEBUG: Projects received from API:', projectsData);
+      console.log('🔍 DEBUG: Number of projects:', projectsData.length);
+      
       setProjects(projectsData);
       
       return projectsData;
     } catch (err) {
       const error = err as Error;
+      console.error('🔍 DEBUG: Error fetching projects:', error);
       setError(error);
       throw error;
     }

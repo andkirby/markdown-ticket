@@ -12,6 +12,7 @@ import { Ticket } from './types';
 import { useTheme } from './hooks/useTheme';
 import { useMultiProjectData } from './hooks/useMultiProjectData';
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing';
+import './utils/cache'; // Import cache utilities for development
 
 interface ViewModeSwitcherProps {
   viewMode: 'board' | 'list' | 'documents';
@@ -119,7 +120,7 @@ function ProjectRouteHandler() {
       return;
     }
 
-    if (getProjectCode(selectedProject || {} as any) !== projectCode) {
+    if (!selectedProject || getProjectCode(selectedProject) !== projectCode) {
       setSelectedProject(project);
       setCurrentProject(projectCode);
     }
