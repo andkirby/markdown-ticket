@@ -33,20 +33,35 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
-    // Block path traversal attempts
-    if (relativePath.includes('..')) {
+    // Decode URL encoding to catch encoded traversal attempts
+    let decoded = relativePath;
+    try {
+      decoded = decodeURIComponent(relativePath);
+    } catch {
+      console.warn('Invalid URL encoding blocked:', relativePath);
+      return null;
+    }
+
+    // Block path traversal attempts (including encoded variants)
+    if (decoded.includes('..') || decoded.includes('%2e%2e')) {
       console.warn('Path traversal attempt blocked:', relativePath);
       return null;
     }
-    // Remove leading slashes and normalize
-    return relativePath.replace(/^\/+/, '').replace(/\/+/g, '/');
+
+    // Block absolute paths
+    if (decoded.startsWith('/')) {
+      console.warn('Absolute path attempt blocked:', relativePath);
+      return null;
+    }
+
+    // Normalize slashes
+    return decoded.replace(/\/+/g, '/');
   };
 
   // Helper to convert relative path to absolute path
   const toAbsolutePath = (relativePath: string): string | null => {
     const sanitized = sanitizePath(relativePath);
     if (!sanitized) return null;
-    if (sanitized.startsWith('/')) return sanitized;
     return `${projectPath}/${sanitized}`;
   };
 
@@ -326,9 +341,13 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
             onFileSelect={(filePath) => {
               setSelectedFile(filePath);
               if (filePath) {
-                setSearchParams({ file: toRelativePath(filePath) });
+                const relativePath = toRelativePath(filePath);
+                // Encode each path segment separately to keep slashes visible
+                const encodedPath = relativePath.split('/').map(encodeURIComponent).join('/');
+                const newUrl = `${window.location.pathname}?file=${encodedPath}`;
+                window.history.pushState({}, '', newUrl);
               } else {
-                setSearchParams({});
+                window.history.pushState({}, '', window.location.pathname);
               }
             }}
             selectedFile={selectedFile}
