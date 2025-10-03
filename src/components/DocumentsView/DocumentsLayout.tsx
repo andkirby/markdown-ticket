@@ -16,10 +16,10 @@ interface DocumentFile {
 }
 
 interface DocumentsLayoutProps {
-  projectPath: string;
+  projectId: string;
 }
 
-export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
+export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [files, setFiles] = useState<DocumentFile[]>([]);
   const [filteredFiles, setFilteredFiles] = useState<DocumentFile[]>([]);
@@ -58,26 +58,15 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
     return decoded.replace(/\/+/g, '/');
   };
 
-  // Helper to convert relative path to absolute path
-  const toAbsolutePath = (relativePath: string): string | null => {
-    const sanitized = sanitizePath(relativePath);
-    if (!sanitized) return null;
-    return `${projectPath}/${sanitized}`;
-  };
-
-  // Helper to convert absolute path to relative path
-  const toRelativePath = (absolutePath: string): string => {
-    if (!absolutePath.startsWith(projectPath)) return absolutePath;
-    return absolutePath.substring(projectPath.length + 1);
-  };
+  // File paths are now always relative - no conversion needed
 
   // Initialize selected file from URL parameter
   useEffect(() => {
     const fileParam = searchParams.get('file');
     if (fileParam) {
-      const absolutePath = toAbsolutePath(fileParam);
-      if (absolutePath) {
-        setSelectedFile(absolutePath);
+      const sanitized = sanitizePath(fileParam);
+      if (sanitized) {
+        setSelectedFile(sanitized);
       } else {
         setSelectedFile(null);
         setError('Invalid file path');
@@ -85,11 +74,11 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
     } else {
       setSelectedFile(null);
     }
-  }, [searchParams, projectPath]);
+  }, [searchParams]);
 
   useEffect(() => {
     loadDocuments();
-  }, [projectPath]);
+  }, [projectId]);
 
   // Filter and sort files
   useEffect(() => {
@@ -194,7 +183,7 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/documents?projectPath=${encodeURIComponent(projectPath)}`);
+      const response = await fetch(`/api/documents?projectId=${encodeURIComponent(projectId)}`);
       
       if (response.status === 404) {
         // No documents configured, show path selector
@@ -226,7 +215,7 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          projectPath,
+          projectId,
           documentPaths: paths
         })
       });
@@ -269,7 +258,7 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
   if (showPathSelector) {
     return (
       <PathSelector
-        projectPath={projectPath}
+        projectId={projectId}
         onPathsSelected={handlePathsSelected}
         onCancel={handleCancelPathSelection}
       />
@@ -341,9 +330,8 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
             onFileSelect={(filePath) => {
               setSelectedFile(filePath);
               if (filePath) {
-                const relativePath = toRelativePath(filePath);
                 // Encode each path segment separately to keep slashes visible
-                const encodedPath = relativePath.split('/').map(encodeURIComponent).join('/');
+                const encodedPath = filePath.split('/').map(encodeURIComponent).join('/');
                 const newUrl = `${window.location.pathname}?file=${encodedPath}`;
                 window.history.pushState({}, '', newUrl);
               } else {
@@ -357,6 +345,7 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
       <div className="flex-1 min-w-0 overflow-hidden">
         {selectedFile ? (
           <MarkdownViewer
+            projectId={projectId}
             filePath={selectedFile}
             fileInfo={findFileByPath(filteredFiles, selectedFile)}
           />

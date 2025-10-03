@@ -1731,31 +1731,26 @@ async function buildFileSystemTree(dirPath, maxDepth = 3) {
 // Documents API endpoints
 app.get('/api/documents', async (req, res) => {
   try {
-    const { projectPath } = req.query;
-    if (!projectPath) {
-      return res.status(400).json({ error: 'Project path is required' });
+    const { projectId } = req.query;
+    if (!projectId) {
+      return res.status(400).json({ error: 'Project ID is required' });
     }
 
-    // Security: Block path traversal attempts
-    if (projectPath.includes('..')) {
-      console.warn('⚠️ Path traversal attempt blocked:', projectPath);
-      return res.status(403).json({ error: 'Invalid project path' });
+    console.log(`🔍 Documents API called for project: ${projectId}`);
+
+    // Get project from projectDiscovery service
+    const projects = await projectDiscovery.getProjects();
+    const project = projects.find(p => p.id === projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
     }
 
-    console.log(`🔍 Documents API called for: ${projectPath}`);
-
-    // Security: Resolve and validate path is within working directory or home directory
-    const resolvedProjectPath = path.resolve(projectPath);
-    const cwd = process.cwd();
-    const homeDir = os.homedir();
-
-    if (!resolvedProjectPath.startsWith(cwd) && !resolvedProjectPath.startsWith(homeDir)) {
-      console.warn('⚠️ Path outside allowed directories blocked:', resolvedProjectPath);
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    const projectPath = project.project.path;
+    console.log(`📂 Resolved project path: ${projectPath}`);
 
     // Check if config exists and has document_paths
-    const configPath = path.join(resolvedProjectPath, '.mdt-config.toml');
+    const configPath = path.join(projectPath, '.mdt-config.toml');
     try {
       await fs.access(configPath);
       const configContent = await fs.readFile(configPath, 'utf8');
@@ -1781,12 +1776,12 @@ app.get('/api/documents', async (req, res) => {
 
 app.get('/api/documents/content', async (req, res) => {
   try {
-    const { filePath } = req.query;
-    if (!filePath) {
-      return res.status(400).json({ error: 'File path is required' });
+    const { projectId, filePath } = req.query;
+    if (!projectId || !filePath) {
+      return res.status(400).json({ error: 'Project ID and file path are required' });
     }
 
-    // Security: Block path traversal attempts
+    // Security: Block path traversal attempts in filePath
     if (filePath.includes('..')) {
       console.warn('⚠️ Path traversal attempt blocked:', filePath);
       return res.status(403).json({ error: 'Invalid file path' });
@@ -1797,13 +1792,23 @@ app.get('/api/documents/content', async (req, res) => {
       return res.status(400).json({ error: 'Only markdown files are allowed' });
     }
 
-    // Security: Resolve path and ensure it's within working directory or home directory
-    const resolvedPath = path.resolve(filePath);
-    const cwd = process.cwd();
-    const homeDir = os.homedir();
+    console.log(`📄 Loading document for project ${projectId}: ${filePath}`);
 
-    if (!resolvedPath.startsWith(cwd) && !resolvedPath.startsWith(homeDir)) {
-      console.warn('⚠️ Path outside allowed directories blocked:', resolvedPath);
+    // Get project from projectDiscovery service
+    const projects = await projectDiscovery.getProjects();
+    const project = projects.find(p => p.id === projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Resolve file path relative to project root
+    const projectPath = project.project.path;
+    const resolvedPath = path.join(projectPath, filePath);
+
+    // Security: Ensure resolved path is within project directory
+    if (!resolvedPath.startsWith(projectPath)) {
+      console.warn('⚠️ Path outside project directory blocked:', resolvedPath);
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -1887,7 +1892,7 @@ async function discoverDocuments(projectPath, currentDepth = 0, maxDepth = 3) {
           documents.push({
             name: path.basename(docPath),
             title: h1Title,
-            path: fullPath,
+            path: docPath, // Relative path
             type: 'file',
             dateCreated: fileStats.birthtime || fileStats.ctime,
             lastModified: fileStats.mtime
@@ -1959,7 +1964,7 @@ async function scanDirectory(dirPath, relativePath, excludeFolders, currentDepth
       if (children.length > 0) {
         documents.push({
           name: entry.name,
-          path: fullPath,
+          path: entryRelativePath, // Relative path
           type: 'folder',
           children
         });
@@ -1971,7 +1976,7 @@ async function scanDirectory(dirPath, relativePath, excludeFolders, currentDepth
       documents.push({
         name: entry.name,
         title: h1Title,
-        path: fullPath,
+        path: entryRelativePath, // Relative path
         type: 'file',
         dateCreated: fileStats.birthtime || fileStats.ctime,
         lastModified: fileStats.mtime
