@@ -5,7 +5,7 @@ status: Implemented
 dateCreated: 2025-09-06T15:42:22.523Z
 type: Feature Enhancement
 priority: High
-lastModified: 2025-10-02T15:27:01.039Z
+lastModified: 2025-10-03T20:44:12.541Z
 ---
 
 # Implement URL-based state management for frontend routing and deep linking
@@ -135,6 +135,55 @@ const normalizeTicketKey = (key: string) => {
 
 **Related Issues:**
 - MDT-058: Backend config parsing bug (hotfix applied)
+
+## Security Enhancements (2025-10-03)
+
+### Document Viewer Security Implementation
+
+**Problem:** Documents API exposed absolute file paths and was vulnerable to path traversal attacks.
+
+**Solution:** Comprehensive security refactor using projectId-based path resolution.
+
+**Changes Made:**
+
+1. **Frontend Security (DocumentsLayout, MarkdownViewer, PathSelector)**
+   - Replaced absolute `projectPath` with `projectId`
+   - All file paths now relative to project root
+   - Path sanitization blocks `..` traversal attempts
+   - URL encoding prevents special character exploits
+   - Frontend never sees absolute server paths
+
+2. **Backend Security (server.js)**
+   - `/api/documents?projectId=...` - Resolve project path from ID registry
+   - `/api/documents/content?projectId=...&filePath=...` - Validate relative paths
+   - `/api/filesystem?projectId=...` - Browse files within project only
+   - `/api/documents/configure` - Update with projectId validation
+   - All paths validated to stay within project boundaries
+
+3. **Security Validations**
+   - Block `..` sequences in all path inputs
+   - Block absolute paths (starting with `/`)
+   - Decode URL encoding before validation (catches `%2e%2e`)
+   - Resolve projectId to path via project registry
+   - Ensure resolved paths stay within project directory
+
+**Attack Scenarios Blocked:**
+- `?projectId=../../etc` → 404 Project not found
+- `?filePath=../../../passwd` → 403 Path traversal blocked
+- `?filePath=%2e%2e%2fsecret` → 403 Encoded traversal blocked
+- Absolute paths eliminated from all API responses
+
+**Commits:**
+- `53f8aac` - Initial URL-based document selection
+- `94e8afb` - Frontend path validation (blocks encoded attacks)
+- `973d570` - Backend path traversal fixes (critical vulnerabilities)
+- `a5e8024` - Allow absolute project paths (temporary approach)
+- `326514b` - Refactor to projectId + relative paths (final solution)
+- `8eea69b` - Fix getAllProjects() method name
+- `da24641` - Update PathSelector to use projectId
+- `0ab2ecc` - Update filesystem/configure endpoints
+
+**Result:** Document viewer now uses secure projectId-based architecture with no path exposure to client.
 ## Acceptance Criteria
 
 **✅ Root Redirect**
