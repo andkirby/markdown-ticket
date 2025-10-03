@@ -1739,7 +1739,7 @@ app.get('/api/documents', async (req, res) => {
     console.log(`🔍 Documents API called for project: ${projectId}`);
 
     // Get project from projectDiscovery service
-    const projects = await projectDiscovery.getProjects();
+    const projects = await projectDiscovery.getAllProjects();
     const project = projects.find(p => p.id === projectId);
 
     if (!project) {
@@ -1795,7 +1795,7 @@ app.get('/api/documents/content', async (req, res) => {
     console.log(`📄 Loading document for project ${projectId}: ${filePath}`);
 
     // Get project from projectDiscovery service
-    const projects = await projectDiscovery.getProjects();
+    const projects = await projectDiscovery.getAllProjects();
     const project = projects.find(p => p.id === projectId);
 
     if (!project) {
