@@ -26,7 +26,7 @@ export const findProjectByTicketKey = async (ticketKey: string): Promise<string 
     
     // Fetch all project tickets in parallel
     const ticketPromises = projects.map(async (project) => {
-      const ticketsResponse = await fetch(`/api/projects/${project.id}/tickets`);
+      const ticketsResponse = await fetch(`/api/projects/${project.id}/crs`);
       const tickets: Ticket[] = await ticketsResponse.json();
       return { project, tickets };
     });
