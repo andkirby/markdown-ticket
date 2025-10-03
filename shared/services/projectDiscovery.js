@@ -14,7 +14,6 @@ export class SharedProjectDiscoveryService {
    * Auto-discover projects by scanning for .mdt-config.toml files
    */
   autoDiscoverProjects(searchPaths = []) {
-    console.log('🔍 DEBUG: autoDiscoverProjects() called with paths:', searchPaths);
     const discovered = [];
     const defaultPaths = [
       path.join(os.homedir(), 'home'),
@@ -35,12 +34,10 @@ export class SharedProjectDiscoveryService {
       pathsToScan = defaultPaths;
     }
     
-    console.log('🔍 DEBUG: Scanning paths:', pathsToScan);
 
     for (const searchPath of pathsToScan) {
       try {
         const expandedPath = this.expandPath(searchPath);
-        console.log('🔍 DEBUG: Scanning expanded path:', expandedPath);
         if (fs.existsSync(expandedPath)) {
           this.scanDirectoryForProjects(expandedPath, discovered, 0, 3);
         }
@@ -49,7 +46,6 @@ export class SharedProjectDiscoveryService {
       }
     }
 
-    console.log('🔍 DEBUG: Auto-discovered projects:', discovered.length);
     return discovered;
   }
 
@@ -65,10 +61,8 @@ export class SharedProjectDiscoveryService {
       );
 
       if (configFile) {
-        console.log('🔍 DEBUG: Found .mdt-config.toml in:', dirPath);
         const project = this.loadProjectFromConfig(path.join(dirPath, '.mdt-config.toml'), dirPath);
         if (project) {
-          console.log('🔍 DEBUG: Successfully loaded project:', project.id);
           discovered.push(project);
         }
       }
@@ -91,13 +85,10 @@ export class SharedProjectDiscoveryService {
 
   loadProjectFromConfig(configPath, projectDir) {
     try {
-      console.log('🔍 DEBUG: Loading config from:', configPath);
       const configContent = fs.readFileSync(configPath, 'utf8');
       const config = toml.parse(configContent);
-      console.log('🔍 DEBUG: Parsed config:', config);
 
       if (!config.project) {
-        console.log('🔍 DEBUG: No project section in config');
         return null;
       }
 
@@ -127,7 +118,6 @@ export class SharedProjectDiscoveryService {
         configPath
       };
 
-      console.log('🔍 DEBUG: Created project object:', project);
       return project;
     } catch (error) {
       console.warn(`Failed to load project config ${configPath}:`, error);

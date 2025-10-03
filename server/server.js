@@ -833,13 +833,9 @@ app.post('/api/duplicates/resolve', async (req, res) => {
 // Get all registered projects
 app.get('/api/projects', async (req, res) => {
   try {
-    console.log('🔍 DEBUG: /api/projects endpoint called');
     const projects = await projectDiscovery.getAllProjects();
-    console.log('🔍 DEBUG: projectDiscovery.getAllProjects() returned:', projects.length, 'projects');
-    console.log('🔍 DEBUG: Project IDs:', projects.map(p => p.id));
     res.json(projects);
   } catch (error) {
-    console.error('🔍 DEBUG: Error getting projects:', error);
     res.status(500).json({ error: 'Failed to get projects' });
   }
 });
@@ -848,15 +844,12 @@ app.get('/api/projects', async (req, res) => {
 app.get('/api/projects/:projectId/config', async (req, res) => {
   try {
     const { projectId } = req.params;
-    console.log('🔍 DEBUG: Looking for project config for ID:', projectId);
     
     const projects = await projectDiscovery.getAllProjects();
-    console.log('🔍 DEBUG: Available project IDs:', projects.map(p => p.id));
     
     const project = projects.find(p => p.id === projectId);
     
     if (!project) {
-      console.log('🔍 DEBUG: Project not found for ID:', projectId);
       return res.status(404).json({ error: 'Project not found' });
     }
 
@@ -868,10 +861,8 @@ app.get('/api/projects/:projectId/config', async (req, res) => {
       configPath = project.project.path;
     }
     
-    console.log('🔍 DEBUG: Using config path:', configPath);
     const config = projectDiscovery.getProjectConfig(configPath);
     if (!config) {
-      console.log('🔍 DEBUG: Project config not found for path:', configPath);
       return res.status(404).json({ error: 'Project configuration not found' });
     }
 

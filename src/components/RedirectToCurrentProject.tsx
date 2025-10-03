@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentProject } from '../utils/routing';
-import { useMultiProjectData } from '../hooks/useMultiProjectData';
+import { useProjectManager } from '../hooks/useProjectManager';
 import { getProjectCode } from './ProjectSelector';
 
 export function RedirectToCurrentProject() {
   const navigate = useNavigate();
-  const { projects, loading } = useMultiProjectData({ autoSelectFirst: false });
+  const { projects, loading } = useProjectManager({ autoSelectFirst: false });
 
   useEffect(() => {
     if (loading) return;

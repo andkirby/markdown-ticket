@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import showdown from 'showdown';
 import { Button } from './UI/index';
-import { defaultRealtimeFileWatcher } from '../services/realtimeFileWatcher';
+import { useEventBus } from '../services/eventBus';
 import { SortControls } from './SortControls';
 import { HamburgerMenu } from './HamburgerMenu';
 import { AddProjectModal } from './AddProjectModal';
@@ -215,44 +215,44 @@ const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => 
     }
   }, [selectedProject, fetchCRs]);
 
-  // Set up realtime file watcher for multi-project dashboard (once only)
-  useEffect(() => {
-    const handleTicketsChange = () => {
-      // Refresh current project's CRs if one is selected
-      if (selectedProject) {
-        fetchCRs(selectedProject).catch(err => {
-          console.error('❌ Failed to refresh CRs after file change:', err);
-        });
-      }
-      
-      // Also refresh the projects list in case new projects were added
-      fetchProjects().catch(err => {
-        console.error('❌ Failed to refresh projects after file change:', err);
-      });
-    };
-
-    const handleError = (data: any) => {
-      const error = data instanceof Error ? data : new Error(String(data));
-      console.error('❌ MultiProject realtime watcher error:', error);
-      setError(error.message);
-    };
-
-    // Set up callbacks
-    defaultRealtimeFileWatcher.on('change', handleTicketsChange);
-    defaultRealtimeFileWatcher.on('error', handleError);
-    
-    // Start watcher if not running
-    const stats = defaultRealtimeFileWatcher.getStats();
-    if (!stats.isRunning && !stats.isSSEConnected) {
-      defaultRealtimeFileWatcher.start().catch(err => {
-        console.error('❌ Failed to start realtime file watcher:', err);
+  // Set up event listeners for real-time updates
+  useEventBus('ticket:created', () => {
+    if (selectedProject) {
+      fetchCRs(selectedProject).catch(err => {
+        console.error('❌ Failed to refresh CRs after creation:', err);
       });
     }
+    fetchProjects().catch(err => {
+      console.error('❌ Failed to refresh projects after creation:', err);
+    });
+  });
 
-    return () => {
-      defaultRealtimeFileWatcher.off();
-    };
-  }, []); // Empty dependency array - run only once
+  useEventBus('ticket:updated', () => {
+    if (selectedProject) {
+      fetchCRs(selectedProject).catch(err => {
+        console.error('❌ Failed to refresh CRs after update:', err);
+      });
+    }
+  });
+
+  useEventBus('ticket:deleted', () => {
+    if (selectedProject) {
+      fetchCRs(selectedProject).catch(err => {
+        console.error('❌ Failed to refresh CRs after deletion:', err);
+      });
+    }
+  });
+
+  useEventBus('project:created', () => {
+    fetchProjects().catch(err => {
+      console.error('❌ Failed to refresh projects after creation:', err);
+    });
+  });
+
+  useEventBus('error:api', (event) => {
+    console.error('❌ API Error:', event.payload.message);
+    setError(event.payload.message);
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {

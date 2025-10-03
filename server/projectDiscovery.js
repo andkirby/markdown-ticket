@@ -50,28 +50,22 @@ class ProjectDiscoveryService {
    */
   getRegisteredProjects() {
     try {
-      console.log('🔍 DEBUG: getRegisteredProjects() - checking:', this.projectsDir);
       if (!fs.existsSync(this.projectsDir)) {
-        console.log('🔍 DEBUG: Projects directory does not exist');
         return [];
       }
 
       const projects = [];
       const projectFiles = fs.readdirSync(this.projectsDir)
         .filter(file => file.endsWith('.toml'));
-      console.log('🔍 DEBUG: Found project files:', projectFiles);
 
       for (const file of projectFiles) {
         try {
           const projectPath = path.join(this.projectsDir, file);
-          console.log('🔍 DEBUG: Reading project file:', projectPath);
           const content = fs.readFileSync(projectPath, 'utf8');
           const projectData = toml.parse(content);
-          console.log('🔍 DEBUG: Project data from', file, ':', projectData);
           
           // Read the actual project data from local config file
           const localConfig = this.getProjectConfig(projectData.project?.path || '');
-          console.log('🔍 DEBUG: Local config for', file, ':', localConfig);
           
           const project = {
             id: path.basename(file, '.toml'),
@@ -112,12 +106,9 @@ class ProjectDiscoveryService {
    */
   getProjectConfig(projectPath) {
     try {
-      console.log('🔍 DEBUG: getProjectConfig called with path:', projectPath);
       const configPath = path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG);
-      console.log('🔍 DEBUG: Looking for config at:', configPath);
       
       if (!fs.existsSync(configPath)) {
-        console.log('🔍 DEBUG: Config file does not exist at:', configPath);
         return null;
       }
 
@@ -141,17 +132,13 @@ class ProjectDiscoveryService {
    * Get all projects (registered + auto-discovered)
    */
   async getAllProjects() {
-    console.log('🔍 DEBUG: getAllProjects() called');
     const registered = this.getRegisteredProjects();
-    console.log('🔍 DEBUG: Registered projects:', registered.length);
     
     const globalConfig = this.getGlobalConfig();
-    console.log('🔍 DEBUG: Global config autoDiscover:', globalConfig.discovery?.autoDiscover);
     
     if (globalConfig.discovery?.autoDiscover) {
       const searchPaths = globalConfig.discovery?.searchPaths || [];
       const discovered = this.sharedDiscovery.autoDiscoverProjects(searchPaths);
-      console.log('🔍 DEBUG: Auto-discovered projects:', discovered.length);
       
       // Create sets for both path and id to avoid duplicates
       const registeredPaths = new Set(registered.map(p => p.project.path));
@@ -160,7 +147,6 @@ class ProjectDiscoveryService {
       const uniqueDiscovered = discovered.filter(p => 
         !registeredPaths.has(p.project.path) && !registeredIds.has(p.id)
       );
-      console.log('🔍 DEBUG: Unique discovered projects:', uniqueDiscovered.length);
       
       // Combine and deduplicate by id (in case of any remaining duplicates)
       const allProjects = [...registered, ...uniqueDiscovered];

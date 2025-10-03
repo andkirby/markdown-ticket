@@ -2,17 +2,18 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import ProjectView from './components/ProjectView';
-import List from './components/List';
 import TicketViewer from './components/TicketViewer';
+import { EventHistory } from './components/DevTools/EventHistory';
 import { ProjectSelector, getProjectCode } from './components/ProjectSelector';
 import { RedirectToCurrentProject } from './components/RedirectToCurrentProject';
 import { DirectTicketAccess } from './components/DirectTicketAccess';
 import { RouteErrorModal } from './components/RouteErrorModal';
 import { Ticket } from './types';
 import { useTheme } from './hooks/useTheme';
-import { useMultiProjectData } from './hooks/useMultiProjectData';
+import { useProjectManager } from './hooks/useProjectManager';
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing';
 import './utils/cache'; // Import cache utilities for development
+import './services/sseClient'; // Initialize SSE connection
 
 interface ViewModeSwitcherProps {
   viewMode: 'board' | 'list' | 'documents';
@@ -85,7 +86,7 @@ function ProjectRouteHandler() {
     tickets,
     refreshProjects,
     loading: projectsLoading 
-  } = useMultiProjectData({ autoSelectFirst: false });
+  } = useProjectManager({ autoSelectFirst: false, handleSSEEvents: true });
 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -225,6 +226,8 @@ function ProjectRouteHandler() {
         isOpen={!!selectedTicket} 
         onClose={handleTicketClose} 
       />
+      
+      <EventHistory />
     </div>
   );
 }

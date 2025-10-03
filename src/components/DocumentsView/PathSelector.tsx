@@ -98,7 +98,7 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
           <input
             type="checkbox"
             checked={isSelected}
-            onChange={() => toggleSelection(relativePath, item.type === 'folder')}
+            onChange={() => toggleSelection(item.path, item.type === 'folder')}
             className="mr-2"
           />
           <span className={`text-sm ${item.type === 'folder' ? 'font-medium' : ''} ${hasSelectedChildren ? 'text-primary' : ''}`}>

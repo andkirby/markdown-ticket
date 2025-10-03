@@ -92,19 +92,15 @@ export class CRService {
       // Generate markdown content
       const markdownContent = this.formatCRAsMarkdown(ticket, data);
       
-      console.error(`🔍 DEBUG: Creating CR file at: ${filePath}`);
-      console.error(`🔍 DEBUG: Directory exists: ${await fs.pathExists(project.project.path)}`);
-      console.error(`🔍 DEBUG: Content length: ${markdownContent.length}`);
+
       
       // Write file (fs-extra uses outputFile for creating files with directory creation)
       await fs.outputFile(filePath, markdownContent, 'utf-8');
 
       // Verify file was created
       const fileExists = await fs.pathExists(filePath);
-      console.error(`🔍 DEBUG: File exists after write: ${fileExists}`);
       if (fileExists) {
         const writtenContent = await readFile(filePath, 'utf-8');
-        console.error(`🔍 DEBUG: Written content length: ${writtenContent.length}`);
       }
 
       // Update counter
@@ -275,7 +271,6 @@ export class CRService {
       
       // Use the higher of the two (existing files + 1, or counter file)
       const nextNumber = Math.max(highestExistingNumber + 1, counterNumber);
-      console.error(`🔍 DEBUG: Highest existing: ${highestExistingNumber}, Counter: ${counterNumber}, Next: ${nextNumber}`);
       
       return nextNumber;
     } catch (error) {
