@@ -44,7 +44,6 @@ export function ProjectSelector({ projects, selectedProject, onProjectSelect, lo
                 <button
                   key={project.id}
                   onClick={() => {
-                    console.log('ProjectSelector: Selecting project:', { id: project.id, name: project.project.name });
                     onProjectSelect(project);
                   }}
                   disabled={loading}
@@ -68,7 +67,6 @@ export function ProjectSelector({ projects, selectedProject, onProjectSelect, lo
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => {
-                      console.log('ProjectSelector: Selecting project:', { id: project.id, name: project.project.name });
                       onProjectSelect(project);
                     }}
                     disabled={loading}
