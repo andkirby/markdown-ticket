@@ -1737,18 +1737,20 @@ app.get('/api/documents', async (req, res) => {
     }
 
     // Security: Block path traversal attempts
-    if (projectPath.includes('..') || projectPath.startsWith('/')) {
+    if (projectPath.includes('..')) {
       console.warn('⚠️ Path traversal attempt blocked:', projectPath);
       return res.status(403).json({ error: 'Invalid project path' });
     }
 
     console.log(`🔍 Documents API called for: ${projectPath}`);
 
-    // Security: Resolve and validate path is within working directory
+    // Security: Resolve and validate path is within working directory or home directory
     const resolvedProjectPath = path.resolve(projectPath);
     const cwd = process.cwd();
-    if (!resolvedProjectPath.startsWith(cwd)) {
-      console.warn('⚠️ Path outside working directory blocked:', resolvedProjectPath);
+    const homeDir = os.homedir();
+
+    if (!resolvedProjectPath.startsWith(cwd) && !resolvedProjectPath.startsWith(homeDir)) {
+      console.warn('⚠️ Path outside allowed directories blocked:', resolvedProjectPath);
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -1785,7 +1787,7 @@ app.get('/api/documents/content', async (req, res) => {
     }
 
     // Security: Block path traversal attempts
-    if (filePath.includes('..') || filePath.startsWith('/')) {
+    if (filePath.includes('..')) {
       console.warn('⚠️ Path traversal attempt blocked:', filePath);
       return res.status(403).json({ error: 'Invalid file path' });
     }
@@ -1795,11 +1797,13 @@ app.get('/api/documents/content', async (req, res) => {
       return res.status(400).json({ error: 'Only markdown files are allowed' });
     }
 
-    // Security: Resolve path and ensure it's within current working directory
+    // Security: Resolve path and ensure it's within working directory or home directory
     const resolvedPath = path.resolve(filePath);
     const cwd = process.cwd();
-    if (!resolvedPath.startsWith(cwd)) {
-      console.warn('⚠️ Path outside working directory blocked:', resolvedPath);
+    const homeDir = os.homedir();
+
+    if (!resolvedPath.startsWith(cwd) && !resolvedPath.startsWith(homeDir)) {
+      console.warn('⚠️ Path outside allowed directories blocked:', resolvedPath);
       return res.status(403).json({ error: 'Access denied' });
     }
 
