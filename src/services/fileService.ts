@@ -102,28 +102,32 @@ export class FileService {
    */
   private async loadTicketsFromFiles(): Promise<Ticket[]> {
     try {
-      // In a browser environment, we'll need to fetch files from the server
-      // For now, we'll use the file watcher to get the files
-      const response = await fetch('/api/tasks');
+      // Get current project ID from URL or storage
+      const currentProjectId = this.getCurrentProjectId();
+      if (!currentProjectId) {
+        console.warn('No current project ID found, cannot load tickets from files');
+        return [];
+      }
+
+      // Use multi-project API to get CRs for the current project
+      const response = await fetch(`/api/projects/${currentProjectId}/crs`);
       if (!response.ok) {
+        console.warn(`Failed to fetch CRs for project ${currentProjectId}:`, response.status);
         return [];
       }
       
-      const files = await response.json();
+      const crs = await response.json();
       const tickets: Ticket[] = [];
 
-      for (const file of files) {
+      for (const cr of crs) {
         try {
-          const fileResponse = await fetch(`/api/tasks/${file}`);
-          if (!fileResponse.ok) continue;
-          
-          const content = await fileResponse.text();
-          const ticket = this.parseMarkdownTicket(content, file);
+          // CRs from the multi-project API already contain the parsed ticket data
+          const ticket = this.parseTicketFromCR(cr);
           if (ticket) {
             tickets.push(ticket);
           }
         } catch (error) {
-          console.warn(`Failed to load ticket from file ${file}:`, error);
+          console.warn(`Failed to parse CR:`, error);
         }
       }
 
@@ -890,6 +894,78 @@ Dark mode implemented with CSS variables.
 - [ ] Theme transitions are smooth`
       }
     ];
+  }
+
+  /**
+   * Parse a ticket from CR data returned by the multi-project API
+   */
+  private parseTicketFromCR(cr: any): Ticket | null {
+    try {
+      // The CR object should contain the parsed frontmatter and content
+      const frontMatter = cr.frontMatter || {};
+      
+      return {
+        code: frontMatter.code || cr.code || '',
+        title: frontMatter.title || cr.title || 'Untitled',
+        status: frontMatter.status || cr.status || 'Proposed',
+        type: frontMatter.type || cr.type || 'Feature Enhancement',
+        priority: frontMatter.priority || cr.priority || 'Medium',
+        dateCreated: frontMatter.dateCreated ? new Date(frontMatter.dateCreated) : new Date(),
+        lastModified: frontMatter.lastModified ? new Date(frontMatter.lastModified) : new Date(),
+        implementationDate: frontMatter.implementationDate ? new Date(frontMatter.implementationDate) : undefined,
+        assignee: frontMatter.assignee || cr.assignee || '',
+        phaseEpic: frontMatter.phaseEpic || cr.phaseEpic || '',
+        relatedTickets: frontMatter.relatedTickets || cr.relatedTickets || '',
+        dependsOn: frontMatter.dependsOn || cr.dependsOn || '',
+        blocks: frontMatter.blocks || cr.blocks || '',
+        content: cr.content || '',
+        filePath: cr.path || cr.filePath || ''
+      };
+    } catch (error) {
+      console.warn('Failed to parse ticket from CR:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get current project ID from URL or localStorage
+   */
+  private getCurrentProjectId(): string | null {
+    try {
+      // First try to get from URL path
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        const match = path.match(/\/prj\/([^\/]+)/);
+        if (match) {
+          const projectCode = match[1];
+          // We need to map project code to project ID
+          // For now, we'll use a simple mapping based on known projects
+          const codeToIdMap: { [key: string]: string } = {
+            'DEB': 'debug',
+            'MDT': 'markdown-ticket',
+            'SEB': 'sentence-breakdown',
+            'CR': 'LlmTranslator',
+            'OPU': 'OPUS-training',
+            'GT': 'goto_dir'
+          };
+          return codeToIdMap[projectCode] || projectCode;
+        }
+      }
+
+      // Fallback to localStorage
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('selectedProject');
+        if (stored) {
+          const project = JSON.parse(stored);
+          return project.id;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.warn('Failed to get current project ID:', error);
+      return null;
+    }
   }
 }
 
