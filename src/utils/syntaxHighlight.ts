@@ -1,15 +1,22 @@
 import Prism from 'prismjs';
+
+// Import common languages
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-jsx';
+import 'prismjs/components/prism-tsx';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-yaml';
 import 'prismjs/components/prism-markdown';
-import 'prismjs/components/prism-markup-templating'; // Required for PHP
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-sql';
+import 'prismjs/components/prism-markup-templating';
 import 'prismjs/components/prism-php';
 import 'prismjs/components/prism-go';
-import 'prismjs/themes/prism.css';
+
+export { loadPrismTheme } from '../styles/prism-theme-loader';
 
 export function highlightCodeBlocks(html: string): string {
   const parser = new DOMParser();
@@ -19,15 +26,16 @@ export function highlightCodeBlocks(html: string): string {
   codeBlocks.forEach((block) => {
     const codeElement = block as HTMLElement;
     const className = codeElement.className;
-    const languageMatch = className.match(/language-(\w+)/);
-    
+
+    // Try multiple class name patterns
+    const languageMatch = className.match(/(?:language-|lang-)(\w+)/);
+
     if (languageMatch) {
       const language = languageMatch[1];
       const code = codeElement.textContent || '';
-      
+
       if (Prism.languages[language]) {
-        const highlighted = Prism.highlight(code, Prism.languages[language], language);
-        codeElement.innerHTML = highlighted;
+        codeElement.innerHTML = Prism.highlight(code, Prism.languages[language], language);
         codeElement.classList.add(`language-${language}`);
       }
     }

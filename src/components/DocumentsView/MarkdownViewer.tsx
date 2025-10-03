@@ -132,7 +132,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
           </div>
         )}
         <div
-          className="prose prose-sm w-full max-w-full dark:prose-invert prose-pre:overflow-x-auto prose-table:overflow-x-auto break-words overflow-hidden"
+          className="prose prose-sm max-w-none dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: processedHtml }}
         />
       </div>
