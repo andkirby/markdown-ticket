@@ -18,8 +18,25 @@ interface SSEMessageData {
     projectId?: string;
     timestamp?: number;
     status?: string;
+    ticketData?: {
+      code: string;
+      title: string;
+      status: string;
+      type: string;
+      priority: string;
+      lastModified: string;
+    } | null;
     [key: string]: any;
   };
+}
+
+// Type guards for SSE message validation
+function isValidSSEMessage(data: any): data is SSEMessageData {
+  return data && typeof data.type === 'string' && data.data && typeof data.data === 'object';
+}
+
+function isValidFileChangeData(data: any): boolean {
+  return data.eventType && data.filename && typeof data.eventType === 'string' && typeof data.filename === 'string';
 }
 
 export class SSEClient {
@@ -45,7 +62,9 @@ export class SSEClient {
     this.url = url;
     const fullUrl = this.getFullUrl(url);
 
-    console.log('[SSEClient] 🔌 Connecting to:', fullUrl);
+    if (import.meta.env.DEV) {
+      console.log('[SSEClient] 🔌 Connecting to:', fullUrl);
+    }
 
     try {
       this.eventSource = new EventSource(fullUrl);
@@ -63,9 +82,13 @@ export class SSEClient {
       // Message received
       this.eventSource.onmessage = (event) => {
         try {
-          const data: SSEMessageData = JSON.parse(event.data);
-          console.log('[SSEClient] 📨 Message received:', data);
-
+          const data = JSON.parse(event.data);
+          
+          if (!isValidSSEMessage(data)) {
+            console.error('[SSEClient] ❌ Invalid SSE message format:', data);
+            return;
+          }
+          
           this.handleSSEMessage(data);
         } catch (error) {
           console.error('[SSEClient] ❌ Error parsing message:', error);
@@ -182,7 +205,7 @@ export class SSEClient {
    * Handle file change events and map to ticket events
    */
   private handleFileChange(data: SSEMessageData['data']): void {
-    const { eventType, filename, projectId } = data;
+    const { eventType, filename, projectId, ticketData } = data;
 
     if (!filename || !eventType) {
       console.warn('[SSEClient] ⚠️ Invalid file change data:', data);
@@ -195,22 +218,25 @@ export class SSEClient {
     console.log('[SSEClient] 📝 File change detected:', {
       eventType,
       ticketCode,
-      projectId
+      projectId,
+      hasTicketData: !!ticketData
     });
 
-    // Map file system events to business events
+    // Map file system events to business events with ticket data
     switch (eventType) {
       case 'add':
         eventBus.emit('ticket:created', {
           ticketCode,
-          projectId: projectId || ''
+          projectId: projectId || '',
+          ticket: ticketData
         }, 'sse');
         break;
 
       case 'change':
         eventBus.emit('ticket:updated', {
           ticketCode,
-          projectId: projectId || ''
+          projectId: projectId || '',
+          ticket: ticketData
         }, 'sse');
         break;
 

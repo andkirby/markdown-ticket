@@ -1,11 +1,11 @@
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Ticket, Status } from '../types';
 import { getVisibleColumns, getColumnForStatus } from '../config';
 import Column from './Column';
 import { Button } from './UI/index';
-import { useMultiProjectData } from '../hooks/useMultiProjectData';
+import { useProjectManager } from '../hooks/useProjectManager';
 import { SortControls } from './SortControls';
 import { FilterControls } from './FilterControls';
 import { HamburgerMenu } from './HamburgerMenu';
@@ -42,7 +42,7 @@ const BoardContent: React.FC<BoardProps> = ({
   const [filterQuery, setFilterQuery] = useState('');
   
   // Only use the hook when no selectedProject prop is provided (multi-project mode)
-  const hookData = useMultiProjectData({ autoSelectFirst: enableProjectSwitching });
+  const hookData = useProjectManager({ autoSelectFirst: enableProjectSwitching && !propSelectedProject });
   
   // IMPORTANT: Always use hook data for multi-project mode to ensure fresh state
   // Prop data should only be used in single-project mode (when props are explicitly passed)
@@ -52,6 +52,31 @@ const BoardContent: React.FC<BoardProps> = ({
   
   // Local state for immediate UI updates during drag-and-drop
   const [localTicketUpdates, setLocalTicketUpdates] = useState<Record<string, Partial<Ticket>>>({});
+  
+  // Clear optimistic updates when server state matches
+  useEffect(() => {
+    setLocalTicketUpdates(prev => {
+      const updated = { ...prev };
+      let hasChanges = false;
+      
+      for (const [ticketCode, localUpdate] of Object.entries(prev)) {
+        const serverTicket = baseTickets.find(t => t.code === ticketCode);
+        if (serverTicket) {
+          // Check if server state matches our optimistic update
+          const isMatching = Object.entries(localUpdate).every(([key, value]) => 
+            serverTicket[key as keyof Ticket] === value
+          );
+          
+          if (isMatching) {
+            delete updated[ticketCode];
+            hasChanges = true;
+          }
+        }
+      }
+      
+      return hasChanges ? updated : prev;
+    });
+  }, [baseTickets]);
   
   // Merge base tickets with local updates for immediate UI feedback
   const tickets = useMemo(() => {
@@ -89,18 +114,32 @@ const BoardContent: React.FC<BoardProps> = ({
   };
   
   const handleDrop = useCallback((status: Status, ticket: Ticket) => {
-    // Just update local state immediately - no backend calls, no events
+    // Skip if ticket is already in the correct status
+    if (ticket.status === status) {
+      return;
+    }
+    
+    // Extract filename for tracking (matches SSE event format)
+    const trackingKey = ticket.filePath ? 
+      ticket.filePath.split('/').pop()?.replace('.md', '') || ticket.code : 
+      ticket.code;
+    
+    // Update local state immediately for optimistic UI
     setLocalTicketUpdates(prev => ({
       ...prev,
       [ticket.code]: { status }
     }));
     
-    // Send update to backend (fire and forget)
+    // Send update to backend with tracking key
     const updateData: Partial<Ticket> = { status };
     const updateFunction = onTicketUpdate || updateTicketOptimistic;
-    updateFunction(ticket.code, updateData);
     
-    console.log('Board: Ticket moved locally:', ticket.code, 'to', status);
+    // Pass tracking key for optimistic updates
+    if (updateFunction === updateTicketOptimistic) {
+      updateFunction(ticket.code, updateData, trackingKey);
+    } else {
+      updateFunction(ticket.code, updateData);
+    }
   }, [onTicketUpdate, updateTicketOptimistic]);
 
   const handleTicketCreate = useCallback(async () => {

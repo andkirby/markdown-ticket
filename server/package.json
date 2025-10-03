@@ -18,7 +18,8 @@
     "chokidar": "^3.6.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "glob": "^11.0.3"
+    "glob": "^11.0.3",
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "eslint": "^8.50.0",

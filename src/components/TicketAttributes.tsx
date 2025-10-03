@@ -8,9 +8,11 @@ interface TicketAttributesProps {
 }
 
 const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className = '' }) => {
-  const formatDate = (date: Date | null) => {
+  const formatDate = (date: Date | string | null) => {
     if (!date) return 'N/A';
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) return 'Invalid Date';
+    return dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatArray = (arr: string[]) => {

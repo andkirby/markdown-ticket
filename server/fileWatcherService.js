@@ -1,5 +1,8 @@
 import chokidar from 'chokidar';
 import { EventEmitter } from 'events';
+import fs from 'fs';
+import path from 'path';
+import matter from 'gray-matter';
 
 class FileWatcherService extends EventEmitter {
   constructor() {
@@ -83,14 +86,61 @@ class FileWatcherService extends EventEmitter {
     this.debounceTimers.set(debounceKey, timer);
   }
 
-  broadcastFileChange(eventType, filename, projectId) {
+  getProjectPath(projectId) {
+    // This should match your project path resolution logic
+    // For debug project, it's in debug-tasks folder relative to project root
+    if (projectId === 'debug') {
+      return path.join(process.cwd(), '..', 'debug-tasks');
+    }
+    // For other projects, try to find them in the project registry
+    // This is a simplified version - in production you'd look up the actual project paths
+    return path.join(process.cwd(), '..');
+  }
+
+  async broadcastFileChange(eventType, filename, projectId) {
+    let ticketData = null;
+    
+    // For change events, try to parse the ticket data
+    if (eventType === 'change' || eventType === 'add') {
+      try {
+        const projectPath = this.getProjectPath(projectId);
+        const filePath = path.join(projectPath, filename);
+        
+        console.log(`🔍 DEBUG: Attempting to parse ticket data from ${filePath}`);
+        
+        if (fs.existsSync(filePath)) {
+          const fileContent = fs.readFileSync(filePath, 'utf8');
+          const { data: frontmatter } = matter(fileContent);
+          
+          console.log(`🔍 DEBUG: Parsed frontmatter:`, frontmatter);
+          
+          // Extract key ticket fields
+          ticketData = {
+            code: frontmatter.code,
+            title: frontmatter.title,
+            status: frontmatter.status,
+            type: frontmatter.type,
+            priority: frontmatter.priority,
+            lastModified: frontmatter.lastModified || new Date().toISOString()
+          };
+          
+          console.log(`🔍 DEBUG: Extracted ticket data:`, ticketData);
+        } else {
+          console.log(`🔍 DEBUG: File does not exist: ${filePath}`);
+        }
+      } catch (error) {
+        console.warn('Failed to parse ticket data for SSE:', error.message);
+      }
+    }
+
     const event = {
       type: 'file-change',
       data: {
         eventType,
         filename,
         projectId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        ticketData // Include parsed ticket data
       }
     };
 

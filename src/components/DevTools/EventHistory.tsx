@@ -8,6 +8,10 @@
 import { useState, useEffect } from 'react';
 import { eventBus, Event } from '../../services/eventBus';
 
+interface EventItemProps {
+  event: Event;
+}
+
 export function EventHistory() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -123,7 +127,7 @@ export function EventHistory() {
   );
 }
 
-function EventItem({ event }: { event: Event }) {
+function EventItem({ event }: EventItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Color based on event type
