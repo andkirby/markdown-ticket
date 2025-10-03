@@ -3,6 +3,7 @@ import path from 'path';
 import toml from 'toml';
 import os from 'os';
 import { MarkdownService } from '../shared/services/MarkdownService.js';
+import { SharedProjectDiscoveryService } from '../shared/services/projectDiscovery.js';
 
 const CONFIG_FILES = {
   PROJECT_CONFIG: '.mdt-config.toml',
@@ -18,6 +19,7 @@ class ProjectDiscoveryService {
     this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
     this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
+    this.sharedDiscovery = new SharedProjectDiscoveryService();
   }
 
   /**
@@ -48,22 +50,28 @@ class ProjectDiscoveryService {
    */
   getRegisteredProjects() {
     try {
+      console.log('🔍 DEBUG: getRegisteredProjects() - checking:', this.projectsDir);
       if (!fs.existsSync(this.projectsDir)) {
+        console.log('🔍 DEBUG: Projects directory does not exist');
         return [];
       }
 
       const projects = [];
       const projectFiles = fs.readdirSync(this.projectsDir)
         .filter(file => file.endsWith('.toml'));
+      console.log('🔍 DEBUG: Found project files:', projectFiles);
 
       for (const file of projectFiles) {
         try {
           const projectPath = path.join(this.projectsDir, file);
+          console.log('🔍 DEBUG: Reading project file:', projectPath);
           const content = fs.readFileSync(projectPath, 'utf8');
           const projectData = toml.parse(content);
+          console.log('🔍 DEBUG: Project data from', file, ':', projectData);
           
           // Read the actual project data from local config file
           const localConfig = this.getProjectConfig(projectData.project?.path || '');
+          console.log('🔍 DEBUG: Local config for', file, ':', localConfig);
           
           const project = {
             id: path.basename(file, '.toml'),
@@ -104,9 +112,12 @@ class ProjectDiscoveryService {
    */
   getProjectConfig(projectPath) {
     try {
+      console.log('🔍 DEBUG: getProjectConfig called with path:', projectPath);
       const configPath = path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG);
+      console.log('🔍 DEBUG: Looking for config at:', configPath);
       
       if (!fs.existsSync(configPath)) {
+        console.log('🔍 DEBUG: Config file does not exist at:', configPath);
         return null;
       }
 
@@ -130,11 +141,17 @@ class ProjectDiscoveryService {
    * Get all projects (registered + auto-discovered)
    */
   async getAllProjects() {
+    console.log('🔍 DEBUG: getAllProjects() called');
     const registered = this.getRegisteredProjects();
+    console.log('🔍 DEBUG: Registered projects:', registered.length);
+    
     const globalConfig = this.getGlobalConfig();
+    console.log('🔍 DEBUG: Global config autoDiscover:', globalConfig.discovery?.autoDiscover);
     
     if (globalConfig.discovery?.autoDiscover) {
-      const discovered = this.autoDiscoverProjects(globalConfig.discovery?.searchPaths || []);
+      const searchPaths = globalConfig.discovery?.searchPaths || [];
+      const discovered = this.sharedDiscovery.autoDiscoverProjects(searchPaths);
+      console.log('🔍 DEBUG: Auto-discovered projects:', discovered.length);
       
       // Create sets for both path and id to avoid duplicates
       const registeredPaths = new Set(registered.map(p => p.project.path));
@@ -143,6 +160,7 @@ class ProjectDiscoveryService {
       const uniqueDiscovered = discovered.filter(p => 
         !registeredPaths.has(p.project.path) && !registeredIds.has(p.id)
       );
+      console.log('🔍 DEBUG: Unique discovered projects:', uniqueDiscovered.length);
       
       // Combine and deduplicate by id (in case of any remaining duplicates)
       const allProjects = [...registered, ...uniqueDiscovered];
@@ -160,76 +178,6 @@ class ProjectDiscoveryService {
     return registered;
   }
 
-  /**
-   * Auto-discover projects by scanning for .mdt-config.toml files
-   */
-  autoDiscoverProjects(searchPaths = []) {
-    const discovered = [];
-    const defaultPaths = [
-      os.homedir(),
-      path.join(os.homedir(), 'Documents'), 
-      path.join(os.homedir(), 'Projects'),
-      process.cwd()
-    ];
-
-    const pathsToSearch = [...new Set([...defaultPaths, ...searchPaths])];
-
-    for (const searchPath of pathsToSearch) {
-      try {
-        if (fs.existsSync(searchPath)) {
-          this.scanDirectoryForProjects(searchPath, discovered, 3);
-        }
-      } catch (error) {
-        console.error(`Error scanning ${searchPath}:`, error);
-      }
-    }
-
-    return discovered;
-  }
-
-  /**
-   * Recursively scan directory for project configurations
-   */
-  scanDirectoryForProjects(dirPath, discovered, maxDepth) {
-    if (maxDepth <= 0) return;
-
-    try {
-      const configPath = path.join(dirPath, CONFIG_FILES.PROJECT_CONFIG);
-      
-      if (fs.existsSync(configPath)) {
-        const config = this.getProjectConfig(dirPath);
-        if (config) {
-          const project = {
-            id: path.basename(dirPath),
-            project: {
-              name: config.project.name,
-              path: dirPath,
-              configFile: configPath,
-              active: true,
-              description: config.project.description || ''
-            },
-            metadata: {
-              dateRegistered: new Date().toISOString().split('T')[0],
-              lastAccessed: new Date().toISOString().split('T')[0],
-              version: '1.0.0'
-            },
-            autoDiscovered: true
-          };
-          
-          discovered.push(project);
-        }
-      }
-
-      const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
-          this.scanDirectoryForProjects(path.join(dirPath, entry.name), discovered, maxDepth - 1);
-        }
-      }
-    } catch (error) {
-      // Silently skip directories we can't read
-    }
-  }
   /**
    * Get CRs for a specific project using shared MarkdownService
    */

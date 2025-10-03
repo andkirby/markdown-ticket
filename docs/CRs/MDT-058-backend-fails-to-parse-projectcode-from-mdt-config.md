@@ -1,11 +1,14 @@
 ---
 code: MDT-058
 title: Backend fails to parse project.code from .mdt-config.toml for specific projects
-status: Proposed
+status: Implemented
 dateCreated: 2025-10-02T15:23:43.508Z
 type: Bug Fix
 priority: High
+implementationDate: 2025-10-02T22:45:11.167Z
+implementationNotes: Status changed to Implemented on 10/3/2025
 ---
+
 
 # Backend fails to parse project.code from .mdt-config.toml for specific projects
 
