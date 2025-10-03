@@ -1736,10 +1736,24 @@ app.get('/api/documents', async (req, res) => {
       return res.status(400).json({ error: 'Project path is required' });
     }
 
+    // Security: Block path traversal attempts
+    if (projectPath.includes('..') || projectPath.startsWith('/')) {
+      console.warn('⚠️ Path traversal attempt blocked:', projectPath);
+      return res.status(403).json({ error: 'Invalid project path' });
+    }
+
     console.log(`🔍 Documents API called for: ${projectPath}`);
-    
+
+    // Security: Resolve and validate path is within working directory
+    const resolvedProjectPath = path.resolve(projectPath);
+    const cwd = process.cwd();
+    if (!resolvedProjectPath.startsWith(cwd)) {
+      console.warn('⚠️ Path outside working directory blocked:', resolvedProjectPath);
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     // Check if config exists and has document_paths
-    const configPath = path.join(projectPath, '.mdt-config.toml');
+    const configPath = path.join(resolvedProjectPath, '.mdt-config.toml');
     try {
       await fs.access(configPath);
       const configContent = await fs.readFile(configPath, 'utf8');
@@ -1770,10 +1784,23 @@ app.get('/api/documents/content', async (req, res) => {
       return res.status(400).json({ error: 'File path is required' });
     }
 
-    // Security check - ensure file is within allowed paths and is markdown
-    const resolvedPath = path.resolve(filePath);
-    if (!resolvedPath.endsWith('.md')) {
+    // Security: Block path traversal attempts
+    if (filePath.includes('..') || filePath.startsWith('/')) {
+      console.warn('⚠️ Path traversal attempt blocked:', filePath);
+      return res.status(403).json({ error: 'Invalid file path' });
+    }
+
+    // Security: Only allow markdown files
+    if (!filePath.endsWith('.md')) {
       return res.status(400).json({ error: 'Only markdown files are allowed' });
+    }
+
+    // Security: Resolve path and ensure it's within current working directory
+    const resolvedPath = path.resolve(filePath);
+    const cwd = process.cwd();
+    if (!resolvedPath.startsWith(cwd)) {
+      console.warn('⚠️ Path outside working directory blocked:', resolvedPath);
+      return res.status(403).json({ error: 'Access denied' });
     }
 
     const content = await fs.readFile(resolvedPath, 'utf8');
