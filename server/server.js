@@ -472,25 +472,33 @@ app.get('/api/status', (req, res) => {
 // New endpoint for file system browsing
 app.get('/api/filesystem', async (req, res) => {
   try {
-    const { path: requestPath } = req.query;
-    
-    console.log(`🗂️ Filesystem API called for: ${requestPath}`);
-    
-    if (!requestPath) {
-      return res.status(400).json({ error: 'Path is required' });
+    const { projectId } = req.query;
+
+    console.log(`🗂️ Filesystem API called for project: ${projectId}`);
+
+    if (!projectId) {
+      return res.status(400).json({ error: 'Project ID is required' });
     }
 
-    const fullPath = path.resolve(requestPath);
-    console.log(`🗂️ Resolved path: ${fullPath}`);
-    
+    // Get project from projectDiscovery service
+    const projects = await projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const projectPath = project.project.path;
+    console.log(`🗂️ Resolved project path: ${projectPath}`);
+
     try {
-      await fs.access(fullPath);
+      await fs.access(projectPath);
     } catch {
-      console.log(`🗂️ Path not found: ${fullPath}`);
+      console.log(`🗂️ Path not found: ${projectPath}`);
       return res.status(404).json({ error: 'Path not found' });
     }
 
-    const items = await buildFileSystemTree(fullPath);
+    const items = await buildFileSystemTree(projectPath);
     console.log(`🗂️ Found ${items.length} items`);
     res.json(items);
   } catch (error) {
@@ -502,15 +510,24 @@ app.get('/api/filesystem', async (req, res) => {
 // New endpoint for configuring document paths
 app.post('/api/documents/configure', async (req, res) => {
   try {
-    const { projectPath, documentPaths } = req.body;
-    
-    console.log(`📝 Configure documents for: ${projectPath}`);
+    const { projectId, documentPaths } = req.body;
+
+    console.log(`📝 Configure documents for project: ${projectId}`);
     console.log(`📝 Document paths: ${JSON.stringify(documentPaths)}`);
-    
-    if (!projectPath || !Array.isArray(documentPaths)) {
-      return res.status(400).json({ error: 'Project path and document paths are required' });
+
+    if (!projectId || !Array.isArray(documentPaths)) {
+      return res.status(400).json({ error: 'Project ID and document paths are required' });
     }
 
+    // Get project from projectDiscovery service
+    const projects = await projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const projectPath = project.project.path;
     const configPath = path.join(projectPath, '.mdt-config.toml');
     
     // Create or update config file
