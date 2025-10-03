@@ -72,7 +72,9 @@ export const nuclearCacheClear = () => {
     }
     
     // Force reload with cache bypass
-    window.location.href = window.location.href + '?cache-bust=' + Date.now();
+    const url = new URL(window.location.href);
+    url.searchParams.set('cache-bust', Date.now().toString());
+    window.location.href = url.toString();
   }
 };
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
