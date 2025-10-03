@@ -1,8 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import showdown from 'showdown';
-import { processMermaidBlocks, renderMermaid } from '../../utils/mermaid';
-import { highlightCodeBlocks, loadPrismTheme } from '../../utils/syntaxHighlight';
-import { useTheme } from '../../hooks/useTheme';
+import React, { useState, useEffect } from 'react';
+import MarkdownRenderer from '../shared/MarkdownRenderer';
 
 interface DocumentFile {
   name: string;
@@ -20,48 +17,14 @@ interface MarkdownViewerProps {
   fileInfo?: DocumentFile | null;
 }
 
-const converter = new showdown.Converter({
-  tables: true,
-  strikethrough: true,
-  tasklists: true,
-  ghCodeBlocks: true,
-  smoothLivePreview: true,
-  simpleLineBreaks: true,
-  headerLevelStart: 1,
-  parseImgDimensions: true,
-  simplifiedAutoLink: true,
-  excludeTrailingPunctuationFromURLs: true,
-  literalMidWordUnderscores: true,
-  ghCompatibleHeaderId: true,
-});
-
 export default function MarkdownViewer({ projectId, filePath, fileInfo }: MarkdownViewerProps) {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { theme } = useTheme();
-
-  // Load Prism theme based on current theme
-  useEffect(() => {
-    loadPrismTheme(theme);
-  }, [theme]);
 
   useEffect(() => {
     loadFile();
   }, [filePath]);
-
-  const processedHtml = useMemo(() => {
-    if (!content) return '';
-    const htmlContent = converter.makeHtml(content);
-    const mermaidProcessed = processMermaidBlocks(htmlContent);
-    return highlightCodeBlocks(mermaidProcessed);
-  }, [content]);
-
-  useEffect(() => {
-    if (processedHtml) {
-      setTimeout(() => renderMermaid(), 100);
-    }
-  }, [processedHtml]);
 
   const loadFile = async () => {
     try {
@@ -131,10 +94,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
             </div>
           </div>
         )}
-        <div
-          className="prose prose-sm max-w-none dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: processedHtml }}
-        />
+        {content && <MarkdownRenderer content={content} />}
       </div>
     </div>
   );
