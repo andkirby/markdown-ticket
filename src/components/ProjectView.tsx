@@ -152,7 +152,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
           </div>
         ) : viewMode === 'documents' ? (
           selectedProject ? (
-            <DocumentsLayout projectPath={selectedProject.project.path} />
+            <DocumentsLayout projectId={selectedProject.id} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               No project selected

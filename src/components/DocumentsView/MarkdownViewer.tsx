@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import showdown from 'showdown';
 import { processMermaidBlocks, renderMermaid } from '../../utils/mermaid';
-import { highlightCodeBlocks } from '../../utils/syntaxHighlight';
+import { highlightCodeBlocks, loadPrismTheme } from '../../utils/syntaxHighlight';
+import { useTheme } from '../../hooks/useTheme';
 
 interface DocumentFile {
   name: string;
@@ -14,6 +15,7 @@ interface DocumentFile {
 }
 
 interface MarkdownViewerProps {
+  projectId: string;
   filePath: string;
   fileInfo?: DocumentFile | null;
 }
@@ -33,10 +35,16 @@ const converter = new showdown.Converter({
   ghCompatibleHeaderId: true,
 });
 
-export default function MarkdownViewer({ filePath, fileInfo }: MarkdownViewerProps) {
+export default function MarkdownViewer({ projectId, filePath, fileInfo }: MarkdownViewerProps) {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { theme } = useTheme();
+
+  // Load Prism theme based on current theme
+  useEffect(() => {
+    loadPrismTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     loadFile();
@@ -59,7 +67,7 @@ export default function MarkdownViewer({ filePath, fileInfo }: MarkdownViewerPro
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/documents/content?filePath=${encodeURIComponent(filePath)}`);
+      const response = await fetch(`/api/documents/content?projectId=${encodeURIComponent(projectId)}&filePath=${encodeURIComponent(filePath)}`);
       if (response.ok) {
         const text = await response.text();
         setContent(text);
