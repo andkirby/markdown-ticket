@@ -10,12 +10,12 @@ interface PathItem {
 }
 
 interface PathSelectorProps {
-  projectPath: string;
+  projectId: string;
   onPathsSelected: (paths: string[]) => void;
   onCancel: () => void;
 }
 
-export default function PathSelector({ projectPath, onPathsSelected, onCancel }: PathSelectorProps) {
+export default function PathSelector({ projectId, onPathsSelected, onCancel }: PathSelectorProps) {
   const [items, setItems] = useState<PathItem[]>([]);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -23,12 +23,12 @@ export default function PathSelector({ projectPath, onPathsSelected, onCancel }:
   useEffect(() => {
     loadFileSystem();
     loadCurrentDocumentPaths();
-  }, [projectPath]);
+  }, [projectId]);
 
   const loadCurrentDocumentPaths = async () => {
     try {
       // Try to get current document configuration
-      const response = await fetch(`/api/documents?projectPath=${encodeURIComponent(projectPath)}`);
+      const response = await fetch(`/api/documents?projectId=${encodeURIComponent(projectId)}`);
       
       if (response.ok) {
         const documents = await response.json();
@@ -37,9 +37,8 @@ export default function PathSelector({ projectPath, onPathsSelected, onCancel }:
         const configuredPaths = new Set<string>();
         documents.forEach((doc: any) => {
           if (doc.path) {
-            // Convert absolute path back to relative path for selection
-            const relativePath = doc.path.replace(projectPath + '/', '');
-            configuredPaths.add(relativePath);
+            // Paths are now already relative
+            configuredPaths.add(doc.path);
           }
         });
         
@@ -53,7 +52,7 @@ export default function PathSelector({ projectPath, onPathsSelected, onCancel }:
   const loadFileSystem = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/filesystem?path=${encodeURIComponent(projectPath)}`);
+      const response = await fetch(`/api/filesystem?projectId=${encodeURIComponent(projectId)}`);
       if (response.ok) {
         const data = await response.json();
         setItems(data);
@@ -86,12 +85,11 @@ export default function PathSelector({ projectPath, onPathsSelected, onCancel }:
   };
 
   const renderItem = (item: PathItem, depth = 0) => {
-    // Convert absolute path to relative path for comparison
-    const relativePath = item.path.replace(projectPath + '/', '');
-    const isSelected = selectedPaths.has(relativePath);
+    // Paths are now relative, use directly
+    const isSelected = selectedPaths.has(item.path);
     
-    const hasSelectedChildren = Array.from(selectedPaths).some(path => 
-      path.startsWith(relativePath + '/') && path !== relativePath
+    const hasSelectedChildren = Array.from(selectedPaths).some(path =>
+      path.startsWith(item.path + '/') && path !== item.path
     );
 
     return (
