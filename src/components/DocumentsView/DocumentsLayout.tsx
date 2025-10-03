@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Pencil, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import FileTree from './FileTree';
 import MarkdownViewer from './MarkdownViewer';
@@ -19,6 +20,7 @@ interface DocumentsLayoutProps {
 }
 
 export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [files, setFiles] = useState<DocumentFile[]>([]);
   const [filteredFiles, setFilteredFiles] = useState<DocumentFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -29,8 +31,48 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
   const [sortBy, setSortBy] = useState<'name' | 'title' | 'created' | 'modified'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Helper to sanitize and validate relative path (blocks .. traversal)
+  const sanitizePath = (relativePath: string): string | null => {
+    // Block path traversal attempts
+    if (relativePath.includes('..')) {
+      console.warn('Path traversal attempt blocked:', relativePath);
+      return null;
+    }
+    // Remove leading slashes and normalize
+    return relativePath.replace(/^\/+/, '').replace(/\/+/g, '/');
+  };
+
+  // Helper to convert relative path to absolute path
+  const toAbsolutePath = (relativePath: string): string | null => {
+    const sanitized = sanitizePath(relativePath);
+    if (!sanitized) return null;
+    if (sanitized.startsWith('/')) return sanitized;
+    return `${projectPath}/${sanitized}`;
+  };
+
+  // Helper to convert absolute path to relative path
+  const toRelativePath = (absolutePath: string): string => {
+    if (!absolutePath.startsWith(projectPath)) return absolutePath;
+    return absolutePath.substring(projectPath.length + 1);
+  };
+
+  // Initialize selected file from URL parameter
   useEffect(() => {
-    setSelectedFile(null); // Clear selected file when project changes
+    const fileParam = searchParams.get('file');
+    if (fileParam) {
+      const absolutePath = toAbsolutePath(fileParam);
+      if (absolutePath) {
+        setSelectedFile(absolutePath);
+      } else {
+        setSelectedFile(null);
+        setError('Invalid file path');
+      }
+    } else {
+      setSelectedFile(null);
+    }
+  }, [searchParams, projectPath]);
+
+  useEffect(() => {
     loadDocuments();
   }, [projectPath]);
 
@@ -281,7 +323,14 @@ export default function DocumentsLayout({ projectPath }: DocumentsLayoutProps) {
         <div className="p-2">
           <FileTree
             files={filteredFiles}
-            onFileSelect={setSelectedFile}
+            onFileSelect={(filePath) => {
+              setSelectedFile(filePath);
+              if (filePath) {
+                setSearchParams({ file: toRelativePath(filePath) });
+              } else {
+                setSearchParams({});
+              }
+            }}
             selectedFile={selectedFile}
           />
         </div>
