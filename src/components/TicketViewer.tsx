@@ -5,7 +5,8 @@ import { Modal, ModalHeader, ModalBody } from './UI/Modal';
 import TicketAttributes from './TicketAttributes';
 import { TicketCode } from './TicketCode';
 import { processMermaidBlocks, renderMermaid } from '../utils/mermaid';
-import { highlightCodeBlocks } from '../utils/syntaxHighlight';
+import { highlightCodeBlocks, loadPrismTheme } from '../utils/syntaxHighlight';
+import { useTheme } from '../hooks/useTheme';
 
 interface TicketViewerProps {
   ticket: Ticket | null;
@@ -14,6 +15,13 @@ interface TicketViewerProps {
 }
 
 const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) => {
+  const { theme } = useTheme();
+
+  // Load Prism theme based on current theme
+  useEffect(() => {
+    loadPrismTheme(theme);
+  }, [theme]);
+
   const converter = useMemo(() => {
     return new showdown.Converter({
       tables: true,
@@ -59,7 +67,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
 
           {/* Rendered Markdown Content */}
           <div
-            className="prose prose-sm max-w-none prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-code:bg-gray-100 dark:prose-code:bg-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-gray-900 dark:prose-code:text-gray-100 prose-pre:bg-gray-100 dark:prose-pre:bg-slate-800 prose-pre:border dark:prose-pre:border-slate-700 prose-blockquote:text-gray-700 dark:prose-blockquote:text-gray-300 prose-li:text-gray-700 dark:prose-li:text-gray-300 prose-ol:text-gray-700 dark:prose-ol:text-gray-300 prose-ul:text-gray-700 dark:prose-ul:text-gray-300"
+            className="prose prose-sm max-w-none dark:prose-invert"
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
 
