@@ -45,8 +45,9 @@ export const SUPPORTED_EXTENSIONS = ['.md', '.markdown'] as const;
 // Default configuration paths
 export const DEFAULT_PATHS = {
   CONFIG_DIR: path.join(os.homedir(), '.config', 'markdown-ticket'),
+  CONFIG_FILE: path.join(os.homedir(), '.config', 'markdown-ticket', 'config.toml'),
   TEMPLATES_DIR: path.join(os.homedir(), '.config', 'markdown-ticket', 'templates'),
-  MCP_CONFIG: path.join(os.homedir(), '.config', 'markdown-ticket', 'mcp-server.toml'),
+  PROJECTS_REGISTRY: path.join(os.homedir(), '.config', 'markdown-ticket', 'projects'),
   USER_CONFIG: path.join(os.homedir(), '.config', 'markdown-ticket', 'user.toml')
 } as const;
 

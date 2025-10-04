@@ -4,6 +4,7 @@ import { Pencil, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import FileTree from './FileTree';
 import MarkdownViewer from './MarkdownViewer';
 import PathSelector from './PathSelector';
+import { ScrollArea } from '../UI/scroll-area';
 import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting';
 
 interface DocumentFile {
@@ -291,8 +292,8 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
 
   return (
     <div className="flex h-full">
-      <div className="w-1/3 border-r border-border bg-muted/30">
-        <div className="p-4 border-b border-border">
+      <div className="w-1/3 border-r border-border bg-muted/30 flex flex-col">
+        <div className="p-4 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-3">
               <h3 className="font-semibold text-foreground">Documents</h3>
@@ -340,23 +341,25 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
             />
           </div>
         </div>
-        <div className="p-2">
-          <FileTree
-            files={filteredFiles}
-            onFileSelect={(filePath) => {
-              setSelectedFile(filePath);
-              if (filePath) {
-                // Encode each path segment separately to keep slashes visible
-                const encodedPath = filePath.split('/').map(encodeURIComponent).join('/');
-                const newUrl = `${window.location.pathname}?file=${encodedPath}`;
-                window.history.pushState({}, '', newUrl);
-              } else {
-                window.history.pushState({}, '', window.location.pathname);
-              }
-            }}
-            selectedFile={selectedFile}
-          />
-        </div>
+        <ScrollArea className="h-[calc(100vh-200px)]">
+          <div className="p-2">
+            <FileTree
+              files={filteredFiles}
+              onFileSelect={(filePath) => {
+                setSelectedFile(filePath);
+                if (filePath) {
+                  // Encode each path segment separately to keep slashes visible
+                  const encodedPath = filePath.split('/').map(encodeURIComponent).join('/');
+                  const newUrl = `${window.location.pathname}?file=${encodedPath}`;
+                  window.history.pushState({}, '', newUrl);
+                } else {
+                  window.history.pushState({}, '', window.location.pathname);
+                }
+              }}
+              selectedFile={selectedFile}
+            />
+          </div>
+        </ScrollArea>
       </div>
       <div className="flex-1 min-w-0 overflow-hidden">
         {selectedFile ? (

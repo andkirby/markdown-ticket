@@ -3,19 +3,47 @@ import { existsSync, readFileSync } from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as toml from 'toml';
-import { ServerConfig } from '../../../shared/models/Config.js';
 // @ts-ignore
 import { DEFAULT_PATHS } from '../../../shared/utils/constants.js';
+
+/**
+ * Server configuration with merged approach.
+ *
+ * Configuration sources (in order of precedence):
+ * 1. config.toml (optional) - for server settings and scanPaths
+ * 2. Environment variables (MCP_LOG_LEVEL, MCP_CACHE_TIMEOUT)
+ * 3. Hardcoded defaults
+ *
+ * Project discovery supports BOTH:
+ * - Global registry: ~/.config/markdown-ticket/projects/*.toml
+ * - ScanPaths: Configured directories scanned for *-config.toml files
+ */
+
+export interface ServerConfig {
+  server: {
+    port: number;
+    logLevel: 'debug' | 'info' | 'warn' | 'error';
+  };
+  discovery: {
+    registryPath: string;    // Path to global registry
+    scanPaths: string[];     // Additional scan paths
+    excludePaths: string[];
+    maxDepth: number;        // For directory scanning
+    cacheTimeout: number;
+  };
+  templates: {
+    customPath: string;
+  };
+}
 
 const DEFAULT_CONFIG: ServerConfig = {
   server: {
     port: 8000,
-    logLevel: 'info'
+    logLevel: (process.env.MCP_LOG_LEVEL as 'debug' | 'info' | 'warn' | 'error') || 'info'
   },
   discovery: {
-    scanPaths: [
-      // No default scan paths - require explicit configuration for security
-    ],
+    registryPath: DEFAULT_PATHS.PROJECTS_REGISTRY,
+    scanPaths: [],  // Empty by default, populated from config.toml if present
     excludePaths: [
       'node_modules',
       '.git',
@@ -31,134 +59,87 @@ const DEFAULT_CONFIG: ServerConfig = {
       'temp'
     ],
     maxDepth: 4,
-    cacheTimeout: 300 // 5 minutes
+    cacheTimeout: parseInt(process.env.MCP_CACHE_TIMEOUT || '300', 10) // 5 minutes default
   },
   templates: {
     customPath: DEFAULT_PATHS.TEMPLATES_DIR
   }
 };
 
+const CONFIG_PATH = DEFAULT_PATHS.CONFIG_FILE;
+
 export class ConfigService {
   private config: ServerConfig;
-  private configPath: string;
 
   constructor() {
-    this.configPath = this.getConfigPath();
-    this.config = this.loadConfig();
+    this.config = { ...DEFAULT_CONFIG };
+    this.loadConfigFile();
+    console.error(`📋 Configuration loaded`);
+    console.error(`   Log Level: ${this.config.server.logLevel}`);
+    console.error(`   Registry Path: ${this.config.discovery.registryPath}`);
+    console.error(`   Scan Paths: ${this.config.discovery.scanPaths.length} configured`);
+    console.error(`   Cache Timeout: ${this.config.discovery.cacheTimeout}s`);
   }
 
-  private getConfigPath(): string {
-    // Check for config file in order of preference
-    const possiblePaths = [
-      DEFAULT_PATHS.MCP_CONFIG
-    ];
-
-    for (const configPath of possiblePaths) {
-      if (existsSync(configPath)) {
-        console.error(`📋 Using config file: ${configPath}`);
-        return configPath;
-      }
-    }
-
-    // Return unified path for creation
-    console.error(`📋 No config file found, will use defaults. Config can be created at: ${DEFAULT_PATHS.MCP_CONFIG}`);
-    return DEFAULT_PATHS.MCP_CONFIG;
-  }
-
-  private loadConfig(): ServerConfig {
+  private loadConfigFile(): void {
     try {
-      if (existsSync(this.configPath)) {
-        const configContent = readFileSync(this.configPath, 'utf-8');
-        const userConfig = toml.parse(configContent);
-        
-        // Deep merge with defaults
-        return this.mergeConfig(DEFAULT_CONFIG, userConfig);
+      if (existsSync(CONFIG_PATH)) {
+        console.error(`📝 Loading config from: ${CONFIG_PATH}`);
+        const configContent = readFileSync(CONFIG_PATH, 'utf-8');
+        const fileConfig = toml.parse(configContent);
+
+        // Merge server settings
+        if (fileConfig.server) {
+          if (fileConfig.server.port) {
+            this.config.server.port = fileConfig.server.port;
+          }
+          if (fileConfig.server.logLevel && !process.env.MCP_LOG_LEVEL) {
+            // Environment variable takes precedence
+            this.config.server.logLevel = fileConfig.server.logLevel;
+          }
+        }
+
+        // Merge discovery settings
+        if (fileConfig.discovery) {
+          if (Array.isArray(fileConfig.discovery.scanPaths)) {
+            this.config.discovery.scanPaths = fileConfig.discovery.scanPaths.map((p: string) =>
+              this.expandPath(p)
+            );
+          }
+          if (Array.isArray(fileConfig.discovery.excludePaths)) {
+            this.config.discovery.excludePaths = fileConfig.discovery.excludePaths;
+          }
+          if (typeof fileConfig.discovery.maxDepth === 'number') {
+            this.config.discovery.maxDepth = fileConfig.discovery.maxDepth;
+          }
+          if (typeof fileConfig.discovery.cacheTimeout === 'number' && !process.env.MCP_CACHE_TIMEOUT) {
+            // Environment variable takes precedence
+            this.config.discovery.cacheTimeout = fileConfig.discovery.cacheTimeout;
+          }
+        }
+
+        // Merge template settings
+        if (fileConfig.templates?.customPath) {
+          this.config.templates.customPath = this.expandPath(fileConfig.templates.customPath);
+        }
+      } else {
+        console.error(`ℹ️  No config.toml found (optional) - using defaults and environment variables`);
       }
     } catch (error) {
-      console.warn(`⚠️ Failed to load config from ${this.configPath}, using defaults:`, (error as Error).message);
+      console.warn(`⚠️  Failed to load config.toml: ${(error as Error).message}`);
+      console.warn(`   Falling back to defaults`);
     }
-
-    return { ...DEFAULT_CONFIG };
   }
 
-  private mergeConfig(defaultConfig: any, userConfig: any): any {
-    const merged = { ...defaultConfig };
-    
-    for (const [key, value] of Object.entries(userConfig)) {
-      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-        merged[key] = this.mergeConfig(defaultConfig[key] || {}, value);
-      } else {
-        merged[key] = value;
-      }
+  private expandPath(inputPath: string): string {
+    if (inputPath.startsWith('~/')) {
+      return path.join(os.homedir(), inputPath.slice(2));
     }
-    
-    return merged;
+    return path.resolve(inputPath);
   }
 
   getConfig(): ServerConfig {
     return this.config;
-  }
-
-  private generateConfigContent(): string {
-    return `# MCP CR Server Configuration
-# This file configures the Model Context Protocol server for Change Request management
-
-[server]
-# Server port for MCP communication
-port = ${this.config.server.port}
-# Log level: debug, info, warn, error
-logLevel = "${this.config.server.logLevel}"
-
-[discovery]
-# Paths to scan for project configuration files (*-config.toml)
-# SECURITY: Only add paths you explicitly want to scan
-scanPaths = [
-  # Add your project directories here, e.g.:
-  # "${path.join(os.homedir(), 'my-projects')}",
-  # "/path/to/specific/project"
-]
-
-# Directories to exclude from scanning
-excludePaths = [
-  "node_modules",
-  ".git", 
-  "vendor",
-  ".next",
-  "dist",
-  "build",
-  "target",
-  "__pycache__",
-  ".vscode",
-  ".idea",
-  "tmp",
-  "temp"
-]
-
-# Maximum directory depth to scan
-maxDepth = ${this.config.discovery.maxDepth}
-
-# Cache timeout in seconds (project discovery results)
-cacheTimeout = ${this.config.discovery.cacheTimeout}
-
-[templates]
-# Path to custom CR templates (optional)
-# customPath = "${this.config.templates.customPath}"
-
-# Example project structure:
-# 
-# my-project/
-# ├── .mdt-config.toml          <- Project configuration
-# ├── .mdt-next                 <- Counter file
-# └── docs/CRs/                 <- CR directory
-#     ├── MDT-001-feature.md
-#     └── MDT-002-bugfix.md
-#
-# The server will automatically discover projects by scanning for *-config.toml files
-# in the configured scan paths. Each project should have:
-# 1. A configuration file (e.g., .mdt-config.toml)
-# 2. A CR directory specified in the config
-# 3. A counter file for tracking CR numbers
-`;
   }
 
   async validateConfig(): Promise<{valid: boolean, errors: string[], warnings: string[]}> {
@@ -172,7 +153,7 @@ cacheTimeout = ${this.config.discovery.cacheTimeout}
       if (typeof this.config.server.port !== 'number' || this.config.server.port < 1 || this.config.server.port > 65535) {
         errors.push('server.port must be a number between 1 and 65535');
       }
-      
+
       const validLogLevels = ['debug', 'info', 'warn', 'error'];
       if (!validLogLevels.includes(this.config.server.logLevel)) {
         errors.push(`server.logLevel must be one of: ${validLogLevels.join(', ')}`);
@@ -183,14 +164,23 @@ cacheTimeout = ${this.config.discovery.cacheTimeout}
     if (!this.config.discovery) {
       errors.push('discovery configuration section is missing');
     } else {
-      if (!Array.isArray(this.config.discovery.scanPaths) || this.config.discovery.scanPaths.length === 0) {
-        errors.push('discovery.scanPaths must be a non-empty array');
-      } else {
-        // Check if scan paths exist
+      // Check if registry path exists (create if not)
+      if (!await fs.pathExists(this.config.discovery.registryPath)) {
+        warnings.push(`Registry path does not exist, will be created: ${this.config.discovery.registryPath}`);
+        try {
+          await fs.ensureDir(this.config.discovery.registryPath);
+        } catch (error) {
+          errors.push(`Failed to create registry path: ${(error as Error).message}`);
+        }
+      }
+
+      // Validate scanPaths
+      if (!Array.isArray(this.config.discovery.scanPaths)) {
+        warnings.push('discovery.scanPaths should be an array');
+      } else if (this.config.discovery.scanPaths.length > 0) {
         for (const scanPath of this.config.discovery.scanPaths) {
-          const expandedPath = this.expandPath(scanPath);
-          if (!await fs.pathExists(expandedPath)) {
-            warnings.push(`Scan path does not exist: ${scanPath} (${expandedPath})`);
+          if (!await fs.pathExists(scanPath)) {
+            warnings.push(`Scan path does not exist: ${scanPath}`);
           }
         }
       }
@@ -200,7 +190,7 @@ cacheTimeout = ${this.config.discovery.cacheTimeout}
       }
 
       if (typeof this.config.discovery.maxDepth !== 'number' || this.config.discovery.maxDepth < 1) {
-        errors.push('discovery.maxDepth must be a positive number');
+        warnings.push('discovery.maxDepth should be a positive number');
       }
 
       if (typeof this.config.discovery.cacheTimeout !== 'number' || this.config.discovery.cacheTimeout < 0) {
@@ -210,9 +200,8 @@ cacheTimeout = ${this.config.discovery.cacheTimeout}
 
     // Validate templates config
     if (this.config.templates?.customPath) {
-      const customPath = this.expandPath(this.config.templates.customPath);
-      if (!await fs.pathExists(customPath)) {
-        warnings.push(`Custom templates path does not exist: ${this.config.templates.customPath} (${customPath})`);
+      if (!await fs.pathExists(this.config.templates.customPath)) {
+        warnings.push(`Templates path does not exist, will be created if needed: ${this.config.templates.customPath}`);
       }
     }
 
@@ -221,12 +210,5 @@ cacheTimeout = ${this.config.discovery.cacheTimeout}
       errors,
       warnings
     };
-  }
-
-  private expandPath(inputPath: string): string {
-    if (inputPath.startsWith('~/')) {
-      return path.join(os.homedir(), inputPath.slice(2));
-    }
-    return path.resolve(inputPath);
   }
 }
