@@ -51,6 +51,8 @@
 - **Document Navigation**: Collapsible directory trees with filtering and sorting in document view
 - **Ticket Relationships**: Full support for dependencies, blocks, and related tickets
 - **Backlog Management**: Hide/show backlog tickets for cleaner board views
+- **Intelligent Caching**: File operations cached with 1-hour TTL and automatic invalidation on file changes
+- **Cache Management**: Clear backend and frontend caches via hamburger menu or API endpoint
 - **Markdown Storage**: All tickets stored as markdown files with YAML frontmatter
 - **Real-time Updates**: SSE-based live updates with optimistic UI
 - **Multiple View Modes**: Board, List, and Documents views with seamless switching

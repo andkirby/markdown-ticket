@@ -56,9 +56,33 @@ export const clearProjectCache = (projectId?: string) => {
   }
 };
 
-export const nuclearCacheClear = () => {
+export const clearBackendCache = async () => {
+  try {
+    const response = await fetch('/api/cache/clear', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('🧹 Backend cache cleared:', result.message);
+      return result;
+    } else {
+      console.error('Failed to clear backend cache:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error clearing backend cache:', error);
+  }
+};
+
+export const nuclearCacheClear = async () => {
   if (typeof window !== 'undefined') {
-    // Clear all storage
+    // Clear backend cache first
+    await clearBackendCache();
+    
+    // Clear all frontend storage
     clearAllCache();
     
     // Clear browser cache if possible (limited by security)
@@ -80,4 +104,5 @@ export const nuclearCacheClear = () => {
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   (window as any).clearCache = clearAllCache;
   (window as any).clearProjectCache = clearProjectCache;
+  (window as any).clearBackendCache = clearBackendCache;
 }
