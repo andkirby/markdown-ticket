@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import showdown from 'showdown';
 import { Button } from './UI/index';
 import { useEventBus } from '../services/eventBus';
@@ -44,6 +44,13 @@ const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => 
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'detail' | 'create'>('list');
   const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences);
+
+  // Use ref to prevent stale closure bug when switching projects
+  const selectedProjectRef = useRef<Project | null>(selectedProject);
+
+  useEffect(() => {
+    selectedProjectRef.current = selectedProject;
+  }, [selectedProject]);
 
   // Form state for CR creation
   const [newCR, setNewCR] = useState({
@@ -121,12 +128,13 @@ const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => 
 
   // Create new CR
   const handleCreateCR = useCallback(async () => {
-    if (!selectedProject) return;
-    
+    const currentProject = selectedProjectRef.current;
+    if (!currentProject) return;
+
     try {
       setError(null);
-      
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs`, {
+
+      const response = await fetch(`/api/projects/${currentProject.id}/crs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,15 +156,15 @@ const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => 
         priority: 'Medium',
         description: ''
       });
-      
+
       // Refresh CRs and go back to list
-      await fetchCRs(selectedProject);
+      await fetchCRs(currentProject);
       setView('list');
     } catch (error) {
       console.error('Error creating CR:', error);
       setError(error instanceof Error ? error.message : 'Failed to create CR');
     }
-  }, [selectedProject, newCR, fetchCRs]);
+  }, [newCR, fetchCRs]); // Removed selectedProject - using ref instead
 
   // Convert LocalCR to Ticket for API calls
   const convertToTicket = (localCR: LocalCR): Ticket => ({
@@ -176,12 +184,13 @@ const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => 
 
   // Delete CR
   const handleDeleteCR = useCallback(async (ticket: Ticket) => {
-    if (!selectedProject || !confirm(`Are you sure you want to delete ${ticket.code}?`)) return;
+    const currentProject = selectedProjectRef.current;
+    if (!currentProject || !confirm(`Are you sure you want to delete ${ticket.code}?`)) return;
 
     try {
       setError(null);
 
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticket.code}`, {
+      const response = await fetch(`/api/projects/${currentProject.id}/crs/${ticket.code}`, {
         method: 'DELETE',
       });
 
@@ -190,7 +199,7 @@ const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => 
       }
 
       // Refresh CRs
-      await fetchCRs(selectedProject);
+      await fetchCRs(currentProject);
 
       // Clear selection if deleted CR was selected
       if (selectedCR && selectedCR.code === ticket.code) {
@@ -201,7 +210,7 @@ const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => 
       console.error('Error deleting CR:', error);
       setError(error instanceof Error ? error.message : 'Failed to delete CR');
     }
-  }, [selectedProject, selectedCR, fetchCRs]);
+  }, [selectedCR, fetchCRs]); // Removed selectedProject - using ref instead
 
   // Initialize dashboard
   useEffect(() => {

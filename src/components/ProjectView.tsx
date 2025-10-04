@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Board from './Board';
 import { DocumentsLayout } from './DocumentsView';
 import { DuplicateResolver } from './DuplicateResolver';
@@ -45,6 +45,13 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   const [showCounterAPIModal, setShowCounterAPIModal] = useState(false);
   const [showDuplicateResolver, setShowDuplicateResolver] = useState(false);
 
+  // Use ref to prevent stale closure bug when switching projects
+  const selectedProjectRef = useRef<Project | null>(selectedProject);
+
+  useEffect(() => {
+    selectedProjectRef.current = selectedProject;
+  }, [selectedProject]);
+
   const handleViewModeChange = (mode: ViewMode) => {
     setInternalViewMode(mode);
     localStorage.setItem(VIEW_MODE_KEY, mode);
@@ -56,12 +63,13 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   }, []);
 
   const handleTicketUpdate = useCallback(async (ticketCode: string, updates: Partial<Ticket>) => {
-    if (!selectedProject) {
+    const currentProject = selectedProjectRef.current;
+    if (!currentProject) {
       throw new Error('No project selected');
     }
 
     try {
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticketCode}`, {
+      const response = await fetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -74,15 +82,15 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
       }
 
       const updatedTicket = await response.json();
-      
+
       // Ticket updates are now handled by SSE events automatically
-      
+
       return updatedTicket;
     } catch (error) {
       console.error('Failed to update ticket:', error);
       throw error;
     }
-  }, [selectedProject]);
+  }, []); // Removed selectedProject from deps - using ref instead
 
   return (
     <div className="h-full flex flex-col">
