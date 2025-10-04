@@ -27,21 +27,14 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
 
   const loadCurrentDocumentPaths = async () => {
     try {
-      // Try to get current document configuration
-      const response = await fetch(`/api/documents?projectId=${encodeURIComponent(projectId)}`);
-      
+      // Get the actual configured paths from the config file
+      const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/config`);
+
       if (response.ok) {
-        const documents = await response.json();
-        
-        // Extract the configured paths from the documents
-        const configuredPaths = new Set<string>();
-        documents.forEach((doc: any) => {
-          if (doc.path) {
-            // Paths are now already relative
-            configuredPaths.add(doc.path);
-          }
-        });
-        
+        const data = await response.json();
+
+        // Use only the top-level document_paths from config, not the expanded tree
+        const configuredPaths = new Set<string>(data.config?.project?.document_paths || []);
         setSelectedPaths(configuredPaths);
       }
     } catch (error) {
@@ -64,47 +57,43 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
     }
   };
 
-  const toggleSelection = (path: string, isFolder: boolean) => {
+  const toggleSelection = (path: string, isFolder: boolean, item?: PathItem) => {
     const newSelected = new Set(selectedPaths);
-    
+
+    // Simple toggle - don't auto-select/deselect children
     if (newSelected.has(path)) {
       newSelected.delete(path);
-      // Remove all children if deselecting a folder
-      if (isFolder) {
-        Array.from(newSelected).forEach(selectedPath => {
-          if (selectedPath.startsWith(path + '/')) {
-            newSelected.delete(selectedPath);
-          }
-        });
-      }
     } else {
       newSelected.add(path);
     }
-    
+
     setSelectedPaths(newSelected);
   };
 
   const renderItem = (item: PathItem, depth = 0) => {
-    // Paths are now relative, use directly
     const isSelected = selectedPaths.has(item.path);
-    
+
     const hasSelectedChildren = Array.from(selectedPaths).some(path =>
       path.startsWith(item.path + '/') && path !== item.path
     );
 
     return (
       <div key={item.path} style={{ marginLeft: `${depth * 20}px` }}>
-        <div className="flex items-center py-1 hover:bg-accent rounded">
+        <label
+          className="flex items-center py-1 hover:bg-accent rounded cursor-pointer"
+          htmlFor={`checkbox-${item.path}`}
+        >
           <input
+            id={`checkbox-${item.path}`}
             type="checkbox"
             checked={isSelected}
-            onChange={() => toggleSelection(item.path, item.type === 'folder')}
-            className="mr-2"
+            onChange={() => toggleSelection(item.path, item.type === 'folder', item)}
+            className="mr-2 cursor-pointer"
           />
           <span className={`text-sm ${item.type === 'folder' ? 'font-medium' : ''} ${hasSelectedChildren ? 'text-primary' : ''}`}>
             {item.type === 'folder' ? '📁' : '📄'} {item.name}
           </span>
-        </div>
+        </label>
         {item.children && item.children.map(child => renderItem(child, depth + 1))}
       </div>
     );
