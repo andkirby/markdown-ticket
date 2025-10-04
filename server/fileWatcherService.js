@@ -100,6 +100,10 @@ class FileWatcherService extends EventEmitter {
     if (projectId === 'debug') {
       return path.join(process.cwd(), '..', 'debug-tasks');
     }
+    // For markdown-ticket project, CRs are in docs/CRs relative to project root
+    if (projectId === 'markdown-ticket') {
+      return path.join(process.cwd(), '..', 'docs', 'CRs');
+    }
     // For other projects, try to find them in the project registry
     // This is a simplified version - in production you'd look up the actual project paths
     return path.join(process.cwd(), '..');
@@ -122,13 +126,9 @@ class FileWatcherService extends EventEmitter {
         const projectPath = this.getProjectPath(projectId);
         const filePath = path.join(projectPath, filename);
         
-        console.log(`🔍 DEBUG: Attempting to parse ticket data from ${filePath}`);
-        
         if (fs.existsSync(filePath)) {
           const fileContent = fs.readFileSync(filePath, 'utf8');
           const { data: frontmatter } = matter(fileContent);
-          
-          console.log(`🔍 DEBUG: Parsed frontmatter:`, frontmatter);
           
           // Extract key ticket fields
           ticketData = {
@@ -139,10 +139,6 @@ class FileWatcherService extends EventEmitter {
             priority: frontmatter.priority,
             lastModified: frontmatter.lastModified || new Date().toISOString()
           };
-          
-          console.log(`🔍 DEBUG: Extracted ticket data:`, ticketData);
-        } else {
-          console.log(`🔍 DEBUG: File does not exist: ${filePath}`);
         }
       } catch (error) {
         console.warn('Failed to parse ticket data for SSE:', error.message);

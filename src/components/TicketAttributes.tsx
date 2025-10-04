@@ -111,21 +111,21 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
         )}
       </div>
 
-      {(ticket.relatedTickets.length > 0 || ticket.dependsOn.length > 0 || ticket.blocks.length > 0) && (
+      {((ticket.relatedTickets?.length || 0) > 0 || (ticket.dependsOn?.length || 0) > 0 || (ticket.blocks?.length || 0) > 0) && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Relationships</h4>
           <div className="flex flex-wrap gap-2">
-            {ticket.relatedTickets.length > 0 && (
+            {(ticket.relatedTickets?.length || 0) > 0 && (
               <Badge variant="outline" className="bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-700" title={`Related: ${ticket.relatedTickets.join(', ')}`}>
                 🔗 {ticket.relatedTickets.join(', ')}
               </Badge>
             )}
-            {ticket.dependsOn.length > 0 && (
+            {(ticket.dependsOn?.length || 0) > 0 && (
               <Badge variant="outline" className="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-700" title={`Depends on: ${ticket.dependsOn.join(', ')}`}>
                 ⬅️ {ticket.dependsOn.join(', ')}
               </Badge>
             )}
-            {ticket.blocks.length > 0 && (
+            {(ticket.blocks?.length || 0) > 0 && (
               <Badge variant="outline" className="bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-700" title={`Blocks: ${ticket.blocks.join(', ')}`}>
                 ➡️ {ticket.blocks.join(', ')}
               </Badge>
