@@ -4,6 +4,7 @@ import { Pencil, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import FileTree from './FileTree';
 import MarkdownViewer from './MarkdownViewer';
 import PathSelector from './PathSelector';
+import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting';
 
 interface DocumentFile {
   name: string;
@@ -28,8 +29,11 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const [showPathSelector, setShowPathSelector] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'title' | 'created' | 'modified'>('name');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Load sort preferences from localStorage on mount
+  const savedPreferences = getDocumentSortPreferences(projectId);
+  const [sortBy, setSortBy] = useState<'name' | 'title' | 'created' | 'modified'>(savedPreferences.sortBy);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(savedPreferences.sortDirection);
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
@@ -59,6 +63,18 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   };
 
   // File paths are now always relative - no conversion needed
+
+  // Reset and load sort preferences when project changes
+  useEffect(() => {
+    const preferences = getDocumentSortPreferences(projectId);
+    setSortBy(preferences.sortBy);
+    setSortDirection(preferences.sortDirection);
+  }, [projectId]);
+
+  // Persist sort preferences to localStorage when they change
+  useEffect(() => {
+    setDocumentSortPreferences(projectId, { sortBy, sortDirection });
+  }, [projectId, sortBy, sortDirection]);
 
   // Initialize selected file from URL parameter
   useEffect(() => {
