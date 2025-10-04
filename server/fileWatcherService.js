@@ -12,6 +12,14 @@ class FileWatcherService extends EventEmitter {
     this.clients = new Set();
     this.debounceTimers = new Map();
     this.watchPaths = new Map(); // Map of projectId -> watchPath
+    this.fileInvoker = null; // Will be set by server
+  }
+
+  /**
+   * Set file operation invoker for cache invalidation
+   */
+  setFileInvoker(fileInvoker) {
+    this.fileInvoker = fileInvoker;
   }
 
   initFileWatcher(watchPath = './sample-tasks/*.md') {
@@ -99,6 +107,14 @@ class FileWatcherService extends EventEmitter {
 
   async broadcastFileChange(eventType, filename, projectId) {
     let ticketData = null;
+    
+    // Invalidate cache for changed files
+    if (this.fileInvoker && (eventType === 'change' || eventType === 'add' || eventType === 'unlink')) {
+      const projectPath = this.getProjectPath(projectId);
+      const filePath = path.join(projectPath, filename);
+      console.log(`🗑️  Invalidating cache for: ${filePath}`);
+      this.fileInvoker.invalidateFile(filePath);
+    }
     
     // For change events, try to parse the ticket data
     if (eventType === 'change' || eventType === 'add') {

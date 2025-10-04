@@ -66,6 +66,9 @@ const ticketService = new TicketService(projectDiscovery);
 const documentService = new DocumentService(projectDiscovery);
 const fileSystemService = new FileSystemService(TICKETS_DIR);
 
+// Connect file watcher to document service for cache invalidation
+fileWatcher.setFileInvoker(documentService.fileInvoker);
+
 // =============================================================================
 // Initialize Controllers
 // =============================================================================
@@ -183,7 +186,7 @@ app.use('/api/documents', createDocumentRouter(documentController, projectContro
 app.use('/api/events', createSSERouter(fileWatcher));
 
 // System routes (status, directories, filesystem, config)
-app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery));
+app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker));
 
 // Dev tools routes (logging)
 app.use('/api', createDevToolsRouter());
