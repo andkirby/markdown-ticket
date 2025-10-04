@@ -44,7 +44,7 @@ export interface ProjectEventPayload {
 
 export interface SSEEventPayload {
   url?: string;
-  error?: any;
+  error?: Error | unknown;
   status?: string;
 }
 

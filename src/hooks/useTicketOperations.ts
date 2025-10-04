@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Ticket, Status } from '../types';
 import { Project } from '../../shared/models/Project';
 import { formatTicketAsMarkdown } from '../services/markdownParser';
@@ -11,22 +11,15 @@ export function useTicketOperations(
   trackUserUpdate: (key: string) => void
 ) {
   const [error, setError] = useState<Error | null>(null);
-  const selectedProjectRef = useRef<Project | null>(selectedProject);
-
-  // Update ref when selectedProject changes
-  useEffect(() => {
-    selectedProjectRef.current = selectedProject;
-  }, [selectedProject]);
 
   // Create a new ticket in the selected project
   const createTicket = useCallback(async (title: string, type: string): Promise<Ticket> => {
-    const currentProject = selectedProjectRef.current;
-    if (!currentProject) {
+    if (!selectedProject) {
       throw new Error('No project selected');
     }
 
     try {
-      const response = await fetch(`/api/projects/${currentProject.id}/crs`, {
+      const response = await fetch(`/api/projects/${selectedProject.id}/crs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -53,17 +46,16 @@ export function useTicketOperations(
       setError(error as Error);
       throw error;
     }
-  }, [setTickets]);
+  }, [selectedProject, setTickets]);
 
   // Update a ticket
   const updateTicket = useCallback(async (ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> => {
-    const currentProject = selectedProjectRef.current;
-    if (!currentProject) {
+    if (!selectedProject) {
       throw new Error('No project selected');
     }
 
     try {
-      const response = await fetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
+      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticketCode}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -85,7 +77,7 @@ export function useTicketOperations(
       setError(error as Error);
       throw error;
     }
-  }, [setTickets]);
+  }, [selectedProject, setTickets]);
 
   // Optimistic update for immediate UI feedback
   const updateTicketOptimistic = useCallback(async (ticketCode: string, updates: Partial<Ticket>, trackingKey?: string): Promise<Ticket> => {
@@ -136,25 +128,23 @@ export function useTicketOperations(
     updateTicket(ticketCode, updates).catch(error => {
       console.error('Optimistic update failed, reverting:', error);
       // Revert optimistic update on error
-      const currentProject = selectedProjectRef.current;
-      if (currentProject) {
-        fetchTicketsForProject(currentProject);
+      if (selectedProject) {
+        fetchTicketsForProject(selectedProject);
       }
     });
 
     // Return immediately with optimistic data
     return optimisticTicket;
-  }, [tickets, trackUserUpdate, updateTicket, setTickets, fetchTicketsForProject]);
+  }, [tickets, trackUserUpdate, updateTicket, setTickets, selectedProject, fetchTicketsForProject]);
 
   // Delete a ticket from the selected project
   const deleteTicket = useCallback(async (ticketCode: string): Promise<void> => {
-    const currentProject = selectedProjectRef.current;
-    if (!currentProject) {
+    if (!selectedProject) {
       throw new Error('No project selected');
     }
 
     try {
-      const response = await fetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
+      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticketCode}`, {
         method: 'DELETE'
       });
 
@@ -170,7 +160,7 @@ export function useTicketOperations(
       setError(error as Error);
       throw error;
     }
-  }, [setTickets]);
+  }, [selectedProject, setTickets]);
 
   const clearError = useCallback(() => {
     setError(null);
