@@ -141,15 +141,22 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   // Handle project selection changes
   useEffect(() => {
     if (selectedProject) {
+      // Clear tickets immediately to prevent showing wrong project's tickets
+      setTickets([]);
+
       // Load tickets immediately for fast UI response
       fetchTicketsForProject(selectedProject).catch(err => {
         console.error('Failed to load tickets:', selectedProject.project.name, err);
       });
-      
+
       // Load config in parallel (non-blocking)
       fetchProjectConfig(selectedProject).catch(err => {
         console.error('Failed to load project config:', selectedProject.project.name, err);
       });
+    } else {
+      // No project selected - clear tickets
+      setTickets([]);
+      setProjectConfig(null);
     }
   }, [selectedProject, fetchProjectConfig, fetchTicketsForProject]);
 
