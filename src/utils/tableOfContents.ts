@@ -1,32 +1,55 @@
+import showdown from 'showdown';
+
 export interface TocItem {
   id: string;
   text: string;
   level: number;
 }
 
-export function extractTableOfContents(content: string): TocItem[] {
-  const headingRegex = /^(#{1,6})\s+(.+)$/gm;
+export function extractTableOfContents(content: string, headerLevelStart: number = 1): TocItem[] {
+  const converter = new showdown.Converter({
+    tables: true,
+    strikethrough: true,
+    tasklists: true,
+    ghCodeBlocks: true,
+    smoothLivePreview: true,
+    simpleLineBreaks: true,
+    headerLevelStart,
+    parseImgDimensions: true,
+    simplifiedAutoLink: true,
+    excludeTrailingPunctuationFromURLs: true,
+    literalMidWordUnderscores: true,
+    ghCompatibleHeaderId: true,
+  });
+
+  const html = converter.makeHtml(content);
+  return extractTableOfContentsFromHtml(html);
+}
+
+export function extractTableOfContentsFromHtml(html: string): TocItem[] {
   const toc: TocItem[] = [];
+  const headingRegex = /<h([1-6])(?:\s+id="([^"]*)")?[^>]*>(.*?)<\/h[1-6]>/gi;
   let match;
 
-  while ((match = headingRegex.exec(content)) !== null) {
-    const level = match[1].length;
-    const rawText = match[2].trim();
+  while ((match = headingRegex.exec(html)) !== null) {
+    const level = parseInt(match[1]);
+    const id = match[2] || '';
+    const htmlContent = match[3];
     
-    // Clean formatting symbols and markdown
-    const text = rawText
-      .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove bold **text**
-      .replace(/\*(.*?)\*/g, '$1')      // Remove italic *text*
-      .replace(/`(.*?)`/g, '$1')        // Remove code `text`
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove links [text](url)
-      .replace(/[_~]/g, '')             // Remove underscores and tildes
+    const text = htmlContent
+      .replace(/<[^>]*>/g, '')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
       .trim();
     
-    const id = text.toLowerCase()
+    const finalId = id || text.toLowerCase()
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-');
     
-    toc.push({ id, text, level });
+    toc.push({ id: finalId, text, level });
   }
 
   return toc;

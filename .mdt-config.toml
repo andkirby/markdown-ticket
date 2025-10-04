@@ -17,10 +17,14 @@ exclude_folders = [
 
 # Documentation Configuration
 document_paths = [
-    "docs",
+    "generated-docs",
     "logger-tree",
-    "PROJECT.md",
-    "README.md",
-    "generated-docs"
+    "docs",
+    "./",
+    "lambda-counter-aws",
+    "mcp-server",
+    "server",
+    "shared",
+    "tests"
 ]
 max_depth = 3             # Maximum directory depth for scanning

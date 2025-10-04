@@ -3,6 +3,7 @@ import { Ticket } from '../types';
 import { Project, ProjectConfig } from '../../shared/models/Project';
 import { useSSEEvents } from './useSSEEvents';
 import { useTicketOperations } from './useTicketOperations';
+import { dataLayer } from '../services/dataLayer';
 
 interface UseProjectManagerOptions {
   autoSelectFirst?: boolean;
@@ -51,12 +52,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     if (!project) return;
     
     try {
-      const response = await fetch(`/api/projects/${project.id}/crs`);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const projectTickets = await response.json();
+      const projectTickets = await dataLayer.fetchTickets(project.id);
       setTickets(projectTickets);
     } catch (error) {
       console.error('Failed to fetch tickets for project:', project.project.name, error);
@@ -65,11 +61,27 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   }, []);
 
   // Set up SSE events if this instance should handle them
-  const updateTicketInState = useCallback((ticketData: Ticket) => {
-    setTickets(prev => prev.map(ticket =>
-      ticket.code === ticketData.code ? { ...ticket, ...ticketData } : ticket
-    ));
-  }, []);
+  const updateTicketInState = useCallback(async (ticketData: Ticket) => {
+    // SSE only sends metadata, fetch complete ticket including content
+    if (selectedProject) {
+      try {
+        console.log(`[ProjectManager] Fetching complete ticket: ${ticketData.code}`);
+        const fullTicket = await dataLayer.fetchTicket(selectedProject.id, ticketData.code);
+        if (fullTicket) {
+          console.log(`[ProjectManager] ✅ Updated ticket in main array: ${ticketData.code}`);
+          setTickets(prev => prev.map(ticket =>
+            ticket.code === ticketData.code ? fullTicket : ticket
+          ));
+        }
+      } catch (error) {
+        console.error('Failed to fetch complete ticket:', error);
+        // Fallback to partial update
+        setTickets(prev => prev.map(ticket =>
+          ticket.code === ticketData.code ? { ...ticket, ...ticketData } : ticket
+        ));
+      }
+    }
+  }, [selectedProject]);
 
   const sseEvents = handleSSEEvents ? useSSEEvents(fetchTicketsForProject, updateTicketInState) : null;
   
