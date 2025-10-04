@@ -1,6 +1,6 @@
 ---
 code: MDT-063
-title: Design Pattern Refactoring - Architecture Decision Record
+title: File System Change Detection - Redesign
 status: Implemented
 dateCreated: 2025-10-04T18:05:48.929Z
 type: Architecture
@@ -9,9 +9,7 @@ phaseEpic: Phase 2 - Architecture Improvements
 assignee: Development Team
 ---
 
-# Design Pattern Refactoring - Architecture Decision Record
-
-# Design Pattern Refactoring - Architecture Decision Record
+# File System Change Detection - Redesign
 
 ## Description
 

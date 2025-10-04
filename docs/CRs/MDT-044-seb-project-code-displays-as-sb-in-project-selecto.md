@@ -1,13 +1,14 @@
 ---
 code: MDT-044
 title: SEB project code displays as SB in project selector
-status: Proposed
+status: Rejected
 dateCreated: 2025-09-12T22:08:15.402Z
 type: Bug Fix
 priority: Low
 description: The SEB project (Sentence Breakdown) appears incorrectly as 'SB' in the project selector instead of showing the full 'SEB' code as defined in .mdt-config.toml
 rationale: Project codes should display accurately to avoid confusion and maintain consistency with configuration
 ---
+
 
 # SEB project code displays as SB in project selector
 

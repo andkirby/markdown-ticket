@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TocItem } from '../../utils/tableOfContents';
 
 interface TableOfContentsProps {
@@ -8,6 +8,10 @@ interface TableOfContentsProps {
 export default function TableOfContents({ items }: TableOfContentsProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set());
+  const navRef = useRef<HTMLDivElement>(null);
+
+  // Calculate minimum level for relative padding
+  const minLevel = items.length > 0 ? Math.min(...items.map(item => item.level)) : 1;
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -35,6 +39,18 @@ export default function TableOfContents({ items }: TableOfContentsProps) {
     return () => observer.disconnect();
   }, [items]);
 
+  // Auto-scroll ToC to keep visible items in view
+  useEffect(() => {
+    if (visibleIds.size > 0 && navRef.current) {
+      visibleIds.forEach(id => {
+        const activeButton = navRef.current?.querySelector(`[data-id="${id}"]`);
+        if (activeButton) {
+          activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+    }
+  }, [visibleIds]);
+
   if (items.length === 0) return null;
 
   const scrollToHeading = (id: string) => {
@@ -55,22 +71,28 @@ export default function TableOfContents({ items }: TableOfContentsProps) {
       </button>
       
       {isExpanded && (
-        <div className="absolute bottom-full right-0 mb-1 w-80 border border-border rounded-lg bg-card/95 backdrop-blur-sm shadow-lg z-50" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+        <div className="absolute bottom-full right-0 mb-1 w-80 border border-border rounded-lg bg-card/70 hover:bg-card/90 backdrop-blur-sm shadow-lg z-50 transition-colors" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
           <div className="px-4 py-3">
             <div className="text-sm font-medium mb-2">Table of Contents</div>
-            <nav className="space-y-1">
+            <nav ref={navRef} className="space-y-1">
               {items.map((item, index) => (
                 <button
                   key={index}
+                  data-id={item.id}
                   onClick={() => scrollToHeading(item.id)}
                   className={`block w-full text-left text-sm transition-colors ${
-                    visibleIds.has(item.id) ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'
+                    visibleIds.has(item.id) ? 'text-primary' : 'text-foreground/80 hover:text-foreground'
                   } ${
-                    item.level === 1 ? 'font-medium' : 
-                    item.level === 2 ? 'pl-4' :
-                    item.level === 3 ? 'pl-8' :
-                    item.level === 4 ? 'pl-12' :
-                    item.level === 5 ? 'pl-16' : 'pl-20'
+                    (() => {
+                      const relativeLevel = item.level - minLevel;
+                      if (relativeLevel === 0) {
+                        return 'font-bold';
+                      }
+                      return relativeLevel === 1 ? '' :
+                             relativeLevel === 2 ? 'pl-4' :
+                             relativeLevel === 3 ? 'pl-8' :
+                             relativeLevel === 4 ? 'pl-12' : 'pl-16';
+                    })()
                   }`}
                 >
                   {item.text}

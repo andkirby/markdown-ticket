@@ -31,7 +31,6 @@ class DataLayer {
    */
   async fetchProjects(): Promise<Project[]> {
     try {
-      console.log('[DataLayer] Fetching projects...');
 
       const response = await fetch(`${this.baseUrl}/projects`);
 
@@ -40,7 +39,6 @@ class DataLayer {
       }
 
       const projects = await response.json();
-      console.log(`[DataLayer] ✅ Fetched ${projects.length} projects`);
 
       return projects;
     } catch (error) {
@@ -54,20 +52,17 @@ class DataLayer {
    */
   async fetchProjectConfig(projectId: string): Promise<ProjectConfig | null> {
     try {
-      console.log(`[DataLayer] Fetching config for project: ${projectId}`);
 
       const response = await fetch(`${this.baseUrl}/projects/${projectId}/config`);
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.warn(`[DataLayer] No config found for project: ${projectId}`);
           return null;
         }
         throw new Error(`Failed to fetch project config: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log(`[DataLayer] ✅ Fetched config for project: ${projectId}`);
 
       return data.config;
     } catch (error) {
@@ -85,7 +80,6 @@ class DataLayer {
    */
   async fetchTickets(projectId: string): Promise<Ticket[]> {
     try {
-      console.log(`[DataLayer] Fetching tickets for project: ${projectId}`);
 
       const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`);
 
@@ -96,7 +90,6 @@ class DataLayer {
       const data = await response.json();
       const tickets = this.normalizeTickets(data);
 
-      console.log(`[DataLayer] ✅ Fetched ${tickets.length} tickets for project: ${projectId}`);
 
       return tickets;
     } catch (error) {
@@ -110,13 +103,12 @@ class DataLayer {
    */
   async fetchTicket(projectId: string, ticketCode: string): Promise<Ticket | null> {
     try {
-      console.log(`[DataLayer] Fetching ticket: ${ticketCode} from project: ${projectId}`);
+      console.log(`[DataLayer] 🔍 Fetching ticket: ${ticketCode} from project: ${projectId}`);
 
       const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`);
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.warn(`[DataLayer] Ticket not found: ${ticketCode}`);
           return null;
         }
         throw new Error(`Failed to fetch ticket: ${response.statusText}`);
@@ -125,7 +117,7 @@ class DataLayer {
       const data = await response.json();
       const ticket = this.normalizeTicket(data);
 
-      console.log(`[DataLayer] ✅ Fetched ticket: ${ticketCode}`);
+      console.log(`[DataLayer] ✅ Fetched ticket: ${ticketCode} (content length: ${ticket.content?.length || 0})`);
 
       return ticket;
     } catch (error) {
@@ -139,7 +131,6 @@ class DataLayer {
    */
   async createTicket(projectId: string, data: CreateTicketData): Promise<Ticket> {
     try {
-      console.log(`[DataLayer] Creating ticket in project: ${projectId}`, data);
 
       const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`, {
         method: 'POST',
@@ -157,7 +148,6 @@ class DataLayer {
       const createdTicket = await response.json();
       const ticket = this.normalizeTicket(createdTicket);
 
-      console.log(`[DataLayer] ✅ Created ticket: ${ticket.code}`);
 
       return ticket;
     } catch (error) {
@@ -175,7 +165,6 @@ class DataLayer {
     updates: Partial<Ticket>
   ): Promise<void> {
     try {
-      console.log(`[DataLayer] Updating ticket: ${ticketCode}`, updates);
 
       // Prepare update data (convert dates to ISO strings)
       const updateData: Record<string, any> = {};
@@ -200,7 +189,6 @@ class DataLayer {
         throw new Error(errorData.error || `Failed to update ticket: ${response.statusText}`);
       }
 
-      console.log(`[DataLayer] ✅ Updated ticket: ${ticketCode}`);
     } catch (error) {
       console.error(`[DataLayer] ❌ Error updating ticket:`, error);
       throw error;
@@ -212,7 +200,6 @@ class DataLayer {
    */
   async deleteTicket(projectId: string, ticketCode: string): Promise<void> {
     try {
-      console.log(`[DataLayer] Deleting ticket: ${ticketCode}`);
 
       const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`, {
         method: 'DELETE'
@@ -223,7 +210,6 @@ class DataLayer {
         throw new Error(errorData.error || `Failed to delete ticket: ${response.statusText}`);
       }
 
-      console.log(`[DataLayer] ✅ Deleted ticket: ${ticketCode}`);
     } catch (error) {
       console.error(`[DataLayer] ❌ Error deleting ticket:`, error);
       throw error;
