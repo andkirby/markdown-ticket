@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Ticket } from '../types/ticket';
 import { Modal, ModalHeader, ModalBody } from './UI/Modal';
 import TicketAttributes from './TicketAttributes';
 import { TicketCode } from './TicketCode';
 import MarkdownRenderer from './shared/MarkdownRenderer';
+import { extractTableOfContents } from '../utils/tableOfContents';
+import TableOfContents from './shared/TableOfContents';
 
 interface TicketViewerProps {
   ticket: Ticket | null;
@@ -12,10 +14,16 @@ interface TicketViewerProps {
 }
 
 const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) => {
+  // Extract ToC items from ticket content
+  const tocItems = useMemo(() => {
+    return ticket?.content ? extractTableOfContents(ticket.content) : [];
+  }, [ticket?.content]);
+
   if (!ticket) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
+      <TableOfContents items={tocItems} />
       <ModalHeader
         title={
           <span>
