@@ -8,9 +8,10 @@ import os from 'os';
  * @param {FileWatcherService} fileWatcher - File watcher service instance
  * @param {ProjectController} projectController - Project controller instance
  * @param {Object} projectDiscovery - Project discovery service
+ * @param {FileOperationInvoker} fileInvoker - File operation invoker for cache management
  * @returns {Router} Express router
  */
-export function createSystemRouter(fileWatcher, projectController, projectDiscovery) {
+export function createSystemRouter(fileWatcher, projectController, projectDiscovery, fileInvoker) {
   const router = Router();
 
   // Get server status
@@ -29,6 +30,22 @@ export function createSystemRouter(fileWatcher, projectController, projectDiscov
 
   // Browse file system
   router.get('/filesystem', (req, res) => projectController.getFileSystemTree(req, res));
+
+  // Clear file operation cache
+  router.post('/cache/clear', async (req, res) => {
+    try {
+      console.log('🗑️  Clearing file operation cache');
+      fileInvoker.clearCache();
+      res.json({ 
+        success: true, 
+        message: 'Cache cleared successfully',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+      res.status(500).json({ error: 'Failed to clear cache' });
+    }
+  });
 
   // Get global configuration
   router.get('/config/global', async (req, res) => {
@@ -86,6 +103,15 @@ export function createSystemRouter(fileWatcher, projectController, projectDiscov
           };
         }
 
+        // Parse cache section
+        const cacheMatch = configContent.match(/\[cache\]([\s\S]*?)(?=\[|$)/);
+        if (cacheMatch) {
+          const section = cacheMatch[1];
+          config.cache = {
+            ttl: parseInt(section.match(/ttl\s*=\s*(\d+)/)?.[1] || '3600')
+          };
+        }
+
         res.json(config);
       } catch (error) {
         // Config file doesn't exist, return default config
@@ -103,6 +129,9 @@ export function createSystemRouter(fileWatcher, projectController, projectDiscov
             enabled: false,
             endpoint: '',
             api_key: ''
+          },
+          cache: {
+            ttl: 3600
           }
         });
       }

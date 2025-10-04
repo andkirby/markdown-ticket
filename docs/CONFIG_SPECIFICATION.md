@@ -29,6 +29,10 @@ searchPaths = [
 port = 3001 
 host = "localhost"
 cors = { origin = ["http://localhost:5173"], credentials = true }
+
+# Cache Configuration
+[cache]
+ttl = 3600  # Cache TTL in seconds (default: 1 hour)
 ```
 
 ### Discovery Configuration
@@ -48,6 +52,24 @@ searchPaths = [
     "/opt/work"
 ]
 ```
+
+### Cache Configuration
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `ttl` | integer | Optional | `3600` | Cache TTL in seconds (file operations cache expiration) |
+
+**Example:**
+```toml
+[cache]
+ttl = 7200  # 2 hours cache TTL
+```
+
+**Notes:**
+- Cache TTL applies to file metadata and content caching
+- Set to `0` to disable TTL (cache until manual clear or file change)
+- Minimum recommended value: `300` (5 minutes)
+- File watcher invalidation works regardless of TTL setting
 
 When `autoDiscover` is enabled, the system scans `searchPaths` for directories containing `.mdt-config.toml` files and automatically registers them as available projects.
 
@@ -248,6 +270,10 @@ searchPaths = [
 port = 3001
 host = "localhost"
 cors = { origin = ["http://localhost:5173"], credentials = true }
+
+# Cache Configuration
+[cache]
+ttl = 3600  # 1 hour cache TTL
 ```
 
 ### Complete User Preferences (`~/.config/markdown-ticket/user.toml`)
