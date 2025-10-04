@@ -206,9 +206,14 @@ export async function buildFileSystemTree(dirPath, maxDepth = 3) {
       // Add the file (only if we didn't break out of the loop above)
       if (!shouldIgnorePath(path.dirname(relativePath))) {
         const fileName = parts[parts.length - 1];
+        const h1Title = await extractH1Title(filePath);
+        const fileStats = await fs.stat(filePath);
         current[fileName] = {
           type: 'file',
-          path: relativePath // Use relative path
+          path: relativePath, // Use relative path
+          title: h1Title,
+          dateCreated: fileStats.birthtime || fileStats.ctime,
+          lastModified: fileStats.mtime
         };
       }
     }
@@ -218,6 +223,16 @@ export async function buildFileSystemTree(dirPath, maxDepth = 3) {
 
     // If there are root files, add a root folder at the beginning
     if (rootFiles.length > 0) {
+      // Add metadata to root files
+      for (const file of rootFiles) {
+        const fullPath = path.join(dirPath, file.path);
+        const h1Title = await extractH1Title(fullPath);
+        const fileStats = await fs.stat(fullPath);
+        file.title = h1Title;
+        file.dateCreated = fileStats.birthtime || fileStats.ctime;
+        file.lastModified = fileStats.mtime;
+      }
+      
       result.unshift({
         name: './ (root files)',
         path: './',
@@ -230,6 +245,21 @@ export async function buildFileSystemTree(dirPath, maxDepth = 3) {
   } catch (error) {
     console.error(`Error building file system tree for ${dirPath}:`, error);
     return [];
+  }
+}
+
+/**
+ * Extract H1 title from markdown file
+ * @param {string} filePath - File path
+ * @returns {Promise<string|null>} H1 title or null
+ */
+async function extractH1Title(filePath) {
+  try {
+    const content = await fs.readFile(filePath, 'utf8');
+    const h1Match = content.match(/^#\s+(.+)$/m);
+    return h1Match ? h1Match[1].trim() : null;
+  } catch (error) {
+    return null;
   }
 }
 

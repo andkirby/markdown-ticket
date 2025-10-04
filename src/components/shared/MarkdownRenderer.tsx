@@ -11,16 +11,6 @@ interface MarkdownRendererProps {
   onRenderComplete?: () => void;
 }
 
-/**
- * Shared markdown rendering component that processes markdown content through
- * the Showdown → Mermaid → Prism pipeline.
- *
- * Handles:
- * - Markdown to HTML conversion with configurable header levels
- * - Mermaid diagram rendering
- * - Syntax highlighting with Prism
- * - Theme-aware Prism styles
- */
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   content,
   className = 'prose prose-sm max-w-none dark:prose-invert',

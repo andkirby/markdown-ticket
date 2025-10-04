@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import MarkdownRenderer from '../shared/MarkdownRenderer';
+import { extractTableOfContents } from '../../utils/tableOfContents';
+import TableOfContents from '../shared/TableOfContents';
+import { ScrollArea } from '../UI/scroll-area';
 
 interface DocumentFile {
   name: string;
@@ -21,6 +24,11 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Extract ToC items from content
+  const tocItems = useMemo(() => {
+    return extractTableOfContents(content);
+  }, [content]);
 
   useEffect(() => {
     loadFile();
@@ -79,23 +87,26 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
   };
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="p-6">
-        {fileInfo && (
-          <div className="mb-4 pb-3 border-b border-border">
-            <div className="text-xs text-muted-foreground space-x-4">
-              <span>
-                <strong>Created:</strong> {formatDate(fileInfo.dateCreated)}
-              </span>
-              <span className="text-muted-foreground/60">|</span>
-              <span>
-                <strong>Updated:</strong> {formatDate(fileInfo.lastModified)}
-              </span>
+    <div className="h-full flex flex-col relative">
+      <TableOfContents items={tocItems} />
+      <ScrollArea className="h-[calc(100vh-100px)]">
+        <div className="p-6">
+          {fileInfo && (
+            <div className="sticky top-0 z-10 mb-4 pb-3 border-b border-border bg-background/95 backdrop-blur-sm">
+              <div className="text-xs text-muted-foreground space-x-4">
+                <span>
+                  <strong>Created:</strong> {formatDate(fileInfo.dateCreated)}
+                </span>
+                <span className="text-muted-foreground/60">|</span>
+                <span>
+                  <strong>Updated:</strong> {formatDate(fileInfo.lastModified)}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
-        {content && <MarkdownRenderer content={content} />}
-      </div>
+          )}
+          {content && <MarkdownRenderer content={content} />}
+        </div>
+      </ScrollArea>
     </div>
   );
 }
