@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Ticket, Status } from '../types';
 import { Project } from '../../shared/models/Project';
 import { formatTicketAsMarkdown } from '../services/markdownParser';
@@ -12,14 +12,22 @@ export function useTicketOperations(
 ) {
   const [error, setError] = useState<Error | null>(null);
 
+  // Use ref to always get current selectedProject (prevents stale closure)
+  const selectedProjectRef = useRef<Project | null>(selectedProject);
+
+  useEffect(() => {
+    selectedProjectRef.current = selectedProject;
+  }, [selectedProject]);
+
   // Create a new ticket in the selected project
   const createTicket = useCallback(async (title: string, type: string): Promise<Ticket> => {
-    if (!selectedProject) {
+    const currentProject = selectedProjectRef.current;
+    if (!currentProject) {
       throw new Error('No project selected');
     }
 
     try {
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs`, {
+      const response = await fetch(`/api/projects/${currentProject.id}/crs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -46,16 +54,17 @@ export function useTicketOperations(
       setError(error as Error);
       throw error;
     }
-  }, [selectedProject, setTickets]);
+  }, [setTickets]); // Removed selectedProject from deps - using ref instead
 
   // Update a ticket
   const updateTicket = useCallback(async (ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> => {
-    if (!selectedProject) {
+    const currentProject = selectedProjectRef.current;
+    if (!currentProject) {
       throw new Error('No project selected');
     }
 
     try {
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticketCode}`, {
+      const response = await fetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -77,7 +86,7 @@ export function useTicketOperations(
       setError(error as Error);
       throw error;
     }
-  }, [selectedProject, setTickets]);
+  }, [setTickets]); // Removed selectedProject from deps - using ref instead
 
   // Optimistic update for immediate UI feedback
   const updateTicketOptimistic = useCallback(async (ticketCode: string, updates: Partial<Ticket>, trackingKey?: string): Promise<Ticket> => {
@@ -128,23 +137,25 @@ export function useTicketOperations(
     updateTicket(ticketCode, updates).catch(error => {
       console.error('Optimistic update failed, reverting:', error);
       // Revert optimistic update on error
-      if (selectedProject) {
-        fetchTicketsForProject(selectedProject);
+      const currentProject = selectedProjectRef.current;
+      if (currentProject) {
+        fetchTicketsForProject(currentProject);
       }
     });
 
     // Return immediately with optimistic data
     return optimisticTicket;
-  }, [tickets, trackUserUpdate, updateTicket, setTickets, selectedProject, fetchTicketsForProject]);
+  }, [tickets, trackUserUpdate, updateTicket, setTickets, fetchTicketsForProject]); // Removed selectedProject - using ref
 
   // Delete a ticket from the selected project
   const deleteTicket = useCallback(async (ticketCode: string): Promise<void> => {
-    if (!selectedProject) {
+    const currentProject = selectedProjectRef.current;
+    if (!currentProject) {
       throw new Error('No project selected');
     }
 
     try {
-      const response = await fetch(`/api/projects/${selectedProject.id}/crs/${ticketCode}`, {
+      const response = await fetch(`/api/projects/${currentProject.id}/crs/${ticketCode}`, {
         method: 'DELETE'
       });
 
@@ -160,7 +171,7 @@ export function useTicketOperations(
       setError(error as Error);
       throw error;
     }
-  }, [selectedProject, setTickets]);
+  }, [setTickets]); // Removed selectedProject from deps - using ref instead
 
   const clearError = useCallback(() => {
     setError(null);
