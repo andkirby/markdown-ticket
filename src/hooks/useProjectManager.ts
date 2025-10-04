@@ -65,8 +65,8 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   }, []);
 
   // Set up SSE events if this instance should handle them
-  const updateTicketInState = useCallback((ticketData: any) => {
-    setTickets(prev => prev.map(ticket => 
+  const updateTicketInState = useCallback((ticketData: Ticket) => {
+    setTickets(prev => prev.map(ticket =>
       ticket.code === ticketData.code ? { ...ticket, ...ticketData } : ticket
     ));
   }, []);
