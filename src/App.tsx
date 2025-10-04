@@ -147,11 +147,18 @@ function ProjectRouteHandler() {
   const handleViewModeChange = (mode: 'board' | 'list' | 'documents') => {
     const basePath = `/prj/${projectCode}`;
     const newPath = mode === 'board' ? basePath : `${basePath}/${mode}`;
+    // Store current view mode preference
+    localStorage.setItem('lastViewMode', mode);
     navigate(newPath);
   };
 
   const handleProjectSelect = (project: any) => {
-    navigate(`/prj/${getProjectCode(project)}`);
+    // Preserve current view mode when switching projects
+    const lastViewMode = localStorage.getItem('lastViewMode') || 'board';
+    const projectCode = getProjectCode(project);
+    const basePath = `/prj/${projectCode}`;
+    const newPath = lastViewMode === 'board' ? basePath : `${basePath}/${lastViewMode}`;
+    navigate(newPath);
   };
 
   const handleTicketClick = (ticket: Ticket) => {
