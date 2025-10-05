@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import MarkdownRenderer from '../shared/MarkdownRenderer';
+import { useParams } from 'react-router-dom';
+import MarkdownContent from '../MarkdownContent';
 import { extractTableOfContents } from '../../utils/tableOfContents';
 import TableOfContents from '../shared/TableOfContents';
 import { ScrollArea } from '../UI/scroll-area';
@@ -21,6 +22,7 @@ interface MarkdownViewerProps {
 }
 
 export default function MarkdownViewer({ projectId, filePath, fileInfo }: MarkdownViewerProps) {
+  const { projectCode } = useParams<{ projectCode: string }>();
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +106,12 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
               </div>
             </div>
           )}
-          {content && <MarkdownRenderer content={content} />}
+          {content && (
+            <MarkdownContent 
+              markdown={content} 
+              currentProject={projectCode || ''}
+            />
+          )}
         </div>
       </ScrollArea>
     </div>
