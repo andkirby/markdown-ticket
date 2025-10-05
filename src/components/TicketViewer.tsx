@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { Ticket } from '../types/ticket';
 import { Modal, ModalHeader, ModalBody } from './UI/Modal';
 import TicketAttributes from './TicketAttributes';
 import { TicketCode } from './TicketCode';
-import MarkdownRenderer from './shared/MarkdownRenderer';
+import MarkdownContent from './MarkdownContent';
 import { extractTableOfContents } from '../utils/tableOfContents';
 import TableOfContents from './shared/TableOfContents';
 import { useEventBus } from '../services/eventBus';
@@ -16,6 +17,7 @@ interface TicketViewerProps {
 }
 
 const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) => {
+  const { projectCode } = useParams<{ projectCode: string }>();
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(ticket);
 
   // Update internal state when prop changes
@@ -69,9 +71,10 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
           </div>
 
           {/* Rendered Markdown Content */}
-          {isOpen && currentTicket.content && (
-            <MarkdownRenderer
-              content={currentTicket.content}
+          {isOpen && currentTicket.content && projectCode && (
+            <MarkdownContent
+              markdown={currentTicket.content}
+              currentProject={projectCode}
               headerLevelStart={3}
             />
           )}

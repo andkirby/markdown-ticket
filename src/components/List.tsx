@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import showdown from 'showdown';
 import { Button } from './UI/index';
 import { useEventBus } from '../services/eventBus';
 import { SortControls } from './SortControls';
@@ -8,6 +7,7 @@ import { AddProjectModal } from './AddProjectModal';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 import { getProjectCode } from './ProjectSelector';
+import MarkdownContent from './MarkdownContent';
 import { Ticket } from '../../shared/models/Ticket';
 import { Project } from '../../shared/models/Project';
 
@@ -65,23 +65,6 @@ const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => 
     setSortPreferencesState(newPreferences);
     setSortPreferences(newPreferences);
   };
-
-  // Markdown converter for ticket content
-  const converter = useMemo(() => {
-    return new showdown.Converter({
-      tables: true,
-      tasklists: true,
-      ghCodeBlocks: true,
-      simpleLineBreaks: true,
-      headerLevelStart: 3, // Start headers from h3 to avoid conflicts
-    });
-  }, []);
-
-  // Convert selected CR content to HTML
-  const selectedCRContentHtml = useMemo(() => {
-    if (!selectedCR?.content) return '';
-    return converter.makeHtml(selectedCR.content);
-  }, [selectedCR?.content, converter]);
 
   // Fetch projects on component mount
   const fetchProjects = useCallback(async () => {
@@ -470,7 +453,14 @@ const List: React.FC<ListProps> = ({ selectedProject: propSelectedProject }) => 
 
                   {/* CR Content */}
                   <div className="prose prose-sm max-w-none prose-headings:text-card-foreground dark:prose-headings:text-white prose-p:text-card-foreground/80 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-card-foreground dark:prose-strong:text-gray-100 prose-code:bg-gray-100 dark:prose-code:bg-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-gray-900 dark:prose-code:text-gray-100 prose-pre:bg-gray-100 dark:prose-pre:bg-slate-800 prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-slate-700 prose-blockquote:text-card-foreground/70 dark:prose-blockquote:text-gray-300 prose-li:text-card-foreground/80 dark:prose-li:text-gray-300 prose-ol:text-card-foreground/80 dark:prose-ol:text-gray-300 prose-ul:text-card-foreground/80 dark:prose-ul:text-gray-300 bg-card border border-border rounded-lg p-4">
-                    <div className="text-sm" dangerouslySetInnerHTML={{ __html: selectedCRContentHtml }} />
+                    {selectedCR?.content && selectedProject && (
+                      <MarkdownContent
+                        markdown={selectedCR.content}
+                        currentProject={getProjectCode(selectedProject)}
+                        className="text-sm"
+                        headerLevelStart={3}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
