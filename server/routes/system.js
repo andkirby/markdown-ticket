@@ -28,6 +28,34 @@ export function createSystemRouter(fileWatcher, projectController, projectDiscov
   // Get system directories for project path selection
   router.get('/directories', (req, res) => projectController.getSystemDirectories(req, res));
 
+  // Get link configuration
+  router.get('/config/links', async (req, res) => {
+    try {
+      const configPath = path.join(os.homedir(), '.config', 'markdown-ticket', 'config.toml');
+      const configData = await fs.readFile(configPath, 'utf8');
+      
+      // Simple TOML parsing for [links] section
+      const linkSection = configData.match(/\[links\]([\s\S]*?)(?=\[|$)/);
+      if (linkSection) {
+        const linkConfig = {};
+        const lines = linkSection[1].split('\n');
+        
+        for (const line of lines) {
+          const match = line.trim().match(/^(\w+)\s*=\s*(true|false)$/);
+          if (match) {
+            linkConfig[match[1]] = match[2] === 'true';
+          }
+        }
+        
+        res.json(linkConfig);
+      } else {
+        res.status(404).json({ error: 'Link configuration not found' });
+      }
+    } catch (error) {
+      res.status(404).json({ error: 'Configuration file not found' });
+    }
+  });
+
   // Browse file system
   router.get('/filesystem', (req, res) => projectController.getFileSystemTree(req, res));
 

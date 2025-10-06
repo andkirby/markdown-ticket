@@ -7,7 +7,7 @@ type: Bug Fix
 priority: Medium
 ---
 
-# Title Updates Don't Sync with Markdown H1 Header
+# Title Updates Don't Sync with Markdown H1 Header 1
 
 ## Description
 

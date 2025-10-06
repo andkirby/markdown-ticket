@@ -15,6 +15,8 @@ assignee: Development Team
 
 The file tree building functionality suffered from code duplication, inconsistent filtering, and mixed responsibilities across multiple services. The original blacklist filtering issue revealed deeper architectural problems that needed systematic resolution.
 
+**Related Documentation**: See `server/docs/DESIGN_ANALYSIS.md` for the original design proposal and analysis that led to this implementation.
+
 ## Rationale
 
 Implemented a comprehensive refactoring using established design patterns to create a maintainable, extensible architecture for file operations.
