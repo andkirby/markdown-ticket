@@ -54,7 +54,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <TableOfContents items={tocItems} />
+      <TableOfContents items={tocItems} view="ticket" />
       <ModalHeader
         title={
           <span>

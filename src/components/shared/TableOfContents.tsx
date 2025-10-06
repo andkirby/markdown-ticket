@@ -1,14 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TocItem } from '../../utils/tableOfContents';
+import { TocView, getTocState, setTocState } from '../../config/tocConfig';
 
 interface TableOfContentsProps {
   items: TocItem[];
+  view: TocView;
 }
 
-export default function TableOfContents({ items }: TableOfContentsProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+export default function TableOfContents({ items, view }: TableOfContentsProps) {
+  const [isExpanded, setIsExpanded] = useState(() => getTocState(view).isExpanded);
   const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set());
   const navRef = useRef<HTMLDivElement>(null);
+
+  // Persist ToC state changes
+  useEffect(() => {
+    setTocState(view, { isExpanded });
+  }, [isExpanded, view]);
 
   // Calculate minimum level for relative padding
   const minLevel = items.length > 0 ? Math.min(...items.map(item => item.level)) : 1;
