@@ -364,7 +364,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: ['.trycloudflare.com'],
+    allowedHosts: [
+      'hungry-days-check.loca.lt',
+      '.loca.lt',
+      '.trycloudflare.com', 
+      'jamir-geochronologic-jocelynn.ngrok-free.app'],
     proxy: {
       '/api': {
         target: 'http://localhost:3001',

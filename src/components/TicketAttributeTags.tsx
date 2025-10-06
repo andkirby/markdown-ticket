@@ -1,6 +1,9 @@
 import React from 'react';
+import { useParams } from 'react-router-dom';
 import { Ticket } from '../types';
 import { Badge } from './UI/badge';
+import { classifyLink } from '../utils/linkProcessor';
+import SmartLink from './SmartLink';
 
 interface TicketAttributeTagsProps {
   ticket: Ticket;
@@ -8,6 +11,28 @@ interface TicketAttributeTagsProps {
 }
 
 const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, className = '' }) => {
+  const { projectCode } = useParams<{ projectCode: string }>();
+  
+  // Helper function to render ticket references as links
+  const renderTicketLinks = (tickets: string[]) => {
+    return tickets.map((ticketRef, index) => {
+      const parsedLink = classifyLink(ticketRef, projectCode || '');
+      return (
+        <React.Fragment key={ticketRef}>
+          {index > 0 && ', '}
+          <SmartLink 
+            link={parsedLink} 
+            currentProject={projectCode || ''}
+            className="hover:underline"
+            showIcon={false}
+          >
+            {ticketRef}
+          </SmartLink>
+        </React.Fragment>
+      );
+    });
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High':
@@ -73,17 +98,17 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, class
       )}
       {ticket.relatedTickets && ticket.relatedTickets.length > 0 && (
         <Badge variant="outline" className="bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-700" title={`Related: ${ticket.relatedTickets.join(', ')}`}>
-          🔗 {ticket.relatedTickets.join(', ')}
+          🔗 {renderTicketLinks(ticket.relatedTickets)}
         </Badge>
       )}
       {ticket.dependsOn && ticket.dependsOn.length > 0 && (
         <Badge variant="outline" className="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-700" title={`Depends on: ${ticket.dependsOn.join(', ')}`}>
-          ⬅️ {ticket.dependsOn.join(', ')}
+          ⬅️ {renderTicketLinks(ticket.dependsOn)}
         </Badge>
       )}
       {ticket.blocks && ticket.blocks.length > 0 && (
         <Badge variant="outline" className="bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-700" title={`Blocks: ${ticket.blocks.join(', ')}`}>
-          ➡️ {ticket.blocks.join(', ')}
+          ➡️ {renderTicketLinks(ticket.blocks)}
         </Badge>
       )}
     </div>
