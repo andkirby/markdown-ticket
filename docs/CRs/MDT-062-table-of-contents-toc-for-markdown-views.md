@@ -1,7 +1,7 @@
 ---
 code: MDT-062
 title: Table of Contents (ToC) for Markdown Views
-status: Proposed
+status: Implemented
 dateCreated: 2025-10-04T16:20:20.191Z
 type: Feature Enhancement
 priority: Medium
@@ -104,6 +104,16 @@ Long markdown documents and tickets can be difficult to navigate without a clear
 - [ ] Formatting symbols are cleaned from ToC text
 - [ ] ToC is scrollable when content exceeds 65% viewport height
 
+#### Browser State Persistence
+- **ToC Toggle State**: Remember the ToC button's show/hide state in browser localStorage
+- **Per-View Persistence**: Maintain separate ToC state for different views (document view, ticket view)  
+- **Session Restoration**: Restore ToC visibility state when user returns to the application
+
+**✅ IMPLEMENTED**: Browser State Persistence
+- ToC toggle state is now persisted in localStorage with keys `markdown-ticket-toc-document` and `markdown-ticket-toc-ticket`
+- Separate state maintained for document view and ticket view
+- State restoration works when user returns to the application
+- Implementation follows project patterns in `/src/config/tocConfig.ts`
 ### Visual Requirements
 - [ ] ToC button positioned above Event History button
 - [ ] Dropdown expands upward with proper spacing
