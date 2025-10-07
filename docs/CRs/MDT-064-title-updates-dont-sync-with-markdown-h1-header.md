@@ -1,68 +1,143 @@
 ---
 code: MDT-064
-title: Title Updates Don't Sync with Markdown H1 Header
+title: Standardize Ticket Title Management - H1 as Single Source of Truth
 status: Proposed
 dateCreated: 2025-10-04T21:01:56.683Z
-type: Bug Fix
-priority: Medium
+type: Feature Enhancement
+priority: High
 ---
 
-# Title Updates Don't Sync with Markdown H1 Header 1
-
+# Standardize Ticket Title Management - H1 as Single Source of Truth
 ## Description
 
-When updating a ticket's title via the API (e.g., using `update_cr_attrs`), the frontmatter `title` field is updated but the markdown H1 header (`#`) in the content remains unchanged. This creates inconsistency between the metadata and the document content.
+Currently the system has inconsistent title management with duplication between YAML frontmatter `title` attribute and markdown H1 headers. LLMs creating tickets via MCP often duplicate titles, creating data inconsistency. This CR establishes H1 as the single source of truth while maintaining backward compatibility.
+
+**Current Problems:**
+- YAML `title` and H1 header can become out of sync
+- LLMs duplicate titles when creating via MCP (e.g., DEB-031)
+- Unclear which source is authoritative
+- Violates Single Responsibility Principle
 
 ## Rationale
 
-Tickets should maintain consistency between:
-- Frontmatter `title` field (used in UI displays)
-- Markdown H1 header (used in document content)
+The current dual-title system creates:
+- Data duplication and inconsistency
+- LLM confusion during ticket creation
+- Maintenance overhead
+- Unclear data hierarchy
 
-Currently these can become out of sync, leading to confusion about the actual ticket title.
+Establishing H1 as authoritative source provides:
+- Single source of truth for titles
+- Clear document structure for ToC and section tools
+- Consistent LLM interaction patterns
+- Preserved backward compatibility
 
 ## Solution Analysis
 
-**Option 1: Auto-sync H1 when title changes**
-- Pros: Automatic consistency, no manual work
-- Cons: May overwrite intentional H1 differences
+### Current State
+- YAML frontmatter contains `title` attribute
+- Markdown content may have H1 header
+- LLMs duplicate titles when creating via MCP
+- UI displays YAML title in cards
 
-**Option 2: Validation warning**
-- Pros: User control, awareness of inconsistency
-- Cons: Manual fix required
-
-**Option 3: Bidirectional sync**
-- Pros: Changes to either update both
-- Cons: More complex, potential conflicts
+### Target State
+- H1 header is authoritative title source
+- System extracts H1 → populates `title` attribute (compatibility)
+- UI shows extracted title, hides H1 in content
+- ToC includes H1 linking to document top
+- MCP generates H1 from title parameter
 
 ## Implementation
 
-**Recommended: Option 1 with safeguards**
+### Phase 1: Server-Side H1 Processing
 
-1. When `title` is updated via API:
-   - Parse markdown content
-   - Find first H1 header (`# ...`)
-   - Replace with new title
-   - Update file content
+**File Processing Logic:**
+```javascript
+// Extract title from H1, fallback to filename
+const extractTitle = (content, filename) => {
+  const h1Match = content.match(/^# (.+)$/m);
+  if (h1Match) return h1Match[1].trim();
+  
+  // Fallback: extract from filename
+  const titlePart = filename.replace(/^[A-Z]+-\d+-/, '').replace(/\.md$/, '');
+  return titlePart.replace(/-/g, ' ');
+};
 
-2. Add configuration option to disable auto-sync if needed
+// Strip additional H1s
+const normalizeH1s = (content) => {
+  const lines = content.split('\n');
+  let foundFirst = false;
+  return lines.filter(line => {
+    if (line.startsWith('# ')) {
+      if (foundFirst) return false; // Remove additional H1s
+      foundFirst = true;
+    }
+    return true;
+  }).join('\n');
+};
+```
 
-3. Log when sync occurs for transparency
+**Caching Implementation:**
+- Memory cache with key: `${project}:${filepath}`
+- Cache final ticket data (with extracted titles)
+- Invalidation: API request + TTL + file watcher
+- TTL from existing configuration (1-hour)
+
+**Error Handling:**
+- `console.error` when no H1 found
+- Use filename fallback for title extraction
+- Validate H1 format: strict `^# ` pattern
+
+### Phase 2: MCP Integration
+
+**Update create_cr:**
+```javascript
+// Auto-generate H1 from title parameter
+if (data.title && data.content) {
+  data.content = `# ${data.title}\n\n${data.content}`;
+}
+```
+
+### Phase 3: Frontend Updates
+
+**Content Rendering:**
+- Hide H1 in ticket content view
+- Show extracted title at top (existing behavior)
+- Ensure cards use `ticket.title` attribute
+
+**ToC Integration:**
+- Include H1 in table of contents
+- Link H1 to document top (`#`)
+- Maintain existing section navigation
 
 ## Acceptance Criteria
 
-- [ ] Updating ticket title via API also updates H1 in markdown
-- [ ] Original H1 formatting is preserved (spacing, etc.)
-- [ ] Only first H1 is updated, subsequent H1s remain unchanged
-- [ ] Configuration option to disable auto-sync
-- [ ] Logging when title-H1 sync occurs
-- [ ] No sync if H1 doesn't exist (don't create one)
-- [ ] Works for all title update methods (API, UI, MCP)
+### Server-Side Processing
+- [ ] Extract H1 text → populate `title` attribute
+- [ ] Strip additional H1 headers (remove entirely)
+- [ ] Fallback to filename when no H1 exists
+- [ ] Log console.error for missing H1
+- [ ] Implement memory caching with proper invalidation
 
-## Test Cases
+### MCP Integration
+- [ ] Accept `title` parameter in create_cr
+- [ ] Auto-generate H1 in content from title
+- [ ] Maintain existing MCP tool functionality
 
-1. **Basic sync**: Update title → H1 changes
-2. **No H1**: Update title when no H1 exists → no H1 created
-3. **Multiple H1s**: Only first H1 updated
-4. **Disabled sync**: Configuration prevents auto-sync
-5. **Complex H1**: H1 with formatting preserved
+### Frontend Behavior
+- [ ] Hide H1 in content display
+- [ ] Show extracted title at top of ticket view
+- [ ] Include H1 in ToC linking to document start
+- [ ] Preserve existing card title display
+
+### Backward Compatibility
+- [ ] Existing YAML titles overwritten by H1 extraction
+- [ ] No migration required for existing tickets
+- [ ] Section tools continue working with H1 structure
+- [ ] Cache invalidation works with file watcher
+
+### Validation Requirements
+- [ ] Strict H1 detection: `^# ` pattern only
+- [ ] Filename extraction: `DEB-031-testing-ticket.md` → `"testing-ticket"`
+- [ ] Cache key format: `${project}:${filepath}`
+- [ ] ToC H1 links to `#` (document top)

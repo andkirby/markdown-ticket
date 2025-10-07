@@ -1,28 +1,13 @@
 ---
 code: MDT-059
 title: Implement smart link conversion for markdown content with React Router integration
-status: Implemented
+status: Approved
 dateCreated: 2025-10-03T13:52:40.563Z
 type: Feature Enhancement
 priority: High
 relatedTickets: MDT-017
 dependsOn: MDT-017
 ---
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Implement smart link conversion for markdown content with React Router integration
-
 # Implement smart link conversion for markdown content with React Router integration
 
 ## 1. Description
@@ -32,12 +17,13 @@ Markdown content rendered by Showdown.js converts all links to standard HTML `<a
 ### Requirements
 - Internal ticket references (e.g., `MDT-001`) should use React Router for client-side navigation
 - Document references (e.g., `file.md`) should navigate to document viewer
+- **Relative path resolution**: GitHub-compatible relative links (e.g., `../../file.md`) should resolve to web routes
+- **Security**: Path traversal prevention - links cannot escape project directory boundaries
 - External links should open in new tabs with security attributes
 - Code blocks and inline code should be protected from link conversion
 - Link conversion should be scoped to current project only
 - Visual distinction between different link types
 - Graceful error handling for malformed markdown
-
 ### Success Criteria
 - Clicking ticket references navigates without page reload
 - External links open securely in new tabs
@@ -143,6 +129,38 @@ interface ParsedLink {
 }
 ```
 
+#### Relative Path Resolver
+```typescript
+interface PathResolutionResult {
+  resolvedPath: string;
+  isValid: boolean;
+  error?: string;
+}
+
+function resolveRelativePath(
+  currentDocPath: string, 
+  relativePath: string, 
+  projectRoot: string
+): PathResolutionResult {
+  // Security: Resolve and validate path boundaries
+  const resolved = path.resolve(path.dirname(currentDocPath), relativePath);
+  const normalized = path.normalize(resolved);
+  
+  // Prevent directory traversal attacks
+  if (!normalized.startsWith(projectRoot)) {
+    return {
+      resolvedPath: '',
+      isValid: false,
+      error: 'Path traversal outside project directory blocked'
+    };
+  }
+  
+  return {
+    resolvedPath: path.relative(projectRoot, normalized),
+    isValid: true
+  };
+}
+```
 ### Processing Pipeline
 1. **Protect existing links** - Replace `[text](url)` with placeholders
 2. **Protect code blocks** - Replace ` ```code``` ` and `` `inline` `` with placeholders
@@ -150,12 +168,15 @@ interface ParsedLink {
 4. **Restore protected content** - Put back code blocks and original links
 5. **Parse and render** - Convert to React components with SmartLink
 
+6. **Validate restoration** - Ensure all placeholders are properly restored and no processing artifacts remain in final output
 ### Security Measures
 - DOMPurify sanitization with allowed tags/attributes
 - External link security: `rel="noopener noreferrer" target="_blank"`
 - URL protocol validation (block javascript:, data:, etc.)
 - XSS prevention through controlled HTML parsing
 
+- **Path traversal protection**: Relative links validated against project boundaries using `path.resolve()` and `startsWith()` checks
+- **Malicious path detection**: Block attempts to access `../../../etc/passwd` or similar attacks
 ### Configuration
 ```typescript
 interface LinkConfig {
@@ -177,6 +198,8 @@ interface LinkConfig {
 - [ ] Visual indicators distinguish between link types (icons, colors)
 - [ ] Existing markdown links `[text](url)` are preserved unchanged
 
+- [ ] Relative paths (`../../file.md`) resolve correctly to web routes while maintaining GitHub compatibility
+- [ ] Path traversal attacks are blocked (cannot access files outside project directory)
 ### Technical Requirements
 - [ ] No memory leaks (proper useEffect cleanup)
 - [ ] Error boundaries prevent crashes from malformed markdown
@@ -185,6 +208,8 @@ interface LinkConfig {
 - [ ] DOMPurify sanitization prevents XSS attacks
 - [ ] Compatible with existing Mermaid diagrams and syntax highlighting
 
+- [ ] **Clean output rendering**: Markdown processing must produce clean final output without processing artifacts or corrupted text
+- [ ] Proper content restoration ensures rendered text matches expected markdown output
 ### User Experience
 - [ ] Seamless navigation without page reloads for internal links
 - [ ] Clear visual feedback for different link types
