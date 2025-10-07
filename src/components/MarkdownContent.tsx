@@ -7,6 +7,7 @@ import { highlightCodeBlocks, loadPrismTheme } from '../utils/syntaxHighlight';
 import { classifyLink } from '../utils/linkProcessor';
 import { validateAllReferences } from '../utils/linkValidator';
 import { getLinkConfig } from '../config/linkConfig';
+import { preprocessMarkdown } from '../utils/markdownPreprocessor';
 import SmartLink from './SmartLink';
 import { MarkdownErrorBoundary } from './MarkdownErrorBoundary';
 import { useTheme } from '../hooks/useTheme';
@@ -60,84 +61,8 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
     if (!markdown) return '';
 
     try {
-      let preprocessedMarkdown = markdown;
-      
-      if (linkConfig.enableAutoLinking) {
-        // First, protect existing markdown links
-        const linkPlaceholders: string[] = [];
-        preprocessedMarkdown = preprocessedMarkdown.replace(
-          /\[([^\]]+)\]\(([^)]+)\)/g,
-          (match) => {
-            const placeholder = `__LINK_PLACEHOLDER_${linkPlaceholders.length}__`;
-            linkPlaceholders.push(match);
-            return placeholder;
-          }
-        );
-        
-        // Second, protect code blocks and inline code
-        const codeBlockPlaceholders: string[] = [];
-        const inlineCodePlaceholders: string[] = [];
-        
-        // Protect fenced code blocks (```...```)
-        preprocessedMarkdown = preprocessedMarkdown.replace(
-          /```[\s\S]*?```/g,
-          (match) => {
-            const placeholder = `__CODE_BLOCK_PLACEHOLDER_${codeBlockPlaceholders.length}__`;
-            codeBlockPlaceholders.push(match);
-            return placeholder;
-          }
-        );
-        
-        // Protect inline code (`...`)
-        preprocessedMarkdown = preprocessedMarkdown.replace(
-          /`[^`]+`/g,
-          (match) => {
-            const placeholder = `__INLINE_CODE_PLACEHOLDER_${inlineCodePlaceholders.length}__`;
-            inlineCodePlaceholders.push(match);
-            return placeholder;
-          }
-        );
-        
-        // Now safe to do link conversion
-        if (linkConfig.enableTicketLinks) {
-          // Only convert ticket references for current project
-          const projectPattern = new RegExp(`\\b(${currentProject}-\\d+)\\b`, 'g');
-          preprocessedMarkdown = preprocessedMarkdown.replace(
-            projectPattern,
-            '[$1]($1)'
-          );
-        }
-        
-        if (linkConfig.enableDocumentLinks) {
-          preprocessedMarkdown = preprocessedMarkdown.replace(
-            /\b(\S+\.md)\b/g,
-            '[$1]($1)'
-          );
-        }
-        
-        // Restore code blocks and inline code
-        inlineCodePlaceholders.forEach((code, index) => {
-          preprocessedMarkdown = preprocessedMarkdown.replace(
-            `__INLINE_CODE_PLACEHOLDER_${index}__`,
-            code
-          );
-        });
-        
-        codeBlockPlaceholders.forEach((code, index) => {
-          preprocessedMarkdown = preprocessedMarkdown.replace(
-            `__CODE_BLOCK_PLACEHOLDER_${index}__`,
-            code
-          );
-        });
-        
-        // Restore original markdown links
-        linkPlaceholders.forEach((link, index) => {
-          preprocessedMarkdown = preprocessedMarkdown.replace(
-            `__LINK_PLACEHOLDER_${index}__`,
-            link
-          );
-        });
-      }
+      // Step 1: Preprocess markdown with safe link conversion
+      const preprocessedMarkdown = preprocessMarkdown(markdown, currentProject, linkConfig);
 
       // Step 2: Convert markdown to HTML
       const rawHTML = converter.makeHtml(preprocessedMarkdown);
