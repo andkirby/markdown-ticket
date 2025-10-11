@@ -273,7 +273,8 @@ Once connected, your MCP client should show **15 available tools**:
 
 **CR Operations:**
 - `list_crs` - List CRs with filtering options
-- `get_cr` - Get detailed CR information
+- `get_cr_full_content` - Get complete CR details including full markdown content
+- `get_cr_attributes` - Get only YAML frontmatter attributes (90-95% more efficient for metadata-only operations)
 - `create_cr` - Create new CRs
 - `update_cr_status` - Update CR status
 - `delete_cr` - Delete CRs
@@ -352,8 +353,11 @@ List CRs for a project with optional filtering.
 }
 ```
 
-#### `get_cr`
-Get detailed information about a specific CR.
+#### `get_cr_full_content`
+Get complete CR details including full markdown content.
+
+#### `get_cr_attributes`
+Get only YAML frontmatter attributes from a CR (efficient for metadata-only operations). Returns 90-95% less data than `get_cr_full_content` when you only need metadata.
 
 **Parameters:**
 - `project` (string): Project key

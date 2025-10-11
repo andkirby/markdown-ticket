@@ -3,6 +3,7 @@ import { ProjectDiscoveryService } from '../services/projectDiscovery.js';
 import { CRService } from '../services/crService.js';
 import { TemplateService } from '../../../shared/services/TemplateService.js';
 import { MarkdownSectionService } from '../../../shared/services/MarkdownSectionService.js';
+import { MarkdownService } from '../../../shared/services/MarkdownService.js';
 import { TicketFilters, TicketData } from '../../../shared/models/Ticket.js';
 import { CRStatus } from '../../../shared/models/Types.js';
 
@@ -82,8 +83,26 @@ export class MCPTools {
         }
       },
       {
-        name: 'get_cr',
-        description: 'Get detailed information about a specific CR',
+        name: 'get_cr_full_content',
+        description: 'Get complete CR details including full markdown content',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            project: {
+              type: 'string',
+              description: 'Project key'
+            },
+            key: {
+              type: 'string',
+              description: 'CR key (e.g., MDT-004, API-123)'
+            }
+          },
+          required: ['project', 'key']
+        }
+      },
+      {
+        name: 'get_cr_attributes',
+        description: 'Get only the YAML frontmatter attributes from a CR (efficient for metadata-only operations)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -365,9 +384,12 @@ export class MCPTools {
         case 'list_crs':
           return await this.handleListCRs(args.project, args.filters);
         
-        case 'get_cr':
+        case 'get_cr_full_content':
           return await this.handleGetCR(args.project, args.key);
-        
+
+        case 'get_cr_attributes':
+          return await this.handleGetCRAttributes(args.project, args.key);
+
         case 'create_cr':
           return await this.handleCreateCR(args.project, args.type, args.data);
         
@@ -399,7 +421,7 @@ export class MCPTools {
           return await this.handleSuggestCRImprovements(args.project, args.key);
         
         default:
-          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr', 'create_cr', 'update_cr_attrs', 'update_cr_status', 'delete_cr', 'list_cr_sections', 'get_cr_section', 'update_cr_section', 'list_cr_templates', 'get_cr_template', 'suggest_cr_improvements'];
+          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr_full_content', 'get_cr_attributes', 'create_cr', 'update_cr_attrs', 'update_cr_status', 'delete_cr', 'list_cr_sections', 'get_cr_section', 'update_cr_section', 'list_cr_templates', 'get_cr_template', 'suggest_cr_improvements'];
           throw new Error(`Unknown tool '${name}'. Available tools: ${availableTools.join(', ')}`);
       }
     } catch (error) {
@@ -527,16 +549,85 @@ export class MCPTools {
 
     if (ticket.content) {
       const contentLength = ticket.content.length;
-      if (contentLength > 500) {
-        lines.push('', `**Content (${contentLength} chars, showing first 500):**`, ticket.content.substring(0, 500) + '...');
-      } else {
-        lines.push('', `**Content (${contentLength} chars):**`, ticket.content);
-      }
+      lines.push('', `**Content (${contentLength} chars):**`, ticket.content);
     }
 
     lines.push('', `**File:** ${ticket.filePath}`);
 
     return lines.join('\n');
+  }
+
+  private async handleGetCRAttributes(projectKey: string, key: string): Promise<string> {
+    const project = await this.validateProject(projectKey);
+
+    // Get CR basic info first
+    const ticket = await this.crService.getCR(project, key);
+    if (!ticket) {
+      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
+    }
+
+    // Read the file to extract YAML frontmatter
+    const fs = await import('fs/promises');
+    try {
+      const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
+
+      // Extract YAML frontmatter
+      const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
+      if (!frontmatterMatch) {
+        throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+      }
+
+      const yamlContent = frontmatterMatch[1];
+
+      // Parse YAML with simple parser
+      let yaml: any = {};
+      try {
+        yaml = this.parseYamlFrontmatter(yamlContent) || {};
+      } catch (yamlError) {
+        throw new Error(`Failed to parse YAML frontmatter for ${key}: ${(yamlError as Error).message}`);
+      }
+
+      // Build attributes object with common fields
+      const attributes: any = {
+        code: yaml.code || key,
+        title: yaml.title || 'Untitled',
+        status: yaml.status || 'Unknown',
+        type: yaml.type || 'Unknown',
+        priority: yaml.priority || 'Medium'
+      };
+
+      // Add optional fields if present
+      const optionalFields = [
+        'dateCreated', 'lastModified', 'phaseEpic', 'assignee',
+        'dependsOn', 'blocks', 'relatedTickets', 'impactAreas',
+        'description', 'rationale' // Common custom fields
+      ];
+
+      for (const field of optionalFields) {
+        if (yaml[field] !== undefined) {
+          attributes[field] = yaml[field];
+        }
+      }
+
+      // Include any additional custom fields not in the standard set
+      const standardFields = new Set([
+        'code', 'title', 'status', 'type', 'priority', 'dateCreated',
+        'lastModified', 'phaseEpic', 'assignee', 'dependsOn', 'blocks',
+        'relatedTickets', 'impactAreas', 'description', 'rationale'
+      ]);
+
+      for (const [field, value] of Object.entries(yaml)) {
+        if (!standardFields.has(field)) {
+          attributes[field] = value;
+        }
+      }
+
+      // Return formatted JSON output
+      return JSON.stringify(attributes, null, 2);
+
+    } catch (fileError) {
+      throw new Error(`Failed to read CR file for ${key}: ${(fileError as Error).message}`);
+    }
   }
 
   private async handleCreateCR(projectKey: string, type: string, data: TicketData): Promise<string> {
@@ -1116,5 +1207,44 @@ export class MCPTools {
     return results
       .sort((a, b) => b.score - a.score)
       .slice(0, 10); // Return top 10 results
+  }
+
+  /**
+   * Simple YAML frontmatter parser for extracting CR attributes
+   */
+  private parseYamlFrontmatter(yamlContent: string): Record<string, any> | null {
+    try {
+      const result: Record<string, any> = {};
+      const lines = yamlContent.split('\n');
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+
+        const colonIndex = trimmed.indexOf(':');
+        if (colonIndex === -1) continue;
+
+        const key = trimmed.substring(0, colonIndex).trim();
+        let value = trimmed.substring(colonIndex + 1).trim();
+
+        // Remove quotes if present
+        if ((value.startsWith('"') && value.endsWith('"')) ||
+            (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1);
+        }
+
+        // Handle arrays (comma-separated values)
+        if (value.includes(',') && !value.startsWith('"') && !value.startsWith("'")) {
+          const arrayValue = value.split(',').map(v => v.trim()).filter(v => v);
+          result[key] = arrayValue;
+        } else {
+          result[key] = value;
+        }
+      }
+
+      return result;
+    } catch (error) {
+      return null;
+    }
   }
 }

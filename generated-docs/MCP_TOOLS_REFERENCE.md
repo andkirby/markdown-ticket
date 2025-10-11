@@ -115,8 +115,15 @@ The MCP server uses the **shared core architecture** with unified types, service
 }
 ```
 
-### `get_cr`
-**Description**: Get detailed information about a specific CR
+### `get_cr_full_content`
+**Description**: Get complete CR details including full markdown content
+
+**Parameters**:
+- `project` (string, required): Project key
+- `key` (string, required): CR key (e.g., "MDT-001")
+
+### `get_cr_attributes`
+**Description**: Get only YAML frontmatter attributes from a CR (efficient for metadata-only operations). Returns 90-95% less data than `get_cr_full_content` when you only need metadata.
 
 **Parameters**:
 - `project` (string, required): Project key

@@ -20,7 +20,8 @@ The Markdown Ticket Board project includes multiple MCP servers that enable AI a
 
 #### CR/Ticket Management
 - `list_crs` - List CRs with filtering options
-- `get_cr` - Get detailed CR information
+- `get_cr_full_content` - Get complete CR details including full markdown content
+- `get_cr_attributes` - Get only YAML frontmatter attributes (90-95% more efficient for metadata-only operations)
 - `create_cr` - Create new change requests
 - `update_cr_attrs` - Update CR attributes
 - `update_cr_status` - Update CR workflow status
