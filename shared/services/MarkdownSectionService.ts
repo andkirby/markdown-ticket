@@ -95,6 +95,37 @@ export class MarkdownSectionService {
     // Keep lines before section
     const before = lines.slice(0, section.startLine + 1); // +1 to include header
 
+    // Special handling for H1 sections to prevent data loss
+    if (section.headerLevel === 1) {
+      // Check if this is a header-only replacement (potential data corruption scenario)
+      const isHeaderOnlyReplacement = newContent.trim() === '' ||
+        (newContent.trim().startsWith('#') && newContent.trim().split('\n').length === 1);
+
+      if (isHeaderOnlyReplacement && section.content.trim()) {
+        // WARNING: This operation would cause data loss for H1 sections
+        console.warn(`⚠️  WARNING: Detected potentially destructive operation on H1 section "${section.headerText}"`);
+        console.warn(`   The section contains ${section.content.length} characters of content that would be deleted.`);
+        console.warn(`   Consider using 'append' or 'prepend' operations, or provide content to preserve subsections.`);
+
+        // For H1 sections with existing content, preserve subsections when doing header-only replacement
+        const subsections = this.extractSubsections(section.content);
+
+        if (subsections.length > 0) {
+          console.warn(`   Preserving ${subsections.length} existing subsection(s) to prevent data loss.`);
+
+          // Build new content that includes preserved subsections
+          const preservedContent = subsections.join('\n\n');
+          const contentLines = newContent.trim() ?
+            [newContent.trim(), '', preservedContent] :
+            [preservedContent];
+
+          // Keep lines after section
+          const after = lines.slice(section.endLine);
+          return [...before, ...contentLines, ...after].join('\n');
+        }
+      }
+    }
+
     // Add new content (ensure it doesn't start with newline if not empty)
     const contentLines = newContent.trim() ? [newContent.trim()] : [];
 
@@ -212,6 +243,48 @@ export class MarkdownSectionService {
     }
 
     return sections;
+  }
+
+  /**
+   * Extract subsections from H1 section content to preserve them during header updates
+   *
+   * @param content - H1 section content
+   * @returns Array of subsection content strings (including headers)
+   */
+  private static extractSubsections(content: string): string[] {
+    const lines = content.split('\n');
+    const subsections: string[] = [];
+    let currentSubsection: string[] = [];
+    let inSubsection = false;
+
+    for (const line of lines) {
+      const headerMatch = line.match(/^(#{2,6})\s+(.+)$/);
+
+      if (headerMatch) {
+        // Found a subsection header
+        if (currentSubsection.length > 0) {
+          // Save previous subsection
+          subsections.push(currentSubsection.join('\n'));
+        }
+        // Start new subsection
+        currentSubsection = [line];
+        inSubsection = true;
+      } else if (inSubsection) {
+        // Add content to current subsection
+        currentSubsection.push(line);
+      } else if (line.trim()) {
+        // Non-header content before first subsection - treat as standalone content
+        currentSubsection.push(line);
+        inSubsection = true;
+      }
+    }
+
+    // Add the last subsection
+    if (currentSubsection.length > 0) {
+      subsections.push(currentSubsection.join('\n'));
+    }
+
+    return subsections.filter(subsection => subsection.trim().length > 0);
   }
 
   /**
