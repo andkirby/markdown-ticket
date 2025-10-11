@@ -117,7 +117,7 @@ Sample request and response data for the MCP CR Management Server using the shar
   "id": 5,
   "method": "tools/call",
   "params": {
-    "name": "get_cr",
+    "name": "get_cr_full_content",
     "arguments": {
       "project": "MDT",
       "key": "MDT-006"
@@ -214,6 +214,22 @@ Sample request and response data for the MCP CR Management Server using the shar
   "params": {
     "name": "list_cr_templates",
     "arguments": {}
+  }
+}
+```
+
+### Get CR Attributes (Metadata Only)
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "method": "tools/call",
+  "params": {
+    "name": "get_cr_attributes",
+    "arguments": {
+      "project": "MDT",
+      "key": "MDT-006"
+    }
   }
 }
 ```
@@ -574,7 +590,7 @@ Typical workflow combining all three section tools:
     "content": [
       {
         "type": "text",
-        "text": "❌ **Error in get_cr**\n\nProject 'INVALID' not found. Available projects: MDT, LlmTranslator, goto_dir, sentence-breakdown, debug\n\nPlease check your input parameters and try again."
+        "text": "❌ **Error in get_cr_full_content**\n\nProject 'INVALID' not found. Available projects: MDT, LlmTranslator, goto_dir, sentence-breakdown, debug\n\nPlease check your input parameters and try again."
       }
     ]
   }

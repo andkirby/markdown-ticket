@@ -146,7 +146,7 @@ Why this change is needed...
 - `mdt-all` (global) - Access all projects from any directory
 - `mdt-tickets` (local) - Filtered to specific project via `MCP_PROJECT_FILTER`
 
-**Available Tools**: `list_projects`, `list_crs`, `get_cr`, `create_cr`, `update_cr_status`, `update_cr_attrs`, `delete_cr`, `suggest_cr_improvements`, section-based updates
+**Available Tools**: `list_projects`, `list_crs`, `get_cr_full_content`, `get_cr_attributes`, `create_cr`, `update_cr_status`, `update_cr_attrs`, `delete_cr`, `suggest_cr_improvements`, section-based updates
 
 ### Logging & Debugging
 

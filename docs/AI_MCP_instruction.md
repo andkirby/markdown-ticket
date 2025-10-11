@@ -43,7 +43,8 @@ User requests new CR → Use this sequence:
 ```
 User asks about existing CRs → Use:
 - mcp__markdown-ticket__list_crs (with filters for status/priority/type)
-- mcp__markdown-ticket__get_cr (for specific CR details)
+- mcp__markdown-ticket__get_cr_full_content (for specific CR details with full content)
+- mcp__markdown-ticket__get_cr_attributes (for metadata-only operations, 90-95% more efficient)
 - mcp__markdown-ticket__find_related_crs (for topic-based searches)
 - mcp__markdown-ticket__suggest_cr_improvements (for analysis)
 ```

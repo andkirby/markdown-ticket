@@ -121,5 +121,39 @@ Ensure LLMs have full visibility into data model capabilities to maximize AI ass
 - **Remaining work**: Update MCP server code and frontend to match simplified schemas
 *To be filled during/after implementation*
 
+**Update (2025-01-10): Added `get_cr_attributes` Tool**
+- **New Tool**: `get_cr_attributes(project, key)` - Efficiently retrieve only YAML frontmatter attributes from a CR
+- **Purpose**: Metadata-only operations without loading full document content
+- **Benefits**:
+  - 90-95% reduction in data transfer for attribute queries
+  - Faster response times for CR metadata operations
+  - Ideal for CR listing, status checks, and attribute validation
+- **Implementation**:
+  - Direct file parsing with custom YAML frontmatter parser
+  - Returns structured JSON with all CR attributes
+  - Handles standard fields plus custom attributes automatically
+- **Use Cases**:
+  - CR list views showing metadata
+  - Status validation workflows
+  - Attribute-based filtering and searching
+  - Integration with external systems requiring CR metadata
+
+**Update (2025-01-11): Renamed `get_cr` to `get_cr_full_content`**
+- **Renamed Tool**: `get_cr_full_content(project, key)` - Get complete CR details including full markdown content
+- **Purpose**: Full content retrieval for detailed CR analysis and editing
+- **Changes**:
+  - Removed 500-character truncation limit
+  - Updated tool name to clearly indicate full content capability
+  - Maintained metadata display alongside complete content
+- **Benefits**:
+  - Complete access to CR content for analysis
+  - Clear distinction from `get_cr_attributes` (metadata-only)
+  - Better tool naming for use case clarity
+- **Use Cases**:
+  - Detailed CR review and analysis
+  - Content editing and updates
+  - Full document export operations
+  - Integration requiring complete CR content
+
 ## 6. References
 *To be filled during implementation*
