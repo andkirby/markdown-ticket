@@ -230,7 +230,8 @@ claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 ### Available MCP Tools
 - `list_projects` - List all discovered projects
 - `list_crs` - List CRs for a project with filtering
-- `get_cr` - Get detailed CR information
+- `get_cr_full_content` - Get complete CR details including full markdown content
+- `get_cr_attributes` - Get only YAML frontmatter attributes (90-95% more efficient for metadata-only operations)
 - `create_cr` - Create new change requests
 - `update_cr_attrs` - Update CR attributes (excludes status)
 - `update_cr_status` - Update CR status
