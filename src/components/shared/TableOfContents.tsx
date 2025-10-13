@@ -61,8 +61,12 @@ export default function TableOfContents({ items, view }: TableOfContentsProps) {
   if (items.length === 0) return null;
 
   const scrollToHeading = (id: string) => {
-    const element = document.getElementById(id);
-    element?.scrollIntoView({ behavior: 'smooth' });
+    if (id === 'top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const element = document.getElementById(id);
+      element?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -82,6 +86,13 @@ export default function TableOfContents({ items, view }: TableOfContentsProps) {
           <div className="px-4 py-3">
             <div className="text-sm font-medium mb-2">Table of Contents</div>
             <nav ref={navRef} className="space-y-1">
+              {/* MDT-064: Add Top link that scrolls to document beginning (H1 location) */}
+              <button
+                onClick={() => scrollToHeading('top')}
+                className="block w-full text-left text-sm transition-colors text-foreground/80 hover:text-foreground font-bold"
+              >
+                Top
+              </button>
               {items.map((item, index) => (
                 <button
                   key={index}
