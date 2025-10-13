@@ -4,10 +4,10 @@
  */
 
 // Models
-export * from './models/Ticket';
-export * from './models/Project';
-export * from './models/Config';
-export * from './models/Counter';
+export * from './models/Ticket.js';
+export * from './models/Project.js';
+export * from './models/Config.js';
+export * from './models/Counter.js';
 
 // Types
 export type {
@@ -21,14 +21,14 @@ export type {
   ValidationError,
   ValidationWarning,
   Suggestion
-} from './models/Types';
+} from './models/Types.js';
 
 // Services
-export * from './services/ProjectService';
-export * from './services/MarkdownService';
-export * from './services/TemplateService';
-export * from './services/CRService';
-export * from './services/CounterService';
+export * from './services/ProjectService.js';
+export * from './services/MarkdownService.js';
+export * from './services/TemplateService.js';
+export * from './services/CRService.js';
+export * from './services/CounterService.js';
 
 // Constants
-export * from './utils/constants';
+export * from './utils/constants.js';
