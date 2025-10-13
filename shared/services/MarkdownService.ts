@@ -1,7 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Ticket, normalizeTicket } from '../models/Ticket.js';
-import { PATTERNS } from '../utils/constants.js';
+import type { Ticket } from '../models/Ticket';
+import { normalizeTicket } from '../models/Ticket';
+import { PATTERNS } from '../utils/constants';
+import { CRService } from './CRService';
 
 /**
  * Unified Markdown Processing Service
@@ -12,14 +14,14 @@ export class MarkdownService {
   /**
    * Parse markdown file with YAML frontmatter
    */
-  static parseMarkdownFile(filePath: string): Ticket | null {
+  static async parseMarkdownFile(filePath: string, projectPath?: string): Promise<Ticket | null> {
     try {
       if (!fs.existsSync(filePath)) {
         return null;
       }
 
       const content = fs.readFileSync(filePath, 'utf8');
-      const ticket = this.parseMarkdownContent(content, filePath);
+      const ticket = await this.parseMarkdownContent(content, filePath, projectPath);
       
       if (ticket) {
         // Get file stats for dates if not in frontmatter
@@ -43,7 +45,7 @@ export class MarkdownService {
   /**
    * Parse markdown content with YAML frontmatter
    */
-  static parseMarkdownContent(content: string, filePath?: string): Ticket | null {
+  static async parseMarkdownContent(content: string, filePath?: string, projectPath?: string): Promise<Ticket | null> {
     try {
       const frontmatterMatch = content.match(PATTERNS.YAML_FRONTMATTER);
       
@@ -56,15 +58,31 @@ export class MarkdownService {
 
       // Parse YAML frontmatter (using simple parsing for now)
       const metadata = this.parseYamlFrontmatter(yamlContent);
-      
+
       if (!metadata) {
         return null;
       }
 
+      // MDT-064: Extract title from H1 header with fallback to filename
+      // H1 is the authoritative source, frontmatter.title is for compatibility
+      let extractedTitle = metadata.title || 'Untitled';
+      if (projectPath && filePath) {
+        try {
+          extractedTitle = await CRService.extractTitle(projectPath, filePath, markdownContent);
+        } catch (error) {
+          console.warn(`Failed to extract title from H1 for ${filePath}:`, error);
+          // Fallback to frontmatter title
+        }
+      }
+
+      // Process content to hide additional H1 headers (keep only first)
+      const processedContent = CRService.processContentForDisplay(markdownContent.trim());
+
       // Create raw ticket object
       const rawTicket = {
         ...metadata,
-        content: markdownContent.trim(),
+        title: extractedTitle, // Use H1-extracted title as authoritative
+        content: processedContent,
         filePath: filePath || ''
       };
 
@@ -190,7 +208,7 @@ export class MarkdownService {
   /**
    * Scan directory for markdown files
    */
-  static scanMarkdownFiles(dirPath: string): Ticket[] {
+  static async scanMarkdownFiles(dirPath: string, projectPath?: string): Promise<Ticket[]> {
     try {
       if (!fs.existsSync(dirPath)) {
         return [];
@@ -201,9 +219,9 @@ export class MarkdownService {
         .map(file => path.join(dirPath, file));
 
       const tickets: Ticket[] = [];
-      
+
       for (const filePath of files) {
-        const ticket = this.parseMarkdownFile(filePath);
+        const ticket = await this.parseMarkdownFile(filePath, projectPath);
         if (ticket) {
           tickets.push(ticket);
         }

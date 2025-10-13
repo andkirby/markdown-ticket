@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import toml from 'toml';
 import os from 'os';
-import { MarkdownService } from '../shared/services/MarkdownService.js';
+import { MarkdownService } from '../dist/services/MarkdownService.js';
 import { SharedProjectDiscoveryService } from '../shared/services/projectDiscovery.js';
 
 const CONFIG_FILES = {
@@ -167,7 +167,7 @@ class ProjectDiscoveryService {
   /**
    * Get CRs for a specific project using shared MarkdownService
    */
-  getProjectCRs(projectPath) {
+  async getProjectCRs(projectPath) {
     try {
       const config = this.getProjectConfig(projectPath);
       if (!config || !config.project) {
@@ -176,13 +176,13 @@ class ProjectDiscoveryService {
 
       const crPath = config.project.path || 'docs/CRs';
       const fullCRPath = path.resolve(projectPath, crPath);
-      
+
       if (!fs.existsSync(fullCRPath)) {
         return [];
       }
 
       // Use shared MarkdownService for consistent parsing
-      return MarkdownService.scanMarkdownFiles(fullCRPath);
+      return await MarkdownService.scanMarkdownFiles(fullCRPath, projectPath);
     } catch (error) {
       console.error(`Error getting CRs for project ${projectPath}:`, error);
       return [];
