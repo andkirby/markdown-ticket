@@ -149,6 +149,21 @@ function EventItem({ event }: EventItemProps) {
     }
   };
 
+  // Get listener information for this event type
+  const listeners = eventBus.getListenersForType(event.type);
+  const listenerCount = eventBus.getListenerCount(event.type);
+  const [expandedListener, setExpandedListener] = useState<number | null>(null);
+
+  // Format time relative to now
+  const formatTimeAgo = (timestamp: number) => {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
+  };
+
   const timeStr = new Date(event.timestamp).toLocaleTimeString();
 
   return (
@@ -170,10 +185,57 @@ function EventItem({ event }: EventItemProps) {
       </div>
 
       {isExpanded && (
-        <div className="mt-2 pt-2 border-t border-gray-700">
-          <div className="text-gray-400 mb-1">
+        <div className="mt-2 pt-2 border-t border-gray-700 space-y-2">
+          {/* Listener Information */}
+          <div className="text-gray-400">
+            <span className="text-gray-500">Listeners:</span>{' '}
+            {listenerCount === 0 ? (
+              <span className="text-yellow-400">0 subscribed</span>
+            ) : (
+              <span className="text-green-400">({listenerCount})</span>
+            )}
+          </div>
+          {listeners.length > 0 && (
+            <div className="ml-4 space-y-1">
+              {listeners.map((listener, idx) => (
+                <div key={idx} className="text-gray-400 text-[10px]">
+                  <div
+                    className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 rounded px-1 py-0.5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedListener(expandedListener === idx ? null : idx);
+                    }}
+                  >
+                    <span className="text-gray-600">{expandedListener === idx ? '▼' : '▶'}</span>
+                    <span className="text-gray-600">↳</span>
+                    <span className="text-blue-400 font-mono">{listener.source}</span>
+                    <span className="text-purple-400 font-mono">
+                      {listener.functionName}()
+                    </span>
+                    <span className="text-gray-500">
+                      (registered {formatTimeAgo(listener.registeredAt)})
+                    </span>
+                  </div>
+
+                  {expandedListener === idx && (
+                    <div className="mt-1 ml-6 p-2 bg-gray-900 rounded border border-gray-700">
+                      <div className="text-gray-500 mb-1">Function Reference:</div>
+                      <pre className="text-[9px] text-green-400 overflow-auto max-h-32 whitespace-pre-wrap break-all">
+                        {listener.functionCode}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Event ID */}
+          <div className="text-gray-400">
             <span className="text-gray-500">ID:</span> {event.id}
           </div>
+
+          {/* Payload */}
           <div className="text-gray-400">
             <span className="text-gray-500">Payload:</span>
           </div>

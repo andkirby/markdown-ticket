@@ -69,11 +69,19 @@ export type EventListener<T = any> = (event: Event<T>) => void;
 // Unsubscribe function type
 export type UnsubscribeFn = () => void;
 
+// Listener metadata for debugging
+export interface ListenerMetadata {
+  handler: EventListener;
+  source: string; // Component or hook name
+  registeredAt: number;
+}
+
 /**
  * EventBus class - singleton pattern
  */
 class EventBus {
   private listeners = new Map<EventType, Set<EventListener>>();
+  private listenerMetadata = new Map<EventType, Map<EventListener, ListenerMetadata>>(); // Track metadata for dev tools
   private eventQueue: Event[] = [];
   private eventIdCounter = 0;
   private maxQueueSize = 100; // Keep last 100 events
@@ -85,19 +93,24 @@ class EventBus {
    *
    * @param eventType - Type of event to listen for
    * @param handler - Function to call when event occurs
+   * @param metadata - Optional metadata for debugging (source component name)
    * @returns Unsubscribe function
    *
    * @example
    * ```typescript
    * const unsubscribe = eventBus.on('ticket:created', (event) => {
    *   console.log('New ticket:', event.payload.ticketCode);
-   * });
+   * }, { source: 'MyComponent' });
    *
    * // Later, when component unmounts:
    * unsubscribe();
    * ```
    */
-  on<T = any>(eventType: EventType, handler: EventListener<T>): UnsubscribeFn {
+  on<T = any>(
+    eventType: EventType,
+    handler: EventListener<T>,
+    metadata?: { source?: string }
+  ): UnsubscribeFn {
     if (!this.listeners.has(eventType)) {
       this.listeners.set(eventType, new Set());
     }
@@ -105,8 +118,20 @@ class EventBus {
     const listeners = this.listeners.get(eventType)!;
     listeners.add(handler as EventListener);
 
+    // Store metadata for dev tools
+    if (import.meta.env.DEV && metadata?.source) {
+      if (!this.listenerMetadata.has(eventType)) {
+        this.listenerMetadata.set(eventType, new Map());
+      }
+      this.listenerMetadata.get(eventType)!.set(handler as EventListener, {
+        handler: handler as EventListener,
+        source: metadata.source,
+        registeredAt: Date.now()
+      });
+    }
+
     if (import.meta.env.DEV) {
-      console.log(`[EventBus] Subscribed to ${eventType}. Total listeners: ${listeners.size}`);
+      console.log(`[EventBus] Subscribed to ${eventType}. Total listeners: ${listeners.size}${metadata?.source ? ` (source: ${metadata.source})` : ''}`);
     }
 
     // Return unsubscribe function
@@ -114,6 +139,14 @@ class EventBus {
       listeners.delete(handler as EventListener);
       if (import.meta.env.DEV) {
         console.log(`[EventBus] Unsubscribed from ${eventType}. Remaining listeners: ${listeners.size}`);
+      }
+
+      // Clean up metadata
+      if (import.meta.env.DEV && this.listenerMetadata.has(eventType)) {
+        this.listenerMetadata.get(eventType)!.delete(handler as EventListener);
+        if (this.listenerMetadata.get(eventType)!.size === 0) {
+          this.listenerMetadata.delete(eventType);
+        }
       }
 
       // Clean up empty listener sets
@@ -272,6 +305,47 @@ class EventBus {
     const listeners = this.listeners.get(eventType);
     return listeners ? listeners.size > 0 : false;
   }
+
+  /**
+   * Get listener count for a specific event type
+   * @param eventType - Event type to get count for
+   * @returns Number of listeners subscribed to this event type
+   */
+  getListenerCount(eventType: EventType): number {
+    const listeners = this.listeners.get(eventType);
+    return listeners ? listeners.size : 0;
+  }
+
+  /**
+   * Get listener details for a specific event type (dev tools only)
+   * @param eventType - Event type to get listeners for
+   * @returns Array of listener metadata (source, registeredAt, function details)
+   */
+  getListenersForType(eventType: EventType): Array<{
+    source: string;
+    registeredAt: number;
+    functionName: string;
+    functionCode: string;
+    handler: EventListener;
+  }> {
+    if (!import.meta.env.DEV) return [];
+
+    const listeners = this.listeners.get(eventType);
+    if (!listeners) return [];
+
+    const metadata = this.listenerMetadata.get(eventType);
+
+    return Array.from(listeners).map(handler => {
+      const meta = metadata?.get(handler);
+      return {
+        source: meta?.source || 'unknown',
+        registeredAt: meta?.registeredAt || 0,
+        functionName: handler.name || 'anonymous',
+        functionCode: handler.toString(),
+        handler // Include reference to actual function
+      };
+    });
+  }
 }
 
 // Export singleton instance
@@ -283,12 +357,17 @@ export { EventBus };
 /**
  * React hook for using event bus in components
  *
+ * @param eventType - Type of event to listen for
+ * @param handler - Event handler function
+ * @param dependencies - Dependencies for useEffect
+ * @param source - Optional source component name for debugging (auto-inferred if not provided)
+ *
  * @example
  * ```typescript
  * function MyComponent() {
  *   useEventBus('ticket:created', (event) => {
  *     console.log('New ticket:', event.payload);
- *   });
+ *   }, [], 'MyComponent'); // source is optional
  *
  *   return <div>...</div>;
  * }
@@ -299,10 +378,31 @@ import { useEffect } from 'react';
 export function useEventBus<T = any>(
   eventType: EventType,
   handler: EventListener<T>,
-  dependencies: any[] = []
+  dependencies: any[] = [],
+  source?: string
 ): void {
   useEffect(() => {
-    const unsubscribe = eventBus.on(eventType, handler);
+    // Try to infer component name from the call stack if not provided
+    let componentSource = source;
+    if (!componentSource && import.meta.env.DEV) {
+      try {
+        const stack = new Error().stack;
+        // Extract component name from stack trace (rough heuristic)
+        const match = stack?.match(/at (\w+)/g);
+        if (match && match.length > 2) {
+          // Skip 'Error' and 'useEventBus', get the calling component
+          componentSource = match[2]?.replace('at ', '') || 'unknown';
+        }
+      } catch {
+        componentSource = 'unknown';
+      }
+    }
+
+    const unsubscribe = eventBus.on(
+      eventType,
+      handler,
+      componentSource ? { source: componentSource } : undefined
+    );
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventType, ...dependencies]);
