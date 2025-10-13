@@ -3,7 +3,7 @@ import path from 'path';
 import toml from 'toml';
 import os from 'os';
 import { MarkdownService } from '../dist/services/MarkdownService.js';
-import { SharedProjectDiscoveryService } from '../shared/services/projectDiscovery.js';
+import { ProjectService } from '../dist/services/ProjectService.js';
 
 const CONFIG_FILES = {
   PROJECT_CONFIG: '.mdt-config.toml',
@@ -19,7 +19,7 @@ class ProjectDiscoveryService {
     this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
     this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
-    this.sharedDiscovery = new SharedProjectDiscoveryService();
+    this.sharedProjectService = new ProjectService();
   }
 
   /**
@@ -138,7 +138,7 @@ class ProjectDiscoveryService {
     
     if (globalConfig.discovery?.autoDiscover) {
       const searchPaths = globalConfig.discovery?.searchPaths || [];
-      const discovered = this.sharedDiscovery.autoDiscoverProjects(searchPaths);
+      const discovered = this.sharedProjectService.autoDiscoverProjects(searchPaths);
       
       // Create sets for both path and id to avoid duplicates
       const registeredPaths = new Set(registered.map(p => p.project.path));

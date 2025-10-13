@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "cd server && npm run dev",
-    "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
+    "dev:full": "npm run build:shared && concurrently \"npm run dev\" \"npm run dev:server\"",
+    "build:shared": "tsc --project tsconfig.shared.json",
     "server": "cd server && npm start",
     "server:dev": "cd server && npm run dev",
     "build": "tsc --project tsconfig.shared.json && tsc && vite build",
