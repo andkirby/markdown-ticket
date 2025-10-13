@@ -1,5 +1,5 @@
-import { TitleExtractionService } from './TitleExtractionService';
-import type { TicketData } from '../models/Ticket';
+import { TitleExtractionService } from './TitleExtractionService.js';
+import type { TicketData } from '../models/Ticket.js';
 
 export class CRService {
     static titleService = new TitleExtractionService();
