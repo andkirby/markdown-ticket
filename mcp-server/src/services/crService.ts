@@ -444,15 +444,20 @@ export class CRService {
     sections.push('---');
     sections.push('');
 
-    // Title
-    sections.push(`# ${ticket.title}`);
-    sections.push('');
-
     // Content
     if (data.content) {
-      sections.push(data.content);
+      // MDT-064: Auto-generate H1 from title parameter if content doesn't start with H1
+      if (!data.content.trim().startsWith('# ')) {
+        sections.push(`# ${ticket.title}`);
+        sections.push('');
+        sections.push(data.content);
+      } else {
+        sections.push(data.content);
+      }
     } else {
-      // Default template
+      // Default template with auto-generated H1
+      sections.push(`# ${ticket.title}`);
+      sections.push('');
       sections.push('## 1. Description');
       sections.push('');
       sections.push('### Problem Statement');

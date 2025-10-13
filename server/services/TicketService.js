@@ -23,7 +23,7 @@ export class TicketService {
       throw new Error('Project not found');
     }
 
-    return this.projectDiscovery.getProjectCRs(project.project.path);
+    return await this.projectDiscovery.getProjectCRs(project.project.path);
   }
 
   /**
@@ -40,7 +40,7 @@ export class TicketService {
       throw new Error('Project not found');
     }
 
-    const crs = this.projectDiscovery.getProjectCRs(project.project.path);
+    const crs = await this.projectDiscovery.getProjectCRs(project.project.path);
     const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
 
     if (!cr) {
@@ -92,6 +92,7 @@ export class TicketService {
       .substring(0, 50);
     const filename = `${crCode}-${titleSlug}.md`;
 
+    // MDT-064: Create CR content with H1 as authoritative source
     const crContent = `- **Code**: ${crCode}
 - **Title/Summary**: ${title}
 - **Status**: Proposed
@@ -216,7 +217,7 @@ Please list specific, testable conditions that must be met for completion:
       throw new Error('Project not found');
     }
 
-    const crs = this.projectDiscovery.getProjectCRs(project.project.path);
+    const crs = await this.projectDiscovery.getProjectCRs(project.project.path);
     const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
 
     if (!cr) {
@@ -329,7 +330,7 @@ Please list specific, testable conditions that must be met for completion:
       throw new Error('Project not found');
     }
 
-    const crs = this.projectDiscovery.getProjectCRs(project.project.path);
+    const crs = await this.projectDiscovery.getProjectCRs(project.project.path);
     const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
 
     if (!cr) {
@@ -361,7 +362,7 @@ Please list specific, testable conditions that must be met for completion:
       throw new Error('Project not found');
     }
 
-    const crs = this.projectDiscovery.getProjectCRs(project.project.path);
+    const crs = await this.projectDiscovery.getProjectCRs(project.project.path);
     const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
 
     if (!cr) {
