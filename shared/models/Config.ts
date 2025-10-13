@@ -3,7 +3,7 @@
  * Status and attribute configuration interfaces
  */
 
-import { CRStatus } from './Types';
+import { CRStatus } from './Types.js';
 
 // Status Configuration Interface
 export interface StatusConfig {

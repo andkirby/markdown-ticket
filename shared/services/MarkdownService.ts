@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { Ticket } from '../models/Ticket';
-import { normalizeTicket } from '../models/Ticket';
-import { PATTERNS } from '../utils/constants';
-import { CRService } from './CRService';
+import type { Ticket } from '../models/Ticket.js';
+import { normalizeTicket } from '../models/Ticket.js';
+import { PATTERNS } from '../utils/constants.js';
+import { CRService } from './CRService.js';
 
 /**
  * Unified Markdown Processing Service
