@@ -1,7 +1,7 @@
 ---
 code: MDT-064
 title: Standardize Ticket Title Management - H1 as Single Source of Truth
-status: Proposed
+status: Implemented
 dateCreated: 2025-10-04T21:01:56.683Z
 type: Feature Enhancement
 priority: High

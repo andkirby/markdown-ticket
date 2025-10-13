@@ -9,6 +9,7 @@ import { extractTableOfContents } from '../utils/tableOfContents';
 import TableOfContents from './shared/TableOfContents';
 import { useEventBus } from '../services/eventBus';
 import { dataLayer } from '../services/dataLayer';
+import { processContentForDisplay } from '../utils/titleExtraction';
 
 interface TicketViewerProps {
   ticket: Ticket | null;
@@ -45,10 +46,18 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
     }
   }, []));
 
-  // Extract ToC items from ticket content
-  const tocItems = useMemo(() => {
-    return currentTicket?.content ? extractTableOfContents(currentTicket.content, 3) : [];
+  // MDT-064: Process content to hide H1 headers and extract title
+  const processedContent = useMemo(() => {
+    if (!currentTicket?.content) return '';
+
+    // Process content to remove additional H1 headers (keep only first, then skip it)
+    return processContentForDisplay(currentTicket.content);
   }, [currentTicket?.content]);
+
+  // Extract ToC items from processed content
+  const tocItems = useMemo(() => {
+    return processedContent ? extractTableOfContents(processedContent, 3) : [];
+  }, [processedContent]);
 
   if (!currentTicket) return null;
 
@@ -71,9 +80,9 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
           </div>
 
           {/* Rendered Markdown Content */}
-          {isOpen && currentTicket.content && projectCode && (
+          {isOpen && processedContent && projectCode && (
             <MarkdownContent
-              markdown={currentTicket.content}
+              markdown={processedContent}
               currentProject={projectCode}
               headerLevelStart={3}
             />
