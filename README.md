@@ -48,6 +48,9 @@
 - **URL-based Routing**: Direct navigation to specific tickets and views via URLs
 - **Mermaid Diagrams**: Full support for Mermaid diagrams with fullscreen viewing, adaptive scaling, and zoom controls
 - **Syntax Highlighting**: Code blocks with syntax highlighting for 8+ languages (JS, TS, Python, Bash, JSON, YAML, PHP, Go)
+- **Smart Links**: Automatic conversion of ticket references (MDT-001) to clickable links with hover previews
+- **Table of Contents**: Auto-generated ToC for markdown documents with persistent button state
+- **H1 Title Management**: Automatic standardization and management of H1 headers in tickets
 - **Document Navigation**: Collapsible directory trees with filtering and sorting in document view
 - **Ticket Relationships**: Full support for dependencies, blocks, and related tickets
 - **Backlog Management**: Hide/show backlog tickets for cleaner board views
@@ -233,6 +236,7 @@ claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 - `get_cr_full_content` - Get complete CR details including full markdown content
 - `get_cr_attributes` - Get only YAML frontmatter attributes (90-95% more efficient for metadata-only operations)
 - `create_cr` - Create new change requests
+- `update_cr_section` - Update specific sections of CR content (98% more efficient than full document updates)
 - `update_cr_attrs` - Update CR attributes (excludes status)
 - `update_cr_status` - Update CR status
 - `delete_cr` - Delete CRs (for implemented bug fixes)
@@ -309,6 +313,7 @@ See **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** for:
 
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for detailed information about each version:
 
+- **v0.5.0** (2025-10-14): Smart links, Table of Contents, H1 title management, enhanced MCP tools
 - **v0.4.0** (2025-10-02): URL routing, Mermaid diagrams, document filtering, section-based MCP updates
 - **v0.3.0** (2025-09-11): Badge components, project editing, backlog management, MCP development tools
 - **v0.2.0** (2025-09-09): Enhanced ticket viewer, relationship management, real-time updates
