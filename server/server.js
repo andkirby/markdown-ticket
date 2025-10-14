@@ -158,6 +158,10 @@ async function initializeMultiProjectWatchers() {
         console.log(`   📂 ${project.id}: ${project.path}`);
       });
     }
+
+    // Initialize global registry watcher for project lifecycle events
+    fileWatcher.initGlobalRegistryWatcher();
+
   } catch (error) {
     console.error('Error initializing multi-project watchers:', error);
     const watchPath = path.join(TICKETS_DIR, '*.md');

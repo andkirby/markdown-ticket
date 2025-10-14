@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import os from 'os';
 
 class FileWatcherService extends EventEmitter {
   constructor() {
@@ -67,6 +68,86 @@ class FileWatcherService extends EventEmitter {
     }
 
     return this;
+  }
+
+  /**
+   * Initialize file watcher for global project registry
+   * Watches ~/.config/markdown-ticket/projects/*.toml for project lifecycle events
+   */
+  initGlobalRegistryWatcher() {
+    const registryPath = path.join(os.homedir(), '.config', 'markdown-ticket', 'projects');
+
+    // Check if registry directory exists
+    if (!fs.existsSync(registryPath)) {
+      console.log(`📡 Global registry directory not found: ${registryPath}`);
+      return;
+    }
+
+    const watcher = chokidar.watch(path.join(registryPath, '*.toml'), {
+      ignoreInitial: true,
+      persistent: true,
+      awaitWriteFinish: {
+        stabilityThreshold: 100,
+        pollInterval: 100
+      }
+    });
+
+    watcher
+      .on('add', (filePath) => this.handleRegistryEvent('add', filePath))
+      .on('change', (filePath) => this.handleRegistryEvent('change', filePath))
+      .on('unlink', (filePath) => this.handleRegistryEvent('unlink', filePath))
+      .on('error', (error) => {
+        console.error('Global registry watcher error:', error);
+      })
+      .on('ready', () => {
+        console.log(`📡 Global registry watcher ready: ${registryPath}`);
+      });
+
+    this.watchers.set('__global_registry__', watcher);
+    console.log(`📡 Global registry watcher initialized: ${registryPath}`);
+  }
+
+  /**
+   * Handle global registry file events
+   * @param {string} eventType - 'add', 'change', or 'unlink'
+   * @param {string} filePath - Full path to the .toml file
+   */
+  handleRegistryEvent(eventType, filePath) {
+    const projectId = path.basename(filePath, '.toml');
+
+    const eventTypeMap = {
+      'add': 'project-created',
+      'change': 'project-updated',
+      'unlink': 'project-deleted'
+    };
+
+    const sseEventType = eventTypeMap[eventType];
+    const now = Date.now();
+    const eventId = `evt_${now}_${Math.random().toString(36).substr(2, 9)}`;
+
+    const event = {
+      type: sseEventType,
+      data: {
+        projectId,
+        timestamp: now,
+        eventId,
+        source: 'file_watcher'
+      }
+    };
+
+    console.log(`📡 Registry event: ${sseEventType} - ${projectId} (eventId: ${eventId}, source: file_watcher)`);
+
+    // Broadcast to all connected SSE clients
+    this.clients.forEach(client => {
+      try {
+        this.sendSSEEvent(client, event);
+      } catch (error) {
+        console.error('Failed to broadcast registry event:', error);
+      }
+    });
+
+    // Emit event for other parts of the application
+    this.emit(sseEventType, event.data);
   }
 
   handleFileEvent(eventType, filePath, projectId) {

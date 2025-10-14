@@ -25,15 +25,13 @@ export class ProjectController {
    * Get project configuration
    */
   async getProjectConfig(req, res) {
+    const { projectId } = req.params;
     try {
-      const { projectId } = req.params;
       const result = await this.projectService.getProjectConfig(projectId);
       res.json(result);
     } catch (error) {
       console.error('Error getting project config:', error);
-      if (error.message === 'Project not found') {
-        res.status(404).json({ error: error.message });
-      } else if (error.message === 'Project configuration not found') {
+      if (error.message === 'Project not found' || error.message === 'Project configuration not found') {
         res.status(404).json({ error: error.message });
       } else {
         res.status(500).json({ error: 'Failed to get project configuration' });
@@ -45,8 +43,8 @@ export class ProjectController {
    * Get CRs for a project
    */
   async getProjectCRs(req, res) {
+    const { projectId } = req.params;
     try {
-      const { projectId } = req.params;
       const crs = await this.ticketService.getProjectCRs(projectId);
       res.json(crs);
     } catch (error) {
@@ -173,23 +171,8 @@ export class ProjectController {
     try {
       const result = await this.projectService.createProject(req.body);
 
-      // Broadcast project creation event
-      const projectCreatedEvent = {
-        type: 'project-created',
-        data: {
-          projectId: result.project.id,
-          projectPath: result.project.path,
-          timestamp: Date.now()
-        }
-      };
-
-      this.fileWatcher.clients.forEach(client => {
-        try {
-          this.fileWatcher.sendSSEEvent(client, projectCreatedEvent);
-        } catch (error) {
-          console.error('Failed to broadcast project creation event:', error);
-        }
-      });
+      // File watcher will automatically detect the new .toml file
+      // and emit the 'project-created' event - no manual emission needed
 
       res.json(result);
     } catch (error) {
@@ -281,16 +264,16 @@ export class ProjectController {
    * Configure document paths
    */
   async configureDocuments(req, res) {
+    const { projectId, documentPaths } = req.body;
+
+    console.log(`📝 Configure documents for project: ${projectId}`);
+    console.log(`📝 Document paths: ${JSON.stringify(documentPaths)}`);
+
+    if (!projectId || !Array.isArray(documentPaths)) {
+      return res.status(400).json({ error: 'Project ID and document paths are required' });
+    }
+
     try {
-      const { projectId, documentPaths } = req.body;
-
-      console.log(`📝 Configure documents for project: ${projectId}`);
-      console.log(`📝 Document paths: ${JSON.stringify(documentPaths)}`);
-
-      if (!projectId || !Array.isArray(documentPaths)) {
-        return res.status(400).json({ error: 'Project ID and document paths are required' });
-      }
-
       await this.projectService.configureDocuments(projectId, documentPaths);
       console.log(`✅ Document paths configured successfully`);
       res.json({ success: true });
@@ -305,4 +288,5 @@ export class ProjectController {
       }
     }
   }
+
 }
