@@ -6,6 +6,8 @@ import { MarkdownSectionService } from '../../../dist/services/MarkdownSectionSe
 import { MarkdownService } from '../../../dist/services/MarkdownService.js';
 import { TicketFilters, TicketData } from '../../../dist/models/Ticket.js';
 import { CRStatus } from '../../../dist/models/Types.js';
+import { SimpleContentProcessor } from '../utils/simpleContentProcessor.js';
+import { SimpleSectionValidator } from '../utils/simpleSectionValidator.js';
 
 export class MCPTools {
   constructor(
@@ -640,7 +642,27 @@ export class MCPTools {
       throw new Error(`CR data validation failed:\n${errors}`);
     }
 
-    const ticket = await this.crService.createCR(project, type, data);
+    // Process content if provided
+    let processedData = { ...data };
+    if (data.content) {
+      const contentProcessingResult = SimpleContentProcessor.processContent(data.content, {
+        operation: 'replace',
+        maxLength: 1000000 // 1MB limit for full CR content
+      });
+
+      // Check for content processing errors (SimpleContentProcessor throws exceptions directly)
+      // No need to check .errors field as SimpleContentProcessor throws on errors
+
+      // Show warnings if any
+      if (contentProcessingResult.warnings.length > 0) {
+        console.warn(`Content processing warnings for new CR:`, contentProcessingResult.warnings);
+      }
+
+      // Use processed content
+      processedData.content = contentProcessingResult.content;
+    }
+
+    const ticket = await this.crService.createCR(project, type, processedData);
 
     const lines = [
       `✅ **Created CR ${ticket.code}**: ${ticket.title}`,
@@ -656,6 +678,16 @@ export class MCPTools {
     lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString() : 'N/A'}`);
     lines.push('');
     lines.push(`**File Created:** ${ticket.filePath}`);
+
+    // Add processing information if content was provided and processed
+    if (data.content && processedData.content !== data.content) {
+      lines.push('');
+      lines.push('**Content Processing:**');
+      lines.push('- Applied content sanitization and formatting');
+      if (contentProcessingResult.warnings.length > 0) {
+        lines.push(`- ${contentProcessingResult.warnings.length} warning(s) logged to console`);
+      }
+    }
 
     if (!data.content) {
       lines.push('');
@@ -908,14 +940,36 @@ export class MCPTools {
     const yamlFrontmatter = frontmatterMatch[1];
     const markdownBody = frontmatterMatch[2];
 
-    // Find section
-    const matches = MarkdownSectionService.findSection(markdownBody, section);
+    // Simple section validation
+    const availableSections = SimpleSectionValidator.extractSections(markdownBody);
+    const sectionValidation = SimpleSectionValidator.validateSection(section, availableSections);
+
+    if (!sectionValidation.valid) {
+      const errorMessage = [
+        `❌ **Section validation failed**`,
+        '',
+        `**Errors:**`,
+        ...sectionValidation.errors.map(error => `- ${error}`),
+        ''
+      ];
+
+      if (sectionValidation.suggestions.length > 0) {
+        errorMessage.push('**Suggestions:**');
+        errorMessage.push(...sectionValidation.suggestions.map(suggestion => `- ${suggestion}`));
+        errorMessage.push('');
+      }
+
+      errorMessage.push(`Use \`list_cr_sections\` to see all available sections in CR ${key}.`);
+      throw new Error(errorMessage.join('\n'));
+    }
+
+    // Find section using normalized identifier
+    const matches = MarkdownSectionService.findSection(markdownBody, sectionValidation.normalized || section);
 
     if (matches.length === 0) {
       // Section not found - list available sections
-      const allSections = MarkdownSectionService.findSection(markdownBody, '');
-      const sectionList = allSections
-        .map(s => `  - "${s.hierarchicalPath}"`)
+      const sectionList = availableSections
+        .map(s => `  - "${s}"`)
         .join('\n');
 
       throw new Error(
@@ -933,19 +987,33 @@ export class MCPTools {
       );
     }
 
+    // Process content with simple sanitization
+    const contentProcessingResult = SimpleContentProcessor.processContent(content, {
+      operation: operation as 'replace' | 'append' | 'prepend',
+      maxLength: 500000 // 500KB limit for section content
+    });
+
+    // Show warnings if any
+    if (contentProcessingResult.warnings.length > 0) {
+      console.warn(`Content processing warnings for ${key}:`, contentProcessingResult.warnings);
+    }
+
+    // Use processed content
+    const processedContent = contentProcessingResult.content;
+
     // Single match - proceed with update
     const matchedSection = matches[0];
     let updatedBody: string;
 
     switch (operation) {
       case 'replace':
-        updatedBody = MarkdownSectionService.replaceSection(markdownBody, matchedSection, content);
+        updatedBody = MarkdownSectionService.replaceSection(markdownBody, matchedSection, processedContent);
         break;
       case 'append':
-        updatedBody = MarkdownSectionService.appendToSection(markdownBody, matchedSection, content);
+        updatedBody = MarkdownSectionService.appendToSection(markdownBody, matchedSection, processedContent);
         break;
       case 'prepend':
-        updatedBody = MarkdownSectionService.prependToSection(markdownBody, matchedSection, content);
+        updatedBody = MarkdownSectionService.prependToSection(markdownBody, matchedSection, processedContent);
         break;
       default:
         throw new Error(`Invalid operation '${operation}'. Must be: replace, append, or prepend`);
@@ -969,12 +1037,26 @@ export class MCPTools {
       '',
       `**Section:** ${matchedSection.hierarchicalPath}`,
       `**Operation:** ${operation}`,
-      `**Content Length:** ${content.length} characters`,
+      `**Content Length:** ${processedContent.length} characters`,
       '',
       `- Title: ${ticket.title}`,
       `- Updated: ${now}`,
       `- File: ${ticket.filePath}`
     ];
+
+    // Add processing information
+    if (contentProcessingResult.modified) {
+      lines.push('');
+      lines.push('**Content Processing:**');
+      if (contentProcessingResult.warnings.length > 0) {
+        lines.push('- Applied content sanitization and formatting');
+        lines.push(`- ${contentProcessingResult.warnings.length} warning(s) logged to console`);
+      } else {
+        lines.push('- Content processed successfully');
+      }
+    }
+
+    // Simple implementation - no complex integrity checking needed
 
     // Add helpful message based on operation
     if (operation === 'replace') {
