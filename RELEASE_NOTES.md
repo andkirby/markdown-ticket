@@ -1,5 +1,37 @@
 # Release Notes
 
+## v0.5.0 (2025-10-14)
+
+### New Features
+- **Smart Links**: Automatic conversion of ticket references (MDT-001) to clickable links with hover previews. Navigate between related tickets instantly.
+- **Table of Contents**: Auto-generated ToC for all markdown documents with persistent button state. Quickly jump to any section within long tickets.
+- **H1 Title Management**: Automatic standardization and management of H1 headers in tickets to maintain consistent formatting across projects.
+- **Enhanced MCP Tools**: New `update_cr_section` tool for updating specific ticket sections (98% more efficient than full document updates).
+- **Event History Dev Tool**: Advanced development tool for tracking and debugging real-time events and listener management.
+
+### Improvements
+- **Document View Enhancement**: Clickable labels and persistent sorting preferences in the documents view for better navigation.
+- **Path Selector Logic**: Improved project switching logic with immediate ticket clearing to prevent cross-project data errors.
+- **Cross-Project Operations**: Enhanced drag-and-drop between projects with proper view mode preservation.
+- **Layered Architecture**: Complete backend refactoring to clean layered architecture improving maintainability and scalability.
+- **Real-time Updates**: Enhanced file system change detection for more reliable markdown updates across all views.
+- **Security Improvements**: Strengthened path validation and access controls for multi-project environments.
+
+### Bug Fixes
+- **Cross-Project Errors**: Fixed critical bugs causing data corruption when switching between projects rapidly.
+- **Drag-and-Drop Issues**: Resolved stale closure problems that caused 404 errors during cross-project ticket operations.
+- **Build Process**: Fixed ES module import issues and TypeScript compilation problems in shared libraries.
+- **Mermaid Rendering**: Fixed diagram rendering and placeholder corruption issues.
+- **Event Management**: Complete resolution of stale closure bugs throughout the application using useRef patterns.
+
+### Technical Improvements
+- **Component Architecture**: Applied useRef pattern consistently across all components to prevent React stale closure bugs
+- **TypeScript Configuration**: Replaced ES module workarounds with proper TypeScript configuration
+- **Build Optimization**: Removed tracked compiled JS files and improved shared library compilation
+- **Event System**: Enhanced SSE event handling with better error prevention and cleanup
+
+---
+
 ## v0.4.0 (2025-10-02)
 
 ### New Features
