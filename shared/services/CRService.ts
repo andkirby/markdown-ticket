@@ -66,9 +66,9 @@ export class CRService {
      */
     static parseArrayField(field: string | string[] | undefined): string[] {
         if (Array.isArray(field))
-            return field;
+            return field.filter((item: string) => !/^(none|n\/a|null|undefined)$/i.test(item.trim()));
         if (typeof field === 'string' && field.trim()) {
-            return field.split(',').map(item => item.trim()).filter(Boolean);
+            return field.split(',').map(item => item.trim()).filter(Boolean).filter((item: string) => !/^(none|n\/a|null|undefined)$/i.test(item));
         }
         return [];
     }
