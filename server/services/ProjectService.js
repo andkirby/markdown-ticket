@@ -132,6 +132,7 @@ lastAccessed = "${new Date().toISOString().split('T')[0]}"
 
     // Create local project config content
     const localConfigContent = `[project]
+id = "${projectDirName}"
 name = "${name}"
 code = "${projectCode}"
 path = "${crsPath}"
@@ -153,7 +154,7 @@ ${repositoryUrl ? `repository = "${repositoryUrl}"` : 'repository = ""'}
       success: true,
       message: 'Project created successfully',
       project: {
-        id: projectCode,
+        id: projectDirName,
         path: projectPath,
         configFile: '.mdt-config.toml',
         active: true
@@ -224,6 +225,7 @@ ${repositoryUrl ? `repository = "${repositoryUrl}"` : 'repository = ""'}
     // Security check - only allow paths under home directory
     const homedir = process.env.HOME || os.homedir();
     const resolvedPath = path.resolve(basePath);
+
     if (!resolvedPath.startsWith(homedir)) {
       throw new Error('Access denied to path outside home directory');
     }
