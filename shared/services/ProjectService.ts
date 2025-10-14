@@ -156,10 +156,29 @@ export class ProjectService {
       if (fs.existsSync(configPath)) {
         const config = this.getProjectConfig(dirPath);
         if (config) {
+          const directoryName = path.basename(dirPath);
+
+          // Determine project ID: use config.id if available, otherwise use directory name
+          const projectId = config.project.id || directoryName;
+
+          // Track projects by code to handle duplicates without proper IDs
+          if (!config.project.id && config.project.code) {
+            // Check if we already found a project with this code but no ID
+            const existingProject = discovered.find(p =>
+              p.project.code === config.project.code &&
+              !p.project.id
+            );
+            if (existingProject) {
+              console.warn(`Ignoring duplicate project ${directoryName} with code "${config.project.code}" (no ID in config)`);
+              return; // Skip duplicate
+            }
+          }
+
           const project: Project = {
-            id: path.basename(dirPath),
+            id: projectId,
             project: {
               name: config.project.name,
+              code: config.project.code,
               path: dirPath,
               configFile: configPath,
               active: true,
@@ -218,6 +237,43 @@ export class ProjectService {
       fs.writeFileSync(projectFile, tomlContent, 'utf8');
     } catch (error) {
       console.error('Error registering project:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create or update local .mdt-config.toml file with proper ID field
+   */
+  createOrUpdateLocalConfig(projectId: string, projectPath: string, name: string, code: string, description?: string): void {
+    try {
+      const configPath = path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG);
+
+      let config: any;
+      if (fs.existsSync(configPath)) {
+        // Read existing config
+        const content = fs.readFileSync(configPath, 'utf8');
+        config = toml.parse(content);
+      } else {
+        // Create new config structure
+        config = { project: {} };
+      }
+
+      // Update project section with proper ID
+      config.project = {
+        ...config.project,
+        id: projectId,
+        name: name,
+        code: code,
+        description: description || config.project.description || ''
+      };
+
+      // Write updated config
+      const tomlContent = this.objectToToml(config);
+      fs.writeFileSync(configPath, tomlContent, 'utf8');
+
+      console.log(`Updated local config for ${projectId} at ${configPath}`);
+    } catch (error) {
+      console.error('Error creating/updating local config:', error);
       throw error;
     }
   }
