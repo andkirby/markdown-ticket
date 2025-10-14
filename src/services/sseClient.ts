@@ -47,6 +47,12 @@ export class SSEClient {
   private url: string = '';
   private isConnected = false;
 
+  // Event deduplication tracking
+  private processedEventIds = new Set<string>();
+  private readonly EVENT_ID_CACHE_SIZE = 100; // Keep last 100 event IDs
+  private readonly EVENT_ID_CACHE_DURATION_MS = 5000; // 5 seconds
+  private eventIdTimestamps = new Map<string, number>();
+
   /**
    * Connect to SSE endpoint
    *
@@ -73,10 +79,19 @@ export class SSEClient {
       this.eventSource.onopen = () => {
         console.log('[SSEClient] ✅ Connection established');
         this.isConnected = true;
+
+        // Check if this was a reconnection (not initial connection)
+        const wasReconnection = this.reconnectAttempts > 0;
         this.reconnectAttempts = 0;
 
         // Emit connection event
         eventBus.emit('sse:connected', { url: fullUrl }, 'sse');
+
+        // Emit reconnection event if applicable
+        if (wasReconnection) {
+          console.log('[SSEClient] 🔄 SSE reconnected, triggering sync');
+          eventBus.emit('sse:reconnected', { timestamp: Date.now() }, 'sse');
+        }
       };
 
       // Message received
@@ -174,6 +189,15 @@ export class SSEClient {
    * Handle incoming SSE messages and map to EventBus events
    */
   private handleSSEMessage(data: SSEMessageData): void {
+    // Check for duplicate events using eventId if available
+    if (data.data.eventId) {
+      if (this.isDuplicateEvent(data.data.eventId)) {
+        console.log(`[SSEClient] 🔁 [DEDUPE] Skipping duplicate event: ${data.type} (ID: ${data.data.eventId})`);
+        return;
+      }
+      this.markEventProcessed(data.data.eventId);
+    }
+
     switch (data.type) {
       case 'connection':
         console.log('[SSEClient] Connection confirmed:', data.data.status);
@@ -189,15 +213,66 @@ export class SSEClient {
         break;
 
       case 'project-created':
-        console.log('[SSEClient] 📁 Project created:', data.data);
+        if (!import.meta.env.VITE_DISABLE_EVENTBUS_LOGS) {
+          console.log('[SSEClient] 📁 Project created:', data.data);
+        }
         eventBus.emit('project:created', {
           projectId: data.data.projectId || '',
           project: data.data
         }, 'sse');
         break;
 
+      case 'project-deleted':
+        if (!import.meta.env.VITE_DISABLE_EVENTBUS_LOGS) {
+          console.log(`[SSEClient] 🗑️ Project deleted: ${data.data.projectId} (eventId: ${data.data.eventId}, source: ${data.data.source})`);
+        }
+        eventBus.emit('project:deleted', {
+          projectId: data.data.projectId || '',
+          timestamp: data.data.timestamp
+        }, 'sse');
+        break;
+
       default:
         console.warn('[SSEClient] ⚠️ Unknown message type:', data.type);
+    }
+  }
+
+  /**
+   * Check if event has already been processed
+   */
+  private isDuplicateEvent(eventId: string): boolean {
+    return this.processedEventIds.has(eventId);
+  }
+
+  /**
+   * Mark event as processed and clean up old entries
+   */
+  private markEventProcessed(eventId: string): void {
+    const now = Date.now();
+
+    // Add to processed set
+    this.processedEventIds.add(eventId);
+    this.eventIdTimestamps.set(eventId, now);
+
+    // Clean up old event IDs
+    if (this.processedEventIds.size > this.EVENT_ID_CACHE_SIZE) {
+      // Remove oldest entries
+      const sortedByTime = Array.from(this.eventIdTimestamps.entries())
+        .sort((a, b) => a[1] - b[1]);
+
+      const toRemove = sortedByTime.slice(0, this.processedEventIds.size - this.EVENT_ID_CACHE_SIZE);
+      toRemove.forEach(([id]) => {
+        this.processedEventIds.delete(id);
+        this.eventIdTimestamps.delete(id);
+      });
+    }
+
+    // Also clean up by time
+    for (const [id, timestamp] of this.eventIdTimestamps.entries()) {
+      if (now - timestamp > this.EVENT_ID_CACHE_DURATION_MS) {
+        this.processedEventIds.delete(id);
+        this.eventIdTimestamps.delete(id);
+      }
     }
   }
 

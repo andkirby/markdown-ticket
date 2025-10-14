@@ -4,6 +4,7 @@ import { Project, ProjectConfig } from '../../shared/models/Project';
 import { useSSEEvents } from './useSSEEvents';
 import { useTicketOperations } from './useTicketOperations';
 import { dataLayer } from '../services/dataLayer';
+import { useEventBus } from '../services/eventBus';
 
 interface UseProjectManagerOptions {
   autoSelectFirst?: boolean;
@@ -83,7 +84,32 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     }
   }, [selectedProject]);
 
-  const sseEvents = handleSSEEvents ? useSSEEvents(fetchTicketsForProject, updateTicketInState) : null;
+  // Fetch all projects
+  const fetchProjects = useCallback(async (): Promise<void> => {
+    try {
+      const response = await fetch('/api/projects');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const allProjects = await response.json();
+      setProjects(allProjects);
+
+      // Auto-select first project if none selected and autoSelectFirst is enabled
+      if (autoSelectFirst && allProjects.length > 0 && !selectedProjectRef.current) {
+        setSelectedProjectState(allProjects[0]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+      throw error;
+    }
+  }, [autoSelectFirst]); // Removed selectedProject and ticketOps dependencies
+
+  const refreshProjects = useCallback(async () => {
+    await fetchProjects();
+  }, [fetchProjects]);
+
+  const sseEvents = handleSSEEvents ? useSSEEvents(fetchTicketsForProject, updateTicketInState, refreshProjects) : null;
   
   // Set up ticket operations
   const ticketOps = useTicketOperations(
@@ -101,27 +127,6 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
       sseEvents.selectedProjectRef.current = selectedProject;
     }
   }, [selectedProject, sseEvents]);
-
-  // Fetch all projects
-  const fetchProjects = useCallback(async (): Promise<void> => {
-    try {
-      const response = await fetch('/api/projects');
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const allProjects = await response.json();
-      setProjects(allProjects);
-      
-      // Auto-select first project if none selected and autoSelectFirst is enabled
-      if (autoSelectFirst && allProjects.length > 0 && !selectedProjectRef.current) {
-        setSelectedProjectState(allProjects[0]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-      throw error;
-    }
-  }, [autoSelectFirst]); // Removed selectedProject and ticketOps dependencies
 
   // Fetch project configuration
   const fetchProjectConfig = useCallback(async (project: Project): Promise<void> => {
@@ -150,9 +155,30 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     fetchProjects().finally(() => setLoading(false));
   }, [fetchProjects]);
 
+  // Reconcile projects on SSE reconnection (only if this instance handles SSE events)
+  useEventBus('sse:reconnected', useCallback(() => {
+    if (!handleSSEEvents) return;
+
+    console.log('[useProjectManager] SSE reconnected, syncing projects');
+    refreshProjects().catch(err => {
+      console.error('Failed to sync projects after SSE reconnection:', err);
+    });
+  }, [handleSSEEvents, refreshProjects]));
+
   // Handle project selection changes
   useEffect(() => {
     if (selectedProject) {
+      // Check if selected project still exists in the current project list
+      const projectStillExists = projects.some(p => p.id === selectedProject.id);
+
+      if (!projectStillExists) {
+        console.log(`Selected project ${selectedProject.id} no longer exists, clearing selection`);
+        setSelectedProjectState(null);
+        setTickets([]);
+        setProjectConfig(null);
+        return;
+      }
+
       // Clear tickets immediately to prevent showing wrong project's tickets
       setTickets([]);
 
@@ -170,15 +196,11 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
       setTickets([]);
       setProjectConfig(null);
     }
-  }, [selectedProject, fetchProjectConfig, fetchTicketsForProject]);
+  }, [selectedProject, fetchProjectConfig, fetchTicketsForProject, projects]);
 
   const setSelectedProject = useCallback((project: Project | null) => {
     setSelectedProjectState(project);
   }, []);
-
-  const refreshProjects = useCallback(async () => {
-    await fetchProjects();
-  }, [fetchProjects]);
 
   const refreshTickets = useCallback(async () => {
     if (selectedProject) {
