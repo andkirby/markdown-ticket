@@ -1,6 +1,7 @@
 [project]
 name = "Markdown Ticket Board"
 code = "MDT"
+id = "markdown-ticket"
 path = "docs/CRs"
 startNumber = 1
 counterFile = ".mdt-next"

@@ -6,6 +6,7 @@
 export interface Project {
   id: string;
   project: {
+    id?: string;
     name: string;
     code?: string;
     path: string;
@@ -30,6 +31,7 @@ export interface Project {
 
 export interface ProjectConfig {
   project: {
+    id?: string;
     name: string;
     code: string;
     path: string;
@@ -69,6 +71,6 @@ export function validateProjectConfig(config: any): config is ProjectConfig {
     typeof config.project.name === 'string' &&
     typeof config.project.code === 'string' &&
     typeof config.project.path === 'string' &&
-    typeof config.project.startNumber === 'number'
+    (typeof config.project.startNumber === 'number' || (typeof config.project.startNumber === 'string' && !isNaN(Number(config.project.startNumber))))
   );
 }
