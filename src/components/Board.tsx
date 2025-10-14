@@ -42,7 +42,10 @@ const BoardContent: React.FC<BoardProps> = ({
   const [filterQuery, setFilterQuery] = useState('');
   
   // Only use the hook when no selectedProject prop is provided (multi-project mode)
-  const hookData = useProjectManager({ autoSelectFirst: enableProjectSwitching && !propSelectedProject });
+  const hookData = useProjectManager({
+    autoSelectFirst: enableProjectSwitching && !propSelectedProject,
+    handleSSEEvents: true // Enable SSE events to refresh project list when new projects are created
+  });
   
   // IMPORTANT: Always use hook data for multi-project mode to ensure fresh state
   // Prop data should only be used in single-project mode (when props are explicitly passed)
