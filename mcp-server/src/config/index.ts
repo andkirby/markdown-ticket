@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as toml from 'toml';
 // @ts-ignore
-import { DEFAULT_PATHS } from '../../../shared/utils/constants.js';
+import { DEFAULT_PATHS } from '../../../dist/utils/constants.js';
 
 /**
  * Server configuration with merged approach.
