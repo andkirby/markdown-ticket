@@ -23,17 +23,20 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
   // Helper function to render ticket references as links
   const renderTicketLinks = (tickets: string[]) => {
     return tickets.map((ticketRef, index) => {
-      const parsedLink = classifyLink(ticketRef, projectCode || '');
+      // Extract clean ticket code from strings like "CR-A017 (Service Provider Architecture)"
+      const ticketCodeMatch = ticketRef.match(/^([A-Z]+-\d+)/);
+      const cleanTicketCode = ticketCodeMatch ? ticketCodeMatch[1] : ticketRef;
+      const parsedLink = classifyLink(cleanTicketCode, projectCode || '');
       return (
         <React.Fragment key={ticketRef}>
           {index > 0 && ', '}
-          <SmartLink 
-            link={parsedLink} 
+          <SmartLink
+            link={parsedLink}
             currentProject={projectCode || ''}
             className="hover:underline"
             showIcon={false}
           >
-            {ticketRef}
+            {cleanTicketCode}
           </SmartLink>
         </React.Fragment>
       );
