@@ -43,8 +43,8 @@ export function classifyLink(href: string, currentProject: string): ParsedLink {
     };
   }
   
-  // Ticket references (MDT-001, MDT-001.md, MDT-001#section)
-  const ticketMatch = href.match(/^([A-Z]+-\d+)(\.md)?(#.*)?$/);
+  // Ticket references (CR-A017, CR-017, CR-A017.md, CR-017.md, CR-A017#section, CR-017#section)
+  const ticketMatch = href.match(/^([A-Z]+-[A-Z]?\d+)(\.md)?(#.*)?$/);
   if (ticketMatch) {
     const [, ticketKey, , anchor] = ticketMatch;
     return {
