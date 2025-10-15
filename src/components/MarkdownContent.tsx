@@ -66,6 +66,12 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
 
       // Step 2: Convert markdown to HTML
       const rawHTML = converter.makeHtml(preprocessedMarkdown);
+
+      // Debug: Log the raw HTML to see what URLs are generated
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Preprocessed markdown sample:', preprocessedMarkdown.substring(0, 500));
+        console.log('Raw HTML sample:', rawHTML.substring(0, 500));
+      }
       
       // Step 3: Process Mermaid diagrams
       const mermaidProcessed = processMermaidBlocks(rawHTML);
@@ -104,6 +110,12 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
     replace: (domNode) => {
       if (domNode instanceof Element && domNode.name === 'a') {
         const href = domNode.attribs?.href || '';
+
+        // Debug: Log the href being processed
+        if (process.env.NODE_ENV === 'development' && href.includes('MDT-')) {
+          console.log('Processing link href:', href);
+        }
+
         const parsedLink = classifyLink(href, currentProject);
         
         // Extract text content safely
