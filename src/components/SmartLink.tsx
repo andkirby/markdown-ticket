@@ -75,6 +75,16 @@ const SmartLink: React.FC<SmartLinkProps> = ({
   const effectiveHref = shouldUseNormalizedHref ? normalizedLink.webHref : link.href;
   const effectiveLink = shouldUseNormalizedHref ? { ...link, href: effectiveHref } : link;
 
+  // Debug: Log the final href being used for navigation
+  if (process.env.NODE_ENV === 'development' && effectiveHref.includes('MDT-')) {
+    console.log('SmartLink rendering:', {
+      type: effectiveLink.type,
+      href: effectiveHref,
+      projectCode: effectiveLink.projectCode,
+      ticketKey: effectiveLink.ticketKey
+    });
+  }
+
   // If auto-linking is disabled, render as plain text
   if (!linkConfig.enableAutoLinking) {
     return <span className={className}>{children}</span>;

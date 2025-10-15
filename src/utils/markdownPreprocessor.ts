@@ -74,6 +74,7 @@ function protectExistingLinks(markdown: string, state: PreprocessorState): strin
 function convertTicketReferences(markdown: string, currentProject: string): string {
   const projectPattern = new RegExp(`\\b(${currentProject}-\\d+)\\b`, 'g');
   // Use absolute URLs to prevent Showdown.js from resolving relative to current page
+  // Ensure the URLs are explicitly absolute to avoid any relative resolution issues
   return markdown.replace(projectPattern, `[$1](/prj/${currentProject}/ticket/$1)`);
 }
 
