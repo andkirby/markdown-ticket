@@ -46,7 +46,7 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
       simpleLineBreaks: true,
       headerLevelStart,
       parseImgDimensions: true,
-      simplifiedAutoLink: true,
+      simplifiedAutoLink: false, // Disabled to prevent conflicts with our preprocessor
       excludeTrailingPunctuationFromURLs: true,
       literalMidWordUnderscores: true,
       ghCompatibleHeaderId: true,
@@ -114,9 +114,21 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
         // Debug: Log the href being processed
         if (process.env.NODE_ENV === 'development' && href.includes('MDT-')) {
           console.log('Processing link href:', href);
+          console.log('Current path:', window.location.pathname);
         }
 
         const parsedLink = classifyLink(href, currentProject);
+
+        // Debug: Log the classification result
+        if (process.env.NODE_ENV === 'development' && href.includes('MDT-')) {
+          console.log('Link classification result:', {
+            type: parsedLink.type,
+            href: parsedLink.href,
+            projectCode: parsedLink.projectCode,
+            ticketKey: parsedLink.ticketKey,
+            isValid: parsedLink.isValid
+          });
+        }
         
         // Extract text content safely
         const extractText = (node: any): string => {
