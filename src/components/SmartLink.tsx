@@ -66,9 +66,14 @@ const SmartLink: React.FC<SmartLinkProps> = ({
     }
   }, [linkContext, originalHref, currentProject]);
 
-  // Use normalized href if available, otherwise fall back to original
-  const effectiveHref = normalizedLink?.webHref || link.href;
-  const effectiveLink = normalizedLink ? { ...link, href: effectiveHref } : link;
+  // Use normalized href for document/file links, but keep original for ticket links
+  // This prevents overriding correctly built ticket URLs
+  const shouldUseNormalizedHref = normalizedLink &&
+    link.type !== LinkType.TICKET &&
+    link.type !== LinkType.CROSS_PROJECT;
+
+  const effectiveHref = shouldUseNormalizedHref ? normalizedLink.webHref : link.href;
+  const effectiveLink = shouldUseNormalizedHref ? { ...link, href: effectiveHref } : link;
 
   // If auto-linking is disabled, render as plain text
   if (!linkConfig.enableAutoLinking) {
