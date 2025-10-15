@@ -1,3 +1,5 @@
+import { LinkNormalizer, LinkContext, NormalizedLink, createLinkContext } from './linkNormalization';
+
 export enum LinkType {
   EXTERNAL = 'external',
   TICKET = 'ticket',
@@ -121,4 +123,86 @@ export function validateTicketLink(ticketKey: string, availableTickets: string[]
 
 export function validateDocumentLink(docPath: string, availableDocuments: string[]): boolean {
   return availableDocuments.includes(docPath);
+}
+
+/**
+ * Enhanced link classification with normalization support
+ */
+export function classifyAndNormalizeLink(
+  href: string,
+  currentProject: string,
+  context?: Partial<LinkContext>
+): { parsed: ParsedLink; normalized?: NormalizedLink } {
+  const parsed = classifyLink(href, currentProject);
+
+  // If normalization context is provided, also normalize the link
+  if (context) {
+    const fullContext = createLinkContext({
+      currentProject,
+      sourcePath: context.sourcePath || '',
+      projectConfig: context.projectConfig,
+      documentPaths: context.documentPaths,
+      webBasePath: context.webBasePath
+    });
+
+    const normalized = LinkNormalizer.normalizeLink(href, fullContext);
+
+    // Update parsed link with normalized information
+    if (normalized.isValid) {
+      parsed.href = normalized.webHref;
+      parsed.isValid = true;
+
+      if (normalized.filePath) {
+        parsed.documentPath = normalized.filePath;
+      }
+
+      if (normalized.targetProject) {
+        parsed.projectCode = normalized.targetProject;
+      }
+    } else {
+      parsed.isValid = false;
+    }
+
+    return { parsed, normalized };
+  }
+
+  return { parsed };
+}
+
+/**
+ * Extract document paths from project configuration
+ */
+export function extractDocumentPaths(projectConfig: any): string[] {
+  if (!projectConfig) return [];
+
+  // Handle different configuration formats
+  if (projectConfig.document_paths) {
+    return projectConfig.document_paths;
+  }
+
+  if (projectConfig.documentPaths) {
+    return projectConfig.documentPaths;
+  }
+
+  if (projectConfig.documents?.paths) {
+    return projectConfig.documents.paths;
+  }
+
+  return [];
+}
+
+/**
+ * Create link context from project data
+ */
+export function createLinkContextFromProject(
+  currentProject: string,
+  sourcePath: string,
+  projectConfig?: any
+): LinkContext {
+  return createLinkContext({
+    currentProject,
+    sourcePath,
+    projectConfig,
+    documentPaths: extractDocumentPaths(projectConfig)
+  });
 }
