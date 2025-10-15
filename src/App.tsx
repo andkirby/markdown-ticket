@@ -136,13 +136,16 @@ function ProjectRouteHandler() {
       const ticket = tickets.find(t => t.code === ticketKey);
       if (ticket) {
         setSelectedTicket(ticket);
-      } else {
+        setError(null); // Clear any previous error
+      } else if (!projectsLoading && selectedProject) {
+        // Only set error if projects are loaded and we have a selected project with loaded tickets
+        // This prevents false errors during initial loading
         setError(`Ticket '${ticketMatch[1]}' not found`);
       }
     } else {
       setSelectedTicket(null);
     }
-  }, [location.pathname, tickets]);
+  }, [location.pathname, tickets, projectsLoading, selectedProject]);
 
   const handleViewModeChange = (mode: 'board' | 'list' | 'documents') => {
     const basePath = `/prj/${projectCode}`;
