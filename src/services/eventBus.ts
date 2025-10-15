@@ -87,6 +87,7 @@ class EventBus {
   private maxQueueSize = 100; // Keep last 100 events
   private errorCount = 0;
   private maxErrors = 10; // Circuit breaker threshold
+  private enableLogging = import.meta.env.DEV && !import.meta.env.VITE_DISABLE_EVENTBUS_LOGS;
 
   /**
    * Subscribe to events of a specific type
@@ -130,14 +131,14 @@ class EventBus {
       });
     }
 
-    if (import.meta.env.DEV) {
+    if (this.enableLogging) {
       console.log(`[EventBus] Subscribed to ${eventType}. Total listeners: ${listeners.size}${metadata?.source ? ` (source: ${metadata.source})` : ''}`);
     }
 
     // Return unsubscribe function
     return () => {
       listeners.delete(handler as EventListener);
-      if (import.meta.env.DEV) {
+      if (this.enableLogging) {
         console.log(`[EventBus] Unsubscribed from ${eventType}. Remaining listeners: ${listeners.size}`);
       }
 
@@ -185,7 +186,7 @@ class EventBus {
     };
 
     // Log event for debugging
-    if (import.meta.env.DEV) {
+    if (this.enableLogging) {
       console.log(`[EventBus] 📤 ${eventType}`, {
         id: event.id,
         source,
@@ -222,7 +223,7 @@ class EventBus {
           }
         }
       });
-    } else {
+    } else if (this.enableLogging) {
       console.warn(`[EventBus] ⚠️ No listeners for ${eventType}`);
     }
   }
@@ -252,7 +253,9 @@ class EventBus {
    */
   clearHistory(): void {
     this.eventQueue = [];
-    console.log('[EventBus] Event history cleared');
+    if (this.enableLogging) {
+      console.log('[EventBus] Event history cleared');
+    }
   }
 
   /**
@@ -260,7 +263,9 @@ class EventBus {
    */
   resetErrorCount(): void {
     this.errorCount = 0;
-    console.log('[EventBus] Error count reset');
+    if (this.enableLogging) {
+      console.log('[EventBus] Error count reset');
+    }
   }
 
   /**
@@ -295,7 +300,9 @@ class EventBus {
    */
   removeAllListeners(): void {
     this.listeners.clear();
-    console.log('[EventBus] All listeners removed');
+    if (this.enableLogging) {
+      console.log('[EventBus] All listeners removed');
+    }
   }
 
   /**

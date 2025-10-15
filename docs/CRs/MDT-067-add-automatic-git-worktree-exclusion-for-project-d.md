@@ -18,48 +18,93 @@ When developers create git worktrees, these appear as separate directories but r
 - Redundant file watching and resource usage
 - User confusion about which "project" to select
 
-\n\n**Additional Consideration: Projects Without Configuration Files**\n\nThe current discovery logic only considers directories containing `.mdt-config.toml` files as valid projects. However, this excludes legitimate projects that may not have configuration files yet. The worktree detection logic should also handle:\n\n- Directories without `.mdt-config.toml` files that could still be valid projects\n- Worktrees of projects that have configuration files in the main repository but not in the worktree\n- Legacy projects or newly created workspaces that haven't been configured yet\n\nThe detection logic should apply worktree exclusion to all directories being scanned, regardless of whether they contain configuration files, ensuring comprehensive coverage of the filesystem tree.
+**Additional Consideration: Projects Without Configuration Files**
 
+The current discovery logic only considers directories containing `.mdt-config.toml` files as valid projects. However, this excludes legitimate projects that may not have configuration files yet. The worktree detection logic should also handle:
+
+- Directories without `.mdt-config.toml` files that could still be valid projects
+- Worktrees of projects that have configuration files in the main repository but not in the worktree
+- Legacy projects or newly created workspaces that haven't been configured yet
+
+The detection logic should apply worktree exclusion to all directories being scanned, regardless of whether they contain configuration files, ensuring comprehensive coverage of the filesystem tree.
 ## Implementation Status: ✅ COMPLETED
+### Core Detection Logic
 
-**Date Implemented**: 2025-10-14
+Implement a multi-layered detection approach:
 
-**Summary**: Git worktree exclusion functionality has been successfully implemented and deployed. The system now automatically excludes git worktree directories from project discovery and provides robust project ID validation.
+1. **Fast Path (Pattern-based)**:
+   - Analyze directory names against worktree patterns
+   - Check for corresponding main project directories
+   - No git commands required - immediate results
 
-### Key Improvements Implemented
+2. **Verification Path (Git-based)**:
+   - Use `git rev-parse --git-dir` to confirm worktree status
+   - Check for absolute paths containing `worktrees/`
+   - Execute asynchronously to avoid blocking
 
-1. **Project ID Validation System**
-   - Added optional `id` field to Project and ProjectConfig interfaces
-   - Implemented priority system: `config.project.id` > directory name
-   - Enhanced duplicate detection for projects with same code but missing IDs
+3. **Caching Layer**:
+   - Pre-build worktree cache using `git worktree list`
+   - Use `Set` data structure for O(1) lookups
+   - Update cache asynchronously during startup
 
-2. **Automatic Worktree Exclusion**
-   - Git worktrees are automatically filtered out during project discovery
-   - Reduced project list from 10 entries to 7 clean, unique projects
-   - Duplicate worktrees (markdown-ticket-aws-counter, markdown-ticket-clone, markdown-ticket-smart-link) are properly excluded
+### Integration Points
 
-3. **Enhanced Configuration Validation**
-   - Fixed TOML number parsing validation for `startNumber` field
-   - Resolved config validation failures that prevented proper project recognition
-   - Improved error handling in ProjectSelector component
+**Project Scanner Enhancement**:
+```typescript
+// In scanDirectoryForProjects method
+if (this.isGitWorktree(dirPath)) {
+    console.log(`Skipping git worktree: ${dirPath}`);
+    return; // Skip this directory
+}
+```
 
-### Results Achieved
+**Non-blocking Initialization**:
+```typescript
+// Use setImmediate to avoid blocking startup
+setImmediate(() => {
+    // Build worktree cache asynchronously
+    this.buildWorktreeCache();
+});
+```
 
-- **Before**: 10 projects including duplicates/worktrees with `code: null`
-- **After**: 7 unique projects with proper codes (CR, OPU, ACT, DEB, MDT, GT, SEB)
-- **Performance**: Project discovery completes within 2 seconds with minimal overhead
-- **User Experience**: Clean project selector with no duplicate entries or worktree confusion
+### Error Handling
 
-### Files Modified
+- Add timeouts (2 seconds) to all git commands
+- Suppress stderr output to prevent console spam
+- Gracefully handle non-git directories and permission errors
+- Use pattern-based detection as fallback when git commands fail
 
-- `shared/services/ProjectService.ts` - Core implementation of project ID validation and duplicate filtering
-- `shared/models/Project.ts` - Interface updates for optional ID field and validation fixes
-- `src/components/ProjectSelector.tsx` - Improved error handling for missing project codes
+### Comprehensive Directory Scanning
 
-### Commit
+**Apply Worktree Detection to All Directories**:
 
-- **Commit Hash**: `e149eee`
-- **Message**: `feat: improve project ID validation and duplicate detection`
+The worktree detection logic should be applied to all directory scanning operations, not just those looking for `.mdt-config.toml` files. This ensures:
+
+```typescript
+// In scanDirectoryForProjects method - apply to ALL directories
+for (const entry of entries) {
+    if (entry.isDirectory() && !entry.name.startsWith('.')) {
+        const subDirPath = path.join(dirPath, entry.name);
+        
+        // Apply worktree exclusion to ALL subdirectories
+        if (this.isGitWorktree(subDirPath)) {
+            console.log(`Skipping git worktree subdirectory: ${subDirPath}`);
+            continue;
+        }
+        
+        // Then continue with normal project detection logic
+        // (checking for .mdt-config.toml, etc.)
+        this.scanDirectoryForProjects(subDirPath, discovered, maxDepth - 1);
+    }
+}
+```
+
+**Handle Projects Without Configuration Files**:
+
+- The worktree exclusion should run before any configuration file checks
+- This prevents scanning worktree directories regardless of their contents
+- Ensures comprehensive coverage of the filesystem during project discovery
+- Maintains performance by avoiding unnecessary git operations in worktrees
 ## 2. Rationale
 
 Git worktrees are a common workflow feature where developers need to work on multiple branches simultaneously without switching contexts. However, from a project management perspective, these worktrees represent the same logical project and should not appear as separate entities in the project selector.
@@ -193,4 +238,11 @@ setImmediate(() => {
 - [ ] Supports various worktree naming conventions
 - [ ] Works with both relative and absolute git paths
 
-\n\n**Comprehensive Directory Coverage Requirements:**\n- [ ] Worktree detection applies to ALL scanned directories, not just those with .mdt-config.toml\n- [ ] Worktree exclusion runs before any configuration file checks\n- [ ] Directories without .mdt-config.toml are still evaluated for worktree status\n- [ ] File system scanning excludes worktrees regardless of their configuration status\n- [ ] Projects without configuration files can still be discovered (if they meet other criteria)\n- [ ] Worktree detection works during general directory traversal and auto-discovery\n- [ ] No assumption that all valid projects must have .mdt-config.toml files
+**Comprehensive Directory Coverage Requirements:**
+- [ ] Worktree detection applies to ALL scanned directories, not just those with .mdt-config.toml
+- [ ] Worktree exclusion runs before any configuration file checks
+- [ ] Directories without .mdt-config.toml are still evaluated for worktree status
+- [ ] File system scanning excludes worktrees regardless of their configuration status
+- [ ] Projects without configuration files can still be discovered (if they meet other criteria)
+- [ ] Worktree detection works during general directory traversal and auto-discovery
+- [ ] No assumption that all valid projects must have .mdt-config.toml files
