@@ -64,10 +64,12 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   // Set up SSE events if this instance should handle them
   const updateTicketInState = useCallback(async (ticketData: Ticket) => {
     // SSE only sends metadata, fetch complete ticket including content
-    if (selectedProject) {
+    // Use ref to avoid stale closure issues
+    const currentProject = selectedProjectRef.current;
+    if (currentProject) {
       try {
         console.log(`[ProjectManager] Fetching complete ticket: ${ticketData.code}`);
-        const fullTicket = await dataLayer.fetchTicket(selectedProject.id, ticketData.code);
+        const fullTicket = await dataLayer.fetchTicket(currentProject.id, ticketData.code);
         if (fullTicket) {
           console.log(`[ProjectManager] ✅ Updated ticket in main array: ${ticketData.code}`);
           setTickets(prev => prev.map(ticket =>
@@ -82,7 +84,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
         ));
       }
     }
-  }, [selectedProject]);
+  }, []); // No dependencies - uses ref instead
 
   // Fetch all projects
   const fetchProjects = useCallback(async (): Promise<void> => {
