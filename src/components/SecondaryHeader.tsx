@@ -14,6 +14,7 @@ interface SecondaryHeaderProps {
   onEditProject?: () => void;
   onCounterAPI?: () => void;
   selectedProject?: any;
+  onCreateTicket?: () => void;
 }
 
 export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
@@ -23,7 +24,8 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   onAddProject,
   onEditProject,
   onCounterAPI,
-  selectedProject
+  selectedProject,
+  onCreateTicket
 }) => {
   return (
     <div className="flex items-center space-x-4">
@@ -33,6 +35,16 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
           preferences={sortPreferences}
           onPreferencesChange={onSortPreferencesChange}
         />
+      )}
+
+      {/* Create Button - visible in Board and List views when project is selected */}
+      {(viewMode === 'board' || viewMode === 'list') && selectedProject && onCreateTicket && (
+        <Button
+          onClick={onCreateTicket}
+          className="btn btn-primary"
+        >
+          Create
+        </Button>
       )}
 
       {/* Hamburger Menu - visible in all views */}

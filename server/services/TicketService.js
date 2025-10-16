@@ -92,14 +92,18 @@ export class TicketService {
       .substring(0, 50);
     const filename = `${crCode}-${titleSlug}.md`;
 
-    // MDT-064: Create CR content with H1 as authoritative source
-    const crContent = `- **Code**: ${crCode}
-- **Title/Summary**: ${title}
-- **Status**: Proposed
-- **Date Created**: ${new Date().toISOString().split('T')[0]}
-- **Type**: ${type}
-- **Priority**: ${priority || 'Medium'}
-- **Phase/Epic**: Phase A (Foundation)
+    // MDT-064: Create CR content with YAML frontmatter format
+    const crContent = `---
+code: ${crCode}
+title: ${title}
+status: Proposed
+dateCreated: ${new Date().toISOString()}
+type: ${type}
+priority: ${priority || 'Medium'}
+phaseEpic: Phase A (Foundation)
+source: User Request
+impact: Medium
+---
 
 # ${title}
 

@@ -69,3 +69,4 @@ lambda-counter-aws
 generated-docs/repomix_output.xml
 docs/**/*.md
 /docs/*.*
+/projects/
