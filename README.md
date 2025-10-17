@@ -316,6 +316,7 @@ See **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** for:
 
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for detailed information about each version:
 
+- **v0.6.0** (2025-10-18): MCP transport improvements, smart link fixes, enhanced project management
 - **v0.5.0** (2025-10-14): Smart links, Table of Contents, H1 title management, enhanced MCP tools
 - **v0.4.0** (2025-10-02): URL routing, Mermaid diagrams, document filtering, section-based MCP updates
 - **v0.3.0** (2025-09-11): Badge components, project editing, backlog management, MCP development tools

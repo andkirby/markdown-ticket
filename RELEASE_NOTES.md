@@ -1,5 +1,34 @@
 # Release Notes
 
+## v0.6.0 (2025-10-18)
+
+### New Features
+- **MCP Streamable HTTP Transport**: New official MCP transport specification support for better integration with modern AI assistants and improved performance.
+- **SSE Transport Architecture**: Enhanced Server-Sent Events transport for MCP operations, providing more reliable real-time communication.
+- **Automatic Git Worktree Exclusion**: Project discovery now automatically excludes git worktrees to prevent duplicate project detection and confusion.
+- **File Watcher-based Project Lifecycle**: Improved automatic detection of project creation, deletion, and configuration changes without requiring manual refresh.
+
+### Improvements
+- **Smart Links Reliability**: Comprehensive fixes for URL duplication issues, ensuring ticket references display correctly without duplicated base URLs.
+- **Project Management**: Enhanced project ID validation and duplicate detection to prevent configuration conflicts.
+- **MCP Tool Optimization**: Finalized 40% token reduction improvements through tool consolidation and efficient section-based operations.
+- **Docker Infrastructure**: Simplified Docker containerization architecture for easier deployment and development setup.
+- **Link Classification**: Improved absolute URL recognition for ticket links, preventing conflicts with regular web URLs.
+
+### Bug Fixes
+- **Smart Link URL Duplication**: Fixed critical bug where ticket links would show duplicated base URLs (e.g., `http://localhost:5173http://localhost:5173/...`).
+- **Project Creation SSE Events**: Resolved event ID mismatch issues when creating new projects that could cause UI inconsistencies.
+- **Stale Closure in Ticket Updates**: Fixed state update prevention that could stop board view updates when tickets were modified.
+- **API Endpoint Consistency**: Updated AddProjectModal to use correct `/api/directories` endpoint for directory discovery.
+- **Navigation Race Conditions**: Resolved race conditions in smart link navigation that could cause broken links.
+
+### Developer Experience
+- **Production/Development Setups**: Added practical Docker setup configurations for both development and production environments.
+- **Content Sanitization**: Implemented MCP content sanitization with conservative approach for security.
+- **Health Check Cleanup**: Simplified infrastructure by removing unnecessary health check endpoints.
+
+---
+
 ## v0.5.0 (2025-10-14)
 
 ### New Features
