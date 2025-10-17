@@ -1,13 +1,11 @@
 ---
 code: MDT-055
-title: Docker Containerization Architecture for Multi-Service Application
 status: Proposed
 dateCreated: 2025-10-02T10:38:54.678Z
 type: Architecture
 priority: High
 phaseEpic: Phase C (Infrastructure)
 ---
-
 
 # Docker Containerization Architecture for Multi-Service Application
 
@@ -997,36 +995,25 @@ services:
 #### 3.1 MCP on Host (Development/Simple Production)
 
 **Documentation: `docs/MCP_DOCKER.md` (new)**
-```markdown
+
+File content for `docs/MCP_DOCKER.md`:
+
 # MCP Server Docker Integration
 
 ## Option A: MCP on Host (Recommended for Development)
 
 ### Setup
-1. Run Docker containers:
-   ```bash
-   docker-compose -f docker-compose.dev.yml up
-   ```
+1. Run Docker containers: `docker-compose -f docker-compose.dev.yml up`
 
 2. MCP server runs on host, accesses volumes:
-   ```bash
-   # Terminal on host
-   cd mcp-server
-   npm run build
-   node dist/index.js
-   ```
+   - Terminal on host
+   - `cd mcp-server`
+   - `npm run build`
+   - `node dist/index.js`
 
 3. LLM configuration (no changes needed):
-   ```bash
-   # Claude Code
-   claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
-   
-   # Amazon Q
-   q mcp add --name mdt-all \
-     --command "node" \
-     --args "$HOME/markdown-ticket/mcp-server/dist/index.js" \
-     --scope global
-   ```
+   - Claude Code: `claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js`
+   - Amazon Q: `q mcp add --name mdt-all --command "node" --args "$HOME/markdown-ticket/mcp-server/dist/index.js" --scope global`
 
 ### How It Works
 - Docker volumes mount to host paths
@@ -1039,64 +1026,28 @@ services:
 - Works with existing LLM configurations
 - Simple setup
 
-### Cons  
+### Cons
 - MCP not containerized
 - Requires Node.js on host
-```
 
 #### 3.2 MCP via Docker Exec (Advanced Production)
 
-**Documentation: `docs/MCP_DOCKER.md` (continued)**
-```markdown
+File content for `docs/MCP_DOCKER.md` (continued):
+
 ## Option B: MCP in Container (Advanced)
 
 ### Setup
-1. Build MCP container:
-   ```dockerfile
-   # Dockerfile.mcp
-   FROM node:20-alpine
-   
-   WORKDIR /app
-   
-   COPY mcp-server/package*.json ./
-   RUN npm ci --only=production
-   
-   COPY mcp-server ./
-   RUN npm run build
-   
-   CMD ["node", "dist/index.js"]
+1. Create `Dockerfile.mcp` with MCP server build configuration
+2. Add MCP service to docker-compose with stdin_open and tty enabled for stdio support
+3. Create wrapper script `mcp-docker-wrapper.sh`:
    ```
-
-2. Add to docker-compose:
-   ```yaml
-   mcp:
-     build:
-       context: .
-       dockerfile: Dockerfile.mcp
-     volumes:
-       - tickets_data:/app/docs/CRs
-       - config_data:/root/.config/markdown-ticket:ro
-     stdin_open: true
-     tty: true
-   ```
-
-3. LLM configuration (docker exec wrapper):
-   ```bash
-   # Create wrapper script: mcp-docker-wrapper.sh
    #!/bin/bash
    docker exec -i mcp-mcp-1 node dist/index.js
-   
-   # Make executable
-   chmod +x mcp-docker-wrapper.sh
-   
-   # Claude Code
-   claude mcp add mdt-docker ./mcp-docker-wrapper.sh
-   
-   # Amazon Q
-   q mcp add --name mdt-docker \
-     --command "./mcp-docker-wrapper.sh" \
-     --scope global
    ```
+4. Make executable: `chmod +x mcp-docker-wrapper.sh`
+5. Configure LLM:
+   - Claude Code: `claude mcp add mdt-docker ./mcp-docker-wrapper.sh`
+   - Amazon Q: `q mcp add --name mdt-docker --command "./mcp-docker-wrapper.sh" --scope global`
 
 ### How It Works
 - MCP container runs with stdio support (stdin_open: true)
@@ -1113,14 +1064,13 @@ services:
 - Complex setup
 - Requires Docker socket access from LLM
 - Performance overhead from docker exec
-```
 
 ### Phase 4: Documentation & Developer Experience
 
 #### 4.1 Quick Start Guide
 
-**File: `docs/DOCKER_QUICKSTART.md` (new)**
-```markdown
+File content for `docs/DOCKER_QUICKSTART.md`:
+
 # Docker Quick Start
 
 ## Prerequisites
@@ -1128,75 +1078,28 @@ services:
 - Docker Compose v2.0+
 
 ## Development Setup
-
-1. Clone repository:
-   ```bash
-   git clone <repo>
-   cd markdown-ticket
-   ```
-
-2. Create environment file:
-   ```bash
-   cp .env.example .env.local
-   ```
-
-3. Start services:
-   ```bash
-   docker-compose -f docker-compose.dev.yml up
-   ```
-
+1. Clone repository: `git clone <repo>` and `cd markdown-ticket`
+2. Create environment file: `cp .env.example .env.local`
+3. Start services: `docker-compose -f docker-compose.dev.yml up`
 4. Access application:
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:3001
    - API Docs: http://localhost:3001/api/status
-
-5. MCP Server (optional):
-   ```bash
-   # Run on host for development
-   cd mcp-server
-   npm run build
-   node dist/index.js
-   ```
+5. MCP Server (optional): Run on host - `cd mcp-server && npm run build && node dist/index.js`
 
 ## Production Deployment
-
-1. Build images:
-   ```bash
-   docker-compose -f docker-compose.prod.yml build
-   ```
-
-2. Start services:
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-
-3. Check health:
-   ```bash
-   curl http://localhost/api/health
-   ```
+1. Build images: `docker-compose -f docker-compose.prod.yml build`
+2. Start services: `docker-compose -f docker-compose.prod.yml up -d`
+3. Check health: `curl http://localhost/api/health`
 
 ## Standalone Mode (Simplest)
-
-```bash
-docker-compose -f docker-compose.standalone.yml up
-```
-
+Run: `docker-compose -f docker-compose.standalone.yml up`
 Access at http://localhost:3000
 
 ## Troubleshooting
-
-### File changes not detected
-- Ensure `CHOKIDAR_USEPOLLING=true` is set
-- Check volume mounts: `docker-compose ps`
-
-### MCP server can't access files
-- Verify volume paths match between containers and host
-- Check permissions on mounted directories
-
-### SSE connection fails
-- Check nginx proxy configuration
-- Verify backend health: `docker-compose logs backend`
-```
+- **File changes not detected**: Ensure `CHOKIDAR_USEPOLLING=true` is set, check volume mounts with `docker-compose ps`
+- **MCP server can't access files**: Verify volume paths match between containers and host, check permissions
+- **SSE connection fails**: Check nginx proxy configuration, verify backend health with `docker-compose logs backend`
 
 #### 4.2 CI/CD Integration
 
