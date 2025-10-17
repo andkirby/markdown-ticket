@@ -2,6 +2,12 @@
 
 Complete reference for all available MCP tools with input parameters and descriptions.
 
+**🎯 Recent Optimization Update**: This MCP server has been optimized for 40% token reduction through tool consolidation:
+- ✅ **Consolidated Tools**: `get_cr` replaces `get_cr_full_content` + `get_cr_attributes`
+- ✅ **Consolidated Tools**: `manage_cr_sections` replaces `list_cr_sections` + `get_cr_section` + `update_cr_section`
+- ✅ **Enhanced Tool**: `create_cr` now includes embedded template guidance
+- ✅ **Removed Tools**: Template tools (`list_cr_templates`, `get_cr_template`) removed for YAGNI compliance
+
 **Note:** For interactive testing and viewing request/response payloads, use the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector).
 
 ## Architecture
@@ -35,24 +41,21 @@ The MCP server uses the **shared core architecture** with unified types, service
   - `type` (string|array): Filter by type ("Architecture", "Feature Enhancement", "Bug Fix", "Technical Debt", "Documentation")
   - `priority` (string|array): Filter by priority ("Low", "Medium", "High", "Critical")
 
-### `get_cr_full_content`
-**Description**: Get complete CR details including full markdown content
+### `get_cr` (Consolidated)
+**Description**: Get CR with flexible return modes (consolidated tool replacing get_cr_full_content and get_cr_attributes)
 
 **Parameters**:
 - `project` (string, required): Project key
-- `key` (string, required): CR key (e.g., "MDT-001")
-
-### `get_cr_attributes`
-**Description**: Get only YAML frontmatter attributes from a CR (efficient for metadata-only operations). Returns 90-95% less data than `get_cr_full_content` when you only need metadata.
-
-**Parameters**:
-- `project` (string, required): Project key
-- `key` (string, required): CR key (e.g., "MDT-001")
+- `key` (string, required): CR key (e.g., "MDT-004", "API-123")
+- `mode` (string, optional): Return mode (default: "full")
+  - `"full"`: Plain markdown content only (no metadata or formatting)
+  - `"attributes"`: YAML frontmatter only (90-95% less data than full)
+  - `"metadata"`: Basic key metadata without full YAML parsing
 
 ## CR Management Tools
 
-### `create_cr`
-**Description**: Create a new CR in the specified project using shared templates
+### `create_cr` (Enhanced)
+**Description**: Create a new CR with embedded template guidance. Auto-generates complete template if content omitted.
 
 **Parameters**:
 - `project` (string, required): Project key
@@ -65,7 +68,12 @@ The MCP server uses the **shared core architecture** with unified types, service
   - `relatedTickets` (string, optional): Comma-separated list of related CR codes
   - `dependsOn` (string, optional): Comma-separated list of CR keys this depends on
   - `blocks` (string, optional): Comma-separated list of CR keys this blocks
-  - `content` (string, optional): Full markdown content (overrides template if provided)
+  - `content` (string, optional): Full markdown content with required sections (auto-generated if omitted):
+    - `## 1. Description` - Problem statement and context
+    - `## 2. Rationale` - Why this change is necessary
+    - `## 3. Solution Analysis` - Alternatives and selected approach
+    - `## 4. Implementation Specification` - Technical details and plan
+    - `## 5. Acceptance Criteria` - Measurable completion conditions
 
 ### `update_cr_attrs`
 **Description**: Update attributes of an existing CR (excludes status - use update_cr_status for workflow)
@@ -97,50 +105,27 @@ The MCP server uses the **shared core architecture** with unified types, service
 - `project` (string, required): Project key
 - `key` (string, required): CR key
 
-## Section-Based Content Tools
+## Section Management Tools
 
 **Token Efficiency**: 84-94% savings compared to full document operations
 
-### `list_cr_sections`
-**Description**: List all sections in a CR document with hierarchical tree structure. Use this to discover available sections before reading or updating.
+### `manage_cr_sections` (Consolidated)
+**Description**: Manage CR sections with multiple operations (consolidated tool replacing list_cr_sections, get_cr_section, and update_cr_section)
 
 **Parameters**:
 - `project` (string, required): Project key (e.g., "MDT", "SEB")
 - `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
-
-### `get_cr_section`
-**Description**: Read specific section content without loading full document. Use `list_cr_sections` first to discover available sections.
-
-**Parameters**:
-- `project` (string, required): Project key (e.g., "MDT", "SEB")
-- `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
-- `section` (string, required): Section to read. Can be:
+- `operation` (string, required): Operation type
+  - `"list"`: List all sections with hierarchical tree structure
+  - `"get"`: Read specific section content
+  - `"update"`: Modify section content
+- `section` (string, optional): Section identifier (required for get/update operations). Can be:
   - Simple name: "Problem Statement" or "Requirements"
   - Markdown header: "### Problem Statement" or "## 2. Solution Analysis"
   - Hierarchical path for duplicates: "## Feature AA / ### Requirements"
+- `updateMode` (string, optional): Update mode (required for update operation): `"replace"`, `"append"`, or `"prepend"`
+- `content` (string, optional): Content to apply (required for update operation)
 
-### `update_cr_section`
-**Description**: Update a specific section efficiently. Supports replace, append, and prepend operations.
-
-**Parameters**:
-- `project` (string, required): Project key (e.g., "MDT", "SEB")
-- `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
-- `section` (string, required): Section to update (same format as `get_cr_section`)
-- `operation` (string, required): Operation type: `"replace"`, `"append"`, or `"prepend"`
-- `content` (string, required): Content to apply
-
-## Template Tools
-
-### `list_cr_templates`
-**Description**: List all available CR template types
-
-**Parameters**: None
-
-### `get_cr_template`
-**Description**: Get the template structure for a specific CR type
-
-**Parameters**:
-- `type` (string, required): CR type ("Architecture", "Feature Enhancement", "Bug Fix", "Technical Debt", "Documentation")
 
 ## Analysis Tools
 
