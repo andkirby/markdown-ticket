@@ -1,0 +1,18 @@
+{
+  "baseline": {
+    "toolCount": 17,
+    "characterCount": 46415,
+    "estimatedTokens": 11604,
+    "measuredAt": "2025-10-15T01:33:29.071Z"
+  },
+  "targets": {
+    "reductionPercent": 0.4,
+    "targetTokens": 6962,
+    "expectedSavings": 4642
+  },
+  "consolidation": {
+    "toolsToRemove": 2,
+    "toolsToConsolidate": 5,
+    "netToolReduction": 3
+  }
+}

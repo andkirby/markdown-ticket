@@ -2,6 +2,14 @@
 
 Sample request and response data for the MCP CR Management Server using the shared core architecture.
 
+**🎯 Recent Optimization Update**: This MCP server has been optimized for 40% token reduction through tool consolidation:
+- ✅ **Consolidated Tools**: `get_cr` replaces `get_cr_full_content` + `get_cr_attributes`
+- ✅ **Consolidated Tools**: `manage_cr_sections` replaces `list_cr_sections` + `get_cr_section` + `update_cr_section`
+- ✅ **Enhanced Tool**: `create_cr` now includes embedded template guidance
+- ✅ **Removed Tools**: Template tools (`list_cr_templates`, `get_cr_template`) removed for YAGNI compliance
+
+**Note**: Samples below show the new consolidated tools. Legacy tool samples have been updated to use the new consolidated versions.
+
 ## Connection and Initialization
 
 ### Initialize MCP Connection
@@ -110,17 +118,18 @@ Sample request and response data for the MCP CR Management Server using the shar
 }
 ```
 
-### Get Specific CR
+### Get Specific CR (Full Content)
 ```json
 {
   "jsonrpc": "2.0",
   "id": 5,
   "method": "tools/call",
   "params": {
-    "name": "get_cr_full_content",
+    "name": "get_cr",
     "arguments": {
       "project": "MDT",
-      "key": "MDT-006"
+      "key": "MDT-006",
+      "mode": "full"
     }
   }
 }
@@ -203,69 +212,47 @@ Sample request and response data for the MCP CR Management Server using the shar
 }
 ```
 
-## Template Management
+## CR Retrieval Modes
 
-### List Available Templates
+### Get CR Attributes (Metadata Only)
+**Token Efficiency**: 90-95% less data than full content when you only need metadata.
+
 ```json
 {
   "jsonrpc": "2.0",
   "id": 9,
   "method": "tools/call",
   "params": {
-    "name": "list_cr_templates",
-    "arguments": {}
-  }
-}
-```
-
-### Get CR Attributes (Metadata Only)
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 6,
-  "method": "tools/call",
-  "params": {
-    "name": "get_cr_attributes",
+    "name": "get_cr",
     "arguments": {
       "project": "MDT",
-      "key": "MDT-006"
+      "key": "MDT-006",
+      "mode": "attributes"
     }
   }
 }
 ```
 
-### Get Template Structure
+### Get CR Metadata (Basic Info)
+**Token Efficiency**: Minimal data for quick lookups and listing operations.
+
 ```json
 {
   "jsonrpc": "2.0",
   "id": 10,
   "method": "tools/call",
   "params": {
-    "name": "get_cr_template",
+    "name": "get_cr",
     "arguments": {
-      "type": "Architecture"
+      "project": "MDT",
+      "key": "MDT-006",
+      "mode": "metadata"
     }
   }
 }
 ```
 
-**Response:**
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 10,
-  "result": {
-    "content": [
-      {
-        "type": "text",
-        "text": "📋 **Architecture Template Structure**\n\n**Required Fields:** title, description, rationale\n\n**Template Sections:**\n1. Problem Statement (required) - What architectural challenge needs to be addressed?\n2. Proposed Solution (required) - High-level architectural approach\n3. Design Rationale (required) - Why this approach over alternatives\n4. Impact Analysis (required) - System-wide implications and dependencies\n\n**Template File:** shared/templates/architecture.md"
-      }
-    ]
-  }
-}
-```
-
-## Section-Based Content Operations
+## Section Management Operations
 
 ### List CR Sections
 List all sections in a CR document with hierarchical tree structure. Enables section discovery before reading or updating. **Token Efficiency: ~150 tokens vs ~2500 for full document (94% savings).**
@@ -276,10 +263,11 @@ List all sections in a CR document with hierarchical tree structure. Enables sec
   "id": 11,
   "method": "tools/call",
   "params": {
-    "name": "list_cr_sections",
+    "name": "manage_cr_sections",
     "arguments": {
       "project": "MDT",
-      "key": "MDT-052"
+      "key": "MDT-052",
+      "operation": "list"
     }
   }
 }
@@ -310,10 +298,11 @@ Read specific section content without loading full document. **Token Efficiency:
   "id": 12,
   "method": "tools/call",
   "params": {
-    "name": "get_cr_section",
+    "name": "manage_cr_sections",
     "arguments": {
       "project": "MDT",
       "key": "MDT-052",
+      "operation": "get",
       "section": "### Problem Statement"
     }
   }
@@ -329,7 +318,7 @@ Read specific section content without loading full document. **Token Efficiency:
     "content": [
       {
         "type": "text",
-        "text": "📖 **Section Content from CR MDT-052**\n\n**Section:** # Add section-based content updates / ## 1. Description / ### Problem Statement\n**Content Length:** 567 characters\n\n---\n\nLLMs currently waste 90-98% of tokens when updating CR documents because they must send the entire document content even when changing a single section. For a typical 2000-line CR document, updating one paragraph requires sending ~2500 tokens in the request, when only ~150 tokens of actual content are being modified.\n\n---\n\nUse `update_cr_section` to modify this section."
+        "text": "📖 **Section Content from CR MDT-052**\n\n**Section:** # Add section-based content updates / ## 1. Description / ### Problem Statement\n**Content Length:** 567 characters\n\n---\n\nLLMs currently waste 90-98% of tokens when updating CR documents because they must send the entire document content even when changing a single section. For a typical 2000-line CR document, updating one paragraph requires sending ~2500 tokens in the request, when only ~150 tokens of actual content are being modified.\n\n---\n\nUse `manage_cr_sections` with operation="update" to modify this section."
       }
     ]
   }
@@ -345,13 +334,14 @@ Replace entire section content. **Token Efficiency: ~150 tokens vs ~2500 for ful
   "id": 13,
   "method": "tools/call",
   "params": {
-    "name": "update_cr_section",
+    "name": "manage_cr_sections",
     "arguments": {
       "project": "MDT",
       "key": "MDT-052",
+      "operation": "update",
       "section": "## 4. Acceptance Criteria",
-      "operation": "replace",
-      "content": "- [ ] All three section-based tools are accessible via MCP\n- [ ] `list_cr_sections` correctly identifies all document sections\n- [ ] `get_cr_section` retrieves section content efficiently\n- [ ] `update_cr_section` with all three operations works correctly\n- [ ] Token usage is significantly reduced (90%+ savings)\n- [ ] No data corruption or formatting issues occur"
+      "updateMode": "replace",
+      "content": "- [ ] All consolidated section tools are accessible via MCP\n- [ ] `manage_cr_sections` with list operation correctly identifies all document sections\n- [ ] `manage_cr_sections` with get operation retrieves section content efficiently\n- [ ] `manage_cr_sections` with update operation works correctly with all modes\n- [ ] Token usage is significantly reduced (90%+ savings)\n- [ ] No data corruption or formatting issues occur"
     }
   }
 }
@@ -382,12 +372,13 @@ Add content to end of existing section. Ideal for adding implementation notes or
   "id": 14,
   "method": "tools/call",
   "params": {
-    "name": "update_cr_section",
+    "name": "manage_cr_sections",
     "arguments": {
       "project": "MDT",
       "key": "MDT-052",
+      "operation": "update",
       "section": "## 5. Implementation Notes",
-      "operation": "append",
+      "updateMode": "append",
       "content": "\n\n### Performance Results\n- Section parsing: O(n) where n = number of lines\n- Average section update: 150 tokens vs 2500 tokens (94% savings)\n- Tested on documents up to 500 lines with no performance degradation"
     }
   }
@@ -419,13 +410,14 @@ Add content to beginning of existing section. Ideal for adding context or summar
   "id": 15,
   "method": "tools/call",
   "params": {
-    "name": "update_cr_section",
+    "name": "manage_cr_sections",
     "arguments": {
       "project": "MDT",
       "key": "MDT-052",
+      "operation": "update",
       "section": "## 5. Implementation Notes",
-      "operation": "prepend",
-      "content": "**Status: Implemented and Tested (2025-10-02)**\n\nAll three section-based tools are fully operational and have been validated with comprehensive testing.\n\n---\n\n"
+      "updateMode": "prepend",
+      "content": "**Status: Implemented and Tested (2025-10-15)**\n\nAll consolidated section tools are fully operational and have been validated with comprehensive testing.\n\n---\n\n"
     }
   }
 }
@@ -447,8 +439,8 @@ Add content to beginning of existing section. Ideal for adding context or summar
 }
 ```
 
-### Section-Based Workflow Example
-Typical workflow combining all three section tools:
+### Section Management Workflow Example
+Typical workflow combining all consolidated section operations:
 
 ```json
 // 1. Discover sections
@@ -457,8 +449,12 @@ Typical workflow combining all three section tools:
   "id": 16,
   "method": "tools/call",
   "params": {
-    "name": "list_cr_sections",
-    "arguments": { "project": "MDT", "key": "MDT-052" }
+    "name": "manage_cr_sections",
+    "arguments": {
+      "project": "MDT",
+      "key": "MDT-052",
+      "operation": "list"
+    }
   }
 }
 
@@ -468,10 +464,11 @@ Typical workflow combining all three section tools:
   "id": 17,
   "method": "tools/call",
   "params": {
-    "name": "get_cr_section",
+    "name": "manage_cr_sections",
     "arguments": {
       "project": "MDT",
       "key": "MDT-052",
+      "operation": "get",
       "section": "## 1. Description"
     }
   }
@@ -483,12 +480,13 @@ Typical workflow combining all three section tools:
   "id": 18,
   "method": "tools/call",
   "params": {
-    "name": "update_cr_section",
+    "name": "manage_cr_sections",
     "arguments": {
       "project": "MDT",
       "key": "MDT-052",
+      "operation": "update",
       "section": "## 5. Implementation Notes",
-      "operation": "append",
+      "updateMode": "append",
       "content": "\n\nAdditional implementation details..."
     }
   }
@@ -558,7 +556,7 @@ Typical workflow combining all three section tools:
     "content": [
       {
         "type": "text",
-        "text": "❌ **Error in get_cr_section**\n\nSection '## Non-existent Section' not found in CR MDT-052.\n\nAvailable sections:\n- # Add section-based content updates\n- ## 1. Description\n- ### Problem Statement\n- ### Current State\n- ## 2. Solution Analysis\n\nPlease check your input parameters and try again."
+        "text": "❌ **Error in manage_cr_sections**\n\nSection '## Non-existent Section' not found in CR MDT-052.\n\nAvailable sections:\n- # Add section-based content updates\n- ## 1. Description\n- ### Problem Statement\n- ### Current State\n- ## 2. Solution Analysis\n\nPlease check your input parameters and try again."
       }
     ]
   }
@@ -574,7 +572,7 @@ Typical workflow combining all three section tools:
     "content": [
       {
         "type": "text",
-        "text": "❌ **Error in update_cr_section**\n\nMultiple sections match 'Requirements'. Please use a hierarchical path:\n\n- # Feature A / ## Requirements\n- # Feature B / ## Requirements\n\nUse the full hierarchical path to specify which section to update.\n\nPlease check your input parameters and try again."
+        "text": "❌ **Error in manage_cr_sections**\n\nMultiple sections match 'Requirements'. Please use a hierarchical path:\n\n- # Feature A / ## Requirements\n- # Feature B / ## Requirements\n\nUse the full hierarchical path to specify which section to update.\n\nPlease check your input parameters and try again."
       }
     ]
   }
@@ -590,7 +588,7 @@ Typical workflow combining all three section tools:
     "content": [
       {
         "type": "text",
-        "text": "❌ **Error in get_cr_full_content**\n\nProject 'INVALID' not found. Available projects: MDT, LlmTranslator, goto_dir, sentence-breakdown, debug\n\nPlease check your input parameters and try again."
+        "text": "❌ **Error in get_cr**\n\nProject 'INVALID' not found. Available projects: MDT, LlmTranslator, goto_dir, sentence-breakdown, debug\n\nPlease check your input parameters and try again."
       }
     ]
   }

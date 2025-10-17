@@ -115,41 +115,67 @@ The MCP server uses the **shared core architecture** with unified types, service
 }
 ```
 
-### `get_cr_full_content`
-**Description**: Get complete CR details including full markdown content
+### `get_cr` (Consolidated)
+**Description**: Get CR with flexible return modes (consolidated tool replacing get_cr_full_content and get_cr_attributes)
 
 **Parameters**:
 - `project` (string, required): Project key
 - `key` (string, required): CR key (e.g., "MDT-001")
+- `mode` (string, optional): Return mode (default: "full")
+  - `"full"`: Plain markdown content only (no metadata or formatting)
+  - `"attributes"`: YAML frontmatter only (90-95% less data than full)
+  - `"metadata"`: Basic key metadata without full YAML parsing
 
-### `get_cr_attributes`
-**Description**: Get only YAML frontmatter attributes from a CR (efficient for metadata-only operations). Returns 90-95% less data than `get_cr_full_content` when you only need metadata.
-
-**Parameters**:
-- `project` (string, required): Project key
-- `key` (string, required): CR key (e.g., "MDT-001")
-
-**Response Format**:
+**Example Request**:
 ```json
 {
-  "cr": {
-    "code": "MDT-001",
-    "title": "Multi-project CR dashboard",
-    "status": "In Progress",
-    "type": "Feature Enhancement",
-    "priority": "High",
-    "dateCreated": "2025-09-07T10:00:00.000Z",
-    "lastModified": "2025-10-02T09:20:02.492Z",
-    "content": "# Description\n\nDetailed markdown content...",
-    "filePath": "/path/to/MDT-001-multi-project-cr-dashboard.md",
-    "assignee": "developer@example.com",
-    "phaseEpic": "Phase A",
-    "dependsOn": ["MDT-002"],
-    "blocks": ["MDT-005"],
-    "relatedTickets": ["MDT-003", "MDT-004"]
-  }
+  "project": "MDT",
+  "key": "MDT-001",
+  "mode": "attributes"
 }
 ```
+
+**Response Format (attributes mode)**:
+```json
+{
+  "code": "MDT-001",
+  "title": "Multi-project CR dashboard",
+  "status": "In Progress",
+  "type": "Feature Enhancement",
+  "priority": "High",
+  "dateCreated": "2025-09-07T10:00:00.000Z",
+  "lastModified": "2025-10-02T09:20:02.492Z",
+  "assignee": "developer@example.com",
+  "phaseEpic": "Phase A",
+  "dependsOn": ["MDT-002"],
+  "blocks": ["MDT-005"],
+  "relatedTickets": ["MDT-003", "MDT-004"]
+}
+```
+
+**Response Format (metadata mode)**:
+```json
+{
+  "code": "MDT-001",
+  "title": "Multi-project CR dashboard",
+  "status": "In Progress",
+  "type": "Feature Enhancement",
+  "priority": "High",
+  "dateCreated": "2025-09-07T10:00:00.000Z",
+  "lastModified": "2025-10-02T09:20:02.492Z",
+  "phaseEpic": "Phase A",
+  "filePath": "/path/to/MDT-001-multi-project-cr-dashboard.md"
+}
+```
+
+**Response Format (full mode)**:
+```
+# Description
+
+Detailed markdown content...
+```
+
+**Token Efficiency**: Use `attributes` or `metadata` modes for 90-95% token reduction when you don't need full content.
 
 ## CR Management Tools
 
@@ -262,172 +288,100 @@ The MCP server uses the **shared core architecture** with unified types, service
 }
 ```
 
-## Section-Based Content Tools
+## Section Management Tools
 
 **Token Efficiency**: 84-94% savings compared to full document operations
 
-### `list_cr_sections`
-**Description**: List all sections in a CR document with hierarchical tree structure. Use this to discover available sections before reading or updating.
+### `manage_cr_sections` (Consolidated)
+**Description**: Manage CR sections with multiple operations (consolidated tool replacing list_cr_sections, get_cr_section, and update_cr_section)
 
 **Parameters**:
 - `project` (string, required): Project key (e.g., "MDT", "SEB")
 - `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
-
-**Response Format**:
-```json
-{
-  "sections": [
-    {
-      "title": "Description",
-      "level": 2,
-      "path": "## Description",
-      "hasContent": true
-    },
-    {
-      "title": "Problem Statement",
-      "level": 3,
-      "path": "## Description / ### Problem Statement",
-      "hasContent": true
-    },
-    {
-      "title": "Implementation",
-      "level": 2,
-      "path": "## Implementation",
-      "hasContent": true
-    }
-  ],
-  "totalSections": 3
-}
-```
-
-### `get_cr_section`
-**Description**: Read specific section content without loading full document. Use `list_cr_sections` first to discover available sections.
-
-**Parameters**:
-- `project` (string, required): Project key (e.g., "MDT", "SEB")
-- `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
-- `section` (string, required): Section to read. Can be:
+- `operation` (string, required): Operation type
+  - `"list"`: List all sections with hierarchical tree structure
+  - `"get"`: Read specific section content
+  - `"update"`: Modify section content
+- `section` (string, optional): Section identifier (required for get/update operations). Can be:
   - Simple name: "Problem Statement" or "Requirements"
   - Markdown header: "### Problem Statement" or "## 2. Solution Analysis"
   - Hierarchical path for duplicates: "## Feature AA / ### Requirements"
+- `updateMode` (string, optional): Update mode (required for update operation): `"replace"`, `"append"`, or `"prepend"`
+- `content` (string, optional): Content to apply (required for update operation)
 
-**Example Request**:
+**Example Request (list)**:
 ```json
 {
   "project": "MDT",
   "key": "MDT-001",
+  "operation": "list"
+}
+```
+
+**Response Format (list operation)**:
+```
+📑 **Sections in CR MDT-001** - Multi-project CR dashboard
+
+Found 3 sections:
+
+- ## Description (1234 chars)
+  - ### Problem Statement (567 chars)
+  - ### Current State (345 chars)
+- ## Implementation (890 chars)
+- ## Acceptance Criteria (432 chars)
+```
+
+**Example Request (get)**:
+```json
+{
+  "project": "MDT",
+  "key": "MDT-001",
+  "operation": "get",
   "section": "## Implementation"
 }
 ```
 
-**Response Format**:
-```json
-{
-  "section": {
-    "title": "Implementation",
-    "level": 2,
-    "content": "Detailed implementation content...",
-    "path": "## Implementation"
-  }
-}
+**Response Format (get operation)**:
+```
+📖 **Section Content from CR MDT-001**
+
+**Section:** ## Implementation
+**Content Length:** 890 characters
+
+---
+
+Detailed implementation content...
+
+---
+
+Use `manage_cr_sections` with operation="update" to modify this section.
 ```
 
-### `update_cr_section`
-**Description**: Update a specific section efficiently. Supports replace, append, and prepend operations.
-
-**Parameters**:
-- `project` (string, required): Project key (e.g., "MDT", "SEB")
-- `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
-- `section` (string, required): Section to update (same format as `get_cr_section`)
-- `operation` (string, required): Operation type: `"replace"`, `"append"`, or `"prepend"`
-- `content` (string, required): Content to apply
-
-**Example Request**:
+**Example Request (update)**:
 ```json
 {
   "project": "MDT",
   "key": "MDT-001",
+  "operation": "update",
   "section": "## Implementation",
-  "operation": "append",
+  "updateMode": "append",
   "content": "\n\n### Additional Technical Notes\n\nNew implementation details..."
 }
 ```
 
-**Response Format**:
-```json
-{
-  "message": "Section updated successfully",
-  "section": "## Implementation",
-  "operation": "append",
-  "bytesChanged": 156
-}
+**Response Format (update operation)**:
 ```
+✅ **Updated Section in CR MDT-001**
 
-## Template Tools
+**Section:** ## Implementation
+**Operation:** append
+**Content Length:** 156 characters
 
-### `list_cr_templates`
-**Description**: List all available CR template types
+- Title: Multi-project CR dashboard
+- Updated: 2025-10-02T09:20:02.492Z
+- File: /path/to/MDT-001-multi-project-cr-dashboard.md
 
-**Parameters**: None
-
-**Response Format**:
-```json
-{
-  "templates": [
-    {
-      "type": "Architecture",
-      "description": "System design and architectural decisions",
-      "sections": ["Description", "Rationale", "Solution Analysis", "Implementation", "Acceptance Criteria"]
-    },
-    {
-      "type": "Feature Enhancement",
-      "description": "New features and capabilities",
-      "sections": ["Description", "Rationale", "Solution Analysis", "Implementation", "Acceptance Criteria"]
-    },
-    {
-      "type": "Bug Fix",
-      "description": "Issue resolution and fixes",
-      "sections": ["Problem Statement", "Root Cause Analysis", "Solution", "Testing", "Acceptance Criteria"]
-    }
-  ]
-}
-```
-
-### `get_cr_template`
-**Description**: Get the template structure for a specific CR type
-
-**Parameters**:
-- `type` (string, required): CR type ("Architecture", "Feature Enhancement", "Bug Fix", "Technical Debt", "Documentation")
-
-**Response Format**:
-```json
-{
-  "template": {
-    "type": "Feature Enhancement",
-    "structure": {
-      "sections": [
-        {
-          "title": "Description",
-          "level": 2,
-          "required": true,
-          "subsections": [
-            {
-              "title": "Problem Statement",
-              "level": 3,
-              "required": true
-            },
-            {
-              "title": "Current State",
-              "level": 3,
-              "required": false
-            }
-          ]
-        }
-      ]
-    },
-    "content": "# Full template markdown content..."
-  }
-}
+Content has been added to the end of the section.
 ```
 
 ## Analysis Tools
