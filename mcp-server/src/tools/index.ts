@@ -21,7 +21,7 @@ export class MCPTools {
       // Project Management
       {
         name: 'list_projects',
-        description: 'List all discovered projects with their basic information',
+        description: 'List all discovered projects',
         inputSchema: {
           type: 'object',
           properties: {},
@@ -30,7 +30,7 @@ export class MCPTools {
       },
       {
         name: 'get_project_info',
-        description: 'Get detailed information about a specific project',
+        description: 'Get detailed project information',
         inputSchema: {
           type: 'object',
           properties: {
@@ -46,7 +46,7 @@ export class MCPTools {
       // CR Operations
       {
         name: 'list_crs',
-        description: 'List CRs for a project with optional filtering',
+        description: 'List CRs with optional filtering',
         inputSchema: {
           type: 'object',
           properties: {
@@ -62,21 +62,21 @@ export class MCPTools {
                     { type: 'string', enum: ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected'] },
                     { type: 'array', items: { type: 'string', enum: ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected'] } }
                   ],
-                  description: 'Filter by status (single value or array)'
+                  description: 'Filter by status'
                 },
                 type: {
                   oneOf: [
                     { type: 'string', enum: ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'] },
                     { type: 'array', items: { type: 'string', enum: ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'] } }
                   ],
-                  description: 'Filter by type (single value or array)'
+                  description: 'Filter by type'
                 },
                 priority: {
                   oneOf: [
                     { type: 'string', enum: ['Low', 'Medium', 'High', 'Critical'] },
                     { type: 'array', items: { type: 'string', enum: ['Low', 'Medium', 'High', 'Critical'] } }
                   ],
-                  description: 'Filter by priority (single value or array)'
+                  description: 'Filter by priority'
                 }
               }
             }
@@ -85,44 +85,8 @@ export class MCPTools {
         }
       },
       {
-        name: 'get_cr_full_content',
-        description: 'Get complete CR details including full markdown content',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            project: {
-              type: 'string',
-              description: 'Project key'
-            },
-            key: {
-              type: 'string',
-              description: 'CR key (e.g., MDT-004, API-123)'
-            }
-          },
-          required: ['project', 'key']
-        }
-      },
-      {
-        name: 'get_cr_attributes',
-        description: 'Get only the YAML frontmatter attributes from a CR (efficient for metadata-only operations)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            project: {
-              type: 'string',
-              description: 'Project key'
-            },
-            key: {
-              type: 'string',
-              description: 'CR key (e.g., MDT-004, API-123)'
-            }
-          },
-          required: ['project', 'key']
-        }
-      },
-      {
         name: 'create_cr',
-        description: 'Create a new CR in the specified project',
+        description: 'Create a new CR. Available types: Architecture (system design), Feature Enhancement (new functionality), Bug Fix (defect resolution), Technical Debt (code quality), Documentation (project docs)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -133,12 +97,11 @@ export class MCPTools {
             type: {
               type: 'string',
               enum: ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'],
-              description: 'Type of CR to create'
+              description: 'CR type'
             },
             data: {
               type: 'object',
               properties: {
-                // Mandatory fields
                 title: {
                   type: 'string',
                   description: 'CR title/summary'
@@ -146,37 +109,62 @@ export class MCPTools {
                 priority: {
                   type: 'string',
                   enum: ['Low', 'Medium', 'High', 'Critical'],
-                  description: 'CR priority (defaults to Medium)'
+                  description: 'CR priority (default: Medium)'
                 },
-                // Optional fields
                 phaseEpic: {
                   type: 'string',
-                  description: 'Phase or epic this CR belongs to'
+                  description: 'Phase or epic'
                 },
                 impactAreas: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'Areas of the system that will be impacted'
+                  description: 'System areas impacted'
                 },
                 relatedTickets: {
                   type: 'string',
-                  description: 'Comma-separated list of related CR codes (e.g., "CR-A001,CR-A002")'
+                  description: 'Related CR codes (comma-separated)'
                 },
                 dependsOn: {
                   type: 'string',
-                  description: 'Comma-separated list of CR keys this depends on (e.g., "MDT-001,MDT-005")'
+                  description: 'CR dependencies (comma-separated)'
                 },
                 blocks: {
                   type: 'string',
-                  description: 'Comma-separated list of CR keys this blocks (e.g., "MDT-010,MDT-015")'
+                  description: 'CRs blocked by this (comma-separated)'
                 },
                 assignee: {
                   type: 'string',
-                  description: 'Person responsible for implementation'
+                  description: 'Implementation assignee'
                 },
                 content: {
                   type: 'string',
-                  description: 'FULL markdown document with ## Description, ## Rationale, ## Solution Analysis, ## Implementation, ## Acceptance Criteria sections. USE THIS FIELD for ALL detailed content including problem statements, rationale, and specifications. If omitted, a complete template will be generated.'
+                  description: `FULL markdown document with required sections:
+
+  ## 1. Description
+  - Problem statement with background context
+  - Current state vs. desired state
+  - Business or technical justification
+
+  ## 2. Rationale
+  - Why this change is necessary
+  - What it accomplishes
+  - Alignment with project goals
+
+  ## 3. Solution Analysis
+  - Evaluated alternatives with trade-offs
+  - Selected approach with justification
+  - Rejected options and why
+
+  ## 4. Implementation Specification
+  - Technical details and architecture changes
+  - Step-by-step implementation plan
+  - Testing requirements and success criteria
+
+  ## 5. Acceptance Criteria
+  - Measurable conditions for completion
+  - Definition of "done"
+
+  Template auto-generated if omitted. When providing content, include ALL sections above.`
                 }
               },
               required: ['title']
@@ -187,7 +175,7 @@ export class MCPTools {
       },
       {
         name: 'update_cr_status',
-        description: 'Update the status of an existing CR',
+        description: 'Update CR status',
         inputSchema: {
           type: 'object',
           properties: {
@@ -202,7 +190,7 @@ export class MCPTools {
             status: {
               type: 'string',
               enum: ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold'],
-              description: 'New status for the CR'
+              description: 'New CR status'
             }
           },
           required: ['project', 'key', 'status']
@@ -210,7 +198,7 @@ export class MCPTools {
       },
       {
         name: 'update_cr_attrs',
-        description: 'Update attributes of an existing CR (excludes status - use update_cr_status for workflow)',
+        description: 'Update CR attributes (status excluded)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -227,11 +215,11 @@ export class MCPTools {
               properties: {
                 title: { type: 'string', description: 'CR title/summary' },
                 priority: { type: 'string', enum: ['Low', 'Medium', 'High', 'Critical'], description: 'CR priority' },
-                phaseEpic: { type: 'string', description: 'Phase or epic this CR belongs to' },
-                relatedTickets: { type: 'string', description: 'Comma-separated list of related CR codes' },
-                dependsOn: { type: 'string', description: 'Comma-separated list of CR keys this depends on' },
-                blocks: { type: 'string', description: 'Comma-separated list of CR keys this blocks' },
-                assignee: { type: 'string', description: 'Person responsible for implementation' }
+                phaseEpic: { type: 'string', description: 'Phase or epic' },
+                relatedTickets: { type: 'string', description: 'Related CR codes' },
+                dependsOn: { type: 'string', description: 'CR dependencies' },
+                blocks: { type: 'string', description: 'CRs blocked by this' },
+                assignee: { type: 'string', description: 'Implementation assignee' }
               }
             }
           },
@@ -240,7 +228,7 @@ export class MCPTools {
       },
       {
         name: 'delete_cr',
-        description: 'Delete a CR (typically used for implemented bug fixes)',
+        description: 'Delete CR (for implemented bug fixes)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -257,26 +245,32 @@ export class MCPTools {
         }
       },
       {
-        name: 'list_cr_sections',
-        description: 'List all sections in a CR document with their hierarchical paths. Use this to discover available sections before updating. Much more efficient than reading the full document.',
+        name: 'get_cr',
+        description: 'Get CR (consolidated - replaces get_cr_full_content + get_cr_attributes)',
         inputSchema: {
           type: 'object',
           properties: {
             project: {
               type: 'string',
-              description: 'Project key (e.g., "MDT", "SEB")'
+              description: 'Project key'
             },
             key: {
               type: 'string',
-              description: 'CR key (e.g., "MDT-001", "SEB-010")'
+              description: 'CR key (e.g., MDT-004, API-123)'
+            },
+            mode: {
+              type: 'string',
+              enum: ['full', 'attributes', 'metadata'],
+              description: 'Return mode: full=CR+markdown, attributes=YAML only, metadata=key info only',
+              default: 'full'
             }
           },
           required: ['project', 'key']
         }
       },
       {
-        name: 'get_cr_section',
-        description: 'Read the content of a specific section from a CR document. Much more efficient than reading the full document when you only need one section. Use list_cr_sections first to discover available sections.',
+        name: 'manage_cr_sections',
+        description: 'Manage CR sections (consolidated - replaces list/get/update sections)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -287,75 +281,33 @@ export class MCPTools {
             key: {
               type: 'string',
               description: 'CR key (e.g., "MDT-001", "SEB-010")'
-            },
-            section: {
-              type: 'string',
-              description: 'Section to read. Can be: (1) Simple name: "Problem Statement" or "Requirements", (2) Markdown header: "### Problem Statement" or "## 2. Solution Analysis", (3) Hierarchical path for duplicates: "## Feature AA / ### Requirements". If multiple sections match, an error will list all available hierarchical paths.'
-            }
-          },
-          required: ['project', 'key', 'section']
-        }
-      },
-      {
-        name: 'update_cr_section',
-        description: 'Update a specific section of a CR document efficiently. Saves 90-98% of tokens compared to updating the full document. Use this for targeted edits, incremental document building, or appending to existing sections.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            project: {
-              type: 'string',
-              description: 'Project key (e.g., "MDT", "SEB")'
-            },
-            key: {
-              type: 'string',
-              description: 'CR key (e.g., "MDT-001", "SEB-010")'
-            },
-            section: {
-              type: 'string',
-              description: 'Section to update. Can be: (1) Simple name: "Problem Statement" or "Requirements", (2) Markdown header: "### Problem Statement" or "## 2. Solution Analysis", (3) Hierarchical path for duplicates: "## Feature AA / ### Requirements". If multiple sections match, an error will list all available hierarchical paths.'
             },
             operation: {
               type: 'string',
+              enum: ['list', 'get', 'update'],
+              description: 'Operation: list=get all sections, get=read one section, update=modify section'
+            },
+            section: {
+              type: 'string',
+              description: 'Section identifier (required for get/update operations)'
+            },
+            updateMode: {
+              type: 'string',
               enum: ['replace', 'append', 'prepend'],
-              description: 'Operation type: "replace" = Replace entire section content. "append" = Add content to end of section. "prepend" = Add content to beginning of section.'
+              description: 'Update mode (required for update operation)'
             },
             content: {
               type: 'string',
-              description: 'Content to apply. For "replace", this is the complete new content for the section (excluding header). For "append"/"prepend", this is the additional content to add.'
+              description: 'Content to apply (required for update operation)'
             }
           },
-          required: ['project', 'key', 'section', 'operation', 'content']
+          required: ['project', 'key', 'operation']
         }
       },
 
-      // Template System
-      {
-        name: 'list_cr_templates',
-        description: 'List all available CR template types',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-          required: []
-        }
-      },
-      {
-        name: 'get_cr_template',
-        description: 'Get the template structure for a specific CR type',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            type: {
-              type: 'string',
-              enum: ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'],
-              description: 'CR type to get template for'
-            }
-          },
-          required: ['type']
-        }
-      },
       {
         name: 'suggest_cr_improvements',
-        description: 'Get suggestions for improving an existing CR. Returns an object with suggestions array (each with category, priority, suggestion, reason), overallScore (0-10), strengths array, and weaknesses array. Analyzes content structure, completeness, and clarity.',
+        description: 'Get CR improvement suggestions (analyzes structure/completeness)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -386,12 +338,6 @@ export class MCPTools {
         case 'list_crs':
           return await this.handleListCRs(args.project, args.filters);
         
-        case 'get_cr_full_content':
-          return await this.handleGetCR(args.project, args.key);
-
-        case 'get_cr_attributes':
-          return await this.handleGetCRAttributes(args.project, args.key);
-
         case 'create_cr':
           return await this.handleCreateCR(args.project, args.type, args.data);
         
@@ -404,26 +350,17 @@ export class MCPTools {
         case 'delete_cr':
           return await this.handleDeleteCR(args.project, args.key);
 
-        case 'list_cr_sections':
-          return await this.handleListCRSections(args.project, args.key);
+        case 'get_cr':
+          return await this.handleGetCRConsolidated(args.project, args.key, args.mode);
 
-        case 'get_cr_section':
-          return await this.handleGetCRSection(args.project, args.key, args.section);
+        case 'manage_cr_sections':
+          return await this.handleManageCRSections(args.project, args.key, args.operation, args.section, args.updateMode, args.content);
 
-        case 'update_cr_section':
-          return await this.handleUpdateCRSection(args.project, args.key, args.section, args.operation, args.content);
-
-        case 'list_cr_templates':
-          return await this.handleListCRTemplates();
-        
-        case 'get_cr_template':
-          return await this.handleGetCRTemplate(args.type);
-        
         case 'suggest_cr_improvements':
           return await this.handleSuggestCRImprovements(args.project, args.key);
         
         default:
-          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr_full_content', 'get_cr_attributes', 'create_cr', 'update_cr_attrs', 'update_cr_status', 'delete_cr', 'list_cr_sections', 'get_cr_section', 'update_cr_section', 'list_cr_templates', 'get_cr_template', 'suggest_cr_improvements'];
+          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr', 'create_cr', 'update_cr_attrs', 'update_cr_status', 'delete_cr', 'manage_cr_sections', 'suggest_cr_improvements'];
           throw new Error(`Unknown tool '${name}'. Available tools: ${availableTools.join(', ')}`);
       }
     } catch (error) {
@@ -528,7 +465,8 @@ export class MCPTools {
     return lines.join('\n');
   }
 
-  private async handleGetCR(projectKey: string, key: string): Promise<string> {
+      
+  private async handleGetCRConsolidated(projectKey: string, key: string, mode: string = 'full'): Promise<string> {
     const project = await this.validateProject(projectKey);
 
     const ticket = await this.crService.getCR(project, key);
@@ -536,99 +474,94 @@ export class MCPTools {
       throw new Error(`CR '${key}' not found in project '${projectKey}'`);
     }
 
-    const lines = [
-      `📄 **${ticket.code}** - ${ticket.title}`,
-      '',
-      '**Metadata:**',
-      `- Status: ${ticket.status}`,
-      `- Type: ${ticket.type}`,
-      `- Priority: ${ticket.priority}`,
-      `- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString() : 'N/A'}`,
-      `- Modified: ${ticket.lastModified ? ticket.lastModified.toISOString() : 'N/A'}`,
-    ];
+    switch (mode) {
+      case 'full':
+        // Return just the plain ticket content
+        return ticket.content || '';
 
-    if (ticket.phaseEpic) lines.push(`- Phase: ${ticket.phaseEpic}`);
+      case 'attributes': {
+        // Extract YAML frontmatter and return attributes
+        const fs = await import('fs/promises');
+        try {
+          const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
 
-    if (ticket.content) {
-      const contentLength = ticket.content.length;
-      lines.push('', `**Content (${contentLength} chars):**`, ticket.content);
-    }
+          // Extract YAML frontmatter
+          const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
+          if (!frontmatterMatch) {
+            throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+          }
 
-    lines.push('', `**File:** ${ticket.filePath}`);
+          const yamlContent = frontmatterMatch[1];
 
-    return lines.join('\n');
-  }
+          // Parse YAML with simple parser
+          let yaml: any = {};
+          try {
+            yaml = this.parseYamlFrontmatter(yamlContent) || {};
+          } catch (yamlError) {
+            throw new Error(`Failed to parse YAML frontmatter for ${key}: ${(yamlError as Error).message}`);
+          }
 
-  private async handleGetCRAttributes(projectKey: string, key: string): Promise<string> {
-    const project = await this.validateProject(projectKey);
+          // Build attributes object with common fields
+          const attributes: any = {
+            code: yaml.code || key,
+            title: yaml.title || 'Untitled',
+            status: yaml.status || 'Unknown',
+            type: yaml.type || 'Unknown',
+            priority: yaml.priority || 'Medium'
+          };
 
-    // Get CR basic info first
-    const ticket = await this.crService.getCR(project, key);
-    if (!ticket) {
-      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-    }
+          // Add optional fields if present
+          const optionalFields = [
+            'dateCreated', 'lastModified', 'phaseEpic', 'assignee',
+            'dependsOn', 'blocks', 'relatedTickets', 'impactAreas',
+            'description', 'rationale' // Common custom fields
+          ];
 
-    // Read the file to extract YAML frontmatter
-    const fs = await import('fs/promises');
-    try {
-      const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
+          for (const field of optionalFields) {
+            if (yaml[field] !== undefined) {
+              attributes[field] = yaml[field];
+            }
+          }
 
-      // Extract YAML frontmatter
-      const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
-      if (!frontmatterMatch) {
-        throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
-      }
+          // Include any additional custom fields not in the standard set
+          const standardFields = new Set([
+            'code', 'title', 'status', 'type', 'priority', 'dateCreated',
+            'lastModified', 'phaseEpic', 'assignee', 'dependsOn', 'blocks',
+            'relatedTickets', 'impactAreas', 'description', 'rationale'
+          ]);
 
-      const yamlContent = frontmatterMatch[1];
+          for (const [field, value] of Object.entries(yaml)) {
+            if (!standardFields.has(field)) {
+              attributes[field] = value;
+            }
+          }
 
-      // Parse YAML with simple parser
-      let yaml: any = {};
-      try {
-        yaml = this.parseYamlFrontmatter(yamlContent) || {};
-      } catch (yamlError) {
-        throw new Error(`Failed to parse YAML frontmatter for ${key}: ${(yamlError as Error).message}`);
-      }
+          // Return formatted JSON output
+          return JSON.stringify(attributes, null, 2);
 
-      // Build attributes object with common fields
-      const attributes: any = {
-        code: yaml.code || key,
-        title: yaml.title || 'Untitled',
-        status: yaml.status || 'Unknown',
-        type: yaml.type || 'Unknown',
-        priority: yaml.priority || 'Medium'
-      };
-
-      // Add optional fields if present
-      const optionalFields = [
-        'dateCreated', 'lastModified', 'phaseEpic', 'assignee',
-        'dependsOn', 'blocks', 'relatedTickets', 'impactAreas',
-        'description', 'rationale' // Common custom fields
-      ];
-
-      for (const field of optionalFields) {
-        if (yaml[field] !== undefined) {
-          attributes[field] = yaml[field];
+        } catch (fileError) {
+          throw new Error(`Failed to read CR file for ${key}: ${(fileError as Error).message}`);
         }
       }
 
-      // Include any additional custom fields not in the standard set
-      const standardFields = new Set([
-        'code', 'title', 'status', 'type', 'priority', 'dateCreated',
-        'lastModified', 'phaseEpic', 'assignee', 'dependsOn', 'blocks',
-        'relatedTickets', 'impactAreas', 'description', 'rationale'
-      ]);
+      case 'metadata':
+        // Return just the key metadata without full YAML parsing
+        const metadata = {
+          code: ticket.code,
+          title: ticket.title,
+          status: ticket.status,
+          type: ticket.type,
+          priority: ticket.priority,
+          dateCreated: ticket.dateCreated?.toISOString(),
+          lastModified: ticket.lastModified?.toISOString(),
+          phaseEpic: ticket.phaseEpic,
+          filePath: ticket.filePath
+        };
 
-      for (const [field, value] of Object.entries(yaml)) {
-        if (!standardFields.has(field)) {
-          attributes[field] = value;
-        }
-      }
+        return JSON.stringify(metadata, null, 2);
 
-      // Return formatted JSON output
-      return JSON.stringify(attributes, null, 2);
-
-    } catch (fileError) {
-      throw new Error(`Failed to read CR file for ${key}: ${(fileError as Error).message}`);
+      default:
+        throw new Error(`Invalid mode '${mode}'. Must be: full, attributes, or metadata`);
     }
   }
 
@@ -644,8 +577,10 @@ export class MCPTools {
 
     // Process content if provided
     let processedData = { ...data };
+    let contentProcessingResult: any = null;
+
     if (data.content) {
-      const contentProcessingResult = SimpleContentProcessor.processContent(data.content, {
+      contentProcessingResult = SimpleContentProcessor.processContent(data.content, {
         operation: 'replace',
         maxLength: 1000000 // 1MB limit for full CR content
       });
@@ -801,431 +736,297 @@ export class MCPTools {
     return lines.join('\n');
   }
 
-  private async handleListCRSections(projectKey: string, key: string): Promise<string> {
+  
+  
+  
+  private async handleManageCRSections(projectKey: string, key: string, operation: string, section?: string, updateMode?: string, content?: string): Promise<string> {
     const project = await this.validateProject(projectKey);
-
-    // Get CR
-    const ticket = await this.crService.getCR(project, key);
-    if (!ticket) {
-      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-    }
-
-    // Read file content
-    const fs = await import('fs/promises');
-    const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
-
-    // Extract markdown body (after YAML frontmatter)
-    const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-    if (!frontmatterMatch) {
-      throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
-    }
-
-    const markdownBody = frontmatterMatch[2];
-
-    // Get all sections
-    const allSections = MarkdownSectionService.findSection(markdownBody, '');
-
-    if (allSections.length === 0) {
-      return [
-        `📑 **Sections in CR ${key}**`,
-        '',
-        `- Title: ${ticket.title}`,
-        '',
-        '*(No sections found - document may be empty or improperly formatted)*'
-      ].join('\n');
-    }
-
-    const lines = [
-      `📑 **Sections in CR ${key}** - ${ticket.title}`,
-      '',
-      `Found ${allSections.length} section${allSections.length === 1 ? '' : 's'}:`,
-      ''
-    ];
-
-    // Build tree structure based on header levels
-    for (const section of allSections) {
-      // Calculate indentation based on header level (# = 0, ## = 1, ### = 2, etc.)
-      const indent = '  '.repeat(Math.max(0, section.headerLevel - 1));
-
-      const contentPreview = section.content.trim() ?
-        ` (${section.content.length} chars)` :
-        ' (empty)';
-
-      lines.push(`${indent}- ${section.headerText}${contentPreview}`);
-    }
-
-    lines.push('');
-    lines.push('**Usage:**');
-    lines.push('To read or update a section, use the **exact header text** shown above (with # symbols).');
-    lines.push('');
-    lines.push('**Examples:**');
-    lines.push('- `section: "## 1. Feature Description"` - reads/updates that section');
-    lines.push('- `section: "### Key Features"` - reads/updates the subsection');
-
-    return lines.join('\n');
-  }
-
-  private async handleGetCRSection(projectKey: string, key: string, section: string): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    // Get CR
-    const ticket = await this.crService.getCR(project, key);
-    if (!ticket) {
-      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-    }
-
-    // Read file content
-    const fs = await import('fs/promises');
-    const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
-
-    // Extract markdown body (after YAML frontmatter)
-    const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-    if (!frontmatterMatch) {
-      throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
-    }
-
-    const markdownBody = frontmatterMatch[2];
-
-    // Find section
-    const matches = MarkdownSectionService.findSection(markdownBody, section);
-
-    if (matches.length === 0) {
-      throw new Error(`Section "${section}" not found in CR ${key}. Use list_cr_sections to see available sections.`);
-    }
-
-    if (matches.length > 1) {
-      const paths = matches.map(m => m.hierarchicalPath).join('\n  - ');
-      throw new Error(
-        `Multiple sections match "${section}". Please use a hierarchical path:\n  - ${paths}`
-      );
-    }
-
-    const matchedSection = matches[0];
-
-    return [
-      `📖 **Section Content from CR ${key}**`,
-      '',
-      `**Section:** ${matchedSection.hierarchicalPath}`,
-      `**Content Length:** ${matchedSection.content.length} characters`,
-      '',
-      '---',
-      '',
-      matchedSection.content,
-      '',
-      '---',
-      '',
-      `Use \`update_cr_section\` to modify this section.`
-    ].join('\n');
-  }
-
-  private async handleUpdateCRSection(projectKey: string, key: string, section: string, operation: string, content: string): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    // Get CR
-    const ticket = await this.crService.getCR(project, key);
-    if (!ticket) {
-      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-    }
-
-    // Read file content
-    const fs = await import('fs/promises');
-    const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
-
-    // Extract markdown body (after YAML frontmatter)
-    const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-    if (!frontmatterMatch) {
-      throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
-    }
-
-    const yamlFrontmatter = frontmatterMatch[1];
-    const markdownBody = frontmatterMatch[2];
-
-    // Simple section validation
-    const availableSections = SimpleSectionValidator.extractSections(markdownBody);
-    const sectionValidation = SimpleSectionValidator.validateSection(section, availableSections);
-
-    if (!sectionValidation.valid) {
-      const errorMessage = [
-        `❌ **Section validation failed**`,
-        '',
-        `**Errors:**`,
-        ...sectionValidation.errors.map(error => `- ${error}`),
-        ''
-      ];
-
-      if (sectionValidation.suggestions.length > 0) {
-        errorMessage.push('**Suggestions:**');
-        errorMessage.push(...sectionValidation.suggestions.map(suggestion => `- ${suggestion}`));
-        errorMessage.push('');
-      }
-
-      errorMessage.push(`Use \`list_cr_sections\` to see all available sections in CR ${key}.`);
-      throw new Error(errorMessage.join('\n'));
-    }
-
-    // Find section using normalized identifier
-    const matches = MarkdownSectionService.findSection(markdownBody, sectionValidation.normalized || section);
-
-    if (matches.length === 0) {
-      // Section not found - list available sections
-      const sectionList = availableSections
-        .map(s => `  - "${s}"`)
-        .join('\n');
-
-      throw new Error(
-        `Section '${section}' not found in CR ${key}.\n\n` +
-        `Available sections:\n${sectionList || '  (none)'}`
-      );
-    }
-
-    if (matches.length > 1) {
-      // Multiple matches - require hierarchical path
-      const paths = matches.map(m => `  - "${m.hierarchicalPath}"`).join('\n');
-      throw new Error(
-        `Multiple sections found matching '${section}'.\n\n` +
-        `Please specify which one using hierarchical path:\n${paths}`
-      );
-    }
-
-    // Process content with simple sanitization
-    const contentProcessingResult = SimpleContentProcessor.processContent(content, {
-      operation: operation as 'replace' | 'append' | 'prepend',
-      maxLength: 500000 // 500KB limit for section content
-    });
-
-    // Show warnings if any
-    if (contentProcessingResult.warnings.length > 0) {
-      console.warn(`Content processing warnings for ${key}:`, contentProcessingResult.warnings);
-    }
-
-    // Use processed content
-    const processedContent = contentProcessingResult.content;
-
-    // Single match - proceed with update
-    const matchedSection = matches[0];
-    let updatedBody: string;
 
     switch (operation) {
-      case 'replace':
-        updatedBody = MarkdownSectionService.replaceSection(markdownBody, matchedSection, processedContent);
-        break;
-      case 'append':
-        updatedBody = MarkdownSectionService.appendToSection(markdownBody, matchedSection, processedContent);
-        break;
-      case 'prepend':
-        updatedBody = MarkdownSectionService.prependToSection(markdownBody, matchedSection, processedContent);
-        break;
+      case 'list': {
+        // List all sections in the CR
+        const ticket = await this.crService.getCR(project, key);
+        if (!ticket) {
+          throw new Error(`CR '${key}' not found in project '${projectKey}'`);
+        }
+
+        // Read file content
+        const fs = await import('fs/promises');
+        const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
+
+        // Extract markdown body (after YAML frontmatter)
+        const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+        if (!frontmatterMatch) {
+          throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+        }
+
+        const markdownBody = frontmatterMatch[2];
+
+        // Get all sections
+        const allSections = MarkdownSectionService.findSection(markdownBody, '');
+
+        if (allSections.length === 0) {
+          return [
+            `📑 **Sections in CR ${key}**`,
+            '',
+            `- Title: ${ticket.title}`,
+            '',
+            '*(No sections found - document may be empty or improperly formatted)*'
+          ].join('\n');
+        }
+
+        const lines = [
+          `📑 **Sections in CR ${key}** - ${ticket.title}`,
+          '',
+          `Found ${allSections.length} section${allSections.length === 1 ? '' : 's'}:`,
+          ''
+        ];
+
+        // Build tree structure based on header levels
+        for (const section of allSections) {
+          // Calculate indentation based on header level (# = 0, ## = 1, ### = 2, etc.)
+          const indent = '  '.repeat(Math.max(0, section.headerLevel - 1));
+
+          const contentPreview = section.content.trim() ?
+            ` (${section.content.length} chars)` :
+            ' (empty)';
+
+          lines.push(`${indent}- ${section.headerText}${contentPreview}`);
+        }
+
+        lines.push('');
+        lines.push('**Usage:**');
+        lines.push('To read or update a section, use the **exact header text** shown above (with # symbols).');
+        lines.push('');
+        lines.push('**Examples:**');
+        lines.push('- `section: "## 1. Feature Description"` - reads/updates that section');
+        lines.push('- `section: "### Key Features"` - reads/updates the subsection');
+
+        return lines.join('\n');
+      }
+
+      case 'get': {
+        if (!section) {
+          throw new Error(`Section parameter is required for 'get' operation`);
+        }
+
+        // Get CR
+        const ticket = await this.crService.getCR(project, key);
+        if (!ticket) {
+          throw new Error(`CR '${key}' not found in project '${projectKey}'`);
+        }
+
+        // Read file content
+        const fs = await import('fs/promises');
+        const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
+
+        // Extract markdown body (after YAML frontmatter)
+        const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+        if (!frontmatterMatch) {
+          throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+        }
+
+        const markdownBody = frontmatterMatch[2];
+
+        // Find section
+        const matches = MarkdownSectionService.findSection(markdownBody, section);
+
+        if (matches.length === 0) {
+          throw new Error(`Section "${section}" not found in CR ${key}. Use manage_cr_sections with operation="list" to see available sections.`);
+        }
+
+        if (matches.length > 1) {
+          const paths = matches.map(m => m.hierarchicalPath).join('\n  - ');
+          throw new Error(
+            `Multiple sections match "${section}". Please use a hierarchical path:\n  - ${paths}`
+          );
+        }
+
+        const matchedSection = matches[0];
+
+        return [
+          `📖 **Section Content from CR ${key}**`,
+          '',
+          `**Section:** ${matchedSection.hierarchicalPath}`,
+          `**Content Length:** ${matchedSection.content.length} characters`,
+          '',
+          '---',
+          '',
+          matchedSection.content,
+          '',
+          '---',
+          '',
+          `Use \`manage_cr_sections\` with operation="update" to modify this section.`
+        ].join('\n');
+      }
+
+      case 'update': {
+        if (!section) {
+          throw new Error(`Section parameter is required for 'update' operation`);
+        }
+        if (!updateMode) {
+          throw new Error(`UpdateMode parameter is required for 'update' operation`);
+        }
+        if (!content) {
+          throw new Error(`Content parameter is required for 'update' operation`);
+        }
+
+        // Get CR
+        const ticket = await this.crService.getCR(project, key);
+        if (!ticket) {
+          throw new Error(`CR '${key}' not found in project '${projectKey}'`);
+        }
+
+        // Read file content
+        const fs = await import('fs/promises');
+        const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
+
+        // Extract markdown body (after YAML frontmatter)
+        const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+        if (!frontmatterMatch) {
+          throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+        }
+
+        const yamlFrontmatter = frontmatterMatch[1];
+        const markdownBody = frontmatterMatch[2];
+
+        // Simple section validation
+        const availableSections = SimpleSectionValidator.extractSections(markdownBody);
+        const sectionValidation = SimpleSectionValidator.validateSection(section, availableSections);
+
+        if (!sectionValidation.valid) {
+          const errorMessage = [
+            `❌ **Section validation failed**`,
+            '',
+            `**Errors:**`,
+            ...sectionValidation.errors.map(error => `- ${error}`),
+            ''
+          ];
+
+          if (sectionValidation.suggestions.length > 0) {
+            errorMessage.push('**Suggestions:**');
+            errorMessage.push(...sectionValidation.suggestions.map(suggestion => `- ${suggestion}`));
+            errorMessage.push('');
+          }
+
+          errorMessage.push(`Use \`manage_cr_sections\` with operation="list" to see all available sections in CR ${key}.`);
+          throw new Error(errorMessage.join('\n'));
+        }
+
+        // Find section using normalized identifier
+        const matches = MarkdownSectionService.findSection(markdownBody, sectionValidation.normalized || section);
+
+        if (matches.length === 0) {
+          // Section not found - list available sections
+          const sectionList = availableSections
+            .map(s => `  - "${s}"`)
+            .join('\n');
+
+          throw new Error(
+            `Section '${section}' not found in CR ${key}.\n\n` +
+            `Available sections:\n${sectionList || '  (none)'}`
+          );
+        }
+
+        if (matches.length > 1) {
+          // Multiple matches - require hierarchical path
+          const paths = matches.map(m => `  - "${m.hierarchicalPath}"`).join('\n');
+          throw new Error(
+            `Multiple sections found matching '${section}'.\n\n` +
+            `Please specify which one using hierarchical path:\n${paths}`
+          );
+        }
+
+        // Process content with simple sanitization
+        const contentProcessingResult = SimpleContentProcessor.processContent(content, {
+          operation: updateMode as 'replace' | 'append' | 'prepend',
+          maxLength: 500000 // 500KB limit for section content
+        });
+
+        // Show warnings if any
+        if (contentProcessingResult.warnings.length > 0) {
+          console.warn(`Content processing warnings for ${key}:`, contentProcessingResult.warnings);
+        }
+
+        // Use processed content
+        const processedContent = contentProcessingResult.content;
+
+        // Single match - proceed with update
+        const matchedSection = matches[0];
+        let updatedBody: string;
+
+        switch (updateMode) {
+          case 'replace':
+            updatedBody = MarkdownSectionService.replaceSection(markdownBody, matchedSection, processedContent);
+            break;
+          case 'append':
+            updatedBody = MarkdownSectionService.appendToSection(markdownBody, matchedSection, processedContent);
+            break;
+          case 'prepend':
+            updatedBody = MarkdownSectionService.prependToSection(markdownBody, matchedSection, processedContent);
+            break;
+          default:
+            throw new Error(`Invalid updateMode '${updateMode}'. Must be: replace, append, or prepend`);
+        }
+
+        // Update lastModified in YAML
+        const now = new Date().toISOString();
+        const updatedYaml = yamlFrontmatter.replace(
+          /lastModified:.*$/m,
+          `lastModified: ${now}`
+        );
+
+        // Reconstruct full document
+        const updatedContent = `---\n${updatedYaml}\n---\n${updatedBody}`;
+
+        // Write back to file
+        await fs.writeFile(ticket.filePath, updatedContent, 'utf-8');
+
+        const lines = [
+          `✅ **Updated Section in CR ${key}**`,
+          '',
+          `**Section:** ${matchedSection.hierarchicalPath}`,
+          `**Operation:** ${updateMode}`,
+          `**Content Length:** ${processedContent.length} characters`,
+          '',
+          `- Title: ${ticket.title}`,
+          `- Updated: ${now}`,
+          `- File: ${ticket.filePath}`
+        ];
+
+        // Add processing information
+        if (contentProcessingResult.modified) {
+          lines.push('');
+          lines.push('**Content Processing:**');
+          if (contentProcessingResult.warnings.length > 0) {
+            lines.push('- Applied content sanitization and formatting');
+            lines.push(`- ${contentProcessingResult.warnings.length} warning(s) logged to console`);
+          } else {
+            lines.push('- Content processed successfully');
+          }
+        }
+
+        // Add helpful message based on operation
+        if (updateMode === 'replace') {
+          lines.push('', `The section content has been completely replaced.`);
+        } else if (updateMode === 'append') {
+          lines.push('', `Content has been added to the end of the section.`);
+        } else if (updateMode === 'prepend') {
+          lines.push('', `Content has been added to the beginning of the section.`);
+        }
+
+        return lines.join('\n');
+      }
+
       default:
-        throw new Error(`Invalid operation '${operation}'. Must be: replace, append, or prepend`);
+        throw new Error(`Invalid operation '${operation}'. Must be: list, get, or update`);
     }
-
-    // Update lastModified in YAML
-    const now = new Date().toISOString();
-    const updatedYaml = yamlFrontmatter.replace(
-      /lastModified:.*$/m,
-      `lastModified: ${now}`
-    );
-
-    // Reconstruct full document
-    const updatedContent = `---\n${updatedYaml}\n---\n${updatedBody}`;
-
-    // Write back to file
-    await fs.writeFile(ticket.filePath, updatedContent, 'utf-8');
-
-    const lines = [
-      `✅ **Updated Section in CR ${key}**`,
-      '',
-      `**Section:** ${matchedSection.hierarchicalPath}`,
-      `**Operation:** ${operation}`,
-      `**Content Length:** ${processedContent.length} characters`,
-      '',
-      `- Title: ${ticket.title}`,
-      `- Updated: ${now}`,
-      `- File: ${ticket.filePath}`
-    ];
-
-    // Add processing information
-    if (contentProcessingResult.modified) {
-      lines.push('');
-      lines.push('**Content Processing:**');
-      if (contentProcessingResult.warnings.length > 0) {
-        lines.push('- Applied content sanitization and formatting');
-        lines.push(`- ${contentProcessingResult.warnings.length} warning(s) logged to console`);
-      } else {
-        lines.push('- Content processed successfully');
-      }
-    }
-
-    // Simple implementation - no complex integrity checking needed
-
-    // Add helpful message based on operation
-    if (operation === 'replace') {
-      lines.push('', `The section content has been completely replaced.`);
-    } else if (operation === 'append') {
-      lines.push('', `Content has been added to the end of the section.`);
-    } else if (operation === 'prepend') {
-      lines.push('', `Content has been added to the beginning of the section.`);
-    }
-
-    return lines.join('\n');
   }
 
-  private async handleListCRTemplates(): Promise<string> {
-    const templateTypes = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'];
-    
-    const lines = [
-      '📋 **Available CR Template Types**',
-      '',
-      '**Template Types:**'
-    ];
-    
-    templateTypes.forEach((type, index) => {
-      lines.push(`${index + 1}. **${type}**`);
-      
-      // Add brief description for each type
-      switch(type) {
-        case 'Architecture':
-          lines.push('   - High-level system design and structural changes');
-          break;
-        case 'Feature Enhancement':
-          lines.push('   - New functionality or improvements to existing features');
-          break;
-        case 'Bug Fix':
-          lines.push('   - Correcting defects and resolving issues');
-          break;
-        case 'Technical Debt':
-          lines.push('   - Code quality improvements and refactoring');
-          break;
-        case 'Documentation':
-          lines.push('   - Creating or updating project documentation');
-          break;
-      }
-      lines.push('');
-    });
-    
-    lines.push('**Usage:**');
-    lines.push('Use `get_cr_template(type: "<template_type>")` to get the specific template structure.');
-    lines.push('Use `create_cr(type: "<template_type>", data: {...})` to create a new CR.');
-    
-    return lines.join('\n');
-  }
-
-  private async handleGetCRTemplate(type: string): Promise<string> {
-    const template = this.templateService.getTemplate(type);
-    
-    return [
-      `📋 **${type} CR Template**`,
-      '',
-      '**Required Fields:**',
-      ...template.requiredFields.map(field => `- ${field}`),
-      '',
-      '**Template Structure:**',
-      '```markdown',
-      template.template,
-      '```'
-    ].join('\n');
-  }
-
-  private async handleValidateCRData(projectKey: string, data: any): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    const validation = this.templateService.validateTicketData(data, data.type);
-    
-    const lines = [
-      '✅ **CR Data Validation Results**',
-      '',
-      `**Status:** ${validation.valid ? 'Valid ✅' : 'Invalid ❌'}`,
-      ''
-    ];
-
-    if (validation.valid) {
-      lines.push('**Validation Details:**');
-      lines.push('- ✅ Title: Present and descriptive');
-      lines.push(`- ✅ Type: Valid ${data.type} type`);
-      if (data.priority) lines.push(`- ✅ Priority: Valid ${data.priority} priority`);
-      if (data.description) lines.push('- ✅ Description: Present with problem context');
-    } else {
-      lines.push('**Errors:**');
-      validation.errors.forEach(error => {
-        lines.push(`- ❌ ${error.field}: ${error.message}`);
-      });
-    }
-
-    if (validation.warnings.length > 0) {
-      lines.push('', '**Warnings:**');
-      validation.warnings.forEach(warning => {
-        lines.push(`- ⚠️ ${warning.field}: ${warning.message}`);
-      });
-    }
-
-    if (validation.valid) {
-      lines.push('', '**Next Steps:**');
-      lines.push('1. Add any additional details based on warnings above');
-      lines.push('2. Create the CR using create_cr tool');
-      if (data.type === 'Bug Fix') {
-        lines.push('3. Investigate root cause for proper analysis section');
-      }
-    } else {
-      lines.push('', '**Fix Required:** Please correct the errors above before creating the CR.');
-    }
-
-    return lines.join('\n');
-  }
-
-  private async handleGetNextCRNumber(projectKey: string): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    const nextNumber = await this.crService.getNextCRNumber(project);
-    const nextKey = `${project.project.code}-${String(nextNumber).padStart(3, '0')}`;
-
-    return [
-      `🔢 **Next CR Number for ${projectKey} Project**`,
-      '',
-      `**Next Available:** ${nextKey}`,
-      '',
-      '**Details:**',
-      `- Project Code: ${project.project.code}`,
-      `- Current Counter: ${nextNumber}`,
-      `- Counter File: ${project.project.counterFile}`,
-      `- Start Number: ${project.project.startNumber}`,
-      `- Format: ${project.project.code}-XXX (3-digit zero-padded)`,
-      '',
-      `The next CR created will automatically use ${nextKey}.`
-    ].join('\n');
-  }
-
-  private async handleFindRelatedCRs(projectKey: string, keywords: string[]): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    const allCRs = await this.crService.listCRs(project);
-    const related = this.findRelatedCRs(allCRs, keywords);
-
-    const lines = [
-      `🔍 **Related CRs Found**`,
-      '',
-      `Searched for: ${keywords.join(', ')}`,
-      ''
-    ];
-
-    if (related.length === 0) {
-      lines.push('No related CRs found with the specified keywords.');
-      return lines.join('\n');
-    }
-
-    lines.push(`**Results (${related.length}):**`, '');
-
-    related.forEach(({ cr, score, matchedKeywords }) => {
-      lines.push(`**${cr.key}** - ${cr.title}`);
-      lines.push(`- Status: ${cr.status}`);
-      lines.push(`- Type: ${cr.type}`);
-      lines.push(`- Keywords: ${matchedKeywords.join(', ')}`);
-      lines.push(`- Relevance: ${Math.round(score * 100)}%`);
-      lines.push('');
-    });
-
-    return lines.join('\n');
-  }
-
+  
+  
+  
+  
   private async handleSuggestCRImprovements(projectKey: string, key: string): Promise<string> {
     const project = await this.validateProject(projectKey);
 
@@ -1255,42 +1056,7 @@ export class MCPTools {
     ].join('\n');
   }
 
-  private findRelatedCRs(tickets: any[], keywords: string[]): Array<{cr: any, score: number, matchedKeywords: string[]}> {
-    const results: Array<{cr: any, score: number, matchedKeywords: string[]}> = [];
-
-    for (const ticket of tickets) {
-      const text = `${ticket.title} ${ticket.content}`.toLowerCase();
-      const matchedKeywords: string[] = [];
-      let score = 0;
-
-      for (const keyword of keywords) {
-        const keywordLower = keyword.toLowerCase();
-        if (text.includes(keywordLower)) {
-          matchedKeywords.push(keyword);
-
-          // Title matches are worth more
-          if (ticket.title.toLowerCase().includes(keywordLower)) {
-            score += 0.5;
-          } else {
-            score += 0.2;
-          }
-        }
-      }
-
-      if (matchedKeywords.length > 0) {
-        results.push({
-          cr: ticket,
-          score: score / keywords.length, // Normalize by keyword count
-          matchedKeywords
-        });
-      }
-    }
-
-    return results
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10); // Return top 10 results
-  }
-
+  
   /**
    * Simple YAML frontmatter parser for extracting CR attributes
    */
