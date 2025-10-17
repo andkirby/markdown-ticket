@@ -309,15 +309,11 @@ services:
    - Enable file watching polling in containers
    - Externalize all paths and ports
 
-2. **Health Check Endpoints**
-   - `/api/health` - Basic liveness check
-   - `/api/ready` - Readiness check with filesystem access
-
-3. **Graceful Shutdown**
+2. **Graceful Shutdown**
    - Handle SIGTERM/SIGINT for container lifecycle
    - Clean shutdown of file watchers
 
-4. **Volume Management**
+3. **Volume Management**
    - Mount project directories from host
    - Read-only mount for configuration
    - Proper file permissions
@@ -361,7 +357,6 @@ services:
 
 ### Docker Configuration
 - [ ] Environment-based configuration (no hardcoded paths)
-- [ ] Health check endpoint responds correctly
 - [ ] Graceful shutdown on SIGTERM/SIGINT
 - [ ] Proper volume permissions for file access
 
