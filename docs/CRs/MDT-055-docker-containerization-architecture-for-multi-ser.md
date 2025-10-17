@@ -55,20 +55,12 @@ graph TB
         VOLUMES[Docker Volumes]
     end
 
-    subgraph "Host"
-        MCP[MCP Server<br/>stdio<br/>until MDT-071]
-        LLM[LLM Client]
-    end
-
-    USER[User] -->|localhost:80| NGINX
     LLM_CLIENT[LLM Client] -->|localhost:80/sse| NGINX
 
     NGINX -->|serve static| STATIC
     NGINX -->|proxy /api/*| APP
     NGINX -->|proxy /sse| APP
     APP -->|Read/Write| VOLUMES
-    MCP -->|Access| VOLUMES
-    LLM -->|stdio| MCP
 
     style NGINX fill:#ff6f00,color:#fff
     style APP fill:#1976d2,color:#fff
@@ -86,8 +78,7 @@ graph TB
 
 **Development (Two Containers):**
 - **Frontend**: `http://localhost:5173` → Vite dev server (hot reload)
-- **Backend**: `http://localhost:3001` → Express.js with SSE
-- **MCP Server**: Host machine, stdio transport (until MDT-071)
+- **Backend**: `http://localhost:3001` → Express.js with SSE + MCP HTTP
 
 ### Impact Areas
 
@@ -130,14 +121,15 @@ graph TB
 
 #### MCP Server Integration
 
-**Decision: MCP runs on host machine, accesses Docker volumes**
+**Decision: MCP HTTP transport integrated in backend container**
 
 **Rationale:**
-- MCP requires stdio transport which doesn't work well in containers
-- Keeps existing LLM configurations unchanged
-- Simple and reliable file access through volume mounts
+- stdio transport is not compatible with Docker containers
+- MDT-071 implements official MCP Streamable HTTP transport
+- Single container architecture simplifies deployment
+- LLM clients connect via standard HTTP endpoint
 
-**Note:** This will change when MDT-071 implements HTTP transport for MCP
+**Dependency:** Requires MDT-071 implementation for MCP HTTP transport
 
 #### SSE Communication
 
@@ -153,9 +145,9 @@ graph TB
 
 ### Main Challenges
 
-1. **MCP Server Integration**: MCP uses stdio transport which doesn't work well in containers
-   - **Solution**: Run MCP on host, access Docker volumes via mounts
-   - **Future**: MDT-071 will implement HTTP transport for full containerization
+1. **MCP Server Integration**: stdio transport is incompatible with Docker containers
+   - **Solution**: Use MCP HTTP transport implemented in MDT-071
+   - **Benefit**: Full containerization with standard HTTP endpoints
 
 2. **File Watching in Docker**: Native file events don't propagate reliably in containers
    - **Solution**: Use Chokidar polling mode when running in Docker
@@ -330,22 +322,19 @@ services:
    - Read-only mount for configuration
    - Proper file permissions
 
-### MCP Server Setup
+### MCP Server Integration
 
-**Current Approach (stdio on host):**
-```bash
-# Run MCP server on host machine
-cd mcp-server
-npm run build
-node dist/index.js
+**HTTP Transport Approach (MDT-071):**
+- MCP Streamable HTTP transport integrated in backend container
+- LLM clients connect to `/sse` endpoint via HTTP
+- Full containerization without stdio limitations
+- Session management and security built-in
 
-# LLM connects normally (no changes needed)
-```
-
-**Future Approach (HTTP transport - MDT-071):**
-- MCP server will be fully containerizable
-- HTTP/SSE transport eliminates stdio requirement
-- True multi-container architecture possible
+**Benefits:**
+- No stdio transport limitations in containers
+- Standard HTTP endpoint for all MCP clients
+- Better scalability and monitoring
+- Consistent deployment architecture
 
 ### Development vs Production
 
@@ -355,7 +344,7 @@ node dist/index.js
 | **Frontend Access** | http://localhost:5173 | http://localhost:80 |
 | **Backend Access** | http://localhost:3001 | http://localhost:80/api/* |
 | **SSE Endpoint** | http://localhost:3001/api/events | http://localhost:80/api/events |
-| **MCP Endpoint** | Host stdio (until MDT-071) | http://localhost:80/sse (after MDT-071) |
+| **MCP Endpoint** | http://localhost:3001/sse | http://localhost:80/sse |
 | **File Watching** | Polling | Polling |
 | **Hot Reload** | Yes | No |
 | **Build Type** | Development | Production optimized |
@@ -367,7 +356,7 @@ node dist/index.js
 - [ ] Production application accessible at http://localhost:80
 - [ ] Development setup works with frontend on :5173 and backend on :3001
 - [ ] File watching works in containers (polling mode)
-- [ ] MCP server can read/write files through volume mounts
+- [ ] MCP HTTP transport accessible at /sse endpoint
 - [ ] Multi-project mounting supported from any filesystem location
 
 ### Docker Configuration
