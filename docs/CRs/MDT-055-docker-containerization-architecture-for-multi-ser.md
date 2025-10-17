@@ -48,33 +48,52 @@ graph LR
 
 ```mermaid
 graph TB
-    subgraph "Docker Compose"
+    subgraph "Production Container"
         NGINX[Nginx :80]
-        APP[Application :3000]
+        APP[Express :3000<br/>Frontend+SSE+MCP]
+        STATIC[React Build<br/>Static Files]
         VOLUMES[Docker Volumes]
     end
 
     subgraph "Host"
-        MCP[MCP Server<br/>stdio]
+        MCP[MCP Server<br/>stdio<br/>until MDT-071]
         LLM[LLM Client]
     end
 
-    NGINX -->|Proxy| APP
+    USER[User] -->|localhost:80| NGINX
+    LLM_CLIENT[LLM Client] -->|localhost:80/sse| NGINX
+
+    NGINX -->|serve static| STATIC
+    NGINX -->|proxy /api/*| APP
+    NGINX -->|proxy /sse| APP
     APP -->|Read/Write| VOLUMES
     MCP -->|Access| VOLUMES
     LLM -->|stdio| MCP
 
     style NGINX fill:#ff6f00,color:#fff
     style APP fill:#1976d2,color:#fff
-    style MCP fill:#2e7d32,color:#fff
+    style STATIC fill:#4caf50,color:#fff
     style VOLUMES fill:#f57c00,color:#fff
 ```
+
+### Endpoint Access Patterns
+
+**Production (Single Container - Port 80):**
+- **Frontend**: `http://localhost:80/` → React app (static files)
+- **Backend API**: `http://localhost:80/api/*` → Express.js routes
+- **Frontend SSE**: `http://localhost:80/api/events` → Real-time file updates
+- **MCP HTTP**: `http://localhost:80/sse` → MCP Streamable HTTP (MDT-071)
+
+**Development (Two Containers):**
+- **Frontend**: `http://localhost:5173` → Vite dev server (hot reload)
+- **Backend**: `http://localhost:3001` → Express.js with SSE
+- **MCP Server**: Host machine, stdio transport (until MDT-071)
 
 ### Impact Areas
 
 - **Developer Experience**: Simplified onboarding with `docker-compose up`
 - **Deployment**: Consistent environments from dev to production
-- **MCP Integration**: File access through Docker volume mounts
+- **MCP Integration**: File access through Docker volume mounts, HTTP transport via MDT-071
 
 ## 2. Rationale
 
@@ -152,9 +171,9 @@ graph TB
 | **Production** | Team deployments, staging/prod | 5 minutes |
 | **Standalone** | Demos, simple deployments | 30 seconds |
 
-### Simple Docker Compose Example
+### Practical Docker Compose Setups
 
-**docker-compose.yml (Production)**
+**Production Setup (docker-compose.yml)**
 ```yaml
 version: '3.8'
 
@@ -162,7 +181,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "80:80"  # nginx serves everything on port 80
     volumes:
       # Mount project directories
       - ~/work/project-a:/projects/project-a
@@ -173,6 +192,48 @@ services:
       - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
     restart: unless-stopped
+```
+
+**Development Setup (docker-compose.dev.yml)**
+```yaml
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ~/work/project-a:/projects/project-a
+      - ~/personal/project-b:/projects/project-b
+      - ~/.config/markdown-ticket:/config:ro
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+```
+
+**Usage:**
+```bash
+# Production
+docker-compose up
+
+# Development
+docker-compose -f docker-compose.dev.yml up
 ```
 
 ### Project Mounting Strategies
@@ -290,17 +351,21 @@ node dist/index.js
 
 | Feature | Development | Production |
 |---------|-------------|------------|
-| **Containers** | 2 (FE + BE) | 1 (combined) |
+| **Containers** | 2 (frontend + backend) | 1 (nginx + app) |
+| **Frontend Access** | http://localhost:5173 | http://localhost:80 |
+| **Backend Access** | http://localhost:3001 | http://localhost:80/api/* |
+| **SSE Endpoint** | http://localhost:3001/api/events | http://localhost:80/api/events |
+| **MCP Endpoint** | Host stdio (until MDT-071) | http://localhost:80/sse (after MDT-071) |
 | **File Watching** | Polling | Polling |
-| **MCP Server** | On host | On host |
-| **Build Type** | Development | Optimized |
 | **Hot Reload** | Yes | No |
+| **Build Type** | Development | Production optimized |
 
 ## 5. Acceptance Criteria
 
 ### Core Requirements
 - [ ] Docker Compose setup works with single command: `docker-compose up`
-- [ ] Application accessible at http://localhost:3000
+- [ ] Production application accessible at http://localhost:80
+- [ ] Development setup works with frontend on :5173 and backend on :3001
 - [ ] File watching works in containers (polling mode)
 - [ ] MCP server can read/write files through volume mounts
 - [ ] Multi-project mounting supported from any filesystem location
