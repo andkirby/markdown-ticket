@@ -52,6 +52,9 @@ junit.xml
 # Temporary files
 tmp/
 temp/
+
+# Backup directories
+backup-*/
 # Legacy path - CRs now stored in docs/CRs/
 # server/tasks
 **/debug-tasks/
@@ -66,3 +69,4 @@ lambda-counter-aws
 generated-docs/repomix_output.xml
 docs/**/*.md
 /docs/*.*
+/projects/

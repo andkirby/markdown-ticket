@@ -92,6 +92,39 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
     }
   }, []); // Removed selectedProject from deps - using ref instead
 
+  const handleCreateTicket = useCallback(async () => {
+    const currentProject = selectedProjectRef.current;
+    if (!currentProject) {
+      console.error('No project selected');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/projects/${currentProject.id}/crs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'New Change Request',
+          type: 'Feature Enhancement',
+          status: 'Proposed'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create ticket: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Created ticket:', result);
+
+      // Tickets will be updated via SSE events automatically
+    } catch (error) {
+      console.error('Failed to create ticket:', error);
+    }
+  }, []);
+
   return (
     <div className="h-full flex flex-col">
       <div className="px-6 py-3 border-b border-border">
@@ -108,6 +141,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
               onEditProject={() => setShowEditProjectModal(true)}
               onCounterAPI={() => setShowCounterAPIModal(true)}
               selectedProject={selectedProject}
+              onCreateTicket={handleCreateTicket}
             />
           </div>
         </div>
