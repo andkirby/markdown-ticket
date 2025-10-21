@@ -20,6 +20,13 @@ class ProjectDiscoveryService {
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
     this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
     this.sharedProjectService = new ProjectService();
+
+    // Cache for project discovery results
+    this.cache = {
+      projects: null,
+      timestamp: 0,
+      ttl: 30000 // 30 seconds cache TTL
+    };
   }
 
   /**
@@ -132,36 +139,60 @@ class ProjectDiscoveryService {
    * Get all projects (registered + auto-discovered)
    */
   async getAllProjects() {
+    const now = Date.now();
+
+    // Return cached results if still valid
+    if (this.cache.projects && (now - this.cache.timestamp) < this.cache.ttl) {
+      return this.cache.projects;
+    }
+
     const registered = this.getRegisteredProjects();
-    
+
     const globalConfig = this.getGlobalConfig();
-    
+
     if (globalConfig.discovery?.autoDiscover) {
       const searchPaths = globalConfig.discovery?.searchPaths || [];
       const discovered = this.sharedProjectService.autoDiscoverProjects(searchPaths);
-      
+
       // Create sets for both path and id to avoid duplicates
       const registeredPaths = new Set(registered.map(p => p.project.path));
       const registeredIds = new Set(registered.map(p => p.id));
-      
-      const uniqueDiscovered = discovered.filter(p => 
+
+      const uniqueDiscovered = discovered.filter(p =>
         !registeredPaths.has(p.project.path) && !registeredIds.has(p.id)
       );
-      
+
       // Combine and deduplicate by id (in case of any remaining duplicates)
       const allProjects = [...registered, ...uniqueDiscovered];
       const seenIds = new Set();
-      
-      return allProjects.filter(project => {
+
+      const result = allProjects.filter(project => {
         if (seenIds.has(project.id)) {
           return false;
         }
         seenIds.add(project.id);
         return true;
       });
+
+      // Cache the result
+      this.cache.projects = result;
+      this.cache.timestamp = now;
+
+      return result;
     }
-    
+
+    // Cache registered projects too
+    this.cache.projects = registered;
+    this.cache.timestamp = now;
     return registered;
+  }
+
+  /**
+   * Clear the project cache
+   */
+  clearCache() {
+    this.cache.projects = null;
+    this.cache.timestamp = 0;
   }
 
   /**
