@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "declaration": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
+    "allowJs": true,
+    "checkJs": false,
+    "lib": ["ES2020"],
+    "types": ["node"]
+  },
+  "include": [
+    "server.ts",
+    "projectDiscovery.ts",
+    "fileWatcherService.ts",
+    "counterAPI.ts",
+    "createSampleTickets.ts",
+    "services/**/*.ts",
+    "controllers/**/*.ts",
+    "routes/**/*.ts",
+    "strategies/**/*.ts",
+    "utils/**/*.ts",
+    "repositories/**/*.ts",
+    "factories/**/*.ts",
+    "commands/**/*.ts",
+    "invokers/**/*.ts",
+    "middleware/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "mcp-dev-tools",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "references": [
+    { "path": "../tsconfig.shared.json" }
+  ]
+}

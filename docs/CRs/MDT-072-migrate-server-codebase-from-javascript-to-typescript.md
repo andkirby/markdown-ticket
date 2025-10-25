@@ -1,7 +1,7 @@
 ---
 code: MDT-072
 title: Migrate server codebase from JavaScript to TypeScript
-status: Proposed
+status: Implemented
 dateCreated: 2025-10-18T00:00:00.000Z
 type: Architecture
 priority: High

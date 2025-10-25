@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "description": "Backend server for md-ticket-board application",
   "type": "module",
-  "main": "server.js",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "create-samples": "node createSampleTickets.js",
+    "start": "node dist/server.js",
+    "dev": "tsx server.ts",
+    "dev:watch": "tsx watch server.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "create-samples": "tsx createSampleTickets.ts",
     "test": "jest",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix"
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
@@ -22,10 +25,16 @@
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.10.0",
     "eslint": "^8.50.0",
     "jest": "^29.7.0",
     "nodemon": "^3.0.1",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.3",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.1",
+    "tsx": "^4.6.0"
   },
   "engines": {
     "node": ">=16.0.0"
