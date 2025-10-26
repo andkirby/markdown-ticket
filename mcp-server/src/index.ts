@@ -110,16 +110,32 @@ class MCPCRServer {
         try {
           const port = parseInt(process.env.MCP_HTTP_PORT || '3002');
           const host = process.env.MCP_BIND_ADDRESS || '127.0.0.1';
+
+          // Phase 2: Security features (all optional)
           const enableOriginValidation = process.env.MCP_SECURITY_ORIGIN_VALIDATION === 'true';
-          const allowedOrigins = process.env.MCP_ALLOWED_ORIGINS?.split(',') || [];
+          const allowedOrigins = process.env.MCP_ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
+          const enableRateLimiting = process.env.MCP_SECURITY_RATE_LIMITING === 'true';
+          const rateLimitMax = parseInt(process.env.MCP_RATE_LIMIT_MAX || '100');
+          const rateLimitWindowMs = parseInt(process.env.MCP_RATE_LIMIT_WINDOW_MS || '60000');
+          const enableAuth = process.env.MCP_SECURITY_AUTH === 'true';
+          const authToken = process.env.MCP_AUTH_TOKEN;
+          const sessionTimeoutMs = parseInt(process.env.MCP_SESSION_TIMEOUT_MS || '1800000'); // 30 min
 
           await startHttpTransport(this.mcpTools, {
             port,
             host,
             enableOriginValidation,
-            allowedOrigins
+            allowedOrigins,
+            enableRateLimiting,
+            rateLimitMax,
+            rateLimitWindowMs,
+            enableAuth,
+            authToken,
+            sessionTimeoutMs
           });
+
           console.error(`✅ HTTP transport ready at http://${host}:${port}/mcp`);
+          console.error(`   Features: SSE=${true}, Sessions=${true}, RateLimit=${enableRateLimiting}, Auth=${enableAuth}`);
         } catch (error) {
           console.warn('⚠️  HTTP transport failed to start:', (error as Error).message);
           console.warn('   Stdio transport is still available');
