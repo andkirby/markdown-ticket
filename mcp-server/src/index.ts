@@ -1,21 +1,15 @@
 #!/usr/bin/env node
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { 
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
-
 import { ConfigService } from './config/index.js';
 import { ProjectDiscoveryService } from './services/projectDiscovery.js';
 import { CRService } from './services/crService.js';
 // @ts-ignore
 import { TemplateService } from '../../dist/services/TemplateService.js';
 import { MCPTools } from './tools/index.js';
+import { startStdioTransport } from './transports/stdio.js';
+import { startHttpTransport } from './transports/http.js';
 
 class MCPCRServer {
-  private server: Server;
   private configService!: ConfigService;
   private projectDiscovery!: ProjectDiscoveryService;
   private crService!: CRService;
@@ -23,47 +17,34 @@ class MCPCRServer {
   private mcpTools!: MCPTools;
 
   constructor() {
-    this.server = new Server(
-      {
-        name: 'mcp-cr-server',
-        version: '1.0.0',
-      },
-      {
-        capabilities: {
-          tools: {},
-        },
-      }
-    );
-
     this.setupErrorHandling();
     this.initializeServices();
-    this.setupHandlers();
   }
 
   private setupErrorHandling(): void {
     process.on('uncaughtException', (error) => {
-      //console.error('❌ Uncaught Exception:', error);
+      console.error('❌ Uncaught Exception:', error);
       process.exit(1);
     });
 
     process.on('unhandledRejection', (reason, promise) => {
-      //console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+      console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
       process.exit(1);
     });
 
     process.on('SIGINT', () => {
-      //console.error('\\n🛑 Received SIGINT, shutting down gracefully...');
+      console.error('\n🛑 Received SIGINT, shutting down gracefully...');
       process.exit(0);
     });
 
     process.on('SIGTERM', () => {
-      //console.error('\\n🛑 Received SIGTERM, shutting down gracefully...');
+      console.error('\n🛑 Received SIGTERM, shutting down gracefully...');
       process.exit(0);
     });
   }
 
   private initializeServices(): void {
-    // Debug: Initializing MCP CR Server...
+    console.error('🚀 Initializing MCP CR Server...');
 
     // Initialize configuration
     this.configService = new ConfigService();
@@ -79,104 +60,85 @@ class MCPCRServer {
       this.templateService
     );
 
-    // Debug: Services initialized
-  }
-
-  private setupHandlers(): void {
-    // List available tools
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-      // Debug: Listing available tools
-      return {
-        tools: this.mcpTools.getTools()
-      };
-    });
-
-    // Handle tool calls
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const { name, arguments: args } = request.params;
-      
-      // Debug: Tool called: ${name}
-
-      try {
-        const result = await this.mcpTools.handleToolCall(name, args || {});
-        
-        // Debug: Tool completed successfully
-        
-        return {
-          content: [
-            {
-              type: 'text',
-              text: result
-            }
-          ]
-        };
-      } catch (error) {
-        //console.error(`❌ Tool ${name} failed:`, error);
-        
-        // Return error as content rather than throwing
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `❌ **Error in ${name}**\\n\\n${(error as Error).message}\\n\\nPlease check your input parameters and try again.`
-            }
-          ]
-        };
-      }
-    });
+    console.error('✅ Services initialized');
   }
 
   async start(): Promise<void> {
     try {
       // Validate configuration
-      // Debug: Validating configuration...
+      console.error('🔍 Validating configuration...');
       const validation = await this.configService.validateConfig();
-      
+
       if (!validation.valid) {
-        //console.error('❌ Configuration validation failed:');
-        // validation.errors.forEach(error => console.error(`  • ${error}`));
-        
-        //console.error('\\n💡 To create a default configuration file, run:');
-        //console.error(`echo 'Creating config...' && mkdir -p ~/.config/mcp-server && cat > ~/.config/mcp-server/config.toml << 'EOF'\\n${this.generateSampleConfig()}\\nEOF`);
-        
+        console.error('❌ Configuration validation failed:');
+        validation.errors.forEach(error => console.error(`  • ${error}`));
+
+        console.error('\n💡 To create a default configuration file, run:');
+        console.error(`echo 'Creating config...' && mkdir -p ~/.config/mcp-server && cat > ~/.config/mcp-server/config.toml << 'EOF'\n${this.generateSampleConfig()}\nEOF`);
+
         process.exit(1);
       }
 
       if (validation.warnings.length > 0) {
-        console.warn('⚠️ Configuration warnings:');
+        console.warn('⚠️  Configuration warnings:');
         validation.warnings.forEach(warning => console.warn(`  • ${warning}`));
       }
 
       // Discover projects
-      //console.error('🔍 Discovering projects...');
+      console.error('🔍 Discovering projects...');
       const projects = await this.projectDiscovery.discoverProjects();
-      //console.error(`📁 Found ${projects.length} project${projects.length === 1 ? '' : 's'}`);
+      console.error(`📁 Found ${projects.length} project${projects.length === 1 ? '' : 's'}`);
 
       if (projects.length > 0) {
-        //console.error('\\nProjects discovered:');
+        console.error('\nProjects discovered:');
         projects.forEach(project => {
-          //console.error(`  • ${project.id} - ${project.project.name}`);
-          //console.error(`    Path: ${project.project.path}`);
+          console.error(`  • ${project.id} - ${project.project.name}`);
+          console.error(`    Path: ${project.project.path}`);
         });
       }
 
-      // Start MCP server
-      //console.error('\\n🌐 Starting MCP server...');
-      
-      const transport = new StdioServerTransport();
-      await this.server.connect(transport);
-      
-      //console.error('✅ MCP CR Server is running and ready for connections!');
-      //console.error('\\n📡 Available tools:');
+      console.error('\n🌐 Starting MCP transports...');
+
+      // Start stdio transport (ALWAYS ON)
+      console.error('📡 Starting stdio transport...');
+      await startStdioTransport(this.mcpTools);
+      console.error('✅ Stdio transport ready');
+
+      // Start HTTP transport (OPTIONAL - enabled via env var)
+      if (process.env.MCP_HTTP_ENABLED === 'true') {
+        console.error('🌐 Starting HTTP transport...');
+        try {
+          const port = parseInt(process.env.MCP_HTTP_PORT || '3002');
+          const host = process.env.MCP_BIND_ADDRESS || '127.0.0.1';
+          const enableOriginValidation = process.env.MCP_SECURITY_ORIGIN_VALIDATION === 'true';
+          const allowedOrigins = process.env.MCP_ALLOWED_ORIGINS?.split(',') || [];
+
+          await startHttpTransport(this.mcpTools, {
+            port,
+            host,
+            enableOriginValidation,
+            allowedOrigins
+          });
+          console.error(`✅ HTTP transport ready at http://${host}:${port}/mcp`);
+        } catch (error) {
+          console.warn('⚠️  HTTP transport failed to start:', (error as Error).message);
+          console.warn('   Stdio transport is still available');
+        }
+      } else {
+        console.error('ℹ️  HTTP transport disabled (set MCP_HTTP_ENABLED=true to enable)');
+      }
+
+      console.error('\n✅ MCP CR Server is running and ready for connections!');
+      console.error('\n📡 Available tools:');
       const tools = this.mcpTools.getTools();
       tools.forEach(tool => {
-        //console.error(`  • ${tool.name}: ${tool.description}`);
+        console.error(`  • ${tool.name}: ${tool.description}`);
       });
 
-      //console.error('\\n🔗 Connect your MCP client to start managing CRs across projects!');
-      
+      console.error('\n🔗 Connect your MCP client to start managing CRs across projects!');
+
     } catch (error) {
-      //console.error('❌ Failed to start MCP CR Server:', (error as Error).message);
+      console.error('❌ Failed to start MCP CR Server:', (error as Error).message);
       process.exit(1);
     }
   }
@@ -203,7 +165,7 @@ async function main() {
     const server = new MCPCRServer();
     await server.start();
   } catch (error) {
-    //console.error('❌ Fatal error:', error);
+    console.error('❌ Fatal error:', error);
     process.exit(1);
   }
 }
@@ -211,7 +173,7 @@ async function main() {
 // Handle module execution
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    //console.error('❌ Failed to start server:', error);
+    console.error('❌ Failed to start server:', error);
     process.exit(1);
   });
 }
