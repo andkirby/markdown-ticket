@@ -18,9 +18,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### MCP Server (Model Context Protocol)
 - `cd mcp-server && npm run build` - Build MCP server (required after code changes)
-- `cd mcp-server && npm run dev` - Run MCP server in development mode (uses tsx, no build needed)
+- `cd mcp-server && npm run dev` - Run MCP server in development mode with stdio transport (uses tsx, no build needed)
+- `MCP_HTTP_ENABLED=true npm run dev` - Run MCP server with both stdio and HTTP transports
 - `cd mcp-server && npm test` - Run MCP server Jest tests
 - `cd mcp-server && npm run test:watch` - Run MCP tests in watch mode
+
+**MCP Transport Options:**
+- **Stdio Transport** (default): Always enabled, used by Claude Desktop and other stdio-based clients
+- **HTTP Transport** (optional): Enable with `MCP_HTTP_ENABLED=true`, provides HTTP/JSON-RPC endpoint at `http://localhost:3002/mcp`
+  - Eliminates docker-exec overhead in containerized deployments
+  - Implements MCP Streamable HTTP specification (2025-06-18)
+  - Supports both GET (health check) and POST (JSON-RPC requests)
+  - Environment variables:
+    - `MCP_HTTP_ENABLED=true` - Enable HTTP transport
+    - `MCP_HTTP_PORT=3002` - HTTP port (default: 3002)
+    - `MCP_BIND_ADDRESS=127.0.0.1` - Bind address (use 0.0.0.0 for Docker)
+    - `MCP_SECURITY_ORIGIN_VALIDATION=true` - Enable origin validation (optional)
+    - `MCP_ALLOWED_ORIGINS=http://localhost:5173` - Comma-separated allowed origins (optional)
 
 ### Full Stack Development
 - `npm run dev:full` - **RECOMMENDED** - Builds shared code and starts both frontend and backend concurrently
@@ -186,6 +200,15 @@ Why this change is needed...
 **MCP Server Scopes**:
 - `mdt-all` (global) - Access all projects from any directory
 - `mdt-tickets` (local) - Filtered to specific project via `MCP_PROJECT_FILTER`
+
+**MCP Server Architecture** (Updated MDT-074):
+The MCP server supports dual transport:
+- **Stdio transport** (`mcp-server/src/transports/stdio.ts`): Always enabled, traditional stdio-based communication
+- **HTTP transport** (`mcp-server/src/transports/http.ts`): Optional HTTP/JSON-RPC endpoint for containerized deployments
+  - Eliminates docker-exec overhead
+  - Implements MCP Streamable HTTP specification (2025-06-18)
+  - Endpoints: `POST /mcp` (JSON-RPC), `GET /health` (health check)
+  - Both transports share the same tool implementations in `mcp-server/src/tools/index.ts`
 
 **Available Tools**: `list_projects`, `get_project_info`, `list_crs`, `get_cr`, `create_cr`, `update_cr_status`, `update_cr_attrs`, `delete_cr`, `manage_cr_sections`, `suggest_cr_improvements`
 
