@@ -15,7 +15,6 @@ build/
 **/*.js.map
 **/*.d.ts.map
 !/server/**/*.js
-/*.*
 
 # Environment variables
 .env
@@ -69,3 +68,5 @@ lambda-counter-aws
 generated-docs/repomix_output.xml
 docs/**/*.md
 /docs/*.*
+/projects/sudoku/.mdt-config.toml
+/projects/sudoku/.mdt-next

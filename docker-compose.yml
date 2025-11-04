@@ -1,0 +1,121 @@
+services:
+  # Development environment with hot reload
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"  # Frontend Vite dev server
+      - "3001:3001"  # Backend API server
+    volumes:
+      # Mount entire project directory for live editing
+      - .:/app
+      # Exclude node_modules to avoid conflicts with container versions
+      - /app/node_modules
+      - /app/server/node_modules
+      - /app/mcp-server/node_modules
+      - /app/server/mcp-dev-tools/node_modules
+      # Persistent user config only (docs/CRs now synced via .:/app)
+      - config_data:/root/.config
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true  # For file watching in Docker
+    command: npm run dev:full
+    stdin_open: true
+    tty: true
+    profiles:
+      - dev
+
+  # Production-like environment
+  app-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    ports:
+      - "3001:3001"
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - app_data:/app/data
+    environment:
+      - NODE_ENV=production
+    command: node server/server.js
+    profiles:
+      - prod
+
+  # Frontend only (for development)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev
+    profiles:
+      - frontend
+
+  # Backend only (for development)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - .:/app
+      - /app/server/node_modules
+      - config_data:/root/.config
+    environment:
+      - NODE_ENV=development
+    command: npm run dev:server
+    profiles:
+      - backend
+
+  # MCP Server for AI integration
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: mcp
+    volumes:
+      - .:/app
+      - /app/mcp-server/node_modules
+      - config_data:/root/.config
+    environment:
+      - NODE_ENV=development
+    command: cd mcp-server && npm run dev
+    profiles:
+      - mcp
+
+  # Testing environment
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/server/node_modules
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    command: npm run test:e2e
+    profiles:
+      - test
+    depends_on:
+      - app-dev
+
+volumes:
+  app_data:
+    driver: local
+  config_data:
+    driver: local
