@@ -62,11 +62,9 @@ playwright-report
 test-results
 .amazonq
 .mcp.json
-/*.md
 /*.txt
 lambda-counter-aws
 generated-docs/repomix_output.xml
 docs/**/*.md
 /docs/*.*
-/projects/sudoku/.mdt-config.toml
-/projects/sudoku/.mdt-next
+/projects/
