@@ -24,7 +24,7 @@ Commands:
     build       Build all images
     clean       Stop and remove containers, volumes, and images
     logs        Show logs for all services
-    shell       Open shell in development container
+    shell       Open shell in running development container (or start new if not running)
     npm         Run npm command in container (e.g., ./scripts/docker-dev.sh npm install)
     lint        Run linting
     install     Install/update dependencies
@@ -158,9 +158,17 @@ case "${1:-help}" in
         ;;
 
     "shell")
-        echo "🐚 Opening shell in development container..."
+        echo "🐚 Opening shell in running development container..."
         ensure_docker
-        docker_compose --profile dev run --rm app-dev sh
+
+        # Check if development container is running
+        if docker_compose ps --services --filter "status=running" | grep -q "app-dev"; then
+            # Connect to running container
+            docker_compose exec app-dev sh
+        else
+            echo "⚠️  Development container is not running. Starting a new shell session..."
+            docker_compose --profile dev run --rm app-dev sh
+        fi
         ;;
 
     "npm")
