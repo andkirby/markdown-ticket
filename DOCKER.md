@@ -51,9 +51,6 @@ The `./scripts/docker-dev.sh` script provides convenient commands for Docker-bas
 
 # Create a new project in separate directory
 ./scripts/docker-dev.sh create-project "My API" API projects/my-api
-
-# Show project URL for manual opening
-./scripts/docker-dev.sh open-project projects/my-api
 ```
 
 ### Development Tasks
@@ -164,12 +161,7 @@ For working with multiple projects, you can create separate project directories:
    ./scripts/docker-dev.sh create-project "Backend API" API projects/backend-api
    ```
 
-2. Get the URL for a specific project:
-   ```bash
-   ./scripts/docker-dev.sh open-project projects/backend-api
-   ```
-
-3. Open the project URL shown to access that specific project
+2. Access the project directly through the web UI at http://localhost:5173
 
 ### Making Changes
 
@@ -306,8 +298,7 @@ cat .mdt-config.toml
 # Re-register a project that's not showing up
 ./scripts/docker-dev.sh init-project -f
 
-# Get URL for a specific project
-./scripts/docker-dev.sh open-project projects/my-project
+# Access projects directly through the web UI at http://localhost:5173
 ```
 
 ## Production Deployment

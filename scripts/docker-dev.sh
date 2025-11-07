@@ -32,7 +32,6 @@ Commands:
 Project Management:
     init-project Initialize a new project (interactive setup)
     create-project Create a new project in separate directory
-    open-project Show project URL for manual opening
 
 Sample Data:
     create-samples Create sample tickets only (no backup/clean)
@@ -43,7 +42,6 @@ Examples:
     $0 dev                          # Start development environment
     $0 init-project                 # Initialize new project (interactive)
     $0 create-project "My API" API  # Create new project in projects/my-api
-    $0 open-project projects/my-api # Show project URL for manual access
     $0 create-samples               # Create sample tickets only
     $0 reset-samples                # Reset sample data (interactive)
     $0 npm install react-router    # Install new package
@@ -261,37 +259,6 @@ EOF
 
 
 
-    "open-project")
-        if [ $# -lt 2 ]; then
-            echo "❌ Usage: $0 open-project <project-subdirectory>"
-            echo "Example: $0 open-project projects/my-api"
-            exit 1
-        fi
-
-        TARGET_PROJECT="$2"
-        TARGET_PATH="$TARGET_PROJECT"
-
-        if [ ! -d "$TARGET_PATH" ]; then
-            echo "❌ Project directory not found: $TARGET_PATH"
-            echo "💡 Available project directories:"
-            find projects -type d -name "*" 2>/dev/null | head -10 | sed 's/^/  - /' || echo "  - No projects/ directory found"
-            exit 1
-        fi
-
-        PROJECT_CODE=$(get_project_code "$TARGET_PATH")
-        PROJECT_NAME=$(get_project_name "$TARGET_PATH")
-
-        if [ -z "$PROJECT_CODE" ]; then
-            echo "❌ Could not find project code in $TARGET_PATH/.mdt-config.toml"
-            exit 1
-        fi
-
-        PROJECT_URL="http://localhost:5173/prj/$PROJECT_CODE"
-        echo "📁 Project: $PROJECT_NAME ($PROJECT_CODE)"
-        echo "📂 Path: $TARGET_PATH"
-        echo ""
-        show_project_url "$PROJECT_URL"
-        ;;
 
     "create-samples")
         echo "📝 Creating sample tickets..."
