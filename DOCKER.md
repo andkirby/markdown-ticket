@@ -74,12 +74,6 @@ Two scripts provide complete Docker-based development:
 ./scripts/docker-run.sh be npm test       # backend
 ```
 
-### Project Management
-
-```bash
-# Create a new project in separate directory
-./scripts/docker-env.sh create-project "My API" API projects/my-api
-```
 
 ### Development Tasks
 
@@ -200,11 +194,22 @@ Two scripts provide complete Docker-based development:
 
 ### Multi-Project Setup
 
-For working with multiple projects, you can create separate project directories:
+For working with multiple projects, you can create separate project directories manually:
 
 1. Create a new project in a subdirectory:
    ```bash
-   ./scripts/docker-env.sh create-project "Backend API" API projects/backend-api
+   mkdir -p projects/backend-api/docs/CRs
+
+   cat > projects/backend-api/.mdt-config.toml << EOF
+   [project]
+   name = "Backend API"
+   code = "API"
+   path = "docs/CRs"
+   startNumber = 1
+   counterFile = ".mdt-next"
+   EOF
+
+   echo "1" > projects/backend-api/.mdt-next
    ```
 
 2. Access the project directly through the web UI at http://localhost:5173
