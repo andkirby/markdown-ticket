@@ -77,9 +77,6 @@ Two scripts provide complete Docker-based development:
 ### Project Management
 
 ```bash
-# Initialize new project (interactive setup)
-./scripts/docker-env.sh init-project
-
 # Create a new project in separate directory
 ./scripts/docker-env.sh create-project "My API" API projects/my-api
 ```
@@ -171,11 +168,24 @@ Two scripts provide complete Docker-based development:
 
 ### First Time Setup
 
-1. Initialize a new project:
+1. Create project configuration manually:
    ```bash
-   ./scripts/docker-env.sh init-project
+   # Create directory structure
+   mkdir -p docs/CRs
+
+   # Create project config
+   cat > .mdt-config.toml << EOF
+   [project]
+   name = "My Project"
+   code = "MYPROJ"
+   path = "docs/CRs"
+   startNumber = 1
+   counterFile = ".mdt-next"
+   EOF
+
+   # Create ticket counter
+   echo "1" > .mdt-next
    ```
-   This will guide you through creating your first project configuration.
 
 2. Start the development environment:
    ```bash
@@ -327,8 +337,8 @@ If you encounter issues with project registration:
 # Check project configuration
 cat .mdt-config.toml
 
-# Re-register a project that's not showing up
-./scripts/docker-env.sh init-project -f
+# Recreate project configuration if needed
+# (see manual project creation section above)
 
 # Access projects directly through the web UI at http://localhost:5173
 ```

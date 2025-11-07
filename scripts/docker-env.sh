@@ -27,7 +27,6 @@ Commands:
     install     Install/update dependencies
 
 Project Management:
-    init-project Initialize a new project (interactive setup)
     create-project Create a new project in separate directory
 
 Sample Data:
@@ -37,7 +36,6 @@ Sample Data:
 
 Examples:
     $0 dev                          # Start development environment
-    $0 init-project                 # Initialize new project (interactive)
     $0 create-project "My API" API  # Create new project in projects/my-api
     $0 create-samples               # Create sample tickets only
     $0 reset-samples                # Reset sample data (interactive)
@@ -152,13 +150,6 @@ case "${1:-help}" in
         docker_compose --profile dev run --rm app-dev npm install
         docker_compose --profile dev run --rm app-dev sh -c "cd server && npm install"
         docker_compose --profile dev run --rm app-dev sh -c "cd mcp-server && npm install"
-        ;;
-
-    "init-project")
-        echo "🚀 Initializing new project..."
-        ensure_docker
-        shift
-        docker_compose --profile dev run --rm app-dev ./scripts/init-project.sh "$@"
         ;;
 
     "create-project")
