@@ -96,16 +96,11 @@ Two scripts provide complete Docker-based development:
 ### Sample Data Management
 
 ```bash
-# Create sample tickets only (no backup/clean)
+# Create sample tickets
 ./scripts/docker-env.sh create-samples
 
-# Reset sample data (backup, clean, recreate)
-./scripts/docker-env.sh reset-samples
-
-# Reset with options
-./scripts/docker-env.sh reset-samples -f      # Force mode (no prompts)
-./scripts/docker-env.sh reset-samples -k -f   # Keep config, just reset tickets
-./scripts/docker-env.sh reset-samples -n -f   # Just clean, don't recreate samples
+# Or use npm directly for more control
+./scripts/docker-run.sh backend npm run create-samples
 ```
 
 ### Utilities
@@ -273,8 +268,8 @@ cp -r . backup-$(date +%Y%m%d)
 # Backup specific project tickets
 cp -r projects/my-api/docs/CRs ./backup-my-api-tickets
 
-# Use the built-in reset script with backup
-./scripts/docker-env.sh reset-samples   # Creates timestamped backups automatically
+# Recreate sample tickets if needed
+./scripts/docker-env.sh create-samples
 ```
 
 ## Troubleshooting
@@ -315,24 +310,17 @@ To completely reset the environment:
 ./scripts/docker-env.sh reset
 ```
 
-### Reset Sample Data
-To reset sample tickets and start fresh:
+### Recreate Sample Data
+To create fresh sample tickets:
 
 ```bash
-# Interactive mode (recommended) - backs up, cleans, recreates
-./scripts/docker-env.sh reset-samples
-
-# Force mode (no prompts)
-./scripts/docker-env.sh reset-samples -f
-
-# Keep project configuration, just reset tickets
-./scripts/docker-env.sh reset-samples -k -f
-
-# Just clean existing tickets, don't recreate samples
-./scripts/docker-env.sh reset-samples -n -f
-
-# Create new samples without cleaning existing ones
+# Create sample tickets (adds to existing tickets)
 ./scripts/docker-env.sh create-samples
+
+# Or manually clean and recreate
+rm docs/CRs/*.md  # Remove existing tickets (keep README.md)
+./scripts/docker-env.sh create-samples
+echo "1" > .mdt-next  # Reset counter if needed
 ```
 
 ### Project Management Issues

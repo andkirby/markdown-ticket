@@ -28,14 +28,12 @@ Commands:
 
 
 Sample Data:
-    create-samples Create sample tickets only (no backup/clean)
-    reset-samples Reset sample data (backup, clean, recreate)
+    create-samples Create sample tickets only
     reset       Reset development environment (clean + build + dev)
 
 Examples:
     $0 dev                          # Start development environment
     $0 create-samples               # Create sample tickets only
-    $0 reset-samples                # Reset sample data (interactive)
     $0 clean                        # Clean everything
 EOF
 }
@@ -156,13 +154,6 @@ case "${1:-help}" in
         echo "📝 Creating sample tickets..."
         ensure_docker
         docker_compose --profile dev run --rm app-dev sh -c "cd server && npm run create-samples"
-        ;;
-
-    "reset-samples")
-        echo "🔄 Resetting sample data..."
-        ensure_docker
-        shift
-        docker_compose --profile dev run --rm app-dev ./scripts/reset-samples.sh "$@"
         ;;
 
     "reset")
