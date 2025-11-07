@@ -17,7 +17,7 @@ This guide explains how to run and develop the Markdown Ticket Board application
 
 2. **Start the development environment**:
    ```bash
-   ./scripts/docker-dev.sh dev
+   ./scripts/docker-env.sh dev
    ```
 
 3. **Access the application**:
@@ -26,82 +26,118 @@ This guide explains how to run and develop the Markdown Ticket Board application
 
 ## Development Scripts
 
-The `./scripts/docker-dev.sh` script provides convenient commands for Docker-based development:
+Two scripts provide complete Docker-based development:
 
-### Core Commands
+- **`./scripts/docker-env.sh`** - Environment management (start/stop/build containers)
+- **`./scripts/docker-run.sh`** - Run commands in active containers
+
+### Environment Management (docker-env.sh)
 
 ```bash
 # Start full development environment (recommended)
-./scripts/docker-dev.sh dev
+./scripts/docker-env.sh dev
 
 # Start individual services
-./scripts/docker-dev.sh frontend    # Frontend only (port 5173)
-./scripts/docker-dev.sh backend     # Backend only (port 3001)
-./scripts/docker-dev.sh mcp         # MCP server only
+./scripts/docker-env.sh frontend    # Frontend only (port 5173)
+./scripts/docker-env.sh backend     # Backend only (port 3001)
+./scripts/docker-env.sh mcp         # MCP server only
 
 # Production-like environment
-./scripts/docker-dev.sh prod
+./scripts/docker-env.sh prod
+
+# Environment operations
+./scripts/docker-env.sh build       # Build all images
+./scripts/docker-env.sh clean       # Clean up everything
+./scripts/docker-env.sh reset       # Reset environment
+```
+
+### Running Commands (docker-run.sh)
+
+```bash
+# NPM commands in specific services
+./scripts/docker-run.sh frontend npm install
+./scripts/docker-run.sh frontend npm run build
+./scripts/docker-run.sh backend npm run create-samples
+./scripts/docker-run.sh mcp npm run dev
+
+# Access service shells
+./scripts/docker-run.sh frontend shell
+./scripts/docker-run.sh backend shell
+./scripts/docker-run.sh mcp shell
+
+# View service logs
+./scripts/docker-run.sh frontend logs
+./scripts/docker-run.sh backend logs
+
+# Service aliases (shorter)
+./scripts/docker-run.sh fe npm install    # frontend
+./scripts/docker-run.sh be npm test       # backend
 ```
 
 ### Project Management
 
 ```bash
 # Initialize new project (interactive setup)
-./scripts/docker-dev.sh init-project
+./scripts/docker-env.sh init-project
 
 # Create a new project in separate directory
-./scripts/docker-dev.sh create-project "My API" API projects/my-api
+./scripts/docker-env.sh create-project "My API" API projects/my-api
 ```
 
 ### Development Tasks
 
 ```bash
 # Install/update dependencies
-./scripts/docker-dev.sh install
+./scripts/docker-env.sh install
 
-# Run npm commands
-./scripts/docker-dev.sh npm install react-router-dom
-./scripts/docker-dev.sh npm run build
+# Run npm commands (use docker-run.sh for active containers)
+./scripts/docker-run.sh frontend npm install react-router-dom
+./scripts/docker-run.sh frontend npm run build
 
 # Run linting
-./scripts/docker-dev.sh lint
+./scripts/docker-run.sh frontend npm run lint
 
 # Run tests
-./scripts/docker-dev.sh test
+./scripts/docker-env.sh test        # E2E tests (starts test environment)
+./scripts/docker-run.sh backend npm test    # Backend unit tests
 ```
 
 ### Sample Data Management
 
 ```bash
 # Create sample tickets only (no backup/clean)
-./scripts/docker-dev.sh create-samples
+./scripts/docker-env.sh create-samples
 
 # Reset sample data (backup, clean, recreate)
-./scripts/docker-dev.sh reset-samples
+./scripts/docker-env.sh reset-samples
 
 # Reset with options
-./scripts/docker-dev.sh reset-samples -f      # Force mode (no prompts)
-./scripts/docker-dev.sh reset-samples -k -f   # Keep config, just reset tickets
-./scripts/docker-dev.sh reset-samples -n -f   # Just clean, don't recreate samples
+./scripts/docker-env.sh reset-samples -f      # Force mode (no prompts)
+./scripts/docker-env.sh reset-samples -k -f   # Keep config, just reset tickets
+./scripts/docker-env.sh reset-samples -n -f   # Just clean, don't recreate samples
 ```
 
 ### Utilities
 
 ```bash
-# Open shell in running development container
-./scripts/docker-dev.sh shell
+# Open shell in specific service
+./scripts/docker-run.sh dev shell          # General development shell
+./scripts/docker-run.sh frontend shell     # Frontend-specific shell
+./scripts/docker-run.sh backend shell      # Backend-specific shell
 
-# View logs for all services
-./scripts/docker-dev.sh logs
+# View logs for services
+./scripts/docker-run.sh frontend logs      # Frontend logs only
+./scripts/docker-run.sh backend logs       # Backend logs only
+./scripts/docker-env.sh logs              # All services logs
 
 # Build all Docker images
-./scripts/docker-dev.sh build
+./scripts/docker-env.sh build
 
 # Clean up everything (containers, volumes, images)
-./scripts/docker-dev.sh clean
+./scripts/docker-env.sh clean
 
 # Reset environment (clean + build + start)
-./scripts/docker-dev.sh reset
+./scripts/docker-env.sh reset
 ```
 
 ## Docker Architecture
@@ -137,13 +173,13 @@ The `./scripts/docker-dev.sh` script provides convenient commands for Docker-bas
 
 1. Initialize a new project:
    ```bash
-   ./scripts/docker-dev.sh init-project
+   ./scripts/docker-env.sh init-project
    ```
    This will guide you through creating your first project configuration.
 
 2. Start the development environment:
    ```bash
-   ./scripts/docker-dev.sh dev
+   ./scripts/docker-env.sh dev
    ```
 
 3. The application will be available at:
@@ -158,7 +194,7 @@ For working with multiple projects, you can create separate project directories:
 
 1. Create a new project in a subdirectory:
    ```bash
-   ./scripts/docker-dev.sh create-project "Backend API" API projects/backend-api
+   ./scripts/docker-env.sh create-project "Backend API" API projects/backend-api
    ```
 
 2. Access the project directly through the web UI at http://localhost:5173
@@ -173,30 +209,26 @@ For working with multiple projects, you can create separate project directories:
 
 ```bash
 # Frontend dependencies
-./scripts/docker-dev.sh npm install package-name
+./scripts/docker-run.sh frontend npm install package-name
 
 # Backend dependencies
-./scripts/docker-dev.sh shell
-cd server && npm install package-name
+./scripts/docker-run.sh backend npm install package-name
 
 # MCP server dependencies
-./scripts/docker-dev.sh shell
-cd mcp-server && npm install package-name
+./scripts/docker-run.sh mcp npm install package-name
 ```
 
 ### Running Tests
 
 ```bash
 # Run E2E tests
-./scripts/docker-dev.sh test
+./scripts/docker-env.sh test
 
 # Run backend tests
-./scripts/docker-dev.sh shell
-cd server && npm test
+./scripts/docker-run.sh backend npm test
 
 # Run MCP server tests
-./scripts/docker-dev.sh shell
-cd mcp-server && npm test
+./scripts/docker-run.sh mcp npm test
 ```
 
 ## Data Persistence
@@ -211,7 +243,7 @@ ls docs/CRs/                    # Main project tickets
 ls projects/*/docs/CRs/         # Sub-project tickets
 
 # Or access via container shell:
-./scripts/docker-dev.sh shell
+./scripts/docker-run.sh dev shell
 ls /app/docs/CRs/               # Current project
 ls /app/projects/*/docs/CRs/    # All projects
 ```
@@ -227,7 +259,7 @@ cp -r . backup-$(date +%Y%m%d)
 cp -r projects/my-api/docs/CRs ./backup-my-api-tickets
 
 # Use the built-in reset script with backup
-./scripts/docker-dev.sh reset-samples   # Creates timestamped backups automatically
+./scripts/docker-env.sh reset-samples   # Creates timestamped backups automatically
 ```
 
 ## Troubleshooting
@@ -243,7 +275,7 @@ File watching should work automatically with `CHOKIDAR_USEPOLLING=true`. If you 
 
 1. Restart the development environment:
    ```bash
-   ./scripts/docker-dev.sh reset
+   ./scripts/docker-env.sh reset
    ```
 
 ### Permission Issues
@@ -251,7 +283,7 @@ If you encounter permission issues:
 
 1. Check file ownership:
    ```bash
-   ./scripts/docker-dev.sh shell
+   ./scripts/docker-run.sh dev shell
    ls -la /app
    ```
 
@@ -264,8 +296,8 @@ If you encounter permission issues:
 To completely reset the environment:
 
 ```bash
-./scripts/docker-dev.sh clean
-./scripts/docker-dev.sh reset
+./scripts/docker-env.sh clean
+./scripts/docker-env.sh reset
 ```
 
 ### Reset Sample Data
@@ -273,19 +305,19 @@ To reset sample tickets and start fresh:
 
 ```bash
 # Interactive mode (recommended) - backs up, cleans, recreates
-./scripts/docker-dev.sh reset-samples
+./scripts/docker-env.sh reset-samples
 
 # Force mode (no prompts)
-./scripts/docker-dev.sh reset-samples -f
+./scripts/docker-env.sh reset-samples -f
 
 # Keep project configuration, just reset tickets
-./scripts/docker-dev.sh reset-samples -k -f
+./scripts/docker-env.sh reset-samples -k -f
 
 # Just clean existing tickets, don't recreate samples
-./scripts/docker-dev.sh reset-samples -n -f
+./scripts/docker-env.sh reset-samples -n -f
 
 # Create new samples without cleaning existing ones
-./scripts/docker-dev.sh create-samples
+./scripts/docker-env.sh create-samples
 ```
 
 ### Project Management Issues
@@ -296,7 +328,7 @@ If you encounter issues with project registration:
 cat .mdt-config.toml
 
 # Re-register a project that's not showing up
-./scripts/docker-dev.sh init-project -f
+./scripts/docker-env.sh init-project -f
 
 # Access projects directly through the web UI at http://localhost:5173
 ```
@@ -319,7 +351,7 @@ docker run -d \
 
 ### Using Production Compose
 ```bash
-./scripts/docker-dev.sh prod
+./scripts/docker-env.sh prod
 ```
 
 ## VS Code Integration
@@ -366,8 +398,8 @@ environment:
 
 ## Tips
 
-1. **Use the scripts**: Always use `./scripts/docker-dev.sh` for consistency
+1. **Use the scripts**: Always use `./scripts/docker-env.sh` for consistency
 2. **Persistent volumes**: Your ticket data persists between container restarts
 3. **Hot reload**: Both frontend and backend support hot reload
 4. **Clean regularly**: Use `clean` command to free up Docker space
-5. **Shell access**: Use `shell` command to debug issues inside containers
+5. **Shell access**: Use `./scripts/docker-run.sh <service> shell` to debug issues inside containers

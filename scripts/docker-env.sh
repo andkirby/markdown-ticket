@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Docker Development Scripts for Markdown Ticket Board
-# Usage: ./scripts/docker-dev.sh [command]
+# Docker Environment Scripts for Markdown Ticket Board
+# Usage: ./scripts/docker-env.sh [command]
 
 set -e
 
@@ -10,7 +10,7 @@ COMPOSE_FILE="docker-compose.yml"
 
 show_help() {
     cat << EOF
-Docker Development Scripts for Markdown Ticket Board
+Docker Environment Management for Markdown Ticket Board
 
 Usage: $0 [COMMAND]
 
@@ -24,9 +24,6 @@ Commands:
     build       Build all images
     clean       Stop and remove containers, volumes, and images
     logs        Show logs for all services
-    shell       Open shell in running development container (or start new if not running)
-    npm         Run npm command in container (e.g., ./scripts/docker-dev.sh npm install)
-    lint        Run linting
     install     Install/update dependencies
 
 Project Management:
@@ -44,9 +41,6 @@ Examples:
     $0 create-project "My API" API  # Create new project in projects/my-api
     $0 create-samples               # Create sample tickets only
     $0 reset-samples                # Reset sample data (interactive)
-    $0 npm install react-router    # Install new package
-    $0 shell                        # Open shell in container
-    $0 test                         # Run tests
     $0 clean                        # Clean everything
 EOF
 }
@@ -151,32 +145,6 @@ case "${1:-help}" in
         docker_compose logs -f
         ;;
 
-    "shell")
-        echo "🐚 Opening shell in running development container..."
-        ensure_docker
-
-        # Check if development container is running
-        if docker_compose ps --services --filter "status=running" | grep -q "app-dev"; then
-            # Connect to running container
-            docker_compose exec app-dev sh
-        else
-            echo "⚠️  Development container is not running. Starting a new shell session..."
-            docker_compose --profile dev run --rm app-dev sh
-        fi
-        ;;
-
-    "npm")
-        shift
-        echo "📦 Running npm command: npm $*"
-        ensure_docker
-        docker_compose --profile dev run --rm app-dev npm "$@"
-        ;;
-
-    "lint")
-        echo "🔍 Running linting..."
-        ensure_docker
-        docker_compose --profile dev run --rm app-dev npm run lint
-        ;;
 
     "install")
         echo "📥 Installing/updating dependencies..."
