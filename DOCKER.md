@@ -49,6 +49,9 @@ Two scripts provide complete Docker-based development:
 ./scripts/docker-env.sh build       # Build all images
 ./scripts/docker-env.sh clean       # Clean up everything
 ./scripts/docker-env.sh reset       # Reset environment
+./scripts/docker-env.sh test        # Run E2E tests
+./scripts/docker-env.sh logs        # Show logs for all services
+./scripts/docker-env.sh install     # Install/update dependencies
 ```
 
 ### Running Commands (docker-run.sh)
@@ -59,21 +62,34 @@ Two scripts provide complete Docker-based development:
 ./scripts/docker-run.sh frontend npm run build
 ./scripts/docker-run.sh backend npm run create-samples
 ./scripts/docker-run.sh mcp npm run dev
+./scripts/docker-run.sh mcp-tools npm run health-check
 
 # Access service shells
-./scripts/docker-run.sh frontend shell
-./scripts/docker-run.sh backend shell
-./scripts/docker-run.sh mcp shell
+./scripts/docker-run.sh dev shell           # General development shell
+./scripts/docker-run.sh frontend shell      # Frontend-specific shell
+./scripts/docker-run.sh backend shell       # Backend-specific shell
+./scripts/docker-run.sh mcp shell          # MCP server shell
 
-# View service logs
-./scripts/docker-run.sh frontend logs
-./scripts/docker-run.sh backend logs
+# View service logs and status
+./scripts/docker-run.sh frontend logs      # Frontend logs only
+./scripts/docker-run.sh backend logs       # Backend logs only
+./scripts/docker-run.sh frontend status    # Service status
 
 # Service aliases (shorter)
-./scripts/docker-run.sh fe npm install    # frontend
-./scripts/docker-run.sh be npm test       # backend
+./scripts/docker-run.sh fe npm install     # frontend
+./scripts/docker-run.sh be npm test        # backend
 ```
 
+### Project Management
+
+```bash
+# Project setup is done manually by creating configuration files
+# See "First Time Setup" and "Multi-Project Setup" sections below
+
+# Sample data management
+./scripts/docker-env.sh create-samples      # Create sample tickets
+./scripts/docker-run.sh backend npm run create-samples  # Direct npm approach
+```
 
 ### Development Tasks
 
@@ -93,37 +109,27 @@ Two scripts provide complete Docker-based development:
 ./scripts/docker-run.sh backend npm test    # Backend unit tests
 ```
 
-### Sample Data Management
-
-```bash
-# Create sample tickets
-./scripts/docker-env.sh create-samples
-
-# Or use npm directly for more control
-./scripts/docker-run.sh backend npm run create-samples
-```
-
 ### Utilities
 
 ```bash
-# Open shell in specific service
+# Environment management
+./scripts/docker-env.sh build       # Build all Docker images
+./scripts/docker-env.sh clean       # Clean up everything (containers, volumes, images)
+./scripts/docker-env.sh reset       # Reset environment (clean + build + start)
+./scripts/docker-env.sh logs        # Show logs for all services
+
+# Sample data
+./scripts/docker-env.sh create-samples     # Create sample tickets
+
+# Service access (requires running containers)
 ./scripts/docker-run.sh dev shell          # General development shell
 ./scripts/docker-run.sh frontend shell     # Frontend-specific shell
 ./scripts/docker-run.sh backend shell      # Backend-specific shell
 
-# View logs for services
+# Service monitoring (requires running containers)
 ./scripts/docker-run.sh frontend logs      # Frontend logs only
 ./scripts/docker-run.sh backend logs       # Backend logs only
-./scripts/docker-env.sh logs              # All services logs
-
-# Build all Docker images
-./scripts/docker-env.sh build
-
-# Clean up everything (containers, volumes, images)
-./scripts/docker-env.sh clean
-
-# Reset environment (clean + build + start)
-./scripts/docker-env.sh reset
+./scripts/docker-run.sh frontend status    # Service status
 ```
 
 ## Docker Architecture
