@@ -32,8 +32,6 @@ Commands:
 Project Management:
     init-project Initialize a new project (interactive setup)
     create-project Create a new project in separate directory
-    list-projects List all registered projects (--web for URLs)
-    switch-project Switch to an existing project (shows URL)
     open-project Show project URL for manual opening
 
 Sample Data:
@@ -45,8 +43,6 @@ Examples:
     $0 dev                          # Start development environment
     $0 init-project                 # Initialize new project (interactive)
     $0 create-project "My API" API  # Create new project in projects/my-api
-    $0 list-projects --web          # Show all projects with browser URLs
-    $0 switch-project projects/my-api # Switch to existing project (shows URL)
     $0 open-project projects/my-api # Show project URL for manual access
     $0 create-samples               # Create sample tickets only
     $0 reset-samples                # Reset sample data (interactive)
@@ -263,110 +259,7 @@ EOF
         echo "  3. Tickets will be stored in $TARGET_DIR/docs/CRs/"
         ;;
 
-    "list-projects")
-        echo "📋 Listing all registered projects..."
 
-        # Check for --web flag
-        SHOW_WEB=false
-        if [ "$2" = "--web" ] || [ "$2" = "-w" ]; then
-            SHOW_WEB=true
-        fi
-
-        ensure_docker
-
-        if [ "$SHOW_WEB" = true ]; then
-            echo "🌐 Projects with web URLs:"
-            echo ""
-
-            # Get projects and process them locally
-            docker_compose --profile dev run --rm app-dev sh -c "
-                if [ -d '/root/.config/markdown-ticket/projects' ]; then
-                    for file in /root/.config/markdown-ticket/projects/*.toml; do
-                        if [ -f \"\$file\" ]; then
-                            PROJECT_NAME=\$(basename \"\$file\" .toml)
-                            PROJECT_PATH=\$(grep 'path' \"\$file\" | cut -d'\"' -f2)
-                            IS_ACTIVE=\$(grep 'active.*true' \"\$file\" > /dev/null && echo ' (active)' || echo '')
-                            echo \"\$PROJECT_NAME|\$PROJECT_PATH|\$IS_ACTIVE\"
-                        fi
-                    done
-                fi
-            " | while IFS='|' read -r project_name project_path is_active; do
-                if [ -n "$project_name" ]; then
-                    # Extract project code from local config if path exists
-                    local_path=$(echo "$project_path" | sed 's|^/app/||')
-                    if [ -f "$local_path/.mdt-config.toml" ]; then
-                        project_code=$(get_project_code "$local_path")
-                        if [ -n "$project_code" ]; then
-                            project_url="http://localhost:5173/prj/$project_code"
-                            echo "  📁 $project_name ($project_code)$is_active"
-                            echo "     🌐 $project_url"
-                            echo "     📂 $local_path"
-                        else
-                            echo "  📁 $project_name$is_active"
-                            echo "     📂 $local_path (no project code found)"
-                        fi
-                    else
-                        echo "  📁 $project_name$is_active"
-                        echo "     📂 $project_path (not accessible)"
-                    fi
-                    echo ""
-                fi
-            done
-        else
-            docker_compose --profile dev run --rm app-dev sh -c "
-                if [ -d '/root/.config/markdown-ticket/projects' ]; then
-                    echo 'Registered projects:'
-                    for file in /root/.config/markdown-ticket/projects/*.toml; do
-                        if [ -f \"\$file\" ]; then
-                            PROJECT_NAME=\$(basename \"\$file\" .toml)
-                            PROJECT_PATH=\$(grep 'path' \"\$file\" | cut -d'\"' -f2)
-                            IS_ACTIVE=\$(grep 'active.*true' \"\$file\" > /dev/null && echo '(active)' || echo '')
-                            echo \"  - \$PROJECT_NAME: \$PROJECT_PATH \$IS_ACTIVE\"
-                        fi
-                    done
-                else
-                    echo 'No projects registered yet'
-                fi
-            "
-            echo ""
-            echo "💡 Use --web flag to see browser URLs: $0 list-projects --web"
-        fi
-        ;;
-
-    "switch-project")
-        if [ $# -lt 2 ]; then
-            echo "❌ Usage: $0 switch-project <project-subdirectory>"
-            echo "Example: $0 switch-project projects/my-api"
-            exit 1
-        fi
-
-        TARGET_PROJECT="$2"
-        TARGET_PATH="$TARGET_PROJECT"
-
-        if [ ! -d "$TARGET_PATH" ]; then
-            echo "❌ Project directory not found: $TARGET_PATH"
-            echo "💡 Available project directories:"
-            find projects -type d -name "*" 2>/dev/null | head -10 | sed 's/^/  - /' || echo "  - No projects/ directory found"
-            exit 1
-        fi
-
-        PROJECT_CODE=$(get_project_code "$TARGET_PATH")
-        PROJECT_NAME=$(get_project_name "$TARGET_PATH")
-
-        if [ -z "$PROJECT_CODE" ]; then
-            echo "❌ Could not find project code in $TARGET_PATH/.mdt-config.toml"
-            exit 1
-        fi
-
-        echo "🔄 Switching to project: $PROJECT_NAME ($PROJECT_CODE)"
-        echo "📁 Project path: $TARGET_PATH"
-        echo "📝 Tickets location: $TARGET_PATH/docs/CRs/"
-        echo ""
-
-        PROJECT_URL="http://localhost:5173/prj/$PROJECT_CODE"
-        echo ""
-        show_project_url "$PROJECT_URL"
-        ;;
 
     "open-project")
         if [ $# -lt 2 ]; then

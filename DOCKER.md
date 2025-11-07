@@ -43,15 +43,22 @@ The `./scripts/docker-dev.sh` script provides convenient commands for Docker-bas
 ./scripts/docker-dev.sh prod
 ```
 
-### Development Tasks
+### Project Management
 
 ```bash
 # Initialize new project (interactive setup)
 ./scripts/docker-dev.sh init-project
 
-# Reset sample data (backup, clean, recreate)
-./scripts/docker-dev.sh reset-samples
+# Create a new project in separate directory
+./scripts/docker-dev.sh create-project "My API" API projects/my-api
 
+# Show project URL for manual opening
+./scripts/docker-dev.sh open-project projects/my-api
+```
+
+### Development Tasks
+
+```bash
 # Install/update dependencies
 ./scripts/docker-dev.sh install
 
@@ -66,16 +73,34 @@ The `./scripts/docker-dev.sh` script provides convenient commands for Docker-bas
 ./scripts/docker-dev.sh test
 ```
 
+### Sample Data Management
+
+```bash
+# Create sample tickets only (no backup/clean)
+./scripts/docker-dev.sh create-samples
+
+# Reset sample data (backup, clean, recreate)
+./scripts/docker-dev.sh reset-samples
+
+# Reset with options
+./scripts/docker-dev.sh reset-samples -f      # Force mode (no prompts)
+./scripts/docker-dev.sh reset-samples -k -f   # Keep config, just reset tickets
+./scripts/docker-dev.sh reset-samples -n -f   # Just clean, don't recreate samples
+```
+
 ### Utilities
 
 ```bash
 # Open shell in running development container
 ./scripts/docker-dev.sh shell
 
-# View logs
+# View logs for all services
 ./scripts/docker-dev.sh logs
 
-# Clean up everything
+# Build all Docker images
+./scripts/docker-dev.sh build
+
+# Clean up everything (containers, volumes, images)
 ./scripts/docker-dev.sh clean
 
 # Reset environment (clean + build + start)
@@ -100,10 +125,14 @@ The `./scripts/docker-dev.sh` script provides convenient commands for Docker-bas
 
 ### Volumes
 
-- **Source code**: Mounted for hot reload during development
-- **docs_data**: Persistent storage for ticket files
-- **app_data**: Application data storage
-- **node_modules**: Cached dependencies to avoid conflicts
+- **Source code**: Entire project directory mounted (`.:/app`) for hot reload during development
+- **config_data**: Persistent storage for user configuration and project registry
+- **app_data**: Application data storage (production only)
+- **node_modules**: Excluded volumes to avoid conflicts with container dependencies
+  - `/app/node_modules`
+  - `/app/server/node_modules`
+  - `/app/mcp-server/node_modules`
+  - `/app/server/mcp-dev-tools/node_modules`
 
 ## Development Workflow
 
@@ -125,6 +154,22 @@ The `./scripts/docker-dev.sh` script provides convenient commands for Docker-bas
    - Backend: http://localhost:3001
 
 4. Your project should now be visible in the UI
+
+### Multi-Project Setup
+
+For working with multiple projects, you can create separate project directories:
+
+1. Create a new project in a subdirectory:
+   ```bash
+   ./scripts/docker-dev.sh create-project "Backend API" API projects/backend-api
+   ```
+
+2. Get the URL for a specific project:
+   ```bash
+   ./scripts/docker-dev.sh open-project projects/backend-api
+   ```
+
+3. Open the project URL shown to access that specific project
 
 ### Making Changes
 
@@ -165,27 +210,32 @@ cd mcp-server && npm test
 ## Data Persistence
 
 ### Ticket Files
-Ticket files are stored in a Docker volume (`docs_data`) that persists between container restarts. This ensures your tickets are not lost when you stop/start the containers.
+Ticket files are now stored directly in your project directory structure and mounted into containers. This provides better visibility and direct access to your files.
 
 ### Accessing Ticket Files
 ```bash
-# Open shell in running development container
+# Files are directly accessible on your host machine:
+ls docs/CRs/                    # Main project tickets
+ls projects/*/docs/CRs/         # Sub-project tickets
+
+# Or access via container shell:
 ./scripts/docker-dev.sh shell
-
-# Ticket files are in /app/docs/CRs/
-ls /app/docs/CRs/
-
-# If container is not running, the command will start a new shell session
-# If container is running, it will connect to the existing running container
+ls /app/docs/CRs/               # Current project
+ls /app/projects/*/docs/CRs/    # All projects
 ```
 
 ### Backup/Restore Tickets
-```bash
-# Backup tickets to host
-docker cp $(docker-compose ps -q app-dev):/app/docs/CRs ./backup-tickets
+Since tickets are stored directly in your project directories, you can use standard file operations:
 
-# Restore tickets from host
-docker cp ./backup-tickets $(docker-compose ps -q app-dev):/app/docs/CRs
+```bash
+# Backup entire project structure
+cp -r . backup-$(date +%Y%m%d)
+
+# Backup specific project tickets
+cp -r projects/my-api/docs/CRs ./backup-my-api-tickets
+
+# Use the built-in reset script with backup
+./scripts/docker-dev.sh reset-samples   # Creates timestamped backups automatically
 ```
 
 ## Troubleshooting
@@ -230,17 +280,34 @@ To completely reset the environment:
 To reset sample tickets and start fresh:
 
 ```bash
-# Interactive mode (recommended)
+# Interactive mode (recommended) - backs up, cleans, recreates
 ./scripts/docker-dev.sh reset-samples
 
 # Force mode (no prompts)
 ./scripts/docker-dev.sh reset-samples -f
 
-# Keep config, just reset tickets
+# Keep project configuration, just reset tickets
 ./scripts/docker-dev.sh reset-samples -k -f
 
-# Just clean, don't recreate samples
+# Just clean existing tickets, don't recreate samples
 ./scripts/docker-dev.sh reset-samples -n -f
+
+# Create new samples without cleaning existing ones
+./scripts/docker-dev.sh create-samples
+```
+
+### Project Management Issues
+If you encounter issues with project registration:
+
+```bash
+# Check project configuration
+cat .mdt-config.toml
+
+# Re-register a project that's not showing up
+./scripts/docker-dev.sh init-project -f
+
+# Get URL for a specific project
+./scripts/docker-dev.sh open-project projects/my-project
 ```
 
 ## Production Deployment
