@@ -6,9 +6,9 @@
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { useSmartLinkProcessor, SmartLinkProcessorOptions } from '../useSmartLinkProcessor';
-import { LinkType } from '../../utils/linkProcessor';
+import { LinkType, ParsedLink } from '../../utils/linkProcessor';
 
 // Mock window.location for URL validation
 const mockLocation = {
@@ -212,7 +212,7 @@ describe('useSmartLinkProcessor', () => {
 
   describe('Custom Validation', () => {
     it('should apply custom validation function', () => {
-      const customValidator = jest.fn((link) => {
+      const customValidator = jest.fn((link: ParsedLink) => {
         return link.text?.includes('allowed');
       });
 
@@ -275,7 +275,7 @@ describe('useSmartLinkProcessor', () => {
 
     it('should update context when options change', () => {
       const { result, rerender } = renderHook(
-        (props) => useSmartLinkProcessor(props),
+        (props: SmartLinkProcessorOptions) => useSmartLinkProcessor(props),
         { initialProps: basicOptions }
       );
 
