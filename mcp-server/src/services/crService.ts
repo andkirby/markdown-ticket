@@ -2,15 +2,15 @@ import * as fs from 'fs-extra';
 import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
-import { Ticket, TicketFilters, TicketData, normalizeTicket, arrayToString } from '../../../dist/models/Ticket.js';
-import { CRStatus } from '../../../dist/models/Types.js';
-import { Project } from '../../../dist/models/Project.js';
+import { Ticket, TicketFilters, TicketData, normalizeTicket, arrayToString } from '../../../shared/models/Ticket.js';
+import { CRStatus } from '../../../shared/models/Types.js';
+import { Project } from '../../../shared/models/Project.js';
 // Use shared services for consistency
 // @ts-ignore
-import { MarkdownService } from '../../../dist/services/MarkdownService.js';
+import { MarkdownService } from '../../../shared/services/MarkdownService.js';
 // Import shared service with different name to avoid conflict
 // @ts-ignore
-import { CRService as SharedCRService } from '../../../dist/services/CRService.js';
+import { CRService as SharedCRService } from '../../../shared/services/CRService.js';
 
 export class CRService {
   async listCRs(project: Project, filters?: TicketFilters): Promise<Ticket[]> {

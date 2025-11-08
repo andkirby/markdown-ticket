@@ -77,9 +77,8 @@ RUN cd server && npx tsc
 # Build dev tools MCP server (no dependencies on main build)
 RUN cd server/mcp-dev-tools && npm run build
 
-# Skip MCP server build for now (has compilation issues)
-# TODO: Fix MCP server TypeScript errors and re-enable
-# RUN cd mcp-server && npm run build
+# Build MCP server (now imports from shared TypeScript source files)
+RUN cd mcp-server && npm run build
 
 # Production runner
 FROM base AS runner
@@ -90,18 +89,15 @@ RUN adduser --system --uid 1001 nodejs
 # Copy built application
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/server ./server
-# Skip MCP server dist copy (build disabled above)
-# COPY --from=builder --chown=nodejs:nodejs /app/mcp-server/dist ./mcp-server/dist
+COPY --from=builder --chown=nodejs:nodejs /app/mcp-server/dist ./mcp-server/dist
 COPY --from=prod-deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=prod-deps --chown=nodejs:nodejs /app/server/node_modules ./server/node_modules
-# Skip MCP server node_modules copy (build disabled above)
-# COPY --from=prod-deps --chown=nodejs:nodejs /app/mcp-server/node_modules ./mcp-server/node_modules
+COPY --from=prod-deps --chown=nodejs:nodejs /app/mcp-server/node_modules ./mcp-server/node_modules
 
 # Copy package.json files for runtime
 COPY --chown=nodejs:nodejs package*.json ./
 COPY --chown=nodejs:nodejs server/package*.json ./server/
-# Skip MCP server package.json copy (build disabled above)
-# COPY --chown=nodejs:nodejs mcp-server/package*.json ./mcp-server/
+COPY --chown=nodejs:nodejs mcp-server/package*.json ./mcp-server/
 
 # Create directories for data persistence
 RUN mkdir -p /app/docs/CRs && chown nodejs:nodejs /app/docs/CRs
