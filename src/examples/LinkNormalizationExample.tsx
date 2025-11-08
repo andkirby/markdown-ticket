@@ -82,7 +82,7 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
         const processed = linkProcessor.processLink(href, text);
 
         if (!processed.isValid) {
-          return `<span class="broken-link" title="${processed.error || 'Invalid link'}">${text}</span>`;
+          return `<span class="text-red-600 line-through cursor-not-allowed" title="${processed.error || 'Invalid link'}">${text}</span>`;
         }
 
         // Create a unique key for React
@@ -132,141 +132,52 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
   };
 
   return (
-    <div className="link-normalization-example">
-      <style jsx>{`
-        .link-normalization-example {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        .content-section {
-          background: #f8f9fa;
-          border-radius: 8px;
-          padding: 20px;
-          margin-bottom: 20px;
-        }
-        .links-analysis {
-          background: white;
-          border: 1px solid #e1e5e9;
-          border-radius: 8px;
-          padding: 20px;
-          margin-bottom: 20px;
-        }
-        .link-item {
-          display: flex;
-          align-items: center;
-          padding: 8px 12px;
-          border-radius: 4px;
-          margin-bottom: 8px;
-        }
-        .link-item.valid {
-          background: #d4edda;
-          border-left: 4px solid #28a745;
-        }
-        .link-item.invalid {
-          background: #f8d7da;
-          border-left: 4px solid #dc3545;
-        }
-        .link-item.warning {
-          background: #fff3cd;
-          border-left: 4px solid #ffc107;
-        }
-        .link-details {
-          flex: 1;
-          font-family: monospace;
-          font-size: 12px;
-        }
-        .link-status {
-          padding: 4px 8px;
-          border-radius: 12px;
-          font-size: 11px;
-          font-weight: bold;
-          text-transform: uppercase;
-          margin-left: 12px;
-        }
-        .status-valid {
-          background: #28a745;
-          color: white;
-        }
-        .status-invalid {
-          background: #dc3545;
-          color: white;
-        }
-        .status-warning {
-          background: #ffc107;
-          color: #212529;
-        }
-        .processed-content {
-          line-height: 1.6;
-        }
-        .broken-link {
-          color: #dc3545;
-          text-decoration: line-through;
-          cursor: not-allowed;
-        }
-        .stats {
-          display: flex;
-          gap: 20px;
-          margin-bottom: 20px;
-        }
-        .stat-item {
-          text-align: center;
-          padding: 10px;
-          background: #f8f9fa;
-          border-radius: 4px;
-        }
-        .stat-number {
-          font-size: 24px;
-          font-weight: bold;
-          color: #007bff;
-        }
-        .stat-label {
-          font-size: 12px;
-          color: #6c757d;
-          text-transform: uppercase;
-        }
-      `}</style>
+    <div className="max-w-6xl mx-auto p-5">{/* link-normalization-example */}
 
-      <div className="stats">
-        <div className="stat-item">
-          <div className="stat-number">{extractedLinks.length}</div>
-          <div className="stat-label">Total Links</div>
+      <div className="flex gap-5 mb-5">{/* stats */}
+        <div className="text-center p-2.5 bg-gray-50 rounded">{/* stat-item */}
+          <div className="text-2xl font-bold text-blue-600">{extractedLinks.length}</div>{/* stat-number */}
+          <div className="text-xs text-gray-500 uppercase">Total Links</div>{/* stat-label */}
         </div>
-        <div className="stat-item">
-          <div className="stat-number">
+        <div className="text-center p-2.5 bg-gray-50 rounded">
+          <div className="text-2xl font-bold text-blue-600">
             {extractedLinks.filter(l => l.status === 'valid').length}
           </div>
-          <div className="stat-label">Valid</div>
+          <div className="text-xs text-gray-500 uppercase">Valid</div>
         </div>
-        <div className="stat-item">
-          <div className="stat-number">
+        <div className="text-center p-2.5 bg-gray-50 rounded">
+          <div className="text-2xl font-bold text-blue-600">
             {extractedLinks.filter(l => l.status === 'warning').length}
           </div>
-          <div className="stat-label">Warnings</div>
+          <div className="text-xs text-gray-500 uppercase">Warnings</div>
         </div>
-        <div className="stat-item">
-          <div className="stat-number">
+        <div className="text-center p-2.5 bg-gray-50 rounded">
+          <div className="text-2xl font-bold text-blue-600">
             {extractedLinks.filter(l => l.status === 'invalid').length}
           </div>
-          <div className="stat-label">Invalid</div>
+          <div className="text-xs text-gray-500 uppercase">Invalid</div>
         </div>
       </div>
 
-      <div className="content-section">
+      <div className="bg-gray-50 rounded-lg p-5 mb-5">
         <h3>Processed Content</h3>
-        <div className="processed-content">
+        <div className="leading-relaxed">
           {renderContentWithSmartLinks(processedContent)}
         </div>
       </div>
 
-      <div className="links-analysis">
+      <div className="bg-white border border-gray-300 rounded-lg p-5 mb-5">
         <h3>Links Analysis</h3>
         {extractedLinks.length === 0 ? (
           <p>No links found in the content.</p>
         ) : (
           extractedLinks.map((link, index) => (
-            <div key={index} className={`link-item ${link.status}`}>
-              <div className="link-details">
+            <div key={index} className={`flex items-center px-3 py-2 rounded mb-2 ${
+                link.status === 'valid' ? 'bg-green-100 border-l-4 border-green-500' :
+                link.status === 'invalid' ? 'bg-red-100 border-l-4 border-red-500' :
+                'bg-yellow-100 border-l-4 border-yellow-500'
+              }`}>
+              <div className="flex-1 font-mono text-xs">
                 <div><strong>Original:</strong> {link.original}</div>
                 <div><strong>Type:</strong> {link.processed.parsed.type}</div>
                 {link.processed.normalized && (
@@ -276,7 +187,11 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
                   <div><strong>Error:</strong> {link.processed.error}</div>
                 )}
               </div>
-              <span className={`link-status status-${link.status}`}>
+              <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ml-3 ${
+                link.status === 'valid' ? 'bg-green-600 text-white' :
+                link.status === 'invalid' ? 'bg-red-600 text-white' :
+                'bg-yellow-500 text-gray-900'
+              }`}>
                 {link.status}
               </span>
             </div>
@@ -284,7 +199,7 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
         )}
       </div>
 
-      <div className="content-section">
+      <div className="bg-gray-50 rounded-lg p-5 mb-5">
         <h3>System Information</h3>
         <div>
           <p><strong>Current Project:</strong> {currentProject}</p>

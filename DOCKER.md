@@ -415,8 +415,6 @@ docker run -d \
   markdown-ticket:latest
 ```
 
-**Note**: MCP server build is temporarily disabled in production due to TypeScript compilation issues. The core application (frontend + backend) works fully.
-
 ### Using Production Compose
 ```bash
 ./scripts/docker-env.sh prod
