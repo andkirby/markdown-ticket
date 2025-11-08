@@ -5,9 +5,6 @@
 
 set -e
 
-PROJECT_NAME="markdown-ticket"
-COMPOSE_FILE="docker-compose.yml"
-
 show_help() {
     cat << EOF
 Docker Run Scripts for Markdown Ticket Board
