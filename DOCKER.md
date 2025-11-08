@@ -7,6 +7,15 @@ This guide explains how to run and develop the Markdown Ticket Board application
 - Docker (version 20.10+)
 - Docker Compose (version 2.0+)
 
+## Architecture Overview
+
+The project uses a **unified multi-stage Dockerfile** that supports both development and production environments through build targets. This approach provides:
+
+- **Shared foundation**: Single `node:20-alpine` base with common utilities (git, bash)
+- **Optimized layer caching**: Separate dependency stages for dev and production
+- **Consistent environments**: Same base image across all services
+- **Single file management**: One Dockerfile instead of separate dev/prod files
+
 ## Quick Start
 
 1. **Clone the repository** (if you haven't already):
@@ -134,19 +143,62 @@ Two scripts provide complete Docker-based development:
 
 ## Docker Architecture
 
-### Images
+### Unified Dockerfile Structure
 
-- **Dockerfile**: Multi-stage production build
-- **Dockerfile.dev**: Development build with hot reload
+The single `Dockerfile` contains multiple build targets:
 
-### Services
+**Foundation Stages:**
+- **base**: `node:20-alpine` + common utilities (git, bash)
+- **deps-base**: Package files setup for all services
+- **dev-deps**: All dependencies (including dev dependencies)
+- **prod-deps**: Production-only dependencies
 
-- **app-dev**: Full development environment with hot reload
-- **frontend**: Frontend-only development
-- **backend**: Backend-only development
-- **mcp-server**: MCP server for AI integration
-- **app-prod**: Production-like environment
-- **test**: Testing environment with Playwright
+**Development Targets:**
+- **frontend**: Frontend development with hot reload (port 5173)
+- **backend**: Backend development with hot reload (port 3001)
+- **mcp**: MCP server development
+- **development**: Full development environment (both ports)
+- **test**: E2E testing with Playwright
+
+**Production Targets:**
+- **builder**: Builds all components (frontend, backend, dev-tools)
+- **runner**: Production runtime with optimized layers and security
+
+### Services (via docker-compose.yml)
+
+- **app-dev**: Full development environment (target: `development`)
+- **frontend**: Frontend-only development (target: `frontend`)
+- **backend**: Backend-only development (target: `backend`)
+- **mcp-server**: MCP server for AI integration (target: `mcp`)
+- **app-prod**: Production-like environment (target: `runner`)
+- **test**: Testing environment with Playwright (target: `test`)
+
+### Benefits of Unified Architecture
+
+- **Better caching**: Shared dependency layers across all targets
+- **Consistency**: Same Node.js version and utilities everywhere
+- **Maintenance**: Single file to update instead of multiple Dockerfiles
+- **Efficiency**: Optimal layer reuse between development and production
+
+### Direct Docker Commands
+
+You can also use Docker directly with build targets:
+
+```bash
+# Development targets
+docker build --target development -t mdt-dev .
+docker build --target frontend -t mdt-frontend .
+docker build --target backend -t mdt-backend .
+docker build --target test -t mdt-test .
+
+# Production targets
+docker build --target runner -t mdt-prod .
+
+# Run specific targets
+docker run -p 5173:5173 -v .:/app mdt-frontend
+docker run -p 3001:3001 -v .:/app mdt-backend
+docker run -p 5173:5173 -p 3001:3001 -v .:/app mdt-dev
+```
 
 ### Volumes
 
@@ -346,7 +398,12 @@ cat .mdt-config.toml
 
 ### Building Production Image
 ```bash
-docker build -t markdown-ticket:latest .
+# Build production target
+docker build --target runner -t markdown-ticket:latest .
+
+# Or build specific targets for testing
+docker build --target frontend -t markdown-ticket-frontend .
+docker build --target development -t markdown-ticket-dev .
 ```
 
 ### Running Production Container
@@ -357,6 +414,8 @@ docker run -d \
   --name markdown-ticket-prod \
   markdown-ticket:latest
 ```
+
+**Note**: MCP server build is temporarily disabled in production due to TypeScript compilation issues. The core application (frontend + backend) works fully.
 
 ### Using Production Compose
 ```bash

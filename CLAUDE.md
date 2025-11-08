@@ -26,6 +26,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:e2e:report` - Show Playwright test report
 - `PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/specific-test.spec.ts --project=chromium` - Run specific test without server restart
 
+### Docker Development (Alternative)
+- `./scripts/docker-env.sh dev` - **RECOMMENDED** - Start full development environment in Docker
+- `./scripts/docker-env.sh frontend` - Start frontend only in Docker (localhost:5173)
+- `./scripts/docker-env.sh backend` - Start backend only in Docker (localhost:3001)
+- `./scripts/docker-env.sh mcp` - Start MCP server only in Docker
+- `./scripts/docker-env.sh test` - Run E2E tests in Docker
+- `./scripts/docker-env.sh build` - Build all Docker images
+- `./scripts/docker-env.sh clean` - Clean up Docker containers and images
+- `./scripts/docker-run.sh <service> <command>` - Run commands in active containers
+- `./scripts/docker-run.sh dev shell` - Open shell in development container
+
+**Docker Benefits**: No need to install Node.js locally, consistent environment, isolated dependencies.
+**Complete Docker Guide**: See [DOCKER.md](DOCKER.md) for comprehensive Docker documentation.
+
 ## Architecture Overview
 
 ### Core Concept
@@ -159,6 +173,32 @@ Why this change is needed...
 - Session management: `get_frontend_session_status`, `stop_frontend_logging`
 
 **Never restart servers** - use MCP logging tools instead unless user explicitly requests restart.
+
+## Docker Architecture
+
+### Unified Multi-stage Dockerfile
+The project uses a single `Dockerfile` with multiple build targets for optimal caching and consistency:
+
+**Foundation Stages**:
+- `base`: node:20-alpine + git + bash
+- `deps-base`: Package files for all services
+- `dev-deps`: All dependencies (including dev)
+- `prod-deps`: Production-only dependencies
+
+**Development Targets**:
+- `frontend`: Frontend with hot reload (port 5173)
+- `backend`: Backend with hot reload (port 3001)
+- `mcp`: MCP server development
+- `development`: Full dev environment (both ports)
+- `test`: E2E testing with Playwright
+
+**Production Targets**:
+- `builder`: Compiles all components
+- `runner`: Optimized production runtime
+
+**Key Benefits**: Better Docker layer caching, consistent environments, single file maintenance.
+
+**Current Status**: MCP server build temporarily disabled in production due to TypeScript compilation issues.
 
 ## CR Management Workflow
 
