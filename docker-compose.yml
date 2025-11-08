@@ -3,7 +3,8 @@ services:
   app-dev:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: development
     ports:
       - "5173:5173"  # Frontend Vite dev server
       - "3001:3001"  # Backend API server
@@ -48,7 +49,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
       target: frontend
     ports:
       - "5173:5173"
@@ -66,7 +67,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
       target: backend
     ports:
       - "3001:3001"
@@ -84,7 +85,7 @@ services:
   mcp-server:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
       target: mcp
     volumes:
       - .:/app
@@ -100,7 +101,8 @@ services:
   test:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: test
     volumes:
       - .:/app
       - /app/node_modules
