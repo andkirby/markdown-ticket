@@ -65,7 +65,10 @@ FROM dev-deps AS builder
 # Copy source code
 COPY . .
 
-# Build frontend first
+# Build shared code first (required by both frontend and backend)
+RUN npm run build:shared
+
+# Build frontend (includes TypeScript compilation)
 RUN npm run build
 
 # Build backend TypeScript (creates dist/ that MCP server depends on)
