@@ -93,7 +93,7 @@ services:
       - config_data:/root/.config
     environment:
       - NODE_ENV=development
-    command: cd mcp-server && npm run dev
+    command: sh -c "cd mcp-server && npm run dev"
     profiles:
       - dev
       - mcp
