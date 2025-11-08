@@ -95,6 +95,7 @@ services:
       - NODE_ENV=development
     command: cd mcp-server && npm run dev
     profiles:
+      - dev
       - mcp
 
   # Testing environment
