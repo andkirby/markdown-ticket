@@ -125,7 +125,8 @@ case "${1:-help}" in
     "clean")
         echo "🧹 Cleaning up containers, volumes, and images..."
         ensure_docker
-        docker_compose down --volumes --rmi all --remove-orphans
+        # Stop all profiles to ensure everything is cleaned
+        docker_compose --profile dev --profile frontend --profile backend --profile mcp --profile prod --profile test down --volumes --rmi all --remove-orphans
         docker system prune -f
         ;;
 
