@@ -79,7 +79,7 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
     return content.replace(
       /\[([^\]]*)\]\(([^)]+)\)/g,
       (match, text, href) => {
-        const { processed } = linkProcessor.processLink(href, text);
+        const processed = linkProcessor.processLink(href, text);
 
         if (!processed.isValid) {
           return `<span class="broken-link" title="${processed.error || 'Invalid link'}">${text}</span>`;
@@ -111,7 +111,7 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
           const text = textMatch[1];
           const key = keyMatch[1];
 
-          const { processed } = linkProcessor.processLink(href, text);
+          const processed = linkProcessor.processLink(href, text);
 
           return (
             <SmartLink
