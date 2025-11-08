@@ -1,5 +1,30 @@
 # Release Notes
 
+## v0.6.0 (2025-10-18)
+
+### Bug Fixes
+- **Smart Link URL Duplication**: Fixed critical bug where ticket links would show duplicated base URLs (e.g., `http://localhost:5173http://localhost:5173/...`).
+- **Project Creation SSE Events**: Resolved event ID mismatch issues when creating new projects that could cause UI inconsistencies.
+- **Stale Closure in Ticket Updates**: Fixed state update prevention that could stop board view updates when tickets were modified.
+- **API Endpoint Consistency**: Updated AddProjectModal to use correct `/api/directories` endpoint for directory discovery.
+- **Navigation Race Conditions**: Resolved race conditions in smart link navigation that could cause broken links.
+
+### Improvements
+- **Smart Links Reliability**: Comprehensive fixes for URL duplication issues, ensuring ticket references display correctly without duplicated base URLs.
+- **Project Management**: Enhanced project ID validation and duplicate detection to prevent configuration conflicts.
+- **MCP Tool Optimization**: Finalized 40% token reduction improvements through tool consolidation and efficient section-based operations.
+- **Link Classification**: Improved absolute URL recognition for ticket links, preventing conflicts with regular web URLs.
+- **Automatic Git Worktree Exclusion**: Project discovery now automatically excludes git worktrees to prevent duplicate project detection and confusion.
+- **File Watcher-based Project Lifecycle**: Improved automatic detection of project creation, deletion, and configuration changes without requiring manual refresh.
+
+### Planning & Architecture
+- **MCP Transport Requirements**: Created requirements for future MCP Streamable HTTP transport implementation (MDT-071).
+- **Server TypeScript Migration**: Planned migration of server architecture to TypeScript for better type safety (MDT-072).
+- **Docker Infrastructure**: Planned simplification of Docker containerization architecture (MDT-055).
+- **Content Sanitization**: Planned MCP content sanitization with conservative security approach (MDT-068).
+
+---
+
 ## v0.5.0 (2025-10-14)
 
 ### New Features

@@ -20,21 +20,16 @@ The Markdown Ticket Board project includes multiple MCP servers that enable AI a
 
 #### CR/Ticket Management
 - `list_crs` - List CRs with filtering options
-- `get_cr_full_content` - Get complete CR details including full markdown content
-- `get_cr_attributes` - Get only YAML frontmatter attributes (90-95% more efficient for metadata-only operations)
-- `create_cr` - Create new change requests
+- `get_cr` (Consolidated) - Get CR with flexible modes (full, attributes, metadata)
+- `create_cr` (Enhanced) - Create new change requests with embedded template guidance
 - `update_cr_attrs` - Update CR attributes
 - `update_cr_status` - Update CR workflow status
 - `delete_cr` - Delete CRs
 
-#### Section-Based Operations (84-94% token savings)
-- `list_cr_sections` - List document sections
-- `get_cr_section` - Read specific sections
-- `update_cr_section` - Update sections efficiently
+#### Section Management (84-94% token savings)
+- `manage_cr_sections` (Consolidated) - List, get, or update CR sections efficiently
 
-#### Templates & Analysis
-- `list_cr_templates` - List available templates
-- `get_cr_template` - Get template structure
+#### Analysis
 - `suggest_cr_improvements` - AI-powered CR analysis
 
 ### Setup Instructions
@@ -133,8 +128,8 @@ Update the Implementation section of MDT-001 with the new technical approach
 ```
 
 The AI assistant will:
-1. Use `list_cr_sections` to find available sections
-2. Use `update_cr_section` to update specific content
+1. Use `manage_cr_sections` with operation="list" to find available sections
+2. Use `manage_cr_sections` with operation="update" to update specific content
 
 ## MCP Development Tools
 
@@ -286,7 +281,7 @@ Each template includes:
 1. **Start with Discovery**: Use `list_projects` to understand available projects
 2. **Use Filtering**: Leverage `list_crs` filters for targeted queries
 3. **Section Updates**: Use section-based tools for efficient content updates
-4. **Template Consistency**: Use `get_cr_template` to understand expected structure
+4. **Template Consistency**: Templates are embedded in `create_cr` tool for automatic generation
 
 ## Troubleshooting
 

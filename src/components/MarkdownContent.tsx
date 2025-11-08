@@ -46,7 +46,7 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
       simpleLineBreaks: true,
       headerLevelStart,
       parseImgDimensions: true,
-      simplifiedAutoLink: true,
+      simplifiedAutoLink: false, // Disabled to prevent conflicts with our preprocessor
       excludeTrailingPunctuationFromURLs: true,
       literalMidWordUnderscores: true,
       ghCompatibleHeaderId: true,
@@ -66,6 +66,12 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
 
       // Step 2: Convert markdown to HTML
       const rawHTML = converter.makeHtml(preprocessedMarkdown);
+
+      // Debug: Log the raw HTML to see what URLs are generated
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Preprocessed markdown sample:', preprocessedMarkdown.substring(0, 500));
+        console.log('Raw HTML sample:', rawHTML.substring(0, 500));
+      }
       
       // Step 3: Process Mermaid diagrams
       const mermaidProcessed = processMermaidBlocks(rawHTML);
@@ -104,7 +110,25 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
     replace: (domNode) => {
       if (domNode instanceof Element && domNode.name === 'a') {
         const href = domNode.attribs?.href || '';
+
+        // Debug: Log the href being processed
+        if (process.env.NODE_ENV === 'development' && href.includes('MDT-')) {
+          console.log('Processing link href:', href);
+          console.log('Current path:', window.location.pathname);
+        }
+
         const parsedLink = classifyLink(href, currentProject);
+
+        // Debug: Log the classification result
+        if (process.env.NODE_ENV === 'development' && href.includes('MDT-')) {
+          console.log('Link classification result:', {
+            type: parsedLink.type,
+            href: parsedLink.href,
+            projectCode: parsedLink.projectCode,
+            ticketKey: parsedLink.ticketKey,
+            isValid: parsedLink.isValid
+          });
+        }
         
         // Extract text content safely
         const extractText = (node: any): string => {

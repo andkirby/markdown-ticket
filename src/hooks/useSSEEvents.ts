@@ -14,7 +14,8 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
 
 export function useSSEEvents(
   fetchTicketsForProject: (project: Project) => Promise<void>,
-  updateTicketInState: (ticket: Ticket) => void
+  updateTicketInState: (ticket: Ticket) => void,
+  refreshProjects?: () => Promise<void>
 ) {
   const selectedProjectRef = useRef<Project | null>(null);
   const userInitiatedUpdates = useRef(new Set<string>());
@@ -79,6 +80,36 @@ export function useSSEEvents(
       debouncedRefresh(currentProject);
     }
   }, [debouncedRefresh]));
+
+  // Handle project creation events
+  useEventBus('project:created', useCallback((event) => {
+    if (!import.meta.env.VITE_DISABLE_EVENTBUS_LOGS) {
+      console.log('✅ Project created event received:', event.payload);
+    }
+    if (refreshProjects) {
+      if (!import.meta.env.VITE_DISABLE_EVENTBUS_LOGS) {
+        console.log('🔄 Refreshing projects after project creation');
+      }
+      refreshProjects().catch(err => {
+        console.error('❌ Failed to refresh projects after creation:', err);
+      });
+    }
+  }, [refreshProjects]));
+
+  // Handle project deletion events
+  useEventBus('project:deleted', useCallback((event) => {
+    if (!import.meta.env.VITE_DISABLE_EVENTBUS_LOGS) {
+      console.log('✅ Project deleted event received:', event.payload);
+    }
+    if (refreshProjects) {
+      if (!import.meta.env.VITE_DISABLE_EVENTBUS_LOGS) {
+        console.log('🔄 Refreshing projects after project deletion');
+      }
+      refreshProjects().catch(err => {
+        console.error('❌ Failed to refresh projects after deletion:', err);
+      });
+    }
+  }, [refreshProjects]));
 
   useEventBus('error:api', useCallback((event) => {
     console.error('❌ API Error:', event.payload.message);

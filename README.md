@@ -231,17 +231,20 @@ claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 - **Global**: MCP available from any directory, can access all configured projects
 
 ### Available MCP Tools
+
+**🎯 Recent Optimization**: Tools have been consolidated for 40% token reduction:
 - `list_projects` - List all discovered projects
+- `get_project_info` - Get detailed project information
 - `list_crs` - List CRs for a project with filtering
-- `get_cr_full_content` - Get complete CR details including full markdown content
-- `get_cr_attributes` - Get only YAML frontmatter attributes (90-95% more efficient for metadata-only operations)
-- `create_cr` - Create new change requests
-- `update_cr_section` - Update specific sections of CR content (98% more efficient than full document updates)
+- `get_cr` (Consolidated) - Get CR with flexible modes (full, attributes, metadata)
+- `create_cr` (Enhanced) - Create CR with embedded template guidance
+- `manage_cr_sections` (Consolidated) - List, get, or update CR sections efficiently
 - `update_cr_attrs` - Update CR attributes (excludes status)
 - `update_cr_status` - Update CR status
 - `delete_cr` - Delete CRs (for implemented bug fixes)
-- `get_project_info` - Get detailed project information
 - `suggest_cr_improvements` - Get suggestions for improving CRs
+
+**Token Efficiency**: Section operations are 84-94% more efficient than full document updates
 
 **📖 Complete Documentation**: See `mcp-server/MCP_TOOLS.md` for detailed API reference including response formats, examples, and error handling.
 
@@ -313,6 +316,7 @@ See **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** for:
 
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for detailed information about each version:
 
+- **v0.6.0** (2025-10-18): Smart link reliability fixes, project management improvements, and MCP optimizations
 - **v0.5.0** (2025-10-14): Smart links, Table of Contents, H1 title management, enhanced MCP tools
 - **v0.4.0** (2025-10-02): URL routing, Mermaid diagrams, document filtering, section-based MCP updates
 - **v0.3.0** (2025-09-11): Badge components, project editing, backlog management, MCP development tools

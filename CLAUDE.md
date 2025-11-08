@@ -16,8 +16,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `cd server && npm run create-samples` - Create sample ticket files
 - `cd server && npm test` - Run backend Jest tests
 
+### MCP Server (Model Context Protocol)
+- `cd mcp-server && npm run build` - Build MCP server (required after code changes)
+- `cd mcp-server && npm run dev` - Run MCP server in development mode (uses tsx, no build needed)
+- `cd mcp-server && npm test` - Run MCP server Jest tests
+- `cd mcp-server && npm run test:watch` - Run MCP tests in watch mode
+
 ### Full Stack Development
-- `npm run dev:full` - **RECOMMENDED** - Start both frontend and backend concurrently
+- `npm run dev:full` - **RECOMMENDED** - Builds shared code and starts both frontend and backend concurrently
+  - Equivalent to: `npm run build:shared && concurrently "npm run dev" "npm run dev:server"`
+  - **Important**: Rebuilds shared types automatically before starting servers
 
 ### Testing
 - `npm run test:e2e` - Run Playwright E2E tests across browsers
@@ -92,6 +100,20 @@ server/
 - `/api/filesystem` - File tree for path selection
 - `/api/events` - SSE endpoint for real-time updates
 
+### Shared Architecture (shared/)
+
+**Purpose**: Code shared across frontend, backend, and MCP server to maintain consistency
+
+**Key Modules**:
+- `shared/models/Types.ts` - CR, CRStatus, CRType, CRPriority type definitions
+- `shared/models/Project.ts` - Project, ProjectConfig interfaces
+- `shared/services/ProjectService.ts` - Multi-project discovery and validation
+- `shared/services/MarkdownService.ts` - YAML frontmatter parsing and CR file I/O
+- `shared/services/TemplateService.ts` - CR template management
+- `shared/templates/` - File-based templates for each CR type
+
+**Build Required**: Run `npm run build:shared` to compile TypeScript before starting dev servers. This is automatically done by `npm run dev:full`.
+
 ### Data Flow & Real-time Updates
 
 1. **Tickets as Files**: Each CR is a `.md` file in `docs/CRs/` with YAML frontmatter
@@ -149,18 +171,39 @@ Why this change is needed...
 - **Document Discovery**: `DocumentService` converts to relative paths for consistency
 - **Frontend**: PathSelector expects relative paths for checkbox state tracking
 
+### Smart Links & Markdown Processing
+**Pattern**: Showdown.js with custom extensions for ticket reference links
+
+**Link Processing Pipeline** (see `useTicketLinks.ts` and `TicketLinkProcessor.ts`):
+1. `classifyLink()` at `useTicketLinks.ts:149` - Identifies ticket references (MDT-001) vs regular URLs
+2. Showdown converts markdown to HTML
+3. `TicketLinkProcessor.ts:68` - Post-processes HTML to add clickable ticket links with hover previews
+4. **Critical**: Use absolute URLs for ticket links to prevent Showdown from treating them as relative paths
+
+**Common Bug**: If ticket links show duplicated base URLs (e.g., `http://localhost:5173http://localhost:5173/...`):
+- Check `classifyLink()` correctly identifies absolute URLs starting with `http://` or `https://`
+- Verify `TicketLinkProcessor` doesn't prepend base URL to already-absolute URLs
+- See MDT-062 for reference implementation
+
 ### MCP Integration Priority
+
+**Tool Consolidation (Oct 2024)**: MCP tools optimized for 40% token reduction
+- ✅ Use `get_cr` with modes (full/attributes/metadata) instead of separate tools
+- ✅ Use `manage_cr_sections` for all section operations (list/get/update)
+- ✅ Section updates are 84-94% more efficient than full document rewrites
 
 **Always attempt MCP operations first**:
 1. Try `mcp__mdt-all__*` or `mcp__markdown-ticket__*` tools
-2. If fails, ask user: "The MCP server appears disconnected. Please run `/mcp` to reconnect."
+2. If fails, ask user: "The MCP server appears disconnected. Please run `/mcp` to reconnect or verify MCP server is built with `cd mcp-server && npm run build`"
 3. Only after user confirms MCP restart, fall back to manual file operations
 
 **MCP Server Scopes**:
 - `mdt-all` (global) - Access all projects from any directory
 - `mdt-tickets` (local) - Filtered to specific project via `MCP_PROJECT_FILTER`
 
-**Available Tools**: `list_projects`, `list_crs`, `get_cr_full_content`, `get_cr_attributes`, `create_cr`, `update_cr_status`, `update_cr_attrs`, `delete_cr`, `suggest_cr_improvements`, section-based updates
+**Available Tools**: `list_projects`, `get_project_info`, `list_crs`, `get_cr`, `create_cr`, `update_cr_status`, `update_cr_attrs`, `delete_cr`, `manage_cr_sections`, `suggest_cr_improvements`
+
+**See `mcp-server/MCP_TOOLS.md` for complete API reference**
 
 ### Logging & Debugging
 
@@ -245,12 +288,18 @@ The project uses a single `Dockerfile` with multiple build targets for optimal c
 
 **E2E Tests** (Playwright):
 - Test user workflows across browsers (Chrome, Firefox, Safari, Mobile)
-- Automatically start frontend (5173) and backend (3001) servers
-- Use `PWTEST_SKIP_WEB_SERVER=1` to skip server startup for debugging
+- Automatically start frontend (5173) and backend (3001) servers via `playwright.config.ts`
+- Use `PWTEST_SKIP_WEB_SERVER=1` to skip server startup for faster iteration during debugging
+- Example: `PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/ticket-move-simple.spec.ts --project=chromium --reporter=line`
 
 **Backend Tests** (Jest):
 - Unit tests for services, utilities, and controllers
 - Run with `cd server && npm test`
+
+**MCP Server Tests** (Jest):
+- Tests for MCP tools and shared services
+- Run with `cd mcp-server && npm test`
+- Watch mode: `cd mcp-server && npm run test:watch`
 
 ## Important Conventions
 

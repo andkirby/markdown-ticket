@@ -69,11 +69,13 @@ function protectExistingLinks(markdown: string, state: PreprocessorState): strin
 }
 
 /**
- * Converts ticket references to markdown links
+ * Converts ticket references to markdown links with absolute URLs
  */
 function convertTicketReferences(markdown: string, currentProject: string): string {
   const projectPattern = new RegExp(`\\b(${currentProject}-\\d+)\\b`, 'g');
-  return markdown.replace(projectPattern, '[$1]($1)');
+  // Use absolute URLs to prevent Showdown.js from resolving relative to current page
+  // Ensure the URLs are explicitly absolute to avoid any relative resolution issues
+  return markdown.replace(projectPattern, `[$1](/prj/${currentProject}/ticket/$1)`);
 }
 
 /**

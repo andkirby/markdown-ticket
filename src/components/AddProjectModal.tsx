@@ -125,18 +125,18 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const loadDirectories = async (path?: string) => {
     setLoadingDirectories(true);
     try {
-      const url = path 
-        ? `/api/system/directories?path=${encodeURIComponent(path)}`
-        : '/api/system/directories';
-      
+      const url = path
+        ? `/api/directories?path=${encodeURIComponent(path)}`
+        : '/api/directories';
+
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to load directories');
-      
+
       const data: DirectoryResponse = await response.json();
       setCurrentPath(data.currentPath);
       setParentPath(data.parentPath);
       setDirectories(data.directories);
-      
+
       // Set filter base path on initial load or reset filter when navigating
       if (!filterBasePath || path) {
         setFilterBasePath(data.currentPath);

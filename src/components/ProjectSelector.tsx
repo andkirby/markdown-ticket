@@ -1,3 +1,4 @@
+import path from 'path';
 import { Badge } from './UI/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './UI/tooltip';
 import { Project } from '../../shared/models/Project';
@@ -16,13 +17,13 @@ export const getProjectCode = (project: Project): string => {
     console.error('getProjectCode called with invalid project object:', project);
     return 'UNKNOWN';
   }
-  
+
   // Use the project.code from config if available
   if (project.project.code) {
     return project.project.code;
   }
-  
-  console.warn(`Project ${project.id} missing code in .mdt-config.toml`);
+
+  // This should not happen with the new validation, but keep as safety fallback
   return project.id; // Return ID as-is, don't modify
 };
 
