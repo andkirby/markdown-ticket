@@ -65,26 +65,25 @@
 
 ## Quick Start
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+**Docker (Recommended)**:
+```bash
+git clone <repository-url>
+cd markdown-ticket
+./scripts/docker-env.sh dev
+```
 
-2. **Start the backend server**:
-   ```bash
-   cd server
-   node server.js
-   ```
+**Local Development**:
+```bash
+npm install                    # Install dependencies
+npm run build:shared           # Build shared code
+npm run dev:full               # Start all services
+```
 
-3. **Start the development server** (in another terminal):
-   ```bash
-   npm run dev
-   ```
-
-4. **Access the application**:
-   - Open http://localhost:5173 in your browser
-   - Use the "Add New Project" button to create your first project
-   - Switch between Board, List, and Documents views using the icon switcher
+**Access the application**:
+- Open http://localhost:5173 in your browser
+- **Auto-Discovery**: Projects are automatically discovered on startup
+- Sample projects (like Sudoku Game) are included for testing
+- Switch between Board, List, and Documents views using the icon switcher
 
 ## Getting Started
 
