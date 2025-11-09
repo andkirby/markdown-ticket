@@ -30,9 +30,12 @@ services:
       # Mount Docker-only configuration (container-specific)
       - ./docker-config:/root/.config/markdown-ticket:ro
 
-      # Option 2: Mount specific projects (uncomment and customize)
-      # - ~/work/project-a:/projects/project-a
+      # Mount projects - generic mounting pattern
+      # Examples:
+      # - ./:/projects/markdown-ticket          # Work on MDT app itself
+      # - ~/work/project-a:/projects/project-a   # Other projects
       # - ~/personal/project-b:/projects/project-b
+      # projects:/projects                       # Named volume (uncomment below)
 
       # Mount source code for hot reload (tsx watch mode)
       - ./server:/app/server
@@ -45,18 +48,19 @@ services:
       - DOCKER=true
       - CHOKIDAR_USEPOLLING=true
       - PORT=3001
+    command: ["npx", "nodemon", "--exec", "tsx", "server.ts"]
 
   mcp:
     volumes:
       # Mount Docker-only configuration (container-specific)
       - ./docker-config:/root/.config/markdown-ticket:ro
 
-      # Mount debug project directory (testing only)
-      - projects:/projects
-
-      # Option 2: Mount specific projects (uncomment and customize)
-      # - ~/work/project-a:/projects/project-a
+      # Mount projects - generic mounting pattern (same as backend)
+      # Examples:
+      # - ./:/projects/markdown-ticket          # Work on MDT app itself
+      # - ~/work/project-a:/projects/project-a   # Other projects
       # - ~/personal/project-b:/projects/project-b
+      # projects:/projects                       # Named volume (uncomment below)
 
       # Mount source code for hot reload (tsx watch mode)
       - ./mcp-server/src:/app/mcp-server/src
@@ -70,17 +74,21 @@ services:
       - MCP_HTTP_PORT=3002
       - MCP_BIND_ADDRESS=0.0.0.0
       - LOG_LEVEL=debug
-volumes:
-  projects:
+# Optional: Named volume for projects (uncomment to use)
+# volumes:
+#   projects:
 
 # Development Tips:
-# 1. Set MCP_PROJECTS_DIR environment variable to your workspace directory:
-#    export MCP_PROJECTS_DIR=~/workspace
+# 1. For working on the MDT application itself, mount it as a project:
+#    volumes:
+#      - ./:/projects/markdown-ticket
 #
-# 2. Or create a .env file in the project root with:
-#    MCP_PROJECTS_DIR=/path/to/your/workspace
+# 2. For other projects, mount them to /projects:
+#    volumes:
+#      - ~/work/project-a:/projects/project-a
+#      - ~/personal/project-b:/projects/project-b
 #
-# 3. For specific project mounting, uncomment and customize the volume mounts above
+# 3. Use docker-compose.demo.yml as a template for mounting multiple projects
 #
 # 4. Hot reload is enabled for all services:
 #    - Frontend: Vite HMR

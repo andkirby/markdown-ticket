@@ -1,6 +1,0 @@
-[project]
-name = "DEBUG for markdown project"
-path = "/projects/debug-tasks"
-configFile = ".mdt-config.toml"
-active = true
-description = "Debug project for testing Docker configuration"

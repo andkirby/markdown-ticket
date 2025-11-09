@@ -14,6 +14,7 @@ interface Project {
     name: string;
     code?: string;
     path: string;
+    configFile: string;
     active: boolean;
     description?: string;
     repository?: string;
@@ -23,6 +24,7 @@ interface Project {
     lastAccessed: string;
     version: string;
   };
+  autoDiscovered?: boolean;
 }
 
 interface Ticket {
@@ -71,12 +73,12 @@ interface GlobalConfig {
 }
 
 interface ProjectCache {
-  projects: (Project | ExtendedProject)[] | null;
+  projects: (Project | RegisteredProject)[] | null;
   timestamp: number;
   ttl: number;
 }
 
-interface ExtendedProject {
+interface RegisteredProject {
   id: string;
   project: {
     name: string;
@@ -117,18 +119,20 @@ class ProjectDiscoveryService {
   private globalConfigDir: string;
   private projectsDir: string;
   private globalConfigPath: string;
-  private sharedProjectService: { autoDiscoverProjects: (_searchPaths: string[]) => Project[] };
+  private sharedProjectService: any;
   private cache: ProjectCache;
+  private projectServiceInitialized: boolean = false;
 
   constructor() {
     this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
     this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
-    // this.sharedProjectService = new ProjectService();
-    // Will be implemented when shared services are migrated
-    this.sharedProjectService = {
-      autoDiscoverProjects: (_searchPaths: string[]) => []
-    };
+
+    // Will be initialized with dynamic import
+    this.sharedProjectService = null;
+
+    // Initialize the shared ProjectService asynchronously
+    this.initializeProjectService();
 
     // Cache for project discovery results
     this.cache = {
@@ -136,6 +140,111 @@ class ProjectDiscoveryService {
       timestamp: 0,
       ttl: 30000 // 30 seconds cache TTL
     };
+  }
+
+  /**
+   * Initialize the shared ProjectService asynchronously
+   */
+  private async initializeProjectService(): Promise<void> {
+    try {
+      // For now, implement simple auto-discovery directly here
+      // to avoid dependency issues with shared services
+      this.sharedProjectService = {
+        autoDiscoverProjects: (searchPaths: string[]) => this.simpleAutoDiscover(searchPaths)
+      };
+      this.projectServiceInitialized = true;
+      console.log('✅ Simple auto-discovery initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize auto-discovery:', error);
+      // Fallback to stub
+      this.sharedProjectService = {
+        autoDiscoverProjects: (_searchPaths: string[]) => []
+      };
+      this.projectServiceInitialized = true;
+    }
+  }
+
+  /**
+   * Simple auto-discovery implementation without external dependencies
+   */
+  private simpleAutoDiscover(searchPaths: string[]): Project[] {
+    const discovered: Project[] = [];
+
+    console.log('🔍 Auto-discovery scanning for .mdt-config.toml files in configured paths:', searchPaths);
+
+    for (const searchPath of searchPaths) {
+      try {
+        console.log(`🔍 Checking path: ${searchPath}, exists: ${fs.existsSync(searchPath)}`);
+        if (fs.existsSync(searchPath)) {
+          this.scanDirectoryForProjectsSimple(searchPath, discovered, 2); // Max depth 2 for performance
+        }
+      } catch (error) {
+        console.error(`Error scanning ${searchPath}:`, error);
+      }
+    }
+
+    console.log(`🔍 Auto-discovery complete. Found ${discovered.length} projects with .mdt-config.toml:`);
+    discovered.forEach(p => console.log(`  - ${p.project.name} (${p.project.code}) at ${p.project.path}`));
+
+    return discovered;
+  }
+
+  /**
+   * Simple recursive scan for project configurations
+   */
+  private scanDirectoryForProjectsSimple(dirPath: string, discovered: Project[], maxDepth: number): void {
+    if (maxDepth <= 0) return;
+
+    try {
+      const configPath = path.join(dirPath, CONFIG_FILES.PROJECT_CONFIG);
+
+      if (fs.existsSync(configPath)) {
+        try {
+          const content = fs.readFileSync(configPath, 'utf8');
+          const config = toml.parse(content);
+
+          if (config.project &&
+              typeof config.project.name === 'string' &&
+              typeof config.project.code === 'string') {
+
+            const directoryName = path.basename(dirPath);
+            const projectId = config.project.id || directoryName;
+
+            const project: Project = {
+              id: projectId,
+              project: {
+                name: config.project.name,
+                code: config.project.code,
+                path: dirPath,
+                configFile: configPath,
+                active: true,
+                description: config.project.description || ''
+              },
+              metadata: {
+                dateRegistered: new Date().toISOString().split('T')[0],
+                lastAccessed: new Date().toISOString().split('T')[0],
+                version: '1.0.0'
+              }
+            };
+
+            discovered.push(project);
+            console.log(`✅ Found project: ${config.project.name} (${config.project.code}) at ${dirPath}`);
+          }
+        } catch (error) {
+          console.error(`Error parsing config at ${configPath}:`, error);
+        }
+      }
+
+      // Continue scanning subdirectories
+      const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+          this.scanDirectoryForProjectsSimple(path.join(dirPath, entry.name), discovered, maxDepth - 1);
+        }
+      }
+    } catch (error) {
+      // Silently skip directories we can't read
+    }
   }
 
   /**
@@ -164,13 +273,13 @@ class ProjectDiscoveryService {
   /**
    * Get all registered projects
    */
-  getRegisteredProjects(): ExtendedProject[] {
+  getRegisteredProjects(): RegisteredProject[] {
     try {
       if (!fs.existsSync(this.projectsDir)) {
         return [];
       }
 
-      const projects: ExtendedProject[] = [];
+      const projects: RegisteredProject[] = [];
       const projectFiles = fs.readdirSync(this.projectsDir)
         .filter(file => file.endsWith('.toml'));
 
@@ -183,7 +292,7 @@ class ProjectDiscoveryService {
           // Read the actual project data from local config file
           const localConfig = this.getProjectConfig(projectData.project?.path || '');
 
-          const project: ExtendedProject = {
+          const project: RegisteredProject = {
             id: path.basename(file, '.toml'),
             project: {
               name: localConfig?.project?.name || projectData.project?.name || 'Unknown Project',
@@ -247,10 +356,17 @@ class ProjectDiscoveryService {
   /**
    * Get all projects (registered + auto-discovered)
    */
-  async getAllProjects(): Promise<(Project | ExtendedProject)[]> {
+  async getAllProjects(): Promise<(Project | RegisteredProject)[]> {
     const now = Date.now();
 
-    // Return cached results if still valid
+    // Wait for ProjectService to be initialized
+    let attempts = 0;
+    while (!this.projectServiceInitialized && attempts < 50) { // 5 seconds max
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+
+    // Temporarily disable cache for debugging
     if (this.cache.projects && (now - this.cache.timestamp) < this.cache.ttl) {
       return this.cache.projects;
     }
@@ -258,10 +374,14 @@ class ProjectDiscoveryService {
     const registered = this.getRegisteredProjects();
 
     const globalConfig = this.getGlobalConfig();
+    console.log('🔧 Global config:', JSON.stringify(globalConfig, null, 2));
 
     if (globalConfig.discovery?.autoDiscover) {
       const searchPaths = globalConfig.discovery?.searchPaths || [];
-      const discovered = this.sharedProjectService.autoDiscoverProjects(searchPaths);
+      console.log('🔧 Auto-discovery enabled with searchPaths:', searchPaths);
+      const discovered = this.sharedProjectService?.autoDiscoverProjects?.(searchPaths) || [];
+      console.log('🔧 > Discovered projects:', discovered.length);
+
 
       // Create sets for both path and id to avoid duplicates
       const registeredPaths = new Set(registered.map(p => p.project.path));
@@ -288,6 +408,8 @@ class ProjectDiscoveryService {
       this.cache.timestamp = now;
 
       return result;
+    } else {
+      console.log('‼️Projects auto discover disabled..');
     }
 
     // Cache registered projects too

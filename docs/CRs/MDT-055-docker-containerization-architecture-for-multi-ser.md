@@ -210,46 +210,59 @@ See `README.docker.md` for complete setup instructions and `docker-compose.dev.y
 
 ```
 docker-config/                              # Docker-only configuration
-├── config.toml                           # Main configuration
-└── projects/                             # Project registry (debug/test only)
-    ├── mdt.toml                          # Main MDT project
-    └── debug.toml                        # Debug project
+└── config.toml                           # Main configuration
 ```
 
 **Key Requirements**:
 1. **No host configuration mapping** - Never mount `${HOME}/.config/markdown-ticket`
 2. **Container paths only** - Use `/app/`, `/projects/` paths, not host paths
 3. **Self-contained application** - Main MDT project is self-contained in `/app`
-4. **Debug projects only** - `/projects` for testing/debugging scenarios only
-5. **Environment-based URLs** - All service URLs configurable via environment variables
+4. **Generic /projects mounting** - `/projects` is a generic mount point for any project
+5. **Exclude /app from discovery** - Application code is not auto-discovered as a project
+6. **Environment-based URLs** - All service URLs configurable via environment variables
 
 #### Self-Contained Application Architecture
 
 **Core Principle**: The MDT application is **self-contained** within `/app`:
-- **Main Project**: `/app` (all source code, docs, CRs included)
-- **Debug Projects**: `/projects/*` (for testing/debugging only)
-- **No General Workspace**: Application does NOT need other projects
+- **Application Code**: `/app` (all source code, docs, CRs included - excluded from discovery)
+- **Generic Projects**: `/projects/*` (mount point for any project including MDT itself)
+- **Flexible Mounting**: No hardcoded project registry
 
 **Docker Volume Mounts**:
 ```yaml
 volumes:
   # Docker-only configuration (container-specific)
   - ./docker-config:/root/.config/markdown-ticket:ro
-  
+
   # Source code (hot reload)
   - ./server:/app/server
   - ./shared:/app/shared
   - ./mcp-server/src:/app/mcp-server/src
-  
-  # Debug project directory (testing only)
-  - ./debug-tasks:/projects/debug-tasks
+
+  # Projects - generic mounting pattern
+  # Examples:
+  # - ./:/projects/markdown-ticket          # Work on MDT app itself
+  # - ~/work/project-a:/projects/project-a   # Other projects
+  # - ~/personal/project-b:/projects/project-b
 ```
 
 #### Path Resolution
 
-- **Main MDT Project**: `/app` (self-contained, includes docs/CRs)
-- **Debug/Test Projects**: `/projects/project-name` (mounted from host directories)
+- **Application Code**: `/app` (self-contained, excluded from discovery)
+- **Projects**: `/projects/*` (generic mount point for any project)
 - **Configuration**: `/root/.config/markdown-ticket` (Docker-only)
+
+**Usage Examples**:
+```yaml
+# Working on MDT application itself
+volumes:
+  - ./:/projects/markdown-ticket
+
+# Working on other projects
+volumes:
+  - ~/work/project-a:/projects/project-a
+  - ~/personal/project-b:/projects/project-b
+```
 
 #### Environment Variable Configuration
 
@@ -353,7 +366,7 @@ refreshInterval = 5000
 
 [discovery]
 autoDiscover = true
-searchPaths = "/projects,/app"
+searchPaths = "/projects"
 
 [links]
 enableAutoLinking = false
@@ -361,25 +374,7 @@ enableTicketLinks = false
 enableDocumentLinks = false
 ```
 
-**docker-config/projects/mdt.toml**:
-```toml
-[project]
-name = "Markdown Ticket Board"
-path = "/app"
-configFile = ".mdt-config.toml"
-active = true
-description = "Main project running in Docker container"
-```
-
-**docker-config/projects/debug.toml** (Debug only):
-```toml
-[project]
-name = "DEBUG for markdown project"
-path = "/projects/debug-tasks"
-configFile = ".mdt-config.toml"
-active = true
-description = "Debug project for testing Docker configuration"
-```
+**Note**: No hardcoded project files in `docker-config/projects/`. Projects are mounted dynamically to `/projects/*`.
 
 #### Best Practices
 
