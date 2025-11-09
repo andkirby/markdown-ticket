@@ -130,16 +130,20 @@ export class ProjectService {
     ];
 
     const pathsToSearch = [...new Set([...defaultPaths, ...searchPaths])];
+    console.log('🔍 Auto-discovery scanning paths:', pathsToSearch);
 
     for (const searchPath of pathsToSearch) {
       try {
+        console.log(`🔍 Checking path: ${searchPath}, exists: ${fs.existsSync(searchPath)}`);
         if (fs.existsSync(searchPath)) {
+          console.log(`🔍 Scanning ${searchPath} for projects...`);
           this.scanDirectoryForProjects(searchPath, discovered, 3); // Max depth 3
         }
       } catch (error) {
         console.error(`Error scanning ${searchPath}:`, error);
       }
     }
+    console.log(`🔍 Auto-discovery complete. Found ${discovered.length} projects:`);
 
     return discovered;
   }

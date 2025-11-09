@@ -8,7 +8,7 @@ refreshInterval = 5000
 
 [discovery]
 autoDiscover = true
-searchPaths = "/projects,/app"
+searchPaths = ["/projects"]
 
 [links]
 enableAutoLinking = false

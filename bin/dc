@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+docker-compose \
+--file docker-compose.yml \
+--file docker-compose."${MDT_DOCKER_MODE:-dev}".yml \
+"${@}"
