@@ -1,0 +1,23 @@
+# Markdown Ticket MCP Server Configuration
+# This file was auto-generated on first run
+
+[server]
+port = 8000
+logLevel = "info"
+
+[discovery]
+# Scan paths for auto-discovery of projects
+# Add directories where you keep your projects
+scanPaths = [
+  "/app/data",
+  "/app",
+  "~/projects",
+  "~/work"
+]
+excludePaths = ["node_modules", ".git", "vendor", ".next", "dist", "build", "target"]
+maxDepth = 4
+cacheTimeout = 300
+
+[templates]
+# Custom templates directory (optional)
+# customPath = "~/.config/markdown-ticket/templates"

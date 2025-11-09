@@ -1,0 +1,9 @@
+# Auto-generated registry entry for ${projectName}
+# Created: ${dateCreated}
+
+projectPath = "${projectPath}"
+
+[metadata]
+dateRegistered = "${dateRegistered}"
+lastAccessed = "${lastAccessed}"
+version = "1.0.0"

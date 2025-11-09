@@ -138,6 +138,75 @@ export class ConfigService {
     return path.resolve(inputPath);
   }
 
+  /**
+   * Load global config template from external file
+   */
+  private async loadConfigTemplate(): Promise<string> {
+    try {
+      const templatePath = path.join(__dirname, '../../config-samples/global-config.toml');
+      if (await fs.pathExists(templatePath)) {
+        return await fs.readFile(templatePath, 'utf-8');
+      }
+    } catch (error) {
+      console.warn(`⚠️  Failed to load config template: ${(error as Error).message}`);
+    }
+
+    // Fallback to minimal inline template if external file is not available
+    return `# Markdown Ticket MCP Server Configuration
+# This file was auto-generated on first run
+
+[server]
+port = 8000
+logLevel = "info"
+
+[discovery]
+scanPaths = []
+excludePaths = ["node_modules", ".git", "vendor", ".next", "dist", "build", "target"]
+maxDepth = 4
+cacheTimeout = 300
+
+[templates]
+# customPath = "~/.config/markdown-ticket/templates"
+`;
+  }
+
+  /**
+   * Load project registry template from external file
+   */
+  private async loadProjectRegistryTemplate(projectName: string, projectPath: string): Promise<string> {
+    try {
+      const templatePath = path.join(__dirname, '../../config-samples/project-registry.toml');
+      if (await fs.pathExists(templatePath)) {
+        let template = await fs.readFile(templatePath, 'utf-8');
+        const dateString = new Date().toISOString().split('T')[0];
+
+        // Replace template variables
+        template = template.replace(/\$\{projectName\}/g, projectName);
+        template = template.replace(/\$\{projectPath\}/g, projectPath);
+        template = template.replace(/\$\{dateCreated\}/g, dateString);
+        template = template.replace(/\$\{dateRegistered\}/g, dateString);
+        template = template.replace(/\$\{lastAccessed\}/g, dateString);
+
+        return template;
+      }
+    } catch (error) {
+      console.warn(`⚠️  Failed to load project registry template: ${(error as Error).message}`);
+    }
+
+    // Fallback to minimal inline template if external file is not available
+    const dateString = new Date().toISOString().split('T')[0];
+    return `# Auto-generated registry entry for ${projectName}
+# Created: ${dateString}
+
+projectPath = "${projectPath}"
+
+[metadata]
+dateRegistered = "${dateString}"
+lastAccessed = "${dateString}"
+version = "1.0.0"
+`;
+  }
+
   getConfig(): ServerConfig {
     return this.config;
   }
@@ -151,30 +220,7 @@ export class ConfigService {
 
       // 1. Create a sample global config.toml if it doesn't exist
       if (!await fs.pathExists(CONFIG_PATH)) {
-        const sampleGlobalConfig = `# Markdown Ticket MCP Server Configuration
-# This file was auto-generated on first run
-
-[server]
-port = 8000
-logLevel = "info"
-
-[discovery]
-# Scan paths for auto-discovery of projects
-# Add directories where you keep your projects
-scanPaths = [
-  "/app/data",
-  "/app",
-  "~/projects",
-  "~/work"
-]
-excludePaths = ["node_modules", ".git", "vendor", ".next", "dist", "build", "target"]
-maxDepth = 4
-cacheTimeout = 300
-
-[templates]
-# Custom templates directory (optional)
-# customPath = "~/.config/markdown-ticket/templates"
-`;
+        const sampleGlobalConfig = await this.loadConfigTemplate();
         await fs.outputFile(CONFIG_PATH, sampleGlobalConfig, 'utf-8');
         console.error(`   ✅ Created global config: ${CONFIG_PATH}`);
       }
@@ -249,16 +295,7 @@ cacheTimeout = 300
 
         // Don't overwrite existing registry entries
         if (!await fs.pathExists(registryFilePath)) {
-          const sampleRegistry = `# Auto-generated registry entry for ${projectName}
-# Created: ${new Date().toISOString().split('T')[0]}
-
-projectPath = "${projectPath}"
-
-[metadata]
-dateRegistered = "${new Date().toISOString().split('T')[0]}"
-lastAccessed = "${new Date().toISOString().split('T')[0]}"
-version = "1.0.0"
-`;
+          const sampleRegistry = await this.loadProjectRegistryTemplate(projectName, projectPath);
           await fs.outputFile(registryFilePath, sampleRegistry, 'utf-8');
           console.error(`   ✅ Registered project: ${projectName} (${projectPath})`);
         } else {
