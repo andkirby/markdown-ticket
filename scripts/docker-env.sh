@@ -12,13 +12,14 @@ Docker Environment Management for Markdown Ticket Board
 Usage: $0 [COMMAND]
 
 Commands:
-    dev         Start full development environment (frontend + backend)
+    dev         Start full development environment (all services)
     frontend    Start frontend only
     backend     Start backend only
     mcp         Start MCP server only
-    prod        Start production environment
+    mcp-dev     Start MCP dev tools only
+    prod        Start production environment (all services)
     test        Run E2E tests
-    build       Build all images
+    build       Build all service images
     clean       Stop and remove containers, volumes, and images
     logs        Show logs for all services
     install     Install/update dependencies
@@ -83,36 +84,57 @@ case "${1:-help}" in
     "dev")
         echo "🚀 Starting development environment..."
         ensure_docker
+        echo "📦 Building shared dependencies first..."
+        docker_compose build shared-builder
+        echo "🚀 Starting all services..."
         docker_compose --profile dev up --build
         ;;
 
     "frontend")
         echo "🎨 Starting frontend only..."
         ensure_docker
+        echo "📦 Building shared dependencies first..."
+        docker_compose build shared-builder
         docker_compose --profile frontend up --build frontend
         ;;
 
     "backend")
         echo "⚙️  Starting backend only..."
         ensure_docker
+        echo "📦 Building shared dependencies first..."
+        docker_compose build shared-builder
         docker_compose --profile backend up --build backend
         ;;
 
     "mcp")
         echo "🤖 Starting MCP server..."
         ensure_docker
+        echo "📦 Building shared dependencies first..."
+        docker_compose build shared-builder
         docker_compose --profile mcp up --build mcp-server
+        ;;
+
+    "mcp-dev")
+        echo "🔧 Starting MCP dev tools..."
+        ensure_docker
+        echo "📦 Building shared dependencies first..."
+        docker_compose build shared-builder
+        docker_compose --profile mcp-dev up --build mcp-dev-tools
         ;;
 
     "prod")
         echo "🏭 Starting production environment..."
         ensure_docker
-        docker_compose --profile prod up --build app-prod
+        echo "📦 Building shared dependencies first..."
+        docker_compose build shared-builder
+        docker_compose --profile prod up --build frontend-prod backend-prod mcp-server-prod mcp-dev-tools-prod
         ;;
 
     "test")
         echo "🧪 Running E2E tests..."
         ensure_docker
+        echo "📦 Building shared dependencies first..."
+        docker_compose build shared-builder
         docker_compose --profile test up --build --abort-on-container-exit test
         ;;
 

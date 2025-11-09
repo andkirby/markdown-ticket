@@ -117,7 +117,8 @@ const frontendLoggingPlugin = () => ({
     server.middlewares.use('/api/cache/clear', (req, res, next) => {
       if (req.method === 'POST') {
         // Call backend to clear cache
-        fetch('http://localhost:3001/api/cache/clear', { method: 'POST' })
+        const backendUrl = process.env.VITE_API_BASE_URL || 'http://localhost:3001';
+        fetch(`${backendUrl}/api/cache/clear`, { method: 'POST' })
           .then(response => response.json())
           .then(data => {
             console.log('🔄 Config cache cleared via frontend');
@@ -367,11 +368,11 @@ export default defineConfig({
     allowedHosts: [
       'hungry-days-check.loca.lt',
       '.loca.lt',
-      '.trycloudflare.com', 
+      '.trycloudflare.com',
       'jamir-geochronologic-jocelynn.ngrok-free.app'],
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
       }
