@@ -1,11 +1,11 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { ProjectDiscoveryService } from '../services/projectDiscovery.js';
 import { CRService } from '../services/crService.js';
-import { TemplateService } from '../../../dist/services/TemplateService.js';
-import { MarkdownSectionService } from '../../../dist/services/MarkdownSectionService.js';
-import { MarkdownService } from '../../../dist/services/MarkdownService.js';
-import { TicketFilters, TicketData } from '../../../dist/models/Ticket.js';
-import { CRStatus } from '../../../dist/models/Types.js';
+import { TemplateService } from '@shared/services/TemplateService.js';
+import { MarkdownSectionService } from '@shared/services/MarkdownSectionService.js';
+import { MarkdownService } from '@shared/services/MarkdownService.js';
+import { TicketFilters, TicketData } from '@shared/models/Ticket.js';
+import { CRStatus } from '@shared/models/Types.js';
 import { SimpleContentProcessor } from '../utils/simpleContentProcessor.js';
 import { SimpleSectionValidator } from '../utils/simpleSectionValidator.js';
 

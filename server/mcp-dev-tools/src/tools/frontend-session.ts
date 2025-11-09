@@ -51,7 +51,7 @@ export const getFrontendSessionStatus: Tool = {
 };
 
 export async function handleStartFrontendLogging(args: { frontend_host?: string } = {}): Promise<string> {
-  const host = args.frontend_host || process.env.FRONTEND_URL || 'localhost:5173';
+  const host = args.frontend_host || FRONTEND_URL;
   const frontendUrl = host.startsWith('http') ? host : `http://${host}`;
   
   try {
@@ -72,7 +72,7 @@ export async function handleStartFrontendLogging(args: { frontend_host?: string 
 }
 
 export async function handleStopFrontendLogging(args: { frontend_host?: string } = {}): Promise<string> {
-  const host = args.frontend_host || process.env.FRONTEND_URL || 'localhost:5173';
+  const host = args.frontend_host || FRONTEND_URL;
   const frontendUrl = host.startsWith('http') ? host : `http://${host}`;
   
   try {
@@ -93,7 +93,7 @@ export async function handleStopFrontendLogging(args: { frontend_host?: string }
 }
 
 export async function handleGetFrontendSessionStatus(args: { frontend_host?: string } = {}): Promise<string> {
-  const host = args.frontend_host || process.env.FRONTEND_URL || 'localhost:5173';
+  const host = args.frontend_host || FRONTEND_URL;
   const frontendUrl = host.startsWith('http') ? host : `http://${host}`;
   
   try {

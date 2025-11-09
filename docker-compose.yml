@@ -1,0 +1,95 @@
+# Docker Compose configuration for markdown-ticket application
+# Three-container architecture: frontend, backend, and MCP server
+# See README.docker.md for detailed usage instructions
+#
+# Usage:
+#   Development: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+#   Production:  docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+services:
+  # Frontend Service - React + Vite
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: development
+    container_name: mdt-frontend
+    ports:
+      - "5174:5173"  # Host:Container - use 5174 to avoid conflict with local dev (5173)
+    networks:
+      - mdt-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5173/"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+  # Backend API Service - Express.js
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: development
+    container_name: mdt-backend
+    # Backend is NOT exposed to host - only accessible through Docker network
+    # Frontend accesses backend via Vite proxy: http://backend:3001
+    networks:
+      - mdt-network
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - PORT=3001
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+  # MCP Server - HTTP Transport (MDT-074)
+  mcp:
+    build:
+      context: .
+      dockerfile: mcp-server/Dockerfile
+      target: development
+    container_name: mdt-mcp
+    ports:
+      - "3012:3002"  # Host:Container - using 3012 to avoid conflict with native MCP server
+    networks:
+      - mdt-network
+    environment:
+      # Core MCP Configuration
+      - NODE_ENV=development
+      - MCP_HTTP_ENABLED=true
+      - MCP_HTTP_PORT=3002
+      - MCP_BIND_ADDRESS=0.0.0.0
+      - LOG_LEVEL=debug
+
+      # Cache Configuration
+      - MCP_CACHE_TIMEOUT=300
+
+      # Phase 2 Security (optional, disabled by default)
+      - MCP_SECURITY_ORIGIN_VALIDATION=false
+      - MCP_SECURITY_RATE_LIMITING=false
+      - MCP_SECURITY_AUTH=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+networks:
+  mdt-network:
+    driver: bridge
+    name: mdt-network
+
+# Volumes are configured in override files:
+# - docker-compose.dev.yml: Volume mounts for hot reload
+# - docker-compose.prod.yml: No volume mounts, production builds

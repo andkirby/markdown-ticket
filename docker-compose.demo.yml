@@ -1,0 +1,11 @@
+services:
+  backend:
+    volumes:
+      # Mount debug project directory (testing only)
+      - ./debug-tasks:/projects/debug-tasks
+      - ./:/projects/markdown-ticket
+  mcp:
+    volumes:
+      # Mount debug project directory (testing only)
+      - ./debug-tasks:/projects/debug-tasks
+      - ./:/projects/markdown-ticket

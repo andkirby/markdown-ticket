@@ -1,5 +1,5 @@
 import { readConfig } from './config/configManager';
-import { CounterConfig } from '../shared/models/Counter';
+import { CounterConfig } from '@shared/models/Counter.js';
 
 interface CounterAPIModule {
   getCounterConfig: (config: unknown, keyType: string) => Promise<CounterConfig>;

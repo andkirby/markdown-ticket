@@ -18,7 +18,7 @@
 - **File Watcher-based Project Lifecycle**: Improved automatic detection of project creation, deletion, and configuration changes without requiring manual refresh.
 
 ### Planning & Architecture
-- **MCP Transport Requirements**: Created requirements for future MCP Streamable HTTP transport implementation (MDT-071).
+- ~~**MCP Transport Requirements**: Created requirements for future MCP Streamable HTTP transport implementation (MDT-071 - declined)~~.
 - **Server TypeScript Migration**: Planned migration of server architecture to TypeScript for better type safety (MDT-072).
 - **Docker Infrastructure**: Planned simplification of Docker containerization architecture (MDT-055).
 - **Content Sanitization**: Planned MCP content sanitization with conservative security approach (MDT-068).
