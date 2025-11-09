@@ -23,12 +23,11 @@
     /* Path Mapping */
     "baseUrl": "..",
     "paths": {
-      "@shared/*": ["./shared/dist/*"]
+      "@shared/*": ["./shared/*"]
     }
   },
   "include": [
     "server.ts",
-    "projectDiscovery.ts",
     "fileWatcherService.ts",
     "counterAPI.ts",
     "createSampleTickets.ts",

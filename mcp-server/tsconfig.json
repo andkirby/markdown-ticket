@@ -29,7 +29,7 @@
     /* Path Mapping */
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../shared/dist/*"]
+      "@shared/*": ["../shared/*"]
     }
   },
   "ts-node": {
