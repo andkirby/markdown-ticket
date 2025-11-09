@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 
-docker-compose \
---file docker-compose.yml \
---file docker-compose."${MDT_DOCKER_MODE:-dev}".yml \
-"${@}"
+# Get script directory to work from any location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+# Build docker-compose command arguments
+compose_args=()
+compose_args+=("--file" "$PROJECT_ROOT/docker-compose.yml")
+compose_args+=("--file" "$PROJECT_ROOT/docker-compose.${MDT_DOCKER_MODE:-dev}.yml")
+
+# Auto-join all dc-prj.*.yml files with full paths
+for project_file in "$PROJECT_ROOT"/dc-prj.*.yml; do
+    if [[ -f "$project_file" ]]; then
+        compose_args+=("--file" "$project_file")
+    fi
+done
+
+docker-compose "${compose_args[@]}" "${@}"
