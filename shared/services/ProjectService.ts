@@ -3,27 +3,61 @@ import path from 'path';
 import toml from 'toml';
 import os from 'os';
 import { Project, ProjectConfig, validateProjectConfig } from '../models/Project.js';
+import { Ticket } from '../models/Ticket.js';
 import { CONFIG_FILES } from '../utils/constants.js';
+
+/**
+ * Global configuration interface
+ */
+export interface GlobalConfig {
+  dashboard: {
+    port: number;
+    autoRefresh: boolean;
+    refreshInterval: number;
+  };
+  discovery: {
+    autoDiscover: boolean;
+    searchPaths: string[];
+  };
+}
+
+/**
+ * Project cache interface
+ */
+interface ProjectCache {
+  projects: Project[] | null;
+  timestamp: number;
+  ttl: number;
+}
 
 /**
  * Unified Project Discovery Service
  * Handles project scanning, configuration, and management
+ * Shared across backend and MCP server
  */
 export class ProjectService {
   private globalConfigDir: string;
   private projectsDir: string;
   private globalConfigPath: string;
+  private cache: ProjectCache;
 
   constructor() {
     this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
     this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
+
+    // Initialize cache with 30-second TTL
+    this.cache = {
+      projects: null,
+      timestamp: 0,
+      ttl: 30000 // 30 seconds
+    };
   }
 
   /**
    * Get global dashboard configuration
    */
-  getGlobalConfig() {
+  getGlobalConfig(): GlobalConfig {
     try {
       if (!fs.existsSync(this.globalConfigPath)) {
         return {
@@ -31,9 +65,9 @@ export class ProjectService {
           discovery: { autoDiscover: true, searchPaths: [] }
         };
       }
-      
+
       const configContent = fs.readFileSync(this.globalConfigPath, 'utf8');
-      return toml.parse(configContent);
+      return toml.parse(configContent) as GlobalConfig;
     } catch (error) {
       console.error('Error reading global config:', error);
       return {
@@ -45,6 +79,7 @@ export class ProjectService {
 
   /**
    * Get all registered projects
+   * Reads registry files and merges with local project configs
    */
   getRegisteredProjects(): Project[] {
     try {
@@ -61,16 +96,23 @@ export class ProjectService {
           const projectPath = path.join(this.projectsDir, file);
           const content = fs.readFileSync(projectPath, 'utf8');
           const projectData = toml.parse(content);
-          
-          // Convert to Project interface
+
+          // Read the actual project data from local config file
+          const localConfig = this.getProjectConfig(projectData.project?.path || '');
+
+          // Convert to Project interface, merging registry and local config data
           const project: Project = {
             id: path.basename(file, '.toml'),
             project: {
-              name: projectData.project?.name || 'Unknown Project',
+              name: localConfig?.project?.name || projectData.project?.name || 'Unknown Project',
+              code: localConfig?.project?.code || '',
               path: projectData.project?.path || '',
               configFile: path.join(projectData.project?.path || '', CONFIG_FILES.PROJECT_CONFIG),
+              startNumber: localConfig?.project?.startNumber || 1,
+              counterFile: localConfig?.project?.counterFile || CONFIG_FILES.COUNTER_FILE,
               active: projectData.project?.active !== false,
-              description: projectData.project?.description || ''
+              description: localConfig?.project?.description || projectData.project?.description || '',
+              repository: localConfig?.project?.repository || ''
             },
             metadata: {
               dateRegistered: projectData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
@@ -283,11 +325,108 @@ export class ProjectService {
   }
 
   /**
+   * Get all projects (registered + auto-discovered)
+   * Uses cache with 30-second TTL for performance
+   */
+  async getAllProjects(): Promise<Project[]> {
+    const now = Date.now();
+
+    // Return cached results if still valid
+    if (this.cache.projects && (now - this.cache.timestamp) < this.cache.ttl) {
+      return this.cache.projects;
+    }
+
+    // Get registered projects
+    const registered = this.getRegisteredProjects();
+
+    // Check if auto-discovery is enabled
+    const globalConfig = this.getGlobalConfig();
+    console.log('🔧 Global config:', JSON.stringify(globalConfig, null, 2));
+
+    if (globalConfig.discovery?.autoDiscover) {
+      const searchPaths = globalConfig.discovery?.searchPaths || [];
+      console.log('🔧 Auto-discovery enabled with searchPaths:', searchPaths);
+      const discovered = this.autoDiscoverProjects(searchPaths);
+      console.log('🔧 > Discovered projects:', discovered.length);
+
+      // Create sets for both path and id to avoid duplicates
+      const registeredPaths = new Set(registered.map(p => p.project.path));
+      const registeredIds = new Set(registered.map(p => p.id));
+
+      const uniqueDiscovered = discovered.filter((p: Project) =>
+        !registeredPaths.has(p.project.path) && !registeredIds.has(p.id)
+      );
+
+      // Combine and deduplicate by id (in case of any remaining duplicates)
+      const allProjects = [...registered, ...uniqueDiscovered];
+      const seenIds = new Set<string>();
+
+      const result = allProjects.filter(project => {
+        if (seenIds.has(project.id)) {
+          return false;
+        }
+        seenIds.add(project.id);
+        return true;
+      });
+
+      // Cache the result
+      this.cache.projects = result;
+      this.cache.timestamp = now;
+
+      return result;
+    } else {
+      console.log('‼️ Projects auto discover disabled..');
+    }
+
+    // Cache registered projects too
+    this.cache.projects = registered;
+    this.cache.timestamp = now;
+    return registered;
+  }
+
+  /**
+   * Clear the project cache
+   * Forces next getAllProjects() call to refresh
+   */
+  clearCache(): void {
+    this.cache.projects = null;
+    this.cache.timestamp = 0;
+  }
+
+  /**
+   * Get CRs for a specific project using shared MarkdownService
+   */
+  async getProjectCRs(projectPath: string): Promise<Ticket[]> {
+    try {
+      const config = this.getProjectConfig(projectPath);
+      if (!config || !config.project) {
+        return [];
+      }
+
+      const crPath = config.project.path || 'docs/CRs';
+      const fullCRPath = path.resolve(projectPath, crPath);
+
+      if (!fs.existsSync(fullCRPath)) {
+        return [];
+      }
+
+      // Use shared MarkdownService for consistent parsing
+      // Dynamic import to avoid circular dependencies
+      const sharedModule = await import('./MarkdownService.js');
+      const { MarkdownService } = sharedModule;
+      return await MarkdownService.scanMarkdownFiles(fullCRPath, projectPath);
+    } catch (error) {
+      console.error(`Error getting CRs for project ${projectPath}:`, error);
+      return [];
+    }
+  }
+
+  /**
    * Simple TOML serializer for project data
    */
   private objectToToml(obj: any): string {
     let toml = '';
-    
+
     for (const [section, data] of Object.entries(obj)) {
       toml += `[${section}]\n`;
       for (const [key, value] of Object.entries(data as any)) {
@@ -301,7 +440,7 @@ export class ProjectService {
       }
       toml += '\n';
     }
-    
+
     return toml;
   }
 }

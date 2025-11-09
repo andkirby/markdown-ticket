@@ -31,7 +31,7 @@ interface FileInvokerAdapter {
 
 // Services
 import FileWatcherService from './fileWatcherService';
-import ProjectDiscoveryService from './projectDiscovery';
+import { ProjectService as SharedProjectService } from '@shared/services/ProjectService.js';
 import { ProjectService } from './services/ProjectService';
 import { TicketService } from './services/TicketService';
 import { DocumentService } from './services/DocumentService';
@@ -83,7 +83,7 @@ setupLogInterception();
 
 // Core services
 const fileWatcher = new FileWatcherService();
-const projectDiscovery = new ProjectDiscoveryService();
+const projectDiscovery = new SharedProjectService();
 
 // Business logic services
 const projectService = new ProjectService(projectDiscovery as ProjectDiscoveryAdapter);
