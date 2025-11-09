@@ -1,0 +1,58 @@
+{
+  "Bug Fix": {
+    "type": "Bug Fix",
+    "file": "bug-fix.md",
+    "requiredFields": ["title", "description", "priority"],
+    "sections": [
+      { "name": "Problem Statement", "required": true, "placeholder": "Describe the bug with clear reproduction steps" },
+      { "name": "Current Behavior", "required": true, "placeholder": "What's actually happening (wrong behavior)" },
+      { "name": "Expected Behavior", "required": true, "placeholder": "What should happen instead" },
+      { "name": "Root Cause Analysis", "required": false, "placeholder": "Why this bug exists - fill after investigation" },
+      { "name": "Impact Assessment", "required": true, "placeholder": "User impact, system stability, data integrity" }
+    ]
+  },
+  "Architecture": {
+    "type": "Architecture",
+    "file": "architecture.md",
+    "requiredFields": ["title", "description", "rationale"],
+    "sections": [
+      { "name": "Problem Statement", "required": true, "placeholder": "What architectural challenge needs to be addressed?" },
+      { "name": "Proposed Solution", "required": true, "placeholder": "High-level architectural approach" },
+      { "name": "Design Rationale", "required": true, "placeholder": "Why this approach over alternatives" },
+      { "name": "Impact Analysis", "required": true, "placeholder": "System-wide implications and dependencies" }
+    ]
+  },
+  "Feature Enhancement": {
+    "type": "Feature Enhancement", 
+    "file": "feature-enhancement.md",
+    "requiredFields": ["title", "description"],
+    "sections": [
+      { "name": "Feature Description", "required": true, "placeholder": "What new functionality is being added?" },
+      { "name": "User Stories", "required": true, "placeholder": "As a [user], I want [goal] so that [benefit]" },
+      { "name": "Acceptance Criteria", "required": true, "placeholder": "Specific, testable requirements" },
+      { "name": "Technical Approach", "required": false, "placeholder": "Implementation strategy and considerations" }
+    ]
+  },
+  "Technical Debt": {
+    "type": "Technical Debt",
+    "file": "technical-debt.md", 
+    "requiredFields": ["title", "description", "rationale"],
+    "sections": [
+      { "name": "Current State", "required": true, "placeholder": "What technical debt exists?" },
+      { "name": "Problems Caused", "required": true, "placeholder": "How does this debt impact development/maintenance?" },
+      { "name": "Proposed Improvements", "required": true, "placeholder": "What changes will address the debt?" },
+      { "name": "Benefits", "required": true, "placeholder": "How will this improve the codebase?" }
+    ]
+  },
+  "Documentation": {
+    "type": "Documentation",
+    "file": "documentation.md",
+    "requiredFields": ["title", "description"],
+    "sections": [
+      { "name": "Documentation Gap", "required": true, "placeholder": "What documentation is missing or outdated?" },
+      { "name": "Target Audience", "required": true, "placeholder": "Who will use this documentation?" },
+      { "name": "Content Outline", "required": true, "placeholder": "Key topics and structure to cover" },
+      { "name": "Success Criteria", "required": true, "placeholder": "How will we know the documentation is effective?" }
+    ]
+  }
+}

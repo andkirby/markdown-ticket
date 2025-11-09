@@ -1,0 +1,10 @@
+# Project Registry Template
+# Used for auto-registering discovered projects
+
+projectPath = "{{PROJECT_PATH}}"
+
+[metadata]
+dateRegistered = "{{DATE_REGISTERED}}"
+lastAccessed = "{{DATE_ACCESSED}}"
+version = "1.0.0"
+source = "auto-discovery"

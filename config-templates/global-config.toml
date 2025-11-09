@@ -1,0 +1,24 @@
+# Markdown Ticket Global Configuration
+# This file was auto-generated during container initialization
+
+[dashboard]
+port = 3002
+autoRefresh = true
+refreshInterval = 5000
+
+[discovery]
+autoDiscover = true
+searchPaths = [
+    "/app/sample-projects",
+    "/app/projects",
+    "/app/data",
+    "/app",
+    "/workspace"
+]
+
+[server]
+logLevel = "info"
+
+[templates]
+# Custom templates directory
+# customPath = "/config/markdown-ticket/templates"

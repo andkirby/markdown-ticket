@@ -129,8 +129,7 @@ export class ProjectDiscoveryService {
               console.error(`   ✅ ${project.id} - ${project.project.name} (legacy)`);
               this.projects.set(project.id, project);
 
-              // Auto-register discovered projects to registry for backend compatibility
-              await this.createRegistryEntry(project);
+              // Note: Auto-registration is now handled by backend server
             }
           } catch (error) {
             console.warn(`Failed to load config file ${configFile}:`, error);
@@ -224,11 +223,17 @@ export class ProjectDiscoveryService {
       projectPath = this.expandPath(projectPath);
 
       // Find the project's config file
-      const configFiles = await glob('*-config.toml', {
-        cwd: projectPath,
-        absolute: true,
-        dot: true
-      });
+      let configFiles: string[];
+      try {
+        configFiles = await glob('*-config.toml', {
+          cwd: projectPath,
+          absolute: true,
+          dot: true
+        });
+      } catch (error) {
+        console.warn(`Failed to scan project directory ${projectPath}: ${(error as Error).message}`);
+        return null;
+      }
 
       if (configFiles.length === 0) {
         console.warn(`No config file found in project: ${projectPath}`);
@@ -362,82 +367,6 @@ export class ProjectDiscoveryService {
     return paths;
   }
 
-  /**
-   * Create a registry entry for a discovered project
-   */
-  private async createRegistryEntry(project: Project): Promise<void> {
-    try {
-      const registryPath = this.config.discovery.registryPath;
-      await fs.ensureDir(registryPath);
-
-      const registryFileName = `${project.id.toLowerCase().replace(/[^a-z0-9]/g, '-')}.toml`;
-      const registryFilePath = path.join(registryPath, registryFileName);
-
-      // Don't overwrite existing registry entries
-      if (!await fs.pathExists(registryFilePath)) {
-        // Determine project path from config file location
-        let projectPath = path.dirname(project.project.configFile || '');
-
-        // Handle mounted config file case: if config is at /app/project-root/.mdt-config.toml,
-        // we need to find the actual project location by checking scan paths
-        if (projectPath === '/app/project-root') {
-          // Look for the project in scan paths based on project code/name
-          const dockerAwarePaths = this.getDockerAwarePaths(this.config.discovery.scanPaths || []);
-          for (const scanPath of dockerAwarePaths) {
-            try {
-              // Look for config files that match this project
-              const configFiles = await glob('**/.mdt-config.toml', {
-                cwd: scanPath,
-                absolute: true,
-                ignore: this.config.discovery.excludePaths.map(p => `**/${p}/**`)
-              });
-
-              for (const configFile of configFiles) {
-                try {
-                  const configContent = await fs.readFile(configFile, 'utf-8');
-                  const config = toml.parse(configContent);
-
-                  if (config.project && (
-                    config.project.code === project.project.code ||
-                    config.project.name === project.project.name
-                  )) {
-                    projectPath = path.dirname(configFile);
-                    console.error(`   🔍 Found actual project path: ${projectPath}`);
-                    break;
-                  }
-                } catch (error) {
-                  // Skip invalid config files
-                }
-              }
-
-              if (projectPath !== '/app/project-root') {
-                break; // Found the actual path
-              }
-            } catch (error) {
-              // Skip invalid scan paths
-            }
-          }
-        }
-
-        const registryContent = `# Auto-registered project discovered during scan
-# Project: ${project.project.name}
-# Created: ${new Date().toISOString().split('T')[0]}
-
-projectPath = "${projectPath}"
-
-[metadata]
-dateRegistered = "${new Date().toISOString().split('T')[0]}"
-lastAccessed = "${new Date().toISOString().split('T')[0]}"
-version = "1.0.0"
-source = "auto-discovery"
-`;
-        await fs.outputFile(registryFilePath, registryContent, 'utf-8');
-        console.error(`   📝 Auto-registered: ${registryFileName} -> ${projectPath}`);
-      }
-    } catch (error) {
-      console.error(`   ⚠️  Failed to create registry entry for ${project.id}: ${(error as Error).message}`);
-    }
-  }
 
   async invalidateCache(): Promise<void> {
     this.lastScan = null;

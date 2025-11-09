@@ -15,6 +15,28 @@ services:
       - prod
       - test
 
+  # Config Initializer - Sets up global configuration once before other services
+  config-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    environment:
+      - MDT_CONFIG_DIR=/config/markdown-ticket
+    volumes:
+      - user_config:/config  # Mount user_config volume to /config
+      - ./config-templates:/app/config-templates:ro  # Read-only config templates
+      - ./scripts:/app/scripts:ro  # Read-only scripts
+    command: ["./scripts/init-config.sh"]
+    restart: "no"  # Run once, don't restart
+    profiles:
+      - dev
+      - frontend
+      - backend
+      - mcp
+      - prod
+      - test
+
   # Frontend - React + Vite
   frontend:
     build:
@@ -58,9 +80,12 @@ services:
       - user_config:/root/.config  # Global configuration
       - project_data:/app/data  # Project data persistence
       - ./server/sample-projects:/app/sample-projects  # Sample projects for registry access
+      - ./projects:/app/projects  # User projects directory
       - ./.mdt-config.toml:/app/project-root/.mdt-config.toml:ro  # Project root config for discovery
     depends_on:
       shared-builder:
+        condition: service_completed_successfully
+      config-init:
         condition: service_completed_successfully
     profiles:
       - dev
@@ -85,6 +110,8 @@ services:
       - ./.mdt-config.toml:/app/project-root/.mdt-config.toml:ro  # Project root config for discovery
     depends_on:
       shared-builder:
+        condition: service_completed_successfully
+      config-init:
         condition: service_completed_successfully
     profiles:
       - dev
@@ -137,6 +164,9 @@ services:
     volumes:
       - user_config:/root/.config  # Global configuration
       - project_data:/app/data  # Project data persistence
+    depends_on:
+      config-init:
+        condition: service_completed_successfully
     profiles:
       - prod
 
@@ -152,6 +182,9 @@ services:
     volumes:
       - user_config:/root/.config  # Global configuration
       - project_data:/app/data  # Project data access
+    depends_on:
+      config-init:
+        condition: service_completed_successfully
     profiles:
       - prod
 

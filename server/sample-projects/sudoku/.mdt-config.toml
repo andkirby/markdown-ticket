@@ -1,8 +1,0 @@
-[project]
-code = "SUD"
-name = "Sudoku Game Project"
-cr_path = "docs/CRs"
-repository = "local"
-
-[counter]
-next = 1

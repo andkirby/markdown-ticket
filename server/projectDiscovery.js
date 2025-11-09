@@ -144,25 +144,30 @@ class ProjectDiscoveryService {
    */
   async getAllProjects() {
     const registered = this.getRegisteredProjects();
-    
+
     const globalConfig = this.getGlobalConfig();
-    
+
     if (globalConfig.discovery?.autoDiscover) {
       const searchPaths = globalConfig.discovery?.searchPaths || [];
       const discovered = this.sharedProjectService.autoDiscoverProjects(searchPaths);
-      
+
       // Create sets for both path and id to avoid duplicates
       const registeredPaths = new Set(registered.map(p => p.project.path));
       const registeredIds = new Set(registered.map(p => p.id));
-      
-      const uniqueDiscovered = discovered.filter(p => 
+
+      const uniqueDiscovered = discovered.filter(p =>
         !registeredPaths.has(p.project.path) && !registeredIds.has(p.id)
       );
-      
+
+      // Auto-register newly discovered projects
+      for (const project of uniqueDiscovered) {
+        await this.registerDiscoveredProject(project);
+      }
+
       // Combine and deduplicate by id (in case of any remaining duplicates)
       const allProjects = [...registered, ...uniqueDiscovered];
       const seenIds = new Set();
-      
+
       return allProjects.filter(project => {
         if (seenIds.has(project.id)) {
           return false;
@@ -171,8 +176,47 @@ class ProjectDiscoveryService {
         return true;
       });
     }
-    
+
     return registered;
+  }
+
+  /**
+   * Register a discovered project in the global registry
+   */
+  async registerDiscoveredProject(project) {
+    try {
+      const registryFileName = `${project.id.toLowerCase().replace(/[^a-z0-9]/g, '-')}.toml`;
+      const registryFilePath = path.join(this.projectsDir, registryFileName);
+
+      // Don't overwrite existing registry entries
+      if (!fs.existsSync(registryFilePath)) {
+        // Determine project path from the project data
+        const projectPath = path.dirname(project.project.configFile || '');
+
+        const registryContent = `# Auto-registered project discovered during backend scan
+# Project: ${project.project.name}
+# Created: ${new Date().toISOString().split('T')[0]}
+
+projectPath = "${projectPath}"
+
+[metadata]
+dateRegistered = "${new Date().toISOString().split('T')[0]}"
+lastAccessed = "${new Date().toISOString().split('T')[0]}"
+version = "1.0.0"
+source = "backend-auto-discovery"
+`;
+
+        // Ensure directory exists
+        if (!fs.existsSync(this.projectsDir)) {
+          fs.mkdirSync(this.projectsDir, { recursive: true });
+        }
+
+        fs.writeFileSync(registryFilePath, registryContent, 'utf-8');
+        console.log(`📝 Auto-registered project: ${project.project.name} (${projectPath})`);
+      }
+    } catch (error) {
+      console.error(`⚠️  Failed to register project ${project.id}: ${error.message}`);
+    }
   }
 
   /**
