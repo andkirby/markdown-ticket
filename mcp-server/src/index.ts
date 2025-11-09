@@ -11,7 +11,7 @@ import { ConfigService } from './config/index.js';
 import { ProjectDiscoveryService } from './services/projectDiscovery.js';
 import { CRService } from './services/crService.js';
 // @ts-ignore
-import { TemplateService } from '../../dist/services/TemplateService.js';
+import { TemplateService } from '../../../shared/services/TemplateService.js';
 import { MCPTools } from './tools/index.js';
 
 class MCPCRServer {

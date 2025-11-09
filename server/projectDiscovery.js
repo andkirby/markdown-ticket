@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import toml from 'toml';
+import toml from '@iarna/toml';
 import os from 'os';
-import { MarkdownService } from '../dist/services/MarkdownService.js';
-import { ProjectService } from '../dist/services/ProjectService.js';
+import { MarkdownService } from '/app/shared-dist/services/MarkdownService.js';
+import { ProjectService } from '/app/shared-dist/services/ProjectService.js';
 
 const CONFIG_FILES = {
   PROJECT_CONFIG: '.mdt-config.toml',
@@ -18,6 +18,15 @@ class ProjectDiscoveryService {
   constructor() {
     this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
+
+    // Check for nested path (temporary fix for path mismatch issue)
+    const nestedProjectsDir = path.join(this.globalConfigDir, 'markdown-ticket', 'projects');
+    if (!fs.existsSync(this.projectsDir) && fs.existsSync(nestedProjectsDir)) {
+      console.log(`📁 Using nested projects directory: ${nestedProjectsDir}`);
+      this.projectsDir = nestedProjectsDir;
+      this.globalConfigDir = path.join(this.globalConfigDir, 'markdown-ticket');
+    }
+
     this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
     this.sharedProjectService = new ProjectService();
   }
@@ -60,19 +69,21 @@ class ProjectDiscoveryService {
 
       for (const file of projectFiles) {
         try {
-          const projectPath = path.join(this.projectsDir, file);
-          const content = fs.readFileSync(projectPath, 'utf8');
+          const registryFilePath = path.join(this.projectsDir, file);
+          const content = fs.readFileSync(registryFilePath, 'utf8');
           const projectData = toml.parse(content);
-          
+
           // Read the actual project data from local config file
-          const localConfig = this.getProjectConfig(projectData.project?.path || '');
+          // Handle both registry formats: projectData.projectPath (new) and projectData.project?.path (legacy)
+          const projectPath = projectData.projectPath || projectData.project?.path || '';
+          const localConfig = this.getProjectConfig(projectPath);
           
           const project = {
             id: path.basename(file, '.toml'),
             project: {
               name: localConfig?.project?.name || projectData.project?.name || 'Unknown Project',
-              path: projectData.project?.path || '',
-              configFile: path.join(projectData.project?.path || '', CONFIG_FILES.PROJECT_CONFIG),
+              path: projectPath, // Use the resolved projectPath instead of the missing projectData.project.path
+              configFile: path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG),
               active: projectData.project?.active !== false,
               description: localConfig?.project?.description || projectData.project?.description || '',
               code: localConfig?.project?.code || '',
@@ -133,25 +144,30 @@ class ProjectDiscoveryService {
    */
   async getAllProjects() {
     const registered = this.getRegisteredProjects();
-    
+
     const globalConfig = this.getGlobalConfig();
-    
+
     if (globalConfig.discovery?.autoDiscover) {
       const searchPaths = globalConfig.discovery?.searchPaths || [];
       const discovered = this.sharedProjectService.autoDiscoverProjects(searchPaths);
-      
+
       // Create sets for both path and id to avoid duplicates
       const registeredPaths = new Set(registered.map(p => p.project.path));
       const registeredIds = new Set(registered.map(p => p.id));
-      
-      const uniqueDiscovered = discovered.filter(p => 
+
+      const uniqueDiscovered = discovered.filter(p =>
         !registeredPaths.has(p.project.path) && !registeredIds.has(p.id)
       );
-      
+
+      // Auto-register newly discovered projects
+      for (const project of uniqueDiscovered) {
+        await this.registerDiscoveredProject(project);
+      }
+
       // Combine and deduplicate by id (in case of any remaining duplicates)
       const allProjects = [...registered, ...uniqueDiscovered];
       const seenIds = new Set();
-      
+
       return allProjects.filter(project => {
         if (seenIds.has(project.id)) {
           return false;
@@ -160,8 +176,47 @@ class ProjectDiscoveryService {
         return true;
       });
     }
-    
+
     return registered;
+  }
+
+  /**
+   * Register a discovered project in the global registry
+   */
+  async registerDiscoveredProject(project) {
+    try {
+      const registryFileName = `${project.id.toLowerCase().replace(/[^a-z0-9]/g, '-')}.toml`;
+      const registryFilePath = path.join(this.projectsDir, registryFileName);
+
+      // Don't overwrite existing registry entries
+      if (!fs.existsSync(registryFilePath)) {
+        // Determine project path from the project data
+        const projectPath = path.dirname(project.project.configFile || '');
+
+        const registryContent = `# Auto-registered project discovered during backend scan
+# Project: ${project.project.name}
+# Created: ${new Date().toISOString().split('T')[0]}
+
+projectPath = "${projectPath}"
+
+[metadata]
+dateRegistered = "${new Date().toISOString().split('T')[0]}"
+lastAccessed = "${new Date().toISOString().split('T')[0]}"
+version = "1.0.0"
+source = "backend-auto-discovery"
+`;
+
+        // Ensure directory exists
+        if (!fs.existsSync(this.projectsDir)) {
+          fs.mkdirSync(this.projectsDir, { recursive: true });
+        }
+
+        fs.writeFileSync(registryFilePath, registryContent, 'utf-8');
+        console.log(`📝 Auto-registered project: ${project.project.name} (${projectPath})`);
+      }
+    } catch (error) {
+      console.error(`⚠️  Failed to register project ${project.id}: ${error.message}`);
+    }
   }
 
   /**

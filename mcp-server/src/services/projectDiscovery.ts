@@ -3,9 +3,9 @@ import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
 import * as toml from 'toml';
-import { ProjectInfo } from '../../../dist/models/Types.js';
-import { Project } from '../../../dist/models/Project.js';
-import { ServerConfig } from '../../../dist/models/Config.js';
+import { ProjectInfo } from '../../../shared/models/Types.js';
+import { Project } from '../../../shared/models/Project.js';
+import { ServerConfig } from '../../../shared/models/Config.js';
 
 export class ProjectDiscoveryService {
   private projects: Map<string, Project> = new Map();
@@ -86,7 +86,11 @@ export class ProjectDiscoveryService {
 
     console.error(`🔎 Discovering from ${this.config.discovery.scanPaths.length} legacy scan path(s)...`);
 
-    for (const scanPath of this.config.discovery.scanPaths) {
+    // Add Docker-aware paths to scan paths
+    const dockerAwarePaths = this.getDockerAwarePaths(this.config.discovery.scanPaths);
+    console.error(`   📦 Including ${dockerAwarePaths.length - this.config.discovery.scanPaths.length} Docker-aware paths`);
+
+    for (const scanPath of dockerAwarePaths) {
       try {
         const stats = await stat(scanPath);
         if (!stats.isDirectory()) {
@@ -124,6 +128,8 @@ export class ProjectDiscoveryService {
               // Only add if not already discovered via registry
               console.error(`   ✅ ${project.id} - ${project.project.name} (legacy)`);
               this.projects.set(project.id, project);
+
+              // Note: Auto-registration is now handled by backend server
             }
           } catch (error) {
             console.warn(`Failed to load config file ${configFile}:`, error);
@@ -217,11 +223,17 @@ export class ProjectDiscoveryService {
       projectPath = this.expandPath(projectPath);
 
       // Find the project's config file
-      const configFiles = await glob('*-config.toml', {
-        cwd: projectPath,
-        absolute: true,
-        dot: true
-      });
+      let configFiles: string[];
+      try {
+        configFiles = await glob('*-config.toml', {
+          cwd: projectPath,
+          absolute: true,
+          dot: true
+        });
+      } catch (error) {
+        console.warn(`Failed to scan project directory ${projectPath}: ${(error as Error).message}`);
+        return null;
+      }
 
       if (configFiles.length === 0) {
         console.warn(`No config file found in project: ${projectPath}`);
@@ -315,6 +327,46 @@ export class ProjectDiscoveryService {
     }
     return path.resolve(inputPath);
   }
+
+  /**
+   * Add Docker-aware paths to scan paths for better auto-discovery in containerized environments
+   */
+  private getDockerAwarePaths(originalPaths: string[]): string[] {
+    const paths = [...originalPaths.map(p => this.expandPath(p))];
+    const addedPaths = new Set(paths);
+
+    // Docker environment detection and path mapping
+    const dockerPaths = [
+      '/app/data',          // Common mounted project data
+      '/app/sample-projects',  // Sample projects mount
+      '/app',               // Current app directory
+      '/workspace',         // Common workspace mount
+      '/project',           // Alternative project mount
+    ];
+
+    // Add Docker paths if they don't already exist in the list
+    for (const dockerPath of dockerPaths) {
+      if (!addedPaths.has(dockerPath)) {
+        paths.push(dockerPath);
+        addedPaths.add(dockerPath);
+      }
+    }
+
+    // If we detect we're in a container (common indicators), prioritize container paths
+    const isInContainer = process.env.container ||
+                         process.env.DOCKER_CONTAINER ||
+                         process.cwd().startsWith('/app');
+
+    if (isInContainer) {
+      // Move Docker-specific paths to the front for priority scanning
+      const dockerSpecific = paths.filter(p => p.startsWith('/app') || p.startsWith('/workspace'));
+      const others = paths.filter(p => !p.startsWith('/app') && !p.startsWith('/workspace'));
+      return [...dockerSpecific, ...others];
+    }
+
+    return paths;
+  }
+
 
   async invalidateCache(): Promise<void> {
     this.lastScan = null;

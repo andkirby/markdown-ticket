@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as toml from 'toml';
 // @ts-ignore
-import { DEFAULT_PATHS } from '../../../dist/utils/constants.js';
+import { DEFAULT_PATHS } from '../../../shared/utils/constants.js';
 
 /**
  * Server configuration with merged approach.
@@ -138,9 +138,11 @@ export class ConfigService {
     return path.resolve(inputPath);
   }
 
+
   getConfig(): ServerConfig {
     return this.config;
   }
+
 
   async validateConfig(): Promise<{valid: boolean, errors: string[], warnings: string[]}> {
     const errors: string[] = [];
@@ -164,14 +166,9 @@ export class ConfigService {
     if (!this.config.discovery) {
       errors.push('discovery configuration section is missing');
     } else {
-      // Check if registry path exists (create if not)
+      // Check if registry path exists (should be created by init container)
       if (!await fs.pathExists(this.config.discovery.registryPath)) {
-        warnings.push(`Registry path does not exist, will be created: ${this.config.discovery.registryPath}`);
-        try {
-          await fs.ensureDir(this.config.discovery.registryPath);
-        } catch (error) {
-          errors.push(`Failed to create registry path: ${(error as Error).message}`);
-        }
+        warnings.push(`Registry path does not exist (should be created by init container): ${this.config.discovery.registryPath}`);
       }
 
       // Validate scanPaths

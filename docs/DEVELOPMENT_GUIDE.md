@@ -1,33 +1,72 @@
 # Development Guide
 
-Complete guide for developing and contributing to the Markdown Ticket Board project.
+Complete guide for developing and contributing to the Markdown Ticket Board project with auto-discovery, Docker containers, and MCP integration.
 
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
-- npm or yarn
+- **Docker & Docker Compose** (recommended)
+- OR Node.js 20+ and npm (local development)
 
-### Installation
+### Docker Installation (Recommended)
 ```bash
 git clone <repository-url>
 cd markdown-ticket
-npm install
+
+# Start complete development environment
+./scripts/docker-env.sh dev
+```
+
+### Local Installation
+```bash
+git clone <repository-url>
+cd markdown-ticket
+npm install                    # Root dependencies
+cd server && npm install      # Backend dependencies
+cd ../mcp-server && npm install  # MCP server dependencies
 ```
 
 ## Development Environment
 
-### Frontend Development
+### Docker Development (Recommended)
 ```bash
-npm run dev          # Start development server (http://localhost:5173)
-npm run build        # Build for production
-npm run preview      # Preview production build
+# Full development environment
+./scripts/docker-env.sh dev        # All services (frontend, backend, MCP server)
+
+# Individual services
+./scripts/docker-env.sh frontend   # Frontend only (port 5173)
+./scripts/docker-env.sh backend    # Backend only (port 3001)
+./scripts/docker-env.sh mcp        # MCP server only
+./scripts/docker-env.sh mcp-dev    # MCP dev tools only
+
+# Management commands
+./scripts/docker-env.sh build      # Build all images
+./scripts/docker-env.sh clean      # Clean containers/volumes
+./scripts/docker-env.sh logs       # View logs
 ```
 
-### Backend Development
+### Local Development
 ```bash
-cd server
-node server.js       # Start backend server (http://localhost:3001)
+# Build shared dependencies first
+npm run build:shared
+
+# Frontend Development
+npm run dev                    # Development server (port 5173)
+npm run build                  # Production build
+npm run preview                # Preview production build
+
+# Backend Development
+npm run dev:server             # Development server (port 3001)
+# OR individually:
+cd server && npm run dev       # Backend with nodemon
+
+# MCP Server Development
+cd mcp-server && npm run dev   # MCP server development mode
+cd mcp-server && npm run build # Build MCP server
+
+# Combined Development
+npm run dev:full               # Frontend + Backend (builds shared automatically)
+```
 ```
 
 ### Full Development Setup
