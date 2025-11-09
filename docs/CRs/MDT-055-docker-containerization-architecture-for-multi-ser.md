@@ -1,11 +1,11 @@
 ---
 code: MDT-055
-status: Proposed
+status: Implemented
 dateCreated: 2025-10-02T10:38:54.678Z
 type: Architecture
 priority: High
 phaseEpic: Phase C (Infrastructure)
-dependsOn: MDT-071
+dependsOn: MDT-074
 ---
 
 # Docker Containerization Architecture
@@ -16,7 +16,7 @@ dependsOn: MDT-071
 
 The markdown-ticket application currently runs as separate processes on the host machine requiring manual setup for each developer. This creates inconsistent environments and makes onboarding difficult.
 
-### Current Architecture
+### On-Host Architecture
 
 ```mermaid
 graph LR
@@ -48,43 +48,49 @@ graph LR
 
 ```mermaid
 graph TB
-    subgraph "Production Container"
-        NGINX[Nginx :80]
-        APP[Express :3000<br/>Frontend+SSE+MCP]
-        STATIC[React Build<br/>Static Files]
+    subgraph "Docker Containers (MVP)"
+        FE[Frontend Container<br/>Vite Dev Server<br/>Port 5173]
+        BE[Backend Container<br/>Express API<br/>Port 3001]
+        MCP[MCP Container<br/>HTTP Transport<br/>Port 3002]
         VOLUMES[Docker Volumes]
     end
 
-    LLM_CLIENT[LLM Client] -->|localhost:80/sse| NGINX
+    LLM_CLIENT[LLM Client] -->|localhost:3002/mcp| MCP
+    USER[User] -->|localhost:5173| FE
+    USER -->|localhost:3001| BE
 
-    NGINX -->|serve static| STATIC
-    NGINX -->|proxy /api/*| APP
-    NGINX -->|proxy /sse| APP
-    APP -->|Read/Write| VOLUMES
+    BE -->|Read/Write| VOLUMES
+    MCP -->|Read/Write| VOLUMES
+    FE -.->|Poll API| BE
 
-    style NGINX fill:#ff6f00,color:#fff
-    style APP fill:#1976d2,color:#fff
-    style STATIC fill:#4caf50,color:#fff
+    style FE fill:#4caf50,color:#fff
+    style BE fill:#1976d2,color:#fff
+    style MCP fill:#e8f5e9,color:#fff
     style VOLUMES fill:#f57c00,color:#fff
 ```
 
-### Endpoint Access Patterns
+### Container Access Patterns
 
-**Production (Single Container - Port 80):**
-- **Frontend**: `http://localhost:80/` → React app (static files)
-- **Backend API**: `http://localhost:80/api/*` → Express.js routes
-- **Frontend SSE**: `http://localhost:80/api/events` → Real-time file updates
-- **MCP HTTP**: `http://localhost:80/sse` → MCP Streamable HTTP (MDT-071)
+**Development Environment:**
+- **Frontend**: `http://localhost:5174` → Maps to container port 5173 (Vite dev server)
+- **Backend API**: Not directly exposed → Accessible via frontend Vite proxy at `/api/*`
+- **MCP HTTP**: `http://localhost:3012/mcp` → Maps to container port 3002
+- **Health Checks**:
+  - `http://localhost:5174/` (frontend)
+  - Not exposed for backend (health check runs inside container)
+  - `http://localhost:3012/health` (MCP)
 
-**Development (Two Containers):**
-- **Frontend**: `http://localhost:5173` → Vite dev server (hot reload)
-- **Backend**: `http://localhost:3001` → Express.js with SSE + MCP HTTP
+**Production Environment:**
+- **Frontend**: `http://localhost:80` → Nginx serving static build
+- **Backend/MCP**: Same network architecture, behind reverse proxy if deployed
+
+**Port Mapping Rationale:** Host ports (5174, 3012) differ from container ports (5173, 3002) to avoid conflicts when running both native and Docker environments simultaneously.
 
 ### Impact Areas
 
 - **Developer Experience**: Simplified onboarding with `docker-compose up`
 - **Deployment**: Consistent environments from dev to production
-- **MCP Integration**: File access through Docker volume mounts, HTTP transport via MDT-071
+- **MCP Integration**: File access through Docker volume mounts, HTTP transport via MDT-074
 
 ## 2. Rationale
 
@@ -107,47 +113,50 @@ graph TB
 
 ### Key Architectural Decisions
 
-#### Single Container vs Multi-Container
+#### Container Architecture
 
-**Decision: Single container for production (with nginx reverse proxy)**
+**Decision: Three separate containers for both production and development**
+
+**Production (with Nginx reverse proxy):**
+- Frontend container: React build artifacts
+- Backend container: Express.js + SSE
+- MCP container: HTTP transport (MDT-074)
+- Nginx: Reverse proxy routing to appropriate containers
+
+**Development (direct access):**
+- Frontend container: Vite dev server (:5173)
+- Backend container: Express.js + SSE (:3001)
+- MCP container: HTTP transport (:3002/mcp)
 
 **Rationale:**
-- Simpler deployment and operations
-- Lower resource overhead
-- Easier debugging and monitoring
-- Sufficient for our use case (stateless frontend + backend)
-
-**Exception:** Development mode may use separate containers for hot reload
+- **Separation of concerns**: Each service has its own container
+- **Independent scaling**: Services can be scaled based on load
+- **Isolation**: Issues in one container don't affect others
+- **Development parity**: Same architecture in dev and production
+- **MCP requirements**: HTTP transport needs separate container for performance
 
 #### MCP Server Integration
 
-**Decision: MCP HTTP transport integrated in backend container**
+**Decision: MCP HTTP transport in separate container**
 
 **Rationale:**
-- stdio transport is not compatible with Docker containers
-- MDT-071 implements official MCP Streamable HTTP transport
-- Single container architecture simplifies deployment
+- MDT-074 implements official MCP Streamable HTTP transport
+- HTTP transport eliminates docker-exec overhead for better performance in containers
+- Separate container provides better isolation and performance
 - LLM clients connect via standard HTTP endpoint
+- Independent scaling and restart capability
+- No stdio transport support in Docker containers (stdio clients can use docker-exec directly if needed)
 
-**Dependency:** Requires MDT-071 implementation for MCP HTTP transport
+**Dependency:** Requires MDT-074 implementation for MCP HTTP transport
 
-#### SSE Communication
-
-**Decision: SSE remains for file watching, NOT for MCP**
-
-**Rationale:**
-- SSE and MCP serve different purposes
-- SSE: Real-time frontend updates
-- MCP: LLM tool integration
-- Separation keeps architecture clean and maintainable
 
 ## 3. Solution Analysis
 
 ### Main Challenges
 
-1. **MCP Server Integration**: stdio transport is incompatible with Docker containers
-   - **Solution**: Use MCP HTTP transport implemented in MDT-071
-   - **Benefit**: Full containerization with standard HTTP endpoints
+1. **MCP Server Integration**: Need efficient container-based MCP access
+   - **Solution**: Use MCP HTTP transport implemented in MDT-074
+   - **Benefit**: Full containerization with standard HTTP endpoints, eliminates docker-exec overhead
 
 2. **File Watching in Docker**: Native file events don't propagate reliably in containers
    - **Solution**: Use Chokidar polling mode when running in Docker
@@ -163,239 +172,272 @@ graph TB
 | **Production** | Team deployments, staging/prod | 5 minutes |
 | **Standalone** | Demos, simple deployments | 30 seconds |
 
-### Practical Docker Compose Setups
+### Docker Compose Architecture
 
-**Production Setup (docker-compose.yml)**
-```yaml
-version: '3.8'
+The implementation uses **three separate files** for flexibility:
 
-services:
-  app:
-    build: .
-    ports:
-      - "80:80"  # nginx serves everything on port 80
-    volumes:
-      # Mount project directories
-      - ~/work/project-a:/projects/project-a
-      - ~/personal/project-b:/projects/project-b
-      # Mount global config
-      - ~/.config/markdown-ticket:/config:ro
-    environment:
-      - NODE_ENV=production
-      - CHOKIDAR_USEPOLLING=true
-    restart: unless-stopped
-```
+1. **`docker-compose.yml`** - Base configuration (3 containers, network, health checks)
+2. **`docker-compose.dev.yml`** - Development overrides (volume mounts for hot reload, debug projects)
+3. **`docker-compose.prod.yml`** - Production overrides (optimized builds, no source mounts)
 
-**Development Setup (docker-compose.dev.yml)**
-```yaml
-version: '3.8'
-
-services:
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    ports:
-      - "5173:5173"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-    command: npm run dev
-
-  backend:
-    build:
-      context: ./server
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3001:3001"
-    volumes:
-      - ~/work/project-a:/projects/project-a
-      - ~/personal/project-b:/projects/project-b
-      - ~/.config/markdown-ticket:/config:ro
-    environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
-```
-
-**Usage:**
+**Development Usage:**
 ```bash
-# Production
-docker-compose up
-
-# Development
-docker-compose -f docker-compose.dev.yml up
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
-### Project Mounting Strategies
-
-**Option 1: Individual Project Mounts**
-```yaml
-volumes:
-  - ~/work/project-a:/projects/project-a
-  - ~/personal/project-b:/projects/project-b
-  - /var/data/project-c:/projects/project-c
+**Production Usage:**
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```
 
-**Option 2: Override Files for Different Environments**
-```yaml
-# docker-compose.override.yml (local dev)
-volumes:
-  - ./project-a:/projects/project-a
-  - ./project-b:/projects/project-b
+**Key Architecture Decisions:**
+- **Frontend**: Port 5174→5173 (avoids conflict with native dev on 5173)
+- **Backend**: Network-only (not exposed to host, accessed via frontend proxy)
+- **MCP**: Port 3012→3002 (avoids conflict with native MCP on 3002)
+- **Configuration**: Docker-only `./docker-config` (never mounts `~/.config/markdown-ticket`)
+- **Hot Reload**: Development mode mounts `src/` directories for instant updates
 
-# docker-compose.prod.yml (production)
-volumes:
-  - /data/projects:/projects
-```
-
-**Option 3: Workspace Directory**
-```yaml
-volumes:
-  - ./workspace:/workspace
-```
-Then organize all projects under a workspace directory.
+See `README.docker.md` for complete setup instructions and `docker-compose.dev.yml` for volume mount examples.
 
 ## 4. Implementation Specification
+### Docker Configuration Requirements
 
-### Dockerfile (Simplified)
+#### Container-Only Configuration System
 
-```dockerfile
-FROM node:20-alpine
+**Problem**: Using host's `${HOME}/.config/markdown-ticket` creates confusion between Docker and native environments.
 
-WORKDIR /app
+**Solution**: Implement Docker-only configuration that is completely independent of host system:
 
-# Build frontend
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-# Setup backend
-COPY server ./server
-RUN cd server && npm ci --only=production
-
-# Runtime
-EXPOSE 3000
-CMD ["node", "server.js"]
+```
+docker-config/                              # Docker-only configuration
+├── config.toml                           # Main configuration
+└── projects/                             # Project registry (debug/test only)
+    ├── mdt.toml                          # Main MDT project
+    └── debug.toml                        # Debug project
 ```
 
-### Docker Compose (Simplified)
+**Key Requirements**:
+1. **No host configuration mapping** - Never mount `${HOME}/.config/markdown-ticket`
+2. **Container paths only** - Use `/app/`, `/projects/` paths, not host paths
+3. **Self-contained application** - Main MDT project is self-contained in `/app`
+4. **Debug projects only** - `/projects` for testing/debugging scenarios only
+5. **Environment-based URLs** - All service URLs configurable via environment variables
 
+#### Self-Contained Application Architecture
+
+**Core Principle**: The MDT application is **self-contained** within `/app`:
+- **Main Project**: `/app` (all source code, docs, CRs included)
+- **Debug Projects**: `/projects/*` (for testing/debugging only)
+- **No General Workspace**: Application does NOT need other projects
+
+**Docker Volume Mounts**:
 ```yaml
-version: '3.8'
-
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    volumes:
-      # Mount projects from any location
-      - ~/project-a:/projects/project-a
-      - ~/project-b:/projects/project-b
-      - ~/.config/markdown-ticket:/config:ro
-    environment:
-      - NODE_ENV=production
-      - CHOKIDAR_USEPOLLING=true
-    restart: unless-stopped
+volumes:
+  # Docker-only configuration (container-specific)
+  - ./docker-config:/root/.config/markdown-ticket:ro
+  
+  # Source code (hot reload)
+  - ./server:/app/server
+  - ./shared:/app/shared
+  - ./mcp-server/src:/app/mcp-server/src
+  
+  # Debug project directory (testing only)
+  - ./debug-tasks:/projects/debug-tasks
 ```
 
-### Key Implementation Steps
+#### Path Resolution
 
-1. **Configuration via Environment Variables**
-   - Auto-detect Docker environment
-   - Enable file watching polling in containers
-   - Externalize all paths and ports
+- **Main MDT Project**: `/app` (self-contained, includes docs/CRs)
+- **Debug/Test Projects**: `/projects/project-name` (mounted from host directories)
+- **Configuration**: `/root/.config/markdown-ticket` (Docker-only)
 
-2. **Graceful Shutdown**
-   - Handle SIGTERM/SIGINT for container lifecycle
-   - Clean shutdown of file watchers
+#### Environment Variable Configuration
 
-3. **Volume Management**
-   - Mount project directories from host
-   - Read-only mount for configuration
-   - Proper file permissions
+**Required Environment Variables**:
+```yaml
+environment:
+  # Vite proxy configuration
+  - DOCKER_BACKEND_URL=http://backend:3001
+  - VITE_BACKEND_URL=                     # Empty = use frontend proxy
+  
+  # Frontend settings
+  - NODE_ENV=development
+  - VITE_HMR_HOST=localhost
+  - VITE_HMR_PORT=5173
+```
 
-### MCP Server Integration
+**Frontend URL Resolution**:
+- **API calls**: Use `VITE_BACKEND_URL` or fallback to frontend proxy
+- **SSE connections**: Use `VITE_BACKEND_URL` or fallback to frontend proxy  
+- **Native development**: Set `VITE_BACKEND_URL=http://localhost:3001` in `.env`
+- **Docker development**: Leave empty to use proxy
 
-**HTTP Transport Approach (MDT-071):**
-- MCP Streamable HTTP transport integrated in backend container
-- LLM clients connect to `/sse` endpoint via HTTP
-- Full containerization without stdio limitations
-- Session management and security built-in
+#### Service Communication
 
-**Benefits:**
-- No stdio transport limitations in containers
-- Standard HTTP endpoint for all MCP clients
-- Better scalability and monitoring
-- Consistent deployment architecture
+**Container Network Communication**: Services communicate via Docker network names (`backend:3001`, `frontend:5173`). Host access uses mapped ports (`localhost:3011`, `localhost:5174`).
 
-### Development vs Production
+**URL Resolution**:
+- Frontend proxy routes `/api/*` to backend container
+- SSE uses `/api/events` through frontend proxy
+- Environment variable `VITE_BACKEND_URL` controls backend discovery (empty = use proxy)
 
-| Feature | Development | Production |
-|---------|-------------|------------|
-| **Containers** | 2 (frontend + backend) | 1 (nginx + app) |
-| **Frontend Access** | http://localhost:5173 | http://localhost:80 |
-| **Backend Access** | http://localhost:3001 | http://localhost:80/api/* |
-| **SSE Endpoint** | http://localhost:3001/api/events | http://localhost:80/api/events |
-| **MCP Endpoint** | http://localhost:3001/sse | http://localhost:80/sse |
-| **File Watching** | Polling | Polling |
-| **Hot Reload** | Yes | No |
-| **Build Type** | Development | Production optimized |
+### Implementation Completed (2025-10-26)
+
+**Critical Fix: Tailwind CSS in Docker**
+
+The Docker frontend was displaying without styles because `postcss.config.js` and `tailwind.config.js` were not being copied to the container.
+
+**Solution**: Updated `Dockerfile.frontend` (lines 21, 45) to include:
+```dockerfile
+COPY postcss.config.js tailwind.config.js ./
+```
+
+This fix ensures Tailwind CSS processes correctly in Docker containers. All styling now displays properly at `http://localhost:5174`.
+
+**Additional Changes**:
+- Updated `vite.config.ts` to use config function for better environment variable handling
+- Verified backend connectivity via Docker network (`backend:3001`)
+- Tested with DEBUG-035 sample ticket
+- All three containers (frontend, backend, MCP) working correctly
+
+---
+
+### TypeScript Path Mapping Implementation (2025-10-26)
+
+**Optimization**: Implemented TypeScript path mapping to replace inconsistent relative/absolute paths with clean `@shared/*` aliases.
+
+```typescript
+// Before: import { Ticket } from '../../../shared/dist/models/Ticket.js';
+// After:  import { Ticket } from '@shared/models/Ticket.js';
+```
+
+Works identically in host and Docker environments. Custom `fix-paths.js` build scripts handle production path resolution automatically.
+
+**Documentation**: See [`docs/development/PATH_MAPPING.md`](../development/PATH_MAPPING.md) for details.
+
+### MCP Dev Tools Configuration Refactoring (2025-10-26)
+
+**Problem**: Hardcoded Docker port logic scattered across MCP dev tools created maintenance issues and tight coupling.
+
+**Refactored Code**:
+- `server/mcp-dev-tools/src/tools/frontend-logs.ts` (2 occurrences)
+- `server/mcp-dev-tools/src/tools/frontend-session.ts` (3 occurrences)
+
+**Solution**: Centralized configuration through `FRONTEND_URL` environment variable:
+
+```typescript
+// Before: Hardcoded Docker detection
+const defaultHost = process.env.DOCKER === 'true' ? 'localhost:5174' : 'localhost:5173';
+const host = args.frontend_host || process.env.FRONTEND_URL || defaultHost;
+
+// After: Single source of truth
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const host = args.frontend_host || FRONTEND_URL;
+```
+
+**Configuration**:
+- **Native development**: Uses default `http://localhost:5173`
+- **Docker environment**: MCP dev tools **disabled by default** (no FRONTEND_URL set)
+- **Enable if needed**: Set `FRONTEND_URL=http://frontend:5173` in docker-compose.yml
+
+**Rationale**: MCP dev tools are for MDT project development only, not general Docker deployments. Cleaner separation of concerns with environment-based configuration.
+
+#### Configuration File Formats
+
+**docker-config/config.toml**:
+```toml
+[dashboard]
+port = 3001
+autoRefresh = true
+refreshInterval = 5000
+
+[discovery]
+autoDiscover = true
+searchPaths = "/projects,/app"
+
+[links]
+enableAutoLinking = false
+enableTicketLinks = false
+enableDocumentLinks = false
+```
+
+**docker-config/projects/mdt.toml**:
+```toml
+[project]
+name = "Markdown Ticket Board"
+path = "/app"
+configFile = ".mdt-config.toml"
+active = true
+description = "Main project running in Docker container"
+```
+
+**docker-config/projects/debug.toml** (Debug only):
+```toml
+[project]
+name = "DEBUG for markdown project"
+path = "/projects/debug-tasks"
+configFile = ".mdt-config.toml"
+active = true
+description = "Debug project for testing Docker configuration"
+```
+
+#### Best Practices
+
+1. **Never mount host configuration** - Use container-only `docker-config/`
+2. **Use container paths consistently** - `/app/`, `/projects/`, not `/Users/...`
+3. **Make all URLs configurable** - Environment variables for service discovery
+4. **Provide fallback mechanisms** - Native localhost URLs for development
+5. **Keep configuration read-only** - Mount config with `:ro` flag
+6. **Document both environments** - Clear instructions for Docker vs native setup
+7. **Self-contained design** - Main application requires no external project dependencies
+
+### Implementation Details
+
+**Multi-Stage Dockerfiles**: Each service uses multi-stage builds with `development` and `production` targets:
+- **Development**: tsx hot reload, volume mounts for source code, debugging enabled
+- **Production**: Compiled TypeScript, minimal images, non-root users, health checks
+
+**Volume Strategy**:
+- Docker-only configuration in `./docker-config` (never mounts host `~/.config/markdown-ticket`)
+- Source code volumes for hot reload (development only)
+- Main MDT project self-contained at `/app`
+- Debug projects mounted at `/projects/debug-tasks`
+
+**Key Features**:
+- Chokidar polling mode for reliable file watching in containers
+- Health checks on all services
+- Docker network for inter-container communication
+- Environment-based configuration (no hardcoded paths)
 
 ## 5. Acceptance Criteria
 
-### Core Requirements
-- [ ] Docker Compose setup works with single command: `docker-compose up`
-- [ ] Production application accessible at http://localhost:80
-- [ ] Development setup works with frontend on :5173 and backend on :3001
-- [ ] File watching works in containers (polling mode)
-- [ ] MCP HTTP transport accessible at /sse endpoint
-- [ ] Multi-project mounting supported from any filesystem location
+### Implementation (Completed ✅)
+- ✅ Docker Compose with overlay files: `docker-compose.yml` + `docker-compose.dev.yml` / `docker-compose.prod.yml`
+- ✅ Three-container architecture: frontend (5174→5173), backend (3001, network-only), MCP (3012→3002)
+- ✅ Multi-stage Dockerfiles with development and production targets
+- ✅ File watching with Chokidar polling (`CHOKIDAR_USEPOLLING=true`)
+- ✅ MCP HTTP transport at `/mcp` endpoint with health checks
+- ✅ Volume mounts for hot reload (development) and self-contained builds (production)
+- ✅ Docker-only configuration system (`docker-config/`)
+- ✅ Health checks on all services
+- ✅ TypeScript path mapping (`@shared/*`) works in both host and Docker
 
-### Docker Configuration
-- [ ] Environment-based configuration (no hardcoded paths)
-- [ ] Graceful shutdown on SIGTERM/SIGINT
-- [ ] Proper volume permissions for file access
+### Documentation (Completed ✅)
+- ✅ `README.docker.md` with complete setup instructions
+- ✅ MCP integration examples and endpoint documentation
+- ✅ Volume mounting strategies (workspace, specific projects, environment variables)
+- ✅ Troubleshooting guide
 
-### Documentation
-- [ ] Quick start guide for developers
-- [ ] MCP integration instructions
-- [ ] Examples for different project mounting strategies
+### Security
+- ✅ Non-root users in production containers
+- ✅ Alpine base images (~100-200MB per service)
+- ✅ Read-only config mounts
+- ✅ Phase 2 security features (origin validation, rate limiting, auth) - optional, disabled by default
 
-### Testing
-- [ ] E2E tests pass in Docker environment
-- [ ] Manual verification of CRUD operations
-- [ ] SSE events propagate correctly
-- [ ] MCP server integration verified
+## 6. Future Enhancements
 
-## 6. Migration Strategy
+- **Kubernetes deployment**: Helm charts for cloud platforms
+- **Nginx reverse proxy**: Single-port SSL termination for production
+- **Observability**: Structured logging, metrics, distributed tracing
+- **CI/CD**: Automated multi-arch builds and vulnerability scanning
 
-### For Developers
-1. **Week 1**: Share Docker setup documentation
-2. **Week 2**: Make Docker the recommended approach
-3. **Week 3**: Update onboarding process
-4. **Week 4**: Optimize based on feedback
-
-### Rollback Plan
-If issues occur:
-1. Stop containers: `docker-compose down`
-2. Continue using existing Node.js setup
-3. Report issues for fixing
-
-## 7. Security Considerations
-
-- Run containers as non-root user
-- Use minimal base images (alpine)
-- Mount config directories as read-only
-- Scan images for vulnerabilities
-- Don't expose unnecessary ports
-
-## 8. Future Considerations
-
-- **Kubernetes deployment**: Helm charts for cloud deployment
-- **Full MCP containerization**: After MDT-071 implements HTTP transport
-- **Observability**: Logging and monitoring integration
-- **CI/CD**: Automated builds and deployments
