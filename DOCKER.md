@@ -29,6 +29,10 @@ open http://localhost:5173
 
 ### Environment Management
 
+The main script provides complete Docker-based development:
+
+- **`./scripts/docker-env.sh`** - Environment management (start/stop/build containers)
+
 ```bash
 # Start complete development environment (recommended)
 ./scripts/docker-env.sh dev
@@ -60,6 +64,58 @@ open http://localhost:5173
 
 # Install dependencies
 ./scripts/docker-env.sh install
+```
+
+### Running Commands in Containers
+
+For running commands inside containers, use `docker-compose exec` directly:
+
+```bash
+# NPM commands in specific services
+docker-compose exec frontend npm install
+docker-compose exec frontend npm run build
+docker-compose exec backend npm run create-samples
+docker-compose exec mcp-server npm run dev
+
+# Access service shells
+docker-compose exec app-dev sh             # General development shell
+docker-compose exec frontend sh            # Frontend-specific shell
+docker-compose exec backend sh             # Backend-specific shell
+docker-compose exec mcp-server sh          # MCP server shell
+
+# View service logs
+docker-compose logs frontend               # Frontend logs
+docker-compose logs backend                # Backend logs
+docker-compose logs -f app-dev             # Follow all dev logs
+```
+
+### Project Management
+
+```bash
+# Project setup is done manually by creating configuration files
+# See "First Time Setup" and "Multi-Project Setup" sections below
+
+# Sample data management
+./scripts/docker-env.sh create-samples      # Create sample tickets
+docker-compose exec backend npm run create-samples  # Direct npm approach
+```
+
+### Development Tasks
+
+```bash
+# Install/update dependencies
+./scripts/docker-env.sh install
+
+# Run npm commands (for active containers)
+docker-compose exec frontend npm install react-router-dom
+docker-compose exec frontend npm run build
+
+# Run linting
+docker-compose exec frontend npm run lint
+
+# Run tests
+./scripts/docker-env.sh test        # E2E tests (starts test environment)
+docker-compose exec backend npm test    # Backend unit tests
 ```
 
 ## Auto-Discovery System
@@ -210,6 +266,42 @@ docker exec markdown-ticket-backend-1 ls -la /root/.config/markdown-ticket/proje
 docker exec markdown-ticket-backend-1 ls -la /app/sample-projects/
 ```
 
+### Port Conflicts
+If ports 5173 or 3001 are already in use:
+
+1. Stop the conflicting services
+2. Or modify ports in `docker-compose.yml`
+
+### File Watching Issues
+File watching should work automatically with `CHOKIDAR_USEPOLLING=true`. If you experience issues:
+
+1. Restart the development environment:
+   ```bash
+   ./scripts/docker-env.sh reset
+   ```
+
+### Permission Issues
+If you encounter permission issues:
+
+1. Check file ownership:
+   ```bash
+   docker-compose exec app-dev sh
+   ls -la /app
+   ```
+
+2. Fix permissions if needed:
+   ```bash
+   sudo chown -R $(id -u):$(id -g) .
+   ```
+
+### Clean Slate
+To completely reset the environment:
+
+```bash
+./scripts/docker-env.sh clean
+./scripts/docker-env.sh reset
+```
+
 ### Container Issues
 
 ```bash
@@ -305,6 +397,113 @@ docker-compose --profile prod up --build
 3. **Use .dockerignore**: Exclude unnecessary files from build context
 4. **Layer caching**: Dependencies are cached in separate layers
 5. **Volume mounts**: Source code changes don't require rebuilds
+
+## Data Persistence
+
+### Ticket Files
+Ticket files are stored directly in your project directory structure and mounted into containers. This provides better visibility and direct access to your files.
+
+### Accessing Ticket Files
+```bash
+# Files are directly accessible on your host machine:
+ls docs/CRs/                    # Main project tickets
+ls projects/*/docs/CRs/         # Sub-project tickets
+
+# Or access via container shell:
+docker-compose exec app-dev sh
+ls /app/docs/CRs/               # Current project
+ls /app/projects/*/docs/CRs/    # All projects
+```
+
+### Backup/Restore Tickets
+Since tickets are stored directly in your project directories, you can use standard file operations:
+
+```bash
+# Backup entire project structure
+cp -r . backup-$(date +%Y%m%d)
+
+# Backup specific project tickets
+cp -r projects/my-api/docs/CRs ./backup-my-api-tickets
+
+# Recreate sample tickets if needed
+./scripts/docker-env.sh create-samples
+```
+
+### Adding Dependencies
+
+```bash
+# Frontend dependencies
+docker-compose exec frontend npm install package-name
+
+# Backend dependencies
+docker-compose exec backend npm install package-name
+
+# MCP server dependencies
+docker-compose exec mcp-server npm install package-name
+```
+
+### Running Tests
+
+```bash
+# Run E2E tests
+./scripts/docker-env.sh test
+
+# Run backend tests
+docker-compose exec backend npm test
+
+# Run MCP server tests
+docker-compose exec mcp-server npm test
+```
+
+## VS Code Integration
+
+### Development in Container
+If using VS Code, you can develop directly in the container:
+
+1. Install the "Dev Containers" extension
+2. Open the project folder
+3. Use "Reopen in Container" command
+
+### Dockerfile for VS Code
+Create `.devcontainer/devcontainer.json`:
+
+```json
+{
+  "name": "Markdown Ticket Board",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app-dev",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-playwright.playwright"
+      ]
+    }
+  }
+}
+```
+
+## Environment Variables
+
+Common environment variables you can set in `docker-compose.yml`:
+
+```yaml
+environment:
+  - NODE_ENV=development
+  - CHOKIDAR_USEPOLLING=true  # Enable file watching
+  - PORT=3001                 # Backend port
+  - FRONTEND_PORT=5173        # Frontend port
+```
+
+## Tips
+
+1. **Use the scripts**: Always use `./scripts/docker-env.sh` for consistency
+2. **Persistent volumes**: Your ticket data persists between container restarts
+3. **Hot reload**: Both frontend and backend support hot reload
+4. **Clean regularly**: Use `clean` command to free up Docker space
+5. **Shell access**: Use `docker-compose exec <service> sh` to debug issues inside containers
 
 ## Security Considerations
 

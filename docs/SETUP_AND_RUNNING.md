@@ -409,36 +409,40 @@ server {
 
 ### Docker Deployment
 
-The project uses a unified multi-stage Dockerfile for both development and production deployments.
+#### Dockerfile for Backend
 
-#### Quick Docker Setup
+```dockerfile
+FROM node:18-alpine
 
-```bash
-# Development environment
-./scripts/docker-env.sh dev
+WORKDIR /app
+COPY server/package*.json ./
+RUN npm ci --only=production
 
-# Production environment
-./scripts/docker-env.sh prod
+COPY server/ .
+EXPOSE 3001
 
-# Build production image directly
-docker build --target runner -t markdown-ticket:prod .
+CMD ["npm", "start"]
 ```
 
-#### Production Deployment
+#### Dockerfile for Frontend
 
-```bash
-# Build production image
-docker build --target runner -t markdown-ticket:latest .
+```dockerfile
+FROM node:18-alpine as builder
 
-# Run production container
-docker run -d \
-  -p 3001:3001 \
-  -v ticket_data:/app/docs/CRs \
-  --name markdown-ticket-prod \
-  markdown-ticket:latest
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 ```
-
-For comprehensive Docker documentation, see [DOCKER.md](../DOCKER.md).
 
 ### Environment-Specific Configuration
 

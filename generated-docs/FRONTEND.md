@@ -346,19 +346,15 @@ npm run deploy
 - Environment variables: Configure API endpoints
 
 #### Docker Deployment
-
-The project uses a unified multi-stage Dockerfile. For frontend development:
-
-```bash
-# Development with hot reload
-docker build --target frontend -t mdt-frontend .
-docker run -p 5173:5173 -v .:/app mdt-frontend
-
-# Or use the development scripts
-./scripts/docker-env.sh frontend
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY dist ./dist
+EXPOSE 5173
+CMD ["npm", "run", "preview"]
 ```
-
-See [DOCKER.md](../DOCKER.md) for complete Docker documentation.
 
 ### Browser Compatibility
 
