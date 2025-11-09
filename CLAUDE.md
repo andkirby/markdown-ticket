@@ -28,13 +28,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **HTTP Transport** (optional): Enable with `MCP_HTTP_ENABLED=true`, provides HTTP/JSON-RPC endpoint at `http://localhost:3002/mcp`
   - Eliminates docker-exec overhead in containerized deployments
   - Implements MCP Streamable HTTP specification (2025-06-18)
-  - Supports both GET (health check) and POST (JSON-RPC requests)
-  - Environment variables:
-    - `MCP_HTTP_ENABLED=true` - Enable HTTP transport
-    - `MCP_HTTP_PORT=3002` - HTTP port (default: 3002)
-    - `MCP_BIND_ADDRESS=127.0.0.1` - Bind address (use 0.0.0.0 for Docker)
-    - `MCP_SECURITY_ORIGIN_VALIDATION=true` - Enable origin validation (optional)
-    - `MCP_ALLOWED_ORIGINS=http://localhost:5173` - Comma-separated allowed origins (optional)
+  - Endpoints: POST /mcp (JSON-RPC), GET /mcp (SSE streaming), GET /health, DELETE /mcp (session deletion)
+
+**Phase 2 Features (all optional, disabled by default):**
+- **Session Management**: Mcp-Session-Id header for stateful connections
+- **SSE Streaming**: GET /mcp for real-time server-initiated messages
+- **Rate Limiting**: Prevent abuse with configurable request limits
+- **Authentication**: Bearer token authentication for secure access
+- **Origin Validation**: DNS rebinding protection
+
+**Environment Variables:**
+
+Core:
+- `MCP_HTTP_ENABLED=true` - Enable HTTP transport
+- `MCP_HTTP_PORT=3002` - HTTP port (default: 3002)
+- `MCP_BIND_ADDRESS=127.0.0.1` - Bind address (use 0.0.0.0 for Docker)
+
+Phase 2 Security (all optional):
+- `MCP_SESSION_TIMEOUT_MS=1800000` - Session timeout in ms (default: 30 min)
+- `MCP_SECURITY_ORIGIN_VALIDATION=true` - Enable origin validation
+- `MCP_ALLOWED_ORIGINS=http://localhost:5173` - Comma-separated allowed origins
+- `MCP_SECURITY_RATE_LIMITING=true` - Enable rate limiting
+- `MCP_RATE_LIMIT_MAX=100` - Max requests per window (default: 100)
+- `MCP_RATE_LIMIT_WINDOW_MS=60000` - Rate limit window in ms (default: 1 min)
+- `MCP_SECURITY_AUTH=true` - Enable Bearer token authentication
+- `MCP_AUTH_TOKEN=your-token` - Required auth token
 
 ### Full Stack Development
 - `npm run dev:full` - **RECOMMENDED** - Builds shared code and starts both frontend and backend concurrently

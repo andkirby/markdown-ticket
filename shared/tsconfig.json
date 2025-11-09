@@ -9,15 +9,17 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": ".",
+    "outDir": "./dist",
     "rootDir": ".",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noImplicitAny": false
   },
   "include": [
     "**/*.ts"
   ],
   "exclude": [
     "**/*.d.ts",
-    "**/*.js"
+    "**/*.js",
+    "dist"
   ]
 }

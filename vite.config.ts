@@ -20,9 +20,9 @@ let devModeLogCount = 0;
 let devModeRateLimitStart = Date.now();
 const devStreamClients = new Set(); // DEV mode SSE clients
 
-// Status endpoint rate limiting
+// Status endpoint rate limiting - reduced for development
 const statusRequestTimes = new Map(); // IP -> last request time
-const STATUS_RATE_LIMIT = 10000; // 10 seconds minimum between requests
+const STATUS_RATE_LIMIT = 2000; // 2 seconds minimum between requests (reduced from 10s)
 
 // Vite plugin for frontend logging endpoints
 const frontendLoggingPlugin = () => ({
@@ -30,25 +30,45 @@ const frontendLoggingPlugin = () => ({
   configureServer(server) {
     server.middlewares.use('/api/frontend/logs/status', (req, res, next) => {
       if (req.method === 'GET') {
-        // Rate limiting for status endpoint
-        const clientIP = req.connection?.remoteAddress || 'unknown';
+        // Rate limiting for status endpoint - improved IP detection for Docker
+        const clientIP = req.headers['x-forwarded-for'] ||
+                        req.headers['x-real-ip'] ||
+                        req.connection?.remoteAddress ||
+                        req.socket?.remoteAddress ||
+                        req.ip ||
+                        'unknown';
         const now = Date.now();
         const lastRequest = statusRequestTimes.get(clientIP);
-        
-        if (lastRequest && (now - lastRequest) < STATUS_RATE_LIMIT) {
-          res.statusCode = 429;
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ error: 'Rate limited' }));
-          return;
-        }
-        
+
+        // Temporarily disable rate limiting for development
+        // if (lastRequest && (now - lastRequest) < STATUS_RATE_LIMIT) {
+        //   const waitTime = STATUS_RATE_LIMIT - (now - lastRequest);
+        //   console.log(`[Frontend Logs] Rate limited IP: ${clientIP}, Last: ${lastRequest}, Now: ${now}, Wait: ${waitTime}ms`);
+        //   res.statusCode = 429;
+        //   res.setHeader('Content-Type', 'application/json');
+        //   res.setHeader('Retry-After', Math.ceil(waitTime / 1000).toString());
+        //   res.end(JSON.stringify({
+        //     error: 'Rate limited',
+        //     waitTime: Math.ceil(waitTime / 1000),
+        //     clientIP: clientIP,
+        //     lastRequest: lastRequest,
+        //     currentTime: now
+        //   }));
+        //   return;
+        // }
+
         statusRequestTimes.set(clientIP, now);
         
+        // Debug logging for rate limiting issues
+        console.log(`[Frontend Logs] Status check from IP: ${clientIP}, Session active: ${frontendSessionActive}`);
+
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ 
+        res.end(JSON.stringify({
           active: frontendSessionActive,
           sessionStart: frontendSessionStart,
-          timeRemaining: frontendSessionActive ? (SESSION_TIMEOUT - (Date.now() - frontendSessionStart)) : null
+          timeRemaining: frontendSessionActive ? (SESSION_TIMEOUT - (Date.now() - frontendSessionStart)) : null,
+          clientIP: clientIP,
+          rateLimit: STATUS_RATE_LIMIT
         }));
       } else {
         next();
@@ -117,7 +137,8 @@ const frontendLoggingPlugin = () => ({
     server.middlewares.use('/api/cache/clear', (req, res, next) => {
       if (req.method === 'POST') {
         // Call backend to clear cache
-        fetch('http://localhost:3001/api/cache/clear', { method: 'POST' })
+        const backendUrl = process.env.DOCKER_BACKEND_URL || 'http://localhost:3001';
+        fetch(`${backendUrl}/api/cache/clear`, { method: 'POST' })
           .then(response => response.json())
           .then(data => {
             console.log('🔄 Config cache cleared via frontend');
@@ -359,22 +380,27 @@ ${scriptTag}
 });
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],
-  server: {
-    host: '0.0.0.0',
-    port: 5173,
-    allowedHosts: [
-      'hungry-days-check.loca.lt',
-      '.loca.lt',
-      '.trycloudflare.com', 
-      'jamir-geochronologic-jocelynn.ngrok-free.app'],
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        secure: false,
+export default defineConfig(({ mode }) => {
+  // In Docker, use backend service name; otherwise use localhost
+  const backendUrl = process.env.DOCKER_BACKEND_URL || 'http://localhost:3001';
+
+  return {
+    plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],
+    server: {
+      host: '0.0.0.0',
+      port: 5173,
+      allowedHosts: [
+        'hungry-days-check.loca.lt',
+        '.loca.lt',
+        '.trycloudflare.com',
+        'jamir-geochronologic-jocelynn.ngrok-free.app'],
+      proxy: {
+        '/api': {
+          target: backendUrl,
+          changeOrigin: true,
+          secure: false,
+        }
       }
     }
-  }
+  };
 })
