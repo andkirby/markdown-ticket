@@ -27,7 +27,7 @@ services:
       - user_config:/config  # Mount user_config volume to /config
       - ./config-templates:/app/config-templates:ro  # Read-only config templates
       - ./scripts:/app/scripts:ro  # Read-only scripts
-    command: ["./scripts/init-config.sh"]
+    command: ["./scripts/init-config.sh", "--auto"]
     restart: "no"  # Run once, don't restart
     profiles:
       - dev
