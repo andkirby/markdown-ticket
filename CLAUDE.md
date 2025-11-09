@@ -42,8 +42,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `./scripts/docker-env.sh test` - Run E2E tests in Docker
 - `./scripts/docker-env.sh build` - Build all Docker images
 - `./scripts/docker-env.sh clean` - Clean up Docker containers and images
-- `./scripts/docker-run.sh <service> <command>` - Run commands in active containers
-- `./scripts/docker-run.sh dev shell` - Open shell in development container
 
 **Docker Benefits**: No need to install Node.js locally, consistent environment, isolated dependencies.
 **Complete Docker Guide**: See [DOCKER.md](DOCKER.md) for comprehensive Docker documentation.

@@ -35,10 +35,9 @@ The project uses a **unified multi-stage Dockerfile** that supports both develop
 
 ## Development Scripts
 
-Two scripts provide complete Docker-based development:
+The main script provides complete Docker-based development:
 
 - **`./scripts/docker-env.sh`** - Environment management (start/stop/build containers)
-- **`./scripts/docker-run.sh`** - Run commands in active containers
 
 ### Environment Management (docker-env.sh)
 
@@ -63,30 +62,27 @@ Two scripts provide complete Docker-based development:
 ./scripts/docker-env.sh install     # Install/update dependencies
 ```
 
-### Running Commands (docker-run.sh)
+### Running Commands in Containers
+
+For running commands inside containers, use `docker-compose exec` directly:
 
 ```bash
 # NPM commands in specific services
-./scripts/docker-run.sh frontend npm install
-./scripts/docker-run.sh frontend npm run build
-./scripts/docker-run.sh backend npm run create-samples
-./scripts/docker-run.sh mcp npm run dev
-./scripts/docker-run.sh mcp-tools npm run health-check
+docker-compose exec frontend npm install
+docker-compose exec frontend npm run build
+docker-compose exec backend npm run create-samples
+docker-compose exec mcp-server npm run dev
 
 # Access service shells
-./scripts/docker-run.sh dev shell           # General development shell
-./scripts/docker-run.sh frontend shell      # Frontend-specific shell
-./scripts/docker-run.sh backend shell       # Backend-specific shell
-./scripts/docker-run.sh mcp shell          # MCP server shell
+docker-compose exec app-dev sh             # General development shell
+docker-compose exec frontend sh            # Frontend-specific shell
+docker-compose exec backend sh             # Backend-specific shell
+docker-compose exec mcp-server sh          # MCP server shell
 
-# View service logs and status
-./scripts/docker-run.sh frontend logs      # Frontend logs only
-./scripts/docker-run.sh backend logs       # Backend logs only
-./scripts/docker-run.sh frontend status    # Service status
-
-# Service aliases (shorter)
-./scripts/docker-run.sh fe npm install     # frontend
-./scripts/docker-run.sh be npm test        # backend
+# View service logs
+docker-compose logs frontend               # Frontend logs
+docker-compose logs backend                # Backend logs
+docker-compose logs -f app-dev             # Follow all dev logs
 ```
 
 ### Project Management
@@ -97,7 +93,7 @@ Two scripts provide complete Docker-based development:
 
 # Sample data management
 ./scripts/docker-env.sh create-samples      # Create sample tickets
-./scripts/docker-run.sh backend npm run create-samples  # Direct npm approach
+docker-compose exec backend npm run create-samples  # Direct npm approach
 ```
 
 ### Development Tasks
@@ -106,16 +102,16 @@ Two scripts provide complete Docker-based development:
 # Install/update dependencies
 ./scripts/docker-env.sh install
 
-# Run npm commands (use docker-run.sh for active containers)
-./scripts/docker-run.sh frontend npm install react-router-dom
-./scripts/docker-run.sh frontend npm run build
+# Run npm commands (for active containers)
+docker-compose exec frontend npm install react-router-dom
+docker-compose exec frontend npm run build
 
 # Run linting
-./scripts/docker-run.sh frontend npm run lint
+docker-compose exec frontend npm run lint
 
 # Run tests
 ./scripts/docker-env.sh test        # E2E tests (starts test environment)
-./scripts/docker-run.sh backend npm test    # Backend unit tests
+docker-compose exec backend npm test    # Backend unit tests
 ```
 
 ### Utilities
@@ -131,14 +127,14 @@ Two scripts provide complete Docker-based development:
 ./scripts/docker-env.sh create-samples     # Create sample tickets
 
 # Service access (requires running containers)
-./scripts/docker-run.sh dev shell          # General development shell
-./scripts/docker-run.sh frontend shell     # Frontend-specific shell
-./scripts/docker-run.sh backend shell      # Backend-specific shell
+docker-compose exec app-dev sh             # General development shell
+docker-compose exec frontend sh            # Frontend-specific shell
+docker-compose exec backend sh             # Backend-specific shell
 
 # Service monitoring (requires running containers)
-./scripts/docker-run.sh frontend logs      # Frontend logs only
-./scripts/docker-run.sh backend logs       # Backend logs only
-./scripts/docker-run.sh frontend status    # Service status
+docker-compose logs frontend               # Frontend logs only
+docker-compose logs backend                # Backend logs only
+docker-compose ps                          # Service status
 ```
 
 ## Docker Architecture
@@ -277,13 +273,13 @@ For working with multiple projects, you can create separate project directories 
 
 ```bash
 # Frontend dependencies
-./scripts/docker-run.sh frontend npm install package-name
+docker-compose exec frontend npm install package-name
 
 # Backend dependencies
-./scripts/docker-run.sh backend npm install package-name
+docker-compose exec backend npm install package-name
 
 # MCP server dependencies
-./scripts/docker-run.sh mcp npm install package-name
+docker-compose exec mcp-server npm install package-name
 ```
 
 ### Running Tests
@@ -293,10 +289,10 @@ For working with multiple projects, you can create separate project directories 
 ./scripts/docker-env.sh test
 
 # Run backend tests
-./scripts/docker-run.sh backend npm test
+docker-compose exec backend npm test
 
 # Run MCP server tests
-./scripts/docker-run.sh mcp npm test
+docker-compose exec mcp-server npm test
 ```
 
 ## Data Persistence
@@ -311,7 +307,7 @@ ls docs/CRs/                    # Main project tickets
 ls projects/*/docs/CRs/         # Sub-project tickets
 
 # Or access via container shell:
-./scripts/docker-run.sh dev shell
+docker-compose exec app-dev sh
 ls /app/docs/CRs/               # Current project
 ls /app/projects/*/docs/CRs/    # All projects
 ```
@@ -351,7 +347,7 @@ If you encounter permission issues:
 
 1. Check file ownership:
    ```bash
-   ./scripts/docker-run.sh dev shell
+   docker-compose exec app-dev sh
    ls -la /app
    ```
 
@@ -470,4 +466,4 @@ environment:
 2. **Persistent volumes**: Your ticket data persists between container restarts
 3. **Hot reload**: Both frontend and backend support hot reload
 4. **Clean regularly**: Use `clean` command to free up Docker space
-5. **Shell access**: Use `./scripts/docker-run.sh <service> shell` to debug issues inside containers
+5. **Shell access**: Use `docker-compose exec <service> sh` to debug issues inside containers
