@@ -48,6 +48,9 @@ junit.xml
 # Logs
 *.log
 
+# Docker customizations
+docker-compose.override.yml
+
 # Temporary files
 tmp/
 temp/

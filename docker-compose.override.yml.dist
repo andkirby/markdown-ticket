@@ -1,0 +1,102 @@
+# Docker Compose Override Example
+#
+# Copy this file to docker-compose.override.yml and customize for your needs.
+# Docker Compose automatically merges override files with the main docker-compose.yml.
+#
+# Usage:
+#   cp docker-compose.override.yml.dist docker-compose.override.yml
+#   # Edit docker-compose.override.yml with your custom settings
+#   docker-compose up --profile dev
+#
+# Alternative usage with custom filename:
+#   docker-compose -f docker-compose.yml -f your-custom.yml up --profile dev
+
+# YAML Anchors - Define reusable configurations to avoid duplication
+# Uncomment and customize these shared configurations:
+
+# Shared project volumes - CRITICAL: Both backend and mcp-server need identical project access
+#x-project-volumes: &project-volumes
+#  - ./local-projects:/app/projects                          # Relative path - projects in repo
+#  - ~/my-markdown-projects:/app/projects                    # Home directory (absolute)
+#  - /Users/username/work/project-a:/app/projects/project-a  # Absolute path (macOS/Linux)
+#  - /c/Users/username/projects:/app/projects                # Windows absolute path (Git Bash)
+#  - ../sibling-projects:/app/projects                       # Relative to parent directory
+#  - /var/data/shared-projects:/app/external-projects        # System directory mount
+
+# Shared environment variables for development
+#x-dev-environment: &dev-environment
+#  NODE_ENV: development
+#  DEBUG: "markdown-ticket:*"
+#  CHOKIDAR_USEPOLLING: "true"
+
+# Shared port overrides (if default ports conflict)
+#x-custom-ports: &custom-ports
+#  frontend-port: &frontend-port "3000:5173"
+#  backend-port: &backend-port "8080:3001"
+
+services:
+  # Frontend customizations
+  frontend:
+#    ports:
+#      - *frontend-port  # Use shared port anchor
+#    environment:
+#      <<: *dev-environment  # Use shared dev environment
+#      VITE_API_BASE_URL: http://localhost:8080  # Override API URL if using custom backend port
+#    volumes:
+#      # Add frontend-specific volumes (not for projects):
+#      - ./frontend-assets:/app/public/custom         # Frontend-only assets directory
+
+  # Backend customizations
+  backend:
+#    ports:
+#      - *backend-port  # Use shared port anchor
+#    environment:
+#      <<: *dev-environment  # Use shared dev environment
+#    volumes: *project-volumes  # CRITICAL: Use shared project volumes
+#      # To add backend-specific volumes, list them manually:
+#      # - ./backend-logs:/app/logs                  # Backend-only logs directory
+
+  # MCP Server customizations - MUST have same project access as backend
+  mcp-server:
+#    environment:
+#      <<: *dev-environment  # Use shared dev environment
+#      MCP_PROJECT_FILTER: my-project-name   # Filter to specific project
+#    volumes: *project-volumes  # CRITICAL: Same project volumes as backend
+#      # To add MCP-specific volumes, list them manually:
+#      # - ./mcp-cache:/app/cache                     # MCP-only cache directory
+
+  # Add a database service (example)
+#  database:
+#    image: postgres:15-alpine
+#    environment:
+#      - POSTGRES_DB=markdown_ticket
+#      - POSTGRES_USER=mdt_user
+#      - POSTGRES_PASSWORD=mdt_password
+#    volumes:
+#      - ./data/postgres:/var/lib/postgresql/data      # Relative path - DB in repo
+#      - ~/database/postgres:/var/lib/postgresql/data  # Home directory (absolute)
+#      - postgres_data:/var/lib/postgresql/data        # Named volume (recommended)
+#    ports:
+#      - "5432:5432"
+#    profiles:
+#      - dev
+#      - prod
+
+  # Add Redis for caching (example)
+#  redis:
+#    image: redis:7-alpine
+#    ports:
+#      - "6379:6379"
+#    profiles:
+#      - dev
+#      - prod
+
+# Custom volumes (uncomment if using database example above)
+#volumes:
+#  postgres_data:
+#    driver: local
+
+# Custom networks (if needed)
+#networks:
+#  custom_network:
+#    driver: bridge
