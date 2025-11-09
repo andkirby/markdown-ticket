@@ -15,7 +15,6 @@ build/
 **/*.js.map
 **/*.d.ts.map
 !/server/**/*.js
-/*.*
 
 # Environment variables
 .env
@@ -52,6 +51,7 @@ junit.xml
 # Temporary files
 tmp/
 temp/
+
 # Legacy path - CRs now stored in docs/CRs/
 # server/tasks
 **/debug-tasks/
@@ -60,9 +60,9 @@ playwright-report
 test-results
 .amazonq
 .mcp.json
-/*.md
 /*.txt
 lambda-counter-aws
 generated-docs/repomix_output.xml
 docs/**/*.md
 /docs/*.*
+/projects/
