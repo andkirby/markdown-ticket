@@ -1,6 +1,0 @@
-[project]
-name = "Markdown Ticket Board"
-path = "/app"
-configFile = ".mdt-config.toml"
-active = true
-description = "Main project running in Docker container"

@@ -121,12 +121,6 @@ async function initializeMultiProjectWatchers(): Promise<void> {
 
     const projectPaths: Array<{ id: string; path: string }> = [];
 
-    // Add default/legacy project (sample-tasks)
-    projectPaths.push({
-      id: 'sample-tasks',
-      path: path.join(TICKETS_DIR, '*.md')
-    });
-
     // Add configured projects
     for (const project of projects) {
       try {
