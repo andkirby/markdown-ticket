@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import toml from 'toml';
+import toml from '@iarna/toml';
 import os from 'os';
-import { MarkdownService } from '../dist/services/MarkdownService.js';
-import { ProjectService } from '../dist/services/ProjectService.js';
+import { MarkdownService } from '/app/shared-dist/services/MarkdownService.js';
+import { ProjectService } from '/app/shared-dist/services/ProjectService.js';
 
 const CONFIG_FILES = {
   PROJECT_CONFIG: '.mdt-config.toml',
@@ -18,6 +18,15 @@ class ProjectDiscoveryService {
   constructor() {
     this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
+
+    // Check for nested path (temporary fix for path mismatch issue)
+    const nestedProjectsDir = path.join(this.globalConfigDir, 'markdown-ticket', 'projects');
+    if (!fs.existsSync(this.projectsDir) && fs.existsSync(nestedProjectsDir)) {
+      console.log(`📁 Using nested projects directory: ${nestedProjectsDir}`);
+      this.projectsDir = nestedProjectsDir;
+      this.globalConfigDir = path.join(this.globalConfigDir, 'markdown-ticket');
+    }
+
     this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
     this.sharedProjectService = new ProjectService();
   }
@@ -60,19 +69,21 @@ class ProjectDiscoveryService {
 
       for (const file of projectFiles) {
         try {
-          const projectPath = path.join(this.projectsDir, file);
-          const content = fs.readFileSync(projectPath, 'utf8');
+          const registryFilePath = path.join(this.projectsDir, file);
+          const content = fs.readFileSync(registryFilePath, 'utf8');
           const projectData = toml.parse(content);
-          
+
           // Read the actual project data from local config file
-          const localConfig = this.getProjectConfig(projectData.project?.path || '');
+          // Handle both registry formats: projectData.projectPath (new) and projectData.project?.path (legacy)
+          const projectPath = projectData.projectPath || projectData.project?.path || '';
+          const localConfig = this.getProjectConfig(projectPath);
           
           const project = {
             id: path.basename(file, '.toml'),
             project: {
               name: localConfig?.project?.name || projectData.project?.name || 'Unknown Project',
-              path: projectData.project?.path || '',
-              configFile: path.join(projectData.project?.path || '', CONFIG_FILES.PROJECT_CONFIG),
+              path: projectPath, // Use the resolved projectPath instead of the missing projectData.project.path
+              configFile: path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG),
               active: projectData.project?.active !== false,
               description: localConfig?.project?.description || projectData.project?.description || '',
               code: localConfig?.project?.code || '',

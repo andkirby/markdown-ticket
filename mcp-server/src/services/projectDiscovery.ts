@@ -86,7 +86,11 @@ export class ProjectDiscoveryService {
 
     console.error(`🔎 Discovering from ${this.config.discovery.scanPaths.length} legacy scan path(s)...`);
 
-    for (const scanPath of this.config.discovery.scanPaths) {
+    // Add Docker-aware paths to scan paths
+    const dockerAwarePaths = this.getDockerAwarePaths(this.config.discovery.scanPaths);
+    console.error(`   📦 Including ${dockerAwarePaths.length - this.config.discovery.scanPaths.length} Docker-aware paths`);
+
+    for (const scanPath of dockerAwarePaths) {
       try {
         const stats = await stat(scanPath);
         if (!stats.isDirectory()) {
@@ -124,6 +128,9 @@ export class ProjectDiscoveryService {
               // Only add if not already discovered via registry
               console.error(`   ✅ ${project.id} - ${project.project.name} (legacy)`);
               this.projects.set(project.id, project);
+
+              // Auto-register discovered projects to registry for backend compatibility
+              await this.createRegistryEntry(project);
             }
           } catch (error) {
             console.warn(`Failed to load config file ${configFile}:`, error);
@@ -314,6 +321,122 @@ export class ProjectDiscoveryService {
       return path.join(process.env.HOME || '', inputPath.slice(2));
     }
     return path.resolve(inputPath);
+  }
+
+  /**
+   * Add Docker-aware paths to scan paths for better auto-discovery in containerized environments
+   */
+  private getDockerAwarePaths(originalPaths: string[]): string[] {
+    const paths = [...originalPaths.map(p => this.expandPath(p))];
+    const addedPaths = new Set(paths);
+
+    // Docker environment detection and path mapping
+    const dockerPaths = [
+      '/app/data',          // Common mounted project data
+      '/app/sample-projects',  // Sample projects mount
+      '/app',               // Current app directory
+      '/workspace',         // Common workspace mount
+      '/project',           // Alternative project mount
+    ];
+
+    // Add Docker paths if they don't already exist in the list
+    for (const dockerPath of dockerPaths) {
+      if (!addedPaths.has(dockerPath)) {
+        paths.push(dockerPath);
+        addedPaths.add(dockerPath);
+      }
+    }
+
+    // If we detect we're in a container (common indicators), prioritize container paths
+    const isInContainer = process.env.container ||
+                         process.env.DOCKER_CONTAINER ||
+                         process.cwd().startsWith('/app');
+
+    if (isInContainer) {
+      // Move Docker-specific paths to the front for priority scanning
+      const dockerSpecific = paths.filter(p => p.startsWith('/app') || p.startsWith('/workspace'));
+      const others = paths.filter(p => !p.startsWith('/app') && !p.startsWith('/workspace'));
+      return [...dockerSpecific, ...others];
+    }
+
+    return paths;
+  }
+
+  /**
+   * Create a registry entry for a discovered project
+   */
+  private async createRegistryEntry(project: Project): Promise<void> {
+    try {
+      const registryPath = this.config.discovery.registryPath;
+      await fs.ensureDir(registryPath);
+
+      const registryFileName = `${project.id.toLowerCase().replace(/[^a-z0-9]/g, '-')}.toml`;
+      const registryFilePath = path.join(registryPath, registryFileName);
+
+      // Don't overwrite existing registry entries
+      if (!await fs.pathExists(registryFilePath)) {
+        // Determine project path from config file location
+        let projectPath = path.dirname(project.project.configFile || '');
+
+        // Handle mounted config file case: if config is at /app/project-root/.mdt-config.toml,
+        // we need to find the actual project location by checking scan paths
+        if (projectPath === '/app/project-root') {
+          // Look for the project in scan paths based on project code/name
+          const dockerAwarePaths = this.getDockerAwarePaths(this.config.discovery.scanPaths || []);
+          for (const scanPath of dockerAwarePaths) {
+            try {
+              // Look for config files that match this project
+              const configFiles = await glob('**/.mdt-config.toml', {
+                cwd: scanPath,
+                absolute: true,
+                ignore: this.config.discovery.excludePaths.map(p => `**/${p}/**`)
+              });
+
+              for (const configFile of configFiles) {
+                try {
+                  const configContent = await fs.readFile(configFile, 'utf-8');
+                  const config = toml.parse(configContent);
+
+                  if (config.project && (
+                    config.project.code === project.project.code ||
+                    config.project.name === project.project.name
+                  )) {
+                    projectPath = path.dirname(configFile);
+                    console.error(`   🔍 Found actual project path: ${projectPath}`);
+                    break;
+                  }
+                } catch (error) {
+                  // Skip invalid config files
+                }
+              }
+
+              if (projectPath !== '/app/project-root') {
+                break; // Found the actual path
+              }
+            } catch (error) {
+              // Skip invalid scan paths
+            }
+          }
+        }
+
+        const registryContent = `# Auto-registered project discovered during scan
+# Project: ${project.project.name}
+# Created: ${new Date().toISOString().split('T')[0]}
+
+projectPath = "${projectPath}"
+
+[metadata]
+dateRegistered = "${new Date().toISOString().split('T')[0]}"
+lastAccessed = "${new Date().toISOString().split('T')[0]}"
+version = "1.0.0"
+source = "auto-discovery"
+`;
+        await fs.outputFile(registryFilePath, registryContent, 'utf-8');
+        console.error(`   📝 Auto-registered: ${registryFileName} -> ${projectPath}`);
+      }
+    } catch (error) {
+      console.error(`   ⚠️  Failed to create registry entry for ${project.id}: ${(error as Error).message}`);
+    }
   }
 
   async invalidateCache(): Promise<void> {

@@ -142,6 +142,163 @@ export class ConfigService {
     return this.config;
   }
 
+  /**
+   * Create sample configurations on first run
+   */
+  private async createSampleConfigs(): Promise<void> {
+    try {
+      console.error('📝 Creating sample configurations...');
+
+      // 1. Create a sample global config.toml if it doesn't exist
+      if (!await fs.pathExists(CONFIG_PATH)) {
+        const sampleGlobalConfig = `# Markdown Ticket MCP Server Configuration
+# This file was auto-generated on first run
+
+[server]
+port = 8000
+logLevel = "info"
+
+[discovery]
+# Scan paths for auto-discovery of projects
+# Add directories where you keep your projects
+scanPaths = [
+  "/app/data",
+  "/app",
+  "~/projects",
+  "~/work"
+]
+excludePaths = ["node_modules", ".git", "vendor", ".next", "dist", "build", "target"]
+maxDepth = 4
+cacheTimeout = 300
+
+[templates]
+# Custom templates directory (optional)
+# customPath = "~/.config/markdown-ticket/templates"
+`;
+        await fs.outputFile(CONFIG_PATH, sampleGlobalConfig, 'utf-8');
+        console.error(`   ✅ Created global config: ${CONFIG_PATH}`);
+      }
+
+      // 2. Create templates directory
+      const templatesDir = this.config.templates.customPath;
+      if (!await fs.pathExists(templatesDir)) {
+        await fs.ensureDir(templatesDir);
+        console.error(`   ✅ Created templates directory: ${templatesDir}`);
+      }
+
+      // 3. Scan for projects and create registry entries
+      await this.scanAndRegisterProjects();
+
+      console.error('✅ Sample configurations created successfully');
+    } catch (error) {
+      console.error(`❌ Failed to create sample configs: ${(error as Error).message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Scan for projects and create registry entries
+   */
+  private async scanAndRegisterProjects(): Promise<void> {
+    try {
+      const projectsToScan = [
+        // 1. Priority: mounted project data directory (Docker environment)
+        '/app/data',
+        // 2. Check current working directory (could contain sample projects)
+        process.cwd(),
+        // 3. Check common Docker mount paths
+        '/app',
+        '/workspace',
+        // 4. Check parent directory (in case we're in a subdirectory)
+        path.dirname(process.cwd())
+      ];
+
+      // 4. Add scan paths from global config (if any)
+      const globalConfigPath = this.config.discovery.registryPath.replace('/projects', '/config.toml');
+      if (await fs.pathExists(globalConfigPath)) {
+        const globalConfigContent = readFileSync(globalConfigPath, 'utf-8');
+        const globalConfig = toml.parse(globalConfigContent);
+        if (globalConfig.discovery?.scanPaths) {
+          projectsToScan.push(...globalConfig.discovery.scanPaths.map((p: string) => this.expandPath(p)));
+        }
+      }
+
+      console.error(`   🔍 Scanning ${projectsToScan.length} potential project locations...`);
+
+      for (const projectPath of projectsToScan) {
+        if (await fs.pathExists(projectPath)) {
+          await this.registerProjectIfValid(projectPath);
+        }
+      }
+    } catch (error) {
+      console.error(`   ⚠️  Error scanning for projects: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Register a project if it has valid configuration
+   */
+  private async registerProjectIfValid(projectPath: string): Promise<void> {
+    try {
+      const hasProjectConfig = await this.hasValidProjectConfig(projectPath);
+
+      if (hasProjectConfig) {
+        const projectName = path.basename(projectPath);
+        const registryFileName = `${projectName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.toml`;
+        const registryFilePath = path.join(this.config.discovery.registryPath, registryFileName);
+
+        // Don't overwrite existing registry entries
+        if (!await fs.pathExists(registryFilePath)) {
+          const sampleRegistry = `# Auto-generated registry entry for ${projectName}
+# Created: ${new Date().toISOString().split('T')[0]}
+
+projectPath = "${projectPath}"
+
+[metadata]
+dateRegistered = "${new Date().toISOString().split('T')[0]}"
+lastAccessed = "${new Date().toISOString().split('T')[0]}"
+version = "1.0.0"
+`;
+          await fs.outputFile(registryFilePath, sampleRegistry, 'utf-8');
+          console.error(`   ✅ Registered project: ${projectName} (${projectPath})`);
+        } else {
+          console.error(`   ℹ️  Project already registered: ${projectName}`);
+        }
+      }
+    } catch (error) {
+      console.error(`   ⚠️  Failed to register project at ${projectPath}: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Check if a directory contains a valid project configuration
+   */
+  private async hasValidProjectConfig(projectPath: string): Promise<boolean> {
+    try {
+      // Check for .mdt-config.toml or *-config.toml files
+      const configPatterns = [
+        path.join(projectPath, '.mdt-config.toml'),
+        path.join(projectPath, '*-config.toml')
+      ];
+
+      for (const pattern of configPatterns) {
+        if (pattern.includes('*')) {
+          // Use glob for pattern matching
+          const { glob } = await import('glob');
+          const matches = await glob(pattern);
+          if (matches.length > 0) return true;
+        } else {
+          // Direct file check
+          if (await fs.pathExists(pattern)) return true;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      return false;
+    }
+  }
+
   async validateConfig(): Promise<{valid: boolean, errors: string[], warnings: string[]}> {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -169,6 +326,9 @@ export class ConfigService {
         warnings.push(`Registry path does not exist, will be created: ${this.config.discovery.registryPath}`);
         try {
           await fs.ensureDir(this.config.discovery.registryPath);
+          await this.createSampleConfigs();
+          // Reload configuration after creating sample configs
+          this.loadConfigFile();
         } catch (error) {
           errors.push(`Failed to create registry path: ${(error as Error).message}`);
         }

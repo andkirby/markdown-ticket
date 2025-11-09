@@ -77,13 +77,26 @@ class FileWatcherService extends EventEmitter {
   initGlobalRegistryWatcher() {
     const registryPath = path.join(os.homedir(), '.config', 'markdown-ticket', 'projects');
 
-    // Check if registry directory exists
+    // Also check nested location (temporary fix for path mismatch issue)
+    const nestedRegistryPath = path.join(os.homedir(), '.config', 'markdown-ticket', 'markdown-ticket', 'projects');
+
+    let actualRegistryPath = registryPath;
+
+    // Check if registry directory exists in expected location
     if (!fs.existsSync(registryPath)) {
       console.log(`📡 Global registry directory not found: ${registryPath}`);
-      return;
+
+      // Check nested location
+      if (fs.existsSync(nestedRegistryPath)) {
+        console.log(`📡 Found registry in nested location: ${nestedRegistryPath}`);
+        actualRegistryPath = nestedRegistryPath;
+      } else {
+        console.log(`📡 Global registry directory not found in either location`);
+        return;
+      }
     }
 
-    const watcher = chokidar.watch(path.join(registryPath, '*.toml'), {
+    const watcher = chokidar.watch(path.join(actualRegistryPath, '*.toml'), {
       ignoreInitial: true,
       persistent: true,
       awaitWriteFinish: {
@@ -100,11 +113,11 @@ class FileWatcherService extends EventEmitter {
         console.error('Global registry watcher error:', error);
       })
       .on('ready', () => {
-        console.log(`📡 Global registry watcher ready: ${registryPath}`);
+        console.log(`📡 Global registry watcher ready: ${actualRegistryPath}`);
       });
 
     this.watchers.set('__global_registry__', watcher);
-    console.log(`📡 Global registry watcher initialized: ${registryPath}`);
+    console.log(`📡 Global registry watcher initialized: ${actualRegistryPath}`);
   }
 
   /**

@@ -1,124 +1,198 @@
 services:
-  # Development environment with hot reload
-  app-dev:
+  # Shared Builder - Builds shared TypeScript modules once
+  shared-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.shared
+      target: builder
+    image: markdown-ticket-shared-builder:latest
+    command: "true"  # No-op command, just build and exit
+    profiles:
+      - dev
+      - frontend
+      - backend
+      - mcp
+      - prod
+      - test
+
+  # Frontend - React + Vite
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile
       target: development
     ports:
-      - "5173:5173"  # Frontend Vite dev server
-      - "3001:3001"  # Backend API server
-    volumes:
-      # Mount entire project directory for live editing
-      - .:/app
-      # Exclude node_modules to avoid conflicts with container versions
-      - /app/node_modules
-      - /app/server/node_modules
-      - /app/mcp-server/node_modules
-      - /app/server/mcp-dev-tools/node_modules
-      # Persistent user config only (docs/CRs now synced via .:/app)
-      - config_data:/root/.config
+      - "5173:5173"
     environment:
       - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true  # For file watching in Docker
-    command: npm run dev:full
+      - VITE_API_BASE_URL=http://backend:3001
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - .:/app  # Source code for development hot reload
+      - /app/node_modules
     stdin_open: true
     tty: true
+    depends_on:
+      shared-builder:
+        condition: service_completed_successfully
     profiles:
       - dev
-
-  # Production-like environment
-  app-prod:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: runner
-    ports:
-      - "3001:3001"
-      - "5173:5173"
-    volumes:
-      - .:/app
-      - app_data:/app/data
-    environment:
-      - NODE_ENV=production
-    command: node server/server.js
-    profiles:
-      - prod
-
-  # Frontend only (for development)
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
-    command: npm run dev
-    profiles:
       - frontend
 
-  # Backend only (for development)
+  # Backend API - Express.js
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: backend
+      dockerfile: server/Dockerfile
+      target: development
     ports:
       - "3001:3001"
-    volumes:
-      - .:/app
-      - /app/server/node_modules
-      - config_data:/root/.config
     environment:
       - NODE_ENV=development
-    command: npm run dev:server
+      - PORT=3001
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./server:/app  # Backend source code for hot reload
+      - /app/node_modules
+      - /app/shared-dist  # Preserve shared-dist from build
+      - user_config:/root/.config  # Global configuration
+      - project_data:/app/data  # Project data persistence
+      - ./server/sample-projects:/app/sample-projects  # Sample projects for registry access
+      - ./.mdt-config.toml:/app/project-root/.mdt-config.toml:ro  # Project root config for discovery
+    depends_on:
+      shared-builder:
+        condition: service_completed_successfully
     profiles:
+      - dev
       - backend
 
-  # MCP Server for AI integration
+  # MCP Server - Model Context Protocol
   mcp-server:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: mcp
-    volumes:
-      - .:/app
-      - /app/mcp-server/node_modules
-      - config_data:/root/.config
+      dockerfile: mcp-server/Dockerfile
+      target: development
     environment:
       - NODE_ENV=development
-    command: sh -c "cd mcp-server && npm run dev"
+      - MCP_PROJECT_FILTER=${MCP_PROJECT_FILTER:-}
+    volumes:
+      - ./mcp-server:/app  # MCP server source code
+      - /app/node_modules
+      - /app/shared-dist  # Preserve shared-dist from build
+      - user_config:/root/.config  # Global configuration
+      - project_data:/app/data  # Project data persistence
+      - ./server/sample-projects:/app/sample-projects  # Sample projects for auto-discovery
+      - ./.mdt-config.toml:/app/project-root/.mdt-config.toml:ro  # Project root config for discovery
+    depends_on:
+      shared-builder:
+        condition: service_completed_successfully
     profiles:
       - dev
       - mcp
 
-  # Testing environment
+  # MCP Dev Tools - Logging and Debugging
+  mcp-dev-tools:
+    build:
+      context: .
+      dockerfile: server/mcp-dev-tools/Dockerfile
+      target: development
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./server/mcp-dev-tools:/app  # Dev tools source code
+      - /app/node_modules
+      - /app/shared-dist  # Preserve shared-dist from build
+      - user_config:/root/.config  # Global configuration for logging
+    depends_on:
+      shared-builder:
+        condition: service_completed_successfully
+    profiles:
+      - dev
+      - mcp-dev
+
+  # Production Frontend
+  frontend-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=production
+    profiles:
+      - prod
+
+  # Production Backend
+  backend-prod:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: production
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    volumes:
+      - user_config:/root/.config  # Global configuration
+      - project_data:/app/data  # Project data persistence
+    profiles:
+      - prod
+
+  # Production MCP Server
+  mcp-server-prod:
+    build:
+      context: .
+      dockerfile: mcp-server/Dockerfile
+      target: production
+    environment:
+      - NODE_ENV=production
+      - MCP_PROJECT_FILTER=${MCP_PROJECT_FILTER:-}
+    volumes:
+      - user_config:/root/.config  # Global configuration
+      - project_data:/app/data  # Project data access
+    profiles:
+      - prod
+
+  # Production MCP Dev Tools
+  mcp-dev-tools-prod:
+    build:
+      context: .
+      dockerfile: server/mcp-dev-tools/Dockerfile
+      target: production
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - user_config:/root/.config  # Global configuration
+    profiles:
+      - prod
+
+  # E2E Testing
   test:
     build:
       context: .
       dockerfile: Dockerfile
-      target: test
+      target: development
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/server/node_modules
     environment:
       - NODE_ENV=test
       - CI=true
+      - VITE_API_BASE_URL=http://backend:3001
     command: npm run test:e2e
     profiles:
       - test
     depends_on:
-      - app-dev
+      - frontend
+      - backend
 
+# Shared volumes for configuration and project data
 volumes:
-  app_data:
+  # User configuration persistence
+  user_config:
     driver: local
-  config_data:
+  # Project data persistence
+  project_data:
     driver: local

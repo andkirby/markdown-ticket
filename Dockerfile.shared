@@ -1,0 +1,17 @@
+# Shared Builder Dockerfile - Builds shared TypeScript modules
+FROM node:20-alpine AS base
+WORKDIR /app
+
+# Install utilities
+RUN apk add --no-cache git bash
+
+# Build shared code
+FROM base AS builder
+COPY package*.json ./
+COPY tsconfig.shared.json ./
+COPY shared/ ./shared/
+RUN npm ci
+RUN npm run build:shared
+
+# This image contains the built shared-dist folder
+# Other services will copy from this stage
