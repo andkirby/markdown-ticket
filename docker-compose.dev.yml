@@ -52,8 +52,8 @@ services:
 
   mcp:
     volumes:
-      # Mount Docker-only configuration (container-specific)
-      - ./docker-config:/root/.config/markdown-ticket:ro
+      # Mount Docker-only configuration (container-specific) - needs to be writable for projects subdirectory
+      - ./docker-config:/root/.config/markdown-ticket
 
       # Mount projects - generic mounting pattern (same as backend)
       # Examples:
@@ -74,6 +74,7 @@ services:
       - MCP_HTTP_PORT=3002
       - MCP_BIND_ADDRESS=0.0.0.0
       - LOG_LEVEL=debug
+    entrypoint: ["npx", "tsx", "watch", "src/index.ts"]
 # Optional: Named volume for projects (uncomment to use)
 # volumes:
 #   projects:

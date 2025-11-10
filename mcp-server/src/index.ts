@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { ConfigService } from './config/index.js';
-import { ProjectDiscoveryService } from './services/projectDiscovery.js';
+import { ProjectService } from '@shared/services/ProjectService.js';
 import { CRService } from './services/crService.js';
 // @ts-ignore
 import { TemplateService } from '@shared/services/TemplateService.js';
@@ -11,12 +11,13 @@ import { startHttpTransport } from './transports/http.js';
 
 class MCPCRServer {
   private configService!: ConfigService;
-  private projectDiscovery!: ProjectDiscoveryService;
+  private projectService!: ProjectService;
   private crService!: CRService;
   private templateService!: TemplateService;
   private mcpTools!: MCPTools;
 
   constructor() {
+    console.log('🔥🔥🔥 MCP Server initializing with HOT RELOAD - TEST CHANGE!');
     this.setupErrorHandling();
     this.initializeServices();
   }
@@ -51,11 +52,11 @@ class MCPCRServer {
     const config = this.configService.getConfig();
 
     // Initialize services
-    this.projectDiscovery = new ProjectDiscoveryService(config);
+    this.projectService = new ProjectService();
     this.crService = new CRService();
     this.templateService = new TemplateService();
     this.mcpTools = new MCPTools(
-      this.projectDiscovery,
+      this.projectService,
       this.crService,
       this.templateService
     );
@@ -86,7 +87,7 @@ class MCPCRServer {
 
       // Discover projects
       console.error('🔍 Discovering projects...');
-      const projects = await this.projectDiscovery.discoverProjects();
+      const projects = await this.projectService.getAllProjects();
       console.error(`📁 Found ${projects.length} project${projects.length === 1 ? '' : 's'}`);
 
       if (projects.length > 0) {

@@ -164,14 +164,8 @@ export class ProjectService {
    */
   autoDiscoverProjects(searchPaths: string[] = []): Project[] {
     const discovered: Project[] = [];
-    const defaultPaths = [
-      os.homedir(),
-      path.join(os.homedir(), 'Documents'),
-      path.join(os.homedir(), 'Projects'),
-      process.cwd()
-    ];
 
-    const pathsToSearch = [...new Set([...defaultPaths, ...searchPaths])];
+    const pathsToSearch = [...new Set(searchPaths)];
     console.log('🔍 Auto-discovery scanning paths:', pathsToSearch);
 
     for (const searchPath of pathsToSearch) {
