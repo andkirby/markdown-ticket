@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
+    "@mdt/shared": "*",
     "axios": "^1.12.2",
     "chokidar": "^3.6.0",
     "cors": "^2.8.5",
