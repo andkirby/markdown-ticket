@@ -1,29 +1,34 @@
 # Multi-stage Dockerfile for Backend (Express.js)
 # Development: tsx with hot reload
 # Production: Built TypeScript running on Node.js
-# Build context: Project root (requires shared/ directory)
+# Build context: Project root (uses npm workspaces)
 
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# Copy shared code first (for better layer caching)
-COPY shared /app/shared
-
-# Install dependencies
-COPY server/package*.json /app/server/
-WORKDIR /app/server
+# Copy workspace root package.json and workspace package.jsons
+COPY package*.json ./
+COPY shared/package*.json ./shared/
+COPY server/package*.json ./server/
+COPY mcp-server/package*.json ./mcp-server/
 
 # Development stage
 FROM base AS development
 
-# Install all dependencies (including devDependencies for tsx)
+# Install all workspace dependencies at root level
 RUN npm ci
 
-# Copy source code
-COPY server /app/server
+# Copy shared source code
+COPY shared ./shared
 
-# Build shared TypeScript code during image build
-RUN cd /app/server && ./node_modules/.bin/tsc --project ../shared/tsconfig.json || echo "Shared build completed with warnings"
+# Copy server source code
+COPY server ./server
+
+# Build shared TypeScript code using workspace
+RUN cd shared && npm run build
+
+# Set working directory to server
+WORKDIR /app/server
 
 # Expose backend port
 EXPOSE 3001
@@ -48,10 +53,15 @@ FROM base AS build
 # Install all dependencies
 RUN npm ci
 
-# Copy source code
-COPY server /app/server
+# Copy all source code
+COPY shared ./shared
+COPY server ./server
 
-# Build TypeScript
+# Build shared code first using workspace
+RUN cd shared && npm run build
+
+# Build server code
+WORKDIR /app/server
 RUN npm run build
 
 # Production stage
@@ -61,23 +71,29 @@ FROM node:20-alpine AS production
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-WORKDIR /app/server
+WORKDIR /app
 
-# Copy package files
-COPY server/package*.json ./
+# Copy workspace root package.json
+COPY package*.json ./
+COPY shared/package*.json ./shared/
+COPY server/package*.json ./server/
 
-# Install production dependencies only
+# Install production dependencies only at workspace root
 RUN npm ci --only=production && \
     npm cache clean --force
 
-# Copy shared services
-COPY --chown=nodejs:nodejs shared /app/shared
+# Copy built shared code
+COPY --from=build --chown=nodejs:nodejs /app/shared/dist ./shared/dist
+COPY --from=build --chown=nodejs:nodejs /app/shared/package.json ./shared/
 
-# Copy built application from build stage
-COPY --from=build --chown=nodejs:nodejs /app/server/dist ./dist
+# Copy built server code
+COPY --from=build --chown=nodejs:nodejs /app/server/dist ./server/dist
 
 # Switch to non-root user
 USER nodejs
+
+# Set working directory to server
+WORKDIR /app/server
 
 # Expose backend port
 EXPOSE 3001
@@ -85,8 +101,6 @@ EXPOSE 3001
 # Set environment
 ENV NODE_ENV=production
 ENV CHOKIDAR_USEPOLLING=true
-# FRONTEND_URL not set - MCP dev tools disabled by default in Docker
-# Set via docker-compose.yml if needed: FRONTEND_URL=http://frontend:5173
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \

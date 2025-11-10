@@ -20,6 +20,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@mdt/shared": "*",
     "@modelcontextprotocol/sdk": "^0.5.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.4",

@@ -1,5 +1,5 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ProjectDiscoveryService } from '../services/projectDiscovery.js';
+import { ProjectService } from '@shared/services/ProjectService.js';
 import { CRService } from '../services/crService.js';
 import { TemplateService } from '@shared/services/TemplateService.js';
 import { MarkdownSectionService } from '@shared/services/MarkdownSectionService.js';
@@ -8,10 +8,13 @@ import { TicketFilters, TicketData } from '@shared/models/Ticket.js';
 import { CRStatus } from '@shared/models/Types.js';
 import { SimpleContentProcessor } from '../utils/simpleContentProcessor.js';
 import { SimpleSectionValidator } from '../utils/simpleSectionValidator.js';
+import { Project } from '@shared/models/Project.js';
 
 export class MCPTools {
+  private cachedProjects: Project[] = [];
+
   constructor(
-    private projectDiscovery: ProjectDiscoveryService,
+    private projectService: ProjectService,
     private crService: CRService,
     private templateService: TemplateService
   ) {}
@@ -369,10 +372,13 @@ export class MCPTools {
     }
   }
 
-  private async validateProject(projectKey: string): Promise<any> {
-    const project = this.projectDiscovery.getProject(projectKey);
+  private async validateProject(projectKey: string): Promise<Project> {
+    // Get all projects (uses cache if available)
+    const projects = await this.projectService.getAllProjects();
+    this.cachedProjects = projects;
+
+    const project = projects.find(p => p.id === projectKey);
     if (!project) {
-      const projects = await this.projectDiscovery.discoverProjects();
       const availableKeys = projects.map(p => p.id).join(', ');
       throw new Error(`Project '${projectKey}' not found. Available projects: ${availableKeys}`);
     }
@@ -380,26 +386,27 @@ export class MCPTools {
   }
 
   private async handleListProjects(): Promise<string> {
-    // First try cached projects, fallback to discovery
-    let projects = this.projectDiscovery.getCachedProjects();
+    // Get all projects (uses cache if available)
+    const projects = await this.projectService.getAllProjects();
+    this.cachedProjects = projects;
+
     if (projects.length === 0) {
-      projects = await this.projectDiscovery.discoverProjects();
-    }
-    
-    if (projects.length === 0) {
-      return '📁 No projects found. Make sure you have *-config.toml files in the configured scan paths.';
+      return '📁 No projects found. Make sure you have .mdt-config.toml files in the configured scan paths.';
     }
 
     const lines = [`📁 Found ${projects.length} project${projects.length === 1 ? '' : 's'}:`, ''];
-    
+
     for (const project of projects) {
-      const info = await this.projectDiscovery.getProjectInfo(project.id);
+      // Get CR count from project CRs
+      const crs = await this.projectService.getProjectCRs(project.project.path);
+      const crCount = crs.length;
+
       lines.push(`• **${project.id}** - ${project.project.name}`);
       if (project.project.description) {
         lines.push(`  Description: ${project.project.description}`);
       }
       lines.push(`  Path: ${project.project.path}`);
-      lines.push(`  CRs: ${info?.crCount || 0}`);
+      lines.push(`  CRs: ${crCount}`);
       lines.push('');
     }
 
@@ -409,24 +416,23 @@ export class MCPTools {
   private async handleGetProjectInfo(key: string): Promise<string> {
     const project = await this.validateProject(key);
 
-    const info = await this.projectDiscovery.getProjectInfo(key);
-    if (!info) {
-      throw new Error(`Failed to get project info for '${key}'`);
-    }
+    // Get CR count from project CRs
+    const crs = await this.projectService.getProjectCRs(project.project.path);
+    const crCount = crs.length;
 
     const lines = [
-      `📋 Project: **${info.key}** - ${info.name}`,
+      `📋 Project: **${project.id}** - ${project.project.name}`,
       '',
       '**Details:**',
-      `- Key: ${info.key}`,
-      `- Description: ${info.description || 'No description'}`,
-      `- Path: ${info.path}`,
-      `- Total CRs: ${info.crCount}`,
-      `- Last Accessed: ${info.lastAccessed}`,
+      `- Key: ${project.id}`,
+      `- Description: ${project.project.description || 'No description'}`,
+      `- Path: ${project.project.path}`,
+      `- Total CRs: ${crCount}`,
+      `- Last Accessed: ${project.metadata.lastAccessed}`,
       '',
       '**Configuration:**',
-      `- Start Number: ${project.project.startNumber}`,
-      `- Counter File: ${project.project.counterFile}`,
+      `- Start Number: ${project.project.startNumber || 1}`,
+      `- Counter File: ${project.project.counterFile || '.mdt-next'}`,
     ];
 
     if (project.project.repository) {

@@ -4,6 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "homepage": "https://andkirby.github.io/markdown-ticket",
+  "workspaces": [
+    "shared",
+    "server",
+    "mcp-server"
+  ],
   "scripts": {
     "dev": "vite",
     "dev:server": "cd server && npm run dev",
