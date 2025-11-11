@@ -5,6 +5,8 @@ import { glob } from 'glob';
 import { Ticket, TicketFilters, TicketData, normalizeTicket, arrayToString} from '@shared/models/Ticket.js';
 import { CRStatus } from '@shared/models/Types.js';
 import { Project } from '@shared/models/Project.js';
+// @ts-ignore
+import { ProjectService } from '@shared/services/ProjectService.js';
 // Use shared services for consistency
 // @ts-ignore
 import { MarkdownService } from '@shared/services/MarkdownService.js';
@@ -13,24 +15,36 @@ import { MarkdownService } from '@shared/services/MarkdownService.js';
 import { CRService as SharedCRService } from '@shared/services/CRService.js';
 
 export class CRService {
+  private projectService = new ProjectService();
+
+  private async getCRPath(project: Project): Promise<string> {
+    try {
+      const config = this.projectService.getProjectConfig(project.project.path);
+      if (!config || !config.project) {
+        return path.resolve(project.project.path, 'docs/CRs');
+      }
+
+      const crPath = config.project.path || 'docs/CRs';
+      return path.resolve(project.project.path, crPath);
+    } catch (error) {
+      console.warn(`Failed to get CR path config for project ${project.id}, using default:`, error);
+      return path.resolve(project.project.path, 'docs/CRs');
+    }
+  }
+
   async listCRs(project: Project, filters?: TicketFilters): Promise<Ticket[]> {
     try {
-      const crFiles = await glob('*.md', { cwd: project.project.path });
-      const crs: Ticket[] = [];
+      // Use shared ProjectService to get CRs with correct path resolution
+      const crs = await this.projectService.getProjectCRs(project.project.path);
 
-      for (const filename of crFiles) {
-        try {
-          const cr = await this.loadCR(project, filename);
-          if (cr && this.matchesFilters(cr, filters)) {
-            crs.push(cr);
-          }
-        } catch (error) {
-          console.warn(`Failed to load CR ${filename}:`, error);
-        }
+      // Apply filters if provided
+      let filteredCRs = crs;
+      if (filters) {
+        filteredCRs = crs.filter(cr => this.matchesFilters(cr, filters));
       }
 
       // Sort by ticket code (natural sort, DESC - newest/highest numbers first)
-      return crs.sort((a, b) => {
+      return filteredCRs.sort((a, b) => {
         // Extract the numeric part for proper sorting (e.g., CR-A001 vs CR-A010)
         const extractNumber = (code: string) => {
           const match = code.match(/(\d+)/);
@@ -78,13 +92,16 @@ export class CRService {
       const nextNumber = await this.getNextCRNumber(project);
       const crKey = `${project.project.code}-${String(nextNumber).padStart(3, '0')}`;
       
+      // Get the correct CR path from config
+      const crPath = await this.getCRPath(project);
+
       // Create filename slug from title
       const titleSlug = this.createSlug(data.title);
       const filename = `${crKey}-${titleSlug}.md`;
-      const filePath = path.join(project.project.path, filename);
+      const filePath = path.join(crPath, filename);
 
       // Ensure CR directory exists
-      await fs.ensureDir(project.project.path);
+      await fs.ensureDir(crPath);
 
       // Create ticket object using shared service
       const ticket = SharedCRService.createTicket(data, crKey, crType, filePath);
