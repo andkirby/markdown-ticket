@@ -2,17 +2,17 @@ import * as fs from 'fs-extra';
 import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
-import { Ticket, TicketFilters, TicketData, normalizeTicket, arrayToString} from '@shared/models/Ticket.js';
-import { CRStatus } from '@shared/models/Types.js';
-import { Project } from '@shared/models/Project.js';
+import { Ticket, TicketFilters, TicketData, normalizeTicket, arrayToString} from '@mdt/shared/models/Ticket.js';
+import { CRStatus } from '@mdt/shared/models/Types.js';
+import { Project } from '@mdt/shared/models/Project.js';
 // @ts-ignore
-import { ProjectService } from '@shared/services/ProjectService.js';
+import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 // Use shared services for consistency
 // @ts-ignore
-import { MarkdownService } from '@shared/services/MarkdownService.js';
+import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
 // Import shared service with different name to avoid conflict
 // @ts-ignore
-import { CRService as SharedCRService } from '@shared/services/CRService.js';
+import { CRService as SharedCRService } from '@mdt/shared/services/CRService.js';
 
 export class CRService {
   private projectService = new ProjectService();

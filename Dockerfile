@@ -41,7 +41,7 @@ FROM base AS build
 RUN npm ci
 
 # Copy source code and configuration files
-COPY tsconfig.json vite.config.ts index.html ./
+COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
 COPY postcss.config.js tailwind.config.js ./
 COPY src ./src
 COPY public ./public

@@ -30,7 +30,4 @@ try {
   process.exit(1);
 }
 
-// Replace path aliases with relative paths AFTER copying to final locations
-execSync('node fix-paths.js', { stdio: 'inherit' });
-
 console.log('✅ Build completed - index.js available at dist/index.js with all dependencies');

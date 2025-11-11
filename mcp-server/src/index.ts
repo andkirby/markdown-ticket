@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import { ConfigService } from './config/index.js';
-import { ProjectService } from '@shared/services/ProjectService.js';
+import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 import { CRService } from './services/crService.js';
 // @ts-ignore
-import { TemplateService } from '@shared/services/TemplateService.js';
+import { TemplateService } from '@mdt/shared/services/TemplateService.js';
 import { MCPTools } from './tools/index.js';
 import { startStdioTransport } from './transports/stdio.js';
 import { startHttpTransport } from './transports/http.js';
