@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Production environment overrides for docker-compose.yml
 # Includes resource limits, production builds, and security hardening
 #
