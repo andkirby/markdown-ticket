@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { loadTickets, getNextTicketNumber, updateTicketCounter } from './ticketNumbering';
+import { loadTickets, getNextTicketNumber, updateTicketCounter } from './ticketNumbering.js';
 
 export interface DuplicateTicket {
   filename: string;

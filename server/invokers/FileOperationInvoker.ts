@@ -1,5 +1,5 @@
-import { ExtractMetadataCommand, FileMetadata } from '../commands/ExtractMetadataCommand';
-import { ReadFileCommand } from '../commands/ReadFileCommand';
+import { ExtractMetadataCommand, FileMetadata } from '../commands/ExtractMetadataCommand.js';
+import { ReadFileCommand } from '../commands/ReadFileCommand.js';
 
 /**
  * Invoker for file operations using command pattern

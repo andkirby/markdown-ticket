@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { getNextTicketNumber } from '../utils/ticketNumbering';
+import { getNextTicketNumber } from '../utils/ticketNumbering.js';
 
 // Type definitions
 

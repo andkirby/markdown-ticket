@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { TicketController } from '../controllers/TicketController';
+import { TicketController } from '../controllers/TicketController.js';
 
 /**
  * Router for ticket/task-related endpoints (legacy and duplicate detection)

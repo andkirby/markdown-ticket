@@ -1,6 +1,6 @@
 import path from 'path';
-import { TreeService } from './TreeService';
-import { FileOperationInvoker } from '../invokers/FileOperationInvoker';
+import { TreeService } from './TreeService.js';
+import { FileOperationInvoker } from '../invokers/FileOperationInvoker.js';
 
 // Type definitions
 interface TreeNode {

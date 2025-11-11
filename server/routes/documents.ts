@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { DocumentController } from '../controllers/DocumentController';
-import { ProjectController } from '../controllers/ProjectController';
+import { DocumentController } from '../controllers/DocumentController.js';
+import { ProjectController } from '../controllers/ProjectController.js';
 
 /**
  * Router for document-related endpoints

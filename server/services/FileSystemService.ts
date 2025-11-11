@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { TreeService } from './TreeService';
+import { TreeService } from './TreeService.js';
 
 // Type definitions
 interface Task {

@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
-import FileWatcherService from '../fileWatcherService';
-import { ProjectController } from '../controllers/ProjectController';
+import FileWatcherService from '../fileWatcherService.js';
+import { ProjectController } from '../controllers/ProjectController.js';
 
 interface FileInvoker {
   clearCache(): void;

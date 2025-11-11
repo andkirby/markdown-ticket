@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ProjectController } from '../controllers/ProjectController';
+import { ProjectController } from '../controllers/ProjectController.js';
 
 /**
  * Router for project-related endpoints
