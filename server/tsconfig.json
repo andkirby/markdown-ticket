@@ -23,7 +23,7 @@
     /* Path Mapping */
     "baseUrl": "..",
     "paths": {
-      "@shared/*": ["./shared/*"]
+      "@mdt/shared/*": ["./shared/*"]
     }
   },
   "include": [
