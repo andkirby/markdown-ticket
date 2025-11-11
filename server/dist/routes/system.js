@@ -110,16 +110,17 @@ export function createSystemRouter(fileWatcher, projectController, projectDiscov
                         }
                     }
                 }
+                // Counter API section removed - moved to counter-api/ package
                 // Parse counter_api section
-                const counterApiMatch = configContent.match(/\[counter_api\]([\s\S]*?)(?=\[|$)/);
-                if (counterApiMatch) {
-                    const section = counterApiMatch[1];
-                    config.counter_api = {
-                        enabled: section.match(/enabled\s*=\s*(true|false)/)?.[1] === 'true',
-                        endpoint: section.match(/endpoint\s*=\s*"([^"]+)"/)?.[1] || '',
-                        api_key: section.match(/api_key\s*=\s*"([^"]+)"/)?.[1] || ''
-                    };
-                }
+                // const counterApiMatch = configContent.match(/\[counter_api\]([\s\S]*?)(?=\[|$)/);
+                // if (counterApiMatch) {
+                //   const section = counterApiMatch[1];
+                //   config.counter_api = {
+                //     enabled: section.match(/enabled\s*=\s*(true|false)/)?.[1] === 'true',
+                //     endpoint: section.match(/endpoint\s*=\s*"([^"]+)"/)?.[1] || '',
+                //     api_key: section.match(/api_key\s*=\s*"([^"]+)"/)?.[1] || ''
+                //   };
+                // }
                 // Parse cache section
                 const cacheMatch = configContent.match(/\[cache\]([\s\S]*?)(?=\[|$)/);
                 if (cacheMatch) {
@@ -142,11 +143,12 @@ export function createSystemRouter(fileWatcher, projectController, projectDiscov
                         autoDiscover: true,
                         searchPaths: []
                     },
-                    counter_api: {
-                        enabled: false,
-                        endpoint: '',
-                        api_key: ''
-                    },
+                    // counter_api config removed - moved to counter-api/ package
+                    // counter_api: {
+                    //   enabled: false,
+                    //   endpoint: '',
+                    //   api_key: ''
+                    // },
                     cache: {
                         ttl: 3600
                     }
