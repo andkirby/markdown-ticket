@@ -28,6 +28,7 @@
     "test:e2e:update": "playwright test --update-snapshots"
   },
   "dependencies": {
+    "@mdt/shared": "*",
     "@chakra-ui/icons": "^2.0.19",
     "@chakra-ui/react": "^2.8.2",
     "@chakra-ui/theme": "^2.0.19",
