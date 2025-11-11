@@ -377,9 +377,14 @@ export class MCPTools {
     const projects = await this.projectService.getAllProjects();
     this.cachedProjects = projects;
 
-    const project = projects.find(p => p.project.code === projectKey);
+    // Look for project by code first, then fall back to id for backward compatibility
+    const project = projects.find(p =>
+      p.project.code === projectKey || p.id === projectKey
+    );
     if (!project) {
-      const availableKeys = projects.map(p => p.project.code).join(', ');
+      const availableKeys = projects.map(p =>
+        p.project.code || p.id
+      ).filter(Boolean).join(', ');
       throw new Error(`Project '${projectKey}' not found. Available projects: ${availableKeys}`);
     }
     return project;
@@ -401,14 +406,17 @@ export class MCPTools {
       const crs = await this.projectService.getProjectCRs(project.project.path);
       const crCount = crs.length;
 
-      const projectCode = project.project.code;
+      const projectCode = project.project.code || project.id;
       const projectName = project.project.name;
 
       lines.push(`• **${projectCode}** - ${projectName}`);
       if (project.project.description) {
         lines.push(`  Description: ${project.project.description}`);
       }
-      lines.push(`  Code: ${projectCode}`);
+      lines.push(`  Code: ${projectCode || 'None'}`);
+      if (project.project.code) {
+        lines.push(`  ID: ${project.id}`);
+      }
       lines.push(`  Path: ${project.project.path}`);
       lines.push(`  CRs: ${crCount}`);
       lines.push('');
@@ -424,11 +432,13 @@ export class MCPTools {
     const crs = await this.projectService.getProjectCRs(project.project.path);
     const crCount = crs.length;
 
+    const projectCode = project.project.code || project.id;
     const lines = [
-      `📋 Project: **${project.project.code}** - ${project.project.name}`,
+      `📋 Project: **${projectCode}** - ${project.project.name}`,
       '',
       '**Details:**',
-      `- Code: ${project.project.code}`,
+      `- Code: ${project.project.code || 'None'}`,
+      `- ID: ${project.id}`,
       `- Description: ${project.project.description || 'No description'}`,
       `- Path: ${project.project.path}`,
       `- Total CRs: ${crCount}`,
