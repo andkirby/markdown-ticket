@@ -69,17 +69,20 @@ export class CRService {
 
   async getCR(project: Project, key: string): Promise<Ticket | null> {
     try {
-      // Find the file matching the CR key
-      const crFiles = await glob('*.md', { cwd: project.project.path });
-      const targetFile = crFiles.find(file => 
-        path.basename(file, '.md').toUpperCase().includes(key.toUpperCase())
+      // Use shared ProjectService to get all CRs with correct path resolution
+      const crs = await this.projectService.getProjectCRs(project.project.path);
+
+      // Find the CR matching the key (case-insensitive)
+      const targetCR = crs.find(cr =>
+        cr.code.toUpperCase() === key.toUpperCase()
       );
 
-      if (!targetFile) {
+      if (!targetCR) {
+        console.warn(`CR ${key} not found among ${crs.length} CRs in project ${project.id}`);
         return null;
       }
 
-      return await this.loadCR(project, targetFile);
+      return targetCR;
     } catch (error) {
       console.error(`Failed to get CR ${key} for project ${project.id}:`, error);
       return null;
