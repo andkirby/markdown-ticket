@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { findDuplicates, previewRename, resolveDuplicate } from '../utils/duplicateDetection';
+import { findDuplicates, previewRename, resolveDuplicate } from '../utils/duplicateDetection.js';
 
 // Type definitions
 interface TaskResult {

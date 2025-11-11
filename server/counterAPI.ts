@@ -1,4 +1,4 @@
-import { readConfig } from './config/configManager';
+import { readConfig } from './config/configManager.js';
 import { CounterConfig } from '@shared/models/Counter.js';
 
 interface CounterAPIModule {

@@ -30,28 +30,28 @@ interface FileInvokerAdapter {
 }
 
 // Services
-import FileWatcherService from './fileWatcherService';
+import FileWatcherService from './fileWatcherService.js';
 import { ProjectService as SharedProjectService } from '@shared/services/ProjectService.js';
-import { ProjectService } from './services/ProjectService';
-import { TicketService } from './services/TicketService';
-import { DocumentService } from './services/DocumentService';
-import { FileSystemService } from './services/FileSystemService';
+import { ProjectService } from './services/ProjectService.js';
+import { TicketService } from './services/TicketService.js';
+import { DocumentService } from './services/DocumentService.js';
+import { FileSystemService } from './services/FileSystemService.js';
 
 // Controllers
-import { ProjectController } from './controllers/ProjectController';
-import { TicketController } from './controllers/TicketController';
-import { DocumentController } from './controllers/DocumentController';
+import { ProjectController } from './controllers/ProjectController.js';
+import { TicketController } from './controllers/TicketController.js';
+import { DocumentController } from './controllers/DocumentController.js';
 
 // Routes
-import { createProjectRouter } from './routes/projects';
-import { createTicketRouter, createDuplicateRouter } from './routes/tickets';
-import { createDocumentRouter } from './routes/documents';
-import { createSSERouter } from './routes/sse';
-import { createSystemRouter } from './routes/system';
-import { createDevToolsRouter, setupLogInterception } from './routes/devtools';
+import { createProjectRouter } from './routes/projects.js';
+import { createTicketRouter, createDuplicateRouter } from './routes/tickets.js';
+import { createDocumentRouter } from './routes/documents.js';
+import { createSSERouter } from './routes/sse.js';
+import { createSystemRouter } from './routes/system.js';
+import { createDevToolsRouter, setupLogInterception } from './routes/devtools.js';
 
 // Middleware
-import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 // =============================================================================
 // Configuration & Setup

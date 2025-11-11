@@ -1,5 +1,5 @@
 import { Router, Request } from 'express';
-import FileWatcherService from '../fileWatcherService';
+import FileWatcherService from '../fileWatcherService.js';
 
 interface _ResponseLike {
   write(data: string): void;

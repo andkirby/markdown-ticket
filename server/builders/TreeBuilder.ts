@@ -1,6 +1,6 @@
 import { glob } from 'glob';
 import path from 'path';
-import { shouldIgnorePath } from '../utils/fsIgnoreList';
+import { shouldIgnorePath } from '../utils/fsIgnoreList.js';
 
 // Define strategy interface
 interface ITreeBuildingStrategy {
