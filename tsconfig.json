@@ -17,7 +17,7 @@
     /* Path Mapping */
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["./shared/dist/*"]
+      "@mdt/shared/*": ["./shared/dist/*"]
     },
 
     /* Linting */
