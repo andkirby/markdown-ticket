@@ -51,7 +51,7 @@ CMD ["npm", "run", "dev"]
 # Build stage
 FROM base AS build
 
-# Install all dependencies
+# Install all workspace dependencies
 RUN npm ci
 
 # Copy all source code
@@ -83,7 +83,7 @@ COPY server/package.json ./server/
 COPY --from=build /app/node_modules ./node_modules
 
 # Install only production dependencies (prunes dev deps from existing node_modules)
-RUN npm ci --only=production && \
+RUN npm ci --omit=dev && \
     npm cache clean --force
 
 # Copy built shared code
