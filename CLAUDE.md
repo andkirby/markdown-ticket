@@ -23,6 +23,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `cd mcp-server && npm test` - Run MCP server Jest tests
 - `cd mcp-server && npm run test:watch` - Run MCP tests in watch mode
 
+**Testing HTTP Transport:**
+```bash
+# Start server with HTTP transport enabled
+cd mcp-server && MCP_HTTP_ENABLED=true MCP_HTTP_PORT=3002 npm run dev
+
+# Test with MCP Inspector (opens browser UI)
+npx @modelcontextprotocol/inspector --transport streamable-http --server-url http://localhost:3002/mcp
+
+# Test with curl
+curl -H "Accept: application/json" -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
+  http://localhost:3002/mcp
+```
+
 **MCP Transport Options:**
 - **Stdio Transport** (default): Always enabled, used by Claude Desktop and other stdio-based clients
 - **HTTP Transport** (optional): Enable with `MCP_HTTP_ENABLED=true`, provides HTTP/JSON-RPC endpoint at `http://localhost:3002/mcp`
@@ -309,3 +323,5 @@ The MCP server supports dual transport:
 - **Check for stale closures** when adding React hooks that reference changing state
 - **Use MCP tools** before manual file operations
 - **Follow CR format** from `docs/create_ticket.md` for all tickets
+- A cli command for teseting MCP with streamable HTTP protocol: 
+  timeout 10 npx @modelcontextprotocol/inspector --cli http://localhost:3002/mcp --transport http --method tools/list

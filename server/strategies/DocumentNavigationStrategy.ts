@@ -1,7 +1,7 @@
-import { PathSelectionStrategy } from './PathSelectionStrategy';
-import { TreeNode } from './TreeBuildingStrategy';
-import { FileOperationInvoker } from '../invokers/FileOperationInvoker';
-import { FileMetadata } from '../commands/ExtractMetadataCommand';
+import { PathSelectionStrategy } from './PathSelectionStrategy.js';
+import { TreeNode } from './TreeBuildingStrategy.js';
+import { FileOperationInvoker } from '../invokers/FileOperationInvoker.js';
+import { FileMetadata } from '../commands/ExtractMetadataCommand.js';
 
 /**
  * Strategy for building trees for document navigation (with metadata)

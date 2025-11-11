@@ -11,19 +11,23 @@ if [ -f "${PROJECT_ROOT}/.env.local" ]; then
   source "${PROJECT_ROOT}/.env.local"
 fi
 
+mode=${MDT_DOCKER_MODE:-prod}
+
 # Build docker-compose command arguments
 compose_args=()
 compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.yml")
-compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${MDT_DOCKER_MODE:-dev}.yml")
-compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${MDT_DOCKER_MODE:-dev}.mcp-stdio.yml")
+compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${mode}.yml")
+#compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${mode}-mcp-stdio.yml")
 
-echo "mode: ${MDT_DOCKER_MODE:-dev}" > /dev/stderr
+echo "mode: ${mode}" > /dev/stderr
 
 # Auto-join all dc-prj.*.yml files with full paths
-for project_file in "${PROJECT_ROOT}"/docker-compose."${MDT_DOCKER_MODE:-dev}".*.yml; do
+for project_file in "${PROJECT_ROOT}"/docker-compose."${mode}".*.yml; do
     if [[ -f "${project_file}" ]]; then
         compose_args+=("--file" "${project_file}")
     fi
 done
+
+echo "${compose_args[@]}"
 
 docker-compose "${compose_args[@]}" "${@}"

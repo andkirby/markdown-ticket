@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import { Command } from './Command';
+import { Command } from './Command.js';
 
 export interface FileMetadata {
   title: string | null;

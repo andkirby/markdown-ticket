@@ -1,6 +1,6 @@
-import { TreeBuilder } from '../builders/TreeBuilder';
-import { TreeStrategyFactory } from '../factories/TreeStrategyFactory';
-import { ConfigRepository } from '../repositories/ConfigRepository';
+import { TreeBuilder } from '../builders/TreeBuilder.js';
+import { TreeStrategyFactory } from '../factories/TreeStrategyFactory.js';
+import { ConfigRepository } from '../repositories/ConfigRepository.js';
 
 // Type definitions
 interface Project {
