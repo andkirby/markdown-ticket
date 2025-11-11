@@ -1,5 +1,5 @@
-import { StatusConfig } from '../../shared/models/Config';
-import { CRStatus } from '../../shared/models/Types';
+import { StatusConfig } from '@mdt/shared/models/Config';
+import { CRStatus } from '@mdt/shared/models/Types';
 
 export type { StatusConfig };
 

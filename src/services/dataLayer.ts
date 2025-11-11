@@ -9,7 +9,7 @@
  */
 
 import { Ticket, Status } from '../types';
-import { Project, ProjectConfig } from '../../shared/models/Project';
+import { Project, ProjectConfig } from '@mdt/shared/models/Project';
 
 interface CreateTicketData {
   code?: string;

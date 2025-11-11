@@ -11,7 +11,7 @@
  */
 
 import { Ticket } from '../types';
-import { Project } from '../../shared/models/Project';
+import { Project } from '@mdt/shared/models/Project';
 export type EventType =
   // Ticket events
   | 'ticket:created'
