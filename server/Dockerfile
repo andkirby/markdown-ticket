@@ -8,6 +8,7 @@ WORKDIR /app
 
 # Copy workspace root package.json and workspace package.jsons
 COPY package*.json ./
+COPY tsconfig.shared.json ./
 COPY shared/package*.json ./shared/
 COPY server/package*.json ./server/
 COPY mcp-server/package*.json ./mcp-server/

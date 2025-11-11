@@ -71,3 +71,6 @@ test-results
 
 lambda-counter-aws
 generated-docs/repomix_output.xml
+
+# Counter API - moved out of main codebase
+counter-api/
