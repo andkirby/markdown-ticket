@@ -79,8 +79,11 @@ COPY package*.json ./
 COPY shared/package.json ./shared/
 COPY server/package.json ./server/
 
-# Install production dependencies only at workspace root
-RUN npm ci --only=production && \
+# Copy node_modules from build stage (all deps needed for production)
+COPY --from=build /app/node_modules ./node_modules
+
+# Prune to production dependencies only
+RUN npm ci --only=production --prefer-offline && \
     npm cache clean --force
 
 # Copy built shared code
