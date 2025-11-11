@@ -39,9 +39,8 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 # Production build stage
 FROM base AS build
 
-# Install all dependencies for build
-RUN npm ci --only=production && \
-    npm cache clean --force
+# Install all dependencies for build (including devDependencies for compilation)
+RUN npm ci
 
 # Copy source code and configuration files
 COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
