@@ -129,7 +129,7 @@ autoRefresh = true
 # ~/.config/markdown-ticket/projects/markdown-ticket.toml
 [project]
 name = "Markdown Ticket Board"
-path = "/Users/kirby/home/markdown-ticket"
+path = "~/home/markdown-ticket"
 configFile = ".mdt-config.toml"
 active = true
 ```
@@ -470,7 +470,7 @@ const generateNextTicketCode = useCallback((): string => {
 # ~/.config/markdown-ticket/projects/llm-translator.toml
 [project]
 name = "LLM Translator - macos"
-path = "/Users/kirby/home/LlmTranslator"
+path = "~/home/LlmTranslator"
 configFile = ".mdt-config.toml"
 
 [tickets]
@@ -479,7 +479,7 @@ codePattern = "^CR-[A-Z]\\d{3}$"  # Generates CR-A001, CR-A002, CR-A003...
 # ~/.config/markdown-ticket/projects/markdown-ticket.toml  
 [project]
 name = "Markdown Ticket Board"
-path = "/Users/kirby/home/markdown-ticket"
+path = "~/home/markdown-ticket"
 configFile = ".mdt-config.toml"
 # No codePattern = uses default MDT-001, MDT-002, MDT-003...
 ```
