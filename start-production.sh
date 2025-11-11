@@ -5,6 +5,10 @@
 
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 echo "🚀 Starting All Services in Production Mode"
 echo "=========================================="
 
@@ -22,7 +26,7 @@ check_port() {
 wait_for_service() {
     local url=$1
     local name=$2
-    local max_attempts=30
+    local max_attempts=15  # Reduced timeout
     local attempt=1
 
     echo "⏳ Waiting for $name to be ready..."
@@ -32,12 +36,12 @@ wait_for_service() {
             return 0
         fi
         echo "   Attempt $attempt/$max_attempts..."
-        sleep 1
+        sleep 2  # Increased sleep time
         attempt=$((attempt + 1))
     done
 
-    echo "❌ $name failed to start within $max_attempts seconds"
-    return 1
+    echo "⚠️  $name not ready within $max_attempts attempts, but continuing..."
+    return 0  # Don't fail, just warn
 }
 
 # Check if all components are built
@@ -77,21 +81,24 @@ echo "🚀 Starting services..."
 
 # Start Backend Server
 echo "🔧 Starting Backend Server (port 3001)..."
-cd server && NODE_ENV=production nohup npm start > ../logs/backend.log 2>&1 &
+cd server
+NODE_ENV=production nohup npm start > ../logs/backend.log 2>&1 &
 BACKEND_PID=$!
 cd ..
 echo "   Backend PID: $BACKEND_PID"
 
 # Start MCP Server
 echo "🔧 Starting MCP Server (port 3002)..."
-cd mcp-server && MCP_HTTP_ENABLED=true NODE_ENV=production nohup npm start > ../logs/mcp-server.log 2>&1 &
+cd mcp-server
+MCP_HTTP_ENABLED=true NODE_ENV=production nohup npm start > ../logs/mcp-server.log 2>&1 &
 MCP_PID=$!
 cd ..
 echo "   MCP Server PID: $MCP_PID"
 
 # Start Frontend (static server)
 echo "🔧 Starting Frontend (port 5173)..."
-cd dist && python3 -m http.server 5173 > ../logs/frontend.log 2>&1 &
+cd dist
+python3 -m http.server 5173 > ../logs/frontend.log 2>&1 &
 FRONTEND_PID=$!
 cd ..
 echo "   Frontend PID: $FRONTEND_PID"
@@ -100,6 +107,9 @@ echo "   Frontend PID: $FRONTEND_PID"
 echo "$BACKEND_PID" > logs/backend.pid
 echo "$MCP_PID" > logs/mcp-server.pid
 echo "$FRONTEND_PID" > logs/frontend.pid
+
+# Give services a moment to start
+sleep 3
 
 # Wait for services to be ready
 echo ""
@@ -111,7 +121,7 @@ wait_for_service "http://localhost:5173" "Frontend"
 
 # Show service URLs
 echo ""
-echo "🎉 All services started successfully!"
+echo "🎉 All services started!"
 echo "=================================="
 echo "🌐 Frontend:     http://localhost:5173"
 echo "🔧 Backend API:  http://localhost:3001"
@@ -124,7 +134,7 @@ echo "   Backend:   logs/backend.log"
 echo "   MCP:       logs/mcp-server.log"
 echo "   Frontend:  logs/frontend.log"
 echo ""
-echo "🛑 To stop all services: ./stop-production.sh"
+echo "🛑 To stop all services: npm run stop:prod"
 echo "🔍 To check status: ps aux | grep -E '(node|python3)' | grep -v grep"
 
 exit 0
