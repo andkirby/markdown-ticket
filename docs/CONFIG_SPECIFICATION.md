@@ -47,8 +47,8 @@ ttl = 3600  # Cache TTL in seconds (default: 1 hour)
 [discovery]
 autoDiscover = true
 searchPaths = [
-    "/Users/kirby/home",
-    "/Users/kirby/projects",
+    "~/home",
+    "~/projects",
     "/opt/work"
 ]
 ```
@@ -180,7 +180,7 @@ activeMcp = true
 **Project Registry Entry** (`~/.config/markdown-ticket/projects/markdown-ticket.toml`):
 ```toml
 [project]
-path = "/Users/kirby/home/markdown-ticket"
+path = "~/home/markdown-ticket"
 active = true
 
 [metadata]

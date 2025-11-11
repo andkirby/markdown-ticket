@@ -163,8 +163,6 @@ export class TicketController {
 
       // Map project IDs to paths (simplified for now)
       const projectPaths: Record<string, string> = {
-        'debug-tasks': '/Users/kirby/home/markdown-ticket/debug-tasks',
-        'markdown-ticket': '/Users/kirby/home/markdown-ticket/docs/CRs'
       };
 
       const projectPath = projectPaths[projectId];
@@ -194,8 +192,6 @@ export class TicketController {
 
       // Map project IDs to paths and codes
       const projectInfo: Record<string, { path: string; code: string }> = {
-        'debug-tasks': { path: '/Users/kirby/home/markdown-ticket/debug-tasks', code: 'DEB' },
-        'markdown-ticket': { path: '/Users/kirby/home/markdown-ticket/docs/CRs', code: 'MDT' }
       };
 
       const project = projectInfo[projectId];
@@ -225,8 +221,6 @@ export class TicketController {
 
       // Map project IDs to paths and codes
       const projectInfo: Record<string, { path: string; code: string }> = {
-        'debug-tasks': { path: '/Users/kirby/home/markdown-ticket/debug-tasks', code: 'DEB' },
-        'markdown-ticket': { path: '/Users/kirby/home/markdown-ticket/docs/CRs', code: 'MDT' }
       };
 
       const project = projectInfo[projectId];

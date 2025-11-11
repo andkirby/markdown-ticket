@@ -25,7 +25,7 @@ The MCP server returns successful responses for `create_cr` operations but fails
    {
      "success": true,
      "message": "CR MDT-010 created successfully",
-     "filePath": "/Users/kirby/home/markdown-ticket/docs/CRs/MDT-010-...",
+     "filePath": "~/home/markdown-ticket/docs/CRs/MDT-010-...",
      "crCode": "MDT-010"
    }
    ```
