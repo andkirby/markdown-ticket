@@ -30,6 +30,9 @@ services:
       # Mount Docker-only configuration (container-specific)
       - ./docker-config:/root/.config/markdown-ticket:ro
 
+      - my-projects:/projects
+      - app:/app
+
       # Mount projects - generic mounting pattern
       # Examples:
       # - ./:/projects/markdown-ticket          # Work on MDT app itself
@@ -55,12 +58,8 @@ services:
       # Mount Docker-only configuration (container-specific) - needs to be writable for projects subdirectory
       - ./docker-config:/root/.config/markdown-ticket
 
-      # Mount projects - generic mounting pattern (same as backend)
-      # Examples:
-      # - ./:/projects/markdown-ticket          # Work on MDT app itself
-      # - ~/work/project-a:/projects/project-a   # Other projects
-      # - ~/personal/project-b:/projects/project-b
-      # projects:/projects                       # Named volume (uncomment below)
+      - my-projects:/projects
+      - app:/app
 
       # Mount source code for hot reload (tsx watch mode)
       - ./mcp-server/src:/app/mcp-server/src
@@ -75,23 +74,7 @@ services:
       - MCP_BIND_ADDRESS=0.0.0.0
       - LOG_LEVEL=debug
     entrypoint: ["npx", "tsx", "watch", "src/index.ts"]
-# Optional: Named volume for projects (uncomment to use)
-# volumes:
-#   projects:
 
-# Development Tips:
-# 1. For working on the MDT application itself, mount it as a project:
-#    volumes:
-#      - ./:/projects/markdown-ticket
-#
-# 2. For other projects, mount them to /projects:
-#    volumes:
-#      - ~/work/project-a:/projects/project-a
-#      - ~/personal/project-b:/projects/project-b
-#
-# 3. Use docker-compose.demo.yml as a template for mounting multiple projects
-#
-# 4. Hot reload is enabled for all services:
-#    - Frontend: Vite HMR
-#    - Backend: tsx watch mode
-#    - MCP: tsx watch mode
+volumes:
+  app:
+  my-projects:
