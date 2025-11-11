@@ -40,8 +40,10 @@ export class ProjectService {
   private projectsDir: string;
   private globalConfigPath: string;
   private cache: ProjectCache;
+  private quiet: boolean;
 
-  constructor() {
+  constructor(quiet: boolean = false) {
+    this.quiet = quiet;
     this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
     this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
@@ -52,6 +54,15 @@ export class ProjectService {
       timestamp: 0,
       ttl: 30000 // 30 seconds
     };
+  }
+
+  /**
+   * Log to stderr unless quiet mode is enabled
+   */
+  private log(message: string, ...args: any[]): void {
+    if (!this.quiet) {
+      console.error(message, ...args);
+    }
   }
 
   /**
@@ -69,7 +80,7 @@ export class ProjectService {
       const configContent = fs.readFileSync(this.globalConfigPath, 'utf8');
       return toml.parse(configContent) as GlobalConfig;
     } catch (error) {
-      console.error('Error reading global config:', error);
+      this.log('Error reading global config:', error);
       return {
         dashboard: { port: 3002, autoRefresh: true, refreshInterval: 5000 },
         discovery: { autoDiscover: true, searchPaths: [] }
@@ -123,13 +134,13 @@ export class ProjectService {
 
           projects.push(project);
         } catch (error) {
-          console.error(`Error parsing project file ${file}:`, error);
+          this.log(`Error parsing project file ${file}:`, error);
         }
       }
 
       return projects;
     } catch (error) {
-      console.error('Error reading registered projects:', error);
+      this.log('Error reading registered projects:', error);
       return [];
     }
   }
@@ -154,7 +165,7 @@ export class ProjectService {
       
       return null;
     } catch (error) {
-      console.error(`Error reading project config from ${projectPath}:`, error);
+      this.log(`Error reading project config from ${projectPath}:`, error);
       return null;
     }
   }
@@ -166,20 +177,20 @@ export class ProjectService {
     const discovered: Project[] = [];
 
     const pathsToSearch = [...new Set(searchPaths)];
-    console.log('🔍 Auto-discovery scanning paths:', pathsToSearch);
+    this.log('🔍 Auto-discovery scanning paths:', pathsToSearch);
 
     for (const searchPath of pathsToSearch) {
       try {
-        console.log(`🔍 Checking path: ${searchPath}, exists: ${fs.existsSync(searchPath)}`);
+        this.log(`🔍 Checking path: ${searchPath}, exists: ${fs.existsSync(searchPath)}`);
         if (fs.existsSync(searchPath)) {
-          console.log(`🔍 Scanning ${searchPath} for projects...`);
+          this.log(`🔍 Scanning ${searchPath} for projects...`);
           this.scanDirectoryForProjects(searchPath, discovered, 3); // Max depth 3
         }
       } catch (error) {
-        console.error(`Error scanning ${searchPath}:`, error);
+        this.log(`Error scanning ${searchPath}:`, error);
       }
     }
-    console.log(`🔍 Auto-discovery complete. Found ${discovered.length} projects:`);
+    this.log(`🔍 Auto-discovery complete. Found ${discovered.length} projects:`);
 
     return discovered;
   }
@@ -209,7 +220,7 @@ export class ProjectService {
               !p.project.id
             );
             if (existingProject) {
-              console.warn(`Ignoring duplicate project ${directoryName} with code "${config.project.code}" (no ID in config)`);
+              this.log(`Ignoring duplicate project ${directoryName} with code "${config.project.code}" (no ID in config)`);
               return; // Skip duplicate
             }
           }
@@ -276,7 +287,7 @@ export class ProjectService {
       const tomlContent = this.objectToToml(projectData);
       fs.writeFileSync(projectFile, tomlContent, 'utf8');
     } catch (error) {
-      console.error('Error registering project:', error);
+      this.log('Error registering project:', error);
       throw error;
     }
   }
@@ -311,9 +322,9 @@ export class ProjectService {
       const tomlContent = this.objectToToml(config);
       fs.writeFileSync(configPath, tomlContent, 'utf8');
 
-      console.log(`Updated local config for ${projectId} at ${configPath}`);
+      this.log(`Updated local config for ${projectId} at ${configPath}`);
     } catch (error) {
-      console.error('Error creating/updating local config:', error);
+      this.log('Error creating/updating local config:', error);
       throw error;
     }
   }
@@ -335,13 +346,13 @@ export class ProjectService {
 
     // Check if auto-discovery is enabled
     const globalConfig = this.getGlobalConfig();
-    console.log('🔧 Global config:', JSON.stringify(globalConfig, null, 2));
+    this.log('🔧 Global config:', JSON.stringify(globalConfig, null, 2));
 
     if (globalConfig.discovery?.autoDiscover) {
       const searchPaths = globalConfig.discovery?.searchPaths || [];
-      console.log('🔧 Auto-discovery enabled with searchPaths:', searchPaths);
+      this.log('🔧 Auto-discovery enabled with searchPaths:', searchPaths);
       const discovered = this.autoDiscoverProjects(searchPaths);
-      console.log('🔧 > Discovered projects:', discovered.length);
+      this.log('🔧 > Discovered projects:', discovered.length);
 
       // Create sets for both path and id to avoid duplicates
       const registeredPaths = new Set(registered.map(p => p.project.path));
@@ -369,7 +380,7 @@ export class ProjectService {
 
       return result;
     } else {
-      console.log('‼️ Projects auto discover disabled..');
+      this.log('‼️ Projects auto discover disabled..');
     }
 
     // Cache registered projects too
@@ -410,7 +421,7 @@ export class ProjectService {
       const { MarkdownService } = sharedModule;
       return await MarkdownService.scanMarkdownFiles(fullCRPath, projectPath);
     } catch (error) {
-      console.error(`Error getting CRs for project ${projectPath}:`, error);
+      this.log(`Error getting CRs for project ${projectPath}:`, error);
       return [];
     }
   }

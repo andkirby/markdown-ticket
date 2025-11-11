@@ -10,11 +10,19 @@ const __dirname = path.dirname(__filename);
 export class TemplateService {
   private templates: Map<string, Template> = new Map();
   private templatesPath: string;
+  private quiet: boolean;
 
-  constructor(templatesPath?: string) {
+  constructor(templatesPath?: string, quiet: boolean = false) {
     // Default to shared templates directory
     this.templatesPath = templatesPath || path.join(__dirname, '..', 'templates');
+    this.quiet = quiet;
     this.loadTemplates();
+  }
+
+  private log(message: string): void {
+    if (!this.quiet) {
+      console.warn(message);
+    }
   }
 
   private loadTemplates(): void {
@@ -22,7 +30,7 @@ export class TemplateService {
       const configPath = path.join(this.templatesPath, 'templates.json');
       
       if (!fs.existsSync(configPath)) {
-        console.warn(`Templates config not found at ${configPath}, using fallback`);
+        this.log(`Templates config not found at ${configPath}, using fallback`);
         this.initializeFallbackTemplates();
         return;
       }
@@ -43,19 +51,19 @@ export class TemplateService {
             template: templateContent
           });
         } else {
-          console.warn(`Template file not found: ${templatePath}`);
+          this.log(`Template file not found: ${templatePath}`);
         }
       }
 
-      console.error(`Loaded ${this.templates.size} templates from ${this.templatesPath}`);
+      this.log(`Loaded ${this.templates.size} templates from ${this.templatesPath}`);
     } catch (error) {
-      console.error('Failed to load templates from files:', error);
+      this.log('Failed to load templates from files: ' + error);
       this.initializeFallbackTemplates();
     }
   }
 
   private initializeFallbackTemplates(): void {
-    console.error('Using fallback hardcoded templates');
+    this.log('Using fallback hardcoded templates');
     
     // Bug Fix Template (fallback)
     this.templates.set('Bug Fix', {

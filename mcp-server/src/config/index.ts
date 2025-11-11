@@ -70,21 +70,29 @@ const CONFIG_PATH = DEFAULT_PATHS.CONFIG_FILE;
 
 export class ConfigService {
   private config: ServerConfig;
+  private quiet: boolean;
 
-  constructor() {
+  constructor(quiet: boolean = false) {
+    this.quiet = quiet;
     this.config = { ...DEFAULT_CONFIG };
     this.loadConfigFile();
-    console.error(`📋 Configuration loaded`);
-    console.error(`   Log Level: ${this.config.server.logLevel}`);
-    console.error(`   Registry Path: ${this.config.discovery.registryPath}`);
-    console.error(`   Scan Paths: ${this.config.discovery.scanPaths.length} configured`);
-    console.error(`   Cache Timeout: ${this.config.discovery.cacheTimeout}s`);
+    this.log(`📋 Configuration loaded`);
+    this.log(`   Log Level: ${this.config.server.logLevel}`);
+    this.log(`   Registry Path: ${this.config.discovery.registryPath}`);
+    this.log(`   Scan Paths: ${this.config.discovery.scanPaths.length} configured`);
+    this.log(`   Cache Timeout: ${this.config.discovery.cacheTimeout}s`);
+  }
+
+  private log(message: string): void {
+    if (!this.quiet) {
+      console.error(message);
+    }
   }
 
   private loadConfigFile(): void {
     try {
       if (existsSync(CONFIG_PATH)) {
-        console.error(`📝 Loading config from: ${CONFIG_PATH}`);
+        this.log(`📝 Loading config from: ${CONFIG_PATH}`);
         const configContent = readFileSync(CONFIG_PATH, 'utf-8');
         const fileConfig = toml.parse(configContent);
 
@@ -123,7 +131,7 @@ export class ConfigService {
           this.config.templates.customPath = this.expandPath(fileConfig.templates.customPath);
         }
       } else {
-        console.error(`ℹ️  No config.toml found (optional) - using defaults and environment variables`);
+        this.log(`ℹ️  No config.toml found (optional) - using defaults and environment variables`);
       }
     } catch (error) {
       console.warn(`⚠️  Failed to load config.toml: ${(error as Error).message}`);
