@@ -80,11 +80,11 @@ COPY package*.json ./
 COPY shared/package.json ./shared/
 COPY mcp-server/package.json ./mcp-server/
 
-# Copy node_modules from build stage (all deps needed for production)
+# Copy node_modules from build stage (has all deps already installed)
 COPY --from=build /app/node_modules ./node_modules
 
-# Prune to production dependencies only
-RUN npm ci --only=production --prefer-offline && \
+# Install only production dependencies (prunes dev deps from existing node_modules)
+RUN npm ci --only=production && \
     npm cache clean --force
 
 # Copy built shared code
