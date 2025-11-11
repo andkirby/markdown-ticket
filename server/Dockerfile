@@ -6,12 +6,12 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# Copy workspace root package.json and workspace package.jsons
+# Copy workspace root package.json and shared package.json (workspace monorepo)
 COPY package*.json ./
 COPY tsconfig.shared.json ./
-COPY shared/package*.json ./shared/
-COPY server/package*.json ./server/
-COPY mcp-server/package*.json ./mcp-server/
+COPY shared/package.json ./shared/
+COPY server/package.json ./server/
+COPY mcp-server/package.json ./mcp-server/
 
 # Development stage
 FROM base AS development
@@ -76,8 +76,8 @@ WORKDIR /app
 
 # Copy workspace root package.json
 COPY package*.json ./
-COPY shared/package*.json ./shared/
-COPY server/package*.json ./server/
+COPY shared/package.json ./shared/
+COPY server/package.json ./server/
 
 # Install production dependencies only at workspace root
 RUN npm ci --only=production && \
