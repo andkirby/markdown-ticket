@@ -24,6 +24,7 @@ export type EventType =
   // SSE connection events
   | 'sse:connected'
   | 'sse:disconnected'
+  | 'sse:reconnected'
   | 'sse:error'
   // System events
   | 'error:api'
