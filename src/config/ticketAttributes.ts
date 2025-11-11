@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AttributeConfig } from '../../shared/models/Config';
+import { AttributeConfig } from '@mdt/shared/models/Config';
 
 export type { AttributeConfig };
 

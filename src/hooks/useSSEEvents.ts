@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { useEventBus } from '../services/eventBus';
-import { Project } from '../../shared/models/Project';
+import { Project } from '@mdt/shared/models/Project';
 import { Ticket } from '../types';
 
 // Simple debounce utility
