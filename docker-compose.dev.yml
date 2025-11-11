@@ -6,6 +6,8 @@
 
 services:
   frontend:
+    ports:
+      - "5174:5173"
     volumes:
       # Mount source code for hot reload
       - ./src:/app/src

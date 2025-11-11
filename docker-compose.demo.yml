@@ -1,6 +1,6 @@
 x-shared-volumes: &project-volumes
     volumes:
-      - ./debug-tasks:/projects/debug-tasks
+      - ./debug-tasks:/projects/demo-project
       - ./:/projects/markdown-ticket
 
 services:
