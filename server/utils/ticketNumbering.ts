@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Project, ProjectConfig } from '../../shared/models/Project.js';
+import { Project, ProjectConfig } from '@mdt/shared/models/Project.js';
 
 export interface Ticket {
   code: string;
