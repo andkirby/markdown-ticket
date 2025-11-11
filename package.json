@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "install:all": "npm install && npm install --workspace=shared && npm install --workspace=server && npm install --workspace=mcp-server",
+    "install:prod": "npm ci --omit=dev && npm cache clean --force && npm install --workspaces --omit=dev && npm cache clean --force",
     "dev": "vite",
     "dev:server": "cd server && npm run dev",
     "dev:full": "npm run build:shared && concurrently \"npm run dev\" \"npm run dev:server\"",
