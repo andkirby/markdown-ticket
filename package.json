@@ -10,6 +10,7 @@
     "mcp-server"
   ],
   "scripts": {
+    "install:all": "npm install && npm install --workspace=shared && npm install --workspace=server && npm install --workspace=mcp-server",
     "dev": "vite",
     "dev:server": "cd server && npm run dev",
     "dev:full": "npm run build:shared && concurrently \"npm run dev\" \"npm run dev:server\"",
