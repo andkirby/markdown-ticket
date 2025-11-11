@@ -16,7 +16,7 @@ COPY mcp-server/package.json ./mcp-server/
 FROM base AS development
 
 # Install all dependencies (including devDependencies)
-RUN npm install
+RUN npm ci
 
 # Copy source code and configuration files
 COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
