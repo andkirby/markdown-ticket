@@ -1,11 +1,5 @@
 # Docker Configuration for Markdown Ticket
 # This config is container-only and independent of host configuration
-
-[dashboard]
-port = 3001
-autoRefresh = true
-refreshInterval = 5000
-
 [discovery]
 autoDiscover = true
 searchPaths = ["/projects"]

@@ -7,10 +7,6 @@ This directory contains Docker-only configuration that is completely independent
 ```
 docker-config/
 ├── config.toml           # Main configuration with discovery settings
-├── projects/
-│   ├── mdt.toml          # Main MDT project (self-contained)
-│   ├── debug.toml        # Debug project (for testing only)
-│   └── README.md         # Project-specific documentation
 └── README.md             # This file
 ```
 
