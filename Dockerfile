@@ -5,16 +5,18 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# Install dependencies for shared code and frontend
+# Install dependencies for shared code and frontend (workspace monorepo)
 COPY package*.json ./
 COPY tsconfig.shared.json ./
 COPY shared ./shared
+COPY server/package.json ./server/
+COPY mcp-server/package.json ./mcp-server/
 
 # Development stage
 FROM base AS development
 
 # Install all dependencies (including devDependencies)
-RUN npm ci
+RUN npm install
 
 # Copy source code and configuration files
 COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
@@ -38,7 +40,8 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 FROM base AS build
 
 # Install all dependencies for build
-RUN npm ci
+RUN npm ci --only=production && \
+    npm cache clean --force
 
 # Copy source code and configuration files
 COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
