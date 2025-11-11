@@ -15,99 +15,111 @@ class MCPCRServer {
   private crService!: CRService;
   private templateService!: TemplateService;
   private mcpTools!: MCPTools;
+  private quiet: boolean;
 
-  constructor() {
-    console.log('🔥🔥🔥 MCP Server initializing with HOT RELOAD - TEST CHANGE!');
+  constructor(quiet: boolean = false) {
+    this.quiet = quiet;
     this.setupErrorHandling();
     this.initializeServices();
   }
 
+  /**
+   * Log to stderr unless quiet mode is enabled
+   */
+  private log(message: string): void {
+    if (!this.quiet) {
+      console.error(message);
+    }
+  }
+
   private setupErrorHandling(): void {
     process.on('uncaughtException', (error) => {
-      console.error('❌ Uncaught Exception:', error);
+      this.log('❌ Uncaught Exception: ' + error);
       process.exit(1);
     });
 
     process.on('unhandledRejection', (reason, promise) => {
-      console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+      this.log('❌ Unhandled Rejection at: ' + promise + ', reason: ' + reason);
       process.exit(1);
     });
 
     process.on('SIGINT', () => {
-      console.error('\n🛑 Received SIGINT, shutting down gracefully...');
+      this.log('\n🛑 Received SIGINT, shutting down gracefully...');
       process.exit(0);
     });
 
     process.on('SIGTERM', () => {
-      console.error('\n🛑 Received SIGTERM, shutting down gracefully...');
+      this.log('\n🛑 Received SIGTERM, shutting down gracefully...');
       process.exit(0);
     });
   }
 
   private initializeServices(): void {
-    console.error('🚀 Initializing MCP CR Server...');
+    this.log('🚀 Initializing MCP CR Server...');
 
     // Initialize configuration
-    this.configService = new ConfigService();
+    this.configService = new ConfigService(this.quiet);
     const config = this.configService.getConfig();
 
     // Initialize services
-    this.projectService = new ProjectService();
+    this.projectService = new ProjectService(this.quiet);
     this.crService = new CRService();
-    this.templateService = new TemplateService();
+    this.templateService = new TemplateService(undefined, this.quiet);
     this.mcpTools = new MCPTools(
       this.projectService,
       this.crService,
       this.templateService
     );
 
-    console.error('✅ Services initialized');
+    this.log('✅ Services initialized');
   }
 
   async start(): Promise<void> {
     try {
       // Validate configuration
-      console.error('🔍 Validating configuration...');
+      this.log('🔍 Validating configuration...');
       const validation = await this.configService.validateConfig();
 
       if (!validation.valid) {
-        console.error('❌ Configuration validation failed:');
-        validation.errors.forEach(error => console.error(`  • ${error}`));
+        this.log('❌ Configuration validation failed:');
+        validation.errors.forEach(error => this.log(`  • ${error}`));
 
-        console.error('\n💡 To create a default configuration file, run:');
-        console.error(`echo 'Creating config...' && mkdir -p ~/.config/mcp-server && cat > ~/.config/mcp-server/config.toml << 'EOF'\n${this.generateSampleConfig()}\nEOF`);
+        this.log('\n💡 To create a default configuration file, run:');
+        this.log(`echo 'Creating config...' && mkdir -p ~/.config/mcp-server && cat > ~/.config/mcp-server/config.toml << 'EOF'\n${this.generateSampleConfig()}\nEOF`);
 
         process.exit(1);
       }
 
       if (validation.warnings.length > 0) {
-        console.warn('⚠️  Configuration warnings:');
-        validation.warnings.forEach(warning => console.warn(`  • ${warning}`));
+        if (!this.quiet) {
+          console.warn('⚠️  Configuration warnings:');
+          validation.warnings.forEach(warning => console.warn(`  • ${warning}`));
+        }
       }
 
       // Discover projects
-      console.error('🔍 Discovering projects...');
+      this.log('🔍 Discovering projects...');
       const projects = await this.projectService.getAllProjects();
-      console.error(`📁 Found ${projects.length} project${projects.length === 1 ? '' : 's'}`);
+      this.log(`📁 Found ${projects.length} project${projects.length === 1 ? '' : 's'}`);
 
       if (projects.length > 0) {
-        console.error('\nProjects discovered:');
+        this.log('\nProjects discovered:');
         projects.forEach(project => {
-          console.error(`  • ${project.id} - ${project.project.name}`);
-          console.error(`    Path: ${project.project.path}`);
+          this.log(`  • ${project.id} - ${project.project.name}`);
+          this.log(`    Path: ${project.project.path}`);
         });
       }
 
-      console.error('\n🌐 Starting MCP transports...');
+      this.log('\n🌐 Starting MCP transports...');
 
       // Start stdio transport (ALWAYS ON)
-      console.error('📡 Starting stdio transport...');
+      this.log('📡 Starting stdio transport...');
       await startStdioTransport(this.mcpTools);
-      console.error('✅ Stdio transport ready');
+      this.log('✅ Stdio transport ready');
 
       // Start HTTP transport (OPTIONAL - enabled via env var)
       if (process.env.MCP_HTTP_ENABLED === 'true') {
-        console.error('🌐 Starting HTTP transport...');
+        this.log('🌐 Starting HTTP transport...');
         try {
           const port = parseInt(process.env.MCP_HTTP_PORT || '3002');
           const host = process.env.MCP_BIND_ADDRESS || '127.0.0.1';
@@ -135,27 +147,29 @@ class MCPCRServer {
             sessionTimeoutMs
           });
 
-          console.error(`✅ HTTP transport ready at http://${host}:${port}/mcp`);
-          console.error(`   Features: SSE=${true}, Sessions=${true}, RateLimit=${enableRateLimiting}, Auth=${enableAuth}`);
+          this.log(`✅ HTTP transport ready at http://${host}:${port}/mcp`);
+          this.log(`   Features: SSE=${true}, Sessions=${true}, RateLimit=${enableRateLimiting}, Auth=${enableAuth}`);
         } catch (error) {
-          console.warn('⚠️  HTTP transport failed to start:', (error as Error).message);
-          console.warn('   Stdio transport is still available');
+          if (!this.quiet) {
+            console.warn('⚠️  HTTP transport failed to start:', (error as Error).message);
+            console.warn('   Stdio transport is still available');
+          }
         }
       } else {
-        console.error('ℹ️  HTTP transport disabled (set MCP_HTTP_ENABLED=true to enable)');
+        this.log('ℹ️  HTTP transport disabled (set MCP_HTTP_ENABLED=true to enable)');
       }
 
-      console.error('\n✅ MCP CR Server is running and ready for connections!');
-      console.error('\n📡 Available tools:');
+      this.log('\n✅ MCP CR Server is running and ready for connections!');
+      this.log('\n📡 Available tools:');
       const tools = this.mcpTools.getTools();
       tools.forEach(tool => {
-        console.error(`  • ${tool.name}: ${tool.description}`);
+        this.log(`  • ${tool.name}: ${tool.description}`);
       });
 
-      console.error('\n🔗 Connect your MCP client to start managing CRs across projects!');
+      this.log('\n🔗 Connect your MCP client to start managing CRs across projects!');
 
     } catch (error) {
-      console.error('❌ Failed to start MCP CR Server:', (error as Error).message);
+      this.log('❌ Failed to start MCP CR Server: ' + (error as Error).message);
       process.exit(1);
     }
   }
@@ -176,10 +190,19 @@ cacheTimeout = 300
   }
 }
 
+/**
+ * Parse command line arguments
+ */
+function parseArgs(): { quiet: boolean } {
+  const quiet = process.argv.includes('-q') || process.argv.includes('--quiet');
+  return { quiet };
+}
+
 // Start the server
 async function main() {
   try {
-    const server = new MCPCRServer();
+    const { quiet } = parseArgs();
+    const server = new MCPCRServer(quiet);
     await server.start();
   } catch (error) {
     console.error('❌ Fatal error:', error);
