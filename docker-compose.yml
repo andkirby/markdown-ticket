@@ -11,7 +11,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.frontend
+      dockerfile: Dockerfile
       target: development
     container_name: mdt-frontend
     ports:

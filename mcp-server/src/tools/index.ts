@@ -1,14 +1,14 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ProjectService } from '@shared/services/ProjectService.js';
+import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 import { CRService } from '../services/crService.js';
-import { TemplateService } from '@shared/services/TemplateService.js';
-import { MarkdownSectionService } from '@shared/services/MarkdownSectionService.js';
-import { MarkdownService } from '@shared/services/MarkdownService.js';
-import { TicketFilters, TicketData } from '@shared/models/Ticket.js';
-import { CRStatus } from '@shared/models/Types.js';
+import { TemplateService } from '@mdt/shared/services/TemplateService.js';
+import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js';
+import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
+import { TicketFilters, TicketData } from '@mdt/shared/models/Ticket.js';
+import { CRStatus } from '@mdt/shared/models/Types.js';
 import { SimpleContentProcessor } from '../utils/simpleContentProcessor.js';
 import { SimpleSectionValidator } from '../utils/simpleSectionValidator.js';
-import { Project } from '@shared/models/Project.js';
+import { Project } from '@mdt/shared/models/Project.js';
 
 export class MCPTools {
   private cachedProjects: Project[] = [];

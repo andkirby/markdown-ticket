@@ -4,7 +4,7 @@ import cors from 'cors';
 import { fileURLToPath } from 'url';
 // Services
 import FileWatcherService from './fileWatcherService.js';
-import { ProjectService as SharedProjectService } from '../../shared/dist/services/ProjectService.js';
+import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js';
 import { ProjectService } from './services/ProjectService.js';
 import { TicketService } from './services/TicketService.js';
 import { DocumentService } from './services/DocumentService.js';
