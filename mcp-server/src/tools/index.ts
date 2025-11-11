@@ -377,9 +377,9 @@ export class MCPTools {
     const projects = await this.projectService.getAllProjects();
     this.cachedProjects = projects;
 
-    const project = projects.find(p => p.id === projectKey);
+    const project = projects.find(p => p.project.code === projectKey);
     if (!project) {
-      const availableKeys = projects.map(p => p.id).join(', ');
+      const availableKeys = projects.map(p => p.project.code).join(', ');
       throw new Error(`Project '${projectKey}' not found. Available projects: ${availableKeys}`);
     }
     return project;
@@ -401,10 +401,14 @@ export class MCPTools {
       const crs = await this.projectService.getProjectCRs(project.project.path);
       const crCount = crs.length;
 
-      lines.push(`• **${project.id}** - ${project.project.name}`);
+      const projectCode = project.project.code;
+      const projectName = project.project.name;
+
+      lines.push(`• **${projectCode}** - ${projectName}`);
       if (project.project.description) {
         lines.push(`  Description: ${project.project.description}`);
       }
+      lines.push(`  Code: ${projectCode}`);
       lines.push(`  Path: ${project.project.path}`);
       lines.push(`  CRs: ${crCount}`);
       lines.push('');
@@ -421,10 +425,10 @@ export class MCPTools {
     const crCount = crs.length;
 
     const lines = [
-      `📋 Project: **${project.id}** - ${project.project.name}`,
+      `📋 Project: **${project.project.code}** - ${project.project.name}`,
       '',
       '**Details:**',
-      `- Key: ${project.id}`,
+      `- Code: ${project.project.code}`,
       `- Description: ${project.project.description || 'No description'}`,
       `- Path: ${project.project.path}`,
       `- Total CRs: ${crCount}`,

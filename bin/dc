@@ -2,16 +2,27 @@
 
 # Get script directory to work from any location
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
+
+if [ -f "${PROJECT_ROOT}/.env" ]; then
+  source "${PROJECT_ROOT}/.env"
+fi
+if [ -f "${PROJECT_ROOT}/.env.local" ]; then
+  source "${PROJECT_ROOT}/.env.local"
+fi
+
 # Build docker-compose command arguments
 compose_args=()
-compose_args+=("--file" "$PROJECT_ROOT/docker-compose.yml")
-compose_args+=("--file" "$PROJECT_ROOT/docker-compose.${MDT_DOCKER_MODE:-dev}.yml")
+compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.yml")
+compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${MDT_DOCKER_MODE:-dev}.yml")
+compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${MDT_DOCKER_MODE:-dev}.mcp-stdio.yml")
+
+echo "mode: ${MDT_DOCKER_MODE:-dev}" > /dev/stderr
 
 # Auto-join all dc-prj.*.yml files with full paths
-for project_file in "$PROJECT_ROOT"/dc-prj.*.yml; do
-    if [[ -f "$project_file" ]]; then
-        compose_args+=("--file" "$project_file")
+for project_file in "${PROJECT_ROOT}"/docker-compose."${MDT_DOCKER_MODE:-dev}".*.yml; do
+    if [[ -f "${project_file}" ]]; then
+        compose_args+=("--file" "${project_file}")
     fi
 done
 
