@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { SmartLink } from '../components/SmartLink';
+import SmartLink from '../components/SmartLink';
 import { useSmartLinkProcessor } from '../hooks/useSmartLinkProcessor';
 import { createLinkContextFromProject } from '../utils/linkProcessor';
 import { preprocessMarkdown } from '../utils/markdownPreprocessor';
@@ -63,7 +63,7 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
       const categorizedLinks = links.map(link => ({
         original: link.original,
         processed: link,
-        status: link.isValid ? 'valid' : (link.error?.includes('security') ? 'invalid' : 'warning')
+        status: link.isValid ? 'valid' : (link.error?.includes('security') ? 'invalid' : 'warning') as 'valid' | 'invalid' | 'warning'
       }));
 
       setExtractedLinks(categorizedLinks);
@@ -79,7 +79,7 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
     return content.replace(
       /\[([^\]]*)\]\(([^)]+)\)/g,
       (match, text, href) => {
-        const { processed } = linkProcessor.processLink(href, text);
+        const processed = linkProcessor.processLink(href, text);
 
         if (!processed.isValid) {
           return `<span class="broken-link" title="${processed.error || 'Invalid link'}">${text}</span>`;
@@ -111,7 +111,7 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
           const text = textMatch[1];
           const key = keyMatch[1];
 
-          const { processed } = linkProcessor.processLink(href, text);
+          const processed = linkProcessor.processLink(href, text);
 
           return (
             <SmartLink
@@ -133,7 +133,7 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
 
   return (
     <div className="link-normalization-example">
-      <style jsx>{`
+      <style>{`
         .link-normalization-example {
           max-width: 1200px;
           margin: 0 auto;
@@ -290,7 +290,7 @@ export const LinkNormalizationExample: React.FC<ExampleProps> = ({
           <p><strong>Current Project:</strong> {currentProject}</p>
           <p><strong>Source Path:</strong> {sourcePath}</p>
           <p><strong>Cache Size:</strong> {linkProcessor.cacheSize} entries</p>
-          <p><strong>Document Paths:</strong> {linkContext.documentPaths.join(', ')}</p>
+          <p><strong>Document Paths:</strong> {linkContext.documentPaths?.join(', ') || 'None'}</p>
           <p><strong>Auto-Linking Enabled:</strong> {linkConfig.enableAutoLinking ? 'Yes' : 'No'}</p>
         </div>
       </div>
