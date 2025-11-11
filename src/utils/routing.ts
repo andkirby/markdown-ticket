@@ -1,4 +1,4 @@
-import { Project } from '../../shared/models/Project';
+import { Project } from '@mdt/shared/models/Project';
 import { Ticket } from '../types';
 
 export const normalizeTicketKey = (key: string): string => {

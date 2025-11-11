@@ -6,8 +6,8 @@
  */
 
 import path from 'path';
-import { Project } from '../../shared/models/Project.js';
-import { ProjectConfig } from '../../shared/models/Project.js';
+import { Project } from '@mdt/shared/models/Project.js';
+import { ProjectConfig } from '@mdt/shared/models/Project.js';
 
 export interface LinkContext {
   /** Current project code */

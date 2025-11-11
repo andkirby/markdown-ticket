@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Ticket, Status } from '../types';
-import { Project } from '../../shared/models/Project';
-import { formatTicketAsMarkdown } from '../services/markdownParser';
+import { Ticket } from '../types';
+import { Project } from '@mdt/shared/models/Project';
 
 export function useTicketOperations(
   selectedProject: Project | null,
