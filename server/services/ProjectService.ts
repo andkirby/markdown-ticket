@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
+import { DEFAULT_PATHS } from '../../shared/utils/constants.js';
 
 // Type definitions
 interface Project {
@@ -162,7 +163,9 @@ export class ProjectService {
     const projectCode = code || name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6);
 
     // Create project config directory
-    const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket', 'projects');
+    const configDir = process.env.CONFIG_PATH
+      ? path.join(path.dirname(process.env.CONFIG_PATH), 'projects')
+      : DEFAULT_PATHS.PROJECTS_REGISTRY;
     await fs.mkdir(configDir, { recursive: true });
 
     // Create project config file using directory name, fallback to project code

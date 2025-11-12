@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import os from 'os';
+import { DEFAULT_PATHS } from '../shared/utils/constants.js';
 
 // Type definitions
 interface ProjectPath {
@@ -130,10 +131,12 @@ class FileWatcherService extends EventEmitter {
 
   /**
    * Initialize file watcher for global project registry
-   * Watches ~/.config/markdown-ticket/projects/*.toml for project lifecycle events
+   * Watches {DEFAULT_PATHS.PROJECTS_REGISTRY}/*.toml for project lifecycle events
    */
   initGlobalRegistryWatcher(): void {
-    const registryPath = path.join(os.homedir(), '.config', 'markdown-ticket', 'projects');
+    const registryPath = process.env.CONFIG_PATH
+      ? path.join(path.dirname(process.env.CONFIG_PATH), 'projects')
+      : DEFAULT_PATHS.PROJECTS_REGISTRY;
 
     // Check if registry directory exists
     if (!fs.existsSync(registryPath)) {
