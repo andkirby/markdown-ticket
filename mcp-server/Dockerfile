@@ -118,7 +118,11 @@ ENV MCP_SECURITY_AUTH=false
 
 ENV CONFIG_DIR=/app/config
 ENV CONFIG_DISCOVER_PATH=/projects
+
 VOLUME /app/config
+
+# Create config directory with proper ownership (after VOLUME)
+RUN mkdir -p /app/config && chown nodejs:nodejs /app/config
 
 # Copy entrypoint script before switching to non-root user
 COPY --chown=nodejs:nodejs mcp-server/docker-entrypoint.sh /usr/local/bin/
