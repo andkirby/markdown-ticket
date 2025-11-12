@@ -4,7 +4,7 @@ import toml from 'toml';
 import os from 'os';
 import { Project, ProjectConfig, validateProjectConfig } from '../models/Project.js';
 import { Ticket } from '../models/Ticket.js';
-import { CONFIG_FILES } from '../utils/constants.js';
+import { CONFIG_FILES, DEFAULT_PATHS } from '../utils/constants.js';
 
 /**
  * Global configuration interface
@@ -63,9 +63,9 @@ export class ProjectService {
 
   constructor(quiet: boolean = false) {
     this.quiet = quiet;
-    this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
+    this.globalConfigPath = process.env.CONFIG_PATH || DEFAULT_PATHS.CONFIG_FILE;
+    this.globalConfigDir = path.dirname(this.globalConfigPath);
     this.projectsDir = path.join(this.globalConfigDir, 'projects');
-    this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
 
     // Initialize cache with 30-second TTL
     this.cache = {

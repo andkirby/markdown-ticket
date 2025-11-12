@@ -4,6 +4,7 @@ import path from 'path';
 import os from 'os';
 import FileWatcherService from '../fileWatcherService.js';
 import { ProjectController } from '../controllers/ProjectController.js';
+import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js';
 
 interface FileInvoker {
   clearCache(): void;
@@ -49,7 +50,7 @@ export function createSystemRouter(
   // Get link configuration
   router.get('/config/links', async (req: Request, res: Response) => {
     try {
-      const configPath = path.join(os.homedir(), '.config', 'markdown-ticket', 'config.toml');
+      const configPath = process.env.CONFIG_PATH || DEFAULT_PATHS.CONFIG_FILE;
       const configData = await fs.readFile(configPath, 'utf8');
 
       // Simple TOML parsing for [links] section
@@ -98,8 +99,7 @@ export function createSystemRouter(
   // Get global configuration
   router.get('/config/global', async (req: Request, res: Response) => {
     try {
-      const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket');
-      const configPath = path.join(configDir, 'config.toml');
+      const configPath = process.env.CONFIG_PATH || DEFAULT_PATHS.CONFIG_FILE;
 
       console.log(`Reading global config from: ${configPath}`);
 
