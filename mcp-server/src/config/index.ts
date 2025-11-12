@@ -15,7 +15,7 @@ import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js';
  * 3. Hardcoded defaults
  *
  * Project discovery supports BOTH:
- * - Global registry: Uses CONFIG_PATH environment variable or DEFAULT_PATHS.PROJECTS_REGISTRY
+ * - Global registry: Uses DEFAULT_PATHS.CONFIG_FILE environment variable or DEFAULT_PATHS.PROJECTS_REGISTRY
  * - ScanPaths: Configured directories scanned for *-config.toml files
  */
 
@@ -66,7 +66,7 @@ const DEFAULT_CONFIG: ServerConfig = {
   }
 };
 
-const CONFIG_PATH = process.env.CONFIG_PATH || DEFAULT_PATHS.CONFIG_FILE;
+
 
 export class ConfigService {
   private config: ServerConfig;
@@ -91,9 +91,9 @@ export class ConfigService {
 
   private loadConfigFile(): void {
     try {
-      if (existsSync(CONFIG_PATH)) {
-        this.log(`📝 Loading config from: ${CONFIG_PATH}`);
-        const configContent = readFileSync(CONFIG_PATH, 'utf-8');
+      if (existsSync(DEFAULT_PATHS.CONFIG_FILE)) {
+        this.log(`📝 Loading config from: ${DEFAULT_PATHS.CONFIG_FILE}`);
+        const configContent = readFileSync(DEFAULT_PATHS.CONFIG_FILE, 'utf-8');
         const fileConfig = toml.parse(configContent);
 
         // Merge server settings
