@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
-import os from 'os';
+import toml from 'toml';
 import FileWatcherService from '../fileWatcherService.js';
 import { ProjectController } from '../controllers/ProjectController.js';
+import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js';
 
 interface FileInvoker {
   clearCache(): void;
@@ -49,7 +50,7 @@ export function createSystemRouter(
   // Get link configuration
   router.get('/config/links', async (req: Request, res: Response) => {
     try {
-      const configPath = path.join(os.homedir(), '.config', 'markdown-ticket', 'config.toml');
+      const configPath = DEFAULT_PATHS.CONFIG_FILE;
       const configData = await fs.readFile(configPath, 'utf8');
 
       // Simple TOML parsing for [links] section
@@ -95,95 +96,81 @@ export function createSystemRouter(
     }
   });
 
+  // Get configuration for frontend "No Projects Found" display
+  router.get('/config', async (req: Request, res: Response) => {
+    try {
+      const configPath = DEFAULT_PATHS.CONFIG_FILE;
+      console.log(`Reading config from: ${configPath}`);
+
+      try {
+        const configContent = await fs.readFile(configPath, 'utf8');
+        const parsedConfig = toml.parse(configContent);
+
+        // Extract configuration using proper TOML parsing
+        const response = {
+          configDir: DEFAULT_PATHS.CONFIG_DIR,
+          discovery: {
+            autoDiscover: parsedConfig.discovery?.autoDiscover ?? true,
+            searchPaths: parsedConfig.discovery?.searchPaths ?? [],
+            maxDepth: parsedConfig.discovery?.maxDepth ?? 3
+          }
+        };
+
+        res.json(response);
+      } catch (_error) {
+        // Config file doesn't exist, return defaults
+        const response = {
+          configDir: DEFAULT_PATHS.CONFIG_DIR,
+          discovery: {
+            autoDiscover: true,
+            searchPaths: [],
+            maxDepth: 3
+          }
+        };
+        res.json(response);
+      }
+    } catch (error) {
+      console.error('Error reading config:', error);
+      res.status(500).json({ error: 'Failed to read config' });
+    }
+  });
+
   // Get global configuration
   router.get('/config/global', async (req: Request, res: Response) => {
     try {
-      const configDir = path.join(process.env.HOME || os.homedir(), '.config', 'markdown-ticket');
-      const configPath = path.join(configDir, 'config.toml');
-
+      const configPath = DEFAULT_PATHS.CONFIG_FILE;
       console.log(`Reading global config from: ${configPath}`);
 
       try {
         const configContent = await fs.readFile(configPath, 'utf8');
-
-        // Basic TOML parsing for all sections
-        const config: any = {};
-
-        // Parse dashboard section
-        const dashboardMatch = configContent.match(/\[dashboard\]([\s\S]*?)(?=\[|$)/);
-        if (dashboardMatch) {
-          const section = dashboardMatch[1];
-          config.dashboard = {
-            port: parseInt(section.match(/port\s*=\s*(\d+)/)?.[1] || '3002'),
-            autoRefresh: section.match(/autoRefresh\s*=\s*(true|false)/)?.[1] === 'true',
-            refreshInterval: parseInt(section.match(/refreshInterval\s*=\s*(\d+)/)?.[1] || '5000')
-          };
-        }
-
-        // Parse discovery section
-        const discoveryMatch = configContent.match(/\[discovery\]([\s\S]*?)(?=\[|$)/);
-        if (discoveryMatch) {
-          const section = discoveryMatch[1];
-          config.discovery = {
-            autoDiscover: section.match(/autoDiscover\s*=\s*(true|false)/)?.[1] === 'true',
-            searchPaths: []
-          };
-
-          // Parse search paths array
-          const pathsMatch = section.match(/searchPaths\s*=\s*\[([\s\S]*?)\]/);
-          if (pathsMatch) {
-            const pathsStr = pathsMatch[1];
-            const paths = pathsStr.match(/"([^"]+)"/g);
-            if (paths) {
-              config.discovery.searchPaths = paths.map(p => p.replace(/"/g, ''));
-            }
-          }
-        }
-
-        // Counter API section removed - moved to counter-api/ package
-        // Parse counter_api section
-        // const counterApiMatch = configContent.match(/\[counter_api\]([\s\S]*?)(?=\[|$)/);
-        // if (counterApiMatch) {
-        //   const section = counterApiMatch[1];
-        //   config.counter_api = {
-        //     enabled: section.match(/enabled\s*=\s*(true|false)/)?.[1] === 'true',
-        //     endpoint: section.match(/endpoint\s*=\s*"([^"]+)"/)?.[1] || '',
-        //     api_key: section.match(/api_key\s*=\s*"([^"]+)"/)?.[1] || ''
-        //   };
-        // }
-
-        // Parse cache section
-        const cacheMatch = configContent.match(/\[cache\]([\s\S]*?)(?=\[|$)/);
-        if (cacheMatch) {
-          const section = cacheMatch[1];
-          config.cache = {
-            ttl: parseInt(section.match(/ttl\s*=\s*(\d+)/)?.[1] || '3600')
-          };
-        }
-
-        res.json(config);
+        const parsedConfig = toml.parse(configContent);
+        res.json(parsedConfig);
       } catch (_error) {
         // Config file doesn't exist, return default config
-        res.json({
-          dashboard: {
-            port: 3002,
+        const defaultConfig = {
+          discovery: {
+            autoDiscover: true,
+            searchPaths: [],
+            maxDepth: 3
+          },
+          links: {
+            enableAutoLinking: true,
+            enableTicketLinks: true,
+            enableDocumentLinks: true,
+            enableHoverPreviews: false,
+            linkValidation: false
+          },
+          ui: {
+            theme: 'auto',
             autoRefresh: true,
             refreshInterval: 5000
           },
-          discovery: {
-            autoDiscover: true,
-            searchPaths: []
-          },
-          // counter_api config removed - moved to counter-api/ package
-          // counter_api: {
-          //   enabled: false,
-          //   endpoint: '',
-          //   api_key: ''
-          // },
-          cache: {
-            ttl: 3600
+          system: {
+            logLevel: 'info',
+            cacheTimeout: 30000
           }
-        });
+        };
+        res.json(defaultConfig);
       }
     } catch (error) {
       console.error('Error reading global config:', error);

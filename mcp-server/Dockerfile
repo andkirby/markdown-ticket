@@ -41,6 +41,10 @@ ENV MCP_HTTP_PORT=3002
 ENV MCP_BIND_ADDRESS=0.0.0.0
 ENV LOG_LEVEL=debug
 
+ENV CONFIG_DIR=/app/config
+ENV CONFIG_DISCOVER_PATH=/projects
+VOLUME /app/config
+
 # Copy entrypoint script
 COPY mcp-server/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
@@ -61,6 +65,9 @@ COPY mcp-server ./mcp-server
 
 # Build shared code first using workspace
 RUN cd shared && npm run build
+
+# Build config-cli tool
+RUN cd shared && npm run build:tools
 
 # Build MCP server code
 WORKDIR /app/mcp-server
@@ -91,17 +98,11 @@ RUN npm ci --omit=dev && \
 COPY --from=build --chown=nodejs:nodejs /app/shared/dist ./shared/dist
 COPY --from=build --chown=nodejs:nodejs /app/shared/package.json ./shared/
 
+# Copy built config-cli tool
+COPY --from=build --chown=nodejs:nodejs /app/shared/dist/tools ./shared/dist/tools
+
 # Copy built MCP server code
 COPY --from=build --chown=nodejs:nodejs /app/mcp-server/dist ./mcp-server/dist
-
-# Switch to non-root user
-USER nodejs
-
-# Set working directory to mcp-server
-WORKDIR /app/mcp-server
-
-# Expose MCP HTTP port
-EXPOSE 3002
 
 # Set environment for HTTP transport
 ENV NODE_ENV=production
@@ -115,9 +116,33 @@ ENV MCP_SECURITY_ORIGIN_VALIDATION=false
 ENV MCP_SECURITY_RATE_LIMITING=false
 ENV MCP_SECURITY_AUTH=false
 
+ENV CONFIG_DIR=/app/config
+ENV CONFIG_DISCOVER_PATH=/projects
+
+VOLUME /app/config
+
+# Create config directory with proper ownership (after VOLUME)
+RUN mkdir -p /app/config && chown nodejs:nodejs /app/config
+
+# Copy entrypoint script before switching to non-root user
+COPY --chown=nodejs:nodejs mcp-server/docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Health check for HTTP transport
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3002/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"
+
+# Switch to non-root user
+USER nodejs
+
+# Set working directory to mcp-server
+WORKDIR /app/mcp-server
+
+# Expose MCP HTTP port
+EXPOSE 3002
+
+# Run production server
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Start MCP server with HTTP transport
 # Stdio: Available but not typically used in containers
