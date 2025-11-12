@@ -64,7 +64,7 @@ This MCP server integrates with the main application via API endpoints rather th
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/kirby/home/markdown-ticket/server/mcp-dev-tools/dist/index.js"
+        "~/home/markdown-ticket/server/mcp-dev-tools/dist/index.js"
       ],
       "env": {}
     }
@@ -80,7 +80,7 @@ This MCP server integrates with the main application via API endpoints rather th
       "type": "stdio", 
       "command": "node",
       "args": [
-        "/Users/kirby/home/markdown-ticket/server/mcp-dev-tools/dist/index.js"
+        "~/home/markdown-ticket/server/mcp-dev-tools/dist/index.js"
       ],
       "env": {}
     }

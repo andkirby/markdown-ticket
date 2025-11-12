@@ -1,0 +1,41 @@
+{
+  "name": "@mdt/shared",
+  "version": "1.0.0",
+  "description": "Shared TypeScript code for Markdown Ticket",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./services/*": {
+      "import": "./dist/services/*",
+      "types": "./dist/services/*.d.ts"
+    },
+    "./models/*": {
+      "import": "./dist/models/*",
+      "types": "./dist/models/*.d.ts"
+    },
+    "./utils/*": {
+      "import": "./dist/utils/*",
+      "types": "./dist/utils/*.d.ts"
+    },
+    "./templates/*": {
+      "import": "./dist/templates/*",
+      "types": "./dist/templates/*.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "toml": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -349,16 +349,35 @@ export class SSEClient {
    * Get full URL for SSE endpoint
    */
   private getFullUrl(path: string): string {
+    // Use backend URL from environment variable or fall back to same origin
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+
     if (typeof window === 'undefined') {
-      return `http://localhost:3001${path}`;
+      // SSR context - use backend URL or fallback to localhost
+      return backendUrl ? `${backendUrl}${path}` : `http://localhost:3001${path}`;
     }
 
-    // In development, use backend port
+    // If backend URL is explicitly configured, use it
+    if (backendUrl) {
+      return `${backendUrl}${path}`;
+    }
+
+    // Check if we're in Docker environment by looking at port
+    const currentPort = window.location.port;
+
+    // In Docker environment (port 5174), use same origin to go through Vite proxy
+    // In local development (port 5173), use same origin to go through Vite proxy
+    // The Vite proxy will handle routing /api requests to the backend
+    if (currentPort === '5173' || currentPort === '5174') {
+      return `${window.location.origin}${path}`;
+    }
+
+    // In development with same host but different port, use backend port
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return `http://localhost:3001${path}`;
     }
 
-    // In production, use same origin
+    // In production or other environments, use same origin (goes through Vite proxy)
     return `${window.location.origin}${path}`;
   }
 }

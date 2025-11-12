@@ -1,0 +1,12 @@
+# Development environment overrides for docker-compose.yml
+# Includes volume mounts for hot reload and development-friendly settings
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+  mcp:
+    environment:
+      - MCP_HTTP_ENABLED=false
+    command: ["echo", "Using MCP server with STDIO transport only, from backend service..."]
+    healthcheck:
+      test: [ "CMD", "echo", "Using MCP server with STDIO transport only, from backend service..." ]

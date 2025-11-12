@@ -275,12 +275,12 @@ eventBus.getStats()
 ### Step 1: Explore the New System (10 minutes)
 ```bash
 # Read the implementation
-cat /Users/kirby/home/markdown-ticket/src/services/eventBus.ts
-cat /Users/kirby/home/markdown-ticket/src/services/sseClient.ts
-cat /Users/kirby/home/markdown-ticket/src/services/dataLayer.ts
+cat ~/home/markdown-ticket/src/services/eventBus.ts
+cat ~/home/markdown-ticket/src/services/sseClient.ts
+cat ~/home/markdown-ticket/src/services/dataLayer.ts
 
 # Read the quick start guide
-cat /Users/kirby/home/markdown-ticket/docs/QUICK_START_NEW_EVENT_SYSTEM.md
+cat ~/home/markdown-ticket/docs/QUICK_START_NEW_EVENT_SYSTEM.md
 ```
 
 ### Step 2: Add Debug Tools (5 minutes)

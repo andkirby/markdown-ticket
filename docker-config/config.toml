@@ -1,0 +1,10 @@
+# Docker Configuration for Markdown Ticket
+# This config is container-only and independent of host configuration
+[discovery]
+autoDiscover = true
+searchPaths = ["/projects"]
+
+[links]
+enableAutoLinking = false
+enableTicketLinks = false
+enableDocumentLinks = false
