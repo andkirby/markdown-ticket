@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as os from 'os';
+import * as fs from 'fs';
 
 /**
  * Shared Constants for Frontend, Backend, and MCP
@@ -42,8 +43,63 @@ export type Priority = typeof PRIORITIES[number];
 // File Extensions
 export const SUPPORTED_EXTENSIONS = ['.md', '.markdown'] as const;
 
-// Default configuration paths - using CONFIG_DIR as base
-const CONFIG_DIR = path.join(os.homedir(), '.config', 'markdown-ticket');
+/**
+ * Get or create the configuration directory with fallback logic
+ * Handles environment variables, directory creation, and permission issues
+ */
+function getOrCreateConfigDir(): string {
+  // Try environment variable first
+  let configDir = process.env.CONFIG_DIR;
+
+  if (!configDir) {
+    // Use default location
+    configDir = path.join(os.homedir(), '.config', 'markdown-ticket');
+  }
+
+  // Try to create the directory if it doesn't exist
+  try {
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+
+    // Test if directory is writable
+    const testFile = path.join(configDir, '.write-test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+
+    return configDir;
+  } catch (error) {
+    // If creation or write test fails, use fallback
+    const fallbackDir = path.join(os.homedir(), '.config', 'markdown-ticket');
+
+    // Try fallback directory
+    try {
+      if (!fs.existsSync(fallbackDir)) {
+        fs.mkdirSync(fallbackDir, { recursive: true });
+      }
+      console.warn(`⚠️  Could not create or write to config directory "${configDir}". Using fallback: "${fallbackDir}"`);
+      return fallbackDir;
+    } catch (fallbackError) {
+      // Last resort: use temp directory
+      const tempDir = path.join(os.tmpdir(), 'markdown-ticket');
+      try {
+        if (!fs.existsSync(tempDir)) {
+          fs.mkdirSync(tempDir, { recursive: true });
+        }
+        console.error(`❌ Could not create config directory. Using temporary directory: "${tempDir}"`);
+        return tempDir;
+      } catch (tempError) {
+        // Ultimate fallback - use current working directory
+        const cwdFallback = path.join(process.cwd(), '.mdt-config');
+        console.error(`🚨 All config directory creation failed. Using current directory: "${cwdFallback}"`);
+        return cwdFallback;
+      }
+    }
+  }
+}
+
+// Initialize config directory and create paths
+const CONFIG_DIR = getOrCreateConfigDir();
 
 export const DEFAULT_PATHS = {
   CONFIG_DIR,

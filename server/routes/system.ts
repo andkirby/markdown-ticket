@@ -50,7 +50,7 @@ export function createSystemRouter(
   // Get link configuration
   router.get('/config/links', async (req: Request, res: Response) => {
     try {
-      const configPath = process.env.CONFIG_PATH || DEFAULT_PATHS.CONFIG_FILE;
+      const configPath = DEFAULT_PATHS.CONFIG_FILE;
       const configData = await fs.readFile(configPath, 'utf8');
 
       // Simple TOML parsing for [links] section
@@ -99,7 +99,7 @@ export function createSystemRouter(
   // Get global configuration
   router.get('/config/global', async (req: Request, res: Response) => {
     try {
-      const configPath = process.env.CONFIG_PATH || DEFAULT_PATHS.CONFIG_FILE;
+      const configPath = DEFAULT_PATHS.CONFIG_FILE;
 
       console.log(`Reading global config from: ${configPath}`);
 

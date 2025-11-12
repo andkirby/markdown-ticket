@@ -163,9 +163,7 @@ export class ProjectService {
     const projectCode = code || name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6);
 
     // Create project config directory
-    const configDir = process.env.CONFIG_PATH
-      ? path.join(path.dirname(process.env.CONFIG_PATH), 'projects')
-      : DEFAULT_PATHS.PROJECTS_REGISTRY;
+    const configDir = DEFAULT_PATHS.PROJECTS_REGISTRY;
     await fs.mkdir(configDir, { recursive: true });
 
     // Create project config file using directory name, fallback to project code

@@ -81,9 +81,7 @@ class ConfigManager {
   private configDir: string;
 
   constructor(configPath?: string) {
-    this.configPath = configPath ||
-      process.env.CONFIG_PATH ||
-      DEFAULT_PATHS.CONFIG_FILE;
+    this.configPath = configPath || DEFAULT_PATHS.CONFIG_FILE;
     this.configDir = path.dirname(this.configPath);
   }
 
