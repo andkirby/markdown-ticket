@@ -141,7 +141,73 @@ environment:
   - MCP_HTTP_ENABLED=true
   - MCP_HTTP_PORT=3002
   - MCP_BIND_ADDRESS=0.0.0.0
+
+  # Configuration Management (MDT-073)
+  - CONFIG_DIR=/app/config          # Directory for configuration files
+  - CONFIG_DISCOVER_PATH=/projects  # Default project discovery path
 ```
+
+### Configuration Management Environment Variables (MDT-073)
+
+The Docker containers support dynamic configuration through the configuration management CLI tool:
+
+#### `CONFIG_DIR`
+- **Purpose**: Directory where configuration files are stored and managed
+- **Default**: `/app/config`
+- **Usage**: All config files (`.toml`, `.json`) are read from and written to this directory
+- **Volume Mount**: Automatically mounted as a Docker volume for persistence
+- **Example**: `CONFIG_DIR=/custom/config/path`
+
+#### `CONFIG_DISCOVER_PATH`
+- **Purpose**: Default path used for automatic project discovery
+- **Default**: `/projects`
+- **Usage**: Sets the initial search path when `config.toml` doesn't specify discovery paths
+- **Runtime**: Can be overridden per deployment without rebuilding containers
+- **Example**: `CONFIG_DISCOVER_PATH=/workspace/projects`
+
+#### Configuration Example
+
+```yaml
+# docker-compose.yml
+services:
+  backend:
+    environment:
+      - CONFIG_DIR=/app/config
+      - CONFIG_DISCOVER_PATH=/projects
+    volumes:
+      - ./docker-config:/app/config  # Config persistence
+      - ./my-projects:/projects      # Project files
+
+  mcp:
+    environment:
+      - CONFIG_DIR=/app/config
+      - CONFIG_DISCOVER_PATH=/projects
+    volumes:
+      - ./docker-config:/app/config  # Shared config
+      - ./my-projects:/projects      # Shared projects
+```
+
+#### Dynamic Configuration Usage
+
+The configuration is managed via the built-in config-cli tool:
+
+```bash
+# Inside containers, configuration is automatically applied
+docker exec backend node /app/shared/dist/tools/config-cli.js show
+
+# Set discovery paths dynamically
+docker exec backend node /app/shared/dist/tools/config-cli.js set discovery.searchPaths "/projects,/workspace"
+
+# The entrypoint script automatically applies CONFIG_DISCOVER_PATH
+# when containers start, ensuring consistent configuration
+```
+
+#### Configuration Persistence
+
+- Config files are persisted in the mounted volume (`./docker-config:/app/config`)
+- Changes made via the application or config-cli are saved to the host
+- Configuration survives container restarts and redeployments
+- Each deployment can have different configurations by changing volume mounts
 
 ## Usage Patterns
 
@@ -316,10 +382,33 @@ docker-compose exec backend env | grep CHOKIDAR
 docker-compose exec backend ls -la /projects
 
 # Verify configuration
-docker-compose exec backend cat /root/.config/markdown-ticket/config.toml
+docker-compose exec backend cat /app/config/config.toml
 ```
 
-#### 4. MCP Connection Issues
+#### 4. Configuration Management Issues
+
+**Problem**: Configuration changes not persisting
+```bash
+# Check config directory permissions
+docker-compose exec backend ls -la /app/config
+
+# Verify config-cli tool is working
+docker-compose exec backend node /app/shared/dist/tools/config-cli.js show
+
+# Check environment variables
+docker-compose exec backend env | grep CONFIG_
+```
+
+**Problem**: CONFIG_DISCOVER_PATH not applied
+```bash
+# Check if entrypoint script ran correctly
+docker-compose exec backend cat /app/config/config.toml | grep searchPaths
+
+# Manually apply configuration
+docker-compose exec backend node /app/shared/dist/tools/config-cli.js set discovery.searchPaths "$CONFIG_DISCOVER_PATH"
+```
+
+#### 5. MCP Connection Issues
 
 **Problem**: Cannot connect to MCP server
 ```bash
@@ -498,5 +587,6 @@ const mcpClient = new MCPClient({ transport: 'http', url: 'http://localhost:3012
 
 For more detailed technical information, see:
 - [MDT-055: Docker Containerization Architecture](docs/CRs/MDT-055-docker-containerization-architecture-for-multi-ser.md)
+- [MDT-073: Configuration Management CLI Tool for Project Discovery](docs/CRs/MDT-073-configuration-management-cli-tool-for-project-disc.md)
 - [README.docker.md](README.docker.md)
 - [Development Documentation](docs/development/)
