@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
-import { DEFAULT_PATHS } from '../../shared/utils/constants.js';
+import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js';
 
 // Type definitions
 interface Project {

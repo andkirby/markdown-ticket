@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import os from 'os';
-import { DEFAULT_PATHS } from '../shared/utils/constants.js';
+import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js';
 
 // Type definitions
 interface ProjectPath {
