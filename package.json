@@ -34,7 +34,12 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
-    "test:e2e:update": "playwright test --update-snapshots"
+    "test:e2e:update": "playwright test --update-snapshots",
+    "config": "tsx shared/tools/config-cli.ts",
+    "config:get": "tsx shared/tools/config-cli.ts get",
+    "config:set": "tsx shared/tools/config-cli.ts set",
+    "config:show": "tsx shared/tools/config-cli.ts show",
+    "config:init": "tsx shared/tools/config-cli.ts init"
   },
   "dependencies": {
     "@mdt/shared": "*",
