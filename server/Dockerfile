@@ -44,6 +44,13 @@ ENV CHOKIDAR_USEPOLLING=true
 COPY server/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+ENV CONFIG_DIR=/app/config
+ENV CONFIG_DISCOVER_PATH=/projects
+
+# Create config directory with proper ownership
+RUN mkdir -p /app/config && chown nodejs:nodejs /app/config
+VOLUME /app/config
+
 # Run with tsx for hot reload
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["npm", "run", "dev"]
@@ -92,6 +99,14 @@ COPY --from=build --chown=nodejs:nodejs /app/shared/package.json ./shared/
 
 # Copy built server code
 COPY --from=build --chown=nodejs:nodejs /app/server/dist ./server/dist
+
+ENV CONFIG_DIR=/app/config
+ENV CONFIG_DISCOVER_PATH=/projects
+
+VOLUME /app/config
+
+# Create config directory with proper ownership (after VOLUME)
+RUN mkdir -p /app/config && chown nodejs:nodejs /app/config
 
 # Switch to non-root user
 USER nodejs
