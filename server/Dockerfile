@@ -44,6 +44,10 @@ ENV CHOKIDAR_USEPOLLING=true
 COPY server/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+ENV CONFIG_DIR=/app/config
+ENV CONFIG_DISCOVER_PATH=/projects
+VOLUME /app/config
+
 # Run with tsx for hot reload
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["npm", "run", "dev"]
@@ -98,6 +102,10 @@ USER nodejs
 
 # Set working directory to server
 WORKDIR /app/server
+
+ENV CONFIG_DIR=/app/config
+ENV CONFIG_DISCOVER_PATH=/projects
+VOLUME /app/config
 
 # Expose backend port
 EXPOSE 3001

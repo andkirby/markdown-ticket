@@ -41,6 +41,10 @@ ENV MCP_HTTP_PORT=3002
 ENV MCP_BIND_ADDRESS=0.0.0.0
 ENV LOG_LEVEL=debug
 
+ENV CONFIG_DIR=/app/config
+ENV CONFIG_DISCOVER_PATH=/projects
+VOLUME /app/config
+
 # Copy entrypoint script
 COPY mcp-server/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
@@ -115,9 +119,20 @@ ENV MCP_SECURITY_ORIGIN_VALIDATION=false
 ENV MCP_SECURITY_RATE_LIMITING=false
 ENV MCP_SECURITY_AUTH=false
 
+ENV CONFIG_DIR=/app/config
+ENV CONFIG_DISCOVER_PATH=/projects
+VOLUME /app/config
+
 # Health check for HTTP transport
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3002/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"
+
+# Copy entrypoint script
+COPY mcp-server/docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Run with tsx for hot reload
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Start MCP server with HTTP transport
 # Stdio: Available but not typically used in containers
