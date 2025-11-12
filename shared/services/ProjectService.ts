@@ -4,20 +4,39 @@ import toml from 'toml';
 import os from 'os';
 import { Project, ProjectConfig, validateProjectConfig } from '../models/Project.js';
 import { Ticket } from '../models/Ticket.js';
-import { CONFIG_FILES } from '../utils/constants.js';
+import { CONFIG_FILES, DEFAULT_PATHS } from '../utils/constants.js';
 
 /**
  * Global configuration interface
  */
 export interface GlobalConfig {
-  dashboard: {
-    port: number;
-    autoRefresh: boolean;
-    refreshInterval: number;
-  };
+  // Discovery configuration (existing, enhanced)
   discovery: {
     autoDiscover: boolean;
     searchPaths: string[];
+    maxDepth?: number; // Add optional depth control
+  };
+
+  // Links configuration with boolean flags
+  links: {
+    enableAutoLinking: boolean;
+    enableTicketLinks: boolean;
+    enableDocumentLinks: boolean;
+    enableHoverPreviews?: boolean; // Optional future feature
+    linkValidation?: boolean;      // Optional future feature
+  };
+
+  // UI/UX preferences (moved from dashboard)
+  ui?: {
+    theme?: 'light' | 'dark' | 'auto';
+    autoRefresh?: boolean;
+    refreshInterval?: number;
+  };
+
+  // System configuration
+  system?: {
+    logLevel?: 'error' | 'warn' | 'info' | 'debug';
+    cacheTimeout?: number;
   };
 }
 
@@ -44,9 +63,9 @@ export class ProjectService {
 
   constructor(quiet: boolean = false) {
     this.quiet = quiet;
-    this.globalConfigDir = path.join(os.homedir(), '.config', 'markdown-ticket');
-    this.projectsDir = path.join(this.globalConfigDir, 'projects');
-    this.globalConfigPath = path.join(this.globalConfigDir, 'config.toml');
+    this.globalConfigPath = DEFAULT_PATHS.CONFIG_FILE;
+    this.globalConfigDir = DEFAULT_PATHS.CONFIG_DIR;
+    this.projectsDir = DEFAULT_PATHS.PROJECTS_REGISTRY;
 
     // Initialize cache with 30-second TTL
     this.cache = {
@@ -66,26 +85,142 @@ export class ProjectService {
   }
 
   /**
-   * Get global dashboard configuration
+   * Get global configuration
    */
   getGlobalConfig(): GlobalConfig {
     try {
       if (!fs.existsSync(this.globalConfigPath)) {
-        return {
-          dashboard: { port: 3002, autoRefresh: true, refreshInterval: 5000 },
-          discovery: { autoDiscover: true, searchPaths: [] }
-        };
+        return this.getDefaultConfig();
       }
 
       const configContent = fs.readFileSync(this.globalConfigPath, 'utf8');
-      return toml.parse(configContent) as GlobalConfig;
+      const parsedConfig = toml.parse(configContent);
+
+      // Check for old config structure and migrate if needed
+      if (parsedConfig.dashboard) {
+        this.log('Migrating old configuration structure...');
+        return this.migrateConfig(parsedConfig);
+      }
+
+      return this.validateConfig(parsedConfig);
     } catch (error) {
       this.log('Error reading global config:', error);
-      return {
-        dashboard: { port: 3002, autoRefresh: true, refreshInterval: 5000 },
-        discovery: { autoDiscover: true, searchPaths: [] }
-      };
+      return this.getDefaultConfig();
     }
+  }
+
+  /**
+   * Get default configuration
+   */
+  private getDefaultConfig(): GlobalConfig {
+    return {
+      discovery: {
+        autoDiscover: true,
+        searchPaths: [],
+        maxDepth: 3
+      },
+      links: {
+        enableAutoLinking: true,
+        enableTicketLinks: true,
+        enableDocumentLinks: true,
+        enableHoverPreviews: false,
+        linkValidation: false
+      },
+      ui: {
+        theme: 'auto',
+        autoRefresh: true,
+        refreshInterval: 5000
+      },
+      system: {
+        logLevel: 'info',
+        cacheTimeout: 30000
+      }
+    };
+  }
+
+  /**
+   * Migrate old configuration to new structure
+   */
+  private migrateConfig(oldConfig: any): GlobalConfig {
+    const defaultConfig = this.getDefaultConfig();
+
+    return {
+      discovery: {
+        autoDiscover: oldConfig.discovery?.autoDiscover ?? defaultConfig.discovery.autoDiscover,
+        searchPaths: oldConfig.discovery?.searchPaths ?? defaultConfig.discovery.searchPaths,
+        maxDepth: defaultConfig.discovery.maxDepth
+      },
+      links: {
+        enableAutoLinking: oldConfig.dashboard?.autoRefresh ?? defaultConfig.links.enableAutoLinking,
+        enableTicketLinks: defaultConfig.links.enableTicketLinks,
+        enableDocumentLinks: defaultConfig.links.enableDocumentLinks,
+        enableHoverPreviews: defaultConfig.links.enableHoverPreviews,
+        linkValidation: defaultConfig.links.linkValidation
+      },
+      ui: {
+        theme: defaultConfig.ui?.theme,
+        autoRefresh: oldConfig.dashboard?.autoRefresh ?? defaultConfig.ui?.autoRefresh,
+        refreshInterval: oldConfig.dashboard?.refreshInterval ?? defaultConfig.ui?.refreshInterval
+      },
+      system: defaultConfig.system
+    };
+  }
+
+  /**
+   * Validate configuration against GlobalConfig interface
+   */
+  private validateConfig(config: any): GlobalConfig {
+    const defaultConfig = this.getDefaultConfig();
+
+    return {
+      discovery: {
+        autoDiscover: typeof config.discovery?.autoDiscover === 'boolean'
+          ? config.discovery.autoDiscover
+          : defaultConfig.discovery.autoDiscover,
+        searchPaths: Array.isArray(config.discovery?.searchPaths)
+          ? config.discovery.searchPaths
+          : defaultConfig.discovery.searchPaths,
+        maxDepth: typeof config.discovery?.maxDepth === 'number'
+          ? config.discovery.maxDepth
+          : defaultConfig.discovery.maxDepth
+      },
+      links: {
+        enableAutoLinking: typeof config.links?.enableAutoLinking === 'boolean'
+          ? config.links.enableAutoLinking
+          : defaultConfig.links.enableAutoLinking,
+        enableTicketLinks: typeof config.links?.enableTicketLinks === 'boolean'
+          ? config.links.enableTicketLinks
+          : defaultConfig.links.enableTicketLinks,
+        enableDocumentLinks: typeof config.links?.enableDocumentLinks === 'boolean'
+          ? config.links.enableDocumentLinks
+          : defaultConfig.links.enableDocumentLinks,
+        enableHoverPreviews: typeof config.links?.enableHoverPreviews === 'boolean'
+          ? config.links.enableHoverPreviews
+          : defaultConfig.links.enableHoverPreviews,
+        linkValidation: typeof config.links?.linkValidation === 'boolean'
+          ? config.links.linkValidation
+          : defaultConfig.links.linkValidation
+      },
+      ui: {
+        theme: ['light', 'dark', 'auto'].includes(config.ui?.theme)
+          ? config.ui?.theme
+          : defaultConfig.ui?.theme,
+        autoRefresh: typeof config.ui?.autoRefresh === 'boolean'
+          ? config.ui?.autoRefresh
+          : defaultConfig.ui?.autoRefresh,
+        refreshInterval: typeof config.ui?.refreshInterval === 'number'
+          ? config.ui?.refreshInterval
+          : defaultConfig.ui?.refreshInterval
+      },
+      system: {
+        logLevel: ['error', 'warn', 'info', 'debug'].includes(config.system?.logLevel)
+          ? config.system?.logLevel
+          : defaultConfig.system?.logLevel,
+        cacheTimeout: typeof config.system?.cacheTimeout === 'number'
+          ? config.system?.cacheTimeout
+          : defaultConfig.system?.cacheTimeout
+      }
+    };
   }
 
   /**
