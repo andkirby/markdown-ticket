@@ -42,21 +42,23 @@ export type Priority = typeof PRIORITIES[number];
 // File Extensions
 export const SUPPORTED_EXTENSIONS = ['.md', '.markdown'] as const;
 
-// Default configuration paths
+// Default configuration paths - using CONFIG_DIR as base
+const CONFIG_DIR = path.join(os.homedir(), '.config', 'markdown-ticket');
+
 export const DEFAULT_PATHS = {
-  CONFIG_DIR: path.join(os.homedir(), '.config', 'markdown-ticket'),
-  CONFIG_FILE: path.join(os.homedir(), '.config', 'markdown-ticket', 'config.toml'),
-  TEMPLATES_DIR: path.join(os.homedir(), '.config', 'markdown-ticket', 'templates'),
-  PROJECTS_REGISTRY: path.join(os.homedir(), '.config', 'markdown-ticket', 'projects'),
-  USER_CONFIG: path.join(os.homedir(), '.config', 'markdown-ticket', 'user.toml')
+  CONFIG_DIR,
+  CONFIG_FILE: path.join(CONFIG_DIR, 'config.toml'),
+  TEMPLATES_DIR: path.join(CONFIG_DIR, 'templates'),
+  PROJECTS_REGISTRY: path.join(CONFIG_DIR, 'projects'),
+  USER_CONFIG: path.join(CONFIG_DIR, 'user.toml')
 } as const;
 
 // Configuration Files
 export const CONFIG_FILES = {
   PROJECT_CONFIG: '.mdt-config.toml',
   COUNTER_FILE: '.mdt-next',
-  USER_CONFIG: '~/.config/markdown-ticket/user.toml',
-  PROJECTS_REGISTRY: '~/.config/markdown-ticket/projects'
+  USER_CONFIG: path.join(CONFIG_DIR, 'user.toml'),
+  PROJECTS_REGISTRY: path.join(CONFIG_DIR, 'projects'),
 } as const;
 
 // Default Values
