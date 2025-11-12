@@ -1,13 +1,6 @@
-# Docker Guide for Markdown Ticket Board
+# Docker Guide for Markdown Ticket Board 1
 
 Quick start guide for Docker containerization of the Markdown Ticket (MDT) application.
-
-## Contents
-
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [Usage Patterns](#usage-patterns)
-- [Troubleshooting](#troubleshooting)
 
 ## Quick Start
 
@@ -31,6 +24,8 @@ docker-compose down -v
 **Access**: Frontend `http://localhost:5174`, MCP `http://localhost:3012/mcp`
 
 ## Architecture
+
+Ticket: MDT-055
 
 ### Container Overview
 
@@ -71,20 +66,25 @@ environment:
 
 ### Configuration Management (MDT-073)
 
-#### `CONFIG_DIR`
-Directory for configuration files (`.toml`, `.json`). Default: `/app/config`
+The `bin/dc` script automatically loads `.env` and `.env.local` files, where you can declare `MDT_DOCKER_MODE`.
 
-#### `CONFIG_DISCOVER_PATH`
-Default project discovery path. Default: `/projects`
+#### Environment Variables
+
+Backend and MCP containers have predefined environment variables:
+```yaml
+environment:
+  - CONFIG_DIR=/app/config
+  - CONFIG_DISCOVER_PATH=/projects
+```
 
 #### Usage
 
 ```bash
 # View configuration
-docker exec backend node /app/shared/dist/tools/config-cli.js show
+bin/dc exec backend node /app/shared/dist/tools/config-cli.js show
 
 # Set discovery paths
-docker exec backend node /app/shared/dist/tools/config-cli.js set discovery.searchPaths "/projects,/workspace"
+bin/dc exec backend node /app/shared/dist/tools/config-cli.js set discovery.searchPaths "/projects,/workspace"
 ```
 
 Configuration persists in mounted volume `./docker-config:/app/config`
@@ -95,14 +95,14 @@ Configuration persists in mounted volume `./docker-config:/app/config`
 
 **Using bin/dc wrapper (recommended):**
 ```bash
-# Development mode
-./bin/dc up
-
 # Production mode
-./bin/dc up -d
+bin/dc up
+
+# Production mode (detached)
+bin/dc up -d
 
 # Demo mode
-./bin/dc -f docker-compose.demo.yml up
+bin/dc -f docker-compose.demo.yml up
 ```
 
 **Direct docker-compose commands:**
@@ -114,19 +114,29 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Demo
-docker-compose -f docker-compose.yml -f docker-compose.demo.yml up
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.demo.yml up
 ```
 
 ### Volume Mount Examples
 
-```yaml
-# Mount MDT itself
-volumes:
-  - ./:/projects/markdown-ticket
+Use YAML anchor syntax for shared volumes (from `docker-compose.demo.yml`):
 
-# Mount external projects
-volumes:
-  - ~/work/project:/projects/project
+```yaml
+x-shared-volumes: &project-volumes
+  volumes:
+    - ./debug-tasks:/projects/demo-project
+    - ./:/projects/markdown-ticket
+
+services:
+  backend:
+    <<: *project-volumes
+  mcp:
+    <<: *project-volumes
+```
+
+To use custom project mounts:
+```bash
+bin/dc -f docker-compose.projects.yml up -d [--force-recreate]
 ```
 
 ## Troubleshooting
@@ -163,4 +173,8 @@ The `bin/dc` script simplifies Docker Compose commands:
 - **Auto file discovery**: Automatically includes matching compose files
 - **Environment loading**: Loads `.env` and `.env.local` files
 
-Usage: `./bin/dc [docker-compose-options] [command]`
+Usage: `bin/dc [docker-compose-options] [command]`
+
+- `bin/dc up` - Start with logs (foreground mode)
+- `bin/dc up -d` - Start detached (background mode)
+- `bin/dc exec <service> <command>` - Execute commands in containers
