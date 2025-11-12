@@ -17,6 +17,8 @@
 
 - [Features](#features)
 - [Quick Start](#quick-start)
+  - [Option 1: Traditional Development Setup](#option-1-traditional-development-setup)
+  - [Option 2: Docker Deployment (Recommended)](#option-2-docker-deployment-recommended)
 - [Getting Started](#getting-started)
   - [First Time Setup](#first-time-setup)
   - [Creating Tickets](#creating-tickets)
@@ -35,6 +37,7 @@
   - [Editing Projects](#editing-projects)
   - [Project Configuration](#project-configuration)
 - [Development](#development)
+- [Docker Deployment](#docker-deployment)
 - [File System Integration](#file-system-integration)
 - [Release Notes](#release-notes)
 - [Contributing](#contributing)
@@ -60,10 +63,15 @@
 - **Real-time Updates**: SSE-based live updates with optimistic UI
 - **Multiple View Modes**: Board, List, and Documents views with seamless switching
 - **Advanced Filtering**: Filter and sort documents and tickets by multiple criteria
-- **MCP Integration**: Model Context Protocol server with efficient section-based CR updates
+- **MCP Integration**: Model Context Protocol server with efficient section-based CR updates and HTTP transport
 - **Project Discovery**: Automatic detection of project configurations
+- **Docker Containerization**: Complete Docker deployment architecture with production-ready containers
+- **Configuration Management**: Advanced CLI tool for environment-based configuration management (MDT-073)
+- **Production Deployment**: Comprehensive deployment scripts and multi-environment support
 
 ## Quick Start
+
+### Option 1: Traditional Development Setup
 
 1. **Install dependencies**:
    ```bash
@@ -85,6 +93,37 @@
    - Open http://localhost:5173 in your browser
    - Use the "Add New Project" button to create your first project
    - Switch between Board, List, and Documents views using the icon switcher
+
+### Option 2: Docker Deployment (Recommended)
+
+**Prerequisites**: Docker Engine 20.10+, Docker Compose 2.0+
+
+1. **Quick Start with Docker Compose**:
+   ```bash
+   # Development
+   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+   # Production
+   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+   ```
+
+2. **Or use the simplified wrapper script**:
+   ```bash
+   # Production mode (recommended)
+   bin/dc up
+
+   # Development mode
+   bin/dc -m dev up
+
+   # Stop containers
+   bin/dc down
+   ```
+
+3. **Access the application**:
+   - Frontend: http://localhost:5174
+   - MCP HTTP endpoint: http://localhost:3012/mcp
+
+For detailed Docker configuration and troubleshooting, see **[docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md)**.
 
 ## Getting Started
 
@@ -306,6 +345,53 @@ See **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** for:
 - Architecture overview and code organization
 - Common development tasks and troubleshooting
 
+## Docker Deployment
+
+The application includes comprehensive Docker support for both development and production environments.
+
+### Prerequisites
+- Docker Engine 20.10+
+- Docker Compose 2.0+
+
+### Quick Start
+```bash
+# Start with simplified wrapper (recommended)
+bin/dc up
+
+# Or with docker-compose directly
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+### Access Points
+- **Frontend**: http://localhost:5174
+- **MCP HTTP**: http://localhost:3012/mcp
+- **Health Check**: http://localhost:3012/health
+
+### Container Architecture
+| Service | Port | Purpose |
+|---------|------|---------|
+| Frontend | 5174 | React + Vite dev server |
+| Backend | Internal | Express.js API + SSE |
+| MCP | 3012 | HTTP transport for AI assistants |
+
+### Configuration Management
+Docker containers include advanced configuration management (MDT-073):
+- Environment variable support for custom paths
+- CLI tool for runtime configuration
+- Persistent configuration in Docker volumes
+- Auto-discovery of projects in mounted directories
+
+### Project Volume Examples
+```bash
+# Mount custom projects
+bin/dc -f docker-compose.projects.yml up
+
+# Use demo configuration
+bin/dc -f docker-compose.demo.yml up
+```
+
+For detailed configuration options, troubleshooting, and advanced usage, see **[docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md)**.
+
 ## File System Integration
 
 - **Automatic Timestamps**: `dateCreated` and `lastModified` are automatically managed from file system timestamps
@@ -316,6 +402,7 @@ See **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** for:
 
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for detailed information about each version:
 
+- **v0.7.0** (2025-11-12): Complete Docker containerization, advanced configuration management, enhanced MCP HTTP transport
 - **v0.6.0** (2025-10-18): Smart link reliability fixes, project management improvements, and MCP optimizations
 - **v0.5.0** (2025-10-14): Smart links, Table of Contents, H1 title management, enhanced MCP tools
 - **v0.4.0** (2025-10-02): URL routing, Mermaid diagrams, document filtering, section-based MCP updates
