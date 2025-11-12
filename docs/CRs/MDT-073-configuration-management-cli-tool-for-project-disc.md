@@ -1,6 +1,5 @@
 ---
 code: MDT-073
-title: Configuration Management CLI Tool for Project Discovery
 status: Implemented
 dateCreated: 2025-11-11T20:18:21.594Z
 type: Architecture
@@ -197,6 +196,38 @@ npm run config:get:dev key       # Development version with tsx
 - Development scripts use: `tsx shared/tools/config-cli.ts`
 - Compiled JavaScript file: 18KB, fully standalone
 - Type-safe compilation with runtime error handling
+
+### Advanced Configuration Management Features
+
+**Centralized Environment Variable Support:**
+- ✅ CONFIG_DIR environment variable support in shared/utils/constants.ts
+- ✅ Automatic directory creation with recursive mkdir
+- ✅ Robust fallback logic for permission issues (4-level fallback chain)
+- ✅ Write test verification before using configuration directory
+- ✅ Clear console warnings for fallback scenarios
+
+**Fallback Logic Priority:**
+1. CONFIG_DIR environment variable (if provided and writable)
+2. Default ~/.config/markdown-ticket (fallback if CONFIG_DIR fails)
+3. Temp directory /tmp/markdown-ticket (if default fails)
+4. Current directory ./mdt-config (ultimate fallback)
+
+**Eliminated Hardcoded Paths:**
+- ✅ All .config/markdown-ticket paths replaced with DEFAULT_PATHS constants
+- ✅ Server/services/ProjectService.ts uses centralized constants
+- ✅ Server/fileWatcherService.ts uses centralized constants
+- ✅ MCP server components use centralized constants
+- ✅ Removed scattered CONFIG_PATH environment variable checks
+
+**Production-Ready Architecture:**
+```bash
+# Custom config directory (auto-created)
+CONFIG_DIR=/app/config npm run config:init
+
+# Production with robust fallbacks
+docker run -e CONFIG_DIR=/docker-data/config my-app
+# Falls back gracefully if directory not writable
+```
 ## 6. Success Metrics
 
 **Qualitative improvements**:
