@@ -29,6 +29,7 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
+    "build:tools": "tsc --project tsconfig.json",
     "clean": "rm -rf dist"
   },
   "dependencies": {
