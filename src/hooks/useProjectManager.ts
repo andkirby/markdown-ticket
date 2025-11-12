@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Ticket } from '../types';
-import { Project, ProjectConfig } from '../../shared/models/Project';
+import { Project, ProjectConfig } from '@mdt/shared/models/Project';
 import { useSSEEvents } from './useSSEEvents';
 import { useTicketOperations } from './useTicketOperations';
 import { dataLayer } from '../services/dataLayer';

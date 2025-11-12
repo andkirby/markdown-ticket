@@ -24,7 +24,13 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    /* Path Mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@mdt/shared/*": ["../shared/*"]
+    }
   },
   "ts-node": {
     "esm": true

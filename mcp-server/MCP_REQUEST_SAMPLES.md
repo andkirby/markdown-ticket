@@ -75,7 +75,7 @@ Sample request and response data for the MCP CR Management Server using the shar
     "content": [
       {
         "type": "text",
-        "text": "📋 **Discovered Projects** (5 total)\n\n**MDT** - Markdown Ticket Board\n- Path: /Users/kirby/home/markdown-ticket\n- CRs: 6 total\n- Last accessed: 2025-09-10\n\n**LlmTranslator** - LLM Translation Service\n- Path: /Users/kirby/home/LlmTranslator\n- CRs: 3 total\n- Last accessed: 2025-09-09"
+        "text": "📋 **Discovered Projects** (5 total)\n\n**MDT** - Markdown Ticket Board\n- Path: ~/home/markdown-ticket\n- CRs: 6 total\n- Last accessed: 2025-09-10\n\n**LlmTranslator** - LLM Translation Service\n- Path: ~/home/LlmTranslator\n- CRs: 3 total\n- Last accessed: 2025-09-09"
       }
     ]
   }
@@ -167,7 +167,7 @@ Sample request and response data for the MCP CR Management Server using the shar
     "content": [
       {
         "type": "text",
-        "text": "✅ **Created CR MDT-008** - Fix duplicate project detection\n\n**Details:**\n- Project: MDT (Markdown Ticket Board)\n- Type: Bug Fix\n- Priority: High\n- File: /Users/kirby/home/markdown-ticket/docs/CRs/MDT-008-fix-duplicate-project-detection.md\n\n**Template Applied:** Bug Fix template from shared/templates/bug-fix.md\n\n**Next Steps:**\n1. Review and refine the CR content\n2. Update status when ready to proceed\n3. Assign team members if needed"
+        "text": "✅ **Created CR MDT-008** - Fix duplicate project detection\n\n**Details:**\n- Project: MDT (Markdown Ticket Board)\n- Type: Bug Fix\n- Priority: High\n- File: ~/home/markdown-ticket/docs/CRs/MDT-008-fix-duplicate-project-detection.md\n\n**Template Applied:** Bug Fix template from shared/templates/bug-fix.md\n\n**Next Steps:**\n1. Review and refine the CR content\n2. Update status when ready to proceed\n3. Assign team members if needed"
       }
     ]
   }
@@ -356,7 +356,7 @@ Replace entire section content. **Token Efficiency: ~150 tokens vs ~2500 for ful
     "content": [
       {
         "type": "text",
-        "text": "✅ **Updated Section in CR MDT-052**\n\n**Section:** # Add section-based content updates / ## 4. Acceptance Criteria\n**Operation:** replace\n**Content Length:** 334 characters\n\n- Title: Add section-based content updates\n- Updated: 2025-10-02T00:06:19.706Z\n- File: /Users/kirby/home/markdown-ticket/docs/CRs/MDT-052-add-section-based-content-updates.md\n\nSection content has been completely replaced."
+        "text": "✅ **Updated Section in CR MDT-052**\n\n**Section:** # Add section-based content updates / ## 4. Acceptance Criteria\n**Operation:** replace\n**Content Length:** 334 characters\n\n- Title: Add section-based content updates\n- Updated: 2025-10-02T00:06:19.706Z\n- File: ~/home/markdown-ticket/docs/CRs/MDT-052-add-section-based-content-updates.md\n\nSection content has been completely replaced."
       }
     ]
   }
@@ -394,7 +394,7 @@ Add content to end of existing section. Ideal for adding implementation notes or
     "content": [
       {
         "type": "text",
-        "text": "✅ **Updated Section in CR MDT-052**\n\n**Section:** # Add section-based content updates / ## 5. Implementation Notes\n**Operation:** append\n**Content Length:** 234 characters\n\n- Title: Add section-based content updates\n- Updated: 2025-10-02T00:12:45.123Z\n- File: /Users/kirby/home/markdown-ticket/docs/CRs/MDT-052-add-section-based-content-updates.md\n\nContent has been added to the end of the section."
+        "text": "✅ **Updated Section in CR MDT-052**\n\n**Section:** # Add section-based content updates / ## 5. Implementation Notes\n**Operation:** append\n**Content Length:** 234 characters\n\n- Title: Add section-based content updates\n- Updated: 2025-10-02T00:12:45.123Z\n- File: ~/home/markdown-ticket/docs/CRs/MDT-052-add-section-based-content-updates.md\n\nContent has been added to the end of the section."
       }
     ]
   }
@@ -432,7 +432,7 @@ Add content to beginning of existing section. Ideal for adding context or summar
     "content": [
       {
         "type": "text",
-        "text": "✅ **Updated Section in CR MDT-052**\n\n**Section:** # Add section-based content updates / ## 5. Implementation Notes\n**Operation:** prepend\n**Content Length:** 178 characters\n\n- Title: Add section-based content updates\n- Updated: 2025-10-02T00:15:32.456Z\n- File: /Users/kirby/home/markdown-ticket/docs/CRs/MDT-052-add-section-based-content-updates.md\n\nContent has been added to the beginning of the section."
+        "text": "✅ **Updated Section in CR MDT-052**\n\n**Section:** # Add section-based content updates / ## 5. Implementation Notes\n**Operation:** prepend\n**Content Length:** 178 characters\n\n- Title: Add section-based content updates\n- Updated: 2025-10-02T00:15:32.456Z\n- File: ~/home/markdown-ticket/docs/CRs/MDT-052-add-section-based-content-updates.md\n\nContent has been added to the beginning of the section."
       }
     ]
   }
@@ -639,8 +639,8 @@ logLevel = "info"
 [discovery]
 # Explicit paths for security
 scanPaths = [
-  "/Users/kirby/home",
-  "/Users/kirby/projects"
+  "~/home",
+  "~/projects"
 ]
 
 excludePaths = [
@@ -654,7 +654,7 @@ maxDepth = 4
 cacheTimeout = 300
 
 [templates]
-customPath = "/Users/kirby/.config/markdown-ticket/templates"
+customPath = "~/.config/markdown-ticket/templates"
 ```
 
 ### Environment Variables
@@ -663,7 +663,7 @@ customPath = "/Users/kirby/.config/markdown-ticket/templates"
 export MCP_PROJECT_FILTER=MDT
 
 # Set project scan paths
-export MCP_SCAN_PATHS="/Users/kirby/home/markdown-ticket"
+export MCP_SCAN_PATHS="~/home/markdown-ticket"
 ```
 
 ## Integration Testing

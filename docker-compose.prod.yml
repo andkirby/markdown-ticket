@@ -1,0 +1,129 @@
+# Production environment overrides for docker-compose.yml
+# Includes resource limits, production builds, and security hardening
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  frontend:
+    build:
+      target: production  # Use production stage from Dockerfile
+    environment:
+      - NODE_ENV=production
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    # Production logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    build:
+      target: production  # Use production stage from Dockerfile
+    volumes:
+      # Mount global config (read-only in production)
+      - ${HOME}/.config/markdown-ticket:/root/.config/markdown-ticket:ro
+
+      # Mount projects directory - REQUIRED for production
+      # Customize these paths for your production environment
+      - ${MCP_PROJECTS_DIR:-${HOME}/home}:/workspace:ro
+
+      # Alternative: Mount specific projects
+      # - /data/projects/project-a:/projects/project-a:ro
+      # - /data/projects/project-b:/projects/project-b:ro
+    environment:
+      - NODE_ENV=production
+      - CHOKIDAR_USEPOLLING=true
+      - PORT=3001
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    # Production logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  mcp:
+    build:
+      target: production  # Use production stage from Dockerfile
+    volumes:
+      # Mount global config (read-only)
+      - ${HOME}/.config/markdown-ticket:/root/.config/markdown-ticket:ro
+
+      # Mount projects directory - REQUIRED for production
+      # Customize these paths for your production environment
+      - ${MCP_PROJECTS_DIR:-${HOME}/home}:/workspace:ro
+
+      # Alternative: Mount specific projects
+      # - /data/projects/project-a:/projects/project-a:ro
+      # - /data/projects/project-b:/projects/project-b:ro
+    environment:
+      # Core MCP Configuration
+      - NODE_ENV=production
+      - MCP_HTTP_ENABLED=true
+      - MCP_HTTP_PORT=3002
+      - MCP_BIND_ADDRESS=0.0.0.0
+      - LOG_LEVEL=info
+
+      # Cache Configuration
+      - MCP_CACHE_TIMEOUT=300
+
+      # Phase 2 Security (enable as needed)
+      # - MCP_SECURITY_ORIGIN_VALIDATION=true
+      # - MCP_ALLOWED_ORIGINS=https://yourdomain.com
+      # - MCP_SECURITY_RATE_LIMITING=true
+      # - MCP_RATE_LIMIT_MAX=100
+      # - MCP_RATE_LIMIT_WINDOW_MS=60000
+      # - MCP_SECURITY_AUTH=true
+      # - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}  # Set in .env file
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    # Production logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Production Tips:
+# 1. Set MCP_PROJECTS_DIR to your production data directory:
+#    export MCP_PROJECTS_DIR=/data/projects
+#
+# 2. Use .env file for production secrets:
+#    - MCP_AUTH_TOKEN=your-secret-token
+#    - Database credentials (if applicable)
+#
+# 3. Enable Phase 2 security features as needed
+#
+# 4. Monitor resource usage and adjust limits accordingly
+#
+# 5. Set up log rotation and monitoring for production deployments
+#
+# 6. Consider adding Nginx reverse proxy for SSL termination:
+#    - Single entry point (port 443)
+#    - SSL/TLS certificates
+#    - Load balancing (if scaling)

@@ -15,7 +15,15 @@ build/
 **/*.js.map
 **/*.d.ts.map
 !/server/**/*.js
-/*.*
+
+# Docker files (not ignored)
+!/Dockerfile.frontend
+!/nginx.conf
+!/docker-compose.yml
+!/docker-compose.dev.yml
+!/docker-compose.prod.yml
+!/.dockerignore
+!/README.docker.md
 
 # Environment variables
 .env
@@ -60,9 +68,9 @@ playwright-report
 test-results
 .amazonq
 .mcp.json
-/*.md
-/*.txt
+
 lambda-counter-aws
 generated-docs/repomix_output.xml
-docs/**/*.md
-/docs/*.*
+
+# Counter API - moved out of main codebase
+counter-api/

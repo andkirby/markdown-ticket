@@ -50,7 +50,7 @@ export const streamFrontendLogs: Tool = {
 export async function handleGetFrontendLogs(args: { lines?: number; filter?: string; frontend_host?: string } = {}): Promise<string> {
   const lines = Math.min(args.lines || 20, 100);
   const filter = args.filter;
-  const host = args.frontend_host || process.env.FRONTEND_URL || 'localhost:5173';
+  const host = args.frontend_host || FRONTEND_URL;
   const frontendUrl = host.startsWith('http') ? host : `http://${host}`;
   
   try {
@@ -105,7 +105,8 @@ export async function handleGetFrontendLogs(args: { lines?: number; filter?: str
 
 export async function handleStreamFrontendLogs(args: { filter?: string; frontend_host?: string } = {}): Promise<string> {
   const filter = args.filter;
-  const frontendUrl = args.frontend_host || process.env.FRONTEND_URL || 'http://localhost:5173';
+  const host = args.frontend_host || FRONTEND_URL;
+  const frontendUrl = host.startsWith('http') ? host : `http://${host}`;
   const params = filter ? `?filter=${encodeURIComponent(filter)}` : '';
   const streamUrl = `${frontendUrl}/api/frontend/logs/stream${params}`;
   
