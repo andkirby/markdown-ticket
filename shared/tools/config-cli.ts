@@ -5,6 +5,7 @@ import path from 'path';
 import os from 'os';
 import toml from 'toml';
 import { GlobalConfig } from '../services/ProjectService.js';
+import { DEFAULT_PATHS } from '../utils/constants.js';
 
 /**
  * Configuration error class
@@ -80,8 +81,10 @@ class ConfigManager {
   private configDir: string;
 
   constructor(configPath?: string) {
-    this.configDir = path.join(os.homedir(), '.config', 'markdown-ticket');
-    this.configPath = configPath || path.join(this.configDir, 'config.toml');
+    this.configPath = configPath ||
+      process.env.CONFIG_PATH ||
+      DEFAULT_PATHS.CONFIG_FILE;
+    this.configDir = path.dirname(this.configPath);
   }
 
   /**
