@@ -63,9 +63,9 @@ export class ProjectService {
 
   constructor(quiet: boolean = false) {
     this.quiet = quiet;
-    this.globalConfigPath = process.env.CONFIG_PATH || DEFAULT_PATHS.CONFIG_FILE;
-    this.globalConfigDir = path.dirname(this.globalConfigPath);
-    this.projectsDir = path.join(this.globalConfigDir, 'projects');
+    this.globalConfigPath = DEFAULT_PATHS.CONFIG_FILE;
+    this.globalConfigDir = DEFAULT_PATHS.CONFIG_DIR;
+    this.projectsDir = DEFAULT_PATHS.PROJECTS_REGISTRY;
 
     // Initialize cache with 30-second TTL
     this.cache = {
