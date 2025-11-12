@@ -1,5 +1,94 @@
 # Release Notes
 
+## v0.7.0 (2025-11-12)
+
+### 🎉 Major New Features
+
+**Complete Docker Containerization**
+- **Full Docker Architecture**: Production-ready container deployment with multi-environment support
+- **Simplified Docker Scripts**: `bin/dc` wrapper script for easy Docker Compose management
+- **Multi-Stage Builds**: Optimized containers with proper dependency management
+- **Volume Mounting**: Flexible project mounting with custom configurations
+- **Health Checks**: Built-in container health monitoring and endpoints
+
+**Advanced Configuration Management (MDT-073)**
+- **CLI Configuration Tool**: Runtime configuration management via command-line interface
+- **Environment Variable Support**: Dynamic path configuration through environment variables
+- **Centralized Config Handling**: Robust fallback logic for configuration discovery
+- **Production Config Management**: Persistent configuration in Docker environments
+
+**Enhanced Project Discovery UI (MDT-076)**
+- **"No Projects Found" Interface**: Comprehensive UI when no projects are configured
+- **Configuration-Driven Discovery**: Step-by-step guidance for project setup
+- **Smart Path Suggestions**: Intelligent recommendations for project paths
+
+### 🚀 MCP Server Enhancements
+
+**HTTP Transport Improvements**
+- **Phase 2 Features**: Advanced MCP HTTP transport with session management
+- **Streamable HTTP Support**: Implementation of 2025-06-18 MCP specification
+- **Container Optimization**: HTTP transport eliminates docker-exec overhead
+- **Enhanced Security**: Rate limiting, origin validation, and authentication options
+
+**Tool Consolidation**
+- **40% Token Reduction**: Continued optimization of MCP tools for efficiency
+- **Section-Based Operations**: 84-94% more efficient than full document updates
+- **Quiet Mode**: Reduced output for cleaner integration with AI assistants
+
+### 🛠 Development Infrastructure
+
+**Production Deployment**
+- **Deployment Scripts**: Comprehensive npm scripts for production environments
+- **Workspace Management**: npm workspaces for shared dependency resolution
+- **Multi-Environment Support**: Development, staging, and production configurations
+- **Build Optimization**: Improved build processes with proper TypeScript compilation
+
+**Code Organization**
+- **Shared Package Migration**: Consolidated shared code under `@mdt/shared` package
+- **TypeScript Path Mapping**: Clean import structure across frontend and backend
+- **Module Resolution**: Fixed ES module compatibility issues
+
+### 🐛 Bug Fixes
+
+**Docker Environment**
+- **Permission Issues**: Resolved nginx and nodejs user permissions in containers
+- **Module Import Fixes**: Fixed backend module resolution in Docker environments
+- **Build Compatibility**: Resolved npm ci workspace compatibility issues
+- **Production Dependencies**: Fixed dependency management for production builds
+
+**Configuration System**
+- **Hardcoded Path Elimination**: Replaced all hardcoded paths with configurable constants
+- **Environment Variable Support**: Added robust fallback logic for configuration paths
+- **CLI Production Fixes**: Ensured configuration CLI works in production environments
+
+### 📚 Documentation
+
+**Docker Guide**: Comprehensive Docker deployment documentation with examples
+- Architecture overview and container configuration
+- Development and production deployment patterns
+- Troubleshooting common Docker issues
+- Volume mounting and project configuration examples
+
+**Configuration Documentation**: Complete guide for MDT-073 configuration management
+- CLI tool usage and examples
+- Environment variable configuration
+- Production deployment configuration patterns
+
+### 🔧 Technical Improvements
+
+**Build System**
+- **npm Workspaces**: Proper workspace configuration for monorepo management
+- **TypeScript Compilation**: Complete server migration to TypeScript
+- **Shared Dependencies**: Optimized shared package management
+- **Production Builds**: Streamlined build processes for deployment
+
+**Development Experience**
+- **Auto-Discovery**: Improved project auto-discovery mechanisms
+- **Development Scripts**: Enhanced npm scripts for development workflows
+- **Environment Detection**: Better development vs production environment handling
+
+---
+
 ## v0.6.0 (2025-10-18)
 
 ### Bug Fixes
