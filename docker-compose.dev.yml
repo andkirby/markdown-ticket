@@ -30,7 +30,7 @@ services:
   backend:
     volumes:
       # Mount Docker-only configuration (container-specific)
-      - ./docker-config:/root/.config/markdown-ticket:ro
+      - ./docker-config:/app/config
 
       - my-projects:/projects
       - app:/app
@@ -58,7 +58,7 @@ services:
   mcp:
     volumes:
       # Mount Docker-only configuration (container-specific) - needs to be writable for projects subdirectory
-      - ./docker-config:/root/.config/markdown-ticket
+      - ./docker-config:/app/config
 
       - my-projects:/projects
       - app:/app
