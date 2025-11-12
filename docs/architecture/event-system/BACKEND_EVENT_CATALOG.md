@@ -62,7 +62,7 @@ The backend event system uses **Server-Sent Events (SSE)** to push real-time upd
 
 **Endpoint**: `GET /api/events`
 **Protocol**: Server-Sent Events (text/event-stream)
-**Location**: `/Users/kirby/home/markdown-ticket/server/server.js:431-459`
+**Location**: `~/home/markdown-ticket/server/server.js:431-459`
 
 #### Connection Headers
 
@@ -115,7 +115,7 @@ sequenceDiagram
 ### Client Management
 
 **Service**: `FileWatcherService`
-**Location**: `/Users/kirby/home/markdown-ticket/server/fileWatcherService.js`
+**Location**: `~/home/markdown-ticket/server/fileWatcherService.js`
 
 - **Clients stored in**: `Set<Response>` (line 9)
 - **Client added**: `addClient(response)` (line 145)
@@ -904,7 +904,7 @@ broadcastCriticalEvent(event) {
 
 **Recommendation**: **Create shared type definitions**
 
-**New file**: `/Users/kirby/home/markdown-ticket/shared/events.ts`
+**New file**: `~/home/markdown-ticket/shared/events.ts`
 
 ```typescript
 // Event type definitions shared between backend and frontend
@@ -1188,11 +1188,11 @@ app.get('/api/events/metrics', (req, res) => {
 
 ### Source Files
 
-- **Server**: `/Users/kirby/home/markdown-ticket/server/server.js`
-- **File Watcher**: `/Users/kirby/home/markdown-ticket/server/fileWatcherService.js`
-- **Frontend SSE Client**: `/Users/kirby/home/markdown-ticket/src/services/sseClient.ts`
-- **Frontend EventBus**: `/Users/kirby/home/markdown-ticket/src/services/eventBus.ts`
-- **Frontend DataLayer**: `/Users/kirby/home/markdown-ticket/src/services/dataLayer.ts`
+- **Server**: `~/home/markdown-ticket/server/server.js`
+- **File Watcher**: `~/home/markdown-ticket/server/fileWatcherService.js`
+- **Frontend SSE Client**: `~/home/markdown-ticket/src/services/sseClient.ts`
+- **Frontend EventBus**: `~/home/markdown-ticket/src/services/eventBus.ts`
+- **Frontend DataLayer**: `~/home/markdown-ticket/src/services/dataLayer.ts`
 
 ### Related Documentation
 

@@ -11,7 +11,7 @@
  */
 
 import { Ticket } from '../types';
-import { Project } from '../../shared/models/Project';
+import { Project } from '@mdt/shared/models/Project';
 export type EventType =
   // Ticket events
   | 'ticket:created'
@@ -24,6 +24,7 @@ export type EventType =
   // SSE connection events
   | 'sse:connected'
   | 'sse:disconnected'
+  | 'sse:reconnected'
   | 'sse:error'
   // System events
   | 'error:api'

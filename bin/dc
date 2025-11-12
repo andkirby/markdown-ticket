@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# Get script directory to work from any location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
+
+if [ -f "${PROJECT_ROOT}/.env" ]; then
+  source "${PROJECT_ROOT}/.env"
+fi
+if [ -f "${PROJECT_ROOT}/.env.local" ]; then
+  source "${PROJECT_ROOT}/.env.local"
+fi
+
+mode=${MDT_DOCKER_MODE:-prod}
+
+# Build docker-compose command arguments
+compose_args=()
+compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.yml")
+compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${mode}.yml")
+#compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${mode}-mcp-stdio.yml")
+
+echo "mode: ${mode}" > /dev/stderr
+
+# Auto-join all dc-prj.*.yml files with full paths
+for project_file in "${PROJECT_ROOT}"/docker-compose."${mode}".*.yml; do
+    if [[ -f "${project_file}" ]]; then
+        compose_args+=("--file" "${project_file}")
+    fi
+done
+
+echo "${compose_args[@]}"
+
+docker-compose "${compose_args[@]}" "${@}"

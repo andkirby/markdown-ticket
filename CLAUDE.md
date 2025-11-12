@@ -18,9 +18,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### MCP Server (Model Context Protocol)
 - `cd mcp-server && npm run build` - Build MCP server (required after code changes)
-- `cd mcp-server && npm run dev` - Run MCP server in development mode (uses tsx, no build needed)
+- `cd mcp-server && npm run dev` - Run MCP server in development mode with stdio transport (uses tsx, no build needed)
+- `MCP_HTTP_ENABLED=true npm run dev` - Run MCP server with both stdio and HTTP transports
 - `cd mcp-server && npm test` - Run MCP server Jest tests
 - `cd mcp-server && npm run test:watch` - Run MCP tests in watch mode
+
+**Testing HTTP Transport:**
+```bash
+# Start server with HTTP transport enabled
+cd mcp-server && MCP_HTTP_ENABLED=true MCP_HTTP_PORT=3002 npm run dev
+
+# Test with MCP Inspector (opens browser UI)
+npx @modelcontextprotocol/inspector --transport streamable-http --server-url http://localhost:3002/mcp
+
+# Test with curl
+curl -H "Accept: application/json" -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
+  http://localhost:3002/mcp
+```
+
+**MCP Transport Options:**
+- **Stdio Transport** (default): Always enabled, used by Claude Desktop and other stdio-based clients
+- **HTTP Transport** (optional): Enable with `MCP_HTTP_ENABLED=true`, provides HTTP/JSON-RPC endpoint at `http://localhost:3002/mcp`
+  - Eliminates docker-exec overhead in containerized deployments
+  - Implements MCP Streamable HTTP specification (2025-06-18)
+  - Endpoints: POST /mcp (JSON-RPC), GET /mcp (SSE streaming), GET /health, DELETE /mcp (session deletion)
+
+**Phase 2 Features (all optional, disabled by default):**
+- **Session Management**: Mcp-Session-Id header for stateful connections
+- **SSE Streaming**: GET /mcp for real-time server-initiated messages
+- **Rate Limiting**: Prevent abuse with configurable request limits
+- **Authentication**: Bearer token authentication for secure access
+- **Origin Validation**: DNS rebinding protection
+
+**Environment Variables:**
+
+Core:
+- `MCP_HTTP_ENABLED=true` - Enable HTTP transport
+- `MCP_HTTP_PORT=3002` - HTTP port (default: 3002)
+- `MCP_BIND_ADDRESS=127.0.0.1` - Bind address (use 0.0.0.0 for Docker)
+
+Phase 2 Security (all optional):
+- `MCP_SESSION_TIMEOUT_MS=1800000` - Session timeout in ms (default: 30 min)
+- `MCP_SECURITY_ORIGIN_VALIDATION=true` - Enable origin validation
+- `MCP_ALLOWED_ORIGINS=http://localhost:5173` - Comma-separated allowed origins
+- `MCP_SECURITY_RATE_LIMITING=true` - Enable rate limiting
+- `MCP_RATE_LIMIT_MAX=100` - Max requests per window (default: 100)
+- `MCP_RATE_LIMIT_WINDOW_MS=60000` - Rate limit window in ms (default: 1 min)
+- `MCP_SECURITY_AUTH=true` - Enable Bearer token authentication
+- `MCP_AUTH_TOKEN=your-token` - Required auth token
 
 ### Full Stack Development
 - `npm run dev:full` - **RECOMMENDED** - Builds shared code and starts both frontend and backend concurrently
@@ -187,6 +233,15 @@ Why this change is needed...
 - `mdt-all` (global) - Access all projects from any directory
 - `mdt-tickets` (local) - Filtered to specific project via `MCP_PROJECT_FILTER`
 
+**MCP Server Architecture** (Updated MDT-074):
+The MCP server supports dual transport:
+- **Stdio transport** (`mcp-server/src/transports/stdio.ts`): Always enabled, traditional stdio-based communication
+- **HTTP transport** (`mcp-server/src/transports/http.ts`): Optional HTTP/JSON-RPC endpoint for containerized deployments
+  - Eliminates docker-exec overhead
+  - Implements MCP Streamable HTTP specification (2025-06-18)
+  - Endpoints: `POST /mcp` (JSON-RPC), `GET /health` (health check)
+  - Both transports share the same tool implementations in `mcp-server/src/tools/index.ts`
+
 **Available Tools**: `list_projects`, `get_project_info`, `list_crs`, `get_cr`, `create_cr`, `update_cr_status`, `update_cr_attrs`, `delete_cr`, `manage_cr_sections`, `suggest_cr_improvements`
 
 **See `mcp-server/MCP_TOOLS.md` for complete API reference**
@@ -268,3 +323,5 @@ Why this change is needed...
 - **Check for stale closures** when adding React hooks that reference changing state
 - **Use MCP tools** before manual file operations
 - **Follow CR format** from `docs/create_ticket.md` for all tickets
+- A cli command for teseting MCP with streamable HTTP protocol: 
+  timeout 10 npx @modelcontextprotocol/inspector --cli http://localhost:3002/mcp --transport http --method tools/list

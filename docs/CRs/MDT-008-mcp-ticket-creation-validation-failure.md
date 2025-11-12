@@ -130,7 +130,7 @@ if (!effectiveType) {
 
 #### Issue 1: MCP Debug-Tickets Functions (Original Discovery)
 **Problem**: MCP debug-tickets functions appear to simulate responses without actual execution
-- Agent claimed file created at: `/Users/kirby/home/markdown-ticket/mcp-server/docs/CRs/MDT-009...` 
+- Agent claimed file created at: `~/home/markdown-ticket/mcp-server/docs/CRs/MDT-009...` 
 - **This path is nonsense** - MCP server shouldn't have docs/CRs directory
 - No actual file was created in debug-tasks directory
 - MCP functions may not be properly connected to Claude Code
@@ -144,7 +144,7 @@ if (!effectiveType) {
 **Problem**: Ticket-creator agent reported successful MDT-009 creation but file was never created
 - Agent used `mcp__markdown-ticket__create_cr` function
 - Agent reported: "Perfect! I've successfully created Change Request **MDT-009**"
-- Agent claimed file created at: `/Users/kirby/home/markdown-ticket/docs/CRs/MDT-009-implement-patch-endpoint-optimization-for-drag-and-drop-efficiency.md`
+- Agent claimed file created at: `~/home/markdown-ticket/docs/CRs/MDT-009-implement-patch-endpoint-optimization-for-drag-and-drop-efficiency.md`
 - **Reality**: No MDT-009 file exists in docs/CRs/ directory
 - Latest ticket remains MDT-008, confirming MDT-009 creation failed
 

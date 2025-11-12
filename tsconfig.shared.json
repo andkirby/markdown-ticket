@@ -15,7 +15,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "allowImportingTsExtensions": false,
-    "noEmit": false
+    "noEmit": false,
+    "composite": true
   },
   "include": [
     "shared/**/*.ts"

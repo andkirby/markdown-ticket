@@ -1,0 +1,82 @@
+# Development environment overrides for docker-compose.yml
+# Includes volume mounts for hot reload and development-friendly settings
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  frontend:
+    ports:
+      - "5174:5173"
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./tsconfig.node.json:/app/tsconfig.node.json
+      - ./shared:/app/shared
+      # Preserve node_modules in container
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DOCKER_BACKEND_URL=http://backend:3001
+      - VITE_BACKEND_URL=
+      # Enable Vite HMR
+      - VITE_HMR_HOST=localhost
+      - VITE_HMR_PORT=5173
+
+  backend:
+    volumes:
+      # Mount Docker-only configuration (container-specific)
+      - ./docker-config:/root/.config/markdown-ticket:ro
+
+      - my-projects:/projects
+      - app:/app
+
+      # Mount projects - generic mounting pattern
+      # Examples:
+      # - ./:/projects/markdown-ticket          # Work on MDT app itself
+      # - ~/work/project-a:/projects/project-a   # Other projects
+      # - ~/personal/project-b:/projects/project-b
+      # projects:/projects                       # Named volume (uncomment below)
+
+      # Mount source code for hot reload (tsx watch mode)
+      - ./server:/app/server
+      - ./shared:/app/shared
+      # Preserve node_modules in container
+      - /app/server/node_modules
+      - /app/server/dist
+    environment:
+      - NODE_ENV=development
+      - DOCKER=true
+      - CHOKIDAR_USEPOLLING=true
+      - PORT=3001
+    command: ["npx", "nodemon", "--exec", "tsx", "server.ts"]
+
+  mcp:
+    volumes:
+      # Mount Docker-only configuration (container-specific) - needs to be writable for projects subdirectory
+      - ./docker-config:/root/.config/markdown-ticket
+
+      - my-projects:/projects
+      - app:/app
+
+      # Mount source code for hot reload (tsx watch mode)
+      - ./mcp-server/src:/app/mcp-server/src
+      - ./shared:/app/shared
+      # Preserve node_modules and build artifacts in container
+      - /app/mcp-server/node_modules
+      - /app/mcp-server/dist
+    environment:
+      - NODE_ENV=development
+      - MCP_HTTP_ENABLED=true
+      - MCP_HTTP_PORT=3002
+      - MCP_BIND_ADDRESS=0.0.0.0
+      - LOG_LEVEL=debug
+    entrypoint: ["npx", "tsx", "watch", "src/index.ts"]
+
+volumes:
+  app:
+  my-projects:

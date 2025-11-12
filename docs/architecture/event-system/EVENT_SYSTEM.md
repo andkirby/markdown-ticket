@@ -46,7 +46,7 @@ Backend → SSE Stream → Frontend Handler → Custom DOM Events → React Comp
   type: "project-created",
   data: {
     projectId: "OPU",
-    projectPath: "/Users/kirby/home/OPUS-training", 
+    projectPath: "~/home/OPUS-training", 
     timestamp: 1758900073623
   }
 }

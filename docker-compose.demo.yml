@@ -1,0 +1,11 @@
+x-shared-volumes: &project-volumes
+    volumes:
+      - ./debug-tasks:/projects/demo-project
+      - ./:/projects/markdown-ticket
+
+services:
+  backend:
+    <<: *project-volumes
+  mcp:
+    <<: *project-volumes
+
