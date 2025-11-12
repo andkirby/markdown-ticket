@@ -60,6 +60,9 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
+# Fix permissions for nginx to serve files
+RUN chmod go+r /usr/share/nginx/html -R
+
 # Expose nginx port
 EXPOSE 80
 
