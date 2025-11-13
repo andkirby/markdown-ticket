@@ -7,10 +7,11 @@ import { useProjectManager } from '../hooks/useProjectManager';
 import { getProjectCode } from './ProjectSelector';
 import { AddProjectModal } from './AddProjectModal';
 import { useTheme } from '../hooks/useTheme';
+import { Alert, AlertDescription, AlertTitle } from './UI/alert';
 
 export function RedirectToCurrentProject() {
   const navigate = useNavigate();
-  const { projects, loading, refreshProjects } = useProjectManager({ autoSelectFirst: false });
+  const { projects, loading, refreshProjects, isBackendDown } = useProjectManager({ autoSelectFirst: false });
   const { theme, toggleTheme } = useTheme();
   const [configInfo, setConfigInfo] = useState<any>(null);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
@@ -89,6 +90,31 @@ export function RedirectToCurrentProject() {
         {/* No Projects Content */}
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center max-w-2xl mx-auto p-8">
+            {/* Backend down warning */}
+            {isBackendDown && (
+              <div className="mb-6">
+                <Alert variant="warning" className="text-left">
+                  <AlertTitle className="flex items-center gap-2">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    Backend Server Not Responding
+                  </AlertTitle>
+                  <AlertDescription className="mt-3">
+                    <div className="space-y-2">
+                      <p className="font-medium">Current URL: {window.location.origin}/api</p>
+                      <p>The backend server is not responding. To fix this issue:</p>
+                      <ul className="list-disc list-inside space-y-1 text-sm ml-2">
+                        <li>Run <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">npm run server</code> in your terminal</li>
+                        <li>Or use Docker: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">bin/dc up backend -d</code></li>
+                        <li>Check logs with: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">bin/dc logs -f backend</code></li>
+                      </ul>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+
             <div className="flex items-center justify-center gap-3 mb-4">
               <h2 className="text-2xl font-semibold">No Projects Found</h2>
               <button
