@@ -90,6 +90,19 @@ export function RedirectToCurrentProject() {
         {/* No Projects Content */}
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center max-w-2xl mx-auto p-8">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <h2 className="text-2xl font-semibold">No Projects Found</h2>
+              {!isBackendDown && (
+                <button
+                  onClick={() => setShowAddProjectModal(true)}
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Project
+                </button>
+              )}
+            </div>
+
             {/* Backend down warning */}
             {isBackendDown && (
               <div className="mb-6">
@@ -101,30 +114,22 @@ export function RedirectToCurrentProject() {
                     Backend Server Not Responding
                   </AlertTitle>
                   <AlertDescription className="mt-3">
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                       <p className="font-medium">Current URL: {window.location.origin}/api</p>
-                      <p>The backend server is not responding. To fix this issue:</p>
-                      <ul className="list-disc list-inside space-y-1 text-sm ml-2">
-                        <li>Run <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">npm run server</code> in your terminal</li>
-                        <li>Or use Docker: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">bin/dc up backend -d</code></li>
-                        <li>Check logs with: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">bin/dc logs -f backend</code></li>
-                      </ul>
+                      <div>
+                        <h5 className="font-semibold mb-2">If you use <em>local</em> installation</h5>
+                        <p>Run <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">npm run server</code> in your terminal</p>
+                      </div>
+                      <div>
+                        <h5 className="font-semibold mb-2">If you use installation <em>docker</em></h5>
+                        <p>Wake up backend service: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">bin/dc up backend -d</code></p>
+                        <p className="mt-1">Check logs: <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">bin/dc logs -f backend</code></p>
+                      </div>
                     </div>
                   </AlertDescription>
                 </Alert>
               </div>
             )}
-
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <h2 className="text-2xl font-semibold">No Projects Found</h2>
-              <button
-                onClick={() => setShowAddProjectModal(true)}
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create Project
-              </button>
-            </div>
 
             {configInfo && (
               <div className="bg-muted/50 rounded-lg p-6 text-left">
@@ -218,21 +223,23 @@ services:
           </div>
         </div>
 
-        {/* Add Project Modal */}
-        <AddProjectModal
-          isOpen={showAddProjectModal}
-          onClose={() => setShowAddProjectModal(false)}
-          onProjectCreated={async () => {
-            setShowAddProjectModal(false);
-            // Refresh projects to get the newly created project
-            await refreshProjects();
-            // Redirect to the new project
-            if (projects.length > 0) {
-              const firstProjectCode = getProjectCode(projects[0]);
-              navigate(`/prj/${firstProjectCode}`, { replace: true });
-            }
-          }}
-        />
+        {/* Add Project Modal - Only show when backend is up */}
+        {!isBackendDown && (
+          <AddProjectModal
+            isOpen={showAddProjectModal}
+            onClose={() => setShowAddProjectModal(false)}
+            onProjectCreated={async () => {
+              setShowAddProjectModal(false);
+              // Refresh projects to get the newly created project
+              await refreshProjects();
+              // Redirect to the new project
+              if (projects.length > 0) {
+                const firstProjectCode = getProjectCode(projects[0]);
+                navigate(`/prj/${firstProjectCode}`, { replace: true });
+              }
+            }}
+          />
+        )}
       </TooltipProvider>
     );
   }
