@@ -89,7 +89,6 @@ This solution aligns with the project's goals of providing a user-friendly, self
 - **Option C** was rejected as it perpetuates technical debt and architectural inconsistencies
 
 ## 4. Implementation Specification
-
 ### Backend Architecture Changes
 
 #### TOML Configuration Parsing
@@ -149,6 +148,43 @@ Click "Create Project" → AddProjectModal → Project creation → Redirect to 
 - Graceful degradation when configuration is unavailable
 - User-friendly error messages with suggested actions
 
+### Backend Connectivity UX Enhancement (IMPLEMENTED)
+
+#### Alert Component Implementation
+- **File**: `src/components/UI/alert.tsx`
+- Created reusable shadcn-style alert component with `Alert`, `AlertTitle`, and `AlertDescription`
+- Uses `class-variance-authority` for consistent styling patterns
+- Provides warning-styled alert for error states
+
+#### Enhanced Backend Detection
+- **File**: `src/hooks/useProjectManager.ts`
+- Added `isBackendDown` state tracking to hook interface
+- Enhanced error handling to detect both network `TypeError` and HTTP 500 failures
+- Properly catches backend connectivity issues through Vite proxy failures
+- Returns backend connectivity status for UI components
+
+#### User-Friendly Error Display
+- **File**: `src/components/RedirectToCurrentProject.tsx`
+- Shows alert only when: `projects.length === 0` AND `isBackendDown === true`
+- **Error Message Content**:
+  - Title: "Backend Server Not Responding"
+  - Shows current URL that isn't responding (e.g., `http://localhost:5173/api`)
+  - Provides multiple solution options:
+    - `npm run server` for local development
+    - `bin/dc up backend -d` for Docker environments
+    - `bin/dc logs -f backend` for troubleshooting
+
+#### Smart Detection Logic
+- **Condition**: Alert appears only on "No projects" page when backend is down
+- **Prevents false positives**: Won't show when backend is working normally
+- **Network error handling**: Catches Vite proxy connection failures
+- **HTTP error handling**: Handles 500 server errors gracefully
+
+#### User Experience Features
+- **Clear messaging**: Warning-styled alert with appropriate icon
+- **Actionable instructions**: Code-formatted commands users can copy
+- **Multiple deployment scenarios**: Covers both local and Docker setups
+- **Responsive design**: Works across all device sizes
 ## 5. Acceptance Criteria
 
 ### Functional Criteria
@@ -184,26 +220,13 @@ Click "Create Project" → AddProjectModal → Project creation → Redirect to 
 
 ## 6. Success Metrics
 
-### User Experience Metrics
-- **Reduction in Support Tickets**: Target 50% reduction in "no projects found" related support inquiries
-- **User Task Completion**: 90% of users can successfully complete project setup within 5 minutes
-- **User Satisfaction**: NPS score improvement of 20+ points for new user onboarding experience
-- **Configuration Success Rate**: 95% of users successfully configure projects on first attempt
+### Primary Success Indicators
+- **User Experience**: 90% of users successfully complete project setup within 5 minutes
+- **System Performance**: `/api/config` endpoint responds in < 200ms for typical configurations
+- **Error Reduction**: < 1% error rate for project discovery and configuration operations
 
-### Technical Metrics
-- **Configuration Parsing Robustness**: 99.9% success rate on parsing various TOML file formats
-- **API Response Time**: `/api/config` endpoint responds in < 200ms for typical configurations
-- **Error Rate**: < 1% error rate for project discovery and configuration operations
-- **Code Coverage**: 95%+ test coverage for new configuration and discovery functionality
-
-### Architectural Metrics
-- **Technical Debt Reduction**: Elimination of regex-based TOML parsing maintenance burden
-- **System Maintainability**: 30% reduction in configuration-related bug reports
-- **Extensibility**: New configuration features can be added with < 2 hours development effort
-- **Documentation**: Complete API documentation and architectural diagrams for configuration system
-
-### Business Metrics
-- **User Adoption Rate**: 25% increase in new user adoption within 3 months
-- **Developer Onboarding Time**: 40% reduction in time for developers to set up new projects
-- **System Reliability**: 99.9% uptime for configuration and project discovery services
-- **Customer Satisfaction**: CSAT score improvement of 15+ points for configuration experience
+### Secondary Benefits
+- Elimination of regex-based TOML parsing maintenance burden
+- Improved error handling with actionable user guidance
+- Enhanced developer onboarding experience
+- Cleaner architectural separation between empty state and project views

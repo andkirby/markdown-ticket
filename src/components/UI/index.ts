@@ -29,6 +29,11 @@ export {
   toastVariants
 } from './Toast';
 export { default as FullscreenWrapper } from './FullscreenWrapper';
+export {
+  Alert,
+  AlertTitle,
+  AlertDescription
+} from './alert';
 
 // Re-export types
 export type {
