@@ -292,7 +292,7 @@ export class MCPTools {
             },
             section: {
               type: 'string',
-              description: 'Section identifier (required for get/update operations)'
+              description: 'Section identifier (supports flexible formats: "1. Description", "Description", or exact "## 1. Description"). Required for get/update operations.'
             },
             updateMode: {
               type: 'string',
@@ -816,11 +816,14 @@ export class MCPTools {
 
         lines.push('');
         lines.push('**Usage:**');
-        lines.push('To read or update a section, use the **exact header text** shown above (with # symbols).');
+        lines.push('To read or update a section, you can use flexible formats:');
+        lines.push('- User-friendly: `section: "1. Description"` or `section: "Description"`');
+        lines.push('- Exact format: `section: "## 1. Description"`');
         lines.push('');
         lines.push('**Examples:**');
-        lines.push('- `section: "## 1. Feature Description"` - reads/updates that section');
-        lines.push('- `section: "### Key Features"` - reads/updates the subsection');
+        lines.push('- `section: "1. Feature Description"` - matches "## 1. Feature Description"');
+        lines.push('- `section: "Feature Description"` - matches "## 1. Feature Description"');
+        lines.push('- `section: "### Key Features"` - exact match for subsection');
 
         return lines.join('\n');
       }
