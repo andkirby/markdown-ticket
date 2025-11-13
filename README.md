@@ -1,423 +1,252 @@
 # Markdown Ticket Board
 
- > **🚀 The "AI-first" and developer-friendly project management tool that speaks your language!**<br>
-> AI powered Kanban board that stores tickets as markdown files, integrating project management with your existing Git workflow.
+**Organize project tickets as markdown files with AI-powered workflow**
 
-<img alt="Markdown Ticket - Board, support dark/light theme" src="https://github.com/user-attachments/assets/f682104e-0e74-45b7-a6d4-b72142441b39" width="500"> <img alt="Markdown Ticket - Board, support dark/light theme" src="https://github.com/user-attachments/assets/4440a05e-6ec8-40ca-a08d-6d2d833b9561" width="500">
+Transform scattered documentation into an organized, version-controlled project management system. <br>
 
-**Key capabilities:**
-- Store tickets as markdown files with YAML frontmatter (for attributes part)
-- Version control your project management alongside code
-- Drag-and-drop Kanban interface with real-time updates
-- MCP integration for AI assistant workflows
-- Multi-project support from a single interface
-- No external dependencies or cloud services required
+Discuss features with LLM → LLM creates structured tickets → Review → LLM implements code → You review and organize.
 
-## Table of Contents
+![Markdown Ticket Board Demo](https://github.com/user-attachments/assets/f682104e-0e74-45b7-a6d4-b72142441b39)
 
-- [Features](#features)
-- [Quick Start](#quick-start)
-  - [Option 1: Traditional Development Setup](#option-1-traditional-development-setup)
-  - [Option 2: Docker Deployment (Recommended)](#option-2-docker-deployment-recommended)
-- [Getting Started](#getting-started)
-  - [First Time Setup](#first-time-setup)
-  - [Creating Tickets](#creating-tickets)
-  - [Ticket Format](#ticket-format)
-  - [Ticket Statuses](#ticket-statuses)
-- [Sorting Configuration](#sorting-configuration)
-  - [Default Sort Attributes](#default-sort-attributes)
-  - [Custom Sorting Configuration](#custom-sorting-configuration)
-  - [Configuration Options](#configuration-options)
-  - [System Attributes Protection](#system-attributes-protection)
-- [MCP Integration](#mcp-integration)
-  - [Adding MCP to AI Assistants](#adding-mcp-to-ai-assistants)
-  - [Available MCP Tools](#available-mcp-tools)
-- [Project Management](#project-management)
-  - [Creating Projects](#creating-projects)
-  - [Editing Projects](#editing-projects)
-  - [Project Configuration](#project-configuration)
-- [Development](#development)
-- [Docker Deployment](#docker-deployment)
-- [File System Integration](#file-system-integration)
-- [Release Notes](#release-notes)
-- [Contributing](#contributing)
-- [License](#license)
+## ⚡ Quick Start
 
-## Features
+### Docker (Recommended)
+```bash
+git clone https://github.com/andkirby/markdown-ticket.git
+cd markdown-ticket
+bin/dc up -d
+```
 
-- **Kanban Board Interface**: Visual drag-and-drop ticket management with status toggle buttons
-- **Multi-Project Support**: Manage multiple projects from a single dashboard with project editing capabilities
-- **Enhanced Ticket Viewer**: Comprehensive attribute display with styled badges and structured layout
-- **URL-based Routing**: Direct navigation to specific tickets and views via URLs
-- **Mermaid Diagrams**: Full support for Mermaid diagrams with fullscreen viewing, adaptive scaling, and zoom controls
-- **Syntax Highlighting**: Code blocks with syntax highlighting for 8+ languages (JS, TS, Python, Bash, JSON, YAML, PHP, Go)
-- **Smart Links**: Automatic conversion of ticket references (MDT-001) to clickable links with hover previews
-- **Table of Contents**: Auto-generated ToC for markdown documents with persistent button state
-- **H1 Title Management**: Automatic standardization and management of H1 headers in tickets
-- **Document Navigation**: Collapsible directory trees with filtering and sorting in document view
-- **Ticket Relationships**: Full support for dependencies, blocks, and related tickets
-- **Backlog Management**: Hide/show backlog tickets for cleaner board views
-- **Intelligent Caching**: File operations cached with 1-hour TTL and automatic invalidation on file changes
-- **Cache Management**: Clear backend and frontend caches via hamburger menu or API endpoint
-- **Markdown Storage**: All tickets stored as markdown files with YAML frontmatter
-- **Real-time Updates**: SSE-based live updates with optimistic UI
-- **Multiple View Modes**: Board, List, and Documents views with seamless switching
-- **Advanced Filtering**: Filter and sort documents and tickets by multiple criteria
-- **MCP Integration**: Model Context Protocol server with efficient section-based CR updates and HTTP transport
-- **Project Discovery**: Automatic detection of project configurations
-- **Docker Containerization**: Complete Docker deployment architecture with production-ready containers
-- **Configuration Management**: Advanced CLI tool for environment-based configuration management (MDT-073)
-- **Production Deployment**: Comprehensive deployment scripts and multi-environment support
+### Manual Setup
+```bash
+npm install
+npm run dev:full
+```
 
-## Quick Start
+**Access Points:**
+- **Docker**: http://localhost:5174
+- **Manual Setup**: http://localhost:5173
 
-### Option 1: Traditional Development Setup
-
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Start the backend server**:
-   ```bash
-   cd server
-   node server.js
-   ```
-
-3. **Start the development server** (in another terminal):
-   ```bash
-   npm run dev
-   ```
-
-4. **Access the application**:
-   - Open http://localhost:5173 in your browser
-   - Use the "Add New Project" button to create your first project
-   - Switch between Board, List, and Documents views using the icon switcher
-
-### Option 2: Docker Deployment (Recommended)
-
-**Prerequisites**: Docker Engine 20.10+, Docker Compose 2.0+
-
-1. **Quick Start with Docker Compose**:
-   ```bash
-   # Development
-   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-
-   # Production
-   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-   ```
-
-2. **Or use the simplified wrapper script**:
-   ```bash
-   # Production mode (recommended)
-   bin/dc up
-
-   # Development mode
-   bin/dc -m dev up
-
-   # Stop containers
-   bin/dc down
-   ```
-
-3. **Access the application**:
-   - Frontend: http://localhost:5174
-   - MCP HTTP endpoint: http://localhost:3012/mcp
-
-For detailed Docker configuration and troubleshooting, see **[docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md)**.
-
-## Getting Started
-
-### First Time Setup
-1. Create your first project using the "Add New Project" button in the UI
-2. The system will create both global registry and local project configuration files
-3. Start creating tickets using the UI or by following the guide in `docs/create_ticket.md`
-
-### Creating Tickets
-- **UI Method**: Use the "Create" button in the application interface
-- **Manual Method**: Create markdown files directly in your project's ticket directory
-- **Detailed Instructions**: See `docs/create_ticket.md` for comprehensive ticket creation guidelines
-- Files follow the naming pattern: `PROJECT-###-title.md`
-
-### Ticket Format
-```yaml
----
-code: MDT-001
-title: Example Ticket
-status: Proposed
-type: Feature Enhancement
-priority: Medium
-dateCreated: 2025-09-06T10:00:00.000Z
-lastModified: 2025-09-06T15:30:00.000Z
-phaseEpic: Phase A
 ---
 
-# Ticket Content
+## 🎯 What It Does
 
-Markdown content goes here...
-```
+**Solves three fundamental problems with AI-driven development:**
 
-### Ticket Statuses
-- **Proposed**: Initial state for new tickets
-- **Approved**: Approved for implementation
-- **In Progress**: Currently being worked on
-- **Implemented**: Completed and deployed
-- **Rejected**: Not approved for implementation
+### 1. **Markdown Management**
+Anyone can create markdown files, but managing them at scale becomes challenging. Files get scattered, navigation breaks down, and tracking progress requires manual hunting through directories.
 
-## Sorting Configuration
+### 2. **AI Context Persistence**
+LLMs have limited context windows and forget previous conversations. This system keeps everything organized and accessible across AI sessions, so no decisions get lost.
 
-The application supports customizable sorting with persistent user preferences.
+### 3. **Specification-Driven Workflow**
+Create detailed specifications first, then let AI implement exactly what was specified. This eliminates ambiguity and ensures requirements are actually met.
 
-### Default Sort Attributes
-- **Key** (desc) - Ticket identifier (e.g., MDT-001)
-- **Title** (asc) - Ticket title
-- **Created Date** (desc) - When the ticket was created
-- **Update Date** (desc) - When the ticket was last modified
+**The result:** Your scattered markdown files become an organized, version-controlled knowledge base that both AI and humans can work with effectively.
 
-### Custom Sorting Configuration
+---
 
-Create a configuration file at `~/.config/markdown-ticket/user.toml`:
+## 🔄 How It Works
 
-```toml
-[sorting]
-attributes = [
-    { name = "code", label = "Key", default_direction = "desc", system = true },
-    { name = "title", label = "Title", default_direction = "asc", system = true },
-    { name = "dateCreated", label = "Created Date", default_direction = "desc", system = true },
-    { name = "lastModified", label = "Update Date", default_direction = "desc", system = true },
-    # Add custom attributes
-    { name = "priority", label = "Priority", default_direction = "desc", system = false },
-    { name = "type", label = "Type", default_direction = "asc", system = false }
-]
+### 1. **AI Creates Tickets**
+Discuss requirements with AI assistants (Claude, GPT, Amazon Q) using **crafted prompts** for best results. AI creates structured tickets with all necessary sections:
+- Description, Rationale, Solution Analysis
+- Implementation Specification and Acceptance Criteria
 
-[sorting.preferences]
-selected_attribute = "lastModified"
-selected_direction = "desc"
-```
+💡 **Pro Tip**: Use the provided prompt template at `prompts/mdt-ticket-creation.md` for consistent, high-quality tickets that AI can implement effectively.
 
-### Configuration Options
+### 2. **You Read & Organize**
+Navigate tickets and documents through a beautiful interface with proper formatting, code highlighting, and Mermaid diagrams. Drag and drop tickets between columns to update status.
 
-- **name**: Field name in the ticket data
-- **label**: Display name in the sort dropdown
-- **default_direction**: Default sort direction (`asc` or `desc`)
-- **system**: If `true`, cannot be removed by users
+### 3. **AI Implements the Work**
+When a ticket is ready, give it to AI. AI reads the complete specification and implements exactly what was specified - writes code, tests, and documentation.
 
-### System Attributes Protection
-System attributes (`code`, `title`, `dateCreated`, `lastModified`) cannot be removed from the configuration to ensure core functionality remains intact.
+### 4. **You Review & Merge**
+Review the implementation against requirements, run automated tests, and merge the completed work with confidence.
 
-## MCP Integration
+**Every step is tracked in Git, creating a complete history from discussion to deployment.**
 
-The project includes an MCP (Model Context Protocol) server for AI assistant integration:
+---
 
+## 🌟 Key Features
+
+### 📖 **Content Consumption**
+- **Beautiful markdown rendering** with proper formatting and syntax highlighting
+- **Interactive Mermaid diagrams** with zoom controls for architecture visualizations
+- **Document navigation** for both tickets AND all project documents
+
+### 🎯 **Organization**
+- **Drag and drop** tickets between status columns
+- **Visual status tracking** for progress and priorities
+- **Multi-project support** to switch between projects instantly
+- **All content stored** in standard markdown files with YAML frontmatter
+
+### 🤖 **AI Integration**
+- **Native MCP integration** for AI assistants to read, create, and update tickets
+- **Persistent context** across AI sessions - no more lost decisions
+- **Structured ticket generation** with all required sections
+- **Specification-driven implementation** ensuring code matches requirements
+
+### 🔧 **Technical Foundation**
+- **Git-based storage** - everything version-controlled alongside your code
+- **No database required** - works with your existing filesystem
+- **Real-time updates** across all interfaces
+- **Production-ready Docker** deployment with single command
+
+---
+
+## 🤖 AI Assistant Integration
+
+**Built for the AI era** - Native MCP (Model Context Protocol) server lets AI assistants read, create, and update tickets directly.
+
+### Quick Setup
 ```bash
-# Start MCP server
-cd mcp-server
-npm run build
-npm start
-```
+# Claude Code - Global access (stdio transport)
+claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 
-### Adding MCP to AI Assistants
+# Claude Code - HTTP transport (for Docker containers)
+claude mcp add --transport http mdt-all http://localhost:3012/mcp --scope user
 
-**Pre-conditions:**
-- Markdown-ticket project installed in `~/markdown-ticket`
-- MCP server built (`npm run build` in mcp-server directory)
-- Your project has a project code (e.g., "COD")
-
-**Setup from your project directory:**
-```bash
-cd /path/to/my-project
-```
-
-#### Amazon Q CLI
-
-**Local scope** (project-specific, **🔴 currently not working - keep for future**):
-```bash
-q mcp add --name mdt-tickets \
-  --command "node" \
-  --args $HOME/markdown-ticket/mcp-server/dist/index.js \
-  --env MCP_PROJECT_FILTER=COD \
-  --env MCP_SCAN_PATHS="$(pwd)" \
-  --scope workspace --force
-```
-
-**Global scope** (works, access all projects):
-```bash
+# Amazon Q - Global access
 q mcp add --name mdt-all \
   --command "node" \
   --args $HOME/markdown-ticket/mcp-server/dist/index.js \
   --scope global --force
 ```
 
-#### Claude Code
+**Available Tools**: `list_projects`, `get_project_info`, `list_crs`, `get_cr`, `create_cr`, `update_cr_status`, `manage_cr_sections`, and more.
 
-**Local scope** (recommended, LLM sees only one project):
+---
+
+## 🐳 Docker Deployment
+
+Production-ready deployment with single command:
+
 ```bash
-claude mcp add mdt-tickets node $HOME/markdown-ticket/mcp-server/dist/index.js \
-  --env MCP_PROJECT_FILTER=COD \
-  --env MCP_SCAN_PATHS=$(pwd)
+# Production
+bin/dc up -d
+
+# Development
+MDT_DOCKER_MODE=dev bin/dc up -d
+# or add MDT_DOCKER_MODE=dev into .env[.local]
 ```
 
-**Global scope** (access any project from anywhere):
+**MCP Endpoint**: http://localhost:3012/mcp (for HTTP transport setup)
+
+**Features**: Secure by default, volume mounting, auto-discovery of projects. See **[docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md)** for detailed configuration.
+
+---
+
+## 🔄 Workflow Integration
+
+### Git Workflow
+Your entire project state is tracked in Git alongside code:
+
 ```bash
-claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
+git add docs/CRs/
+git commit -m "Add user authentication ticket (PROJ-001)"
+git push
 ```
 
-**Environment Variables:**
-- `MCP_PROJECT_FILTER=COD` - Limits MCP to specific project code
-- `MCP_SCAN_PATHS=$(pwd)` - Sets project path for scanning
+### Team Collaboration
+- **No merge conflicts** on project management data
+- **Pull requests** include both code and ticket changes
+- **Code reviews** show requirement context alongside implementation
+- **Complete history** for all decisions and changes
 
-**Scopes Explained:**
-- **Local/Workspace**: MCP only available in current project directory
-- **Global**: MCP available from any directory, can access all configured projects
+---
 
-### Available MCP Tools
+## 🎯 Who This Is For
 
-**🎯 Recent Optimization**: Tools have been consolidated for 40% token reduction:
-- `list_projects` - List all discovered projects
-- `get_project_info` - Get detailed project information
-- `list_crs` - List CRs for a project with filtering
-- `get_cr` (Consolidated) - Get CR with flexible modes (full, attributes, metadata)
-- `create_cr` (Enhanced) - Create CR with embedded template guidance
-- `manage_cr_sections` (Consolidated) - List, get, or update CR sections efficiently
-- `update_cr_attrs` - Update CR attributes (excludes status)
-- `update_cr_status` - Update CR status
-- `delete_cr` - Delete CRs (for implemented bug fixes)
-- `suggest_cr_improvements` - Get suggestions for improving CRs
+### ✅ Perfect For
+- **Solo developers working with AI assistance** who need to keep track of decisions and progress
+- **Engineers who maintain architectural documents** and feature specifications
+- **Anyone frustrated with AI context limits** and losing track of important decisions
+- **Developers managing feature requests** and change requests for existing projects
+- **Projects that require structured documentation** and specification-driven workflow
 
-**Token Efficiency**: Section operations are 84-94% more efficient than full document updates
+**This tool shines when AI and humans collaborate on software development through structured tickets and specifications.**
 
-**📖 Complete Documentation**: See `mcp-server/MCP_TOOLS.md` for detailed API reference including response formats, examples, and error handling.
+---
 
-## Project Management
+## 📈 What's New
 
-### Creating Projects
-- Use the "Add New Project" button in the UI to create new projects with automatic configuration setup
+**v0.7.0** (2025-11-12): Complete Docker containerization, advanced configuration management, enhanced MCP HTTP transport
 
-### Editing Projects
-- Click the edit button (pencil icon) next to any project to modify name, description, CRs path, and repository URL
+**v0.6.0** (2025-10-18): Smart link reliability fixes, project management improvements, and MCP optimizations
 
-### Project Configuration
-Projects use a dual-configuration approach:
+**v0.5.0** (2025-10-14): Smart links, Table of Contents, H1 title management, enhanced MCP tools
 
-**Global Registry** (`~/.config/markdown-ticket/projects/{project-dir}.toml`):
-```toml
-[project]
-path = "/path/to/project"
-active = true
+See **[RELEASE_NOTES.md](RELEASE_NOTES.md)** for detailed version history.
 
-[metadata]
-dateRegistered = "2025-09-07"
-lastAccessed = "2025-09-07"
-```
+---
 
-**Local Configuration** (`{project}/.mdt-config.toml`):
-```toml
-[project]
-name = "My Project"
-code = "MYPROJ"
-path = "docs/CRs"
-startNumber = 1
-counterFile = ".mdt-next"
-description = "Project description"
-repository = "https://github.com/user/repo"
-```
+## 🛠 Development
 
-The global registry provides minimal discovery information, while local configuration contains operational details.
-
-## Development
-
-### Quick Start
+### Setup
 ```bash
-npm install                    # Install dependencies
-cd server && node server.js   # Start backend (Terminal 1)
-npm run dev                    # Start frontend (Terminal 2)
+npm install          # Install all dependencies
+npm run dev:full     # Start frontend + backend
+npm run test:e2e     # Run Playwright tests
+npm run lint         # Code quality checks
 ```
 
-### MCP Development Tools
-The project includes MCP servers for AI assistant integration:
-- **CR Management**: `mcp-server/` - Full CR management via MCP tools
-- **Development Logging**: `server/mcp-dev-tools/` - Real-time log access during development
+### Architecture
+- **Frontend**: React + TypeScript + Vite + Tailwind CSS
+- **Backend**: Express.js + Node.js with SSE for real-time updates
+- **MCP Server**: Model Context Protocol server for AI integration
+- **Storage**: File system with markdown + YAML frontmatter
+- **No Database**: Everything is version-controlled with Git
 
-### Complete Development Guide
-See **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** for:
-- Full development environment setup
-- MCP server configuration and usage
-- Testing procedures and workflows
-- Architecture overview and code organization
-- Common development tasks and troubleshooting
-
-## Docker Deployment
-
-The application includes comprehensive Docker support for both development and production environments.
-
-### Prerequisites
-- Docker Engine 20.10+
-- Docker Compose 2.0+
-
-### Quick Start
-```bash
-# Start with simplified wrapper (recommended)
-bin/dc up
-
-# Or with docker-compose directly
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+### Project Structure
+```
+markdown-ticket/
+├── src/                    # React frontend
+├── server/                 # Express.js backend API
+├── mcp-server/             # MCP server for AI integration
+├── shared/                 # Shared types and utilities
+├── docs/CRs/               # Tickets directory
+└── docs/                   # Documentation
 ```
 
-### Access Points
-- **Frontend**: http://localhost:5174
-- **MCP HTTP**: http://localhost:3012/mcp
-- **Health Check**: http://localhost:3012/health
+---
 
-### Container Architecture
-| Service | Port | Purpose |
-|---------|------|---------|
-| Frontend | 5174 | React + Vite dev server |
-| Backend | Internal | Express.js API + SSE |
-| MCP | 3012 | HTTP transport for AI assistants |
+## 🤝 Contributing
 
-### Configuration Management
-Docker containers include advanced configuration management (MDT-073):
-- Environment variable support for custom paths
-- CLI tool for runtime configuration
-- Persistent configuration in Docker volumes
-- Auto-discovery of projects in mounted directories
+We welcome contributions! Here's how to get started:
 
-### Project Volume Examples
-```bash
-# Mount custom projects
-bin/dc -f docker-compose.projects.yml up
+1. **Fork** the repository
+2. **Create a feature branch**: `git checkout -b amazing-feature`
+3. **Make your changes** with tests if applicable
+4. **Run the test suite**: `npm run test:e2e` (ignore it so far, tests has to be fixed and updated)
+5. **Submit a pull request** with a clear description
 
-# Use demo configuration
-bin/dc -f docker-compose.demo.yml up
-```
+**Development priorities:**
+- Bug fixes and performance improvements
+- New MCP tool integrations
+- Useful prompts
+- Enhanced Docker deployment options
+- Documentation and examples
 
-For detailed configuration options, troubleshooting, and advanced usage, see **[docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md)**.
+---
 
-## File System Integration
+## 📄 License
 
-- **Automatic Timestamps**: `dateCreated` and `lastModified` are automatically managed from file system timestamps
-- **Real-time Updates**: File changes are detected and reflected in the UI immediately
-- **Version Control Friendly**: All data stored in markdown files, perfect for Git workflows
+MIT License - see **[LICENSE](LICENSE)** file for details.
 
-## Release Notes
+---
 
-See [RELEASE_NOTES.md](RELEASE_NOTES.md) for detailed information about each version:
+## 🙏 Acknowledgments
 
-- **v0.7.0** (2025-11-12): Complete Docker containerization, advanced configuration management, enhanced MCP HTTP transport
-- **v0.6.0** (2025-10-18): Smart link reliability fixes, project management improvements, and MCP optimizations
-- **v0.5.0** (2025-10-14): Smart links, Table of Contents, H1 title management, enhanced MCP tools
-- **v0.4.0** (2025-10-02): URL routing, Mermaid diagrams, document filtering, section-based MCP updates
-- **v0.3.0** (2025-09-11): Badge components, project editing, backlog management, MCP development tools
-- **v0.2.0** (2025-09-09): Enhanced ticket viewer, relationship management, real-time updates
-- **v0.1.0** (2025-09-07): Core Kanban board, multi-project support, MCP integration
+- Built with **React**, **Node.js**, and **Tailwind CSS**
+- Inspired by the simplicity of markdown-based workflows
+- Powered by the **Model Context Protocol** for LLM integration
+- Containerized with **Docker** for easy deployment
 
-## Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+**⭐ Star this repo if you find it useful!**
 
-## License
+**🐛 Found an issue?** [Report it here](https://github.com/andkirby/markdown-ticket/issues)
 
-MIT License - see LICENSE file for details.
+**💬 Have questions?** [Start a discussion](https://github.com/andkirby/markdown-ticket/discussions)

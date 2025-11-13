@@ -90,5 +90,5 @@ networks:
     name: mdt-network
 
 # Volumes are configured in override files:
-# - docker-compose.dev.yml: Volume mounts for hot reload
+# - docker-compose.dev.yml: Volume mounts for web server hot reload
 # - docker-compose.prod.yml: No volume mounts, production builds

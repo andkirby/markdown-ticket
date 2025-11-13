@@ -63,17 +63,6 @@ services:
   mcp:
     build:
       target: production  # Use production stage from Dockerfile
-    volumes:
-      # Mount global config (read-only)
-      - ${HOME}/.config/markdown-ticket:/root/.config/markdown-ticket:ro
-
-      # Mount projects directory - REQUIRED for production
-      # Customize these paths for your production environment
-      - ${MCP_PROJECTS_DIR:-${HOME}/home}:/workspace:ro
-
-      # Alternative: Mount specific projects
-      # - /data/projects/project-a:/projects/project-a:ro
-      # - /data/projects/project-b:/projects/project-b:ro
     environment:
       # Core MCP Configuration
       - NODE_ENV=production
