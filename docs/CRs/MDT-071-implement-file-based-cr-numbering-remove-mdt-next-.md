@@ -53,7 +53,6 @@ System currently uses dual mechanisms:
 - Requires directory scanning for each new CR (minimal performance impact)
 
 ## 4. Implementation Specification
-
 ### Files Requiring Changes
 
 **Backend Services**:
@@ -87,6 +86,39 @@ for (const filename of crFiles) {
 3. Remove `updateCounter` calls in `crService.ts`
 4. Remove counter file path resolution logic
 
+### Bug Fix Applied (2025-11-13)
+
+**Issue**: `getNextCRNumber()` in `crService.ts:268` searched in wrong directory when `.mdt-next` missing
+- Searched in `project.project.path` (project root) instead of configured CR directory
+- Bug only occurred when `path != "."` (e.g., `path = "docs/CRs"`)
+- Caused duplicate ticket numbers (MDT-001 instead of MDT-077)
+
+**Fix**: Changed line 268 to use `getCRPath()`:
+```typescript
+const crPath = await this.getCRPath(project);
+const crFiles = await glob('*.md', { cwd: crPath });
+```
+
+**Testing**: Reproduced bug in MDT project, confirmed fix works correctly for both root and subdirectory CR paths.
+
+### Test Results (2025-11-13)
+
+**Test 1: DEB Project** (path = ".")
+- Deleted .mdt-next file
+- Highest existing: DEB-033
+- Result: ✅ Created DEB-034 (correct, but bug doesn't affect root-level paths)
+
+**Test 2: MDT Project BEFORE Fix** (path = "docs/CRs")
+- Deleted .mdt-next file
+- Highest existing: MDT-076
+- Result: ❌ Created MDT-001 (bug confirmed - searched in wrong directory)
+
+**Test 3: MDT Project AFTER Fix** (path = "docs/CRs")
+- Deleted .mdt-next file
+- Highest existing: MDT-076
+- Result: ✅ Created MDT-077 (fix verified - searches in correct directory)
+
+**Conclusion**: Bug fix successful. System now correctly scans the configured CR directory when .mdt-next is missing.
 ## 5. Acceptance Criteria
 
 **Functional**:
