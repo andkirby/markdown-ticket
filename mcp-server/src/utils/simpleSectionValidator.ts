@@ -17,6 +17,7 @@ export interface ValidationResult {
 export class SimpleSectionValidator {
   /**
    * Validate a section identifier and provide helpful feedback
+   * Supports both user-friendly format ("1. Description") and exact format ("## 1. Description")
    */
   static validateSection(section: string, availableSections: string[] = []): ValidationResult {
     const errors: string[] = [];
@@ -30,56 +31,85 @@ export class SimpleSectionValidator {
 
     const normalized = section.trim();
 
-    // Check if it looks like a markdown header
-    if (!normalized.startsWith('#')) {
-      errors.push('Section identifier should start with # (markdown header)');
-      suggestions.push(`Try adding header markers: "## ${normalized}"`);
-    } else {
-      // Validate header format
-      if (!/^#+\s+.+$/.test(normalized)) {
-        errors.push('Header format should be: "# + space + title"');
-        suggestions.push(`Add space after #: "${normalized.replace(/^(#+)/, '$1 ')}"`);
-      }
-    }
+    // Normalize section text for matching (remove # symbols, numbers, lowercase)
+    const normalizeForMatching = (text: string): string => {
+      return text
+        .replace(/^#+\s*/, '') // Remove leading # characters
+        .replace(/^\d+\.\s*/, '') // Remove leading numbers like "1. "
+        .trim()
+        .toLowerCase();
+    };
 
     // Check if section exists in available sections
     if (availableSections.length > 0) {
-      const exactMatch = availableSections.find(s => s === normalized);
-      const partialMatches = availableSections.filter(s =>
-        s.toLowerCase().includes(normalized.toLowerCase()) ||
-        normalized.toLowerCase().includes(s.toLowerCase())
-      );
+      const normalizedInput = normalizeForMatching(normalized);
 
-      if (!exactMatch) {
+      // Find exact matches (comparing normalized forms)
+      const exactMatches = availableSections.filter(s => {
+        const normalizedSection = normalizeForMatching(s);
+        return normalizedSection === normalizedInput;
+      });
+
+      if (exactMatches.length === 0) {
+        // No exact match found - provide helpful error
+        errors.push(`Section "${normalized}" not found`);
+
+        // Try to find partial matches for suggestions
+        const partialMatches = availableSections.filter(s => {
+          const normalizedSection = normalizeForMatching(s);
+          return normalizedSection.includes(normalizedInput) ||
+                 normalizedInput.includes(normalizedSection);
+        });
+
         if (partialMatches.length > 0) {
-          errors.push(`Section "${normalized}" not found. Did you mean one of:`);
-          suggestions.push(...partialMatches.slice(0, 3).map(s => `  - "${s}"`));
+          suggestions.push('Did you mean one of:');
+          suggestions.push(...partialMatches.slice(0, 5).map(s => `  "${s}"`));
+        } else if (availableSections.length <= 10) {
+          suggestions.push('Available sections:');
+          suggestions.push(...availableSections.map(s => `  "${s}"`));
         } else {
-          errors.push(`Section "${normalized}" not found`);
-          if (availableSections.length <= 10) {
-            suggestions.push('Available sections:');
-            suggestions.push(...availableSections.map(s => `  - "${s}"`));
-          } else {
-            suggestions.push(`Use list_cr_sections to see all ${availableSections.length} available sections`);
-          }
+          suggestions.push(`Use manage_cr_sections with operation="list" to see all ${availableSections.length} available sections`);
         }
+
+        return { valid: false, errors, suggestions };
       }
+
+      if (exactMatches.length > 1) {
+        // Multiple matches found - require hierarchical path or more specific identifier
+        errors.push(`Multiple sections match "${normalized}". Please use a hierarchical path or the exact heading format.`);
+        suggestions.push('Matching sections:');
+        suggestions.push(...exactMatches.map(s => `  "${s}"`));
+
+        return { valid: false, errors, suggestions };
+      }
+
+      // Single exact match found - use it
+      // Return the exact section text from the document (with # symbols)
+      return {
+        valid: true,
+        normalized: exactMatches[0],
+        errors: [],
+        suggestions: []
+      };
     }
 
+    // No available sections provided - just validate format
     // Check for hierarchical path format
     if (normalized.includes(' / ')) {
       const parts = normalized.split(' / ');
       if (parts.length > 2) {
-        errors.push('Section path too deep - maximum format: "Document / Section"');
+        errors.push('Section path too deep - maximum 2 levels: "Parent / Child"');
         suggestions.push('Use simpler section name or flatten document structure');
+        return { valid: false, errors, suggestions };
       }
     }
 
+    // Accept both formats: with or without # symbols
     return {
-      valid: errors.length === 0,
+      valid: true,
       normalized,
-      errors,
-      suggestions
+      errors: [],
+      suggestions: []
     };
   }
 
