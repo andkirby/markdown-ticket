@@ -357,11 +357,12 @@ None required.
 
 ### Functional Requirements
 
-- [ ] `MarkdownSectionService.findSection()` correctly identifies sections by:
-  - [ ] Simple name ("Problem Statement")
-  - [ ] Markdown header ("### Problem Statement")
-  - [ ] Case-insensitive matching
-  - [ ] Partial header matching ("Problem" matches "### Problem Statement")
+- [x] `MarkdownSectionService.findSection()` correctly identifies sections by:
+  - [x] Simple name ("Problem Statement")
+  - [x] Markdown header ("### Problem Statement")
+  - [x] Case-insensitive matching
+  - [x] Partial header matching ("Problem" matches "### Problem Statement")
+  - [x] **Flexible section matching**: Accepts user-friendly formats like "Description" instead of requiring "## 1. Description"
 
 - [ ] `MarkdownSectionService.findSection()` handles duplicate sections:
   - [ ] Returns array of all matches
@@ -380,13 +381,15 @@ None required.
   - [ ] All operations maintain proper markdown formatting
   - [ ] Section boundaries detected correctly (ends at next header of same/higher level)
 
-- [ ] `update_cr_section` MCP tool:
-  - [ ] Validates project exists
-  - [ ] Validates CR exists
-  - [ ] Updates section content correctly
-  - [ ] Updates `lastModified` timestamp in YAML frontmatter
-  - [ ] Returns clear success message
-  - [ ] Returns helpful error messages (section not found, multiple matches, etc.)
+- [x] `update_cr_section` MCP tool:
+  - [x] Validates project exists
+  - [x] Validates CR exists
+  - [x] Updates section content correctly
+  - [x] Updates `lastModified` timestamp in YAML frontmatter
+  - [x] Returns clear success message
+  - [x] Returns helpful error messages (section not found, multiple matches, etc.)
+  - [x] **Enhanced error handling**: `SimpleSectionValidator` provides helpful suggestions when sections not found
+  - [x] **Flexible format support**: Accepts both "Description" and "## 1. Description" formats
 
 ### Error Handling
 
@@ -518,6 +521,23 @@ For incremental CR creation (building section by section):
 - **Testing**: Add unit tests for MarkdownSectionService edge cases
 - **Performance monitoring**: Track actual token savings in production usage
 - **Test Results**: DEB-908 successfully validates all three tools with comprehensive workflow testing
+
+### Flexible Section Matching Enhancement (2025-11-13)
+
+**Problem**: Required exact format `"## 1. Description"` but LLMs used `"Description"`, causing validation failures.
+
+**Solution**: Enhanced `SimpleSectionValidator` with `normalizeForMatching()` function:
+- Accepts `"Description"` → finds `"## 1. Description"`
+- Accepts `"1. Description"` → finds `"## 1. Description"`
+- Accepts `"## 1. Description"` → exact match (backwards compatible)
+
+**Files Modified**:
+- `mcp-server/src/utils/simpleSectionValidator.ts` (+58 lines)
+- `mcp-server/src/tools/index.ts` (updated description)
+
+**Testing**: ✅ Verified with curl - `section: "Description"` successfully updates TTT-099
+
+**Impact**: Eliminates validation errors, maintains backwards compatibility, improves LLM usability.
 
 ### Test Summary (DEB-908)
 

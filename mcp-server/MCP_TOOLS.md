@@ -112,6 +112,8 @@ The MCP server uses the **shared core architecture** with unified types, service
 ### `manage_cr_sections` (Consolidated)
 **Description**: Manage CR sections with multiple operations (consolidated tool replacing list_cr_sections, get_cr_section, and update_cr_section)
 
+**🆕 Flexible Section Matching**: Supports user-friendly formats - no need for exact markdown syntax!
+
 **Parameters**:
 - `project` (string, required): Project key (e.g., "MDT", "SEB")
 - `key` (string, required): CR key (e.g., "MDT-001", "SEB-010")
@@ -119,12 +121,30 @@ The MCP server uses the **shared core architecture** with unified types, service
   - `"list"`: List all sections with hierarchical tree structure
   - `"get"`: Read specific section content
   - `"update"`: Modify section content
-- `section` (string, optional): Section identifier (required for get/update operations). Can be:
-  - Simple name: "Problem Statement" or "Requirements"
-  - Markdown header: "### Problem Statement" or "## 2. Solution Analysis"
-  - Hierarchical path for duplicates: "## Feature AA / ### Requirements"
+- `section` (string, optional): Section identifier (required for get/update operations). **Flexible formats supported**:
+  - **User-friendly**: `"1. Description"` or `"Description"` (recommended)
+  - **Exact format**: `"## 1. Description"` or `"### Key Features"` (backwards compatible)
+  - **Hierarchical path**: `"## Parent / ### Child"` (for disambiguation)
+  - **Case-insensitive**: `"description"` matches `"## 1. Description"`
 - `updateMode` (string, optional): Update mode (required for update operation): `"replace"`, `"append"`, or `"prepend"`
 - `content` (string, optional): Content to apply (required for update operation)
+
+**Section Matching Examples**:
+```typescript
+// All of these work:
+section: "Description"           // Simple and natural
+section: "1. Description"        // With numbered prefix
+section: "## 1. Description"     // Exact markdown format
+
+// All match the same section: "## 1. Description"
+```
+
+**Error Handling**:
+- **Not found**: Provides list of available sections with suggestions
+- **Ambiguous**: Lists all matching sections and requires exact format or hierarchical path
+- **Partial matches**: Suggests similar section names
+
+See `/mcp-server/docs/FLEXIBLE_SECTION_MATCHING.md` for complete guide.
 
 
 ## Analysis Tools
