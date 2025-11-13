@@ -23,9 +23,20 @@ npm install
 npm run dev:full
 ```
 
+### 🤖 AI Integration Setup (Essential)
+```bash
+# Claude Code - Global access
+claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
+
+# Claude Code - HTTP transport (for Docker)
+claude mcp add --transport http mdt-all http://localhost:3012/mcp --scope user
+```
+
 **Access Points:**
-- **Docker**: http://localhost:5174
-- **Manual Setup**: http://localhost:5173
+- **Web Interface**: Docker http://localhost:5174 | Manual http://localhost:5173
+- **MCP Endpoint**: http://localhost:3012/mcp (for AI integration)
+
+🚨 **Note**: MCP integration is required for the full AI-driven workflow. Without it, you only have a basic ticket viewer.
 
 ---
 
@@ -99,22 +110,9 @@ Review the implementation against requirements, run automated tests, and merge t
 
 **Built for the AI era** - Native MCP (Model Context Protocol) server lets AI assistants read, create, and update tickets directly.
 
-### Quick Setup
-```bash
-# Claude Code - Global access (stdio transport)
-claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
-
-# Claude Code - HTTP transport (for Docker containers)
-claude mcp add --transport http mdt-all http://localhost:3012/mcp --scope user
-
-# Amazon Q - Global access
-q mcp add --name mdt-all \
-  --command "node" \
-  --args $HOME/markdown-ticket/mcp-server/dist/index.js \
-  --scope global --force
-```
-
 **Available Tools**: `list_projects`, `get_project_info`, `list_crs`, `get_cr`, `create_cr`, `update_cr_status`, `manage_cr_sections`, and more.
+
+**For detailed setup and memory configuration**, see **[docs/MCP_SERVER_GUIDE.md](docs/MCP_SERVER_GUIDE.md)**.
 
 ---
 
