@@ -17,22 +17,23 @@ interface UseProjectManagerReturn {
   selectedProject: Project | null;
   setSelectedProject: (project: Project | null) => void;
   refreshProjects: () => Promise<void>;
-  
+
   // Ticket management
   tickets: Ticket[];
   refreshTickets: () => Promise<void>;
-  
+
   // Ticket operations
   createTicket: (title: string, type: string) => Promise<Ticket>;
   updateTicket: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>;
   updateTicketOptimistic: (ticketCode: string, updates: Partial<Ticket>, trackingKey?: string) => Promise<Ticket>;
   deleteTicket: (ticketCode: string) => Promise<void>;
-  
+
   // State
   loading: boolean;
   error: Error | null;
   clearError: () => void;
-  
+  isBackendDown: boolean;
+
   // Project configuration
   projectConfig: ProjectConfig | null;
 }
@@ -45,7 +46,8 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  
+  const [isBackendDown, setIsBackendDown] = useState<boolean>(false);
+
   const selectedProjectRef = useRef<Project | null>(null);
 
   // Fetch tickets for a specific project
@@ -89,7 +91,9 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   // Fetch all projects
   const fetchProjects = useCallback(async (): Promise<void> => {
     try {
+      setIsBackendDown(false);
       const response = await fetch('/api/projects');
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -103,6 +107,22 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
       }
     } catch (error) {
       console.error('Failed to fetch projects:', error);
+      // Check if it's a network error (backend down) or HTTP 500 from proxy
+      if (error instanceof TypeError && (
+        error.message.includes('fetch') ||
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError')
+      )) {
+        setIsBackendDown(true);
+        throw new Error('Backend server is not responding. Please check that the server is running.');
+      }
+
+      // Check if it's an HTTP 500 error from the proxy (indicating backend is down)
+      if (error instanceof Error && error.message.includes('HTTP 500')) {
+        setIsBackendDown(true);
+        throw new Error('Backend server is not responding. Please check that the server is running.');
+      }
+
       throw error;
     }
   }, [autoSelectFirst]); // Removed selectedProject and ticketOps dependencies
@@ -224,6 +244,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     loading,
     error: ticketOps.error,
     clearError: ticketOps.clearError,
+    isBackendDown,
     projectConfig
   };
 }

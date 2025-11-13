@@ -1,26 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Quick Start Script for md-ticket-board
-# This script helps you get the system running quickly
+# Production Start Script for MDT
+# This script starts the production servers using built .js files
 # Can be run from any directory - will automatically find the project root
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Change to the project root directory
-cd "$SCRIPT_DIR"
+cd "${SCRIPT_DIR}" || exit 1
 
-echo "🏠 Working from project directory: $SCRIPT_DIR"
+echo "🏠 Working from project directory: ${SCRIPT_DIR}"
 
 # Verify we're in the correct project directory
-if [ ! -f "package.json" ] || ! grep -q "md-ticket-board" package.json 2>/dev/null; then
-    echo "❌ Error: This doesn't appear to be the md-ticket-board project directory"
-    echo "   Expected to find package.json with 'md-ticket-board' in: $SCRIPT_DIR"
+if [ ! -f "package.json" ] || ! grep -q "MDT" package.json 2>/dev/null; then
+    echo "❌ Error: This doesn't appear to be the MDT project directory"
+    echo "   Expected to find package.json with 'MDT' in: ${SCRIPT_DIR}"
     echo "   Please make sure the script is in the project root directory"
     exit 1
 fi
 
-echo "✅ Found md-ticket-board project"
+echo "✅ Found MDT project"
 
 # Function to kill processes on specific ports
 kill_processes_on_ports() {
@@ -40,72 +40,41 @@ kill_processes_on_ports() {
 
 # Function to stop all running processes
 stop_processes() {
-    echo "🛑 Stopping md-ticket-board processes..."
+    echo "🛑 Stopping MDT production processes..."
     kill_processes_on_ports 5173 3001
     echo "✅ All processes stopped"
 }
 
-# Check if user wants to stop processes or install global
+# Check if user wants to stop processes
 if [ "$1" = "stop" ]; then
     stop_processes
     exit 0
 elif [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    echo "md-ticket-board Quick Start Script"
-    echo "=================================="
+    echo "MDT (Markdown-Ticket) Production Start Script"
+    echo "=============================================="
     echo ""
-    echo "Usage: ./quick-start.sh [OPTION]"
+    echo "Usage: ./start-prod.sh [OPTION]"
     echo ""
     echo "Options:"
-    echo "  both (default)   - Start both frontend and backend servers"
-    echo "  frontend         - Start frontend server only (port 5173)"
-    echo "  backend          - Start backend server only (port 3001)"
-    echo "  stop             - Stop all running servers"
-    echo "  install-global   - Create a global symlink to run from anywhere"
+    echo "  both (default)   - Start both frontend and backend production servers"
+    echo "  frontend         - Start frontend production server only (port 5173)"
+    echo "  backend          - Start backend production server only (port 3001)"
+    echo "  stop             - Stop all running production servers"
+    echo "  build            - Build all projects before starting (if needed)"
     echo "  help, --help, -h - Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./quick-start.sh              # Start both servers"
-    echo "  ./quick-start.sh frontend     # Start frontend only"
-    echo "  ./quick-start.sh stop         # Stop all servers"
-    echo "  ./quick-start.sh install-global  # Install globally as 'md-ticket-board'"
-    exit 0
-elif [ "$1" = "install-global" ]; then
-    echo "🌍 Installing global symlink for md-ticket-board..."
-    
-    # Check if /usr/local/bin exists and is writable
-    if [ ! -d "/usr/local/bin" ]; then
-        echo "❌ /usr/local/bin doesn't exist. Creating it..."
-        sudo mkdir -p /usr/local/bin
-    fi
-    
-    # Create the symlink
-    GLOBAL_LINK="/usr/local/bin/md-ticket-board"
-    if [ -L "$GLOBAL_LINK" ]; then
-        echo "🔄 Removing existing symlink..."
-        sudo rm "$GLOBAL_LINK"
-    fi
-    
-    echo "🔗 Creating symlink: $GLOBAL_LINK -> $SCRIPT_DIR/quick-start.sh"
-    sudo ln -s "$SCRIPT_DIR/quick-start.sh" "$GLOBAL_LINK"
-    
-    if [ -L "$GLOBAL_LINK" ]; then
-        echo "✅ Global installation complete!"
-        echo "   You can now run 'md-ticket-board' from any directory"
-        echo ""
-        echo "Examples:"
-        echo "  md-ticket-board           # Start both servers"
-        echo "  md-ticket-board frontend  # Start frontend only"
-        echo "  md-ticket-board backend   # Start backend only"
-        echo "  md-ticket-board stop      # Stop all servers"
-    else
-        echo "❌ Failed to create global symlink"
-        exit 1
-    fi
+    echo "  ./start-prod.sh              # Start both production servers"
+    echo "  ./start-prod.sh frontend     # Start frontend production only"
+    echo "  ./start-prod.sh build        # Build then start both servers"
+    echo "  ./start-prod.sh stop         # Stop all production servers"
+    echo ""
+    echo "Note: This script uses pre-built .js files. Run 'npm run build:all' first if needed."
     exit 0
 fi
 
-echo "🚀 Starting md-ticket-board setup..."
-echo "=================================="
+echo "🚀 Starting MDT production setup..."
+echo "======================================"
 
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then
@@ -113,60 +82,112 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
-# Check if npm is installed
-if ! command -v npm &> /dev/null; then
-    echo "❌ npm is not installed. Please install npm."
-    exit 1
+# Check if production builds exist
+echo "🔍 Checking for production builds..."
+
+missing_builds=false
+
+# Check frontend build
+if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
+    echo "❌ Frontend build not found in ./dist/"
+    missing_builds=true
 fi
 
-# Install dependencies
-echo "📦 Installing frontend dependencies..."
-npm install
+# Check server build
+if [ ! -d "server/dist" ] || [ ! -f "server/dist/server.js" ]; then
+    echo "❌ Server build not found in ./server/dist/"
+    missing_builds=true
+fi
 
-echo "📦 Installing server dependencies..."
-cd server && npm install && cd ..
+# Check shared build
+if [ ! -d "shared/dist" ]; then
+    echo "❌ Shared build not found in ./shared/dist/"
+    missing_builds=true
+fi
 
-# Create tasks directory if it doesn't exist
-echo "📁 Creating tasks directory..."
-mkdir -p tasks
-
+# If builds are missing, offer to build them
+if [ "$missing_builds" = true ]; then
+    if [ "$1" = "build" ]; then
+        echo "🔨 Building all components..."
+        npm run build:all
+        if [ $? -ne 0 ]; then
+            echo "❌ Build failed. Please check the build logs above."
+            exit 1
+        fi
+        echo "✅ Build complete!"
+    else
+        echo ""
+        echo "❌ Production builds are missing. Run with 'build' option to create them:"
+        echo "   ./start-prod.sh build"
+        echo ""
+        echo "Or build manually:"
+        echo "   npm run build:all"
+        echo ""
+        echo "Then run this script again without 'build' option."
+        exit 1
+    fi
+else
+    echo "✅ All production builds found"
+fi
 
 # Kill existing processes on default ports
 echo "🔍 Checking for existing processes on default ports..."
 kill_processes_on_ports 5173 3001
 
-# Check if nodemon is installed for development
-if ! command -v nodemon &> /dev/null; then
-    echo "🔧 Installing nodemon for development..."
-    npm install -g nodemon
-fi
-
 echo "✅ Setup complete!"
 echo ""
-echo "🎯 Starting the system..."
+echo "🎯 Starting production servers..."
 
 # Check if user wants to start both servers (default) or specific ones
-if [ -z "$1" ] || [ "$1" = "both" ]; then
-    echo "🚀 Starting both frontend and backend servers..."
-    npm run dev:full
+if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
+    echo "🚀 Starting both frontend and backend production servers..."
+
+    # Start backend in background
+    echo "🔧 Starting backend production server on port 3001..."
+    cd server && node dist/server.js &
+    BACKEND_PID=$!
+    cd ..
+
+    # Give backend a moment to start
+    sleep 2
+
+    # Start frontend in background
+    echo "🎨 Starting frontend production server on port 5173..."
+    npx preview dist &
+    FRONTEND_PID=$!
+
+    echo ""
+    echo "✅ Production servers started!"
+    echo "   Frontend: http://localhost:5173 (PID: $FRONTEND_PID)"
+    echo "   Backend:  http://localhost:3001 (PID: $BACKEND_PID)"
+    echo ""
+    echo "To stop servers, run: ./start-prod.sh stop"
+    echo ""
+    echo "Press Ctrl+C to stop watching (servers will continue running)"
+
+    # Wait for interrupt signal
+    trap 'echo ""; echo "🛑 Stopping production servers..."; kill $FRONTEND_PID $BACKEND_PID 2>/dev/null; echo "✅ Servers stopped"; exit 0' INT
+
+    # Keep script running to monitor processes
+    wait
+
 elif [ "$1" = "frontend" ]; then
-    echo "🚀 Starting frontend server only..."
-    npm run dev
+    echo "🚀 Starting frontend production server only..."
+    npx preview dist
+
 elif [ "$1" = "backend" ]; then
-    echo "🚀 Starting backend server only..."
-    npm run dev:server
-elif [ "$1" = "stop" ]; then
-    stop_processes
-    exit 0
+    echo "🚀 Starting backend production server only..."
+    cd server && node dist/server.js
+
 else
     echo "❌ Unknown option: $1"
-    echo "Usage: ./quick-start.sh [both|frontend|backend|stop|install-global]"
+    echo "Usage: ./start-prod.sh [both|frontend|backend|stop|build]"
     echo ""
     echo "Options:"
-    echo "  both (default)   - Start both frontend and backend servers"
-    echo "  frontend         - Start frontend server only (port 5173)"
-    echo "  backend          - Start backend server only (port 3001)" 
-    echo "  stop             - Stop all running servers"
-    echo "  install-global   - Create a global symlink to run from anywhere"
+    echo "  both (default)   - Start both frontend and backend production servers"
+    echo "  frontend         - Start frontend production server only (port 5173)"
+    echo "  backend          - Start backend production server only (port 3001)"
+    echo "  stop             - Stop all running production servers"
+    echo "  build            - Build all projects then start both servers"
     exit 1
 fi
