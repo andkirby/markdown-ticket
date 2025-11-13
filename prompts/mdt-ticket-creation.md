@@ -10,8 +10,8 @@ Guide for AI agents creating architectural decision records (ADRs) using MCP mdt
 4. **NO fabricated metrics** - Only real baselines
 5. **NO implementation details**: No code snippets, API signatures, config files, implementation steps, or database schemas
 6. **This is a DECISION document** - Answer "what and why", not "how to code it"
-7. **Testable criteria** - "API returns 200 OK" not "works well"
-8. **Specific tests** - "Function X throws ErrorY when Z" not "test error handling"
+7. **Testable criteria** - "System returns success code" not "works well"
+8. **Specific tests** - "Component X fails with ErrorY when condition Z" not "test error handling"
 9. **Skip optional sections** - If simple change, omit deployment strategy
 10. **Keep concise** - Target 200-400 lines
 
@@ -77,8 +77,8 @@ Then:
 
 **Functional** (testable):
 ```
-- [ ] Component X does Y when Z
-- [ ] User completes workflow A→B→C
+- [ ] Component X performs action Y when condition Z
+- [ ] Process completes workflow A→B→C
 ```
 
 **Non-Functional** (measurable):
@@ -86,24 +86,24 @@ Then:
 - Reliability: Error X handled as Y
 - Maintainability: Follows pattern Z
 - Security: Input validated against Y
-- Performance: Operation < X ms
+- Performance: Operation completes within acceptable time/resources
 ```
 
 **Testing** (concrete scenarios):
 ```
-- Unit: Function X(input) returns Y, throws Error when Z
-- Integration: User→Action→Response→State
-- Manual: Specific UI flow to verify
+- Unit: Component X with input Y produces output Z, fails with ErrorType when condition A
+- Integration: Action X triggers process Y resulting in state Z
+- Manual: Execute scenario, verify expected behavior occurs
 ```
 
 ### 6. Success Metrics
 
-**Only if baselines exist**:
-- Performance: "Response < 200ms" (current: 350ms)
-- Resources: "Memory < 100MB" (current: 180MB)  
-- Quality: "Coverage > 80%" (current: 65%)
+**Only if baselines exist** - Include current measurement and target:
+- Performance: "Operation X < [target]" (current: [baseline])
+- Resources: "Resource Y < [target]" (current: [baseline])
+- Quality: "Metric Z > [target]" (current: [baseline])
 
-**Otherwise**: Describe qualitative improvements
+**If no baselines exist**: Describe qualitative improvements (workflow changes, developer experience, user outcomes)
 
 ### 7. Deployment Strategy
 
@@ -135,3 +135,6 @@ Keep: simple, minimal colors, clear labels
 - [ ] Rollback plan
 - [ ] All placeholders replaced
 
+---
+
+This ensures consistent, token-efficient architectural tickets for MCP workflow.

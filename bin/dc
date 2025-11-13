@@ -17,9 +17,20 @@ mode=${MDT_DOCKER_MODE:-prod}
 compose_args=()
 compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.yml")
 compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${mode}.yml")
+
 #compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.${mode}-mcp-stdio.yml")
 
 echo "mode: ${mode}" > /dev/stderr
+
+# Add custom projects yml file if specified
+if [[ -n "${MDT_DOCKER_PROJECTS_YML}" ]]; then
+    if [[ -f "${PROJECT_ROOT}/${MDT_DOCKER_PROJECTS_YML}" ]]; then
+        compose_args+=("--file" "${PROJECT_ROOT}/${MDT_DOCKER_PROJECTS_YML}")
+        echo "Added projects file: ${MDT_DOCKER_PROJECTS_YML}" > /dev/stderr
+    else
+        echo "Warning: Projects file not found: ${PROJECT_ROOT}/${MDT_DOCKER_PROJECTS_YML}" > /dev/stderr
+    fi
+fi
 
 # Auto-join all dc-prj.*.yml files with full paths
 for project_file in "${PROJECT_ROOT}"/docker-compose."${mode}".*.yml; do

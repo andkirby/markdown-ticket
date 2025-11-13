@@ -7,13 +7,13 @@ Simple commands for integrating with Markdown Ticket through Claude Code.
 Copy commands to your Claude Code commands folder:
 
 ```bash
-cp prompts/mdt-ticket-creation-architecture.md ~/.claude/commands/
+cp prompts/mdt-ticket-creation.md ~/.claude/commands/
 ```
 
 ## Usage
 
 1. Provide context for ticket creation in Claude Code
-2. Run: `/mdt-ticket-creation-architecture`
+2. Run: `/mdt-ticket-creation`
 
 ## Contributing
 
