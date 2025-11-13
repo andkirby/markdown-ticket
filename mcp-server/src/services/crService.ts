@@ -264,10 +264,13 @@ export class CRService {
 
   async getNextCRNumber(project: Project): Promise<number> {
     try {
+      // Get the correct CR directory path
+      const crPath = await this.getCRPath(project);
+
       // Scan existing CR files to find the highest number
-      const crFiles = await glob('*.md', { cwd: project.project.path });
+      const crFiles = await glob('*.md', { cwd: crPath });
       let highestExistingNumber = 0;
-      
+
       for (const filename of crFiles) {
         const match = filename.match(new RegExp(`${project.project.code}-(\\d+)-`, 'i'));
         if (match) {
