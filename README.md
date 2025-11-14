@@ -70,7 +70,6 @@ Create detailed specifications first, then let AI implement exactly what was spe
 ---
 config:
   layout: elk
-  look: handDrawn
 ---
 flowchart TD
     User[User / Developer]
@@ -108,7 +107,6 @@ flowchart TD
 ---
 config:
   layout: elk
-  look: handDrawn
 ---
 flowchart TD
     User[User / Developer]
