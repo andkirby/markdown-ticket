@@ -1,5 +1,85 @@
 # Release Notes
 
+## v0.7.1 (2025-11-14)
+
+### 🎉 New Features
+
+**CLI Project Management Tool (MDT-077)**
+- **Command-line Interface**: Comprehensive CLI for project CRUD operations
+- **Interactive Mode**: Guided project creation with template support
+- **Non-Interactive Mode**: Automation-friendly commands for CI/CD pipelines
+- **Template Operations**: Import and export project configurations
+- **Integration Ready**: Works seamlessly with existing ProjectService architecture
+
+**Flexible Section Matching (MDT-052)**
+- **User-Friendly Format**: MCP tools now accept section names like "Description" or "1. Description"
+- **No Exact Syntax Required**: Eliminates need for precise "## 1. Description" markdown format
+- **Improved AI Integration**: Makes it easier for AI assistants to work with ticket sections
+- **Backwards Compatible**: Still supports exact markdown heading syntax
+- **Helpful Error Messages**: Provides section suggestions when section not found
+
+### 🚀 Improvements
+
+**Enhanced Ticket Creation Workflow**
+- **Comprehensive Prompt Template**: Updated `prompts/mdt-ticket-creation.md` with detailed guidelines
+- **Critical Rules**: Clear rules to avoid common mistakes when creating tickets
+- **MCP Tool Examples**: Practical examples for using MCP tools effectively
+- **Quality Checklist**: Before-submitting checklist ensures high-quality tickets
+- **Diagram Guidelines**: Best practices for including technical diagrams
+
+**Project Rebranding**
+- **Consistent Naming**: Updated from 'md-ticket-board' to 'markdown-ticket' throughout
+- **Portable Scripts**: Changed shebang to `#!/usr/bin/env bash` for better compatibility
+- **Port Configuration**: Production frontend moved from port 5173 to 4173
+- **Package Naming**: Consistent project/package ID across all components
+
+**Docker Configuration**
+- **MCP Stdio-only Option**: New `docker-compose.mcp-stdio-only.yml` for traditional stdio transport
+- **Flexible Transport**: Choose between HTTP and stdio MCP transports in Docker
+
+### 🐛 Bug Fixes
+
+**Ticket Numbering in Subdirectories (MDT-071)**
+- **Critical Fix**: Resolved duplicate ticket numbers when `.mdt-next` file is missing
+- **Subdirectory Support**: Now correctly handles CRs in subdirectories like `docs/CRs/`
+- **Path Resolution**: Uses `getCRPath()` to find correct CR directory before scanning
+- **Verified Fix**: Tested with both root-level and subdirectory CR paths
+
+### 📚 Documentation
+
+**Streamlined README**
+- **41% Reduction**: Reduced from 423 to 250 lines for better readability
+- **Improved Quick Start**: MCP setup integrated directly into Quick Start section
+- **AI-First Focus**: Clearer positioning as AI-powered development tool
+- **Visual Workflow**: Added Mermaid diagram showing AI-human collaboration phases
+- **Better Organization**: Moved Quick Start after value proposition for immediate clarity
+
+**Enhanced Docker Guide**
+- **71% Reduction**: Streamlined from 578 to 166 lines
+- **bin/dc Documentation**: Added comprehensive guide for Docker wrapper script
+- **Configuration Focus**: Practical usage patterns for CONFIG_DIR and CONFIG_DISCOVER_PATH
+- **Quick Reference**: Problem-solution pairs for common troubleshooting scenarios
+
+**Improved Ticket Templates**
+- **Artifact-Specification Format**: Better structure for ADR-style tickets
+- **Tables and Lists**: Replaced prose with scannable tables and bullet points
+- **Specific File Paths**: All changes include exact file paths and line numbers
+- **Measurable Criteria**: Clear acceptance criteria with specific test cases
+
+### 🔧 Technical Details
+
+**Start Script Improvements**
+- **Portable Shebang**: All scripts use `#!/usr/bin/env bash` for cross-platform support
+- **Better Package Detection**: Improved patterns for detecting package.json files
+- **Production Fixes**: Corrected frontend startup to use `npm run preview`
+
+**Section Validation**
+- **Flexible Matching**: SimpleSectionValidator now includes `normalizeForMatching()` function
+- **Smart Normalization**: Strips markdown syntax and numbering for comparison
+- **Error Messaging**: Provides helpful suggestions when sections don't match
+
+---
+
 ## v0.7.0 (2025-11-12)
 
 ### 🎉 Major New Features
