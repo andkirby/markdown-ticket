@@ -141,11 +141,11 @@ npm run cli:project export <project-id> [--format json|toml]
 - [ ] npm run cli:project create --name "Test" --code "TST" --path "/path/to/test" creates project non-interactively
 - [ ] npm run cli:project list displays all projects in tabular format
 - [ ] npm run cli:project list --format json outputs structured data
-- [ ] npm run cli:project get <project-id> shows detailed project information
-- [ ] npm run cli:project update <project-id> --interactive updates project with validation
-- [ ] npm run cli:project delete <project-id> --confirm removes project after confirmation
+- [ ] npm run cli:project get <project-code> shows detailed project information
+- [ ] npm run cli:project update <project-code> --interactive updates project with validation
+- [ ] npm run cli:project delete <project-code> --confirm removes project after confirmation
 - [ ] npm run cli:project import template.toml creates project from template file
-- [ ] npm run cli:project export <project-id> --format toml outputs project configuration
+- [ ] npm run cli:project export <project-code> --format toml outputs project configuration
 - [ ] All commands use shared/ ProjectService and maintain data consistency
 - [ ] CLI supports both development (tsx) and production (node) execution
 ```
