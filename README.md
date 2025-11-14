@@ -94,10 +94,10 @@ flowchart TD
     B1 --> B2
     B2 --> User
 
-    style User fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    style LLM fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style User fill:#4a90e2,stroke:#2e5c8a,stroke-width:2px,color:#fff
+    style LLM fill:#9b59b6,stroke:#6c3483,stroke-width:2px,color:#fff
 
-    classDef phaseBox fill:#f8f9fa,stroke:#6c757d,stroke-width:1px,stroke-dasharray: 5 5
+    classDef phaseBox stroke:#718096,stroke-width:1px,stroke-dasharray: 5 5
     class A1,A2,B1,B2 phaseBox
 ```
 
@@ -132,10 +132,10 @@ flowchart TD
     D1 --> D2
     D2 --> User
 
-    style User fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    style LLM fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style User fill:#4a90e2,stroke:#2e5c8a,stroke-width:2px,color:#fff
+    style LLM fill:#9b59b6,stroke:#6c3483,stroke-width:2px,color:#fff
 
-    classDef phaseBox fill:#f8f9fa,stroke:#6c757d,stroke-width:1px,stroke-dasharray: 5 5
+    classDef phaseBox stroke:#718096,stroke-width:1px,stroke-dasharray: 5 5
     class C1,C2,D1,D2 phaseBox
 ```
 
