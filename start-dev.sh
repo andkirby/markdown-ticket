@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Quick Start Script for md-ticket-board
+# Quick Start Script for MDT
 # This script helps you get the system running quickly
 # Can be run from any directory - will automatically find the project root
 
@@ -8,19 +8,19 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Change to the project root directory
-cd "$SCRIPT_DIR"
+cd "${SCRIPT_DIR}" || exit 1
 
-echo "🏠 Working from project directory: $SCRIPT_DIR"
+echo "🏠 Working from project directory: ${SCRIPT_DIR}"
 
 # Verify we're in the correct project directory
-if [ ! -f "package.json" ] || ! grep -q "md-ticket-board" package.json 2>/dev/null; then
-    echo "❌ Error: This doesn't appear to be the md-ticket-board project directory"
-    echo "   Expected to find package.json with 'md-ticket-board' in: $SCRIPT_DIR"
+if [ ! -f "package.json" ] || (! grep -q "MDT\|md-ticket-board\|markdown-ticket" package.json 2>/dev/null); then
+    echo "❌ Error: This doesn't appear to be the MDT project directory"
+    echo "   Expected to find package.json with project identifiers in: ${SCRIPT_DIR}"
     echo "   Please make sure the script is in the project root directory"
     exit 1
 fi
 
-echo "✅ Found md-ticket-board project"
+echo "✅ Found MDT project"
 
 # Function to kill processes on specific ports
 kill_processes_on_ports() {
@@ -40,7 +40,7 @@ kill_processes_on_ports() {
 
 # Function to stop all running processes
 stop_processes() {
-    echo "🛑 Stopping md-ticket-board processes..."
+    echo "🛑 Stopping MDT processes..."
     kill_processes_on_ports 5173 3001
     echo "✅ All processes stopped"
 }
@@ -50,61 +50,26 @@ if [ "$1" = "stop" ]; then
     stop_processes
     exit 0
 elif [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    echo "md-ticket-board Quick Start Script"
+    echo "MDT (Markdown-Ticket) Quick Start Script"
     echo "=================================="
     echo ""
-    echo "Usage: ./quick-start.sh [OPTION]"
+    echo "Usage: ./start.sh [OPTION]"
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend servers"
     echo "  frontend         - Start frontend server only (port 5173)"
     echo "  backend          - Start backend server only (port 3001)"
     echo "  stop             - Stop all running servers"
-    echo "  install-global   - Create a global symlink to run from anywhere"
     echo "  help, --help, -h - Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./quick-start.sh              # Start both servers"
-    echo "  ./quick-start.sh frontend     # Start frontend only"
-    echo "  ./quick-start.sh stop         # Stop all servers"
-    echo "  ./quick-start.sh install-global  # Install globally as 'md-ticket-board'"
-    exit 0
-elif [ "$1" = "install-global" ]; then
-    echo "🌍 Installing global symlink for md-ticket-board..."
-    
-    # Check if /usr/local/bin exists and is writable
-    if [ ! -d "/usr/local/bin" ]; then
-        echo "❌ /usr/local/bin doesn't exist. Creating it..."
-        sudo mkdir -p /usr/local/bin
-    fi
-    
-    # Create the symlink
-    GLOBAL_LINK="/usr/local/bin/md-ticket-board"
-    if [ -L "$GLOBAL_LINK" ]; then
-        echo "🔄 Removing existing symlink..."
-        sudo rm "$GLOBAL_LINK"
-    fi
-    
-    echo "🔗 Creating symlink: $GLOBAL_LINK -> $SCRIPT_DIR/quick-start.sh"
-    sudo ln -s "$SCRIPT_DIR/quick-start.sh" "$GLOBAL_LINK"
-    
-    if [ -L "$GLOBAL_LINK" ]; then
-        echo "✅ Global installation complete!"
-        echo "   You can now run 'md-ticket-board' from any directory"
-        echo ""
-        echo "Examples:"
-        echo "  md-ticket-board           # Start both servers"
-        echo "  md-ticket-board frontend  # Start frontend only"
-        echo "  md-ticket-board backend   # Start backend only"
-        echo "  md-ticket-board stop      # Stop all servers"
-    else
-        echo "❌ Failed to create global symlink"
-        exit 1
-    fi
+    echo "  ./start.sh              # Start both servers"
+    echo "  ./start.sh frontend     # Start frontend only"
+    echo "  ./start.sh stop         # Stop all servers"
     exit 0
 fi
 
-echo "🚀 Starting md-ticket-board setup..."
+echo "🚀 Starting MDT setup..."
 echo "=================================="
 
 # Check if Node.js is installed
@@ -160,13 +125,12 @@ elif [ "$1" = "stop" ]; then
     exit 0
 else
     echo "❌ Unknown option: $1"
-    echo "Usage: ./quick-start.sh [both|frontend|backend|stop|install-global]"
+    echo "Usage: ./start.sh [both|frontend|backend|stop]"
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend servers"
     echo "  frontend         - Start frontend server only (port 5173)"
     echo "  backend          - Start backend server only (port 3001)" 
     echo "  stop             - Stop all running servers"
-    echo "  install-global   - Create a global symlink to run from anywhere"
     exit 1
 fi

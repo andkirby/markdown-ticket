@@ -13,9 +13,9 @@ cd "${SCRIPT_DIR}" || exit 1
 echo "🏠 Working from project directory: ${SCRIPT_DIR}"
 
 # Verify we're in the correct project directory
-if [ ! -f "package.json" ] || ! grep -q "MDT" package.json 2>/dev/null; then
+if [ ! -f "package.json" ] || (! grep -q "MDT\|markdown-ticket" package.json 2>/dev/null); then
     echo "❌ Error: This doesn't appear to be the MDT project directory"
-    echo "   Expected to find package.json with 'MDT' in: ${SCRIPT_DIR}"
+    echo "   Expected to find package.json with project identifiers in: ${SCRIPT_DIR}"
     echo "   Please make sure the script is in the project root directory"
     exit 1
 fi
@@ -41,7 +41,7 @@ kill_processes_on_ports() {
 # Function to stop all running processes
 stop_processes() {
     echo "🛑 Stopping MDT production processes..."
-    kill_processes_on_ports 5173 3001
+    kill_processes_on_ports 4173 5173 3001
     echo "✅ All processes stopped"
 }
 
@@ -53,23 +53,24 @@ elif [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "MDT (Markdown-Ticket) Production Start Script"
     echo "=============================================="
     echo ""
-    echo "Usage: ./start-prod.sh [OPTION]"
+    echo "Usage: ./start.sh [OPTION]"
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend production servers"
-    echo "  frontend         - Start frontend production server only (port 5173)"
+    echo "  frontend         - Start frontend production server only (port 4173)"
     echo "  backend          - Start backend production server only (port 3001)"
     echo "  stop             - Stop all running production servers"
     echo "  build            - Build all projects before starting (if needed)"
     echo "  help, --help, -h - Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./start-prod.sh              # Start both production servers"
-    echo "  ./start-prod.sh frontend     # Start frontend production only"
-    echo "  ./start-prod.sh build        # Build then start both servers"
-    echo "  ./start-prod.sh stop         # Stop all production servers"
+    echo "  ./start.sh              # Start both production servers"
+    echo "  ./start.sh frontend     # Start frontend production only"
+    echo "  ./start.sh build        # Build then start both servers"
+    echo "  ./start.sh stop         # Stop all production servers"
     echo ""
     echo "Note: This script uses pre-built .js files. Run 'npm run build:all' first if needed."
+    echo "For development mode with hot-reload, use: ./start-dev.sh"
     exit 0
 fi
 
@@ -118,7 +119,7 @@ if [ "$missing_builds" = true ]; then
     else
         echo ""
         echo "❌ Production builds are missing. Run with 'build' option to create them:"
-        echo "   ./start-prod.sh build"
+        echo "   ./start.sh build"
         echo ""
         echo "Or build manually:"
         echo "   npm run build:all"
@@ -132,7 +133,7 @@ fi
 
 # Kill existing processes on default ports
 echo "🔍 Checking for existing processes on default ports..."
-kill_processes_on_ports 5173 3001
+kill_processes_on_ports 4173 5173 3001
 
 echo "✅ Setup complete!"
 echo ""
@@ -152,16 +153,16 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
     sleep 2
 
     # Start frontend in background
-    echo "🎨 Starting frontend production server on port 5173..."
-    npx preview dist &
+    echo "🎨 Starting frontend production server on port 4173..."
+    (cd "${SCRIPT_DIR}" && npm run preview) &
     FRONTEND_PID=$!
 
     echo ""
     echo "✅ Production servers started!"
-    echo "   Frontend: http://localhost:5173 (PID: $FRONTEND_PID)"
+    echo "   Frontend: http://localhost:4173 (PID: $FRONTEND_PID)"
     echo "   Backend:  http://localhost:3001 (PID: $BACKEND_PID)"
     echo ""
-    echo "To stop servers, run: ./start-prod.sh stop"
+    echo "To stop servers, run: ./start.sh stop"
     echo ""
     echo "Press Ctrl+C to stop watching (servers will continue running)"
 
@@ -173,7 +174,7 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
 
 elif [ "$1" = "frontend" ]; then
     echo "🚀 Starting frontend production server only..."
-    npx preview dist
+    cd "${SCRIPT_DIR}" && npm run preview
 
 elif [ "$1" = "backend" ]; then
     echo "🚀 Starting backend production server only..."
@@ -181,11 +182,11 @@ elif [ "$1" = "backend" ]; then
 
 else
     echo "❌ Unknown option: $1"
-    echo "Usage: ./start-prod.sh [both|frontend|backend|stop|build]"
+    echo "Usage: ./start.sh [both|frontend|backend|stop|build]"
     echo ""
     echo "Options:"
     echo "  both (default)   - Start both frontend and backend production servers"
-    echo "  frontend         - Start frontend production server only (port 5173)"
+    echo "  frontend         - Start frontend production server only (port 4173)"
     echo "  backend          - Start backend production server only (port 3001)"
     echo "  stop             - Stop all running production servers"
     echo "  build            - Build all projects then start both servers"
