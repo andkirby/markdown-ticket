@@ -69,7 +69,7 @@ Create detailed specifications first, then let AI implement exactly what was spe
 ```mermaid
 ---
 config:
-  layout: elk
+  theme: forest
 ---
 flowchart TD
     User[User / Developer]
@@ -107,6 +107,7 @@ flowchart TD
 ---
 config:
   layout: elk
+  theme: forest
 ---
 flowchart TD
     User[User / Developer]
