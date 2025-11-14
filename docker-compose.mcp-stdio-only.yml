@@ -1,8 +1,5 @@
-# Development environment overrides for docker-compose.yml
-# Includes volume mounts for hot reload and development-friendly settings
-#
-# Usage:
-#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Attach this docker-compose file to disable HTTP server for MCP container, and use only STDIO protocol
+# docker-compose  -f ./docker-compose.yml -f ./docker-compose.prod.yml -f .docker-compose.mcp-stdio-only.yml up -d
 services:
   mcp:
     environment:
