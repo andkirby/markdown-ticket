@@ -1,7 +1,7 @@
 {
-  "name": "md-ticket-board-server",
+  "name": "markdown-ticket-server",
   "version": "1.0.0",
-  "description": "Backend server for md-ticket-board application",
+  "description": "Backend server for markdown-ticket application",
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
@@ -46,12 +46,12 @@
     "node": ">=16.0.0"
   },
   "keywords": [
-    "ticket-board",
+    "markdown-ticket",
     "markdown",
     "change-request",
     "api",
     "express"
   ],
-  "author": "md-ticket-board",
+  "author": "markdown-ticket",
   "license": "MIT"
 }
