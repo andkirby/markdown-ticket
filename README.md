@@ -99,6 +99,8 @@ flowchart TD
 
     classDef phaseBox stroke:#718096,stroke-width:1px,stroke-dasharray: 5 5
     class A1,A2,B1,B2 phaseBox
+
+    linkStyle default stroke:#718096,stroke-width:2px
 ```
 
 ### Implementation & Review
@@ -137,6 +139,8 @@ flowchart TD
 
     classDef phaseBox stroke:#718096,stroke-width:1px,stroke-dasharray: 5 5
     class C1,C2,D1,D2 phaseBox
+
+    linkStyle default stroke:#718096,stroke-width:2px
 ```
 
 ### The Workflow Explained
