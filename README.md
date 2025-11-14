@@ -64,6 +64,8 @@ Create detailed specifications first, then let AI implement exactly what was spe
 
 ## 🔄 How It Works
 
+### Planning & Organization
+
 ```mermaid
 ---
 config:
@@ -84,6 +86,34 @@ flowchart TD
         B2[Organize tickets with<br/>drag-and-drop columns]
     end
 
+    User --> A1
+    A1 --> LLM
+    LLM --> A2
+    A2 --> User
+
+    User --> B1
+    B1 --> B2
+    B2 --> User
+
+    style User fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style LLM fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+
+    classDef phaseBox fill:#f8f9fa,stroke:#6c757d,stroke-width:1px,stroke-dasharray: 5 5
+    class A1,A2,B1,B2 phaseBox
+```
+
+### Implementation & Review
+
+```mermaid
+---
+config:
+  look: handDrawn
+  theme: neutral
+---
+flowchart TD
+    User[User / Developer]
+    LLM[AI Assistant<br/>Claude, GPT, Q]
+
     subgraph "Phase 3: Implementation"
         C1[User assigns ticket<br/>to AI Assistant]
         C2[AI implements exactly<br/>as specified]
@@ -93,15 +123,6 @@ flowchart TD
         D1[User reviews implementation<br/>against requirements]
         D2[Merge completed work<br/>to Git]
     end
-
-    User --> A1
-    A1 --> LLM
-    LLM --> A2
-    A2 --> User
-
-    User --> B1
-    B1 --> B2
-    B2 --> User
 
     User --> C1
     C1 --> LLM
@@ -116,7 +137,7 @@ flowchart TD
     style LLM fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
 
     classDef phaseBox fill:#f8f9fa,stroke:#6c757d,stroke-width:1px,stroke-dasharray: 5 5
-    class A1,A2,B1,B2,C1,C2,D1,D2 phaseBox
+    class C1,C2,D1,D2 phaseBox
 ```
 
 ### The Workflow Explained
