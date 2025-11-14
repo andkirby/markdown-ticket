@@ -67,10 +67,13 @@ Create detailed specifications first, then let AI implement exactly what was spe
 ### Planning & Organization
 
 ```mermaid
----
-config:
-  theme: forest
----
+%%{
+  init: {
+    'themeVariables': {
+      'lineColor': '#e507'
+    }
+  }
+}%%
 flowchart TD
     User[User / Developer]
     LLM[AI Assistant<br/>Claude, GPT, Q]
@@ -99,24 +102,20 @@ flowchart TD
 
     classDef phaseBox stroke:#718096,stroke-width:1px,stroke-dasharray: 5 5
     class A1,A2,B1,B2 phaseBox
-
-    linkStyle 0 stroke:#718096,stroke-width:2px
-    linkStyle 1 stroke:#718096,stroke-width:2px
-    linkStyle 2 stroke:#718096,stroke-width:2px
-    linkStyle 3 stroke:#718096,stroke-width:2px
-    linkStyle 4 stroke:#718096,stroke-width:2px
-    linkStyle 5 stroke:#718096,stroke-width:2px
-    linkStyle 6 stroke:#718096,stroke-width:2px
+    
+    linkStyle default stroke:#e507,stroke-width:2px
 ```
 
 ### Implementation & Review
 
 ```mermaid
----
-config:
-  layout: elk
-  theme: forest
----
+%%{
+  init: {
+    'themeVariables': {
+      'lineColor': '#e507'
+    }
+  }
+}%%
 flowchart TD
     User[User / Developer]
     LLM[AI Assistant<br/>Claude, GPT, Q]
@@ -145,14 +144,8 @@ flowchart TD
 
     classDef phaseBox stroke:#718096,stroke-width:1px,stroke-dasharray: 5 5
     class C1,C2,D1,D2 phaseBox
-
-    linkStyle 0 stroke:#718096,stroke-width:2px
-    linkStyle 1 stroke:#718096,stroke-width:2px
-    linkStyle 2 stroke:#718096,stroke-width:2px
-    linkStyle 3 stroke:#718096,stroke-width:2px
-    linkStyle 4 stroke:#718096,stroke-width:2px
-    linkStyle 5 stroke:#718096,stroke-width:2px
-    linkStyle 6 stroke:#718096,stroke-width:2px
+    
+    linkStyle default stroke:#e507,stroke-width:2px
 ```
 
 ### The Workflow Explained
