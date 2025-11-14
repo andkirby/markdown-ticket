@@ -9,32 +9,37 @@ Discuss features with LLM → LLM creates structured tickets → Review → LLM 
 ![Markdown Ticket Board Demo](https://github.com/user-attachments/assets/f682104e-0e74-45b7-a6d4-b72142441b39)
 
 ## ⚡ Quick Start
-
-### Docker (Recommended)
+### Start the application
+#### Docker
 ```bash
 git clone https://github.com/andkirby/markdown-ticket.git
 cd markdown-ticket
 bin/dc up -d
+
+claude mcp add --scope user --transport http mdt-all http://localhost:3012/mcp
 ```
 
-### Manual Setup
+Or use MCP connection with STDIO transport:
 ```bash
-npm install
-npm run dev:full
+claude mcp remove mdt-all --scope user # delete existing MCP 
+claude mcp add --scope user mdt-all docker -- exec --env MCP_HTTP_ENABLED=false -i mdt-mcp node /app/mcp-server/dist/index.js
 ```
 
-### 🤖 AI Integration Setup (Essential)
+#### Local Setup
 ```bash
-# Claude Code - Global access
-claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
+# Build JavaScript code
+npm run build:all
 
-# Claude Code - HTTP transport (for Docker)
-claude mcp add --transport http mdt-all http://localhost:3012/mcp --scope user
+# Production (built JavaScript files)
+./start.sh              # Start fronend/backend production servers
+
+# Add MCP into Claude Code, transport: STDIO 
+claude mcp add mdt-all node $PWD/mcp-server/dist/index.js
 ```
 
-**Access Points:**
-- **Web Interface**: Docker http://localhost:5174 | Manual http://localhost:5173
-- **MCP Endpoint**: http://localhost:3012/mcp (for AI integration)
+## **Access Points:**
+- **Web Interface**: Docker http://localhost:5174 | Local http://localhost:4173 (production) | http://localhost:5173 (development)
+- **MCP Endpoint**: Docker http://localhost:3012/mcp | Local `mcp-server/dist/index.js`
 
 🚨 **Note**: MCP integration is required for the full AI-driven workflow. Without it, you only have a basic ticket viewer.
 
@@ -59,21 +64,74 @@ Create detailed specifications first, then let AI implement exactly what was spe
 
 ## 🔄 How It Works
 
-### 1. **AI Creates Tickets**
-Discuss requirements with AI assistants (Claude, GPT, Amazon Q) using **crafted prompts** for best results. AI creates structured tickets with all necessary sections:
+```mermaid
+---
+config:
+  look: handDrawn
+  theme: neutral
+---
+flowchart TD
+    User[User / Developer]
+    LLM[AI Assistant<br/>Claude, GPT, Q]
+
+    subgraph "Phase 1: Planning"
+        A1[Discuss requirements<br/>with AI Assistant]
+        A2[AI creates structured<br/>tickets with full specs]
+    end
+
+    subgraph "Phase 2: Organization"
+        B1[Read tickets through<br/>web interface]
+        B2[Organize tickets with<br/>drag-and-drop columns]
+    end
+
+    subgraph "Phase 3: Implementation"
+        C1[User assigns ticket<br/>to AI Assistant]
+        C2[AI implements exactly<br/>as specified]
+    end
+
+    subgraph "Phase 4: Review"
+        D1[User reviews implementation<br/>against requirements]
+        D2[Merge completed work<br/>to Git]
+    end
+
+    User --> A1
+    A1 --> LLM
+    LLM --> A2
+    A2 --> User
+
+    User --> B1
+    B1 --> B2
+    B2 --> User
+
+    User --> C1
+    C1 --> LLM
+    LLM --> C2
+    C2 --> User
+
+    User --> D1
+    D1 --> D2
+    D2 --> User
+
+    style User fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style LLM fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+
+    classDef phaseBox fill:#f8f9fa,stroke:#6c757d,stroke-width:1px,stroke-dasharray: 5 5
+    class A1,A2,B1,B2,C1,C2,D1,D2 phaseBox
+```
+
+### The Workflow Explained
+
+**Phase 1: Planning** - Discuss requirements with AI assistants using **crafted prompts** for best results. AI creates structured tickets with all necessary sections:
 - Description, Rationale, Solution Analysis
 - Implementation Specification and Acceptance Criteria
 
-💡 **Pro Tip**: Use the provided prompt template at `prompts/mdt-ticket-creation.md` for consistent, high-quality tickets that AI can implement effectively.
+💡 **Pro Tip**: Use the provided prompt template at `prompts/mdt-ticket-creation.md` for consistent, high-quality tickets that AI can implement effectively. Please provide feedback on its effectiveness; it would be greatly appreciated.
 
-### 2. **You Read & Organize**
-Navigate tickets and documents through a beautiful interface with proper formatting, code highlighting, and Mermaid diagrams. Drag and drop tickets between columns to update status.
+**Phase 2: Organization** - Navigate tickets and documents through a beautiful interface with proper formatting, code highlighting, and Mermaid diagrams. Drag and drop tickets between columns to update status.
 
-### 3. **AI Implements the Work**
-When a ticket is ready, give it to AI. AI reads the complete specification and implements exactly what was specified - writes code, tests, and documentation.
+**Phase 3: Implementation** - When a ticket is ready, give it to AI. AI reads the complete specification and implements exactly what was specified - writes code, tests, and documentation.
 
-### 4. **You Review & Merge**
-Review the implementation against requirements, run automated tests, and merge the completed work with confidence.
+**Phase 4: Review** - Review the implementation against requirements, run automated tests, and merge the completed work with confidence.
 
 **Every step is tracked in Git, creating a complete history from discussion to deployment.**
 
@@ -169,11 +227,11 @@ git push
 
 ## 📈 What's New
 
-**v0.7.0** (2025-11-12): Complete Docker containerization, advanced configuration management, enhanced MCP HTTP transport
+- **v0.7.0** (2025-11-12): Complete Docker containerization, advanced configuration management, enhanced MCP HTTP transport
 
-**v0.6.0** (2025-10-18): Smart link reliability fixes, project management improvements, and MCP optimizations
+- **v0.6.0** (2025-10-18): Smart link reliability fixes, project management improvements, and MCP optimizations
 
-**v0.5.0** (2025-10-14): Smart links, Table of Contents, H1 title management, enhanced MCP tools
+- **v0.5.0** (2025-10-14): Smart links, Table of Contents, H1 title management, enhanced MCP tools
 
 See **[RELEASE_NOTES.md](RELEASE_NOTES.md)** for detailed version history.
 
@@ -184,10 +242,26 @@ See **[RELEASE_NOTES.md](RELEASE_NOTES.md)** for detailed version history.
 ### Setup
 ```bash
 npm install          # Install all dependencies
-npm run dev:full     # Start frontend + backend
+
+# Development Mode (hot-reload, TypeScript)
+./start-dev.sh       # Start both dev servers (port 5173)
+# or
+npm run dev:full     # Start both dev servers
+
+# Production Mode (built JavaScript files)
+./start.sh           # Start both production servers (port 4173)
+# Build first if needed:
+./start.sh build     # Build then start production servers
+
 npm run test:e2e     # Run Playwright tests
 npm run lint         # Code quality checks
 ```
+
+### Access Links / Port Configuration
+- **Development Frontend**: http://localhost:5173 (Vite dev server)
+- **Production Frontend**: http://localhost:4173 (Vite preview server)
+- **Backend**: http://localhost:3001 (Express.js API)
+- **MCP Server**: http://localhost:3012/mcp (for AI integration)
 
 ### Architecture
 - **Frontend**: React + TypeScript + Vite + Tailwind CSS
