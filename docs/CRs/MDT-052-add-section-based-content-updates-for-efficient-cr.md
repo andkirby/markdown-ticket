@@ -374,12 +374,14 @@ None required.
   - [ ] Nested paths with 3+ levels
   - [ ] Returns single match or null
 
-- [ ] Section operations work correctly:
-  - [ ] `replace`: Replaces section content, preserves header
-  - [ ] `append`: Adds content to end, preserves existing content
-  - [ ] `prepend`: Adds content to beginning, preserves existing content
-  - [ ] All operations maintain proper markdown formatting
-  - [ ] Section boundaries detected correctly (ends at next header of same/higher level)
+- [x] Section operations work correctly:
+  - [x] `replace`: Replaces section content, preserves header OR uses new header if provided
+  - [x] `append`: Adds content to end, preserves existing content (ignores any provided headers)
+  - [x] `prepend`: Adds content to beginning, preserves existing content (ignores any provided headers)
+  - [x] All operations maintain proper markdown formatting
+  - [x] Section boundaries detected correctly (ends at next header of same/higher level)
+  - [x] **NEW**: Intelligent header detection - if content starts with header at same level, use as new section header
+  - [x] **NEW**: Document restructuring/renaming supported via explicit header in content
 
 - [x] `update_cr_section` MCP tool:
   - [x] Validates project exists
@@ -553,6 +555,64 @@ Comprehensive testing completed with all operations verified:
 | update (prepend) | ✅ | Added test summary to Implementation Notes |
 | Data integrity | ✅ | No corruption, YAML preserved, formatting intact |
 | Token efficiency | ✅ | 84-94% savings verified |
+
+### Flexible Section Header Renaming Enhancement (2025-11-15)
+
+**Problem**: Document restructuring was inconvenient - to rename a section, users had to manually edit headers or rewrite entire documents. The feature only allowed content updates while preserving section names.
+
+**Solution**: Enhanced `manage_cr_sections` (evolved from `update_cr_section`) with intelligent header detection:
+
+**How It Works:**
+- If content starts with a header at the same level as the section → use it as the new section header
+- If content provides only body text → keep existing header unchanged
+- Applies to all `updateMode` values: replace, append, prepend
+
+**Examples:**
+
+```typescript
+// Pattern 1: Keep header, update content only
+section: "## 7. Deployment"
+content: "### Phase 1: Staging\n...\n### Phase 2: Production\n..."
+// Result: Header stays "## 7. Deployment"
+
+// Pattern 2: Rename section (restructure)
+section: "## 7. Deployment"
+content: "## 7. Deployment & Rollback Strategy\n### Phase 1: Staging\n..."
+// Result: Header becomes "## 7. Deployment & Rollback Strategy"
+
+// Pattern 3: Append body content (header unchanged)
+updateMode: "append"
+section: "## Implementation"
+content: "### Additional Testing Requirements\n..."
+// Result: Content appended, header preserved
+```
+
+**Benefits:**
+- ✅ **Intuitive** - LLMs naturally write markdown with headers
+- ✅ **Flexible** - Allows document restructuring when needed
+- ✅ **Explicit** - Intent is clear from provided content
+- ✅ **Safe** - Can't accidentally change headers without providing them
+- ✅ **Single operation** - No separate "rename" mode needed
+
+**Implementation:**
+- Detects first header line at matching level using regex: `^#{headerLevel} (.+?)$`
+- Extracts new header text and body separately
+- For `replace`: uses new header + extracted body
+- For `append`/`prepend`: uses only the body (headers not appended/prepended)
+- Logs informational message when renaming occurs
+- Works with all supported section formats (numbered, unnumbered, any nesting level)
+
+**Files Modified:**
+- `mcp-server/src/tools/index.ts` (enhanced `manage_cr_sections` tool)
+- Tool description updated with examples showing both patterns
+- Schema documentation clarifies when/how headers are used
+
+**MDT-064 Alignment:**
+This enhancement maintains MDT-064 (H1 as Single Source of Truth) because:
+- Title changes still go through `manage_cr_sections` for H1 header
+- Only document section headers (##, ###, etc.) can be renamed via this mechanism
+- CR title must be updated via H1, enforcing the single source of truth
+- No separate title attribute updates allowed via `update_cr_attrs`
 
 ## 6. References
 **Related Documents:**
