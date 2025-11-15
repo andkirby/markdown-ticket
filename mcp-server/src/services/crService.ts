@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
-import { Ticket, TicketFilters, TicketData, normalizeTicket, arrayToString} from '@mdt/shared/models/Ticket.js';
+import { Ticket, TicketFilters, TicketData, normalizeTicket, arrayToString, TICKET_UPDATE_ALLOWED_ATTRS } from '@mdt/shared/models/Ticket.js';
 import { CRStatus } from '@mdt/shared/models/Types.js';
 import { Project } from '@mdt/shared/models/Project.js';
 // @ts-ignore
@@ -186,6 +186,19 @@ export class CRService {
       const cr = await this.getCR(project, key);
       if (!cr) {
         throw new Error(`CR '${key}' not found in project '${project.id}'`);
+      }
+
+      // Validate that only allowed attributes are being updated
+      const invalidAttributes = Object.keys(attributes).filter(
+        field => !TICKET_UPDATE_ALLOWED_ATTRS.has(field as any)
+      );
+
+      if (invalidAttributes.length > 0) {
+        const allowed = Array.from(TICKET_UPDATE_ALLOWED_ATTRS).join(', ');
+        throw new Error(
+          `Invalid attributes: ${invalidAttributes.join(', ')}. ` +
+          `Allowed attributes for update_cr_attrs are: ${allowed}`
+        );
       }
 
       // Read current file content
