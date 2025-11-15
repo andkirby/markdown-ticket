@@ -10,101 +10,74 @@ assignee: Backend Team
 # Configuration Management CLI Tool for Project Discovery
 
 ## 1. Description
+### Problem
+- Configuration scattered across multiple files without unified management interface
+- Hardcoded discovery paths in `shared/services/ProjectService.ts` requiring manual file edits
+- Dashboard configuration mixed with core configuration adding unused complexity
+- No standardized CLI tool for managing configuration across deployment environments
 
-### Problem Statement
-The markdown-ticket system lacks a standardized way to configure project discovery paths and link settings across different deployment environments (development, Docker, production). Currently configuration is hardcoded or requires manual file editing.
+### Affected Artifacts
+- `shared/services/ProjectService.ts` (contains hardcoded paths and mixed dashboard settings)
+- `shared/utils/constants.ts` (needs centralized path management)
+- `server/services/ProjectService.ts` (uses hardcoded configuration paths)
+- `mcp-server/src/config/config.ts` (requires centralized configuration constants)
+- Root `package.json` (needs CLI script integration)
 
-### Current State
-- Global configuration mixed with dashboard settings in `shared/services/ProjectService.ts`
-- Discovery paths hardcoded as empty arrays or manual file edits required
-- No unified CLI tool for managing configuration
-- Dashboard configuration included but unused
+### Scope
+**Changes**:
+- Create TypeScript CLI tool for configuration management
+- Remove dashboard configuration from GlobalConfig interface
+- Centralize configuration paths with environment variable support
+- Add npm scripts for configuration operations
 
-### Desired State
-- Clean configuration interface focused only on discovery and link settings
-- CLI tool for managing configuration via npm script
-- Support for different environments through simple commands
-- Consistent TOML configuration format
-
-### Impact Areas
-- Shared configuration system (`shared/services/ProjectService.ts`)
-- Docker deployment configurations
-- Development environment setup
-- MCP server and backend service initialization
-
+**Unchanged**:
+- Existing TOML configuration file format and location
+- Core project discovery and management functionality
+- MCP server tool implementations
 ## 2. Decision Rationale
+### Chosen Approach
+Implement TypeScript CLI tool with centralized configuration management and environment variable support.
 
-### Why necessary
-- Removes unused dashboard configuration that adds complexity
-- Provides developer-friendly CLI for configuration management
+### Rationale
+- Provides type-safe configuration management with existing TOML library dependency
+- Eliminates hardcoded paths through centralized constants with fallback logic
 - Enables automated configuration in CI/CD and Docker environments
-- Standardizes configuration approach across all deployment scenarios
+- Maintains backward compatibility while improving developer experience
+- Supports production deployments with compiled JavaScript and development iteration with tsx
 
-### What it accomplishes
-- Simplified configuration model focused on discovery and links
-- Consistent configuration management through CLI commands
-- Better separation of concerns by removing dashboard-specific settings
-- Improved developer experience for project setup
+## 3. Artifact Specifications
+### New Artifacts
 
-### Project alignment
-Aligns with the goal of making markdown-ticket more maintainable and easier to configure across different environments.
+| Artifact | Type | Purpose |
+|----------|------|---------|
+| `shared/tools/config-cli.ts` | CLI Tool | Configuration management with dot notation |
+| `shared/utils/constants.ts` | Constants | Centralized configuration paths with fallback logic |
+| `shared/dist/tools/config-cli.js` | Compiled CLI | Production deployment without TypeScript dependencies |
 
-## 3. Solution Analysis
+### Modified Artifacts
 
-#### Approach A: CLI Tool with TOML Management (Chosen)
-**Description**: Implement a TypeScript CLI tool in `shared/tools/config-cli.ts` that reads/writes TOML configuration files.
+| Artifact | Change Type | Modification |
+|----------|-------------|--------------|
+| `shared/services/ProjectService.ts` | Method updated | Remove dashboard section, use centralized constants |
+| `server/services/ProjectService.ts` | Import change | Use centralized configuration paths |
+| `mcp-server/src/config/config.ts` | Import change | Use centralized configuration paths |
+| `package.json` | Script added | Add config CLI commands |
 
-**Pros**:
-- Type-safe configuration management
-- Leverages existing TOML library dependency
-- Consistent with project's TypeScript stack
-- Can handle nested configuration with dot notation
-- Supports multiple operations (get, set, show, init)
+### Integration Points
 
-**Cons**:
-- Requires building TypeScript before use
-- Additional code to maintain
+| From | To | Interface |
+|------|----|-----------|
+| CLI Tool | TOML Configuration | Read/write operations with validation |
+| Constants | All Services | DEFAULT_PATHS with fallback logic |
+| Environment | CLI Tool | CONFIG_DIR variable support |
 
-#### Approach B: Environment Variable Override
-**Description**: Override configuration through environment variables that supersede TOML file values.
-
-**Pros**:
-- No additional tooling required
-- Works well with Docker containers
-- Simple configuration injection
-
-**Cons**:
-- Less discoverable for developers
-- Limited runtime configuration changes
-- More complex fallback logic in ProjectService
-- Environment variable proliferation
-
-#### Approach C: JSON Schema-based Configuration
-**Description**: Replace TOML with JSON schema validation and JSON configuration files.
-
-**Pros**:
-- Better validation support
-- More standard format
-- Easier schema evolution
-
-**Cons**:
-- Requires breaking change from TOML
-- More verbose configuration format
-- Losing TOML's comment support
-
-### Decision Factors
-- Developer experience and discoverability
-- Integration with existing TOML-based configuration
-- Support for different deployment environments
-- Maintenance overhead and code complexity
-- Backward compatibility requirements
-
-### Justification
-Approach A is chosen because it maintains the existing TOML configuration while providing a developer-friendly interface. The CLI tool integrates naturally with npm scripts and can handle the complex dot notation for nested configuration access. It provides the best balance of functionality, maintainability, and developer experience.
-
+### Key Patterns
+- Configuration management: CLI tool with TypeScript compilation for production
+- Fallback pattern: 4-level directory fallback chain with graceful degradation
+- Environment pattern: CONFIG_DIR support with automatic directory creation
 ## 4. Implementation Specification
 
-### Components
+### Components 
 
 #### Configuration CLI Tool (`shared/tools/config-cli.ts`)
 - Command parser for operations: get, set, show, init
@@ -138,111 +111,48 @@ Approach A is chosen because it maintains the existing TOML configuration while 
 - [ ] CLI tool handles array values with comma separation
 - [ ] Configuration tool creates config directory if missing
 - [ ] CLI tool preserves existing configuration when updating specific keys
-- [ ] Root npm script `npm run config` executes CLI tool correctly
+- [ ] Root npm script executes CLI tool correctly
+- [ ] CONFIG_DIR environment variable changes configuration directory
+- [ ] Fallback logic works when primary directory not writable
 
 ### Non-Functional
-- Reliability: CLI handles missing config directory gracefully
-- Maintainability: Configuration changes respect GlobalConfig interface
-- Security: CLI validates input values against expected types
-- Performance: Configuration operations complete within 100ms
+- [ ] Configuration operations complete within
+- [ ] CLI handles missing config directory gracefully
+- [ ] Production deployment works with compiled JavaScript
+- [ ] TypeScript compilation succeeds without errors
+- [ ] TOML serialization maintains proper formatting and comments
 
 ### Testing
-- Unit: CLI parser handles dot notation with valid/invalid keys
-- Unit: TOML serialization maintains proper formatting and comments
+- Unit: CLI parser handles valid/invalid dot notation keys
+- Unit: TOML read/write operations preserve data integrity
 - Integration: Configuration changes reflected in ProjectService after restart
+- Integration: Environment variable overrides default paths correctly
 - Manual: Developer can set discovery paths and verify auto-discovery works
 
-### Additional Implementation Details
-
-**Enhanced CLI Feedback:**
-- ✅ Configuration commands now display the exact file path that was modified
-- ✅ Visual indicators (✅, ℹ️) for clear status communication
-- ✅ Structured output showing file, key, and value information
-- ✅ Consistent behavior on empty files (creates full config with defaults + update)
-
-**Example CLI Output:**
-```
-✅ Configuration updated successfully
-   File: /Users/kirby/.config/markdown-ticket/config.toml
-   Key: discovery.searchPaths = /Users/kirby/home
-```
-
-### Production Compatibility Fix
-
-**Production Environment Support:**
-- ✅ CLI commands now use compiled JavaScript instead of tsx
-- ✅ Works with `npm ci --omit=dev` (no devDependencies required)
-- ✅ Compatible with Docker, Kubernetes, and production deployments
-- ✅ Added separate development scripts for faster iteration using tsx
-
-**Production Commands (compiled JS):**
-```bash
-npm run config:init          # Creates default config file
-npm run config:set key value # Updates configuration values
-npm run config:show          # Displays current configuration
-npm run config:get key       # Gets specific configuration value
-```
-
-**Development Commands (tsx for faster iteration):**
-```bash
-npm run config:init:dev          # Development version with tsx
-npm run config:set:dev key value # Development version with tsx
-npm run config:show:dev          # Development version with tsx
-npm run config:get:dev key       # Development version with tsx
-```
-
-**Technical Implementation:**
-- Production scripts use: `node shared/dist/tools/config-cli.js`
-- Development scripts use: `tsx shared/tools/config-cli.ts`
-- Compiled JavaScript file: 18KB, fully standalone
-- Type-safe compilation with runtime error handling
-
-### Advanced Configuration Management Features
-
-**Centralized Environment Variable Support:**
-- ✅ CONFIG_DIR environment variable support in shared/utils/constants.ts
-- ✅ Automatic directory creation with recursive mkdir
-- ✅ Robust fallback logic for permission issues (4-level fallback chain)
-- ✅ Write test verification before using configuration directory
-- ✅ Clear console warnings for fallback scenarios
-
-**Fallback Logic Priority:**
-1. CONFIG_DIR environment variable (if provided and writable)
-2. Default ~/.config/markdown-ticket (fallback if CONFIG_DIR fails)
-3. Temp directory /tmp/markdown-ticket (if default fails)
-4. Current directory ./mdt-config (ultimate fallback)
-
-**Eliminated Hardcoded Paths:**
-- ✅ All .config/markdown-ticket paths replaced with DEFAULT_PATHS constants
-- ✅ Server/services/ProjectService.ts uses centralized constants
-- ✅ Server/fileWatcherService.ts uses centralized constants
-- ✅ MCP server components use centralized constants
-- ✅ Removed scattered CONFIG_PATH environment variable checks
-
-**Production-Ready Architecture:**
-```bash
-# Custom config directory (auto-created)
-CONFIG_DIR=/app/config npm run config:init
-
-# Production with robust fallbacks
-docker run -e CONFIG_DIR=/docker-data/config my-app
-# Falls back gracefully if directory not writable
-```
 ## 6. Success Metrics
+### Functional Verification
+- Configuration CLI tool exists and executes all operations (get, set, show, init)
+- Centralized constants in `shared/utils/constants.ts` used across all services
+- Dashboard configuration removed from GlobalConfig interface
+- CONFIG_DIR environment variable support functional
 
-**Qualitative improvements**:
-- Reduced configuration setup time for new developers
-- Fewer manual file edits required for project configuration
-- Consistent configuration approach across environments
-- Better error messages for configuration issues
+### Production Readiness
+- Compiled CLI tool works without TypeScript dependencies
+- Docker deployment with custom configuration directories functional
+- Fallback chain works in permission-restricted environments
 
 ## 7. Deployment Strategy
-
-**Simple deployment**:
-1. Update GlobalConfig interface and remove dashboard defaults
-2. Implement CLI tool in shared package
-3. Add root npm script for CLI access
-4. Update existing config files during next build cycle
-5. No service restarts required for existing configurations
-
-**Rollback plan**: Revert to previous GlobalConfig interface and default values. Existing configurations remain functional due to backward compatibility in TOML parsing.
+## Production (compiled JavaScript)
+```
+npm run config:init
+npm run config:set key value
+npm run config:show
+npm run config:get key
+```
+## Development (TypeScript with tsx for faster iteration)
+```
+npm run config:init:dev
+npm run config:set:dev key value
+npm run config:show:dev
+npm run config:get:dev key
+```
