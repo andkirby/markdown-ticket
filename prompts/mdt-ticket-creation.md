@@ -192,10 +192,23 @@ Before submitting, verify:
 - [ ] Acceptance criteria reference specific artifacts and tests
 - [ ] Verification is measurable or references concrete artifacts
 - [ ] NO generic adjectives without supporting specifics
-- [ ] Section headers use `##` and `###`, NOT bold text
+- [ ] Section headers use `##` and `###`, NEVER bold text like `**Header**`
+- [ ] NO duplicate headers (never repeat the same section header)
 - [ ] Lists are NOT wrapped in code blocks (except Section 7 deployment commands)
 - [ ] Only ONE H1 (`#`) header - the document title
 - [ ] All metrics have baselines OR section describes artifacts only
+- [ ] Alternatives table clearly marks chosen approach with **ACCEPTED**
+
+## Common Errors to Avoid
+
+❌ **WRONG**: `**Problem**` (bold as header)
+✅ **CORRECT**: `### Problem` (markdown header)
+
+❌ **WRONG**: Duplicate headers like `## 1. Description` appearing twice
+✅ **CORRECT**: Each header appears only once
+
+❌ **WRONG**: Behavioral descriptions like "Component that handles authentication"
+✅ **CORRECT**: Artifact specifications like "`AuthService.ts` - Authentication logic"
 
 ---
 
