@@ -43,31 +43,29 @@ Users need comprehensive CLI tooling for project management operations (create, 
 - **Architecture**: Aligns with existing shared/ service layer and TypeScript patterns
 
 ## 3. Solution Analysis
-
 ### Evaluated Approaches
 
-| Approach | Key Difference | Why Selected |
-|----------|---------------|--------------|
+| Approach | Key Difference | Status |
+|----------|---------------|--------|
 | Interactive CLI prompts | User-friendly step-by-step project creation | Selected for primary create/edit workflow |
 | Command-line arguments | All parameters passed as flags | Selected for automation and scripting |
-| Configuration file templates | Project definitions from TOML/JSON files | Selected for batch operations |
+| Configuration file templates | Project definitions from TOML/JSON files | **Rejected - no import/export needed** |
 | Direct file manipulation | Manual editing of .toml files | Rejected - bypasses validation |
 | MCP-only approach | Use existing MCP tools exclusively | Rejected - requires MCP server running |
 
 ### Selected Approach
-Hybrid CLI tool with three operation modes:
+Hybrid CLI tool with two operation modes:
 1. **Interactive Mode**: Step-by-step prompts with validation
 2. **Argument Mode**: All parameters via command-line flags
-3. **Template Mode**: Create/update from configuration templates
+
+**Scope Clarification**: Import/export functionality is **explicitly removed**. Project creation/update exists only via CLI; web UI project management is not in scope for this ticket. Export to configuration files and template-based project creation are not required.
 
 ### Integration Architecture
 - Reuse `ProjectService` from shared/services/ProjectService.ts
 - Extend `ConfigManager` patterns from config-cli.ts
 - Leverage `DEFAULT_PATHS` and constants from shared/utils/constants.ts
 - Follow TOML serialization patterns from existing CLI tools
-
 ## 4. Implementation Specification
-
 ### New Artifacts
 
 | Artifact | Type | Purpose |
@@ -76,7 +74,6 @@ Hybrid CLI tool with three operation modes:
 | `shared/dist/tools/project-cli.js` | Compiled CLI | Production-ready command-line tool |
 | `shared/tools/ProjectManager.ts` | Service Class | High-level project operations |
 | `shared/tools/ProjectValidator.ts` | Validation Class | Project data validation |
-| `shared/tools/TemplateManager.ts` | Service Class | Template-based operations |
 
 ### Modified Artifacts
 
@@ -91,12 +88,10 @@ Hybrid CLI tool with three operation modes:
 
 ```bash
 npm run cli:project create [--interactive] [options]
-npm run cli:project list [--format json|table|toml]
-npm run cli:project get <project-id> [--format json|toml]
-npm run cli:project update <project-id> [--interactive] [options]
-npm run cli:project delete <project-id> [--confirm]
-npm run cli:project import <template-file>
-npm run cli:project export <project-id> [--format json|toml]
+npm run cli:project list [--format json|table]
+npm run cli:project get <project-code> [--format json]
+npm run cli:project update <project-code> [--interactive] [options]
+npm run cli:project delete <project-code> [--confirm]
 ```
 
 ### Operation Modes
@@ -113,18 +108,12 @@ npm run cli:project export <project-id> [--format json|toml]
 - JSON output for automation
 - Exit codes for scripting
 
-**Template Mode** (`import`/`export`):
-- Create projects from TOML/JSON templates
-- Export existing project configurations
-- Support for project templates with placeholders
-
 ### Integration Points
 
 | From | To | Interface |
 |------|----|-----------|
-| CLI Tool | ProjectService | `getAllProjects()`, `registerProject()` |
+| CLI Tool | ProjectService | `getAllProjects()`, `registerProject()`, `updateProject()`, `deleteProject()` |
 | CLI Tool | ConfigManager | TOML read/write operations |
-| CLI Tool | TemplateManager | Template processing |
 | ProjectValidator | Project types | `validateProjectConfig()` |
 
 ### Key Patterns
@@ -132,9 +121,7 @@ npm run cli:project export <project-id> [--format json|toml]
 - **Builder Pattern**: Interactive project creation with validation
 - **Template Method**: Consistent command execution flow
 - **Error Handling**: Structured error codes and user-friendly messages
-
 ## 5. Acceptance Criteria
-
 ### Functional
 ```
 - [ ] npm run cli:project create --interactive creates project with step-by-step prompts
@@ -144,8 +131,6 @@ npm run cli:project export <project-id> [--format json|toml]
 - [ ] npm run cli:project get <project-code> shows detailed project information
 - [ ] npm run cli:project update <project-code> --interactive updates project with validation
 - [ ] npm run cli:project delete <project-code> --confirm removes project after confirmation
-- [ ] npm run cli:project import template.toml creates project from template file
-- [ ] npm run cli:project export <project-code> --format toml outputs project configuration
 - [ ] All commands use shared/ ProjectService and maintain data consistency
 - [ ] CLI supports both development (tsx) and production (node) execution
 ```
@@ -155,7 +140,6 @@ npm run cli:project export <project-id> [--format json|toml]
 - [ ] Exit code 0 for successful operations, 1 for errors, 2 for validation failures
 - [ ] All operations complete within 2 seconds for single project actions
 - [ ] Memory usage < 50MB for all CLI operations
-- [ ] TOML output matches existing project registry format exactly
 - [ ] Error messages provide actionable guidance for resolution
 ```
 
@@ -167,7 +151,6 @@ npm run cli:project export <project-id> [--format json|toml]
 - Manual: Create project interactively, verify in UI and file system
 - Manual: Update project via CLI, confirm changes reflected in UI
 ```
-
 ## 6. Verification
 
 ### By Feature
@@ -175,11 +158,11 @@ npm run cli:project export <project-id> [--format json|toml]
 - **Project Listing**: CLI lists projects matching UI project manager output
 - **Project Updates**: Modifications via CLI persist and appear in UI
 - **Project Deletion**: Removal updates both registry and local config files
-- **Template Operations**: Import/export maintains project data integrity
+- **CLI Operations**: All CRUD commands use shared/ `ProjectService` without duplication
 
 ### Integration Verification
 - CLI operations use `ProjectService` methods without duplication
-- Generated TOML files match existing project registry format
+- Generated project configurations match existing project registry format
 - Error handling follows existing CLI patterns from config-cli.ts
 - TypeScript compilation succeeds for both development and production builds
 
