@@ -1011,11 +1011,19 @@ export class MCPTools {
 
         switch (updateMode) {
           case 'replace':
-            // If a new header was detected, use it; otherwise use sectionBody as-is
-            const replaceContent = newSectionHeader
-              ? `${newSectionHeader}\n${sectionBody}`
-              : processedContent;
+            // CRITICAL BUG FIX: replaceSection keeps the old header from matchedSection
+            // and adds the body we provide. So we MUST NOT include a header in the content!
+            // If a new header was detected, we'll replace it after calling replaceSection.
+            const replaceContent = newSectionHeader ? sectionBody : processedContent;
             updatedBody = MarkdownSectionService.replaceSection(markdownBody, matchedSection, replaceContent);
+
+            // If header changed, replace the old header with the new one
+            if (newSectionHeader) {
+              // matchedSection.headerText includes the markdown prefix (e.g., "## 2. Solution Analysis")
+              const escapedOldHeader = matchedSection.headerText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const oldHeaderRegex = new RegExp(`^${escapedOldHeader}$`, 'm');
+              updatedBody = updatedBody.replace(oldHeaderRegex, newSectionHeader);
+            }
             break;
           case 'append':
             // For append, use sectionBody only (don't append the header)
