@@ -201,7 +201,7 @@ export class MCPTools {
       },
       {
         name: 'update_cr_attrs',
-        description: 'Update CR attributes (status excluded)',
+        description: 'Update CR attributes. Only the following attributes can be updated: priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, implementationDate, implementationNotes. To update CR title, use manage_cr_sections (edit the H1 header - MDT-064). To update CR status, use update_cr_status. To update CR content/sections, use manage_cr_sections.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -215,14 +215,16 @@ export class MCPTools {
             },
             attributes: {
               type: 'object',
+              description: 'Attributes to update. Only these fields are allowed: priority, phaseEpic, assignee, relatedTickets, dependsOn, blocks, implementationDate, implementationNotes. Do NOT update title directly - update the H1 header in the CR content using manage_cr_sections instead (MDT-064: H1 as Single Source of Truth).',
               properties: {
-                title: { type: 'string', description: 'CR title/summary' },
                 priority: { type: 'string', enum: ['Low', 'Medium', 'High', 'Critical'], description: 'CR priority' },
                 phaseEpic: { type: 'string', description: 'Phase or epic' },
-                relatedTickets: { type: 'string', description: 'Related CR codes' },
-                dependsOn: { type: 'string', description: 'CR dependencies' },
-                blocks: { type: 'string', description: 'CRs blocked by this' },
-                assignee: { type: 'string', description: 'Implementation assignee' }
+                relatedTickets: { type: 'string', description: 'Related CR codes (comma-separated)' },
+                dependsOn: { type: 'string', description: 'CR dependencies (comma-separated)' },
+                blocks: { type: 'string', description: 'CRs blocked by this (comma-separated)' },
+                assignee: { type: 'string', description: 'Implementation assignee' },
+                implementationDate: { type: 'string', description: 'Date when implementation was completed (ISO 8601 format, e.g., "2025-09-20")' },
+                implementationNotes: { type: 'string', description: 'Notes about implementation completion' }
               }
             }
           },
@@ -273,7 +275,7 @@ export class MCPTools {
       },
       {
         name: 'manage_cr_sections',
-        description: 'Manage CR sections (consolidated - replaces list/get/update sections)',
+        description: 'Manage CR sections (list, get, or update). To rename a section when updating, start your content with a new header at the same level. To keep the section header, provide only the body content. This allows flexible document restructuring while keeping intent explicit.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -301,7 +303,7 @@ export class MCPTools {
             },
             content: {
               type: 'string',
-              description: 'Content to apply (required for update operation)'
+              description: 'Content to apply (required for update operation). To rename/restructure a section, start content with a new header at the same level (e.g., "## New Section Name\n..."). To keep the section header unchanged, provide only the body content. Examples: (1) Rename: "## 7. Deployment & Rollback\n### Phase 1\n..." → header becomes "## 7. Deployment & Rollback", (2) Keep header: "### Phase 1\n..." → header unchanged, content updated.'
             }
           },
           required: ['project', 'key', 'operation']
@@ -972,21 +974,56 @@ export class MCPTools {
         }
 
         // Use processed content
-        const processedContent = contentProcessingResult.content;
+        let processedContent = contentProcessingResult.content;
 
         // Single match - proceed with update
         const matchedSection = matches[0];
+
+        // Handle section header updates intelligently
+        // If content starts with a header at the same level as the section, use it as the new section header
+        // This allows restructuring/renaming while keeping headers explicit and intentional
+        const sectionHeaderLevel = matchedSection.headerLevel;
+        const headerPrefix = '#'.repeat(sectionHeaderLevel);
+        const firstHeaderPattern = new RegExp(`^${headerPrefix} (.+?)$`, 'm');
+        const firstHeaderMatch = processedContent.match(firstHeaderPattern);
+
+        let newSectionHeader: string | null = null;
+        let sectionBody = processedContent;
+
+        if (firstHeaderMatch) {
+          // Found a header at the same level - use it as new section header
+          newSectionHeader = firstHeaderMatch[0]; // Full header line "## New Name"
+          const newHeaderText = firstHeaderMatch[1]; // Just the text "New Name"
+
+          // Extract body (everything after the first header)
+          const headerIndex = processedContent.indexOf(firstHeaderMatch[0]);
+          sectionBody = processedContent
+            .substring(headerIndex + firstHeaderMatch[0].length)
+            .trim();
+
+          console.warn(
+            `ℹ️ Section "${matchedSection.headerText}" is being renamed to "${newHeaderText}". ` +
+            `This is intentional since you provided the new header in the content.`
+          );
+        }
+
         let updatedBody: string;
 
         switch (updateMode) {
           case 'replace':
-            updatedBody = MarkdownSectionService.replaceSection(markdownBody, matchedSection, processedContent);
+            // If a new header was detected, use it; otherwise use sectionBody as-is
+            const replaceContent = newSectionHeader
+              ? `${newSectionHeader}\n${sectionBody}`
+              : processedContent;
+            updatedBody = MarkdownSectionService.replaceSection(markdownBody, matchedSection, replaceContent);
             break;
           case 'append':
-            updatedBody = MarkdownSectionService.appendToSection(markdownBody, matchedSection, processedContent);
+            // For append, use sectionBody only (don't append the header)
+            updatedBody = MarkdownSectionService.appendToSection(markdownBody, matchedSection, sectionBody);
             break;
           case 'prepend':
-            updatedBody = MarkdownSectionService.prependToSection(markdownBody, matchedSection, processedContent);
+            // For prepend, use sectionBody only (don't prepend the header)
+            updatedBody = MarkdownSectionService.prependToSection(markdownBody, matchedSection, sectionBody);
             break;
           default:
             throw new Error(`Invalid updateMode '${updateMode}'. Must be: replace, append, or prepend`);
