@@ -149,9 +149,12 @@ export class ProjectService {
       throw new Error('Name and path are required');
     }
 
+    // Expand ~ to home directory
+    const expandedPath = projectPath.replace(/^~($|\/)/, `${os.homedir()}$1`);
+
     // Verify project path exists
     try {
-      const stats = await fs.stat(projectPath);
+      const stats = await fs.stat(expandedPath);
       if (!stats.isDirectory()) {
         throw new Error('Project path must be a directory');
       }
@@ -167,7 +170,7 @@ export class ProjectService {
     await fs.mkdir(configDir, { recursive: true });
 
     // Create project config file using directory name, fallback to project code
-    const projectDirName = path.basename(projectPath);
+    const projectDirName = path.basename(expandedPath);
     const configFileName = `${projectDirName}.toml`;
     const configFilePath = path.join(configDir, configFileName);
 
@@ -194,12 +197,12 @@ export class ProjectService {
     }
 
     // Create CRs directory if it doesn't exist
-    const crsDir = path.join(projectPath, crsPath);
+    const crsDir = path.join(expandedPath, crsPath);
     await fs.mkdir(crsDir, { recursive: true });
 
     // Create minimal global config content
     const globalConfigContent = `[project]
-path = "${projectPath}"
+path = "${expandedPath}"
 active = true
 
 [metadata]
@@ -223,11 +226,11 @@ ${repositoryUrl ? `repository = "${repositoryUrl}"` : 'repository = ""'}
 `;
 
     // Write local config file
-    const localConfigPath = path.join(projectPath, '.mdt-config.toml');
+    const localConfigPath = path.join(expandedPath, '.mdt-config.toml');
     await fs.writeFile(localConfigPath, localConfigContent, 'utf8');
 
     // Create counter file
-    const counterFile = path.join(projectPath, '.mdt-next');
+    const counterFile = path.join(expandedPath, '.mdt-next');
     await fs.writeFile(counterFile, '1', 'utf8');
 
     return {
@@ -235,7 +238,7 @@ ${repositoryUrl ? `repository = "${repositoryUrl}"` : 'repository = ""'}
       message: 'Project created successfully',
       project: {
         id: projectDirName,
-        path: projectPath,
+        path: expandedPath,
         configFile: '.mdt-config.toml',
         active: true
       },
