@@ -39,7 +39,19 @@
     "config:get:dev": "tsx shared/tools/config-cli.ts get",
     "config:set:dev": "tsx shared/tools/config-cli.ts set",
     "config:show:dev": "tsx shared/tools/config-cli.ts show",
-    "config:init:dev": "tsx shared/tools/config-cli.ts init"
+    "config:init:dev": "tsx shared/tools/config-cli.ts init",
+    "project": "node shared/dist/tools/project-cli.js",
+    "project:create": "node shared/dist/tools/project-cli.js create",
+    "project:list": "node shared/dist/tools/project-cli.js list",
+    "project:get": "node shared/dist/tools/project-cli.js get",
+    "project:update": "node shared/dist/tools/project-cli.js update",
+    "project:delete": "node shared/dist/tools/project-cli.js delete",
+    "project:dev": "tsx shared/tools/project-cli.ts",
+    "project:create:dev": "tsx shared/tools/project-cli.ts create",
+    "project:list:dev": "tsx shared/tools/project-cli.ts list",
+    "project:get:dev": "tsx shared/tools/project-cli.ts get",
+    "project:update:dev": "tsx shared/tools/project-cli.ts update",
+    "project:delete:dev": "tsx shared/tools/project-cli.ts delete"
   },
   "dependencies": {
     "@mdt/shared": "*",

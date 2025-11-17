@@ -133,3 +133,14 @@ export const PATTERNS = {
   PROJECT_CODE: /^[A-Z]{2,5}$/,
   YAML_FRONTMATTER: /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/
 } as const;
+
+// CLI Error Codes
+export const CLI_ERROR_CODES = {
+  SUCCESS: 0,
+  GENERAL_ERROR: 1,
+  VALIDATION_ERROR: 2,
+  NOT_FOUND: 3,
+  ALREADY_EXISTS: 4,
+  PERMISSION_DENIED: 5,
+  USER_CANCELLED: 6
+} as const;

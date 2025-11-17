@@ -251,14 +251,14 @@ export class ProjectService {
             id: path.basename(file, '.toml'),
             project: {
               name: localConfig?.project?.name || projectData.project?.name || 'Unknown Project',
-              code: localConfig?.project?.code || '',
+              code: projectData.project?.code || localConfig?.project?.code || '',
               path: projectData.project?.path || '',
               configFile: path.join(projectData.project?.path || '', CONFIG_FILES.PROJECT_CONFIG),
               startNumber: localConfig?.project?.startNumber || 1,
               counterFile: localConfig?.project?.counterFile || CONFIG_FILES.COUNTER_FILE,
               active: projectData.project?.active !== false,
               description: localConfig?.project?.description || projectData.project?.description || '',
-              repository: localConfig?.project?.repository || ''
+              repository: projectData.project?.repository || localConfig?.project?.repository || ''
             },
             metadata: {
               dateRegistered: projectData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
@@ -408,9 +408,11 @@ export class ProjectService {
       const projectData = {
         project: {
           name: project.project.name,
+          code: project.project.code,
           path: project.project.path,
           active: project.project.active,
-          description: project.project.description
+          description: project.project.description,
+          repository: project.project.repository
         },
         metadata: {
           dateRegistered: project.metadata.dateRegistered,
@@ -582,5 +584,176 @@ export class ProjectService {
     }
 
     return toml;
+  }
+
+  /**
+   * Update existing project in registry and local config
+   */
+  updateProject(projectId: string, updates: Partial<Pick<Project['project'], 'name' | 'description' | 'repository' | 'active'>>): void {
+    try {
+      const projectFile = path.join(this.projectsDir, `${projectId}.toml`);
+
+      if (!fs.existsSync(projectFile)) {
+        throw new Error(`Project ${projectId} not found in registry`);
+      }
+
+      // Read existing registry file
+      const content = fs.readFileSync(projectFile, 'utf8');
+      const projectData = toml.parse(content);
+
+      // Merge updates into project data
+      if (updates.name !== undefined) {
+        projectData.project.name = updates.name;
+      }
+      if (updates.description !== undefined) {
+        projectData.project.description = updates.description;
+      }
+      if (updates.active !== undefined) {
+        projectData.project.active = updates.active;
+      }
+
+      // Update lastAccessed timestamp
+      projectData.metadata.lastAccessed = new Date().toISOString().split('T')[0];
+
+      // Write updated registry file
+      const tomlContent = this.objectToToml(projectData);
+      fs.writeFileSync(projectFile, tomlContent, 'utf8');
+
+      // Update local .mdt-config.toml if it exists
+      if (projectData.project?.path && fs.existsSync(projectData.project.path)) {
+        const configPath = path.join(projectData.project.path, CONFIG_FILES.PROJECT_CONFIG);
+
+        if (fs.existsSync(configPath)) {
+          const localContent = fs.readFileSync(configPath, 'utf8');
+          const localConfig = toml.parse(localContent);
+
+          // Update local config
+          if (updates.name !== undefined) {
+            localConfig.project.name = updates.name;
+          }
+          if (updates.description !== undefined) {
+            localConfig.project.description = updates.description;
+          }
+          if (updates.repository !== undefined) {
+            localConfig.project.repository = updates.repository;
+          }
+
+          // Write updated local config
+          const localTomlContent = this.objectToToml(localConfig);
+          fs.writeFileSync(configPath, localTomlContent, 'utf8');
+        }
+      }
+
+      // Clear cache to force refresh
+      this.clearCache();
+    } catch (error) {
+      this.log('Error updating project:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove project from registry
+   */
+  async deleteProject(projectId: string, deleteLocalConfig: boolean = true): Promise<void> {
+    try {
+      const projectFile = path.join(this.projectsDir, `${projectId}.toml`);
+      let projectPath: string | undefined;
+
+      // Try to read registry file if it exists
+      if (fs.existsSync(projectFile)) {
+        const content = fs.readFileSync(projectFile, 'utf8');
+        const projectData = toml.parse(content);
+        projectPath = projectData.project?.path;
+
+        // Delete registry file
+        fs.unlinkSync(projectFile);
+        this.log(`Deleted registry file for project ${projectId}`);
+      } else {
+        // Auto-discovered project - try to find path from local config
+        this.log(`Project ${projectId} not in registry, checking for auto-discovered project`);
+        const allProjects = await this.getAllProjects();
+        const project = allProjects.find(p => p.id === projectId);
+        if (project) {
+          projectPath = project.project.path;
+        }
+      }
+
+      // Always delete local project files (.mdt-config.toml and .mdt-next)
+      if (projectPath) {
+        // Delete .mdt-config.toml
+        const configPath = path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG);
+        if (fs.existsSync(configPath)) {
+          fs.unlinkSync(configPath);
+          this.log(`Deleted config file at ${configPath}`);
+        }
+
+        // Delete .mdt-next (counter file)
+        const counterFile = path.join(projectPath, CONFIG_FILES.COUNTER_FILE);
+        if (fs.existsSync(counterFile)) {
+          fs.unlinkSync(counterFile);
+          this.log(`Deleted counter file at ${counterFile}`);
+        }
+      }
+
+      // Clear cache
+      this.clearCache();
+    } catch (error) {
+      this.log('Error deleting project:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Find project by code or ID
+   */
+  async getProjectByCodeOrId(codeOrId: string): Promise<Project | null> {
+    const allProjects = await this.getAllProjects();
+
+    // Try exact ID match first
+    let project = allProjects.find(p => p.id === codeOrId);
+    if (project) {
+      return project;
+    }
+
+    // Try code match
+    project = allProjects.find(p => p.project.code === codeOrId);
+    return project || null;
+  }
+
+  /**
+   * Generate unique project ID from name
+   */
+  async generateProjectId(name: string): Promise<string> {
+    // Convert name to lowercase with hyphens
+    let baseId = name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove non-alphanumeric chars except spaces and hyphens
+      .replace(/\s+/g, '-')          // Replace spaces with hyphens
+      .replace(/-+/g, '-')           // Collapse multiple hyphens
+      .replace(/^-|-$/g, '');        // Remove leading/trailing hyphens
+
+    // Ensure valid ID
+    if (!baseId) {
+      baseId = 'project';
+    }
+
+    // Check for duplicates
+    const allProjects = await this.getAllProjects();
+    const existingIds = new Set(allProjects.map(p => p.id));
+
+    // If no duplicate, return base ID
+    if (!existingIds.has(baseId)) {
+      return baseId;
+    }
+
+    // Add numeric suffix
+    let counter = 2;
+    while (existingIds.has(`${baseId}-${counter}`)) {
+      counter++;
+    }
+
+    return `${baseId}-${counter}`;
   }
 }
