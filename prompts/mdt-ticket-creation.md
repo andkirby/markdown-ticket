@@ -1,8 +1,22 @@
-# ADR Template for MCP mdt-all (v3 - Artifact Specification)
+# ADR Creation Workflow for MCP mdt-all (v4 - Interactive Specification)
 
-Guide for AI agents creating architectural decision records (ADRs) using MCP mdt-all ticket system.
+Interactive workflow for AI agents creating architectural decision records (ADRs) using MCP mdt-all ticket system with structured questioning.
 
 **Core Principle**: Specify concrete artifacts (files, components, endpoints, methods), not behavioral descriptions. Every technical statement must reference what exists, not what it does.
+
+## User Input
+
+```text
+$ARGUMENTS
+```
+
+You **MUST** consider the user input before proceeding (if not empty). User may provide:
+- Initial description of the change needed
+- Specific files/components involved
+- Problem statement or user story
+- Technical requirements or constraints
+
+Parse this input for context before starting the questioning workflow.
 
 ## Critical Rules
 
@@ -30,20 +44,274 @@ Guide for AI agents creating architectural decision records (ADRs) using MCP mdt
 - **One H1 only** - The document title at the top, nothing else
 - **NO duplicate headers** - Each section header must be unique, never repeat `## 1. Description` twice
 
-## MCP Tool Usage
+## Workflow Execution
+
+### Step 1: Analyze Context
+
+1. Parse user input from `$ARGUMENTS` for:
+   - Stated problem or need
+   - Mentioned files/components/endpoints
+   - Technical constraints or requirements
+   - Desired outcome
+
+2. Scan conversation history for:
+   - Recent code discussions
+   - File paths mentioned
+   - Error messages or bugs discussed
+   - Performance concerns raised
+
+3. If project context available, identify:
+   - Codebase structure (frontend/backend/shared)
+   - Existing patterns and conventions
+   - Related CRs or tickets
+
+### Step 2: Interactive Question Flow
+
+Ask questions using `AskUserQuestion` tool to gather artifact-specific information. **Maximum 10 questions total**. Skip questions if information is already clear from context.
+
+#### Question 1: Change Type (Required)
+
+```
+Question: What type of change are you making?
+Header: CR Type
+Options:
+- Feature Enhancement: Add new functionality or capability
+- Bug Fix: Fix existing defect or broken behavior
+- Architecture: System design or structural change
+- Technical Debt: Code quality improvement or refactoring
+- Documentation: Project documentation updates
+```
+
+**Use answer to**:
+- Set MCP `type` parameter
+- Determine verification approach (Section 6)
+- Frame remaining questions
+
+#### Question 2: Trigger/Motivation (Required)
+
+```
+Question: What triggered this change?
+Header: Motivation
+Options:
+- User requirement: Specific user/stakeholder need (Recommended for Feature Enhancement)
+- Technical limitation: Current system can't meet requirement
+- Bug/defect: Something is broken or behaving incorrectly
+- Performance issue: System is too slow or resource-intensive
+- Maintenance burden: Code is hard to understand or maintain
+- Architectural gap: Missing architectural component or pattern
+```
+
+**Use answer to**:
+- Frame Problem section (1.1)
+- Identify affected artifacts
+- Guide rationale development
+
+#### Question 3: Artifact Areas (Conditional Multi-select)
+
+Only ask if not clear from context.
+
+```
+Question: Which areas of the codebase are involved?
+Header: Areas
+MultiSelect: true
+Options:
+- Frontend components: UI components in src/components/
+- Backend services: Business logic in server/services/
+- API endpoints: REST/GraphQL endpoints
+- Database: Schema, queries, or migrations
+- Configuration: Config files or environment variables
+- Shared code: Utilities in shared/ directory
+- Tests: Test files or test infrastructure
+```
+
+**Use answer to**:
+- Populate Affected Artifacts section (1.2)
+- Guide specific file/component questions
+- Set scope boundaries
+
+#### Question 4: Specific Files Modified (Conditional Short-answer)
+
+Only ask if specific files not mentioned in context.
+
+```
+Question: Which existing files need to be modified?
+Format: Provide comma-separated file paths (≤5 files)
+Example: src/services/UserService.ts, server/routes/users.ts
+Constraint: ≤50 characters total
+```
+
+**Use answer to**:
+- Populate Modified Artifacts table (Section 4.2)
+- Identify integration points
+- Clarify scope
+
+#### Question 5: New Artifacts (Conditional Short-answer)
+
+Only ask if new files/components not mentioned.
+
+```
+Question: What new files or components will be created?
+Format: Provide comma-separated paths (≤5 items)
+Example: src/services/AuthService.ts, /api/auth/token
+Constraint: ≤50 characters total
+```
+
+**Use answer to**:
+- Populate New Artifacts table (Section 4.1)
+- Define scope boundaries
+- Set integration points
+
+#### Question 6: Decision Status (Required)
+
+```
+Question: Have you decided on an implementation approach?
+Header: Decision Status
+Options:
+- Decided with alternatives: I know the approach and considered alternatives (Recommended - produces complete CR)
+- Decided, no alternatives: I know the approach but didn't evaluate alternatives
+- Need alternatives: Help me evaluate different approaches
+- Exploratory: Not sure yet, need to explore options
+```
+
+**Use answer to**:
+- Determine if Alternatives table can be populated (Section 3)
+- Set CR status (Proposed vs. Exploratory)
+- Guide approach documentation depth
+
+#### Question 7: Chosen Approach (Conditional Short-answer)
+
+Only ask if Question 6 answered "Decided..." option.
+
+```
+Question: Describe your chosen approach in one sentence
+Format: ≤15 words
+Example: Add JWT middleware to Express server for token-based authentication
+```
+
+**Use answer to**:
+- Populate Chosen Approach section (2.1)
+- Frame rationale bullets
+- Set alternatives table context
+
+#### Question 8: Alternatives Considered (Conditional Multi-select or Short-answer)
+
+Only ask if Question 6 answered "Decided with alternatives".
+
+```
+Question: What alternative approaches did you consider?
+Header: Alternatives
+MultiSelect: true
+Options:
+- Different library/framework: Considered alternative tech choice
+- Different architecture pattern: Considered different design pattern
+- Different implementation approach: Same tech, different approach
+- No-code solution: Configuration or existing tool instead
+- Defer/don't fix: Considered not doing this change
+- Other: Specify in ≤10 words
+```
+
+**Use answer to**:
+- Populate Alternatives Considered table (Section 3)
+- Identify rejection reasons
+- Demonstrate decision-making process
+
+#### Question 9: Success Criteria (Conditional Multi-select)
+
+Only ask if not clear from context.
+
+```
+Question: How will you verify this change is complete?
+Header: Verification
+MultiSelect: true
+Options:
+- Files exist: Specific files created with expected exports/methods
+- Tests pass: Unit, integration, or e2e tests pass
+- Endpoints work: API endpoints return expected responses
+- Performance met: Measured performance meets target
+- Manual verification: Specific manual test steps work
+- Documentation updated: Docs reflect the changes
+```
+
+**Use answer to**:
+- Populate Acceptance Criteria (Section 5)
+- Define verification approach (Section 6)
+- Set completion criteria
+
+#### Question 10: Performance Targets (Conditional)
+
+Only ask if "Performance met" selected in Question 9 OR Question 2 answered "Performance issue".
+
+```
+Question: Do you have measurable performance targets?
+Header: Performance
+Options:
+- Yes, with baseline: I have current baseline and target metrics (Recommended)
+- Yes, target only: I have target but need to measure baseline
+- No metrics yet: Need to establish baseline and target
+- Not applicable: Change not performance-related
+```
+
+**Use answer to**:
+- Populate Metrics section (6.2) if baseline exists
+- Add acceptance criteria for performance
+- Flag if baseline measurement needed
+
+### Step 3: Generate CR Content
+
+Using answers from questioning flow and context from Step 1:
+
+1. **Generate Title**: Concise description (≤10 words)
+   - Pattern: `[Type] Brief description of change`
+   - Example: `Add JWT authentication middleware to API`
+
+2. **Populate Sections** according to Document Structure below:
+   - Use artifact-specific language from answers
+   - Transform behavioral descriptions to artifact references
+   - Fill tables with concrete specifications
+   - Add acceptance criteria as checkboxes
+
+3. **Mark Unknown Sections**: If information missing after all questions:
+   - Add note: `(Requires clarification - run mdt-clarification.md workflow)`
+   - Do NOT use placeholders or TODOs
+   - Do NOT fabricate information
+
+4. **Validate Content** against Quality Checklist before submission
+
+### Step 4: Create CR via MCP
 
 ```json
 {
   "project": "PROJECT_CODE",
-  "type": "Architecture|Feature Enhancement|Bug Fix|Documentation",
+  "type": "Architecture|Feature Enhancement|Bug Fix|Technical Debt|Documentation",
   "data": {
-    "title": "CR title",
-    "phaseEpic": "Optional phase/epic",
-    "assignee": "Optional team/person",
-    "content": "Full markdown (no YAML)"
+    "title": "Generated title from Step 3",
+    "phaseEpic": "Optional phase/epic if mentioned in context",
+    "assignee": "Optional assignee if mentioned in context",
+    "content": "Full markdown content (no YAML frontmatter)"
   }
 }
 ```
+
+**Project Code Discovery**: If not in context, use:
+```bash
+cat .mdt-config.toml | grep 'code = '
+```
+
+### Step 5: Post-Creation Actions
+
+After successful CR creation:
+
+1. **Report CR Key**: Inform user of created CR (e.g., "Created MDT-078")
+
+2. **Suggest Next Steps**:
+   - If sections marked "Requires clarification": Suggest running `mdt-clarification.md`
+   - If exploratory CR: Suggest implementation spike before approval
+   - If ready: Suggest marking as "Approved" for implementation
+
+3. **Offer Immediate Refinement**: Ask if user wants to:
+   - Add more detail to any section
+   - Run clarification workflow now
+   - Make any corrections
 
 ---
 
