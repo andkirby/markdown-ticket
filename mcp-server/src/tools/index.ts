@@ -275,7 +275,7 @@ export class MCPTools {
       },
       {
         name: 'manage_cr_sections',
-        description: 'Manage CR sections (list, get, or update). To rename a section when updating, start your content with a new header at the same level. To keep the section header, provide only the body content. This allows flexible document restructuring while keeping intent explicit.',
+        description: `Manage CR sections with targeted operations. Operations: list (all sections), get (read one), replace (all content), append (add to end), prepend (add to beginning). Section matching supports: "Description", "## 1. Description", or hierarchical paths. Content with header renames section.`,
         inputSchema: {
           type: 'object',
           properties: {
@@ -289,21 +289,16 @@ export class MCPTools {
             },
             operation: {
               type: 'string',
-              enum: ['list', 'get', 'update'],
-              description: 'Operation: list=get all sections, get=read one section, update=modify section'
+              enum: ['list', 'get', 'replace', 'append', 'prepend'],
+              description: 'Operation: list=all sections with structure, get=read specific section, replace=entire content, append=add to end, prepend=add to beginning'
             },
             section: {
               type: 'string',
-              description: 'Section identifier (supports flexible formats: "1. Description", "Description", or exact "## 1. Description"). Required for get/update operations.'
-            },
-            updateMode: {
-              type: 'string',
-              enum: ['replace', 'append', 'prepend'],
-              description: 'Update mode (required for update operation)'
+              description: 'Section identifier (supports flexible formats: "1. Description", "Description", exact "## 1. Description", or hierarchical "## Parent / ### Child"). Required for get/replace/append/prepend operations.'
             },
             content: {
               type: 'string',
-              description: 'Content to apply (required for update operation). To rename/restructure a section, start content with a new header at the same level (e.g., "## New Section Name\n..."). To keep the section header unchanged, provide only the body content. Examples: (1) Rename: "## 7. Deployment & Rollback\n### Phase 1\n..." → header becomes "## 7. Deployment & Rollback", (2) Keep header: "### Phase 1\n..." → header unchanged, content updated.'
+              description: 'Content to apply (required for replace/append/prepend operations). To rename/restructure: start with new header at same level. To preserve header: provide only body content.'
             }
           },
           required: ['project', 'key', 'operation']
@@ -764,6 +759,15 @@ export class MCPTools {
   private async handleManageCRSections(projectKey: string, key: string, operation: string, section?: string, updateMode?: string, content?: string): Promise<string> {
     const project = await this.validateProject(projectKey);
 
+    // Backward compatibility: map legacy 'update' operation to 'replace'
+    if (operation === 'update') {
+      operation = 'replace';
+      // For backward compatibility, use updateMode as the operation if provided
+      if (updateMode && ['replace', 'append', 'prepend'].includes(updateMode)) {
+        operation = updateMode;
+      }
+    }
+
     switch (operation) {
       case 'list': {
         // List all sections in the CR
@@ -881,19 +885,18 @@ export class MCPTools {
           '',
           '---',
           '',
-          `Use \`manage_cr_sections\` with operation="update" to modify this section.`
+          `Use \`manage_cr_sections\` with operation="replace", "append", or "prepend" to modify this section.`
         ].join('\n');
       }
 
-      case 'update': {
+      case 'replace':
+      case 'append':
+      case 'prepend': {
         if (!section) {
-          throw new Error(`Section parameter is required for 'update' operation`);
-        }
-        if (!updateMode) {
-          throw new Error(`UpdateMode parameter is required for 'update' operation`);
+          throw new Error(`Section parameter is required for '${operation}' operation`);
         }
         if (!content) {
-          throw new Error(`Content parameter is required for 'update' operation`);
+          throw new Error(`Content parameter is required for '${operation}' operation`);
         }
 
         // Get CR
@@ -964,7 +967,7 @@ export class MCPTools {
 
         // Process content with simple sanitization
         const contentProcessingResult = SimpleContentProcessor.processContent(content, {
-          operation: updateMode as 'replace' | 'append' | 'prepend',
+          operation: operation as 'replace' | 'append' | 'prepend',
           maxLength: 500000 // 500KB limit for section content
         });
 
@@ -1009,7 +1012,7 @@ export class MCPTools {
 
         let updatedBody: string;
 
-        switch (updateMode) {
+        switch (operation) {
           case 'replace':
             // CRITICAL BUG FIX: replaceSection keeps the old header from matchedSection
             // and adds the body we provide. So we MUST NOT include a header in the content!
@@ -1034,7 +1037,7 @@ export class MCPTools {
             updatedBody = MarkdownSectionService.prependToSection(markdownBody, matchedSection, sectionBody);
             break;
           default:
-            throw new Error(`Invalid updateMode '${updateMode}'. Must be: replace, append, or prepend`);
+            throw new Error(`Invalid operation '${operation}'. Must be: list, get, replace, append, or prepend`);
         }
 
         // Update lastModified in YAML
@@ -1054,7 +1057,7 @@ export class MCPTools {
           `✅ **Updated Section in CR ${key}**`,
           '',
           `**Section:** ${matchedSection.hierarchicalPath}`,
-          `**Operation:** ${updateMode}`,
+          `**Operation:** ${operation}`,
           `**Content Length:** ${processedContent.length} characters`,
           '',
           `- Title: ${ticket.title}`,
@@ -1075,11 +1078,11 @@ export class MCPTools {
         }
 
         // Add helpful message based on operation
-        if (updateMode === 'replace') {
+        if (operation === 'replace') {
           lines.push('', `The section content has been completely replaced.`);
-        } else if (updateMode === 'append') {
+        } else if (operation === 'append') {
           lines.push('', `Content has been added to the end of the section.`);
-        } else if (updateMode === 'prepend') {
+        } else if (operation === 'prepend') {
           lines.push('', `Content has been added to the beginning of the section.`);
         }
 
@@ -1087,7 +1090,7 @@ export class MCPTools {
       }
 
       default:
-        throw new Error(`Invalid operation '${operation}'. Must be: list, get, or update`);
+        throw new Error(`Invalid operation '${operation}'. Must be: list, get, replace, append, or prepend`);
     }
   }
 
