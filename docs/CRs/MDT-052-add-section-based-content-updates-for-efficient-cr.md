@@ -1,6 +1,5 @@
 ---
 code: MDT-052
-title: Add section-based content updates for efficient CR editing
 status: Implemented
 dateCreated: 2025-10-01T23:06:26.696Z
 type: Feature Enhancement
@@ -8,7 +7,7 @@ priority: High
 phaseEpic: Phase B (Enhancement)
 ---
 
-# Add section-based content updates for efficient CR editing
+# Add section-based content updates for efficient CR editing via MCP
 
 ## 1. Description
 ### Problem
@@ -118,6 +117,25 @@ prependToSection(content: string, section: SectionMatch, additionalContent: stri
 | MCP Tools | MarkdownSectionService | Method calls |
 | MarkdownSectionService | File System | File I/O |
 | update_cr_section | YAML Frontmatter | Timestamp updates |
+
+#### Interface Simplification Discoveries (Post-Implementation: 2025-11-17)
+
+**Current MCP Tool Interface Issues:**
+- Parameter complexity: 6 parameters with conditional requirements create cognitive overhead
+- User confusion between `operation` vs `updateMode` parameters
+- Poor LLM discoverability of valid operations through description
+
+**Proposed Interface Refinement (Solution 2):**
+- Merge `updateMode` into `operation` parameter
+- Change from: `operation: ["list", "get", "update"]` + `updateMode: ["replace", "append", "prepend"]`
+- Change to: `operation: ["list", "get", "replace", "append", "prepend"]`
+- Result: 50% reduction in cognitive load, eliminates operation vs mode confusion
+
+**LLM Discovery Enhancement:**
+- Add explicit operation list in tool description (beyond JSON Schema enum)
+- Provide concise examples for each operation type
+- Improve schema description with clear operation semantics
+
 ## 4. Acceptance Criteria
 ### Functional Requirements
 
@@ -150,6 +168,14 @@ prependToSection(content: string, section: SectionMatch, additionalContent: stri
 - [ ] Update workflow examples in create_ticket.md
 - [ ] Add hierarchical path syntax documentation
 - [ ] Include token savings comparisons
+
+### Documentation Requirements (Updated: 2025-11-17)
+
+- [ ] Tool description includes explicit operation list for quick LLM scanning
+- [ ] JSON Schema enum matches all valid operations (including merged append/prepend/replace)
+- [ ] Minimal examples provided for each operation type
+- [ ] Operation semantics clearly documented (replace=entire content, append=add to end, prepend=add to beginning)
+
 ## 5. Implementation Notes
 ### Status: IMPLEMENTED ✅
 
@@ -179,6 +205,17 @@ prependToSection(content: string, section: SectionMatch, additionalContent: stri
 - All operations verified (list, get, update)
 - Data integrity maintained
 - Token efficiency confirmed
+
+### Interface Simplification Update
+
+**Date**: 2025-11-17  
+**Implementation**: Solution 2 from MDT-052 has been implemented successfully
+
+**Key Changes:**
+- Updated `manage_cr_sections` tool with new 5-operation interface
+- Removed `updateMode` parameter for simplified usage
+- Added backward compatibility mapping
+- All operations working correctly
 ## 6. References
 **Related Documents:**
 - **MCP Tools Reference**: `mcp-server/MCP_TOOLS.md` - Complete tool documentation with parameters and examples
