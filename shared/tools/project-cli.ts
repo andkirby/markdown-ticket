@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import * as readline from 'readline';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ProjectManager, ProjectCreateInput, ProjectUpdateInput } from './ProjectManager.js';
 import { Project } from '../models/Project.js';
 
@@ -294,23 +296,41 @@ class ProjectCommands {
 
         // Red background WARNING
         console.log(`\n\x1b[41m\x1b[1;37m ⚠️  WARNING: PERMANENT ACTION \x1b[0m`);
-        console.log(`\x1b[41m\x1b[37m  This will permanently delete all project data.       \x1b[0m`);
+        console.log(`\x1b[41m\x1b[37m  This will permanently delete the project profile.     \x1b[0m`);
+        console.log(`\x1b[41m\x1b[37m  Project files and folders will NOT be affected.       \x1b[0m`);
         console.log(`\x1b[41m\x1b[37m  There is no way to undo this action.                 \x1b[0m`);
 
         console.log(`\n\x1b[1;31mFiles that will be removed:\x1b[0m`);
-        console.log(`  - Registry entry: ~/.config/markdown-ticket/projects/${project.id}.toml`);
-        console.log(`  - Project config: ${project.project.path}/.mdt-config.toml`);
-        console.log(`  - Counter file: ${project.project.path}/.mdt-next`);
+
+        // Check if files actually exist and apply strikethrough if not
+        const registryFile = path.join(process.env.HOME || '', '.config', 'markdown-ticket', 'projects', `${project.id}.toml`);
+        const configFile = path.join(project.project.path, '.mdt-config.toml');
+        const counterFile = path.join(project.project.path, '.mdt-next');
+
+        const registryExists = fs.existsSync(registryFile);
+        const configExists = fs.existsSync(configFile);
+        const counterExists = fs.existsSync(counterFile);
+
+        console.log(`  - Registry entry: ${!registryExists ? `\x1b[9m~/.config/markdown-ticket/projects/${project.id}.toml\x1b[0m` : `~/.config/markdown-ticket/projects/${project.id}.toml`}`);
+        console.log(`  - Project config: ${!configExists ? `\x1b[9m${project.project.path}/.mdt-config.toml\x1b[0m` : `${project.project.path}/.mdt-config.toml`}`);
+        console.log(`  - Counter file: ${!counterExists ? `\x1b[9m${project.project.path}/.mdt-next\x1b[0m` : `${project.project.path}/.mdt-next`}`);
 
         // Orange background DISABLE OPTION
         console.log(`\n\x1b[43m\x1b[1;30m 💡 ALTERNATIVE: DISABLE THIS PROJECT \x1b[0m`);
-        console.log(`\x1b[43m\x1b[30m  Hit "y" when prompted to just disable instead of delete. \x1b[0m`);
+        console.log(`\x1b[43m\x1b[30m  Type "d" to disable instead of delete. \x1b[0m`);
         console.log(`\x1b[43m\x1b[30m  The project will be hidden but all files remain intact.    \x1b[0m`);
 
         const projectCode = project.project.code || project.id;
-        const confirm = await this.prompt.question(`\nDisable this project instead? (y/n): `);
+        console.log(`\nType "\x1b[1;31m${projectCode}\x1b[0m" for project \x1b[1;31mdeletion\x1b[0m, "\x1b[1;33md\x1b[0m" to \x1b[1;33mdisable\x1b[0m, or "\x1b[1;32mn\x1b[0m" to \x1b[1;32mcancel\x1b[0m: `);
+        const action = await this.prompt.question(`> `);
 
-        if (confirm.toLowerCase() === 'y') {
+        const actionLower = action.toLowerCase();
+
+        if (actionLower === 'n') {
+          throw new ProjectError('Operation cancelled by user', CLI_ERROR_CODES.USER_CANCELLED);
+        }
+
+        if (actionLower === 'd') {
           // Disable project instead of deleting
           await this.manager.disableProject(codeOrId);
           console.log('\n✅ Project disabled successfully!');
@@ -319,20 +339,30 @@ class ProjectCommands {
           return;
         }
 
-        // Continue with deletion
-        const deleteConfirm = await this.prompt.question(`\nType the project code "${projectCode}" to confirm deletion: `);
-        if (deleteConfirm !== projectCode) {
-          throw new ProjectError('Deletion cancelled: project code does not match', CLI_ERROR_CODES.USER_CANCELLED);
+        // Continue with deletion (case-insensitive code match)
+        if (action.toLowerCase() === projectCode.toLowerCase()) {
+          await this.manager.deleteProject(codeOrId, true);
+
+          // Check which files were actually deleted
+          const deletedRegistry = fs.existsSync(registryFile) ? false : true;
+          const deletedConfig = fs.existsSync(configFile) ? false : true;
+          const deletedCounter = fs.existsSync(counterFile) ? false : true;
+
+          console.log('\n✅ Project deleted successfully!');
+          if (deletedRegistry) {
+            console.log(`  - Registry entry: \x1b[9m~/.config/markdown-ticket/projects/${project.id}.toml\x1b[0m \x1b[32m✅\x1b[0m`);
+          }
+          if (deletedConfig) {
+            console.log(`  - Project config: \x1b[9m${project.project.path}/.mdt-config.toml\x1b[0m \x1b[32m✅\x1b[0m`);
+          }
+          if (deletedCounter) {
+            console.log(`  - Counter file: \x1b[9m${project.project.path}/.mdt-next\x1b[0m \x1b[32m✅\x1b[0m`);
+          }
+          return;
         }
+
+        throw new ProjectError('Deletion cancelled: invalid option', CLI_ERROR_CODES.USER_CANCELLED);
       }
-
-      // Always delete all project files
-      await this.manager.deleteProject(codeOrId, true);
-
-      console.log('\n✅ Project deleted successfully!');
-      console.log('  - Registry entry removed');
-      console.log('  - .mdt-config.toml removed');
-      console.log('  - .mdt-next removed');
     } catch (error) {
       if (error instanceof Error && error.message.includes('not found')) {
         throw new ProjectError(error.message, CLI_ERROR_CODES.NOT_FOUND, error);
