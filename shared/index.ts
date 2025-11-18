@@ -31,5 +31,8 @@ export * from './services/TemplateService.js';
 export * from './services/CRService.js';
 export * from './services/CounterService.js';
 
+// Tools
+export * from './tools/ProjectManager.js';
+
 // Constants
 export * from './utils/constants.js';

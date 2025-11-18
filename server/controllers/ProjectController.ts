@@ -1,14 +1,7 @@
 import { Request, Response } from 'express';
-
-// Type definitions
-interface Project {
-  id: string;
-  project: {
-    name: string;
-    path: string;
-    active: boolean;
-  };
-}
+import { ProjectService } from '@mdt/shared/services/ProjectService.js';
+import { Project } from '@mdt/shared/models/Project.js';
+import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js';
 
 interface Ticket {
   code: string;
@@ -75,10 +68,8 @@ interface AuthenticatedRequest extends Request {
   body: any;
 }
 
-// Service interfaces
-interface ProjectService {
-  getAllProjects(): Promise<Project[]>;
-  getProjectConfig(projectId: string): Promise<ProjectWithConfig>;
+// Extended interfaces for methods not in shared ProjectService
+interface ProjectServiceExtension extends ProjectService {
   createProject(data: CreateProjectData): Promise<any>;
   updateProject(code: string, data: UpdateProjectData): Promise<any>;
   getSystemDirectories(path?: string): Promise<DirectoryListing>;
@@ -107,13 +98,13 @@ interface FileWatcher {
  * Controller layer for project-related HTTP endpoints
  */
 export class ProjectController {
-  private projectService: ProjectService;
+  private projectService: ProjectServiceExtension;
   private ticketService: TicketService;
   private fileSystemService: FileSystemService;
   private fileWatcher: FileWatcher;
 
   constructor(
-    projectService: ProjectService,
+    projectService: ProjectServiceExtension,
     ticketService: TicketService,
     fileSystemService: FileSystemService,
     fileWatcher: FileWatcher
@@ -149,15 +140,26 @@ export class ProjectController {
     }
 
     try {
-      const result = await this.projectService.getProjectConfig(projectId);
+      // Get project by ID first, then get config using project path
+      const projects = await this.projectService.getAllProjects();
+      const project = projects.find(p => p.id === projectId);
+
+      if (!project) {
+        res.status(404).json({ error: 'Project not found' });
+        return;
+      }
+
+      const config = this.projectService.getProjectConfig(project.project.path);
+      if (!config) {
+        res.status(404).json({ error: 'Project configuration not found' });
+        return;
+      }
+
+      const result = { project, config };
       res.json(result);
     } catch (error: any) {
       console.error('Error getting project config:', error);
-      if (error.message === 'Project not found' || error.message === 'Project configuration not found') {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to get project configuration' });
-      }
+      res.status(500).json({ error: 'Failed to get project configuration' });
     }
   }
 
@@ -363,6 +365,54 @@ export class ProjectController {
         res.status(404).json({ error: error.message });
       } else {
         res.status(500).json({ error: 'Failed to update project' });
+      }
+    }
+  }
+
+  /**
+   * Enable project
+   */
+  async enableProject(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { code } = req.params;
+      if (!code) {
+        res.status(400).json({ error: 'Project code is required' });
+        return;
+      }
+
+      const projectManager = new ProjectManager();
+      const result = await projectManager.enableProject(code);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error enabling project:', error);
+      if (error.message === 'Project not found') {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Failed to enable project' });
+      }
+    }
+  }
+
+  /**
+   * Disable project
+   */
+  async disableProject(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { code } = req.params;
+      if (!code) {
+        res.status(400).json({ error: 'Project code is required' });
+        return;
+      }
+
+      const projectManager = new ProjectManager();
+      const result = await projectManager.disableProject(code);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error disabling project:', error);
+      if (error.message === 'Project not found') {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Failed to disable project' });
       }
     }
   }

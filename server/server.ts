@@ -15,13 +15,6 @@ interface ServerProject {
   configPath?: string;
 }
 
-// Type adapters to resolve interface conflicts
-interface ProjectDiscoveryAdapter {
-  getAllProjects(): Promise<any[]>;
-  getProjectConfig(projectPath: string): any;
-  getProjectCRs(projectPath: string): Promise<any[]>;
-  clearCache?(): void | Promise<void>;
-}
 
 interface FileInvokerAdapter {
   readFile(filePath: string): Promise<string>;
@@ -32,7 +25,6 @@ interface FileInvokerAdapter {
 // Services
 import FileWatcherService from './fileWatcherService.js';
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js';
-import { ProjectService } from './services/ProjectService.js';
 import { TicketService } from './services/TicketService.js';
 import { DocumentService } from './services/DocumentService.js';
 import { FileSystemService } from './services/FileSystemService.js';
@@ -86,9 +78,9 @@ const fileWatcher = new FileWatcherService();
 const projectDiscovery = new SharedProjectService();
 
 // Business logic services
-const projectService = new ProjectService(projectDiscovery as ProjectDiscoveryAdapter);
-const ticketService = new TicketService(projectDiscovery as ProjectDiscoveryAdapter);
-const documentService = new DocumentService(projectDiscovery as ProjectDiscoveryAdapter);
+const projectService = projectDiscovery; // Direct usage of shared service
+const ticketService = new TicketService(projectDiscovery as any); // Type cast for compatibility
+const documentService = new DocumentService(projectDiscovery as any); // Type cast for compatibility
 const fileSystemService = new FileSystemService(TICKETS_DIR);
 
 // Connect file watcher to document service for cache invalidation
@@ -99,7 +91,7 @@ fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter);
 // =============================================================================
 
 const projectController = new ProjectController(
-  projectService,
+  projectService as any, // Type cast to ProjectServiceExtension for compatibility
   ticketService,
   fileSystemService,
   fileWatcher
@@ -210,7 +202,7 @@ app.use('/api/documents', createDocumentRouter(documentController, projectContro
 app.use('/api/events', createSSERouter(fileWatcher));
 
 // System routes (status, directories, filesystem, config)
-app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery as ProjectDiscoveryAdapter, documentService.fileInvoker as FileInvokerAdapter));
+app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter));
 
 // Dev tools routes (logging)
 app.use('/api', createDevToolsRouter());
