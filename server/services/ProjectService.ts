@@ -33,6 +33,7 @@ interface CreateProjectData {
   crsPath?: string;
   description?: string;
   repositoryUrl?: string;
+  createProjectPath?: boolean; // Auto-create project directory if it doesn't exist
 }
 
 interface CreateProjectResult {
@@ -143,7 +144,7 @@ export class ProjectService {
    * @returns Created project info
    */
   async createProject(projectData: CreateProjectData): Promise<CreateProjectResult> {
-    const { name, code, path: projectPath, crsPath = 'docs/CRs', description, repositoryUrl } = projectData;
+    const { name, code, path: projectPath, crsPath = 'docs/CRs', description, repositoryUrl, createProjectPath = false } = projectData;
 
     if (!name || !projectPath) {
       throw new Error('Name and path are required');
@@ -152,14 +153,19 @@ export class ProjectService {
     // Expand ~ to home directory
     const expandedPath = projectPath.replace(/^~($|\/)/, `${os.homedir()}$1`);
 
-    // Verify project path exists
+    // Verify project path exists or create it if flag is set
     try {
       const stats = await fs.stat(expandedPath);
       if (!stats.isDirectory()) {
         throw new Error('Project path must be a directory');
       }
-    } catch (_error) {
-      throw new Error('Project path does not exist');
+    } catch (error: any) {
+      if (createProjectPath) {
+        // Create project directory recursively
+        await fs.mkdir(expandedPath, { recursive: true });
+      } else {
+        throw new Error(`Project path does not exist: ${expandedPath}. Use createProjectPath flag to auto-create.`);
+      }
     }
 
     // Generate project code if not provided
