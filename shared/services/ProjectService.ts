@@ -434,7 +434,7 @@ export class ProjectService {
    * Create or update local .mdt-config.toml file with complete configuration
    * Uses same template as Web UI to ensure consistency
    */
-  createOrUpdateLocalConfig(projectId: string, projectPath: string, name: string, code: string, description?: string, repository?: string, globalOnly: boolean = false): void {
+  createOrUpdateLocalConfig(projectId: string, projectPath: string, name: string, code: string, description?: string, repository?: string, globalOnly: boolean = false, ticketsPath?: string): void {
     try {
       if (globalOnly) {
         // Global-only mode: don't create local config file
@@ -454,13 +454,25 @@ export class ProjectService {
         config = { project: {} };
       }
 
+      // Determine tickets path (use provided or fallback to existing/default)
+      const finalTicketsPath = ticketsPath || config.project.path || 'docs/CRs';
+
+      // Auto-create tickets directory if it doesn't exist
+      if (finalTicketsPath) {
+        const fullTicketsPath = path.join(projectPath, finalTicketsPath);
+        if (!fs.existsSync(fullTicketsPath)) {
+          fs.mkdirSync(fullTicketsPath, { recursive: true });
+          this.log(`Created tickets directory: ${fullTicketsPath}`);
+        }
+      }
+
       // Update project section with complete configuration matching Web UI template
       config.project = {
         ...config.project,
         id: projectId,
         name: name,
         code: code,
-        path: config.project.path || 'docs/CRs', // Default CR path
+        path: finalTicketsPath,
         startNumber: config.project.startNumber || 1,
         counterFile: config.project.counterFile || CONFIG_FILES.COUNTER_FILE,
         description: description || config.project.description || '',

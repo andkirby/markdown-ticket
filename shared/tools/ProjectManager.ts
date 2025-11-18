@@ -25,6 +25,8 @@ export interface ProjectCreateInput {
   description?: string;
   repository?: string;
   globalOnly?: boolean; // Strategy 1: Global-only mode
+  createProjectPath?: boolean; // Flag to auto-create project directory
+  ticketsPath?: string; // Relative path for tickets (default: "docs/CRs")
 }
 
 /**
@@ -70,8 +72,10 @@ export class ProjectManager {
       throw new Error(`Project with code "${code}" already exists`);
     }
 
-    // Validate path
-    const pathResult = ProjectValidator.validatePath(input.path, { mustExist: false });
+    // Validate path (require existence unless createProjectPath flag is set)
+    const pathResult = ProjectValidator.validatePath(input.path, {
+      mustExist: !input.createProjectPath
+    });
     if (!pathResult.valid) {
       throw new Error(pathResult.error);
     }
@@ -95,12 +99,24 @@ export class ProjectManager {
       }
     }
 
+    // Validate tickets path if provided
+    let ticketsPath: string | undefined;
+    if (input.ticketsPath) {
+      const ticketsPathResult = ProjectValidator.validateTicketsPath(input.ticketsPath);
+      if (!ticketsPathResult.valid) {
+        throw new Error(ticketsPathResult.error);
+      }
+      ticketsPath = ticketsPathResult.normalized!;
+    }
+
     // Generate unique project ID
     const projectId = await this.projectService.generateProjectId(name);
 
-    // Create project directory if needed (unless global-only mode)
-    if (!input.globalOnly && !fs.existsSync(projectPath)) {
+    // Create project directory if needed (if createProjectPath flag is set)
+    if (input.createProjectPath && !input.globalOnly && !fs.existsSync(projectPath)) {
       fs.mkdirSync(projectPath, { recursive: true });
+    } else if (!input.globalOnly && !fs.existsSync(projectPath) && !input.createProjectPath) {
+      throw new Error(`Project path does not exist: ${projectPath}. Use --create-project-path flag to auto-create.`);
     }
 
     // Build Project object with complete configuration matching Web UI template
@@ -138,14 +154,9 @@ export class ProjectManager {
         code,
         description,
         repository,
-        false // not global-only
+        false, // not global-only
+        ticketsPath // pass the validated tickets path
       );
-
-      // Create docs/CRs directory and counter file
-      const crsPath = path.join(projectPath, 'docs', 'CRs');
-      if (!fs.existsSync(crsPath)) {
-        fs.mkdirSync(crsPath, { recursive: true });
-      }
 
       // Create counter file
       const counterFile = path.join(projectPath, CONFIG_FILES.COUNTER_FILE);

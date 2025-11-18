@@ -112,19 +112,35 @@ Hybrid CLI tool with two operation modes:
 | `shared/utils/constants.js` | Constants added | CLI_ERROR_CODES for proper exit codes |
 | `server/services/ProjectService.ts` | Reference implementation | Complete config creation template - should be used for CLI consistency |
 | `shared/tools/project-cli.ts` | Enhancement needed | Add `--global-only` flag support for three-strategy architecture |
+| `shared/tools/project-cli.ts` | Enhancement required | Add `--create-project-path` and `--tickets-path` flag parsing and validation |
+| `shared/tools/ProjectValidator.ts` | Method addition | Add `validateTicketsPath()` method for relative path validation |
+| `shared/tools/ProjectManager.ts` | Enhancement required | Modify `createProject()` to handle new path management flags |
+| `shared/services/ProjectService.ts:createOrUpdateLocalConfig()` | Enhancement required | Add `ticketsPath` parameter with auto-creation logic |
+| `server/services/ProjectService.ts:createProject()` | Consistency required | Ensure backend API supports same path management parameters |
 
 ### CLI Command Structure
 
 ```bash
-npm run project:create -- --name "Project Name" --code "CODE" --path "/path/to/project" [--description "Description"]
+npm run project:create -- \
+  --name "Project Name" \
+  --code "CODE" \
+  --path "/path/to/project" \
+  [--description "Description"] \
+  [--create-project-path] \
+  [--tickets-path "docs/CRs"]
 npm run project:list [--format json|table]
 npm run project:get <project-code> [--format json]
 npm run project:update <project-code> --interactive
 npm run project:delete <project-code> [--confirm]
 npm run project:enable <project-code>
 npm run project:disable <project-code>
-
+```
 **Note**: Use `--` separator to pass arguments to CLI tool (e.g., `npm run project:create -- --name "Test"`)
+
+#### **New CLI Flags (Post-Implementation Specification)**
+
+- **--create-project-path**: Enable automatic creation of project directory if it doesn't exist
+- **--tickets-path**: Specify custom tickets directory path (relative to project root, default: "docs/CRs")
 
 ### **Post-Implementation Key Patterns Discovery**
 
@@ -179,9 +195,6 @@ npm run project:disable <project-code>
 - **File system verification**: `fs.existsSync()` for real-time file checking
 - **Visual feedback system**: Consistent ANSI escape codes throughout CLI
 - **Disable workflow**: Integrated directly into delete confirmation flow
-# COMPLETED: npm run project:disable <project-code>
-# COMPLETED: npm run project:enable <project-code>
-```
 
 ### Operation Modes
 
@@ -230,6 +243,17 @@ npm run project:disable <project-code>
 - [ ] CLI must support `--global-only` flag for centralized project management strategy
 - [ ] Configuration validation must accept all properly formed project configurations regardless of creation method
 - [ ] API must return correct project names and codes for all projects, regardless of creation method
+
+### **CLI Path Management Requirements (Added 2025-11-18)**
+
+- [ ] System shall NOT create project paths automatically by default
+- [ ] CLI shall show user-friendly error message when project path doesn't exist
+- [ ] `--create-project-path` flag shall enable automatic project directory creation when explicitly requested
+- [ ] `--tickets-path` flag shall accept only relative paths from project root
+- [ ] `--tickets-path` shall default to "docs/CRs" when not specified
+- [ ] System shall auto-create tickets directory when valid relative path provided
+- [ ] CLI shall be a parameter wrapper calling core functionality in `shared/services/ProjectService.ts`
+- [ ] Backend API shall use same core logic as CLI to ensure consistency
 
 
 ### Non-Functional
@@ -392,3 +416,66 @@ npm run project:disable <project-code>
 - Fix existing incomplete `.mdt-config.toml` files with missing required fields
 - Add validation to prevent future incomplete config creation
 - Provide migration script for existing CLI-created projects
+
+## 13. Post-Implementation Session (2025-11-18) - CLI Path Management & Architecture Specification
+
+### Specification Corrections: CLI Path Management Requirements
+
+#### **Project Path Validation Behavior**
+- **Artifact Reference**: `shared/tools/project-cli.ts` (CLI argument parsing and validation)
+- **Current Issue**: System auto-creates project paths (undesired behavior)
+- **Required Implementation**: System shall NOT create project paths automatically, show user-friendly error if path doesn't exist
+- **Impact**: Prevents users from accidentally using wrong paths, adds explicit control over directory creation
+
+#### **--create-project-path Flag Addition**
+- **Artifact Reference**: `shared/tools/ProjectManager.ts` (project creation logic)
+- **Current Issue**: No flag for controlling project path auto-creation
+- **Required Implementation**: Add `--create-project-path` boolean flag to enable project path auto-creation when explicitly requested
+- **Impact**: Provides explicit control over directory creation behavior while preventing accidental path creation
+
+#### **--tickets-path Flag with Validation**
+- **Artifact Reference**: `shared/tools/ProjectValidator.ts` (path validation logic)
+- **Current Issue**: Fixed tickets path "docs/CRs" with no customization
+- **Required Implementation**: Add `--tickets-path` flag accepting relative paths only, default "docs/CRs", with auto-creation
+- **Impact**: Allows flexible ticket directory configuration while maintaining consistency and preventing absolute path confusion
+
+#### **CLI-Backend Separation of Concerns**
+- **Artifact Reference**: `shared/tools/project-cli.ts` (CLI wrapper), `shared/services/ProjectService.ts` (core functionality)
+- **Architectural Requirement**: CLI shall be a parameter wrapper that calls core functionality in shared services
+- **Implementation Pattern**: Both CLI and backend API use same core logic from `ProjectService.ts`
+- **Impact**: Eliminates code duplication, ensures consistency between CLI and API, maintains single source of truth
+
+#### **Enhanced Path Validation Logic**
+- **Artifact Reference**: `shared/services/ProjectService.ts:createOrUpdateLocalConfig()` (template creation)
+- **Current Issue**: No distinction between project path validation and tickets path validation
+- **Required Implementation**: Separate validation logic - project path must exist unless `--create-project-path`, tickets path auto-created if valid relative path
+- **Impact**: Prevents configuration errors and provides clear user feedback for different path types
+
+### Integration Updates
+
+| From | To | Interface | Enhancement |
+|------|----|-----------|-------------|
+| CLI | ProjectValidator | `validateProjectPath()` | Add existence check with error unless `--create-project-path` |
+| CLI | ProjectValidator | `validateTicketsPath()` | New method for relative path validation |
+| CLI | ProjectService | `createOrUpdateLocalConfig()` | Add `ticketsPath` parameter with auto-creation |
+| CLI | ProjectManager | `createProject()` | Enhanced parameter handling with new flags |
+
+### Artifacts Requiring Updates
+
+#### **CLI Command Structure Enhancement**
+```bash
+npm run project:create -- \
+  --name "Project Name" \
+  --code "CODE" \
+  --path "/path/to/project" \
+  [--description "Description"] \
+  [--create-project-path] \
+  [--tickets-path "docs/CRs"]
+```
+
+#### **Modified Components**
+- `shared/tools/project-cli.ts` - Add new flag parsing and validation calls
+- `shared/tools/ProjectValidator.ts` - Add `validateTicketsPath()` method
+- `shared/tools/ProjectManager.ts` - Enhance `createProject()` with new parameters
+- `shared/services/ProjectService.ts:createOrUpdateLocalConfig()` - Add `ticketsPath` parameter
+- `server/services/ProjectService.ts:createProject()` - Ensure backend API supports same parameters
