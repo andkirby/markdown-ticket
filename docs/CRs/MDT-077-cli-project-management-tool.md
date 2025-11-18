@@ -479,3 +479,110 @@ npm run project:create -- \
 - `shared/tools/ProjectManager.ts` - Enhance `createProject()` with new parameters
 - `shared/services/ProjectService.ts:createOrUpdateLocalConfig()` - Add `ticketsPath` parameter
 - `server/services/ProjectService.ts:createProject()` - Ensure backend API supports same parameters
+
+## 14. Post-Implementation Session (2025-11-18) - Critical Technical Debt: Server Project Management Duplication
+
+### Critical Architectural Issues Discovered
+
+#### **Multiple Project Service Implementations**
+- **Shared Implementation**: `shared/services/ProjectService.ts` (497 lines) - Comprehensive project management with auto-discovery, caching, validation
+- **Server Implementation**: `server/services/ProjectService.ts` (~300 lines) - Duplicate implementation with incomplete functionality
+- **Impact**: 80% code duplication, inconsistent behavior between CLI and Web UI, maintenance overhead
+
+#### **Missing Server Features**
+- **Auto-Discovery**: Server lacks project auto-discovery, Web UI shows different project lists than CLI
+- **Caching**: Server has no caching mechanism, performance degradation on repeated requests
+- **Validation**: Server lacks comprehensive validation, can create invalid project configurations
+- **Enable/Disable**: Server missing project status management endpoints
+
+#### **Inconsistent Data Structures**
+- **Shared Service**: Returns rich `Project` objects with metadata, auto-discovery flags, TTL caching
+- **Server Service**: Returns basic project objects, inconsistent field naming, missing metadata
+- **Impact**: API responses vary between endpoints, client-side complexity
+
+### Server Architecture Refactoring Requirements
+
+#### **Removed Artifacts**
+
+| Artifact | Type | Reason for Removal |
+|----------|------|-------------------|
+| `server/services/ProjectService.ts` | Duplicate Service | Duplicates 80% of shared/ProjectService functionality with incomplete implementation |
+| Server ProjectController duplication | Redundant Layer | Unnecessary wrapper - server should use shared service directly |
+
+#### **Modified Artifacts**
+
+| Artifact | Change Type | Modification |
+|----------|-------------|--------------|
+| `server/controllers/ProjectController.ts` | Refactor to direct usage | Import and use `@mdt/shared/services/ProjectService.js` directly |
+| `server/routes/projects.ts` | Import update | Remove local ProjectService import, use shared service |
+| `server/package.json` | Dependency update | Ensure shared service available as runtime dependency |
+
+#### **New Artifacts**
+
+| Artifact | Type | Purpose |
+|----------|------|---------|
+| `server/controllers/ProjectController.ts` (refactored) | HTTP Controller | Thin HTTP wrapper around shared ProjectService |
+
+#### **Integration Changes**
+
+| From | To | Interface | Impact |
+|------|----|-----------|--------|
+| Web UI APIs | shared/ProjectService | Direct import | Eliminates duplicate implementation, provides auto-discovery and caching |
+| ProjectController | shared/ProjectService | `ProjectService` class | Single source of truth for project operations |
+
+#### **Architectural Enforcement Pattern**
+
+**Single Source of Truth Rule**:
+- All project CRUD operations MUST use `shared/services/ProjectService.ts`
+- Server package SHALL NOT duplicate business logic from shared package
+- HTTP controllers SHALL be thin wrappers around shared services
+- Feature parity between CLI, Web UI, and MCP guaranteed by shared service usage
+
+**Benefits**:
+- Eliminate ~300 lines of duplicate code
+- Immediate server access to auto-discovery, caching, validation
+- Consistent error handling and data structures across all interfaces
+- Single maintenance point for project management logic
+
+### Specification Updates Required
+
+#### **Acceptance Criteria Additions**
+- Server SHALL use shared ProjectService directly for all project operations
+- Web UI SHALL have same project discovery capabilities as CLI (auto-discovery, search paths)
+- All project endpoints SHALL return consistent data structures with metadata
+- Server SHALL implement enable/disable endpoints matching CLI functionality
+- Project operations SHALL leverage shared service caching (30-second TTL)
+
+#### **Integration Points Updates**
+
+| From | To | Interface | Enhancement |
+|------|----|-----------|-------------|
+| Web UI APIs | shared/ProjectService | `getAllProjects()` | Auto-discovery support |
+| Web UI APIs | shared/ProjectService | `enableProject()`, `disableProject()` | Status management |
+| ProjectController | shared/ProjectService | All methods | Consistent validation and error handling |
+
+### Performance Impact
+
+**Current State**:
+- Server: No caching, duplicate code execution
+- CLI: 30-second TTL caching, optimized project discovery
+- Web UI: Slower response times, missing project discovery
+
+**After Refactoring**:
+- Server: Leverages shared service caching, faster response times
+- Consistent performance across CLI, Web UI, and MCP interfaces
+- Reduced memory footprint through code deduplication
+
+### Migration Strategy
+
+1. **Phase 1**: Update server imports to use shared service directly
+2. **Phase 2**: Remove duplicate server project management files
+3. **Phase 3**: Add missing enable/disable endpoints to server routes
+4. **Phase 4**: Update Web UI to use enhanced server endpoints
+5. **Phase 5**: Integration testing to ensure feature parity across all interfaces
+
+### Risk Mitigation
+
+- **Breaking Changes**: Ensure API response format compatibility through gradual migration
+- **Performance**: Monitor shared service caching effectiveness in high-traffic scenarios
+- **Testing**: Comprehensive integration tests for CLI, Web UI, and MCP interfaces
