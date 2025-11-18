@@ -25,6 +25,10 @@
     "./templates/*": {
       "import": "./dist/templates/*",
       "types": "./dist/templates/*.d.ts"
+    },
+    "./tools/*": {
+      "import": "./dist/tools/*",
+      "types": "./dist/tools/*.d.ts"
     }
   },
   "scripts": {

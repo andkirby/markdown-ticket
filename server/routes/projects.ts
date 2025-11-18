@@ -47,5 +47,11 @@ export function createProjectRouter(projectController: ProjectController): Route
   // Update existing project
   router.put('/:code/update', (req, res) => projectController.updateProject(req, res));
 
+  // Enable project
+  router.put('/:code/enable', (req, res) => projectController.enableProject(req, res));
+
+  // Disable project
+  router.put('/:code/disable', (req, res) => projectController.disableProject(req, res));
+
   return router;
 }
