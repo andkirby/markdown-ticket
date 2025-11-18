@@ -247,18 +247,19 @@ export class ProjectService {
           const localConfig = this.getProjectConfig(projectData.project?.path || '');
 
           // Convert to Project interface, merging registry and local config data
+          // Follow hybrid priority pattern: administrative metadata (global priority), technical settings (local priority)
           const project: Project = {
             id: path.basename(file, '.toml'),
             project: {
-              name: localConfig?.project?.name || projectData.project?.name || 'Unknown Project',
-              code: projectData.project?.code || localConfig?.project?.code || '',
+              name: projectData.project?.name || localConfig?.project?.name || 'Unknown Project', // Global priority
+              code: projectData.project?.code || localConfig?.project?.code || '', // Global priority
               path: projectData.project?.path || '',
               configFile: path.join(projectData.project?.path || '', CONFIG_FILES.PROJECT_CONFIG),
-              startNumber: localConfig?.project?.startNumber || 1,
-              counterFile: localConfig?.project?.counterFile || CONFIG_FILES.COUNTER_FILE,
+              startNumber: localConfig?.project?.startNumber || 1, // Local priority
+              counterFile: localConfig?.project?.counterFile || CONFIG_FILES.COUNTER_FILE, // Local priority
               active: projectData.project?.active !== false,
-              description: localConfig?.project?.description || projectData.project?.description || '',
-              repository: projectData.project?.repository || localConfig?.project?.repository || ''
+              description: localConfig?.project?.description || projectData.project?.description || '', // Local priority
+              repository: localConfig?.project?.repository || projectData.project?.repository || '' // Local priority
             },
             metadata: {
               dateRegistered: projectData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
@@ -430,10 +431,17 @@ export class ProjectService {
   }
 
   /**
-   * Create or update local .mdt-config.toml file with proper ID field
+   * Create or update local .mdt-config.toml file with complete configuration
+   * Uses same template as Web UI to ensure consistency
    */
-  createOrUpdateLocalConfig(projectId: string, projectPath: string, name: string, code: string, description?: string): void {
+  createOrUpdateLocalConfig(projectId: string, projectPath: string, name: string, code: string, description?: string, repository?: string, globalOnly: boolean = false): void {
     try {
+      if (globalOnly) {
+        // Global-only mode: don't create local config file
+        this.log(`Global-only mode: skipping local config creation for ${projectId}`);
+        return;
+      }
+
       const configPath = path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG);
 
       let config: any;
@@ -442,17 +450,21 @@ export class ProjectService {
         const content = fs.readFileSync(configPath, 'utf8');
         config = toml.parse(content);
       } else {
-        // Create new config structure
+        // Create new config structure with all required fields
         config = { project: {} };
       }
 
-      // Update project section with proper ID
+      // Update project section with complete configuration matching Web UI template
       config.project = {
         ...config.project,
         id: projectId,
         name: name,
         code: code,
-        description: description || config.project.description || ''
+        path: config.project.path || 'docs/CRs', // Default CR path
+        startNumber: config.project.startNumber || 1,
+        counterFile: config.project.counterFile || CONFIG_FILES.COUNTER_FILE,
+        description: description || config.project.description || '',
+        repository: repository || config.project.repository || ''
       };
 
       // Write updated config
@@ -564,7 +576,7 @@ export class ProjectService {
   }
 
   /**
-   * Simple TOML serializer for project data
+   * TOML serializer matching server formatting
    */
   private objectToToml(obj: any): string {
     let toml = '';
@@ -576,6 +588,11 @@ export class ProjectService {
           toml += `${key} = "${value}"\n`;
         } else if (typeof value === 'boolean') {
           toml += `${key} = ${value}\n`;
+        } else if (typeof value === 'number') {
+          toml += `${key} = ${value}\n`;
+        } else if (value === undefined || value === null) {
+          // Skip undefined/null values
+          continue;
         } else {
           toml += `${key} = "${value}"\n`;
         }
@@ -583,7 +600,7 @@ export class ProjectService {
       toml += '\n';
     }
 
-    return toml;
+    return toml.trim() + '\n'; // Ensure single trailing newline
   }
 
   /**

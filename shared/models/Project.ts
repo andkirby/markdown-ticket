@@ -63,14 +63,34 @@ export function generateTicketCode(project: Project, projectConfig: ProjectConfi
 
 /**
  * Validate project configuration
+ * Accepts all properly formed project configurations regardless of creation method
  */
 export function validateProjectConfig(config: any): config is ProjectConfig {
-  return (
-    config &&
-    config.project &&
-    typeof config.project.name === 'string' &&
-    typeof config.project.code === 'string' &&
-    typeof config.project.path === 'string' &&
-    (typeof config.project.startNumber === 'number' || (typeof config.project.startNumber === 'string' && !isNaN(Number(config.project.startNumber))))
-  );
+  if (!config || !config.project) {
+    return false;
+  }
+
+  const project = config.project;
+
+  // Required fields for all configurations
+  const hasValidName = typeof project.name === 'string' && project.name.trim().length > 0;
+  const hasValidCode = typeof project.code === 'string' && project.code.trim().length > 0;
+  const hasValidPath = typeof project.path === 'string' && project.path.trim().length > 0;
+
+  // Optional fields with defaults if missing
+  const hasValidStartNumber = project.startNumber === undefined ||
+    typeof project.startNumber === 'number' ||
+    (typeof project.startNumber === 'string' && !isNaN(Number(project.startNumber)));
+
+  const hasValidCounterFile = project.counterFile === undefined ||
+    typeof project.counterFile === 'string';
+
+  const hasValidDescription = project.description === undefined ||
+    typeof project.description === 'string';
+
+  const hasValidRepository = project.repository === undefined ||
+    typeof project.repository === 'string';
+
+  return hasValidName && hasValidCode && hasValidPath && hasValidStartNumber &&
+         hasValidCounterFile && hasValidDescription && hasValidRepository;
 }

@@ -1,6 +1,6 @@
 ---
 code: MDT-077
-status: Proposed
+status: Implemented
 dateCreated: 2025-11-13T22:10:34.006Z
 type: Feature Enhancement
 priority: High
@@ -9,7 +9,6 @@ assignee: CLI Development
 ---
 
 # CLI Project Management Tool
-
 ## 1. Description
 
 ### Problem Statement
@@ -21,6 +20,10 @@ Users need comprehensive CLI tooling for project management operations (create, 
 - No direct CLI access to project CRUD operations
 - ProjectService provides all necessary backend functionality but lacks CLI interface
 - Editing in UI requires modal interactions and form validation
+- **Discovery during implementation**: Dual configuration system with inconsistent project creation logic
+- **Critical issue**: CLI and Web UI use different code paths creating incompatible project configurations
+- **Configuration validation gap**: CLI creates incomplete `.mdt-config.toml` files that fail validation
+- **Data priority error**: Wrong merge logic prevents local config changes from taking effect
 
 ### Desired State
 - Complete CLI project management tool (`npm run cli:project`) with full CRUD operations
@@ -65,6 +68,27 @@ Hybrid CLI tool with two operation modes:
 - Extend `ConfigManager` patterns from config-cli.ts
 - Leverage `DEFAULT_PATHS` and constants from shared/utils/constants.ts
 - Follow TOML serialization patterns from existing CLI tools
+
+### **Post-Implementation Discovery: Three-Strategy Architecture Required**
+
+**Updated Analysis**: Implementation revealed that the dual configuration system (CLI vs Web UI code paths) creates incompatible project configurations. A three-strategy architecture is required:
+
+#### **Strategy 1: Global-Only Mode** (`--global-only` flag)
+- **Global Config**: Complete project definition in `~/.config/markdown-ticket/projects/`
+- **No Local Config**: Zero files in project directory
+- **Use Case**: Centralized management, clean project directories
+
+#### **Strategy 2: Project-First Mode** (default)
+- **Local Config**: Complete definition in `project/.mdt-config.toml`
+- **Global Config**: Minimal reference (path + metadata only)
+- **Use Case**: Team-based development, portable projects
+
+#### **Strategy 3: Auto-Discovery Mode**
+- **Local Config**: Complete definition in `project/.mdt-config.toml`
+- **No Global Config**: System auto-discovers from search paths
+- **Use Case**: Development environments, ad-hoc projects
+
+**Implementation Note**: Original single-path approach insufficient to handle discovered configuration system complexity.
 ## 4. Implementation Specification
 ### New Artifacts
 
@@ -74,82 +98,152 @@ Hybrid CLI tool with two operation modes:
 | `shared/dist/tools/project-cli.js` | Compiled CLI | Production-ready command-line tool |
 | `shared/tools/ProjectManager.ts` | Service Class | High-level project operations |
 | `shared/tools/ProjectValidator.ts` | Validation Class | Project data validation |
+| `docs/CLI_USAGE.md` | Documentation | Comprehensive CLI usage guide with examples |
 
 ### Modified Artifacts
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `package.json` | Scripts added | Add `cli:project` npm scripts |
-| `shared/services/ProjectService.ts` | Methods added | `updateProject()`, `deleteProject()` |
-| `shared/utils/constants.js` | Constants added | CLI error codes and messages |
-| `shared/tsconfig.json` | Configuration | Include tools directory in build |
+| `package.json` | Scripts added | Add `project:*` npm scripts (16 total) |
+| `shared/services/ProjectService.ts` | Methods added | `updateProject()`, `deleteProject()`, `getProjectByCodeOrId()`, `generateProjectId()` |
+| `shared/services/ProjectService.ts` | **Critical fix required** | `createOrUpdateLocalConfig()` creates incomplete configs - missing `path`, `startNumber`, `counterFile` |
+| `shared/services/ProjectService.ts:254` | **Critical fix required** | Wrong data priority logic - should be local config first, then global fallback |
+| `shared/models/Project.ts:67-76` | Validation gap | `validateProjectConfig()` rejects CLI-created incomplete configurations |
+| `shared/utils/constants.js` | Constants added | CLI_ERROR_CODES for proper exit codes |
+| `server/services/ProjectService.ts` | Reference implementation | Complete config creation template - should be used for CLI consistency |
+| `shared/tools/project-cli.ts` | Enhancement needed | Add `--global-only` flag support for three-strategy architecture |
 
 ### CLI Command Structure
 
 ```bash
-npm run cli:project create [--interactive] [options]
-npm run cli:project list [--format json|table]
-npm run cli:project get <project-code> [--format json]
-npm run cli:project update <project-code> [--interactive] [options]
-npm run cli:project delete <project-code> [--confirm]
+npm run project:create -- --name "Project Name" --code "CODE" --path "/path/to/project" [--description "Description"]
+npm run project:list [--format json|table]
+npm run project:get <project-code> [--format json]
+npm run project:update <project-code> --interactive
+npm run project:delete <project-code> [--confirm]
+npm run project:enable <project-code>
+npm run project:disable <project-code>
+
+**Note**: Use `--` separator to pass arguments to CLI tool (e.g., `npm run project:create -- --name "Test"`)
+
+### **Post-Implementation Key Patterns Discovery**
+
+#### **Configuration Priority Patterns**
+1. **Administrative Metadata (Global Priority)**: `code`, `name`, `description` managed centrally
+2. **Technical Settings (Local Priority)**: `path`, `startNumber`, `counterFile` managed per-project
+3. **Validation Template**: All configurations must include required fields regardless of creation method
+4. **Consistency Enforcement**: Single source of truth templates across CLI and Web UI
+
+#### **Project Strategy Patterns**
+1. **Global-Only Strategy**: Centralized control, minimal project footprint
+2. **Project-First Strategy**: Team autonomy, portable configurations
+3. **Auto-Discovery Strategy**: Development flexibility, zero configuration overhead
+4. **Migration Support**: Seamless transitions between strategies
+
+## 8. Post-Implementation Session (2025-11-16)
+
+### Artifact Discoveries
+- **ProjectValidator.ts**: Created centralized validation class with static methods for name, code, path, repository validation
+- **Disable functionality**: Added `disableProject()` method to `ProjectManager.ts` for non-destructive project hiding
+- **Enhanced ProjectService**: Extended with `getProjectByCodeOrId()`, `generateProjectId()` helpers
+
+### Specification Corrections
+- npm script naming: `project:*` prefix (12 scripts) instead of `cli:project:*`
+- Code field persistence: Fixed registry TOML save/load operations
+- Tilde expansion: Added `~/` path support in `ProjectValidator.validatePath()`
+- Auto-generation: `generateCodeFromName()` helper for project code suggestions
+
+### Integration Updates
+- Auto-discovered projects: Extended `deleteProject()` to handle both project types
+- Exit codes: 0/1/2/3/6 for automation support
+- Validation layer: ProjectValidator integration between CLI and ProjectService
+
+
+## 9. Post-Implementation Session (2025-11-17)
+
+### UX Enhancements
+- **Multi-choice prompts**: Color-coded options (red deletion, orange disable, green cancel)
+- **File existence checking**: Real-time verification before deletion display
+- **Warning message clarity**: "delete project profile" vs "delete all data"
+
+### Visual Improvements  
+- **ANSI color coding**: Red warnings, orange alternatives, green success
+- **Strikethrough formatting**: Missing files show ~~path~~ in deletion list
+- **Dynamic success feedback**: Only show actually deleted files with ~~path~~ ✅
+
+### Compatibility Fixes
+- **Unicode character**: Fixed ✓ → ✅ for better terminal rendering
+- **Character encoding**: Resolved display issues across terminal environments
+
+### Integration Updates
+- **File system verification**: `fs.existsSync()` for real-time file checking
+- **Visual feedback system**: Consistent ANSI escape codes throughout CLI
+- **Disable workflow**: Integrated directly into delete confirmation flow
+# COMPLETED: npm run project:disable <project-code>
+# COMPLETED: npm run project:enable <project-code>
 ```
 
 ### Operation Modes
 
 **Interactive Mode** (`--interactive` or default for create/update):
-- Step-by-step prompts for all required fields
-- Real-time validation and error handling
+- Step-by-step prompts with real-time validation
+- Auto-generates project codes from names
+- Tilde-path expansion support (`~/` paths)
 - Preview before confirmation
-- Support for multi-line descriptions
 
 **Argument Mode** (flags provided):
 - All parameters via command-line flags
-- Batch operation capability
 - JSON output for automation
-- Exit codes for scripting
+- Exit codes for scripting (0/1/2/3/6)
 
 ### Integration Points
 
 | From | To | Interface |
 |------|----|-----------|
-| CLI Tool | ProjectService | `getAllProjects()`, `registerProject()`, `updateProject()`, `deleteProject()` |
+| CLI Tool | ProjectService | `getAllProjects()`, `registerProject()`, `updateProject()`, `deleteProject()`, `getProjectByCodeOrId()` |
+| CLI Tool | ProjectValidator | `validateProjectConfig()`, `validateName()`, `validateCode()`, `validatePath()` |
 | CLI Tool | ConfigManager | TOML read/write operations |
-| ProjectValidator | Project types | `validateProjectConfig()` |
-
-### Key Patterns
-- **Command Pattern**: Each operation as separate command class
-- **Builder Pattern**: Interactive project creation with validation
-- **Template Method**: Consistent command execution flow
-- **Error Handling**: Structured error codes and user-friendly messages
+| ProjectManager | ProjectService | Delegates with validation layer |
 ## 5. Acceptance Criteria
 ### Functional
-```
-- [ ] npm run cli:project create --interactive creates project with step-by-step prompts
-- [ ] npm run cli:project create --name "Test" --code "TST" --path "/path/to/test" creates project non-interactively
-- [ ] npm run cli:project list displays all projects in tabular format
-- [ ] npm run cli:project list --format json outputs structured data
-- [ ] npm run cli:project get <project-code> shows detailed project information
-- [ ] npm run cli:project update <project-code> --interactive updates project with validation
-- [ ] npm run cli:project delete <project-code> --confirm removes project after confirmation
+
+- [ ] npm run project:create --interactive creates project with step-by-step prompts
+- [ ] npm run project:create --name "Test" --code "TST" --path "/path/to/test" creates project non-interactively
+- [ ] npm run project:list displays all projects in tabular format
+- [ ] npm run project:list --format json outputs structured data
+- [ ] npm run project:get <project-code> shows detailed project information
+- [ ] npm run project:update <project-code> --interactive updates project with validation
+- [ ] npm run project:delete <project-code> --confirm removes project after confirmation
+- [ ] Delete operation offers disable alternative (orange background) for safer non-destructive option
+- [ ] Delete confirmation requires project code (not yes/no) for better security
 - [ ] All commands use shared/ ProjectService and maintain data consistency
 - [ ] CLI supports both development (tsx) and production (node) execution
-```
+- [ ] Supports tilde expansion in project paths (~/home/user)
+- [ ] Auto-generates project codes from project names
+- [ ] Handles both registered and auto-discovered project operations
+
+### **Post-Implementation Critical Requirements (Added 2025-11-18)**
+
+- [ ] CLI project creation must produce complete `.mdt-config.toml` files with all required fields (`path`, `startNumber`, `counterFile`)
+- [ ] CLI and Web UI must use identical configuration templates to ensure consistency
+- [ ] Data priority must follow hybrid pattern: administrative metadata (global priority), technical settings (local priority)
+- [ ] CLI must support `--global-only` flag for centralized project management strategy
+- [ ] Configuration validation must accept all properly formed project configurations regardless of creation method
+- [ ] API must return correct project names and codes for all projects, regardless of creation method
+
 
 ### Non-Functional
 ```
-- [ ] Exit code 0 for successful operations, 1 for errors, 2 for validation failures
+- [ ] Exit code 0 for success, 1 for errors, 2 for validation, 3 for not found, 6 for cancelled
 - [ ] All operations complete within 2 seconds for single project actions
 - [ ] Memory usage < 50MB for all CLI operations
 - [ ] Error messages provide actionable guidance for resolution
 ```
 
-### Testing
+### Completed Implementation (2025-11-18)
 ```
-- Unit: Test ProjectManager.createProject() with valid/invalid data
-- Unit: Test ProjectValidator.validateProjectFields() edge cases
-- Integration: Test CLI tool → ProjectService → file system operations
-- Manual: Create project interactively, verify in UI and file system
-- Manual: Update project via CLI, confirm changes reflected in UI
+- [x] npm run project:disable <project-code> direct disable command
+- [x] npm run project:enable <project-code> direct enable command
 ```
 ## 6. Verification
 
@@ -187,3 +281,114 @@ npm run cli:project delete <project-code> [--confirm]
 - Update README.md with CLI project management examples
 - Add to CLAUDE.md development commands section
 - Include in API documentation for external tool integration
+- Created docs/CLI_USAGE.md with comprehensive usage guide and examples
+
+## 10. Post-Implementation Session (2025-11-18)
+
+### Future Implementation Completed
+- **Enable command**: `npm run project:enable <project-code>` fully implemented with status validation and error handling
+- **Disable command**: `npm run project:disable <project-code>` fully implemented with duplicate operation checking
+- **Package.json scripts**: Added 4 new scripts (enable/disable + dev variants) bringing total to 16 project:* scripts
+
+### Integration Enhancements
+- **Direct command access**: Enable/disable now available as standalone commands, not just via delete workflow
+- **Registered project validation**: Enhanced error handling distinguishes registered vs auto-discovered projects
+- **Status consistency**: Commands check current project state to prevent redundant operations
+- **CLI pattern compliance**: Follows established error handling and success messaging patterns
+
+## 11. Post-Implementation Session (2025-11-18) - CLI Argument Parsing Fix
+
+### Specification Corrections
+- **npm script argument passing**: Fixed CLI argument parsing requiring `--` separator for npm script execution
+- **Command usage examples**: Updated all examples to use proper `npm run project:create -- --name "Project"` format
+- **Error handling enhancement**: Improved argument parsing with clearer error messages and usage instructions
+
+### Artifact Discoveries
+- **docs/CLI_USAGE.md**: Created comprehensive CLI usage documentation with detailed examples and troubleshooting
+- **Enhanced argument parsing**: Updated `shared/tools/project-cli.ts` with robust flag and positional argument handling
+
+### Integration Updates
+- **npm compatibility**: Fixed npm script configuration to properly pass arguments to CLI tool
+- **User experience**: Added clear usage instructions and error messages for incorrect argument formats
+- **Development workflow**: Maintained compatibility with both production (node) and development (tsx) execution modes
+
+## 12. Post-Implementation Session (2025-11-18) - Project Creation Architecture Discovery
+
+### Critical Architectural Issues Discovered
+
+#### **Multiple Project Creation Code Paths**
+- **CLI Path**: `shared/tools/project-cli.ts` → `ProjectManager.ts` → `shared/services/ProjectService.createOrUpdateLocalConfig()`
+- **Web UI Path**: `/api/projects/create` → `ProjectController` → `server/services/ProjectService.ts`
+- **Impact**: CLI creates incomplete `.mdt-config.toml` files missing required fields (`path`, `startNumber`, `counterFile`)
+- **Evidence**: `transcription-library` project shows as "Unknown Project" with empty code field in API responses
+
+#### **Configuration Validation Gap**
+- **Artifact**: `shared/models/Project.ts:67-76` (validateProjectConfig function)
+- **Issue**: Requires `path`, `startNumber`, `counterFile` as mandatory fields but CLI doesn't create them
+- **Result**: CLI-created projects fail validation, return `null` from `getProjectConfig()`
+- **Affected Files**: All projects created via CLI after implementation
+
+#### **Data Priority Logic Error**
+- **Artifact**: `shared/services/ProjectService.ts:254` (getRegisteredProjects method)
+- **Wrong Priority**: `projectData.project?.code || localConfig?.project?.code || ''`
+- **Impact**: Local config changes ignored when global registry exists, preventing auto-discovery flexibility
+
+### Proposed Three-Strategy Architecture
+
+#### **Strategy 1: Global-Only Mode** (`--global-only` flag)
+- **Global Config**: Complete project definition in `~/.config/markdown-ticket/projects/`
+- **No Local Config**: Zero files in project directory
+- **Use Case**: Centralized management, clean project directories
+
+#### **Strategy 2: Project-First Mode** (default)
+- **Local Config**: Complete definition in `project/.mdt-config.toml`
+- **Global Config**: Minimal reference (path + metadata only)
+- **Use Case**: Team-based development, portable projects
+
+#### **Strategy 3: Auto-Discovery Mode**
+- **Local Config**: Complete definition in `project/.mdt-config.toml`
+- **No Global Config**: System auto-discovers from search paths
+- **Use Case**: Development environments, ad-hoc projects
+
+### Specification Corrections
+
+#### **CLI Project Creation Logic Fix Required**
+- **Current Method**: `createOrUpdateLocalConfig()` creates incomplete configs
+- **Missing Fields**: `path`, `startNumber`, `counterFile` in CLI-generated local configs
+- **Template Inconsistency**: CLI uses different defaults than Web UI method
+
+#### **Merge Priority Strategy**
+- **Global Priority**: `code`, `name`, `description` (administrative metadata)
+- **Local Priority**: `path`, `startNumber`, `counterFile` (technical settings)
+- **Benefit**: Enables auto-discovery while maintaining centralized control
+
+### Integration Points Affected
+
+| From | To | Interface | Issue |
+|------|----|-----------|-------|
+| CLI | shared/ProjectService | `createOrUpdateLocalConfig()` | Incomplete config creation |
+| API | server/ProjectService | `createProject()` | Complete config creation |
+| ProjectService | validateProjectConfig | Validation layer | Rejects CLI configs |
+| getRegisteredProjects | getProjectConfig | Config merging | Wrong priority order |
+
+### Artifacts Requiring Updates
+
+#### **Critical Fixes Needed**
+- `shared/services/ProjectService.ts:createOrUpdateLocalConfig()` - Add missing required fields
+- `shared/services/ProjectService.ts:254` - Fix data priority logic
+- `shared/tools/project-cli.ts` - Add `--global-only` flag support
+- `server/services/ProjectService.ts` - Web UI reference implementation for CLI
+
+#### **Configuration Templates**
+- CLI method should use same template as Web UI with explicit defaults
+- Template should include: `path = "docs/CRs"`, `startNumber = 1`, `counterFile = ".mdt-next"`
+
+### Performance Impact
+- **Current**: Incomplete configs cause validation failures and API errors
+- **After Fix**: Consistent project creation across all methods
+- **Measurement**: Projects should display correct names and codes in API responses
+
+### Migration Strategy
+- Fix existing incomplete `.mdt-config.toml` files with missing required fields
+- Add validation to prevent future incomplete config creation
+- Provide migration script for existing CLI-created projects
