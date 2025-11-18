@@ -24,6 +24,7 @@ export interface ProjectCreateInput {
   path: string;
   description?: string;
   repository?: string;
+  globalOnly?: boolean; // Strategy 1: Global-only mode
 }
 
 /**
@@ -40,7 +41,7 @@ export class ProjectManager {
   }
 
   /**
-   * Create new project
+   * Create new project with three-strategy architecture support
    */
   async createProject(input: ProjectCreateInput): Promise<Project> {
     // Validate name
@@ -97,12 +98,12 @@ export class ProjectManager {
     // Generate unique project ID
     const projectId = await this.projectService.generateProjectId(name);
 
-    // Create project directory if needed
-    if (!fs.existsSync(projectPath)) {
+    // Create project directory if needed (unless global-only mode)
+    if (!input.globalOnly && !fs.existsSync(projectPath)) {
       fs.mkdirSync(projectPath, { recursive: true });
     }
 
-    // Build Project object
+    // Build Project object with complete configuration matching Web UI template
     const project: Project = {
       id: projectId,
       project: {
@@ -110,7 +111,7 @@ export class ProjectManager {
         name,
         code,
         path: projectPath,
-        configFile: path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG),
+        configFile: input.globalOnly ? '' : path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG),
         active: true,
         description,
         repository,
@@ -124,22 +125,36 @@ export class ProjectManager {
       }
     };
 
-    // Register project
+    // Register project (global config is always created)
     this.projectService.registerProject(project);
 
-    // Create or update local config
-    this.projectService.createOrUpdateLocalConfig(
-      projectId,
-      projectPath,
-      name,
-      code,
-      description
-    );
+    // Create local config based on strategy
+    if (!input.globalOnly) {
+      // Strategy 2: Project-First Mode (default) - Create local config
+      this.projectService.createOrUpdateLocalConfig(
+        projectId,
+        projectPath,
+        name,
+        code,
+        description,
+        repository,
+        false // not global-only
+      );
 
-    // Create docs/CRs directory
-    const crsPath = path.join(projectPath, 'docs', 'CRs');
-    if (!fs.existsSync(crsPath)) {
-      fs.mkdirSync(crsPath, { recursive: true });
+      // Create docs/CRs directory and counter file
+      const crsPath = path.join(projectPath, 'docs', 'CRs');
+      if (!fs.existsSync(crsPath)) {
+        fs.mkdirSync(crsPath, { recursive: true });
+      }
+
+      // Create counter file
+      const counterFile = path.join(projectPath, CONFIG_FILES.COUNTER_FILE);
+      if (!fs.existsSync(counterFile)) {
+        fs.writeFileSync(counterFile, '1', 'utf8');
+      }
+    } else {
+      // Strategy 1: Global-Only Mode - Skip local config creation
+      console.log(`Global-only mode: Project registered only in global registry`);
     }
 
     return project;
@@ -228,8 +243,32 @@ export class ProjectManager {
     // Load project first
     const project = await this.getProject(codeOrId);
 
+    // Check if already inactive
+    if (!project.project.active) {
+      return project; // Already disabled
+    }
+
     // Update to set active: false
     await this.updateProject(codeOrId, { active: false });
+
+    // Return updated project
+    return this.getProject(codeOrId);
+  }
+
+  /**
+   * Enable project (set active: true)
+   */
+  async enableProject(codeOrId: string): Promise<Project> {
+    // Load project first
+    const project = await this.getProject(codeOrId);
+
+    // Check if already active
+    if (project.project.active) {
+      return project; // Already enabled
+    }
+
+    // Update to set active: true
+    await this.updateProject(codeOrId, { active: true });
 
     // Return updated project
     return this.getProject(codeOrId);

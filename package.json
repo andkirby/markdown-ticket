@@ -46,12 +46,16 @@
     "project:get": "node shared/dist/tools/project-cli.js get",
     "project:update": "node shared/dist/tools/project-cli.js update",
     "project:delete": "node shared/dist/tools/project-cli.js delete",
+    "project:enable": "node shared/dist/tools/project-cli.js enable",
+    "project:disable": "node shared/dist/tools/project-cli.js disable",
     "project:dev": "tsx shared/tools/project-cli.ts",
     "project:create:dev": "tsx shared/tools/project-cli.ts create",
     "project:list:dev": "tsx shared/tools/project-cli.ts list",
     "project:get:dev": "tsx shared/tools/project-cli.ts get",
     "project:update:dev": "tsx shared/tools/project-cli.ts update",
-    "project:delete:dev": "tsx shared/tools/project-cli.ts delete"
+    "project:delete:dev": "tsx shared/tools/project-cli.ts delete",
+    "project:enable:dev": "tsx shared/tools/project-cli.ts enable",
+    "project:disable:dev": "tsx shared/tools/project-cli.ts disable"
   },
   "dependencies": {
     "@mdt/shared": "*",

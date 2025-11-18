@@ -82,23 +82,36 @@ class ProjectCommands {
       if (args.flags.interactive || (!args.positional.length && !args.flags.name)) {
         input = await this.interactiveCreate();
       } else {
-        // Argument mode
+        // Argument mode - handle both flag and positional arguments
         const name = (typeof args.flags.name === 'string' ? args.flags.name : args.positional[0]);
         if (!name) {
-          throw new ProjectError('Project name is required', CLI_ERROR_CODES.VALIDATION_ERROR);
+          throw new ProjectError('Project name is required. Use: npm run project:create -- --name "Project Name" --path "/path/to/project"', CLI_ERROR_CODES.VALIDATION_ERROR);
         }
 
-        const projectPath = (typeof args.flags.path === 'string' ? args.flags.path : args.positional[1]);
+        // Handle path from flag or positional argument
+        const projectPath = (typeof args.flags.path === 'string' ? args.flags.path :
+                           (args.positional.length > 1 && args.positional[1].startsWith('/') ? args.positional[1] : undefined));
+
         if (!projectPath) {
-          throw new ProjectError('Project path is required', CLI_ERROR_CODES.VALIDATION_ERROR);
+          throw new ProjectError('Project path is required. Use: npm run project:create -- --name "Project Name" --path "/path/to/project"', CLI_ERROR_CODES.VALIDATION_ERROR);
+        }
+
+        // Handle code - prefer flag over positional, but don't use positional if it looks like a path
+        let code: string | undefined;
+        if (typeof args.flags.code === 'string' && args.flags.code) {
+          code = args.flags.code;
+        } else if (args.positional.length > 1 && !args.positional[1].startsWith('/') && args.positional[1].length <= 5) {
+          // Second positional might be a code (short, not a path)
+          code = args.positional[1];
         }
 
         input = {
-          name,
-          code: typeof args.flags.code === 'string' ? args.flags.code : undefined,
-          path: projectPath,
-          description: typeof args.flags.description === 'string' ? args.flags.description : undefined,
-          repository: typeof args.flags.repository === 'string' ? args.flags.repository : undefined
+          name: name.trim(),
+          code: code?.trim(),
+          path: projectPath.trim(),
+          description: typeof args.flags.description === 'string' ? args.flags.description.trim() : undefined,
+          repository: typeof args.flags.repository === 'string' ? args.flags.repository.trim() : undefined,
+          globalOnly: args.flags['global-only'] === true
         };
       }
 
@@ -379,6 +392,111 @@ class ProjectCommands {
   }
 
   /**
+   * Enable project command
+   */
+  async enableCommand(args: ParsedArgs): Promise<void> {
+    try {
+      const codeOrId = args.positional[0];
+      if (!codeOrId) {
+        throw new ProjectError('Project code or ID is required', CLI_ERROR_CODES.VALIDATION_ERROR);
+      }
+
+      // Get project to show details
+      const project = await this.manager.getProject(codeOrId);
+
+      console.log('\nProject to be enabled:');
+      console.log(`  ID: ${project.id}`);
+      console.log(`  Name: ${project.project.name}`);
+      console.log(`  Path: ${project.project.path}`);
+      console.log(`  Current Status: ${project.project.active ? '\x1b[32mActive\x1b[0m' : '\x1b[31mInactive\x1b[0m'}`);
+
+      // Check if already active
+      if (project.project.active) {
+        console.log('\n⚠️  Project is already active');
+        return;
+      }
+
+      // Confirm action
+      const confirm = await this.prompt.question('\nEnable this project? (y/n): ');
+      if (confirm.toLowerCase() !== 'y') {
+        throw new ProjectError('Enable cancelled by user', CLI_ERROR_CODES.USER_CANCELLED);
+      }
+
+      // Enable project
+      await this.manager.enableProject(codeOrId);
+
+      console.log('\n✅ Project enabled successfully!');
+      console.log('  - Project marked as active');
+      console.log('  - Project will appear in UI and CLI listings');
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        throw new ProjectError(error.message, CLI_ERROR_CODES.NOT_FOUND, error);
+      }
+      if (error instanceof ProjectError) {
+        throw error;
+      }
+      throw new ProjectError(
+        `Failed to enable project: ${error instanceof Error ? error.message : String(error)}`,
+        CLI_ERROR_CODES.GENERAL_ERROR,
+        error instanceof Error ? error : undefined
+      );
+    }
+  }
+
+  /**
+   * Disable project command
+   */
+  async disableCommand(args: ParsedArgs): Promise<void> {
+    try {
+      const codeOrId = args.positional[0];
+      if (!codeOrId) {
+        throw new ProjectError('Project code or ID is required', CLI_ERROR_CODES.VALIDATION_ERROR);
+      }
+
+      // Get project to show details
+      const project = await this.manager.getProject(codeOrId);
+
+      console.log('\nProject to be disabled:');
+      console.log(`  ID: ${project.id}`);
+      console.log(`  Name: ${project.project.name}`);
+      console.log(`  Path: ${project.project.path}`);
+      console.log(`  Current Status: ${project.project.active ? '\x1b[32mActive\x1b[0m' : '\x1b[31mInactive\x1b[0m'}`);
+
+      // Check if already inactive
+      if (!project.project.active) {
+        console.log('\n⚠️  Project is already inactive');
+        return;
+      }
+
+      // Confirm action
+      const confirm = await this.prompt.question('\nDisable this project? (y/n): ');
+      if (confirm.toLowerCase() !== 'y') {
+        throw new ProjectError('Disable cancelled by user', CLI_ERROR_CODES.USER_CANCELLED);
+      }
+
+      // Disable project
+      await this.manager.disableProject(codeOrId);
+
+      console.log('\n✅ Project disabled successfully!');
+      console.log('  - Project marked as inactive');
+      console.log('  - Project will be hidden from UI and CLI listings');
+      console.log('  - All files and data preserved');
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        throw new ProjectError(error.message, CLI_ERROR_CODES.NOT_FOUND, error);
+      }
+      if (error instanceof ProjectError) {
+        throw error;
+      }
+      throw new ProjectError(
+        `Failed to disable project: ${error instanceof Error ? error.message : String(error)}`,
+        CLI_ERROR_CODES.GENERAL_ERROR,
+        error instanceof Error ? error : undefined
+      );
+    }
+  }
+
+  /**
    * Interactive project creation
    */
   private async interactiveCreate(): Promise<ProjectCreateInput> {
@@ -520,6 +638,12 @@ class ProjectCLI {
         case 'delete':
           await this.commands.deleteCommand(args);
           break;
+        case 'enable':
+          await this.commands.enableCommand(args);
+          break;
+        case 'disable':
+          await this.commands.disableCommand(args);
+          break;
         default:
           console.error(`Unknown command: ${args.command}`);
           this.showUsage();
@@ -609,6 +733,8 @@ Commands:
   get <code|id>       Get project details
   update <code|id>    Update project
   delete <code|id>    Delete project
+  enable <code|id>    Enable project
+  disable <code|id>   Disable project
 
 Create Options:
   --name <name>           Project name
@@ -616,6 +742,7 @@ Create Options:
   --path <path>           Project path
   --description <text>    Project description (optional)
   --repository <url>      Repository URL (optional)
+  --global-only           Global-only mode (no local config files)
   --interactive, -i       Interactive mode
 
 List Options:
@@ -638,12 +765,23 @@ Delete Options:
 Global Options:
   --help, -h              Show this help message
 
-Examples:
+NPM Scripts Usage:
+  # Use double -- to separate npm arguments from CLI arguments
+  npm run project:create -- --name "My Project" --code MP --path ~/projects/my-project
+  npm run project:create -- --name "My Project" --code MP --path ~/projects/my-project --global-only
+  npm run project:list -- --json
+  npm run project:get -- MP
+  npm run project:update -- MP --description "Updated description"
+
+Direct CLI Usage:
   # Create project interactively
   project create --interactive
 
-  # Create project with arguments
+  # Create project with arguments (Project-First Strategy)
   project create --name "My Project" --code MP --path ~/projects/my-project
+
+  # Create project with global-only mode (Strategy 1)
+  project create --name "My Project" --code MP --path ~/projects/my-project --global-only
 
   # List all projects
   project list
@@ -656,6 +794,12 @@ Examples:
 
   # Delete project
   project delete MP
+
+  # Enable project
+  project enable MP
+
+  # Disable project
+  project disable MP
 `);
   }
 }
