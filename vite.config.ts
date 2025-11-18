@@ -393,7 +393,7 @@ export default defineConfig(({ mode }) => {
         'hungry-days-check.loca.lt',
         '.loca.lt',
         '.trycloudflare.com',
-        'jamir-geochronologic-jocelynn.ngrok-free.app'],
+        '.ngrok-free.app'],
       proxy: {
         '/api': {
           target: backendUrl,
