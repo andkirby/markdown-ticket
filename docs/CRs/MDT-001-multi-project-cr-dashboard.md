@@ -6,7 +6,7 @@ dateCreated: 2025-08-31T00:00:00.000Z
 type: Feature Enhancement
 priority: High
 phaseEpic: Phase A (Foundation)
-lastModified: 2025-09-03T19:02:02.079Z
+lastModified: 2025-11-18T00:12:59.351Z
 implementationDate: 2025-09-03T00:00:00.000Z
 implementationNotes: Complete multi-project CR dashboard with API backend and React frontend
 ---
@@ -170,7 +170,6 @@ No database required - file-based storage maintained for CRs and configuration.
 - [ ] Cross-browser compatibility testing (Chrome, Firefox, Safari) (future enhancement)
 
 ## 5. Implementation Notes
-
 ### Implementation Summary
 **Implementation Date**: 2025-09-03  
 **Implementation Status**: ✅ Complete and fully functional  
@@ -370,6 +369,18 @@ POST   /api/projects/register         # Register new project
 - **Future Capabilities**: Architecture supports advanced features like analytics and automation
 
 The multi-project CR management dashboard successfully achieves all primary objectives while establishing a solid foundation for future enhancements. The implementation balances immediate usability with long-term extensibility, providing both developers and project managers with powerful tools for managing Change Requests at scale.
+
+### Post-Implementation Session 2025-11-18
+
+#### Artifact Discovery: Inactive Project Filtering
+- **server/controllers/ProjectController.ts:129-138** - Added `project.project.active === true` filter in `getAllProjects()` method
+- **Frontend ProjectSelector Component** - Now receives only active projects via API filtering
+- **API Response** - Reduced from 14 to 13 projects (inactive "Ollama MCP" project excluded)
+
+#### Specification Correction
+- **Original Gap**: This document specified multi-project discovery but did not specify inactive project filtering
+- **Implementation**: Backend filtering ensures inactive projects don't appear in project selector UI
+- **User Experience**: Simplified project selection by showing only active projects
 
 ## 6. References
 

@@ -129,7 +129,9 @@ export class ProjectController {
   async getAllProjects(req: Request, res: Response): Promise<void> {
     try {
       const projects = await this.projectService.getAllProjects();
-      res.json(projects);
+      // Filter out inactive projects (MDT-001)
+      const activeProjects = projects.filter(project => project.project.active === true);
+      res.json(activeProjects);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get projects' });
     }
