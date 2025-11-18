@@ -785,4 +785,86 @@ export class ProjectService {
 
     return `${baseId}-${counter}`;
   }
+
+  /**
+   * Get system directories for browsing
+   * @param path - Optional path to list directories from (defaults to user home)
+   * @returns Directory listing with current path, parent path, and directories
+   */
+  async getSystemDirectories(path?: string): Promise<{
+    currentPath: string;
+    parentPath: string;
+    directories: Array<{
+      name: string;
+      path: string;
+      isDirectory: boolean;
+    }>;
+  }> {
+    const fs = await import('fs/promises');
+    const pathModule = await import('path');
+    const os = await import('os');
+
+    // Default to user home directory if no path provided
+    const targetPath = path || os.homedir();
+
+    // Resolve the path to an absolute path
+    const resolvedPath = pathModule.resolve(targetPath);
+
+    // Security check: ensure path exists and is accessible
+    try {
+      const stats = await fs.stat(resolvedPath);
+      if (!stats.isDirectory()) {
+        throw new Error('Path is not a directory');
+      }
+    } catch (error) {
+      throw new Error('Directory not found or not accessible');
+    }
+
+    // Get parent directory
+    const parentPath = pathModule.dirname(resolvedPath);
+
+    // Read directory contents
+    let entries;
+    try {
+      entries = await fs.readdir(resolvedPath);
+    } catch (error) {
+      throw new Error('Access denied to directory');
+    }
+
+    // Filter and process directory entries
+    const directories: Array<{
+      name: string;
+      path: string;
+      isDirectory: boolean;
+    }> = [];
+
+    for (const entry of entries) {
+      const entryPath = pathModule.join(resolvedPath, entry);
+
+      try {
+        const stats = await fs.stat(entryPath);
+
+        // Only include directories, exclude hidden ones (starting with .)
+        if (stats.isDirectory() && !entry.startsWith('.')) {
+          directories.push({
+            name: entry,
+            path: entryPath,
+            isDirectory: true
+          });
+        }
+      } catch (error) {
+        // Skip entries we can't access
+        continue;
+      }
+    }
+
+    // Sort directories alphabetically
+    directories.sort((a, b) => a.name.localeCompare(b.name));
+
+    return {
+      currentPath: resolvedPath,
+      parentPath: parentPath === resolvedPath ? '' : parentPath,
+      directories
+    };
+  }
 }
