@@ -111,7 +111,9 @@ class ProjectCommands {
           path: projectPath.trim(),
           description: typeof args.flags.description === 'string' ? args.flags.description.trim() : undefined,
           repository: typeof args.flags.repository === 'string' ? args.flags.repository.trim() : undefined,
-          globalOnly: args.flags['global-only'] === true
+          globalOnly: args.flags['global-only'] === true,
+          createProjectPath: args.flags['create-project-path'] === true,
+          ticketsPath: typeof args.flags['tickets-path'] === 'string' ? args.flags['tickets-path'].trim() : undefined
         };
       }
 
@@ -520,12 +522,23 @@ class ProjectCommands {
     const description = await this.prompt.question('Description (optional): ');
     const repository = await this.prompt.question('Repository URL (optional): ');
 
+    let ticketsPath: string | undefined;
+    const ticketsPathInput = await this.prompt.question('Tickets path (relative to project root, default: docs/CRs): ');
+    if (ticketsPathInput.trim()) {
+      ticketsPath = ticketsPathInput.trim();
+    }
+
+    const createProjectPathInput = await this.prompt.question('Create project directory if it doesn\'t exist? (y/n, default: n): ');
+    const createProjectPath = createProjectPathInput.toLowerCase().trim() === 'y' || createProjectPathInput.toLowerCase().trim() === 'yes';
+
     return {
       name,
       code: code.trim() || undefined,
       path: projectPath,
       description: description.trim() || undefined,
-      repository: repository.trim() || undefined
+      repository: repository.trim() || undefined,
+      createProjectPath,
+      ticketsPath
     };
   }
 
@@ -743,6 +756,8 @@ Create Options:
   --description <text>    Project description (optional)
   --repository <url>      Repository URL (optional)
   --global-only           Global-only mode (no local config files)
+  --create-project-path   Auto-create project directory if it doesn't exist
+  --tickets-path <path>   Tickets path relative to project root (default: docs/CRs)
   --interactive, -i       Interactive mode
 
 List Options:
@@ -769,6 +784,7 @@ NPM Scripts Usage:
   # Use double -- to separate npm arguments from CLI arguments
   npm run project:create -- --name "My Project" --code MP --path ~/projects/my-project
   npm run project:create -- --name "My Project" --code MP --path ~/projects/my-project --global-only
+  npm run project:create -- --name "My Project" --code MP --path ~/projects/my-project --create-project-path --tickets-path "docs/tickets"
   npm run project:list -- --json
   npm run project:get -- MP
   npm run project:update -- MP --description "Updated description"
@@ -782,6 +798,9 @@ Direct CLI Usage:
 
   # Create project with global-only mode (Strategy 1)
   project create --name "My Project" --code MP --path ~/projects/my-project --global-only
+
+  # Create project with auto-directory creation and custom tickets path
+  project create --name "My Project" --code MP --path ~/projects/my-project --create-project-path --tickets-path "docs/tickets"
 
   # List all projects
   project list

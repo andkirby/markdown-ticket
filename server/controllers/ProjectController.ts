@@ -27,6 +27,7 @@ interface CreateProjectData {
   crsPath?: string;
   description?: string;
   repositoryUrl?: string;
+  createProjectPath?: boolean; // Auto-create project directory if it doesn't exist
 }
 
 interface UpdateProjectData {
