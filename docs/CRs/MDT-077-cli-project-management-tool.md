@@ -586,3 +586,33 @@ npm run project:create -- \
 - **Breaking Changes**: Ensure API response format compatibility through gradual migration
 - **Performance**: Monitor shared service caching effectiveness in high-traffic scenarios
 - **Testing**: Comprehensive integration tests for CLI, Web UI, and MCP interfaces
+
+## 15. Post-Implementation Session (2025-11-19) - Registry File Reference Enhancement
+
+### Registry File Management Fixes
+
+#### **Project ID Consistency Enhancement**
+- **Artifact Reference**: `shared/tools/ProjectManager.ts` (project creation logic)
+- **Issue**: Project creation used name-based IDs ("transcriptionaudio") while listing used directory-based IDs ("transcription-content")
+- **Fix**: Changed ID generation to use directory names consistently across all operations
+- **User Impact**: Projects now have consistent IDs whether created via CLI or viewed in listing
+
+#### **Registry File Reference Storage**
+- **Artifact Reference**: `shared/models/Project.ts` (Project interface)
+- **Enhancement**: Added `registryFile` field to store exact path to project's global config file
+- **User Impact**: System can find project files even when registry files are renamed or moved
+
+#### **Deletion Operation Improvements**
+- **Artifact Reference**: `shared/services/ProjectService.ts` (project deletion logic)
+- **Enhancement**: Updated deletion to use stored file references instead of guessing filenames
+- **User Impact**: Project deletion works correctly even when registry files have custom names
+
+#### **CLI Display Accuracy**
+- **Artifact Reference**: `shared/tools/project-cli.ts` (user interface)
+- **Enhancement**: Deletion confirmation shows actual file names that will be deleted
+- **User Impact**: Users see exactly which files will be removed before confirming deletion
+
+#### **Script-Friendly Operations**
+- **Artifact Reference**: `shared/tools/project-cli.ts` (command-line interface)
+- **Enhancement**: Improved `--force` flag for automated project deletion without interactive prompts
+- **User Impact**: Scripts can delete projects reliably without user intervention
