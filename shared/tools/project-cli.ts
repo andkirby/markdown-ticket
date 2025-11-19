@@ -302,7 +302,7 @@ class ProjectCommands {
       // Get project to show details
       const project = await this.manager.getProject(codeOrId);
 
-      // Confirm deletion
+      // Confirm deletion (skip with --force flag)
       if (!args.flags.force) {
         console.log('\nProject to be deleted:');
         console.log(`  ID: ${project.id}`);
@@ -318,7 +318,7 @@ class ProjectCommands {
         console.log(`\n\x1b[1;31mFiles that will be removed:\x1b[0m`);
 
         // Check if files actually exist and apply strikethrough if not
-        const registryFile = path.join(process.env.HOME || '', '.config', 'markdown-ticket', 'projects', `${project.id}.toml`);
+        const registryFile = project.registryFile || path.join(process.env.HOME || '', '.config', 'markdown-ticket', 'projects', `${project.id}.toml`);
         const configFile = path.join(project.project.path, '.mdt-config.toml');
         const counterFile = path.join(project.project.path, '.mdt-next');
 
@@ -326,7 +326,7 @@ class ProjectCommands {
         const configExists = fs.existsSync(configFile);
         const counterExists = fs.existsSync(counterFile);
 
-        console.log(`  - Registry entry: ${!registryExists ? `\x1b[9m~/.config/markdown-ticket/projects/${project.id}.toml\x1b[0m` : `~/.config/markdown-ticket/projects/${project.id}.toml`}`);
+        console.log(`  - Registry entry: ${!registryExists ? `\x1b[9m${registryFile.replace(process.env.HOME || '', '~')}\x1b[0m` : registryFile.replace(process.env.HOME || '', '~')}`);
         console.log(`  - Project config: ${!configExists ? `\x1b[9m${project.project.path}/.mdt-config.toml\x1b[0m` : `${project.project.path}/.mdt-config.toml`}`);
         console.log(`  - Counter file: ${!counterExists ? `\x1b[9m${project.project.path}/.mdt-next\x1b[0m` : `${project.project.path}/.mdt-next`}`);
 
@@ -365,7 +365,8 @@ class ProjectCommands {
 
           console.log('\n✅ Project deleted successfully!');
           if (deletedRegistry) {
-            console.log(`  - Registry entry: \x1b[9m~/.config/markdown-ticket/projects/${project.id}.toml\x1b[0m \x1b[32m✅\x1b[0m`);
+            const registryFileName = (project.registryFile || '').replace(process.env.HOME || '', '~');
+            console.log(`  - Registry entry: \x1b[9m${registryFileName}\x1b[0m \x1b[32m✅\x1b[0m`);
           }
           if (deletedConfig) {
             console.log(`  - Project config: \x1b[9m${project.project.path}/.mdt-config.toml\x1b[0m \x1b[32m✅\x1b[0m`);
@@ -377,6 +378,15 @@ class ProjectCommands {
         }
 
         throw new ProjectError('Deletion cancelled: invalid option', CLI_ERROR_CODES.USER_CANCELLED);
+      } else {
+        // Immediate deletion with --force or --immediate flag
+        await this.manager.deleteProject(codeOrId, true);
+
+        console.log('\n✅ Project deleted successfully!');
+        console.log(`  - Registry entry: ${(project.registryFile || '').replace(process.env.HOME || '', '~')}`);
+        console.log(`  - Project config: ${project.project.path}/.mdt-config.toml`);
+        console.log(`  - Counter file: ${project.project.path}/.mdt-next`);
+        return;
       }
     } catch (error) {
       if (error instanceof Error && error.message.includes('not found')) {
@@ -813,6 +823,9 @@ Direct CLI Usage:
 
   # Delete project
   project delete MP
+
+  # Delete project without confirmation
+  project delete MP --force
 
   # Enable project
   project enable MP

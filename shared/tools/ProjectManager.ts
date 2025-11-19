@@ -109,8 +109,8 @@ export class ProjectManager {
       ticketsPath = ticketsPathResult.normalized!;
     }
 
-    // Generate unique project ID
-    const projectId = await this.projectService.generateProjectId(name);
+    // Generate unique project ID from directory name for consistency with listing
+    const projectId = await this.projectService.generateProjectId(path.basename(projectPath));
 
     // Create project directory if needed (if createProjectPath flag is set)
     if (input.createProjectPath && !input.globalOnly && !fs.existsSync(projectPath)) {

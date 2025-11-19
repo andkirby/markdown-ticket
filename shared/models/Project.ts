@@ -27,6 +27,7 @@ export interface Project {
   };
   autoDiscovered?: boolean;
   configPath?: string;
+  registryFile?: string; // Exact path to the registry file (for CLI operations)
 }
 
 export interface ProjectConfig {
