@@ -249,7 +249,7 @@ export class ProjectService {
           // Convert to Project interface, merging registry and local config data
           // Follow hybrid priority pattern: administrative metadata (global priority), technical settings (local priority)
           const project: Project = {
-            id: path.basename(file, '.toml'),
+            id: path.basename(projectData.project!.path),
             project: {
               name: projectData.project?.name || localConfig?.project?.name || 'Unknown Project', // Global priority
               code: projectData.project?.code || localConfig?.project?.code || '', // Global priority
@@ -265,7 +265,8 @@ export class ProjectService {
               dateRegistered: projectData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
               lastAccessed: projectData.metadata?.lastAccessed || new Date().toISOString().split('T')[0],
               version: projectData.metadata?.version || '1.0.0'
-            }
+            },
+            registryFile: projectPath // Store exact registry file path for CLI operations
           };
 
           projects.push(project);
@@ -682,30 +683,69 @@ export class ProjectService {
   }
 
   /**
+   * Find registry file for project by ID or code (filename-agnostic)
+   */
+  private async findRegistryFile(projectIdOrCode: string): Promise<{ filePath: string; projectData: any } | null> {
+    try {
+      if (!fs.existsSync(this.projectsDir)) {
+        return null;
+      }
+
+      const files = fs.readdirSync(this.projectsDir).filter(file => file.endsWith('.toml'));
+
+      for (const file of files) {
+        const filePath = path.join(this.projectsDir, file);
+        try {
+          const content = fs.readFileSync(filePath, 'utf8');
+          const projectData = toml.parse(content);
+
+          // Check if this file matches the project by ID or code
+          const projectPath = projectData.project?.path;
+          const derivedId = projectPath ? path.basename(projectPath) : path.basename(file, '.toml');
+          const projectCode = projectData.project?.code;
+
+          if (derivedId === projectIdOrCode || projectCode === projectIdOrCode) {
+            return { filePath, projectData };
+          }
+        } catch (parseError) {
+          // Skip invalid files
+          continue;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      throw new Error(`Failed to find registry file for project ${projectIdOrCode}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
    * Remove project from registry
    */
   async deleteProject(projectId: string, deleteLocalConfig: boolean = true): Promise<void> {
     try {
-      const projectFile = path.join(this.projectsDir, `${projectId}.toml`);
       let projectPath: string | undefined;
+      let registryFile: string | undefined;
 
-      // Try to read registry file if it exists
-      if (fs.existsSync(projectFile)) {
-        const content = fs.readFileSync(projectFile, 'utf8');
-        const projectData = toml.parse(content);
-        projectPath = projectData.project?.path;
+      // Get project from in-memory data to find the exact registry file path
+      const allProjects = await this.getAllProjects();
+      const project = allProjects.find(p => p.id === projectId || p.project.code === projectId);
 
-        // Delete registry file
-        fs.unlinkSync(projectFile);
-        this.log(`Deleted registry file for project ${projectId}`);
-      } else {
-        // Auto-discovered project - try to find path from local config
-        this.log(`Project ${projectId} not in registry, checking for auto-discovered project`);
-        const allProjects = await this.getAllProjects();
-        const project = allProjects.find(p => p.id === projectId);
-        if (project) {
-          projectPath = project.project.path;
+      if (project) {
+        projectPath = project.project.path;
+        registryFile = project.registryFile; // Use exact registry file path from discovery
+
+        if (registryFile && fs.existsSync(registryFile)) {
+          // Delete the exact registry file
+          fs.unlinkSync(registryFile);
+          this.log(`Deleted registry file for project ${projectId}: ${path.basename(registryFile)}`);
+        } else {
+          this.log(`Registry file not found for project ${projectId}: ${registryFile || 'no path stored'}`);
         }
+      } else {
+        // Auto-discovered project not in registry
+        this.log(`Project ${projectId} not found in registry`);
+        // For auto-discovered projects, we don't have registry files to delete
       }
 
       // Always delete local project files (.mdt-config.toml and .mdt-next)
