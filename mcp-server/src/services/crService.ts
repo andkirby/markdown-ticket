@@ -1,3 +1,8 @@
+/**
+ * This is a CR/ticket manager
+ *
+ * TODO it shall be moved into shared
+ */
 import * as fs from 'fs-extra';
 import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
@@ -7,6 +12,7 @@ import { CRStatus } from '@mdt/shared/models/Types.js';
 import { Project } from '@mdt/shared/models/Project.js';
 // @ts-ignore
 import { ProjectService } from '@mdt/shared/services/ProjectService.js';
+import { getTicketsPath } from '@mdt/shared/models/Project.js';
 // Use shared services for consistency
 // @ts-ignore
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
@@ -24,7 +30,8 @@ export class CRService {
         return path.resolve(project.project.path, 'docs/CRs');
       }
 
-      const crPath = config.project.path || 'docs/CRs';
+      // Use new helper function with backward compatibility
+      const crPath = getTicketsPath(config, 'docs/CRs');
       return path.resolve(project.project.path, crPath);
     } catch (error) {
       console.warn(`Failed to get CR path config for project ${project.id}, using default:`, error);
@@ -123,9 +130,7 @@ export class CRService {
         const writtenContent = await readFile(filePath, 'utf-8');
       }
 
-      // Update counter
-      await this.updateCounter(project, nextNumber + 1);
-
+      
       console.error(`✅ Created CR ${crKey}: ${data.title}`);
       return ticket;
     } catch (error) {
@@ -294,19 +299,8 @@ export class CRService {
         }
       }
       
-      // Also check counter file
-      let counterNumber = project.project.startNumber || 1;
-      const counterPath = path.join(path.dirname(project.configPath || project.project.path), project.project.counterFile || '.mdt-next');
-      if (await fs.pathExists(counterPath)) {
-        const content = await readFile(counterPath, 'utf-8');
-        const number = parseInt(content.trim(), 10);
-        if (!isNaN(number)) {
-          counterNumber = number;
-        }
-      }
-      
-      // Use the higher of the two (existing files + 1, or counter file)
-      const nextNumber = Math.max(highestExistingNumber + 1, counterNumber);
+      // Use file scanning only (counter file dependency removed per MDT-071)
+      const nextNumber = Math.max(highestExistingNumber + 1, project.project.startNumber || 1);
       
       return nextNumber;
     } catch (error) {
@@ -315,15 +309,7 @@ export class CRService {
     }
   }
 
-  private async updateCounter(project: Project, newValue: number): Promise<void> {
-    try {
-      const counterPath = path.join(path.dirname(project.configPath || project.project.path), project.project.counterFile || '.mdt-next');
-      await fs.outputFile(counterPath, newValue.toString(), 'utf-8');
-    } catch (error) {
-      console.warn(`Failed to update counter file: ${(error as Error).message}`);
-    }
-  }
-
+  
   private async loadCR(project: Project, filename: string): Promise<Ticket | null> {
     try {
       const filePath = path.join(project.project.path, filename);

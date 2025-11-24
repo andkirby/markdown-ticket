@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import toml from 'toml';
 import os from 'os';
-import { Project, ProjectConfig, validateProjectConfig } from '../models/Project.js';
+import { Project, ProjectConfig, validateProjectConfig, getTicketsPath, isLegacyConfig, migrateLegacyConfig } from '../models/Project.js';
 import { Ticket } from '../models/Ticket.js';
-import { CONFIG_FILES, DEFAULT_PATHS } from '../utils/constants.js';
+import { CONFIG_FILES, DEFAULT_PATHS, DEFAULTS } from '../utils/constants.js';
 
 /**
  * Global configuration interface
@@ -224,8 +224,10 @@ export class ProjectService {
   }
 
   /**
-   * Get all registered projects
-   * Reads registry files and merges with local project configs
+   * Get all registered projects (Project-First Strategy)
+   * Reads minimal references from global registry and merges with local project configs
+   * Global provides: path location + metadata
+   * Local provides: complete project definition (name, code, settings)
    */
   getRegisteredProjects(): Project[] {
     try {
@@ -239,34 +241,47 @@ export class ProjectService {
 
       for (const file of projectFiles) {
         try {
-          const projectPath = path.join(this.projectsDir, file);
-          const content = fs.readFileSync(projectPath, 'utf8');
-          const projectData = toml.parse(content);
+          const registryPath = path.join(this.projectsDir, file);
+          const content = fs.readFileSync(registryPath, 'utf8');
+          const registryData = toml.parse(content);
 
-          // Read the actual project data from local config file
-          const localConfig = this.getProjectConfig(projectData.project?.path || '');
+          // Global registry provides only project path and metadata
+          const projectPath = registryData.project?.path;
+          if (!projectPath) {
+            this.log(`Skipping registry file ${file}: missing project path`);
+            continue;
+          }
 
-          // Convert to Project interface, merging registry and local config data
-          // Follow hybrid priority pattern: administrative metadata (global priority), technical settings (local priority)
+          // Read complete project definition from local config
+          const localConfig = this.getProjectConfig(projectPath);
+
+          // Validate local config exists and is valid
+          if (!localConfig) {
+            this.log(`Warning: Project ${path.basename(projectPath)} has global registry but no valid local config at ${projectPath}`);
+            // Still include project but with minimal data for recovery scenarios
+          }
+
+          // Project-First Strategy: Local config is primary source, global provides metadata only
+          const projectId = path.basename(projectPath);
           const project: Project = {
-            id: path.basename(projectData.project!.path),
+            id: projectId,
             project: {
-              name: projectData.project?.name || localConfig?.project?.name || 'Unknown Project', // Global priority
-              code: projectData.project?.code || localConfig?.project?.code || '', // Global priority
-              path: projectData.project?.path || '',
-              configFile: path.join(projectData.project?.path || '', CONFIG_FILES.PROJECT_CONFIG),
+              name: localConfig?.project?.name || projectId, // Local priority, fallback to directory name
+              code: localConfig?.project?.code || projectId.toUpperCase(), // Local priority, fallback to ID
+              path: projectPath, // From global registry
+              configFile: path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG),
               startNumber: localConfig?.project?.startNumber || 1, // Local priority
               counterFile: localConfig?.project?.counterFile || CONFIG_FILES.COUNTER_FILE, // Local priority
-              active: projectData.project?.active !== false,
-              description: localConfig?.project?.description || projectData.project?.description || '', // Local priority
-              repository: localConfig?.project?.repository || projectData.project?.repository || '' // Local priority
+              active: localConfig?.project?.active !== false, // Local priority, default true
+              description: localConfig?.project?.description || '', // Local priority
+              repository: localConfig?.project?.repository || '' // Local priority
             },
             metadata: {
-              dateRegistered: projectData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
-              lastAccessed: projectData.metadata?.lastAccessed || new Date().toISOString().split('T')[0],
-              version: projectData.metadata?.version || '1.0.0'
+              dateRegistered: registryData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
+              lastAccessed: registryData.metadata?.lastAccessed || new Date().toISOString().split('T')[0],
+              version: registryData.metadata?.version || '1.0.0'
             },
-            registryFile: projectPath // Store exact registry file path for CLI operations
+            registryFile: registryPath // Store exact registry file path for CLI operations
           };
 
           projects.push(project);
@@ -284,22 +299,36 @@ export class ProjectService {
 
   /**
    * Get project configuration from local .mdt-config.toml
+   * Automatically migrates legacy configurations on read
    */
   getProjectConfig(projectPath: string): ProjectConfig | null {
     try {
       const configPath = path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG);
-      
+
       if (!fs.existsSync(configPath)) {
         return null;
       }
 
       const content = fs.readFileSync(configPath, 'utf8');
       const config = toml.parse(content);
-      
+
       if (validateProjectConfig(config)) {
+        // Check for legacy configuration and migrate automatically
+        if (isLegacyConfig(config)) {
+          this.log(`Automatically migrating legacy configuration format for project at ${projectPath}...`);
+          const migratedConfig = this.migrateLegacyConfigWithCleanup(config);
+
+          // Write the migrated config back to disk to clean up the legacy format
+          // This ensures the migration is persisted and future reads are fast
+          const tomlContent = this.objectToToml(migratedConfig);
+          fs.writeFileSync(configPath, tomlContent, 'utf8');
+          this.log(`Updated legacy config to clean format at ${configPath}`);
+
+          return migratedConfig;
+        }
         return config;
       }
-      
+
       return null;
     } catch (error) {
       this.log(`Error reading project config from ${projectPath}:`, error);
@@ -397,7 +426,9 @@ export class ProjectService {
   }
 
   /**
-   * Register a project in the global registry
+   * Register a project in the global registry (Project-First Strategy)
+   * Stores minimal reference: path for discovery, metadata for tracking
+   * Complete project definition remains in local config
    */
   registerProject(project: Project): void {
     try {
@@ -407,14 +438,12 @@ export class ProjectService {
       }
 
       const projectFile = path.join(this.projectsDir, `${project.id}.toml`);
+
+      // Project-First Strategy: Store minimal reference in global registry
+      // Complete definition stays in local config for portability and team collaboration
       const projectData = {
         project: {
-          name: project.project.name,
-          code: project.project.code,
-          path: project.project.path,
-          active: project.project.active,
-          description: project.project.description,
-          repository: project.project.repository
+          path: project.project.path  // Only store path for discovery
         },
         metadata: {
           dateRegistered: project.metadata.dateRegistered,
@@ -423,12 +452,44 @@ export class ProjectService {
         }
       };
 
+      
       const tomlContent = this.objectToToml(projectData);
       fs.writeFileSync(projectFile, tomlContent, 'utf8');
+
+      this.log(`Registered project ${project.id} in global registry (minimal reference)`);
     } catch (error) {
       this.log('Error registering project:', error);
       throw error;
     }
+  }
+
+  /**
+   * Enhanced migration method that properly cleans up legacy configurations
+   * Moves project.path (tickets) to project.ticketsPath and sets project.path to "."
+   */
+  private migrateLegacyConfigWithCleanup(config: ProjectConfig): ProjectConfig {
+    if (!isLegacyConfig(config)) {
+      return config;
+    }
+
+    // At this point, config.project.path is guaranteed to be a string (not undefined)
+    // because isLegacyConfig() checks for its existence and non-undefined value
+    const legacyTicketsPath = config.project.path!; // Non-null assertion - safe due to isLegacyConfig check
+
+    // Create a clean migrated configuration
+    const migratedConfig: ProjectConfig = {
+      ...config,
+      project: {
+        ...config.project,
+        // Set project.path to "." since it represents the project root
+        // The legacy path was actually the tickets path, not the project root
+        path: ".",
+        // Move the legacy path to ticketsPath where it belongs
+        ticketsPath: legacyTicketsPath
+      }
+    };
+
+    return migratedConfig;
   }
 
   /**
@@ -450,13 +511,23 @@ export class ProjectService {
         // Read existing config
         const content = fs.readFileSync(configPath, 'utf8');
         config = toml.parse(content);
+
+        // Check if we need to migrate legacy configuration
+        if (validateProjectConfig(config) && isLegacyConfig(config)) {
+          this.log(`Migrating legacy configuration format for ${projectId}...`);
+          config = this.migrateLegacyConfigWithCleanup(config);
+        }
       } else {
         // Create new config structure with all required fields
-        config = { project: {} };
+        config = {
+          project: {
+            ticketsPath: ticketsPath || DEFAULTS.TICKETS_PATH
+          }
+        };
       }
 
       // Determine tickets path (use provided or fallback to existing/default)
-      const finalTicketsPath = ticketsPath || config.project.path || 'docs/CRs';
+      const finalTicketsPath = ticketsPath || getTicketsPath(config, DEFAULTS.TICKETS_PATH);
 
       // Auto-create tickets directory if it doesn't exist
       if (finalTicketsPath) {
@@ -468,17 +539,37 @@ export class ProjectService {
       }
 
       // Update project section with complete configuration matching Web UI template
+      // Ensure clean format: never write legacy project.path values for tickets paths
       config.project = {
         ...config.project,
         id: projectId,
         name: name,
         code: code,
-        path: finalTicketsPath,
         startNumber: config.project.startNumber || 1,
         counterFile: config.project.counterFile || CONFIG_FILES.COUNTER_FILE,
         description: description || config.project.description || '',
-        repository: repository || config.project.repository || ''
+        repository: repository || config.project.repository || '',
+        // Always set path to "." for clean format - config file location determines project root
+        path: ".",
+        // Always use ticketsPath for tickets location (clean format)
+        ticketsPath: finalTicketsPath
       };
+
+      // Remove any legacy path values that might accidentally be tickets paths
+      // This ensures we never write legacy format again
+      if (config.project.path && config.project.path !== "." && !fs.existsSync(path.join(projectPath, config.project.path, '.mdt-config.toml'))) {
+        // If project.path exists and it's not "." and it doesn't contain a .mdt-config.toml file,
+        // it's likely a legacy tickets path that should be removed
+        delete config.project.path;
+      }
+
+      // Preserve other sections
+      if (config.document_paths) {
+        config.document_paths = config.document_paths;
+      }
+      if (config.exclude_folders) {
+        config.exclude_folders = config.exclude_folders;
+      }
 
       // Write updated config
       const tomlContent = this.objectToToml(config);
@@ -570,7 +661,8 @@ export class ProjectService {
         return [];
       }
 
-      const crPath = config.project.path || 'docs/CRs';
+      // Use new helper function with backward compatibility
+      const crPath = getTicketsPath(config, DEFAULTS.TICKETS_PATH);
       const fullCRPath = path.resolve(projectPath, crPath);
 
       if (!fs.existsSync(fullCRPath)) {
@@ -595,18 +687,31 @@ export class ProjectService {
     let toml = '';
 
     for (const [section, data] of Object.entries(obj)) {
+      // Skip sections with no data
+      if (!data || typeof data !== 'object') {
+        continue;
+      }
+
       toml += `[${section}]\n`;
       for (const [key, value] of Object.entries(data as any)) {
+        // Skip undefined/null values
+        if (value === undefined || value === null) {
+          continue;
+        }
+
         if (typeof value === 'string') {
           toml += `${key} = "${value}"\n`;
         } else if (typeof value === 'boolean') {
           toml += `${key} = ${value}\n`;
         } else if (typeof value === 'number') {
           toml += `${key} = ${value}\n`;
-        } else if (value === undefined || value === null) {
-          // Skip undefined/null values
-          continue;
+        } else if (Array.isArray(value)) {
+          // Handle arrays properly
+          if (value.length > 0) {
+            toml += `${key} = [${value.map(item => `"${item}"`).join(', ')}]\n`;
+          }
         } else {
+          // Fallback for other types
           toml += `${key} = "${value}"\n`;
         }
       }
@@ -617,7 +722,8 @@ export class ProjectService {
   }
 
   /**
-   * Update existing project in registry and local config
+   * Update existing project (Project-First Strategy)
+   * Updates local config only (primary source) and updates metadata in global registry
    */
   updateProject(projectId: string, updates: Partial<Pick<Project['project'], 'name' | 'description' | 'repository' | 'active'>>): void {
     try {
@@ -627,51 +733,50 @@ export class ProjectService {
         throw new Error(`Project ${projectId} not found in registry`);
       }
 
-      // Read existing registry file
+      // Read existing registry file to get project path
       const content = fs.readFileSync(projectFile, 'utf8');
-      const projectData = toml.parse(content);
+      const registryData = toml.parse(content);
 
-      // Merge updates into project data
-      if (updates.name !== undefined) {
-        projectData.project.name = updates.name;
-      }
-      if (updates.description !== undefined) {
-        projectData.project.description = updates.description;
-      }
-      if (updates.active !== undefined) {
-        projectData.project.active = updates.active;
+      if (!registryData.project?.path) {
+        throw new Error(`Project ${projectId} registry entry missing project path`);
       }
 
-      // Update lastAccessed timestamp
-      projectData.metadata.lastAccessed = new Date().toISOString().split('T')[0];
+      // Update only metadata in global registry (lastAccessed timestamp)
+      registryData.metadata.lastAccessed = new Date().toISOString().split('T')[0];
 
       // Write updated registry file
-      const tomlContent = this.objectToToml(projectData);
+      const tomlContent = this.objectToToml(registryData);
       fs.writeFileSync(projectFile, tomlContent, 'utf8');
 
-      // Update local .mdt-config.toml if it exists
-      if (projectData.project?.path && fs.existsSync(projectData.project.path)) {
-        const configPath = path.join(projectData.project.path, CONFIG_FILES.PROJECT_CONFIG);
+      // Update local .mdt-config.toml (primary source for project data)
+      const configPath = path.join(registryData.project.path, CONFIG_FILES.PROJECT_CONFIG);
 
-        if (fs.existsSync(configPath)) {
-          const localContent = fs.readFileSync(configPath, 'utf8');
-          const localConfig = toml.parse(localContent);
+      if (fs.existsSync(configPath)) {
+        const localContent = fs.readFileSync(configPath, 'utf8');
+        const localConfig = toml.parse(localContent);
 
-          // Update local config
-          if (updates.name !== undefined) {
-            localConfig.project.name = updates.name;
-          }
-          if (updates.description !== undefined) {
-            localConfig.project.description = updates.description;
-          }
-          if (updates.repository !== undefined) {
-            localConfig.project.repository = updates.repository;
-          }
-
-          // Write updated local config
-          const localTomlContent = this.objectToToml(localConfig);
-          fs.writeFileSync(configPath, localTomlContent, 'utf8');
+        // Update local config with all changes (Project-First Strategy)
+        if (updates.name !== undefined) {
+          localConfig.project.name = updates.name;
         }
+        if (updates.description !== undefined) {
+          localConfig.project.description = updates.description;
+        }
+        if (updates.repository !== undefined) {
+          localConfig.project.repository = updates.repository;
+        }
+        if (updates.active !== undefined) {
+          localConfig.project.active = updates.active;
+        }
+
+        // Write updated local config
+        const localTomlContent = this.objectToToml(localConfig);
+        fs.writeFileSync(configPath, localTomlContent, 'utf8');
+
+        this.log(`Updated project ${projectId} in local config`);
+      } else {
+        // Local config doesn't exist - this is a recovery situation
+        this.log(`Warning: Project ${projectId} local config not found at ${configPath}`);
       }
 
       // Clear cache to force refresh
