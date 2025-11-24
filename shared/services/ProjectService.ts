@@ -725,7 +725,7 @@ export class ProjectService {
    * Update existing project (Project-First Strategy)
    * Updates local config only (primary source) and updates metadata in global registry
    */
-  updateProject(projectId: string, updates: Partial<Pick<Project['project'], 'name' | 'description' | 'repository' | 'active'>>): void {
+  updateProject(projectId: string, updates: Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>): void {
     try {
       const projectFile = path.join(this.projectsDir, `${projectId}.toml`);
 
@@ -764,6 +764,9 @@ export class ProjectService {
         }
         if (updates.repository !== undefined) {
           localConfig.project.repository = updates.repository;
+        }
+        if (updates.ticketsPath !== undefined) {
+          localConfig.project.ticketsPath = updates.ticketsPath;
         }
         if (updates.active !== undefined) {
           localConfig.project.active = updates.active;

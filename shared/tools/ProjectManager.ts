@@ -13,6 +13,7 @@ export interface ProjectUpdateInput {
   description?: string;
   repository?: string;
   active?: boolean;
+  ticketsPath?: string; // Relative path for tickets
 }
 
 /**
@@ -223,6 +224,14 @@ export class ProjectManager {
         throw new Error(repoResult.error);
       }
       validatedUpdates.repository = repoResult.normalized!;
+    }
+
+    if (updates.ticketsPath !== undefined) {
+      const ticketsPathResult = ProjectValidator.validateTicketsPath(updates.ticketsPath);
+      if (!ticketsPathResult.valid) {
+        throw new Error(ticketsPathResult.error);
+      }
+      validatedUpdates.ticketsPath = ticketsPathResult.normalized!;
     }
 
     if (updates.active !== undefined) {
