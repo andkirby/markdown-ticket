@@ -1,5 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
+import * as toml from 'toml';
+import { DEFAULTS } from '@mdt/shared/utils/constants.js';
 
 export interface ProjectConfiguration {
   documentPaths: string[];
@@ -28,38 +30,44 @@ export class ConfigRepository {
   private _parseConfig(content: string): ProjectConfiguration {
     const config = this._getDefaultConfig();
 
-    // Parse document_paths
-    const pathsMatch = content.match(/document_paths\s*=\s*\[(.*?)\]/s);
-    if (pathsMatch) {
-      config.documentPaths = this._parseArray(pathsMatch[1]);
-    }
+    try {
+      // Parse TOML content properly using TOML library
+      const parsed = toml.parse(content);
 
-    // Parse exclude_folders
-    const excludeMatch = content.match(/exclude_folders\s*=\s*\[(.*?)\]/s);
-    if (excludeMatch) {
-      config.excludeFolders = this._parseArray(excludeMatch[1]);
-    }
+      // Parse document_paths
+      if (parsed.document_paths && Array.isArray(parsed.document_paths)) {
+        config.documentPaths = parsed.document_paths.filter(path => typeof path === 'string');
+      }
 
-    // Parse tickets path
-    const ticketsMatch = content.match(/path\s*=\s*["']?([^"'\n\r]+)["']?/);
-    if (ticketsMatch) {
-      config.ticketsPath = ticketsMatch[1].trim();
+      // Parse exclude_folders
+      if (parsed.exclude_folders && Array.isArray(parsed.exclude_folders)) {
+        config.excludeFolders = parsed.exclude_folders.filter(folder => typeof folder === 'string');
+      }
+
+      // Parse tickets path from project section
+      if (parsed.project) {
+        // New format: project.ticketsPath
+        if (parsed.project.ticketsPath && typeof parsed.project.ticketsPath === 'string') {
+          config.ticketsPath = parsed.project.ticketsPath.trim();
+        }
+        // Legacy format: project.path
+        else if (parsed.project.path && typeof parsed.project.path === 'string') {
+          config.ticketsPath = parsed.project.path.trim();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse TOML configuration:', error);
+      // Return default config if parsing fails - TOML files should be valid
     }
 
     return config;
   }
 
-  private _parseArray(arrayString: string): string[] {
-    return arrayString
-      .split(/[,\n]/)
-      .map(s => s.trim().replace(/['"]/g, '').replace(/#.*$/, '').trim())
-      .filter(s => s.length > 0);
-  }
-
+  
   private _getDefaultConfig(): ProjectConfiguration {
     return {
       documentPaths: [],
-      excludeFolders: ['docs/CRs', 'node_modules', '.git'],
+      excludeFolders: [DEFAULTS.TICKETS_PATH, 'node_modules', '.git'],
       ticketsPath: null
     };
   }
