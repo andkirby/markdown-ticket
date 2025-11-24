@@ -27,6 +27,7 @@ interface FileInvokerAdapter {
 // Services
 import FileWatcherService from './fileWatcherService.js';
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js';
+import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js';
 import { TicketService } from './services/TicketService.js';
 import { DocumentService } from './services/DocumentService.js';
 import { FileSystemService } from './services/FileSystemService.js';
@@ -78,6 +79,7 @@ setupLogInterception();
 // Core services
 const fileWatcher = new FileWatcherService();
 const projectDiscovery = new SharedProjectService();
+const projectManager = new ProjectManager(true); // Quiet mode for server
 
 // Business logic services
 const projectService = projectDiscovery; // Direct usage of shared service
@@ -96,7 +98,8 @@ const projectController = new ProjectController(
   projectService as any, // Type cast to ProjectServiceExtension for compatibility
   ticketService,
   fileSystemService,
-  fileWatcher
+  fileWatcher,
+  projectManager as any // Type cast to ProjectManagerExtension for compatibility
 );
 
 const ticketController = new TicketController(fileSystemService);
