@@ -1,8 +1,8 @@
 import React from 'react';
 import { Status } from '../types';
 import { getStatusLabel, getStatusDescription, getStatusColor } from '../config/statusConfig';
-import { Modal, ModalHeader, ModalBody, ModalFooter } from './UI/Modal';
-import { Button } from './UI/Button';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from './ui/Modal';
+import { Button } from './ui/Button';
 
 interface ResolutionDialogProps {
   isOpen: boolean;

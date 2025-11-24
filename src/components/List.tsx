@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Button } from './UI/index';
+import { Button } from './ui/index';
 import { useEventBus } from '../services/eventBus';
 import { SortControls } from './SortControls';
 import { HamburgerMenu } from './HamburgerMenu';
@@ -8,8 +8,8 @@ import { getSortPreferences, setSortPreferences, SortPreferences } from '../conf
 import { sortTickets } from '../utils/sorting';
 import { getProjectCode } from './ProjectSelector';
 import MarkdownContent from './MarkdownContent';
-import { Ticket } from '../../shared/models/Ticket';
-import { Project } from '../../shared/models/Project';
+import { Ticket } from '@mdt/shared/models/Ticket';
+import { Project } from '@mdt/shared/models/Project';
 
 interface LocalCR {
   filename: string;

@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 // Frontend logging state
 let frontendSessionActive = false;
@@ -386,11 +387,16 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+        '@mdt/shared': path.resolve(__dirname, './shared/dist')
+      }
+    },
     server: {
       host: '0.0.0.0',
       port: 5173,
       allowedHosts: [
-        'hungry-days-check.loca.lt',
         '.loca.lt',
         '.trycloudflare.com',
         '.ngrok-free.app'],

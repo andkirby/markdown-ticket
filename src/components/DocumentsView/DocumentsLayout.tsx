@@ -4,7 +4,8 @@ import { Pencil, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import FileTree from './FileTree';
 import MarkdownViewer from './MarkdownViewer';
 import PathSelector from './PathSelector';
-import { ScrollArea } from '../UI/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal';
 import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting';
 
 interface DocumentFile {
@@ -274,11 +275,17 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
 
   if (showPathSelector) {
     return (
-      <PathSelector
-        projectId={projectId}
-        onPathsSelected={handlePathsSelected}
-        onCancel={handleCancelPathSelection}
-      />
+      <Modal
+        isOpen={showPathSelector}
+        onClose={handleCancelPathSelection}
+        size="lg"
+      >
+        <PathSelector
+          projectId={projectId}
+          onPathsSelected={handlePathsSelected}
+          onCancel={handleCancelPathSelection}
+        />
+      </Modal>
     );
   }
 
