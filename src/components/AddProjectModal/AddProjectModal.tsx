@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Info } from 'lucide-react';
-import { Button } from '../UI/button';
-import { ScrollArea } from '../UI/scroll-area';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../UI/tooltip';
-import { useProjectForm, FormField, StrategyIndicator } from './index';
-import { ProjectValidator } from '../../shared/tools/ProjectValidator';
+import { Button } from '@/components/ui';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useProjectForm } from './hooks/useProjectForm';
+import { FormField } from './components/FormField';
+import { StrategyIndicator } from './components/StrategyIndicator';
+import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator';
 
 interface AddProjectModalProps {
   isOpen: boolean;
