@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ProjectValidator } from '../../../../shared/tools/ProjectValidator';
+import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator';
 
 export interface ProjectFormData {
   name: string;
