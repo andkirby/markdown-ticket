@@ -3,7 +3,7 @@ import * as path from 'path';
 import { ProjectService } from '../services/ProjectService.js';
 import { ProjectValidator } from './ProjectValidator.js';
 import { Project } from '../models/Project.js';
-import { CONFIG_FILES } from '../utils/constants.js';
+import { CONFIG_FILES, DEFAULTS } from '../utils/constants.js';
 
 /**
  * Project update input
@@ -26,7 +26,7 @@ export interface ProjectCreateInput {
   repository?: string;
   globalOnly?: boolean; // Strategy 1: Global-only mode
   createProjectPath?: boolean; // Flag to auto-create project directory
-  ticketsPath?: string; // Relative path for tickets (default: "docs/CRs")
+  ticketsPath?: string; // Relative path for tickets (default: DEFAULTS.TICKETS_PATH)
 }
 
 /**

@@ -119,11 +119,14 @@ implementationNotes: Status changed to Implemented on 9/11/2025
 1. **Project Name** (required, text input)
 2. **Project Code** (auto-generated, read-only display)
 3. **Project Path** (required, directory picker with tilde expansion support)
+   - Shows discovery path status indicator
+   - Auto-detects whether path is within configured discovery paths
 4. **Create Project Path** (checkbox, default: false)
-5. **Configuration Strategy** (radio buttons):
-   - **Project-First** (default) - Local + Global config
-   - **Global-Only** - Global config only
-   - **Auto-Discovery** - Local config only, no global registration
+5. **Configuration Strategy**:
+   - **"Use Global Config Only"** checkbox with tooltip (i) for explanation
+   - **Auto-Determined Strategy** displayed to user:
+     - **Auto-Discovery**: When path is within discovery paths
+     - **Project-First**: When path is outside discovery paths
 6. **Tickets Path** (text input, default: "docs/CRs", relative path only)
 7. **Description** (optional, textarea)
 8. **Repository URL** (optional, text input)
@@ -237,11 +240,18 @@ if (!fs.existsSync(expandedPath)) {
 
 ### UI Component Requirements
 
-#### **Configuration Strategy Selector**
-- Radio button interface for strategy selection with clear descriptions
-- Supports three strategies: Project-First, Global-Only, Auto-Discovery
-- Disabled state for edit forms (strategy immutable after creation)
-- Accessible labeling and keyboard navigation
+#### **Configuration Strategy Selection**
+- **"Use Global Config Only"** checkbox with tooltip icon (i)
+- Tooltip provides clear explanation: "Store project configuration only in global registry, no config files in project directory"
+- **Auto-Detection Logic**: System automatically determines strategy based on project path location:
+  - **Auto-Discovery**: Selected path is within configured discovery paths
+  - **Project-First**: Selected path is outside discovery paths
+- **Visual Indicators**:
+  - Show clear indicator when project path is within discovery paths
+  - Display the determined strategy (Auto-Discovery vs Project-First) to user
+  - Highlight the path status in the form
+- **Edit Form Behavior**: Strategy selection is read-only in edit forms (strategy immutable after creation)
+- **Accessibility**: Proper labeling, keyboard navigation, and screen reader support for tooltips
 
 #### **Scrollable Modal Form Structure**
 - Modal container with maximum height of 80% viewport

@@ -2,6 +2,8 @@ import express, { Express } from 'express';
 import path from 'path';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
+import { DEFAULTS } from '@mdt/shared/utils/constants.js';
+import { getTicketsPath } from '@mdt/shared/models/Project.js';
 
 // Extended project type for server use
 interface ServerProject {
@@ -136,7 +138,8 @@ async function initializeMultiProjectWatchers(): Promise<void> {
           continue;
         }
 
-        const crPath: string = config.project.path || 'docs/CRs';
+        // Use new helper function with backward compatibility
+        const crPath: string = getTicketsPath(config, DEFAULTS.TICKETS_PATH);
         const fullCRPath: string = path.resolve(configPath, crPath);
         const watchPath: string = path.join(fullCRPath, '*.md');
 

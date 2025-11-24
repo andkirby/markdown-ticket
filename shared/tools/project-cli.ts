@@ -794,7 +794,7 @@ NPM Scripts Usage:
   # Use double -- to separate npm arguments from CLI arguments
   npm run project:create -- --name "My Project" --code MP --path ~/projects/my-project
   npm run project:create -- --name "My Project" --code MP --path ~/projects/my-project --global-only
-  npm run project:create -- --name "My Project" --code MP --path ~/projects/my-project --create-project-path --tickets-path "docs/tickets"
+  npm run project:create -- --name "My Project" --code MP --path ~/projects/my-project --create-project-path --tickets-path "docs/CRs"
   npm run project:list -- --json
   npm run project:get -- MP
   npm run project:update -- MP --description "Updated description"
@@ -810,7 +810,7 @@ Direct CLI Usage:
   project create --name "My Project" --code MP --path ~/projects/my-project --global-only
 
   # Create project with auto-directory creation and custom tickets path
-  project create --name "My Project" --code MP --path ~/projects/my-project --create-project-path --tickets-path "docs/tickets"
+  project create --name "My Project" --code MP --path ~/projects/my-project --create-project-path --tickets-path "docs/CRs"
 
   # List all projects
   project list

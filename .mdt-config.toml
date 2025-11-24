@@ -2,7 +2,7 @@
 name = "Markdown Ticket Board"
 code = "MDT"
 id = "markdown-ticket"
-path = "docs/CRs"
+ticketsPath = "docs/CRs"
 startNumber = 1
 counterFile = ".mdt-next"
 description = "Kanban-style ticket board with markdown storage"
