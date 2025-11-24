@@ -3,10 +3,10 @@ import {
   Eye, EyeOff, AlertTriangle, Copy, Loader2, Hash, Users, ArrowLeft, 
   Settings as SettingsIcon, Plus, Trash2, Power, PowerOff, Mail, Shield, Server, Zap
 } from 'lucide-react';
-import { Button } from './UI/Button';
-import { Input } from './UI/Input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './UI/Card';
-import { Badge } from './UI/badge';
+import { Button } from './ui/Button';
+import { Input } from './ui/Input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card';
+import { Badge } from './ui/badge';
 import { useCounterAPI } from '../hooks/useCounterAPI';
 
 type ViewState = 'loading' | 'setup' | 'dashboard' | 'projects' | 'users' | 'settings';
