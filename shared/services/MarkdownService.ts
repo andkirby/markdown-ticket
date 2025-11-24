@@ -170,7 +170,6 @@ export class MarkdownService {
 
     // Core fields
     if (ticket.code) lines.push(`code: ${ticket.code}`);
-    if (ticket.title) lines.push(`title: ${ticket.title}`);
     if (ticket.status) lines.push(`status: ${ticket.status}`);
     if (ticket.type) lines.push(`type: ${ticket.type}`);
     if (ticket.priority) lines.push(`priority: ${ticket.priority}`);
