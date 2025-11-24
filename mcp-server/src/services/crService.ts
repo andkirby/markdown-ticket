@@ -448,7 +448,6 @@ export class CRService {
     // YAML frontmatter - only mandatory fields + optional fields with values
     sections.push('---');
     sections.push(`code: ${ticket.code}`);
-    sections.push(`title: ${ticket.title}`);
     sections.push(`status: ${ticket.status}`);
     sections.push(`dateCreated: ${ticket.dateCreated?.toISOString() || new Date().toISOString()}`);
     sections.push(`type: ${ticket.type}`);
