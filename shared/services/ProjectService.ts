@@ -828,6 +828,46 @@ export class ProjectService {
   }
 
   /**
+   * Configure document paths for a project
+   */
+  async configureDocuments(projectId: string, documentPaths: string[]): Promise<void> {
+    try {
+      // Get project information
+      const allProjects = await this.getAllProjects();
+      const project = allProjects.find(p => p.id === projectId || p.project.code === projectId);
+
+      if (!project) {
+        throw new Error('Project not found');
+      }
+
+      // Update local .mdt-config.toml (primary source for project configuration)
+      const configPath = path.join(project.project.path, CONFIG_FILES.PROJECT_CONFIG);
+
+      if (fs.existsSync(configPath)) {
+        const localContent = fs.readFileSync(configPath, 'utf8');
+        const localConfig = toml.parse(localContent);
+
+        // Update document paths
+        if (!localConfig.project) {
+          localConfig.project = {};
+        }
+        localConfig.project.document_paths = documentPaths;
+
+        // Write updated local config
+        const updatedContent = this.objectToToml(localConfig);
+        fs.writeFileSync(configPath, updatedContent, 'utf8');
+
+        this.log(`Updated document paths for project ${projectId}: [${documentPaths.join(', ')}]`);
+      } else {
+        throw new Error('Project configuration file not found');
+      }
+    } catch (error) {
+      this.log(`Error configuring documents for project ${projectId}: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
    * Remove project from registry
    */
   async deleteProject(projectId: string, deleteLocalConfig: boolean = true): Promise<void> {
