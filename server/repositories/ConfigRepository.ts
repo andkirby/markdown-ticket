@@ -34,14 +34,16 @@ export class ConfigRepository {
       // Parse TOML content properly using TOML library
       const parsed = toml.parse(content);
 
-      // Parse document_paths
-      if (parsed.document_paths && Array.isArray(parsed.document_paths)) {
-        config.documentPaths = parsed.document_paths.filter(path => typeof path === 'string');
+      // Parse document_paths (check both top-level and under project section)
+      const docPaths = parsed.document_paths || parsed.project?.document_paths;
+      if (docPaths && Array.isArray(docPaths)) {
+        config.documentPaths = docPaths.filter(path => typeof path === 'string');
       }
 
-      // Parse exclude_folders
-      if (parsed.exclude_folders && Array.isArray(parsed.exclude_folders)) {
-        config.excludeFolders = parsed.exclude_folders.filter(folder => typeof folder === 'string');
+      // Parse exclude_folders (check both top-level and under project section)
+      const exclFolders = parsed.exclude_folders || parsed.project?.exclude_folders;
+      if (exclFolders && Array.isArray(exclFolders)) {
+        config.excludeFolders = exclFolders.filter(folder => typeof folder === 'string');
       }
 
       // Parse tickets path from project section
