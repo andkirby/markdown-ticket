@@ -453,7 +453,7 @@ export class ProjectController {
 
       const items = await this.fileSystemService.buildProjectFileSystemTree(
         projectId as string,
-        this.projectService.projectDiscovery
+        this.projectService
       );
 
       console.log(`🗂️ Found ${items.length} items`);
