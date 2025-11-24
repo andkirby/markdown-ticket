@@ -1,22 +1,8 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { getNextTicketNumber } from '../utils/ticketNumbering.js';
-
-// Type definitions
-
-interface ProjectConfig {
-  code: string;
-  project?: {
-    id?: string;
-    name?: string;
-    code?: string;
-    path?: string;
-    startNumber?: number;
-    counterFile?: string;
-    description?: string;
-    repository?: string;
-  };
-}
+import { DEFAULTS } from '@mdt/shared/utils/constants.js';
+import { getTicketsPath, type ProjectConfig } from '@mdt/shared/models/Project.js';
 
 interface Ticket {
   code: string;
@@ -142,7 +128,8 @@ export class TicketService {
     }
 
     // Get next CR number using smart logic
-    const nextNumber = await getNextTicketNumber(project.project.path, config.code);
+    const projectCode = config.project?.code || project.id.toUpperCase();
+    const nextNumber = await getNextTicketNumber(project.project.path, projectCode);
 
     // Generate CR code based on project configuration or use provided code
     let crCode: string;
@@ -150,7 +137,6 @@ export class TicketService {
       crCode = code;
     } else {
       // Simple code generation fallback
-      const projectCode = config.code || project.id.toUpperCase();
       crCode = `${projectCode}-${nextNumber.toString().padStart(3, '0')}`;
     }
 
@@ -248,7 +234,8 @@ Please list specific, testable conditions that must be met for completion:
 `;
 
     // Write CR file
-    const crPath = path.join(project.project.path, config.project?.path || 'docs/CRs');
+    const ticketsPath = getTicketsPath(config, DEFAULTS.TICKETS_PATH);
+    const crPath = path.join(project.project.path, ticketsPath);
     await fs.mkdir(crPath, { recursive: true });
     const crFilePath = path.join(crPath, filename);
     await fs.writeFile(crFilePath, crContent, 'utf8');

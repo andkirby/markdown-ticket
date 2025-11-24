@@ -1,3 +1,10 @@
+/**
+ * This file responsible for project discovery
+ *
+ * TODO it shall be moved into shared
+ * TODO it shall use configuration manager
+ */
+
 import * as fs from 'fs-extra';
 import { stat, readFile } from 'fs/promises';
 import * as path from 'path';
@@ -6,6 +13,7 @@ import * as toml from 'toml';
 import { ProjectInfo } from '@mdt/shared/models/Types.js';
 import { Project } from '@mdt/shared/models/Project.js';
 import { ServerConfig } from '@mdt/shared/models/Config.js';
+import { getTicketsPath } from '@mdt/shared/models/Project.js';
 
 export class ProjectDiscoveryService {
   private projects: Map<string, Project> = new Map();
@@ -153,7 +161,9 @@ export class ProjectDiscoveryService {
       }
 
       const projectRoot = path.dirname(configPath);
-      const crDir = path.resolve(projectRoot, config.project.path || 'docs/CRs');
+      // Use new helper function with backward compatibility
+      const ticketsPath = getTicketsPath(config, 'docs/CRs');
+      const crDir = path.resolve(projectRoot, ticketsPath);
 
       // Use project code from config, fallback to filename-derived ID
       const configFilename = path.basename(configPath, '.toml');
@@ -238,7 +248,9 @@ export class ProjectDiscoveryService {
         return null;
       }
 
-      const crDir = path.resolve(projectPath, config.project.path || 'docs/CRs');
+      // Use new helper function with backward compatibility
+      const ticketsPath = getTicketsPath(config, 'docs/CRs');
+      const crDir = path.resolve(projectPath, ticketsPath);
 
       // Use project code from config, fallback to filename-derived ID
       const configFilename = path.basename(configPath, '.toml');
