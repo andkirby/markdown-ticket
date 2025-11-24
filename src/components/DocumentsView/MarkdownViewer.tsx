@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import MarkdownContent from '../MarkdownContent';
 import { extractTableOfContents } from '../../utils/tableOfContents';
 import TableOfContents from '../shared/TableOfContents';
-import { ScrollArea } from '../UI/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DocumentFile {
   name: string;

@@ -1,8 +1,8 @@
 import path from 'path';
 import { Plus } from 'lucide-react';
-import { Badge } from './UI/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './UI/tooltip';
-import { Project } from '../../shared/models/Project';
+import { Badge } from './ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Project } from '@mdt/shared/models/Project';
 
 interface ProjectSelectorProps {
   projects: Project[];

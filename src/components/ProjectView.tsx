@@ -10,7 +10,7 @@ import { getSortPreferences, setSortPreferences, SortPreferences } from '../conf
 import { sortTickets } from '../utils/sorting';
 import { TicketCode } from './TicketCode';
 import { getProjectCode } from './ProjectSelector';
-import { Project } from '../../shared/models/Project';
+import { Project } from '@mdt/shared/models/Project';
 
 type ViewMode = 'board' | 'list' | 'documents';
 
