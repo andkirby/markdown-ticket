@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Folder, ChevronRight, Home } from 'lucide-react';
+import { X, Folder, ChevronRight, Info, Check, Search, FolderOpen } from 'lucide-react';
 import { Button } from './UI/index';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './UI/tooltip';
+import { ScrollArea } from './UI/scroll-area';
+import { ProjectValidator } from '../../shared/tools/ProjectValidator';
 
 interface Directory {
   name: string;
@@ -42,7 +45,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     path: '',
     crsPath: 'docs/CRs',
     description: '',
-    repositoryUrl: ''
+    repositoryUrl: '',
+    useGlobalConfigOnly: false
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,6 +61,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [createdFiles, setCreatedFiles] = useState<string[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [discoveryPaths, setDiscoveryPaths] = useState<string[]>([]);
+  const [isPathInDiscovery, setIsPathInDiscovery] = useState(false);
 
   const hasFormData = () => {
     return formData.name.trim() !== '' || 
@@ -90,7 +96,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           path: editProject.path,
           crsPath: editProject.crsPath,
           description: editProject.description,
-          repositoryUrl: editProject.repositoryUrl
+          repositoryUrl: editProject.repositoryUrl,
+          useGlobalConfigOnly: false
         });
       } else {
         setFormData({
@@ -99,7 +106,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           path: '',
           crsPath: 'docs/CRs',
           description: '',
-          repositoryUrl: ''
+          repositoryUrl: '',
+          useGlobalConfigOnly: false
         });
       }
       setErrors({});
@@ -108,6 +116,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       setShowSuccess(false);
       setCreatedFiles([]);
       loadDirectories(); // Load home directory initially
+      loadDiscoveryPaths(); // Load discovery paths
     }
   }, [isOpen]);
 
@@ -121,6 +130,11 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       setFormData(prev => ({ ...prev, code: generatedCode }));
     }
   }, [formData.name, formData.code, editMode]);
+
+  // Check if current path is within discovery paths
+  useEffect(() => {
+    checkPathInDiscovery(formData.path);
+  }, [formData.path, discoveryPaths]);
 
   const loadDirectories = async (path?: string) => {
     setLoadingDirectories(true);
@@ -152,18 +166,44 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Project name is required';
+    // Validate name using shared validator
+    const nameValidation = ProjectValidator.validateName(formData.name);
+    if (!nameValidation.valid) {
+      newErrors.name = nameValidation.error || 'Project name is required';
     }
 
-    if (!formData.code.trim()) {
-      newErrors.code = 'Project code is required';
-    } else if (!/^[A-Z0-9]{2,6}$/.test(formData.code)) {
-      newErrors.code = 'Project code must be 2-6 uppercase letters/numbers';
+    // Validate code using shared validator
+    const codeValidation = ProjectValidator.validateCode(formData.code);
+    if (!codeValidation.valid) {
+      newErrors.code = codeValidation.error || 'Project code is required';
     }
 
-    if (!formData.path.trim()) {
-      newErrors.path = 'Project path is required';
+    // Validate path using shared validator (with tilde expansion)
+    const pathValidation = ProjectValidator.validatePath(formData.path);
+    if (!pathValidation.valid) {
+      newErrors.path = pathValidation.error || 'Project path is required';
+    }
+
+    // Validate tickets path using shared validator
+    const ticketsPathValidation = ProjectValidator.validateTicketsPath(formData.crsPath);
+    if (!ticketsPathValidation.valid) {
+      newErrors.crsPath = ticketsPathValidation.error || 'Tickets directory path is required';
+    }
+
+    // Validate description using shared validator (optional field)
+    if (formData.description.trim()) {
+      const descValidation = ProjectValidator.validateDescription(formData.description);
+      if (!descValidation.valid) {
+        newErrors.description = descValidation.error || 'Description validation failed';
+      }
+    }
+
+    // Validate repository URL using shared validator (optional field)
+    if (formData.repositoryUrl.trim()) {
+      const repoValidation = ProjectValidator.validateRepository(formData.repositoryUrl);
+      if (!repoValidation.valid) {
+        newErrors.repositoryUrl = repoValidation.error || 'Repository URL validation failed';
+      }
     }
 
     setErrors(newErrors);
@@ -187,12 +227,28 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const handleConfirmCreate = async () => {
     setIsSubmitting(true);
     try {
+      // Use validated and normalized paths from shared validators
+      const pathValidation = ProjectValidator.validatePath(formData.path);
+      const ticketsPathValidation = ProjectValidator.validateTicketsPath(formData.crsPath);
+      const codeValidation = ProjectValidator.validateCode(formData.code);
+      const nameValidation = ProjectValidator.validateName(formData.name);
+
+      const submissionData = {
+        name: nameValidation.normalized || formData.name,
+        code: codeValidation.normalized || formData.code,
+        path: pathValidation.normalized || formData.path,
+        crsPath: ticketsPathValidation.normalized || formData.crsPath,
+        description: formData.description.trim(),
+        repositoryUrl: formData.repositoryUrl.trim(),
+        useGlobalConfigOnly: formData.useGlobalConfigOnly
+      };
+
       const response = await fetch('/api/projects/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submissionData),
       });
 
       if (!response.ok) {
@@ -201,19 +257,19 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       }
 
       const result = await response.json();
-      
-      // Generate list of created files
+
+      // Generate list of created files using normalized paths
       const files = [
-        `${formData.path}/.mdt-config.toml`,
-        `${formData.path}/.mdt-next`,
-        `${formData.path}/${formData.crsPath}/`,
+        `${submissionData.path}/.mdt-config.toml`,
+        `${submissionData.path}/.mdt-next`,
+        `${submissionData.path}/${submissionData.crsPath}/`,
         result.configPath
       ];
-      
+
       setCreatedFiles(files);
       setShowConfirmation(false);
       setShowSuccess(true);
-      
+
       // Notify parent component to refresh projects list
       onProjectCreated();
     } catch (error) {
@@ -270,6 +326,52 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     setShowDirectoryPicker(false);
   };
 
+  // Load discovery paths from global config
+  const loadDiscoveryPaths = async () => {
+    try {
+      const response = await fetch('/api/config/global');
+      if (response.ok) {
+        const config = await response.json();
+        const paths = config.discovery?.searchPaths || [];
+        setDiscoveryPaths(paths);
+        console.log('Discovery paths loaded:', paths);
+      }
+    } catch (error) {
+      console.error('Error loading discovery paths:', error);
+    }
+  };
+
+  // Check if the selected path is within discovery paths
+  const checkPathInDiscovery = (selectedPath: string) => {
+    if (!selectedPath || discoveryPaths.length === 0) {
+      setIsPathInDiscovery(false);
+      return;
+    }
+
+    // Expand tilde in selected path for comparison
+    const expandedSelectedPath = ProjectValidator.expandTildePath(selectedPath);
+
+    const isInDiscovery = discoveryPaths.some(discoveryPath => {
+      try {
+        // Expand tilde in discovery path as well
+        const expandedDiscoveryPath = ProjectValidator.expandTildePath(discoveryPath);
+
+        // Normalize paths for comparison
+        const normalizedSelected = expandedSelectedPath.replace(/\/+$/, '');
+        const normalizedDiscovery = expandedDiscoveryPath.replace(/\/+$/, '');
+
+        // Check if selected path is the same as or within a discovery path
+        return normalizedSelected === normalizedDiscovery ||
+               normalizedSelected.startsWith(normalizedDiscovery + '/');
+      } catch (error) {
+        console.error('Error checking paths:', error);
+        return false;
+      }
+    });
+
+    setIsPathInDiscovery(isInDiscovery);
+  };
+
   const navigateToDirectory = (path: string) => {
     loadDirectories(path);
   };
@@ -287,23 +389,35 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
 
   if (!isOpen) return null;
 
+  const tags = Array.from({ length: 50 }).map(
+  (_, i, a) => `v1.2.0-beta.${a.length - i}`
+  )
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 pointer-events-auto" onClick={handleOverlayClick}>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background border border-border rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-stretch border-b border-border" style={{ padding: '0' }}>
-          <div style={{ padding: '24px', flex: 1, display: 'flex', alignItems: 'center' }}>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background border border-border rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+        {/* Fixed Header */}
+        <div className="flex items-stretch border-b border-border flex-shrink-0">
+          <div className="p-6 flex-1 flex items-center">
             <h2 className="text-xl font-semibold text-foreground">
               {editMode ? 'Edit Project' : 'Add New Project'}
             </h2>
           </div>
-          <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Button variant="ghost" size="sm" onClick={onClose} style={{ width: '40px', height: '40px' }}>
+          <div className="p-6 flex items-center justify-center">
+            <Button variant="ghost" size="sm" onClick={onClose} className="w-10 h-10">
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        <div className="p-6 overflow-y-auto">
+        {/* Scrollable Content Area */}
+        <ScrollArea
+          type="hover"
+          scrollHideDelay={600}
+          className="h-full"
+          style={{ height: 'calc(80vh - 180px)' }}
+        >
+          <div className="p-6">
           {showDirectoryPicker ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -332,7 +446,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 )}
               </div>
 
-              <div className="border border-border rounded-md max-h-64 overflow-y-auto">
+              <div className="border border-border rounded-md">
+                <ScrollArea className="max-h-64">
                 {parentPath && (
                   <button
                     onClick={() => navigateToDirectory(parentPath)}
@@ -358,13 +473,13 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                         <span className="truncate">{dir.name}</span>
                         <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground flex-shrink-0" />
                       </button>
-                      <div className="flex-shrink-0" style={{ padding: '8px', minWidth: '80px' }}>
+                      <div className="flex-shrink-0 p-2 min-w-[80px]">
                         <Button
                           type="button"
                           variant="default"
                           size="sm"
                           onClick={() => handleDirectorySelect(dir)}
-                          style={{ width: '100%' }}
+                          className="w-full"
                         >
                           Select
                         </Button>
@@ -372,10 +487,11 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                     </div>
                   ))
                 )}
+                </ScrollArea>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">
                   Project Name *
@@ -416,7 +532,25 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">
-                  Project Path *
+                  <span className="flex items-center gap-2">
+                    Project Path *
+                    {isPathInDiscovery && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex items-center text-green-600">
+                              <Check className="h-4 w-4" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">
+                              This path is within configured discovery paths and will be auto-discovered
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </span>
                 </label>
                 <div className="flex space-x-2">
                   <input
@@ -428,7 +562,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                         ? 'bg-muted text-muted-foreground cursor-not-allowed' 
                         : 'bg-background'
                     }`}
-                    placeholder="/path/to/project"
+                    placeholder="/path/to/project or ~/path/to/project"
                     readOnly={editMode}
                     disabled={editMode}
                   />
@@ -446,19 +580,95 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 {errors.path && <p className="text-sm text-destructive mt-1">{errors.path}</p>}
               </div>
 
+              {/* Auto-Detection Strategy Display */}
+              {formData.path && (
+                <div className={`p-4 rounded-md border ${
+                  isPathInDiscovery
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-blue-50 border-blue-200'
+                }`}>
+                  <div className="flex items-start space-x-3">
+                    <div className={`flex-shrink-0 ${
+                      isPathInDiscovery ? 'text-green-600' : 'text-blue-600'
+                    }`}>
+                      {isPathInDiscovery ? (
+                        <Search className="h-5 w-5" />
+                      ) : (
+                        <FolderOpen className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className={`font-medium text-sm mb-1 ${
+                        isPathInDiscovery ? 'text-green-800' : 'text-blue-800'
+                      }`}>
+                        {isPathInDiscovery ? 'Auto-Discovery Strategy' : 'Project-First Strategy'}
+                      </div>
+                      <div className={`text-xs mb-2 ${
+                        isPathInDiscovery ? 'text-green-700' : 'text-blue-700'
+                      }`}>
+                        {isPathInDiscovery
+                          ? 'This project will be automatically discovered and available in the project selector.'
+                          : 'This project will need to be manually added to the global registry to be available.'
+                        }
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        <strong>How it works:</strong> {isPathInDiscovery
+                          ? 'Projects within configured discovery paths are automatically detected and made available without manual registration.'
+                          : 'Projects outside discovery paths require explicit registration in the global configuration to be accessible.'
+                        }
+                      </div>
+                      {discoveryPaths.length > 0 && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          <strong>Discovery paths:</strong> {discoveryPaths.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!editMode && (
+                <div>
+                  <label className="flex items-center space-x-2 text-sm font-medium text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={formData.useGlobalConfigOnly}
+                      onChange={(e) => setFormData(prev => ({ ...prev, useGlobalConfigOnly: e.target.checked }))}
+                      className="rounded border-border text-primary focus:ring-primary focus:ring-2"
+                    />
+                    <span>Use Global Config Only</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">
+                            Store project configuration only in global registry, no config files in project directory
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </label>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">
-                  Tickets Directory
+                  Tickets Directory *
                 </label>
                 <input
                   type="text"
                   value={formData.crsPath}
                   onChange={(e) => setFormData(prev => ({ ...prev, crsPath: e.target.value }))}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                    errors.crsPath ? 'border-destructive' : 'border-border'
+                  }`}
                   placeholder="docs/CRs"
                 />
+                {errors.crsPath && <p className="text-sm text-destructive mt-1">{errors.crsPath}</p>}
                 <p className="text-xs text-muted-foreground mt-1">
-                  Relative path inside the project where tickets will be stored
+                  Relative path inside the project where tickets will be stored (e.g., "docs/CRs", "tickets", "bugs")
                 </p>
               </div>
 
@@ -469,10 +679,13 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                    errors.description ? 'border-destructive' : 'border-border'
+                  }`}
                   rows={3}
                   placeholder="Brief description of the project"
                 />
+                {errors.description && <p className="text-sm text-destructive mt-1">{errors.description}</p>}
               </div>
 
               <div>
@@ -483,9 +696,12 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                   type="url"
                   value={formData.repositoryUrl}
                   onChange={(e) => setFormData(prev => ({ ...prev, repositoryUrl: e.target.value }))}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className={`w-full px-3 py-2 border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                    errors.repositoryUrl ? 'border-destructive' : 'border-border'
+                  }`}
                   placeholder="https://github.com/user/repo"
                 />
+                {errors.repositoryUrl && <p className="text-sm text-destructive mt-1">{errors.repositoryUrl}</p>}
               </div>
 
               {errors.submit && (
@@ -493,25 +709,33 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                   <p className="text-sm text-red-800">{errors.submit}</p>
                 </div>
               )}
+            </div>
+          )}
+          </div>
+        </ScrollArea>
 
-              <div className="flex justify-end space-x-3" style={{ padding: '16px 0 0 0' }}>
-                <div style={{ minWidth: '80px' }}>
-                  <Button type="button" variant="outline" onClick={onClose} style={{ width: '100%' }}>
+        {/* Fixed Footer */}
+        {!showDirectoryPicker && (
+          <div className="border-t border-border p-6 flex-shrink-0">
+            <form onSubmit={handleSubmit}>
+              <div className="flex justify-end space-x-3">
+                <div className="min-w-[80px]">
+                  <Button type="button" variant="outline" onClick={onClose} className="w-full">
                     Cancel
                   </Button>
                 </div>
-                <div style={{ minWidth: '120px' }}>
-                  <Button type="submit" disabled={isSubmitting} style={{ width: '100%' }}>
-                    {isSubmitting 
-                      ? (editMode ? 'Saving...' : 'Creating...') 
+                <div className="min-w-[120px]">
+                  <Button type="submit" disabled={isSubmitting} className="w-full">
+                    {isSubmitting
+                      ? (editMode ? 'Saving...' : 'Creating...')
                       : (editMode ? 'Save' : 'Create Project')
                     }
                   </Button>
                 </div>
               </div>
             </form>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Confirmation Dialog */}
@@ -543,6 +767,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
               <div><strong>Name:</strong> {formData.name}</div>
               <div><strong>Code:</strong> {formData.code}</div>
               <div><strong>Path:</strong> {formData.path}</div>
+              {formData.useGlobalConfigOnly && <div><strong>Config Mode:</strong> Global Config Only</div>}
               <div><strong>Tickets Directory:</strong> {formData.crsPath}</div>
               {formData.description && <div><strong>Description:</strong> {formData.description}</div>}
               {formData.repositoryUrl && <div><strong>Repository:</strong> {formData.repositoryUrl}</div>}
