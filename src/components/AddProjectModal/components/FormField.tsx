@@ -37,7 +37,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   showFolderBrowser = false,
   onFolderSelect
 }) => {
-  const inputId = label.toLowerCase().replace(/\s+/g, '-');
+  const inputId = label ? label.toLowerCase().replace(/\s+/g, '-') : `field-${Math.random().toString(36).substr(2, 9)}`;
   const [showFolderModal, setShowFolderModal] = useState(false);
 
   const handleFolderBrowse = () => {
@@ -56,8 +56,8 @@ export const FormField: React.FC<FormFieldProps> = ({
     px-3 py-2 border rounded-md
     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
     disabled:opacity-50 disabled:cursor-not-allowed
-    ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}
-    ${readOnly ? 'bg-gray-50 cursor-not-allowed' : ''}
+    ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600'}
+    ${readOnly ? 'bg-gray-50 dark:bg-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white'}
     ${showFolderBrowser ? 'flex-1' : 'w-full'}
     ${className}
   `;
@@ -94,14 +94,15 @@ export const FormField: React.FC<FormFieldProps> = ({
 
   return (
     <div className="mb-4">
-      <label
-        htmlFor={inputId}
-        className="block text-sm font-medium text-gray-700 mb-1"
-      >
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-        {tooltip && (
-          <TooltipProvider>
+      {label && label.trim() && (
+        <label
+          htmlFor={inputId}
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+          {tooltip && (
+            <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <HelpCircle
@@ -115,6 +116,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           </TooltipProvider>
         )}
       </label>
+      )}
 
       {children ? (
         <div className="relative">
