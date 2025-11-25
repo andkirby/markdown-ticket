@@ -123,8 +123,12 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
+      <ScrollArea
+        type="hover"
+        scrollHideDelay={600}
+        className="flex-1"
+        style={{ height: 'calc(80vh - 250px)' }}
+      >
           <div className="p-6">
             <div className="border border-gray-200 rounded-lg">
               <div className="p-4">
@@ -133,7 +137,6 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
             </div>
           </div>
         </ScrollArea>
-      </div>
 
       {/* Fixed Footer */}
       <div className="flex-shrink-0 border-t p-6">

@@ -160,7 +160,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div
-          className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+          className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[calc(100vh-100px)] flex flex-col"
           onClick={handleOverlayClick}
         >
           {/* Header */}
@@ -185,8 +185,12 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
+          <ScrollArea
+            type="hover"
+            scrollHideDelay={600}
+            className="h-full"
+            style={{ height: 'calc(100vh - 300px)' }}
+          >
               <div className="p-6 space-y-6">
                 {/* Project Name */}
                 <FormField
@@ -239,6 +243,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                     required
                     readOnly={editMode}
                     className="mt-0"
+                    showFolderBrowser={!editMode}
                   />
                 </div>
 
@@ -309,7 +314,6 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 />
               </div>
             </ScrollArea>
-          </div>
 
           {/* Footer */}
           <div className="border-t p-6 flex-shrink-0">
