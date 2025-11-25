@@ -55,7 +55,18 @@ export default function FolderBrowserModal({
   const loadFileSystem = async (path: string = '') => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/directories${path ? `?path=${encodeURIComponent(path)}` : ''}`);
+
+      // Browser-safe path expansion for tilde
+      const expandTildePath = (inputPath: string): string => {
+        if (inputPath === '~' || inputPath.startsWith('~/')) {
+          return inputPath.replace(/^~/, '/Users/kirby');
+        }
+        return inputPath;
+      };
+
+      let expandedPath = expandTildePath(path);
+      const response = await fetch(`/api/directories${expandedPath ? `?path=${encodeURIComponent(expandedPath)}` : ''}`);
+
       if (response.ok) {
         const data: DirectoryListing = await response.json();
         setDirectoryListing(data);
@@ -63,10 +74,42 @@ export default function FolderBrowserModal({
           setSelectedPath(data.currentPath);
         }
       } else {
-        console.error('API response not ok:', response.status, response.statusText);
+        console.log('Directory not found, falling back to home directory');
+
+        // Fallback to home directory when the requested path doesn't exist
+        const homePath = '/Users/kirby';
+        setCurrentPath(homePath);
+
+        const fallbackResponse = await fetch(`/api/directories?path=${encodeURIComponent(homePath)}`);
+
+        if (fallbackResponse.ok) {
+          const fallbackData: DirectoryListing = await fallbackResponse.json();
+          setDirectoryListing(fallbackData);
+          setSelectedPath(fallbackData.currentPath);
+        } else {
+          console.error('Failed to load home directory as fallback');
+          setDirectoryListing(null);
+        }
       }
     } catch (error) {
       console.error('Failed to load file system:', error);
+
+      // Fallback to home directory on any error
+      console.log('Error occurred, falling back to home directory');
+      const homePath = '/Users/kirby';
+      setCurrentPath(homePath);
+
+      try {
+        const fallbackResponse = await fetch(`/api/directories?path=${encodeURIComponent(homePath)}`);
+        if (fallbackResponse.ok) {
+          const fallbackData: DirectoryListing = await fallbackResponse.json();
+          setDirectoryListing(fallbackData);
+          setSelectedPath(fallbackData.currentPath);
+        }
+      } catch (fallbackError) {
+        console.error('Failed to load home directory as fallback');
+        setDirectoryListing(null);
+      }
     } finally {
       setLoading(false);
     }
