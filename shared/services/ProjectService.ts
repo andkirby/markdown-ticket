@@ -1055,4 +1055,52 @@ export class ProjectService {
       directories
     };
   }
+
+  /**
+   * Check if a directory exists on the filesystem
+   * @param dirPath - Directory path to check
+   * @returns Object indicating if directory exists
+   */
+  async checkDirectoryExists(dirPath: string): Promise<{ exists: boolean }> {
+    const fs = await import('fs/promises');
+    const pathModule = await import('path');
+    const os = await import('os');
+
+    // Validate input
+    if (!dirPath || typeof dirPath !== 'string') {
+      return { exists: false };
+    }
+
+    try {
+      // Resolve the path to an absolute path
+      const resolvedPath = pathModule.resolve(dirPath);
+
+      // Security check: restrict to home directory and common project areas
+      const homedir = os.homedir();
+      const allowedPaths = [
+        homedir,
+        '/tmp',
+        '/var/tmp',
+        process.cwd(),
+        '/Users'
+      ];
+
+      // Check if resolved path is within allowed boundaries
+      const isAllowed = allowedPaths.some(allowedPath =>
+        resolvedPath.startsWith(allowedPath) || resolvedPath === allowedPath
+      );
+
+      if (!isAllowed) {
+        this.log(`⚠️  Path access denied: ${resolvedPath} (outside allowed boundaries)`);
+        return { exists: false };
+      }
+
+      // Check if path exists and is a directory
+      const stats = await fs.stat(resolvedPath);
+      return { exists: stats.isDirectory() };
+    } catch (error) {
+      // Path doesn't exist or is not accessible
+      return { exists: false };
+    }
+  }
 }

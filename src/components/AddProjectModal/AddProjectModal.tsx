@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Info } from 'lucide-react';
+import { X, Check, Info, CircleX } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -37,6 +37,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [discoveryPaths, setDiscoveryPaths] = useState<string[]>([]);
   const [isPathInDiscovery, setIsPathInDiscovery] = useState(false);
+  const [pathExists, setPathExists] = useState(false);
 
   // Use the extracted form hook
   const {
@@ -54,8 +55,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     }
   }, [isOpen]);
 
-  // Check if path is in discovery when form data changes
+  // Check if path is in discovery and exists when form data changes
   useEffect(() => {
+    checkPathExists(formData.path); // This handles empty paths too
     if (formData.path && discoveryPaths.length > 0) {
       checkPathInDiscovery(formData.path);
     }
@@ -100,6 +102,52 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     });
 
     setIsPathInDiscovery(inDiscovery);
+  };
+
+  const checkPathExists = async (path: string) => {
+    if (!path.trim()) {
+      setPathExists(false);
+      return;
+    }
+
+    // Browser-safe path expansion
+    const expandTildePathBrowser = (inputPath: string): string => {
+      if (inputPath === '~' || inputPath.startsWith('~/')) {
+        return inputPath.replace(/^~/, '/Users/kirby');
+      }
+      return inputPath;
+    };
+
+    const expandedPath = expandTildePathBrowser(path);
+
+    try {
+      // Use the new backend API endpoint to check if directory exists
+      const response = await fetch('/api/filesystem/exists', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ path: expandedPath }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPathExists(data.exists);
+      } else {
+        setPathExists(false);
+      }
+    } catch (error) {
+      // If API call fails, fall back to basic format validation
+      const validPathPatterns = [
+        /^\//, // Absolute path starting with /
+        /^~/, // Home directory path starting with ~
+        /^\.\./, // Parent directory path starting with ..
+        /^\.$/, // Current directory path starting with .
+        /^[a-zA-Z]:/, // Windows drive path (for future compatibility)
+      ];
+      const isValidPath = validPathPatterns.some(pattern => pattern.test(path));
+      setPathExists(isValidPath);
+    }
   };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -239,21 +287,24 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Info className={`w-4 h-4 ml-2 cursor-help ${
+                            <Info className={`w-4 h-4 ml-2 cursor-help transition-all duration-300 ${
                               isPathInDiscovery && !editMode
-                                ? 'text-green-600 dark:text-green-400'
+                                ? 'text-green-600 dark:text-green-400 drop-shadow-lg animate-pulse'
                                 : 'text-gray-400'
                             }`} />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
                             <p className="font-semibold mb-2">Project Path & Configuration</p>
                             <p className="text-sm mb-2">
+                              <strong>Path Validation:</strong> ✓ indicates a valid path format, ✗ indicates an invalid path.
+                            </p>
+                            <p className="text-sm mb-2">
                               <strong>Global Config:</strong> Store project configuration only in global registry
                               (~/.config/markdown-ticket), with no local config files in project directory.
                             </p>
                             <p className="text-sm">
                               <strong>Auto-Discovery:</strong> When path is within configured discovery search paths
-                              (shown as green indicator), project will be automatically discovered.
+                              (shown as glowing green info icon), project will be automatically discovered.
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -287,7 +338,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                     readOnly={editMode}
                     className="mt-0 w-full"
                     showFolderBrowser={!editMode}
-                    showSuccessIndicator={isPathInDiscovery && !editMode}
+                    showPathStatus={true}
+                    pathExists={pathExists}
                     containerClassName="w-full"
                   />
                 </div>

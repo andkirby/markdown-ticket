@@ -80,6 +80,11 @@ export function createSystemRouter(
     projectController.getFileSystemTree(req, res);
   });
 
+  // Check if directory exists
+  router.post('/filesystem/exists', (req: Request, res: Response) => {
+    projectController.checkDirectoryExists(req, res);
+  });
+
   // Clear file operation cache
   router.post('/cache/clear', async (req: Request, res: Response) => {
     try {
