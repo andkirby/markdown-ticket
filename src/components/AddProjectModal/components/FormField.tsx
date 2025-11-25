@@ -1,6 +1,8 @@
-import React from 'react';
-import { HelpCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { HelpCircle, FolderOpen, Folder } from 'lucide-react';
+import { Button } from '../../ui';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
+import FolderBrowserModal from './FolderBrowserModal';
 
 export interface FormFieldProps {
   label: string;
@@ -15,6 +17,8 @@ export interface FormFieldProps {
   tooltip?: string;
   className?: string;
   children?: React.ReactNode;
+  showFolderBrowser?: boolean;
+  onFolderSelect?: (path: string) => void;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -29,16 +33,32 @@ export const FormField: React.FC<FormFieldProps> = ({
   type = 'text',
   tooltip,
   className = '',
-  children
+  children,
+  showFolderBrowser = false,
+  onFolderSelect
 }) => {
   const inputId = label.toLowerCase().replace(/\s+/g, '-');
+  const [showFolderModal, setShowFolderModal] = useState(false);
+
+  const handleFolderBrowse = () => {
+    setShowFolderModal(true);
+  };
+
+  const handleFolderSelected = (selectedPath: string) => {
+    if (onFolderSelect) {
+      onFolderSelect(selectedPath);
+    } else {
+      onChange(selectedPath);
+    }
+  };
 
   const baseInputClasses = `
-    w-full px-3 py-2 border rounded-md
+    px-3 py-2 border rounded-md
     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
     disabled:opacity-50 disabled:cursor-not-allowed
     ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}
     ${readOnly ? 'bg-gray-50 cursor-not-allowed' : ''}
+    ${showFolderBrowser ? 'flex-1' : 'w-full'}
     ${className}
   `;
 
@@ -101,8 +121,29 @@ export const FormField: React.FC<FormFieldProps> = ({
           {children}
         </div>
       ) : (
-        <div className="relative">
+        <div className={`relative ${showFolderBrowser ? 'flex gap-2' : ''}`}>
           {renderInput()}
+          {showFolderBrowser && !readOnly && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleFolderBrowse}
+                    disabled={disabled}
+                    className="flex items-center gap-1 whitespace-nowrap"
+                  >
+                    <Folder className="h-4 w-4" />
+                    Browse
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Browse for folder</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       )}
 
@@ -110,6 +151,17 @@ export const FormField: React.FC<FormFieldProps> = ({
         <p className="mt-1 text-sm text-red-600">
           {error}
         </p>
+      )}
+
+      {/* Folder Browser Modal */}
+      {showFolderBrowser && (
+        <FolderBrowserModal
+          isOpen={showFolderModal}
+          onClose={() => setShowFolderModal(false)}
+          onFolderSelected={handleFolderSelected}
+          initialPath={typeof value === 'string' ? value : ''}
+          title={`Select ${label.toLowerCase().replace(/\*\s*/, '')} Folder`}
+        />
       )}
     </div>
   );
