@@ -121,20 +121,20 @@ export default function FolderBrowserModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Current: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{directoryListing?.currentPath || 'Loading...'}</code>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              Current: <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">{directoryListing?.currentPath || 'Loading...'}</code>
             </p>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="p-2 hover:bg-gray-100"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
           >
             ×
           </Button>
@@ -162,25 +162,25 @@ export default function FolderBrowserModal({
                   </div>
                 </div>
               ) : (
-                <div className="border border-gray-200 rounded-lg">
+                <div className="border border-gray-200 dark:border-gray-600 rounded-lg">
                   <div className="p-2">
                     {/* Add ".." parent directory link */}
                     {directoryListing.parentPath && (
                       <div
-                        className={`flex items-center py-2 px-2 hover:bg-accent rounded cursor-pointer group ${
-                          selectedPath === directoryListing.parentPath ? 'bg-primary/10 border-l-2 border-primary' : ''
+                        className={`flex items-center py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group ${
+                          selectedPath === directoryListing.parentPath ? 'bg-primary/10 dark:bg-primary/20 border-l-2 border-primary' : ''
                         }`}
                         onClick={() => navigateUp()}
                       >
                         <div className="flex items-center flex-1 min-w-0">
-                          <Folder className="w-4 h-4 text-blue-500 mr-2 flex-shrink-0" />
+                          <Folder className="w-4 h-4 text-blue-500 dark:text-blue-400 mr-2 flex-shrink-0" />
                           <span className={`text-sm truncate ${
-                            selectedPath === directoryListing.parentPath ? 'font-medium text-primary' : 'text-gray-700'
+                            selectedPath === directoryListing.parentPath ? 'font-medium text-primary dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'
                           }`}>
                             ..
                           </span>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-gray-400 mr-2 opacity-0 group-hover:opacity-100" />
+                        <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2 opacity-0 group-hover:opacity-100" />
                       </div>
                     )}
 
@@ -189,20 +189,20 @@ export default function FolderBrowserModal({
                       return (
                         <div
                           key={item.path}
-                          className={`flex items-center py-2 px-2 hover:bg-accent rounded cursor-pointer group ${
-                            isSelected ? 'bg-primary/10 border-l-2 border-primary' : ''
+                          className={`flex items-center py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group ${
+                            isSelected ? 'bg-primary/10 dark:bg-primary/20 border-l-2 border-primary' : ''
                           }`}
                           onClick={() => handleItemClick(item)}
                         >
                           <div className="flex items-center flex-1 min-w-0">
-                            <Folder className="w-4 h-4 text-blue-500 mr-2 flex-shrink-0" />
+                            <Folder className="w-4 h-4 text-blue-500 dark:text-blue-400 mr-2 flex-shrink-0" />
                             <span className={`text-sm truncate ${
-                              isSelected ? 'font-medium text-primary' : 'text-gray-700'
+                              isSelected ? 'font-medium text-primary dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'
                             }`}>
                               {item.name}
                             </span>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-gray-400 mr-2 opacity-0 group-hover:opacity-100" />
+                          <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2 opacity-0 group-hover:opacity-100" />
                         </div>
                       );
                     })}
@@ -213,11 +213,11 @@ export default function FolderBrowserModal({
           </ScrollArea>
 
         {/* Footer */}
-        <div className="border-t p-6 flex-shrink-0">
+        <div className="border-t border-gray-200 dark:border-gray-700 p-6 flex-shrink-0">
           <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-300">
               {selectedPath && (
-                <span>Selected: <code className="bg-gray-100 px-2 py-1 rounded text-xs max-w-xs truncate inline-block">{selectedPath}</code></span>
+                <span>Selected: <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs max-w-xs truncate inline-block">{selectedPath}</code></span>
               )}
             </div>
             <div className="flex space-x-3">
