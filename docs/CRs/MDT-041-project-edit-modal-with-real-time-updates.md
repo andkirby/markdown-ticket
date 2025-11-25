@@ -103,11 +103,13 @@ implementationNotes: Status changed to Implemented on 9/11/2025
 | `src/components/PathValidation.tsx` | React Component | Enhanced path validation with tilde expansion |
 | `src/hooks/useProjectStrategies.ts` | Custom Hook | Project strategy management logic |
 
-### Modified Artifacts
+### Modified Artifacts (Updated post-implementation: 2025-11-25)
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/components/AddProjectModal.tsx` | Enhancement | Add strategy selection, path controls, tickets path field |
+| `src/components/AddProjectModal/AddProjectModal.tsx` | Layout Restructuring | Lines 213-278: Unified Project Path control with header row, inline checkbox, vertical separator, horizontal separator, and auto-discovery indicator |
+| `src/components/AddProjectModal/components/FormField.tsx` | Enhancement | Add auto-discovery indicator styling for inline green feedback in input fields |
+| `src/components/AddProjectModal/hooks/useProjectForm.ts` | No Changes | Form data structure unchanged - maintains backward compatibility |
 | `server/services/ProjectService.ts` | Enhancement | Add strategy support, tilde expansion, path creation control |
 | `shared/services/ProjectService.ts` | Reference | Align backend with shared service implementation |
 | `src/components/ProjectManager.tsx` | Enhancement | Add strategy indicators, edit buttons |
@@ -115,18 +117,22 @@ implementationNotes: Status changed to Implemented on 9/11/2025
 
 ### UI Form Structure Enhancement
 
-#### **Project Creation Form Fields**
+#### **Project Creation Form Fields** (Updated post-implementation: 2025-11-25)
 1. **Project Name** (required, text input)
 2. **Project Code** (auto-generated, read-only display)
-3. **Project Path** (required, directory picker with tilde expansion support)
-   - Shows discovery path status indicator
-   - Auto-detects whether path is within configured discovery paths
+3. **Project Path Control Group** (unified control unit):
+   - **Header Row**: `Project Path * (i) | [ ] Use Global Config`
+     - Project Path label + info icon on left
+     - Vertical separator `|` for visual boundary
+     - Global Config checkbox on right with inline positioning
+   - **Text Input**: Single line with inline green auto-discovery indicator
+   - **Section Separator**: Horizontal line below input for form delineation
+   - **Enhanced Tooltip**: Explains both global config and auto-discovery concepts
+   - **Visual Feedback**: Green border/background when path is within discovery paths
 4. **Create Project Path** (checkbox, default: false)
-5. **Configuration Strategy**:
-   - **"Use Global Config Only"** checkbox with tooltip (i) for explanation
-   - **Auto-Determined Strategy** displayed to user:
-     - **Auto-Discovery**: When path is within discovery paths
-     - **Project-First**: When path is outside discovery paths
+5. **Configuration Strategy Display** (auto-determined):
+   - **Auto-Discovery**: When path is within configured discovery paths
+   - **Project-First**: When path is outside discovery paths
 6. **Tickets Path** (text input, default: "docs/CRs", relative path only)
 7. **Description** (optional, textarea)
 8. **Repository URL** (optional, text input)
@@ -203,15 +209,20 @@ if (!fs.existsSync(expandedPath)) {
 - [ ] Configuration validation works consistently across UI and CLI
 - [ ] Project discovery returns same results regardless of creation method
 
-### Non-Functional
+### Non-Functional (Updated post-implementation: 2025-11-25)
 - [ ] No performance impact on project operations (< 100ms additional processing)
 - [ ] Cross-platform compatibility maintained (macOS, Linux, Windows)
 - [ ] Backward compatibility with existing projects maintained
 - [ ] All existing project management tests continue to pass
-- [ ] Responsive design works on mobile and desktop viewports
+- [ ] Responsive design works on mobile, tablet, and desktop viewports
 - [ ] Accessibility compliance for form controls and modals
 - [ ] Form area uses ScrollArea component for small viewport heights (max-h-[80vh])
 - [ ] Modal content remains scrollable while header and footer stay fixed
+- [ ] Project Path unified control layout maintains visual coherence across all viewport sizes
+- [ ] Vertical separator `|` remains clearly visible on high-DPI displays
+- [ ] Horizontal separator line renders consistently across different browsers
+- [ ] Green auto-discovery indicator meets WCAG color contrast requirements
+- [ ] Inline tooltips remain accessible via keyboard navigation and screen readers
 
 ### Integration Testing
 - [ ] End-to-end: Project creation with each strategy creates proper config files
@@ -221,12 +232,23 @@ if (!fs.existsSync(expandedPath)) {
 - [ ] API: New endpoints return proper error responses for invalid inputs
 - [ ] UI: Real-time updates propagate across all connected clients
 
-### Manual Testing
+### Manual Testing (Updated post-implementation: 2025-11-25)
 - [ ] User can create Global-Only project with clean project directory
 - [ ] User can create Auto-Discovery project with no global registration
 - [ ] User can edit project name and see changes immediately
 - [ ] User receives clear error messages for invalid paths or strategies
 - [ ] User can use tilde paths in both creation and editing workflows
+- [ ] Project Path header displays unified layout: `Project Path * (i) | [ ] Use Global Config`
+- [ ] Info icon tooltip explains both global config and auto-discovery concepts
+- [ ] Checkbox appears inline with Project Path label on same line
+- [ ] Vertical separator `|` clearly visible between label and checkbox
+- [ ] Horizontal separator line appears below input field
+- [ ] Green indicator styling appears when path is auto-discoverable
+- [ ] Green styling removed when path is outside discovery paths
+- [ ] Form submission still sends `useGlobalConfigOnly` correctly
+- [ ] Read-only mode works correctly in edit form (both label and checkbox grayed)
+- [ ] Unified control layout works on mobile, tablet, and desktop viewports
+- [ ] Keyboard navigation functions properly for all unified controls
 
 ## 5. Implementation Notes
 
@@ -314,3 +336,25 @@ if (!fs.existsSync(expandedPath)) {
 - Integration tests for CLI vs UI configuration parity
 - E2E tests for enhanced project creation and editing workflows
 - Path validation tests with tilde expansion
+
+## 8. Clarifications
+
+### Post-Implementation Session 2025-11-25
+
+**Specification Corrections - UI Layout Control Organization**:
+- **Project Path Field Grouping** (AddProjectModal.tsx:213-278): Visual disconnection discovered between Project Path controls and "Use Global Config" checkbox
+- **Layout Restructuring Required**: Move checkbox from separate section to header row alongside Project Path label with vertical separator `|`
+- **Enhanced Info Icon Tooltip**: Must explain both global config AND auto-discovery concepts (previously only path auto-discoverability)
+
+**Integration Changes - Visual Feedback System**:
+- **Auto-Discovery Indicator**: Inline green indicator within input field instead of separate component below input for real-time feedback
+- **Section Boundary Structure**: Horizontal separator line required below input field for clear form section delineation
+
+**Verification Updates - Layout Control Testing**:
+- **Responsive Layout Requirements**: 11 specific acceptance criteria needed for unified header layout across mobile/tablet/desktop viewports
+- **Visual Validation**: Green border/background styling when path is auto-discoverable, removal when outside discovery paths
+
+**Artifacts Affected**:
+- `src/components/AddProjectModal/AddProjectModal.tsx` - Lines 213-278 restructuring for unified control layout
+- `src/components/AddProjectModal/components/FormField.tsx` - Auto-discovery indicator styling integration
+- `src/components/AddProjectModal/hooks/useProjectForm.ts` - No changes required (form data structure unchanged)
