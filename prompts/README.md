@@ -59,8 +59,7 @@ prompts/
 ├── mdt-ticket-creation.md   # CR creation workflow template
 ├── mdt-clarification.md     # Interactive clarification workflow
 ├── mdt-reflection.md        # Post-implementation learning capture
-├── CLAUDE.md                # Development guidance for working with prompts
-└── docs_review.md           # Documentation review prompts
+└── CLAUDE.md                # Development guidance for working with prompts
 ```
 
 ## Development
