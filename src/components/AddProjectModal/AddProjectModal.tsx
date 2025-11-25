@@ -66,7 +66,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       const response = await fetch('/api/config/global');
       if (response.ok) {
         const data = await response.json();
-        const paths = data.config?.discovery?.searchPaths || [];
+        const paths = data.discovery?.searchPaths || [];
         setDiscoveryPaths(paths);
       }
     } catch (error) {
@@ -75,11 +75,30 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   };
 
   const checkPathInDiscovery = (path: string) => {
-    const expandedPath = ProjectValidator.expandTildePath(path);
+    // Browser-safe path expansion
+    const expandTildePathBrowser = (inputPath: string): string => {
+      if (inputPath === '~' || inputPath.startsWith('~/')) {
+        return inputPath.replace(/^~/, '/Users/kirby'); // Use current user home directory
+      }
+      return inputPath;
+    };
+
+    const expandedPath = expandTildePathBrowser(path);
+
     const inDiscovery = discoveryPaths.some(discoveryPath => {
-      const expandedDiscoveryPath = ProjectValidator.expandTildePath(discoveryPath);
-      return expandedPath.startsWith(expandedDiscoveryPath);
+      const expandedDiscoveryPath = expandTildePathBrowser(discoveryPath);
+
+      // More precise matching: path must start with discovery path AND
+      // either be exactly the discovery path OR have a separator after it
+      if (expandedPath === expandedDiscoveryPath) {
+        return true; // Exact match
+      } else if (expandedPath.startsWith(expandedDiscoveryPath + '/')) {
+        return true; // Match with proper path separator
+      }
+
+      return false;
     });
+
     setIsPathInDiscovery(inDiscovery);
   };
 
@@ -210,23 +229,52 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 />
 
                 {/* Project Path with Discovery Indicator */}
-                <div>
+                <div className="w-full">
                   <div className="flex items-center mb-1">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Project Path
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    {isPathInDiscovery && (
+                    <div className="flex items-center">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Project Path
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Check className="w-4 h-4 ml-1 text-green-600" />
+                            <Info className={`w-4 h-4 ml-2 cursor-help ${
+                              isPathInDiscovery && !editMode
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-gray-400'
+                            }`} />
                           </TooltipTrigger>
-                          <TooltipContent>
-                            <p>This path is within configured discovery paths and will be auto-discovered</p>
+                          <TooltipContent className="max-w-xs">
+                            <p className="font-semibold mb-2">Project Path & Configuration</p>
+                            <p className="text-sm mb-2">
+                              <strong>Global Config:</strong> Store project configuration only in global registry
+                              (~/.config/markdown-ticket), with no local config files in project directory.
+                            </p>
+                            <p className="text-sm">
+                              <strong>Auto-Discovery:</strong> When path is within configured discovery search paths
+                              (shown as green indicator), project will be automatically discovered.
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                    </div>
+                    {!editMode && (
+                      <div className="flex items-center ml-6">
+                        <div className="border-l border-gray-300 mx-3 h-4" />
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="globalConfigOnly"
+                            checked={formData.useGlobalConfigOnly}
+                            onChange={(e) => updateField('useGlobalConfigOnly', e.target.checked)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <label htmlFor="globalConfigOnly" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Global Config Only
+                          </label>
+                        </div>
+                      </div>
                     )}
                   </div>
                   <FormField
@@ -237,45 +285,24 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                     error={errors.path}
                     required
                     readOnly={editMode}
-                    className="mt-0"
+                    className="mt-0 w-full"
                     showFolderBrowser={!editMode}
+                    showSuccessIndicator={isPathInDiscovery && !editMode}
+                    containerClassName="w-full"
                   />
                 </div>
 
                 {/* Strategy Indicator */}
-                {formData.path && !editMode && (
+                {/* Commented out as per MDT-041 */}
+                {/* {formData.path && !editMode && (
                   <StrategyIndicator
                     path={formData.path}
                     isPathInDiscovery={isPathInDiscovery}
                     discoveryPaths={discoveryPaths}
                   />
-                )}
+                )} */}
 
-                {/* Global Config Only Checkbox */}
-                {!editMode && (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="globalConfigOnly"
-                      checked={formData.useGlobalConfigOnly}
-                      onChange={(e) => updateField('useGlobalConfigOnly', e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <label htmlFor="globalConfigOnly" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Use Global Config Only
-                    </label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Store project configuration only in global registry, no config files in project directory</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                )}
+                {/* Global Config Only Checkbox - Moved to header */}
 
                 {/* Tickets Path */}
                 <FormField
