@@ -3,6 +3,7 @@ import path from 'path';
 import toml from 'toml';
 import os from 'os';
 import { Project, ProjectConfig, validateProjectConfig, getTicketsPath, isLegacyConfig, migrateLegacyConfig } from '../models/Project.js';
+import { ProjectValidator } from '../tools/ProjectValidator.js';
 import { Ticket } from '../models/Ticket.js';
 import { CONFIG_FILES, DEFAULT_PATHS, DEFAULTS } from '../utils/constants.js';
 
@@ -267,7 +268,22 @@ export class ProjectService {
             id: projectId,
             project: {
               name: localConfig?.project?.name || projectId, // Local priority, fallback to directory name
-              code: localConfig?.project?.code || projectId.toUpperCase(), // Local priority, fallback to ID
+              code: localConfig?.project?.code || (() => {
+                // Generate valid code from projectId using proper validation
+                const generatedCode = ProjectValidator.generateCodeFromName(projectId);
+                const validationResult = ProjectValidator.validateCode(generatedCode);
+                if (validationResult.valid) {
+                  return validationResult.normalized!;
+                } else {
+                  // Fallback to first 5 chars of uppercase projectId
+                  let fallbackCode = projectId.toUpperCase().replace(/[^A-Z]/g, '').substring(0, 5);
+                  // Ensure minimum 2 chars
+                  if (fallbackCode.length < 2) {
+                    fallbackCode = projectId.toUpperCase().substring(0, 5);
+                  }
+                  return fallbackCode;
+                }
+              })(), // Local priority, fallback to validated code
               path: projectPath, // From global registry
               configFile: path.join(projectPath, CONFIG_FILES.PROJECT_CONFIG),
               startNumber: localConfig?.project?.startNumber || 1, // Local priority

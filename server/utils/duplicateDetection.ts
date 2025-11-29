@@ -1,6 +1,14 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { loadTickets, getNextTicketNumber, updateTicketCounter } from './ticketNumbering.js';
+// NOTE: Duplicate detection functionality is deprecated per MDT-082
+// Ticket numbering logic moved to shared/services/TicketService.ts
+// This file is kept for backward compatibility but functionality is disabled
+
+interface Ticket {
+  code: string;
+  title: string;
+  filename: string;
+}
 
 export interface DuplicateTicket {
   filename: string;
@@ -36,36 +44,19 @@ export interface ResolutionResult {
 
 /**
  * Finds duplicate ticket codes in a project
+ * @deprecated Functionality moved to MCP server per MDT-082
  * @param projectPath - Path to project directory
  * @returns Object with duplicate groups
  */
 export async function findDuplicates(projectPath: string): Promise<DuplicatesResult> {
-  const tickets = await loadTickets(projectPath);
-  const duplicates: Record<string, DuplicateTicket[]> = {};
-
-  // Group tickets by code to find duplicates
-  tickets.forEach(ticket => {
-    if (!duplicates[ticket.code]) {
-      duplicates[ticket.code] = [];
-    }
-    duplicates[ticket.code].push({
-      filename: path.basename(ticket.filename),
-      filepath: ticket.filename,
-      title: ticket.title,
-      code: ticket.code
-    });
-  });
-
-  // Filter to only duplicates (more than 1 ticket per code)
-  const duplicateGroups = Object.entries(duplicates)
-    .filter(([_code, tickets]) => tickets.length > 1)
-    .map(([code, tickets]) => ({ code, tickets }));
-
-  return { duplicates: duplicateGroups };
+  // Deprecated: Functionality moved to MCP server per MDT-082
+  console.warn('findDuplicates is deprecated - use MCP server tools instead');
+  return { duplicates: [] };
 }
 
 /**
  * Previews rename changes for a duplicate ticket
+ * @deprecated Functionality moved to MCP server per MDT-082
  * @param filepath - Path to ticket file
  * @param projectPath - Path to project directory
  * @param projectCode - Project code prefix
@@ -76,29 +67,19 @@ export async function previewRename(
   projectPath: string,
   projectCode: string
 ): Promise<RenamePreview> {
-  // Get next available ticket number
-  const nextNumber = await getNextTicketNumber(projectPath, projectCode);
-  const newCode = `${projectCode}-${String(nextNumber).padStart(3, '0')}`;
-
-  // Read current file to get old code
-  const content = await fs.readFile(filepath, 'utf8');
-  const codeMatch = content.match(/^code:\s*(.+)$/m) || content.match(/^-\s*\*\*Code\*\*:\s*(.+)$/m);
-  const oldCode = codeMatch ? codeMatch[1].trim() : '';
-
-  // Generate new filename
-  const oldFilename = path.basename(filepath);
-  const newFilename = oldFilename.replace(oldCode, newCode);
-
+  // Deprecated: Functionality moved to MCP server per MDT-082
+  console.warn('previewRename is deprecated - use MCP server tools instead');
   return {
-    newCode,
-    newFilename,
-    oldCode,
-    oldFilename
+    newCode: '',
+    newFilename: '',
+    oldCode: '',
+    oldFilename: ''
   };
 }
 
 /**
  * Resolves a duplicate by either renaming or deleting
+ * @deprecated Functionality moved to MCP server per MDT-082
  * @param action - 'rename' or 'delete'
  * @param oldFilepath - Path to ticket file
  * @param projectPath - Path to project directory
@@ -111,47 +92,7 @@ export async function resolveDuplicate(
   projectPath: string,
   projectCode: string
 ): Promise<ResolutionResult> {
-  if (action === 'delete') {
-    await fs.unlink(oldFilepath);
-    return { success: true, action: 'deleted' };
-  }
-
-  if (action === 'rename') {
-    // Get next available ticket number
-    const nextNumber = await getNextTicketNumber(projectPath, projectCode);
-    const newCode = `${projectCode}-${String(nextNumber).padStart(3, '0')}`;
-
-    // Read current file content
-    const content = await fs.readFile(oldFilepath, 'utf8');
-
-    // Extract current code from content
-    const codeMatch = content.match(/^code:\s*(.+)$/m);
-    const oldCode = codeMatch ? codeMatch[1].trim() : '';
-
-    // Replace code in content
-    const newContent = content.replace(/^code:\s*.+$/m, `code: ${newCode}`);
-
-    // Generate new filename
-    const oldFilename = path.basename(oldFilepath);
-    const newFilename = oldFilename.replace(oldCode, newCode);
-    const newFilepath = path.join(path.dirname(oldFilepath), newFilename);
-
-    // Write new file and delete old one
-    await fs.writeFile(newFilepath, newContent, 'utf8');
-    await fs.unlink(oldFilepath);
-
-    // Update counter
-    await updateTicketCounter(projectPath, nextNumber + 1);
-
-    return {
-      success: true,
-      action: 'renamed',
-      oldCode,
-      newCode,
-      oldFilename,
-      newFilename
-    };
-  }
-
-  throw new Error(`Invalid action: ${action}`);
+  // Deprecated: Functionality moved to MCP server per MDT-082
+  console.warn('resolveDuplicate is deprecated - use MCP server tools instead');
+  throw new Error('resolveDuplicate is deprecated - use MCP server tools instead');
 }

@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+// NOTE: Duplicate detection functionality deprecated per MDT-082
+// These functions now return empty results or throw deprecation errors
 import { findDuplicates, previewRename, resolveDuplicate } from '../utils/duplicateDetection.js';
 
 // Type definitions
