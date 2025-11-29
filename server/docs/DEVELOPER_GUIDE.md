@@ -450,7 +450,7 @@ app.use('/api/my-resource', myRouter);
 - **Services**: `*Service.js` (e.g., `ProjectService.js`)
 - **Controllers**: `*Controller.js` (e.g., `ProjectController.js`)
 - **Routes**: lowercase, plural (e.g., `projects.js`, `tickets.js`)
-- **Utilities**: camelCase (e.g., `ticketNumbering.js`)
+- **Utilities**: camelCase (e.g., `duplicateDetection.js`)
 - **Middleware**: camelCase (e.g., `errorHandler.js`)
 
 ### File Structure

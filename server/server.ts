@@ -98,8 +98,7 @@ const projectController = new ProjectController(
   projectService as any, // Type cast to ProjectServiceExtension for compatibility
   ticketService,
   fileSystemService,
-  fileWatcher,
-  projectManager as any // Type cast to ProjectManagerExtension for compatibility
+  fileWatcher
 );
 
 const ticketController = new TicketController(fileSystemService);
