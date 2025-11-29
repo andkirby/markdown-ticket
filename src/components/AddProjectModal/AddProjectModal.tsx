@@ -7,6 +7,7 @@ import { useProjectForm } from './hooks/useProjectForm';
 import { FormField } from './components/FormField';
 import { StrategyIndicator } from './components/StrategyIndicator';
 import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator';
+import { usePathResolution } from '@/hooks/usePathResolution';
 
 interface AddProjectModalProps {
   isOpen: boolean;
@@ -31,6 +32,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   editProject
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 🔐 Simplified path resolution hook - uses enhanced API
+  const { checkPath } = usePathResolution();
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [createdFiles, setCreatedFiles] = useState<string[]>([]);
@@ -55,13 +59,18 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     }
   }, [isOpen]);
 
-  // Check if path is in discovery and exists when form data changes
+  // Check path when form data changes using simplified hook
   useEffect(() => {
-    checkPathExists(formData.path); // This handles empty paths too
-    if (formData.path && discoveryPaths.length > 0) {
-      checkPathInDiscovery(formData.path);
+    if (formData.path) {
+      checkPath(formData.path).then(result => {
+        setPathExists(result.exists);
+        setIsPathInDiscovery(result.isInDiscovery);
+      }).catch(console.error);
+    } else {
+      setPathExists(false);
+      setIsPathInDiscovery(false);
     }
-  }, [formData.path, discoveryPaths]);
+  }, [formData.path, checkPath]);
 
   const loadDiscoveryPaths = async () => {
     try {
@@ -76,80 +85,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     }
   };
 
-  const checkPathInDiscovery = (path: string) => {
-    // Browser-safe path expansion
-    const expandTildePathBrowser = (inputPath: string): string => {
-      if (inputPath === '~' || inputPath.startsWith('~/')) {
-        return inputPath.replace(/^~/, '/Users/kirby'); // Use current user home directory
-      }
-      return inputPath;
-    };
-
-    const expandedPath = expandTildePathBrowser(path);
-
-    const inDiscovery = discoveryPaths.some(discoveryPath => {
-      const expandedDiscoveryPath = expandTildePathBrowser(discoveryPath);
-
-      // More precise matching: path must start with discovery path AND
-      // either be exactly the discovery path OR have a separator after it
-      if (expandedPath === expandedDiscoveryPath) {
-        return true; // Exact match
-      } else if (expandedPath.startsWith(expandedDiscoveryPath + '/')) {
-        return true; // Match with proper path separator
-      }
-
-      return false;
-    });
-
-    setIsPathInDiscovery(inDiscovery);
-  };
-
-  const checkPathExists = async (path: string) => {
-    if (!path.trim()) {
-      setPathExists(false);
-      return;
-    }
-
-    // Browser-safe path expansion
-    const expandTildePathBrowser = (inputPath: string): string => {
-      if (inputPath === '~' || inputPath.startsWith('~/')) {
-        return inputPath.replace(/^~/, '/Users/kirby');
-      }
-      return inputPath;
-    };
-
-    const expandedPath = expandTildePathBrowser(path);
-
-    try {
-      // Use the new backend API endpoint to check if directory exists
-      const response = await fetch('/api/filesystem/exists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ path: expandedPath }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPathExists(data.exists);
-      } else {
-        setPathExists(false);
-      }
-    } catch (error) {
-      // If API call fails, fall back to basic format validation
-      const validPathPatterns = [
-        /^\//, // Absolute path starting with /
-        /^~/, // Home directory path starting with ~
-        /^\.\./, // Parent directory path starting with ..
-        /^\.$/, // Current directory path starting with .
-        /^[a-zA-Z]:/, // Windows drive path (for future compatibility)
-      ];
-      const isValidPath = validPathPatterns.some(pattern => pattern.test(path));
-      setPathExists(isValidPath);
-    }
-  };
-
+  
   const handleOverlayClick = (e: React.MouseEvent) => {
     // Do nothing - clicking outside should not trigger close behavior
     // Only explicit button clicks should close the modal

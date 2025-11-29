@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import toml from 'toml';
+import os from 'os';
 import FileWatcherService from '../fileWatcherService.js';
 import { ProjectController } from '../controllers/ProjectController.js';
 import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js';
@@ -80,11 +81,75 @@ export function createSystemRouter(
     projectController.getFileSystemTree(req, res);
   });
 
-  // Check if directory exists
-  router.post('/filesystem/exists', (req: Request, res: Response) => {
-    projectController.checkDirectoryExists(req, res);
+  // Check if directory exists with enhanced functionality
+  router.post('/filesystem/exists', async (req: Request, res: Response) => {
+    const { path: inputPath } = req.body;
+
+    if (!inputPath || typeof inputPath !== 'string') {
+      return res.status(400).json({ error: 'Path is required and must be a string' });
+    }
+
+    try {
+      // Server-side tilde expansion for security and consistency
+      let expandedPath = inputPath;
+      if (inputPath.startsWith('~')) {
+        const homeDir = os.homedir();
+        expandedPath = inputPath.replace(/^~($|\/)/, `${homeDir}$1`);
+      }
+
+      // Check if directory exists
+      let exists = false;
+      try {
+        const stats = await fs.stat(expandedPath);
+        exists = stats.isDirectory();
+      } catch {
+        exists = false;
+      }
+
+      // Check if path is within discovery search paths
+      let isInDiscovery = 0;
+      try {
+        const configPath = DEFAULT_PATHS.CONFIG_FILE;
+        const configContent = await fs.readFile(configPath, 'utf8');
+        const parsedConfig = toml.parse(configContent);
+        const discoveryPaths = parsedConfig.discovery?.searchPaths || [];
+
+        // More precise matching: path must start with discovery path AND
+        // either be exactly the discovery path OR have a separator after it
+        for (const discoveryPath of discoveryPaths) {
+          let expandedDiscoveryPath = discoveryPath;
+          if (discoveryPath.startsWith('~')) {
+            const homeDir = os.homedir();
+            expandedDiscoveryPath = discoveryPath.replace(/^~($|\/)/, `${homeDir}$1`);
+          }
+
+          if (expandedPath === expandedDiscoveryPath) {
+            isInDiscovery = 1; // Exact match
+            break;
+          } else if (expandedPath.startsWith(expandedDiscoveryPath + '/')) {
+            isInDiscovery = 1; // Match with proper path separator
+            break;
+          }
+        }
+      } catch (error) {
+        console.warn('Could not check discovery paths:', error);
+      }
+
+      const result = {
+        exists: exists ? 1 : 0,
+        isInDiscovery,
+        expandedPath
+      };
+
+      console.log(`🔍 Enhanced path check for "${inputPath}": expanded="${expandedPath}", exists=${result.exists}, inDiscovery=${result.isInDiscovery}`);
+      res.json(result);
+    } catch (error) {
+      console.error('Error checking directory existence:', error);
+      res.status(500).json({ error: 'Failed to check directory existence' });
+    }
   });
 
+  
   // Clear file operation cache
   router.post('/cache/clear', async (req: Request, res: Response) => {
     try {
