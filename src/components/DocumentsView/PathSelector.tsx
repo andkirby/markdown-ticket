@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/index';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PathItem {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/index';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronRight, Folder } from 'lucide-react';
+import { usePathResolution } from '@/hooks/usePathResolution';
 
 interface DirectoryItem {
   name: string;
@@ -43,6 +44,9 @@ export default function FolderBrowserModal({
   const [currentPath, setCurrentPath] = useState<string>('');
   const [clickState, setClickState] = useState<ClickState>({});
 
+  // 🔐 Simplified path resolution hook - uses enhanced API
+  const { checkPath } = usePathResolution();
+
   useEffect(() => {
     if (isOpen) {
       // Start with initial path or home directory
@@ -50,21 +54,16 @@ export default function FolderBrowserModal({
       setCurrentPath(startPath);
       loadFileSystem(startPath);
     }
-  }, [isOpen, initialPath]);
+  }, [isOpen, initialPath, checkPath]);
 
   const loadFileSystem = async (path: string = '') => {
     try {
       setLoading(true);
 
-      // Browser-safe path expansion for tilde
-      const expandTildePath = (inputPath: string): string => {
-        if (inputPath === '~' || inputPath.startsWith('~/')) {
-          return inputPath.replace(/^~/, '/Users/kirby');
-        }
-        return inputPath;
-      };
+      // 🔐 Check if path exists and get expanded path from enhanced API
+      const pathCheck = await checkPath(path || '~');
+      let expandedPath = pathCheck.expandedPath;
 
-      let expandedPath = expandTildePath(path);
       const response = await fetch(`/api/directories${expandedPath ? `?path=${encodeURIComponent(expandedPath)}` : ''}`);
 
       if (response.ok) {
@@ -75,12 +74,8 @@ export default function FolderBrowserModal({
         }
       } else {
         console.log('Directory not found, falling back to home directory');
-
-        // Fallback to home directory when the requested path doesn't exist
-        const homePath = '/Users/kirby';
-        setCurrentPath(homePath);
-
-        const fallbackResponse = await fetch(`/api/directories?path=${encodeURIComponent(homePath)}`);
+        // Use the expanded path from checkPath as fallback
+        const fallbackResponse = await fetch(`/api/directories?path=${encodeURIComponent(expandedPath)}`);
 
         if (fallbackResponse.ok) {
           const fallbackData: DirectoryListing = await fallbackResponse.json();
@@ -93,23 +88,7 @@ export default function FolderBrowserModal({
       }
     } catch (error) {
       console.error('Failed to load file system:', error);
-
-      // Fallback to home directory on any error
-      console.log('Error occurred, falling back to home directory');
-      const homePath = '/Users/kirby';
-      setCurrentPath(homePath);
-
-      try {
-        const fallbackResponse = await fetch(`/api/directories?path=${encodeURIComponent(homePath)}`);
-        if (fallbackResponse.ok) {
-          const fallbackData: DirectoryListing = await fallbackResponse.json();
-          setDirectoryListing(fallbackData);
-          setSelectedPath(fallbackData.currentPath);
-        }
-      } catch (fallbackError) {
-        console.error('Failed to load home directory as fallback');
-        setDirectoryListing(null);
-      }
+      setDirectoryListing(null);
     } finally {
       setLoading(false);
     }
