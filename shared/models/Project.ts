@@ -228,12 +228,14 @@ export function validateProjectConfig(config: any): config is ProjectConfig {
   const hasValidRepository = project.repository === undefined ||
     typeof project.repository === 'string';
 
-  // Optional fields for LocalProjectConfig
+  // Optional fields for LocalProjectConfig - handle both array and object formats
   const hasValidDocumentPaths = config.document_paths === undefined ||
-    (Array.isArray(config.document_paths) && config.document_paths.every((p: any) => typeof p === 'string'));
+    (Array.isArray(config.document_paths) && config.document_paths.every((p: any) => typeof p === 'string')) ||
+    (config.document_paths && config.document_paths.paths && Array.isArray(config.document_paths.paths) && config.document_paths.paths.every((p: any) => typeof p === 'string'));
 
   const hasValidExcludeFolders = config.exclude_folders === undefined ||
-    (Array.isArray(config.exclude_folders) && config.exclude_folders.every((f: any) => typeof f === 'string'));
+    (Array.isArray(config.exclude_folders) && config.exclude_folders.every((f: any) => typeof f === 'string')) ||
+    (config.exclude_folders && config.exclude_folders.folders && Array.isArray(config.exclude_folders.folders) && config.exclude_folders.folders.every((f: any) => typeof f === 'string'));
 
   return hasValidName && hasValidCode && hasValidPath && hasValidStartNumber &&
          hasValidCounterFile && hasValidDescription && hasValidRepository &&

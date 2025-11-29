@@ -1,13 +1,14 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { getNextTicketNumber } from '../utils/ticketNumbering.js';
-import { DEFAULTS } from '@mdt/shared/utils/constants.js';
-import { getTicketsPath, type ProjectConfig } from '@mdt/shared/models/Project.js';
+/**
+ * Web Server Ticket Service Adapter
+ * Adapts shared/services/TicketService.ts for web server API use
+ * Converts projectId strings to Project objects for shared service
+ * Per MDT-082: Uses consolidated CRUD operations from shared layer
+ */
 
-interface Ticket {
-  code: string;
-  filePath: string;
-}
+import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js';
+import { ProjectService } from '@mdt/shared/services/ProjectService.js';
+import { Project } from '@mdt/shared/models/Project.js';
+import { Ticket, TicketData } from '@mdt/shared/models/Ticket.js';
 
 interface CRData {
   code?: string;
@@ -47,53 +48,50 @@ interface DeleteResult {
 }
 
 interface ProjectDiscovery {
-  getAllProjects(): Promise<any[]>; // Use any for now to avoid type conflicts
-  getProjectConfig(projectPath: string): ProjectConfig | null;
-  getProjectCRs(projectPath: string): Promise<Ticket[]>;
+  getAllProjects(): Promise<Project[]>;
 }
 
 /**
- * Service layer for ticket/CR management operations
+ * Web Server Ticket Service
+ * Adapts shared TicketService for web API use (string projectIds vs Project objects)
  */
 export class TicketService {
   private projectDiscovery: ProjectDiscovery;
+  private sharedTicketService: SharedTicketService;
 
   constructor(projectDiscovery: ProjectDiscovery) {
     this.projectDiscovery = projectDiscovery;
+    this.sharedTicketService = new SharedTicketService(false);
+  }
+
+  /**
+   * Convert projectId to Project object
+   */
+  private async getProject(projectId: string): Promise<Project> {
+    const projects = await this.projectDiscovery.getAllProjects();
+    const project = projects.find(p => p.id === projectId);
+
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    return project;
   }
 
   /**
    * Get CRs for a specific project
-   * @param projectId - Project ID
-   * @returns Array of CR objects
    */
   async getProjectCRs(projectId: string): Promise<Ticket[]> {
-    const projects = await this.projectDiscovery.getAllProjects();
-    const project = projects.find(p => p.id === projectId);
-
-    if (!project) {
-      throw new Error('Project not found');
-    }
-
-    return await this.projectDiscovery.getProjectCRs(project.project.path);
+    const project = await this.getProject(projectId);
+    return await this.sharedTicketService.listCRs(project);
   }
 
   /**
    * Get specific CR from a project
-   * @param projectId - Project ID
-   * @param crId - CR ID or code
-   * @returns CR object
    */
   async getCR(projectId: string, crId: string): Promise<Ticket> {
-    const projects = await this.projectDiscovery.getAllProjects();
-    const project = projects.find(p => p.id === projectId);
-
-    if (!project) {
-      throw new Error('Project not found');
-    }
-
-    const crs = await this.projectDiscovery.getProjectCRs(project.project.path);
-    const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
+    const project = await this.getProject(projectId);
+    const cr = await this.sharedTicketService.getCR(project, crId);
 
     if (!cr) {
       throw new Error('CR not found');
@@ -104,333 +102,95 @@ export class TicketService {
 
   /**
    * Create new CR in a project
-   * @param projectId - Project ID
-   * @param crData - CR data
-   * @returns Created CR info
    */
   async createCR(projectId: string, crData: CRData): Promise<CreateCRResult> {
-    const { code, title, type, priority, description } = crData;
+    const { title, type, priority, description } = crData;
 
     if (!title || !type) {
       throw new Error('Title and type are required');
     }
 
-    const projects = await this.projectDiscovery.getAllProjects();
-    const project = projects.find(p => p.id === projectId);
+    const project = await this.getProject(projectId);
 
-    if (!project) {
-      throw new Error('Project not found');
-    }
+    // Convert CRData to TicketData format
+    const ticketData: TicketData = {
+      title,
+      type,
+      priority: priority || 'Medium',
+      content: description ? `## 1. Description\n\n${description}\n\n` : undefined
+    };
 
-    const config = this.projectDiscovery.getProjectConfig(project.project.path);
-    if (!config) {
-      throw new Error('Project configuration not found');
-    }
-
-    // Get next CR number using smart logic
-    const projectCode = config.project?.code || project.id.toUpperCase();
-    const nextNumber = await getNextTicketNumber(project.project.path, projectCode);
-
-    // Generate CR code based on project configuration or use provided code
-    let crCode: string;
-    if (code) {
-      crCode = code;
-    } else {
-      // Simple code generation fallback
-      crCode = `${projectCode}-${nextNumber.toString().padStart(3, '0')}`;
-    }
-
-    const titleSlug = title.toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .substring(0, 50);
-    const filename = `${crCode}-${titleSlug}.md`;
-
-    // MDT-064: Create CR content with H1 as authoritative source
-    const crContent = `- **Code**: ${crCode}
-- **Title/Summary**: ${title}
-- **Status**: Proposed
-- **Date Created**: ${new Date().toISOString().split('T')[0]}
-- **Type**: ${type}
-- **Priority**: ${priority || 'Medium'}
-- **Phase/Epic**: Phase A (Foundation)
-
-# ${title}
-
-## 1. Description
-
-### Problem Statement
-${description || 'Please provide a detailed problem statement.'}
-
-### Current State
-Please describe the current behavior/implementation.
-
-### Desired State
-Please describe what the new behavior/implementation should be.
-
-### Rationale
-Please explain why this change is important and why now.
-
-### Impact Areas
-Please list what parts of the system will be affected.
-
-## 2. Solution Analysis
-
-### Approaches Considered
-Please list alternative solutions that were evaluated.
-
-### Trade-offs Analysis
-Please provide pros/cons of different approaches.
-
-### Decision Factors
-Please list technical constraints, timeline, resources, user impact.
-
-### Chosen Approach
-Please explain why this solution was selected.
-
-### Rejected Alternatives
-Please explain why other approaches were not chosen.
-
-## 3. Implementation Specification
-
-### Technical Requirements
-Please list specific technical changes needed.
-
-### UI/UX Changes
-Please describe user interface modifications (if applicable).
-
-### API Changes
-Please describe new endpoints, modified responses, breaking changes (if applicable).
-
-### Database Changes
-Please describe schema modifications, data migrations (if applicable).
-
-### Configuration
-Please describe new settings, environment variables, deployment changes (if applicable).
-
-## 4. Acceptance Criteria
-
-Please list specific, testable conditions that must be met for completion:
-- [ ] Condition 1
-- [ ] Condition 2
-- [ ] Condition 3
-
-## 5. Implementation Notes
-*To be filled during/after implementation*
-
-## 6. References
-
-### Related Tasks
-- Link to specific implementation tasks
-
-### Code Changes
-- Reference commits, pull requests, or branches
-
-### Documentation Updates
-- Links to updated documentation sections
-
-### Related CRs
-- Cross-references to dependent or related change requests
-`;
-
-    // Write CR file
-    const ticketsPath = getTicketsPath(config, DEFAULTS.TICKETS_PATH);
-    const crPath = path.join(project.project.path, ticketsPath);
-    await fs.mkdir(crPath, { recursive: true });
-    const crFilePath = path.join(crPath, filename);
-    await fs.writeFile(crFilePath, crContent, 'utf8');
-
-    // Update counter
-    const counterPath = path.join(project.project.path, config.project?.counterFile || '.mdt-next');
-    await fs.writeFile(counterPath, String(nextNumber + 1), 'utf8');
+    // Use shared service to create CR
+    const ticket = await this.sharedTicketService.createCR(project, type, ticketData);
 
     return {
       success: true,
       message: 'CR created successfully',
-      crCode,
-      filename,
-      path: crFilePath
+      crCode: ticket.code,
+      filename: ticket.filePath.split('/').pop() || '',
+      path: ticket.filePath
     };
   }
 
   /**
    * Update CR partially (specific fields)
-   * @param projectId - Project ID
-   * @param crId - CR ID or code
-   * @param updates - Fields to update
-   * @returns Success status
    */
   async updateCRPartial(projectId: string, crId: string, updates: Record<string, any>): Promise<UpdateCRResult> {
     if (!updates || Object.keys(updates).length === 0) {
       throw new Error('No fields provided for update');
     }
 
-    const projects = await this.projectDiscovery.getAllProjects();
-    const project = projects.find(p => p.id === projectId);
+    const project = await this.getProject(projectId);
 
-    if (!project) {
-      throw new Error('Project not found');
-    }
+    // Convert web server updates to TicketData format
+    const ticketUpdates: Partial<TicketData> = {};
 
-    const crs = await this.projectDiscovery.getProjectCRs(project.project.path);
-    const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
+    // Map allowed fields
+    if (updates.priority !== undefined) ticketUpdates.priority = updates.priority;
+    if (updates.phaseEpic !== undefined) ticketUpdates.phaseEpic = updates.phaseEpic;
+    if (updates.assignee !== undefined) ticketUpdates.assignee = updates.assignee;
+    if (updates.relatedTickets !== undefined) ticketUpdates.relatedTickets = updates.relatedTickets;
+    if (updates.dependsOn !== undefined) ticketUpdates.dependsOn = updates.dependsOn;
+    if (updates.blocks !== undefined) ticketUpdates.blocks = updates.blocks;
 
-    if (!cr) {
-      throw new Error('CR not found');
-    }
-
-    // Read current content
-    const currentContent = await fs.readFile(cr.filePath, 'utf8');
-
-    // Parse YAML frontmatter
-    const lines = currentContent.split('\n');
-
-    // Find the frontmatter boundaries
-    let frontmatterStart = -1;
-    let frontmatterEnd = -1;
-
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].trim() === '---') {
-        if (frontmatterStart === -1) {
-          frontmatterStart = i;
-        } else if (frontmatterEnd === -1) {
-          frontmatterEnd = i;
-          break;
-        }
-      }
-    }
-
-    if (frontmatterStart === -1 || frontmatterEnd === -1) {
-      throw new Error('Invalid ticket format - no YAML frontmatter found');
-    }
-
-    // Extract and update frontmatter
-    const frontmatterLines = lines.slice(frontmatterStart + 1, frontmatterEnd);
-    const updatedFrontmatter = [...frontmatterLines];
-
-    // Auto-add implementation fields when status changes to Implemented/Partially Implemented
-    if (updates.status === 'Implemented' || updates.status === 'Partially Implemented') {
-      if (!updates.implementationDate) {
-        updates.implementationDate = new Date().toISOString();
-      }
-      if (!updates.implementationNotes) {
-        updates.implementationNotes = `Status changed to ${updates.status} on ${new Date().toLocaleDateString()}`;
-      }
-    }
-
-    // Update only the specified fields
-    const updatedFields: string[] = [];
-    for (const [key, value] of Object.entries(updates)) {
-      // Special handling for date fields
-      let processedValue = value;
-      if (key.includes('Date') && typeof value === 'string' && !value.includes('T')) {
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) {
-          processedValue = date.toISOString();
-        }
-      } else if (key === 'lastModified') {
-        // Skip manual lastModified - will be derived from file modification time
-        continue;
-      }
-
-      const existingIndex = updatedFrontmatter.findIndex(line =>
-        line.trim().startsWith(key + ':')
-      );
-
-      if (existingIndex >= 0) {
-        updatedFrontmatter[existingIndex] = `${key}: ${processedValue}`;
-      } else {
-        updatedFrontmatter.push(`${key}: ${processedValue}`);
-      }
-      updatedFields.push(key);
-    }
-
-    // Reconstruct the file content
-    const updatedContent = [
-      '---',
-      ...updatedFrontmatter,
-      '---',
-      '',
-      ...lines.slice(frontmatterEnd + 1)
-    ].join('\n');
-
-    // Write back to file
-    await fs.writeFile(cr.filePath, updatedContent, 'utf8');
+    // Use shared service to update attributes
+    await this.sharedTicketService.updateCRAttrs(project, crId, ticketUpdates);
 
     return {
       success: true,
       message: 'CR updated successfully',
-      updatedFields,
+      updatedFields: Object.keys(updates),
       projectId,
       crId
     };
   }
 
   /**
-   * Update CR completely (full content)
-   * @param projectId - Project ID
-   * @param crId - CR ID or code
-   * @param content - Full CR content
-   * @returns Success status
+   * Update CR completely (full content) - NOT RECOMMENDED
+   * This method is kept for backward compatibility but not implemented
+   * Use MCP server's manage_cr_sections for content updates
    */
   async updateCR(projectId: string, crId: string, content: string): Promise<UpdateResult> {
-    if (!content) {
-      throw new Error('Content is required');
-    }
-
-    const projects = await this.projectDiscovery.getAllProjects();
-    const project = projects.find(p => p.id === projectId);
-
-    if (!project) {
-      throw new Error('Project not found');
-    }
-
-    const crs = await this.projectDiscovery.getProjectCRs(project.project.path);
-    const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
-
-    if (!cr) {
-      throw new Error('CR not found');
-    }
-
-    // Update CR file
-    await fs.writeFile(cr.filePath, content, 'utf8');
-
-    return {
-      success: true,
-      message: 'CR updated successfully',
-      filename: path.basename(cr.filePath),
-      path: cr.filePath
-    };
+    throw new Error('Full CR content updates should use MCP server manage_cr_sections tool. This method is deprecated.');
   }
 
   /**
    * Delete CR from a project
-   * @param projectId - Project ID
-   * @param crId - CR ID or code
-   * @returns Success status
    */
   async deleteCR(projectId: string, crId: string): Promise<DeleteResult> {
-    const projects = await this.projectDiscovery.getAllProjects();
-    const project = projects.find(p => p.id === projectId);
-
-    if (!project) {
-      throw new Error('Project not found');
-    }
-
-    const crs = await this.projectDiscovery.getProjectCRs(project.project.path);
-    const cr = crs.find(c => c.code === crId || (c.filePath && c.filePath.includes(crId)));
+    const project = await this.getProject(projectId);
+    const cr = await this.sharedTicketService.getCR(project, crId);
 
     if (!cr) {
       throw new Error('CR not found');
     }
 
-    // Delete CR file
-    await fs.unlink(cr.filePath);
+    await this.sharedTicketService.deleteCR(project, crId);
 
     return {
       success: true,
       message: 'CR deleted successfully',
-      filename: path.basename(cr.filePath)
+      filename: cr.filePath.split('/').pop() || ''
     };
   }
 }

@@ -17,9 +17,8 @@ Successfully refactored the monolithic `server/server.js` file according to the 
 server/
 ├── server.js (253 lines) - Application orchestration
 ├── utils/ - Utility functions
-│   ├── ticketNumbering.js - Ticket numbering logic
 │   ├── fileSystemTree.js - File tree building
-│   └── duplicateDetection.js - Duplicate resolution
+│   └── duplicateDetection.js - Duplicate resolution (deprecated)
 ├── services/ - Business logic
 │   ├── ProjectService.js - Project operations
 │   ├── TicketService.js - Ticket/CR operations
@@ -45,9 +44,9 @@ server/
 ## Refactoring Phases Completed
 
 ### Phase 1: Extract Utilities ✅
-- `ticketNumbering.js` - Extracted ticket numbering functions
+- ~~`ticketNumbering.js`~~ - Removed per MDT-082 (moved to shared layer)
 - `fileSystemTree.js` - Extracted file tree building logic
-- `duplicateDetection.js` - Extracted duplicate detection/resolution
+- `duplicateDetection.js` - Extracted duplicate detection/resolution (deprecated per MDT-082)
 
 ### Phase 2: Create Service Layer ✅
 - `ProjectService.js` - Project CRUD operations
@@ -115,10 +114,9 @@ All endpoints tested and confirmed working:
 
 ## Files Created
 
-### Utilities (3 files)
-- `server/utils/ticketNumbering.js`
+### Utilities (2 files)
 - `server/utils/fileSystemTree.js`
-- `server/utils/duplicateDetection.js`
+- `server/utils/duplicateDetection.js` (deprecated per MDT-082)
 
 ### Services (4 files)
 - `server/services/ProjectService.js`
