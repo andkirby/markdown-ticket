@@ -8,7 +8,7 @@ Please [create a ticket](https://github.com/andkirby/markdown-ticket/issues/new)
 
 ## Overview
 
-This directory contains interactive prompt workflows that guide AI agents through structured ticket creation, architecture design, clarification, and reflection processes. Each workflow enforces artifact-focused documentation and integrates with the MCP mdt-all tools.
+This directory contains interactive prompt workflows that guide AI agents through structured ticket creation, architecture design, clarification, technical debt detection, and reflection processes. Each workflow enforces artifact-focused documentation and integrates with the MCP mdt-all tools.
 
 ## Available Workflows
 
@@ -29,6 +29,13 @@ This directory contains interactive prompt workflows that guide AI agents throug
 - **Purpose**: Interactive clarification workflow for improving existing CRs
 - **Process**: Scans CR for ambiguities, asks targeted questions via taxonomy
 - **Output**: Records clarifications in Section 8 and updates relevant CR sections
+- **Integration**: Uses MCP `mdt-all` tools: `get_cr` and `manage_cr_sections`
+
+### `/mdt-tech-debt`
+- **Purpose**: Detect technical debt patterns in implemented code
+- **Process**: Scans for duplication, shotgun surgery, missing abstractions, coupling issues
+- **Output**: Inline `// TECH-DEBT:` comment suggestions + CR documentation in Section 8
+- **When to use**: After implementation when code "feels wrong", or after noticing copy-paste patterns
 - **Integration**: Uses MCP `mdt-all` tools: `get_cr` and `manage_cr_sections`
 
 ### `/mdt-reflection`
@@ -52,8 +59,19 @@ User Request
     ↓
 Implementation           → LLM follows Architecture Design structure
     ↓
+/mdt-tech-debt           → Detect debt patterns (on-demand, when sensing issues)
+    ↓
 /mdt-reflection          → Capture actual vs. planned specifications
 ```
+
+## Upstream vs. Downstream Workflows
+
+| Workflow | Timing | Purpose |
+|----------|--------|---------|
+| `/mdt-architecture` | **Before** implementation | Prevent bad structure |
+| `/mdt-tech-debt` | **After** implementation | Detect accumulated debt |
+
+These are complementary: architecture design prevents debt, tech debt detection catches what slipped through.
 
 ## Installation
 
@@ -68,7 +86,8 @@ cp prompts/mdt-*.md ~/.claude/commands/
 1. **Create new ticket**: Provide context and run `/mdt-ticket-creation`
 2. **Add architecture design**: Run `/mdt-architecture` on CRs needing structural decisions
 3. **Clarify existing**: Run `/mdt-clarification` on ambiguous CRs
-4. **Document learnings**: After implementation, run `/mdt-reflection` to capture insights
+4. **Check for debt**: Run `/mdt-tech-debt` after implementation when sensing issues
+5. **Document learnings**: After implementation, run `/mdt-reflection` to capture insights
 
 ## Design Principles
 
@@ -77,6 +96,7 @@ cp prompts/mdt-*.md ~/.claude/commands/
 - **Atomic updates**: Individual section updates via `manage_cr_sections` (84-94% more efficient)
 - **Quality enforcement**: 95%+ artifact reference requirement, zero behavioral descriptions
 - **Testable architecture**: Every architecture design includes an Extension Rule that can be verified after implementation
+- **Actionable debt**: Every debt item includes location, impact, and fix direction
 
 ## File Structure
 
@@ -84,8 +104,9 @@ cp prompts/mdt-*.md ~/.claude/commands/
 prompts/
 ├── README.md                # This file
 ├── mdt-ticket-creation.md   # CR creation workflow template
-├── mdt-architecture.md      # Architecture design workflow
+├── mdt-architecture.md      # Architecture design workflow (upstream prevention)
 ├── mdt-clarification.md     # Interactive clarification workflow
+├── mdt-tech-debt.md         # Technical debt detection (downstream detection)
 ├── mdt-reflection.md        # Post-implementation learning capture
 └── CLAUDE.md                # Development guidance for working with prompts
 ```
