@@ -8,7 +8,7 @@ Please [create a ticket](https://github.com/andkirby/markdown-ticket/issues/new)
 
 ## Overview
 
-This directory contains interactive prompt workflows that guide AI agents through structured ticket creation, clarification, and reflection processes. Each workflow enforces artifact-focused documentation and integrates with the MCP mdt-all tools.
+This directory contains interactive prompt workflows that guide AI agents through structured ticket creation, architecture design, clarification, and reflection processes. Each workflow enforces artifact-focused documentation and integrates with the MCP mdt-all tools.
 
 ## Available Workflows
 
@@ -18,17 +18,42 @@ This directory contains interactive prompt workflows that guide AI agents throug
 - **Output**: Complete CR document with artifact specifications, alternatives analysis, and acceptance criteria
 - **Integration**: Uses MCP `mdt-all`, `create_cr` and related tools
 
+### `/mdt-architecture`
+- **Purpose**: Surface implicit architectural decisions before implementation
+- **Process**: Analyzes CR for decision points, asks max 5 architecture questions
+- **Output**: Adds `## Architecture Design` section with Pattern, Structure, and Extension Rule
+- **When to use**: When CR involves multiple similar things (adapters, handlers), introduces abstractions, or user flags "needs architecture"
+- **Integration**: Uses MCP `mdt-all` tools: `get_cr` and `manage_cr_sections`
+
 ### `/mdt-clarification`
 - **Purpose**: Interactive clarification workflow for improving existing CRs
 - **Process**: Scans CR for ambiguities, asks targeted questions via taxonomy
 - **Output**: Records clarifications in Section 8 and updates relevant CR sections
-- **Integration**: Uses MCP `mdt-all` and tools: `get_cr` and `manage_cr_sections`
+- **Integration**: Uses MCP `mdt-all` tools: `get_cr` and `manage_cr_sections`
 
 ### `/mdt-reflection`
 - **Purpose**: Post-implementation learning capture and CR documentation updates
 - **Process**: Extracts artifact-level insights from implementation discussions
 - **Output**: Updates CR with actual vs. planned specifications and creates session records
 - **Integration**: Uses MCP `mdt-all` and `manage_cr_sections` for surgical updates
+
+## Workflow Sequence
+
+```
+User Request
+    ↓
+/mdt-ticket-creation     → Create CR with problem/scope
+    ↓
+[User flags "needs architecture"]
+    ↓
+/mdt-architecture        → Surface decisions, add Architecture Design section
+    ↓
+/mdt-clarification       → Fill artifact specification gaps (if needed)
+    ↓
+Implementation           → LLM follows Architecture Design structure
+    ↓
+/mdt-reflection          → Capture actual vs. planned specifications
+```
 
 ## Installation
 
@@ -41,8 +66,9 @@ cp prompts/mdt-*.md ~/.claude/commands/
 ## Usage
 
 1. **Create new ticket**: Provide context and run `/mdt-ticket-creation`
-2. **Clarify existing**: Run `/mdt-clarification` on ambiguous CRs
-3. **Document learnings**: After implementation, run `/mdt-reflection` to capture insights
+2. **Add architecture design**: Run `/mdt-architecture` on CRs needing structural decisions
+3. **Clarify existing**: Run `/mdt-clarification` on ambiguous CRs
+4. **Document learnings**: After implementation, run `/mdt-reflection` to capture insights
 
 ## Design Principles
 
@@ -50,6 +76,7 @@ cp prompts/mdt-*.md ~/.claude/commands/
 - **Structured interactions**: Use `AskUserQuestion` with max 4 options and concise descriptions
 - **Atomic updates**: Individual section updates via `manage_cr_sections` (84-94% more efficient)
 - **Quality enforcement**: 95%+ artifact reference requirement, zero behavioral descriptions
+- **Testable architecture**: Every architecture design includes an Extension Rule that can be verified after implementation
 
 ## File Structure
 
@@ -57,6 +84,7 @@ cp prompts/mdt-*.md ~/.claude/commands/
 prompts/
 ├── README.md                # This file
 ├── mdt-ticket-creation.md   # CR creation workflow template
+├── mdt-architecture.md      # Architecture design workflow
 ├── mdt-clarification.md     # Interactive clarification workflow
 ├── mdt-reflection.md        # Post-implementation learning capture
 └── CLAUDE.md                # Development guidance for working with prompts
