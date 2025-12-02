@@ -6,6 +6,8 @@ Transform scattered documentation into an organized, version-controlled project 
 
 Discuss features with LLM → LLM creates structured tickets → Review → LLM implements code → You review and organize.
 
+**NOTE: this app in active development -- if it's not stable, try to use [release tags](https://github.com/andkirby/markdown-ticket/tags) instead of `main` branch.**
+
 ![Markdown Ticket Board Demo](https://github.com/user-attachments/assets/f682104e-0e74-45b7-a6d4-b72142441b39)
 
 ## ⚡ Quick Start
