@@ -24,12 +24,16 @@ $ARGUMENTS
 ### Step 1: Load Context
 
 1. Load `docs/CRs/{CR-KEY}/tasks.md` — abort if missing
-2. Load CR with `mdt-all:get_cr mode="full"`
-3. Extract:
-   - **Global Constraints** from tasks.md header (max file size)
-   - **Architecture Structure** from CR
-   - **STOP Condition** from tasks.md
-4. Find first incomplete task (not marked `[x]`)
+2. Extract **Project Context** from tasks.md header:
+   ```yaml
+   source_dir: {from tasks.md}
+   test_command: {from tasks.md}
+   build_command: {from tasks.md}
+   file_extension: {from tasks.md}
+   ```
+3. Extract **Global Constraints** from tasks.md (max file size, STOP condition)
+4. Load CR with `mdt-all:get_cr mode="full"` for Architecture Design
+5. Find first incomplete task (not marked `[x]`)
 
 ### Step 2: Execute Task
 
@@ -50,6 +54,11 @@ For each task:
 **2b. Execute:**
 Pass to sub-agent with constraint context:
 ```
+PROJECT CONTEXT:
+- Source dir: {source_dir}
+- Test command: {test_command}
+- File extension: {file_extension}
+
 CONSTRAINTS (from CR):
 - Max file size: {N} lines
 - Target path must be: {exact path}
@@ -61,10 +70,10 @@ TASK:
 {task content}
 ```
 
-**2c. Run tests:**
+**2c. Run verification:**
 ```bash
-npm test
-npm run build
+{test_command}
+{build_command}
 ```
 
 ### Step 3: Verify Constraints (CRITICAL)
@@ -130,7 +139,7 @@ At end of each phase:
 
 **Structure verification**:
 ```bash
-find src/{area} -name "*.ts" -exec wc -l {} \; | sort -n
+find {source_dir}/{area} -name "*{ext}" -exec wc -l {} \; | sort -n
 ```
 
 **Files created**: {list with line counts}
@@ -148,7 +157,7 @@ Implementation Complete: {CR-KEY}
 
 ### Final Structure Check
 ```bash
-find src/ -name "*.ts" -exec wc -l {} \; | awk '$1 > {MAX}'
+find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX}'
 ```
 {output — should be empty}
 
@@ -160,7 +169,7 @@ find src/ -name "*.ts" -exec wc -l {} \; | awk '$1 > {MAX}'
 
 ### Next Steps
 - [ ] Review git diff
-- [ ] Run full test suite  
+- [ ] Run full test suite: `{test_command}`
 - [ ] Commit changes
 - [ ] Run `/mdt-tech-debt {CR-KEY}`
 ```
@@ -171,6 +180,12 @@ When delegating task to sub-agent, include:
 
 ```markdown
 # Task Context
+
+## Project
+- **Source directory**: {source_dir}
+- **Test command**: {test_command}
+- **Build command**: {build_command}
+- **File extension**: {ext}
 
 ## Constraints (MUST follow)
 - **Max file size**: {N} lines — STOP if exceeded
@@ -187,8 +202,8 @@ When delegating task to sub-agent, include:
 
 ## Verification (run after)
 ```bash
-wc -l {target file}  # must be < {limit}
-npm test             # must pass
+wc -l {target file}    # must be < {limit}
+{test_command}         # must pass
 ```
 
 ## STOP Conditions
@@ -228,12 +243,13 @@ This task cannot be marked complete.
 3. **STOP on violations** — don't accumulate problems
 4. **Size check uses actual file** — not estimate
 5. **Phase boundaries are mandatory pauses** — even with `--all`
+6. **Use project's commands** — from tasks.md Project Context, not hardcoded
 
 ## Quality Gate
 
 Before marking any task complete, verify:
-- [ ] Tests pass
-- [ ] Build passes
+- [ ] Tests pass (`{test_command}`)
+- [ ] Build passes (`{build_command}`)
 - [ ] Target file(s) under size limit
 - [ ] File(s) at correct structure path
 - [ ] Source file reduced (for extractions)

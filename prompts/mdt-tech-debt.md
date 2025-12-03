@@ -1,8 +1,8 @@
-# MDT Technical Debt Detection Workflow (v1)
+# MDT Technical Debt Detection Workflow (v2)
 
-On-demand workflow for detecting technical debt patterns in implemented code and flagging them for resolution. Produces inline code comments and CR documentation.
+On-demand detection of technical debt patterns in implemented code.
 
-**Core Principle**: Identify structural problems LLM introduced during implementation. Every debt item must reference concrete artifacts and suggest a fix direction.
+**Core Principle**: Identify structural problems introduced during implementation. Every debt item must have concrete file locations, evidence, and fix direction.
 
 ## User Input
 
@@ -10,333 +10,250 @@ On-demand workflow for detecting technical debt patterns in implemented code and
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+## Output Location
 
-## Problem This Solves
-
-LLMs generate working code that accumulates technical debt:
-- Duplicated logic across multiple files (DRY violations)
-- Shotgun surgery patterns (one change requires N file edits)
-- Missing abstractions (concepts expressed in code without names)
-- Hidden coupling (module A knows too much about module B)
-- Responsibility diffusion (single concern spread across layers)
-
-LLMs don't flag these issues — they just produce working code. This workflow detects debt patterns and captures them for resolution.
-
-## When to Use
-
-Use this workflow when:
-- Implementation complete but code "feels wrong"
-- You notice copy-paste patterns emerging
-- Adding a feature required touching many files
-- Code review reveals structural issues
-- After `/mdt-reflection` to document debt formally
-
-Do NOT use when:
-- Before implementation (use `/mdt-architecture` instead)
-- For functional bugs (use Bug Fix CR)
-- For missing features (use Feature Enhancement CR)
+`docs/CRs/{CR-KEY}/debt.md`
 
 ## Execution Steps
 
-### Step 1: Load Context
+### Step 1: Extract Project Context
 
-1. Use `mdt-all:get_cr` with `mode="full"` to retrieve CR content
-   - Parse CR key, project code, current status
-   - If CR doesn't exist, abort: "Create CR first"
-   - If CR status is "Proposed" or "Approved", warn: "Tech debt check typically runs after implementation"
+Detect or extract from CLAUDE.md / project config:
 
-2. Extract from CR:
-   - Affected artifacts (files that were modified)
-   - New artifacts (files that were created)
-   - Architecture Design section (if exists — check for violations)
+```yaml
+project:
+  source_dir: {src/, lib/, app/, ...}
+  test_command: {npm test, pytest, cargo test, go test, make test, ...}
+  build_command: {npm run build, cargo build, go build, make, ...}
+  file_extension: {.ts, .py, .rs, .go, .java, ...}
+  max_file_lines: {from CR acceptance criteria or default 300}
+```
 
-3. If codebase access available, scan the actual implementation files for patterns.
+If CLAUDE.md exists, read it. Otherwise detect from project files.
 
-### Step 2: Detect Debt Patterns
+### Step 2: Load CR Context
 
-Analyze implementation against these debt categories:
+1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
+2. Extract:
+   - **Affected/new artifacts** — files to analyze
+   - **Architecture Design** — check for violations
+   - **Acceptance Criteria** — extract size constraints to verify
+3. If codebase available, scan actual files
 
-| Pattern | Detection Signal | Severity |
-|---------|------------------|----------|
-| **Duplication** | Same/similar logic in 2+ locations | High |
-| **Shotgun Surgery** | Adding X requires editing N files (N > 1) | High |
-| **Missing Abstraction** | Concept in code without class/interface/type name | Medium |
-| **Hidden Coupling** | Module imports internal details of another module | Medium |
-| **Responsibility Diffusion** | Single concern spread across 3+ files/layers | High |
-| **God Object** | One file/class handles multiple unrelated concerns | Medium |
-| **Primitive Obsession** | Complex concept represented as primitive (string, number) | Low |
-| **Feature Envy** | Function uses more data from other module than its own | Low |
+### Step 3: Detect Debt Patterns
 
-For each detected pattern, capture:
-- **Pattern name**: Which debt type
-- **Location**: Specific file(s) and line numbers if possible
-- **Evidence**: What indicates this is debt (e.g., "3 identical blocks")
-- **Impact**: What happens when you need to extend/modify
-- **Severity**: High / Medium / Low
+Analyze against these patterns:
 
-### Step 3: Check Architecture Violations
+| Pattern | Signal | Severity |
+|---------|--------|----------|
+| **Duplication** | Same logic in 2+ locations | High |
+| **Shotgun Surgery** | Adding X requires editing N files | High |
+| **Size Violation** | File exceeds limit from acceptance criteria | High |
+| **Missing Abstraction** | Concept in code without type/interface | Medium |
+| **Hidden Coupling** | Module imports internals of another | Medium |
+| **Responsibility Diffusion** | Single concern across 3+ files | High |
 
-If CR has `## Architecture Design` section:
+For each item capture:
+- Pattern name
+- Location (file paths, line ranges if available)
+- Evidence (what you observed)
+- Impact (what breaks when extending)
+- Suggested fix (direction, not implementation)
 
-1. Extract the **Extension Rule**
-2. Test mentally: "Does current implementation follow this rule?"
-3. If violated, flag as High severity debt
+### Step 4: Check Architecture Violations
 
-Example:
-- Extension Rule: "To add adapter, create one file in `src/adapters/`"
-- Actual: Adding adapter requires editing 3 files
-- Violation: Architecture design not followed
+If CR has Architecture Design:
 
-### Step 4: Present Findings
+1. Extract **Extension Rule**
+2. Verify: Does implementation follow the rule?
+3. Check **Structure**: Do files match the specified paths?
+4. Check **Size limits** from Acceptance Criteria
 
-Present detected debt to user for review:
+Flag violations as High severity.
+
+### Step 5: Check Size Compliance
+
+Run (or instruct to run):
+```bash
+# Find files exceeding limit (adjust path and extension for project)
+find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX_FROM_CR}'
+```
+
+Compare against CR acceptance criteria. Any violation = High severity debt item.
+
+### Step 6: Generate Debt Report
+
+Create `docs/CRs/{CR-KEY}/debt.md`:
 
 ```markdown
-## Technical Debt Detected
+# {CR-KEY} Technical Debt Analysis
 
-**CR**: [PROJECT-XXX]
-**Files Analyzed**: [N]
-**Debt Items Found**: [N]
+**CR**: {CR-KEY}
+**Date**: {YYYY-MM-DD}
+**Files Analyzed**: {N}
+**Debt Items Found**: {N} ({high} High, {medium} Medium, {low} Low)
 
-### High Severity
+## Project Context
 
-#### 1. [Pattern Name]: [Brief Description]
-- **Location**: `path/to/file.ts` (lines X-Y), `path/to/other.ts` (lines A-B)
-- **Evidence**: [What you observed, e.g., "Identical 15-line blocks in 3 files"]
-- **Impact**: [What breaks or gets harder, e.g., "Adding new provider requires editing 3 files"]
-- **Suggested Fix**: [Direction, not full solution, e.g., "Extract to shared utility or base class"]
+| Setting | Value |
+|---------|-------|
+| Source directory | `{source_dir}` |
+| File extension | `{ext}` |
+| Max file size | {N} lines |
 
-#### 2. [Pattern Name]: [Brief Description]
+## Summary
+
+{2-3 sentence overview of findings}
+
+## Size Compliance
+
+| File | Lines | Target | Status |
+|------|-------|--------|--------|
+| `{path}` | {N} | <{max} | ✅/❌ |
+| ... | ... | ... | ... |
+
+## High Severity
+
+### 1. {Pattern}: {Brief description}
+
+- **Location**: `{file}` (lines {X}-{Y}), `{file2}` (lines {A}-{B})
+- **Evidence**: {What you observed}
+- **Impact**: {What breaks when extending}
+- **Suggested Fix**: {Direction, not implementation}
+
+### 2. {Pattern}: {Brief description}
 ...
 
-### Medium Severity
+## Medium Severity
+
+### {N}. {Pattern}: {Brief description}
 ...
 
-### Low Severity
+## Low Severity
+
+### {N}. {Pattern}: {Brief description}
 ...
+
+## Suggested Inline Comments
+
+**File**: `{path}`
+**Line**: {N}
+```{language}
+// TECH-DEBT: {Pattern} - {Brief description}
+// Impact: {What breaks}
+// Suggested: {Fix direction}
+// See: {CR-KEY}/debt.md
+```
+
+*Note: Adjust comment syntax for project language (// for C-style, # for Python/Ruby/Shell, -- for SQL/Lua)*
+
+## Recommended Actions
+
+### Immediate (High Severity)
+1. [ ] {Action for debt item 1}
+2. [ ] {Action for debt item 2}
+
+### Deferred (Medium/Low)
+1. [ ] {Action}
+
+## Metrics
+
+| Metric | Before | After | Target | Status |
+|--------|--------|-------|--------|--------|
+| {source file} lines | {N} | {N} | <{N} | ✅/❌ |
+| Total files | {N} | {N} | — | — |
+| Debt items | — | {N} | 0 | ❌ |
 
 ---
-
-**Actions**:
-- Reply "document" to add these findings to the CR
-- Reply "fix [number]" to start a fix session for specific item
-- Reply "ignore [number]" to skip specific items
-- Reply "all" to document all and create follow-up CR for fixes
+*Generated: {timestamp}*
 ```
 
-Wait for user confirmation before proceeding.
+### Step 7: Save Report
 
-### Step 5: Generate Inline Comments
-
-For each confirmed debt item, generate inline code comment suggestion:
-
-```typescript
-// TECH-DEBT: [Pattern] - [Brief description]
-// Impact: [What breaks when extending]
-// Suggested: [Fix direction]
-// See: [CR-KEY] for details
-```
-
-**Comment placement rules**:
-- Place at the START of the problematic code block
-- For duplication: comment on FIRST occurrence, reference others
-- For missing abstraction: comment where the concept is most used
-- Keep comment under 4 lines
-
-Present comments to user:
-
-```markdown
-### Suggested Inline Comments
-
-**File**: `src/handlers/user-handler.ts`
-**Line**: 45
-```typescript
-// TECH-DEBT: Duplication - Same validation logic in 3 handlers
-// Impact: Validation change requires editing user, order, product handlers
-// Suggested: Extract to ValidationService or shared utility
-// See: AAA-010 for details
-```
-
-**File**: `src/services/order-service.ts`
-**Line**: 112
-...
-```
-
-User can:
-- Accept all comments
-- Accept selectively
-- Skip inline comments (document in CR only)
-
-### Step 6: Update CR
-
-After user approval, update the CR:
-
-1. **Add/Update Technical Debt Section**:
-   - Create `### Identified Technical Debt` under `## 8. Clarifications` (or create Section 8 if missing)
-   - Add session subheading: `#### Tech Debt Review YYYY-MM-DD`
-
-2. **Document Each Debt Item**:
-   ```markdown
-   #### Tech Debt Review 2025-01-15
-
-   **1. [Pattern]: [Description]**
-   - Location: `file.ts` (lines X-Y)
-   - Severity: High
-   - Impact: [Extension/maintenance impact]
-   - Suggested Fix: [Direction]
-   - Status: Documented / Fix Planned / Deferred
-
-   **2. [Pattern]: [Description]**
-   ...
-   ```
-
-3. **Link to Follow-up** (if user chose to create fix CR):
-   - Add `Related CRs: [NEW-CR-KEY] (Tech debt fix)`
-
-### Step 7: Create Follow-up CR (Optional)
-
-If user requests, create a Technical Debt CR:
-
-```json
-{
-  "project": "PROJECT_CODE",
-  "type": "Technical Debt",
-  "data": {
-    "title": "Refactor: [Brief description of debt pattern]",
-    "relatedTickets": "ORIGINAL-CR-KEY",
-    "content": "... generated from debt findings ..."
-  }
-}
-```
-
-The follow-up CR should:
-- Reference the original CR
-- List all debt items to address
-- NOT include the full fix (that requires separate architecture session)
-- Set status to "Proposed" for prioritization
+1. Create directory if needed: `docs/CRs/{CR-KEY}/`
+2. Write to: `docs/CRs/{CR-KEY}/debt.md`
+3. Optionally update CR Section 8 with summary and link to debt.md
 
 ### Step 8: Report Completion
 
 ```markdown
-## Technical Debt Review Complete
+## Tech Debt Analysis Complete
 
-**CR**: [PROJECT-XXX]
-**Session**: YYYY-MM-DD
+**CR**: {CR-KEY}
+**Report**: `docs/CRs/{CR-KEY}/debt.md`
 
-### Summary
-- Debt items found: [N]
-- High severity: [N]
-- Medium severity: [N]
-- Low severity: [N]
+### Findings
+| Severity | Count |
+|----------|-------|
+| High | {N} |
+| Medium | {N} |
+| Low | {N} |
 
-### Actions Taken
-- [ ] Documented in CR Section 8
-- [ ] Inline comments generated: [N]
-- [ ] Follow-up CR created: [CR-KEY or "None"]
+### Size Compliance
+```bash
+find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX}'
+```
+{output or "All files within limits"}
 
-### Inline Comments
-[List of files with suggested comments, or "Skipped"]
+### Critical Issues
+{List high severity items}
 
 ### Next Steps
-- Review inline comments and add to codebase
-- Prioritize follow-up CR if created
-- For complex fixes, run `/mdt-architecture` on follow-up CR before implementing
+- Review `docs/CRs/{CR-KEY}/debt.md`
+- For complex fixes: create follow-up CR, run `/mdt-architecture`
+- For simple fixes: address inline
 ```
 
 ## Debt Pattern Reference
 
 ### Duplication (High)
-
-**Signal**: Same/similar code in multiple places
-**Example**:
-```
-src/handlers/user-handler.ts:45    → if (input.email && !validateEmail(input.email)) {...}
-src/handlers/order-handler.ts:67   → if (input.email && !validateEmail(input.email)) {...}
-src/handlers/product-handler.ts:89 → if (input.email && !validateEmail(input.email)) {...}
-```
-**Impact**: Change to validation requires 3 edits
-**Fix Direction**: Extract to shared validation utility
+**Signal**: Same/similar code in 2+ places
+**Example**: Validation logic repeated in 3 command handlers
+**Fix Direction**: Extract to shared utility
 
 ### Shotgun Surgery (High)
+**Signal**: Adding one feature requires N file edits
+**Example**: New provider requires editing config, factory, types, handler
+**Fix Direction**: Single extension point (adapter/factory pattern)
 
-**Signal**: Adding one thing requires editing many files
-**Example**: "To add new payment provider, must edit: config.ts, types.ts, handler.ts, factory.ts, tests/"
-**Impact**: High change amplification, error-prone
-**Fix Direction**: Consolidate to single extension point (adapter pattern)
+### Size Violation (High)
+**Signal**: File exceeds limit from CR acceptance criteria
+**Example**: Target was <300 lines, file is 745 lines
+**Fix Direction**: Further extraction, subdivide responsibilities
 
 ### Missing Abstraction (Medium)
-
-**Signal**: Concept exists in code but has no name
-**Example**: Multiple functions pass around `{userId, email, role}` as separate params
-**Impact**: No type safety, concept implicit
-**Fix Direction**: Create `UserContext` type/interface
+**Signal**: Concept exists without type/interface name
+**Example**: `{user_id, email, role}` passed as separate params everywhere
+**Fix Direction**: Create type/interface for the concept
 
 ### Hidden Coupling (Medium)
-
 **Signal**: Module imports internal details of another
-**Example**: `import { _internalHelper } from '../other-module/internals'`
-**Impact**: Changes to internals break dependent modules
-**Fix Direction**: Expose proper public API, hide internals
+**Example**: Importing private/internal helpers from another module
+**Fix Direction**: Expose public API, hide internals
 
-### Responsibility Diffusion (High)
+## Comment Syntax by Language
 
-**Signal**: Single concern spread across layers
-**Example**: "User validation" logic in: controller, service, repository, utils
-**Impact**: Hard to understand full behavior, changes cascade
-**Fix Direction**: Consolidate in single service/module
+| Language | Single-line | Block |
+|----------|-------------|-------|
+| TypeScript/JavaScript/Java/C/C++/Go/Rust | `//` | `/* */` |
+| Python/Ruby/Shell/YAML | `#` | N/A |
+| SQL/Lua/Haskell | `--` | `/* */` or `{- -}` |
+| HTML/XML | N/A | `<!-- -->` |
 
 ## Behavioral Rules
 
-- **On-demand only**: Never run automatically, user must invoke
-- **Present before documenting**: Always show findings for approval
-- **Severity-based ordering**: High → Medium → Low
-- **Fix direction, not full solution**: Suggest approach, don't design the fix
-- **Respect user decisions**: If they say "ignore", don't persist
-- **Link to architecture**: For complex fixes, recommend `/mdt-architecture` session
-- **No false positives**: Only flag clear debt patterns with evidence
-- **Concrete locations**: Every debt item must have file path(s)
+1. **Concrete locations required** — every item needs file path(s)
+2. **Evidence required** — what specifically indicates the debt
+3. **Fix direction, not solution** — suggest approach, don't design
+4. **Size compliance is debt** — exceeding CR limits = High severity
+5. **Save to file** — `docs/CRs/{CR-KEY}/debt.md`, not just console output
+6. **Use project context** — correct paths, extensions, commands for project
 
-## Anti-Patterns to Avoid
+## Integration
 
-❌ **Vague debt description**: "Code could be cleaner"
-✅ **Specific debt**: "Duplication: 15-line block repeated in 3 handler files"
+**Before**: Implementation complete
+**After**: 
+- Simple fixes: address inline
+- Complex fixes: create Technical Debt CR → `/mdt-architecture` → `/mdt-tasks`
 
-❌ **No location**: "There's some coupling somewhere"
-✅ **With location**: "Hidden coupling: `order-service.ts:45` imports internal from `user-module`"
-
-❌ **Prescriptive fix**: "Create AbstractBaseHandlerFactory with these methods..."
-✅ **Fix direction**: "Extract to shared utility or base class"
-
-❌ **Flagging style issues**: "Variable names could be better"
-✅ **Flagging structural issues**: "Missing abstraction for user context passed through 5 functions"
-
-## Integration with Other Workflows
-
-**Before this workflow**:
-- Implementation complete (code exists to analyze)
-- Optionally: `/mdt-reflection` to capture learnings first
-
-**After this workflow**:
-- Fix immediately (if simple)
-- Create follow-up CR (if complex)
-- Run `/mdt-architecture` on follow-up CR before implementing fix
-
-**Trigger phrases**:
-- "Check tech debt in [CR-KEY]"
-- "Review [CR-KEY] for technical debt"
-- "Run tech debt scan on [CR-KEY]"
-
-## Quality Checklist
-
-Before completing, verify:
-- [ ] Every debt item has concrete file location(s)
-- [ ] Severity assigned to each item
-- [ ] Impact explains what breaks/gets harder
-- [ ] Fix direction provided (not full solution)
-- [ ] User approved before documenting
-- [ ] CR Section 8 updated with findings
-- [ ] Inline comments are under 4 lines each
-- [ ] Follow-up CR linked if created
-
-Context for analysis: $ARGUMENTS
+Context: $ARGUMENTS
