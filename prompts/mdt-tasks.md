@@ -1,8 +1,8 @@
-# MDT Task Breakdown Workflow (v1)
+# MDT Task Breakdown Workflow (v2)
 
-Generate a task list from a CR ticket for phased, reviewable implementation. Each task is independently commitable and verifiable.
+Generate a task list from a CR ticket for phased, reviewable implementation.
 
-**Core Principle**: Tasks explain *what* to do and *how to verify*, not *how to code*. Write for a mid-level developer who understands patterns but needs direction on scope and interfaces.
+**Core Principle**: Tasks must include **constraints** (size limits, exclusions) not just actions. LLM agents execute literally — implicit goals must be explicit.
 
 ## User Input
 
@@ -10,383 +10,250 @@ Generate a task list from a CR ticket for phased, reviewable implementation. Eac
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+## Critical Rules (learned from failures)
 
-## Problem This Solves
-
-Large CRs (refactoring, multi-file features) fail when given to LLM agents as single units:
-- Agent may go wrong direction with no checkpoint to catch it
-- Context loss between sessions leaves work in unclear state
-- No way to say "just do Phase 1 today"
-- Hard to review incremental progress
-
-Task breakdown enables:
-- Phased implementation with review gates
-- Resumable work across sessions
-- Clear progress tracking
-- Independent verification per task
-
-## When to Use
-
-Use this workflow when:
-- CR has multiple phases or affects multiple files
-- Work will span multiple sessions
-- You want checkpoint reviews before proceeding
-- CR involves architectural changes (refactoring, new patterns)
-
-Do NOT use when:
-- Single-file bug fix
-- < 1 hour of work
-- You'll watch agent work in real-time
-- CR is exploratory/spike
+1. **Size budgets are mandatory**: Every task creating/modifying files must specify max lines
+2. **Extract shared utilities FIRST**: Before extracting consumers that will use them
+3. **Exclusions prevent bloat**: Explicitly state what NOT to move
+4. **Structure path required**: Link each task to CR Architecture Design location
 
 ## Output Location
 
-Tasks file: `docs/CRs/{CR-KEY}/tasks.md`
-
-Example: `docs/CRs/SUML-009/tasks.md`
+`docs/CRs/{CR-KEY}/tasks.md`
 
 ## Execution Steps
 
 ### Step 1: Load CR Context
 
-1. Use `mdt-all:get_cr` with `mode="full"` to retrieve CR content
-   - Parse CR key, project code
-   - If CR doesn't exist, abort: "Create CR first"
-   - If CR status is "Implemented", warn: "Creating tasks for implemented CR"
+1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
+2. Extract and keep available:
+   - **Architecture Design** (Pattern, Structure, Extension Rule) — REQUIRED for refactoring
+   - **Acceptance Criteria** — extract any size/line constraints
+   - **Artifact Specifications** — list of files to create/modify
+3. If Architecture Design missing for refactoring CR: abort with "Run `/mdt-architecture` first"
 
-2. Extract from CR:
-   - Architecture Design (Pattern, Structure, Extension Rule)
-   - Artifact Specifications (new files, modified files)
-   - Acceptance Criteria
-   - Deployment phases (if defined)
-   - Verification approach
+### Step 2: Calculate Size Budgets
 
-3. If Architecture Design missing, recommend: "Run `/mdt-architecture` first for complex refactoring"
+From CR acceptance criteria, derive per-file limits:
 
-### Step 2: Identify Task Boundaries
+```
+CR says: "src/cli/index.ts reduced to <300 lines"
+Current: 958 lines
+Extracting to: 4 command files + validators + formatters
 
-Group work into logical, independently commitable units:
+Budget allocation:
+- index.ts target: <200 lines (orchestration only)
+- Each command file: <200 lines
+- validators/: <100 lines
+- formatters/: <100 lines
 
-**Boundary principles:**
-- Each task produces working code (tests pass after task)
-- Each task has clear verification criteria
-- Tasks within a phase can be done in sequence
-- Phases are natural review gates
+If extraction would exceed budget → subdivide into smaller tasks
+```
 
-**Task sizing:**
-- Target: 15-45 minutes of work per task
-- Minimum: Creates or modifies at least one file
-- Maximum: Touches no more than 3-4 files
+**Default budgets when CR doesn't specify:**
+- Orchestration files (index.ts): 150 lines max
+- Feature modules: 200 lines max  
+- Utility modules: 100 lines max
 
-**Grouping by CR type:**
+### Step 3: Determine Task Order
 
-| CR Type | Grouping Strategy |
-|---------|-------------------|
-| **Refactoring** | Group by module extraction (one task per new file or logical unit) |
-| **Feature** | Group by vertical slice (one task per user-visible capability) |
-| **Bug Fix** | Usually single task, unless fix spans multiple files |
-| **Architecture** | Group by layer or component boundary |
+**Dependency rule**: Extract in this order:
+1. **Shared utilities first** (validators, formatters, helpers)
+2. **Then consumers** (commands, features that import utilities)
 
-### Step 3: Define Task Structure
+This prevents duplication — consumers can import from already-extracted utilities.
 
-Each task follows this format:
+### Step 4: Task Template
+
+Each task MUST follow this format:
 
 ```markdown
 ### Task {phase}.{number}: {Brief description}
 
-**Commit message**: `{type}({scope}): {description}`
+**Structure**: `{exact path from CR Architecture Design}`
 
-**From**: {source file(s) or "New file"}
-**To**: {destination file(s)}
+**Limits**:
+- Target file: max {N} lines
+- Source reduction: ~{N} lines
 
-**Do**:
-- {Specific action 1}
-- {Specific action 2}
-- {Specific action 3}
+**From**: `{source file}`
+**To**: `{destination file}`
 
-**Interface**:
-```typescript
-// Expected export signature (for new/modified modules)
-export function {name}({params}): {return}
+**Move**:
+- {specific function/class/block 1}
+- {specific function/class/block 2}
+
+**Exclude** (stays in source or goes elsewhere):
+- {what NOT to move — shared utilities, unrelated logic}
+
+**Imports**: Update source to import from new location
+
+**Verify**:
+```bash
+wc -l {destination} # must be < {limit}
+npm test           # must pass
 ```
-
-**Keep unchanged**: {What stays in original location, if applicable}
-
-**Test**:
-- {Verification command or test file}
-- {Expected outcome}
 
 **Done when**:
-- [ ] {Concrete completion criterion}
-- [ ] {Concrete completion criterion}
+- [ ] `{destination}` exists and < {N} lines
+- [ ] `{source}` reduced by ~{N} lines
+- [ ] Tests pass unchanged
 ```
 
-### Step 4: Generate Task List
-
-Create the full task list document:
+### Step 5: Generate Tasks Document
 
 ```markdown
 # Tasks: {CR-KEY}
 
-> Generated from [{CR-KEY}](../../../docs/CRs/{CR-KEY}.md)
-> 
-> **Pattern**: {From Architecture Design}
-> **Extension Rule**: {From Architecture Design}
+**Source**: [{CR-KEY}]({relative path to CR})
 
-## Overview
+## Global Constraints
 
-| Phase | Tasks | Focus |
-|-------|-------|-------|
-| 1 | {N} | {Phase 1 description} |
-| 2 | {N} | {Phase 2 description} |
-| ... | ... | ... |
+| Constraint | Value | From |
+|------------|-------|------|
+| Max file size | {N} lines | CR Acceptance Criteria |
+| Target structure | See Architecture Design | CR Section 2 |
 
-## Progress
+**Architecture Structure** (from CR):
+```
+{paste exact Structure diagram from CR Architecture Design}
+```
 
-- [ ] Phase 1: {description}
-- [ ] Phase 2: {description}
-- [ ] Post-implementation
+**STOP Condition**: If any file would exceed {N} lines, do NOT proceed. Subdivide the task first.
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: {Name} — Shared Utilities
 
-**Goal**: {What this phase achieves}
-**Verify phase complete**: {How to verify entire phase}
+> Extract shared code BEFORE extracting features that will use it.
 
-### Task 1.1: {Description}
-...
+**Phase goal**: {goal}
+**Phase verification**: All utility files exist, tests pass
 
-### Task 1.2: {Description}
+### Task 1.1: {First shared utility}
 ...
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: {Name} — Feature Extraction
+
+> Now extract features that import from Phase 1 utilities.
+
+**Phase goal**: {goal}
+**Phase verification**: {source files} < {N} lines each, tests pass
+
+### Task 2.1: {First feature extraction}
 ...
 
 ---
 
 ## Post-Implementation
 
-### Task N.1: Update documentation
+### Task N.1: Verify structure compliance
 
-**Do**:
-- Update CLAUDE.md with new file structure
-- Update README.md if public API changed
+**Do**: Compare actual file structure against CR Architecture Design
+**Verify**: `find src/{area} -name "*.ts" | sort` matches CR structure
+**Done when**: [ ] All files in correct locations per CR
 
-**Done when**:
-- [ ] CLAUDE.md reflects actual file organization
-- [ ] New developers can navigate codebase using docs
+### Task N.2: Verify size compliance
 
-### Task N.2: Verify extension rule
+**Do**: Check all new/modified files against size limits
+**Verify**:
+```bash
+find src/ -name "*.ts" -exec wc -l {} \; | awk '$1 > {MAX}'
+# Should output nothing
+```
+**Done when**: [ ] No files exceed {MAX} lines
 
-**Do**:
-- Attempt to add mock/test instance following Extension Rule
-- Document if rule holds or needs adjustment
+### Task N.3: Update CLAUDE.md
 
-**Done when**:
-- [ ] Extension Rule verified or CR updated with correction
-
-### Task N.3: Tech debt check
-
-**Do**:
-- Run `/mdt-tech-debt {CR-KEY}`
-- Address or document any findings
-
-**Done when**:
-- [ ] No high-severity debt introduced
-- [ ] Any deferred debt documented in CR
+### Task N.4: Run `/mdt-tech-debt {CR-KEY}`
 ```
 
-### Step 5: Task Detail Guidelines
+### Step 6: Validate Before Saving
 
-**For refactoring tasks (extracting code):**
+Checklist:
+- [ ] Every task has **Limits** with specific line counts
+- [ ] Every task has **Exclude** section (can be empty with explanation)
+- [ ] Shared utilities extracted in earlier phase than consumers
+- [ ] **Structure** path matches CR Architecture Design exactly
+- [ ] **Verify** section has runnable commands
+- [ ] Post-implementation includes structure and size verification
+
+### Step 7: Save and Report
+
+Save to `docs/CRs/{CR-KEY}/tasks.md`
+
+Report:
 ```markdown
-### Task 1.1: Extract {component} to {new file}
+## Tasks Generated: {CR-KEY}
 
-**Commit message**: `refactor({scope}): extract {component} to dedicated module`
+| Phase | Tasks | Focus |
+|-------|-------|-------|
+| 1 | {N} | Shared utilities |
+| 2 | {N} | Feature extraction |
+| Post | 4 | Verification |
 
-**From**: `{source file}` ({description of what to extract})
-**To**: `{destination file}`
+**Size budget**: {N} lines max per file
+**STOP condition**: Exceeding budget requires task subdivision
 
-**Do**:
-- Create `{destination file}`
-- Move {function/class/block description} from source
-- Update imports in source to use new module
-- Re-export from index if needed for public API
-
-**Interface**:
-```typescript
-export function {name}({params}): {return}
+Next: Review tasks, then run `/mdt-implement {CR-KEY}`
 ```
 
-**Keep in source**: {What remains — orchestration, other functions}
+## Task Examples
 
-**Test**:
-- `npm test` — all existing tests pass
-- `npm run build` — no TypeScript errors
+### Good: Refactoring with constraints
+
+```markdown
+### Task 1.1: Extract input validators
+
+**Structure**: `src/cli/validators/input-validators.ts`
+
+**Limits**:
+- Target file: max 100 lines
+- Source reduction: ~80 lines
+
+**From**: `src/cli/index.ts`
+**To**: `src/cli/validators/input-validators.ts`
+
+**Move**:
+- `validateUrl()` function
+- `validateFilePath()` function  
+- `validateNumericOption()` function
+- Related type definitions
+
+**Exclude**:
+- Command-specific validation (goes with each command)
+- Output formatting (separate task)
+
+**Imports**: Add `export` to moved functions, update index.ts imports
+
+**Verify**:
+```bash
+wc -l src/cli/validators/input-validators.ts  # < 100
+npm test
+```
 
 **Done when**:
-- [ ] `{source file}` reduced by ~{N} lines
-- [ ] `{destination file}` exists with focused responsibility
-- [ ] All imports resolve correctly
+- [ ] File exists at correct path and < 100 lines
+- [ ] index.ts reduced by ~80 lines
 - [ ] Tests pass without modification
 ```
 
-**For feature tasks (new functionality):**
-```markdown
-### Task 2.1: Implement {capability}
-
-**Commit message**: `feat({scope}): add {capability}`
-
-**From**: New file
-**To**: `{file path}`
-
-**Do**:
-- Create `{file path}` with {responsibility}
-- Implement {specific behavior}
-- Wire into {integration point}
-
-**Interface**:
-```typescript
-export function {name}({params}): {return}
-```
-
-**Test**:
-- Create `{test file path}`
-- Test cases: {list key scenarios}
-
-**Done when**:
-- [ ] {Functional criterion from CR acceptance criteria}
-- [ ] Unit tests cover happy path and error cases
-- [ ] Integrated with {parent module}
-```
-
-**For test tasks:**
-```markdown
-### Task 1.5: Add tests for {module}
-
-**Commit message**: `test({scope}): add unit tests for {module}`
-
-**From**: New file
-**To**: `{test file path}`
-
-**Do**:
-- Create test file for `{module}`
-- Cover: {list key behaviors to test}
-- Mock: {list dependencies to mock}
-
-**Test cases**:
-- {Input} → {Expected output}
-- {Error condition} → {Expected error}
-- {Edge case} → {Expected behavior}
-
-**Done when**:
-- [ ] Test file exists at `{path}`
-- [ ] Coverage for `{module}` > {N}%
-- [ ] All tests pass
-```
-
-### Step 6: Validate Task List
-
-Before saving, verify:
-
-1. **Completeness**: All artifacts from CR Section 4 are covered by tasks
-2. **Independence**: Each task can be committed and tests pass
-3. **Sequence**: Tasks in a phase have logical order (dependencies first)
-4. **Verification**: Every task has concrete "Done when" criteria
-5. **Traceability**: Tasks map back to CR acceptance criteria
-
-### Step 7: Save Task List
-
-1. Create directory if needed: `docs/CRs/{CR-KEY}/`
-2. Write task list to: `docs/CRs/{CR-KEY}/tasks.md`
-3. Report completion with summary
-
-### Step 8: Report Completion
+### Bad: Missing constraints (what failed in SUML-009)
 
 ```markdown
-## Task Breakdown Complete
-
-**CR**: {CR-KEY}
-**Tasks file**: `docs/CRs/{CR-KEY}/tasks.md`
-
-### Summary
-| Phase | Tasks | Estimated |
-|-------|-------|-----------|
-| 1 | {N} | {N * 30} min |
-| 2 | {N} | {N * 30} min |
-| Post | 3 | 45 min |
-| **Total** | {N} | {total} min |
-
-### Task Overview
-1.1 {description}
-1.2 {description}
-...
-
-### Next Steps
-- Review task breakdown for accuracy
-- Begin with: `Task 1.1: {description}`
-- After each phase, verify before proceeding
+### Task 3: Summarize Command Module
+**Description:** Extract summarize command logic into dedicated module
+**Deliverables:**
+- `src/cli/commands/summarize-command.ts` with complete summarize functionality
 ```
 
-## Behavioral Rules
+Problems: No size limit, no exclusions, "complete functionality" is unbounded.
 
-- **No line numbers**: Reference by function/block name, not line numbers (they shift)
-- **Independently commitable**: Each task leaves code in working state
-- **Mid-level developer audience**: Explain what and why, not how to code
-- **Include test expectations**: Refactoring = existing tests pass; Features = new tests required
-- **Post-implementation tasks always included**: Docs update, extension rule verification, tech debt check
-- **Respect CR phases**: If CR has deployment phases, align task phases to match
-- **No implementation code**: Task describes interface signatures, not full implementation
+## Integration
 
-## Anti-Patterns to Avoid
+**Before**: `/mdt-architecture` (required for refactoring)
+**After**: `/mdt-implement {CR-KEY}`
 
-❌ **Too vague**: "Refactor the CLI module"
-✅ **Specific**: "Extract summarize command handler to `src/cli/commands/summarize-command.ts`"
-
-❌ **Too detailed**: "On line 45, change the import statement to..."
-✅ **Right level**: "Move command handler and its helper functions, update imports in source"
-
-❌ **Not commitable**: "Start working on the config module"
-✅ **Commitable**: "Extract `provider-factory.ts` with `createProviderConfig()` export"
-
-❌ **No verification**: "Create the new file"
-✅ **Verifiable**: "Done when: tests pass, source file reduced by ~100 lines"
-
-❌ **Missing test guidance**: "Implement the feature"
-✅ **With tests**: "Create unit tests in `test/config/provider-factory.test.ts` covering provider creation and error cases"
-
-## Integration with Other Workflows
-
-**Before this workflow**:
-- `/mdt-ticket-creation` — CR must exist
-- `/mdt-architecture` — Recommended for complex refactoring (provides Structure and Extension Rule)
-- `/mdt-clarification` — Resolve ambiguities before breaking down
-
-**After this workflow**:
-- Implementation — Agent works through tasks sequentially
-- `/mdt-tech-debt` — Run as post-implementation task
-- `/mdt-reflection` — Capture learnings after completion
-
-**Trigger phrases**:
-- "Break down [CR-KEY] into tasks"
-- "Create task list for [CR-KEY]"
-- "Generate tasks for [CR-KEY]"
-
-## Quality Checklist
-
-Before saving task list, verify:
-- [ ] All CR artifacts covered by tasks
-- [ ] Each task independently commitable (tests pass after)
-- [ ] Tasks sized appropriately (15-45 min each)
-- [ ] Verification criteria are concrete
-- [ ] Interface signatures included for new modules
-- [ ] Test requirements specified (existing pass or new required)
-- [ ] Post-implementation tasks included (docs, extension rule, tech debt)
-- [ ] Phases align with CR deployment strategy
-- [ ] No line numbers used (reference by name)
-
-Context for breakdown: $ARGUMENTS
+Context: $ARGUMENTS
