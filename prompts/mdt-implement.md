@@ -1,8 +1,8 @@
-# MDT Implementation Orchestrator (v1)
+# MDT Implementation Orchestrator (v2)
 
-Interactive orchestrator for executing tasks from a task list. Runs tasks sequentially, tracks progress, and coordinates with appropriate sub-agents.
+Execute tasks from a task list with structural verification after each task.
 
-**Core Principle**: One task at a time, verify before proceeding. Human stays in control with options to pause, skip, or batch-run.
+**Core Principle**: Verify constraints (size, structure) after each task, not just tests. STOP if constraints violated.
 
 ## User Input
 
@@ -10,435 +10,232 @@ Interactive orchestrator for executing tasks from a task list. Runs tasks sequen
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
-
-## What This Orchestrator Does
-
-1. Loads task list from `docs/CRs/{CR-KEY}/tasks.md`
-2. Identifies appropriate sub-agent/model for each task type
-3. Executes tasks sequentially with verification
-4. Tracks progress (marks completed tasks)
-5. Provides control points between tasks
-
 ## Execution Modes
 
 | Command | Behavior |
 |---------|----------|
-| `/mdt-implement {CR-KEY}` | Interactive mode — ask after each task |
-| `/mdt-implement {CR-KEY} --all` | Step-by-step all — run all tasks, pause only at phase boundaries |
-| `/mdt-implement {CR-KEY} --phase {N}` | Run specific phase only |
-| `/mdt-implement {CR-KEY} --task {N.N}` | Run specific task only |
-| `/mdt-implement {CR-KEY} --fast` | Skip test verification (risky, use for trusted refactoring) |
+| `/mdt-implement {CR-KEY}` | Interactive — verify and ask after each task |
+| `/mdt-implement {CR-KEY} --all` | Run all, pause at phase boundaries |
 | `/mdt-implement {CR-KEY} --continue` | Resume from last incomplete task |
+| `/mdt-implement {CR-KEY} --task {N.N}` | Run specific task only |
 
 ## Execution Steps
 
 ### Step 1: Load Context
 
-1. Parse CR key from `$ARGUMENTS`
-2. Load task list from `docs/CRs/{CR-KEY}/tasks.md`
-   - If file doesn't exist, abort: "Run `/mdt-tasks {CR-KEY}` first to generate task list"
-3. Parse task structure:
-   - Extract phases and tasks
-   - Identify completed tasks (marked `[x]`)
-   - Find first incomplete task
-4. Load CR for context: `mdt-all:get_cr` with `mode="full"`
-   - Extract Architecture Design (Pattern, Structure, Extension Rule)
-   - This guides implementation decisions
+1. Load `docs/CRs/{CR-KEY}/tasks.md` — abort if missing
+2. Load CR with `mdt-all:get_cr mode="full"`
+3. Extract:
+   - **Global Constraints** from tasks.md header (max file size)
+   - **Architecture Structure** from CR
+   - **STOP Condition** from tasks.md
+4. Find first incomplete task (not marked `[x]`)
 
-### Step 2: Select Sub-Agent Strategy
+### Step 2: Execute Task
 
-Based on task type, select appropriate execution approach:
+For each task:
 
-| Task Type | Signal | Sub-Agent Strategy |
-|-----------|--------|-------------------|
-| **Refactoring** | "Extract", "Move", "Rename" | Code manipulation — can use fast model (Haiku) for mechanical changes |
-| **New Feature** | "Implement", "Create", "Add" | Requires reasoning — use capable model (Sonnet/Opus) |
-| **Test Creation** | "Add tests", "Test cases" | Pattern-based — can use fast model with test examples |
-| **Documentation** | "Update docs", "CLAUDE.md" | Writing — use capable model |
-| **Verification** | "Verify", "Check" | Analysis — use capable model |
-
-**Sub-agent selection output:**
-```markdown
-Task 1.1: Extract summarize command
-Type: Refactoring (mechanical extraction)
-Suggested agent: Fast model (Haiku) — code movement, no complex decisions
-```
-
-User can override: "use sonnet" or "use opus" for any task.
-
-### Step 3: Present Task
-
-Before executing, show:
-
+**2a. Show task with constraints:**
 ```markdown
 ## Task {N.N}: {Title}
 
-**Phase**: {Phase number} — {Phase name}
-**Type**: {Task type}
-**Agent**: {Suggested sub-agent}
+**Limits**: Target < {N} lines, Source -{N} lines
+**Structure**: `{path from CR}`
 
-**From**: {Source file(s)}
-**To**: {Destination file(s)}
+{task content}
 
-**Do**:
-- {Action 1}
-- {Action 2}
-- {Action 3}
-
-**Interface**:
-```typescript
-{Expected export signature}
+[run] [skip] [stop]
 ```
 
-**Verify**:
-- {Test command}
-- {Expected outcome}
+**2b. Execute:**
+Pass to sub-agent with constraint context:
+```
+CONSTRAINTS (from CR):
+- Max file size: {N} lines
+- Target path must be: {exact path}
+- Do NOT include: {Exclude items}
 
----
+STOP IF: New file would exceed {N} lines. Report and wait for subdivision.
 
-**Commands**: [run] [skip] [phase] [all] [stop] [agent:{model}]
+TASK:
+{task content}
 ```
 
-Wait for user command.
+**2c. Run tests:**
+```bash
+npm test
+npm run build
+```
 
-### Step 4: Execute Task
+### Step 3: Verify Constraints (CRITICAL)
 
-On "run" or "all" or "phase":
+After each task, verify **before** marking complete:
 
-1. **Announce start:**
-   ```
-   ▶ Starting Task {N.N}: {Title}
-   ```
+**3a. Size check:**
+```bash
+# Check all files modified/created by this task
+for file in {files from task}; do
+  lines=$(wc -l < "$file" 2>/dev/null || echo "0")
+  max={limit from task}
+  if [ "$lines" -gt "$max" ]; then
+    echo "FAIL: $file has $lines lines (max $max)"
+  fi
+done
+```
 
-2. **Execute with sub-agent:**
-   - Pass task description and context to selected agent
-   - Agent performs file operations (create, modify, move)
-   - Agent should follow Architecture Design constraints
+**3b. Structure check:**
+```bash
+# Verify file exists at exact path from task Structure field
+ls -la {Structure path from task}
+```
 
-3. **Run verification** (unless `--fast`):
-   ```bash
-   npm test        # or project-specific test command
-   npm run build   # verify compilation
-   ```
+**3c. Handle violations:**
 
-4. **Report result:**
-   ```markdown
-   ✓ Task {N.N} complete
-     Created: {list of created files}
-     Modified: {list of modified files}  
-     Deleted: {list of deleted files}
-     Tests: {passing|failing|skipped}
-     Duration: {time}
-   ```
-
-5. **Update tasks.md:**
-   - Change `- [ ]` to `- [x]` for completed task
-   - Add completion timestamp as comment if desired
-
-### Step 5: Handle Verification Failure
-
-If tests fail after task execution:
-
+If size exceeded:
 ```markdown
-✗ Task {N.N} verification failed
+⛔ CONSTRAINT VIOLATION
 
-**Test output**:
-```
-{test error output}
-```
+`{file}` has {N} lines (limit: {max})
 
-**Options**:
-- [retry] — Agent attempts to fix the issue
-- [manual] — You fix manually, then mark complete
-- [skip] — Skip this task (mark incomplete)
-- [stop] — Stop orchestration, investigate
+Options:
+- [subdivide] — Break this task into smaller extractions
+- [adjust] — Increase limit if justified (update CR)
+- [stop] — Halt and investigate
 ```
 
-On "retry":
-- Show agent the error
-- Agent attempts fix
-- Re-run verification
-- Max 3 retry attempts
+Do NOT mark task complete if constraints violated.
 
-### Step 6: Inter-Task Control
+### Step 4: Mark Progress
 
-After each task (in interactive mode):
+Only after all verifications pass:
 
+1. Update tasks.md: `- [ ]` → `- [x]`
+2. Report:
 ```markdown
 ✓ Task {N.N} complete
-
-Progress: {completed}/{total} tasks | Phase {N}: {completed}/{phase_total}
-
-Next: Task {N.N+1}: {Title}
-
-[continue] [skip] [phase] [all] [stop] [review]
+  Created: {files} ({lines} lines each)
+  Modified: {files}
+  Tests: passing
+  Constraints: verified
 ```
 
-**Commands:**
-| Command | Action |
-|---------|--------|
-| `continue` / `c` / `yes` / `y` | Run next task, ask again after |
-| `skip` / `s` | Skip next task, continue to following |
-| `phase` / `p` | Run remaining tasks in current phase without asking |
-| `all` / `a` | Run all remaining tasks, pause only at phase boundaries |
-| `stop` / `q` | Stop orchestration, save progress |
-| `review` / `r` | Show git diff of changes so far |
-| `status` | Show overall progress summary |
-
-### Step 7: Phase Boundary
+### Step 5: Phase Boundary
 
 At end of each phase:
 
 ```markdown
-═══════════════════════════════════════════════════════
-✓ Phase {N} Complete: {Phase Name}
-═══════════════════════════════════════════════════════
+═══════════════════════════════════════════
+✓ Phase {N} Complete
+═══════════════════════════════════════════
 
-**Tasks completed**: {N}/{N}
-**Files created**: {list}
-**Files modified**: {list}
-
-**Phase verification**:
-- [ ] All tests passing
-- [ ] {Phase-specific verification from tasks.md}
-
-**Recommendation**: Review changes before proceeding to Phase {N+1}
-
-[continue] [review] [stop]
+**Structure verification**:
+```bash
+find src/{area} -name "*.ts" -exec wc -l {} \; | sort -n
 ```
 
-Even in `--all` mode, pause at phase boundaries for review.
+**Files created**: {list with line counts}
+**Largest file**: {name} ({N} lines) — {OK|WARN if near limit}
 
-### Step 8: Completion
+[continue to Phase {N+1}] [review] [stop]
+```
 
-After all tasks (or on stop):
+### Step 6: Completion
 
 ```markdown
-═══════════════════════════════════════════════════════
-Implementation Session Complete
-═══════════════════════════════════════════════════════
+═══════════════════════════════════════════
+Implementation Complete: {CR-KEY}
+═══════════════════════════════════════════
 
-**CR**: {CR-KEY}
-**Session**: {timestamp}
-
-### Progress
-| Phase | Status | Tasks |
-|-------|--------|-------|
-| 1 | ✓ Complete | 4/4 |
-| 2 | ◐ Partial | 2/5 |
-| 3 | ○ Not started | 0/3 |
-| Post | ○ Not started | 0/3 |
+### Final Structure Check
+```bash
+find src/ -name "*.ts" -exec wc -l {} \; | awk '$1 > {MAX}'
+```
+{output — should be empty}
 
 ### Summary
-- Tasks completed: {N}/{total}
-- Files created: {N}
-- Files modified: {N}
-- Tests: {passing|failing}
-
-### Files Changed
-**Created:**
-- {file path}
-- {file path}
-
-**Modified:**
-- {file path}
-- {file path}
+| Metric | Before | After | Target |
+|--------|--------|-------|--------|
+| {source file} | {N} lines | {N} lines | <{N} |
+| ... | ... | ... | ... |
 
 ### Next Steps
-- {If incomplete: Resume with `/mdt-implement {CR-KEY} --continue`}
-- {If phase done: Review before next phase}
-- {If all done: Run post-implementation tasks}
-- {If tests failing: Fix before proceeding}
-
-### Post-Implementation Checklist
 - [ ] Review git diff
-- [ ] Run full test suite
-- [ ] Update CLAUDE.md
-- [ ] Verify Extension Rule
-- [ ] Run `/mdt-tech-debt {CR-KEY}`
+- [ ] Run full test suite  
 - [ ] Commit changes
+- [ ] Run `/mdt-tech-debt {CR-KEY}`
 ```
 
-## Task Execution Guidelines
+## Sub-Agent Context Template
 
-### For Refactoring Tasks
+When delegating task to sub-agent, include:
 
 ```markdown
-**Context for sub-agent:**
+# Task Context
 
-You are extracting code from {source} to {destination}.
+## Constraints (MUST follow)
+- **Max file size**: {N} lines — STOP if exceeded
+- **Target structure**: `{exact path}`
+- **Exclude from extraction**: {list from task}
 
-Architecture Design:
-- Pattern: {pattern}
-- Structure: {structure diagram}
-- Extension Rule: {rule}
-
-Task requirements:
-{task Do section}
-
-Expected interface:
-{task Interface section}
-
-Constraints:
-- Maintain existing functionality (tests must pass)
-- Follow existing code style
-- Update imports in source file
-- Re-export from index if needed for public API
+## Architecture Reference
+```
+{Structure diagram from CR}
 ```
 
-### For Feature Tasks
+## Task
+{task content from tasks.md}
 
+## Verification (run after)
+```bash
+wc -l {target file}  # must be < {limit}
+npm test             # must pass
+```
+
+## STOP Conditions
+- If target file would exceed {N} lines → STOP, report, request subdivision
+- If unsure what to exclude → STOP, ask for clarification
+- If tests fail after 2 retries → STOP, report failure
+```
+
+## Error Handling
+
+**Test failure:**
 ```markdown
-**Context for sub-agent:**
+✗ Tests failed
 
-You are implementing new functionality.
+{error output}
 
-Architecture Design:
-- Pattern: {pattern}
-- Structure: {structure diagram}  
-- Extension Rule: {rule}
-
-Task requirements:
-{task Do section}
-
-Expected interface:
-{task Interface section}
-
-Test requirements:
-{task Test section}
-
-Constraints:
-- Follow Architecture Design structure
-- Create tests alongside implementation
-- Wire into integration points as specified
+[retry] — Agent attempts fix (max 2 retries)
+[manual] — You fix, then continue
+[stop] — Halt orchestration
 ```
 
-### For Test Tasks
-
+**Constraint violation:**
 ```markdown
-**Context for sub-agent:**
+⛔ Size limit exceeded: {file} has {N} lines (max {limit})
 
-You are creating tests for {module}.
+This task cannot be marked complete.
 
-Test file location: {test file path}
-
-Cover these scenarios:
-{task Test cases section}
-
-Existing test patterns in this project:
-{show example from existing tests}
-
-Constraints:
-- Follow existing test style
-- Mock external dependencies
-- Include happy path and error cases
+[subdivide] — Break into smaller tasks
+[adjust-limit] — Update CR if larger file justified
+[stop] — Investigate
 ```
-
-## Fast Mode (`--fast`)
-
-When `--fast` flag is provided:
-- Skip test verification after each task
-- Skip build verification
-- Only verify at phase boundaries
-- Show warning:
-  ```
-  ⚠ Fast mode: Skipping per-task verification
-  Tests will run at phase boundaries only
-  ```
-
-Use for:
-- Trusted mechanical refactoring
-- When tests are slow and you'll review manually
-- Batch extraction of similar files
-
-Do NOT use for:
-- New feature implementation
-- Complex refactoring with logic changes
-- When you're unsure about the changes
-
-## Progress Tracking
-
-Tasks.md is updated in place:
-
-**Before:**
-```markdown
-### Task 1.1: Extract summarize command
-- [ ] `src/cli/index.ts` reduced by ~135 lines
-- [ ] `src/cli/commands/summarize-command.ts` exists
-- [ ] Tests pass
-```
-
-**After:**
-```markdown
-### Task 1.1: Extract summarize command ✓ <!-- completed: 2025-01-15T14:30:00 -->
-- [x] `src/cli/index.ts` reduced by ~135 lines
-- [x] `src/cli/commands/summarize-command.ts` exists
-- [x] Tests pass
-```
-
-## Error Recovery
-
-### Session Interrupted
-
-If orchestration stops unexpectedly:
-1. Progress is saved in tasks.md (completed tasks marked)
-2. Resume with `/mdt-implement {CR-KEY} --continue`
-3. Orchestrator finds first incomplete task and continues
-
-### Task Failed
-
-If a task cannot be completed:
-1. Mark task with failure note in tasks.md
-2. User can:
-   - Fix manually, then run `/mdt-implement {CR-KEY} --task {N.N}` to re-verify
-   - Skip and continue
-   - Stop and investigate
-
-### Verification Failed
-
-If tests fail:
-1. Show error output
-2. Offer retry (agent attempts fix)
-3. Max 3 retries
-4. If still failing, require manual intervention
 
 ## Behavioral Rules
 
-- **Never skip verification silently** — always inform user if verification skipped
-- **Pause at phase boundaries** — even in `--all` mode
-- **Track all progress** — update tasks.md after each task
-- **Show clear status** — user should always know what's done and what's next
-- **Respect Architecture Design** — pass to sub-agent as constraint
-- **Suggest appropriate agent** — but let user override
-- **Handle failures gracefully** — save progress, offer recovery options
+1. **Never skip constraint verification** — it's the whole point
+2. **Pass constraints to sub-agent** — they execute literally
+3. **STOP on violations** — don't accumulate problems
+4. **Size check uses actual file** — not estimate
+5. **Phase boundaries are mandatory pauses** — even with `--all`
 
-## Integration with Other Workflows
+## Quality Gate
 
-**Before this workflow**:
-- `/mdt-ticket-creation` — CR must exist
-- `/mdt-architecture` — Recommended (provides guidance to sub-agents)
-- `/mdt-tasks` — Required (generates task list)
+Before marking any task complete, verify:
+- [ ] Tests pass
+- [ ] Build passes
+- [ ] Target file(s) under size limit
+- [ ] File(s) at correct structure path
+- [ ] Source file reduced (for extractions)
 
-**After this workflow**:
-- Manual: Review and commit changes
-- `/mdt-tech-debt` — Verify no new debt introduced
-- `/mdt-reflection` — Capture implementation learnings
-
-**Trigger phrases**:
-- "Implement [CR-KEY]"
-- "Run tasks for [CR-KEY]"
-- "Continue implementation of [CR-KEY]"
-- "Work on [CR-KEY] step by step"
-
-## Quality Checklist
-
-During orchestration, verify:
-- [ ] Each task leaves code in working state (tests pass)
-- [ ] Progress tracked in tasks.md
-- [ ] Architecture Design followed
-- [ ] Phase boundaries respected with review pause
-- [ ] Failures handled with clear options
-- [ ] User maintains control (can stop/skip/review anytime)
-
-Context for implementation: $ARGUMENTS
+Context: $ARGUMENTS
