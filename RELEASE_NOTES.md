@@ -1,5 +1,55 @@
 # Release Notes
 
+## v0.7.2 (2025-12-03)
+
+### 🚀 Improvements
+
+**Enhanced Project Management UI (MDT-041)**
+- **Dark Theme Support**: Complete dark mode compatibility for AddProjectModal components
+- **Auto-Discovery Indicators**: Visual feedback showing automatic project detection status
+- **Real Directory Validation**: Validates directory existence with graceful fallback handling
+- **Improved Scrolling**: Fixed modal scrolling issues with ScrollArea component implementation
+- **Enhanced Path Resolution**: Better handling of project paths with tilde expansion support
+
+**Consolidated Ticket Management (MDT-082)**
+- **Unified Service Layer**: Consolidated duplicate ticket CRUD operations into shared services
+- **ProjectManager Integration**: Added ProjectManager to server for centralized ticket handling
+- **Eliminated Duplication**: Removed redundant ticket management code across frontend and backend
+- **Improved Performance**: Reduced overhead through shared service architecture
+
+**UI Components (MDT-076)**
+- **Reusable Alert Component**: New consistent alert system for user feedback across the application
+- **Standardized Error Messages**: Uniform error display with proper styling and accessibility
+
+### 🐛 Bug Fixes
+
+**Project Configuration**
+- **Registry Management**: Enhanced registry file reference handling and project ID consistency
+- **Path Validation**: Fixed missing getSystemDirectories method in path selector functionality
+- **Active Project Filtering**: Properly filter inactive projects from API responses
+
+**YAML Frontmatter**
+- **Title Attribute**: Fixed removal of title attribute from YAML frontmatter to prevent conflicts
+- **Header Duplication**: Prevented doubled headers when sections are renamed
+
+**CLI Tool (MDT-077)**
+- **Enhanced UX**: Improved delete operations with visual feedback
+- **Path Management**: Added enhanced flags for better path handling
+- **Validation**: Comprehensive project validation utilities
+
+### 📚 Documentation
+
+**Architecture Documentation**
+- **Technical Debt**: Documented critical technical debt in server project management
+- **Refactoring Guides**: Added comprehensive refactoring documentation for MDT-082
+- **CLI Guides**: Enhanced CLI project management documentation
+
+**Internal Improvements**
+- **Import Organization**: Standardized imports with path aliases and fixed symlink issues
+- **Code Structure**: Improved component organization with consistent naming conventions
+
+---
+
 ## v0.7.1 (2025-11-14)
 
 ### 🎉 New Features
