@@ -258,6 +258,8 @@ git push
 
 ## 📈 What's New
 
+- **v0.7.2** (2025-12-03): Enhanced project management UI, consolidated ticket management, and improved validation
+
 - **v0.7.1** (2025-11-14): CLI project management tool, flexible MCP section matching, ticket numbering fixes, and documentation improvements
 
 - **v0.7.0** (2025-11-12): Complete Docker containerization, advanced configuration management, enhanced MCP HTTP transport
