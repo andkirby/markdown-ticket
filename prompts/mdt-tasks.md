@@ -44,7 +44,7 @@ project:
      - Structure (file paths)
      - Size Guidance (limits per module)
    - **Acceptance Criteria** — any overrides
-3. If Architecture Design missing: abort with "Run `/mdt-architecture` first"
+3. If Architecture Design missing: abort with "Run `/mdt:architecture` first"
 
 ### Step 3: Inherit Size Limits
 
@@ -210,7 +210,7 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 
 **Do**: Update CLAUDE.md (or equivalent) with new file structure
 
-### Task N.4: Run `/mdt-tech-debt {CR-KEY}`
+### Task N.4: Run `/mdt:tech-debt {CR-KEY}`
 ```
 
 ### Step 7: Validate Before Saving
@@ -240,7 +240,7 @@ Save to `docs/CRs/{CR-KEY}/tasks.md`
 **Size thresholds**: Flag at default, STOP at 1.5x
 **Shared patterns**: {N} (extract in Phase 1)
 
-Next: `/mdt-implement {CR-KEY}`
+Next: `/mdt:implement {CR-KEY}`
 ```
 
 ## Task Examples
@@ -319,7 +319,7 @@ Problems:
 
 ## Integration
 
-**Before**: `/mdt-architecture` (required — provides shared patterns + size limits)
-**After**: `/mdt-implement {CR-KEY}`
+**Before**: `/mdt:architecture` (required — provides shared patterns + size limits)
+**After**: `/mdt:implement {CR-KEY}`
 
 Context: $ARGUMENTS
