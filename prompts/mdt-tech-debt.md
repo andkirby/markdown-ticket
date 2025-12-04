@@ -33,7 +33,7 @@ If CLAUDE.md exists, read it. Otherwise detect from project files.
 
 ### Step 2: Load CR Context
 
-1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
+1. Call MCP tool `mdt-all:get_cr`  with `mode="full"` — abort if CR doesn't exist
 2. Extract:
    - **Affected/new artifacts** — files to analyze
    - **Architecture Design** — check for violations

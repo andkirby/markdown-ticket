@@ -32,6 +32,47 @@ import { TicketService } from './services/TicketService.js';
 import { DocumentService } from './services/DocumentService.js';
 import { FileSystemService } from './services/FileSystemService.js';
 
+// Adapter to make SharedProjectService compatible with server's ProjectController expectations
+class ProjectServiceAdapter {
+  private projectService: SharedProjectService;
+  private projectManager: ProjectManager;
+
+  constructor(projectService: SharedProjectService) {
+    this.projectService = projectService;
+    this.projectManager = new ProjectManager(true); // Quiet mode for server
+  }
+
+  // Methods from SharedProjectService
+  async getAllProjects() {
+    return this.projectService.getAllProjects();
+  }
+
+  getProjectConfig(path: string) {
+    return this.projectService.getProjectConfig(path);
+  }
+
+  async getProjectCRs(path: string) {
+    return this.projectService.getProjectCRs(path);
+  }
+
+  // Additional methods needed by ProjectController
+  async getSystemDirectories(path?: string) {
+    return this.projectService.getSystemDirectories(path);
+  }
+
+  async configureDocuments(projectId: string, documentPaths: string[]) {
+    return this.projectService.configureDocuments(projectId, documentPaths);
+  }
+
+  async checkDirectoryExists(dirPath: string) {
+    return this.projectService.checkDirectoryExists(dirPath);
+  }
+
+  get projectDiscovery() {
+    return this.projectService;
+  }
+}
+
 // Controllers
 import { ProjectController } from './controllers/ProjectController.js';
 import { TicketController } from './controllers/TicketController.js';
@@ -82,7 +123,7 @@ const projectDiscovery = new SharedProjectService();
 const projectManager = new ProjectManager(true); // Quiet mode for server
 
 // Business logic services
-const projectService = projectDiscovery; // Direct usage of shared service
+const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery);
 const ticketService = new TicketService(projectDiscovery as any); // Type cast for compatibility
 const documentService = new DocumentService(projectDiscovery as any); // Type cast for compatibility
 const fileSystemService = new FileSystemService(TICKETS_DIR);
@@ -95,8 +136,7 @@ fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter);
 // =============================================================================
 
 const projectController = new ProjectController(
-  projectService as any, // Type cast to ProjectServiceExtension for compatibility
-  ticketService,
+  projectServiceAdapter as any, // Use the adapter which provides the expected interface
   fileSystemService,
   fileWatcher
 );
