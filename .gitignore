@@ -74,3 +74,6 @@ generated-docs/repomix_output.xml
 
 # Counter API - moved out of main codebase
 counter-api/
+
+# TypeScript incremental compilation
+*.tsbuildinfo
