@@ -101,6 +101,95 @@ To add a new project-related service:
 2. Implement `IProjectService` interface with methods: `initialize()`, `getProject()`, `validateProject()`
 3. Add service to ProjectService constructor with dependency injection
 4. Add delegation method in ProjectService facade (≤5 lines)
+
+### Architecture Diagram
+```mermaid
+graph TB
+    %% Define styles
+    classDef facade fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    classDef service fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef utility fill:#e8f5e8,stroke:#1b5e20,stroke-width:1px
+    classDef external fill:#fff3e0,stroke:#e65100,stroke-width:1px
+    
+    %% Facade Layer
+    PS[ProjectService<br/>Facade<br/>< 150 lines]:::facade
+    
+    %% Service Layer
+    PDS[ProjectDiscoveryService<br/>Scanning & Registry<br/>< 300 lines]:::service
+    PCS[ProjectConfigService<br/>Config Management<br/>< 300 lines]:::service
+    PCHS[ProjectCacheService<br/>Caching & TTL<br/>< 300 lines]:::service
+    
+    %% Utility Layer
+    LOG[logger.ts<br/>Quiet Logging<br/>< 110 lines]:::utility
+    TOML[toml.ts<br/>Serialization<br/>< 110 lines]:::utility
+    CONF[config-validator.ts<br/>Validation<br/>< 110 lines]:::utility
+    FILE[file-utils.ts<br/>File Ops<br/>< 110 lines]:::utility
+    PATH[path-resolver.ts<br/>Path Utils<br/>< 110 lines]:::utility
+    
+    %% External Dependencies
+    BACKEND[Backend APIs]:::external
+    MCP[MCP Server]:::external
+    FRONTEND[Frontend]:::external
+    
+    %% Connections from Facade to Services
+    PS -->|delegates| PDS
+    PS -->|delegates| PCS
+    PS -->|delegates| PCHS
+    
+    %% Service to Utility Connections
+    PDS --> LOG
+    PDS --> FILE
+    PDS --> PATH
+    PDS --> TOML
+    
+    PCS --> LOG
+    PCS --> TOML
+    PCS --> CONF
+    PCS --> FILE
+    PCS --> PATH
+    
+    PCHS --> LOG
+    PCHS --> FILE
+    
+    %% External API Connections
+    PS -.->|Public API| FRONTEND
+    PS -.->|Public API| BACKEND
+    PS -.->|Public API| MCP
+    
+    %% Annotations using click nodes for notes
+    NOTE1["Services injected via<br/>constructor dependency injection"]
+    NOTE2["Utilities extracted<br/>first, then consumed by services"]
+    NOTE1:::note
+    NOTE2:::note
+    
+    %% Position notes
+    NOTE1 -.-> PS
+    NOTE2 -.-> LOG
+    
+    %% Metrics Box
+    subgraph Metrics["Refactor Metrics"]
+        direction TB
+        M1[Before: 1 file<br/>1122 lines]
+        M2[After: 9 files<br/>< 300 lines max]
+        M1 -.->|Refactor| M2
+    end
+    
+    %% Define note style
+    classDef note fill:#ffeb3b,stroke:#f57c00,stroke-width:1px,font-size:11px
+```
+
+**Legend:**
+- **Blue (Facade)**: Coordinates and delegates to specialized services
+- **Purple (Services)**: Each handles single responsibility 
+- **Green (Utilities)**: Shared across all services
+- **Orange (External)**: Consumers of the ProjectService API
+
+**Key Benefits:**
+- Single 1122-line monolith → 9 focused files
+- Each service has single responsibility
+- Size limits prevent future bloat
+- Shared utilities eliminate duplication
+- Facade maintains backward compatibility
 ## 3. Alternatives Considered
 
 | Approach | Key Difference | Why Rejected |
@@ -115,25 +204,35 @@ To add a new project-related service:
 | `shared/services/project/ProjectDiscoveryService.ts` | Service | Project scanning and registry operations |
 | `shared/services/project/ProjectConfigService.ts` | Service | Configuration loading and validation |
 | `shared/services/project/ProjectCacheService.ts` | Service | Caching operations and TTL management |
+| `shared/services/project/types.ts` | Interface | Service interfaces and type definitions |
 | `shared/utils/logger.ts` | Utility | Quiet logging functionality |
 | `shared/utils/toml.ts` | Utility | TOML serialization/deserialization |
 | `shared/utils/config-validator.ts` | Utility | Configuration validation logic |
 | `shared/utils/file-utils.ts` | Utility | File existence and operations |
 | `shared/utils/path-resolver.ts` | Utility | Path resolution utilities |
+| `shared/services/project/__tests__/ProjectDiscoveryService.test.ts` | Test | Unit tests for discovery service |
+| `shared/services/project/__tests__/ProjectConfigService.test.ts` | Test | Unit tests for config service |
+| `shared/services/project/__tests__/ProjectCacheService.test.ts` | Test | Unit tests for cache service |
+| `shared/utils/__tests__/logger.test.ts` | Test | Unit tests for logger utility |
+| `shared/utils/__tests__/toml.test.ts` | Test | Unit tests for TOML utility |
+| `shared/utils/__tests__/config-validator.test.ts` | Test | Unit tests for config validator |
+| `shared/utils/__tests__/file-utils.test.ts` | Test | Unit tests for file utils |
+| `shared/utils/__tests__/path-resolver.test.ts` | Test | Unit tests for path resolver |
 ### Modified Artifacts
-
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
 | `shared/services/ProjectService.ts` | Complete rewrite | Becomes facade/coordinator (max 150 lines) |
 | `shared/models/Project.ts` | Import changes | Update imports from new services |
 | `shared/tools/ProjectManager.ts` | Import changes | Update imports from new services |
-
+| `server/services/ProjectService.ts` | Delete | Remove wrapper, import shared facade directly in routes |
+| `server/routes/projects.js` | Import changes | Import from shared/ProjectService instead of local wrapper |
 ### Integration Points
 | From | To | Interface |
 |------|----|-----------| 
 | ProjectService (facade) | ProjectDiscoveryService | `scanProjects()`, `getProject()`, `isProjectRegistered()`, `registerProject()`, `autoDiscoverProjects()` |
 | ProjectService (facade) | ProjectConfigService | `loadConfig()`, `validateConfig()`, `createOrUpdateLocalConfig()`, `updateProject()` |
 | ProjectService (facade) | ProjectCacheService | `get()`, `set()`, `clear()`, `isValid()` |
+| All services | shared/services/project/types.ts | `IProjectDiscoveryService`, `IProjectConfigService`, `IProjectCacheService` |
 | All services | shared/utils/logger | `log()` |
 | ConfigService | shared/utils/toml | `parse()`, `stringify()` |
 | ConfigService | shared/utils/config-validator | `validateProjectConfig()` |
@@ -188,7 +287,6 @@ To add a new project-related service:
 - Number of responsibilities per service: 1 (down from 5)
 
 ## 7. Deployment
-
 ### Simple Changes
 - Build shared code with `npm run build:shared`
 - Run existing tests to verify no breaking changes
@@ -200,3 +298,8 @@ To add a new project-related service:
 -------|-------------------|----------|
 | 1 | New service files | Delete new files |
 | 2 | Refactored ProjectService | Revert to original version |
+
+### Session 2025-12-04
+- Q: Where should the IProjectService interface be defined? → A: shared/services/project/types.ts
+- Q: Which test file structure should be used for new services? → A: shared/services/project/__tests__/ (following mcp-server pattern)
+- Q: How should server/services/ProjectService.ts wrapper be handled? → A: Delete wrapper, import from shared directly
