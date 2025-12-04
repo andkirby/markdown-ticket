@@ -17,7 +17,7 @@
     "lib": ["ES2022"],
     "types": ["node"],
     "outDir": "./dist",
-    "rootDir": "../",
+    "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -29,12 +29,12 @@
     /* Path Mapping */
     "baseUrl": ".",
     "paths": {
-      "@mdt/shared/*": ["../shared/*"]
+      "@mdt/shared/*": ["../shared/dist/*"]
     }
   },
   "ts-node": {
     "esm": true
   },
-  "include": ["src/**/*", "../shared/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**/*"]
 }
