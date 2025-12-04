@@ -30,13 +30,6 @@ interface UpdateProjectData {
   repositoryUrl?: string;
 }
 
-interface CRData {
-  code?: string;
-  title: string;
-  type: string;
-  priority?: string;
-  description?: string;
-}
 
 interface DirectoryListing {
   currentPath: string;
@@ -58,7 +51,6 @@ interface FileSystemTree {
 interface AuthenticatedRequest extends Request {
   params: {
     projectId?: string;
-    crId?: string;
     code?: string;
   };
   query: {
@@ -69,23 +61,17 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Extended interfaces for methods not in shared ProjectService
-interface ProjectServiceExtension extends ProjectService {
-  createProject(data: CreateProjectData): Promise<any>;
-  updateProject(code: string, data: UpdateProjectData): Promise<any>;
+// These methods are now provided by ProjectManager
+interface ProjectServiceExtension {
+  getAllProjects(): Promise<any[]>;
+  getProjectConfig(path: string): any;
+  getProjectCRs(path: string): Promise<Ticket[]>;
   getSystemDirectories(path?: string): Promise<DirectoryListing>;
   configureDocuments(projectId: string, documentPaths: string[]): Promise<any>;
   checkDirectoryExists(dirPath: string): Promise<{ exists: boolean }>;
   projectDiscovery: any;
 }
 
-interface TicketService {
-  getProjectCRs(projectId: string): Promise<Ticket[]>;
-  getCR(projectId: string, crId: string): Promise<Ticket>;
-  createCR(projectId: string, data: CRData): Promise<any>;
-  updateCRPartial(projectId: string, crId: string, updates: any): Promise<any>;
-  updateCR(projectId: string, crId: string, content: string): Promise<any>;
-  deleteCR(projectId: string, crId: string): Promise<any>;
-}
 
 interface FileSystemService {
   buildProjectFileSystemTree(projectId: string, projectDiscovery: any): Promise<FileSystemTree[]>;
@@ -100,20 +86,22 @@ interface FileWatcher {
  */
 export class ProjectController {
   private projectService: ProjectServiceExtension;
-  private ticketService: TicketService;
   private fileSystemService: FileSystemService;
   private fileWatcher: FileWatcher;
+  private projectManager: ProjectManager;
+  private ticketController?: any; // Optional TicketController for delegation
 
   constructor(
     projectService: ProjectServiceExtension,
-    ticketService: TicketService,
     fileSystemService: FileSystemService,
-    fileWatcher: FileWatcher
+    fileWatcher: FileWatcher,
+    ticketController?: any // Optional TicketController for CR operations
   ) {
     this.projectService = projectService;
-    this.ticketService = ticketService;
     this.fileSystemService = fileSystemService;
     this.fileWatcher = fileWatcher;
+    this.projectManager = new ProjectManager(true); // Quiet mode for server
+    this.ticketController = ticketController;
   }
 
   /**
@@ -164,167 +152,13 @@ export class ProjectController {
     }
   }
 
-  /**
-   * Get CRs for a project
-   */
-  async getProjectCRs(req: AuthenticatedRequest, res: Response): Promise<void> {
-    const { projectId } = req.params;
-    if (!projectId) {
-      res.status(400).json({ error: 'Project ID is required' });
-      return;
-    }
-
-    try {
-      const crs = await this.ticketService.getProjectCRs(projectId);
-      res.json(crs);
-    } catch (error: any) {
-      console.error('Error getting project CRs:', error);
-      if (error.message === 'Project not found') {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to get project CRs' });
-      }
-    }
-  }
-
-  /**
-   * Get specific CR
-   */
-  async getCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const { projectId, crId } = req.params;
-      if (!projectId || !crId) {
-        res.status(400).json({ error: 'Project ID and CR ID are required' });
-        return;
-      }
-
-      const cr = await this.ticketService.getCR(projectId, crId);
-      res.json(cr);
-    } catch (error: any) {
-      console.error('Error getting CR:', error);
-      if (error.message === 'Project not found' || error.message === 'CR not found') {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to get CR' });
-      }
-    }
-  }
-
-  /**
-   * Create new CR
-   */
-  async createCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const { projectId } = req.params;
-      if (!projectId) {
-        res.status(400).json({ error: 'Project ID is required' });
-        return;
-      }
-
-      const result = await this.ticketService.createCR(projectId, req.body);
-      console.log(`Created CR: ${result.filename} in project ${projectId}`);
-      res.json(result);
-    } catch (error: any) {
-      console.error('Error creating CR:', error);
-      if (error.message.includes('required')) {
-        res.status(400).json({ error: error.message });
-      } else if (error.message === 'Project not found') {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to create CR' });
-      }
-    }
-  }
-
-  /**
-   * Partially update CR
-   */
-  async patchCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const { projectId, crId } = req.params;
-      if (!projectId || !crId) {
-        res.status(400).json({ error: 'Project ID and CR ID are required' });
-        return;
-      }
-
-      const result = await this.ticketService.updateCRPartial(projectId, crId, req.body);
-      console.log(`Successfully updated CR: ${crId} in project ${projectId}`);
-      res.json(result);
-    } catch (error: any) {
-      console.error('Error updating CR partially:', error);
-      if (error.message === 'No fields provided for update') {
-        res.status(400).json({ error: error.message });
-      } else if (error.message === 'Project not found' || error.message === 'CR not found') {
-        res.status(404).json({ error: error.message });
-      } else if (error.message.includes('Invalid ticket format')) {
-        res.status(400).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to update CR' });
-      }
-    }
-  }
-
-  /**
-   * Update CR completely
-   */
-  async updateCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const { projectId, crId } = req.params;
-      const { content } = req.body;
-
-      if (!projectId || !crId) {
-        res.status(400).json({ error: 'Project ID and CR ID are required' });
-        return;
-      }
-
-      console.log(`PUT /api/projects/${projectId}/crs/${crId} - Received update request`);
-      console.log('Request body content length:', content ? content.length : 0);
-
-      const result = await this.ticketService.updateCR(projectId, crId, content);
-      console.log(`Updated CR: ${result.filename} in project ${projectId}`);
-      res.json(result);
-    } catch (error: any) {
-      console.error('Error updating CR:', error);
-      if (error.message === 'Content is required') {
-        res.status(400).json({ error: error.message });
-      } else if (error.message === 'Project not found' || error.message === 'CR not found') {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to update CR' });
-      }
-    }
-  }
-
-  /**
-   * Delete CR
-   */
-  async deleteCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const { projectId, crId } = req.params;
-      if (!projectId || !crId) {
-        res.status(400).json({ error: 'Project ID and CR ID are required' });
-        return;
-      }
-
-      const result = await this.ticketService.deleteCR(projectId, crId);
-      console.log(`Deleted CR: ${result.filename} from project ${projectId}`);
-      res.json(result);
-    } catch (error: any) {
-      console.error('Error deleting CR:', error);
-      if (error.message === 'Project not found' || error.message === 'CR not found') {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to delete CR' });
-      }
-    }
-  }
-
+  
   /**
    * Create new project
    */
   async createProject(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.projectService.createProject(req.body);
+      const result = await this.projectManager.createProject(req.body);
 
       // File watcher will automatically detect the new .toml file
       // and emit the 'project-created' event - no manual emission needed
@@ -358,7 +192,7 @@ export class ProjectController {
       }
 
       console.log(`Updating project ${code} with data:`, req.body);
-      const result = await this.projectService.updateProject(code, req.body);
+      const result = await this.projectManager.updateProject(code, req.body);
       res.json(result);
     } catch (error: any) {
       console.error('Error updating project:', error);
@@ -381,8 +215,7 @@ export class ProjectController {
         return;
       }
 
-      const projectManager = new ProjectManager();
-      const result = await projectManager.enableProject(code);
+      const result = await this.projectManager.enableProject(code);
       res.json(result);
     } catch (error: any) {
       console.error('Error enabling project:', error);
@@ -405,8 +238,7 @@ export class ProjectController {
         return;
       }
 
-      const projectManager = new ProjectManager();
-      const result = await projectManager.disableProject(code);
+      const result = await this.projectManager.disableProject(code);
       res.json(result);
     } catch (error: any) {
       console.error('Error disabling project:', error);
@@ -518,5 +350,51 @@ export class ProjectController {
       console.error('Error checking directory existence:', error);
       res.status(500).json({ error: 'Failed to check directory existence' });
     }
+  }
+
+  // CR/CR-related methods - delegate to TicketController or return not implemented
+  async getProjectCRs(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { projectId } = req.params;
+      if (!projectId) {
+        res.status(400).json({ error: 'Project ID is required' });
+        return;
+      }
+
+      // Get project by ID first
+      const projects = await this.projectService.getAllProjects();
+      const project = projects.find(p => p.id === projectId);
+
+      if (!project) {
+        res.status(404).json({ error: 'Project not found' });
+        return;
+      }
+
+      const crs = await this.projectService.getProjectCRs(project.project.path);
+      res.json(crs);
+    } catch (error: any) {
+      console.error('Error getting project CRs:', error);
+      res.status(500).json({ error: 'Failed to get project CRs' });
+    }
+  }
+
+  async getCR(req: AuthenticatedRequest, res: Response): Promise<void> {
+    res.status(501).json({ error: 'Not implemented - use /api/tasks endpoints' });
+  }
+
+  async createCR(req: AuthenticatedRequest, res: Response): Promise<void> {
+    res.status(501).json({ error: 'Not implemented - use /api/tasks/save endpoint' });
+  }
+
+  async patchCR(req: AuthenticatedRequest, res: Response): Promise<void> {
+    res.status(501).json({ error: 'Not implemented - use /api/tasks/save endpoint' });
+  }
+
+  async updateCR(req: AuthenticatedRequest, res: Response): Promise<void> {
+    res.status(501).json({ error: 'Not implemented - use /api/tasks/save endpoint' });
+  }
+
+  async deleteCR(req: AuthenticatedRequest, res: Response): Promise<void> {
+    res.status(501).json({ error: 'Not implemented - use /api/tasks endpoint' });
   }
 }
