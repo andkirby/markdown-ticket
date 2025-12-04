@@ -231,7 +231,7 @@ Use `mdt-all:manage_cr_sections` to insert:
 
 ### Next Steps
 - Review Architecture Design in CR
-- Run `/mdt-tasks {CR-KEY}` — inherits these limits
+- Run `/mdt:tasks {CR-KEY}` — inherits these limits
 - Phase 1 must extract shared patterns FIRST
 ```
 
@@ -392,6 +392,6 @@ Before completing, verify:
 ## Integration
 
 **Before**: CR exists with problem/scope defined
-**After**: `/mdt-tasks` inherits shared patterns + size limits
+**After**: `/mdt:tasks` inherits shared patterns + size limits
 
 Context: $ARGUMENTS
