@@ -200,7 +200,7 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX}'
 
 ### Next Steps
 - Review `docs/CRs/{CR-KEY}/debt.md`
-- For complex fixes: create follow-up CR, run `/mdt-architecture`
+- For complex fixes: create follow-up CR, run `/mdt:architecture`
 - For simple fixes: address inline
 ```
 
@@ -254,6 +254,6 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX}'
 **Before**: Implementation complete
 **After**: 
 - Simple fixes: address inline
-- Complex fixes: create Technical Debt CR → `/mdt-architecture` → `/mdt-tasks`
+- Complex fixes: create Technical Debt CR → `/mdt:architecture` → `/mdt:tasks`
 
 Context: $ARGUMENTS

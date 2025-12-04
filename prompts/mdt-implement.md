@@ -14,10 +14,10 @@ $ARGUMENTS
 
 | Command | Behavior |
 |---------|----------|
-| `/mdt-implement {CR-KEY}` | Interactive — verify and ask after each task |
-| `/mdt-implement {CR-KEY} --all` | Run all, pause at phase boundaries |
-| `/mdt-implement {CR-KEY} --continue` | Resume from last incomplete |
-| `/mdt-implement {CR-KEY} --task {N.N}` | Run specific task only |
+| `/mdt:implement {CR-KEY}` | Interactive — verify and ask after each task |
+| `/mdt:implement {CR-KEY} --all` | Run all, pause at phase boundaries |
+| `/mdt:implement {CR-KEY} --continue` | Resume from last incomplete |
+| `/mdt:implement {CR-KEY} --task {N.N}` | Run specific task only |
 
 ## Execution Steps
 
@@ -206,7 +206,7 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 
 ### Next Steps
 - [ ] Review flagged files — can they be improved?
-- [ ] Run `/mdt-tech-debt {CR-KEY}`
+- [ ] Run `/mdt:tech-debt {CR-KEY}`
 - [ ] Commit changes
 ```
 
@@ -262,7 +262,7 @@ If writing code similar to these → STOP, import instead.
 
 ## Integration
 
-**Before**: `/mdt-tasks` generated task list with limits
-**After**: `/mdt-tech-debt` catches anything that slipped through
+**Before**: `/mdt:tasks` generated task list with limits
+**After**: `/mdt:tech-debt` catches anything that slipped through
 
 Context: $ARGUMENTS
