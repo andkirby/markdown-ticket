@@ -8,19 +8,19 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 
 | Command | Purpose | Output |
 |---------|---------|--------|
-| `/mdt-ticket-creation` | Create CR with structured questioning | CR in MDT system |
-| `/mdt-architecture` | Surface decisions, define structure + size limits | Architecture Design section |
-| `/mdt-clarification` | Fill specification gaps | Updated CR sections |
-| `/mdt-tasks` | Break CR into constrained tasks | `docs/CRs/{CR-KEY}/tasks.md` |
-| `/mdt-implement` | Execute tasks with verification | Code changes, updated tasks.md |
-| `/mdt-tech-debt` | Detect debt patterns | `docs/CRs/{CR-KEY}/debt.md` |
-| `/mdt-reflection` | Capture learnings | Updated CR |
+| `/mdt:ticket-creation` | Create CR with structured questioning | CR in MDT system |
+| `/mdt:architecture` | Surface decisions, define structure + size limits | Architecture Design section |
+| `/mdt:clarification` | Fill specification gaps | Updated CR sections |
+| `/mdt:tasks` | Break CR into constrained tasks | `docs/CRs/{CR-KEY}/tasks.md` |
+| `/mdt:implement` | Execute tasks with verification | Code changes, updated tasks.md |
+| `/mdt:tech-debt` | Detect debt patterns | `docs/CRs/{CR-KEY}/debt.md` |
+| `/mdt:reflection` | Capture learnings | Updated CR |
 
 ## Debt Prevention Chain
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ /mdt-architecture                                           │
+│ /mdt:architecture                                           │
 │                                                             │
 │ Defines:                                                    │
 │ - Pattern (structural approach)                             │
@@ -31,7 +31,7 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 └─────────────────────┬───────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ /mdt-tasks                                                  │
+│ /mdt:tasks                                                  │
 │                                                             │
 │ Inherits:                                                   │
 │ - Size limits → Task Limits (flag/STOP thresholds)          │
@@ -43,7 +43,7 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 └─────────────────────┬───────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ /mdt-implement                                              │
+│ /mdt:implement                                              │
 │                                                             │
 │ Verifies after each task:                                   │
 │ - Size: OK (≤default) / FLAG (≤1.5x) / STOP (>1.5x)         │
@@ -52,7 +52,7 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 └─────────────────────┬───────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ /mdt-tech-debt                                              │
+│ /mdt:tech-debt                                              │
 │                                                             │
 │ Catches what slipped through:                               │
 │ - Size violations                                           │
@@ -87,7 +87,7 @@ Override in: CR Acceptance Criteria or project CLAUDE.md
 
 ### When debt.md is generated
 
-`/mdt-tech-debt` produces `docs/CRs/{CR-KEY}/debt.md` — a **diagnostic report**, not an executable task list.
+`/mdt:tech-debt` produces `docs/CRs/{CR-KEY}/debt.md` — a **diagnostic report**, not an executable task list.
 
 ### How to fix debt
 
@@ -96,11 +96,11 @@ debt.md (diagnosis)
     ↓
 Create new CR (e.g., "Fix technical debt from {CR-KEY}")
     ↓
-/mdt-architecture {NEW-CR-KEY}
+/mdt:architecture {NEW-CR-KEY}
     ↓
-/mdt-tasks {NEW-CR-KEY}
+/mdt:tasks {NEW-CR-KEY}
     ↓
-/mdt-implement {NEW-CR-KEY}
+/mdt:implement {NEW-CR-KEY}
 ```
 
 **debt.md informs what goes into the fix CR:**
@@ -187,7 +187,7 @@ Tasks and verification use these values — no hardcoded assumptions.
 
 ## Command Reference
 
-### `/mdt-architecture`
+### `/mdt:architecture`
 
 Adds Architecture Design section to CR:
 
@@ -197,7 +197,7 @@ Adds Architecture Design section to CR:
 - **Size Guidance**: Per-module limits (default + hard max)
 - **Extension Rule**: "To add X, create Y"
 
-### `/mdt-tasks`
+### `/mdt:tasks`
 
 Generates `docs/CRs/{CR-KEY}/tasks.md`:
 
@@ -208,15 +208,15 @@ Generates `docs/CRs/{CR-KEY}/tasks.md`:
 - **Phase 2+**: Features (import from Phase 1)
 - **Post-Implementation**: Verification tasks
 
-### `/mdt-implement`
+### `/mdt:implement`
 
 Executes tasks with constraint verification:
 
 ```bash
-/mdt-implement {CR-KEY}            # Interactive
-/mdt-implement {CR-KEY} --all      # Run all, pause at phases
-/mdt-implement {CR-KEY} --continue # Resume
-/mdt-implement {CR-KEY} --task 1.3 # Specific task
+/mdt:implement {CR-KEY}            # Interactive
+/mdt:implement {CR-KEY} --all      # Run all, pause at phases
+/mdt:implement {CR-KEY} --continue # Resume
+/mdt:implement {CR-KEY} --task 1.3 # Specific task
 ```
 
 **After each task verifies:**
@@ -225,7 +225,7 @@ Executes tasks with constraint verification:
 3. Structure: correct path
 4. No duplication
 
-### `/mdt-tech-debt`
+### `/mdt:tech-debt`
 
 Generates `docs/CRs/{CR-KEY}/debt.md`:
 
@@ -236,6 +236,22 @@ Generates `docs/CRs/{CR-KEY}/debt.md`:
 
 ## Installation
 
+### Quick Install (Global)
+```bash
+# Run from project root - installs to ~/.claude/commands/
+bash prompts/install-claude.sh
+```
+
+### Local Install (Project-specific)
+```bash
+# Install to project's .claude/commands/mdt/ (no mdt- prefix)
+bash prompts/install-claude.sh --project-path /path/to/project
+
+# Verbose mode with detailed output
+bash prompts/install-claude.sh --verbose
+```
+
+### Manual Install
 ```bash
 cp prompts/mdt-*.md ~/.claude/commands/
 ```
@@ -259,8 +275,8 @@ prompts/
 
 | Workflow | Output Location |
 |----------|-----------------|
-| `/mdt-tasks` | `docs/CRs/{CR-KEY}/tasks.md` |
-| `/mdt-tech-debt` | `docs/CRs/{CR-KEY}/debt.md` |
+| `/mdt:tasks` | `docs/CRs/{CR-KEY}/tasks.md` |
+| `/mdt:tech-debt` | `docs/CRs/{CR-KEY}/debt.md` |
 
 ## Design Principles
 
