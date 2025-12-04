@@ -1,8 +1,8 @@
-# MDT Task Breakdown Workflow (v2)
+# MDT Task Breakdown Workflow (v3)
 
 Generate a task list from a CR ticket for phased, reviewable implementation.
 
-**Core Principle**: Tasks must include **constraints** (size limits, exclusions) not just actions. LLM agents execute literally — implicit goals must be explicit.
+**Core Principle**: Tasks must include **constraints** (size limits, exclusions, anti-duplication) not just actions.
 
 ## User Input
 
@@ -16,16 +16,16 @@ $ARGUMENTS
 
 ## Critical Rules
 
-1. **Size budgets are mandatory**: Every task creating/modifying files must specify max lines
-2. **Extract shared utilities FIRST**: Before extracting consumers that will use them
-3. **Exclusions prevent bloat**: Explicitly state what NOT to move
-4. **Structure path required**: Link each task to CR Architecture Design location
+1. **Shared utilities FIRST** — Phase 1 extracts patterns used by multiple features
+2. **Size limits inherited** — from Architecture Design, flag/STOP thresholds
+3. **Exclusions prevent bloat** — explicitly state what NOT to move
+4. **Anti-duplication** — import from shared, never copy
 
 ## Execution Steps
 
 ### Step 1: Extract Project Context
 
-Detect or extract from CLAUDE.md / project config:
+Detect from CLAUDE.md or project config files (package.json, Cargo.toml, go.mod, pyproject.toml, Makefile, etc.):
 
 ```yaml
 project:
@@ -33,86 +33,86 @@ project:
   test_command: {npm test, pytest, cargo test, go test, make test, ...}
   build_command: {npm run build, cargo build, go build, make, ...}
   file_extension: {.ts, .py, .rs, .go, .java, ...}
-  max_file_lines: {from CR acceptance criteria or default 300}
 ```
-
-If CLAUDE.md exists, read it. Otherwise detect from project files (package.json, Cargo.toml, go.mod, pyproject.toml, Makefile, etc.).
 
 ### Step 2: Load CR Context
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
-2. Extract and keep available:
-   - **Architecture Design** (Pattern, Structure, Extension Rule) — REQUIRED for refactoring
-   - **Acceptance Criteria** — extract any size/line constraints
-   - **Artifact Specifications** — list of files to create/modify
-3. If Architecture Design missing for refactoring CR: abort with "Run `/mdt-architecture` first"
+2. Extract:
+   - **Architecture Design** — REQUIRED for refactoring
+     - Shared Patterns (extract first)
+     - Structure (file paths)
+     - Size Guidance (limits per module)
+   - **Acceptance Criteria** — any overrides
+3. If Architecture Design missing: abort with "Run `/mdt-architecture` first"
 
-### Step 3: Calculate Size Budgets
+### Step 3: Inherit Size Limits
 
-From CR acceptance criteria, derive per-file limits:
+From Architecture Design `Size Guidance`:
 
-```
-CR says: "{source_dir}/cli/index.{ext}" reduced to <300 lines
-Current: 958 lines
-Extracting to: 4 command files + validators + formatters
-
-Budget allocation:
-- index.{ext} target: <200 lines (orchestration only)
-- Each command file: <200 lines
-- validators/: <100 lines
-- formatters/: <100 lines
-
-If extraction would exceed budget → subdivide into smaller tasks
+```markdown
+| Module | Default | Hard Max | Action if exceeded |
+|--------|---------|----------|-------------------|
+| `{path}` | {N} | {N×1.5} | Flag / STOP |
 ```
 
-**Default budgets when CR doesn't specify:**
-- Orchestration files (index, main): 150 lines max
-- Feature modules: 200 lines max  
-- Utility modules: 100 lines max
+These become task `Limits`.
 
 ### Step 4: Determine Task Order
 
-**Dependency rule**: Extract in this order:
-1. **Shared utilities first** (validators, formatters, helpers)
-2. **Then consumers** (commands, features that import utilities)
+**Phase 1**: Shared patterns (from Architecture Design)
+**Phase 2+**: Features that import from Phase 1
 
-This prevents duplication — consumers can import from already-extracted utilities.
+```
+Phase 1: Shared Utilities
+  Task 1.1: Extract validators (used by all commands)
+  Task 1.2: Extract formatters (used by all commands)
+  Task 1.3: Extract error handler (used everywhere)
+
+Phase 2: Features
+  Task 2.1: Extract command-a (imports from Phase 1)
+  Task 2.2: Extract command-b (imports from Phase 1)
+```
 
 ### Step 5: Task Template
-
-Each task MUST follow this format:
 
 ```markdown
 ### Task {phase}.{number}: {Brief description}
 
-**Structure**: `{exact path from CR Architecture Design}`
+**Structure**: `{exact path from Architecture Design}`
 
 **Limits**:
-- Target file: max {N} lines
-- Source reduction: ~{N} lines
+- Default: {N} lines
+- Hard Max: {N×1.5} lines
+- If > Default: ⚠️ flag warning
+- If > Hard Max: ⛔ STOP
 
 **From**: `{source file}`
 **To**: `{destination file}`
 
 **Move**:
-- {specific function/class/block 1}
-- {specific function/class/block 2}
+- {specific function/class 1}
+- {specific function/class 2}
 
 **Exclude** (stays in source or goes elsewhere):
-- {what NOT to move — shared utilities, unrelated logic}
+- {what NOT to move}
 
-**Imports**: Update source to import from new location
+**Anti-duplication**:
+- Import `{shared utility}` from `{path}` — do NOT copy logic
+- If similar code exists in `{other file}` — refactor to shared, don't duplicate
 
 **Verify**:
 ```bash
-wc -l {destination}       # must be < {limit}
-{test_command}            # must pass
+wc -l {destination}       # check against limits
+{test_command}
+{build_command}
 ```
 
 **Done when**:
-- [ ] `{destination}` exists and < {N} lines
-- [ ] `{source}` reduced by ~{N} lines
-- [ ] Tests pass unchanged
+- [ ] File at correct path
+- [ ] Size ≤ default (or flagged if ≤ hard max)
+- [ ] No duplicated logic — uses shared imports
+- [ ] Tests pass
 ```
 
 ### Step 6: Generate Tasks Document
@@ -120,7 +120,7 @@ wc -l {destination}       # must be < {limit}
 ```markdown
 # Tasks: {CR-KEY}
 
-**Source**: [{CR-KEY}]({relative path to CR})
+**Source**: [{CR-KEY}]({path to CR})
 
 ## Project Context
 
@@ -129,65 +129,82 @@ wc -l {destination}       # must be < {limit}
 | Source directory | `{source_dir}` |
 | Test command | `{test_command}` |
 | Build command | `{build_command}` |
-| File extension | `{file_extension}` |
+| File extension | `{ext}` |
 
-## Global Constraints
+## Size Thresholds
 
-| Constraint | Value | From |
-|------------|-------|------|
-| Max file size | {N} lines | CR Acceptance Criteria |
-| Target structure | See Architecture Design | CR Section 2 |
+| Role | Default | Hard Max | Action |
+|------|---------|----------|--------|
+| Orchestration | 100 | 150 | Flag at 100+, STOP at 150+ |
+| Feature | 200 | 300 | Flag at 200+, STOP at 300+ |
+| Utility | 75 | 110 | Flag at 75+, STOP at 110+ |
 
-**Architecture Structure** (from CR):
+*(Inherited from Architecture Design, overridden by CR if specified)*
+
+## Shared Patterns (from Architecture Design)
+
+| Pattern | Extract To | Used By |
+|---------|------------|---------|
+| {pattern} | `{path}` | {consumers} |
+
+> Phase 1 extracts these BEFORE features.
+
+## Architecture Structure (from CR)
+
 ```
-{paste exact Structure diagram from CR Architecture Design}
+{paste Structure diagram from Architecture Design}
 ```
 
-**STOP Condition**: If any file would exceed {N} lines, do NOT proceed. Subdivide the task first.
+## STOP Conditions
+
+- File exceeds Hard Max → STOP, subdivide
+- Duplicating logic that exists in shared module → STOP, import instead
+- Structure path doesn't match Architecture Design → STOP, clarify
 
 ---
 
-## Phase 1: {Name} — Shared Utilities
+## Phase 1: Shared Utilities
 
-> Extract shared code BEFORE extracting features that will use it.
+> Extract patterns used by multiple features FIRST.
 
-**Phase goal**: {goal}
-**Phase verification**: All utility files exist, `{test_command}` passes
+**Phase goal**: All shared utilities exist
+**Phase verify**: `{test_command}` passes, utilities importable
 
-### Task 1.1: {First shared utility}
+### Task 1.1: {Shared pattern}
 ...
 
 ---
 
-## Phase 2: {Name} — Feature Extraction
+## Phase 2: Feature Extraction
 
-> Now extract features that import from Phase 1 utilities.
+> Features import from Phase 1, never duplicate.
 
-**Phase goal**: {goal}
-**Phase verification**: {source files} < {N} lines each, `{test_command}` passes
+**Phase goal**: Features extracted, source reduced
+**Phase verify**: Source files ≤ limits, `{test_command}` passes
 
-### Task 2.1: {First feature extraction}
+### Task 2.1: {Feature}
 ...
 
 ---
 
 ## Post-Implementation
 
-### Task N.1: Verify structure compliance
+### Task N.1: Verify no duplication
 
-**Do**: Compare actual file structure against CR Architecture Design
-**Verify**: `find {source_dir}/{area} -name "*{ext}" | sort` matches CR structure
-**Done when**: [ ] All files in correct locations per CR
+**Do**: Search for duplicated patterns
+```bash
+# Example: find similar function names across files
+grep -r "validateInput\|formatOutput\|handleError" {source_dir} | cut -d: -f1 | sort | uniq -c | sort -rn
+```
+**Done when**: [ ] Each pattern exists in ONE location only
 
 ### Task N.2: Verify size compliance
 
-**Do**: Check all new/modified files against size limits
-**Verify**:
+**Do**: Check all files
 ```bash
-find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX}'
-# Should output nothing
+find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 ```
-**Done when**: [ ] No files exceed {MAX} lines
+**Done when**: [ ] No files exceed hard max
 
 ### Task N.3: Update project documentation
 
@@ -198,20 +215,19 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX}'
 
 ### Step 7: Validate Before Saving
 
-Checklist:
-- [ ] Project context extracted and documented
-- [ ] Every task has **Limits** with specific line counts
-- [ ] Every task has **Exclude** section (can be empty with explanation)
-- [ ] Shared utilities extracted in earlier phase than consumers
-- [ ] **Structure** path matches CR Architecture Design exactly
-- [ ] **Verify** section uses project's test/build commands
-- [ ] Post-implementation includes structure and size verification
+- [ ] Project context includes all settings (source_dir, test, build, ext)
+- [ ] Phase 1 contains shared patterns from Architecture Design
+- [ ] Every task has `Limits` (default + hard max)
+- [ ] Every task has `Exclude` section
+- [ ] Every task has `Anti-duplication` section
+- [ ] Features (Phase 2+) import from shared (Phase 1)
+- [ ] Architecture Structure included for reference
+- [ ] `Verify` uses project's test and build commands
 
 ### Step 8: Save and Report
 
 Save to `docs/CRs/{CR-KEY}/tasks.md`
 
-Report:
 ```markdown
 ## Tasks Generated: {CR-KEY}
 
@@ -221,67 +237,89 @@ Report:
 | 2 | {N} | Feature extraction |
 | Post | 4 | Verification |
 
-**Project**: {source_dir}, {test_command}
-**Size budget**: {N} lines max per file
-**STOP condition**: Exceeding budget requires task subdivision
+**Size thresholds**: Flag at default, STOP at 1.5x
+**Shared patterns**: {N} (extract in Phase 1)
 
-Next: Review tasks, then run `/mdt-implement {CR-KEY}`
+Next: `/mdt-implement {CR-KEY}`
 ```
 
 ## Task Examples
 
-### Example: Refactoring with constraints (language-agnostic)
+### Complete task example (refactoring)
 
 ```markdown
 ### Task 1.1: Extract input validators
 
-**Structure**: `{source_dir}/cli/validators/input_validators{ext}`
+**Structure**: `{source_dir}/cli/validators/input-validators{ext}`
 
 **Limits**:
-- Target file: max 100 lines
-- Source reduction: ~80 lines
+- Default: 75 lines (utility)
+- Hard Max: 110 lines
+- If > 75: ⚠️ flag
+- If > 110: ⛔ STOP
 
 **From**: `{source_dir}/cli/index{ext}`
-**To**: `{source_dir}/cli/validators/input_validators{ext}`
+**To**: `{source_dir}/cli/validators/input-validators{ext}`
 
 **Move**:
-- `validate_url()` function
-- `validate_file_path()` function  
-- `validate_numeric_option()` function
+- `validateUrl()` function
+- `validateFilePath()` function
+- `validateNumericOption()` function
 - Related type definitions
 
 **Exclude**:
-- Command-specific validation (goes with each command)
-- Output formatting (separate task)
+- Command-specific validation (goes with each command in Phase 2)
+- Output formatting (separate task 1.2)
+- Error handling (separate task 1.3)
 
-**Imports**: Add export/public to moved functions, update imports in index
+**Anti-duplication**:
+- This IS the shared validator — other tasks will import from here
+- If similar validation exists elsewhere, consolidate HERE
 
 **Verify**:
 ```bash
-wc -l {source_dir}/cli/validators/input_validators{ext}  # < 100
+wc -l {source_dir}/cli/validators/input-validators{ext}  # ≤ 75 (or flag ≤ 110)
 {test_command}
+{build_command}
 ```
 
 **Done when**:
-- [ ] File exists at correct path and < 100 lines
-- [ ] index reduced by ~80 lines
-- [ ] Tests pass without modification
+- [ ] File at `{source_dir}/cli/validators/input-validators{ext}`
+- [ ] Size ≤ 75 lines (or flagged if ≤ 110)
+- [ ] All validation logic consolidated here
+- [ ] Tests pass
 ```
 
-### Anti-pattern: Missing constraints (what fails)
+### Anti-duplication example (Phase 2 task)
+
+```markdown
+### Task 2.1: Extract summarize command
+
+**Anti-duplication**:
+- Import `validateUrl` from `validators/input-validators` — exists from Task 1.1
+- Import `formatError` from `formatters/output-formatters` — exists from Task 1.2
+- Import `handleCommandError` from `utils/error-handler` — exists from Task 1.3
+- Do NOT implement validation/formatting/error-handling in this file
+```
+
+### Bad task (what failed in SUML-009)
 
 ```markdown
 ### Task 3: Summarize Command Module
 **Description:** Extract summarize command logic into dedicated module
 **Deliverables:**
-- `{source_dir}/cli/commands/summarize_command{ext}` with complete functionality
+- `src/cli/commands/summarize-command.ts` with complete functionality
 ```
 
-Problems: No size limit, no exclusions, "complete functionality" is unbounded.
+Problems:
+- No size limits → resulted in 745-line file
+- No exclusions → moved everything including shared logic
+- No anti-duplication → copied validation into every command
+- "Complete functionality" is unbounded
 
 ## Integration
 
-**Before**: `/mdt-architecture` (required for refactoring)
+**Before**: `/mdt-architecture` (required — provides shared patterns + size limits)
 **After**: `/mdt-implement {CR-KEY}`
 
 Context: $ARGUMENTS

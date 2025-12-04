@@ -1,8 +1,8 @@
-# MDT Implementation Orchestrator (v2)
+# MDT Implementation Orchestrator (v3)
 
-Execute tasks from a task list with structural verification after each task.
+Execute tasks from a task list with constraint verification after each task.
 
-**Core Principle**: Verify constraints (size, structure) after each task, not just tests. STOP if constraints violated.
+**Core Principle**: Verify size (flag/STOP), structure, and no duplication after each task.
 
 ## User Input
 
@@ -16,7 +16,7 @@ $ARGUMENTS
 |---------|----------|
 | `/mdt-implement {CR-KEY}` | Interactive — verify and ask after each task |
 | `/mdt-implement {CR-KEY} --all` | Run all, pause at phase boundaries |
-| `/mdt-implement {CR-KEY} --continue` | Resume from last incomplete task |
+| `/mdt-implement {CR-KEY} --continue` | Resume from last incomplete |
 | `/mdt-implement {CR-KEY} --task {N.N}` | Run specific task only |
 
 ## Execution Steps
@@ -24,111 +24,146 @@ $ARGUMENTS
 ### Step 1: Load Context
 
 1. Load `docs/CRs/{CR-KEY}/tasks.md` — abort if missing
-2. Extract **Project Context** from tasks.md header:
-   ```yaml
-   source_dir: {from tasks.md}
-   test_command: {from tasks.md}
-   build_command: {from tasks.md}
-   file_extension: {from tasks.md}
-   ```
-3. Extract **Global Constraints** from tasks.md (max file size, STOP condition)
-4. Load CR with `mdt-all:get_cr mode="full"` for Architecture Design
-5. Find first incomplete task (not marked `[x]`)
+2. Extract from tasks.md header:
+   - **Project Context** (source_dir, test_command, ext)
+   - **Size Thresholds** (default, hard max per role)
+   - **Shared Patterns** (what should be imported, not duplicated)
+3. Load CR with `mdt-all:get_cr mode="full"` for Architecture Design
+4. Find first incomplete task
 
 ### Step 2: Execute Task
 
-For each task:
-
-**2a. Show task with constraints:**
+**2a. Show task:**
 ```markdown
 ## Task {N.N}: {Title}
 
-**Limits**: Target < {N} lines, Source -{N} lines
-**Structure**: `{path from CR}`
+**Limits**: Default {N}, Hard Max {N×1.5}
+**Structure**: `{path}`
+**Anti-duplication**: Import from {shared modules}
 
 {task content}
 
 [run] [skip] [stop]
 ```
 
-**2b. Execute:**
-Pass to sub-agent with constraint context:
-```
-PROJECT CONTEXT:
-- Source dir: {source_dir}
-- Test command: {test_command}
-- File extension: {file_extension}
+**2b. Pass to sub-agent with context:**
+```markdown
+# Constraints
 
-CONSTRAINTS (from CR):
-- Max file size: {N} lines
-- Target path must be: {exact path}
-- Do NOT include: {Exclude items}
+## Size
+- Default limit: {N} lines
+- Hard max: {N×1.5} lines
+- If > default but ≤ hard max: complete but FLAG
+- If > hard max: STOP, cannot proceed
 
-STOP IF: New file would exceed {N} lines. Report and wait for subdivision.
+## Anti-duplication
+- These utilities exist: {list from Phase 1}
+- IMPORT from them, do NOT copy logic
+- If you find yourself writing similar code: STOP, import instead
 
-TASK:
+## Task
 {task content}
 ```
 
 **2c. Run verification:**
 ```bash
-{test_command}
-{build_command}
+{build_command}   # must compile
+{test_command}    # must pass
 ```
 
-### Step 3: Verify Constraints (CRITICAL)
+### Step 3: Verify Constraints
 
 After each task, verify **before** marking complete:
 
-**3a. Size check:**
+**3a. Size check (three zones):**
 ```bash
-# Check all files modified/created by this task
-for file in {files from task}; do
-  lines=$(wc -l < "$file" 2>/dev/null || echo "0")
-  max={limit from task}
-  if [ "$lines" -gt "$max" ]; then
-    echo "FAIL: $file has $lines lines (max $max)"
-  fi
-done
+lines=$(wc -l < "{file}")
+default={default_limit}
+hard_max={hard_max_limit}
+
+if [ "$lines" -le "$default" ]; then
+  echo "✅ OK: $lines lines (limit: $default)"
+elif [ "$lines" -le "$hard_max" ]; then
+  echo "⚠️ FLAG: $lines lines (exceeds default $default, under hard max $hard_max)"
+  # Task completes but warning recorded
+else
+  echo "⛔ STOP: $lines lines (exceeds hard max $hard_max)"
+  # Task cannot complete
+fi
 ```
 
 **3b. Structure check:**
 ```bash
-# Verify file exists at exact path from task Structure field
-ls -la {Structure path from task}
+ls -la {expected_path}  # Must exist at correct location
 ```
 
-**3c. Handle violations:**
-
-If size exceeded:
-```markdown
-⛔ CONSTRAINT VIOLATION
-
-`{file}` has {N} lines (limit: {max})
-
-Options:
-- [subdivide] — Break this task into smaller extractions
-- [adjust] — Increase limit if justified (update CR)
-- [stop] — Halt and investigate
+**3c. Duplication check:**
+```bash
+# Check if task file duplicates logic that should be imported
+# Example: validation patterns that should come from shared validators
+grep -l "{pattern_that_should_be_shared}" {new_file}
+# If found: warn about potential duplication
 ```
 
-Do NOT mark task complete if constraints violated.
+### Step 4: Handle Results
 
-### Step 4: Mark Progress
-
-Only after all verifications pass:
-
-1. Update tasks.md: `- [ ]` → `- [x]`
-2. Report:
+**✅ OK (under default):**
 ```markdown
 ✓ Task {N.N} complete
-  Created: {files} ({lines} lines each)
-  Modified: {files}
-  Tests: passing
-  Constraints: verified
+  File: {path} ({N} lines)
+  Status: OK
 ```
 
-### Step 5: Phase Boundary
+**⚠️ FLAG (over default, under hard max):**
+```markdown
+⚠️ Task {N.N} complete with WARNING
+  File: {path} ({N} lines)
+  Default: {default}, Hard Max: {hard_max}
+  
+  Warning: File exceeds default limit.
+  Consider: Can this be subdivided? Is there logic to extract?
+  
+  [continue] [subdivide] [stop]
+```
+Task IS complete, but warning recorded for review.
+
+**⛔ STOP (over hard max):**
+```markdown
+⛔ Task {N.N} BLOCKED — exceeds hard max
+
+  File: {path} ({N} lines)
+  Hard Max: {hard_max}
+  
+  This task cannot be marked complete.
+  
+  Options:
+  [subdivide] — Break into smaller extractions
+  [justify] — Add justification to CR, increase limit
+  [stop] — Halt and investigate
+```
+Task is NOT complete. Cannot proceed without resolution.
+
+**⛔ STOP (duplication detected):**
+```markdown
+⛔ Task {N.N} BLOCKED — duplication detected
+
+  File: {path}
+  Issue: Contains {pattern} which exists in {shared_module}
+  
+  Options:
+  [fix] — Remove duplicate, import from shared
+  [stop] — Halt and investigate
+```
+
+### Step 5: Mark Progress
+
+Only after verification:
+
+1. Update tasks.md: `- [ ]` → `- [x]`
+2. If flagged, add note: `- [x] ⚠️ {N} lines (flagged)`
+3. Report result
+
+### Step 6: Phase Boundary
 
 At end of each phase:
 
@@ -137,121 +172,97 @@ At end of each phase:
 ✓ Phase {N} Complete
 ═══════════════════════════════════════════
 
-**Structure verification**:
-```bash
-find {source_dir}/{area} -name "*{ext}" -exec wc -l {} \; | sort -n
+**Size summary**:
+| File | Lines | Limit | Status |
+|------|-------|-------|--------|
+| {path} | {N} | {default} | ✅/⚠️ |
+
+**Flagged files**: {list any warnings}
+**Shared utilities available**: {list for next phase}
+
+[continue] [review] [stop]
 ```
 
-**Files created**: {list with line counts}
-**Largest file**: {name} ({N} lines) — {OK|WARN if near limit}
-
-[continue to Phase {N+1}] [review] [stop]
-```
-
-### Step 6: Completion
+### Step 7: Completion
 
 ```markdown
 ═══════════════════════════════════════════
 Implementation Complete: {CR-KEY}
 ═══════════════════════════════════════════
 
-### Final Structure Check
-```bash
-find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX}'
-```
-{output — should be empty}
+### Size Summary
+| File | Lines | Default | Hard Max | Status |
+|------|-------|---------|----------|--------|
+| {path} | {N} | {N} | {N} | ✅/⚠️ |
 
-### Summary
-| Metric | Before | After | Target |
-|--------|--------|-------|--------|
-| {source file} | {N} lines | {N} lines | <{N} |
-| ... | ... | ... | ... |
+### Warnings
+{list any flagged files that exceeded default}
+
+### Final Check
+```bash
+# Files over hard max (should be none)
+find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
+```
 
 ### Next Steps
-- [ ] Review git diff
-- [ ] Run full test suite: `{test_command}`
-- [ ] Commit changes
+- [ ] Review flagged files — can they be improved?
 - [ ] Run `/mdt-tech-debt {CR-KEY}`
+- [ ] Commit changes
 ```
 
 ## Sub-Agent Context Template
-
-When delegating task to sub-agent, include:
 
 ```markdown
 # Task Context
 
 ## Project
-- **Source directory**: {source_dir}
-- **Test command**: {test_command}
-- **Build command**: {build_command}
-- **File extension**: {ext}
+- Source dir: {source_dir}
+- Test command: {test_command}
+- Extension: {ext}
 
-## Constraints (MUST follow)
-- **Max file size**: {N} lines — STOP if exceeded
-- **Target structure**: `{exact path}`
-- **Exclude from extraction**: {list from task}
+## Size Constraints
+- Default: {N} lines → aim for this
+- Hard Max: {N×1.5} lines → STOP if exceeded
+- If between default and hard max → complete with FLAG
 
-## Architecture Reference
-```
-{Structure diagram from CR}
-```
+## Anti-Duplication
+Shared utilities exist (import, don't copy):
+- `{path}` — {what it provides}
+- `{path}` — {what it provides}
+
+If writing code similar to these → STOP, import instead.
 
 ## Task
-{task content from tasks.md}
+{task content}
 
-## Verification (run after)
-```bash
-wc -l {target file}    # must be < {limit}
-{test_command}         # must pass
-```
-
-## STOP Conditions
-- If target file would exceed {N} lines → STOP, report, request subdivision
-- If unsure what to exclude → STOP, ask for clarification
-- If tests fail after 2 retries → STOP, report failure
+## After Completion
+1. Check: `wc -l {file}` — report line count
+2. Check: imports from shared modules, no duplication
 ```
 
 ## Error Handling
 
-**Test failure:**
+**Test/build failure:**
 ```markdown
-✗ Tests failed
-
-{error output}
+✗ Verification failed: {test_command} or {build_command}
 
 [retry] — Agent attempts fix (max 2 retries)
-[manual] — You fix, then continue
+[manual] — You fix, then continue  
 [stop] — Halt orchestration
-```
-
-**Constraint violation:**
-```markdown
-⛔ Size limit exceeded: {file} has {N} lines (max {limit})
-
-This task cannot be marked complete.
-
-[subdivide] — Break into smaller tasks
-[adjust-limit] — Update CR if larger file justified
-[stop] — Investigate
 ```
 
 ## Behavioral Rules
 
-1. **Never skip constraint verification** — it's the whole point
-2. **Pass constraints to sub-agent** — they execute literally
-3. **STOP on violations** — don't accumulate problems
-4. **Size check uses actual file** — not estimate
-5. **Phase boundaries are mandatory pauses** — even with `--all`
-6. **Use project's commands** — from tasks.md Project Context, not hardcoded
+1. **Three zones**: OK (≤default), FLAG (default to 1.5x), STOP (>1.5x)
+2. **FLAG completes task** — but warning recorded
+3. **STOP blocks task** — cannot mark complete
+4. **Duplication is STOP** — as bad as size violation
+5. **Phase 1 first** — shared utilities must exist before features
+6. **Build + test required** — both must pass
 
-## Quality Gate
+## Integration
 
-Before marking any task complete, verify:
-- [ ] Tests pass (`{test_command}`)
-- [ ] Build passes (`{build_command}`)
-- [ ] Target file(s) under size limit
-- [ ] File(s) at correct structure path
-- [ ] Source file reduced (for extractions)
+**Before**: `/mdt-tasks` generated task list with limits
+**After**: `/mdt-tech-debt` catches anything that slipped through
 
 Context: $ARGUMENTS
