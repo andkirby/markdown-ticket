@@ -1,8 +1,8 @@
-# MDT Architecture Design Workflow (v1)
+# MDT Architecture Design Workflow (v2)
 
-Interactive workflow for surfacing architectural decisions before implementation. Produces a lightweight `## Architecture Design` section that guides LLM code generation toward correct structure.
+Surface architectural decisions before implementation. Produces `## Architecture Design` section with Pattern, Shared Patterns, Structure, Size Guidance, and Extension Rule.
 
-**Core Principle**: Surface the decisions LLM would otherwise make implicitly. Every architecture design must answer: "To add/extend X, what do I create and where?"
+**Core Principle**: Surface decisions LLM would otherwise make implicitly — including size constraints and shared patterns.
 
 ## User Input
 
@@ -10,12 +10,10 @@ Interactive workflow for surfacing architectural decisions before implementation
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
-
 ## Problem This Solves
 
-Without explicit architecture design, LLMs make implicit structural decisions during code generation:
-- Horizontal vs. vertical organization (e.g., 9 duplicated blocks across 3 layers)
+Without explicit architecture design, LLMs make implicit structural decisions:
+- Horizontal vs. vertical organization (e.g., duplicated blocks across layers)
 - Single file vs. multiple files
 - Inheritance vs. composition
 - Centralized vs. distributed logic
@@ -28,199 +26,218 @@ Use this workflow when:
 - CR involves multiple similar things (providers, handlers, adapters)
 - CR introduces new abstraction or extension point
 - CR affects code organization across files/modules
-- User explicitly flags "needs architecture design"
 - Previous implementation attempts produced poor structure
 
 Do NOT use when:
 - Simple bug fix with clear single-file scope
 - Documentation-only change
-- Configuration change without code structure impact
 - CR already has explicit architecture in problem statement
 
 ## Execution Steps
 
-### Step 1: Load CR Context
+### Step 1: Load Context
 
-1. Use `mdt-all:get_cr` with `mode="full"` to retrieve CR content
-   - Parse CR key, project code, current status
-   - If CR doesn't exist, abort: "Create CR first using mdt-ticket-creation.md"
-   - If CR status is "Implemented", warn: "Architecture design for implemented CR — creating post-hoc documentation"
-
+1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
 2. Extract from CR:
    - Problem statement (what's being solved)
    - Affected artifacts (existing files/components)
    - New artifacts (planned files/components)
    - Scope boundaries (what changes, what doesn't)
+3. Check for project CLAUDE.md — may have project-specific size limits
+4. Scan for architectural signals:
+   - Multiple similar items (providers, handlers, commands)
+   - Words: "adapter", "factory", "provider", "handler", "strategy"
+   - Patterns: "for each X", "multiple Y", "extensible"
 
-3. Scan for architectural signals:
-   - Multiple similar items (providers, handlers, validators, etc.)
-   - Words: "adapter", "factory", "plugin", "provider", "handler", "strategy"
-   - Patterns: "for each X", "multiple Y", "extensible", "configurable"
-   - Integration points between layers/modules
+### Step 2: Identify Shared Patterns
 
-### Step 2: Identify Decision Points
+**Before designing structure**, scan for repeated logic:
 
-Analyze the CR to surface **implicit architectural decisions** that would otherwise be made during code generation.
+```markdown
+| Pattern | Where It Appears | Extract To |
+|---------|------------------|------------|
+| Input validation | command1, command2, command3 | `validators/` |
+| Error handling | all handlers | `utils/error-handler` |
+| Silent mode | CLI, config | `utils/silent-mode` |
+```
 
-For each potential decision point, determine:
+**Rule**: If pattern appears in 2+ places → must extract to shared module FIRST.
+
+This prevents duplication that size limits alone won't catch.
+
+### Step 3: Identify Decision Points
+
+Analyze the CR to surface **implicit architectural decisions**.
+
+For each decision point, determine:
 - **Decision**: What structural choice must be made?
 - **Options**: What are the 2-3 viable approaches?
-- **Implication**: How does each option affect extensibility, coupling, or responsibility?
+- **Implication**: How does each option affect extensibility?
 
-Common decision points to check:
+Common decision points:
 
 | Decision Type | Signal in CR | Question to Surface |
 |---------------|--------------|---------------------|
 | **Code Location** | New functionality | Single file vs. multiple files? Which directory? |
-| **Responsibility Distribution** | Multiple similar things | Logic per-item vs. centralized handler? |
-| **Abstraction Level** | Shared behavior | Base class vs. interface vs. utility functions? |
-| **Extension Mechanism** | "Easily add new X" | Plugin pattern vs. configuration vs. subclass? |
-| **Coupling Direction** | Cross-module interaction | Who depends on whom? Shared interface? |
-| **State Management** | Stateful operations | Where does state live? Who owns it? |
+| **Responsibility** | Multiple similar things | Logic per-item vs. centralized handler? |
+| **Abstraction** | Shared behavior | Base class vs. interface vs. utility functions? |
+| **Extension** | "Easily add new X" | Plugin pattern vs. configuration vs. subclass? |
+| **Coupling** | Cross-module interaction | Who depends on whom? Shared interface? |
 
-### Step 3: Present Decision Surface
+### Step 4: Present Decision Surface
 
-Present decision points to user using `AskUserQuestion`. Maximum 5 architectural questions.
+Present decision points to user. Maximum 5 architectural questions.
 
 **Question Format**:
-
 ```
 Question: [Decision point as question]
-Header: Architecture Decision
 Options:
-- Option A: [Concrete structure] → [Extension implication]
+- Option A (Recommended): [Concrete structure] → [Extension implication]
 - Option B: [Concrete structure] → [Extension implication]
-- Option C: [Concrete structure] → [Extension implication] (if applicable)
+- Option C: [Concrete structure] → [Extension implication]
 ```
 
-**Example for adapter/provider pattern**:
-
+**Example**:
 ```
-Question: Where should adapter-specific logic live?
-Header: Adapter Structure
+Question: Where should command-specific logic live?
 Options:
-- Per-adapter files (Recommended): src/adapters/{name}-adapter.ts — each adapter owns all its logic. To add adapter: create one file.
-- Centralized handlers: src/handlers/{concern}.ts — each concern knows all adapters. To add adapter: edit N files.
-- Hybrid approach: Shared base + per-adapter overrides. To add adapter: extend base class in one file.
+- Per-command files (Recommended): `src/cli/commands/{name}` — each command isolated. To add: create one file.
+- Centralized: All in index.ts — violates single responsibility. To add: edit shared file.
+- Hybrid: Shared base + per-command overrides. To add: extend base class.
 ```
 
 **Recommendation criteria**:
 - Prefer structure where extension requires fewer file changes
 - Prefer structure that isolates provider/handler/adapter-specific logic
 - Prefer structure consistent with existing codebase patterns
-- Flag trade-offs explicitly (e.g., "more files but better isolation")
 
-### Step 4: Generate Architecture Design Section
+### Step 5: Generate Architecture Design Section
 
-Based on user's decision answers, generate the `## Architecture Design` section with exactly three parts:
+Based on decisions, generate the `## Architecture Design` section:
 
 ```markdown
 ## Architecture Design
 
 ### Pattern
-[One pattern name + one sentence explaining why this pattern fits the problem]
+{Pattern name} — {one sentence why it fits the problem}
+
+### Shared Patterns
+
+| Pattern | Occurrences | Extract To | 
+|---------|-------------|------------|
+| {pattern} | {where appears} | `{path}` |
+
+> These must be extracted BEFORE features that use them.
 
 ### Structure
-[ASCII diagram or nested list showing file/component organization]
+```
+{source_dir}/
+  ├── {area}/
+  │   ├── index.{ext}           → Orchestration only
+  │   ├── {shared}/             → Shared utilities (extract first)
+  │   │   └── {file}.{ext}
+  │   └── {feature}/
+  │       └── {file}.{ext}
+```
+
+### Size Guidance
+
+**Defaults by role**:
+| Role | Default | Hard Max (1.5x) |
+|------|---------|-----------------|
+| Orchestration (index, main) | 100 | 150 |
+| Feature module | 200 | 300 |
+| Complex logic (parser, state machine) | 300 | 450 |
+| Utility / helper | 75 | 110 |
+
+**Override**: CR Acceptance Criteria or project CLAUDE.md can specify different limits.
+
+**Thresholds**:
+- ≤ Default: ✅ OK
+- Default to Hard Max: ⚠️ FLAG (task completes with warning)
+- > Hard Max: ⛔ STOP (cannot proceed without justification)
+
+**Applied to this CR**:
+| Module | Role | Limit | Hard Max |
+|--------|------|-------|----------|
+| `{path}` | {role} | {N} | {N×1.5} |
 
 ### Extension Rule
-[One sentence: "To add X, create Y in Z location"]
+To add {X}: create `{path}` ({role}, limit {N} lines) implementing `{interface}`.
 ```
 
 **Constraints**:
-- Pattern: Name a recognized pattern (Adapter, Factory, Strategy, Repository, etc.) or describe as "Custom: [brief description]"
-- Structure: Show concrete file paths, not abstract boxes. Use actual `src/` paths from the project.
-- Extension Rule: Must be testable. After implementation, you can verify: "Can I add X by only creating/editing Y?"
+- Pattern: Name a recognized pattern (Adapter, Factory, Strategy, etc.)
+- Structure: Show concrete file paths, not abstract boxes
+- Extension Rule: Must be testable and include size limit
 
-### Step 5: Validate Against CR
+### Step 6: Validate Design
 
-Before inserting, validate the architecture design:
+Before inserting, validate:
 
-1. **Consistency check**: Does the structure align with existing codebase conventions?
-2. **Completeness check**: Does it address all decision points identified in Step 2?
-3. **Artifact alignment**: Do file paths in Structure match New/Modified Artifacts in Section 4?
-4. **Extension rule testability**: Is the extension rule concrete enough to verify?
+1. **Shared patterns identified** — any logic in 2+ places has extraction target
+2. **Size limits assigned** — every module in Structure has a limit
+3. **Total check** — sum of limits < current monolith (no bloat)
+4. **Consistency** — structure aligns with existing codebase conventions
+5. **Artifact alignment** — file paths match CR Section 4 artifacts
+6. **Extension rule testable** — includes "create X (limit N)"
 
-If misalignment detected:
-- Update Section 4 (Artifact Specifications) to match architecture design
-- Or adjust architecture design to match existing artifact specs
-- Present discrepancy to user for resolution
+If misalignment detected, update Section 4 or adjust design.
 
-### Step 6: Insert Architecture Design Section
+### Step 7: Insert and Update CR
 
-Use `mdt-all:manage_cr_sections` to insert the section:
+Use `mdt-all:manage_cr_sections` to insert:
 
-1. **Placement**: Insert `## Architecture Design` after `## 2. Decision` and before `## 3. Alternatives Considered`
-   - This positions architecture as part of the decision, informing alternatives evaluation
-
-2. **Section numbering**: Do NOT renumber existing sections. Architecture Design is unnumbered:
+1. **Placement**: After `## 2. Decision`, before `## 3. Alternatives Considered`
    ```
    ## 1. Description
    ## 2. Decision
    ## Architecture Design    ← New section (no number)
    ## 3. Alternatives Considered
-   ## 4. Artifact Specifications
-   ...
    ```
 
-3. **Update operation**:
-   - Use `operation: "get"` on section "2. Decision" to find insertion point
-   - Use `operation: "append"` to add Architecture Design after Decision section
-   - Verify insertion with `operation: "list"`
+2. **Update Section 4 (Artifact Specifications)**:
+   - Add files from Structure diagram to New Artifacts table
 
-### Step 7: Update Related Sections
-
-After inserting Architecture Design, ensure consistency:
-
-1. **Section 4 (Artifact Specifications)**:
-   - New Artifacts table should list files from Structure diagram
-   - If architecture design introduced new files, add them
-   - If architecture design removed planned files, update accordingly
-
-2. **Section 3 (Alternatives Considered)**:
-   - If architectural alternatives were discussed, add them to table
-   - Mark chosen architecture approach with **ACCEPTED**
-
-3. **Section 5 (Acceptance Criteria)**:
-   - Add extension rule as acceptance criterion:
-     `- [ ] To add [X], only [Y] file(s) need modification`
+3. **Update Section 5 (Acceptance Criteria)**:
+   - Add: `- [ ] No file exceeds Hard Max without justification`
+   - Add: `- [ ] Shared patterns extracted before consumers`
+   - Add: `- [ ] Extension Rule: {rule}`
 
 ### Step 8: Report Completion
 
 ```markdown
 ## Architecture Design Added
 
-**CR**: [PROJECT-XXX]
-**Decisions Surfaced**: [N]
-**Pattern Chosen**: [Pattern name]
+**CR**: {CR-KEY}
+**Decisions Surfaced**: {N}
+**Pattern Chosen**: {name}
 
-### Structure Summary
-[Brief description of file organization]
+### Shared Patterns
+{list of patterns to extract first}
+
+### Size Limits
+| Module | Limit | Hard Max |
+|--------|-------|----------|
+| ... | ... | ... |
 
 ### Extension Rule
-> [The extension rule from the design]
+> {rule with size constraint}
 
 ### Sections Updated
 - Architecture Design: Created
-- Artifact Specifications: [Updated/Unchanged]
-- Alternatives Considered: [Updated/Unchanged]
-- Acceptance Criteria: Added extension verification
-
-### Validation
-- [ ] Structure matches existing codebase conventions
-- [ ] Extension rule is testable
-- [ ] Artifact specs aligned with structure
+- Artifact Specifications: {Updated/Unchanged}
+- Acceptance Criteria: Added size + extension verification
 
 ### Next Steps
-- Review Architecture Design section in CR
-- If approved, proceed with implementation
-- Implementation should follow Structure exactly
-- After implementation, verify Extension Rule holds
+- Review Architecture Design in CR
+- Run `/mdt-tasks {CR-KEY}` — inherits these limits
+- Phase 1 must extract shared patterns FIRST
 ```
 
-## Architecture Design Format Reference
+## Architecture Design Examples
 
-### Minimal Example (Simple Feature)
+### Minimal (Simple Feature)
 
 ```markdown
 ## Architecture Design
@@ -228,120 +245,153 @@ After inserting Architecture Design, ensure consistency:
 ### Pattern
 Service extraction — isolate business logic from controller.
 
+### Shared Patterns
+None identified — single new module.
+
 ### Structure
 ```
 src/
   ├── controllers/
-  │   └── {Resource}Controller.ts  → HTTP handling only
+  │   └── {resource}-controller.{ext}  → HTTP handling only
   └── services/
-      └── {Resource}Service.ts     → Business logic (new)
+      └── {resource}-service.{ext}     → Business logic (new)
 ```
+
+### Size Guidance
+| Module | Role | Limit | Hard Max |
+|--------|------|-------|----------|
+| `{resource}-service` | Feature | 200 | 300 |
 
 ### Extension Rule
-To add business logic for a resource, add methods to its `{Resource}Service.ts` only.
+To add business logic: add methods to `{resource}-service` (limit 200 lines).
 ```
 
-### Standard Example (Adapter Pattern)
+### Standard (Adapter Pattern)
 
 ```markdown
 ## Architecture Design
 
 ### Pattern
-Adapter pattern — each adapter encapsulates its own configuration and request building.
+Adapter pattern — each adapter encapsulates its own logic.
+
+### Shared Patterns
+| Pattern | Occurrences | Extract To |
+|---------|-------------|------------|
+| Base interface | All adapters | `adapters/base-adapter` |
 
 ### Structure
 ```
 src/adapters/
-  ├── base-adapter.ts      → Shared interface + common logic
-  ├── {name}-adapter.ts    → Adapter-specific implementation
-  └── {name}-adapter.ts    → Another adapter implementation
+  ├── base-adapter.{ext}    → Shared interface
+  ├── {name}-adapter.{ext}  → Implementation A
+  └── {name}-adapter.{ext}  → Implementation B
 ```
+
+### Size Guidance
+| Module | Role | Limit | Hard Max |
+|--------|------|-------|----------|
+| `base-adapter` | Shared base | 100 | 150 |
+| `*-adapter` | Feature | 200 | 300 |
 
 ### Extension Rule
-To add a new adapter, create one file in `src/adapters/` implementing `BaseAdapter` interface.
+To add adapter: create `src/adapters/{name}-adapter` (limit 200 lines) implementing `BaseAdapter`.
 ```
 
-### Complex Example (Multi-Pattern)
+### Complex (Multi-Pattern)
 
 ```markdown
 ## Architecture Design
 
 ### Pattern
-Factory + Strategy — factory creates instances, each implementation follows strategy interface.
+Factory + Strategy — factory creates instances, each follows strategy interface.
+
+### Shared Patterns
+| Pattern | Occurrences | Extract To |
+|---------|-------------|------------|
+| Interface | All implementations | `{domain}/{domain}.interface` |
+| Config loading | All implementations | `{domain}/config-loader` |
 
 ### Structure
 ```
-src/
-  ├── {domain}/
-  │   ├── index.ts              → Factory (creates instances)
-  │   ├── {domain}.interface.ts → Interface definition
-  │   ├── {impl-a}/
-  │   │   ├── {impl-a}.ts       → Implements interface
-  │   │   └── {impl-a}.config.ts→ Implementation-specific config
-  │   └── {impl-b}/
-  │       ├── {impl-b}.ts       → Implements interface
-  │       └── {impl-b}.config.ts→ Implementation-specific config
-  └── config/
-      └── {domain}.yaml         → Registry
+src/{domain}/
+  ├── index.{ext}              → Factory (creates instances)
+  ├── {domain}.interface.{ext} → Interface definition
+  ├── config-loader.{ext}      → Shared config logic
+  ├── {impl-a}/
+  │   └── {impl-a}.{ext}       → Implements interface
+  └── {impl-b}/
+      └── {impl-b}.{ext}       → Implements interface
 ```
 
+### Size Guidance
+| Module | Role | Limit | Hard Max |
+|--------|------|-------|----------|
+| `index` | Orchestration | 100 | 150 |
+| `{domain}.interface` | Shared base | 100 | 150 |
+| `config-loader` | Utility | 75 | 110 |
+| `{impl-*}` | Feature | 200 | 300 |
+
 ### Extension Rule
-To add a new implementation: (1) create `src/{domain}/{name}/` folder with implementation + config, (2) register in `{domain}.yaml`.
+To add implementation: (1) create `src/{domain}/{name}/` with implementation (limit 200), (2) register in factory.
 ```
+
+## Size Guidance Reference
+
+**Defaults** (can be overridden by CR or project CLAUDE.md):
+
+| Role | Default | Hard Max | Notes |
+|------|---------|----------|-------|
+| Orchestration | 100 | 150 | Wiring only, no business logic |
+| Feature module | 200 | 300 | Core functionality |
+| Complex logic | 300 | 450 | Parser, state machine, algorithm |
+| Utility | 75 | 110 | Small, focused helpers |
+| Shared base/interface | 100 | 150 | Contracts, minimal implementation |
+
+**Override priority** (highest to lowest):
+1. CR Acceptance Criteria
+2. Project CLAUDE.md
+3. These defaults
 
 ## Behavioral Rules
 
 - **Maximum 5 architectural questions** — avoid analysis paralysis
-- **Always provide recommendation** — mark one option as (Recommended) with reasoning
+- **Always provide recommendation** — mark one option as (Recommended)
 - **Concrete file paths only** — no abstract "ModuleA" references
-- **Extension rule is mandatory** — every design must answer "how do I add X?"
-- **Don't over-architect** — if CR is simple, say "No architecture design needed" and exit
+- **Shared patterns first** — identify before structure, extract before consumers
+- **Size limits per module** — every file needs a limit
+- **Extension rule includes size** — "create X (limit N lines)"
+- **Don't over-architect** — if CR is simple, say "No architecture design needed"
 - **Respect existing patterns** — structure should match codebase conventions
-- **No code in design** — structure shows files/organization, not implementation
-- **Testable extension rules** — must be verifiable after implementation
 
 ## Anti-Patterns to Avoid
 
-❌ **Vague pattern reference**: "Use good design patterns"
+❌ **Vague pattern**: "Use good design patterns"
 ✅ **Specific pattern**: "Adapter pattern — each provider owns its logic"
 
 ❌ **Abstract structure**: "Create modules for each concern"
 ✅ **Concrete structure**: "src/providers/ollama-provider.ts"
 
-❌ **Untestable extension rule**: "Adding providers should be easy"
-✅ **Testable extension rule**: "To add provider, create one file in src/providers/"
+❌ **No size limit**: "To add provider, create one file"
+✅ **With size limit**: "To add provider, create file (limit 200 lines)"
 
-❌ **Over-detailed design**: Including method signatures, types, full interfaces
-✅ **Structural design**: File organization and responsibility boundaries only
-
-❌ **Ignoring existing patterns**: Proposing new structure that conflicts with codebase
-✅ **Consistent design**: Following existing directory conventions
-
-## Integration with Other Workflows
-
-**Before this workflow**:
-- `mdt-ticket-creation.md` — CR must exist with basic problem/scope defined
-
-**After this workflow**:
-- `mdt-clarification.md` — Can run to fill remaining artifact gaps
-- Implementation — LLM follows Architecture Design structure
-- `mdt-reflection.md` — Captures if actual structure matched design
-
-**Trigger phrase for users**: 
-- "Add architecture design to [CR-KEY]"
-- "This CR needs architecture design"
-- "Run architecture workflow on [CR-KEY]"
+❌ **Ignoring shared patterns**: Design structure without checking duplication
+✅ **Shared patterns first**: Identify what repeats, extract before consumers
 
 ## Quality Checklist
 
 Before completing, verify:
-- [ ] Pattern is named and justified in one sentence
-- [ ] Structure shows concrete file paths (not abstract names)
-- [ ] Extension Rule answers "To add X, create Y in Z"
-- [ ] Extension Rule is testable after implementation
-- [ ] Structure matches existing codebase conventions
+- [ ] Shared patterns identified (logic in 2+ places)
+- [ ] Pattern is named and justified
+- [ ] Structure shows concrete file paths
+- [ ] Size limits assigned to every module
+- [ ] Extension Rule includes size constraint
+- [ ] Extension Rule is testable
 - [ ] Section 4 artifacts align with Structure
-- [ ] No code snippets in Architecture Design section
-- [ ] Acceptance criteria includes extension verification
+- [ ] Acceptance criteria includes size verification
 
-Context for prioritization: $ARGUMENTS
+## Integration
+
+**Before**: CR exists with problem/scope defined
+**After**: `/mdt-tasks` inherits shared patterns + size limits
+
+Context: $ARGUMENTS

@@ -2,117 +2,237 @@
 
 Structured workflows for AI agents managing Change Request tickets via MCP mdt-all system.
 
+**Works with any project** — Python, TypeScript, Go, Rust, Java, etc. Project context detected from CLAUDE.md or config files.
+
 ## Available Workflows
 
-| Command | Purpose |
-|---------|---------|
-| `/mdt-ticket-creation` | Create CR with structured questioning |
-| `/mdt-architecture` | Surface decisions, add Architecture Design section |
-| `/mdt-clarification` | Fill specification gaps |
-| `/mdt-tasks` | Break CR into constrained, verifiable tasks |
-| `/mdt-implement` | Execute tasks with constraint verification |
-| `/mdt-tech-debt` | Detect debt patterns post-implementation |
-| `/mdt-reflection` | Capture learnings, update CR |
+| Command | Purpose | Output |
+|---------|---------|--------|
+| `/mdt-ticket-creation` | Create CR with structured questioning | CR in MDT system |
+| `/mdt-architecture` | Surface decisions, define structure + size limits | Architecture Design section |
+| `/mdt-clarification` | Fill specification gaps | Updated CR sections |
+| `/mdt-tasks` | Break CR into constrained tasks | `docs/CRs/{CR-KEY}/tasks.md` |
+| `/mdt-implement` | Execute tasks with verification | Code changes, updated tasks.md |
+| `/mdt-tech-debt` | Detect debt patterns | `docs/CRs/{CR-KEY}/debt.md` |
+| `/mdt-reflection` | Capture learnings | Updated CR |
 
-## Workflow Sequence
+## Debt Prevention Chain
 
 ```
-/mdt-ticket-creation     → Create CR
-        ↓
-/mdt-architecture        → Add Pattern, Structure, Extension Rule
-        ↓
-/mdt-clarification       → Fill gaps (if needed)
-        ↓
-/mdt-tasks               → Generate constrained task list
-        ↓
-/mdt-implement           → Execute with verification
-        ↓
-/mdt-tech-debt           → Check for debt (on-demand)
-        ↓
-/mdt-reflection          → Document learnings
+┌─────────────────────────────────────────────────────────────┐
+│ /mdt-architecture                                           │
+│                                                             │
+│ Defines:                                                    │
+│ - Pattern (structural approach)                             │
+│ - Shared Patterns (extract FIRST to prevent duplication)    │
+│ - Structure (file paths)                                    │
+│ - Size Guidance (default + hard max per module)             │
+│ - Extension Rule                                            │
+└─────────────────────┬───────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────────┐
+│ /mdt-tasks                                                  │
+│                                                             │
+│ Inherits:                                                   │
+│ - Size limits → Task Limits (flag/STOP thresholds)          │
+│ - Shared patterns → Phase 1 (extract before consumers)      │
+│                                                             │
+│ Adds:                                                       │
+│ - Exclude section (what NOT to move)                        │
+│ - Anti-duplication (import, don't copy)                     │
+└─────────────────────┬───────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────────┐
+│ /mdt-implement                                              │
+│                                                             │
+│ Verifies after each task:                                   │
+│ - Size: OK (≤default) / FLAG (≤1.5x) / STOP (>1.5x)         │
+│ - Structure: correct path                                   │
+│ - No duplication: imports from shared, doesn't copy         │
+└─────────────────────┬───────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────────┐
+│ /mdt-tech-debt                                              │
+│                                                             │
+│ Catches what slipped through:                               │
+│ - Size violations                                           │
+│ - Duplication                                               │
+│ - Missing abstractions                                      │
+│ - Shotgun surgery patterns                                  │
+│                                                             │
+│ Output: debt.md (diagnosis for fix CR)                      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Key Concepts (v2)
+## Size Guidance (Three Zones)
 
-### Constraint-Based Tasks
+| Zone | Condition | Action |
+|------|-----------|--------|
+| ✅ OK | ≤ Default | Proceed |
+| ⚠️ FLAG | Default to 1.5x | Task completes with warning |
+| ⛔ STOP | > 1.5x (Hard Max) | Cannot complete, must resolve |
 
-Every task includes explicit limits:
+**Defaults by module role:**
+
+| Role | Default | Hard Max |
+|------|---------|----------|
+| Orchestration (index, main) | 100 | 150 |
+| Feature module | 200 | 300 |
+| Complex logic (parser, algorithm) | 300 | 450 |
+| Utility / helper | 75 | 110 |
+
+Override in: CR Acceptance Criteria or project CLAUDE.md
+
+## Managing Technical Debt
+
+### When debt.md is generated
+
+`/mdt-tech-debt` produces `docs/CRs/{CR-KEY}/debt.md` — a **diagnostic report**, not an executable task list.
+
+### How to fix debt
+
+```
+debt.md (diagnosis)
+    ↓
+Create new CR (e.g., "Fix technical debt from {CR-KEY}")
+    ↓
+/mdt-architecture {NEW-CR-KEY}
+    ↓
+/mdt-tasks {NEW-CR-KEY}
+    ↓
+/mdt-implement {NEW-CR-KEY}
+```
+
+**debt.md informs what goes into the fix CR:**
+
+| Debt Finding | Fix CR Content |
+|--------------|----------------|
+| Size violation (745-line file) | "Break down {file} into focused modules" |
+| Duplication (logic in 4 places) | "Extract shared {pattern} to utility" |
+| Missing abstraction | "Create {type/interface} for {concept}" |
+| Shotgun surgery | "Consolidate {concern} to single extension point" |
+
+### Preventing debt (upstream)
+
+| Prevention | How |
+|------------|-----|
+| Size violations | Architecture defines limits, tasks enforce, implement verifies |
+| Duplication | Shared Patterns identified in architecture, extracted in Phase 1 |
+| Missing abstractions | Architecture Design surfaces implicit decisions |
+| Shotgun surgery | Extension Rule ensures single-point changes |
+
+## Key Concepts
+
+### Shared Patterns (Anti-Duplication)
+
+Architecture Design identifies patterns appearing in 2+ places:
 
 ```markdown
-### Task 1.1: Extract validators
+### Shared Patterns
 
-**Limits**:
-- Target file: max 100 lines
-- Source reduction: ~80 lines
-
-**Exclude** (stays in source):
-- Command-specific validation
-- Output formatting
+| Pattern | Occurrences | Extract To |
+|---------|-------------|------------|
+| Input validation | all commands | `validators/` |
+| Error handling | all handlers | `utils/error-handler` |
 ```
 
-Tasks without limits led to bloated extractions (745-line files from 958-line source).
+**Rule**: Phase 1 extracts these BEFORE Phase 2 extracts features.
 
-### Extraction Order
+Features then **import** from shared utilities, never duplicate.
 
-Phase 1 extracts **shared utilities first**, Phase 2 extracts **consumers**.
+### Task Constraints
 
-This prevents duplication — consumers import from already-extracted utilities.
+Every task includes:
+
+```markdown
+### Task 2.1: Extract summarize command
+
+**Limits**:
+- Default: 150 lines
+- Hard Max: 225 lines
+
+**Exclude** (stays in source):
+- Shared validation (already in validators/)
+- Output formatting (already in formatters/)
+
+**Anti-duplication**:
+- Import `validateUrl` from `validators/input-validators`
+- Do NOT implement validation in this file
+```
 
 ### STOP Conditions
 
-Tasks and orchestrator include explicit STOP triggers:
+Tasks and orchestrator have explicit escalation:
 
-- If target file would exceed limit → STOP, request subdivision
-- If unsure what to exclude → STOP, ask for clarification
-- If constraint violated → cannot mark task complete
+| Trigger | Action |
+|---------|--------|
+| File > Hard Max | STOP, subdivide or justify |
+| Duplicating shared logic | STOP, import instead |
+| Structure mismatch | STOP, clarify path |
+| Tests fail (2 retries) | STOP, report failure |
 
-### Constraint Verification
+## Project Context
 
-After each task, orchestrator verifies:
+Prompts detect project settings from CLAUDE.md or config files:
 
-```bash
-wc -l {target file}  # must be under limit
-npm test             # must pass
+```yaml
+project:
+  source_dir: src/        # or lib/, app/, etc.
+  test_command: npm test  # or pytest, cargo test, go test
+  build_command: npm run build
+  file_extension: .ts     # or .py, .rs, .go, .java
 ```
 
-Both must pass before task is marked complete.
+Tasks and verification use these values — no hardcoded assumptions.
 
 ## Command Reference
 
+### `/mdt-architecture`
+
+Adds Architecture Design section to CR:
+
+- **Pattern**: Structural approach
+- **Shared Patterns**: Logic to extract first (prevents duplication)
+- **Structure**: File paths with responsibilities
+- **Size Guidance**: Per-module limits (default + hard max)
+- **Extension Rule**: "To add X, create Y"
+
 ### `/mdt-tasks`
 
-Generates `docs/CRs/{CR-KEY}/tasks.md` with:
+Generates `docs/CRs/{CR-KEY}/tasks.md`:
 
-- **Global Constraints** header (max file size from CR)
-- **Size budgets** per task (calculated from CR acceptance criteria)
-- **Exclusions** per task (what NOT to move)
-- **STOP condition** (escalation trigger)
-- **Post-implementation verification** tasks
-
-**Requires**: CR with Architecture Design for refactoring
+- **Project Context**: Detected settings
+- **Size Thresholds**: Flag/STOP zones
+- **Shared Patterns**: From Architecture Design
+- **Phase 1**: Shared utilities (extract first)
+- **Phase 2+**: Features (import from Phase 1)
+- **Post-Implementation**: Verification tasks
 
 ### `/mdt-implement`
 
-Executes tasks with constraint verification.
+Executes tasks with constraint verification:
 
-**Modes:**
 ```bash
-/mdt-implement {CR-KEY}            # Interactive — ask after each task
-/mdt-implement {CR-KEY} --all      # Run all, pause at phase boundaries
-/mdt-implement {CR-KEY} --continue # Resume from last incomplete
-/mdt-implement {CR-KEY} --task 1.3 # Run specific task only
+/mdt-implement {CR-KEY}            # Interactive
+/mdt-implement {CR-KEY} --all      # Run all, pause at phases
+/mdt-implement {CR-KEY} --continue # Resume
+/mdt-implement {CR-KEY} --task 1.3 # Specific task
 ```
 
-**Verification after each task:**
+**After each task verifies:**
 1. Tests pass
-2. Build passes
-3. Target file under size limit
-4. File at correct structure path
+2. Size: OK / FLAG / STOP
+3. Structure: correct path
+4. No duplication
 
-**Constraint violation handling:**
-- `[subdivide]` — Break task into smaller extractions
-- `[adjust]` — Update CR if larger file justified
-- `[stop]` — Halt and investigate
+### `/mdt-tech-debt`
+
+Generates `docs/CRs/{CR-KEY}/debt.md`:
+
+- **Size Compliance**: Per-file pass/fail
+- **Debt Items**: By severity (High/Medium/Low)
+- **Suggested Fixes**: Direction, not implementation
+- **Metrics**: Before/after comparison
 
 ## Installation
 
@@ -127,18 +247,27 @@ prompts/
 ├── README.md                # This file
 ├── CLAUDE.md                # Development guidance
 ├── mdt-ticket-creation.md   # CR creation
-├── mdt-architecture.md      # Architecture design (upstream)
+├── mdt-architecture.md      # Architecture design (v2)
 ├── mdt-clarification.md     # Gap filling
-├── mdt-tasks.md             # Task breakdown with constraints (v2)
-├── mdt-implement.md         # Orchestrator with verification (v2)
-├── mdt-tech-debt.md         # Debt detection (downstream)
+├── mdt-tasks.md             # Task breakdown (v2)
+├── mdt-implement.md         # Orchestrator (v2)
+├── mdt-tech-debt.md         # Debt detection (v2)
 └── mdt-reflection.md        # Learning capture
 ```
 
+## Output Files
+
+| Workflow | Output Location |
+|----------|-----------------|
+| `/mdt-tasks` | `docs/CRs/{CR-KEY}/tasks.md` |
+| `/mdt-tech-debt` | `docs/CRs/{CR-KEY}/debt.md` |
+
 ## Design Principles
 
-- **Constraints are explicit**: Size limits, exclusions, STOP conditions in every task
-- **Verification is structural**: Not just "tests pass" but "file under limit"
-- **Order matters**: Shared utilities before consumers
-- **Violations block progress**: Cannot mark complete if constraints violated
-- **Sub-agents get context**: Limits passed to executing agent, not just task description
+1. **Constraints are explicit** — size limits, exclusions, STOP conditions
+2. **Three-zone verification** — OK, FLAG (warning), STOP (blocked)
+3. **Shared patterns first** — Phase 1 before Phase 2
+4. **Anti-duplication enforced** — import from shared, never copy
+5. **Project-agnostic** — works with any language/stack
+6. **Violations block progress** — cannot mark complete if constraints violated
+7. **debt.md is diagnosis** — fix via new CR, not direct execution
