@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "mcp__mdt-all__create_cr",
+      "mcp__mdt-all__get_cr",
+      "mcp__mdt-all__manage_cr_sections",
+      "Bash(git add:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(git commit:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:shared:*)",
+      "Bash(npm run build:all:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
