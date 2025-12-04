@@ -25,6 +25,9 @@
     "shared/**/*.js",
     "shared/**/*.d.ts",
     "node_modules",
-    "dist"
+    "dist",
+    "shared/**/__tests__/**/*",
+    "shared/**/*.test.ts",
+    "shared/**/*.spec.ts"
   ]
 }
