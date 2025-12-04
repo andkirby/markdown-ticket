@@ -83,6 +83,9 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Script directory (always where this script is located)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Project root detection
 if [[ "$LOCAL_INSTALL" == "true" ]]; then
     if [[ -z "$PROJECT_PATH" ]]; then
@@ -91,13 +94,12 @@ if [[ "$LOCAL_INSTALL" == "true" ]]; then
     PROJECT_ROOT="$PROJECT_PATH"
     CLAUDE_COMMANDS_DIR="$PROJECT_ROOT/.claude/commands/mdt"
 else
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-    CLAUDE_COMMANDS_DIR="$HOME/.claude/commands"
+    CLAUDE_COMMANDS_DIR="$HOME/.claude/commands/mdt"
 fi
 
-# Source directory containing MDT prompts
-MDT_PROMPTS_DIR="$PROJECT_ROOT/prompts"
+# Source directory containing MDT prompts (always where script is located)
+MDT_PROMPTS_DIR="$SCRIPT_DIR"
 
 # List of MDT commands to install (without mdt- prefix)
 MDT_COMMANDS=(
