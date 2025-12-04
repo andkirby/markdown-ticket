@@ -46,29 +46,29 @@ Service Extraction with Facade Pattern — Extract single responsibility service
 
 | Pattern | Occurrences | Extract To |
 |---------|-------------|------------|
-| Quiet logging | `ProjectService:82`, `ProjectService:358`, `ProjectService:618` | `shared/utils/logger.ts` |
-| TOML serialization | `ProjectService:702`, `ProjectService:472`, `ProjectService:591`, `ProjectService:764` | `shared/utils/toml.ts` |
-| Config validation | `ProjectService:172`, `ProjectService:331`, `ProjectService:532` | `shared/utils/config-validator.ts` |
-| File existence checks | `ProjectService:93`, `ProjectService:235`, `ProjectService:324` | `shared/utils/file-utils.ts` |
-| Path resolution | `ProjectService:322`, `ProjectService:515`, `ProjectService:680` | `shared/utils/path-resolver.ts` |
+| Quiet logging | 30+ occurrences throughout ProjectService | `shared/utils/logger.ts` |
+| TOML serialization | Lines 98, 247, 472, 528, 591, 702, 764, 864, 872, 873 | `shared/utils/toml.ts` |
+| Config validation | Lines 173-224, 331 | `shared/utils/config-validator.ts` |
+| File existence checks | Lines 93, 235, 324, 389, 452, 526, 617, 684, 748, 814, 862, 902, 918, 925 | `shared/utils/file-utils.ts` |
+| Path resolution | Lines 322, 515, 680, 1007, 1015, 1028, 1046, 1092 | `shared/utils/path-resolver.ts` |
 
 > These must be extracted BEFORE features that use them.
 
 ### Structure
 ```
 shared/services/
-  ├── index.ts                    → Service orchestration only
-  ├── ProjectService.ts           → Facade/coordinator only
-  ├── project/                    → Project-specific services
-  │   ├── ProjectDiscoveryService.ts
-  │   ├── ProjectConfigService.ts
-  │   └── ProjectCacheService.ts
-  └── utils/                      → Shared utilities (extract first)
-      ├── logger.ts
-      ├── toml.ts
-      ├── config-validator.ts
-      ├── file-utils.ts
-      └── path-resolver.ts
+  ├── ProjectService.ts           → Facade/coordinator only (≤150 lines)
+  └── project/                    → Project-specific services
+      ├── ProjectDiscoveryService.ts  → Scanning and registry (≤300 lines)
+      ├── ProjectConfigService.ts     → Config loading/validation (≤300 lines)
+      └── ProjectCacheService.ts      → Caching operations (≤300 lines)
+
+shared/utils/                      → Shared utilities (extract first)
+  ├── logger.ts                   → Quiet logging (≤110 lines)
+  ├── toml.ts                     → TOML serialization (≤110 lines)
+  ├── config-validator.ts         → Config validation (≤110 lines)
+  ├── file-utils.ts               → File operations (≤110 lines)
+  └── path-resolver.ts            → Path utilities (≤110 lines)
 ```
 
 ### Size Guidance
@@ -89,15 +89,18 @@ shared/services/
 | `shared/services/project/ProjectDiscoveryService.ts` | Feature | 200 | 300 |
 | `shared/services/project/ProjectConfigService.ts` | Feature | 200 | 300 |
 | `shared/services/project/ProjectCacheService.ts` | Feature | 200 | 300 |
-| `shared/services/utils/logger.ts` | Utility | 75 | 110 |
-| `shared/services/utils/toml.ts` | Utility | 75 | 110 |
-| `shared/services/utils/config-validator.ts` | Utility | 75 | 110 |
-| `shared/services/utils/file-utils.ts` | Utility | 75 | 110 |
-| `shared/services/utils/path-resolver.ts` | Utility | 75 | 110 |
+| `shared/utils/logger.ts` | Utility | 75 | 110 |
+| `shared/utils/toml.ts` | Utility | 75 | 110 |
+| `shared/utils/config-validator.ts` | Utility | 75 | 110 |
+| `shared/utils/file-utils.ts` | Utility | 75 | 110 |
+| `shared/utils/path-resolver.ts` | Utility | 75 | 110 |
 
 ### Extension Rule
-To add a new project-related service: create `shared/services/project/{NewService}.ts` (feature module, limit 200 lines) implementing interface with methods: `initialize()`, `validate()`, `process()`.
-
+To add a new project-related service: 
+1. Create `shared/services/project/{NewService}.ts` (feature module, limit 200 lines)
+2. Implement `IProjectService` interface with methods: `initialize()`, `getProject()`, `validateProject()`
+3. Add service to ProjectService constructor with dependency injection
+4. Add delegation method in ProjectService facade (≤5 lines)
 ## 3. Alternatives Considered
 
 | Approach | Key Difference | Why Rejected |
@@ -107,18 +110,16 @@ To add a new project-related service: create `shared/services/project/{NewServic
 | Extract into two services | Discovery+Config together | Still too large, overlapping concerns |
 ## 4. Artifact Specifications
 ### New Artifacts
-
 | Artifact | Type | Purpose |
 |----------|------|---------|
 | `shared/services/project/ProjectDiscoveryService.ts` | Service | Project scanning and registry operations |
 | `shared/services/project/ProjectConfigService.ts` | Service | Configuration loading and validation |
 | `shared/services/project/ProjectCacheService.ts` | Service | Caching operations and TTL management |
-| `shared/services/utils/logger.ts` | Utility | Quiet logging functionality |
-| `shared/services/utils/toml.ts` | Utility | TOML serialization/deserialization |
-| `shared/services/utils/config-validator.ts` | Utility | Configuration validation logic |
-| `shared/services/utils/file-utils.ts` | Utility | File existence and operations |
-| `shared/services/utils/path-resolver.ts` | Utility | Path resolution utilities |
-
+| `shared/utils/logger.ts` | Utility | Quiet logging functionality |
+| `shared/utils/toml.ts` | Utility | TOML serialization/deserialization |
+| `shared/utils/config-validator.ts` | Utility | Configuration validation logic |
+| `shared/utils/file-utils.ts` | Utility | File existence and operations |
+| `shared/utils/path-resolver.ts` | Utility | Path resolution utilities |
 ### Modified Artifacts
 
 | Artifact | Change Type | Modification |
@@ -128,18 +129,16 @@ To add a new project-related service: create `shared/services/project/{NewServic
 | `shared/tools/ProjectManager.ts` | Import changes | Update imports from new services |
 
 ### Integration Points
-
 | From | To | Interface |
 |------|----|-----------| 
 | ProjectService (facade) | ProjectDiscoveryService | `scanProjects()`, `getProject()`, `isProjectRegistered()`, `registerProject()`, `autoDiscoverProjects()` |
 | ProjectService (facade) | ProjectConfigService | `loadConfig()`, `validateConfig()`, `createOrUpdateLocalConfig()`, `updateProject()` |
 | ProjectService (facade) | ProjectCacheService | `get()`, `set()`, `clear()`, `isValid()` |
-| All services | utils/logger | `log()` |
-| ConfigService | utils/toml | `parse()`, `stringify()` |
-| ConfigService | utils/config-validator | `validateProjectConfig()` |
-| All services | utils/file-utils | `exists()`, `readFile()`, `writeFile()` |
-| All services | utils/path-resolver | `resolvePath()`, `joinPath()` |
-
+| All services | shared/utils/logger | `log()` |
+| ConfigService | shared/utils/toml | `parse()`, `stringify()` |
+| ConfigService | shared/utils/config-validator | `validateProjectConfig()` |
+| All services | shared/utils/file-utils | `exists()`, `readFile()`, `writeFile()` |
+| All services | shared/utils/path-resolver | `resolvePath()`, `joinPath()` |
 ### Key Patterns
 - Facade Pattern: ProjectService as unified interface
 - Service Layer Pattern: Each service handles specific domain
