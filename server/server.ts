@@ -85,6 +85,7 @@ import { createDocumentRouter } from './routes/documents.js';
 import { createSSERouter } from './routes/sse.js';
 import { createSystemRouter } from './routes/system.js';
 import { createDevToolsRouter, setupLogInterception } from './routes/devtools.js';
+import { createDocsRouter } from './routes/docs.js';
 
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -252,6 +253,9 @@ app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscov
 // Dev tools routes (logging)
 app.use('/api', createDevToolsRouter());
 
+// API Documentation routes (Redoc UI)
+app.use('/api-docs', createDocsRouter());
+
 // =============================================================================
 // Error Handling
 // =============================================================================
@@ -298,6 +302,7 @@ app.listen(PORT, async () => {
   console.log(`   PATCH /api/projects/:id/crs/:crId - Partial update CR`);
   console.log(`   POST /api/projects/create - Create new project`);
   console.log(`   GET  /api/documents - Discover project documents`);
+  console.log(`   GET  /api-docs - API Documentation (Redoc UI)`);
 
   // Initialize the server
   await initializeServer();
