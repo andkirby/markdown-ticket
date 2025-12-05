@@ -144,7 +144,27 @@ export function createDevToolsRouter(): Router {
   // Server Logs API
   // ============================================================================
 
-  // API endpoint for getting server logs (polling)
+  /**
+   * @openapi
+   * /api/devtools/logs:
+   *   get:
+   *     tags: [DevTools]
+   *     summary: Get server logs
+   *     parameters:
+   *       - name: lines
+   *         in: query
+   *         schema: { type: integer, default: 20, maximum: 100 }
+   *       - name: filter
+   *         in: query
+   *         schema: { type: string }
+   *         description: Case-insensitive text filter
+   *     responses:
+   *       200:
+   *         description: Array of log entries
+   *         content:
+   *           application/json:
+   *             schema: { type: array, items: { $ref: '#/components/schemas/LogEntry' } }
+   */
   router.get('/logs', (req: AuthenticatedRequest, res: Response) => {
     const lines = Math.min(parseInt(req.query.lines || '20'), MAX_LOG_ENTRIES);
     const filter = req.query.filter;
@@ -160,7 +180,27 @@ export function createDevToolsRouter(): Router {
     res.json(logs);
   });
 
-  // SSE endpoint for log streaming
+  /**
+   * @openapi
+   * /api/devtools/logs/stream:
+   *   get:
+   *     tags: [DevTools]
+   *     summary: Stream server logs via SSE
+   *     description: Server-Sent Events stream for real-time log monitoring
+   *     parameters:
+   *       - name: filter
+   *         in: query
+   *         schema: { type: string }
+   *         description: Case-insensitive filter for log messages
+   *     responses:
+   *       200:
+   *         description: SSE stream with log events and heartbeats
+   *         content:
+   *           text/event-stream:
+   *             schema:
+   *               type: string
+   *               example: 'data: {"type":"connected","message":"Log stream connected"}'
+   */
   router.get('/logs/stream', (req: Request, res: Response) => {
     const filter = req.query.filter;
 
@@ -201,7 +241,20 @@ export function createDevToolsRouter(): Router {
   // Frontend Logging API
   // ============================================================================
 
-  // Frontend session status
+  /**
+   * @openapi
+   * /api/devtools/frontend/logs/status:
+   *   get:
+   *     tags: [DevTools]
+   *     summary: Get frontend logging session status
+   *     description: Check if frontend logging session is active and time remaining
+   *     responses:
+   *       200:
+   *         description: Session status
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/FrontendSessionStatus' }
+   */
   router.get('/frontend/logs/status', (req: Request, res: Response) => {
     const status: FrontendSessionStatus = {
       active: frontendSessionActive,
@@ -211,7 +264,24 @@ export function createDevToolsRouter(): Router {
     res.json(status);
   });
 
-  // Start frontend logging session
+  /**
+   * @openapi
+   * /api/devtools/frontend/logs/start:
+   *   post:
+   *     tags: [DevTools]
+   *     summary: Start frontend logging session
+   *     description: Activate frontend log collection (30-minute timeout)
+   *     responses:
+   *       200:
+   *         description: Session started
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status: { type: string, example: 'started' }
+   *                 sessionStart: { type: integer, example: 1701234567890 }
+   */
   router.post('/frontend/logs/start', (req: Request, res: Response) => {
     frontendSessionActive = true;
     frontendSessionStart = Date.now();
@@ -219,7 +289,23 @@ export function createDevToolsRouter(): Router {
     res.json({ status: 'started', sessionStart: frontendSessionStart });
   });
 
-  // Stop frontend logging session
+  /**
+   * @openapi
+   * /api/devtools/frontend/logs/stop:
+   *   post:
+   *     tags: [DevTools]
+   *     summary: Stop frontend logging session
+   *     description: Deactivate frontend log collection
+   *     responses:
+   *       200:
+   *         description: Session stopped
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status: { type: string, example: 'stopped' }
+   */
   router.post('/frontend/logs/stop', (req: Request, res: Response) => {
     frontendSessionActive = false;
     frontendSessionStart = null;
@@ -227,7 +313,27 @@ export function createDevToolsRouter(): Router {
     res.json({ status: 'stopped' });
   });
 
-  // Receive frontend logs
+  /**
+   * @openapi
+   * /api/devtools/frontend/logs:
+   *   post:
+   *     tags: [DevTools]
+   *     summary: Receive frontend logs
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               logs: { type: array, items: { $ref: '#/components/schemas/FrontendLogEntry' } }
+   *     responses:
+   *       200:
+   *         description: Logs received
+   *         content:
+   *           application/json:
+   *             schema: { type: object, properties: { received: { type: integer } } }
+   */
   router.post('/frontend/logs', (req: AuthenticatedRequest, res: Response) => {
     const { logs } = req.body;
     if (logs && Array.isArray(logs)) {
@@ -241,7 +347,27 @@ export function createDevToolsRouter(): Router {
     res.json({ received: logs?.length || 0 });
   });
 
-  // Get frontend logs
+  /**
+   * @openapi
+   * /api/devtools/frontend/logs:
+   *   get:
+   *     tags: [DevTools]
+   *     summary: Get frontend logs
+   *     parameters:
+   *       - name: lines
+   *         in: query
+   *         schema: { type: integer, default: 20, maximum: 1000 }
+   *       - name: filter
+   *         in: query
+   *         schema: { type: string }
+   *         description: Case-insensitive text filter
+   *     responses:
+   *       200:
+   *         description: Frontend logs
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/FrontendLogsResponse' }
+   */
   router.get('/frontend/logs', (req: AuthenticatedRequest, res: Response) => {
     const lines = Math.min(parseInt(req.query.lines || '20'), MAX_FRONTEND_LOGS);
     const filter = req.query.filter;
@@ -261,7 +387,20 @@ export function createDevToolsRouter(): Router {
   // DEV Mode Logging API
   // ============================================================================
 
-  // DEV mode logging status
+  /**
+   * @openapi
+   * /api/devtools/frontend/dev-logs/status:
+   *   get:
+   *     tags: [DevTools]
+   *     summary: Get DEV mode logging status
+   *     description: Check DEV mode session status and rate limit info
+   *     responses:
+   *       200:
+   *         description: DEV mode status with rate limit info
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/DevModeStatus' }
+   */
   router.get('/frontend/dev-logs/status', (req: Request, res: Response) => {
     const now = Date.now();
 
@@ -285,7 +424,27 @@ export function createDevToolsRouter(): Router {
     res.json(status);
   });
 
-  // Receive DEV mode frontend logs
+  /**
+   * @openapi
+   * /api/devtools/frontend/dev-logs:
+   *   post:
+   *     tags: [DevTools]
+   *     summary: Receive DEV mode logs (rate limited, 300/min)
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               logs: { type: array, items: { $ref: '#/components/schemas/FrontendLogEntry' } }
+   *     responses:
+   *       200:
+   *         description: Logs received
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/DevModeLogResponse' }
+   *       403: { $ref: '#/components/responses/DevModeInactive' }
+   */
   router.post('/frontend/dev-logs', devModeRateLimit, (req: AuthenticatedRequest, res: Response) => {
     const { logs } = req.body;
 
@@ -318,7 +477,27 @@ export function createDevToolsRouter(): Router {
     });
   });
 
-  // Get DEV mode frontend logs
+  /**
+   * @openapi
+   * /api/devtools/frontend/dev-logs:
+   *   get:
+   *     tags: [DevTools]
+   *     summary: Get DEV mode logs
+   *     parameters:
+   *       - name: lines
+   *         in: query
+   *         schema: { type: integer, default: 20, maximum: 1000 }
+   *       - name: filter
+   *         in: query
+   *         schema: { type: string }
+   *     responses:
+   *       200:
+   *         description: DEV mode logs
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/DevModeLogsResponse' }
+   *       403: { $ref: '#/components/responses/DevModeInactive' }
+   */
   router.get('/frontend/dev-logs', (req: AuthenticatedRequest, res: Response) => {
     if (!devModeActive) {
       res.status(403).json({
