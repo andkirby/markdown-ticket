@@ -9,31 +9,181 @@ import { ProjectController } from '../controllers/ProjectController.js';
 export function createProjectRouter(projectController: ProjectController): Router {
   const router = Router();
 
-  // Get all projects
+  /**
+   * @openapi
+   * /api/projects:
+   *   get:
+   *     summary: List all projects
+   *     tags: [Projects]
+   *     responses:
+   *       200:
+   *         description: List of all registered projects
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Project'
+   */
   router.get('/', (req, res) => projectController.getAllProjects(req, res));
 
-  // Get specific project configuration
+  /**
+   * @openapi
+   * /api/projects/{projectId}/config:
+   *   get:
+   *     summary: Get project configuration
+   *     tags: [Projects]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectId'
+   *     responses:
+   *       200:
+   *         description: Project configuration
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ProjectConfig'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.get('/:projectId/config', (req, res) => projectController.getProjectConfig(req, res));
 
-  // Get CRs for a specific project
+  /**
+   * @openapi
+   * /api/projects/{projectId}/crs:
+   *   get:
+   *     summary: List CRs for project
+   *     tags: [CRs]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectId'
+   *     responses:
+   *       200:
+   *         description: List of CRs
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/CR'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.get('/:projectId/crs', (req, res) => projectController.getProjectCRs(req, res));
 
-  // Get specific CR from a project
+  /**
+   * @openapi
+   * /api/projects/{projectId}/crs/{crId}:
+   *   get:
+   *     summary: Get specific CR
+   *     tags: [CRs]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectId'
+   *       - $ref: '#/components/parameters/crId'
+   *     responses:
+   *       200:
+   *         description: CR details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/CR'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.get('/:projectId/crs/:crId', (req, res) => projectController.getCR(req, res));
 
-  // Create new CR in a project
+  /**
+   * @openapi
+   * /api/projects/{projectId}/crs:
+   *   post:
+   *     summary: Create new CR
+   *     tags: [CRs]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectId'
+   *     requestBody:
+   *       $ref: '#/components/requestBodies/CRCreate'
+   *     responses:
+   *       201:
+   *         $ref: '#/components/responses/CRCreated'
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.post('/:projectId/crs', (req, res) => projectController.createCR(req, res));
 
-  // Partially update CR fields (PATCH)
+  /**
+   * @openapi
+   * /api/projects/{projectId}/crs/{crId}:
+   *   patch:
+   *     summary: Partial update CR
+   *     tags: [CRs]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectId'
+   *       - $ref: '#/components/parameters/crId'
+   *     requestBody:
+   *       $ref: '#/components/requestBodies/CRPatch'
+   *     responses:
+   *       200:
+   *         $ref: '#/components/responses/CRUpdated'
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.patch('/:projectId/crs/:crId', (req, res) => projectController.patchCR(req, res));
 
-  // Update CR in a project (PUT - full update)
+  /**
+   * @openapi
+   * /api/projects/{projectId}/crs/{crId}:
+   *   put:
+   *     summary: Full update CR
+   *     tags: [CRs]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectId'
+   *       - $ref: '#/components/parameters/crId'
+   *     requestBody:
+   *       $ref: '#/components/requestBodies/CRUpdate'
+   *     responses:
+   *       200:
+   *         $ref: '#/components/responses/CRUpdated'
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.put('/:projectId/crs/:crId', (req, res) => projectController.updateCR(req, res));
 
-  // Delete CR from a project
+  /**
+   * @openapi
+   * /api/projects/{projectId}/crs/{crId}:
+   *   delete:
+   *     summary: Delete CR
+   *     tags: [CRs]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectId'
+   *       - $ref: '#/components/parameters/crId'
+   *     responses:
+   *       204:
+   *         description: CR deleted
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.delete('/:projectId/crs/:crId', (req, res) => projectController.deleteCR(req, res));
 
-  // Register a new project (deprecated - kept for backward compatibility)
+  /**
+   * @openapi
+   * /api/projects/register:
+   *   post:
+   *     summary: Register project (deprecated)
+   *     tags: [Projects]
+   *     deprecated: true
+   *     responses:
+   *       501:
+   *         description: Endpoint deprecated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   router.post('/register', (req, res) => {
     res.status(501).json({
       error: 'This endpoint is deprecated',
@@ -41,16 +191,80 @@ export function createProjectRouter(projectController: ProjectController): Route
     });
   });
 
-  // Create new project with UI form data
+  /**
+   * @openapi
+   * /api/projects/create:
+   *   post:
+   *     summary: Create new project
+   *     tags: [Projects]
+   *     requestBody:
+   *       $ref: '#/components/requestBodies/ProjectCreate'
+   *     responses:
+   *       201:
+   *         $ref: '#/components/responses/ProjectCreated'
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   */
   router.post('/create', (req, res) => projectController.createProject(req, res));
 
-  // Update existing project
+  /**
+   * @openapi
+   * /api/projects/{code}/update:
+   *   put:
+   *     summary: Update project
+   *     tags: [Projects]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectCode'
+   *     requestBody:
+   *       $ref: '#/components/requestBodies/ProjectUpdate'
+   *     responses:
+   *       200:
+   *         $ref: '#/components/responses/ProjectUpdated'
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.put('/:code/update', (req, res) => projectController.updateProject(req, res));
 
-  // Enable project
+  /**
+   * @openapi
+   * /api/projects/{code}/enable:
+   *   put:
+   *     summary: Enable project
+   *     tags: [Projects]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectCode'
+   *     responses:
+   *       200:
+   *         description: Project enabled
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Project'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.put('/:code/enable', (req, res) => projectController.enableProject(req, res));
 
-  // Disable project
+  /**
+   * @openapi
+   * /api/projects/{code}/disable:
+   *   put:
+   *     summary: Disable project
+   *     tags: [Projects]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectCode'
+   *     responses:
+   *       200:
+   *         description: Project disabled
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Project'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
   router.put('/:code/disable', (req, res) => projectController.disableProject(req, res));
 
   return router;
