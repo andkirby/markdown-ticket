@@ -32,7 +32,27 @@ export function createSystemRouter(
 ): Router {
   const router = Router();
 
-  // Get server status
+  /**
+   * @openapi
+   * /api/status:
+   *   get:
+   *     tags: [System]
+   *     summary: Server health status
+   *     description: Returns server health, uptime info, and SSE client count
+   *     responses:
+   *       200:
+   *         description: Server status
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status: { type: string, example: ok }
+   *                 message: { type: string }
+   *                 tasksDir: { type: string }
+   *                 timestamp: { type: string, format: date-time }
+   *                 sseClients: { type: integer }
+   */
   router.get('/status', (req: Request, res: Response) => {
     res.json({
       status: 'ok',
@@ -43,12 +63,49 @@ export function createSystemRouter(
     });
   });
 
-  // Get system directories for project path selection
+  /**
+   * @openapi
+   * /api/directories:
+   *   get:
+   *     tags: [System]
+   *     summary: System directories for path selection
+   *     description: Returns home and common directories for project path browsing
+   *     responses:
+   *       200:
+   *         description: Directory list
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 home: { type: string }
+   *                 directories: { type: array, items: { type: string } }
+   */
   router.get('/directories', (req: Request, res: Response) => {
     projectController.getSystemDirectories(req, res);
   });
 
-  // Get link configuration
+  /**
+   * @openapi
+   * /api/config/links:
+   *   get:
+   *     tags: [System]
+   *     summary: Get link configuration
+   *     description: Returns link auto-detection and preview settings
+   *     responses:
+   *       200:
+   *         description: Link config
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               additionalProperties: { type: boolean }
+   *       404:
+   *         description: Config not found
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error404' }
+   */
   router.get('/config/links', async (req: Request, res: Response) => {
     try {
       const configPath = DEFAULT_PATHS.CONFIG_FILE;
@@ -76,12 +133,66 @@ export function createSystemRouter(
     }
   });
 
-  // Browse file system
+  /**
+   * @openapi
+   * /api/filesystem:
+   *   get:
+   *     tags: [System]
+   *     summary: Browse file system tree
+   *     description: Returns directory tree for path selection UI
+   *     parameters:
+   *       - name: path
+   *         in: query
+   *         schema: { type: string }
+   *         description: Root path to browse (defaults to home)
+   *     responses:
+   *       200:
+   *         description: File system tree
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 path: { type: string }
+   *                 children: { type: array, items: { type: object } }
+   */
   router.get('/filesystem', (req: Request, res: Response) => {
     projectController.getFileSystemTree(req, res);
   });
 
-  // Check if directory exists with enhanced functionality
+  /**
+   * @openapi
+   * /api/filesystem/exists:
+   *   post:
+   *     tags: [System]
+   *     summary: Check if directory exists
+   *     description: Validates path existence and checks if within discovery paths
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [path]
+   *             properties:
+   *               path: { type: string, description: 'Path to check (supports ~)' }
+   *     responses:
+   *       200:
+   *         description: Path status
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 exists: { type: integer, enum: [0, 1] }
+   *                 isInDiscovery: { type: integer, enum: [0, 1] }
+   *                 expandedPath: { type: string }
+   *       400:
+   *         description: Invalid path
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error400' }
+   */
   router.post('/filesystem/exists', async (req: Request, res: Response) => {
     const { path: inputPath } = req.body;
 
@@ -149,8 +260,30 @@ export function createSystemRouter(
     }
   });
 
-  
-  // Clear file operation cache
+  /**
+   * @openapi
+   * /api/cache/clear:
+   *   post:
+   *     tags: [System]
+   *     summary: Clear file operation cache
+   *     description: Clears cached file operations to force fresh reads
+   *     responses:
+   *       200:
+   *         description: Cache cleared
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success: { type: boolean }
+   *                 message: { type: string }
+   *                 timestamp: { type: string, format: date-time }
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error500' }
+   */
   router.post('/cache/clear', async (req: Request, res: Response) => {
     try {
       console.log('🗑️  Clearing file operation cache');
@@ -166,7 +299,29 @@ export function createSystemRouter(
     }
   });
 
-  // Get configuration for frontend "No Projects Found" display
+  /**
+   * @openapi
+   * /api/config:
+   *   get:
+   *     tags: [System]
+   *     summary: Get frontend configuration
+   *     description: Returns discovery settings for frontend display
+   *     responses:
+   *       200:
+   *         description: Config settings
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 configDir: { type: string }
+   *                 discovery:
+   *                   type: object
+   *                   properties:
+   *                     autoDiscover: { type: boolean }
+   *                     searchPaths: { type: array, items: { type: string } }
+   *                     maxDepth: { type: integer }
+   */
   router.get('/config', async (req: Request, res: Response) => {
     try {
       const configPath = DEFAULT_PATHS.CONFIG_FILE;
@@ -205,7 +360,31 @@ export function createSystemRouter(
     }
   });
 
-  // Get global configuration
+  /**
+   * @openapi
+   * /api/config/global:
+   *   get:
+   *     tags: [System]
+   *     summary: Get global configuration
+   *     description: Returns full global config including discovery, links, ui, system settings
+   *     responses:
+   *       200:
+   *         description: Full global config
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 discovery: { type: object }
+   *                 links: { type: object }
+   *                 ui: { type: object }
+   *                 system: { type: object }
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error500' }
+   */
   router.get('/config/global', async (req: Request, res: Response) => {
     try {
       const configPath = DEFAULT_PATHS.CONFIG_FILE;
@@ -248,7 +427,30 @@ export function createSystemRouter(
     }
   });
 
-  // Clear config cache
+  /**
+   * @openapi
+   * /api/config/clear:
+   *   post:
+   *     tags: [System]
+   *     summary: Clear config cache
+   *     description: Clears project discovery and configuration cache
+   *     responses:
+   *       200:
+   *         description: Cache cleared
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success: { type: boolean }
+   *                 message: { type: string }
+   *                 timestamp: { type: string, format: date-time }
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error500' }
+   */
   router.post('/config/clear', async (req: Request, res: Response) => {
     try {
       // Clear project discovery cache if it has one
