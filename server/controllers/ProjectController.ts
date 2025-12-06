@@ -423,13 +423,30 @@ export class ProjectController {
       res.status(501).json({ error: 'Ticket service not available for CR updates' });
     } catch (error: any) {
       console.error('Error updating CR:', error);
-      if (error.message === 'Project not found' || error.message === 'CR not found') {
-        res.status(404).json({ error: error.message });
-      } else if (error.message.includes('No fields provided') || error.message.includes('required')) {
-        res.status(400).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to update CR', details: error.message });
+
+      // Handle validation errors with appropriate status codes
+      if (error.message.includes('Invalid status transition')) {
+        res.status(400).json({ error: 'Invalid status transition', details: error.message });
+        return;
       }
+
+      if (error.message === 'Project not found' || error.message === 'CR not found' || error.message.includes('not found')) {
+        res.status(404).json({ error: error.message });
+        return;
+      }
+
+      if (error.message.includes('No fields provided') || error.message.includes('required') || error.message.includes('Invalid')) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+
+      if (error.message.includes('Permission denied')) {
+        res.status(403).json({ error: 'Permission denied', details: error.message });
+        return;
+      }
+
+      // Generic errors
+      res.status(500).json({ error: 'Failed to update CR', details: error.message });
     }
   }
 
