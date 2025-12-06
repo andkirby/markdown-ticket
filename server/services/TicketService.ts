@@ -141,11 +141,18 @@ export class TicketService {
     }
 
     const project = await this.getProject(projectId);
+    const updatedFields: string[] = [];
+
+    // Handle status update separately using the dedicated method
+    if (updates.status !== undefined) {
+      await this.sharedTicketService.updateCRStatus(project, crId, updates.status);
+      updatedFields.push('status');
+    }
 
     // Convert web server updates to TicketData format
     const ticketUpdates: Partial<TicketData> = {};
 
-    // Map allowed fields
+    // Map allowed fields (excluding status which is handled above)
     if (updates.priority !== undefined) ticketUpdates.priority = updates.priority;
     if (updates.phaseEpic !== undefined) ticketUpdates.phaseEpic = updates.phaseEpic;
     if (updates.assignee !== undefined) ticketUpdates.assignee = updates.assignee;
@@ -153,13 +160,16 @@ export class TicketService {
     if (updates.dependsOn !== undefined) ticketUpdates.dependsOn = updates.dependsOn;
     if (updates.blocks !== undefined) ticketUpdates.blocks = updates.blocks;
 
-    // Use shared service to update attributes
-    await this.sharedTicketService.updateCRAttrs(project, crId, ticketUpdates);
+    // Use shared service to update attributes if there are any remaining fields
+    if (Object.keys(ticketUpdates).length > 0) {
+      await this.sharedTicketService.updateCRAttrs(project, crId, ticketUpdates);
+      updatedFields.push(...Object.keys(ticketUpdates));
+    }
 
     return {
       success: true,
       message: 'CR updated successfully',
-      updatedFields: Object.keys(updates),
+      updatedFields,
       projectId,
       crId
     };
