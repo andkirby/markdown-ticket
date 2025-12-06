@@ -52,8 +52,11 @@ Do NOT use when:
    - Affected artifacts (existing files/components)
    - New artifacts (planned files/components)
    - Scope boundaries (what changes, what doesn't)
-3. Check for project CLAUDE.md — may have project-specific size limits
-4. Scan for architectural signals:
+3. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
+   - If found: extract requirement IDs and artifact mappings
+   - These inform component boundaries (each requirement needs a home)
+4. Check for project CLAUDE.md — may have project-specific size limits
+5. Scan for architectural signals:
    - Multiple similar items (providers, handlers, commands)
    - Words: "adapter", "factory", "provider", "handler", "strategy"
    - Patterns: "for each X", "multiple Y", "extensible"
@@ -254,6 +257,17 @@ stateDiagram-v2
 |----------|-----------|----------|----------|
 | {what fails} | {how detected} | {immediate action} | {return to good state} |
 
+## Requirement Coverage
+
+{Include ONLY if requirements.md exists}
+
+| Requirement | Component | Notes |
+|-------------|-----------|-------|
+| R1.1 | `{component}` | {how it's satisfied} |
+| R1.2 | `{component}` | {how it's satisfied} |
+
+**Coverage**: {N}/{M} requirements mapped ({percentage}%)
+
 ## Extension Rule
 
 To add {X}: 
@@ -292,6 +306,10 @@ Before saving, validate:
 5. **Artifact alignment** — file paths match CR Section 4 artifacts
 6. **Extension rule testable** — includes "create X (limit N)"
 7. **Complexity matches output** — simple in CR, complex extracted
+8. **Requirement coverage** (if requirements.md exists):
+   - Every requirement has at least one component home
+   - No orphan requirements (requirements with no implementing component)
+   - Flag gaps: "R1.3 has no component assignment"
 
 If misalignment detected, update Section 4 or adjust design.
 
