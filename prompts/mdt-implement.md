@@ -28,8 +28,12 @@ $ARGUMENTS
    - **Project Context** (source_dir, test_command, ext)
    - **Size Thresholds** (default, hard max per role)
    - **Shared Patterns** (what should be imported, not duplicated)
+   - **Requirement Coverage** table (if exists)
 3. Load CR with `mdt-all:get_cr mode="full"` for Architecture Design
-4. Find first incomplete task
+4. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
+   - If found: track which requirements each task implements
+   - After task completion, mark requirements as satisfied
+5. Find first incomplete task
 
 ### Step 2: Execute Task
 
@@ -161,7 +165,10 @@ Only after verification:
 
 1. Update tasks.md: `- [ ]` → `- [x]`
 2. If flagged, add note: `- [x] ⚠️ {N} lines (flagged)`
-3. Report result
+3. **Update Requirement Coverage** (if requirements.md exists):
+   - Find requirements this task implements (from task's `**Implements**` field)
+   - Update status: `⬜ Pending` → `✅ Satisfied`
+4. Report result
 
 ### Step 6: Phase Boundary
 
@@ -197,6 +204,18 @@ Implementation Complete: {CR-KEY}
 
 ### Warnings
 {list any flagged files that exceeded default}
+
+### Requirement Satisfaction
+
+*(Include ONLY if requirements.md exists)*
+
+| Requirement | Status | Implementing Task |
+|-------------|--------|-------------------|
+| R1.1 | ✅ Satisfied | Task 2.1 |
+| R1.2 | ✅ Satisfied | Task 2.1, 2.3 |
+| R2.1 | ✅ Satisfied | Task 3.1 |
+
+**Coverage**: {N}/{M} requirements satisfied ({percentage}%)
 
 ### Final Check
 ```bash

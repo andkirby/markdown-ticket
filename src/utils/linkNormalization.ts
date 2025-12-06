@@ -5,7 +5,7 @@
  * Supports relative path resolution, security validation, and multi-project configurations.
  */
 
-import path from 'path';
+import { isAbsolute, normalize, dirname, basename, join, resolve, relative, extname, sep } from '@mdt/shared/utils/path-browser.js';
 import { Project } from '@mdt/shared/models/Project.js';
 import { ProjectConfig } from '@mdt/shared/models/Project.js';
 
@@ -126,7 +126,7 @@ export class LinkNormalizer {
     }
 
     // Check for blacklisted components
-    const normalizedPath = path.normalize(relativePath);
+    const normalizedPath = normalize(relativePath);
     if (this.containsBlacklistedComponents(normalizedPath)) {
       return {
         absolutePath: '',
@@ -137,8 +137,8 @@ export class LinkNormalizer {
     }
 
     // Resolve relative to source file directory
-    const sourceDir = path.dirname(context.sourcePath);
-    const resolvedRelativeToSource = path.resolve(sourceDir, normalizedPath);
+    const sourceDir = dirname(context.sourcePath);
+    const resolvedRelativeToSource = resolve(sourceDir, normalizedPath);
 
     // For relative path normalization, we need to determine the project root
     // Since we're in frontend context, we'll use relative path logic
@@ -176,10 +176,10 @@ export class LinkNormalizer {
       return true; // If no restrictions, allow all paths
     }
 
-    const normalizedFilePath = path.normalize(filePath);
+    const normalizedFilePath = normalize(filePath);
 
     return documentPaths.some(docPath => {
-      const normalizedDocPath = path.normalize(docPath);
+      const normalizedDocPath = normalize(docPath);
 
       // Exact match
       if (normalizedFilePath === normalizedDocPath) {
@@ -187,7 +187,7 @@ export class LinkNormalizer {
       }
 
       // Check if file is within document path directory
-      if (normalizedFilePath.startsWith(normalizedDocPath + path.sep)) {
+      if (normalizedFilePath.startsWith(normalizedDocPath + sep)) {
         return true;
       }
 
@@ -263,7 +263,7 @@ export class LinkNormalizer {
     } else {
       // Handle absolute paths (relative to project root)
       resolvedPath = {
-        absolutePath: path.resolve('/' + href.replace(/^\//, '')),
+        absolutePath: resolve('/' + href.replace(/^\//, '')),
         relativePath: href.replace(/^\//, ''),
         isAllowed: true
       };
@@ -366,14 +366,14 @@ export class LinkNormalizer {
   }
 
   private static containsBlacklistedComponents(pathStr: string): boolean {
-    const parts = pathStr.split(path.sep);
+    const parts = pathStr.split(sep);
     return this.DEFAULT_BLACKLIST.some(blacklisted =>
       parts.some(part => part === blacklisted)
     );
   }
 
   private static isFileExtension(filePath: string): boolean {
-    const ext = path.extname(filePath).toLowerCase();
+    const ext = extname(filePath).toLowerCase();
     return [
       '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp',
       '.pdf', '.txt', '.json', '.yaml', '.yml', '.xml',
@@ -396,16 +396,16 @@ export class LinkNormalizer {
     // This is a simplified approach - in a real implementation,
     // you might need to fetch project configuration from the backend
 
-    const sourceDir = path.dirname(context.sourcePath);
-    const relative = path.relative(sourceDir, absolutePath);
+    const sourceDir = dirname(context.sourcePath);
+    const rel = relative(sourceDir, absolutePath);
 
     // If we're at the same level or deeper, use relative path
-    if (!relative.startsWith('..')) {
-      return relative;
+    if (!rel.startsWith('..')) {
+      return rel;
     }
 
     // Otherwise, use the absolute path's basename
-    return path.basename(absolutePath);
+    return basename(absolutePath);
   }
 }
 

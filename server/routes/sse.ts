@@ -18,7 +18,22 @@ interface _ResponseLike {
 export function createSSERouter(fileWatcher: FileWatcherService): Router {
   const router = Router();
 
-  // Server-Sent Events endpoint for real-time file updates
+  /**
+   * @openapi
+   * /api/events:
+   *   get:
+   *     summary: Server-Sent Events stream
+   *     tags: [Events]
+   *     description: Real-time file change notifications via SSE
+   *     responses:
+   *       200:
+   *         description: SSE event stream
+   *         content:
+   *           text/event-stream:
+   *             schema:
+   *               type: string
+   *               description: SSE formatted events
+   */
   router.get('/', (req: Request, res: any) => {
     // Set SSE headers
     res.writeHead(200, {

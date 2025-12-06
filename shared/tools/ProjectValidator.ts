@@ -1,6 +1,15 @@
-import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
+import * as path from 'path';
+import { isAbsolute, normalize } from '../utils/path-browser.js';
+
+// Declare process for browser environment detection
+declare const process: {
+  versions?: {
+    node?: string;
+  };
+  cwd?: () => string;
+} | undefined;
 
 /**
  * Validation result interface
@@ -57,10 +66,24 @@ export class ProjectValidator {
       // Expand tilde
       const expandedPath = this.expandTildePath(inputPath);
 
-      // Convert to absolute path
+      // Try to detect if we're in a Node.js environment
+      const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
+
+      if (!isNodeEnv) {
+        // Browser environment - just validate the path format
+        if (isAbsolute(expandedPath)) {
+          return { valid: true, normalized: expandedPath };
+        } else {
+          // In browser, we can't resolve relative paths to absolute paths
+          // So we'll return the path as-is with a note that it's relative
+          return { valid: true, normalized: expandedPath };
+        }
+      }
+
+      // Node.js environment - convert to absolute path and check existence
       const absolutePath = path.isAbsolute(expandedPath)
         ? expandedPath
-        : path.resolve(process.cwd(), expandedPath);
+        : path.resolve(process.cwd?.() || '.', expandedPath);
 
       // Check if exists (if required)
       if (options.mustExist) {
@@ -133,6 +156,16 @@ export class ProjectValidator {
    */
   static expandTildePath(inputPath: string): string {
     if (inputPath === '~' || inputPath.startsWith('~/')) {
+      // Try to detect if we're in a Node.js environment
+      const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
+
+      if (!isNodeEnv) {
+        // Browser environment - os.homedir() is not available
+        // Return the path as-is for frontend validation
+        return inputPath;
+      }
+
+      // Node.js environment
       return inputPath.replace(/^~/, os.homedir());
     }
     return inputPath;
@@ -193,15 +226,15 @@ export class ProjectValidator {
     }
 
     // Check for absolute paths (not allowed - must be relative)
-    if (path.isAbsolute(trimmed)) {
+    if (isAbsolute(trimmed)) {
       return {
         valid: false,
         error: 'Tickets path must be relative to project root (absolute paths not allowed)'
       };
     }
 
-    // Check for invalid characters
-    const invalidChars = ['<', '>', ':', '"', '|', '?', '*'];
+    // Check for invalid characters (allow : for Windows drives in relative paths)
+    const invalidChars = ['<', '>', '"', '|', '?', '*'];
     if (invalidChars.some(char => trimmed.includes(char))) {
       return {
         valid: false,
@@ -210,7 +243,7 @@ export class ProjectValidator {
     }
 
     // Normalize path separators and resolve relative components
-    const normalized = path.normalize(trimmed).replace(/\\/g, '/');
+    const normalized = normalize(trimmed);
 
     // Ensure path doesn't start with ./ or ../ (should be simple relative path)
     if (normalized.startsWith('../') || normalized === '..') {

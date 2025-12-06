@@ -1,11 +1,13 @@
 import { Project } from '../../models/Project.js';
 import { CONFIG_FILES, DEFAULT_PATHS } from '../../utils/constants.js';
 import { logQuiet } from '../../utils/logger.js';
-import { stringify } from '../../utils/toml.js';
+import { stringify, parse } from '../../utils/toml.js';
 import {
   directoryExists,
   createDirectory,
-  writeFile
+  writeFile,
+  listFiles,
+  readFile
 } from '../../utils/file-utils.js';
 import {
   joinPaths,
@@ -104,24 +106,20 @@ export class ProjectRegistry {
    * List all TOML files in the registry directory
    */
   private listRegistryFiles(): string[] {
-    const fs = require('fs');
-    return fs.readdirSync(this.projectsDir)
-      .filter((file: string) => file.endsWith('.toml'));
+    return listFiles(this.projectsDir, (file: string) => file.endsWith('.toml'));
   }
 
   /**
    * Read a registry file safely
    */
   private readRegistryFile(filePath: string): string {
-    const fs = require('fs');
-    return fs.readFileSync(filePath, 'utf-8');
+    return readFile(filePath);
   }
 
   /**
    * Parse TOML content from registry file
    */
   private parseRegistryContent(content: string): any {
-    const { parse } = require('../../utils/toml.js');
     return parse(content);
   }
 }

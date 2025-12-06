@@ -12,7 +12,18 @@
       "Bash(git commit:*)",
       "Bash(mkdir:*)",
       "Bash(npm run build:shared:*)",
-      "Bash(npm run build:all:*)"
+      "Bash(npm run build:all:*)",
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git worktree:*)",
+      "Bash(git branch:*)",
+      "Bash(npm run dev:server:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(kill:*)",
+      "Bash(timeout 10s npm run dev:*)",
+      "Bash(xargs kill:*)"
     ],
     "deny": [],
     "ask": []
