@@ -103,13 +103,15 @@ MDT_PROMPTS_DIR="$SCRIPT_DIR"
 
 # List of MDT commands to install (without mdt- prefix)
 MDT_COMMANDS=(
+    "ticket-creation"
+    "requirements"
+    "assess"
     "architecture"
     "clarification"
-    "implement"
-    "reflection"
     "tasks"
+    "implement"
     "tech-debt"
-    "ticket-creation"
+    "reflection"
 )
 
 # Check if Claude commands directory exists, create if not
@@ -190,17 +192,22 @@ show_usage() {
     echo "Location: $CLAUDE_COMMANDS_DIR"
     echo
     echo "Available commands:"
-    echo "  /mdt:architecture       - Design system architecture for solutions"
-    echo "  /mdt:clarification      - Clarify ambiguities in existing CRs"
-    echo "  /mdt:implement          - Implement features or fix bugs"
-    echo "  /mdt:reflection         - Capture post-implementation learnings"
-    echo "  /mdt:tasks              - Break down work into actionable tasks"
-    echo "  /mdt:tech-debt          - Document and track technical debt"
-    echo "  /mdt:ticket-creation    - Create a new CR ticket with structured template"
+    echo "  /mdt:ticket-creation    - Create CR with structured questioning"
+    echo "  /mdt:requirements       - Generate EARS-formatted requirements"
+    echo "  /mdt:assess             - Evaluate affected code fitness"
+    echo "  /mdt:architecture       - Surface decisions, define structure + size limits"
+    echo "  /mdt:clarification      - Fill specification gaps"
+    echo "  /mdt:tasks              - Break CR into constrained tasks"
+    echo "  /mdt:implement          - Execute tasks with verification"
+    echo "  /mdt:tech-debt          - Detect debt patterns"
+    echo "  /mdt:reflection         - Capture learnings"
     echo
-    echo "Typical workflow:"
-    echo "  /mdt:ticket-creation → /mdt:clarification → /mdt:architecture"
-    echo "  → /mdt:implement → /mdt:reflection"
+    echo "Full workflow chain:"
+    echo "  /mdt:ticket-creation → /mdt:requirements → /mdt:assess"
+    echo "  → /mdt:architecture → /mdt:clarification → /mdt:tasks"
+    echo "  → /mdt:implement → /mdt:tech-debt → /mdt:reflection"
+    echo
+    echo "Workflows are optional - use what you need:"
     echo
     print_info "Restart Claude Code to see the new commands"
 }
