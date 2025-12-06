@@ -9,12 +9,49 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 | Command | Purpose | Output |
 |---------|---------|--------|
 | `/mdt:ticket-creation` | Create CR with structured questioning | CR in MDT system |
-| `/mdt:architecture` | Surface decisions, define structure + size limits | Architecture Design section |
+| `/mdt:requirements` | Generate EARS-formatted requirements | `docs/CRs/{CR-KEY}/requirements.md` |
+| `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
+| `/mdt:architecture` | Surface decisions, define structure + size limits | CR section or `architecture.md` |
 | `/mdt:clarification` | Fill specification gaps | Updated CR sections |
 | `/mdt:tasks` | Break CR into constrained tasks | `docs/CRs/{CR-KEY}/tasks.md` |
 | `/mdt:implement` | Execute tasks with verification | Code changes, updated tasks.md |
 | `/mdt:tech-debt` | Detect debt patterns | `docs/CRs/{CR-KEY}/debt.md` |
 | `/mdt:reflection` | Capture learnings | Updated CR |
+
+## Full Workflow Chain
+
+```
+/mdt:ticket-creation
+        │
+        ▼
+/mdt:requirements (optional) ─── Creates: requirements.md
+        │                        EARS-formatted behavioral specs
+        ▼
+/mdt:assess (optional) ────────── Decision point: 1/2/3
+        │                        Evaluate code fitness
+        │
+        ├─► Option 1: Just integrate (proceed)
+        ├─► Option 2: Refactor inline (expand CR scope)
+        └─► Option 3: Split CRs (create refactor CR first)
+        │
+        ▼
+/mdt:architecture ─────────────── Simple: CR section (~60 lines)
+        │                        Complex: architecture.md (extracted)
+        ▼
+/mdt:clarification (as needed)
+        │
+        ▼
+/mdt:tasks ────────────────────── Creates: tasks.md
+        │                        Constrained task list
+        ▼
+/mdt:implement ────────────────── Executes tasks with verification
+        │
+        ▼
+/mdt:tech-debt ────────────────── Creates: debt.md
+        │                        Post-implementation analysis
+        ▼
+/mdt:reflection ───────────────── Updates: CR with learnings
+```
 
 ## Debt Prevention Chain
 
@@ -187,15 +224,50 @@ Tasks and verification use these values — no hardcoded assumptions.
 
 ## Command Reference
 
+### `/mdt:requirements`
+
+Generates `docs/CRs/{CR-KEY}/requirements.md`:
+
+- **EARS Syntax**: WHEN/WHILE/IF...THEN/WHERE templates
+- **Requirement Groups**: Organized by feature/behavior
+- **Artifact Mapping**: Each requirement → primary artifact + integration points
+- **Traceability**: Requirements ↔ CR sections
+
+**EARS Types**:
+| Type | Template | Example |
+|------|----------|----------|
+| Event | WHEN `<trigger>` the `<s>` shall | WHEN user clicks Save, the `ProfileService` shall persist |
+| State | WHILE `<state>` the `<s>` shall | WHILE offline, the `SyncQueue` shall queue mutations |
+| Unwanted | IF `<error>` THEN the `<s>` shall | IF timeout, THEN `RetryHandler` shall retry 3x |
+
+### `/mdt:assess`
+
+Evaluates affected code fitness before architecture:
+
+- **File Analysis**: Size, coupling, test coverage, churn
+- **Fitness Score**: 0-100% per file
+- **Verdicts**: ✅ Healthy, ⚠️ Concerning, 🔴 Critical
+- **Three Options**: Integrate / Refactor inline / Split CRs
+
+**Decision Flow**:
+| Option | When to Choose | CR Impact |
+|--------|----------------|----------|
+| 1. Just Integrate | All healthy, or debt acceptable | No change |
+| 2. Refactor Inline | Small refactor improves feature | Scope expands |
+| 3. Split CRs | Substantial refactor needed | New CR created, dependency added |
+
 ### `/mdt:architecture`
 
-Adds Architecture Design section to CR:
+Adds Architecture Design to CR (simple) or extracts to `architecture.md` (complex):
 
+- **Complexity Assessment**: Score determines output location
 - **Pattern**: Structural approach
 - **Shared Patterns**: Logic to extract first (prevents duplication)
 - **Structure**: File paths with responsibilities
 - **Size Guidance**: Per-module limits (default + hard max)
 - **Extension Rule**: "To add X, create Y"
+- **State Flows**: Mermaid diagrams (complex only)
+- **Error Scenarios**: Failure handling (complex only)
 
 ### `/mdt:tasks`
 
@@ -263,7 +335,9 @@ prompts/
 ├── README.md                # This file
 ├── CLAUDE.md                # Development guidance
 ├── mdt-ticket-creation.md   # CR creation
-├── mdt-architecture.md      # Architecture design (v2)
+├── mdt-requirements.md      # EARS requirements (v1)
+├── mdt-assess.md            # Code fitness assessment (v1)
+├── mdt-architecture.md      # Architecture design (v3)
 ├── mdt-clarification.md     # Gap filling
 ├── mdt-tasks.md             # Task breakdown (v2)
 ├── mdt-implement.md         # Orchestrator (v2)
@@ -275,6 +349,8 @@ prompts/
 
 | Workflow | Output Location |
 |----------|-----------------|
+| `/mdt:requirements` | `docs/CRs/{CR-KEY}/requirements.md` |
+| `/mdt:architecture` | CR section (simple) or `docs/CRs/{CR-KEY}/architecture.md` (complex) |
 | `/mdt:tasks` | `docs/CRs/{CR-KEY}/tasks.md` |
 | `/mdt:tech-debt` | `docs/CRs/{CR-KEY}/debt.md` |
 
@@ -287,3 +363,15 @@ prompts/
 5. **Project-agnostic** — works with any language/stack
 6. **Violations block progress** — cannot mark complete if constraints violated
 7. **debt.md is diagnosis** — fix via new CR, not direct execution
+8. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
+
+## Requirements Integration
+
+When `requirements.md` exists, downstream prompts consume it:
+
+| Prompt | How It Uses requirements.md |
+|--------|-----------------------------|
+| `/mdt:architecture` | Maps components to requirements, validates coverage |
+| `/mdt:tasks` | Each task has `**Implements**: R1.1, R1.2`, coverage table |
+| `/mdt:implement` | Marks requirements satisfied as tasks complete |
+| `/mdt:tech-debt` | Flags unsatisfied requirements as High severity debt |

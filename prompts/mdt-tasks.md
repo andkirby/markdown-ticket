@@ -44,7 +44,10 @@ project:
      - Structure (file paths)
      - Size Guidance (limits per module)
    - **Acceptance Criteria** — any overrides
-3. If Architecture Design missing: abort with "Run `/mdt:architecture` first"
+3. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
+   - If found: extract requirement IDs for task mapping
+   - Each task will reference which requirements it implements
+4. If Architecture Design missing: abort with "Run `/mdt:architecture` first"
 
 ### Step 3: Inherit Size Limits
 
@@ -80,6 +83,8 @@ Phase 2: Features
 ### Task {phase}.{number}: {Brief description}
 
 **Structure**: `{exact path from Architecture Design}`
+
+**Implements**: {R1.1, R1.2, ...} *(if requirements.md exists)*
 
 **Limits**:
 - Default: {N} lines
@@ -161,6 +166,18 @@ wc -l {destination}       # check against limits
 - Duplicating logic that exists in shared module → STOP, import instead
 - Structure path doesn't match Architecture Design → STOP, clarify
 
+## Requirement Coverage
+
+*(Include ONLY if requirements.md exists)*
+
+| Requirement | Task(s) | Status |
+|-------------|---------|--------|
+| R1.1 | Task 2.1 | ⬜ Pending |
+| R1.2 | Task 2.1, 2.3 | ⬜ Pending |
+| R2.1 | Task 3.1 | ⬜ Pending |
+
+**Coverage**: {N}/{M} requirements have implementing tasks
+
 ---
 
 ## Phase 1: Shared Utilities
@@ -223,6 +240,10 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 - [ ] Features (Phase 2+) import from shared (Phase 1)
 - [ ] Architecture Structure included for reference
 - [ ] `Verify` uses project's test and build commands
+- [ ] **Requirement coverage** (if requirements.md exists):
+  - Every requirement has at least one implementing task
+  - Flag orphans: "R1.3 has no implementing task"
+  - Requirement Coverage table populated
 
 ### Step 8: Save and Report
 
