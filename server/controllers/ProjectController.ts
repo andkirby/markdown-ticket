@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 import { Project } from '@mdt/shared/models/Project.js';
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js';
+import { TicketService } from '../services/TicketService.js';
 
 interface Ticket {
   code: string;
@@ -52,6 +53,7 @@ interface AuthenticatedRequest extends Request {
   params: {
     projectId?: string;
     code?: string;
+    crId?: string;
   };
   query: {
     projectId?: string;
@@ -90,18 +92,21 @@ export class ProjectController {
   private fileWatcher: FileWatcher;
   private projectManager: ProjectManager;
   private ticketController?: any; // Optional TicketController for delegation
+  private ticketService?: TicketService; // Optional TicketService for CR operations
 
   constructor(
     projectService: ProjectServiceExtension,
     fileSystemService: FileSystemService,
     fileWatcher: FileWatcher,
-    ticketController?: any // Optional TicketController for CR operations
+    ticketController?: any, // Optional TicketController for CR operations
+    ticketService?: TicketService // Optional TicketService for CR operations
   ) {
     this.projectService = projectService;
     this.fileSystemService = fileSystemService;
     this.fileWatcher = fileWatcher;
     this.projectManager = new ProjectManager(true); // Quiet mode for server
     this.ticketController = ticketController;
+    this.ticketService = ticketService;
   }
 
   /**
@@ -387,7 +392,62 @@ export class ProjectController {
   }
 
   async patchCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    res.status(501).json({ error: 'Not implemented - use /api/tasks/save endpoint' });
+    try {
+      const { projectId, crId } = req.params;
+      const updates = req.body;
+
+      if (!projectId || !crId) {
+        res.status(400).json({ error: 'Project ID and CR ID are required' });
+        return;
+      }
+
+      if (!updates || Object.keys(updates).length === 0) {
+        res.status(400).json({ error: 'No update data provided' });
+        return;
+      }
+
+      // Use TicketService if available
+      if (this.ticketService) {
+        const result = await this.ticketService.updateCRPartial(projectId, crId, updates);
+        res.json(result);
+        return;
+      }
+
+      // Fallback: try to use TicketController if it has the necessary methods
+      if (this.ticketController && this.ticketController.ticketService) {
+        const result = await this.ticketController.ticketService.updateCRPartial(projectId, crId, updates);
+        res.json(result);
+        return;
+      }
+
+      res.status(501).json({ error: 'Ticket service not available for CR updates' });
+    } catch (error: any) {
+      console.error('Error updating CR:', error);
+
+      // Handle validation errors with appropriate status codes
+      if (error.message.includes('Invalid status transition')) {
+        res.status(400).json({ error: 'Invalid status transition', details: error.message });
+        return;
+      }
+
+      if (error.message === 'Project not found' || error.message === 'CR not found' || error.message.includes('not found')) {
+        res.status(404).json({ error: error.message });
+        return;
+      }
+
+      if (error.message.includes('No fields provided') || error.message.includes('required') || error.message.includes('Invalid')) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+
+      if (error.message.includes('Permission denied')) {
+        res.status(403).json({ error: 'Permission denied', details: error.message });
+        return;
+      }
+
+      // Generic errors
+      res.status(500).json({ error: 'Failed to update CR', details: error.message });
+    }
   }
 
   async updateCR(req: AuthenticatedRequest, res: Response): Promise<void> {

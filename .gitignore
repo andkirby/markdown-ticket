@@ -77,3 +77,4 @@ counter-api/
 
 # TypeScript incremental compilation
 *.tsbuildinfo
+.claude
