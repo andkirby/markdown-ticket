@@ -38,7 +38,11 @@ If CLAUDE.md exists, read it. Otherwise detect from project files.
    - **Affected/new artifacts** — files to analyze
    - **Architecture Design** — check for violations
    - **Acceptance Criteria** — extract size constraints to verify
-3. If codebase available, scan actual files
+3. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
+   - If found: check for unsatisfied requirements (debt indicator)
+4. **Load tasks if exists**: Check `docs/CRs/{CR-KEY}/tasks.md`
+   - If found: check Requirement Coverage table for gaps
+5. If codebase available, scan actual files
 
 ### Step 3: Detect Debt Patterns
 
@@ -52,6 +56,7 @@ Analyze against these patterns:
 | **Missing Abstraction** | Concept in code without type/interface | Medium |
 | **Hidden Coupling** | Module imports internals of another | Medium |
 | **Responsibility Diffusion** | Single concern across 3+ files | High |
+| **Unsatisfied Requirements** | Requirements with no implementing code | High |
 
 For each item capture:
 - Pattern name

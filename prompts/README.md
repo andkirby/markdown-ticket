@@ -363,3 +363,15 @@ prompts/
 5. **Project-agnostic** — works with any language/stack
 6. **Violations block progress** — cannot mark complete if constraints violated
 7. **debt.md is diagnosis** — fix via new CR, not direct execution
+8. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
+
+## Requirements Integration
+
+When `requirements.md` exists, downstream prompts consume it:
+
+| Prompt | How It Uses requirements.md |
+|--------|-----------------------------|
+| `/mdt:architecture` | Maps components to requirements, validates coverage |
+| `/mdt:tasks` | Each task has `**Implements**: R1.1, R1.2`, coverage table |
+| `/mdt:implement` | Marks requirements satisfied as tasks complete |
+| `/mdt:tech-debt` | Flags unsatisfied requirements as High severity debt |

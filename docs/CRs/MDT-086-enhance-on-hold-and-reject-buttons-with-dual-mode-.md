@@ -145,6 +145,8 @@ To add similar toggle: create component in `src/components/Board/` (limit 150 li
 - Manual: Click checkbox → verify orange border appears and On Hold tickets merge into In Progress
 - Manual: Verify merged tickets appear in original positions
 - Manual: Test Rejected button with same workflow
+
+> **Full EARS requirements**: [requirements.md](./requirements.md)
 ## 6. Verification
 
 ### By CR Type
