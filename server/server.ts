@@ -139,7 +139,9 @@ fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter);
 const projectController = new ProjectController(
   projectServiceAdapter as any, // Use the adapter which provides the expected interface
   fileSystemService,
-  fileWatcher
+  fileWatcher,
+  undefined, // ticketController (not needed)
+  ticketService // Pass the ticketService for CR operations
 );
 
 const ticketController = new TicketController(fileSystemService);
