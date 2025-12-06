@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { useDrop } from 'react-dnd';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useDrag } from 'react-dnd';
-import { Ticket, Status } from '../types';
-import TicketCard from './TicketCard';
-import { ResolutionDialog } from './ResolutionDialog';
-import { sortTickets } from '../utils/sorting';
-import { ScrollArea } from './ui/scroll-area';
+import { Ticket, Status } from '../../types';
+import TicketCard from '../TicketCard';
+import { ResolutionDialog } from '../ResolutionDialog';
+import { sortTickets } from '../../utils/sorting';
+import { ScrollArea } from '../ui/scroll-area';
+import StatusToggle from './StatusToggle';
+import { useButtonModes } from './useButtonModes';
+import { useDropZone } from './useDropZone';
+import { getVisibleColumns } from '../../config';
 
 interface ColumnProps {
   column: {
@@ -15,64 +18,14 @@ interface ColumnProps {
   };
   tickets: Ticket[];
   allTickets: Ticket[]; // All tickets to access deferred ones
-  onDrop: (status: Status, ticket: Ticket) => void;
+  onDrop: (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => void;
   onTicketEdit: (ticket: Ticket) => void;
   sortAttribute?: string;
   sortDirection?: 'asc' | 'desc';
+  // Position tracking methods for StatusToggle
+  getTicketPosition: (ticketCode: string) => { columnIndex: number; ticketIndex: number; timestamp: number } | undefined;
+  clearTicketPosition: (ticketCode: string) => void;
 }
-
-interface StatusToggleProps {
-  status: Status;
-  isActive: boolean;
-  ticketCount: number;
-  onToggle: () => void;
-  onDrop: (status: Status, ticket: Ticket) => void;
-}
-
-const StatusToggle: React.FC<StatusToggleProps> = ({ status, isActive, ticketCount, onToggle, onDrop }) => {
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: 'ticket',
-    drop: (item: any, _monitor) => {
-      onDrop(status, item.ticket);
-      return { handled: true }; // Prevent further drop handling
-    },
-    collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
-    }),
-  }));
-
-  const getIcon = () => {
-    if (status === 'On Hold') return '⏸';
-    if (status === 'Rejected') return '✕';
-    return '';
-  };
-
-  return (
-    <button
-      ref={drop}
-      onClick={onToggle}
-      className={`
-        flex items-center justify-between px-3 py-2 text-sm rounded-md border transition-all
-        ${isActive 
-          ? 'bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-900/20 dark:border-orange-700 dark:text-orange-300' 
-          : 'bg-gray-100 border-gray-300 text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400'
-        }
-        ${isOver ? 'ring-2 ring-blue-400 bg-blue-50 dark:bg-blue-950/20' : ''}
-        hover:bg-opacity-80
-      `}
-    >
-      <span className="flex items-center space-x-1">
-        <span>{getIcon()}</span>
-        <span>{status}</span>
-      </span>
-      {ticketCount > 0 && (
-        <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-white/50 dark:bg-black/20">
-          {ticketCount}
-        </span>
-      )}
-    </button>
-  );
-};
 
 interface DraggableTicketCardProps {
   ticket: Ticket;
@@ -112,7 +65,17 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
   );
 };
 
-const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, onTicketEdit, sortAttribute = 'code', sortDirection = 'desc' }) => {
+const Column: React.FC<ColumnProps> = ({
+  column,
+  tickets,
+  allTickets,
+  onDrop,
+  onTicketEdit,
+  sortAttribute = 'code',
+  sortDirection = 'desc',
+  getTicketPosition,
+  clearTicketPosition
+}) => {
   const [resolutionDialog, setResolutionDialog] = useState<{
     isOpen: boolean;
     ticket: Ticket | null;
@@ -121,11 +84,14 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
     ticket: null,
   });
 
-  // Toggle states for status filters
-  const [toggleStates, setToggleStates] = useState<Record<Status, boolean>>({
-    'On Hold': false,
-    'Rejected': false,
-  } as Record<Status, boolean>);
+  // Use button modes hook for toggle state management
+  const { viewMode, toggleViewMode, mergeMode, setMergeMode } = useButtonModes();
+
+  // Calculate column index
+  const columnIndex = useMemo(() => {
+    const visibleColumns = getVisibleColumns();
+    return visibleColumns.findIndex(col => col.label === column.label);
+  }, [column.label]);
 
   // Get toggle status for this column
   const getToggleStatus = (): Status | null => {
@@ -136,39 +102,44 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
 
   const toggleStatus = getToggleStatus();
 
-  // Filter tickets based on toggle state
+  // Filter tickets based on toggle and merge states
   const getVisibleTickets = () => {
-    const toggleTickets = allTickets.filter(ticket => ticket.status === toggleStatus);
-    
-    if (!toggleStatus) return tickets;
-    
-    const isToggleActive = toggleStates[toggleStatus];
-    if (isToggleActive) {
-      // Show main tickets (excluding toggle status) + toggle tickets, then sort the combined list
-      const mainTickets = tickets.filter(ticket => ticket.status !== toggleStatus);
-      const combinedTickets = [...mainTickets, ...toggleTickets];
-      return sortTickets(combinedTickets, sortAttribute, sortDirection);
+    if (!toggleStatus) {
+      // No toggle status for this column, return all tickets as-is
+      return sortTickets(tickets, sortAttribute, sortDirection);
+    }
+
+    if (mergeMode) {
+      // Merge mode is active: Show ALL tickets from both main and toggle statuses
+      const mainStatus = column.statuses[0]; // Get the primary status for this column
+      const allRelatedTickets = allTickets.filter(ticket =>
+        ticket.status === mainStatus || ticket.status === toggleStatus
+      );
+      return sortTickets(allRelatedTickets, sortAttribute, sortDirection);
+    } else if (viewMode) {
+      // Toggle mode is active (but merge mode is off): Show ONLY tickets with the toggle status
+      const toggleTickets = allTickets.filter(ticket => ticket.status === toggleStatus);
+      return sortTickets(toggleTickets, sortAttribute, sortDirection);
     } else {
-      // Show only main tickets, excluding toggle status tickets
+      // Both modes are inactive: Show only main tickets (excluding toggle status tickets)
       const mainTickets = tickets.filter(ticket => ticket.status !== toggleStatus);
-      return mainTickets;
+      return sortTickets(mainTickets, sortAttribute, sortDirection);
     }
   };
 
   const visibleTickets = getVisibleTickets();
   const toggleTicketCount = allTickets.filter(ticket => ticket.status === toggleStatus).length;
 
-  const handleToggle = (status: Status) => {
-    setToggleStates(prev => ({
-      ...prev,
-      [status]: !prev[status]
-    }));
+  const handleToggleDrop = (status: Status, ticket: Ticket) => {
+    // Find ticket index in all tickets array
+    const ticketIndex = allTickets.findIndex(t => t.code === ticket.code);
+    onDrop(status, ticket, columnIndex, ticketIndex);
   };
 
-  const handleToggleDrop = (status: Status, ticket: Ticket) => {
-    onDrop(status, ticket);
-  };
   const handleDrop = (ticket: Ticket) => {
+    // Find ticket index in all tickets array
+    const ticketIndex = allTickets.findIndex(t => t.code === ticket.code);
+
     // If this is the "Done" column with multiple statuses, show resolution dialog
     if (column.label === 'Done' && column.statuses.length > 1) {
       // Show resolution dialog for Done column
@@ -179,14 +150,15 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
     } else {
       // For other columns, use the first (and usually only) status
       // Direct drop to first status
-      onDrop(column.statuses[0], ticket);
+      onDrop(column.statuses[0], ticket, columnIndex, ticketIndex);
     }
   };
 
   const handleResolutionChoice = (status: Status) => {
     if (resolutionDialog.ticket) {
       // Resolution chosen
-      onDrop(status, resolutionDialog.ticket);
+      const ticketIndex = allTickets.findIndex(t => t.code === resolutionDialog.ticket!.code);
+      onDrop(status, resolutionDialog.ticket, columnIndex, ticketIndex);
     }
     setResolutionDialog({ isOpen: false, ticket: null });
   };
@@ -196,24 +168,12 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
     setResolutionDialog({ isOpen: false, ticket: null });
   };
 
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: 'ticket',
-    drop: (item: any, monitor) => {
-      try {
-        const dropResult = monitor.getDropResult() as { handled?: boolean } | null;
-        if (dropResult && dropResult.handled) {
-          // Drop was already handled by a child component (like StatusToggle)
-          return;
-        }
-        handleDrop(item.ticket);
-      } catch (error) {
-        console.error('Column: Error in drop handler:', error);
-      }
-    },
-    collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
-    }),
-  }));
+  const { drop, isOver } = useDropZone({
+    onDrop: (item: { ticket: Ticket }) => {
+      handleDrop(item.ticket);
+      return { handled: false };
+    }
+  });
 
 
   return (
@@ -232,10 +192,15 @@ const Column: React.FC<ColumnProps> = ({ column, tickets, allTickets, onDrop, on
             {toggleStatus && (
               <StatusToggle
                 status={toggleStatus}
-                isActive={toggleStates[toggleStatus]}
+                isActive={viewMode}
                 ticketCount={toggleTicketCount}
-                onToggle={() => handleToggle(toggleStatus)}
+                onToggle={toggleViewMode}
                 onDrop={handleToggleDrop}
+                allTickets={allTickets}
+                getTicketPosition={getTicketPosition}
+                clearTicketPosition={clearTicketPosition}
+                mergeMode={mergeMode}
+                setMergeMode={setMergeMode}
               />
             )}
           </div>
