@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Ticket } from '../types';
 import { Project } from '@mdt/shared/models/Project';
+import { useTicketPosition } from '../components/Column/useTicketPosition';
 
 export function useTicketOperations(
   selectedProject: Project | null,
@@ -13,6 +14,14 @@ export function useTicketOperations(
 
   // Use ref to always get current selectedProject (prevents stale closure)
   const selectedProjectRef = useRef<Project | null>(selectedProject);
+
+  // Position tracking functionality extracted to dedicated hook
+  const {
+    storeTicketPosition,
+    getTicketPosition,
+    clearTicketPosition,
+    getAllTicketPositions,
+  } = useTicketPosition();
 
   useEffect(() => {
     selectedProjectRef.current = selectedProject;
@@ -88,24 +97,29 @@ export function useTicketOperations(
   }, [setTickets]); // Removed selectedProject from deps - using ref instead
 
   // Optimistic update for immediate UI feedback
-  const updateTicketOptimistic = useCallback(async (ticketCode: string, updates: Partial<Ticket>, trackingKey?: string): Promise<Ticket> => {
+  const updateTicketOptimistic = useCallback(async (ticketCode: string, updates: Partial<Ticket>, trackingKey?: string, currentColumnIndex?: number, currentTicketIndex?: number): Promise<Ticket> => {
     // Use provided tracking key or derive from ticket
     const finalTrackingKey = trackingKey || (() => {
       const ticket = tickets.find(t => t.code === ticketCode);
-      return ticket?.filePath ? 
-        ticket.filePath.split('/').pop()?.replace('.md', '') || ticketCode : 
+      return ticket?.filePath ?
+        ticket.filePath.split('/').pop()?.replace('.md', '') || ticketCode :
         ticketCode;
     })();
-    
+
     // Track this as a user-initiated update to prevent unnecessary refresh
     trackUserUpdate(finalTrackingKey);
-    
+
+    // Store position if ticket is being moved to 'On Hold' status
+    if (updates.status === 'On Hold' && currentColumnIndex !== undefined && currentTicketIndex !== undefined) {
+      storeTicketPosition(ticketCode, currentColumnIndex, currentTicketIndex);
+    }
+
     // Create optimistic ticket for immediate return
     const optimisticTicket: Ticket = {
       code: ticketCode,
       title: '',
       status: 'Proposed',
-      type: 'Feature Enhancement', 
+      type: 'Feature Enhancement',
       priority: 'Medium',
       content: '',
       filePath: '',
@@ -144,7 +158,7 @@ export function useTicketOperations(
 
     // Return immediately with optimistic data
     return optimisticTicket;
-  }, [tickets, trackUserUpdate, updateTicket, setTickets, fetchTicketsForProject]); // Removed selectedProject - using ref
+  }, [tickets, trackUserUpdate, updateTicket, setTickets, fetchTicketsForProject, storeTicketPosition]); // Removed selectedProject - using ref
 
   // Delete a ticket from the selected project
   const deleteTicket = useCallback(async (ticketCode: string): Promise<void> => {
@@ -182,6 +196,11 @@ export function useTicketOperations(
     updateTicketOptimistic,
     deleteTicket,
     error,
-    clearError
+    clearError,
+    // Position tracking methods
+    storeTicketPosition,
+    getTicketPosition,
+    clearTicketPosition,
+    getAllTicketPositions,
   };
 }

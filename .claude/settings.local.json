@@ -23,7 +23,9 @@
       "Bash(curl:*)",
       "Bash(kill:*)",
       "Bash(timeout 10s npm run dev:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(git stash:*)",
+      "mcp__mdt-all__list_crs"
     ],
     "deny": [],
     "ask": []

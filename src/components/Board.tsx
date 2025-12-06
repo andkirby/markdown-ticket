@@ -109,6 +109,9 @@ const BoardContent: React.FC<BoardProps> = ({
   const refreshProjectTickets = hookData.refreshTickets;
   const updateTicket = hookData.updateTicket;
   const updateTicketOptimistic = hookData.updateTicketOptimistic;
+  const storeTicketPosition = hookData.storeTicketPosition;
+  const getTicketPosition = hookData.getTicketPosition;
+  const clearTicketPosition = hookData.clearTicketPosition;
   const clearError = hookData.clearError;
   const isBackendDown = hookData.isBackendDown;
 
@@ -118,34 +121,62 @@ const BoardContent: React.FC<BoardProps> = ({
     setSortPreferences(newPreferences);
   };
   
-  const handleDrop = useCallback((status: Status, ticket: Ticket) => {
+  const handleDrop = useCallback((status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
     // Skip if ticket is already in the correct status
     if (ticket.status === status) {
       return;
     }
-    
+
     // Extract filename for tracking (matches SSE event format)
-    const trackingKey = ticket.filePath ? 
-      ticket.filePath.split('/').pop()?.replace('.md', '') || ticket.code : 
+    const trackingKey = ticket.filePath ?
+      ticket.filePath.split('/').pop()?.replace('.md', '') || ticket.code :
       ticket.code;
-    
+
     // Update local state immediately for optimistic UI
     setLocalTicketUpdates(prev => ({
       ...prev,
       [ticket.code]: { status }
     }));
-    
+
     // Send update to backend with tracking key
     const updateData: Partial<Ticket> = { status };
     const updateFunction = onTicketUpdate || updateTicketOptimistic;
-    
-    // Pass tracking key for optimistic updates
-    if (updateFunction === updateTicketOptimistic) {
-      updateFunction(ticket.code, updateData, trackingKey);
+
+    // Check if ticket is being moved from 'On Hold' or 'Rejected' back to a regular status
+    const isFromHoldStatus = ticket.status === 'On Hold' || ticket.status === 'Rejected';
+    const isToRegularStatus = status !== 'On Hold' && status !== 'Rejected';
+
+    if (isFromHoldStatus && isToRegularStatus) {
+      // Get the stored position for this ticket
+      const storedPosition = getTicketPosition(ticket.code);
+      if (storedPosition) {
+        console.log(`Restoring ticket ${ticket.code} to position`, storedPosition);
+        // Pass the stored position to the update function
+        if (updateFunction === updateTicketOptimistic) {
+          updateFunction(ticket.code, updateData, trackingKey, storedPosition.columnIndex, storedPosition.ticketIndex);
+          // Clear the stored position after successful restoration
+          clearTicketPosition(ticket.code);
+        } else {
+          updateFunction(ticket.code, updateData);
+        }
+      } else {
+        // No stored position, use default behavior
+        if (updateFunction === updateTicketOptimistic) {
+          updateFunction(ticket.code, updateData, trackingKey, currentColumnIndex, currentTicketIndex);
+        } else {
+          updateFunction(ticket.code, updateData);
+        }
+      }
     } else {
-      updateFunction(ticket.code, updateData);
+      // Regular move or moving to hold status
+      // Pass tracking key for optimistic updates
+      if (updateFunction === updateTicketOptimistic) {
+        updateFunction(ticket.code, updateData, trackingKey, currentColumnIndex, currentTicketIndex);
+      } else {
+        updateFunction(ticket.code, updateData);
+      }
     }
-  }, [onTicketUpdate, updateTicketOptimistic]);
+  }, [onTicketUpdate, updateTicketOptimistic, getTicketPosition, clearTicketPosition]);
 
   const handleTicketCreate = useCallback(async () => {
     if (!selectedProject) {
@@ -397,11 +428,13 @@ const BoardContent: React.FC<BoardProps> = ({
             allTickets={tickets}
             sortAttribute={sortPreferences.selectedAttribute}
             sortDirection={sortPreferences.selectedDirection}
-            onDrop={(status: Status, ticket: Ticket) => {
-              console.log('Board: Column onDrop called with:', { status, ticketKey: ticket.code });
-              handleDrop(status, ticket);
+            onDrop={(status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
+              console.log('Board: Column onDrop called with:', { status, ticketKey: ticket.code, currentColumnIndex, currentTicketIndex });
+              handleDrop(status, ticket, currentColumnIndex, currentTicketIndex);
             }}
             onTicketEdit={handleTicketEdit}
+            getTicketPosition={getTicketPosition}
+            clearTicketPosition={clearTicketPosition}
           />
         ))}
       </div>
