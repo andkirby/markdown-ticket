@@ -1,6 +1,6 @@
 ---
 code: MDT-084
-status: Proposed
+status: Approved
 dateCreated: 2025-12-04T00:55:07.220Z
 type: Technical Debt
 priority: High
