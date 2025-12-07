@@ -25,8 +25,13 @@ interface UseProjectManagerReturn {
   // Ticket operations
   createTicket: (title: string, type: string) => Promise<Ticket>;
   updateTicket: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>;
-  updateTicketOptimistic: (ticketCode: string, updates: Partial<Ticket>, trackingKey?: string) => Promise<Ticket>;
+  updateTicketOptimistic: (ticketCode: string, updates: Partial<Ticket>, trackingKey?: string, currentColumnIndex?: number, currentTicketIndex?: number) => Promise<Ticket>;
   deleteTicket: (ticketCode: string) => Promise<void>;
+
+  // Position tracking for ticket restoration
+  storeTicketPosition: (ticketCode: string, columnIndex: number, ticketIndex: number) => void;
+  getTicketPosition: (ticketCode: string) => { columnIndex: number; ticketIndex: number; timestamp: number } | undefined;
+  clearTicketPosition: (ticketCode: string) => void;
 
   // State
   loading: boolean;
@@ -241,6 +246,10 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     updateTicket: ticketOps.updateTicket,
     updateTicketOptimistic: ticketOps.updateTicketOptimistic,
     deleteTicket: ticketOps.deleteTicket,
+    // Position tracking methods
+    storeTicketPosition: ticketOps.storeTicketPosition,
+    getTicketPosition: ticketOps.getTicketPosition,
+    clearTicketPosition: ticketOps.clearTicketPosition,
     loading,
     error: ticketOps.error,
     clearError: ticketOps.clearError,
