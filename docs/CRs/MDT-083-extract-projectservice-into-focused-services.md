@@ -1,6 +1,6 @@
 ---
 code: MDT-083
-status: Proposed
+status: Approved
 dateCreated: 2025-12-04T00:51:40.415Z
 type: Technical Debt
 priority: High
