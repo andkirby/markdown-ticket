@@ -161,7 +161,7 @@ docker-compose exec backend node /app/shared/dist/tools/config-cli.js show
 
 ```bash
 docker-compose ps
-curl http://localhost:5174/
+curl http://localhost:5174/api/projects
 curl http://localhost:3012/health
 ```
 
