@@ -521,7 +521,7 @@ export class MCPTools {
           // Build attributes object with common fields
           const attributes: any = {
             code: yaml.code || key,
-            title: yaml.title || 'Untitled',
+            title: ticket.title || yaml.title || 'Untitled', // Use H1-extracted title first
             status: yaml.status || 'Unknown',
             type: yaml.type || 'Unknown',
             priority: yaml.priority || 'Medium'
