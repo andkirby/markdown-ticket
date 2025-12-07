@@ -18,11 +18,6 @@ implementationNotes: Implementation complete with all acceptance criteria met. C
 - Users cannot switch between viewing only active tickets vs. only on hold/rejected tickets
 - No visual distinction between switch mode and merge mode functionality
 
-### Affected Artifacts
-- `src/components/Column.tsx` - Contains embedded StatusToggle that needs extraction
-- `src/components/Board/StatusToggle.tsx` - New component to be extracted from Column.tsx
-- `src/hooks/useTicketOperations.ts` - Ticket state management with position tracking
-- `src/hooks/useButtonModes.ts` - New dedicated hook for button mode state management
 ### Scope
 - **Changes**: Button behavior in column headers, hover interaction patterns, visual states for orange/merge mode
 - **Unchanged**: Core ticket state management, drag-and-drop functionality, SSE event handling
@@ -40,71 +35,44 @@ Modify button component to add hover checkbox and dual modes (switch/merge).
 - No breaking changes to existing API or state management
 
 ## Architecture Design
-### Pattern
-Component extraction — isolate UI logic from parent component for testability and reusability.
+**Summary**:
+- Pattern: Component Extraction + Observer Pattern
+- Components: 9 (StatusToggle, 4 hooks, 1 utility, 2 tests, 1 modified)
+- Key constraint: StatusToggle ≤225 lines, useButtonModes ≤165 lines
 
-### Shared Patterns
-
-| Pattern | Occurrences | Extract To |
-|---------|-------------|------------|
-| Button styling utilities | All UI components | `src/components/ui/` (existing) |
-| Hook pattern | State management | `src/hooks/` (existing) |
-
-### Structure
-```
-src/
-  ├── components/
-  │   ├── Board/
-  │   │   └── StatusToggle.tsx     → Extracted toggle button (new)
-  │   └── Column.tsx               → Refactored to use StatusToggle
-  └── hooks/
-      └── useButtonModes.ts        → Button state management (new)
-```
-
-### Size Guidance
-| Module | Role | Limit | Hard Max |
-|--------|------|-------|----------|
-| `StatusToggle.tsx` | UI Component | 225 | 337 |
-| `useButtonModes.ts` | Hook | 165 | 247 |
-| `buttonModeStyles.ts` | Utility | 120 | 180 |
-| `useDropZone.ts` | Hook | 112 | 168 |
-| `useTicketPosition.ts` | Hook | 135 | 202 |
-| `Column.tsx` (modified) | Container | 450 | 675 |
-
-**Updated post-implementation 2025-12-05**: Size limits increased based on actual implementation complexity.
-### Extension Rule
-To add similar toggle: create component in `src/components/Board/` (limit 150 lines) using `useButtonModes` pattern.
-
+**Extension Rule**: To add similar toggle, create component in `src/components/Column/` (limit 225 lines) using `useButtonModes` and `buttonModeStyles` patterns.
 ## 3. Alternatives Considered
 ## 4. Artifact Specifications
 ### New Artifacts
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| `src/components/Board/StatusToggle.tsx` | Component | Extracted status toggle button with hover checkbox functionality (135 lines) |
-| `src/hooks/useButtonModes.ts` | Hook | Manage switch vs. merge mode state (177 lines) |
-| `src/hooks/useDropZone.ts` | Hook | Drag-and-drop abstraction layer eliminating react-dnd duplication (116 lines) |
-| `src/utils/buttonModeStyles.ts` | Utility | Centralized orange theme styling for button modes (120 lines) |
-| `src/hooks/useTicketPosition.ts` | Hook | Dedicated ticket position tracking and restoration (85 lines) |
-| `src/components/Board/` directory | Directory | Board-specific component organization following project pattern |
+| `src/components/Column/StatusToggle.tsx` | Component | Extracted status toggle button with hover checkbox functionality (217 lines) |
+| `src/components/Column/useButtonModes.ts` | Hook | Manage switch vs. merge mode state (178 lines) |
+| `src/components/Column/useDropZone.ts` | Hook | Drag-and-drop abstraction layer eliminating react-dnd duplication (123 lines) |
+| `src/components/Column/buttonModeStyles.ts` | Utility | Centralized orange theme styling for button modes (121 lines) |
+| `src/components/Column/useTicketPosition.ts` | Hook | Dedicated ticket position tracking and restoration (86 lines) |
+| `src/components/Column/useButtonModes.test.ts` | Test | Unit tests for useButtonModes hook |
+| `src/components/Column/useDropZone.test.ts` | Test | Unit tests for useDropZone hook |
 | `tests/e2e/status-toggle-hover-merge.spec.ts` | Test | E2E test coverage for hover-merge workflow (191 lines) |
 ### Modified Artifacts
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
-| `src/components/Column.tsx` | Refactor | Remove embedded StatusToggle, import and use useDropZone, useButtonModes |
-| `src/components/Board/StatusToggle.tsx` | Behavior added | Add hover checkbox, orange states, mode switching, event propagation handling |
+| `src/components/Column/index.tsx` | Refactor + Rename | Renamed from Column.tsx to index.tsx, removed embedded StatusToggle, import and use useDropZone, useButtonModes |
+| `src/components/Column/StatusToggle.tsx` | Behavior added | Add hover checkbox, orange states, mode switching, external state management props |
 | `src/hooks/useTicketOperations.ts` | Refactor | Import and integrate useTicketPosition hook for position tracking |
-| `src/components/Column.tsx` | Integration | Import and use new StatusToggle component with proper state management |
+| `src/components/Board/index.tsx` | Integration | Added position tracking methods (getTicketPosition, clearTicketPosition) and updated handleDrop signature |
 ### Integration Points
 | From | To | Interface |
 |------|----|-----------| 
-| Column component | StatusToggle | Props: status, onToggle, onDrop |
+| Column component | StatusToggle | Props: status, onToggle, onDrop, allTickets, getTicketPosition, clearTicketPosition, mergeMode?, setMergeMode? |
 | StatusToggle | useButtonModes | Mode state management (viewMode, toggleViewMode, isHovering, mergeMode) |
 | StatusToggle hover checkbox | useTicketOperations | Merge on hold tickets with position restore |
 | useButtonModes | StatusToggle | Returns: viewMode, mergeMode, activeState |
-| Column component | useDropZone | Drag-and-drop handling with markHandled pattern |
+| Column component | useDropZone | Drag-and-drop handling with markHandled: true pattern |
 | StatusToggle | useDropZone | Drag-and-drop handling with markHandled: true |
 | useTicketOperations | useTicketPosition | Position tracking (storeTicketPosition, getTicketPosition, clearTicketPosition) |
 | StatusToggle | buttonModeStyles | Orange theme styling (getButtonModeClasses) |
+| Board component | Column component | Position tracking methods: getTicketPosition, clearTicketPosition |
 ### Key Patterns
 - Hover reveal pattern: Button number transforms to checkbox on hover
 - Dual state pattern: Orange background = switch mode, orange border = merge mode, orange rounded number
@@ -112,7 +80,9 @@ To add similar toggle: create component in `src/components/Board/` (limit 150 li
 - Position restoration pattern: Store ticket position before status change for restoration
 - Ref pattern: Extensive use of refs in useButtonModes and useTicketPosition to prevent stale closures
 - Styling centralization: Use buttonModeStyles utility with getButtonModeClasses for consistent theming
-- Drop zone abstraction: useDropZone wrapper for react-dnd to eliminate duplication
+- Drop zone abstraction: useDropZone wrapper for react-dnd with markHandled pattern to eliminate duplication
+- External state management: Optional props allow parent component control of merge mode
+- Component directory pattern: Use index.tsx for main component file with supporting files in same directory
 ## 5. Acceptance Criteria
 ### Functional
 - [ ] StatusToggle component extracted from Column.tsx to `src/components/Board/StatusToggle.tsx`
@@ -146,7 +116,32 @@ To add similar toggle: create component in `src/components/Board/` (limit 150 li
 - Manual: Verify merged tickets appear in original positions
 - Manual: Test Rejected button with same workflow
 
-> **Full EARS requirements**: [requirements.md](./requirements.md)
+### Functional
+- [ ] StatusToggle component extracted from Column.tsx to `src/components/Board/StatusToggle.tsx`
+- [ ] Button toggles between showing In Progress tickets and On Hold tickets when clicked (switch mode)
+- [ ] Button shows orange background color when in switch mode (viewing alternate status)
+- [ ] Button shows orange border (no background) when in merge mode only
+- [ ] Button number shows orange rounded background when merge mode is active
+- [ ] Hover over ticket count displays checkbox with Tailwind orange styling
+- [ ] Clicking hover checkbox merges On Hold tickets into In Progress column
+- [ ] Merged tickets restore to their original position from before they were put on hold
+- [ ] Rejected button in Done column has identical behavior pattern
+- [ ] Button number displays count of tickets in alternate state (e.g., count of On Hold tickets when viewing In Progress)
+- [ ] **State Persistence**: When switching between views (Board, List, Documents), toggle button states persist during session
+- [ ] **Cross-tab Sync**: Status toggle changes reflect in other browser tabs via SSE events within 1 second
+- [ ] **Page Refresh**: Toggle states reset to default (primary statuses only) on page refresh
+- [ ] **Done/Rejected Logic**: Default Done column view excludes Rejected tickets (shows Done tickets only)
+
+### Non-Functional
+- [ ] Hover checkbox appears within 200ms of mouse entering number area
+- [ ] Orange color scheme uses consistent Tailwind classes (bg-orange-100, border-orange-300, etc)
+- [ ] No performance degradation in ticket rendering
+- [ ] StatusToggle component is fully unit testable after extraction
+- [ ] No file exceeds Hard Max limits without justification
+- [ ] TypeScript casing conflicts resolved (UI/ui directory issue)
+- [ ] **Network Error Handling**: Display loading state and retry on failed status updates
+- [ ] **Conflict Resolution**: Use last-write-wins strategy for simultaneous status changes
+- [ ] **Count Updates**: Ticket status changes update alternate status counts within 1 second
 ## 6. Verification
 
 ### By CR Type
@@ -211,3 +206,40 @@ To add similar toggle: create component in `src/components/Board/` (limit 150 li
 - Size guidance updated to reflect actual implementation complexity
 - Integration points table expanded from 4 to 8 connections
 - Key patterns expanded from 4 to 7 patterns including ref usage and styling centralization
+
+### Session 2025-12-06
+**Clarification Authority**: .kiro/specs document is authoritative for behavior requirements
+
+**Added Requirements from .kiro/specs:**
+- State persistence across views during session
+- Cross-tab synchronization via SSE events
+- Page refresh reset to default state
+- Network error handling with retry mechanism
+- Last-write-wins conflict resolution for simultaneous changes
+- Done column default view excludes Rejected tickets
+
+**Updated Acceptance Criteria:**
+- Added 4 new functional requirements for state management
+- Added 3 new non-functional requirements for error handling
+- Modified Done/Rejected view logic to match .kiro/specs behavior
+
+### Post-Implementation Session 2025-12-07
+
+**Directory Structure Decision**:
+- Decided against creating `src/components/Board/` directory
+- Kept all StatusToggle-related components in `src/components/Column/` to follow existing project patterns
+- Better consistency with codebase organization
+
+**File Structure Changes**:
+- `Column.tsx` renamed to `src/components/Column/index.tsx` to follow component directory pattern
+- Added unit test files: `useButtonModes.test.ts`, `useDropZone.test.ts`
+- No Board directory was created - over-specified in original design
+
+**Integration Details Discovered**:
+- `markHandled: true` pattern in useDropZone critical for preventing parent-child drop conflicts
+- External state management via optional `mergeMode`, `setMergeMode` props in StatusToggle
+- Position tracking requires `getTicketPosition` and `clearTicketPosition` methods from parent Board component
+
+**Size Estimates Verification**:
+- StatusToggle: 217 lines (within ≤225 limit)
+- useButtonModes: 178 lines (slightly over ≤165 estimate, but acceptable)
