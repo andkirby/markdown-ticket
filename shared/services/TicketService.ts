@@ -265,7 +265,7 @@ export class TicketService {
   private validateStatusTransition(currentStatus: string, newStatus: string): void {
     // Define valid status transitions
     const validTransitions: Record<string, string[]> = {
-      'Proposed': ['Approved', 'Rejected'],
+      'Proposed': ['Approved', 'Rejected', 'In Progress'], // Allow direct move to In Progress for agile workflow
       'Approved': ['In Progress', 'Rejected'],
       'In Progress': ['Implemented', 'Approved', 'On Hold'], // Can pause work
       'Implemented': ['In Progress'], // Allow reopening if issues found
