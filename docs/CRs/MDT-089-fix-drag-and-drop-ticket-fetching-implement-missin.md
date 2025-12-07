@@ -1,13 +1,12 @@
 ---
 code: MDT-089
-status: In Progress
+status: Implemented
 dateCreated: 2025-12-07T09:54:59.679Z
 type: Bug Fix
 priority: High
 ---
 
 # Fix drag and drop ticket fetching - implement missing CR endpoints
-
 ## 1. Description
 
 ### Problem
@@ -84,19 +83,28 @@ Implement missing ProjectController CRUD methods by delegating to existing Ticke
 - [ ] No regression in existing /api/tasks endpoints
 
 ### Testing
+- Unit: `server/tests/unit/ProjectController.test.ts` - Test controller methods with mocked services
 - Unit: Test ProjectController.getCR() with valid projectId/crId → returns Ticket
 - Unit: Test ProjectController.getCR() with invalid crId → returns 404
+- Integration: `server/tests/integration/api.test.ts` - Test Express routes with Supertest
 - Integration: Frontend drag and drop → SSE event → ticket fetch → UI update
 - Integration: Create ticket via API → file created in docs/CRs/
-
+- Integration: All 22 tests pass (12 unit + 10 integration)
 ## 6. Verification
-
 ### By CR Type
 - **Bug Fix**: Drag and drop operations complete without 501 errors; endpoints return expected responses
-
+- **Functional Verification**: Focus on drag and drop working correctly, no performance metrics required
 ## 7. Deployment
 
 ### Simple Changes
 - Restart backend server after code changes
 - No database migrations required
 - No frontend deployment needed (API contract unchanged)
+
+## 8. Clarifications
+
+### Session 2025-12-07
+- **Q: What specific test files should be created to verify the CRUD endpoints?** → A: Both unit and integration test files
+  - Clarified: Unit tests in `server/tests/unit/ProjectController.test.ts` and integration tests in `server/tests/integration/api.test.ts`
+- **Q: What specific metrics should be used to verify successful implementation?** → A: Functional verification only
+  - Clarified: Focus on drag and drop functionality, no performance metrics needed
