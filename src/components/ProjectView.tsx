@@ -78,7 +78,27 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to update ticket: ${response.statusText}`);
+        // Try to parse the error response from backend
+        let errorMessage = `Failed to update ticket: ${response.statusText}`;
+        let errorData = null;
+
+        try {
+          errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If we can't parse JSON, use the status text
+          console.warn('Failed to parse error response JSON:', e);
+        }
+
+        // Create an error object with response data for proper error handling
+        const error = new Error(errorMessage);
+        (error as any).response = {
+          status: response.status,
+          data: errorData
+        };
+        throw error;
       }
 
       const updatedTicket = await response.json();

@@ -1,79 +1,70 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react'
+import { toast } from 'sonner'
 
-export interface Toast {
-  id: string;
-  title: string;
+export interface ToastOptions {
   description?: string;
-  variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
   duration?: number;
-  isClosable?: boolean;
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center';
 }
 
 export const useToast = () => {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const newToast: Toast = {
-      id,
-      ...toast,
-      variant: toast.variant || 'default',
-      duration: toast.duration || 3000,
-      isClosable: toast.isClosable !== false,
-    };
-
-    setToasts((prev) => [...prev, newToast]);
-
-    return id;
-  }, []);
-
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []);
-
-  const toast = useCallback(
-    (options: Omit<Toast, 'id'>) => {
-      return addToast(options);
-    },
-    [addToast]
-  );
-
   const success = useCallback(
-    (title: string, description?: string) => {
-      return addToast({ title, description, variant: 'success' });
+    (title: string, options?: ToastOptions) => {
+      return toast.success(title, {
+        description: options?.description,
+        duration: options?.duration || 3000,
+        position: options?.position || 'bottom-right',
+      });
     },
-    [addToast]
+    []
   );
 
   const error = useCallback(
-    (title: string, description?: string) => {
-      return addToast({ title, description, variant: 'error' });
+    (title: string, options?: ToastOptions) => {
+      return toast.error(title, {
+        description: options?.description,
+        duration: options?.duration || 5000,
+        position: options?.position || 'bottom-right',
+      });
     },
-    [addToast]
+    []
   );
 
   const warning = useCallback(
-    (title: string, description?: string) => {
-      return addToast({ title, description, variant: 'warning' });
+    (title: string, options?: ToastOptions) => {
+      return toast.warning(title, {
+        description: options?.description,
+        duration: options?.duration || 4000,
+        position: options?.position || 'bottom-right',
+      });
     },
-    [addToast]
+    []
   );
 
   const info = useCallback(
-    (title: string, description?: string) => {
-      return addToast({ title, description, variant: 'info' });
+    (title: string, options?: ToastOptions) => {
+      return toast.info(title, {
+        description: options?.description,
+        duration: options?.duration || 4000,
+        position: options?.position || 'bottom-right',
+      });
     },
-    [addToast]
+    []
   );
 
+  const dismiss = useCallback((toastId?: string | number) => {
+    if (toastId) {
+      toast.dismiss(toastId);
+    } else {
+      toast.dismiss();
+    }
+  }, []);
+
   return {
-    toasts,
-    addToast,
-    removeToast,
-    toast,
     success,
     error,
     warning,
     info,
+    dismiss,
   };
 };
