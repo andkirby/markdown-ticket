@@ -48,15 +48,21 @@ Do NOT use when:
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
 2. Extract from CR:
+   - **CR type**: Technical Debt, Feature Enhancement, Architecture, etc.
    - Problem statement (what's being solved)
    - Affected artifacts (existing files/components)
    - New artifacts (planned files/components)
    - Scope boundaries (what changes, what doesn't)
-3. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
+3. **For Technical Debt/Refactoring CRs**:
+   - Focus on: What's wrong with current structure?
+   - Success criteria: Size targets, interface preservation, behavioral equivalence
+   - Skip behavioral requirement analysis
+4. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
    - If found: extract requirement IDs and artifact mappings
    - These inform component boundaries (each requirement needs a home)
-4. Check for project CLAUDE.md — may have project-specific size limits
-5. Scan for architectural signals:
+   - Note: Usually absent for refactoring CRs (which is correct)
+5. Check for project CLAUDE.md — may have project-specific size limits
+6. Scan for architectural signals:
    - Multiple similar items (providers, handlers, commands)
    - Words: "adapter", "factory", "provider", "handler", "strategy"
    - Patterns: "for each X", "multiple Y", "extensible"
@@ -134,6 +140,12 @@ Options:
 
 Based on decisions and complexity assessment, generate appropriate output.
 
+**For Technical Debt/Refactoring CRs**:
+- Focus on "before → after" structure transformation
+- Emphasize size reduction and interface preservation
+- Clearly define what's being consolidated, extracted, or simplified
+- Include behavioral equivalence verification approach
+
 ---
 
 ## Simple Output (Embed in CR)
@@ -162,6 +174,18 @@ For Score ≤ 5, generate `## Architecture Design` section:
 
 ### Extension Rule
 To add {X}: create `{path}` ({role}, limit {N} lines) implementing `{interface}`.
+```
+
+**For Technical Debt/Refactoring**, add:
+```markdown
+### Refactoring Transformation
+| From | To | Rationale |
+|------|----|-----------|
+| `{old_path}` (N lines) | `{new_path}` (M lines) | Extract/consolidate {reason} |
+
+### Behavioral Equivalence
+- Public interfaces preserved: {list}
+- Test coverage ensures: {what behavior remains identical}
 ```
 
 **Insert**: After `## 2. Decision`, before `## 3. Alternatives Considered`
@@ -268,9 +292,30 @@ stateDiagram-v2
 
 **Coverage**: {N}/{M} requirements mapped ({percentage}%)
 
+## Refactoring Plan
+
+{Include ONLY for Technical Debt/Refactoring CRs}
+
+### Transformation Matrix
+| Component | From | To | Reduction | Reason |
+|-----------|------|----|-----------|--------|
+| `{name}` | `{old_path}` | `{new_path}` | {N}→{M} lines | {why} |
+
+### Interface Preservation
+| Public Interface | Status | Verification |
+|------------------|--------|--------------|
+| `{method/class}` | Preserved | Existing tests cover |
+| `{method/class}` | Modified | Update tests in {location} |
+| `{method/class}` | Removed | Deprecated in {version} |
+
+### Behavioral Equivalence
+- Test suite: {which tests verify identical behavior}
+- Performance: {expected impact, if any}
+- Migration: {any migration steps needed}
+
 ## Extension Rule
 
-To add {X}: 
+To add {X}:
 1. Create `{path}` ({role}, limit {N} lines) implementing `{interface}`
 2. {Registration step if needed}
 

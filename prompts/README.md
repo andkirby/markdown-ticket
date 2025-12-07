@@ -26,6 +26,7 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
         ▼
 /mdt:requirements (optional) ─── Creates: requirements.md
         │                        EARS-formatted behavioral specs
+        │                        ⚠️ Skip for refactoring/tech-debt
         ▼
 /mdt:assess (optional) ────────── Decision point: 1/2/3
         │                        Evaluate code fitness
@@ -52,6 +53,53 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
         ▼
 /mdt:reflection ───────────────── Updates: CR with learnings
 ```
+
+## When to Skip `/mdt:requirements`
+
+**For refactoring and technical debt CRs, skip `/mdt:requirements`.**
+
+### Why
+
+- **EARS syntax is designed for behavioral specifications** — "WHEN user clicks Save, the system shall persist..."
+- Refactoring requires *internal restructuring* specifications, not user-facing behaviors
+- Success criteria are structural: size targets, interface preservation, behavioral equivalence
+- Requirements become awkward: "WHEN the get_cr tool processes markdown content..."
+
+### Recommended Flow for Refactoring/Tech-Debt
+
+```
+/mdt:ticket-creation
+        │
+        ▼
+/mdt:assess (optional but useful) ── Decision point
+        │
+        ▼
+/mdt:architecture ────────────────── Define target structure + size limits
+        │
+        ▼
+/mdt:tasks ───────────────────────── Constrained task list
+        │
+        ▼
+/mdt:implement ───────────────────── Execute with verification
+        │
+        ▼
+/mdt:tech-debt ───────────────────── Post-implementation analysis
+        │
+        ▼
+/mdt:reflection ──────────────────── Update CR with learnings
+```
+
+### What the CR Should Capture Instead
+
+- **Problem**: What's wrong with current structure (duplication, bloat, coupling)
+- **Success criteria**: Size targets, interface preservation, behavioral equivalence
+- **Scope boundaries**: What's NOT changing
+
+### When `/mdt:requirements` IS Valuable
+
+- **New features** with multiple user-facing behaviors
+- **Complex integrations** where WHEN/IF/WHILE conditions matter
+- **Compliance-sensitive work** needing formal traceability
 
 ## Debt Prevention Chain
 
