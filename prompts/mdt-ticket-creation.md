@@ -303,8 +303,15 @@ After successful CR creation:
 
 1. **Report CR Key**: Inform user of created CR (e.g., "Created MDT-078")
 
-2. **Suggest Next Steps**:
-   - If sections marked "Requires clarification": Suggest running `mdt-clarification.md`
+2. **Suggest Next Steps** based on CR type:
+   - **Technical Debt/Refactoring**:
+     - Skip `/mdt:requirements` (EARS format not suitable for structural changes)
+     - Recommended flow: `/mdt:assess` → `/mdt:architecture` → `/mdt:tasks` → `/mdt:implement`
+     - Consider `/mdt:assess` to evaluate code health before architecture design
+   - **New Features/Integrations**:
+     - Consider `/mdt:requirements` for behavioral specifications
+     - Full workflow: `/mdt:requirements` → `/mdt:architecture` → `/mdt:tasks` → `/mdt:implement`
+   - If sections marked "Requires clarification": Suggest running `/mdt-clarification.md`
    - If exploratory CR: Suggest implementation spike before approval
    - If ready: Suggest marking as "Approved" for implementation
 
