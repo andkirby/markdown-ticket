@@ -21,6 +21,7 @@
     "@iarna/toml": "^2.2.5",
     "@isaacs/brace-expansion": "^5.0.0",
     "@mdt/shared": "*",
+    "@types/glob": "^8.1.0",
     "axios": "^1.12.2",
     "chokidar": "^3.6.0",
     "cors": "^2.8.5",
