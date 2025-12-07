@@ -547,3 +547,4 @@ When improving these workflows, consider:
 4. **Streamline flows** - Fewer steps, clearer paths
 5. **Better error handling** - Graceful degradation
 6. **User experience** - Clearer questions, better recommendations
+- in commits in this folder always start message with "feat(prompts): ..." or "fix(prompts): ..."
