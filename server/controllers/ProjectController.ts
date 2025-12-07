@@ -384,11 +384,63 @@ export class ProjectController {
   }
 
   async getCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    res.status(501).json({ error: 'Not implemented - use /api/tasks endpoints' });
+    try {
+      const { projectId, crId } = req.params;
+
+      if (!projectId || !crId) {
+        res.status(400).json({ error: 'Project ID and CR ID are required' });
+        return;
+      }
+
+      // Use TicketService if available
+      if (this.ticketService) {
+        const cr = await this.ticketService.getCR(projectId, crId);
+        res.json(cr);
+        return;
+      }
+
+      // Fallback: try to use TicketController if it has the necessary methods
+      if (this.ticketController && this.ticketController.ticketService) {
+        const cr = await this.ticketController.ticketService.getCR(projectId, crId);
+        res.json(cr);
+        return;
+      }
+
+      res.status(501).json({ error: 'Ticket service not available for fetching CR' });
+    } catch (error: any) {
+      console.error('Error getting CR:', error);
+
+      if (error.message === 'Project not found' || error.message === 'CR not found') {
+        res.status(404).json({ error: error.message });
+        return;
+      }
+
+      res.status(500).json({ error: 'Failed to get CR', details: error.message });
+    }
   }
 
   async createCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    res.status(501).json({ error: 'Not implemented - use /api/tasks/save endpoint' });
+    try {
+      const { projectId } = req.params;
+      const crData = req.body;
+
+      if (!projectId) {
+        res.status(400).json({ error: 'Project ID is required' });
+        return;
+      }
+
+      // Use TicketService if available
+      if (this.ticketService) {
+        const result = await this.ticketService.createCR(projectId, crData);
+        res.status(201).json(result);
+        return;
+      }
+
+      res.status(501).json({ error: 'Ticket service not available for creating CR' });
+    } catch (error: any) {
+      console.error('Error creating CR:', error);
+      res.status(500).json({ error: 'Failed to create CR', details: error.message });
+    }
   }
 
   async patchCR(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -451,10 +503,49 @@ export class ProjectController {
   }
 
   async updateCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    res.status(501).json({ error: 'Not implemented - use /api/tasks/save endpoint' });
+    try {
+      const { projectId, crId } = req.params;
+      const crData = req.body;
+
+      if (!projectId || !crId) {
+        res.status(400).json({ error: 'Project ID and CR ID are required' });
+        return;
+      }
+
+      // Use TicketService if available
+      if (this.ticketService) {
+        const result = await this.ticketService.updateCRPartial(projectId, crId, crData);
+        res.json(result);
+        return;
+      }
+
+      res.status(501).json({ error: 'Ticket service not available for updating CR' });
+    } catch (error: any) {
+      console.error('Error updating CR:', error);
+      res.status(500).json({ error: 'Failed to update CR', details: error.message });
+    }
   }
 
   async deleteCR(req: AuthenticatedRequest, res: Response): Promise<void> {
-    res.status(501).json({ error: 'Not implemented - use /api/tasks endpoint' });
+    try {
+      const { projectId, crId } = req.params;
+
+      if (!projectId || !crId) {
+        res.status(400).json({ error: 'Project ID and CR ID are required' });
+        return;
+      }
+
+      // Use TicketService if available
+      if (this.ticketService) {
+        const result = await this.ticketService.deleteCR(projectId, crId);
+        res.json(result);
+        return;
+      }
+
+      res.status(501).json({ error: 'Ticket service not available for deleting CR' });
+    } catch (error: any) {
+      console.error('Error deleting CR:', error);
+      res.status(500).json({ error: 'Failed to delete CR', details: error.message });
+    }
   }
 }
