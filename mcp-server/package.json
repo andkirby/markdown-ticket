@@ -5,11 +5,14 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "MCP_HTTP_ENABLED=true node build.js",
-    "start": "MCP_HTTP_ENABLED=true node dist/index.js",
-    "dev": "MCP_HTTP_ENABLED=true tsx src/index.ts",
+    "build": "MCP_HTTP_ENABLED=false node build.js",
+    "start": "MCP_HTTP_ENABLED=false node dist/index.js",
+    "dev": "MCP_HTTP_ENABLED=false tsx src/index.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:e2e": "jest tests/e2e --config jest.e2e.config.mjs",
+    "test:e2e:watch": "jest tests/e2e --config jest.e2e.config.mjs --watch",
+    "test:e2e:performance": "jest tests/e2e/performance --config jest.e2e.config.mjs"
   },
   "keywords": [
     "mcp",

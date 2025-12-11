@@ -423,63 +423,105 @@ export class MCPTools {
   }
 
   private async handleGetProjectInfo(key: string): Promise<string> {
-    const project = await this.validateProject(key);
-
-    // Get CR count from project CRs
-    const crs = await this.projectService.getProjectCRs(project.project.path);
-    const crCount = crs.length;
-
-    const projectCode = project.project.code || project.id;
-    const lines = [
-      `📋 Project: **${projectCode}** - ${project.project.name}`,
-      '',
-      '**Details:**',
-      `- Code: ${project.project.code || 'None'}`,
-      `- ID: ${project.id}`,
-      `- Description: ${project.project.description || 'No description'}`,
-      `- Path: ${project.project.path}`,
-      `- Total CRs: ${crCount}`,
-      `- Last Accessed: ${project.metadata.lastAccessed}`,
-      '',
-      '**Configuration:**',
-      `- Start Number: ${project.project.startNumber || 1}`,
-      `- Counter File: ${project.project.counterFile || '.mdt-next'}`,
-    ];
-
-    if (project.project.repository) {
-      lines.push(`- Repository: ${project.project.repository}`);
+    // Handle null or undefined keys
+    if (key === null || key === undefined) {
+      return `Project key is required. Please provide a valid project key (e.g., 'MDT', 'API').`;
     }
 
-    return lines.join('\n');
+    // Handle empty keys
+    if (key === '') {
+      return `Project key cannot be empty. Please provide a valid project key (e.g., 'MDT', 'API').`;
+    }
+
+    try {
+      const project = await this.validateProject(key);
+
+      // Get CR count from project CRs
+      const crs = await this.projectService.getProjectCRs(project.project.path);
+      const crCount = crs.length;
+
+      const projectCode = project.project.code || project.id;
+      const lines = [
+        `📋 Project: **${projectCode}** - ${project.project.name}`,
+        '',
+        '**Details:**',
+        `- Code: ${project.project.code || 'None'}`,
+        `- ID: ${project.id}`,
+        `- Description: ${project.project.description || 'No description'}`,
+        `- Path: ${project.project.path}`,
+        `- Total CRs: ${crCount}`,
+        `- Last Accessed: ${project.metadata.lastAccessed}`,
+        '',
+        '**Configuration:**',
+        `- Start Number: ${project.project.startNumber || 1}`,
+        `- Counter File: ${project.project.counterFile || '.mdt-next'}`,
+      ];
+
+      if (project.project.repository) {
+        lines.push(`- Repository: ${project.project.repository}`);
+      }
+
+      return lines.join('\n');
+    } catch (error) {
+      // Handle project not found gracefully
+      if (error instanceof Error && error.message.includes('not found')) {
+        return error.message;
+      }
+      // Re-throw unexpected errors
+      throw error;
+    }
   }
 
   private async handleListCRs(projectKey: string, filters?: TicketFilters): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    const crs = await this.crService.listCRs(project, filters);
-    
-    if (crs.length === 0) {
-      if (filters) {
-        return `🎫 No CRs found matching the specified filters in project ${projectKey}.`;
+    try {
+      // Handle missing project parameter
+      if (!projectKey || projectKey === 'undefined') {
+        return [
+          `❌ **Error in list_crs**`,
+          '',
+          'Project parameter is required',
+          '',
+          'Please provide a valid project key and try again.'
+        ].join('\n');
       }
-      return `🎫 No CRs found in project ${projectKey}.`;
-    }
 
-    const lines = [`🎫 Found ${crs.length} CR${crs.length === 1 ? '' : 's'}${filters ? ' matching filters' : ''}:`, ''];
+      const project = await this.validateProject(projectKey);
 
-    for (const ticket of crs) {
-      lines.push(`**${ticket.code}** - ${ticket.title}`);
-      lines.push(`- Status: ${ticket.status}`);
-      lines.push(`- Type: ${ticket.type}`);
-      lines.push(`- Priority: ${ticket.priority}`);
-      lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString().split('T')[0] : 'N/A'}`);
-      if (ticket.phaseEpic) {
-        lines.push(`- Phase: ${ticket.phaseEpic}`);
+      const crs = await this.crService.listCRs(project, filters);
+
+      if (crs.length === 0) {
+        if (filters) {
+          return `🎫 No CRs found matching the specified filters in project ${projectKey}.`;
+        }
+        return `🎫 No CRs found in project ${projectKey}.`;
       }
-      lines.push('');
-    }
 
-    return lines.join('\n');
+      const lines = [`🎫 Found ${crs.length} CR${crs.length === 1 ? '' : 's'}${filters ? ' matching filters' : ''}:`, ''];
+
+      for (const ticket of crs) {
+        lines.push(`**${ticket.code}** - ${ticket.title}`);
+        lines.push(`- Status: ${ticket.status}`);
+        lines.push(`- Type: ${ticket.type}`);
+        lines.push(`- Priority: ${ticket.priority}`);
+        lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString().split('T')[0] : 'N/A'}`);
+        if (ticket.phaseEpic) {
+          lines.push(`- Phase: ${ticket.phaseEpic}`);
+        }
+        lines.push('');
+      }
+
+      return lines.join('\n');
+    } catch (error) {
+      // Return formatted error message instead of throwing
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return [
+        `❌ **Error in list_crs**`,
+        '',
+        errorMessage,
+        '',
+        'Please check the project key and try again.'
+      ].join('\n');
+    }
   }
 
       
