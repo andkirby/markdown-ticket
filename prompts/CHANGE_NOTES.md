@@ -2,7 +2,54 @@
 
 ## Recent Updates
 
-### 2025-01-07 - Improved Refactoring/Tech-Debt Workflow
+### 2025-12-11 - Added Test-Driven Development Workflow
+
+**Problem**: Implementation tasks lacked automated test generation, making it difficult to verify behavior preservation in refactoring and ensure feature correctness.
+
+**Solution**: Added comprehensive BDD test specification workflow that generates tests BEFORE implementation, following TDD principles.
+
+**Changes Made**:
+
+1. **mdt-tests.md (v1) - New TDD workflow**:
+   - Generates BDD test specifications from requirements or existing behavior
+   - Creates executable test files in project's test directory
+   - Two modes: Feature (tests expected behavior) and Refactoring (locks current behavior)
+   - Outputs to `docs/CRs/{CR-KEY}/tests.md` + actual test files
+   - Supports multiple test frameworks (Jest, Vitest, Playwright, etc.)
+
+2. **Updated workflow integration**:
+   - Added `/mdt:tests` command between assess and architecture
+   - Tests written BEFORE implementation (RED state)
+   - Implementation tasks make specific tests pass (GREEN state)
+   - TDD cycle: RED → GREEN → Refactor
+
+3. **Enhanced existing workflows**:
+   - **README.md**: Updated workflow diagrams to include tests step
+   - **mdt-assess.md**: Now evaluates test coverage gaps alongside code fitness
+   - **mdt-implement.md**: Updated to verify TDD cycle completion
+   - **mdt-tasks.md**: Each task now specifies which tests it makes pass
+
+**Key Features**:
+- **Test-first approach**: Tests define success criteria before implementation
+- **Behavior preservation**: Critical for refactoring to prevent regressions
+- **BDD format**: Given/When/Then scenarios derived from EARS requirements
+- **Framework detection**: Automatically detects project's test framework and structure
+- **Integration focus**: Tests public interfaces, not implementation internals
+
+**Impact**:
+- Refactoring becomes safer with behavior locked by tests
+- Features have clear acceptance criteria through automated tests
+- TDD discipline enforced by workflow (tests must exist before implementation)
+- Better test coverage through systematic generation based on requirements
+
+**Files Changed**:
+- `prompts/mdt-tests.md` (new)
+- `prompts/README.md`
+- `prompts/mdt-assess.md`
+- `prompts/mdt-implement.md`
+- `prompts/mdt-tasks.md`
+
+### 2025-12-07 - Improved Refactoring/Tech-Debt Workflow
 
 **Problem**: `/mdt:requirements` workflow with EARS syntax was awkward for refactoring and technical debt tickets, producing constructs like "WHEN the get_cr tool processes markdown content..." instead of clear structural specifications.
 
@@ -39,7 +86,7 @@
 - `prompts/mdt-ticket-creation.md`
 - `prompts/mdt-architecture.md`
 
-### 2025-01-06 - Complete v2 Workflow Documentation Suite
+### 2025-12-06 - Complete v2 Workflow Documentation Suite
 
 **Problem**: MDT workflows lacked comprehensive documentation and practical guidance for users. The install script was missing new commands and didn't reflect the complete v2 workflow chain.
 
@@ -85,7 +132,7 @@
 - `prompts/mdt-tasks.md`
 - `prompts/mdt-tech-debt.md`
 
-### 2025-01-06 - Install Script Alignment with v2 Workflows
+### 2025-12-06 - Install Script Alignment with v2 Workflows
 
 **Problem**: The install script (`install-claude.sh`) was missing the new `requirements` and `assess` commands added in v2, causing incomplete installations.
 
@@ -113,7 +160,7 @@
 **Files Changed**:
 - `prompts/install-claude.sh`
 
-### 2025-01-06 - Added Requirements and Assess Workflows
+### 2025-12-06 - Added Requirements and Assess Workflows
 
 **Problem**: MDT workflow lacked formal requirements specification and code fitness assessment, leading to poorly scoped CRs and integration issues.
 
