@@ -1,4 +1,4 @@
-# MDT Task Breakdown Workflow (v3)
+# MDT Task Breakdown Workflow (v4)
 
 Generate a task list from a CR ticket for phased, reviewable implementation.
 
@@ -47,7 +47,10 @@ project:
 3. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
    - If found: extract requirement IDs for task mapping
    - Each task will reference which requirements it implements
-4. If Architecture Design missing: abort with "Run `/mdt:architecture` first"
+4. **Load tests if exists**: Check `docs/CRs/{CR-KEY}/tests.md`
+   - If found: extract test→requirement mapping
+   - Each task will reference which tests it should make GREEN
+5. If Architecture Design missing: abort with "Run `/mdt:architecture` first"
 
 ### Step 3: Inherit Size Limits
 
@@ -86,6 +89,10 @@ Phase 2: Features
 
 **Implements**: {R1.1, R1.2, ...} *(if requirements.md exists)*
 
+**Makes GREEN**: *(if tests.md exists)*
+- `{test_file}`: `{test_name}` (R1.1)
+- `{test_file}`: `{test_name}` (R1.2)
+
 **Limits**:
 - Default: {N} lines
 - Hard Max: {N×1.5} lines
@@ -114,10 +121,11 @@ wc -l {destination}       # check against limits
 ```
 
 **Done when**:
+- [ ] Tests RED before task, GREEN after *(if tests.md exists)*
 - [ ] File at correct path
 - [ ] Size ≤ default (or flagged if ≤ hard max)
 - [ ] No duplicated logic — uses shared imports
-- [ ] Tests pass
+- [ ] All tests pass (no regressions)
 ```
 
 ### Step 6: Generate Tasks Document
@@ -177,6 +185,35 @@ wc -l {destination}       # check against limits
 | R2.1 | Task 3.1 | ⬜ Pending |
 
 **Coverage**: {N}/{M} requirements have implementing tasks
+
+## Test Coverage
+
+*(Include ONLY if tests.md exists)*
+
+| Test | Requirement | Task | Status |
+|------|-------------|------|--------|
+| `summarize.test > extracts points` | R1.1 | Task 2.1 | 🔴 RED |
+| `summarize.test > retries on timeout` | R1.2 | Task 2.1 | 🔴 RED |
+| `progress.test > emits events` | R2.1 | Task 3.1 | 🔴 RED |
+
+**TDD Goal**: All tests RED before implementation, GREEN after respective task completes
+
+---
+
+## TDD Verification
+
+*(Include ONLY if tests.md exists)*
+
+Before starting each task:
+```bash
+{test_command} --filter="{task_tests}"  # Should show failures
+```
+
+After completing each task:
+```bash
+{test_command} --filter="{task_tests}"  # Should pass
+{test_command}                           # Full suite — no regressions
+```
 
 ---
 
@@ -244,6 +281,10 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
   - Every requirement has at least one implementing task
   - Flag orphans: "R1.3 has no implementing task"
   - Requirement Coverage table populated
+- [ ] **Test coverage** (if tests.md exists):
+  - Every test has an implementing task
+  - Task `**Makes GREEN**` section populated
+  - Test Coverage table populated
 
 ### Step 8: Save and Report
 
@@ -341,6 +382,14 @@ Problems:
 ## Integration
 
 **Before**: `/mdt:architecture` (required — provides shared patterns + size limits)
+**Before** (optional): `/mdt:tests` (provides test→requirement mapping)
 **After**: `/mdt:implement {CR-KEY}`
+
+**With TDD**:
+```
+/mdt:tests → creates failing tests + tests.md
+/mdt:tasks → maps tasks to tests (Makes GREEN)
+/mdt:implement → verifies RED→GREEN per task
+```
 
 Context: $ARGUMENTS

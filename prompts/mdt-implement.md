@@ -1,8 +1,8 @@
-# MDT Implementation Orchestrator (v3)
+# MDT Implementation Orchestrator (v4)
 
 Execute tasks from a task list with constraint verification after each task.
 
-**Core Principle**: Verify size (flag/STOP), structure, and no duplication after each task.
+**Core Principle**: Verify TDD (RED→GREEN), size (flag/STOP), structure, and no duplication after each task.
 
 ## User Input
 
@@ -33,7 +33,11 @@ $ARGUMENTS
 4. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
    - If found: track which requirements each task implements
    - After task completion, mark requirements as satisfied
-5. Find first incomplete task
+5. **Load tests if exists**: Check `docs/CRs/{CR-KEY}/tests.md`
+   - If found: enable TDD verification mode
+   - Extract test file locations and requirement→test mapping
+   - Track which tests should go RED→GREEN per task
+6. Find first incomplete task
 
 ### Step 2: Execute Task
 
@@ -69,7 +73,19 @@ $ARGUMENTS
 {task content}
 ```
 
-**2c. Run verification:**
+**2c. TDD Pre-check** (if tests.md exists):
+```bash
+# Record which tests are currently RED for this task's requirements
+{test_command} --filter="{task_test_filter}" 2>&1 | tee /tmp/pre-test.log
+# Expected: tests for this task's requirements should FAIL
+```
+
+If tests already pass before implementation → investigate:
+- Is there existing code that satisfies this?
+- Was this task already partially done?
+- Are tests too loose?
+
+**2d. Run verification:**
 ```bash
 {build_command}   # must compile
 {test_command}    # must pass
@@ -79,7 +95,38 @@ $ARGUMENTS
 
 After each task, verify **before** marking complete:
 
-**3a. Size check (three zones):**
+**3a. TDD check** (if tests.md exists):
+```bash
+# Run tests for this task's requirements
+{test_command} --filter="{task_test_filter}"
+```
+
+| Pre-Task | Post-Task | Verdict |
+|----------|-----------|---------|  
+| RED | GREEN | ✅ TDD satisfied |
+| RED | RED | ⛔ Implementation incomplete |
+| GREEN | GREEN | ⚠️ Tests were already passing (investigate) |
+| GREEN | RED | ⛔ REGRESSION — broke something |
+
+**TDD Failure Handling**:
+```markdown
+⛔ TDD VERIFICATION FAILED
+
+Task {N.N} did not satisfy TDD requirements.
+
+**Expected GREEN**:
+- `{test_name}` — still RED
+- `{test_name}` — still RED
+
+**Regression** (was GREEN, now RED):
+- `{test_name}` — BROKEN
+
+[retry] — Agent attempts fix (max 2 retries)
+[investigate] — Review test expectations vs implementation
+[stop] — Halt orchestration
+```
+
+**3b. Size check (three zones):**
 ```bash
 lines=$(wc -l < "{file}")
 default={default_limit}
@@ -96,12 +143,12 @@ else
 fi
 ```
 
-**3b. Structure check:**
+**3c. Structure check:**
 ```bash
 ls -la {expected_path}  # Must exist at correct location
 ```
 
-**3c. Duplication check:**
+**3d. Duplication check:**
 ```bash
 # Check if task file duplicates logic that should be imported
 # Example: validation patterns that should come from shared validators
@@ -111,9 +158,10 @@ grep -l "{pattern_that_should_be_shared}" {new_file}
 
 ### Step 4: Handle Results
 
-**✅ OK (under default):**
+**✅ OK (TDD satisfied, under default):**
 ```markdown
 ✓ Task {N.N} complete
+  TDD: RED → GREEN ({N} tests)
   File: {path} ({N} lines)
   Status: OK
 ```
@@ -121,6 +169,7 @@ grep -l "{pattern_that_should_be_shared}" {new_file}
 **⚠️ FLAG (over default, under hard max):**
 ```markdown
 ⚠️ Task {N.N} complete with WARNING
+  TDD: RED → GREEN ({N} tests)
   File: {path} ({N} lines)
   Default: {default}, Hard Max: {hard_max}
   
@@ -165,10 +214,13 @@ Only after verification:
 
 1. Update tasks.md: `- [ ]` → `- [x]`
 2. If flagged, add note: `- [x] ⚠️ {N} lines (flagged)`
-3. **Update Requirement Coverage** (if requirements.md exists):
+3. **Update Test Coverage** (if tests.md exists):
+   - Find tests this task made GREEN
+   - Update status in tests.md: `🔴 RED` → `✅ GREEN`
+4. **Update Requirement Coverage** (if requirements.md exists):
    - Find requirements this task implements (from task's `**Implements**` field)
    - Update status: `⬜ Pending` → `✅ Satisfied`
-4. Report result
+5. Report result
 
 ### Step 6: Phase Boundary
 
@@ -178,6 +230,11 @@ At end of each phase:
 ═══════════════════════════════════════════
 ✓ Phase {N} Complete
 ═══════════════════════════════════════════
+
+**TDD summary** (if tests.md exists):
+| Test File | Before Phase | After Phase |
+|-----------|--------------|-------------|
+| {test_path} | {N} RED | {N} GREEN |
 
 **Size summary**:
 | File | Lines | Limit | Status |
@@ -196,6 +253,17 @@ At end of each phase:
 ═══════════════════════════════════════════
 Implementation Complete: {CR-KEY}
 ═══════════════════════════════════════════
+
+### TDD Summary
+
+*(Include if tests.md exists)*
+
+| Test File | Initial | Final | Status |
+|-----------|---------|-------|--------|
+| {test_path} | {N} RED | {N} GREEN | ✅ All passed |
+
+**Tests transitioned**: {N} RED → GREEN
+**Regressions**: 0 (no GREEN → RED)
 
 ### Size Summary
 | File | Lines | Default | Hard Max | Status |
@@ -225,6 +293,7 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 
 ### Next Steps
 - [ ] Review flagged files — can they be improved?
+- [ ] Verify all tests GREEN: `{test_command}`
 - [ ] Run `/mdt:tech-debt {CR-KEY}`
 - [ ] Commit changes
 ```
@@ -238,6 +307,16 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 - Source dir: {source_dir}
 - Test command: {test_command}
 - Extension: {ext}
+
+## TDD Context (if tests.md exists)
+**Tests to make GREEN**:
+- `{test_file}`: `{test_name}` — {what it tests}
+- `{test_file}`: `{test_name}` — {what it tests}
+
+**Run before starting**: `{test_command} --filter={filter}`
+- Confirm these tests are RED
+
+**Success criteria**: These specific tests pass after implementation.
 
 ## Size Constraints
 - Default: {N} lines → aim for this
@@ -255,8 +334,9 @@ If writing code similar to these → STOP, import instead.
 {task content}
 
 ## After Completion
-1. Check: `wc -l {file}` — report line count
-2. Check: imports from shared modules, no duplication
+1. Check: `{test_command}` — tests for this task should now pass
+2. Check: `wc -l {file}` — report line count
+3. Check: imports from shared modules, no duplication
 ```
 
 ## Error Handling
@@ -272,16 +352,25 @@ If writing code similar to these → STOP, import instead.
 
 ## Behavioral Rules
 
-1. **Three zones**: OK (≤default), FLAG (default to 1.5x), STOP (>1.5x)
-2. **FLAG completes task** — but warning recorded
-3. **STOP blocks task** — cannot mark complete
-4. **Duplication is STOP** — as bad as size violation
-5. **Phase 1 first** — shared utilities must exist before features
-6. **Build + test required** — both must pass
+1. **TDD verification** — if tests.md exists, verify RED→GREEN per task
+2. **Three zones**: OK (≤default), FLAG (default to 1.5x), STOP (>1.5x)
+3. **FLAG completes task** — but warning recorded
+4. **STOP blocks task** — cannot mark complete
+5. **Duplication is STOP** — as bad as size violation
+6. **Phase 1 first** — shared utilities must exist before features
+7. **Build + test required** — both must pass
+8. **Regression is STOP** — if previously GREEN test becomes RED, halt immediately
 
 ## Integration
 
-**Before**: `/mdt:tasks` generated task list with limits
+**Before**: `/mdt:tasks` generated task list with limits (and `/mdt:tests` if TDD enabled)
 **After**: `/mdt:tech-debt` catches anything that slipped through
+
+**TDD Flow** (when tests.md exists):
+```
+/mdt:tests → creates failing tests
+/mdt:tasks → maps tasks to tests  
+/mdt:implement → verifies RED→GREEN per task
+```
 
 Context: $ARGUMENTS

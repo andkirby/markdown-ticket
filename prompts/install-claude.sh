@@ -112,6 +112,7 @@ MDT_COMMANDS=(
     "implement"
     "tech-debt"
     "reflection"
+    "tests"
 )
 
 # Check if Claude commands directory exists, create if not
@@ -195,15 +196,16 @@ show_usage() {
     echo "  /mdt:ticket-creation    - Create CR with structured questioning"
     echo "  /mdt:requirements       - Generate EARS-formatted requirements"
     echo "  /mdt:assess             - Evaluate affected code fitness"
+    echo "  /mdt:tests              - Generate BDD test specs + executable tests"
     echo "  /mdt:architecture       - Surface decisions, define structure + size limits"
     echo "  /mdt:clarification      - Fill specification gaps"
     echo "  /mdt:tasks              - Break CR into constrained tasks"
-    echo "  /mdt:implement          - Execute tasks with verification"
+    echo "  /mdt:implement          - Execute tasks with TDD verification"
     echo "  /mdt:tech-debt          - Detect debt patterns"
     echo "  /mdt:reflection         - Capture learnings"
     echo
     echo "Full workflow chain:"
-    echo "  /mdt:ticket-creation → /mdt:requirements → /mdt:assess"
+    echo "  /mdt:ticket-creation → /mdt:requirements → /mdt:assess → /mdt:tests"
     echo "  → /mdt:architecture → /mdt:clarification → /mdt:tasks"
     echo "  → /mdt:implement → /mdt:tech-debt → /mdt:reflection"
     echo

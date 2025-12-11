@@ -1,4 +1,4 @@
-# MDT Prompt Commands (v2)
+# MDT Prompt Commands
 
 Structured workflows for AI agents managing Change Request tickets via MCP mdt-all system.
 
@@ -11,6 +11,7 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 | `/mdt:ticket-creation` | Create CR with structured questioning | CR in MDT system |
 | `/mdt:requirements` | Generate EARS-formatted requirements | `docs/CRs/{CR-KEY}/requirements.md` |
 | `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
+| `/mdt:tests` | Generate BDD test specs + executable tests | `docs/CRs/{CR-KEY}/tests.md` + test files |
 | `/mdt:architecture` | Surface decisions, define structure + size limits | CR section or `architecture.md` |
 | `/mdt:clarification` | Fill specification gaps | Updated CR sections |
 | `/mdt:tasks` | Break CR into constrained tasks | `docs/CRs/{CR-KEY}/tasks.md` |
@@ -29,12 +30,16 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
         │                        ⚠️ Skip for refactoring/tech-debt
         ▼
 /mdt:assess (optional) ────────── Decision point: 1/2/3
-        │                        Evaluate code fitness
+        │                        Evaluate code fitness + test coverage
         │
         ├─► Option 1: Just integrate (proceed)
         ├─► Option 2: Refactor inline (expand CR scope)
         └─► Option 3: Split CRs (create refactor CR first)
         │
+        ▼
+/mdt:tests ────────────────────── Creates: tests.md + test files (RED)
+        │                        BDD specs from requirements or behavior
+        │                        Tests written BEFORE implementation
         ▼
 /mdt:architecture ─────────────── Simple: CR section (~60 lines)
         │                        Complex: architecture.md (extracted)
@@ -44,9 +49,10 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
         ▼
 /mdt:tasks ────────────────────── Creates: tasks.md
         │                        Constrained task list
+        │                        Each task → makes specific tests GREEN
         ▼
-/mdt:implement ────────────────── Executes tasks with verification
-        │
+/mdt:implement ────────────────── Executes tasks with TDD verification
+        │                        RED → GREEN → Refactor cycle
         ▼
 /mdt:tech-debt ────────────────── Creates: debt.md
         │                        Post-implementation analysis
@@ -71,22 +77,26 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 /mdt:ticket-creation
         │
         ▼
-/mdt:assess (optional but useful) ── Decision point
+/mdt:assess (recommended) ─────────── Decision point + test coverage gaps
         │
         ▼
-/mdt:architecture ────────────────── Define target structure + size limits
+/mdt:tests ────────────────────────── Behavior preservation tests
+        │                             Lock current behavior before changes
+        │                             Tests must be GREEN before refactoring
+        ▼
+/mdt:architecture ─────────────────── Define target structure + size limits
         │
         ▼
-/mdt:tasks ───────────────────────── Constrained task list
+/mdt:tasks ────────────────────────── Constrained task list
         │
         ▼
-/mdt:implement ───────────────────── Execute with verification
+/mdt:implement ────────────────────── Execute with verification
+        │                             Behavior tests stay GREEN throughout
+        ▼
+/mdt:tech-debt ────────────────────── Post-implementation analysis
         │
         ▼
-/mdt:tech-debt ───────────────────── Post-implementation analysis
-        │
-        ▼
-/mdt:reflection ──────────────────── Update CR with learnings
+/mdt:reflection ───────────────────── Update CR with learnings
 ```
 
 ### What the CR Should Capture Instead
@@ -288,6 +298,28 @@ Generates `docs/CRs/{CR-KEY}/requirements.md`:
 | State | WHILE `<state>` the `<s>` shall | WHILE offline, the `SyncQueue` shall queue mutations |
 | Unwanted | IF `<error>` THEN the `<s>` shall | IF timeout, THEN `RetryHandler` shall retry 3x |
 
+### `/mdt:tests`
+
+Generates BDD test specifications and executable test files:
+
+- **Mode Detection**: Feature (RED tests) vs Refactoring (GREEN tests)
+- **BDD Scenarios**: Gherkin format from EARS requirements
+- **Test Files**: Executable tests in project's test directory
+- **Coverage Mapping**: Requirement → Test → Task traceability
+
+**Outputs**:
+| Output | Location |
+|--------|----------|
+| Test spec | `docs/CRs/{CR-KEY}/tests.md` |
+| Test files | `{test_dir}/integration/*.test.{ext}` |
+
+**Test Strategy by CR Type**:
+| CR Type | Input | Test State |
+|---------|-------|------------|
+| Feature | requirements.md | RED (implementation pending) |
+| Refactoring | assess output | GREEN (locking behavior) |
+| Bug Fix | CR problem | RED (reproduces bug) |
+
 ### `/mdt:assess`
 
 Evaluates affected code fitness before architecture:
@@ -384,11 +416,12 @@ prompts/
 ├── CLAUDE.md                # Development guidance
 ├── mdt-ticket-creation.md   # CR creation
 ├── mdt-requirements.md      # EARS requirements (v1)
-├── mdt-assess.md            # Code fitness assessment (v1)
+├── mdt-assess.md            # Code fitness assessment (v2)
+├── mdt-tests.md             # BDD test generation (v1)
 ├── mdt-architecture.md      # Architecture design (v3)
 ├── mdt-clarification.md     # Gap filling
-├── mdt-tasks.md             # Task breakdown (v2)
-├── mdt-implement.md         # Orchestrator (v2)
+├── mdt-tasks.md             # Task breakdown (v4)
+├── mdt-implement.md         # Orchestrator (v4)
 ├── mdt-tech-debt.md         # Debt detection (v2)
 └── mdt-reflection.md        # Learning capture
 ```
@@ -398,6 +431,7 @@ prompts/
 | Workflow | Output Location |
 |----------|-----------------|
 | `/mdt:requirements` | `docs/CRs/{CR-KEY}/requirements.md` |
+| `/mdt:tests` | `docs/CRs/{CR-KEY}/tests.md` + `{test_dir}/*.test.{ext}` |
 | `/mdt:architecture` | CR section (simple) or `docs/CRs/{CR-KEY}/architecture.md` (complex) |
 | `/mdt:tasks` | `docs/CRs/{CR-KEY}/tasks.md` |
 | `/mdt:tech-debt` | `docs/CRs/{CR-KEY}/debt.md` |
@@ -413,13 +447,78 @@ prompts/
 7. **debt.md is diagnosis** — fix via new CR, not direct execution
 8. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
 
+## TDD/BDD Workflow
+
+### Test-First Development
+
+Tests are **specifications**, not verification. `/mdt:tests` generates executable tests BEFORE implementation:
+
+```
+Requirements (EARS) → Tests (BDD/Gherkin) → Implementation → Tests GREEN
+         ↑                    ↑                    ↑              ↑
+    What should       How to verify        Make it         Prove it
+      happen           it works             work            works
+```
+
+### Two Modes
+
+| CR Type | Test Strategy | Expected Test State |
+|---------|---------------|--------------------|
+| Feature / Enhancement | Behavior specification | RED before implementation |
+| Refactoring / Tech-Debt | Behavior preservation | GREEN before refactoring |
+
+### Feature Flow (RED → GREEN)
+
+```
+/mdt:requirements → /mdt:tests → /mdt:architecture → /mdt:tasks → /mdt:implement
+        │                │                                              │
+        ↓                ↓                                              ↓
+   EARS specs     Tests written                                   Tests pass
+                  (should FAIL)                                   (now GREEN)
+```
+
+1. `/mdt:tests` reads requirements.md
+2. Generates BDD scenarios from EARS statements
+3. Creates test files that FAIL (module doesn't exist)
+4. `/mdt:implement` writes code to make tests GREEN
+
+### Refactoring Flow (GREEN → GREEN)
+
+```
+/mdt:assess → /mdt:tests → /mdt:architecture → /mdt:tasks → /mdt:implement
+      │            │                                              │
+      ↓            ↓                                              ↓
+  Find gaps   Lock behavior                                  Behavior
+             (must PASS now)                                 preserved
+```
+
+1. `/mdt:assess` identifies test coverage gaps
+2. `/mdt:tests` generates behavior preservation tests
+3. Tests must PASS against current code (locking behavior)
+4. `/mdt:implement` refactors while keeping tests GREEN
+
+### TDD Verification in `/mdt:implement`
+
+After each task, verify:
+
+| Check | Feature CR | Refactoring CR |
+|-------|------------|----------------|
+| Tests exist | Required | Required |
+| Initial state | Were RED | Were GREEN |
+| Final state | Now GREEN | Still GREEN |
+| No tests deleted | ✓ | ✓ |
+| No tests weakened | ✓ | ✓ |
+
+---
+
 ## Requirements Integration
 
 When `requirements.md` exists, downstream prompts consume it:
 
 | Prompt | How It Uses requirements.md |
 |--------|-----------------------------|
+| `/mdt:tests` | Transforms EARS → BDD scenarios, creates test files |
 | `/mdt:architecture` | Maps components to requirements, validates coverage |
-| `/mdt:tasks` | Each task has `**Implements**: R1.1, R1.2`, coverage table |
-| `/mdt:implement` | Marks requirements satisfied as tasks complete |
+| `/mdt:tasks` | Each task has `**Implements**: R1.1, R1.2` + `**Tests**: test_xxx` |
+| `/mdt:implement` | Verifies tests GREEN, marks requirements satisfied |
 | `/mdt:tech-debt` | Flags unsatisfied requirements as High severity debt |

@@ -1,4 +1,4 @@
-# MDT Code Fitness Assessment Workflow (v1)
+# MDT Code Fitness Assessment Workflow (v2)
 
 Assess affected code before architecture design. Surfaces the decision: integrate as-is, refactor inline, or split CRs.
 
@@ -77,14 +77,32 @@ grep -E "^import|^from" {file} | wc -l
 - 4-7 dependencies → Medium coupling
 - 8+ dependencies → High coupling
 
-**2d. Test Coverage**
+**2d. Test Coverage** (Critical for Refactoring)
 ```bash
 # Check if test file exists
 ls {test_dir}/*{filename}* 2>/dev/null
+
+# If exists, count test cases
+grep -c "it(\|test(\|def test_" {test_file}
+
+# Check test recency vs source recency
+stat -f "%m" {test_file}  # test last modified
+stat -f "%m" {source_file}  # source last modified
 ```
-- Test file exists with recent changes → Good
-- Test file exists but stale → Partial
-- No test file → None
+
+| Coverage Level | Criteria | Refactor Risk |
+|----------------|----------|---------------|
+| ✅ Good | Tests exist, cover public interface, recent | Low — behavior locked |
+| ⚠️ Partial | Tests exist but stale or incomplete | Medium — some behavior unlocked |
+| 🔴 None | No test file or empty tests | High — behavior undocumented |
+
+**Behavioral Analysis** (when coverage is Partial or None):
+
+Identify behaviors that MUST be tested before refactoring:
+- Public function signatures and return shapes
+- Error conditions and error types thrown
+- Side effects (events emitted, files written, APIs called)
+- Edge cases visible in code (null checks, empty arrays, etc.)
 
 **2e. Recent Churn** (if git available)
 ```bash
@@ -100,11 +118,13 @@ For each file, calculate fitness:
 
 | Factor | Weight | Scoring |
 |--------|--------|---------|
-| Size vs. Limit | 30% | Over limit = 0, At limit = 50, Under = 100 |
-| Change Surface | 25% | Low = 100, Medium = 60, High = 20 |
-| Coupling | 20% | Low = 100, Medium = 60, High = 30 |
-| Test Coverage | 15% | Good = 100, Partial = 50, None = 20 |
-| Churn | 10% | Stable = 100, Active = 60, Volatile = 30 |
+| Size vs. Limit | 25% | Over limit = 0, At limit = 50, Under = 100 |
+| Change Surface | 20% | Low = 100, Medium = 60, High = 20 |
+| Coupling | 15% | Low = 100, Medium = 60, High = 30 |
+| **Test Coverage** | **25%** | Good = 100, Partial = 50, None = 10 |
+| Churn | 15% | Stable = 100, Active = 60, Volatile = 30 |
+
+> ⚠️ **Test Coverage is weighted heavily** because refactoring without tests is flying blind. A file with good size but no tests is riskier than an oversized file with solid tests.
 
 **Verdicts**:
 - Score ≥ 70 → ✅ Healthy
@@ -120,8 +140,34 @@ For files with ⚠️ or 🔴 verdict:
 | Oversized (1.0-1.5x limit) | 1-2 hours | Extract one concern |
 | Oversized (>1.5x limit) | 2-4 hours | Split into modules |
 | High coupling | 2-3 hours | Introduce interface |
-| No tests | 1-2 hours | Add test coverage first |
+| **No tests (🔴 Critical)** | **2-4 hours** | **Must add behavioral tests BEFORE refactoring** |
+| **Partial tests** | 1-2 hours | Add missing behavioral coverage |
 | High churn + low tests | 4+ hours | Stabilize before changing |
+
+### Test Coverage Gate
+
+When test coverage is 🔴 None or ⚠️ Partial on files in the change path:
+
+```markdown
+⚠️ TEST COVERAGE GATE
+
+File `{filename}` has {None/Partial} test coverage.
+Refactoring without tests risks breaking undocumented behavior.
+
+**Behaviors identified for testing**:
+| Behavior | Type | Risk if Untested |
+|----------|------|------------------|
+| `{function}` returns `{shape}` | Return contract | Silent shape change |
+| `{function}` throws `{ErrorType}` | Error contract | Wrong error type |
+| `{function}` emits `{event}` | Side effect | Missing events |
+
+**Recommendation**: Add behavioral preservation tests before proceeding.
+
+Options:
+[A] Add tests inline (expand CR scope)
+[B] Create test CR first (CR-TEST blocks this CR)
+[C] Proceed without tests (accept risk)
+```
 
 ### Step 5: Determine Recommendation
 
@@ -142,6 +188,7 @@ Based on findings:
 - Total refactor effort > 4 hours
 - Refactoring benefits multiple future CRs
 - High-risk files (volatile + low tests)
+- **🔴 No test coverage on files being refactored** (test CR first)
 
 ### Step 6: Present Assessment
 
@@ -160,7 +207,25 @@ Based on findings:
 
 | File | Lines | Limit | Coupling | Tests | Churn | Score | Verdict |
 |------|-------|-------|----------|-------|-------|-------|---------|
-| `{path}` | {N} | {N} | {L/M/H} | {G/P/N} | {S/A/V} | {N}% | {verdict} |
+| `{path}` | {N} | {N} | {L/M/H} | ✅/⚠️/🔴 | {S/A/V} | {N}% | {verdict} |
+
+### Test Coverage Detail
+
+| File | Coverage | Test File | Behaviors Locked | Behaviors at Risk |
+|------|----------|-----------|------------------|-------------------|
+| `{path}` | {✅/⚠️/🔴} | `{test_path}` | {N} | {N} |
+
+**Behaviors at Risk** (need tests before refactoring):
+
+{For each file with ⚠️ or 🔴 test coverage}
+
+#### `{filename}` — {N} unlocked behaviors
+
+| Behavior | Source | Why It Matters |
+|----------|--------|----------------|
+| `{function}()` returns `{Type}` | Line {N} | API contract |
+| `{function}()` throws on `{condition}` | Line {N} | Error handling |
+| `{sideEffect}` occurs when `{condition}` | Line {N} | Observable effect |
 
 ### Findings
 
@@ -228,13 +293,34 @@ Add refactoring to this CR scope.
 ---
 
 ### Option 3: Split CRs 📋
-Create refactoring CR first, feature CR depends on it.
+Create prerequisite CR(s) first, feature CR depends on them.
 
-**New CR**: {suggested title}
-**Dependency**: {CR-KEY} blocked by {NEW-CR-KEY}
+**Scenario A: Test Coverage Critical**
+
+**New CR**: "Add behavioral tests for {files}" (Test CR)
+**Then**: {CR-KEY} blocked by {TEST-CR-KEY}
+
+**Test CR Scope**:
+- Add preservation tests for `{file1}` — lock {N} behaviors
+- Add preservation tests for `{file2}` — lock {N} behaviors
+
+**Scenario B: Refactoring Needed (with test coverage OK)**
+
+**New CR**: {suggested refactoring title}
+**Dependency**: {CR-KEY} blocked by {REFACTOR-CR-KEY}
 
 **Refactoring CR Scope**:
 {list of refactoring work}
+
+**Scenario C: Both Needed**
+
+```
+{TEST-CR-KEY} (add tests)
+        ↓
+{REFACTOR-CR-KEY} (refactor with tests as safety net)
+        ↓
+{CR-KEY} (original feature)
+```
 
 **Pros**:
 - Clean separation
@@ -279,8 +365,27 @@ Next: `/mdt:architecture {CR-KEY}`
 ```
 
 **If Option 3 chosen**:
-1. Create new CR via `mdt-all:create_cr` for refactoring
-2. Update original CR with `dependsOn` via `mdt-all:update_cr_attrs`
+
+**3a. If Test CR needed**:
+1. Create test CR via `mdt-all:create_cr` type="Technical Debt"
+2. Update original CR with `dependsOn`
+
+```markdown
+✓ Created test CR: {TEST-CR-KEY}
+✓ Updated {CR-KEY} with dependency
+
+Workflow:
+1. `/mdt:tests {TEST-CR-KEY}` — generate behavioral preservation tests
+2. `/mdt:tasks {TEST-CR-KEY}` — plan test implementation
+3. `/mdt:implement {TEST-CR-KEY}` — write tests (should pass against current code)
+4. Then return to {CR-KEY} (now safe to refactor)
+
+Next: `/mdt:tests {TEST-CR-KEY}`
+```
+
+**3b. If Refactor CR needed (tests OK)**:
+1. Create refactoring CR via `mdt-all:create_cr`
+2. Update original CR with `dependsOn`
 
 ```markdown
 ✓ Created refactoring CR: {NEW-CR-KEY}
@@ -293,6 +398,24 @@ Workflow:
 4. Then return to {CR-KEY}
 
 Next: `/mdt:architecture {NEW-CR-KEY}`
+```
+
+**3c. If Both needed**:
+1. Create test CR first
+2. Create refactor CR depending on test CR
+3. Update original CR depending on refactor CR
+
+```markdown
+✓ Created test CR: {TEST-CR-KEY}
+✓ Created refactor CR: {REFACTOR-CR-KEY} (depends on {TEST-CR-KEY})
+✓ Updated {CR-KEY} (depends on {REFACTOR-CR-KEY})
+
+Workflow:
+1. `/mdt:tests {TEST-CR-KEY}` → implement → tests pass
+2. `/mdt:architecture {REFACTOR-CR-KEY}` → tasks → implement (tests stay green)
+3. Return to {CR-KEY}
+
+Next: `/mdt:tests {TEST-CR-KEY}`
 ```
 
 ---
@@ -331,6 +454,8 @@ Outputs condensed version:
 5. **Don't over-assess** — if all files healthy, say so quickly
 6. **Consider change path** — file might be concerning but not in direct path
 7. **Churn + low tests = danger** — flag this combination explicitly
+8. **Test coverage gates refactoring** — 🔴 None coverage on refactor target = must add tests first
+9. **Behavioral preservation > new tests** — for refactoring, lock existing behavior before changing structure
 
 ## Integration
 
