@@ -1,6 +1,7 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { MCPTools } from '../tools/index.js';
+import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -45,11 +46,35 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
         ]
       };
     } catch (error) {
+      // Check if this is a validation error that should return an MCP error response
+      const errorMessage = (error as Error).message;
+
+      // List of validation errors that should return MCP error responses
+      const validationErrorPatterns = [
+        /not found/,
+        /required for/,
+        /Invalid operation/,
+        /parameter is required/,
+        /validation failed/,
+        /No YAML frontmatter found/
+      ];
+
+      const isValidationError = validationErrorPatterns.some(pattern =>
+        pattern.test(errorMessage)
+      );
+
+      // For validation errors in manage_cr_sections, return proper MCP error response
+      // Other tools should continue using formatted content errors for backward compatibility
+      if (isValidationError && name === 'manage_cr_sections') {
+        throw new McpError(ErrorCode.ConnectionClosed, errorMessage); // Use ErrorCode.ConnectionClosed (-32000)
+      }
+
+      // For other errors, return formatted content (legacy behavior)
       return {
         content: [
           {
             type: 'text',
-            text: `❌ **Error in ${name}**\n\n${(error as Error).message}\n\nPlease check your input parameters and try again.`
+            text: `❌ **Error in ${name}**\n\n${errorMessage}\n\nPlease check your input parameters and try again.`
           }
         ]
       };
