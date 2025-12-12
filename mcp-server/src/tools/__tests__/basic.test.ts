@@ -1,10 +1,11 @@
+import fs from 'fs/promises';
+import path from 'path';
+import { execSync } from 'child_process';
+
 describe('MCP Tools Basic Tests', () => {
   it('should verify MCP server can be built', async () => {
     // This test just verifies that the MCP server can be imported
     // and the basic structure is in place
-
-    const fs = await import('fs/promises');
-    const path = await import('path');
 
     // Check that the built files exist
     const distIndex = path.join(process.cwd(), 'dist', 'index.js');
@@ -16,9 +17,6 @@ describe('MCP Tools Basic Tests', () => {
 
   it('should verify consolidation results', async () => {
     // Read the built tools file and count the tools
-    const fs = await import('fs/promises');
-    const path = await import('path');
-
     const toolsPath = path.join(process.cwd(), 'dist', 'tools', 'index.js');
     const toolsContent = await fs.readFile(toolsPath, 'utf-8');
 
@@ -56,8 +54,6 @@ describe('MCP Tools Basic Tests', () => {
 
   it('should verify token reduction achievement', async () => {
     // Test the overall optimization success using the verification script logic
-    const { execSync } = await import('child_process');
-
     try {
       // Run the verification script and capture output
       const output = execSync('node verify-optimization.cjs', {
@@ -78,7 +74,7 @@ describe('MCP Tools Basic Tests', () => {
 
       console.log('✅ Optimization verification passed - all checks successful');
 
-    } catch (error) {
+    } catch (error: any) {
       // If verification script fails, fail the test
       fail(`Verification script failed: ${error.message}`);
     }
