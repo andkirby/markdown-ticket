@@ -311,9 +311,16 @@ This project is used by the E2E test suite to verify:
 
       // Extract CR key from response and add it to the response object
       if (response.success && response.data) {
-        const keyMatch = response.data.match(/- Key: (.+)$/m);
-        if (keyMatch) {
-          response.key = keyMatch[1];
+        // Look for "✅ **Created CR KEY**: Title" format
+        const titleMatch = response.data.match(/✅ \*\*Created CR (.+?)\*\*:/);
+        if (titleMatch) {
+          response.key = titleMatch[1];
+        } else {
+          // Fallback to looking for "- Key: KEY" format
+          const keyMatch = response.data.match(/- Key: (.+)$/m);
+          if (keyMatch) {
+            response.key = keyMatch[1];
+          }
         }
       }
 

@@ -2,12 +2,13 @@
  * Real MCP Client Wrapper
  *
  * Provides a unified interface for communicating with MCP server
- * through both stdio and HTTP transports using real JSON-RPC communication.
+ * through both stdio and HTTP transports using proper MCP protocol.
  */
 
 import { TestEnvironment } from './test-environment';
 import { StdioTransport, HttpTransport } from './mcp-transports';
 import { MCPLogger } from './mcp-logger';
+import { spawn, ChildProcess } from 'child_process';
 
 export interface MCPTool {
   name: string;
@@ -37,6 +38,8 @@ export class MCPClient {
   private transport?: StdioTransport | HttpTransport;
   private logger = MCPLogger.getInstance();
   private requestId = 0;
+  private serverProcess?: ChildProcess;
+  private pendingRequests: Map<number, { resolve: Function; reject: Function }> = new Map();
 
   constructor(testEnv: TestEnvironment, options: MCPClientOptions = {}) {
     this.testEnv = testEnv;
@@ -62,12 +65,13 @@ export class MCPClient {
 
     try {
       if (this.options.transport === 'stdio') {
-        this.transport = new StdioTransport(this.testEnv);
+        // Use MCP SDK client for stdio transport
+        await this.startStdioClient();
       } else {
+        // Use HTTP transport (existing implementation)
         this.transport = new HttpTransport(this.testEnv);
+        await this.transport.start();
       }
-
-      await this.transport.start();
       this.logger.info('MCP client started successfully', { transport: this.options.transport });
     } catch (error) {
       this.transport = undefined;
@@ -76,6 +80,76 @@ export class MCPClient {
     }
   }
 
+  /**
+   * Start stdio client with proper MCP protocol handling
+   */
+  private async startStdioClient(): Promise<void> {
+    // Use the existing StdioTransport which spawns the server correctly
+    this.transport = new StdioTransport(this.testEnv);
+    await this.transport.start();
+
+    // Get reference to the spawned process for direct communication
+    this.serverProcess = (this.transport as StdioTransport).getProcess();
+
+    // Set up proper stdio communication that handles MCP protocol
+    this.setupStdioCommunication();
+  }
+
+  /**
+   * Set up stdio communication to handle MCP protocol properly
+   */
+  private setupStdioCommunication(): void {
+    if (!this.serverProcess) {
+      throw new Error('Server process not available');
+    }
+
+    // The MCP server using StdioServerTransport expects JSON-RPC messages
+    // Each message should be sent as a separate line followed by \n
+    // We need to ensure proper message framing
+
+    // Buffer for incoming data
+    let buffer = '';
+
+    this.serverProcess.stdout?.on('data', (data) => {
+      buffer += data.toString();
+
+      // Process complete lines
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+      // Process each complete JSON-RPC message
+      lines.forEach(line => {
+        if (line.trim()) {
+          try {
+            const message = JSON.parse(line);
+            // Handle the message appropriately
+            this.handleServerMessage(message);
+          } catch (e) {
+            this.logger.warn('Failed to parse server message', { line: line.trim() });
+          }
+        }
+      });
+    });
+  }
+
+  /**
+   * Handle incoming messages from the MCP server
+   */
+  private handleServerMessage(message: any): void {
+    // Handle JSON-RPC response
+    if (message.id && this.pendingRequests.has(message.id)) {
+      const { resolve, reject } = this.pendingRequests.get(message.id)!;
+      this.pendingRequests.delete(message.id);
+
+      if (message.error) {
+        reject(new Error(message.error.message || 'RPC error'));
+      } else {
+        resolve(message);
+      }
+    }
+  }
+
+  
   /**
    * Stop the MCP client and server connection
    */
@@ -90,6 +164,7 @@ export class MCPClient {
         this.logger.error('Error stopping transport', error instanceof Error ? error : new Error(String(error)));
       } finally {
         this.transport = undefined;
+        this.serverProcess = undefined;
       }
     }
   }
@@ -199,7 +274,8 @@ export class MCPClient {
         // Check if the content contains an error message in the expected format
         // Some tools (like get_cr, update_cr_status) return error messages as formatted content
         // with success=true, so we should NOT convert these to failures
-        if (content && content.includes('❌ **Error in')) {
+        // Only check for errors if content is a string
+        if (content && typeof content === 'string' && content.includes('❌ **Error in')) {
           // Check if this is a tool that returns errors as content
           const toolsWithContentErrors = ['get_cr', 'update_cr_status', 'create_cr', 'delete_cr', 'update_cr_attrs', 'manage_cr_sections', 'list_crs'];
 
@@ -286,36 +362,42 @@ export class MCPClient {
   }
 
   /**
-   * Call tool via stdio transport
+   * Call tool via stdio transport with proper MCP protocol
    */
   private async callToolStdio(request: any): Promise<any> {
-    const serverProcess = (this.transport as StdioTransport).getProcess();
+    if (!this.serverProcess) {
+      throw new Error('Server process not available');
+    }
 
     return new Promise((resolve, reject) => {
-      let responseData = '';
+      const requestId = request.id;
       const timeout = setTimeout(() => {
+        this.pendingRequests.delete(requestId);
         reject(new Error(`Tool call timeout: ${request.method}`));
       }, this.options.timeout);
 
-      serverProcess.stdout?.once('data', (data) => {
-        clearTimeout(timeout);
-        responseData = data.toString();
-
-        try {
-          const parsed = JSON.parse(responseData);
-          resolve(parsed);
-        } catch (e) {
-          reject(new Error(`Invalid JSON response: ${responseData}`));
+      // Store the promise callbacks for response handling
+      this.pendingRequests.set(requestId, {
+        resolve: (response: any) => {
+          clearTimeout(timeout);
+          resolve(response);
+        },
+        reject: (error: any) => {
+          clearTimeout(timeout);
+          reject(error);
         }
       });
 
-      serverProcess.stdout?.once('error', (error) => {
+      // Send the request as a JSON-RPC message
+      const message = JSON.stringify(request) + '\n';
+      this.serverProcess.stdin?.write(message);
+
+      // Set up error handling
+      this.serverProcess.on('error', (error) => {
         clearTimeout(timeout);
+        this.pendingRequests.delete(requestId);
         reject(error);
       });
-
-      // Send the request
-      serverProcess.stdin?.write(JSON.stringify(request) + '\n');
     });
   }
 
@@ -352,11 +434,26 @@ export class MCPClient {
         .filter((item: any) => item.type === 'text')
         .map((item: any) => item.text);
 
-      return textItems.length === 1 ? textItems[0] : textItems.join('\n');
+      const text = textItems.length === 1 ? textItems[0] : textItems.join('\n');
+
+      return text;
     }
 
     // Handle direct content
-    return result.content || result;
+    const content = result.content || result;
+
+    // If content is not a string, convert it appropriately
+    if (typeof content !== 'string' && typeof content !== 'undefined') {
+      // For tools/list, we expect an array of tools
+      if (Array.isArray(content)) {
+        return content;
+      }
+      // For other non-string content, return as-is (could be parsed JSON already)
+      return content;
+    }
+
+    // Return content as-is without automatic JSON parsing
+    return content;
   }
 
   /**
@@ -374,5 +471,16 @@ export class MCPClient {
    */
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Register a project for testing
+   * This is a no-op method for test compatibility
+   */
+  registerProject(projectCode: string, projectInfo: { name: string; path: string; description?: string }): void {
+    // In the actual MCP server implementation, projects are discovered
+    // through the configuration system, not registered at runtime
+    // This method exists for test compatibility only
+    this.logger.debug('Project registration requested (no-op)', { projectCode, projectInfo });
   }
 }
