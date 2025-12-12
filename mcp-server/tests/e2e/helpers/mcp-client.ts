@@ -142,7 +142,10 @@ export class MCPClient {
       this.pendingRequests.delete(message.id);
 
       if (message.error) {
-        reject(new Error(message.error.message || 'RPC error'));
+        // Create a custom error that preserves the error code
+        const error = new Error(message.error.message || 'RPC error') as any;
+        error.code = message.error.code;
+        reject(error);
       } else {
         resolve(message);
       }
@@ -333,7 +336,7 @@ export class MCPClient {
           const response = {
             success: false,
             error: {
-              code: -1,
+              code: error.code || -1, // Use error code if available, otherwise default to -1
               message: error.message || 'Unknown error'
             }
           };
