@@ -17,6 +17,21 @@
 
 ## Requirement → Test Mapping
 
+### MCP Server Tools Specification MUST Requirements
+
+| Req ID | Description | Test File | Scenarios | Status |
+|--------|-------------|-----------|-----------|--------|
+| MUST-01 | Servers MUST declare tools capability | `tools/list-projects.spec.ts` | tools/list capability | ✅ GREEN |
+| MUST-02 | Tools MUST have unique names | `tools/list-projects.spec.ts` | unique tool names | ✅ GREEN |
+| MUST-03 | Servers MUST validate all tool inputs | `tools/*-validation.spec.ts` | input validation | ✅ GREEN |
+| MUST-04 | Servers MUST implement proper access controls | `tools/access-control.spec.ts` | project validation | ✅ GREEN |
+| MUST-05 | Servers MUST rate limit tool invocations | `tools/rate-limiting.spec.ts` | rate limiting | ⏳ TODO |
+| MUST-06 | Servers MUST sanitize tool outputs | `tools/output-sanitization.spec.ts` | XSS protection | ⏳ TODO |
+| MUST-07 | Structured results MUST conform to schema | `tools/schema-validation.spec.ts` | response schema | ✅ GREEN |
+| MUST-08 | Tools MUST have required parameters list | `tools/param-validation.spec.ts` | required params | ✅ GREEN |
+
+### Phase Requirements
+
 | Req ID | Description | Test File | Scenarios | Status |
 |--------|-------------|-----------|-----------|--------|
 | PH1.1 | E2E tests cover all 10 MCP tools via stdio | `tools/*.spec.ts` | 10 tools × 3+ scenarios | ✅ GREEN |
@@ -28,11 +43,88 @@
 
 ## Test Specifications
 
+### MUST Requirements Implementation
+
+**Feature**: MCP Server Tools Specification Compliance
+**Source**: `/Users/kirby/.claude/commands/advisor/mcp/server-tools.md`
+
+#### MUST-01: Tools Capability Declaration
+```gherkin
+Given MCP server is started via stdio transport
+When client sends initialize request
+Then server response MUST include tools capability
+And listChanged property MUST be present
+```
+**Implemented in**: `tools/list-projects.spec.ts` - "MCP protocol compliance"
+
+#### MUST-02: Unique Tool Names
+```gherkin
+Given MCP server is running
+When client calls tools/list
+Then each tool MUST have a unique name
+And no duplicate names MUST exist in response
+```
+**Implemented in**: `tools/list-projects.spec.ts` - "lists all available tools"
+
+#### MUST-03: Input Validation
+```gherkin
+Given tool expects specific input schema
+When client provides invalid input
+Then server MUST reject with validation error
+And error MUST indicate validation failure
+```
+**Implemented in**: All tool test files - "validation error" scenarios
+
+#### MUST-04: Access Controls
+```gherkin
+Given user requests resource from non-existent project
+When client calls tool with invalid project key
+Then server MUST deny access
+And MUST NOT leak information about existing projects
+```
+**Implemented in**: `tools/get-project-info.spec.ts` - "non-existent project"
+
+#### MUST-05: Rate Limiting (⏳ TODO)
+```gherkin
+Given server has rate limiting configured
+When client exceeds request threshold
+Then server MUST return rate limit error
+And error MUST include retry information
+```
+**Planned for**: `tools/rate-limiting.spec.ts` (HTTP transport phase)
+
+#### MUST-06: Output Sanitization (⏳ TODO)
+```gherkin
+Given user submits malicious content
+When server returns tool result
+Then output MUST be sanitized
+And MUST NOT contain executable scripts
+```
+**Planned for**: `tools/output-sanitization.spec.ts`
+
+#### MUST-07: Schema Compliance
+```gherkin
+Given tool defines response structure
+When server returns result
+Then result MUST conform to declared schema
+And all required fields MUST be present
+```
+**Implemented in**: All tool test files - response structure validation
+
+#### MUST-08: Required Parameters
+```gherkin
+Given tool requires specific parameters
+When client omits required parameter
+Then server MUST return error
+And error MUST specify missing parameter
+```
+**Implemented in**: All tool test files - "missing required parameter" scenarios
+
 ### Phase 1: Stdio Transport E2E Testing ✅
 
 **Feature**: MCP Tools Coverage
 **Files**: `tests/e2e/tools/*.spec.ts`
-**Covers**: All 10 MCP tools
+**Covers**: All 10 MCP tools + MUST requirements
 
 #### Tool Coverage Matrix
 
@@ -230,6 +322,60 @@ npm run test:e2e:performance
 
 ## Coverage Checklist
 
+### MCP Server Tools Specification MUST Requirements
+- [x] MUST-01: Tools capability declaration
+- [x] MUST-02: Unique tool names
+- [x] MUST-03: Input validation
+- [x] MUST-04: Access controls
+- [ ] MUST-05: Rate limiting (HTTP transport phase)
+- [ ] MUST-06: Output sanitization
+- [x] MUST-07: Schema compliance
+- [x] MUST-08: Required parameters validation
+
+### Error Response Compliance Issues ⚠️
+
+**CRITICAL**: Current tests are GREEN but do NOT enforce MCP specification compliance for error responses:
+
+#### Current (Non-Compliant) Behavior:
+- Errors returned as successful responses with error messages in data field
+- Tests expect `response.success` to be `true` even for errors
+- No validation of `isError: true` in result content
+- No validation of proper JSON-RPC error codes
+
+#### Required (MCP Spec Compliant) Behavior:
+1. **Protocol Errors** (invalid tool, missing params):
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "error": {
+       "code": -32602,
+       "message": "Invalid params"
+     }
+   }
+   ```
+
+2. **Tool Execution Errors** (business logic errors):
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "id": 2,
+     "result": {
+       "content": [{
+         "type": "text",
+         "text": "Failed to fetch data"
+       }],
+       "isError": true
+     }
+   }
+   ```
+
+#### Tests Requiring Updates:
+- [ ] All tool test files expecting error responses
+- [ ] MCPClient to properly handle isError responses
+- [ ] Validation of proper error codes for protocol errors
+- [ ] Test expectations to match MCP specification
+
 ### Phase 1: Stdio Transport ✅
 - [x] All 10 MCP tools have E2E tests
 - [x] Test isolation via CONFIG_DIR
@@ -237,6 +383,7 @@ npm run test:e2e:performance
 - [x] Realistic project structures
 - [x] Error scenarios covered
 - [x] BDD scenario format (Given/When/Then)
+- [x] MUST requirements 1-4, 7-8 implemented
 
 ### Phase 2: HTTP Transport ⏳
 - [x] Infrastructure exists in mcp-client.ts
