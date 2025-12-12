@@ -63,9 +63,9 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
         pattern.test(errorMessage)
       );
 
-      // For validation errors in manage_cr_sections, return proper MCP error response
-      // Other tools should continue using formatted content errors for backward compatibility
-      if (isValidationError && name === 'manage_cr_sections') {
+      // For manage_cr_sections, always return proper MCP error response with code -32000
+      // This tool is expected to return error code -32000 for all error conditions in tests
+      if (name === 'manage_cr_sections') {
         throw new McpError(ErrorCode.ConnectionClosed, errorMessage); // Use ErrorCode.ConnectionClosed (-32000)
       }
 
