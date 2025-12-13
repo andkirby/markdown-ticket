@@ -1,5 +1,5 @@
-import { ExtractMetadataCommand, FileMetadata } from '../commands/ExtractMetadataCommand.js';
-import { ReadFileCommand } from '../commands/ReadFileCommand.js';
+import { ExtractMetadataCommand, FileMetadata } from '../commands/ExtractMetadataCommand';
+import { ReadFileCommand } from '../commands/ReadFileCommand';
 
 /**
  * Invoker for file operations using command pattern
@@ -45,7 +45,7 @@ export class FileOperationInvoker {
     if (!this.metadataCommand) {
       throw new Error('Metadata command not initialized');
     }
-    return await this.metadataCommand.execute(filePath);
+    return await this.metadataCommand.execute(filePath) as FileMetadata;
   }
 
   /**
@@ -56,7 +56,7 @@ export class FileOperationInvoker {
     if (!this.readCommand) {
       throw new Error('Read command not initialized');
     }
-    return await this.readCommand.execute(filePath);
+    return await this.readCommand.execute(filePath) as string;
   }
 
   /**
