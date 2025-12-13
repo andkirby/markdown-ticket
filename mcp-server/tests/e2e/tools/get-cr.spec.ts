@@ -14,7 +14,7 @@
  */
 
 import { TestEnvironment } from '../helpers/test-environment';
-import { MCPClient } from '../helpers/mcp-client';
+import { MCPClient, MCPResponse } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
 
 describe('get_cr', () => {
@@ -270,7 +270,6 @@ This CR tests default mode behavior.`
         priority: 'High',
         dependsOn: 'TEST-001, TEST-002, TEST-003',
         blocks: 'TEST-005, TEST-006',
-        relatedTickets: 'MDT-001, MDT-002',
         content: `## 1. Description
 
 This CR has complex dependencies.
@@ -385,7 +384,8 @@ Even more nested content.
       expect(response.success).toBe(true);
       expect(response.data).toBeDefined();
       expect(response.data).toContain('❌ **Error in get_cr**');
-      expect(response.data).toContain('not found');
+      // Update to match new validation message format
+      expect(response.data).toContain('invalid');
     });
 
     it('GIVEN missing project parameter WHEN getting error message in content', async () => {

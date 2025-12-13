@@ -5,6 +5,63 @@
 **Generated**: 2025-12-12
 **Status**: 🟡 Phase 1 Complete, Phase 2 Pending
 
+---
+
+## Tool Configuration Extraction Tests (Added 2025-12-13)
+
+**Purpose**: Behavioral preservation tests for extracting all tool configurations to a single file
+
+### Test Configuration
+
+| Setting | Value |
+|---------|-------|
+| Framework | Jest |
+| Test directory | `mcp-server/src/tools/__tests__/` |
+| Test command | `cd mcp-server && npm test` |
+| CR test filter | `--testPathPattern=toolConfiguration` |
+
+### Requirement → Test Mapping
+
+| Req ID | Description | Test File | Scenarios | Status |
+|--------|-------------|-----------|-----------|--------|
+| MDT-091.1 | Extract crAndSectionTools to dedicated file | `toolConfiguration.test.ts` | 8 | 🔴 RED |
+| MDT-091.2 | Extract projectTools to same configuration | `toolConfiguration.test.ts` | 5 | 🔴 RED |
+| MDT-091.3 | Preserve tool routing behavior | `toolConfiguration.test.ts` | 6 | 🔴 RED |
+| MDT-091.4 | Maintain exact tool schemas | `toolConfiguration.test.ts` | 3 | 🔴 RED |
+| MDT-091.5 | Preserve error handling | `toolConfiguration.test.ts` | 2 | 🔴 RED |
+
+### Test Specifications
+
+**File**: `mcp-server/src/tools/__tests__/toolConfiguration.test.ts`
+**Purpose**: Lock current behavior before consolidating all tool configurations
+
+#### Key Scenarios
+
+- **project_tools_structure**: Verify ProjectHandlers.getProjectTools() returns exactly 2 tools with correct schemas
+- **cr_section_tools_structure**: Verify McpServerTools returns exactly 8 CR/Section tools
+- **list_crs_routing**: Ensure list_crs calls route to CRHandlers.handleListCRs
+- **project_tools_routing**: Ensure project tools route to ProjectHandlers methods
+- **tool_combination_order**: Preserve [...projectTools, ...crAndSectionTools] array combination logic
+- **schema_validation_preservation**: Lock list_crs schema validation rules (status, type, priority enums)
+- **error_handling_preservation**: Preserve missing parameter and unknown tool error handling
+
+### Generated Test Files
+
+| File | Scenarios | Lines | Status |
+|------|-----------|-------|--------|
+| `mcp-server/src/tools/__tests__/toolConfiguration.test.ts` | 24 | ~394 | 🔴 RED |
+
+### Verification
+
+```bash
+cd mcp-server
+npm test -- --testPathPattern=toolConfiguration
+```
+
+Expected: **24 failed, 0 passed** (before extraction)
+
+---
+
 ## Test Configuration
 
 | Setting | Value |
