@@ -3,6 +3,11 @@
 import request from 'supertest';
 import express from 'express';
 
+// Type definitions for Express
+type ExpressRequest = express.Request;
+type ExpressResponse = express.Response;
+type ExpressApplication = express.Application;
+
 // Mock all external modules before imports
 jest.mock('@mdt/shared/services/ProjectService');
 jest.mock('@mdt/shared/services/TemplateService');
@@ -12,17 +17,12 @@ jest.mock('../../src/services/crService');
 jest.mock('../../src/tools/handlers/projectHandlers');
 jest.mock('../../src/tools/handlers/crHandlers');
 jest.mock('../../src/tools/handlers/sectionHandlers');
-jest.mock('../../../server/routes/projects');
-jest.mock('../../../server/controllers/ProjectController');
-jest.mock('../../../server/services/TicketService');
-jest.mock('../../../server/services/FileSystemService');
 
-// Import mocked modules
-import { ProjectService } from '@mdt/shared/services/ProjectService';
-import { TicketService } from '../../../server/services/TicketService';
-import { ProjectController } from '../../../server/controllers/ProjectController';
-import { FileSystemService } from '../../../server/services/FileSystemService';
-import { createProjectRouter } from '../../../server/routes/projects';
+// Mock the modules that exist in the parent directories
+const mockCreateProjectRouter = jest.fn();
+jest.mock('../../../server/routes/projects', () => ({
+  createProjectRouter: mockCreateProjectRouter
+}));
 
 // Test data
 const testProject = {
@@ -52,10 +52,10 @@ const testCR = {
 };
 
 describe('MCP-Backend Consistency Integration Tests (Simplified)', () => {
-  let backendApp: express.Application;
-  let mockProjectService: any;
-  let mockTicketService: any;
-  let mockProjectController: ProjectController;
+  let backendApp: ExpressApplication;
+  let mockProjectService: jest.Mocked<any>;
+  let mockTicketService: jest.Mocked<any>;
+  let mockProjectController: jest.Mocked<any>;
 
   beforeAll(() => {
     // Set up backend Express app
@@ -101,11 +101,11 @@ describe('MCP-Backend Consistency Integration Tests (Simplified)', () => {
       put: jest.fn(),
       delete: jest.fn(),
       use: jest.fn()
-    };
-    (createProjectRouter as jest.Mock).mockReturnValue(mockRouter);
+    } as any;
+    mockCreateProjectRouter.mockReturnValue(mockRouter);
 
     // Set up route handlers manually
-    backendApp.get('/api/projects', async (req, res) => {
+    backendApp.get('/api/projects', async (req: ExpressRequest, res: ExpressResponse) => {
       try {
         const projects = await mockProjectService.getAllProjects();
         res.json(projects);
@@ -114,7 +114,7 @@ describe('MCP-Backend Consistency Integration Tests (Simplified)', () => {
       }
     });
 
-    backendApp.get('/api/projects/:projectId/config', async (req, res) => {
+    backendApp.get('/api/projects/:projectId/config', async (req: ExpressRequest, res: ExpressResponse) => {
       try {
         const config = await mockProjectService.getProjectConfig(req.params.projectId);
         res.json(config);
@@ -123,7 +123,7 @@ describe('MCP-Backend Consistency Integration Tests (Simplified)', () => {
       }
     });
 
-    backendApp.get('/api/projects/:projectId/crs/:crId', async (req, res) => {
+    backendApp.get('/api/projects/:projectId/crs/:crId', async (req: ExpressRequest, res: ExpressResponse) => {
       try {
         const cr = await mockTicketService.getCR(req.params.projectId, req.params.crId);
         if (!cr) {
@@ -141,7 +141,7 @@ describe('MCP-Backend Consistency Integration Tests (Simplified)', () => {
       }
     });
 
-    backendApp.get('/api/projects/:projectId/crs', async (req, res) => {
+    backendApp.get('/api/projects/:projectId/crs', async (req: ExpressRequest, res: ExpressResponse) => {
       try {
         const crs = await mockTicketService.getProjectCRs(req.params.projectId, req.query);
         // Convert dates to strings for JSON serialization
@@ -156,7 +156,7 @@ describe('MCP-Backend Consistency Integration Tests (Simplified)', () => {
       }
     });
 
-    backendApp.post('/api/projects/:projectId/crs', async (req, res) => {
+    backendApp.post('/api/projects/:projectId/crs', async (req: ExpressRequest, res: ExpressResponse) => {
       try {
         const result = await mockTicketService.createCR(req.params.projectId, req.body);
         res.status(201).json(result);
@@ -165,7 +165,7 @@ describe('MCP-Backend Consistency Integration Tests (Simplified)', () => {
       }
     });
 
-    backendApp.patch('/api/projects/:projectId/crs/:crId', async (req, res) => {
+    backendApp.patch('/api/projects/:projectId/crs/:crId', async (req: ExpressRequest, res: ExpressResponse) => {
       try {
         const result = await mockTicketService.updateCRPartial(
           req.params.projectId,
@@ -178,7 +178,7 @@ describe('MCP-Backend Consistency Integration Tests (Simplified)', () => {
       }
     });
 
-    backendApp.delete('/api/projects/:projectId/crs/:crId', async (req, res) => {
+    backendApp.delete('/api/projects/:projectId/crs/:crId', async (req: ExpressRequest, res: ExpressResponse) => {
       try {
         const result = await mockTicketService.deleteCR(
           req.params.projectId,
