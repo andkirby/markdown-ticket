@@ -14,18 +14,12 @@ export default {
     }]
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(supertest|@modelcontextprotocol))'
+    'node_modules/(?!(supertest|@modelcontextprotocol|@mdt/shared))'
   ],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   setupFilesAfterEnv: [],
   reporters: ['default'],
-  testTimeout: 30000,
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-      useESM: true
-    }
-  }
+  testTimeout: 30000
 };

@@ -1,47 +1,17 @@
 import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 import { Project } from '@mdt/shared/models/Project.js';
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { validateProjectKey } from '../../utils/validation.js';
 
 /**
  * Project-specific tool handlers for MCP server
  * Handles project listing, info retrieval, and validation
+ *
+ * Tool definitions are now centralized in config/allTools.ts
  */
 export class ProjectHandlers {
   private cachedProjects: Project[] = [];
 
   constructor(private projectService: ProjectService) {}
-
-  /**
-   * Get tool definitions for project-related operations
-   */
-  getProjectTools(): Tool[] {
-    return [
-      {
-        name: 'list_projects',
-        description: 'List all discovered projects',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-          required: []
-        }
-      },
-      {
-        name: 'get_project_info',
-        description: 'Get detailed project information',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            key: {
-              type: 'string',
-              description: 'Project key (e.g., MDT, API, WEB)'
-            }
-          },
-          required: ['key']
-        }
-      }
-    ];
-  }
 
   /**
    * Handle project-related tool calls
