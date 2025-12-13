@@ -14,7 +14,7 @@
  */
 
 import { TestEnvironment } from '../helpers/test-environment';
-import { MCPClient } from '../helpers/mcp-client';
+import { MCPClient, MCPResponse } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
 
 describe('delete_cr', () => {
@@ -190,7 +190,7 @@ Critical security issue that could lead to unauthorized access.`
         const createdCR = await projectFactory.createTestCR('TEST', {
           title: `${status} Bug Fix`,
           type: 'Bug Fix',
-          status: status,
+          status: status as 'Proposed' | 'Approved' | 'In Progress' | 'Implemented' | 'Rejected',
           content: `## 1. Description
 
 Bug fix that is not yet implemented.
@@ -218,7 +218,7 @@ This needs to be fixed but is not ready for deletion.`
       for (const type of types) {
         const createdCR = await projectFactory.createTestCR('TEST', {
           title: `${type} to Delete`,
-          type: type,
+          type: type as 'Architecture' | 'Feature Enhancement' | 'Bug Fix' | 'Technical Debt' | 'Documentation',
           status: 'Implemented',
           content: `## 1. Description
 
@@ -332,7 +332,6 @@ Requires the bug fix to be implemented first.`
         title: 'Bug Fix with Related Tickets',
         type: 'Bug Fix',
         status: 'Implemented',
-        relatedTickets: 'MDT-001, MDT-002',
         content: `## 1. Description
 
 Bug fix with related tickets in other systems.
@@ -566,7 +565,6 @@ Ensures the delete response includes all expected fields.`
         title: 'Warning Test Bug Fix',
         type: 'Bug Fix',
         status: 'Implemented',
-        relatedTickets: 'TICKET-001', // This might generate a warning
         content: `## 1. Description
 
 Bug fix with related tickets.

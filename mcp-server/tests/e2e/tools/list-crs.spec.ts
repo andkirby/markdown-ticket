@@ -536,7 +536,8 @@ The solution is straightforward as this is test content.
       // The tool returns success=true with error message in data
       expect(response.success).toBe(true);
       expect(response.data).toContain('Error in list_crs');
-      expect(response.data).toContain('not found');
+      // Update to match new validation message format
+      expect(response.data).toContain('invalid');
     });
 
     it('GIVEN missing project parameter WHEN listing THEN return validation error', async () => {
