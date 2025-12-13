@@ -1,13 +1,13 @@
-import { Project } from '../../models/Project.js';
-import { CONFIG_FILES } from '../../utils/constants.js';
-import { logQuiet } from '../../utils/logger.js';
+import { Project } from '../../models/Project';
+import { CONFIG_FILES } from '../../utils/constants';
+import { logQuiet } from '../../utils/logger';
 import {
   joinPaths,
   getBaseName,
   buildConfigFilePath
-} from '../../utils/path-resolver.js';
-import { fileExists, readDirectory } from '../../utils/file-utils.js';
-import { ProjectConfigLoader } from './ProjectConfigLoader.js';
+} from '../../utils/path-resolver';
+import { fileExists, readDirectory } from '../../utils/file-utils';
+import { ProjectConfigLoader } from './ProjectConfigLoader';
 
 /**
  * Utility class for handling project auto-discovery and scanning operations
@@ -28,7 +28,7 @@ export class ProjectScanner {
   autoDiscoverProjects(searchPaths: string[] = []): Project[] {
     const discovered: Project[] = [];
 
-    const pathsToSearch = [...new Set(searchPaths)];
+    const pathsToSearch = Array.from(new Set(searchPaths));
     logQuiet(this.quiet, '🔍 Auto-discovery scanning paths:', pathsToSearch);
 
     for (const searchPath of pathsToSearch) {
