@@ -64,23 +64,6 @@ Create exploratory unit test suite to isolate and verify the code block parsing 
 | Skip testing, trust fix | Assume debug script verification sufficient | Debug script shows fix works but MCP tools still show bogus sections indicating disconnect |
 | Integration tests only | Test only end-to-end MCP behavior | Won't isolate specific MarkdownSectionService method issues |
 
-## 4. Artifact Specifications
-
-### New Artifacts
-
-| Artifact | Type | Purpose |
-|----------|------|---------|
-| `shared/services/__tests__/MarkdownSectionService.test.ts` | Unit test | Test code block detection and masking methods |
-| `mcp-server/src/tools/__tests__/section-management.test.ts` | Integration test | Test MCP tool behavior with problematic content |
-| `test-fixtures/code-block-samples.md` | Test fixture | Sample markdown content with various code block patterns |
-
-### Modified Artifacts
-
-| Artifact | Change Type | Modification |
-|----------|-------------|--------------|
-| `shared/package.json` | Test dependencies | Add jest/test framework dependencies |
-| `mcp-server/package.json` | Test dependencies | Add test dependencies for integration tests |
-
 ### Integration Points
 
 | From | To | Interface |
@@ -130,21 +113,3 @@ Create exploratory unit test suite to isolate and verify the code block parsing 
 - Test execution time: <5 seconds for comprehensive test suite
 - Code block detection accuracy: 100% for test cases with various patterns
 - Section parsing correctness: 0 bogus sections from code block comments
-
-## 7. Deployment
-
-### Test Implementation
-```bash
-# Install test dependencies
-cd shared && npm install --save-dev jest @types/jest ts-jest
-
-# Run unit tests
-npm test shared/services/__tests__/MarkdownSectionService.test.ts
-
-# Run integration tests  
-cd mcp-server && npm test src/tools/__tests__/section-management.test.ts
-
-# Verify MCP server behavior
-npm run dev
-# Use MCP tools to test with DEB-036 content
-```
