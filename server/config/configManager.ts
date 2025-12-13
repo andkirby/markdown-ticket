@@ -1,6 +1,6 @@
-import path from 'path';
-import fs from 'fs';
-import toml from 'toml';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as toml from 'toml';
 
 /**
  * Read global configuration for Counter API

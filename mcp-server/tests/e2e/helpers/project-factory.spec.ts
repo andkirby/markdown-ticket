@@ -18,7 +18,7 @@ describe('Project Factory', () => {
 
   beforeEach(async () => {
     // Create isolated test environment
-    testEnv = new TestEnvironment('project-factory-test');
+    testEnv = new TestEnvironment();
     await testEnv.setup();
 
     // Create MCP client for API calls
@@ -116,8 +116,8 @@ describe('Project Factory', () => {
       // When creating a CR via MCP API
       const crData = {
         title: 'Test CR Creation',
-        type: 'Feature Enhancement',
-        priority: 'Medium',
+        type: 'Feature Enhancement' as const,
+        priority: 'Medium' as const,
         content: `## 1. Description
 
 This is a test CR created via MCP API.
