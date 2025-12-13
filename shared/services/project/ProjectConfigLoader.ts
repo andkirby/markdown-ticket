@@ -1,9 +1,9 @@
-import { validateProjectConfig, isLegacyConfig } from '../../models/Project.js';
-import { CONFIG_FILES } from '../../utils/constants.js';
-import { logQuiet } from '../../utils/logger.js';
-import { parse, stringify } from '../../utils/toml.js';
-import { fileExists, readFile, writeFile } from '../../utils/file-utils.js';
-import { buildConfigFilePath } from '../../utils/path-resolver.js';
+import { validateProjectConfig, isLegacyConfig } from '../../models/Project';
+import { CONFIG_FILES } from '../../utils/constants';
+import { logQuiet } from '../../utils/logger';
+import { parseToml, stringify } from '../../utils/toml';
+import { fileExists, readFile, writeFile } from '../../utils/file-utils';
+import { buildConfigFilePath } from '../../utils/path-resolver';
 
 /**
  * Utility class for handling project configuration operations
@@ -29,7 +29,7 @@ export class ProjectConfigLoader {
       }
 
       const content = readFile(configPath);
-      const config = parse(content);
+      const config = parseToml(content);
 
       if (validateProjectConfig(config)) {
         // Check for legacy configuration and migrate automatically

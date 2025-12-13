@@ -1,11 +1,13 @@
+// Direct imports for standard usage
 import { Template, ValidationResult, Suggestion } from '../models/Types.js';
 import type { Ticket, TicketData } from '../models/Ticket.js';
-import * as fs from 'fs';
-import * as path from 'path';
+import { readFileSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+// Get current file path using import.meta
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
 export class TemplateService {
   private templates: Map<string, Template> = new Map();
@@ -14,7 +16,7 @@ export class TemplateService {
 
   constructor(templatesPath?: string, quiet: boolean = false) {
     // Default to shared templates directory
-    this.templatesPath = templatesPath || path.join(__dirname, '..', 'templates');
+    this.templatesPath = templatesPath || join(__dirname, '..', 'templates');
     this.quiet = quiet;
     this.loadTemplates();
   }
@@ -27,22 +29,22 @@ export class TemplateService {
 
   private loadTemplates(): void {
     try {
-      const configPath = path.join(this.templatesPath, 'templates.json');
-      
-      if (!fs.existsSync(configPath)) {
+      const configPath = join(this.templatesPath, 'templates.json');
+
+      if (!existsSync(configPath)) {
         this.log(`Templates config not found at ${configPath}, using fallback`);
         this.initializeFallbackTemplates();
         return;
       }
 
-      const configContent = fs.readFileSync(configPath, 'utf-8');
+      const configContent = readFileSync(configPath, 'utf-8');
       const templatesConfig = JSON.parse(configContent);
 
       for (const [type, config] of Object.entries(templatesConfig)) {
-        const templatePath = path.join(this.templatesPath, (config as any).file);
+        const templatePath = join(this.templatesPath, (config as any).file);
 
-        if (fs.existsSync(templatePath)) {
-          const templateContent = fs.readFileSync(templatePath, 'utf-8');
+        if (existsSync(templatePath)) {
+          const templateContent = readFileSync(templatePath, 'utf-8');
 
           this.templates.set(type, {
             type: type as any,

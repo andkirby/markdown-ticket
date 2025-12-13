@@ -1,19 +1,19 @@
-import { Project } from '../../models/Project.js';
-import { CONFIG_FILES, DEFAULT_PATHS } from '../../utils/constants.js';
-import { logQuiet } from '../../utils/logger.js';
-import { stringify, parse } from '../../utils/toml.js';
+import { Project } from '../../models/Project';
+import { CONFIG_FILES, DEFAULT_PATHS } from '../../utils/constants';
+import { logQuiet } from '../../utils/logger';
+import { stringify, parseToml } from '../../utils/toml';
 import {
   directoryExists,
   createDirectory,
   writeFile,
   listFiles,
   readFile
-} from '../../utils/file-utils.js';
+} from '../../utils/file-utils';
 import {
   joinPaths,
   buildConfigFilePath,
   buildRegistryFilePath
-} from '../../utils/path-resolver.js';
+} from '../../utils/path-resolver';
 
 /**
  * Utility class for handling project registry operations
@@ -120,6 +120,6 @@ export class ProjectRegistry {
    * Parse TOML content from registry file
    */
   private parseRegistryContent(content: string): any {
-    return parse(content);
+    return parseToml(content);
   }
 }
