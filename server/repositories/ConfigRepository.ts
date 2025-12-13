@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 import * as toml from 'toml';
 import { DEFAULTS } from '@mdt/shared/utils/constants.js';
 
