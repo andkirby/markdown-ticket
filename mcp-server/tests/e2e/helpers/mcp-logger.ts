@@ -76,7 +76,7 @@ export class MCPLogger {
       const timestamp = entry.timestamp.toISOString();
       const contextStr = context ? ` ${JSON.stringify(context)}` : '';
       const errorStr = error ? ` ${error.message}` : '';
-      console.log(`[${timestamp}] ${levelName}: ${message}${contextStr}${errorStr}`);
+      // console.log(`[${timestamp}] ${levelName}: ${message}${contextStr}${errorStr}`);
     }
   }
 

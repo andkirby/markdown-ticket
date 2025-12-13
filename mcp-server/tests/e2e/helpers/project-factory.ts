@@ -378,7 +378,9 @@ This project is used by the E2E test suite to verify:
     const responses: MCPResponse[] = [];
     const errors: Error[] = [];
 
-    for (const [index, crData] of crsData.entries()) {
+    for (let i = 0; i < crsData.length; i++) {
+      const crData = crsData[i];
+      const index = i;
       try {
         const response = await this.createTestCR(projectCode, crData as TestCRData);
         responses.push(response);

@@ -30,16 +30,18 @@ export class StdioTransport implements MCPTransport {
   }
 
   async start(): Promise<void> {
-    // Use tsx directly for development to avoid rebuild overhead
-    const serverScript = 'src/index.ts';
+    // Use built server for tests to avoid module caching issues
+    const serverScript = 'dist/index.js';
 
-    this.process = spawn('npx', ['tsx', serverScript], {
+    this.process = spawn('node', [serverScript], {
       cwd: this.testEnv.getProjectRoot(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,
         MCP_HTTP_ENABLED: 'false',  // Ensure only stdio is enabled
-        NODE_ENV: 'test'
+        NODE_ENV: 'test',
+        // Pass the test config directory to MCP server
+        CONFIG_DIR: this.testEnv.getConfigDir()
       }
     });
 
@@ -92,17 +94,19 @@ export class HttpTransport implements MCPTransport {
   constructor(private testEnv: TestEnvironment) {}
 
   async start(): Promise<void> {
-    // Use tsx directly for development to avoid rebuild overhead
-    const serverScript = 'src/index.ts';
+    // Use built server for tests to avoid module caching issues
+    const serverScript = 'dist/index.js';
 
-    this.process = spawn('npx', ['tsx', serverScript], {
+    this.process = spawn('node', [serverScript], {
       cwd: this.testEnv.getProjectRoot(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,
         MCP_HTTP_ENABLED: 'true',
         MCP_HTTP_PORT: this.port.toString(),
-        NODE_ENV: 'test'
+        NODE_ENV: 'test',
+        // Pass the test config directory to MCP server
+        CONFIG_DIR: this.testEnv.getConfigDir()
       }
     });
 

@@ -10,6 +10,9 @@ import { StdioTransport, HttpTransport } from './mcp-transports';
 import { MCPLogger } from './mcp-logger';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
+import { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
+import { Buffer } from 'buffer';
 
 export interface MCPTool {
   name: string;
@@ -36,7 +39,11 @@ export class MCPClient {
   private testEnv: TestEnvironment;
   private options: MCPClientOptions;
   private client?: Client;
-  private transportWrapper?: StdioTransport | HttpTransport;
+  private transportWrapper?: StdioTransport | HttpTransport | {
+    isConnected(): boolean;
+    start(): Promise<void>;
+    stop(): Promise<void>;
+  };
   private mcpTransport?: StdioClientTransport;
   private logger = MCPLogger.getInstance();
 
@@ -81,11 +88,7 @@ export class MCPClient {
    * Start stdio-based MCP client
    */
   private async startStdioClient(): Promise<void> {
-    // Start the server process
-    this.transportWrapper = new StdioTransport(this.testEnv);
-    await this.transportWrapper.start();
-
-    // Create MCP client
+    // Create MCP client first
     this.client = new Client(
       {
         name: 'mcp-test-client',
@@ -96,37 +99,36 @@ export class MCPClient {
       }
     );
 
-    // Create stdio transport using the server process
-    const serverProcess = (this.transportWrapper as StdioTransport).getProcess();
-    if (!serverProcess.stdin || !serverProcess.stdout) {
-      throw new Error('Server process stdin/stdout not available');
-    }
+    // Use built server for tests to avoid module caching issues
+    const serverScript = 'dist/index.js';
 
+    // Create stdio transport directly
     this.mcpTransport = new StdioClientTransport({
-      write: async (data) => {
-        serverProcess.stdin!.write(data);
-      },
-      read: async () => {
-        // Return a promise that resolves with data from stdout
-        return new Promise((resolve, reject) => {
-          const onData = (data: Buffer) => {
-            serverProcess.stdout!.removeListener('data', onData);
-            serverProcess.stdout!.removeListener('error', onError);
-            resolve(data.toString());
-          };
-          const onError = (error: Error) => {
-            serverProcess.stdout!.removeListener('data', onData);
-            serverProcess.stdout!.removeListener('error', onError);
-            reject(error);
-          };
-          serverProcess.stdout!.once('data', onData);
-          serverProcess.stdout!.once('error', onError);
-        });
+      command: 'node',
+      args: [serverScript],
+      cwd: this.testEnv.getProjectRoot(),
+      env: {
+        ...process.env,
+        MCP_HTTP_ENABLED: 'false',  // Ensure only stdio is enabled
+        NODE_ENV: 'test',
+        // Pass the test config directory to MCP server
+        CONFIG_DIR: this.testEnv.getConfigDir()
       }
     });
 
     // Connect to server
     await this.client.connect(this.mcpTransport);
+
+    // Store transport info for cleanup
+    this.transportWrapper = {
+      isConnected: () => this.mcpTransport !== undefined,
+      start: async () => {}, // Already started
+      stop: async () => {
+        if (this.mcpTransport) {
+          await this.mcpTransport.close();
+        }
+      }
+    };
   }
 
   /**
