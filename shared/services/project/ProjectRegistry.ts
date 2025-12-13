@@ -1,19 +1,19 @@
-import { Project } from '../../models/Project';
-import { CONFIG_FILES, DEFAULT_PATHS } from '../../utils/constants';
-import { logQuiet } from '../../utils/logger';
-import { stringify, parseToml } from '../../utils/toml';
+import { Project } from '../../models/Project.js';
+import { CONFIG_FILES, DEFAULT_PATHS } from '../../utils/constants.js';
+import { logQuiet } from '../../utils/logger.js';
+import { stringify, parseToml } from '../../utils/toml.js';
 import {
   directoryExists,
   createDirectory,
   writeFile,
   listFiles,
   readFile
-} from '../../utils/file-utils';
+} from '../../utils/file-utils.js';
 import {
   joinPaths,
   buildConfigFilePath,
   buildRegistryFilePath
-} from '../../utils/path-resolver';
+} from '../../utils/path-resolver.js';
 
 /**
  * Utility class for handling project registry operations

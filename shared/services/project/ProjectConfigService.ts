@@ -1,15 +1,15 @@
-import { ProjectConfig, validateProjectConfig, isLegacyConfig, migrateLegacyConfig, getTicketsPath } from '../../models/Project';
-import { IProjectConfigService, GlobalConfig, RegistryData } from './types';
-import { CONFIG_FILES, DEFAULT_PATHS, DEFAULTS } from '../../utils/constants';
-import { logQuiet } from '../../utils/logger';
-import { parseToml, stringify } from '../../utils/toml';
-import { processConfig, getDefaultConfig as getDefaultConfigUtil } from '../../utils/config-validator';
-import { fileExists, directoryExists, readFile, writeFile, createDirectory } from '../../utils/file-utils';
+import { ProjectConfig, validateProjectConfig, isLegacyConfig, migrateLegacyConfig, getTicketsPath } from '../../models/Project.js';
+import { IProjectConfigService, GlobalConfig, RegistryData } from './types.js';
+import { CONFIG_FILES, DEFAULT_PATHS, DEFAULTS } from '../../utils/constants.js';
+import { logQuiet } from '../../utils/logger.js';
+import { parseToml, stringify } from '../../utils/toml.js';
+import { processConfig, getDefaultConfig as getDefaultConfigUtil } from '../../utils/config-validator.js';
+import { fileExists, directoryExists, readFile, writeFile, createDirectory } from '../../utils/file-utils.js';
 import {
   buildConfigFilePath,
   buildRegistryFilePath,
   buildProjectPath
-} from '../../utils/path-resolver';
+} from '../../utils/path-resolver.js';
 
 /**
  * Project Configuration Service
