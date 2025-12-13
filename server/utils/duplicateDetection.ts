@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 // NOTE: Duplicate detection functionality is deprecated per MDT-082
 // Ticket numbering logic moved to shared/services/TicketService.ts
 // This file is kept for backward compatibility but functionality is disabled

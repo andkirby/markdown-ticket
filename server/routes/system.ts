@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import fs from 'fs/promises';
-import path from 'path';
-import toml from 'toml';
-import os from 'os';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import * as toml from 'toml';
+import * as os from 'os';
 import FileWatcherService from '../fileWatcherService.js';
 import { ProjectController } from '../controllers/ProjectController.js';
 import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js';
