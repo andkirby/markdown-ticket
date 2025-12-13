@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "MCP_HTTP_ENABLED=false node build.js",
+    "build": "MCP_HTTP_ENABLED=false node build-fix-imports.js",
     "start": "MCP_HTTP_ENABLED=false node dist/index.js",
     "dev": "MCP_HTTP_ENABLED=false tsx src/index.ts",
     "test": "jest",
