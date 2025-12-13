@@ -28,7 +28,7 @@ export class ProjectScanner {
   autoDiscoverProjects(searchPaths: string[] = []): Project[] {
     const discovered: Project[] = [];
 
-    const pathsToSearch = [...new Set(searchPaths)];
+    const pathsToSearch = Array.from(new Set(searchPaths));
     logQuiet(this.quiet, '🔍 Auto-discovery scanning paths:', pathsToSearch);
 
     for (const searchPath of pathsToSearch) {

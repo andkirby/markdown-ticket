@@ -1,7 +1,7 @@
 import { Project } from '../../models/Project.js';
 import { CONFIG_FILES, DEFAULT_PATHS } from '../../utils/constants.js';
 import { logQuiet } from '../../utils/logger.js';
-import { stringify, parse } from '../../utils/toml.js';
+import { stringify, parseToml } from '../../utils/toml.js';
 import {
   directoryExists,
   createDirectory,
@@ -120,6 +120,6 @@ export class ProjectRegistry {
    * Parse TOML content from registry file
    */
   private parseRegistryContent(content: string): any {
-    return parse(content);
+    return parseToml(content);
   }
 }

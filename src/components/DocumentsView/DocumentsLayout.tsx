@@ -4,8 +4,8 @@ import { Pencil, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import FileTree from './FileTree';
 import MarkdownViewer from './MarkdownViewer';
 import PathSelector from './PathSelector';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal';
+import { ScrollArea } from '@/components/UI/scroll-area';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/UI/Modal';
 import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting';
 
 interface DocumentFile {

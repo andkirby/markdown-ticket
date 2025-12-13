@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/index';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/UI/index';
+import { ScrollArea } from '@/components/UI/scroll-area';
 import { ChevronRight, Folder } from 'lucide-react';
 import { usePathResolution } from '@/hooks/usePathResolution';
 

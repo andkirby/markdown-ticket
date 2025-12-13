@@ -1,10 +1,11 @@
 import { chromium, Browser, Page, BrowserContext } from 'playwright';
 import { spawn } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Use relative path from tests/e2e/ directory structure
+// tests/e2e/ is at /Users/kirby/home/markdown-ticket/.gitWT/MDT-091/tests/e2e
+// So we need to go up two levels to reach the project root
+const PROJECT_ROOT = join(process.cwd(), '..');
 
 export class TestSetup {
   private browser: Browser | null = null;
@@ -46,8 +47,8 @@ export class TestSetup {
     console.log('🚀 Starting backend server...');
     
     return new Promise<void>((resolve, reject) => {
-      this.serverProcess = spawn('node', ['server.js'], {
-        cwd: join(__dirname, '..', '..', 'server'),
+      this.serverProcess = spawn('node', ['dist/server.js'], {
+        cwd: join(PROJECT_ROOT, '..', 'server'),
         stdio: 'pipe',
       });
 
@@ -83,7 +84,7 @@ export class TestSetup {
     
     return new Promise<void>((resolve, reject) => {
       const frontendProcess = spawn('npx', ['vite'], {
-        cwd: join(__dirname, '..', '..'),
+        cwd: PROJECT_ROOT,
         stdio: 'pipe',
         env: {
           ...process.env,

@@ -4,7 +4,7 @@ import { Ticket, Status } from '../../types';
 import TicketCard from '../TicketCard';
 import { ResolutionDialog } from '../ResolutionDialog';
 import { sortTickets } from '../../utils/sorting';
-import { ScrollArea } from '../ui/scroll-area';
+import { ScrollArea } from '../UI/scroll-area';
 import StatusToggle from './StatusToggle';
 import { useButtonModes } from './useButtonModes';
 import { useDropZone } from './useDropZone';

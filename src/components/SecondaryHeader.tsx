@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from './ui/index';
+import { Button } from './UI/index';
 import { HamburgerMenu } from './HamburgerMenu';
 import { SortControls } from './SortControls';
 import { SortPreferences } from '../config/sorting';
