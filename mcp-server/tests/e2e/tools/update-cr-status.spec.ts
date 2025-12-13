@@ -14,7 +14,7 @@
  */
 
 import { TestEnvironment } from '../helpers/test-environment';
-import { MCPClient } from '../helpers/mcp-client';
+import { MCPClient, MCPResponse } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
 
 describe('update_cr_status', () => {
