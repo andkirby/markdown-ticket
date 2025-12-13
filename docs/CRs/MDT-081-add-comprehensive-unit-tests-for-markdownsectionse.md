@@ -11,7 +11,6 @@ phaseEpic: Code Quality and Testing
 # Add comprehensive unit tests for MarkdownSectionService code block parsing
 
 ## 1. Description
-
 ### Problem
 - MarkdownSectionService in shared/services/MarkdownSectionService.ts incorrectly treats `#` comments inside code blocks as markdown headers, creating bogus sections
 - Multiple code blocks are not all masked correctly due to line-based slicing bug in maskCodeBlocks method
@@ -36,6 +35,15 @@ phaseEpic: Code Quality and Testing
 - MCP tool functionality and API
 - Frontend section-based update workflows
 
+### Test Cases Created
+Test cases demonstrating these issues have been created in `docs/CRs/MDT-081/cases.md`. The file contains:
+
+1. **Single Code Block Test** - Python code with `#` comments that incorrectly create sections
+2. **Multiple Code Blocks Test** - Different languages (Python, JavaScript, Shell) all showing the same issue
+3. **Edge Cases** - Unclosed code blocks, code blocks with header-like content, real-world examples
+4. **Live Demonstration** - CR DEM-006 created to demonstrate the issue in production
+
+These test cases clearly show how the current MarkdownSectionService incorrectly treats `#` comments inside code blocks as markdown headers, creating numerous bogus sections.
 ## 2. Decision
 
 ### Chosen Approach
