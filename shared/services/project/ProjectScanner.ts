@@ -1,13 +1,13 @@
-import { Project } from '../../models/Project';
-import { CONFIG_FILES } from '../../utils/constants';
-import { logQuiet } from '../../utils/logger';
+import { Project } from '../../models/Project.js';
+import { CONFIG_FILES } from '../../utils/constants.js';
+import { logQuiet } from '../../utils/logger.js';
 import {
   joinPaths,
   getBaseName,
   buildConfigFilePath
-} from '../../utils/path-resolver';
-import { fileExists, readDirectory } from '../../utils/file-utils';
-import { ProjectConfigLoader } from './ProjectConfigLoader';
+} from '../../utils/path-resolver.js';
+import { fileExists, readDirectory } from '../../utils/file-utils.js';
+import { ProjectConfigLoader } from './ProjectConfigLoader.js';
 
 /**
  * Utility class for handling project auto-discovery and scanning operations
