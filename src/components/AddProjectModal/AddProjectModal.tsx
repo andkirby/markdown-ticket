@@ -107,10 +107,11 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
         name: formData.name,
         code: formData.code,
         path: formData.path,
-        crsPath: formData.crsPath,
+        ticketsPath: formData.crsPath,
         description: formData.description,
-        repositoryUrl: formData.repositoryUrl,
-        useGlobalConfigOnly: formData.useGlobalConfigOnly
+        repository: formData.repositoryUrl,
+        createProjectPath: true, // Always auto-create project path
+        globalOnly: formData.useGlobalConfigOnly
       };
 
       const response = await fetch('/api/projects/create', {
