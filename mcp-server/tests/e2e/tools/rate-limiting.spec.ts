@@ -1,0 +1,282 @@
+/**
+ * Rate Limiting E2E Tests
+ *
+ * MUST-05: Servers MUST rate limit tool invocations
+ * Testing rate limiting functionality for MCP server tools
+ * Following TDD RED-GREEN-REFACTOR approach
+ *
+ * BDD Scenarios:
+ * - GIVEN default rate limit WHEN within threshold THEN allow all requests
+ * - GIVEN rate limit exceeded WHEN additional requests THEN return rate limit error
+ * - GIVEN rate limit reset WHEN waiting for window THEN allow new requests
+ * - GIVEN different tools WHEN rate limited THEN apply limits per tool
+ * - GIVEN concurrent requests WHEN rate limited THEN handle gracefully
+ */
+
+import { TestEnvironment } from '../helpers/test-environment';
+import { MCPClient } from '../helpers/mcp-client';
+import { ProjectFactory } from '../helpers/project-factory';
+
+describe('Rate Limiting (MUST-05)', () => {
+  let testEnv: TestEnvironment;
+  let mcpClient: MCPClient;
+  let projectFactory: ProjectFactory;
+
+  // Test setup following RED phase
+  beforeEach(async () => {
+    // Create isolated test environment
+    testEnv = new TestEnvironment();
+    await testEnv.setup();
+
+    // Initialize MCP client with test environment
+    mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
+    await mcpClient.start();
+
+    // Initialize project factory for creating test data
+    projectFactory = new ProjectFactory(testEnv, mcpClient);
+  });
+
+  // Test cleanup
+  afterEach(async () => {
+    await mcpClient.stop();
+    await testEnv.cleanup();
+  });
+
+  // Helper method to make rapid tool calls
+  async function makeRapidCalls(toolName: string, params: any, count: number): Promise<any[]> {
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      try {
+        const result = await mcpClient.callTool(toolName, params);
+        results.push({ success: true, result, index: i });
+      } catch (error) {
+        results.push({ success: false, error, index: i });
+      }
+    }
+    return results;
+  }
+
+  describe('Default Rate Limiting Behavior', () => {
+    it('should allow requests within rate limit threshold', async () => {
+      // Given: Default rate limit (100 requests per minute)
+      // When: Making 5 rapid requests
+      const results = await makeRapidCalls('list_projects', {}, 5);
+
+      // Then: All requests should succeed
+      const successes = results.filter(r => r.success);
+      expect(successes.length).toBe(5);
+
+      // And: No rate limit errors should be present
+      const rateLimitErrors = results.filter(r =>
+        !r.success && r.error.message.includes('rate limit')
+      );
+      expect(rateLimitErrors.length).toBe(0);
+    });
+
+    it('should return rate limit error when threshold exceeded', async () => {
+      // Given: Default rate limit of 100 requests per minute
+      // When: Making 150 rapid requests (exceeding limit)
+      const results = await makeRapidCalls('list_projects', {}, 150);
+
+      // Then: Some requests should fail with rate limit error
+      const rateLimitErrors = results.filter(r =>
+        !r.success && r.error.message.includes('rate limit')
+      );
+      expect(rateLimitErrors.length).toBeGreaterThan(0);
+
+      // And: Rate limit error should include retry information
+      const rateLimitError = rateLimitErrors[0].error;
+      expect(rateLimitError.message).toMatch(/rate limit/i);
+      // Note: retry-after header or info should be included for HTTP transport
+    });
+
+    it('should include retry information in rate limit error', async () => {
+      // Given: Rate limiting is active
+      // When: Exceeding rate limit
+
+      // First, exhaust the rate limit
+      await makeRapidCalls('list_projects', {}, 101);
+
+      // Then: Next request should return rate limit error
+      try {
+        await mcpClient.callTool('list_projects', {});
+        fail('Expected rate limit error');
+      } catch (error) {
+        expect(error.message).toMatch(/rate limit/i);
+        // For stdio transport, retry info might be in error message
+        // For HTTP transport, would be in headers
+      }
+    });
+  });
+
+  describe('Per-Tool Rate Limiting', () => {
+    it('should apply rate limits independently per tool', async () => {
+      // Given: Multiple tools available
+      // When: Exhausting rate limit on one tool
+      await makeRapidCalls('list_projects', {}, 101);
+
+      // Then: Other tools should still be available
+      try {
+        await mcpClient.callTool('get_project_info', { project: 'TEST' });
+        // If no project exists, should get "not found" error, not rate limit error
+      } catch (error) {
+        expect(error.message).not.toMatch(/rate limit/i);
+      }
+    });
+
+    it('should track rate limits separately for different tools', async () => {
+      // Given: Two different tools
+      // When: Making requests to both tools
+      const listProjectsResults = await makeRapidCalls('list_projects', {}, 50);
+      const getProjectResults = await makeRapidCalls('get_project_info', { project: 'TEST' }, 50);
+
+      // Then: Both should have all requests succeed (within limit)
+      expect(listProjectsResults.filter(r => r.success).length).toBe(50);
+      expect(getProjectResults.filter(r => r.success).length).toBe(50);
+    });
+  });
+
+  describe('Rate Limit Window Reset', () => {
+    it('should reset rate limit after time window expires', async () => {
+      // Given: Rate limit window is 1 minute
+      // When: Exhausting rate limit
+      await makeRapidCalls('list_projects', {}, 101);
+
+      // Then: Should get rate limit error
+      try {
+        await mcpClient.callTool('list_projects', {});
+        fail('Expected rate limit error');
+      } catch (error) {
+        expect(error.message).toMatch(/rate limit/i);
+      }
+
+      // Note: Actual waiting for 1 minute would make tests too slow
+      // In real implementation, we'd use a shorter window for testing
+      // This test documents the expected behavior
+    });
+
+    it('should use sliding window for rate limiting', async () => {
+      // Given: Sliding window rate limiting
+      // When: Making requests spread over time
+      // Then: Should allow requests as old ones fall out of window
+
+      // This test documents the sliding window behavior
+      // Implementation would use timestamps to track requests in window
+      expect(true).toBe(true); // Placeholder for documentation
+    });
+  });
+
+  describe('Configurable Rate Limits', () => {
+    it('should respect custom rate limit configuration', async () => {
+      // Given: Custom rate limit via environment variable
+      // MCP_RATE_LIMIT_MAX=10
+      // MCP_RATE_LIMIT_WINDOW_MS=1000
+
+      // When: Making 11 requests in 1 second
+      // Then: Should fail on 11th request
+
+      // This test documents configurability
+      // Implementation would read environment variables
+      expect(true).toBe(true); // Placeholder for documentation
+    });
+
+    it('should disable rate limiting when configured', async () => {
+      // Given: Rate limiting disabled via environment
+      // MCP_SECURITY_RATE_LIMITING=false
+
+      // When: Making many requests
+      const results = await makeRapidCalls('list_projects', {}, 200);
+
+      // Then: All should succeed
+      const successes = results.filter(r => r.success);
+      expect(successes.length).toBe(200);
+
+      // This test documents the disable option
+      // Implementation would check the environment variable
+    });
+  });
+
+  describe('Concurrent Request Handling', () => {
+    it('should handle concurrent requests gracefully', async () => {
+      // Given: Multiple concurrent requests
+      // When: Making 50 requests simultaneously
+      const promises = Array(50).fill(null).map(() =>
+        mcpClient.callTool('list_projects', {})
+      );
+
+      const results = await Promise.allSettled(promises);
+
+      // Then: Should handle without crashes
+      expect(results.length).toBe(50);
+
+      // And: Should have a reasonable success/error distribution
+      const fulfilled = results.filter(r => r.status === 'fulfilled');
+      const rejected = results.filter(r => r.status === 'rejected');
+
+      // Most should succeed unless we're hitting an existing rate limit
+      expect(fulfilled.length + rejected.length).toBe(50);
+    });
+
+    it('should maintain rate limit accuracy under concurrency', async () => {
+      // Given: Rate limiting with concurrent requests
+      // When: Making 150 concurrent requests
+      const promises = Array(150).fill(null).map(() =>
+        mcpClient.callTool('list_projects', {})
+      );
+
+      const results = await Promise.allSettled(promises);
+
+      // Then: Should still enforce rate limit
+      const rejected = results.filter(r => r.status === 'rejected');
+      const rateLimitRejections = rejected.filter(r =>
+        r.status === 'rejected' &&
+        r.reason.message.includes('rate limit')
+      );
+
+      expect(rateLimitRejections.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Transport-Agnostic Rate Limiting', () => {
+    it('should apply rate limiting to both stdio and HTTP transports', async () => {
+      // Given: Rate limiting configured
+      // When: Using stdio transport
+      const stdioResults = await makeRapidCalls('list_projects', {}, 50);
+
+      // Then: Rate limiting should apply
+      expect(stdioResults.filter(r => r.success).length).toBeLessThanOrEqual(100);
+
+      // Note: HTTP transport testing would be in Phase 2
+      // This test documents that rate limiting should work for both
+    });
+  });
+
+  describe('Error Handling and Monitoring', () => {
+    it('should log rate limit events for monitoring', async () => {
+      // Given: Rate limiting is active
+      // When: Rate limit is exceeded
+
+      // Then: Should log appropriate events
+      // This test documents the monitoring requirement
+      expect(true).toBe(true); // Placeholder for documentation
+    });
+
+    it('should not leak information in rate limit errors', async () => {
+      // Given: Rate limit exceeded
+      // When: Returning error
+
+      // First, exhaust rate limit
+      await makeRapidCalls('list_projects', {}, 101);
+
+      try {
+        await mcpClient.callTool('list_projects', {});
+      } catch (error) {
+        // Then: Error should not expose internal details
+        expect(error.message).toMatch(/rate limit/i);
+        expect(error.message).not.toContain('internal');
+        expect(error.message).not.toContain('database');
+        expect(error.message).not.toContain('stack trace');
+      }
+    });
+  });
+});

@@ -36,6 +36,16 @@ phaseEpic: Code Quality and Testing
 - MCP tool functionality and API
 - Frontend section-based update workflows
 
+### Test Cases
+Test cases demonstrating these issues have been created in `docs/CRs/MDT-081/cases.md`. The file contains:
+
+1. **Single Code Block Test** - Python code with `#` comments that incorrectly create sections
+2. **Multiple Code Blocks Test** - Different languages (Python, JavaScript, Shell) all showing the same issue
+3. **Edge Cases** - Unclosed code blocks, code blocks with header-like content, real-world examples
+4. **Live Demonstration** - CR DEM-006 created to demonstrate the issue in production
+
+These test cases clearly show how the current MarkdownSectionService incorrectly treats `#` comments inside code blocks as markdown headers, creating numerous bogus sections.
+
 ## 2. Decision
 
 ### Chosen Approach
@@ -55,23 +65,6 @@ Create exploratory unit test suite to isolate and verify the code block parsing 
 | Manual testing only | Test MCP tools directly with test cases | Cannot isolate specific method issues, harder to verify edge cases |
 | Skip testing, trust fix | Assume debug script verification sufficient | Debug script shows fix works but MCP tools still show bogus sections indicating disconnect |
 | Integration tests only | Test only end-to-end MCP behavior | Won't isolate specific MarkdownSectionService method issues |
-
-## 4. Artifact Specifications
-
-### New Artifacts
-
-| Artifact | Type | Purpose |
-|----------|------|---------|
-| `shared/services/__tests__/MarkdownSectionService.test.ts` | Unit test | Test code block detection and masking methods |
-| `mcp-server/src/tools/__tests__/section-management.test.ts` | Integration test | Test MCP tool behavior with problematic content |
-| `test-fixtures/code-block-samples.md` | Test fixture | Sample markdown content with various code block patterns |
-
-### Modified Artifacts
-
-| Artifact | Change Type | Modification |
-|----------|-------------|--------------|
-| `shared/package.json` | Test dependencies | Add jest/test framework dependencies |
-| `mcp-server/package.json` | Test dependencies | Add test dependencies for integration tests |
 
 ### Integration Points
 
@@ -122,21 +115,3 @@ Create exploratory unit test suite to isolate and verify the code block parsing 
 - Test execution time: <5 seconds for comprehensive test suite
 - Code block detection accuracy: 100% for test cases with various patterns
 - Section parsing correctness: 0 bogus sections from code block comments
-
-## 7. Deployment
-
-### Test Implementation
-```bash
-# Install test dependencies
-cd shared && npm install --save-dev jest @types/jest ts-jest
-
-# Run unit tests
-npm test shared/services/__tests__/MarkdownSectionService.test.ts
-
-# Run integration tests  
-cd mcp-server && npm test src/tools/__tests__/section-management.test.ts
-
-# Verify MCP server behavior
-npm run dev
-# Use MCP tools to test with DEB-036 content
-```
