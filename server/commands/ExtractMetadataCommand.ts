@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import { Command } from './Command.js';
+import { promises as fs } from 'fs';
+import { Command } from './Command';
 
 export interface FileMetadata {
   title: string | null;
@@ -26,7 +26,8 @@ export class ExtractMetadataCommand extends Command {
     this.TTL = ttlSeconds * 1000; // Convert to milliseconds
   }
 
-  async execute(filePath: string): Promise<FileMetadata> {
+  async execute(...args: unknown[]): Promise<unknown> {
+    const [filePath] = args as [string];
     // Check cache first
     const cached = this.cache.get(filePath);
     if (cached && Date.now() - cached.timestamp < this.TTL) {
