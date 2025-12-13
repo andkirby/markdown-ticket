@@ -2,12 +2,8 @@
 import { Template, ValidationResult, Suggestion } from '../models/Types.js';
 import type { Ticket, TicketData } from '../models/Ticket.js';
 import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-// Get current file path using import.meta
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { join } from 'path';
+import { DEFAULT_PATHS } from '../utils/constants.js';
 
 export class TemplateService {
   private templates: Map<string, Template> = new Map();
@@ -15,8 +11,8 @@ export class TemplateService {
   private quiet: boolean;
 
   constructor(templatesPath?: string, quiet: boolean = false) {
-    // Default to shared templates directory
-    this.templatesPath = templatesPath || join(__dirname, '..', 'templates');
+    // Default to shared templates directory from constants
+    this.templatesPath = templatesPath || DEFAULT_PATHS.TEMPLATES_DIR;
     this.quiet = quiet;
     this.loadTemplates();
   }

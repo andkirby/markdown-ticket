@@ -1,17 +1,19 @@
 /// <reference types="jest" />
 
 import request from 'supertest';
-import express from 'express';
-import { MCPTools } from '../../src/tools/index.js';
+import express, { Application } from 'express';
+import { MCPTools } from '../../src/tools/index';
 import { ProjectService } from '@mdt/shared/services/ProjectService.js';
-import { CRService } from '../../src/services/crService.js';
+import { CRService } from '../../src/services/crService';
 import { TemplateService } from '@mdt/shared/services/TemplateService.js';
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
 import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js';
-import { createProjectRouter } from '../../../server/routes/projects.js';
-import { ProjectController } from '../../../server/controllers/ProjectController.js';
-import { TicketService } from '../../../server/services/TicketService.js';
-import { FileSystemService } from '../../../server/services/FileSystemService.js';
+import { createProjectRouter } from '../../../server/routes/projects';
+import { ProjectController } from '../../../server/controllers/ProjectController';
+import { TicketService } from '../../../server/services/TicketService';
+import { FileSystemService } from '../../../server/services/FileSystemService';
+
+declare const global: typeof globalThis;
 
 // Mock console methods to reduce noise in tests
 global.console = {
@@ -73,7 +75,8 @@ No actual implementation needed.
 
 describe('MCP-Backend Consistency Integration Tests', () => {
   let mcpTools: MCPTools;
-  let backendApp: express.Application;
+  let backendApp: Application;
+  let backendRequest: any;
   let mockProjectService: any;
   let mockTicketService: any;
   let mockProjectController: ProjectController;
@@ -127,7 +130,9 @@ describe('MCP-Backend Consistency Integration Tests', () => {
       mockTicketService
     );
 
-    backendApp.use('/api/projects', createProjectRouter(mockProjectController));
+    backendApp.use('/api/projects', createProjectRouter(mockProjectController) as any);
+
+    backendRequest = request(backendApp);
   });
 
   beforeEach(() => {
@@ -148,7 +153,7 @@ describe('MCP-Backend Consistency Integration Tests', () => {
       const mcpData = JSON.parse(mcpResult);
 
       // Call backend API
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .get('/api/projects')
         .expect(200);
       const backendData = backendResponse.body;
@@ -169,7 +174,7 @@ describe('MCP-Backend Consistency Integration Tests', () => {
       const mcpData = JSON.parse(mcpResult);
 
       // Call backend API
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .get(`/${projectId}/config`)
         .expect(200);
       const backendData = backendResponse.body;
@@ -191,7 +196,7 @@ describe('MCP-Backend Consistency Integration Tests', () => {
         .rejects.toThrow();
 
       // Backend should return 404
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .get(`/${nonExistentId}/config`)
         .expect(404);
 
@@ -216,7 +221,7 @@ describe('MCP-Backend Consistency Integration Tests', () => {
       const mcpData = JSON.parse(mcpResult);
 
       // Call backend API
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .get('/test-project/crs')
         .query({ status: 'Proposed' })
         .expect(200);
@@ -240,7 +245,7 @@ describe('MCP-Backend Consistency Integration Tests', () => {
       const mcpData = JSON.parse(mcpResult);
 
       // Call backend API
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .get(`/test-project/crs/${crId}`)
         .expect(200);
       const backendData = backendResponse.body;
@@ -308,7 +313,7 @@ Testing creation consistency.`
       const mcpData = JSON.parse(mcpResult);
 
       // Call backend API
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .post('/test-project/crs')
         .send(newCRData)
         .expect(201);
@@ -339,7 +344,7 @@ Testing creation consistency.`
       const mcpData = JSON.parse(mcpResult);
 
       // Call backend API
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .patch('/test-project/crs/TEST-001')
         .send(updateData)
         .expect(200);
@@ -372,7 +377,7 @@ Testing creation consistency.`
       const mcpData = JSON.parse(mcpResult);
 
       // Call backend API
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .patch('/test-project/crs/TEST-001')
         .send(updateData)
         .expect(200);
@@ -398,7 +403,7 @@ Testing creation consistency.`
       const mcpData = JSON.parse(mcpResult);
 
       // Call backend API
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .delete('/test-project/crs/TEST-001')
         .expect(200);
       const backendData = backendResponse.body;
@@ -479,7 +484,7 @@ Testing creation consistency.`
       })).rejects.toThrow();
 
       // Backend should return 400 for missing params
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .get('/test-project/crs/')
         .expect(404); // Express treats missing param as not found
 
@@ -499,7 +504,7 @@ Testing creation consistency.`
 
       // Backend should handle via controller
       mockProjectService.getAllProjects.mockResolvedValue([]);
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .get('/invalid-project/crs')
         .expect(404);
 
@@ -518,7 +523,7 @@ Testing creation consistency.`
       })).rejects.toThrow();
 
       // Backend should return 404
-      const backendResponse = await request(backendApp)
+      const backendResponse = await backendRequest
         .get(`/test-project/crs/${nonExistentCR}`)
         .expect(404);
 

@@ -30,9 +30,9 @@ export class SectionHandlers {
     key: string,
     operation: string,
     section?: string,
-    updateMode?: string,
     content?: string
   ): Promise<string> {
+    
     // Validate CR key format
     const keyValidation = validateCRKey(key);
     if (!keyValidation.valid) {
@@ -42,10 +42,6 @@ export class SectionHandlers {
     // Backward compatibility: map legacy 'update' operation to 'replace'
     if (operation === 'update') {
       operation = 'replace';
-      // For backward compatibility, use updateMode as the operation if provided
-      if (updateMode && ['replace', 'append', 'prepend'].includes(updateMode)) {
-        operation = updateMode;
-      }
     }
 
     // Validate operation parameter

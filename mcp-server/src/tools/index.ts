@@ -47,7 +47,7 @@ export class MCPTools {
       titleExtractionService,
       templateService
     );
-    this.sectionHandlers = new SectionHandlers(crService, MarkdownSectionService, titleExtractionService);
+    this.sectionHandlers = new SectionHandlers(crService, MarkdownSectionService);
   }
 
   /**

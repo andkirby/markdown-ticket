@@ -3,7 +3,6 @@
 import { ConfigService } from './config/index.js';
 import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 import { CRService } from './services/crService.js';
-// @ts-ignore
 import { TemplateService } from '@mdt/shared/services/TemplateService.js';
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
 import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js';
