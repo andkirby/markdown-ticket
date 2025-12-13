@@ -14,7 +14,7 @@ import { useProjectManager } from './hooks/useProjectManager';
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing';
 import './utils/cache'; // Import cache utilities for development
 import './services/sseClient'; // Initialize SSE connection
-import { Toaster } from './components/ui/sonner';
+import { Toaster } from './components/UI/sonner';
 
 interface ViewModeSwitcherProps {
   viewMode: 'board' | 'list' | 'documents';

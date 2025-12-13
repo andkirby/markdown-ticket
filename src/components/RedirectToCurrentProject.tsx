@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Moon, Sun, Plus, Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './UI/tooltip';
 import { getCurrentProject } from '../utils/routing';
 import { useProjectManager } from '../hooks/useProjectManager';
 import { getProjectCode } from './ProjectSelector';
 import { AddProjectModal } from './AddProjectModal';
 import { useTheme } from '../hooks/useTheme';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Alert, AlertDescription, AlertTitle } from './UI/alert';
 
 export function RedirectToCurrentProject() {
   const navigate = useNavigate();

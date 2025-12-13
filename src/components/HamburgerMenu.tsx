@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Menu, Plus, Edit, Hash, Trash2 } from 'lucide-react';
-import { Button } from './ui/index';
+import { Button } from './UI/index';
 import { useConfig } from '../hooks/useConfig';
 import { clearAllCache, nuclearCacheClear } from '../utils/cache';
 

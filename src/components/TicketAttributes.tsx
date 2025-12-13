@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Ticket } from '../types';
-import { Badge } from './ui/badge';
+import { Badge } from './UI/badge';
 import { classifyLink } from '../utils/linkProcessor';
 import { buildTicketLink } from '../utils/linkBuilder';
 import SmartLink from './SmartLink';

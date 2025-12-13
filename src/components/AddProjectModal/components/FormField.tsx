@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { HelpCircle, FolderOpen, Folder, Check, CircleX } from 'lucide-react';
-import { Button } from '../../ui';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
+import { Button } from '../../UI';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../UI/tooltip';
 import FolderBrowserModal from './FolderBrowserModal';
 
 export interface FormFieldProps {

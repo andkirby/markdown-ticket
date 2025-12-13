@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Ticket } from '../types/ticket';
-import { Modal, ModalHeader, ModalBody } from './ui/Modal';
+import { Modal, ModalHeader, ModalBody } from './UI/Modal';
 import TicketAttributes from './TicketAttributes';
 import { TicketCode } from './TicketCode';
 import MarkdownContent from './MarkdownContent';
