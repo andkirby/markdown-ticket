@@ -271,7 +271,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
   },
   {
     name: 'delete_cr',
-    description: 'Delete CR (for implemented bug fixes)',
+    description: 'Delete CR',
     inputSchema: {
       type: 'object',
       properties: {

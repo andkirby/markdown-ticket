@@ -393,10 +393,10 @@ export class MCPClient {
 
       // Send the request as a JSON-RPC message
       const message = JSON.stringify(request) + '\n';
-      this.serverProcess.stdin?.write(message);
+      this.serverProcess?.stdin?.write(message);
 
       // Set up error handling
-      this.serverProcess.on('error', (error) => {
+      this.serverProcess?.on('error', (error) => {
         clearTimeout(timeout);
         this.pendingRequests.delete(requestId);
         reject(error);
