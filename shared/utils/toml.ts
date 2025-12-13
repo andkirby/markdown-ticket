@@ -1,12 +1,12 @@
-import toml from 'toml';
+import { parse } from 'toml';
 
 /**
  * Parse TOML string to JavaScript object
  * @param content - TOML content as string
  * @returns Parsed JavaScript object
  */
-export function parse(content: string): any {
-  return toml.parse(content);
+export function parseToml(content: string): any {
+  return parse(content);
 }
 
 /**

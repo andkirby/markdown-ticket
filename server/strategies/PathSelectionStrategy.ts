@@ -1,10 +1,10 @@
-import path from 'path';
-import { TreeBuildingStrategy, TreeNode, ProjectConfig } from './TreeBuildingStrategy.js';
+import * as path from 'path';
+import { TreeBuildingStrategy, TreeNode, ProjectConfig } from './TreeBuildingStrategy';
 
 interface FolderNode {
   name: string;
   path: string;
-  type: 'folder';
+  type: 'directory' | 'folder';
   children: Record<string, FolderNode | FileNode | TreeNode>;
 }
 

@@ -2,7 +2,7 @@ import { ProjectConfig, validateProjectConfig, isLegacyConfig, migrateLegacyConf
 import { IProjectConfigService, GlobalConfig, RegistryData } from './types.js';
 import { CONFIG_FILES, DEFAULT_PATHS, DEFAULTS } from '../../utils/constants.js';
 import { logQuiet } from '../../utils/logger.js';
-import { parse, stringify } from '../../utils/toml.js';
+import { parseToml, stringify } from '../../utils/toml.js';
 import { processConfig, getDefaultConfig as getDefaultConfigUtil } from '../../utils/config-validator.js';
 import { fileExists, directoryExists, readFile, writeFile, createDirectory } from '../../utils/file-utils.js';
 import {
@@ -34,7 +34,7 @@ export class ProjectConfigService implements IProjectConfigService {
         return getDefaultConfigUtil();
       }
       const configContent = readFile(this.globalConfigPath);
-      const parsedConfig = parse(configContent);
+      const parsedConfig = parseToml(configContent);
       return processConfig(parsedConfig, this.quiet);
     } catch (error) {
       logQuiet(this.quiet, 'Error reading global config:', error);
@@ -49,7 +49,7 @@ export class ProjectConfigService implements IProjectConfigService {
       if (!fileExists(configPath)) return null;
 
       const content = readFile(configPath);
-      const config = parse(content);
+      const config = parseToml(content);
 
       if (!validateProjectConfig(config)) return null;
 
@@ -121,7 +121,7 @@ export class ProjectConfigService implements IProjectConfigService {
   private loadOrMigrateConfig(configPath: string, projectId: string): any {
     if (fileExists(configPath)) {
       const content = readFile(configPath);
-      const config = parse(content);
+      const config = parseToml(content);
 
       if (validateProjectConfig(config) && isLegacyConfig(config)) {
         logQuiet(this.quiet, `Migrating legacy configuration format for ${projectId}...`);
@@ -157,7 +157,7 @@ export class ProjectConfigService implements IProjectConfigService {
       }
 
       const content = readFile(projectFile);
-      const registryData: RegistryData = parse(content);
+      const registryData: RegistryData = parseToml(content);
 
       if (!registryData.project?.path) {
         throw new Error(`Project ${projectId} registry entry missing project path`);
@@ -170,7 +170,7 @@ export class ProjectConfigService implements IProjectConfigService {
       // Update local config
       const configPath = buildConfigFilePath(registryData.project.path, CONFIG_FILES.PROJECT_CONFIG);
       if (fileExists(configPath)) {
-        const localConfig = parse(readFile(configPath));
+        const localConfig = parseToml(readFile(configPath));
         Object.assign(localConfig.project, updates);
         writeFile(configPath, stringify(localConfig));
         logQuiet(this.quiet, `Updated project ${projectId} in local config`);
@@ -191,14 +191,14 @@ export class ProjectConfigService implements IProjectConfigService {
         throw new Error('Project not found in registry');
       }
 
-      const registryData = parse(readFile(projectFile));
+      const registryData = parseToml(readFile(projectFile));
       if (!registryData.project?.path) {
         throw new Error('Project registry entry missing project path');
       }
 
       const configPath = buildConfigFilePath(registryData.project.path, CONFIG_FILES.PROJECT_CONFIG);
       if (fileExists(configPath)) {
-        const localConfig = parse(readFile(configPath));
+        const localConfig = parseToml(readFile(configPath));
         if (!localConfig.project) localConfig.project = {};
         localConfig.project.document_paths = documentPaths;
         writeFile(configPath, stringify(localConfig));

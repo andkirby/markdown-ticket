@@ -2,8 +2,8 @@ export default {
   preset: 'ts-jest/presets/default-esm',
   extensionsToTreatAsEsm: ['.ts'],
   testEnvironment: 'node',
-  roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts'],
+  roots: ['<rootDir>/src', '<rootDir>/tests'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
   moduleFileExtensions: ['ts', 'js', 'mjs'],
   verbose: true,
   silent: false,
@@ -13,6 +13,9 @@ export default {
       tsconfig: 'tsconfig.json'
     }]
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(supertest|@modelcontextprotocol|@mdt/shared))'
+  ],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
