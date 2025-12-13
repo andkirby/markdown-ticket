@@ -4,7 +4,7 @@
  */
 
 import swaggerJsdoc from 'swagger-jsdoc';
-import path from 'path';
+import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { schemas, parameters } from './schemas.js';
 

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
+    "module": "ES2020",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -40,7 +40,9 @@
     "factories/**/*.ts",
     "commands/**/*.ts",
     "invokers/**/*.ts",
-    "middleware/**/*.ts"
+    "middleware/**/*.ts",
+    "openapi/**/*.ts",
+    "scripts/**/*.ts"
   ],
   "exclude": [
     "node_modules",
