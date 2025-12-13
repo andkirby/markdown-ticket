@@ -5,6 +5,8 @@ import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 import { CRService } from './services/crService.js';
 // @ts-ignore
 import { TemplateService } from '@mdt/shared/services/TemplateService.js';
+import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
+import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js';
 import { MCPTools } from './tools/index.js';
 import { startStdioTransport } from './transports/stdio.js';
 import { startHttpTransport } from './transports/http.js';
@@ -14,6 +16,8 @@ class MCPCRServer {
   private projectService!: ProjectService;
   private crService!: CRService;
   private templateService!: TemplateService;
+  private markdownService!: MarkdownService;
+  private titleExtractionService!: TitleExtractionService;
   private mcpTools!: MCPTools;
   private quiet: boolean;
 
@@ -65,10 +69,14 @@ class MCPCRServer {
     this.projectService = new ProjectService(this.quiet);
     this.crService = new CRService();
     this.templateService = new TemplateService(undefined, this.quiet);
+    this.markdownService = new MarkdownService();
+    this.titleExtractionService = new TitleExtractionService();
     this.mcpTools = new MCPTools(
       this.projectService,
       this.crService,
-      this.templateService
+      this.templateService,
+      this.markdownService,
+      this.titleExtractionService
     );
 
     this.log('✅ Services initialized');

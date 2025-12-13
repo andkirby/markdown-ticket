@@ -1,51 +1,65 @@
+/**
+ * MCP Tools Main Class
+ * Refactored to use extracted handlers and services
+ *
+ * This file serves as the central registry and router for MCP tools,
+ * delegating all business logic to specialized handlers and services.
+ */
+
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 import { CRService } from '../services/crService.js';
 import { TemplateService } from '@mdt/shared/services/TemplateService.js';
-import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js';
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
-import { TicketFilters, TicketData } from '@mdt/shared/models/Ticket.js';
-import { CRStatus } from '@mdt/shared/models/Types.js';
-import { SimpleContentProcessor } from '../utils/simpleContentProcessor.js';
-import { SimpleSectionValidator } from '../utils/simpleSectionValidator.js';
-import { Project } from '@mdt/shared/models/Project.js';
+import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js';
+import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js';
+import { ProjectHandlers } from './handlers/projectHandlers.js';
+import { CRHandlers } from './handlers/crHandlers.js';
+import { SectionHandlers } from './handlers/sectionHandlers.js';
 
+/**
+ * Main MCP Tools Class
+ *
+ * Responsibilities:
+ * - Tool registry and definition
+ * - Tool call routing to appropriate handlers
+ * - Service injection and handler initialization
+ *
+ * Anti-duplication: All business logic delegated to handlers
+ */
 export class MCPTools {
-  private cachedProjects: Project[] = [];
+  private projectHandlers: ProjectHandlers;
+  private crHandlers: CRHandlers;
+  private sectionHandlers: SectionHandlers;
 
   constructor(
-    private projectService: ProjectService,
-    private crService: CRService,
-    private templateService: TemplateService
-  ) {}
+    projectService: ProjectService,
+    crService: CRService,
+    templateService: TemplateService,
+    markdownService: MarkdownService,
+    titleExtractionService: TitleExtractionService
+  ) {
+    // Initialize handlers with injected services
+    this.projectHandlers = new ProjectHandlers(projectService);
+    this.crHandlers = new CRHandlers(
+      crService,
+      markdownService,
+      titleExtractionService,
+      templateService
+    );
+    this.sectionHandlers = new SectionHandlers(crService, MarkdownSectionService, titleExtractionService);
+  }
 
+  /**
+   * Get all available tool definitions
+   * Combines tool definitions from all handlers
+   */
   getTools(): Tool[] {
-    return [
-      // Project Management
-      {
-        name: 'list_projects',
-        description: 'List all discovered projects',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-          required: []
-        }
-      },
-      {
-        name: 'get_project_info',
-        description: 'Get detailed project information',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            key: {
-              type: 'string',
-              description: 'Project key (e.g., MDT, API, WEB)'
-            }
-          },
-          required: ['key']
-        }
-      },
+    const projectTools = this.projectHandlers.getProjectTools();
 
+    // CR and Section tools defined here for now
+    // TODO: Move to respective handlers in Phase 2
+    const crAndSectionTools: Tool[] = [
       // CR Operations
       {
         name: 'list_crs',
@@ -304,7 +318,6 @@ export class MCPTools {
           required: ['project', 'key', 'operation']
         }
       },
-
       {
         name: 'suggest_cr_improvements',
         description: 'Get CR improvement suggestions (analyzes structure/completeness)',
@@ -324,888 +337,72 @@ export class MCPTools {
         }
       }
     ];
+
+    return [...projectTools, ...crAndSectionTools];
   }
 
+  /**
+   * Route tool calls to appropriate handlers
+   * Delegates all business logic to specialized handlers
+   */
   async handleToolCall(name: string, args: any): Promise<string> {
     try {
-      switch (name) {
-        case 'list_projects':
-          return await this.handleListProjects();
-        
-        case 'get_project_info':
-          return await this.handleGetProjectInfo(args.key);
-        
-        case 'list_crs':
-          return await this.handleListCRs(args.project, args.filters);
-        
-        case 'create_cr':
-          return await this.handleCreateCR(args.project, args.type, args.data);
-        
-        case 'update_cr_status':
-          return await this.handleUpdateCRStatus(args.project, args.key, args.status);
-        
-        case 'update_cr_attrs':
-          return await this.handleUpdateCRAttrs(args.project, args.key, args.attributes);
-        
-        case 'delete_cr':
-          return await this.handleDeleteCR(args.project, args.key);
-
-        case 'get_cr':
-          return await this.handleGetCRConsolidated(args.project, args.key, args.mode);
-
-        case 'manage_cr_sections':
-          return await this.handleManageCRSections(args.project, args.key, args.operation, args.section, args.updateMode, args.content);
-
-        case 'suggest_cr_improvements':
-          return await this.handleSuggestCRImprovements(args.project, args.key);
-        
-        default:
-          const availableTools = ['list_projects', 'get_project_info', 'list_crs', 'get_cr', 'create_cr', 'update_cr_attrs', 'update_cr_status', 'delete_cr', 'manage_cr_sections', 'suggest_cr_improvements'];
-          throw new Error(`Unknown tool '${name}'. Available tools: ${availableTools.join(', ')}`);
+      // Route to project handlers
+      if (['list_projects', 'get_project_info'].includes(name)) {
+        return await this.projectHandlers.handleToolCall(name, args);
       }
+
+      // Route to CR handlers
+      if (['list_crs', 'get_cr', 'create_cr', 'update_cr_status', 'update_cr_attrs', 'delete_cr', 'suggest_cr_improvements'].includes(name)) {
+        const project = await this.projectHandlers.validateProject(args.project);
+
+        switch (name) {
+          case 'list_crs':
+            return await this.crHandlers.handleListCRs(project, args.filters);
+
+          case 'get_cr':
+            return await this.crHandlers.handleGetCR(project, args.key, args.mode);
+
+          case 'create_cr':
+            return await this.crHandlers.handleCreateCR(project, args.type, args.data);
+
+          case 'update_cr_status':
+            return await this.crHandlers.handleUpdateCRStatus(project, args.key, args.status);
+
+          case 'update_cr_attrs':
+            return await this.crHandlers.handleUpdateCRAttrs(project, args.key, args.attributes);
+
+          case 'delete_cr':
+            return await this.crHandlers.handleDeleteCR(project, args.key);
+
+          case 'suggest_cr_improvements':
+            return await this.crHandlers.handleSuggestCRImprovements(project, args.key);
+        }
+      }
+
+      // Route to section handlers
+      if (name === 'manage_cr_sections') {
+        const project = await this.projectHandlers.validateProject(args.project);
+        return await this.sectionHandlers.handleManageCRSections(
+          project,
+          args.key,
+          args.operation,
+          args.section,
+          args.content
+        );
+      }
+
+      // Unknown tool
+      const availableTools = [
+        'list_projects', 'get_project_info', 'list_crs', 'get_cr', 'create_cr',
+        'update_cr_attrs', 'update_cr_status', 'delete_cr', 'manage_cr_sections',
+        'suggest_cr_improvements'
+      ];
+      throw new Error(`Unknown tool '${name}'. Available tools: ${availableTools.join(', ')}`);
+
     } catch (error) {
       console.error(`Error handling tool ${name}:`, error);
       throw error;
-    }
-  }
-
-  private async validateProject(projectKey: string): Promise<Project> {
-    // Get all projects (uses cache if available)
-    const projects = await this.projectService.getAllProjects();
-    this.cachedProjects = projects;
-
-    // Look for project by code first, then fall back to id for backward compatibility
-    const project = projects.find(p =>
-      p.project.code === projectKey || p.id === projectKey
-    );
-    if (!project) {
-      const availableKeys = projects.map(p =>
-        p.project.code || p.id
-      ).filter(Boolean).join(', ');
-      throw new Error(`Project '${projectKey}' not found. Available projects: ${availableKeys}`);
-    }
-    return project;
-  }
-
-  private async handleListProjects(): Promise<string> {
-    // Get all projects (uses cache if available)
-    const projects = await this.projectService.getAllProjects();
-    this.cachedProjects = projects;
-
-    if (projects.length === 0) {
-      return '📁 No projects found. Make sure you have .mdt-config.toml files in the configured scan paths.';
-    }
-
-    const lines = [`📁 Found ${projects.length} project${projects.length === 1 ? '' : 's'}:`, ''];
-
-    for (const project of projects) {
-      // Get CR count from project CRs
-      const crs = await this.projectService.getProjectCRs(project.project.path);
-      const crCount = crs.length;
-
-      const projectCode = project.project.code || project.id;
-      const projectName = project.project.name;
-
-      lines.push(`• **${projectCode}** - ${projectName}`);
-      if (project.project.description) {
-        lines.push(`  Description: ${project.project.description}`);
-      }
-      lines.push(`  Code: ${projectCode || 'None'}`);
-      if (project.project.code) {
-        lines.push(`  ID: ${project.id}`);
-      }
-      lines.push(`  Path: ${project.project.path}`);
-      lines.push(`  CRs: ${crCount}`);
-      lines.push('');
-    }
-
-    return lines.join('\n');
-  }
-
-  private async handleGetProjectInfo(key: string): Promise<string> {
-    // Handle null or undefined keys
-    if (key === null || key === undefined) {
-      return `Project key is required. Please provide a valid project key (e.g., 'MDT', 'API').`;
-    }
-
-    // Handle empty keys
-    if (key === '') {
-      return `Project key cannot be empty. Please provide a valid project key (e.g., 'MDT', 'API').`;
-    }
-
-    try {
-      const project = await this.validateProject(key);
-
-      // Get CR count from project CRs
-      const crs = await this.projectService.getProjectCRs(project.project.path);
-      const crCount = crs.length;
-
-      const projectCode = project.project.code || project.id;
-      const lines = [
-        `📋 Project: **${projectCode}** - ${project.project.name}`,
-        '',
-        '**Details:**',
-        `- Code: ${project.project.code || 'None'}`,
-        `- ID: ${project.id}`,
-        `- Description: ${project.project.description || 'No description'}`,
-        `- Path: ${project.project.path}`,
-        `- Total CRs: ${crCount}`,
-        `- Last Accessed: ${project.metadata.lastAccessed}`,
-        '',
-        '**Configuration:**',
-        `- Start Number: ${project.project.startNumber || 1}`,
-        `- Counter File: ${project.project.counterFile || '.mdt-next'}`,
-      ];
-
-      if (project.project.repository) {
-        lines.push(`- Repository: ${project.project.repository}`);
-      }
-
-      return lines.join('\n');
-    } catch (error) {
-      // Handle project not found gracefully
-      if (error instanceof Error && error.message.includes('not found')) {
-        return error.message;
-      }
-      // Re-throw unexpected errors
-      throw error;
-    }
-  }
-
-  private async handleListCRs(projectKey: string, filters?: TicketFilters): Promise<string> {
-    try {
-      // Handle missing project parameter
-      if (!projectKey || projectKey === 'undefined') {
-        return [
-          `❌ **Error in list_crs**`,
-          '',
-          'Project parameter is required',
-          '',
-          'Please provide a valid project key and try again.'
-        ].join('\n');
-      }
-
-      const project = await this.validateProject(projectKey);
-
-      const crs = await this.crService.listCRs(project, filters);
-
-      if (crs.length === 0) {
-        if (filters) {
-          return `🎫 No CRs found matching the specified filters in project ${projectKey}.`;
-        }
-        return `🎫 No CRs found in project ${projectKey}.`;
-      }
-
-      const lines = [`🎫 Found ${crs.length} CR${crs.length === 1 ? '' : 's'}${filters ? ' matching filters' : ''}:`, ''];
-
-      for (const ticket of crs) {
-        lines.push(`**${ticket.code}** - ${ticket.title}`);
-        lines.push(`- Status: ${ticket.status}`);
-        lines.push(`- Type: ${ticket.type}`);
-        lines.push(`- Priority: ${ticket.priority}`);
-        lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString().split('T')[0] : 'N/A'}`);
-        if (ticket.phaseEpic) {
-          lines.push(`- Phase: ${ticket.phaseEpic}`);
-        }
-        lines.push('');
-      }
-
-      return lines.join('\n');
-    } catch (error) {
-      // Return formatted error message instead of throwing
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      return [
-        `❌ **Error in list_crs**`,
-        '',
-        errorMessage,
-        '',
-        'Please check the project key and try again.'
-      ].join('\n');
-    }
-  }
-
-      
-  private async handleGetCRConsolidated(projectKey: string, key: string, mode: string = 'full'): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    const ticket = await this.crService.getCR(project, key);
-    if (!ticket) {
-      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-    }
-
-    switch (mode) {
-      case 'full':
-        // Return just the plain ticket content
-        return ticket.content || '';
-
-      case 'attributes': {
-        // Extract YAML frontmatter and return attributes
-        const fs = await import('fs/promises');
-        try {
-          const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
-
-          // Extract YAML frontmatter
-          const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
-          if (!frontmatterMatch) {
-            throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
-          }
-
-          const yamlContent = frontmatterMatch[1];
-
-          // Parse YAML with simple parser
-          let yaml: any = {};
-          try {
-            yaml = this.parseYamlFrontmatter(yamlContent) || {};
-          } catch (yamlError) {
-            throw new Error(`Failed to parse YAML frontmatter for ${key}: ${(yamlError as Error).message}`);
-          }
-
-          // Build attributes object with common fields
-          const attributes: any = {
-            code: yaml.code || key,
-            title: ticket.title || yaml.title || 'Untitled', // Use H1-extracted title first
-            status: yaml.status || 'Unknown',
-            type: yaml.type || 'Unknown',
-            priority: yaml.priority || 'Medium'
-          };
-
-          // Add optional fields if present
-          const optionalFields = [
-            'dateCreated', 'lastModified', 'phaseEpic', 'assignee',
-            'dependsOn', 'blocks', 'relatedTickets', 'impactAreas',
-            'description', 'rationale' // Common custom fields
-          ];
-
-          for (const field of optionalFields) {
-            if (yaml[field] !== undefined) {
-              attributes[field] = yaml[field];
-            }
-          }
-
-          // Include any additional custom fields not in the standard set
-          const standardFields = new Set([
-            'code', 'title', 'status', 'type', 'priority', 'dateCreated',
-            'lastModified', 'phaseEpic', 'assignee', 'dependsOn', 'blocks',
-            'relatedTickets', 'impactAreas', 'description', 'rationale'
-          ]);
-
-          for (const [field, value] of Object.entries(yaml)) {
-            if (!standardFields.has(field)) {
-              attributes[field] = value;
-            }
-          }
-
-          // Return formatted JSON output
-          return JSON.stringify(attributes, null, 2);
-
-        } catch (fileError) {
-          throw new Error(`Failed to read CR file for ${key}: ${(fileError as Error).message}`);
-        }
-      }
-
-      case 'metadata':
-        // Return just the key metadata without full YAML parsing
-        const metadata = {
-          code: ticket.code,
-          title: ticket.title,
-          status: ticket.status,
-          type: ticket.type,
-          priority: ticket.priority,
-          dateCreated: ticket.dateCreated?.toISOString(),
-          lastModified: ticket.lastModified?.toISOString(),
-          phaseEpic: ticket.phaseEpic,
-          filePath: ticket.filePath
-        };
-
-        return JSON.stringify(metadata, null, 2);
-
-      default:
-        throw new Error(`Invalid mode '${mode}'. Must be: full, attributes, or metadata`);
-    }
-  }
-
-  private async handleCreateCR(projectKey: string, type: string, data: TicketData): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    // Validate data first
-    const validation = this.templateService.validateTicketData(data, type);
-    if (!validation.valid) {
-      const errors = validation.errors.map(e => `- ❌ ${e.field}: ${e.message}`).join('\n');
-      throw new Error(`CR data validation failed:\n${errors}`);
-    }
-
-    // Process content if provided
-    let processedData = { ...data };
-    let contentProcessingResult: any = null;
-
-    if (data.content) {
-      contentProcessingResult = SimpleContentProcessor.processContent(data.content, {
-        operation: 'replace',
-        maxLength: 1000000 // 1MB limit for full CR content
-      });
-
-      // Check for content processing errors (SimpleContentProcessor throws exceptions directly)
-      // No need to check .errors field as SimpleContentProcessor throws on errors
-
-      // Show warnings if any
-      if (contentProcessingResult.warnings.length > 0) {
-        console.warn(`Content processing warnings for new CR:`, contentProcessingResult.warnings);
-      }
-
-      // Use processed content
-      processedData.content = contentProcessingResult.content;
-    }
-
-    const ticket = await this.crService.createCR(project, type, processedData);
-
-    const lines = [
-      `✅ **Created CR ${ticket.code}**: ${ticket.title}`,
-      '',
-      '**Details:**',
-      `- Key: ${ticket.code}`,
-      `- Status: ${ticket.status}`,
-      `- Type: ${ticket.type}`,
-      `- Priority: ${ticket.priority}`,
-    ];
-
-    if (ticket.phaseEpic) lines.push(`- Phase: ${ticket.phaseEpic}`);
-    lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString() : 'N/A'}`);
-    lines.push('');
-    lines.push(`**File Created:** ${ticket.filePath}`);
-
-    // Add processing information if content was provided and processed
-    if (data.content && processedData.content !== data.content) {
-      lines.push('');
-      lines.push('**Content Processing:**');
-      lines.push('- Applied content sanitization and formatting');
-      if (contentProcessingResult.warnings.length > 0) {
-        lines.push(`- ${contentProcessingResult.warnings.length} warning(s) logged to console`);
-      }
-    }
-
-    if (!data.content) {
-      lines.push('');
-      lines.push('The CR has been created with a complete template including:');
-      lines.push('- Problem statement and description');
-      if (data.impactAreas) {
-        lines.push(`- Impact areas (${data.impactAreas.join(', ')})`);
-      }
-      lines.push('- Standard CR sections ready for completion');
-      lines.push('- YAML frontmatter with all metadata');
-      lines.push('');
-      lines.push('Next step: Update the CR with detailed implementation specifications.');
-    }
-
-    return lines.join('\n');
-  }
-
-  private async handleUpdateCRStatus(projectKey: string, key: string, status: CRStatus): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    // Get current CR to show old status
-    const ticket = await this.crService.getCR(project, key);
-    if (!ticket) {
-      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-    }
-
-    const oldStatus = ticket.status;
-
-    // The service now throws specific errors instead of returning false
-    await this.crService.updateCRStatus(project, key, status);
-
-    const lines = [
-      `✅ **Updated CR ${key}** status`,
-      '',
-      `**Change:** ${oldStatus} → ${status}`,
-      `- Title: ${ticket.title}`,
-      `- Updated: ${new Date().toISOString()}`,
-      '- File: Updated YAML frontmatter and lastModified timestamp'
-    ];
-
-    if (status === 'Approved') {
-      lines.push('', 'The CR is now approved and ready for implementation.');
-    } else if (status === 'Implemented') {
-      lines.push('', 'The CR has been marked as implemented.');
-      if (ticket.type === 'Bug Fix') {
-        lines.push('Consider deleting this bug fix CR after verification period.');
-      }
-    }
-
-    return lines.join('\n');
-  }
-
-  private async handleUpdateCRAttrs(projectKey: string, key: string, attributes: any): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    // Get current CR info
-    const ticket = await this.crService.getCR(project, key);
-    if (!ticket) {
-      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-    }
-
-    const success = await this.crService.updateCRAttrs(project, key, attributes);
-    if (!success) {
-      throw new Error(`Failed to update CR '${key}' attributes`);
-    }
-
-    const lines = [
-      `✅ **Updated CR ${key} Attributes**`,
-      '',
-      `- Title: ${ticket.title}`,
-      `- Status: ${ticket.status}`,
-      '',
-      '**Updated Fields:**'
-    ];
-
-    for (const [field, value] of Object.entries(attributes)) {
-      if (value !== undefined && value !== null) {
-        lines.push(`- ${field}: ${value}`);
-      }
-    }
-
-    return lines.join('\n');
-  }
-
-  private async handleDeleteCR(projectKey: string, key: string): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    // Get CR info before deletion
-    const ticket = await this.crService.getCR(project, key);
-    if (!ticket) {
-      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-    }
-
-    const success = await this.crService.deleteCR(project, key);
-    if (!success) {
-      throw new Error(`Failed to delete CR '${key}'`);
-    }
-
-    const lines = [
-      `🗑️ **Deleted CR ${key}**`,
-      '',
-      `- Title: ${ticket.title}`,
-      `- Type: ${ticket.type}`,
-      `- Status: ${ticket.status}`
-    ];
-
-    if (ticket.type === 'Bug Fix') {
-      lines.push('', 'The bug fix CR has been deleted as it was implemented and verified. Bug CRs are typically removed after successful implementation to reduce clutter, as documented in the CR lifecycle.');
-    }
-
-    return lines.join('\n');
-  }
-
-  
-  
-  
-  private async handleManageCRSections(projectKey: string, key: string, operation: string, section?: string, updateMode?: string, content?: string): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    // Backward compatibility: map legacy 'update' operation to 'replace'
-    if (operation === 'update') {
-      operation = 'replace';
-      // For backward compatibility, use updateMode as the operation if provided
-      if (updateMode && ['replace', 'append', 'prepend'].includes(updateMode)) {
-        operation = updateMode;
-      }
-    }
-
-    switch (operation) {
-      case 'list': {
-        // List all sections in the CR
-        const ticket = await this.crService.getCR(project, key);
-        if (!ticket) {
-          throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-        }
-
-        // Read file content
-        const fs = await import('fs/promises');
-        const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
-
-        // Extract markdown body (after YAML frontmatter)
-        const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-        if (!frontmatterMatch) {
-          throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
-        }
-
-        const markdownBody = frontmatterMatch[2];
-
-        // Get all sections
-        const allSections = MarkdownSectionService.findSection(markdownBody, '');
-
-        if (allSections.length === 0) {
-          return [
-            `📑 **Sections in CR ${key}**`,
-            '',
-            `- Title: ${ticket.title}`,
-            '',
-            '*(No sections found - document may be empty or improperly formatted)*'
-          ].join('\n');
-        }
-
-        const lines = [
-          `📑 **Sections in CR ${key}** - ${ticket.title}`,
-          '',
-          `Found ${allSections.length} section${allSections.length === 1 ? '' : 's'}:`,
-          ''
-        ];
-
-        // Build tree structure based on header levels
-        for (const section of allSections) {
-          // Calculate indentation based on header level (# = 0, ## = 1, ### = 2, etc.)
-          const indent = '  '.repeat(Math.max(0, section.headerLevel - 1));
-
-          const contentPreview = section.content.trim() ?
-            ` (${section.content.length} chars)` :
-            ' (empty)';
-
-          lines.push(`${indent}- ${section.headerText}${contentPreview}`);
-        }
-
-        lines.push('');
-        lines.push('**Usage:**');
-        lines.push('To read or update a section, you can use flexible formats:');
-        lines.push('- User-friendly: `section: "1. Description"` or `section: "Description"`');
-        lines.push('- Exact format: `section: "## 1. Description"`');
-        lines.push('');
-        lines.push('**Examples:**');
-        lines.push('- `section: "1. Feature Description"` - matches "## 1. Feature Description"');
-        lines.push('- `section: "Feature Description"` - matches "## 1. Feature Description"');
-        lines.push('- `section: "### Key Features"` - exact match for subsection');
-
-        return lines.join('\n');
-      }
-
-      case 'get': {
-        if (!section) {
-          throw new Error(`Section parameter is required for 'get' operation`);
-        }
-
-        // Get CR
-        const ticket = await this.crService.getCR(project, key);
-        if (!ticket) {
-          throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-        }
-
-        // Read file content
-        const fs = await import('fs/promises');
-        const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
-
-        // Extract markdown body (after YAML frontmatter)
-        const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-        if (!frontmatterMatch) {
-          throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
-        }
-
-        const markdownBody = frontmatterMatch[2];
-
-        // Find section
-        const matches = MarkdownSectionService.findSection(markdownBody, section);
-
-        if (matches.length === 0) {
-          throw new Error(`Section "${section}" not found in CR ${key}. Use manage_cr_sections with operation="list" to see available sections.`);
-        }
-
-        if (matches.length > 1) {
-          const paths = matches.map(m => m.hierarchicalPath).join('\n  - ');
-          throw new Error(
-            `Multiple sections match "${section}". Please use a hierarchical path:\n  - ${paths}`
-          );
-        }
-
-        const matchedSection = matches[0];
-
-        return [
-          `📖 **Section Content from CR ${key}**`,
-          '',
-          `**Section:** ${matchedSection.hierarchicalPath}`,
-          `**Content Length:** ${matchedSection.content.length} characters`,
-          '',
-          '---',
-          '',
-          matchedSection.content,
-          '',
-          '---',
-          '',
-          `Use \`manage_cr_sections\` with operation="replace", "append", or "prepend" to modify this section.`
-        ].join('\n');
-      }
-
-      case 'replace':
-      case 'append':
-      case 'prepend': {
-        if (!section) {
-          throw new Error(`Section parameter is required for '${operation}' operation`);
-        }
-        if (!content) {
-          throw new Error(`Content parameter is required for '${operation}' operation`);
-        }
-
-        // Get CR
-        const ticket = await this.crService.getCR(project, key);
-        if (!ticket) {
-          throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-        }
-
-        // Read file content
-        const fs = await import('fs/promises');
-        const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
-
-        // Extract markdown body (after YAML frontmatter)
-        const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-        if (!frontmatterMatch) {
-          throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
-        }
-
-        const yamlFrontmatter = frontmatterMatch[1];
-        const markdownBody = frontmatterMatch[2];
-
-        // Simple section validation
-        const availableSections = SimpleSectionValidator.extractSections(markdownBody);
-        const sectionValidation = SimpleSectionValidator.validateSection(section, availableSections);
-
-        if (!sectionValidation.valid) {
-          const errorMessage = [
-            `❌ **Section validation failed**`,
-            '',
-            `**Errors:**`,
-            ...sectionValidation.errors.map(error => `- ${error}`),
-            ''
-          ];
-
-          if (sectionValidation.suggestions.length > 0) {
-            errorMessage.push('**Suggestions:**');
-            errorMessage.push(...sectionValidation.suggestions.map(suggestion => `- ${suggestion}`));
-            errorMessage.push('');
-          }
-
-          errorMessage.push(`Use \`manage_cr_sections\` with operation="list" to see all available sections in CR ${key}.`);
-          throw new Error(errorMessage.join('\n'));
-        }
-
-        // Find section using normalized identifier
-        const matches = MarkdownSectionService.findSection(markdownBody, sectionValidation.normalized || section);
-
-        if (matches.length === 0) {
-          // Section not found - list available sections
-          const sectionList = availableSections
-            .map(s => `  - "${s}"`)
-            .join('\n');
-
-          throw new Error(
-            `Section '${section}' not found in CR ${key}.\n\n` +
-            `Available sections:\n${sectionList || '  (none)'}`
-          );
-        }
-
-        if (matches.length > 1) {
-          // Multiple matches - require hierarchical path
-          const paths = matches.map(m => `  - "${m.hierarchicalPath}"`).join('\n');
-          throw new Error(
-            `Multiple sections found matching '${section}'.\n\n` +
-            `Please specify which one using hierarchical path:\n${paths}`
-          );
-        }
-
-        // Process content with simple sanitization
-        const contentProcessingResult = SimpleContentProcessor.processContent(content, {
-          operation: operation as 'replace' | 'append' | 'prepend',
-          maxLength: 500000 // 500KB limit for section content
-        });
-
-        // Show warnings if any
-        if (contentProcessingResult.warnings.length > 0) {
-          console.warn(`Content processing warnings for ${key}:`, contentProcessingResult.warnings);
-        }
-
-        // Use processed content
-        let processedContent = contentProcessingResult.content;
-
-        // Single match - proceed with update
-        const matchedSection = matches[0];
-
-        // Handle section header updates intelligently
-        // If content starts with a header at the same level as the section, use it as the new section header
-        // This allows restructuring/renaming while keeping headers explicit and intentional
-        const sectionHeaderLevel = matchedSection.headerLevel;
-        const headerPrefix = '#'.repeat(sectionHeaderLevel);
-        const firstHeaderPattern = new RegExp(`^${headerPrefix} (.+?)$`, 'm');
-        const firstHeaderMatch = processedContent.match(firstHeaderPattern);
-
-        let newSectionHeader: string | null = null;
-        let sectionBody = processedContent;
-
-        if (firstHeaderMatch) {
-          // Found a header at the same level - use it as new section header
-          newSectionHeader = firstHeaderMatch[0]; // Full header line "## New Name"
-          const newHeaderText = firstHeaderMatch[1]; // Just the text "New Name"
-
-          // Extract body (everything after the first header)
-          const headerIndex = processedContent.indexOf(firstHeaderMatch[0]);
-          sectionBody = processedContent
-            .substring(headerIndex + firstHeaderMatch[0].length)
-            .trim();
-
-          console.warn(
-            `ℹ️ Section "${matchedSection.headerText}" is being renamed to "${newHeaderText}". ` +
-            `This is intentional since you provided the new header in the content.`
-          );
-        }
-
-        let updatedBody: string;
-
-        switch (operation) {
-          case 'replace':
-            // CRITICAL BUG FIX: replaceSection keeps the old header from matchedSection
-            // and adds the body we provide. So we MUST NOT include a header in the content!
-            // If a new header was detected, we'll replace it after calling replaceSection.
-            const replaceContent = newSectionHeader ? sectionBody : processedContent;
-            updatedBody = MarkdownSectionService.replaceSection(markdownBody, matchedSection, replaceContent);
-
-            // If header changed, replace the old header with the new one
-            if (newSectionHeader) {
-              // matchedSection.headerText includes the markdown prefix (e.g., "## 2. Solution Analysis")
-              const escapedOldHeader = matchedSection.headerText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              const oldHeaderRegex = new RegExp(`^${escapedOldHeader}$`, 'm');
-              updatedBody = updatedBody.replace(oldHeaderRegex, newSectionHeader);
-            }
-            break;
-          case 'append':
-            // For append, use sectionBody only (don't append the header)
-            updatedBody = MarkdownSectionService.appendToSection(markdownBody, matchedSection, sectionBody);
-            break;
-          case 'prepend':
-            // For prepend, use sectionBody only (don't prepend the header)
-            updatedBody = MarkdownSectionService.prependToSection(markdownBody, matchedSection, sectionBody);
-            break;
-          default:
-            throw new Error(`Invalid operation '${operation}'. Must be: list, get, replace, append, or prepend`);
-        }
-
-        // Update lastModified in YAML
-        const now = new Date().toISOString();
-        const updatedYaml = yamlFrontmatter.replace(
-          /lastModified:.*$/m,
-          `lastModified: ${now}`
-        );
-
-        // Reconstruct full document
-        const updatedContent = `---\n${updatedYaml}\n---\n${updatedBody}`;
-
-        // Write back to file
-        await fs.writeFile(ticket.filePath, updatedContent, 'utf-8');
-
-        const lines = [
-          `✅ **Updated Section in CR ${key}**`,
-          '',
-          `**Section:** ${matchedSection.hierarchicalPath}`,
-          `**Operation:** ${operation}`,
-          `**Content Length:** ${processedContent.length} characters`,
-          '',
-          `- Title: ${ticket.title}`,
-          `- Updated: ${now}`,
-          `- File: ${ticket.filePath}`
-        ];
-
-        // Add processing information
-        if (contentProcessingResult.modified) {
-          lines.push('');
-          lines.push('**Content Processing:**');
-          if (contentProcessingResult.warnings.length > 0) {
-            lines.push('- Applied content sanitization and formatting');
-            lines.push(`- ${contentProcessingResult.warnings.length} warning(s) logged to console`);
-          } else {
-            lines.push('- Content processed successfully');
-          }
-        }
-
-        // Add helpful message based on operation
-        if (operation === 'replace') {
-          lines.push('', `The section content has been completely replaced.`);
-        } else if (operation === 'append') {
-          lines.push('', `Content has been added to the end of the section.`);
-        } else if (operation === 'prepend') {
-          lines.push('', `Content has been added to the beginning of the section.`);
-        }
-
-        return lines.join('\n');
-      }
-
-      default:
-        throw new Error(`Invalid operation '${operation}'. Must be: list, get, replace, append, or prepend`);
-    }
-  }
-
-  
-  
-  
-  
-  private async handleSuggestCRImprovements(projectKey: string, key: string): Promise<string> {
-    const project = await this.validateProject(projectKey);
-
-    const ticket = await this.crService.getCR(project, key);
-    if (!ticket) {
-      throw new Error(`CR '${key}' not found in project '${projectKey}'`);
-    }
-
-    const suggestions = this.templateService.suggestImprovements(ticket);
-
-    return [
-      `💡 **CR Improvement Suggestions for ${key}**`,
-      '',
-      `**Current CR:** ${ticket.title}`,
-      '',
-      ...suggestions.map((suggestion, index) => {
-        const priority = index < 3 ? 'High-Priority' : index < 6 ? 'Medium-Priority' : 'Low-Priority';
-        return [
-          `**${priority} Improvement:**`,
-          '',
-          `${index + 1}. **${suggestion.title}**`,
-          `   ${suggestion.description}`,
-          `   *Actionable:* ${suggestion.actionable ? 'Yes' : 'No'}`,
-          ''
-        ].join('\n');
-      })
-    ].join('\n');
-  }
-
-  
-  /**
-   * Simple YAML frontmatter parser for extracting CR attributes
-   */
-  private parseYamlFrontmatter(yamlContent: string): Record<string, any> | null {
-    try {
-      const result: Record<string, any> = {};
-      const lines = yamlContent.split('\n');
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) continue;
-
-        const colonIndex = trimmed.indexOf(':');
-        if (colonIndex === -1) continue;
-
-        const key = trimmed.substring(0, colonIndex).trim();
-        let value = trimmed.substring(colonIndex + 1).trim();
-
-        // Remove quotes if present
-        if ((value.startsWith('"') && value.endsWith('"')) ||
-            (value.startsWith("'") && value.endsWith("'"))) {
-          value = value.slice(1, -1);
-        }
-
-        // Handle arrays (comma-separated values)
-        if (value.includes(',') && !value.startsWith('"') && !value.startsWith("'")) {
-          const arrayValue = value.split(',').map(v => v.trim()).filter(v => v);
-          result[key] = arrayValue;
-        } else {
-          result[key] = value;
-        }
-      }
-
-      return result;
-    } catch (error) {
-      return null;
     }
   }
 }
