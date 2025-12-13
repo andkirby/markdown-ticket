@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Button } from './ui/index';
+import { Button } from './UI/index';
 import { useEventBus } from '../services/eventBus';
 import { SortControls } from './SortControls';
 import { HamburgerMenu } from './HamburgerMenu';

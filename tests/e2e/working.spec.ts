@@ -1,16 +1,17 @@
 import { test, expect } from '@playwright/test';
 import { spawn } from 'child_process';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Use relative path from tests/e2e/ directory structure
+// tests/e2e/ is at /Users/kirby/home/markdown-ticket/.gitWT/MDT-091/tests/e2e
+// So we need to go up two levels to reach the project root
+const PROJECT_ROOT = join(process.cwd(), '..');
 
 test.describe('Working Tests', () => {
   test('should start server and load basic page', async ({ page }) => {
     // Start the server manually first
-    const serverProcess = spawn('node', ['server.js'], {
-      cwd: join(__dirname, '..', '..', 'server'),
+    const serverProcess = spawn('node', ['dist/server.js'], {
+      cwd: join(PROJECT_ROOT, '..', 'server'),
       stdio: 'pipe',
     });
 
