@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 
 /**
  * Base strategy for tree building operations
@@ -39,7 +39,7 @@ export class TreeBuildingStrategy {
    * @param relativePath - Relative path from project root
    * @returns File object
    */
-  async processFile(_filePath: string, relativePath: string): Promise<TreeNode> {
+  protected async processFile(_filePath: string, relativePath: string): Promise<TreeNode> {
     return {
       name: path.basename(relativePath),
       path: relativePath,

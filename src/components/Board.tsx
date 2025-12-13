@@ -4,7 +4,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Ticket, Status } from '../types';
 import { getVisibleColumns, getColumnForStatus } from '../config';
 import Column from './Column';
-import { Button } from './ui/index';
+import { Button } from './UI/index';
 import { useProjectManager } from '../hooks/useProjectManager';
 import { SortControls } from './SortControls';
 import { FilterControls } from './FilterControls';
@@ -12,7 +12,7 @@ import { HamburgerMenu } from './HamburgerMenu';
 import { getSortPreferences, setSortPreferences, SortPreferences } from '../config/sorting';
 import { sortTickets } from '../utils/sorting';
 import { Project } from '@mdt/shared/models/Project';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Alert, AlertDescription, AlertTitle } from './UI/alert';
 import { useToast } from '../hooks/useToast';
 
 interface BoardProps {

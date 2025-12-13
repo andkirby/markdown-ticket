@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Info, CircleX } from 'lucide-react';
-import { Button } from '@/components/ui';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/UI';
+import { ScrollArea } from '@/components/UI/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/UI/tooltip';
 import { useProjectForm } from './hooks/useProjectForm';
 import { FormField } from './components/FormField';
 import { StrategyIndicator } from './components/StrategyIndicator';
