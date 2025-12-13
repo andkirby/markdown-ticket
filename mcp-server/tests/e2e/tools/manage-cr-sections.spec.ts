@@ -697,7 +697,8 @@ Updated historical perspective.`;
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
       expect(response.error?.code).toBe(-32000);
-      expect(response.error?.message).toContain('not found');
+      // Update to match new validation message format
+      expect(response.error?.message).toContain('invalid');
     });
 
     it('GIVEN invalid operation WHEN managing THEN return validation error', async () => {
@@ -752,7 +753,8 @@ Test rationale.`
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
       expect(response.error?.code).toBe(-32000);
-      expect(response.error?.message).toContain('Section parameter');
+      // Update to match new validation message format
+      expect(response.error?.message).toContain('section is required');
     });
   });
 

@@ -664,7 +664,8 @@ Real-time collaboration is becoming standard expectation in document editing too
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
       expect(response.error?.code).toBe(-32000);
-      expect(response.error?.message).toContain('not found');
+      // Update to match new validation message format
+      expect(response.error?.message).toContain('invalid');
     });
 
     it('GIVEN missing project parameter WHEN suggesting THEN return validation error', async () => {

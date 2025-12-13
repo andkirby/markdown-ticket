@@ -16,7 +16,7 @@ describe('MCP Client', () => {
 
   beforeEach(async () => {
     // Create isolated test environment for each test
-    testEnv = new TestEnvironment('mcp-client-test');
+    testEnv = new TestEnvironment();
     await testEnv.setup();
 
     // Create a test project directory
@@ -137,7 +137,7 @@ name = "Test Project"
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
       // The error message should indicate the tool is unknown/invalid
-      expect(response.error.message).toMatch(/Unknown tool|not found|invalid/i);
+      expect(response.error?.message).toMatch(/Unknown tool|not found|invalid/i);
     }, 10000);
 
     it('GIVEN server down WHEN calling THEN should handle connection error', async () => {

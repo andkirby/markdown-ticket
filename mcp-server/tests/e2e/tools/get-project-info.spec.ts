@@ -66,7 +66,7 @@ describe('get_project_info', () => {
 
   it('GIVEN project with CRs WHEN getting info THEN show count', async () => {
     await projectFactory.createProjectStructure('CRS', 'Project with CRs');
-    await projectFactory.createTestCR('CRS', { title: 'Test CR 1', type: 'Feature', content: '## 1. Description\nTest\n\n## 2. Rationale\nTest' });
+    await projectFactory.createTestCR('CRS', { title: 'Test CR 1', type: 'Feature Enhancement', content: '## 1. Description\nTest\n\n## 2. Rationale\nTest' });
     const response = await mcpClient.callTool('get_project_info', { key: 'CRS' });
     const projectInfo = parseProjectInfoMarkdown(response.data);
     // Verify the CR exists and count is correct
