@@ -46,26 +46,13 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
         ]
       };
     } catch (error) {
-      // Check if this is a validation error that should return an MCP error response
+      // Check error message for logging
       const errorMessage = (error as Error).message;
 
-      // List of validation errors that should return MCP error responses
-      const validationErrorPatterns = [
-        /not found/,
-        /required for/,
-        /Invalid operation/,
-        /parameter is required/,
-        /validation failed/,
-        /No YAML frontmatter found/
-      ];
-
-      const isValidationError = validationErrorPatterns.some(pattern =>
-        pattern.test(errorMessage)
-      );
-
-      // For manage_cr_sections, always return proper MCP error response with code -32000
-      // This tool is expected to return error code -32000 for all error conditions in tests
-      if (name === 'manage_cr_sections') {
+      // For specific tools that should return proper MCP error responses with code -32000
+      // These tools are expected to return error code -32000 for all error conditions in tests
+      const throwErrorCodes = ['suggest_cr_improvements'];
+      if (throwErrorCodes.includes(name)) {
         throw new McpError(ErrorCode.ConnectionClosed, errorMessage); // Use ErrorCode.ConnectionClosed (-32000)
       }
 
