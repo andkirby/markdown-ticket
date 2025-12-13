@@ -1,5 +1,5 @@
 import express, { Express } from 'express';
-import path from 'path';
+import * as path from 'path';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { DEFAULTS } from '@mdt/shared/utils/constants.js';
