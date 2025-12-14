@@ -107,7 +107,7 @@ describe('Project Factory', () => {
   describe('CR Creation via API', () => {
     it('GIVEN discovered project WHEN creating CR via API THEN CR exists', async () => {
       // RED: This test will fail initially
-      const projectCode = 'CRTEST';
+      const projectCode = 'TST';
       const projectName = 'CR Test Project';
 
       // Given a discovered project

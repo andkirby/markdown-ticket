@@ -546,20 +546,11 @@ Basic implementation steps.
         priority: 'High'
       });
 
-      // The tool may handle non-existent projects differently than expected
-      if (response.success === false) {
-        // If it reports failure, check for error
-        expect(response.error).toBeDefined();
-        expect(response.error?.message).toContain('not found');
-      } else {
-        // If it reports success, check the response contains error information
-        expect(response.data).toBeDefined();
-        if (typeof response.data === 'string' && response.data.includes('Error')) {
-          // Error is returned in the data field
-          expect(response.data).toContain('Error');
-          expect(response.data).toContain('not found');
-        }
-      }
+      // The tool should return an error response
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32602); // Invalid params (project key invalid)
+      expect(response.error.message).toContain('invalid');
     });
 
     it('GIVEN invalid priority WHEN updating THEN accept update', async () => {
@@ -613,15 +604,10 @@ Basic implementation steps.
         attributes: { priority: 'High' }
       });
 
-      // The tool might handle missing parameters differently than expected
-      // Check for either success with error message or explicit failure
-      if (response.success) {
-        // If it succeeds, it might have a default project or error message
-        expect(response.data).toBeDefined();
-      } else {
-        expect(response.error).toBeDefined();
-        expect(response.error?.message).toContain('project');
-      }
+      // Missing required parameter should return validation error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32602); // Invalid params error
     });
 
     it('GIVEN missing key parameter WHEN updating THEN return validation error', async () => {
@@ -630,15 +616,10 @@ Basic implementation steps.
         attributes: { priority: 'High' }
       });
 
-      // The tool might handle missing parameters differently than expected
-      // Check for either success with error message or explicit failure
-      if (response.success) {
-        // If it succeeds, it might have a default key or error message
-        expect(response.data).toBeDefined();
-      } else {
-        expect(response.error).toBeDefined();
-        expect(response.error?.message).toContain('key');
-      }
+      // Missing required parameter returns business logic error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32000); // Business logic error
     });
 
     it('GIVEN missing attributes parameter WHEN updating THEN return validation error', async () => {
@@ -647,15 +628,10 @@ Basic implementation steps.
         key: 'TEST-001'
       });
 
-      // The tool might handle missing parameters differently than expected
-      // Check for either success with error message or explicit failure
-      if (response.success) {
-        // If it succeeds, it might have default attributes or error message
-        expect(response.data).toBeDefined();
-      } else {
-        expect(response.error).toBeDefined();
-        expect(response.error?.message).toContain('attributes');
-      }
+      // Missing required parameter returns business logic error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32000); // Business logic error
     });
   });
 
@@ -672,14 +648,12 @@ Basic implementation steps.
         title: 'New Title' // This should be rejected
       });
 
-      // The tool rejects restricted attributes but may still report success=true
-      // Check for error message in the response data
-      expect(response.data).toBeDefined();
-      if (typeof response.data === 'string') {
-        expect(response.data).toContain('Error in update_cr_attrs');
-        expect(response.data).toContain('Invalid attributes: title');
-        expect(response.data).toContain('Allowed attributes for update_cr_attrs are');
-      }
+      // The tool rejects restricted attributes with error response
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32000); // Business logic error
+      expect(response.error.message).toContain('Invalid attributes: title');
+      expect(response.error.message).toContain('Allowed attributes for update_cr_attrs are');
     });
 
     it('GIVEN attempt to update status WHEN updating attributes THEN reject update', async () => {
@@ -695,14 +669,12 @@ Basic implementation steps.
         status: 'Implemented' // This should be rejected
       });
 
-      // The tool rejects restricted attributes but may still report success=true
-      // Check for error message in the response data
-      expect(response.data).toBeDefined();
-      if (typeof response.data === 'string') {
-        expect(response.data).toContain('Error in update_cr_attrs');
-        expect(response.data).toContain('Invalid attributes: status');
-        expect(response.data).toContain('Allowed attributes for update_cr_attrs are');
-      }
+      // The tool rejects restricted attributes with error response
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32000); // Business logic error
+      expect(response.error.message).toContain('Invalid attributes: status');
+      expect(response.error.message).toContain('Allowed attributes for update_cr_attrs are');
     });
 
     it('GIVEN attempt to update type WHEN updating attributes THEN reject update', async () => {
@@ -717,14 +689,12 @@ Basic implementation steps.
         type: 'Bug Fix' // This should be rejected
       });
 
-      // The tool rejects restricted attributes but may still report success=true
-      // Check for error message in the response data
-      expect(response.data).toBeDefined();
-      if (typeof response.data === 'string') {
-        expect(response.data).toContain('Error in update_cr_attrs');
-        expect(response.data).toContain('Invalid attributes: type');
-        expect(response.data).toContain('Allowed attributes for update_cr_attrs are');
-      }
+      // The tool rejects restricted attributes with error response
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32000); // Business logic error
+      expect(response.error.message).toContain('Invalid attributes: type');
+      expect(response.error.message).toContain('Allowed attributes for update_cr_attrs are');
     });
   });
 
