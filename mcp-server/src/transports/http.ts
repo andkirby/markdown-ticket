@@ -7,6 +7,7 @@ import {
 import cors from 'cors';
 import { SessionManager } from './sessionManager.js';
 import { RateLimitManager } from '../utils/rateLimitManager.js';
+import { Sanitizer } from '../utils/sanitizer.js';
 import {
   createAuthMiddleware,
   createOriginValidationMiddleware,
@@ -191,6 +192,10 @@ export async function startHttpTransport(
 
         try {
           const result = await mcpTools.handleToolCall(tool_name, tool_args);
+
+          // Sanitize the result content if sanitization is enabled
+          const sanitizedResult = Sanitizer.sanitize(result);
+
           const response = {
             "jsonrpc": "2.0",
             "id": request_id,
@@ -198,7 +203,7 @@ export async function startHttpTransport(
               "content": [
                 {
                   "type": "text",
-                  "text": result
+                  "text": sanitizedResult
                 }
               ]
             }
@@ -221,6 +226,12 @@ export async function startHttpTransport(
           }
 
           // For other tools, return formatted content (legacy behavior)
+          const errorContent = `❌ **Error in ${tool_name}**\n\n${(error as Error).message}\n\nPlease check your input parameters and try again.`;
+
+          // Sanitize error content if sanitization is enabled
+          const sanitizedErrorContent = Sanitizer.sanitizeError((error as Error).message);
+          const finalErrorContent = `❌ **Error in ${tool_name}**\n\n${sanitizedErrorContent}\n\nPlease check your input parameters and try again.`;
+
           const response = {
             "jsonrpc": "2.0",
             "id": request_id,
@@ -228,7 +239,7 @@ export async function startHttpTransport(
               "content": [
                 {
                   "type": "text",
-                  "text": `❌ **Error in ${tool_name}**\n\n${(error as Error).message}\n\nPlease check your input parameters and try again.`
+                  "text": process.env.MCP_SANITIZATION_ENABLED === 'true' ? finalErrorContent : errorContent
                 }
               ]
             }
@@ -576,6 +587,10 @@ async function handleJsonRpcRequest(
 
         try {
           const result = await mcpTools.handleToolCall(name, args || {});
+
+          // Sanitize the result content if sanitization is enabled
+          const sanitizedResult = Sanitizer.sanitize(result);
+
           return {
             jsonrpc: '2.0',
             id: request.id,
@@ -583,12 +598,18 @@ async function handleJsonRpcRequest(
               content: [
                 {
                   type: 'text',
-                  text: result
+                  text: sanitizedResult
                 }
               ]
             }
           };
         } catch (error) {
+          const errorContent = `❌ **Error in ${name}**\n\n${(error as Error).message}\n\nPlease check your input parameters and try again.`;
+
+          // Sanitize error content if sanitization is enabled
+          const sanitizedErrorContent = Sanitizer.sanitizeError((error as Error).message);
+          const finalErrorContent = `❌ **Error in ${name}**\n\n${sanitizedErrorContent}\n\nPlease check your input parameters and try again.`;
+
           return {
             jsonrpc: '2.0',
             id: request.id,
@@ -596,7 +617,7 @@ async function handleJsonRpcRequest(
               content: [
                 {
                   type: 'text',
-                  text: `❌ **Error in ${name}**\n\n${(error as Error).message}\n\nPlease check your input parameters and try again.`
+                  text: process.env.MCP_SANITIZATION_ENABLED === 'true' ? finalErrorContent : errorContent
                 }
               ]
             }

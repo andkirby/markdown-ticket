@@ -125,6 +125,12 @@ describe('Rate Limiting (MUST-05)', () => {
   });
 
   describe('Per-Tool Rate Limiting', () => {
+    beforeEach(async () => {
+      // Create test projects for get_project_info calls
+      await projectFactory.createProjectStructure('TEST', 'Test Project');
+      await projectFactory.createProjectStructure('MDT', 'Markdown Ticket');
+    });
+
     it('should apply rate limits independently per tool', async () => {
       // Given: Multiple tools available
       // When: Exhausting rate limit on one tool
@@ -132,7 +138,7 @@ describe('Rate Limiting (MUST-05)', () => {
 
       // Then: Other tools should still be available
       try {
-        await mcpClient.callTool('get_project_info', { project: 'TEST' });
+        await mcpClient.callTool('get_project_info', { key: 'TEST' });
         // If no project exists, should get "not found" error, not rate limit error
       } catch (error) {
         expect(error.message).not.toMatch(/rate limit/i);
@@ -143,7 +149,7 @@ describe('Rate Limiting (MUST-05)', () => {
       // Given: Two different tools
       // When: Making requests to both tools
       const listProjectsResults = await makeRapidCalls('list_projects', {}, 50);
-      const getProjectResults = await makeRapidCalls('get_project_info', { project: 'TEST' }, 50);
+      const getProjectResults = await makeRapidCalls('get_project_info', { key: 'TEST' }, 50);
 
       // Then: Both should have all requests succeed (within limit)
       expect(listProjectsResults.filter(r => r.success).length).toBe(50);

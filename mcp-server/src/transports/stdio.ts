@@ -7,6 +7,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { RateLimitManager } from '../utils/rateLimitManager.js';
+import { Sanitizer } from '../utils/sanitizer.js';
 
 /**
  * Start stdio transport for MCP server
@@ -58,11 +59,14 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
     try {
       const result = await mcpTools.handleToolCall(name, args || {});
 
+      // Sanitize the result content if sanitization is enabled
+      const sanitizedResult = Sanitizer.sanitize(result);
+
       return {
         content: [
           {
             type: 'text',
-            text: result
+            text: sanitizedResult
           }
         ]
       };
@@ -78,11 +82,17 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
       }
 
       // For other errors, return formatted content (legacy behavior)
+      const errorContent = `❌ **Error in ${name}**\n\n${errorMessage}\n\nPlease check your input parameters and try again.`;
+
+      // Sanitize error content if sanitization is enabled
+      const sanitizedErrorContent = Sanitizer.sanitizeError(errorMessage);
+      const finalErrorContent = `❌ **Error in ${name}**\n\n${sanitizedErrorContent}\n\nPlease check your input parameters and try again.`;
+
       return {
         content: [
           {
             type: 'text',
-            text: `❌ **Error in ${name}**\n\n${errorMessage}\n\nPlease check your input parameters and try again.`
+            text: process.env.MCP_SANITIZATION_ENABLED === 'true' ? finalErrorContent : errorContent
           }
         ]
       };
