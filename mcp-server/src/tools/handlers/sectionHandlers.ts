@@ -9,6 +9,7 @@ import { SimpleSectionValidator } from '../../utils/simpleSectionValidator.js';
 import { Project } from '@mdt/shared/models/Project.js';
 import { CRService } from '../../services/crService.js';
 import { validateCRKey, validateRequired, validateString, validateOperation } from '../../utils/validation.js';
+import { Sanitizer } from '../../utils/sanitizer.js';
 
 export interface SectionOperationResult {
   success: boolean;
@@ -112,17 +113,17 @@ export class SectionHandlers {
     const allSections = this.markdownSectionService.findSection(markdownBody, '');
 
     if (allSections.length === 0) {
-      return [
+      return Sanitizer.sanitizeText([
         `📑 **Sections in CR ${key}**`,
         '',
-        `- Title: ${ticket.title}`,
+        `- Title: ${Sanitizer.sanitizeText(ticket.title)}`,
         '',
         '*(No sections found - document may be empty or improperly formatted)*'
-      ].join('\n');
+      ].join('\n'));
     }
 
     const lines = [
-      `📑 **Sections in CR ${key}** - ${ticket.title}`,
+      `📑 **Sections in CR ${key}** - ${Sanitizer.sanitizeText(ticket.title)}`,
       '',
       `Found ${allSections.length} section${allSections.length === 1 ? '' : 's'}:`,
       ''
@@ -137,7 +138,7 @@ export class SectionHandlers {
         ` (${section.content.length} chars)` :
         ' (empty)';
 
-      lines.push(`${indent}- ${section.headerText}${contentPreview}`);
+      lines.push(`${indent}- ${Sanitizer.sanitizeText(section.headerText)}${contentPreview}`);
     }
 
     lines.push('');
@@ -151,7 +152,7 @@ export class SectionHandlers {
     lines.push('- `section: "Feature Description"` - matches "## 1. Feature Description"');
     lines.push('- `section: "### Key Features"` - exact match for subsection');
 
-    return lines.join('\n');
+    return Sanitizer.sanitizeText(lines.join('\n'));
   }
 
   /**
@@ -179,7 +180,7 @@ export class SectionHandlers {
     const matches = this.markdownSectionService.findSection(markdownBody, section);
 
     if (matches.length === 0) {
-      throw new Error(`Section "${section}" not found in CR ${key}. Use manage_cr_sections with operation="list" to see available sections.`);
+      throw new Error(`Section "${Sanitizer.sanitizeText(section)}" not found in CR ${key}. Use manage_cr_sections with operation="list" to see available sections.`);
     }
 
     if (matches.length > 1) {
@@ -191,20 +192,23 @@ export class SectionHandlers {
 
     const matchedSection = matches[0];
 
-    return [
+    // Sanitize the section content for output
+    const sanitizedContent = Sanitizer.sanitizeMarkdown(matchedSection.content);
+
+    return Sanitizer.sanitizeText([
       `📖 **Section Content from CR ${key}**`,
       '',
-      `**Section:** ${matchedSection.hierarchicalPath}`,
+      `**Section:** ${Sanitizer.sanitizeText(matchedSection.hierarchicalPath)}`,
       `**Content Length:** ${matchedSection.content.length} characters`,
       '',
       '---',
       '',
-      matchedSection.content,
+      sanitizedContent,
       '',
       '---',
       '',
       `Use \`manage_cr_sections\` with operation="replace", "append", or "prepend" to modify this section.`
-    ].join('\n');
+    ].join('\n'));
   }
 
   /**
@@ -268,7 +272,7 @@ export class SectionHandlers {
         .join('\n');
 
       throw new Error(
-        `Section '${section}' not found in CR ${key}.\n\n` +
+        `Section '${Sanitizer.sanitizeText(section)}' not found in CR ${key}.\n\n` +
         `Available sections:\n${sectionList || '  (none)'}`
       );
     }
@@ -277,7 +281,7 @@ export class SectionHandlers {
       // Multiple matches - require hierarchical path
       const paths = matches.map(m => `  - "${m.hierarchicalPath}"`).join('\n');
       throw new Error(
-        `Multiple sections found matching '${section}'.\n\n` +
+        `Multiple sections found matching '${Sanitizer.sanitizeText(section)}'.\n\n` +
         `Please specify which one using hierarchical path:\n${paths}`
       );
     }
@@ -373,11 +377,11 @@ export class SectionHandlers {
     const lines = [
       `✅ **Updated Section in CR ${key}**`,
       '',
-      `**Section:** ${matchedSection.hierarchicalPath}`,
+      `**Section:** ${Sanitizer.sanitizeText(matchedSection.hierarchicalPath)}`,
       `**Operation:** ${operation}`,
       `**Content Length:** ${processedContent.length} characters`,
       '',
-      `- Title: ${ticket.title}`,
+      `- Title: ${Sanitizer.sanitizeText(ticket.title)}`,
       `- Updated: ${now}`,
       `- File: ${ticket.filePath}`
     ];
@@ -403,6 +407,6 @@ export class SectionHandlers {
       lines.push('', `Content has been added to the beginning of the section.`);
     }
 
-    return lines.join('\n');
+    return Sanitizer.sanitizeText(lines.join('\n'));
   }
 }

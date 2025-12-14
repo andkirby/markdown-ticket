@@ -104,15 +104,21 @@ export class RateLimitManager {
     // Check if within rate limit
     if (toolInfo.count < this.config.maxRequests) {
       // Increment counter
+      const newCount = toolInfo.count + 1;
       this.toolLimits.set(toolName, {
         ...toolInfo,
-        count: toolInfo.count + 1,
+        count: newCount,
         lastRequest: now
       });
 
+      // Debug log
+      if (newCount % 10 === 0 || newCount > 95) {
+        this.logger(`📊 Rate limit status for '${toolName}': ${newCount}/${this.config.maxRequests} used`);
+      }
+
       return {
         allowed: true,
-        remainingRequests: this.config.maxRequests - toolInfo.count - 1,
+        remainingRequests: this.config.maxRequests - newCount,
         resetTime: new Date(toolInfo.windowStart + this.config.windowMs)
       };
     }

@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import rateLimit from 'express-rate-limit';
 
 /**
  * Authentication middleware
@@ -75,36 +74,6 @@ export function createOriginValidationMiddleware(allowedOrigins: string[]) {
   };
 }
 
-/**
- * Create rate limiter middleware
- */
-export function createRateLimiter(config: {
-  windowMs: number;
-  max: number;
-}) {
-  return rateLimit({
-    windowMs: config.windowMs,
-    max: config.max,
-    message: {
-      jsonrpc: '2.0',
-      error: {
-        code: -32600,
-        message: `Rate limit exceeded. Maximum ${config.max} requests per ${config.windowMs / 1000} seconds. Please try again later.`
-      }
-    },
-    standardHeaders: true, // Return rate limit info in headers
-    legacyHeaders: false,
-    handler: (req, res) => {
-      res.status(429).json({
-        jsonrpc: '2.0',
-        error: {
-          code: -32600,
-          message: `Rate limit exceeded. Maximum ${config.max} requests per ${config.windowMs / 1000} seconds. Please try again later.`
-        }
-      });
-    }
-  });
-}
 
 /**
  * Session validation middleware

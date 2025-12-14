@@ -19,6 +19,7 @@ import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionServ
 import { SimpleContentProcessor } from '../../utils/simpleContentProcessor.js';
 import { SimpleSectionValidator } from '../../utils/simpleSectionValidator.js';
 import { validateCRKey, validateRequired, validateString, validateOperation } from '../../utils/validation.js';
+import { Sanitizer } from '../../utils/sanitizer.js';
 
 /**
  * CR Handlers Class
@@ -42,26 +43,30 @@ export class CRHandlers {
 
     if (crs.length === 0) {
       if (filters) {
-        return `🎫 No CRs found matching the specified filters in project ${project.project.code || project.id}.`;
+        return Sanitizer.sanitizeText(`🎫 No CRs found matching the specified filters in project ${project.project.code || project.id}.`);
       }
-      return `🎫 No CRs found in project ${project.project.code || project.id}.`;
+      return Sanitizer.sanitizeText(`🎫 No CRs found in project ${project.project.code || project.id}.`);
     }
 
     const lines = [`🎫 Found ${crs.length} CR${crs.length === 1 ? '' : 's'}${filters ? ' matching filters' : ''}:`, ''];
 
     for (const ticket of crs) {
-      lines.push(`**${ticket.code}** - ${ticket.title}`);
+      // Sanitize ticket data before output
+      const safeTitle = Sanitizer.sanitizeText(ticket.title);
+      const safePhase = ticket.phaseEpic ? Sanitizer.sanitizeText(ticket.phaseEpic) : null;
+
+      lines.push(`**${ticket.code}** - ${safeTitle}`);
       lines.push(`- Status: ${ticket.status}`);
       lines.push(`- Type: ${ticket.type}`);
       lines.push(`- Priority: ${ticket.priority}`);
       lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString().split('T')[0] : 'N/A'}`);
-      if (ticket.phaseEpic) {
-        lines.push(`- Phase: ${ticket.phaseEpic}`);
+      if (safePhase) {
+        lines.push(`- Phase: ${safePhase}`);
       }
       lines.push('');
     }
 
-    return lines.join('\n');
+    return Sanitizer.sanitizeText(lines.join('\n'));
   }
 
   /**
@@ -87,8 +92,8 @@ export class CRHandlers {
 
     switch (modeValidation.value) {
       case 'full':
-        // Return just the plain ticket content
-        return ticket.content || '';
+        // Return sanitized ticket content
+        return Sanitizer.sanitizeCRContent(ticket.content || '', 'full');
 
       case 'attributes': {
         // Extract YAML frontmatter and return attributes
@@ -113,13 +118,13 @@ export class CRHandlers {
           // Build attributes object from parsed ticket
           const attributes: any = {
             code: parsedTicket.code || key,
-            title: ticket.title || parsedTicket.title || 'Untitled',
+            title: Sanitizer.sanitizeText(ticket.title || parsedTicket.title || 'Untitled'),
             status: parsedTicket.status || 'Unknown',
             type: parsedTicket.type || 'Unknown',
             priority: parsedTicket.priority || 'Medium'
           };
 
-          // Add optional fields if present
+          // Add optional fields if present, sanitizing string values
           const optionalFields = [
             'dateCreated', 'lastModified', 'phaseEpic', 'assignee',
             'dependsOn', 'blocks', 'relatedTickets', 'impactAreas',
@@ -127,13 +132,14 @@ export class CRHandlers {
           ];
 
           for (const field of optionalFields) {
-            if ((parsedTicket as any)[field] !== undefined) {
-              attributes[field] = (parsedTicket as any)[field];
+            const value = (parsedTicket as any)[field];
+            if (value !== undefined) {
+              attributes[field] = typeof value === 'string' ? Sanitizer.sanitizeText(value) : value;
             }
           }
 
           // Return formatted JSON output
-          return JSON.stringify(attributes, null, 2);
+          return Sanitizer.sanitizeText(JSON.stringify(attributes, null, 2));
 
         } catch (fileError) {
           throw new Error(`Failed to read CR file for ${key}: ${(fileError as Error).message}`);
@@ -144,17 +150,17 @@ export class CRHandlers {
         // Return just the key metadata without full YAML parsing
         const metadata = {
           code: ticket.code,
-          title: ticket.title,
+          title: Sanitizer.sanitizeText(ticket.title),
           status: ticket.status,
           type: ticket.type,
           priority: ticket.priority,
           dateCreated: ticket.dateCreated?.toISOString(),
           lastModified: ticket.lastModified?.toISOString(),
-          phaseEpic: ticket.phaseEpic,
+          phaseEpic: ticket.phaseEpic ? Sanitizer.sanitizeText(ticket.phaseEpic) : undefined,
           filePath: ticket.filePath
         };
 
-        return JSON.stringify(metadata, null, 2);
+        return Sanitizer.sanitizeText(JSON.stringify(metadata, null, 2));
 
       default:
         throw new Error(`Invalid mode '${mode}'. Must be: full, attributes, or metadata`);
