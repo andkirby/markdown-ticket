@@ -288,7 +288,7 @@ This change is necessary to:
         content: completeContent
       });
 
-      const response = await callSuggestCRImprovements('TEST', createdCR.key);
+      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key);
 
       expect(response.success).toBe(true);
       expect(response.data).toBeDefined();
@@ -327,7 +327,7 @@ This is blocking user access to the system.`;
         content: incompleteContent
       });
 
-      const response = await callSuggestCRImprovements('TEST', createdCR.key);
+      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key);
 
       expect(response.success).toBe(true);
 
@@ -375,7 +375,7 @@ It works.`;
         content: sparseContent
       });
 
-      const response = await callSuggestCRImprovements('TEST', createdCR.key);
+      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key);
 
       expect(response.success).toBe(true);
 
@@ -425,7 +425,7 @@ This needs to be fixed because users are complaining.`;
         content: poorStructureContent
       });
 
-      const response = await callSuggestCRImprovements('TEST', createdCR.key);
+      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key);
 
       expect(response.success).toBe(true);
 
@@ -475,7 +475,7 @@ More content here.`;
         content: inconsistentContent
       });
 
-      const response = await callSuggestCRImprovements('TEST', createdCR.key);
+      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key);
 
       expect(response.success).toBe(true);
 
@@ -525,7 +525,7 @@ Use search library.
         content: vagueCriteriaContent
       });
 
-      const response = await callSuggestCRImprovements('TEST', createdCR.key);
+      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key);
 
       expect(response.success).toBe(true);
 
@@ -567,7 +567,7 @@ Feature works.`;
         content: noAnalysisContent
       });
 
-      const response = await callSuggestCRImprovements('TEST', createdCR.key);
+      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key);
 
       expect(response.success).toBe(true);
 
@@ -628,7 +628,7 @@ Real-time collaboration is becoming standard expectation in document editing too
         content: perfectContent
       });
 
-      const response = await callSuggestCRImprovements('TEST', createdCR.key);
+      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key);
 
       expect(response.success).toBe(true);
 
@@ -654,7 +654,7 @@ Real-time collaboration is becoming standard expectation in document editing too
 
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32000);
+      expect(response.error?.code).toBe(-32000); // Server error for CR not found
       expect(response.error?.message).toContain('not found');
     });
 
@@ -663,7 +663,7 @@ Real-time collaboration is becoming standard expectation in document editing too
 
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32000);
+      expect(response.error?.code).toBe(-32602); // Invalid params for non-existent project
       // Update to match new validation message format
       expect(response.error?.message).toContain('invalid');
     });
@@ -675,9 +675,9 @@ Real-time collaboration is becoming standard expectation in document editing too
 
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      // The validation happens in validateProject which throws with -32000 code
-      expect(response.error?.code).toBe(-32000);
-      expect(response.error?.message).toContain('not found');
+      // Missing required parameter is InvalidParams
+      expect(response.error?.code).toBe(-32602); // Invalid params for missing project parameter
+      expect(response.error?.message).toContain('required');
     });
 
     it('GIVEN missing key parameter WHEN suggesting THEN return validation error', async () => {
@@ -687,7 +687,7 @@ Real-time collaboration is becoming standard expectation in document editing too
 
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32000);
+      expect(response.error?.code).toBe(-32000); // Server error for missing key parameter
     });
   });
 
@@ -709,7 +709,7 @@ Need to document something.`;
         content: minimalContent
       });
 
-      const response = await callSuggestCRImprovements('TEST', createdCR.key);
+      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key);
 
       expect(response.success).toBe(true);
       expect(response.data).toBeDefined();

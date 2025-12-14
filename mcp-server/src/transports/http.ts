@@ -8,6 +8,7 @@ import cors from 'cors';
 import { SessionManager } from './sessionManager.js';
 import { RateLimitManager } from '../utils/rateLimitManager.js';
 import { Sanitizer } from '../utils/sanitizer.js';
+import { ToolError } from '../utils/toolError.js';
 import {
   createAuthMiddleware,
   createOriginValidationMiddleware,
@@ -211,40 +212,65 @@ export async function startHttpTransport(
           console.error(`📤 Sending tool call response for ${tool_name}`);
           return res.status(200).json(response);
         } catch (error) {
-          // For manage_cr_sections, return JSON-RPC error with code -32000 as expected by tests
-          if (tool_name === 'manage_cr_sections') {
-            const response = {
-              "jsonrpc": "2.0",
-              "id": request_id,
-              "error": {
-                "code": -32000,
-                "message": (error as Error).message
-              }
-            };
-            console.error(`📤 Sending tool error response for ${tool_name} with code -32000`);
-            return res.status(200).json(response);
+          // Handle ToolError instances
+          if (error instanceof ToolError) {
+            if (error.isProtocolError()) {
+              // Protocol errors should return JSON-RPC error responses
+              const jsonRpcError = error.toJsonRpcError();
+              const response = {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {
+                  "code": jsonRpcError.code,
+                  "message": jsonRpcError.message,
+                  ...(jsonRpcError.data && { data: jsonRpcError.data })
+                }
+              };
+              console.error(`📤 Sending protocol error response for ${tool_name} with code ${jsonRpcError.code}`);
+              return res.status(200).json(response);
+            } else {
+              // Tool execution errors should return { result: { content: [...], isError: true } }
+              const toolErrorResult = error.toToolErrorResult();
+              const response = {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": toolErrorResult
+              };
+              console.error(`📤 Sending tool execution error response for ${tool_name}`);
+              return res.status(200).json(response);
+            }
           }
 
-          // For other tools, return formatted content (legacy behavior)
-          const errorContent = `❌ **Error in ${tool_name}**\n\n${(error as Error).message}\n\nPlease check your input parameters and try again.`;
+          // Handle other error types for backward compatibility
+          const errorMessage = (error as Error).message;
+          let errorCode = -32000; // Default internal error
 
-          // Sanitize error content if sanitization is enabled
-          const sanitizedErrorContent = Sanitizer.sanitizeError((error as Error).message);
-          const finalErrorContent = `❌ **Error in ${tool_name}**\n\n${sanitizedErrorContent}\n\nPlease check your input parameters and try again.`;
+          // Convert JavaScript errors to proper JSON-RPC error codes
+          if (errorMessage.includes('Unknown tool') || errorMessage.includes('Available tools:')) {
+            errorCode = -32601; // Method not found
+          } else if (errorMessage.includes('Invalid params') ||
+                     errorMessage.includes('validation') ||
+                     errorMessage.includes('required') ||
+                     errorMessage.includes('must be') ||
+                     errorMessage.includes('is required') ||
+                     errorMessage.includes('invalid')) {
+            errorCode = -32602; // Invalid params
+          } else if (errorMessage.includes('not found') ||
+                     errorMessage.includes('does not exist') ||
+                     errorMessage.includes('No such file') ||
+                     errorMessage.includes('ENOENT')) {
+            errorCode = -32000; // Resource not found
+          }
 
           const response = {
             "jsonrpc": "2.0",
             "id": request_id,
-            "result": {
-              "content": [
-                {
-                  "type": "text",
-                  "text": process.env.MCP_SANITIZATION_ENABLED === 'true' ? finalErrorContent : errorContent
-                }
-              ]
+            "error": {
+              "code": errorCode,
+              "message": errorMessage
             }
           };
-          console.error(`📤 Sending tool error response for ${tool_name}`);
+          console.error(`📤 Sending tool error response for ${tool_name} with code ${errorCode}`);
           return res.status(200).json(response);
         }
       }
@@ -604,22 +630,58 @@ async function handleJsonRpcRequest(
             }
           };
         } catch (error) {
-          const errorContent = `❌ **Error in ${name}**\n\n${(error as Error).message}\n\nPlease check your input parameters and try again.`;
+          // Handle ToolError instances
+          if (error instanceof ToolError) {
+            if (error.isProtocolError()) {
+              // Protocol errors should return JSON-RPC error responses
+              const jsonRpcError = error.toJsonRpcError();
+              return {
+                jsonrpc: '2.0',
+                id: request.id,
+                error: {
+                  code: jsonRpcError.code,
+                  message: jsonRpcError.message,
+                  ...(jsonRpcError.data && { data: jsonRpcError.data })
+                }
+              };
+            } else {
+              // Tool execution errors should return { result: { content: [...], isError: true } }
+              const toolErrorResult = error.toToolErrorResult();
+              return {
+                jsonrpc: '2.0',
+                id: request.id,
+                result: toolErrorResult
+              };
+            }
+          }
 
-          // Sanitize error content if sanitization is enabled
-          const sanitizedErrorContent = Sanitizer.sanitizeError((error as Error).message);
-          const finalErrorContent = `❌ **Error in ${name}**\n\n${sanitizedErrorContent}\n\nPlease check your input parameters and try again.`;
+          // Handle other error types for backward compatibility
+          const errorMessage = (error as Error).message;
+          let errorCode = -32000; // Default internal error
+
+          // Convert JavaScript errors to proper JSON-RPC error codes
+          if (errorMessage.includes('Unknown tool') || errorMessage.includes('Available tools:')) {
+            errorCode = -32601; // Method not found
+          } else if (errorMessage.includes('Invalid params') ||
+                     errorMessage.includes('validation') ||
+                     errorMessage.includes('required') ||
+                     errorMessage.includes('must be') ||
+                     errorMessage.includes('is required') ||
+                     errorMessage.includes('invalid')) {
+            errorCode = -32602; // Invalid params
+          } else if (errorMessage.includes('not found') ||
+                     errorMessage.includes('does not exist') ||
+                     errorMessage.includes('No such file') ||
+                     errorMessage.includes('ENOENT')) {
+            errorCode = -32000; // Resource not found
+          }
 
           return {
             jsonrpc: '2.0',
             id: request.id,
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: process.env.MCP_SANITIZATION_ENABLED === 'true' ? finalErrorContent : errorContent
-                }
-              ]
+            error: {
+              code: errorCode,
+              message: errorMessage
             }
           };
         }

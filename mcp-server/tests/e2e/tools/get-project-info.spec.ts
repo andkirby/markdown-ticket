@@ -27,6 +27,8 @@ describe('get_project_info', () => {
 
   function parseProjectInfoMarkdown(markdown: string) {
     const info: any = {};
+    if (!markdown) return info;
+
     const titleMatch = markdown.match(/📋 Project: \*\*([^*]+)\*\* - (.+)/);
     if (titleMatch) {
       info.key = titleMatch[1];
@@ -53,8 +55,11 @@ describe('get_project_info', () => {
 
   it('GIVEN invalid project WHEN getting info THEN handle gracefully', async () => {
     const response = await mcpClient.callTool('get_project_info', { key: 'INVALID' });
-    expect(response.success).toBe(true);
-    expect(response.data).toContain('not found');
+    // Invalid project returns error, not success
+    expect(response.success).toBe(false);
+    expect(response.error?.code).toBe(-32602);
+    expect(response.error?.message).toContain('MCP error -32602:');
+    expect(response.error?.message).toContain('is invalid');
   });
 
   it('GIVEN project with repo WHEN getting info THEN include repo', async () => {
@@ -91,14 +96,16 @@ describe('get_project_info', () => {
 
   it('GIVEN empty project WHEN getting info THEN handle gracefully', async () => {
     const response = await mcpClient.callTool('get_project_info', { key: '' });
-    expect(response.success).toBe(true);
-    expect(response.data).toBeDefined();
+    expect(response.success).toBe(false);
+    expect(response.error?.code).toBe(-32602);
+    expect(response.error?.message).toContain('MCP error -32602:');
   });
 
   it('GIVEN null project WHEN getting info THEN handle gracefully', async () => {
     const response = await mcpClient.callTool('get_project_info', { key: null });
-    expect(response.success).toBe(true);
-    expect(response.data).toBeDefined();
+    expect(response.success).toBe(false);
+    expect(response.error?.code).toBe(-32602);
+    expect(response.error?.message).toContain('MCP error -32602:');
   });
 
   it('GIVEN successful retrieval WHEN response THEN be markdown', async () => {
