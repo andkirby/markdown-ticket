@@ -365,54 +365,58 @@ Even more nested content.
   });
 
   describe('Error Handling', () => {
-    it('GIVEN non-existent CR WHEN getting THEN return error message in content', async () => {
+    it('GIVEN non-existent CR WHEN getting THEN return tool execution error', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const response = await callGetCR('TEST', 'TEST-999');
 
-      // The server returns success with error message in content
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      expect(response.data).toContain('❌ **Error in get_cr**');
-      expect(response.data).toContain('not found');
+      // Business logic errors (CR not found) are tool execution errors
+      // They should return success=false with error object according to MCP spec
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32000); // Server error code
+      expect(response.error?.message).toContain('not found');
     });
 
-    it('GIVEN non-existent project WHEN getting THEN return error message in content', async () => {
+    it('GIVEN non-existent project WHEN getting THEN return protocol error', async () => {
       const response = await callGetCR('NONEXISTENT', 'TEST-001');
 
-      // The server returns success with error message in content
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      expect(response.data).toContain('❌ **Error in get_cr**');
-      // Update to match new validation message format
-      expect(response.data).toContain('invalid');
+      // Invalid project key is a parameter validation error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32602); // Invalid params error code
+      expect(response.error?.message).toContain('invalid');
     });
 
-    it('GIVEN missing project parameter WHEN getting error message in content', async () => {
+    it('GIVEN missing project parameter WHEN getting THEN return protocol error', async () => {
       const response = await mcpClient.callTool('get_cr', {
         key: 'TEST-001',
         mode: 'full'
       });
 
-      // The server returns success with error message in content
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      expect(response.data).toContain('❌ **Error in get_cr**');
+      // Invalid parameters are protocol errors (missing required argument)
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32602); // Invalid params error code
+      expect(response.error?.message).toContain('Project key is required');
     });
 
-    it('GIVEN missing key parameter WHEN getting error message in content', async () => {
+    it('GIVEN missing key parameter WHEN getting THEN return protocol error', async () => {
+      await projectFactory.createProjectStructure('TEST', 'Test Project');
+
       const response = await mcpClient.callTool('get_cr', {
         project: 'TEST',
         mode: 'full'
       });
 
-      // The server returns success with error message in content
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      expect(response.data).toContain('❌ **Error in get_cr**');
+      // Missing key parameter is a protocol error (invalid params)
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32602); // Invalid params error code
+      expect(response.error?.message).toContain('CR key is required');
     });
 
-    it('GIVEN invalid mode WHEN getting error message in content', async () => {
+    it('GIVEN invalid mode WHEN getting THEN return protocol error', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const response = await mcpClient.callTool('get_cr', {
@@ -421,14 +425,11 @@ Even more nested content.
         mode: 'invalid'
       });
 
-      // The server returns success with error message in content
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      expect(response.data).toContain('❌ **Error in get_cr**');
-      // Note: Might get "not found" error first since CR doesn't exist
-      const hasNotFoundError = response.data.includes('not found');
-      const hasInvalidModeError = response.data.includes('Invalid mode');
-      expect(hasNotFoundError || hasInvalidModeError).toBe(true);
+      // Invalid parameters are protocol errors (invalid enum value)
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32602); // Invalid params error code
+      expect(response.error?.message).toContain('Invalid mode');
     });
   });
 
