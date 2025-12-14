@@ -101,11 +101,10 @@ refreshInterval = 30
 ```toml
 [project]
 path = "/path/to/project"
-active = true
+active = true # optional, default true
 
 [metadata]
 dateRegistered = "2025-09-07"
-lastAccessed = "2025-09-07"
 ```
 
 ### Local Project Configuration (`{project}/.mdt-config.toml`)
@@ -114,21 +113,28 @@ lastAccessed = "2025-09-07"
 [project]
 name = "My Project"
 code = "MYPROJ"
-path = "docs/CRs"
-startNumber = 1
-counterFile = ".mdt-next"
+id = "my-project"                    # Optional: defaults to lowercase code
+ticketsPath = "docs/CRs"             # Path to tickets directory
 description = "Project description"
 repository = "https://github.com/user/repo"
-activeMcp = true
+active = true                        # Whether project is active, optional, default true, shall be used if there is no global config
 
-# Documentation Configuration
-document_paths = [
-    "README.md",           # Single file from root
-    "docs",               # Directory (scans for .md files)
-    "guides/*.md",        # Glob pattern for specific files
-    "architecture"        # Directory with subdirectories
+# Document discovery settings
+exclude_folders = [
+    "docs/CRs",                      # Exclude tickets folder from document discovery
+    "node_modules",
+    ".git",
+    "test-results"
 ]
-max_depth = 3             # Maximum directory depth for scanning
+
+# Documentation paths
+document_paths = [
+    "README.md",                     # Single file from root
+    "docs",                         # Directory (scans for .md files)
+    "guides/*.md",                  # Glob pattern for specific files
+    "architecture"                  # Directory with subdirectories
+]
+max_depth = 3                         # Maximum directory depth for scanning
 ```
 
 ## Project Configuration
@@ -144,13 +150,13 @@ The system uses a dual-configuration approach:
 |-------|------|----------|-------------|
 | `name` | string | Required | Display name for the project |
 | `code` | string | Required | Unique project identifier (e.g., "MDT", "API") |
-| `path` | string | Optional | Relative path to tickets directory (default: "docs/CRs") |
-| `startNumber` | number | Optional | Starting ticket number (default: 1) |
-| `counterFile` | string | Optional | Counter file name (default: ".mdt-next") |
+| `id` | string | Optional | Project identifier (default: lowercase version of `code`) |
+| `ticketsPath` | string | Optional | Relative path to tickets directory (default: "docs/CRs") |
 | `description` | string | Optional | Project description |
 | `repository` | string | Optional | Repository URL |
-| `activeMcp` | boolean | Optional | Enable MCP access (default: true) |
+| `active` | boolean | Optional | Whether project is visible and accessible (default: true) |
 | `document_paths` | array | Optional | Paths to documentation files/directories |
+| `exclude_folders` | array | Optional | Folders to exclude from document discovery |
 | `max_depth` | number | Optional | Maximum directory depth for document scanning (default: 3) |
 
 ### Project Registry Schema
@@ -158,9 +164,8 @@ The system uses a dual-configuration approach:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `path` | string | Required | Absolute path to project directory |
-| `active` | boolean | Optional | Whether project is active (default: true) |
+| `active` | boolean | Optional | Whether project is visible and accessible (default: true) |
 | `dateRegistered` | string | Auto | Date project was registered |
-| `lastAccessed` | string | Auto | Last access timestamp |
 
 ### Project Examples
 
@@ -169,56 +174,97 @@ The system uses a dual-configuration approach:
 [project]
 name = "Markdown Ticket Board"
 code = "MDT"
-path = "docs/CRs"
-startNumber = 1
-counterFile = ".mdt-next"
+id = "markdown-ticket"
+ticketsPath = "docs/CRs"
 description = "Kanban-style ticket board using markdown files"
 repository = "https://github.com/user/markdown-ticket"
-activeMcp = true
+active = true
+
+# Document discovery settings
+exclude_folders = [
+    "docs/CRs",
+    "node_modules",
+    ".git",
+    "test-results"
+]
+
+# Documentation paths
+document_paths = [
+    "generated-docs",
+    "docs",
+    "server",
+    "shared"
+]
+max_depth = 3
 ```
 
 **Project Registry Entry** (`~/.config/markdown-ticket/projects/markdown-ticket.toml`):
 ```toml
 [project]
 path = "~/home/markdown-ticket"
-active = true
+active = true # optional, default true
 
 [metadata]
 dateRegistered = "2025-09-07"
-lastAccessed = "2025-09-09"
 ```
 
 ## Documentation Configuration
 
 The system includes an integrated markdown document viewer with configurable document discovery.
 
-### Document Path Configuration
+### Document Discovery Configuration
 
-Projects can specify which files and directories to include in the Documents view:
+The document viewer uses two complementary settings:
+
+**`exclude_folders`** (top-level array):
+- Folders to completely exclude from document discovery
+- Useful for ticket directories, build outputs, dependencies
+- Applied before scanning any paths
+
+**`document_paths`** (top-level array):
+- Paths to include in document discovery
+- Supports files, directories, and glob patterns
+- Scanned up to `max_depth` levels
+
+**`max_depth`** (top-level):
+- Maximum directory depth for scanning (default: 3)
+- Prevents infinite recursion in deep directory structures
+
+### Example Configuration
 
 ```toml
-[project]
-# ... other project settings
-
-# Documentation paths - supports files, directories, and glob patterns
-document_paths = [
-    "README.md",           # Single file from project root
-    "docs",               # Directory (scans for .md files)
-    "guides/*.md",        # Glob pattern for specific files
-    "architecture",       # Directory with subdirectories
-    "specs/api.md"        # Specific file in subdirectory
+# Document discovery settings
+exclude_folders = [
+    "docs/CRs",                      # Exclude tickets folder
+    "node_modules",                  # Exclude dependencies
+    ".git",                         # Exclude git files
+    "test-results",                 # Exclude test outputs
+    "dist",                         # Exclude build artifacts
+    "coverage"                      # Exclude coverage reports
 ]
 
-# Maximum directory depth for scanning (default: 3)
-max_depth = 3
+# Documentation paths
+document_paths = [
+    "README.md",                     # Single file from project root
+    "docs",                         # Directory (scans for .md files)
+    "guides/*.md",                  # Glob pattern for specific files
+    "architecture",                 # Directory with subdirectories
+    "specs/api.md",                 # Specific file in subdirectory
+    "server",                       # Include source code directories
+    "shared"
+]
+
+max_depth = 3                         # Maximum directory depth for scanning
 ```
 
 ### Document Discovery Rules
 
-1. **Single Files**: Direct path to specific markdown files
-2. **Directories**: Scans directory up to `max_depth` levels for `.md` files
-3. **Glob Patterns**: Supports `*.md` patterns for flexible file matching
-4. **Exclusions**: Only `.md` files are displayed in the document tree
+1. **Exclusion First**: All paths in `exclude_folders` are filtered out completely
+2. **Scanning**: System scans `document_paths` for `.md` files up to `max_depth` levels
+3. **Single Files**: Direct path to specific markdown files
+4. **Directories**: Recursively scanned for `.md` files up to `max_depth` levels
+5. **Glob Patterns**: Supports `*.md` patterns for flexible file matching
+6. **Final Filter**: Only `.md` files are displayed in the document tree
 
 ### Document Viewer Features
 
@@ -235,6 +281,7 @@ max_depth = 3
 3. **Auto-Configuration**: Selected paths saved to `.mdt-config.toml`
 4. **Document Access**: Documents view loads configured content
 
+
 ## System Integration
 
 The configuration system supports:
@@ -250,6 +297,26 @@ The configuration system supports:
 2. **Registry**: Load registered projects from global registry
 3. **Local Config**: Read project-specific settings from `.mdt-config.toml`
 4. **User Preferences**: Apply user sorting and UI preferences
+
+## Project Activation
+
+The `active` field controls project visibility across all interfaces (CLI, Web UI, MCP):
+
+- **`active = true`** (default): Project is visible and accessible
+- **`active = false`**: Project is hidden from listings but configuration files remain intact
+
+### Configuration
+```toml
+[project]
+name = "My Project"
+code = "PROJ"
+active = false  # Project will be hidden from all interfaces
+```
+
+### Behavior
+- Disabling a project only hides it from view
+- No files or configurations are deleted when `active = false`
+- The `active` status is stored in both local and global registry configs
 
 ## Configuration Examples
 
@@ -308,11 +375,12 @@ refreshInterval = 30
 
 ### Project Validation
 - Project `code` must be unique across all projects
-- Project `path` must exist and be readable
-- `activeMcp` must be boolean
+- Project `ticketsPath` directory must exist and be readable (or be created)
+- `active` must be boolean
 
 ### Documentation Validation
 - `document_paths` entries must be valid file/directory paths relative to project root
+- `exclude_folders` entries must be valid directory paths relative to project root
 - `max_depth` must be a positive integer (1-10)
 - Glob patterns in `document_paths` must be valid
 - Referenced files/directories in `document_paths` should exist
