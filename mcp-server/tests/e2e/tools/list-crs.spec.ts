@@ -212,36 +212,36 @@ The solution is straightforward as this is test content.
     it('GIVEN project with CRs WHEN listing with status filter THEN return filtered CRs', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project');
 
-      // Create CRs with different statuses
+      // Create CRs (all will be created with 'Proposed' status regardless of what's specified)
       await projectFactory.createTestCR('TEST', {
-        title: 'Proposed CR',
+        title: 'CR1',
         type: 'Feature Enhancement',
         status: 'Proposed',
-        content: generateTestContent('Proposed CR', 'Test CR with Proposed status')
+        content: generateTestContent('CR1', 'Test CR 1')
       });
 
       await projectFactory.createTestCR('TEST', {
-        title: 'Approved CR',
+        title: 'CR2',
         type: 'Bug Fix',
-        status: 'Approved',
-        content: generateTestContent('Approved CR', 'Test CR with Approved status')
+        status: 'Approved', // This will be ignored, will be created as 'Proposed'
+        content: generateTestContent('CR2', 'Test CR 2')
       });
 
       await projectFactory.createTestCR('TEST', {
-        title: 'In Progress CR',
+        title: 'CR3',
         type: 'Architecture',
-        status: 'In Progress',
-        content: generateTestContent('In Progress CR', 'Test CR with In Progress status')
+        status: 'In Progress', // This will be ignored, will be created as 'Proposed'
+        content: generateTestContent('CR3', 'Test CR 3')
       });
 
       await projectFactory.createTestCR('TEST', {
-        title: 'Implemented CR',
+        title: 'CR4',
         type: 'Documentation',
-        status: 'Implemented',
-        content: generateTestContent('Implemented CR', 'Test CR with Implemented status')
+        status: 'Implemented', // This will be ignored, will be created as 'Proposed'
+        content: generateTestContent('CR4', 'Test CR 4')
       });
 
-      // Test single status filter - using 'Proposed' as that's what all CRs default to
+      // Test single status filter - all CRs have 'Proposed' status
       const response = await callListCRs('TEST', { status: 'Proposed' });
 
       expect(response.success).toBe(true);
@@ -251,47 +251,45 @@ The solution is straightforward as this is test content.
       // Parse markdown response
       const crs = parseMarkdownResponse(response.data);
 
-      expect(crs.length).toBe(4); // All CRs are created with 'Proposed' status
+      // All 4 CRs should be returned since they all have 'Proposed' status
+      expect(crs.length).toBe(4);
       crs.forEach((cr: any) => {
         expect(cr.status).toBe('Proposed');
       });
-
-      const crTitles = crs.map((cr: any) => cr.title);
-      expect(crTitles).toContain('Approved CR');
-      // Since we're filtering by 'Proposed' status, we get all CRs including "Proposed CR"
     });
 
     it('GIVEN project with CRs WHEN listing with multiple status filters THEN return filtered CRs', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project');
 
-      // Create CRs with different statuses
+      // Create CRs (all will be created with 'Proposed' status regardless of what's specified)
       await projectFactory.createTestCR('TEST', {
         title: 'CR1',
         type: 'Feature Enhancement',
         status: 'Proposed',
-        content: generateTestContent('CR1', 'Test CR with Proposed status')
+        content: generateTestContent('CR1', 'Test CR 1')
       });
       await projectFactory.createTestCR('TEST', {
         title: 'CR2',
         type: 'Bug Fix',
-        status: 'Approved',
-        content: generateTestContent('CR2', 'Test CR with Approved status')
+        status: 'Approved', // This will be ignored, will be created as 'Proposed'
+        content: generateTestContent('CR2', 'Test CR 2')
       });
       await projectFactory.createTestCR('TEST', {
         title: 'CR3',
         type: 'Architecture',
-        status: 'In Progress',
-        content: generateTestContent('CR3', 'Test CR with In Progress status')
+        status: 'In Progress', // This will be ignored, will be created as 'Proposed'
+        content: generateTestContent('CR3', 'Test CR 3')
       });
       await projectFactory.createTestCR('TEST', {
         title: 'CR4',
         type: 'Documentation',
-        status: 'Implemented',
-        content: generateTestContent('CR4', 'Test CR with Implemented status')
+        status: 'Implemented', // This will be ignored, will be created as 'Proposed'
+        content: generateTestContent('CR4', 'Test CR 4')
       });
 
-      // Test multiple status filters - all CRs default to 'Proposed' regardless of what's passed
-      const response = await callListCRs('TEST', { status: ['Proposed'] });
+      // Test multiple status filters - filter for 'Proposed' and 'Approved'
+      // All CRs have 'Proposed' status, so all 4 should be returned
+      const response = await callListCRs('TEST', { status: ['Proposed', 'Approved'] });
 
       expect(response.success).toBe(true);
       expect(response.data).toBeDefined();
@@ -300,11 +298,11 @@ The solution is straightforward as this is test content.
       // Parse markdown response
       const crs = parseMarkdownResponse(response.data);
 
+      // All 4 CRs should be returned since they all have 'Proposed' status
+      expect(crs.length).toBe(4);
       crs.forEach((cr: any) => {
         expect(cr.status).toBe('Proposed');
       });
-
-      expect(crs.length).toBe(4); // All CRs are created with 'Proposed' status
     });
   });
 
@@ -533,18 +531,20 @@ The solution is straightforward as this is test content.
     it('GIVEN non-existent project WHEN listing THEN return error message', async () => {
       const response = await callListCRs('NONEXISTENT');
 
-      // The tool returns success=true with error message in data
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error in list_crs');
-      // Update to match new validation message format
-      expect(response.data).toContain('invalid');
+      // Non-existent project results in a protocol error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.message).toContain('invalid');
     });
 
     it('GIVEN missing project parameter WHEN listing THEN return validation error', async () => {
       const response = await mcpClient.callTool('list_crs', {});
 
-      // The tool returns success=true even with missing project parameter
-      expect(response.success).toBe(true);
+      // Missing required parameter should result in a protocol error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.message).toBeDefined();
+      expect(response.error?.message).toContain('Project key is required');
     });
   });
 

@@ -2,6 +2,7 @@ import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 import { Project } from '@mdt/shared/models/Project.js';
 import { validateProjectKey } from '../../utils/validation.js';
 import { Sanitizer } from '../../utils/sanitizer.js';
+import { ToolError, JsonRpcErrorCode } from '../../utils/toolError.js';
 
 /**
  * Project-specific tool handlers for MCP server
@@ -27,11 +28,19 @@ export class ProjectHandlers {
           return await this.handleGetProjectInfo(args.key);
 
         default:
-          throw new Error(`Unknown project tool '${Sanitizer.sanitizeText(name)}'. Available tools: list_projects, get_project_info`);
+          throw ToolError.protocol(
+            `Unknown project tool '${Sanitizer.sanitizeText(name)}'. Available tools: list_projects, get_project_info`,
+            JsonRpcErrorCode.MethodNotFound
+          );
       }
     } catch (error) {
       console.error(`Error handling project tool ${name}:`, error);
-      throw error;
+      // Re-throw ToolError instances
+      if (error instanceof ToolError) {
+        throw error;
+      }
+      // Convert other errors to tool execution errors
+      throw ToolError.toolExecution(error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -39,10 +48,10 @@ export class ProjectHandlers {
    * Validate project key exists and return project info
    */
   async validateProject(projectKey: string): Promise<Project> {
-    // Validate project key format
+    // Validate project key format - this is a protocol error (invalid parameter)
     const validation = validateProjectKey(projectKey);
     if (!validation.valid) {
-      throw new Error(validation.message);
+      throw ToolError.protocol(validation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
     // Get all projects (uses cache if available)
@@ -58,7 +67,8 @@ export class ProjectHandlers {
       const availableKeys = projects.map(p =>
         p.project.code || p.id
       ).filter(Boolean).join(', ');
-      throw new Error(`Project '${normalizedKey}' not found. Available projects: ${availableKeys}`);
+      // Project not found is a business logic failure (tool execution error)
+      throw ToolError.toolExecution(`Project '${normalizedKey}' not found. Available projects: ${availableKeys}`);
     }
     return project;
   }
