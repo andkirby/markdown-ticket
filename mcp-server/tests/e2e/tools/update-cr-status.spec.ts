@@ -287,25 +287,76 @@ The solution involves testing the status update mechanism for CRs in the system.
     });
   });
 
+  describe('Status Validation', () => {
+    it('GIVEN all valid statuses WHEN updating THEN accept all defined statuses', async () => {
+      await projectFactory.createProjectStructure('TEST', 'Test Project');
+
+      // Create a CR
+      const createdCR = await projectFactory.createTestCR('TEST', {
+        title: 'Status Validation Test',
+        type: 'Feature Enhancement',
+        status: 'Proposed',
+        content: createTestCRContent('Status Validation Test')
+      });
+
+      const crKey = extractCRKeyFromResponse(createdCR);
+
+      // All valid statuses from shared/models/Types.ts
+      const validStatuses = [
+        'Proposed',
+        'Approved',
+        'In Progress',
+        'Implemented',
+        'Rejected',
+        'On Hold',
+        'Superseded',
+        'Deprecated',
+        'Duplicate',
+        'Partially Implemented'
+      ];
+
+      // Test each valid status
+      for (const status of validStatuses) {
+        // Add delay to avoid rate limiting (5 requests per 1s per tool)
+        if (validStatuses.indexOf(status) > 0) {
+          await new Promise(resolve => setTimeout(resolve, 300)); // 300ms delay between updates
+        }
+
+        const response = await callUpdateCRStatus('TEST', crKey, status);
+
+        expect(response.success).toBe(true);
+        expect(response.data).toContain('Updated CR');
+        expect(response.data).toContain(status);
+        expect(response.data).toContain(crKey);
+      }
+    });
+  });
+
   describe('Error Handling', () => {
-    it('GIVEN non-existent CR WHEN updating THEN return error', async () => {
+    it('GIVEN non-existent CR WHEN updating THEN return tool execution error', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const response = await callUpdateCRStatus('TEST', 'TEST-999', 'Approved');
 
-      // Error responses are returned as success=true with error message in data
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('not found');
+      // Business logic errors (CR not found) are tool execution errors
+      // They should return success=false with error object according to MCP spec
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32000); // Server error code
+      expect(response.error?.message).toContain('not found');
     });
 
-    it('GIVEN non-existent project WHEN updating THEN return error', async () => {
+    it('GIVEN non-existent project WHEN updating THEN return protocol error', async () => {
       const response = await callUpdateCRStatus('NONEXISTENT', 'TEST-001', 'Approved');
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('not found');
+      // Invalid project key is a parameter validation error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32602); // Invalid params error code
+      expect(response.error?.message).toContain('invalid');
     });
 
-    it('GIVEN invalid status WHEN updating THEN return validation error', async () => {
+    it('GIVEN invalid status WHEN updating THEN return protocol error', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const createdCR = await projectFactory.createTestCR('TEST', {
@@ -318,54 +369,67 @@ The solution involves testing the status update mechanism for CRs in the system.
       const crKey = extractCRKeyFromResponse(createdCR);
       const response = await callUpdateCRStatus('TEST', crKey, 'Invalid Status');
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error');
-      expect(response.data).toContain('Invalid status');
+      // Invalid status is a parameter validation error (protocol error)
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32602); // Invalid params error code
+      expect(response.error?.message).toContain('Invalid status');
     });
 
-    it('GIVEN missing project parameter WHEN updating THEN return validation error', async () => {
+    it('GIVEN missing project parameter WHEN updating THEN return protocol error', async () => {
       const response = await mcpClient.callTool('update_cr_status', {
         key: 'TEST-001',
         status: 'Approved'
       });
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error');
-      expect(response.data).toContain('project');
+      // Missing required parameter is a protocol error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32602); // Invalid params error code
+      expect(response.error?.message).toContain('Project');
     });
 
-    it('GIVEN missing key parameter WHEN updating THEN return validation error', async () => {
+    it('GIVEN missing key parameter WHEN updating THEN return protocol error', async () => {
       const response = await mcpClient.callTool('update_cr_status', {
         project: 'TEST',
         status: 'Approved'
       });
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error');
-      // Error could be about missing key or missing parameters in general
+      // Missing required parameter is a protocol error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32000); // Server error for missing key parameter (business logic validation)
     });
 
-    it('GIVEN missing status parameter WHEN updating THEN return validation error', async () => {
+    it('GIVEN missing status parameter WHEN updating THEN return protocol error', async () => {
+      await projectFactory.createProjectStructure('TEST', 'Test Project');
+
       const response = await mcpClient.callTool('update_cr_status', {
         project: 'TEST',
         key: 'TEST-001'
       });
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error');
-      expect(response.data).toContain('status');
+      // Missing required parameter is a protocol error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32602); // Invalid params error code
+      expect(response.error?.message).toContain('status');
     });
 
-    it('GIVEN empty status WHEN updating THEN return validation error', async () => {
+    it('GIVEN empty status WHEN updating THEN return protocol error', async () => {
+      await projectFactory.createProjectStructure('TEST', 'Test Project');
+
       const response = await mcpClient.callTool('update_cr_status', {
         project: 'TEST',
         key: 'TEST-001',
         status: ''
       });
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error');
-      expect(response.data).toContain('status');
+      // Empty status is a protocol error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error?.code).toBe(-32602); // Invalid params error code
+      expect(response.error?.message).toContain('status');
     });
   });
 

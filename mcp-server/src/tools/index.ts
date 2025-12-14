@@ -18,6 +18,7 @@ import { CRHandlers } from './handlers/crHandlers.js';
 import { SectionHandlers } from './handlers/sectionHandlers.js';
 import { ALL_TOOLS, TOOL_NAMES } from './config/allTools.js';
 import { Sanitizer } from '../utils/sanitizer.js';
+import { ToolError, JsonRpcErrorCode } from '../utils/toolError.js';
 
 /**
  * Main MCP Tools Class
@@ -119,23 +120,56 @@ export class MCPTools {
         );
       }
 
-      // Unknown tool - sanitize tool name in error
+      // Unknown tool - create protocol error
       const availableTools = Object.values(TOOL_NAMES);
       const sanitizedName = Sanitizer.sanitizeText(name);
-      throw new Error(`Unknown tool '${sanitizedName}'. Available tools: ${availableTools.join(', ')}`);
+      throw ToolError.protocol(
+        `Method not found: Unknown tool '${sanitizedName}'. Available tools: ${availableTools.join(', ')}`,
+        JsonRpcErrorCode.MethodNotFound
+      );
 
     } catch (error) {
       console.error(`Error handling tool ${name}:`, error);
 
-      // Sanitize error message before re-throwing
-      if (error instanceof Error) {
-        const sanitizedMessage = Sanitizer.sanitizeError(error.message);
-        const sanitizedError = new Error(sanitizedMessage);
-        sanitizedError.stack = error.stack; // Preserve stack trace for debugging
-        throw sanitizedError;
-      } else {
-        throw new Error(Sanitizer.sanitizeError(String(error)));
+      // Handle ToolError instances
+      if (error instanceof ToolError) {
+        // Protocol errors should be thrown as-is to be handled by the transport layer
+        if (error.isProtocolError()) {
+          throw error;
+        }
+
+        // Tool execution errors should be thrown as-is to be handled by the transport layer
+        // The transport will convert these to { result: { content: [...], isError: true } }
+        throw error;
       }
+
+      // Convert regular errors to ToolError
+      // Determine if it's a protocol error or tool execution error based on the message
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const sanitizedMessage = Sanitizer.sanitizeError(errorMessage);
+
+      // Protocol errors
+      if (sanitizedMessage.includes('not found') && sanitizedMessage.includes('tool')) {
+        throw ToolError.protocol(sanitizedMessage, JsonRpcErrorCode.MethodNotFound);
+      }
+
+      // Parameter validation errors
+      if (sanitizedMessage.includes('required') ||
+          sanitizedMessage.includes('invalid') ||
+          sanitizedMessage.includes('validation') ||
+          sanitizedMessage.includes('must be')) {
+        throw ToolError.protocol(sanitizedMessage, JsonRpcErrorCode.InvalidParams);
+      }
+
+      // All other errors are tool execution errors
+      const toolError = ToolError.toolExecution(sanitizedMessage);
+
+      // Preserve stack trace if available
+      if (error instanceof Error && error.stack) {
+        toolError.stack = error.stack;
+      }
+
+      throw toolError;
     }
   }
 }

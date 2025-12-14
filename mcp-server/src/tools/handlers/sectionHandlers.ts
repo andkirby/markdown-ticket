@@ -10,6 +10,7 @@ import { Project } from '@mdt/shared/models/Project.js';
 import { CRService } from '../../services/crService.js';
 import { validateCRKey, validateRequired, validateString, validateOperation } from '../../utils/validation.js';
 import { Sanitizer } from '../../utils/sanitizer.js';
+import { ToolError, JsonRpcErrorCode } from '../../utils/toolError.js';
 
 export interface SectionOperationResult {
   success: boolean;
@@ -37,7 +38,7 @@ export class SectionHandlers {
     // Validate CR key format
     const keyValidation = validateCRKey(key);
     if (!keyValidation.valid) {
-      throw new Error(keyValidation.message);
+      throw ToolError.protocol(keyValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
     // Backward compatibility: map legacy 'update' operation to 'replace'
@@ -48,7 +49,7 @@ export class SectionHandlers {
     // Validate operation parameter
     const operationValidation = validateOperation(operation, ['list', 'get', 'replace', 'append', 'prepend']);
     if (!operationValidation.valid) {
-      throw new Error(operationValidation.message);
+      throw ToolError.protocol(operationValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
     switch (operationValidation.value) {
@@ -58,7 +59,7 @@ export class SectionHandlers {
       case 'get':
         const sectionValidation1 = validateRequired(section, 'section');
         if (!sectionValidation1.valid) {
-          throw new Error(sectionValidation1.message);
+          throw ToolError.protocol(sectionValidation1.message || "Validation error", JsonRpcErrorCode.InvalidParams);
         }
         return await this.handleGetSection(project, keyValidation.value, sectionValidation1.value);
 
@@ -67,12 +68,12 @@ export class SectionHandlers {
       case 'prepend':
         const sectionValidation2 = validateRequired(section, 'section');
         if (!sectionValidation2.valid) {
-          throw new Error(sectionValidation2.message);
+          throw ToolError.protocol(sectionValidation2.message || "Validation error", JsonRpcErrorCode.InvalidParams);
         }
 
         const contentValidation = validateRequired(content, 'content');
         if (!contentValidation.valid) {
-          throw new Error(contentValidation.message);
+          throw ToolError.protocol(contentValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
         }
 
         return await this.handleModifySection(
@@ -84,7 +85,7 @@ export class SectionHandlers {
         );
 
       default:
-        throw new Error(`Invalid operation '${operation}'. Must be: list, get, replace, append, or prepend`);
+        throw ToolError.protocol(`Invalid operation '${operation}'. Must be: list, get, replace, append, or prepend`, JsonRpcErrorCode.InvalidParams);
     }
   }
 
@@ -94,7 +95,7 @@ export class SectionHandlers {
   private async handleListSections(project: Project, key: string): Promise<string> {
     const ticket = await this.crService.getCR(project, key);
     if (!ticket) {
-      throw new Error(`CR '${key}' not found in project`);
+      throw ToolError.toolExecution(`CR '${key}' not found in project`);
     }
 
     // Read file content
@@ -104,7 +105,7 @@ export class SectionHandlers {
     // Extract markdown body (after YAML frontmatter)
     const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
     if (!frontmatterMatch) {
-      throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+      throw ToolError.toolExecution(`Invalid CR file format for ${key}: No YAML frontmatter found`);
     }
 
     const markdownBody = frontmatterMatch[2];
@@ -161,7 +162,7 @@ export class SectionHandlers {
   private async handleGetSection(project: Project, key: string, section: string): Promise<string> {
     const ticket = await this.crService.getCR(project, key);
     if (!ticket) {
-      throw new Error(`CR '${key}' not found in project`);
+      throw ToolError.toolExecution(`CR '${key}' not found in project`);
     }
 
     // Read file content
@@ -171,7 +172,7 @@ export class SectionHandlers {
     // Extract markdown body (after YAML frontmatter)
     const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
     if (!frontmatterMatch) {
-      throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+      throw ToolError.toolExecution(`Invalid CR file format for ${key}: No YAML frontmatter found`);
     }
 
     const markdownBody = frontmatterMatch[2];
@@ -180,12 +181,12 @@ export class SectionHandlers {
     const matches = this.markdownSectionService.findSection(markdownBody, section);
 
     if (matches.length === 0) {
-      throw new Error(`Section "${Sanitizer.sanitizeText(section)}" not found in CR ${key}. Use manage_cr_sections with operation="list" to see available sections.`);
+      throw ToolError.toolExecution(`Section "${Sanitizer.sanitizeText(section)}" not found in CR ${key}. Use manage_cr_sections with operation="list" to see available sections.`);
     }
 
     if (matches.length > 1) {
       const paths = matches.map(m => m.hierarchicalPath).join('\n  - ');
-      throw new Error(
+      throw ToolError.toolExecution(
         `Multiple sections match "${section}". Please use a hierarchical path:\n  - ${paths}`
       );
     }
@@ -223,7 +224,7 @@ export class SectionHandlers {
   ): Promise<string> {
     const ticket = await this.crService.getCR(project, key);
     if (!ticket) {
-      throw new Error(`CR '${key}' not found in project`);
+      throw ToolError.toolExecution(`CR '${key}' not found in project`);
     }
 
     // Read file content
@@ -233,7 +234,7 @@ export class SectionHandlers {
     // Extract markdown body (after YAML frontmatter)
     const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
     if (!frontmatterMatch) {
-      throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+      throw ToolError.toolExecution(`Invalid CR file format for ${key}: No YAML frontmatter found`);
     }
 
     const yamlFrontmatter = frontmatterMatch[1];
@@ -259,7 +260,7 @@ export class SectionHandlers {
       }
 
       errorMessage.push(`Use \`manage_cr_sections\` with operation="list" to see all available sections in CR ${key}.`);
-      throw new Error(errorMessage.join('\n'));
+      throw ToolError.toolExecution(errorMessage.join('\n'));
     }
 
     // Find section using normalized identifier
@@ -271,7 +272,7 @@ export class SectionHandlers {
         .map(s => `  - "${s}"`)
         .join('\n');
 
-      throw new Error(
+      throw ToolError.toolExecution(
         `Section '${Sanitizer.sanitizeText(section)}' not found in CR ${key}.\n\n` +
         `Available sections:\n${sectionList || '  (none)'}`
       );
@@ -280,7 +281,7 @@ export class SectionHandlers {
     if (matches.length > 1) {
       // Multiple matches - require hierarchical path
       const paths = matches.map(m => `  - "${m.hierarchicalPath}"`).join('\n');
-      throw new Error(
+      throw ToolError.toolExecution(
         `Multiple sections found matching '${Sanitizer.sanitizeText(section)}'.\n\n` +
         `Please specify which one using hierarchical path:\n${paths}`
       );
@@ -358,7 +359,7 @@ export class SectionHandlers {
         updatedBody = this.markdownSectionService.prependToSection(markdownBody, matchedSection, sectionBody);
         break;
       default:
-        throw new Error(`Invalid operation '${operation}'. Must be: list, get, replace, append, or prepend`);
+        throw ToolError.toolExecution(`Invalid operation '${operation}'. Must be: list, get, replace, append, or prepend`);
     }
 
     // Update lastModified in YAML

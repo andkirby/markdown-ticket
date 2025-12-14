@@ -1,535 +1,355 @@
-# Tasks: MDT-091 - E2E Testing Framework
+# Tasks: MDT-091
 
-**Source**: [MDT-091](./add-comprehensive-e2e-testing-framework-for-mcp-se.md)
-
-## Vision
-
-Build a comprehensive E2E testing framework for the MCP server using pure **Test-Driven Development (TDD)** and **Behavior-Driven Development (BDD)** approaches. Tests drive the implementation, not verify existing code.
+**Source**: [MDT-091](./MDT-091-add-comprehensive-e2e-testing-framework-for-mcp-se.md)
 
 ## Project Context
 
 | Setting | Value |
 |---------|-------|
-| Source directory | `mcp-server/src/` |
-| Test command | `npm run test:e2e` |
+| Source directory | `src/` |
+| Test command | `npm test` |
+| E2E Test command | `npm run test:e2e` |
 | Build command | `npm run build` |
-| File extension | `.ts`, `.js` |
-| Test runner | Jest with custom E2E configuration |
+| File extension | `.ts` |
 
-## TDD/BDD Principles
+## Size Thresholds
 
-### Test-Driven Development (TDD) Cycle
-1. **RED** - Write a failing test that defines desired behavior
-2. **GREEN** - Write minimum code to make the test pass
-3. **REFACTOR** - Improve the code while keeping tests green
+| Role | Default | Hard Max | Action |
+|------|---------|----------|--------|
+| Orchestration | 150 | 225 | Flag at 150+, STOP at 225+ |
+| Feature | 300 | 450 | Flag at 300+, STOP at 450+ |
+| Utility | 200 | 300 | Flag at 200+, STOP at 300+ |
+| Test Suite | 300 | 450 | Flag at 300+, STOP at 450+ |
 
-### Behavior-Driven Development (BDD) Structure
-- **GIVEN** - Set up the initial context/state
-- **WHEN** - Perform the action/trigger
-- **THEN** - Verify the expected outcome
+*(Inherited from Architecture Design)*
 
-## Test Architecture
+## Shared Patterns (from Architecture Design)
+
+| Pattern | Extract To | Used By |
+|---------|------------|---------|
+| Test Isolation | `testEnvironment.ts` | All test files |
+| JSON-RPC Communication | `mcpClient.ts` | All MCP tool tests |
+| Output Comparison | `outputMatcher.ts` | All assertions |
+| External Test Data | `test-data/` directory | All test files |
+| Error Scenario Testing | `negativeTestScenarios.ts` | Negative test files |
+
+> Phase 1 extracts these BEFORE features that use them.
+
+## Architecture Structure (from CR)
 
 ```
-mcp-server/tests/
-├── setup.ts                     # Global Jest setup
-├── e2e/
-│   ├── config/
-│   │   └── jest.e2e.config.mjs     # E2E Jest configuration
-│   ├── helpers/                    # Test utilities (created when needed)
-│   │   ├── test-environment.ts     # Test isolation setup
-│   │   ├── mcp-client.ts           # MCP server client
-│   │   └── project-factory.ts      # Project/CR creation helpers
-│   └── tools/                      # Tool-specific test suites
-│       ├── list-projects.spec.ts   # Tests for list_projects tool
-│       ├── get-project-info.spec.ts
-│       ├── list-crs.spec.ts
-│       ├── get-cr.spec.ts
-│       ├── create-cr.spec.ts
-│       ├── update-cr-status.spec.ts
-│       ├── update-cr-attrs.spec.ts
-│       ├── manage-cr-sections.spec.ts
-│       ├── delete-cr.spec.ts
-│       ├── suggest-cr-improvements.spec.ts
-│       └── http-transport.spec.ts  # HTTP transport tests
+mcp-server/tests/e2e/
+├── helpers/                       # Shared test utilities
+│   ├── test-environment.ts        # Temp dir + CONFIG_DIR management
+│   ├── mcp-client.ts              # JSON-RPC client with transport abstraction
+│   ├── project-factory.ts         # Realistic project structure creation
+│   ├── mcp-transports.ts          # Transport adapters
+│   ├── outputMatcher.ts           # Output validation helper
+│   └── negativeTestScenarios.ts   # Error scenario definitions
+├── tools/                         # Tool-specific E2E tests
+│   ├── list-projects.spec.ts      # Tests for list_projects tool
+│   ├── get-project-info.spec.ts   # Tests for get_project_info tool
+│   ├── list-crs.spec.ts           # Tests for list_crs tool
+│   ├── get-cr.spec.ts             # Tests for get_cr tool
+│   ├── create-cr.spec.ts          # Tests for create_cr tool
+│   ├── update-cr-status.spec.ts   # Tests for update_cr_status tool
+│   ├── update-cr-attrs.spec.ts    # Tests for update_cr_attrs tool
+│   ├── manage-cr-sections.spec.ts # Tests for manage_cr_sections tool
+│   ├── delete-cr.spec.ts          # Tests for delete_cr tool
+│   ├── suggest-cr-improvements.spec.ts # Tests for suggest_cr_improvements tool
+│   ├── rate-limiting.spec.ts      # Tests for rate limiting
+│   ├── output-sanitization.spec.ts # Tests for output sanitization (BETA)
+│   └── error-handling.spec.ts     # Tests for MUST-09/10 error formats
+├── performance/                   # Performance test suites
+│   ├── latency.spec.ts            # Latency measurements
+│   ├── memory.spec.ts             # Memory usage tracking
+│   └── concurrent.spec.ts         # Concurrent request handling
+└── __tests__/                     # Unit tests for helpers
+    ├── basic.test.ts              # Basic MCP server tests
+    └── toolConfiguration.test.ts  # Tool configuration behavior preservation
 ```
 
-## Test Suite Template
+## STOP Conditions
 
-Each tool test follows this structure:
+- File exceeds Hard Max → STOP, subdivide
+- Duplicating logic that exists in shared module → STOP, import instead
+- Structure path doesn't match Architecture Design → STOP, clarify
+- Test isolation broken (tests interfere) → STOP, fix CONFIG_DIR setup
 
-```typescript
-describe('{tool_name}', () => {
-  // Test state and helpers
-  let testEnv: TestEnvironment;
-  let mcpClient: MCPClient;
+## Test Coverage
 
-  beforeEach(async () => {
-    testEnv = await createTestEnvironment();
-    mcpClient = new MCPClient({ configDir: testEnv.configDir });
-    await mcpClient.start();
-  });
+| Test | Requirement | Task | Status |
+|------|-------------|------|--------|
+| `error-handling.spec > protocol error format` | MUST-09 | Task 2.1 | 🔴 MISSING |
+| `error-handling.spec > tool execution error format` | MUST-10 | Task 2.1 | 🔴 MISSING |
+| `rate-limiting.spec > limit exceeded` | MUST-05 | Task 2.2 | 🔴 FAILING |
+| `output-sanitization.spec > xss prevention` | MUST-06 | Task 2.3 | 🔴 FAILING |
+| `latency.spec > 100 operations < 500ms` | PH3.1 | Task 3.1 | ⏳ TODO |
+| `memory.spec > no leaks after 1000 ops` | PH3.2 | Task 3.2 | ⏳ TODO |
+| `concurrent.spec > 50 parallel requests` | PH3.3 | Task 3.3 | ⏳ TODO |
 
-  afterEach(async () => {
-    await mcpClient.stop();
-    await testEnv.cleanup();
-  });
+**TDD Goal**: All tests RED before implementation, GREEN after respective task completes
 
-  describe('Behavior Scenarios', () => {
-    describe('Basic Operations', () => {
-      it('GIVEN <context> WHEN <action> THEN <expected>', async () => {
-        // RED: Write failing test first
-        expect(true).toBe(false); // Initially fails
-      });
-    });
+---
 
-    describe('Error Handling', () => {
-      it('GIVEN <error context> WHEN <action> THEN <error response>', async () => {
-        // RED: Define error behavior
-      });
-    });
-  });
-});
-```
+## TDD Verification
 
-## Implementation Tasks
-
-### Phase 1: Foundation (TDD Infrastructure)
-
-#### Task 1.1: Create Test Environment Setup
-**RED**: Define requirements for isolated test environment
-```typescript
-// test-environment.spec.ts
-describe('Test Environment', () => {
-  it('GIVEN no existing config WHEN creating test env THEN create isolated directory', async () => {
-    const env = await createTestEnvironment();
-    expect(env.configDir).toBeDefined();
-    expect(await exists(env.configDir)).toBe(true);
-  });
-});
-```
-
-**GREEN**: Implement minimal `test-environment.ts`
-**REFACTOR**: Add cleanup, temporary directory management
-
-#### Task 1.2: Create MCP Client Wrapper
-**RED**: Define requirements for MCP server communication
-```typescript
-// mcp-client.spec.ts
-describe('MCP Client', () => {
-  it('GIVEN running server WHEN connecting THEN list available tools', async () => {
-    const client = new MCPClient();
-    await client.start();
-    const tools = await client.listTools();
-    expect(tools).toContain('list_projects');
-  });
-});
-```
-
-**GREEN**: Implement basic stdio communication
-**REFACTOR**: Add error handling, timeout management
-
-#### Task 1.3: Create Test Data Utilities (Mixed Approach)
-**IMPORTANT**:
-- Projects: Must set up file structure for auto-discovery (no create_project API)
-- CRs: MUST use create_cr API
-
-**RED**: Define requirements for test data creation
-```typescript
-// test-data.spec.ts
-describe('Test Data Creation', () => {
-  it('GIVEN test environment WHEN creating project structure THEN MCP discovers it', async () => {
-    const client = new MCPClient();
-    await client.start();
-
-    // Create minimal project structure that MCP will auto-discover
-    await createProjectStructure(client.testEnv.tempDir, {
-      name: 'Test Project',
-      code: 'TEST'
-    });
-
-    // Verify MCP discovers the project
-    const result = await client.callTool('list_projects');
-    expect(result).toContain('**TEST** - Test Project');
-  });
-
-  it('GIVEN discovered project WHEN creating CR via API THEN CR exists', async () => {
-    const client = new MCPClient();
-    await client.start();
-
-    // First ensure project is discovered
-    await createProjectStructure(client.testEnv.tempDir, {
-      name: 'Test Project',
-      code: 'TEST'
-    });
-
-    // Create CR using MCP API
-    const result = await client.callTool('create_cr', {
-      project: 'TEST',
-      type: 'Feature Enhancement',
-      data: {
-        title: 'Test CR',
-        priority: 'Medium'
-      }
-    });
-
-    expect(result).toContain('TEST-001');
-  });
-});
-```
-
-**GREEN**: Implement minimal test utilities:
-- `createProjectStructure()` - creates .mdt-config.toml and directories
-- Direct MCP API calls for CR creation
-
-**REFACTOR**: Add helper methods for common scenarios
-
-### Phase 2: Tool Testing (BDD Scenarios)
-
-#### Task 2.1: list_projects Tool
-**BDD Scenarios**:
-- GIVEN no registered projects WHEN listing THEN return "No projects found"
-- GIVEN single project exists WHEN listing THEN show project details
-- GIVEN multiple projects exist WHEN listing THEN show all projects
-- GIVEN project with CRs WHEN listing THEN include CR count
-- GIVEN project without description WHEN listing THEN omit description
-
-**Implementation**:
-```typescript
-// list-projects.spec.ts
-describe('list_projects', () => {
-  describe('Project Discovery', () => {
-    it('GIVEN no registered projects WHEN listing THEN return empty message', async () => {
-      const result = await mcpClient.callTool('list_projects');
-      expect(result).toContain('No projects found');
-    });
-
-    it('GIVEN project structure created THEN MCP discovers and lists it', async () => {
-      // RED: Define behavior - create minimal project structure for auto-discovery
-      await createProjectStructure(testEnv.tempDir, {
-        name: 'Alpha Project',
-        code: 'ALPHA'
-      });
-
-      // May need to use new client for fresh project discovery
-      const result = await mcpClient.callTool('list_projects');
-      expect(result).toContain('**ALPHA** - Alpha Project');
-      expect(result).toContain('Code: ALPHA');
-    });
-
-    it('GIVEN project with CRs created via API WHEN listing THEN include CR count', async () => {
-      // First create project structure
-      await createProjectStructure(testEnv.tempDir, {
-        name: 'Beta Project',
-        code: 'BETA'
-      });
-
-      // Then create CR using MCP API
-      await mcpClient.callTool('create_cr', {
-        project: 'BETA',
-        type: 'Feature Enhancement',
-        data: {
-          title: 'Test Feature',
-          priority: 'High'
-        }
-      });
-
-      const result = await mcpClient.callTool('list_projects');
-      expect(result).toContain('**BETA** - Beta Project');
-      expect(result).toContain('CRs: 1');
-    });
-  });
-});
-```
-
-**Important Note**:
-- ✅ DO: Create minimal project structure for auto-discovery
-- ❌ DON'T: Write complex `.mdt-config.toml` by hand - use helper
-- ✅ DO: Use MCP API for all CR operations
-- ❌ DON'T: Create CR files manually
-
-#### Task 2.2: get_project_info Tool
-**BDD Scenarios**:
-- GIVEN valid project code WHEN getting info THEN return full details
-- GIVEN invalid project code WHEN getting info THEN return error
-- GIVEN project with repository WHEN getting info THEN include repo URL
-- GIVEN project with CRs WHEN getting info THEN show CR count
-
-#### Task 2.3: list_crs Tool
-**BDD Scenarios**:
-- GIVEN project with CRs WHEN listing THEN return formatted list
-- GIVEN empty project WHEN listing THEN return "No CRs found"
-- GIVEN project with status filter WHEN listing THEN return matching CRs
-- GIVEN project with type filter WHEN listing THEN return matching CRs
-
-#### Task 2.4: get_cr Tool
-**BDD Scenarios**:
-- GIVEN existing CR WHEN getting with mode="full" THEN return complete content
-- GIVEN existing CR WHEN getting with mode="attributes" THEN return YAML as JSON
-- GIVEN existing CR WHEN getting with mode="metadata" THEN return basic info
-- GIVEN non-existent CR WHEN getting THEN return error
-
-#### Task 2.5: create_cr Tool
-**BDD Scenarios**:
-- GIVEN valid CR data WHEN creating THEN return success with CR code
-- GIVEN missing required fields WHEN creating THEN return validation error
-- GIVEN invalid CR type WHEN creating THEN return error
-- GIVEN all CR types WHEN creating THEN each creates correctly
-
-#### Task 2.6: Update Tools
-**update_cr_status scenarios**:
-- GIVEN valid status transition WHEN updating THEN success
-- GIVEN invalid status transition WHEN updating THEN error
-
-**update_cr_attrs scenarios**: ✅ PASS
-- GIVEN valid attributes WHEN updating THEN success
-- GIVEN invalid attributes WHEN updating THEN error
-
-#### Task 2.7: manage_cr_sections Tool
-**BDD Scenarios**:
-- GIVEN existing CR WHEN listing sections THEN show all sections
-- GIVEN existing CR WHEN getting section THEN return section content
-- GIVEN existing CR WHEN replacing section THEN update successfully
-- GIVEN new content WHEN appending THEN add to section end
-
-#### Task 2.8: Advanced Tools
-**delete_cr scenarios**:
-- GIVEN bug fix CR WHEN deleting THEN success
-- GIVEN non-bug CR WHEN deleting THEN error
-
-**suggest_cr_improvements scenarios**:
-- GIVEN complete CR WHEN suggesting THEN return "No improvements needed"
-- GIVEN incomplete CR WHEN suggesting THEN return improvement list
-
-### Phase 3: Transport Testing
-
-#### Task 3.1: HTTP Transport Support
-**BDD Scenarios**:
-- GIVEN HTTP transport enabled WHEN starting server THEN listen on configured port
-- GIVEN HTTP client WHEN calling tools THEN same responses as stdio
-- GIVEN invalid HTTP request WHEN sent THEN return proper error
-
-### Phase 4: Cross-Cutting Concerns
-
-#### Task 4.1: Error Handling Tests
-**BDD Scenarios**:
-- GIVEN malformed JSON-RPC WHEN sent THEN handle gracefully
-- GIVEN server crash during test WHEN detected THEN recover
-- GIVEN timeout WHEN tool execution THEN return timeout error
-
-#### Task 4.2: Performance Tests
-**BDD Scenarios**:
-- GIVEN 100 projects WHEN listing THEN complete under 5 seconds
-- GIVEN large CR file WHEN getting THEN handle efficiently
-- GIVEN concurrent requests WHEN executing THEN handle without errors
-
-## Implementation Guidelines
-
-### 1. Always Start with RED
-- Write the test first, make it fail
-- The test should define WHAT behavior we want
-- Use descriptive BDD language in test names
-
-### 2. Minimal GREEN Implementation
-- Write just enough code to make the test pass
-- Don't over-engineer
-- Focus on the specific scenario being tested
-
-### 3. Thoughtful REFACTOR
-- Improve code quality while keeping tests green
-- Eliminate duplication between tests
-- Extract common patterns to helpers
-
-### 4. Test Organization
-- One test file per MCP tool
-- Group related scenarios in describe blocks
-- Use descriptive test names that tell a story
-
-### 5. Test Data Management
-- **Projects**: Use `createProjectStructure()` helper for minimal setup
-- **CRs**: ALWAYS use MCP API (`create_cr`, `update_cr_status`, etc.)
-- Each test should create its own data for independence
-- Example:
-  ```typescript
-  // ❌ WRONG - Manual file manipulation
-  await writeFile(join(projectDir, '.mdt-config.toml'), complexConfig);
-  await writeFile(join(projectDir, 'docs/CRs/TEST-001.md'), crContent);
-
-  // ✅ RIGHT - Minimal structure + API
-  await createProjectStructure(testEnv.tempDir, { name: 'Test', code: 'TEST' });
-  await mcpClient.callTool('create_cr', {
-    project: 'TEST',
-    type: 'Feature Enhancement',
-    data: { title: 'Test Feature' }
-  });
-  ```
-
-## Success Criteria
-
-1. **All Tests Pass**: Every test in the suite passes
-2. **Coverage**: All 10 MCP tools have comprehensive BDD scenarios
-3. **Isolation**: Tests can run independently without interference
-4. **Performance**: Full test suite completes in under 60 seconds
-5. **Maintainability**: New tests can be added easily following the pattern
-6. **Documentation**: Each test scenario is self-documenting through BDD structure
-
-## Next Steps
-
-1. Start with Phase 1.1 (Test Environment Setup)
-2. Complete foundation tasks before moving to tool testing
-3. Implement tools in order of dependency (list_projects first)
-4. Run tests frequently to ensure green state
-5. Add transport and cross-cutting tests last
-
-## Test Status Checklist
-
-### E2E Test Files Status
-
-| Test File | Status | Command to Run |
-|-----------|--------|----------------|
-| ✅ list-projects.spec.ts | **PASS** (7/7) | `npm run test:e2e -- tests/e2e/tools/list-projects.spec.ts` |
-| ❌ get-project-info.spec.ts | FAIL (3 failed, 7 passed) | `npm run test:e2e -- tests/e2e/tools/get-project-info.spec.ts` |
-| ❌ list-crs.spec.ts | FAIL (5 failed, 6 passed) | `npm run test:e2e -- tests/e2e/tools/list-crs.spec.ts` |
-| ❌ get-cr.spec.ts | FAIL (1 failed, 11 passed) | `npm run test:e2e -- tests/e2e/tools/get-cr.spec.ts` |
-| ✅ create-cr.spec.ts | **PASS** (20/20) | `npm run test:e2e -- tests/e2e/tools/create-cr.spec.ts` |
-| ✅ update-cr-status.spec.ts | **PASS** (15/15) | `npm run test:e2e -- tests/e2e/tools/update-cr-status.spec.ts` |
-| ✅ delete-cr.spec.ts | **PASS** (17/17) | `npm run test:e2e -- tests/e2e/tools/delete-cr.spec.ts` |
-| ✅ manage-cr-sections.spec.ts | **PASS** (13/18) | `npm run test:e2e -- tests/e2e/tools/manage-cr-sections.spec.ts` |
-| ✅ suggest-cr-improvements.spec.ts | **PASS** (13/13) | `npm run test:e2e -- tests/e2e/tools/suggest-cr-improvements.spec.ts` |
-| ✅ update-cr-attrs.spec.ts | **PASS** (23/23) | `npm run test:e2e -- tests/e2e/tools/update-cr-attrs.spec.ts` |
-
-**Status as of last check**: 4 files still have some failures (9 failed tests total)
-
-### How to Run Individual Test Files
-
+Before starting each task:
 ```bash
-# Navigate to mcp-server directory first
-cd mcp-server
-
-# Run a specific test file
-npx jest tests/e2e/tools/[test-file-name].spec.ts --config jest.e2e.config.mjs
-
-# Example: Run update-cr-attrs tests
-npx jest tests/e2e/tools/update-cr-attrs.spec.ts --config jest.e2e.config.mjs
-
-# Run with verbose logging (shows INFO messages)
-npx jest tests/e2e/tools/update-cr-attrs.spec.ts --config jest.e2e.config.mjs --verbose
-
-# Run silently (only PASS/FAIL summary)
-npx jest tests/e2e/tools/update-cr-attrs.spec.ts --config jest.e2e.config.mjs --silent
-
-# Run a specific test case
-npx jest tests/e2e/tools/update-cr-attrs.spec.ts -t "test name pattern" --config jest.e2e.config.mjs
-
-# Run in watch mode for rapid iteration
-npx jest tests/e2e/tools/update-cr-attrs.spec.ts --config jest.e2e.config.mjs --watch
+npm run test:e2e -- --testPathPattern="{task_file}"  # Should show failures
 ```
 
-### Fix Pattern for Failing Tests
+After completing each task:
+```bash
+npm run test:e2e -- --testPathPattern="{task_file}"  # Should pass
+npm run test:e2e                                       # Full suite — no regressions
+```
 
-All failing tests have the same issue: **missing `content` field** when creating test CRs.
+---
 
-**Solution** (already implemented in update-cr-attrs.spec.ts):
+## Phase 1: Complete Missing MUST Requirements Tests
 
-1. **Add helper functions** at the top of the test file:
-```typescript
-function createTestContent(title: string): string {
-  return `## 1. Description
+> Create missing test files to complete Phase 1 MUST requirements coverage
+> Phase goal: All MUST requirements have tests
+> Phase verify: `npm run test:e2e` shows no missing test files
 
-Test CR for ${title}.
+### Task 1.1: Create error handling test file
 
-## 2. Rationale
+**Structure**: `tests/e2e/tools/error-handling.spec.ts`
 
-This CR is needed for testing purposes.
+**Implements**: MUST-09, MUST-10
 
-## 3. Solution Analysis
+**Makes GREEN**:
+- `error-handling.spec`: "Protocol Error Format (MUST-09)" (MUST-09)
+- `error-handling.spec`: "Tool Execution Error Format (MUST-10)" (MUST-10)
 
-Simple test implementation.
+**Limits**:
+- Default: 300 lines (test suite)
+- Hard Max: 450 lines
+- If > 300: ⚠️ flag warning
+- If > 450: ⛔ STOP
 
-## 4. Implementation Specification
+**From**: New file
+**To**: `tests/e2e/tools/error-handling.spec.ts`
 
-Basic implementation steps.
+**Create**:
+- Protocol error format scenarios (-32601, -32602, -32000 to -32099)
+- Tool execution error scenarios (isError: true responses)
+- BDD format tests following existing test patterns
+- JSON-RPC error response validation
+- Error content validation for business logic failures
 
-## 5. Acceptance Criteria
+**Exclude**:
+- Rate limiting testing (separate task 2.2)
+- Output sanitization testing (separate task 2.3)
+- HTTP transport specific tests (Phase 2)
 
-- Test passes
-- Functionality works as expected`;
-}
+**Anti-duplication**:
+- Import MCPTestClient from `helpers/mcp-client.ts` — do NOT duplicate client logic
+- Import TestEnvironment from `helpers/test-environment.ts` — do NOT duplicate setup
+- Follow BDD pattern from existing tool tests — do NOT invent new format
 
-async function createTestCRAndGetKey(projectCode: string, crData: any): Promise<string> {
-  const createdCR = await projectFactory.createTestCR(projectCode, {
-    ...crData,
-    content: createTestContent(crData.title)
-  });
+**Verify**:
+```bash
+wc -l tests/e2e/tools/error-handling.spec.ts  # ≤ 300 (or flag ≤ 450)
+npm run test:e2e -- --testPathPattern=error-handling  # Should fail initially
+npm run build
+```
 
-  // Extract the CR key from the markdown response
-  const match = createdCR.data.match(/Key: (TEST-\d+)/);
-  if (!match) {
-    throw new Error(`Failed to extract CR key from response: ${createdCR.data}`);
+**Done when**:
+- [ ] File at `tests/e2e/tools/error-handling.spec.ts`
+- [ ] Size ≤ 300 lines (or flagged if ≤ 450)
+- [ ] MUST-09 protocol error scenarios implemented
+- [ ] MUST-10 tool execution error scenarios implemented
+- [ ] Tests RED before implementation (MCP server missing features)
+
+---
+
+## Phase 2: Fix Failing MUST Requirements Tests
+
+> Implement missing features causing test failures
+> Phase goal: All Phase 1 tests pass (100% success)
+> Phase verify: `npm run test:e2e` shows 0 failures
+
+### Task 2.1: Implement rate limiting in MCP server
+
+**Implements**: MUST-05
+
+**Makes GREEN**:
+- `rate-limiting.spec`: "Rate Limiting (MUST-05)" (5 failing tests)
+
+**From**: `src/index.ts` (transport initialization)
+**To**: Rate limiting implementation in transport layers
+
+**Move**:
+- Rate limiting middleware configuration
+- Request counting and throttling logic
+- Rate limit error responses (code -32003 suggested)
+
+**Exclude**:
+- Output sanitization (separate task)
+- Authentication/authorization (Phase 2 features)
+- Rate limit UI/dashboard (out of scope)
+
+**Anti-duplication**:
+- Use existing `express-rate-limit` dependency (already in package.json)
+- Follow Node.js rate limiting patterns — do NOT reinvent
+- Import from transport modules — do not duplicate across stdio/http
+
+**Verify**:
+```bash
+npm run test:e2e -- --testPathPattern=rate-limiting  # Should pass after
+npm run build
+```
+
+### Task 2.2: Implement output sanitization in MCP server (BETA)
+
+**Implements**: MUST-06
+
+**Makes GREEN**:
+- `output-sanitization.spec`: "Output Sanitization (MUST-06)" (11 failing tests)
+
+**From**: Tool handlers in `src/tools/`
+**To**: Sanitized output responses
+
+**Move**:
+- Sanitization middleware/filter controlled by `MCP_SANITIZATION_ENABLED`
+- HTML/script tag removal (when enabled)
+- XSS prevention using `sanitize-html` dependency (when enabled)
+- Sanitization error handling
+
+**Exclude**:
+- Rate limiting (separate task)
+- Input validation (already implemented)
+- Content transformation beyond sanitization
+
+**Anti-duplication**:
+- Use existing `sanitize-html` dependency (already in package.json)
+- Create shared sanitizer utility — do NOT duplicate per tool
+- Apply in transport layer — do not modify each tool individually
+- **BETA**: Default disabled (`MCP_SANITIZATION_ENABLED=false`)
+
+**Verify**:
+```bash
+# Test with sanitization disabled (default)
+MCP_SANITIZATION_ENABLED=false npm run test:e2e -- --testPathPattern=output-sanitization
+
+# Test with sanitization enabled (beta)
+MCP_SANITIZATION_ENABLED=true npm run test:e2e -- --testPathPattern=output-sanitization
+npm run build
+```
+
+---
+
+## Phase 3: Performance Testing Framework
+
+> Add performance test suite for load and stress testing
+> Phase goal: Performance metrics established and monitored
+> Phase verify: `npm run test:e2e:performance` passes
+
+### Task 3.1: Create latency test suite
+
+**Structure**: `tests/e2e/performance/latency.spec.ts`
+
+**Implements**: PH3.1
+
+**Limits**:
+- Default: 300 lines (test suite)
+- Hard Max: 450 lines
+
+**From**: New file
+**To**: `tests/e2e/performance/latency.spec.ts`
+
+**Create**:
+- Latency measurement utilities
+- 100 CR listing latency test (< 500ms avg)
+- Large CR content fetch test (< 2s)
+- Latency reporting and benchmarking
+
+**Anti-duplication**:
+- Import MCPTestClient from `helpers/mcp-client.ts`
+- Import TestEnvironment from `helpers/test-environment.ts`
+- Use existing performance measurement patterns
+
+### Task 3.2: Create memory usage test suite
+
+**Structure**: `tests/e2e/performance/memory.spec.ts`
+
+**Implements**: PH3.2
+
+**Limits**:
+- Default: 300 lines (test suite)
+- Hard Max: 450 lines
+
+**Create**:
+- Memory usage tracking utilities
+- 1000 operations memory leak detection
+- Large project scan memory baseline test
+- Memory cleanup verification
+
+### Task 3.3: Create concurrent request test suite
+
+**Structure**: `tests/e2e/performance/concurrent.spec.ts`
+
+**Implements**: PH3.3
+
+**Limits**:
+- Default: 300 lines (test suite)
+- Hard Max: 450 lines
+
+**Create**:
+- Concurrent request execution utilities
+- 50 parallel request handling test
+- Race condition detection
+- Dual transport concurrency comparison
+
+---
+
+## Post-Implementation
+
+### Task N.1: Move misplaced test files
+
+**Do**: Fix test file organization
+```bash
+# Move misplaced test files from root to tools/ directory
+mv tests/e2e/rate-limiting.spec.ts tests/e2e/tools/
+mv tests/e2e/output-sanitization.spec.ts tests/e2e/tools/
+```
+**Done when**: [ ] All tool tests in `tests/e2e/tools/` directory
+
+### Task N.2: Update package.json scripts
+
+**Do**: Add missing npm scripts for Phase 2/3
+```json
+{
+  "scripts": {
+    "test:e2e:stdio": "MCP_HTTP_ENABLED=false npm run test:e2e",
+    "test:e2e:http": "MCP_HTTP_ENABLED=true npm run test:e2e",
+    "test:e2e:full": "npm run test:e2e:stdio && npm run test:e2e:http"
   }
-  return match[1];
 }
 ```
+**Done when**: [ ] All E2E test scripts available
 
-2. **Update CR creation calls**:
-```typescript
-// Before (FAILS)
-const createdCR = await projectFactory.createTestCR('TEST', {
-  title: 'Test Title',
-  type: 'Feature Enhancement'
-});
+### Task N.3: Verify complete MUST requirements coverage
 
-// After (WORKS)
-const crKey = await createTestCRAndGetKey('TEST', {
-  title: 'Test Title',
-  type: 'Feature Enhancement'
-});
-```
-
-3. **Handle markdown responses**:
-```typescript
-// Check if response is markdown format
-if (typeof response.data === 'string') {
-  // Extract info from markdown
-  expect(response.data).toContain('Updated CR');
-} else {
-  // Handle JSON response
-  expect(response.data.field).toBe('value');
-}
-```
-
-### Quick Fix Commands
-
+**Do**: Run complete test suite and verify
 ```bash
-# Run all tests to see current status
-for file in tests/e2e/tools/*.spec.ts; do
-  echo "=== $file ==="
-  npx jest "$file" --config jest.e2e.config.mjs --silent 2>&1 | tail -3
-  echo ""
-done
-
-# Run just the passing test to verify setup
-npx jest tests/e2e/tools/update-cr-attrs.spec.ts --config jest.e2e.config.mjs --silent
-
-# Run a failing test to see the specific error
-npx jest tests/e2e/tools/list-projects.spec.ts --config jest.e2e.config.mjs
-```
-
-## Verification Commands
-
-```bash
-# Run all E2E tests
+# Default: sanitization disabled
 npm run test:e2e
 
-# Run specific tool tests
-npm run test:e2e -- --testPathPattern=list-projects
-
-# Run tests in watch mode during development
-npm run test:e2e:watch
-
-# Run with coverage
-npm run test:e2e -- --coverage
-
-# Run performance tests
-npm run test:e2e:performance
+# With sanitization enabled (beta)
+MCP_SANITIZATION_ENABLED=true npm run test:e2e
 ```
+**Expected**: All 10 MUST requirements covered, 0 missing test files
+**Done when**: [ ] Tests show 100% MUST requirements coverage
+
+### Task N.4: Update architecture documentation
+
+**Do**: Update `architecture.md` with implementation status
+**Done when**: [ ] Architecture doc reflects completed work
+
+### Task N.5: Run `/mdt:tech-debt {MDT-091}`
+
+**Do**: Document any technical debt introduced during implementation
+**Done when**: [ ] Tech debt documented and tracked
