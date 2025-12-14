@@ -44,15 +44,15 @@ export class StdioTransport implements MCPTransport {
         CONFIG_DIR: this.testEnv.getConfigDir(),
         // Enable rate limiting for tests
         MCP_SECURITY_RATE_LIMITING: process.env.MCP_SECURITY_RATE_LIMITING || 'true',
-        MCP_RATE_LIMIT_MAX: process.env.MCP_RATE_LIMIT_MAX || '5',
-        MCP_RATE_LIMIT_WINDOW_MS: process.env.MCP_RATE_LIMIT_WINDOW_MS || '1000'
+        MCP_RATE_LIMIT_MAX: process.env.MCP_RATE_LIMIT_MAX,
+        MCP_RATE_LIMIT_WINDOW_MS: process.env.MCP_RATE_LIMIT_WINDOW_MS
       }
     });
 
     // Capture stderr for debugging
-    this.process.stderr?.on('data', (data) => {
-      console.error('[SERVER STDERR]:', data.toString());
-    });
+    // this.process.stderr?.on('data', (data) => {
+    //   console.error('[SERVER STDERR]:', data.toString());
+    // });
 
     await this.waitForStart();
     this.connected = true;

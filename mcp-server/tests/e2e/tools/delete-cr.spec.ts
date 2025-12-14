@@ -357,19 +357,21 @@ This fix is related to external tracking tickets.`
 
       const response = await callDeleteCR('TEST', 'TEST-999');
 
-      // The tool returns success with an error message in the content
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error in delete_cr');
-      expect(response.data).toContain('not found');
+      // The tool returns an error response with success=false
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32000); // Business logic error
+      expect(response.error.message).toContain('not found');
     });
 
     it('GIVEN non-existent project WHEN deleting THEN return error', async () => {
       const response = await callDeleteCR('NONEXISTENT', 'TEST-001');
 
-      // The tool returns success with an error message in the content
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error in delete_cr');
-      expect(response.data).toContain('not found');
+      // The tool returns an error response with success=false
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32602); // Invalid params error (project not found)
+      expect(response.error.message).toContain('invalid');
     });
 
     it('GIVEN missing project parameter WHEN deleting THEN return validation error', async () => {
@@ -377,10 +379,10 @@ This fix is related to external tracking tickets.`
         key: 'TEST-001'
       });
 
-      // The MCP framework handles parameter validation - missing params result in 'undefined'
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error in delete_cr');
-      expect(response.data).toContain('not found');
+      // Parameter validation errors return success=false
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32602); // Invalid params error
     });
 
     it('GIVEN missing key parameter WHEN deleting THEN return validation error', async () => {
@@ -388,10 +390,10 @@ This fix is related to external tracking tickets.`
         project: 'TEST'
       });
 
-      // The MCP framework handles parameter validation - missing params result in error
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error in delete_cr');
-      expect(response.data).toContain('not found');
+      // Missing key is handled as a business logic error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32000); // Business logic error
     });
 
     it('GIVEN empty key parameter WHEN deleting THEN return validation error', async () => {
@@ -400,10 +402,10 @@ This fix is related to external tracking tickets.`
         key: ''
       });
 
-      // Empty key should result in error
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Error in delete_cr');
-      expect(response.data).toContain('not found');
+      // Empty key is handled as a business logic error
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
+      expect(response.error.code).toBe(-32000); // Business logic error
     });
   });
 
