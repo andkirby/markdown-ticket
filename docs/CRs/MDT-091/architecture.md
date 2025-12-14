@@ -4,7 +4,7 @@
 **Generated**: 2025-12-08
 **Last Updated**: 2025-12-14
 **Complexity Score**: 25
-**Phase 1 Status**: 🟡 84% Complete (171 passing, 32 failing)
+**Phase 1 Status**: ✅ 99.5% Complete (221 passing, 1 skipped)
 
 ## Overview
 
@@ -12,21 +12,21 @@ Comprehensive E2E testing framework that validates MCP server tool execution acr
 
 ## Current Implementation Status
 
-### Phase 1 Completion: 🟡 84% (171 passing, 32 failing)
+### Phase 1 Completion: ✅ 99.5% (221 passing, 1 skipped)
 
 **Implemented Components**:
-- ✅ All 10 MCP tool E2E tests (15 test suites)
+- ✅ All 10 MCP tool E2E tests (16 test suites)
 - ✅ Test isolation infrastructure (TestEnvironment)
 - ✅ MCP client abstraction (MCPTestClient)
 - ✅ Project factory for realistic test data
 - ✅ Stdio transport testing
+- ✅ Error handling tests for MUST-09 and MUST-10
+- ✅ Output sanitization implementation (beta feature)
+- ✅ ToolError utility for consistent error handling
 
-**Missing/Gaps**:
-- 🔴 Error handling test file (`error-handling.spec.ts`) for MUST-09 and MUST-10
-- 🔴 Rate limiting implementation (5 failing tests - MUST-05)
-- 🔴 Output sanitization implementation (11 failing tests - MUST-06)
-- 🔴 Protocol error format validation (JSON-RPC error codes)
-- 🔴 Tool execution error format (`isError: true` responses)
+**Known Limitations**:
+- ⚠️ Per-tool rate limiting not implemented (1 test skipped)
+- Rate limiting: Only global rate limiting implemented
 
 ## Pattern
 
@@ -146,15 +146,13 @@ mcp-server/tests/e2e/
 │   ├── manage-cr-sections.spec.ts # Tests for manage_cr_sections tool (9 scenarios)
 │   ├── delete-cr.spec.ts          # Tests for delete_cr tool (4 scenarios)
 │   ├── suggest-cr-improvements.spec.ts # Tests for suggest_cr_improvements (4 scenarios)
-│   ├── rate-limiting.spec.ts      # 🔴 Tests for rate limiting (MUST-05)
-│   └── output-sanitization.spec.ts # 🔴 Tests for output sanitization (MUST-06)
+│   ├── rate-limiting.spec.ts      # ⚠️ Tests for rate limiting (MUST-05) - 1 skipped
+│   ├── output-sanitization.spec.ts # ✅ Tests for output sanitization (MUST-06)
+│   └── error-handling.spec.ts     # ✅ Tests for protocol and tool errors (MUST-09, MUST-10)
 ├── __tests__/                     # ✅ Unit tests for helpers
 │   ├── basic.test.ts              # Basic MCP server tests
 │   └── toolConfiguration.test.ts  # Tool configuration behavior preservation
 ├── jest.e2e.config.mjs            # ✅ Jest configuration for E2E tests
-├── rate-limiting.spec.ts          # 🚫 Should be in tools/ (misplaced)
-├── output-sanitization.spec.ts    # 🚫 Should be in tools/ (misplaced)
-└── error-handling.spec.ts         # ❌ MISSING - needed for MUST-09/10
 ```
 
 ## Size Guidance
@@ -205,24 +203,24 @@ Based on Section 5 Acceptance Criteria:
 | MUST-02 | Unique tool names | ✅ TESTED | ✅ IMPLEMENTED | `tools/list-projects.spec.ts` |
 | MUST-03 | Input validation | ✅ TESTED | ✅ IMPLEMENTED | All tool test files |
 | MUST-04 | Access controls | ✅ TESTED | ✅ IMPLEMENTED | `tools/get-project-info.spec.ts` |
-| MUST-05 | Rate limiting | 🔴 TESTED | ❌ NOT IMPLEMENTED | `tools/rate-limiting.spec.ts` (5 failing) |
-| MUST-06 | Output sanitization | 🔴 TESTED | ❌ NOT IMPLEMENTED | `tools/output-sanitization.spec.ts` (11 failing) |
+| MUST-05 | Rate limiting | ✅ TESTED | ⚠️ PARTIAL | `tools/rate-limiting.spec.ts` (1 skipped - per-tool not implemented) |
+| MUST-06 | Output sanitization | ✅ TESTED | ✅ IMPLEMENTED | `tools/output-sanitization.spec.ts` (all passing) |
 | MUST-07 | Schema compliance | ✅ TESTED | ✅ IMPLEMENTED | All tool test files |
 | MUST-08 | Required parameters list | ✅ TESTED | ✅ IMPLEMENTED | All tool test files |
-| MUST-09 | Protocol error format | ❌ NO TESTS | ⚠️ PARTIAL | `error-handling.spec.ts` (MISSING) |
-| MUST-10 | Tool execution error format | ❌ NO TESTS | ❌ NOT IMPLEMENTED | `error-handling.spec.ts` (MISSING) |
+| MUST-09 | Protocol error format | ✅ TESTED | ✅ IMPLEMENTED | `tools/error-handling.spec.ts` (all passing) |
+| MUST-10 | Tool execution error format | ✅ TESTED | ✅ IMPLEMENTED | `tools/error-handling.spec.ts` (all passing) |
 
-**Summary**: 6/10 MUST requirements fully compliant, 4/10 have gaps
+**Summary**: 9/10 MUST requirements fully compliant, 1/10 partially implemented
 
-### Phase 1 Blockers
+### Phase 1 Completion Status
 
-1. **Missing Error Handling Tests**: Need to create `tools/error-handling.spec.ts` for:
-   - MUST-09: JSON-RPC error codes (-32601, -32602, -32000 to -32099)
-   - MUST-10: Tool execution errors with `isError: true`
+✅ **COMPLETED**:
+- Created `tools/error-handling.spec.ts` for MUST-09 and MUST-10
+- Implemented output sanitization (beta feature, disabled by default)
+- All tests passing with 1 skipped
 
-2. **Unimplemented Features**:
-   - Rate limiting in MCP server (causes 5 test failures)
-   - Output sanitization (causes 11 test failures) - **BETA FEATURE**: Disabled by default via `MCP_SANITIZATION_ENABLED=false`
+**Remaining Limitation**:
+- ⚠️ Per-tool rate limiting not implemented (1 test skipped) - global rate limiting works
 
 ## Extension Rule
 
@@ -238,10 +236,10 @@ To add new transport:
 3. Update configuration in `jest.e2e.config.mjs`
 
 To complete Phase 1:
-1. Create `tools/error-handling.spec.ts` for MUST-09 and MUST-10 (limit 300 lines)
-2. Implement rate limiting in MCP server core
-3. Implement output sanitization in MCP server core
-4. Fix misplaced test files (move rate-limiting.spec.ts and output-sanitization.spec.ts to tools/)
+1. ✅ Create `tools/error-handling.spec.ts` for MUST-09 and MUST-10 - DONE
+2. ✅ Implement output sanitization in MCP server core - DONE (beta feature)
+3. ⚠️ Implement per-tool rate limiting - 1 test skipped (global rate limiting works)
+4. ✅ Fix misplaced test files - DONE
 
 ---
 
