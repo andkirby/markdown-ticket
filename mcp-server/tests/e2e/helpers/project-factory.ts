@@ -40,6 +40,10 @@ import { join } from 'path';
 export interface ProjectConfig {
   /** Git repository URL for the project */
   repository?: string;
+  /** Project name */
+  name?: string;
+  /** Project code */
+  code?: string;
   /** Project description */
   description?: string;
   /** Custom path for CR storage (default: 'docs/CRs') */
@@ -48,6 +52,18 @@ export interface ProjectConfig {
   documentPaths?: string[];
   /** Folders to exclude from scanning */
   excludeFolders?: string[];
+}
+
+/**
+ * Project data structure returned by createProject
+ */
+export interface ProjectData {
+  /** Project key (code) */
+  key: string;
+  /** Absolute path to project directory */
+  path: string;
+  /** Project configuration */
+  config: ProjectConfig;
 }
 
 /**
@@ -119,6 +135,50 @@ export class ProjectFactory {
 
     this.testEnv = testEnv;
     this.mcpClient = mcpClient;
+  }
+
+  /**
+   * Create a project for testing
+   * Simplified method for E2E tests that returns project data structure
+   *
+   * @param type - Type of project ('empty' for minimal setup)
+   * @param config - Optional project configuration
+   * @returns Project data with key and path
+   */
+  async createProject(type: 'empty' = 'empty', config: ProjectConfig = {}): Promise<ProjectData> {
+    // Use provided code or generate a unique project code for this test
+    const projectCode = config.code || this.generateUniqueProjectCode();
+
+    // Use provided name or generate one
+    const projectName = config.name || `Test Project ${projectCode}`;
+
+    // Merge with default empty project config
+    const finalConfig: ProjectConfig = {
+      description: 'Test project for E2E testing',
+      crPath: 'docs/CRs',
+      repository: 'test-repo',
+      ...config
+    };
+
+    // Create the project structure
+    const projectPath = await this.createProjectStructure(projectCode, projectName, finalConfig);
+
+    return {
+      key: projectCode,
+      path: projectPath,
+      config: finalConfig
+    };
+  }
+
+  /**
+   * Generate a unique project code for testing
+   */
+  private generateUniqueProjectCode(): string {
+    // Generate 3 uppercase letters (total 4-5 chars)
+    const randomPart = Math.random().toString(36).replace(/[^a-z]/g, '').toUpperCase().substr(0, 3);
+    // Ensure it's only letters and pad if needed
+    const letters = randomPart || 'AAA';
+    return `T${letters}`.substr(0, 5); // Keep it to 5 chars max
   }
 
   /**

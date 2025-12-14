@@ -5,6 +5,10 @@
  * Testing output sanitization to prevent XSS and malicious content injection
  * Following TDD RED-GREEN-REFACTOR approach
  *
+ * IMPORTANT: The sanitizer is disabled by default in the MCP server.
+ * These tests set MCP_SANITIZATION_ENABLED=true in beforeEach to enable sanitization.
+ * The "Sanitization Toggle" section tests both enabled and disabled states.
+ *
  * BDD Scenarios:
  * - GIVEN script tags in content WHEN returning THEN sanitize/remove scripts
  * - GIVEN on* event handlers WHEN returning THEN sanitize/remove handlers
@@ -24,6 +28,12 @@ describe('Output Sanitization (MUST-06)', () => {
 
   // Test setup following RED phase
   beforeEach(async () => {
+    // Enable sanitization for tests
+    // NOTE: The sanitizer is disabled by default in the MCP server.
+    // This environment variable is required to enable sanitization behavior
+    // and verify that malicious content is properly filtered from tool outputs.
+    process.env.MCP_SANITIZATION_ENABLED = 'true';
+
     // Create isolated test environment
     testEnv = new TestEnvironment();
     await testEnv.setup();
@@ -67,7 +77,21 @@ Testing sanitization of malicious content.
       data: crData
     });
 
-    return result.content.match(/Created (\w+-\d+)/)?.[1] || '';
+    // Look for CR key in multiple possible formats
+    const patterns = [
+      /✅ \*\*Created CR (\w+-\d+)\*\*/,
+      /- Key: (\w+-\d+)/,
+      /Created (\w+-\d+)/
+    ];
+
+    for (const pattern of patterns) {
+      const match = result.data?.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    return '';
   }
 
   describe('Script Tag Sanitization', () => {
@@ -86,9 +110,9 @@ Testing sanitization of malicious content.
       });
 
       // The response should not contain the script tag
-      expect(result.content).not.toContain('<script>');
-      expect(result.content).not.toContain('alert("XSS")');
-      expect(result.content).not.toContain('</script>');
+      expect(result.data).not.toContain('<script>');
+      expect(result.data).not.toContain('alert("XSS")');
+      expect(result.data).not.toContain('</script>');
     });
 
     it('should remove script tags with attributes', async () => {
@@ -105,9 +129,9 @@ Testing sanitization of malicious content.
         key: crCode
       });
 
-      expect(result.content).not.toContain('<script');
-      expect(result.content).not.toContain('evil.com.js');
-      expect(result.content).not.toContain('</script>');
+      expect(result.data).not.toContain('<script');
+      expect(result.data).not.toContain('evil.com.js');
+      expect(result.data).not.toContain('</script>');
     });
 
     it('should handle multiple script tags', async () => {
@@ -128,10 +152,10 @@ Testing sanitization of malicious content.
       });
 
       // Then: All script tags should be removed
-      expect(result.content).not.toContain('<script>');
-      expect(result.content).not.toContain('</script>');
+      expect(result.data).not.toContain('<script>');
+      expect(result.data).not.toContain('</script>');
       // But legitimate content should remain
-      expect(result.content).toContain('Some content');
+      expect(result.data).toContain('Some content');
     });
   });
 
@@ -150,10 +174,10 @@ Testing sanitization of malicious content.
       });
 
       // Then: Event handlers should be removed
-      expect(result.content).not.toContain('onclick=');
-      expect(result.content).not.toContain('onload=');
-      expect(result.content).not.toContain('alert(');
-      expect(result.content).not.toContain('stealData()');
+      expect(result.data).not.toContain('onclick=');
+      expect(result.data).not.toContain('onload=');
+      expect(result.data).not.toContain('alert(');
+      expect(result.data).not.toContain('stealData()');
     });
 
     it('should handle various event handlers', async () => {
@@ -175,10 +199,10 @@ Testing sanitization of malicious content.
       });
 
       // Then: All event handlers should be removed
-      expect(result.content).not.toContain('onerror=');
-      expect(result.content).not.toContain('onload=');
-      expect(result.content).not.toContain('onmouseover=');
-      expect(result.content).not.toContain('onsubmit=');
+      expect(result.data).not.toContain('onerror=');
+      expect(result.data).not.toContain('onload=');
+      expect(result.data).not.toContain('onmouseover=');
+      expect(result.data).not.toContain('onsubmit=');
     });
   });
 
@@ -197,8 +221,8 @@ Testing sanitization of malicious content.
       });
 
       // Then: javascript: URLs should be removed or neutralized
-      expect(result.content).not.toContain('javascript:');
-      expect(result.content).not.toContain('alert(');
+      expect(result.data).not.toContain('javascript:');
+      expect(result.data).not.toContain('alert(');
     });
 
     it('should handle data: URLs with scripts', async () => {
@@ -215,8 +239,8 @@ Testing sanitization of malicious content.
       });
 
       // Then: Malicious data: URLs should be handled
-      expect(result.content).not.toContain('data:text/html,<script>');
-      expect(result.content).not.toContain('alert(');
+      expect(result.data).not.toContain('data:text/html,<script>');
+      expect(result.data).not.toContain('alert(');
     });
   });
 
@@ -236,9 +260,9 @@ Testing sanitization of malicious content.
 
       // Then: HTML should be properly escaped or sanitized
       // Legitimate &lt; and &gt; should remain
-      expect(result.content).toContain('&lt;script&gt;');
+      expect(result.data).toContain('&lt;script&gt;');
       // Malicious <script> should be removed
-      expect(result.content).not.toContain('<script>alert("XSS")</script>');
+      expect(result.data).not.toContain('<script>alert("XSS")</script>');
     });
 
     it('should preserve safe markdown formatting', async () => {
@@ -267,10 +291,10 @@ console.log('safe code');
       });
 
       // Then: Safe markdown should be preserved
-      expect(result.content).toContain('# Heading');
-      expect(result.content).toContain('* Bullet point');
-      expect(result.content).toContain('```javascript');
-      expect(result.content).toContain('[Link](https://example.com)');
+      expect(result.data).toContain('# Heading');
+      expect(result.data).toContain('* Bullet point');
+      expect(result.data).toContain('```javascript');
+      expect(result.data).toContain('[Link](https://example.com)');
     });
   });
 
@@ -293,9 +317,9 @@ console.log('safe code');
       });
 
       // Then: Malicious links should be sanitized
-      expect(result.content).toContain('[Safe Link](https://example.com)');
-      expect(result.content).not.toContain('javascript:alert(');
-      expect(result.content).not.toContain('data:text/html,<script>');
+      expect(result.data).toContain('[Safe Link](https://example.com)');
+      expect(result.data).not.toContain('javascript:alert(');
+      expect(result.data).not.toContain('data:text/html,<script>');
     });
 
     it('should handle XSS in link titles', async () => {
@@ -315,8 +339,8 @@ console.log('safe code');
       });
 
       // Then: Script tags in titles should be removed
-      expect(result.content).not.toContain('<script>');
-      expect(result.content).not.toContain('onclick=');
+      expect(result.data).not.toContain('<script>');
+      expect(result.data).not.toContain('onclick=');
     });
   });
 
@@ -335,9 +359,9 @@ console.log('safe code');
       });
 
       // Then: Output should be sanitized
-      expect(result.content).not.toContain('<script>');
-      expect(result.content).not.toContain('onerror=');
-      expect(result.content).not.toContain('alert(');
+      expect(result.data).not.toContain('<script>');
+      expect(result.data).not.toContain('onerror=');
+      expect(result.data).not.toContain('alert(');
     });
 
     it('should sanitize project descriptions', async () => {
@@ -354,13 +378,13 @@ console.log('safe code');
 
       // When: Getting project info
       const result = await mcpClient.callTool('get_project_info', {
-        project: project.key
+        key: project.key
       });
 
       // Then: Description should be sanitized
-      expect(result.content).not.toContain('<script>');
-      expect(result.content).not.toContain('onerror=');
-      expect(result.content).toContain('Description'); // Safe content should remain
+      expect(result.data).not.toContain('<script>');
+      expect(result.data).not.toContain('onerror=');
+      expect(result.data).toContain('Description'); // Safe content should remain
     });
   });
 
@@ -417,8 +441,8 @@ console.log('safe code');
       });
 
       // Then: All outputs should be consistently sanitized
-      expect(getResult.content).not.toContain('<script>');
-      expect(listResult.content).not.toContain('<script>');
+      expect(getResult.data).not.toContain('<script>');
+      expect(listResult.data).not.toContain('<script>');
     });
   });
 
@@ -446,8 +470,104 @@ console.log('safe code');
       expect(endTime - startTime).toBeLessThan(1000);
 
       // And: Content should be sanitized
-      expect(result.content).not.toContain('<script>');
-      expect(result.content).toContain('Content 0:'); // Safe content preserved
+      expect(result.data).not.toContain('<script>');
+      expect(result.data).toContain('Content 0:'); // Safe content preserved
+    });
+  });
+
+  describe('Sanitization Toggle', () => {
+    it('should not sanitize when MCP_SANITIZATION_ENABLED is not set', async () => {
+      // Create a new test environment with sanitization disabled
+      const testEnvDisabled = new TestEnvironment();
+      await testEnvDisabled.setup();
+
+      // Ensure sanitization is disabled
+      delete process.env.MCP_SANITIZATION_ENABLED;
+
+      // Start a new MCP client (it will pick up the updated environment)
+      const mcpClientDisabled = new MCPClient(testEnvDisabled, { transport: 'stdio' });
+      await mcpClientDisabled.start();
+
+      try {
+        // Given: A project exists
+        const projectFactoryDisabled = new ProjectFactory(testEnvDisabled, mcpClientDisabled);
+        const project = await projectFactoryDisabled.createProject('empty');
+
+        // When: Creating CR with script tags while sanitization is disabled
+        const maliciousContent = '<script>alert("XSS")</script><p>Safe content</p>';
+        const crData = {
+          title: 'Test CR with Malicious Content',
+          type: 'Feature Enhancement',
+          priority: 'Medium',
+          content: `
+## 1. Description
+
+This CR contains potentially malicious content that should be sanitized.
+
+${maliciousContent}
+
+## 2. Rationale
+
+Testing sanitization of malicious content.
+          `.trim()
+        };
+
+        const result = await mcpClientDisabled.callTool('create_cr', {
+          project: project.key,
+          type: crData.type,
+          data: crData
+        });
+
+        // Look for CR key in multiple possible formats
+        const patterns = [
+          /✅ \*\*Created CR (\w+-\d+)\*\*/,
+          /- Key: (\w+-\d+)/,
+          /Created (\w+-\d+)/
+        ];
+
+        let crCode = '';
+        for (const pattern of patterns) {
+          const match = result.data?.match(pattern);
+          if (match && match[1]) {
+            crCode = match[1];
+            break;
+          }
+        }
+
+        // When: Retrieving the CR content
+        const getResult = await mcpClientDisabled.callTool('get_cr', {
+          project: project.key,
+          key: crCode
+        });
+
+        // Then: Content should NOT be sanitized (script tags should remain)
+        expect(getResult.data).toContain('<script>alert("XSS")</script>');
+        expect(getResult.data).toContain('<p>Safe content</p>');
+      } finally {
+        // Cleanup
+        await mcpClientDisabled.stop();
+        await testEnvDisabled.cleanup();
+      }
+    });
+
+    it('should sanitize when MCP_SANITIZATION_ENABLED=true', async () => {
+      // This test verifies that the existing tests are actually testing sanitization
+      // Given: A project exists with sanitization enabled (set in beforeEach)
+      const project = await projectFactory.createProject('empty');
+
+      // When: Creating CR with script tags
+      const maliciousContent = '<script>alert("XSS")</script><p>Safe content</p>';
+      const crCode = await createCRWithMaliciousContent(project.key, maliciousContent);
+
+      // Then: Script tags should be removed but safe content should remain
+      const result = await mcpClient.callTool('get_cr', {
+        project: project.key,
+        key: crCode
+      });
+
+      expect(result.data).not.toContain('<script>alert("XSS")</script>');
+      expect(result.data).not.toContain('</script>');
+      expect(result.data).toContain('Safe content'); // Safe content should remain
     });
   });
 });

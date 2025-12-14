@@ -6,12 +6,15 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { RateLimitManager } from '../utils/rateLimitManager.js';
 
 /**
  * Start stdio transport for MCP server
  * This is the traditional transport that always runs
  */
 export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
+  // Initialize rate limit manager
+  const rateLimitManager = RateLimitManager.fromEnvironment();
   const server = new Server(
     {
       name: 'markdown-ticket',
@@ -33,6 +36,24 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
+
+    // Check rate limit before processing tool call
+    const rateLimitResult = rateLimitManager.checkRateLimit(name);
+
+    // Debug: Log rate limit check
+    console.error(`[RATE LIMIT] Tool '${name}': allowed=${rateLimitResult.allowed}, remaining=${rateLimitResult.remainingRequests}`);
+
+    if (!rateLimitResult.allowed) {
+      const errorMessage = `Rate limit exceeded for tool '${name}'. Maximum ${rateLimitManager.getStats().config.maxRequests} requests per ${rateLimitManager.getStats().config.windowMs / 1000} seconds.`;
+
+      // Include retry information if available
+      const fullMessage = rateLimitResult.retryAfter
+        ? `${errorMessage} Retry after ${rateLimitResult.retryAfter} seconds.`
+        : errorMessage;
+
+      // Return rate limit error with proper MCP format
+      throw new McpError(ErrorCode.InternalError, fullMessage);
+    }
 
     try {
       const result = await mcpTools.handleToolCall(name, args || {});

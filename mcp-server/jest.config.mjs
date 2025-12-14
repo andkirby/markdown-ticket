@@ -3,7 +3,7 @@ export default {
   extensionsToTreatAsEsm: ['.ts'],
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/tests'],
-  testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts', '**/*.spec.ts'],
   moduleFileExtensions: ['ts', 'js', 'mjs'],
   verbose: true,
   silent: false,
