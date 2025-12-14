@@ -41,8 +41,17 @@ export class StdioTransport implements MCPTransport {
         MCP_HTTP_ENABLED: 'false',  // Ensure only stdio is enabled
         NODE_ENV: 'test',
         // Pass the test config directory to MCP server
-        CONFIG_DIR: this.testEnv.getConfigDir()
+        CONFIG_DIR: this.testEnv.getConfigDir(),
+        // Enable rate limiting for tests
+        MCP_SECURITY_RATE_LIMITING: process.env.MCP_SECURITY_RATE_LIMITING || 'true',
+        MCP_RATE_LIMIT_MAX: process.env.MCP_RATE_LIMIT_MAX || '5',
+        MCP_RATE_LIMIT_WINDOW_MS: process.env.MCP_RATE_LIMIT_WINDOW_MS || '1000'
       }
+    });
+
+    // Capture stderr for debugging
+    this.process.stderr?.on('data', (data) => {
+      console.error('[SERVER STDERR]:', data.toString());
     });
 
     await this.waitForStart();

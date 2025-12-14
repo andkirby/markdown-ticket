@@ -1,6 +1,7 @@
 import { ProjectService } from '@mdt/shared/services/ProjectService.js';
 import { Project } from '@mdt/shared/models/Project.js';
 import { validateProjectKey } from '../../utils/validation.js';
+import { Sanitizer } from '../../utils/sanitizer.js';
 
 /**
  * Project-specific tool handlers for MCP server
@@ -26,7 +27,7 @@ export class ProjectHandlers {
           return await this.handleGetProjectInfo(args.key);
 
         default:
-          throw new Error(`Unknown project tool '${name}'. Available tools: list_projects, get_project_info`);
+          throw new Error(`Unknown project tool '${Sanitizer.sanitizeText(name)}'. Available tools: list_projects, get_project_info`);
       }
     } catch (error) {
       console.error(`Error handling project tool ${name}:`, error);
@@ -71,7 +72,7 @@ export class ProjectHandlers {
     this.cachedProjects = projects;
 
     if (projects.length === 0) {
-      return '📁 No projects found. Make sure you have .mdt-config.toml files in the configured scan paths.';
+      return Sanitizer.sanitizeText('📁 No projects found. Make sure you have .mdt-config.toml files in the configured scan paths.');
     }
 
     const lines = [`📁 Found ${projects.length} project${projects.length === 1 ? '' : 's'}:`, ''];
@@ -82,11 +83,11 @@ export class ProjectHandlers {
       const crCount = crs.length;
 
       const projectCode = project.project.code || project.id;
-      const projectName = project.project.name;
+      const projectName = Sanitizer.sanitizeText(project.project.name);
 
       lines.push(`• **${projectCode}** - ${projectName}`);
       if (project.project.description) {
-        lines.push(`  Description: ${project.project.description}`);
+        lines.push(`  Description: ${Sanitizer.sanitizeText(project.project.description)}`);
       }
       lines.push(`  Code: ${projectCode || 'None'}`);
       if (project.project.code) {
@@ -97,7 +98,7 @@ export class ProjectHandlers {
       lines.push('');
     }
 
-    return lines.join('\n');
+    return Sanitizer.sanitizeText(lines.join('\n'));
   }
 
   /**
@@ -112,12 +113,12 @@ export class ProjectHandlers {
 
     const projectCode = project.project.code || project.id;
     const lines = [
-      `📋 Project: **${projectCode}** - ${project.project.name}`,
+      `📋 Project: **${projectCode}** - ${Sanitizer.sanitizeText(project.project.name)}`,
       '',
       '**Details:**',
       `- Code: ${project.project.code || 'None'}`,
       `- ID: ${project.id}`,
-      `- Description: ${project.project.description || 'No description'}`,
+      `- Description: ${Sanitizer.sanitizeText(project.project.description || 'No description')}`,
       `- Path: ${project.project.path}`,
       `- Total CRs: ${crCount}`,
       `- Last Accessed: ${project.metadata.lastAccessed}`,
@@ -128,9 +129,9 @@ export class ProjectHandlers {
     ];
 
     if (project.project.repository) {
-      lines.push(`- Repository: ${project.project.repository}`);
+      lines.push(`- Repository: ${Sanitizer.sanitizeUrl(project.project.repository)}`);
     }
 
-    return lines.join('\n');
+    return Sanitizer.sanitizeText(lines.join('\n'));
   }
 }

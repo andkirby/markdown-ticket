@@ -17,6 +17,7 @@ import { ProjectHandlers } from './handlers/projectHandlers.js';
 import { CRHandlers } from './handlers/crHandlers.js';
 import { SectionHandlers } from './handlers/sectionHandlers.js';
 import { ALL_TOOLS, TOOL_NAMES } from './config/allTools.js';
+import { Sanitizer } from '../utils/sanitizer.js';
 
 /**
  * Main MCP Tools Class
@@ -118,13 +119,23 @@ export class MCPTools {
         );
       }
 
-      // Unknown tool
+      // Unknown tool - sanitize tool name in error
       const availableTools = Object.values(TOOL_NAMES);
-      throw new Error(`Unknown tool '${name}'. Available tools: ${availableTools.join(', ')}`);
+      const sanitizedName = Sanitizer.sanitizeText(name);
+      throw new Error(`Unknown tool '${sanitizedName}'. Available tools: ${availableTools.join(', ')}`);
 
     } catch (error) {
       console.error(`Error handling tool ${name}:`, error);
-      throw error;
+
+      // Sanitize error message before re-throwing
+      if (error instanceof Error) {
+        const sanitizedMessage = Sanitizer.sanitizeError(error.message);
+        const sanitizedError = new Error(sanitizedMessage);
+        sanitizedError.stack = error.stack; // Preserve stack trace for debugging
+        throw sanitizedError;
+      } else {
+        throw new Error(Sanitizer.sanitizeError(String(error)));
+      }
     }
   }
 }

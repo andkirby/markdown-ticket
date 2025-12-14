@@ -1,12 +1,32 @@
 # Architecture: MDT-091
 
-**Source**: [MDT-091](../../../docs/CRs/MDT-091-add-comprehensive-e2e-testing-framework-for-mcp-se.md)
+**Source**: [MDT-091](../MDT-091-add-comprehensive-e2e-testing-framework-for-mcp-se.md)
 **Generated**: 2025-12-08
+**Last Updated**: 2025-12-14
 **Complexity Score**: 25
+**Phase 1 Status**: 🟡 84% Complete (171 passing, 32 failing)
 
 ## Overview
 
 Comprehensive E2E testing framework that validates MCP server tool execution across both stdio and HTTP transports with complete project isolation. The architecture uses temporary directories with custom CONFIG_DIR for test isolation, external TypeScript test data for maintainability, and realistic project structures to ensure tests catch real-world integration issues.
+
+## Current Implementation Status
+
+### Phase 1 Completion: 🟡 84% (171 passing, 32 failing)
+
+**Implemented Components**:
+- ✅ All 10 MCP tool E2E tests (15 test suites)
+- ✅ Test isolation infrastructure (TestEnvironment)
+- ✅ MCP client abstraction (MCPTestClient)
+- ✅ Project factory for realistic test data
+- ✅ Stdio transport testing
+
+**Missing/Gaps**:
+- 🔴 Error handling test file (`error-handling.spec.ts`) for MUST-09 and MUST-10
+- 🔴 Rate limiting implementation (5 failing tests - MUST-05)
+- 🔴 Output sanitization implementation (11 failing tests - MUST-06)
+- 🔴 Protocol error format validation (JSON-RPC error codes)
+- 🔴 Tool execution error format (`isError: true` responses)
 
 ## Pattern
 
@@ -107,29 +127,34 @@ stateDiagram-v2
 
 ```
 mcp-server/tests/e2e/
-├── test-data/                     # External test data (not inline)
-│   ├── expectedOutputs.ts         # All expected outputs by tool/scenario
-│   ├── types.ts                   # TypeScript types for test data
-│   └── factory.ts                 # Factory functions for data creation
-├── helpers/                       # Shared test utilities (extract first)
-│   ├── testEnvironment.ts         # Temp dir + CONFIG_DIR management
-│   ├── mcpClient.ts               # JSON-RPC client with transport abstraction
-│   ├── testDataLoader.ts          # Singleton test data access
-│   ├── outputMatcher.ts           # Output comparison logic
-│   ├── testDataFactory.ts         # Realistic project structure creation
-│   └── negativeTestScenarios.ts   # Error case definitions
-├── list-projects.e2e.test.ts      # Tests for list_projects tool
-├── get-project-info.e2e.test.ts   # Tests for get_project_info tool
-├── list-crs.e2e.test.ts           # Tests for list_crs tool
-├── get-cr.e2e.test.ts             # Tests for get_cr tool
-├── create-cr.e2e.test.ts          # Tests for create_cr tool
-├── update-cr-status.e2e.test.ts   # Tests for update_cr_status tool
-├── update-cr-attrs.e2e.test.ts    # Tests for update_cr_attrs tool
-├── manage-cr-sections.e2e.test.ts # Tests for manage_cr_sections tool
-├── delete-cr.e2e.test.ts          # Tests for delete_cr tool
-├── suggest-cr-improvements.e2e.test.ts # Tests for suggest_cr_improvements tool
-├── http-transport.e2e.test.ts     # HTTP transport specific tests
-└── error-handling.e2e.test.ts     # Cross-tool error scenarios
+├── helpers/                       # ✅ Shared test utilities (implemented)
+│   ├── test-environment.ts        # Temp dir + CONFIG_DIR management
+│   ├── mcp-client.ts              # JSON-RPC client with transport abstraction
+│   ├── project-factory.ts         # Realistic project structure creation
+│   ├── mcp-transports.ts          # Transport adapters
+│   ├── test-environment.spec.ts   # Tests for test environment
+│   ├── mcp-client.spec.ts         # Tests for MCP client
+│   └── project-factory.spec.ts    # Tests for project factory
+├── tools/                         # ✅ Tool-specific E2E tests (implemented)
+│   ├── list-projects.spec.ts      # Tests for list_projects tool (6 scenarios)
+│   ├── get-project-info.spec.ts   # Tests for get_project_info tool (5 scenarios)
+│   ├── list-crs.spec.ts           # Tests for list_crs tool (6 scenarios)
+│   ├── get-cr.spec.ts             # Tests for get_cr tool (8 scenarios)
+│   ├── create-cr.spec.ts          # Tests for create_cr tool (7 scenarios)
+│   ├── update-cr-status.spec.ts   # Tests for update_cr_status tool (5 scenarios)
+│   ├── update-cr-attrs.spec.ts    # Tests for update_cr_attrs tool (6 scenarios)
+│   ├── manage-cr-sections.spec.ts # Tests for manage_cr_sections tool (9 scenarios)
+│   ├── delete-cr.spec.ts          # Tests for delete_cr tool (4 scenarios)
+│   ├── suggest-cr-improvements.spec.ts # Tests for suggest_cr_improvements (4 scenarios)
+│   ├── rate-limiting.spec.ts      # 🔴 Tests for rate limiting (MUST-05)
+│   └── output-sanitization.spec.ts # 🔴 Tests for output sanitization (MUST-06)
+├── __tests__/                     # ✅ Unit tests for helpers
+│   ├── basic.test.ts              # Basic MCP server tests
+│   └── toolConfiguration.test.ts  # Tool configuration behavior preservation
+├── jest.e2e.config.mjs            # ✅ Jest configuration for E2E tests
+├── rate-limiting.spec.ts          # 🚫 Should be in tools/ (misplaced)
+├── output-sanitization.spec.ts    # 🚫 Should be in tools/ (misplaced)
+└── error-handling.spec.ts         # ❌ MISSING - needed for MUST-09/10
 ```
 
 ## Size Guidance
@@ -172,17 +197,51 @@ Based on Section 5 Acceptance Criteria:
 
 **Coverage**: 6/6 requirements mapped (100%)
 
+### MCP Server Tools Specification MUST Requirements Alignment
+
+| MUST # | Description | Test Status | Implementation Status | Test Location |
+|--------|-------------|-------------|----------------------|---------------|
+| MUST-01 | Tools capability declaration | ✅ TESTED | ✅ IMPLEMENTED | `tools/list-projects.spec.ts` |
+| MUST-02 | Unique tool names | ✅ TESTED | ✅ IMPLEMENTED | `tools/list-projects.spec.ts` |
+| MUST-03 | Input validation | ✅ TESTED | ✅ IMPLEMENTED | All tool test files |
+| MUST-04 | Access controls | ✅ TESTED | ✅ IMPLEMENTED | `tools/get-project-info.spec.ts` |
+| MUST-05 | Rate limiting | 🔴 TESTED | ❌ NOT IMPLEMENTED | `tools/rate-limiting.spec.ts` (5 failing) |
+| MUST-06 | Output sanitization | 🔴 TESTED | ❌ NOT IMPLEMENTED | `tools/output-sanitization.spec.ts` (11 failing) |
+| MUST-07 | Schema compliance | ✅ TESTED | ✅ IMPLEMENTED | All tool test files |
+| MUST-08 | Required parameters list | ✅ TESTED | ✅ IMPLEMENTED | All tool test files |
+| MUST-09 | Protocol error format | ❌ NO TESTS | ⚠️ PARTIAL | `error-handling.spec.ts` (MISSING) |
+| MUST-10 | Tool execution error format | ❌ NO TESTS | ❌ NOT IMPLEMENTED | `error-handling.spec.ts` (MISSING) |
+
+**Summary**: 6/10 MUST requirements fully compliant, 4/10 have gaps
+
+### Phase 1 Blockers
+
+1. **Missing Error Handling Tests**: Need to create `tools/error-handling.spec.ts` for:
+   - MUST-09: JSON-RPC error codes (-32601, -32602, -32000 to -32099)
+   - MUST-10: Tool execution errors with `isError: true`
+
+2. **Unimplemented Features**:
+   - Rate limiting in MCP server (causes 5 test failures)
+   - Output sanitization (causes 11 test failures) - **BETA FEATURE**: Disabled by default via `MCP_SANITIZATION_ENABLED=false`
+
 ## Extension Rule
 
 To add new MCP tool test:
-1. Create `{tool-name}.e2e.test.ts` (test suite, limit 300 lines)
-2. Add entries to `expectedOutputs.ts` for all scenarios
-3. Add tool-specific negative scenarios to `negativeTestScenarios.ts`
+1. Create `tools/{tool-name}.spec.ts` (test suite, limit 300-450 lines)
+2. Follow BDD format: Given/When/Then scenarios
+3. Include at least 3 scenarios: happy path, error case, edge case
+4. Ensure test validates both positive and negative conditions
 
 To add new transport:
-1. Extend `mcpClient.ts` with new transport class (within 200-line limit)
-2. Add `{transport}-transport.e2e.test.ts` (test suite, limit 300 lines)
-3. Update configuration in `jest.e2e.config.js`
+1. Extend `helpers/mcpClient.ts` with new transport class (within 200-line limit)
+2. Add `tools/{transport}-transport.spec.ts` (test suite, limit 300-450 lines)
+3. Update configuration in `jest.e2e.config.mjs`
+
+To complete Phase 1:
+1. Create `tools/error-handling.spec.ts` for MUST-09 and MUST-10 (limit 300 lines)
+2. Implement rate limiting in MCP server core
+3. Implement output sanitization in MCP server core
+4. Fix misplaced test files (move rate-limiting.spec.ts and output-sanitization.spec.ts to tools/)
 
 ---
 

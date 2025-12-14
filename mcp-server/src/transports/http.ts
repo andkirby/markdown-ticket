@@ -6,10 +6,10 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import cors from 'cors';
 import { SessionManager } from './sessionManager.js';
+import { RateLimitManager } from '../utils/rateLimitManager.js';
 import {
   createAuthMiddleware,
   createOriginValidationMiddleware,
-  createRateLimiter,
   createSessionValidationMiddleware
 } from './middleware.js';
 
@@ -49,6 +49,9 @@ export async function startHttpTransport(
   // Initialize session manager
   const sessionManager = new SessionManager(config.sessionTimeoutMs || 30 * 60 * 1000);
 
+  // Initialize centralized rate limit manager
+  const rateLimitManager = RateLimitManager.fromEnvironment();
+
   // Log all incoming requests BEFORE body parsing (simplified)
   app.use((req, res, next) => {
     console.error(`📨 ${req.method} ${req.url} from ${req.headers['user-agent'] || 'Unknown'} (PRE-BODY-PARSE)`);
@@ -87,15 +90,8 @@ export async function startHttpTransport(
 
   // Apply security middleware conditionally
 
-  // Rate limiting (Phase 2 - optional)
-  if (config.enableRateLimiting) {
-    const limiter = createRateLimiter({
-      windowMs: config.rateLimitWindowMs || 60 * 1000, // 1 minute default
-      max: config.rateLimitMax || 100 // 100 requests per window
-    });
-    app.use('/mcp', limiter);
-    console.error(`🛡️  Rate limiting enabled: ${config.rateLimitMax} requests per ${(config.rateLimitWindowMs || 60000) / 1000}s`);
-  }
+  // Note: Rate limiting is now handled per-tool using centralized RateLimitManager
+  // The old express-rate-limit middleware has been removed for more granular control
 
   // Origin validation (Phase 2 - optional)
   if (config.enableOriginValidation && config.allowedOrigins) {
@@ -164,6 +160,34 @@ export async function startHttpTransport(
       else if (method === "tools/call") {
         const tool_name = params.name;
         const tool_args = params.arguments || {};
+
+        // Check rate limit before processing tool call
+        const rateLimitResult = rateLimitManager.checkRateLimit(tool_name);
+        if (!rateLimitResult.allowed) {
+          const errorMessage = `Rate limit exceeded for tool '${tool_name}'. Maximum ${rateLimitManager.getStats().config.maxRequests} requests per ${rateLimitManager.getStats().config.windowMs / 1000} seconds.`;
+
+          // Include retry information if available
+          const fullMessage = rateLimitResult.retryAfter
+            ? `${errorMessage} Retry after ${rateLimitResult.retryAfter} seconds.`
+            : errorMessage;
+
+          const response = {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {
+              "code": -32000,
+              "message": fullMessage
+            }
+          };
+
+          // Add retry-after header if available
+          if (rateLimitResult.retryAfter) {
+            res.setHeader('Retry-After', rateLimitResult.retryAfter);
+          }
+
+          console.error(`🚫 Rate limit exceeded for tool ${tool_name}`);
+          return res.status(429).json(response);
+        }
 
         try {
           const result = await mcpTools.handleToolCall(tool_name, tool_args);
@@ -422,6 +446,8 @@ export async function startHttpTransport(
    * GET /health - Health check endpoint
    */
   app.get('/health', (req: Request, res: Response) => {
+    const rateLimitStats = rateLimitManager.getStats();
+
     res.status(200).json({
       status: 'ok',
       transport: 'http',
@@ -429,12 +455,18 @@ export async function startHttpTransport(
       features: {
         sse: true,
         sessions: true,
-        rateLimit: config.enableRateLimiting || false,
+        rateLimit: rateLimitStats.enabled,
         auth: config.enableAuth || false,
         originValidation: config.enableOriginValidation || false
       },
       sessions: {
         active: sessionManager.getSessionCount()
+      },
+      rateLimit: {
+        enabled: rateLimitStats.enabled,
+        maxRequests: rateLimitStats.config.maxRequests,
+        windowMs: rateLimitStats.config.windowMs,
+        activeTools: rateLimitStats.activeTools
       }
     });
   });
