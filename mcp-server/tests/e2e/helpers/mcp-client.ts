@@ -223,10 +223,11 @@ export class MCPClient {
           return response;
         }
 
-        // Prepare JSON-RPC request
+        // Prepare JSON-RPC request with unique ID using timestamp + counter
+        const uniqueId = Date.now() * 1000 + (++this.requestId); // Ensure uniqueness even in concurrent calls
         const request = {
           jsonrpc: '2.0',
-          id: ++this.requestId,
+          id: uniqueId,
           method: toolName === 'tools/list' ? 'tools/list' : 'tools/call',
           params: toolName === 'tools/list' ? {} : {
             name: toolName,
@@ -253,7 +254,9 @@ export class MCPClient {
           };
 
           // Special handling for rate limit errors - throw them for test compatibility
-          if (response.error.message && response.error.message.toLowerCase().includes('rate limit')) {
+          if (response.error.message &&
+              (response.error.message.toLowerCase().includes('rate limit') ||
+               response.error.message.includes('Rate limit'))) {
             this.logger.warn('Rate limit error encountered', {
               toolName,
               error: mcpResponse.error
@@ -285,6 +288,33 @@ export class MCPClient {
 
         // Parse the result content first
         const content = this.parseResultContent(response.result);
+
+        // Check if the response indicates an error according to MCP spec
+        if (response.result && response.result.isError === true) {
+          // According to MCP spec, this is a tool execution error
+          // The error message should be in the content array
+          let errorMessage = 'Tool execution error';
+          if (response.result.content && Array.isArray(response.result.content)) {
+            const textContent = response.result.content.find(c => c.type === 'text');
+            if (textContent && textContent.text) {
+              errorMessage = textContent.text;
+            }
+          }
+
+          const mcpResponse = {
+            success: false,
+            error: {
+              code: -32000, // Server error for tool execution errors
+              message: errorMessage
+            }
+          };
+
+          this.logger.warn('Tool returned error with isError=true', {
+            toolName,
+            error: mcpResponse.error
+          });
+          return mcpResponse;
+        }
 
         // Check if the content contains an error message in the expected format
         // Some tools (like get_cr, update_cr_status) return error messages as formatted content
@@ -345,16 +375,21 @@ export class MCPClient {
 
         // If this is the last attempt, return the error
         if (attempt === maxRetries) {
+          // Preserve the error code from the server
+          // Protocol errors should maintain their original codes (-32601, -32602, etc.)
+          // Tool execution errors will have code -32000 by default
+          const errorCode = error.code || -1;
+
           const response = {
             success: false,
             error: {
-              code: error.code || -1, // Use error code if available, otherwise default to -1
+              code: errorCode,
               message: error.message || 'Unknown error'
             }
           };
           this.logger.error('Tool call failed after all retries with exception',
             error instanceof Error ? error : new Error(String(error)),
-            { toolName, maxRetries }
+            { toolName, maxRetries, errorCode }
           );
           return response;
         }
@@ -478,7 +513,8 @@ export class MCPClient {
     if (!errorCode) return false;
 
     // Retry on connection errors and timeouts
-    return errorCode === -1 || errorCode === -32000 || errorCode === -32001;
+    // Note: Rate limit errors (-32001) should NOT be retried as they are intentional
+    return errorCode === -1 || errorCode === -32000;
   }
 
   /**

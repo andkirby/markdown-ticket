@@ -20,6 +20,7 @@ import { SimpleContentProcessor } from '../../utils/simpleContentProcessor.js';
 import { SimpleSectionValidator } from '../../utils/simpleSectionValidator.js';
 import { validateCRKey, validateRequired, validateString, validateOperation } from '../../utils/validation.js';
 import { Sanitizer } from '../../utils/sanitizer.js';
+import { ToolError, JsonRpcErrorCode } from '../../utils/toolError.js';
 
 /**
  * CR Handlers Class
@@ -73,21 +74,22 @@ export class CRHandlers {
    * Handler for get_cr tool
    */
   async handleGetCR(project: Project, key: string, mode: string = 'full'): Promise<string> {
-    // Validate CR key format
+    // Validate CR key format - this is a protocol error (invalid parameter)
     const keyValidation = validateCRKey(key);
     if (!keyValidation.valid) {
-      throw new Error(keyValidation.message);
+      throw ToolError.protocol(keyValidation.message || 'Invalid CR key format', JsonRpcErrorCode.InvalidParams);
     }
 
-    // Validate mode parameter
+    // Validate mode parameter - this is a protocol error (invalid parameter)
     const modeValidation = validateOperation(mode, ['full', 'attributes', 'metadata'], 'mode');
     if (!modeValidation.valid) {
-      throw new Error(modeValidation.message);
+      throw ToolError.protocol(modeValidation.message || 'Invalid mode parameter', JsonRpcErrorCode.InvalidParams);
     }
 
     const ticket = await this.crService.getCR(project, keyValidation.value);
     if (!ticket) {
-      throw new Error(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
+      // CR not found is a business logic failure (tool execution error)
+      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
     }
 
     switch (modeValidation.value) {
@@ -104,7 +106,8 @@ export class CRHandlers {
           // Extract YAML frontmatter
           const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
           if (!frontmatterMatch) {
-            throw new Error(`Invalid CR file format for ${key}: No YAML frontmatter found`);
+            // Invalid file format is a business logic error (tool execution error)
+            throw ToolError.toolExecution(`Invalid CR file format for ${key}: No YAML frontmatter found`);
           }
 
           const yamlContent = frontmatterMatch[1];
@@ -112,7 +115,7 @@ export class CRHandlers {
           // Use MarkdownService to parse YAML (anti-duplication)
           const parsedTicket = await MarkdownService.parseMarkdownContent(fileContent);
           if (!parsedTicket) {
-            throw new Error(`Failed to parse CR file for ${key}`);
+            throw ToolError.toolExecution(`Failed to parse CR file for ${key}`);
           }
 
           // Build attributes object from parsed ticket
@@ -142,7 +145,7 @@ export class CRHandlers {
           return Sanitizer.sanitizeText(JSON.stringify(attributes, null, 2));
 
         } catch (fileError) {
-          throw new Error(`Failed to read CR file for ${key}: ${(fileError as Error).message}`);
+          throw ToolError.toolExecution(`Failed to read CR file for ${key}: ${(fileError as Error).message}`);
         }
       }
 
@@ -163,7 +166,7 @@ export class CRHandlers {
         return Sanitizer.sanitizeText(JSON.stringify(metadata, null, 2));
 
       default:
-        throw new Error(`Invalid mode '${mode}'. Must be: full, attributes, or metadata`);
+        throw ToolError.protocol(`Invalid mode '${mode}'. Must be: full, attributes, or metadata`, JsonRpcErrorCode.InvalidParams);
     }
   }
 
@@ -171,19 +174,19 @@ export class CRHandlers {
    * Handler for create_cr tool
    */
   async handleCreateCR(project: Project, type: string, data: TicketData): Promise<string> {
-    // Validate type parameter
+    // Validate type parameter - this is a protocol error (invalid parameter)
     const typeValidation = validateOperation(type, [
       'Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'
     ], 'type');
     if (!typeValidation.valid) {
-      throw new Error(typeValidation.message);
+      throw ToolError.protocol(typeValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
-    // Validate data first
+    // Validate data first - this is a protocol error (invalid parameter)
     const validation = this.templateService.validateTicketData(data, typeValidation.value);
     if (!validation.valid) {
       const errors = validation.errors.map(e => `- ❌ ${e.field}: ${e.message}`).join('\n');
-      throw new Error(`CR data validation failed:\n${errors}`);
+      throw ToolError.protocol(`CR data validation failed:\n${errors}`, JsonRpcErrorCode.InvalidParams);
     }
 
     // Process content if provided
@@ -258,21 +261,22 @@ export class CRHandlers {
     // Validate CR key format
     const keyValidation = validateCRKey(key);
     if (!keyValidation.valid) {
-      throw new Error(keyValidation.message);
+      throw ToolError.protocol(keyValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
     // Validate status parameter
     const statusValidation = validateOperation(status, [
-      'Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected'
+      'Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected',
+      'On Hold', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'
     ], 'status');
     if (!statusValidation.valid) {
-      throw new Error(statusValidation.message);
+      throw ToolError.protocol(statusValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
     // Get current CR to show old status
     const ticket = await this.crService.getCR(project, keyValidation.value);
     if (!ticket) {
-      throw new Error(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
+      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
     }
 
     const oldStatus = ticket.status;
@@ -308,24 +312,24 @@ export class CRHandlers {
     // Validate CR key format
     const keyValidation = validateCRKey(key);
     if (!keyValidation.valid) {
-      throw new Error(keyValidation.message);
+      throw ToolError.protocol(keyValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
     // Validate attributes parameter
     const attrsValidation = validateRequired(attributes, 'attributes');
     if (!attrsValidation.valid) {
-      throw new Error(attrsValidation.message);
+      throw ToolError.protocol(attrsValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
     // Get current CR info
     const ticket = await this.crService.getCR(project, keyValidation.value);
     if (!ticket) {
-      throw new Error(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
+      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
     }
 
     const success = await this.crService.updateCRAttrs(project, keyValidation.value, attributes);
     if (!success) {
-      throw new Error(`Failed to update CR '${keyValidation.value}' attributes`);
+      throw ToolError.toolExecution(`Failed to update CR '${keyValidation.value}' attributes`);
     }
 
     const lines = [
@@ -353,18 +357,18 @@ export class CRHandlers {
     // Validate CR key format
     const keyValidation = validateCRKey(key);
     if (!keyValidation.valid) {
-      throw new Error(keyValidation.message);
+      throw ToolError.protocol(keyValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
     // Get CR info before deletion
     const ticket = await this.crService.getCR(project, keyValidation.value);
     if (!ticket) {
-      throw new Error(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
+      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
     }
 
     const success = await this.crService.deleteCR(project, keyValidation.value);
     if (!success) {
-      throw new Error(`Failed to delete CR '${keyValidation.value}'`);
+      throw ToolError.toolExecution(`Failed to delete CR '${keyValidation.value}'`);
     }
 
     const lines = [
@@ -389,12 +393,12 @@ export class CRHandlers {
     // Validate CR key format
     const keyValidation = validateCRKey(key);
     if (!keyValidation.valid) {
-      throw new Error(keyValidation.message);
+      throw ToolError.protocol(keyValidation.message || "Validation error", JsonRpcErrorCode.InvalidParams);
     }
 
     const ticket = await this.crService.getCR(project, keyValidation.value);
     if (!ticket) {
-      throw new Error(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
+      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`);
     }
 
     const suggestions = this.templateService.suggestImprovements(ticket);

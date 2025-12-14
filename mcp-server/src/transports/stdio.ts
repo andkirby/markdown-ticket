@@ -8,6 +8,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { RateLimitManager } from '../utils/rateLimitManager.js';
 import { Sanitizer } from '../utils/sanitizer.js';
+import { ToolError } from '../utils/toolError.js';
 
 /**
  * Start stdio transport for MCP server
@@ -52,8 +53,11 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
         ? `${errorMessage} Retry after ${rateLimitResult.retryAfter} seconds.`
         : errorMessage;
 
-      // Return rate limit error with proper MCP format
-      throw new McpError(ErrorCode.InternalError, fullMessage);
+      // Debug: Log that we're returning the error
+      console.error(`[STDIO] Returning rate limit error: ${fullMessage}`);
+
+      // For stdio transport, we need to throw the McpError which the SDK will convert to a JSON-RPC error
+      throw new McpError(ErrorCode.RequestTimeout, fullMessage); // -32001 is appropriate for rate limiting
     }
 
     try {
@@ -71,31 +75,38 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
         ]
       };
     } catch (error) {
-      // Check error message for logging
-      const errorMessage = (error as Error).message;
-
-      // For specific tools that should return proper MCP error responses with code -32000
-      // These tools are expected to return error code -32000 for all error conditions in tests
-      const throwErrorCodes = ['suggest_cr_improvements'];
-      if (throwErrorCodes.includes(name)) {
-        throw new McpError(ErrorCode.ConnectionClosed, errorMessage); // Use ErrorCode.ConnectionClosed (-32000)
+      // Handle ToolError instances
+      if (error instanceof ToolError) {
+        if (error.isProtocolError()) {
+          // Protocol errors should return JSON-RPC error responses
+          const jsonRpcError = error.toJsonRpcError();
+          throw new McpError(
+            jsonRpcError.code as ErrorCode,
+            jsonRpcError.message,
+            jsonRpcError.data
+          );
+        } else {
+          // Tool execution errors should return { result: { content: [...], isError: true } }
+          const toolErrorResult = error.toToolErrorResult();
+          return toolErrorResult;
+        }
       }
 
-      // For other errors, return formatted content (legacy behavior)
-      const errorContent = `❌ **Error in ${name}**\n\n${errorMessage}\n\nPlease check your input parameters and try again.`;
+      // Handle other error types for backward compatibility
+      const errorMessage = (error as Error).message;
 
-      // Sanitize error content if sanitization is enabled
-      const sanitizedErrorContent = Sanitizer.sanitizeError(errorMessage);
-      const finalErrorContent = `❌ **Error in ${name}**\n\n${sanitizedErrorContent}\n\nPlease check your input parameters and try again.`;
+      // Path traversal attempts and other security issues
+      if (errorMessage.includes('../') ||
+          errorMessage.includes('..\\') ||
+          errorMessage.includes('path traversal') ||
+          errorMessage.includes('outside project')) {
+        throw new McpError(ErrorCode.InternalError, errorMessage);
+      }
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: process.env.MCP_SANITIZATION_ENABLED === 'true' ? finalErrorContent : errorContent
-          }
-        ]
-      };
+      // Rate limiting is already handled above, so no need to check here
+
+      // For backward compatibility, convert other errors to McpError
+      throw new McpError(ErrorCode.InternalError, errorMessage);
     }
   });
 
