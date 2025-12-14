@@ -321,7 +321,6 @@ const createErrorResponse = (type: ErrorType, details: string) => ({
 - **Status changes** (active/disabled): Update local config
 
 ## 8. Success Criteria
-
 ### Functional
 - [ ] Architecture document serves as implementation guide for new CLI features
 - [ ] Three-strategy pattern consistently applied across project operations
@@ -341,6 +340,13 @@ const createErrorResponse = (type: ErrorType, details: string) => ({
 - Integration: CLI tool integration with shared services verified
 - E2E: Complete workflows tested in isolated environments
 
+### Configuration System Updates (2025-12-14)
+- [ ] `lastAccessed` field removed from global registry configuration
+- [ ] `startNumber` and `counterFile` fields removed from local configuration  
+- [ ] Ticket numbering handled by file system scanning, not counter files
+- [ ] CONFIG_SPECIFICATION.md updated to reflect simplified configuration schema
+- [ ] Global registry tracks only: path, active, dateRegistered
+- [ ] Local config excludes legacy counter management fields
 ## 9. Implementation History (Reference)
 This section preserves the implementation journey for historical context and lessons learned.
 
@@ -376,6 +382,22 @@ This section preserves the implementation journey for historical context and les
 **Root Cause**: 
 1. **Configuration Format Issue**: Validation expected direct arrays but configs used structured objects:
 ```toml
+
+document_paths = ["docs", "README.md"]
+exclude_folders = ["docs/CRs", "node_modules"]
+
+## Structured format (redundant - should be removed)
+[document_paths]
+paths = ["docs", "README.md"]
+
+[exclude_folders]
+folders = ["docs/CRs", "node_modules"]
+```
+
+**Recommendation**: 
+- Remove structured format support to simplify configuration
+- Update documentation to clarify that config file location = project root
+- Clean up legacy `path` field references completely
 # Expected (legacy): document_paths = ["docs", "README.md"]  
 # Actual (current): [document_paths] paths = ["docs", "README.md"]
 ```
