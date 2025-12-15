@@ -110,6 +110,8 @@ blocks: MDT-095
 | PathWatcherService | SSEBroadcaster | `broadcast(event)` |
 | SSEBroadcaster | ClientManager | `addClient(response)`, `removeClient(response)` |
 
+### Requirements Specification
+- [`requirements.md`](./requirements.md) — EARS-formatted requirements for **end-user website functionality** enabled by FileWatcherService refactoring
 ### Key Patterns
 - **Service Decomposition**: Split monolith into focused services
 - **Single Responsibility**: Each service has one clear purpose
@@ -120,11 +122,12 @@ blocks: MDT-095
 - **Single Responsibility**: Each service has one clear purpose
 - **Event-Driven**: Services communicate through events and interfaces
 
-## 5. Acceptance Criteria
 ## 5. Verification
-
 ### How to Verify Success
 - Manual verification: Start service with multiple paths and verify file changes in all paths trigger SSE events
 - Automated verification: Integration tests simulate file changes across multiple paths simultaneously
 - E2E verification: Full-stack tests verify UI updates when files change in different paths
 - Performance verification: Measure resource usage with increasing numbers of watched paths
+- **Website verification**: Verify end-user features work correctly across multiple worktrees (see [requirements.md](./requirements.md))
+
+> Full EARS requirements for end-user website behavior: [requirements.md](./requirements.md)
