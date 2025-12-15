@@ -1,4 +1,4 @@
-# MDT Architecture Design Workflow (v3)
+# MDT Architecture Design Workflow (v4)
 
 Surface architectural decisions before implementation. Output location adapts to complexity — simple stays in CR, complex extracts to `architecture.md`.
 
@@ -103,7 +103,62 @@ This prevents duplication that size limits alone won't catch.
 
 Analyze the CR to surface **implicit architectural decisions**.
 
-For each decision point, determine:
+#### 4.1 Extract Existing CR Decisions
+
+**First**, check what's already decided in the CR:
+
+1. Read CR Section 2 (Decision) and Section 3 (Alternatives Considered)
+2. Extract any explicit technology/approach choices
+3. These decisions are **already made** — don't re-evaluate
+
+```markdown
+| Decision | Chosen | Source |
+|----------|--------|--------|
+| {from CR} | {from CR} | CR Section 2/3 |
+```
+
+#### 4.2 Build vs Use Existing Evaluation
+
+**Before designing custom implementation**, evaluate existing solutions for major capabilities NOT already decided in the CR.
+
+**Trigger**: Any substantial functionality (>50 lines) that's a common, solved problem:
+- CLI argument parsing
+- Configuration file handling
+- HTTP client/server
+- Logging framework
+- Date/time manipulation
+- Validation libraries
+- Testing utilities
+
+**Evaluation Table**:
+
+| Capability | Build Custom | Use Existing | Recommendation |
+|------------|--------------|--------------|----------------|
+| {capability} | {effort + pros/cons} | {package + pros/cons} | {Build/Use: reason} |
+
+**Evaluation Criteria** (all must be YES to recommend "Use Existing"):
+
+| Criterion | Question |
+|-----------|----------|
+| Coverage | Does it solve ≥50% of the requirement? |
+| Maturity | Maintained? (recent commits, no deprecation warnings) |
+| License | Compatible with project license? |
+| Footprint | Reasonable dependency count? (<10 transitive deps preferred) |
+| Fit | Consistent with project's existing dependencies? |
+
+**Search Strategy** (language-agnostic):
+1. Check project's existing dependencies first (reuse preferred)
+2. Search "{language} {capability}" in ecosystem package registry
+3. Prefer widely-adopted solutions (>1000 weekly downloads equivalent)
+4. Check for project-specific guidance in CLAUDE.md
+
+**Decision Recording**:
+- If "Use Existing" → Add to CR Section 2 as architectural decision
+- If "Build Custom" → Document why (customization needs, size constraints, etc.)
+
+#### 4.3 Structural Decision Points
+
+For each remaining decision point, determine:
 - **Decision**: What structural choice must be made?
 - **Options**: What are the 2-3 viable approaches?
 - **Implication**: How does each option affect extensibility?
@@ -117,6 +172,7 @@ Common decision points:
 | **Abstraction** | Shared behavior | Base class vs. interface vs. utility functions? |
 | **Extension** | "Easily add new X" | Plugin pattern vs. configuration vs. subclass? |
 | **Coupling** | Cross-module interaction | Who depends on whom? Shared interface? |
+| **Build vs Use** | Common solved problem | Existing library vs. custom implementation? |
 
 ### Step 5: Present Decision Surface
 
@@ -132,9 +188,20 @@ Options:
 ```
 
 **Recommendation criteria**:
+- Prefer existing solutions for solved problems (less code to maintain)
 - Prefer structure where extension requires fewer file changes
 - Prefer structure that isolates provider/handler/adapter-specific logic
 - Prefer structure consistent with existing codebase patterns
+
+**Build vs Use Question Format**:
+```
+Question: How should we handle {capability}?
+Options:
+- Option A (Recommended): Use {package} — {coverage}% of needs, {N} weekly downloads, {license}
+- Option B: Build custom — Full control, {estimated lines} lines, no dependencies
+
+Rationale: {why recommendation fits this project}
+```
 
 ### Step 6: Generate Architecture Design
 
@@ -154,6 +221,14 @@ For Score ≤ 5, generate `## Architecture Design` section:
 
 ```markdown
 ## Architecture Design
+
+### Key Dependencies
+{If any "Use Existing" decisions were made}
+| Capability | Package | Rationale |
+|------------|---------|----------|
+| {capability} | {package} | {why chosen over custom} |
+
+{Or: "No external dependencies — all custom implementation."}
 
 ### Pattern
 {Pattern name} — {one sentence why it fits the problem}
@@ -212,6 +287,21 @@ For Score > 5, generate `docs/CRs/{CR-KEY}/architecture.md`:
 **{Pattern name}** — {why it fits the problem}
 
 {Optional: 1-2 sentences on pattern application specifics}
+
+## Key Dependencies
+
+{If any "Use Existing" decisions were made}
+
+| Capability | Package | Coverage | Rationale |
+|------------|---------|----------|----------|
+| {capability} | {package} | {%} | {why chosen} |
+
+**Build Custom Decisions**:
+| Capability | Reason | Estimated Size |
+|------------|--------|---------------|
+| {capability} | {why not using existing} | {N} lines |
+
+{Or: "No significant build-vs-use decisions — standard project patterns apply."}
 
 ## Component Boundaries
 
@@ -462,6 +552,34 @@ CR gets summary:
 **Extension Rule**: To add status mode, add case to `StatusToggle` state machine.
 ```
 
+### Build vs Use Example (CLI Tool)
+
+**CR**: Implement project management CLI
+
+**Step 4.2 Evaluation**:
+
+| Capability | Build Custom | Use Existing | Recommendation |
+|------------|--------------|--------------|----------------|
+| Argument parsing | 80 lines, full control | Commander.js (mature, 0 deps) | **Use**: solved problem, auto-generates help |
+| Interactive prompts | 25 lines, minimal needs | Inquirer.js (feature-rich) | **Build**: needs are simple, avoid overhead |
+| Config file parsing | 40 lines | dotenv, cosmiconfig | **Use**: dotenv already in project |
+
+**Resulting Architecture Decision**:
+```markdown
+### Key Dependencies
+| Capability | Package | Rationale |
+|------------|---------|----------|
+| CLI framework | commander | Argument parsing, help generation, subcommands |
+| Config parsing | dotenv | Already in project dependencies |
+
+### Build Custom
+| Capability | Reason | Estimated Size |
+|------------|--------|---------------|
+| Interactive prompts | Minimal needs (3 prompts), avoid 50KB dependency | ~25 lines |
+```
+
+**Impact**: CLI reduced from ~650 lines to ~200 lines by using Commander.js instead of custom arg parsing.
+
 ---
 
 ## Size Guidance Reference
@@ -512,9 +630,17 @@ CR gets summary:
 ❌ **Kitchen sink architecture.md**: Goals, Non-Goals, Tech Stack, Traceability Matrix
 ✅ **Focused architecture.md**: Boundaries, Flows (if needed), Errors (if needed), Sizes
 
+❌ **Reinvent solved problems**: Custom arg parsing, custom config loading
+✅ **Evaluate existing first**: Check ecosystem for mature solutions before building
+
+❌ **Hardcoded ecosystem references**: "Use npm install commander"
+✅ **Language-agnostic guidance**: "Search {language} CLI framework in package registry"
+
 ## Quality Checklist
 
 Before completing, verify:
+- [ ] Existing CR decisions extracted (don't re-evaluate)
+- [ ] Build vs Use evaluated for major capabilities (>50 lines)
 - [ ] Complexity assessed and output location chosen
 - [ ] Shared patterns identified (logic in 2+ places)
 - [ ] Pattern is named and justified

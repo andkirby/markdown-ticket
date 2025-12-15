@@ -8,7 +8,7 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 
 | Command | Purpose | Output |
 |---------|---------|--------|
-| `/mdt:ticket-creation` | Create CR with structured questioning | CR in MDT system |
+| `/mdt:ticket-creation` | Create CR with flexible depth (WHAT only or WHAT+HOW) | CR in MDT system |
 | `/mdt:requirements` | Generate EARS-formatted requirements | `docs/CRs/{CR-KEY}/requirements.md` |
 | `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
 | `/mdt:tests` | Generate BDD test specs + executable tests | `docs/CRs/{CR-KEY}/tests.md` + test files |
@@ -19,10 +19,62 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 | `/mdt:tech-debt` | Detect debt patterns | `docs/CRs/{CR-KEY}/debt.md` |
 | `/mdt:reflection` | Capture learnings | Updated CR |
 
-## Full Workflow Chain
+## Specification Depth
+
+`/mdt:ticket-creation` offers two modes, selected as the first question:
+
+| Mode | Focus | Use When |
+|------|-------|----------|
+| **Requirements only** | WHAT outcome is needed | Complex/uncertain features, defer HOW to architecture |
+| **Full specification** | WHAT + HOW with artifacts | Small/well-understood changes, implementation known |
+
+### Requirements Mode (5 sections)
+
+Describes outcomes and constraints, defers implementation to downstream workflows:
 
 ```
-/mdt:ticket-creation
+1. Description (Problem, Affected Areas, Scope)
+2. Desired Outcome (Success Conditions, Constraints, Non-Goals)
+3. Open Questions (decisions for architecture to make)
+4. Acceptance Criteria (outcome-focused)
+5. Verification
+```
+
+**Workflow after Requirements Mode:**
+```
+/mdt:ticket-creation (Requirements)
+        ↓
+/mdt:requirements → EARS specifications
+        ↓
+/mdt:assess → code fitness (optional)
+        ↓
+/mdt:tests → BDD tests
+        ↓
+/mdt:architecture → determines HOW
+        ↓
+/mdt:tasks → /mdt:implement
+```
+
+### Full Specification Mode (7 sections)
+
+Describes both outcomes AND implementation approach with concrete artifacts:
+
+```
+1. Description (Problem, Affected Artifacts, Scope)
+2. Decision (Chosen Approach, Rationale)
+3. Alternatives Considered
+4. Artifact Specifications (New, Modified, Integration Points)
+5. Acceptance Criteria (artifact-specific)
+6. Verification
+7. Deployment
+```
+
+## Full Workflow Chain
+
+For **Full Specification Mode** (see Requirements Mode workflow above):
+
+```
+/mdt:ticket-creation (Full Specification)
         │
         ▼
 /mdt:requirements (optional) ─── Creates: requirements.md
@@ -73,8 +125,10 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 
 ### Recommended Flow for Refactoring/Tech-Debt
 
+Use **Full Specification Mode** for refactoring (implementation approach is known):
+
 ```
-/mdt:ticket-creation
+/mdt:ticket-creation (Full Specification)
         │
         ▼
 /mdt:assess (recommended) ─────────── Decision point + test coverage gaps
@@ -340,7 +394,10 @@ Evaluates affected code fitness before architecture:
 
 Adds Architecture Design to CR (simple) or extracts to `architecture.md` (complex):
 
+- **Extract Existing CR Decisions**: Don't re-evaluate what's already decided in CR
+- **Build vs Use Evaluation**: Evaluate existing libraries before building custom (>50 lines triggers)
 - **Complexity Assessment**: Score determines output location
+- **Key Dependencies**: Documents package choices and rationale
 - **Pattern**: Structural approach
 - **Shared Patterns**: Logic to extract first (prevents duplication)
 - **Structure**: File paths with responsibilities
@@ -348,6 +405,15 @@ Adds Architecture Design to CR (simple) or extracts to `architecture.md` (comple
 - **Extension Rule**: "To add X, create Y"
 - **State Flows**: Mermaid diagrams (complex only)
 - **Error Scenarios**: Failure handling (complex only)
+
+**Build vs Use Criteria** (all must be YES to use existing):
+| Criterion | Question |
+|-----------|----------|
+| Coverage | Solves ≥50% of requirement? |
+| Maturity | Maintained? Recent commits? |
+| License | Compatible with project? |
+| Footprint | <10 transitive deps? |
+| Fit | Consistent with existing deps? |
 
 ### `/mdt:tasks`
 
@@ -414,11 +480,11 @@ cp prompts/mdt-*.md ~/.claude/commands/
 prompts/
 ├── README.md                # This file
 ├── CLAUDE.md                # Development guidance
-├── mdt-ticket-creation.md   # CR creation
+├── mdt-ticket-creation.md   # CR creation (v5 - flexible depth)
 ├── mdt-requirements.md      # EARS requirements (v1)
 ├── mdt-assess.md            # Code fitness assessment (v2)
 ├── mdt-tests.md             # BDD test generation (v1)
-├── mdt-architecture.md      # Architecture design (v3)
+├── mdt-architecture.md      # Architecture design (v4 - build vs use)
 ├── mdt-clarification.md     # Gap filling
 ├── mdt-tasks.md             # Task breakdown (v4)
 ├── mdt-implement.md         # Orchestrator (v4)
@@ -438,14 +504,16 @@ prompts/
 
 ## Design Principles
 
-1. **Constraints are explicit** — size limits, exclusions, STOP conditions
-2. **Three-zone verification** — OK, FLAG (warning), STOP (blocked)
-3. **Shared patterns first** — Phase 1 before Phase 2
-4. **Anti-duplication enforced** — import from shared, never copy
-5. **Project-agnostic** — works with any language/stack
-6. **Violations block progress** — cannot mark complete if constraints violated
-7. **debt.md is diagnosis** — fix via new CR, not direct execution
-8. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
+1. **Flexible specification depth** — choose WHAT-only or WHAT+HOW based on certainty
+2. **Build vs Use evaluation** — evaluate existing libraries before building custom (>50 lines)
+3. **Constraints are explicit** — size limits, exclusions, STOP conditions
+4. **Three-zone verification** — OK, FLAG (warning), STOP (blocked)
+5. **Shared patterns first** — Phase 1 before Phase 2
+6. **Anti-duplication enforced** — import from shared, never copy
+7. **Project-agnostic** — works with any language/stack
+8. **Violations block progress** — cannot mark complete if constraints violated
+9. **debt.md is diagnosis** — fix via new CR, not direct execution
+10. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
 
 ## TDD/BDD Workflow
 
