@@ -2,6 +2,65 @@
 
 ## Recent Updates
 
+### 2025-12-15 - Flexible Specification Depth
+
+**Problem**: Ticket creation forced artifact-focused specifications even when implementation approach was uncertain. Users couldn't describe WHAT they needed without also specifying HOW.
+
+**Solution**: Added two-mode ticket creation — Requirements Mode (WHAT only) vs Full Specification Mode (WHAT + HOW).
+
+**Changes Made**:
+
+1. **mdt-ticket-creation.md (v4→v5)**:
+   - New Question 0: Choose "Requirements only" or "Full specification" mode
+   - **Requirements Mode** (5 sections): Outcomes, constraints, open questions - defers HOW to architecture
+   - **Full Specification Mode** (7 sections): Concrete artifacts and implementation approach (existing behavior)
+   - Questions 4, 5, 7 skipped in Requirements Mode
+   - Section 3 renamed to "Open Questions" with decisions for architecture
+   - Removed "Next Steps" section from document (workflow guidance stays in chat)
+
+2. **README.md** - Updated documentation:
+   - New "Specification Depth" section explaining both modes for `/mdt:ticket-creation` 
+   - Added Design Principle #1 (flexible depth)
+   - Updated File Structure with new version
+
+**Impact**:
+- Complex/uncertain features can start with outcome-focused tickets
+- Better separation between requirements and implementation
+- Architecture workflow determines HOW when Requirements Mode used
+
+**Files Changed**:
+- `prompts/mdt-ticket-creation.md`
+- `prompts/README.md`
+
+### 2025-12-15 - Build vs Use Evaluation in Architecture
+
+**Problem**: Architecture workflow reinvented solved problems instead of evaluating existing libraries. Common capabilities (CLI parsing, config loading) were being designed from scratch.
+
+**Solution**: Added build-vs-use evaluation step that checks ecosystem for mature solutions before designing custom implementations.
+
+**Changes Made**:
+
+1. **mdt-architecture.md (v3→v4)**:
+   - Step 4.1: Extract existing CR decisions first (don't re-evaluate)
+   - Step 4.2: Build vs Use evaluation for capabilities >50 lines
+   - Evaluation criteria: Coverage, Maturity, License, Footprint, Fit
+   - New "Key Dependencies" section in output documenting package choices
+   - Language-agnostic search guidance
+
+2. **README.md** - Updated documentation:
+   - Updated `/mdt:architecture` command reference with Build vs Use criteria
+   - Added Design Principle #2 (build vs use evaluation)
+   - Updated File Structure with new version
+
+**Impact**:
+- Reduced reinvention of solved problems
+- Informed library vs custom decisions with clear criteria
+- CR decisions respected — architecture doesn't re-evaluate what's already decided
+
+**Files Changed**:
+- `prompts/mdt-architecture.md`
+- `prompts/README.md`
+
 ### 2025-12-11 - Added Test-Driven Development Workflow
 
 **Problem**: Implementation tasks lacked automated test generation, making it difficult to verify behavior preservation in refactoring and ensure feature correctness.
