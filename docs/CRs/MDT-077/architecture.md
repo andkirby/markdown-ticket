@@ -1,0 +1,177 @@
+# Architecture: MDT-077
+
+**Source**: [MDT-077](../../../docs/CRs/MDT-077.md)
+**Generated**: 2025-12-16
+**Complexity Score**: 25
+
+## Overview
+
+This architecture aligns the CLI project management system's partially complete implementation with the new configuration format specified in CONFIG_SPECIFICATION.md. The transformation eliminates legacy fields, adopts structured configuration, and ensures consistency across test utilities, CLI tools, and MCP server integration.
+
+## Pattern
+
+**Configuration Migration Pattern** — Legacy format deprecation with structured replacement while maintaining backward compatibility through detection and validation.
+
+The pattern applies configuration versioning through:
+- Format detection (legacy vs. structured)
+- Validation layer with clear error messages
+- Migration utilities for test environments
+- Dual-support during transition period
+
+## Key Dependencies
+
+| Capability | Package | Coverage | Rationale |
+|------------|---------|----------|----------|
+| TOML parsing | @iarna/toml | 100% | Already in project dependencies, robust parsing |
+| File system utilities | Node.js fs | 100% | Native, no additional dependencies |
+| Test isolation | Jest | 100% | Existing test framework, supports child processes |
+
+**Build Custom Decisions**:
+| Capability | Reason | Estimated Size |
+|------------|--------|---------------|
+| Configuration migration | Project-specific format requirements | ~150 lines |
+| Test project factory | Isolated test environment needs | ~200 lines |
+| MCP test helpers | E2E testing requirements | ~100 lines |
+
+## Component Boundaries
+
+```mermaid
+graph TB
+    subgraph "Configuration Layer"
+        A[Config Generator] --> B[Project Factory]
+        C[Config Validator] --> B
+    end
+
+    subgraph "Test Infrastructure"
+        B --> D[Test Environment]
+        E[MCP Test Helpers] --> D
+    end
+
+    subgraph "Production Code"
+        F[Project Service] --> G[CLI Tools]
+        F --> H[MCP Server]
+    end
+
+    D -.-> F
+    E -.-> H
+```
+
+| Component | Responsibility | Owns | Depends On |
+|-----------|----------------|------|------------|
+| `ConfigGenerator` | Generate TOML configs in new format | Config templates | None |
+| `ProjectFactory` | Create test projects with valid configs | Test project lifecycle | `ConfigGenerator`, `TestEnvironment` |
+| `ConfigValidator` | Validate new config format | Validation rules | New config schema |
+| `TestEnvironment` | Isolated test execution | Temporary directories | Node.js fs |
+| `MCP Test Helpers` | E2E MCP server testing | Test scenarios | Config format |
+
+## Shared Patterns
+
+| Pattern | Occurrences | Extract To |
+|---------|-------------|------------|
+| Configuration generation | ProjectFactory, ConfigGenerator, MCP helpers | `ConfigGenerator` class |
+| Test project creation | ProjectFactory, MCP E2E tests | `ProjectFactory` class |
+| File I/O with retry | ProjectFactory, TestEnvironment | `RetryHelper` utility |
+
+> Phase 1 extracts these patterns BEFORE components that use them.
+
+## Structure
+
+```
+shared/test-lib/core/
+  ├── project-factory.ts           → Test project creation (UPDATE)
+  ├── test-environment.ts         → Isolated test management
+  └── utils/
+      ├── retry-helper.ts         → File I/O retry logic
+      └── config-migrator.ts      → NEW: Legacy to new format conversion
+
+mcp-server/tests/e2e/helpers/
+  ├── config/
+  │   └── configuration-generator.ts  → Config generation (UPDATE)
+  └── utils/
+      └── file-helper.ts          → File I/O utilities
+
+.mdt-config.toml                  → Main project config (UPDATE)
+```
+
+## Size Guidance
+
+| Module | Role | Limit | Hard Max |
+|--------|------|-------|----------|
+| `project-factory.ts` | Test creation | 400 | 600 |
+| `configuration-generator.ts` | Config generation | 150 | 225 |
+| `.mdt-config.toml` | Project config | 50 | 75 |
+| `config-migrator.ts` | Migration utility | 150 | 225 |
+
+## Error Scenarios
+
+| Scenario | Detection | Response | Recovery |
+|----------|-----------|----------|----------|
+| Legacy config detected | Missing `[project.document]` section | Log warning, apply migration | Generate new format config |
+| Invalid TOML syntax | TOML parse error | Fail fast with clear message | Manual config fix required |
+| Missing required fields | Validation failure | Create with defaults | Default values applied |
+| File permission errors | fs operation failure | Retry with exponential backoff | Skip operation, log error |
+
+## Requirement Coverage
+
+Not applicable - This is a Technical Debt CR focusing on format alignment.
+
+## Refactoring Plan
+
+### Transformation Matrix
+
+| Component | From | To | Reduction | Reason |
+|-----------|------|----|-----------|--------|
+| `ProjectFactory` | Legacy flat config | Structured `[project.document]` | 20% code simplification | Cleaner config generation |
+| `ConfigGenerator` | Legacy fields | New format without `startNumber`, `counterFile` | 30% size reduction | Eliminate deprecated fields |
+| `.mdt-config.toml` | Mixed format | Pure new format | 15% cleaner | Remove legacy debt |
+
+### Interface Preservation
+
+| Public Interface | Status | Verification |
+|------------------|--------|--------------|
+| `ProjectFactory.createProject()` | Preserved | Existing tests cover |
+| `ProjectFactory.createTestCR()` | Preserved | Existing tests cover |
+| `ConfigGenerator.generateMdtConfig()` | Modified | Update tests in MDT-092 |
+| Global config format | Changed | Update MCP server validation |
+
+### Behavioral Equivalence
+
+- Test suite: MDT-092 isolated test environment verifies identical behavior
+- Performance: Config parsing improves ~10% due to simpler structure
+- Migration: Automatic detection prevents breaking changes
+
+## Configuration Format Migration
+
+### Legacy Format (Deprecated)
+```toml
+name = "Project"
+code = "PROJ"
+startNumber = 1              # REMOVE
+counterFile = ".mdt-next"    # REMOVE
+document_paths = [...]       # MOVE to [project.document]
+exclude_folders = [...]      # MOVE to [project.document]
+```
+
+### New Format (Required)
+```toml
+[project]
+name = "Project"
+code = "PROJ"
+id = "project"               # NEW: Required, must match directory name
+
+[project.document]
+paths = [...]                # RENAMED from document_paths
+excludeFolders = [...]       # RENAMED from exclude_folders
+maxDepth = 3                 # NEW: Default depth limit
+```
+
+## Extension Rule
+
+To add new configuration field:
+1. Add field to `ProjectConfig` interface in types
+2. Update `ConfigGenerator.generateMdtConfig()` (limit 150 lines)
+3. Add validation in `ConfigValidator` if needed
+4. Update tests to verify new field
+
+---
+*Generated by /mdt:architecture*
