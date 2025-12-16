@@ -17,7 +17,11 @@ export default {
     'node_modules/(?!(supertest|@modelcontextprotocol|@mdt/shared))'
   ],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@mdt/shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
+    '^shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
+    '^@mdt/shared/(.*)$': '<rootDir>/../shared/dist/$1',
+    '^shared/(.*)$': '<rootDir>/../shared/dist/$1'
   },
   setupFilesAfterEnv: [],
   reporters: ['default'],

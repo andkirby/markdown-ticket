@@ -1,21 +1,17 @@
 /**
- * Test Environment Helper
+ * Test Environment Helper - Facade
  *
- * Provides isolated temporary directories for E2E testing
- * with proper cleanup mechanisms for both Windows and Unix systems
+ * This is a facade that maintains backward compatibility for existing tests.
+ * The actual implementation is now in shared/test-lib.
  *
- * Features:
- * - Creates unique temporary directories for each test run
- * - Provides isolated config directories for MCP server testing
- * - Automatic cleanup of all temporary files
- * - Cross-platform path handling (Windows/Unix)
- * - Project structure creation with directories and files
+ * New tests should import directly from '@mdt/shared/test-lib':
+ * import { TestEnvironment } from '@mdt/shared/test-lib';
  */
 
+import { TestEnvironment as SharedTestEnvironment } from '@mdt/shared/test-lib';
 import { existsSync, mkdirSync, rmSync, writeFileSync, statSync } from 'fs';
 import { join, resolve, sep } from 'path';
-import { tmpdir } from 'os';
-import { randomUUID } from 'crypto';
+
 
 export interface ProjectStructure {
   [key: string]: boolean | string; // Directory (true) or file content (string)
@@ -32,50 +28,21 @@ export class TestEnvironmentError extends Error {
 }
 
 export class TestEnvironment {
-  private tempDir: string | null = null;
-  private configDir: string | null = null;
+  private sharedTestEnv: SharedTestEnvironment;
   private projectDirs: Map<string, string> = new Map();
-  private isSetup = false;
+
+  constructor() {
+    this.sharedTestEnv = new SharedTestEnvironment();
+  }
 
   /**
    * Set up the test environment with temporary directories
    * @throws {TestEnvironmentError} If setup fails or already initialized
    */
   async setup(): Promise<void> {
-    if (this.isSetup) {
-      throw new TestEnvironmentError('Test environment already setup. Cannot setup twice.');
-    }
-
     try {
-      // Create unique temporary directory
-      const tempBase = tmpdir();
-      const uniqueId = randomUUID();
-      this.tempDir = join(tempBase, `mcp-test-${uniqueId}`);
-
-      // Create temp directory
-      mkdirSync(this.tempDir, { recursive: true });
-
-      // Verify directory was created
-      if (!existsSync(this.tempDir)) {
-        throw new TestEnvironmentError(`Failed to create temporary directory: ${this.tempDir}`);
-      }
-
-      // Create config directory within temp
-      this.configDir = join(this.tempDir, 'config');
-      mkdirSync(this.configDir, { recursive: true });
-
-      // Verify config directory was created
-      if (!existsSync(this.configDir)) {
-        throw new TestEnvironmentError(`Failed to create config directory: ${this.configDir}`);
-      }
-
-      this.isSetup = true;
-
-    // Set CONFIG_DIR environment variable for MCP server
-    process.env.CONFIG_DIR = this.configDir!;
-  } catch (error) {
-      // Cleanup on failure
-      await this.cleanup();
+      await this.sharedTestEnv.setup();
+    } catch (error) {
       if (error instanceof TestEnvironmentError) {
         throw error;
       }
@@ -88,10 +55,11 @@ export class TestEnvironment {
    * @throws {TestEnvironmentError} If environment not initialized
    */
   getTempDir(): string {
-    if (!this.tempDir || !this.isSetup) {
-      throw new TestEnvironmentError('Test environment not initialized. Call setup() first.');
+    try {
+      return this.sharedTestEnv.getTempDirectory();
+    } catch (error) {
+      throw new TestEnvironmentError(error instanceof Error ? error.message : String(error));
     }
-    return this.tempDir;
   }
 
   /**
@@ -99,10 +67,20 @@ export class TestEnvironment {
    * @throws {TestEnvironmentError} If environment not initialized
    */
   getConfigDir(): string {
-    if (!this.configDir || !this.isSetup) {
-      throw new TestEnvironmentError('Test environment not initialized. Call setup() first.');
+    try {
+      return this.sharedTestEnv.getConfigDirectory();
+    } catch (error) {
+      throw new TestEnvironmentError(error instanceof Error ? error.message : String(error));
     }
-    return this.configDir;
+  }
+
+  /**
+   * Get the project root directory
+   * @returns Absolute path to the project root
+   */
+  getProjectRoot(): string {
+    // Assuming tests are run from the mcp-server directory
+    return process.cwd();
   }
 
   /**
@@ -112,7 +90,7 @@ export class TestEnvironment {
    * @throws {TestEnvironmentError} If environment not initialized or directory creation fails
    */
   createProjectDir(projectName: string): string {
-    if (!this.isSetup) {
+    if (!this.isInitialized()) {
       throw new TestEnvironmentError('Test environment not initialized. Call setup() first.');
     }
 
@@ -125,7 +103,7 @@ export class TestEnvironment {
     const sanitizedName = projectName.replace(/[^a-zA-Z0-9_-]/g, '_');
 
     try {
-      const projectDir = join(this.tempDir!, 'projects', sanitizedName);
+      const projectDir = join(this.getTempDir(), 'projects', sanitizedName);
       mkdirSync(projectDir, { recursive: true });
 
       // Verify directory was created
@@ -152,7 +130,7 @@ export class TestEnvironment {
    * @throws {TestEnvironmentError} If structure creation fails
    */
   createProjectStructure(projectName: string, structure: ProjectStructure): void {
-    if (!this.isSetup) {
+    if (!this.isInitialized()) {
       throw new TestEnvironmentError('Test environment not initialized. Call setup() first.');
     }
 
@@ -207,47 +185,13 @@ export class TestEnvironment {
    * @returns Promise that resolves when cleanup is complete
    */
   async cleanup(): Promise<void> {
-    if (this.tempDir && existsSync(this.tempDir)) {
-      try {
-        // Verify we're in a temp directory before deleting (safety check)
-        const tempDirStat = statSync(this.tempDir);
-        if (!tempDirStat.isDirectory()) {
-          throw new TestEnvironmentError(`Temp path is not a directory: ${this.tempDir}`);
-        }
-
-        // Additional safety check: ensure we're deleting within the system temp directory
-        const systemTempDir = tmpdir();
-        if (!this.tempDir.startsWith(systemTempDir)) {
-          throw new TestEnvironmentError(`Refusing to delete outside system temp directory: ${this.tempDir}`);
-        }
-
-        // Remove temporary directory and all its contents
-        rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 3 });
-
-        // Verify cleanup succeeded
-        if (existsSync(this.tempDir)) {
-          throw new TestEnvironmentError(`Failed to completely remove temporary directory: ${this.tempDir}`);
-        }
-      } catch (error) {
-        // Log error but don't throw - cleanup failures shouldn't crash tests
-        console.error('Test environment cleanup failed:', error instanceof Error ? error.message : String(error));
-      } finally {
-        // Always reset state
-        this.tempDir = null;
-        this.configDir = null;
-        this.isSetup = false;
-        this.projectDirs.clear();
-      }
+    try {
+      await this.sharedTestEnv.cleanup();
+      this.projectDirs.clear();
+    } catch (error) {
+      // Log error but don't throw - cleanup failures shouldn't crash tests
+      console.error('Test environment cleanup failed:', error instanceof Error ? error.message : String(error));
     }
-  }
-
-  /**
-   * Get the project root directory (the mcp-server directory)
-   * @returns Absolute path to the project root
-   */
-  getProjectRoot(): string {
-    // Assuming tests are run from the mcp-server directory
-    return process.cwd();
   }
 
   /**
@@ -255,6 +199,6 @@ export class TestEnvironment {
    * @returns True if setup has been called successfully
    */
   isInitialized(): boolean {
-    return this.isSetup && this.tempDir !== null && this.configDir !== null;
+    return this.sharedTestEnv.isInitialized();
   }
 }

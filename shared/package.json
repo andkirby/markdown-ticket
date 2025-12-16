@@ -29,6 +29,10 @@
     "./tools/*": {
       "import": "./dist/tools/*",
       "types": "./dist/tools/*.d.ts"
+    },
+    "./test-lib": {
+      "import": "./dist/test-lib/index.js",
+      "types": "./dist/test-lib/index.d.ts"
     }
   },
   "scripts": {
