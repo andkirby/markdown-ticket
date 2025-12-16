@@ -1,19 +1,21 @@
 ---
 code: MDT-097
-status: Proposed
+status: Implemented
 dateCreated: 2025-12-15T23:27:58.542Z
 type: Architecture
 priority: High
 phaseEpic: Test Infrastructure
 assignee: Test Infrastructure Team
+dependsOn: MDT-091
+blocks: MDT-096
 ---
 
 # Refactor ProjectFactory: Extract Single Responsibility Classes
 
 ## 1. Description
-
 The current `ProjectFactory` class in `mcp-server/tests/e2e/helpers/project-factory.ts` has grown to 722 lines and violates the Single Responsibility Principle. It handles 6+ distinct responsibilities: project structure creation, configuration management, test data generation, scenario orchestration, file system operations, validation, and content templating. This creates tight coupling, makes testing difficult, and makes the code hard to maintain.
 
+**Dependency on MDT-091**: This refactoring work depends on the comprehensive E2E testing framework implemented in MDT-091. The E2E tests provide a critical safety net that ensures the refactoring maintains all existing functionality and behavior, especially for the MCP tool testing infrastructure that relies on ProjectFactory.
 ## 2. Rationale
 Refactor ProjectFactory to extract single responsibility classes with clean separation of concerns.
 
