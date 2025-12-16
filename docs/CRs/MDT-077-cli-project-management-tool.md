@@ -1,6 +1,6 @@
 ---
 code: MDT-077
-status: Implemented
+status: On Hold
 dateCreated: 2025-11-13T22:10:34.006Z
 type: Architecture
 priority: High
@@ -34,6 +34,14 @@ assignee: CLI Development
 - **Unchanged**: Preserve all functional requirements and implementation decisions
 
 ## 2. Decision
+> **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
+
+**Summary**:
+- Pattern: Service Layer with Strategy Configuration
+- Components: 8 (CLI, ProjectManager, Validators, Services, Cache, Discovery, Config, Storage)
+- Key constraint: Eliminate 300-line server duplication, preserve all existing CLI interfaces
+
+**Extension Rule**: To add CLI command, create handler (limit 100 lines) + validator (limit 75 lines) + manager logic (limit 200 lines) + tests (limit 250 lines)
 
 ### Chosen Approach
 Extract architectural patterns from implemented CLI project management system into a comprehensive reference document.
@@ -44,7 +52,25 @@ Extract architectural patterns from implemented CLI project management system in
 - **Consistency Enforcement**: Establishes clear patterns for future CLI development
 - **Testing Strategy**: Adds missing comprehensive CLI testing methodology
 
+### Architectural Decisions
+
+| Decision | Chosen Option | Rationale |
+|----------|---------------|-----------|
+| Testing Framework | **Option A**: Jest + Node.js child_process | Native integration with existing test infrastructure, TypeScript support, access to internal test utilities |
+| Configuration Validation | **Option A**: Shared validation module with schema definitions | Single source of truth, reusable across CLI, API, and MCP |
+| Three-Strategy Implementation | **Option A**: Strategy pattern with pluggable configuration handlers | Clean separation, easy to extend, testable in isolation |
+| Error Recovery | **Option A**: Transaction-style operations with rollback | Guarantees system consistency |
+| Service Dependencies | **Option A**: Direct dependency injection | Maximum reuse, testable with mocks, clear dependencies |
+
 ## 3. Alternatives Considered
+> **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
+
+**Summary**:
+- Pattern: Configuration Migration Pattern
+- Components: 5 (ConfigGenerator, ProjectFactory, ConfigValidator, TestEnvironment, MCP Test Helpers)
+- Key constraint: Remove legacy fields (`startNumber`, `counterFile`) and adopt structured `[project.document]` section
+
+**Extension Rule**: To add new configuration field, update `ProjectConfig` interface and `ConfigGenerator.generateMdtConfig()` (limit 150 lines).
 
 | Approach | Key Difference | Why Rejected |
 |----------|---------------|--------------|
@@ -52,13 +78,12 @@ Extract architectural patterns from implemented CLI project management system in
 | Minimal documentation | Just add API reference | Lacks architectural context and decision rationale |
 | Split into multiple docs | Separate docs for each concern | Creates fragmentation and cross-reference complexity |
 | Rewrite from scratch | Clean slate documentation | Loses valuable implementation context and lessons learned |
-
 ## 4. Architecture Patterns
 
 ### Three-Strategy Configuration Architecture
 
 #### Strategy 1: Global-Only Mode
-- **Global Config**: Complete project definition in `~/.config/markdown-ticket/projects/`
+- **Global Config**: Complete project definition in `~/.config/markdown-ticket/projects/{project-id}.toml`
 - **No Local Config**: Zero files in project directory
 - **Use Case**: Centralized management, clean project directories
 - **CLI Flag**: `--global-only`
@@ -68,30 +93,70 @@ Extract architectural patterns from implemented CLI project management system in
 - **Global Config**: Minimal reference (project location + metadata only)
 - **Use Case**: Team-based development, portable projects
 
-**Global Config Structure (Minimal Reference):**
+**Global Config Structure - Project-First Mode (Minimal Reference):**
 ```toml
 # ~/.config/markdown-ticket/projects/{project-id}.toml
+# Used when {project}/.mdt-config.toml exists
 [project]
-path = "/absolute/path/to/project"  # Project location for discovery
+path = "/absolute/path/to/project"  # REQUIRED: Project location for discovery
+active = true  # optional, default true
 
 [metadata]
 dateRegistered = "2025-11-19"
-lastAccessed = "2025-11-19"
-version = "1.0.0"
+```
+
+**Global Config Structure - Global-Only Mode (Complete Definition):**
+```toml
+# ~/.config/markdown-ticket/projects/{project-id}.toml
+# Used when {project}/.mdt-config.toml does NOT exist
+[project]
+path = "/absolute/path/to/project"  # REQUIRED: Project location for discovery
+name = "Project Name"
+code = "CODE"
+id = "ProjectName"  # REQUIRED: Must match directory name
+ticketsPath = "docs/CRs"  # Optional: defaults to "docs/CRs"
+description = "Project description"
+repository = "https://github.com/user/repo"
+active = true  # optional, default true
+
+[project.document]
+paths = ["README.md", "docs"]
+excludeFolders = [
+    "node_modules",
+    ".git",
+    ".venv",
+    "venv",
+    ".idea"
+]  # ticketsPath (e.g., "docs/CRs") added automatically
+maxDepth = 3  # Optional: defaults to 3
+
+[metadata]
+dateRegistered = "2025-11-19"
 ```
 
 **Local Config Structure (Complete Definition):**
 ```toml
 # {project}/.mdt-config.toml
+# Used in Project-First and Auto-Discovery modes
 [project]
 name = "Project Name"
 code = "CODE"
-path = "."  # Project root (relative)
-startNumber = 1
-counterFile = ".mdt-next"
-active = true
+id = "ProjectName"  # REQUIRED: Must match directory name
+ticketsPath = "docs/CRs"  # Optional: defaults to "docs/CRs"
 description = "Project description"
 repository = "https://github.com/user/repo"
+active = true  # optional, default true
+
+[project.document]
+paths = ["README.md", "docs"]
+excludeFolders = [
+    "node_modules",
+    ".git",
+    ".venv",
+    "venv",
+    ".idea"
+]  # ticketsPath (e.g., "docs/CRs") added automatically
+maxDepth = 3  # Optional: defaults to 3
 ```
 
 #### Strategy 3: Auto-Discovery Mode
@@ -151,9 +216,48 @@ process.exit(CLI_ERROR_CODES[errorType]);
 - **Result**: Eliminates code duplication, ensures consistency
 
 #### Configuration Merge Priority Pattern
-- **Administrative Metadata** (Global Priority): `code`, `name`, `description`
-- **Technical Settings** (Local Priority): `path`, `startNumber`, `counterFile`
-- **Benefit**: Enables auto-discovery while maintaining centralized control
+
+**Project-First Mode (local config exists)**:
+- **Global Registry**: Minimal reference only (`path`, `active`, `dateRegistered`)
+  - `path` is REQUIRED in global registry for project discovery
+- **Local Config**: Complete project definition (NO `path` field - location is implied)
+- **Discovery**: Reads full config from local `.mdt-config.toml`
+
+**Global-Only Mode (no local config)**:
+- **Global Registry**: Complete project definition (all fields including `path`)
+  - `path` is REQUIRED for project discovery
+- **Local Config**: None exists
+- **Discovery**: Reads full config from global registry
+
+**Auto-Discovery Mode**:
+- **Global Registry**: None (auto-discovered)
+- **Local Config**: Complete project definition (NO `path` field)
+- **Discovery**: Scans search paths for `.mdt-config.toml`
+
+**Key Principle**: The `path` field exists ONLY in the global registry to tell the system where to find the project. The local config's location itself defines the project root.
+
+#### Git Worktree Deduplication
+- **Clone Prevention**: The system validates that `id` matches directory name
+- **Ignored Projects**: Worktrees with mismatched `id` are ignored (not added to projects list)
+- **Validation Rule**: `config.project.id === basename(projectPath)` must be true
+- **Example**:
+  - `/path/to/SuperDRuper/.mdt-config.toml` with `id = "SuperDRuper"` → ✅ Accepted
+  - `/path/to/SuperDRuper-new-worktree/.mdt-config.toml` with `id = "SuperDRuper"` → ❌ Ignored
+
+**Implementation Details**:
+- Project discovery validates: `config.project.id === basename(projectPath)`
+- Projects failing validation are silently skipped (no error, just not listed)
+- This keeps the projects list clean and free of duplicate worktrees
+- Only the main repository or properly named worktrees appear in the UI
+
+**Benefit**: Flexible configuration storage based on deployment strategy
+
+#### Automatic Document Discovery Behavior
+- **ticketsPath Auto-Exclusion**: The value of `ticketsPath` (e.g., "docs/CRs") is automatically added to `excludeFolders` for document discovery
+- **Folder Name Matching**: Any path containing a folder name in `excludeFolders` is excluded (e.g., "src/.venv/lib" is excluded because it contains ".venv")
+- **Rationale**: Tickets are managed through the Kanban board interface, not the document viewer
+- **Implementation**: Document discovery system internally merges `excludeFolders` with `ticketsPath` before scanning
+- **maxDepth Control**: Limits how deep directory scanning goes (default: 3 levels from project root)
 
 ### Validation Layer Pattern
 
@@ -263,19 +367,27 @@ npm run test:cli:integration
 
 ### Configuration Management Pattern
 ```typescript
-// Configuration creation template
+// Configuration creation template (aligned with CONFIG_SPECIFICATION.md)
 const createConfigTemplate = (options: ProjectOptions): ProjectConfig => ({
   project: {
     name: options.name,
     code: options.code,
+    id: options.id, // REQUIRED: Should match directory name
     description: options.description || '',
     repository: options.repository || '',
-    path: options.path,
-    startNumber: 1,
-    counterFile: '.mdt-next'
-  },
-  tickets: {
-    path: options.ticketsPath || 'docs/CRs'
+    ticketsPath: options.ticketsPath || 'docs/CRs',
+    active: options.active ?? true,
+    document: {
+      paths: options.document_paths || [],
+      excludeFolders: options.exclude_folders || [
+        "node_modules",
+        ".git",
+        ".venv",
+        "venv",
+        ".idea"
+      ],
+      maxDepth: options.max_depth || 3
+    }
   }
 });
 ```
@@ -297,16 +409,20 @@ const createErrorResponse = (type: ErrorType, details: string) => ({
 
 ### Implementation Status
 
-**Current Issue**: The `registerProject()` method stores complete project definition in both global and local configs, violating the three-strategy architecture.
+The configuration system has been updated to align with CONFIG_SPECIFICATION.md:
 
-**Expected vs Actual Behavior**:
-- ✅ **Expected**: Global stores minimal reference, local stores complete definition
-- ❌ **Actual**: Global stores complete definition, duplicating local config data
+**Completed Changes**:
+- ✅ Global registry supports both minimal reference and complete configuration based on strategy
+- ✅ Project-First mode: Global registry stores minimal reference (`path`, `active`, `dateRegistered`)
+- ✅ Global-Only mode: Global registry stores complete project configuration
+- ✅ Local config contains complete project definition without legacy fields
+- ✅ Removed deprecated fields: `startNumber`, `counterFile`, `lastAccessed`, `version`
+- ✅ Ticket numbering now handled by file system scanning, not counter files
 
-**Required Fix**:
-- Update `registerProject()` to store only path + metadata in global config
-- Ensure local config contains complete project details
-- Update project discovery to merge global (location) + local (details)
+**Current Architecture Compliance**:
+- Global registry adapts storage strategy based on deployment mode
+- Local configs store complete project details when they exist
+- Project discovery handles all three strategies correctly
 
 ### Data Flow Patterns
 
@@ -317,7 +433,7 @@ const createErrorResponse = (type: ErrorType, details: string) => ({
 
 **Project Updates**:
 - **Administrative metadata** (name, code, description): Update local config
-- **Technical settings** (path location): Update global config
+- **Technical settings** (project location): Update global config `path` field
 - **Status changes** (active/disabled): Update local config
 
 ## 8. Success Criteria
@@ -341,12 +457,14 @@ const createErrorResponse = (type: ErrorType, details: string) => ({
 - E2E: Complete workflows tested in isolated environments
 
 ### Configuration System Updates (2025-12-14)
-- [ ] `lastAccessed` field removed from global registry configuration
-- [ ] `startNumber` and `counterFile` fields removed from local configuration  
-- [ ] Ticket numbering handled by file system scanning, not counter files
-- [ ] CONFIG_SPECIFICATION.md updated to reflect simplified configuration schema
-- [ ] Global registry tracks only: path, active, dateRegistered
-- [ ] Local config excludes legacy counter management fields
+- [x] `lastAccessed` field removed from global registry configuration
+- [x] `startNumber` and `counterFile` fields removed from local configuration
+- [x] Ticket numbering handled by file system scanning, not counter files
+- [x] CONFIG_SPECIFICATION.md updated to reflect simplified configuration schema
+- [x] Global registry supports both minimal reference and complete configuration
+- [x] Local config excludes legacy counter management fields
+
+> Full EARS requirements: [requirements.md](./requirements.md)
 ## 9. Implementation History (Reference)
 This section preserves the implementation journey for historical context and lessons learned.
 
@@ -379,9 +497,12 @@ This section preserves the implementation journey for historical context and les
 - Backend API showed invalid project codes exceeding 5-character limit
 - `validateProjectConfig()` function failed to parse structured TOML configuration formats
 
-**Root Cause**: 
+**Root Cause**:
 1. **Configuration Format Issue**: Validation expected direct arrays but configs used structured objects:
+
 ```toml
+# Expected (legacy): document_paths = ["docs", "README.md"]
+# Actual (current): [document_paths] paths = ["docs", "README.md"]
 
 document_paths = ["docs", "README.md"]
 exclude_folders = ["docs/CRs", "node_modules"]
@@ -394,13 +515,10 @@ paths = ["docs", "README.md"]
 folders = ["docs/CRs", "node_modules"]
 ```
 
-**Recommendation**: 
+**Recommendation**:
 - Remove structured format support to simplify configuration
 - Update documentation to clarify that config file location = project root
 - Clean up legacy `path` field references completely
-# Expected (legacy): document_paths = ["docs", "README.md"]  
-# Actual (current): [document_paths] paths = ["docs", "README.md"]
-```
 
 2. **Project Code Validation Gap**: Backend fallback logic bypassed validation:
    ```typescript
