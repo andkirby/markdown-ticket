@@ -1,3 +1,5 @@
+import path from 'path';
+
 export default {
   preset: 'ts-jest/presets/default-esm',
   extensionsToTreatAsEsm: ['.ts'],
@@ -14,7 +16,10 @@ export default {
     }]
   },
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@mdt/shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
+    '^shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
+    '^shared/(.*)$': '<rootDir>/../shared/dist/$1'
   },
   reporters: ['default']
 };

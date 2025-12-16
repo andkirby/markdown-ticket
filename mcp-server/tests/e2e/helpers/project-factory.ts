@@ -1,16 +1,30 @@
 /**
  * Project Factory - Test utility for creating minimal project structures and CRs for E2E testing.
+ *
+ * NOTE: This is a legacy facade for backward compatibility.
+ * New tests should import from 'shared/test-lib' directly:
+ *
+ * import { TestEnvironment, ProjectFactory } from 'shared/test-lib';
  */
 import { TestEnvironment } from './test-environment';
 import { MCPClient, MCPResponse } from './mcp-client';
 import {
-  ProjectConfig, ProjectData, TestCRData, TestScenario, ProjectFactoryError
+  ProjectConfig, ProjectData, TestCRData, TestScenario
 } from './types/project-factory-types';
+import { ProjectFactoryError } from '@mdt/shared/test-lib';
 import { FileHelper } from './utils/file-helper';
 import { ConfigurationGenerator } from './config/configuration-generator';
 import { TestDataFactory } from './core/test-data-factory';
 import { ProjectSetup } from './core/project-setup';
 import { ScenarioBuilder } from './core/scenario-builder';
+
+// Re-export from shared/test-lib for new usage
+export {
+  TestEnvironment as SharedTestEnvironment,
+  ProjectFactory as SharedProjectFactory,
+  TestServer,
+  FileTicketCreator
+} from '@mdt/shared/test-lib';
 
 export interface ProjectFactoryDependencies {
   projectSetup?: ProjectSetup;
