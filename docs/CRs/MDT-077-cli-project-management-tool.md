@@ -15,7 +15,6 @@ assignee: CLI Development
 **Core Pattern**: Three-strategy configuration architecture with single source of truth service layer and comprehensive CLI testing strategy.
 
 ## 1. Description
-
 ### Problem
 - Multiple project management code paths create inconsistent behavior across CLI, Web UI, and MCP interfaces
 - Dual configuration system (global registry + local config) lacks clear architectural patterns
@@ -33,6 +32,14 @@ assignee: CLI Development
 - **Changes**: Transform implementation details into architectural patterns
 - **Unchanged**: Preserve all functional requirements and implementation decisions
 
+### Critical Implementation Constraint
+
+**No Backward Compatibility**: 
+- The implementation SHALL NOT support legacy configuration formats
+- No migration utilities or compatibility layers will be provided
+- All configurations must follow the new specification from CONFIG_SPECIFICATION.md
+- Legacy fields (`startNumber`, `counterFile`, `lastAccessed`) are permanently removed
+- Any configuration using legacy formats will be rejected with clear error messages
 ## 2. Decision
 > **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
 
@@ -79,7 +86,6 @@ Extract architectural patterns from implemented CLI project management system in
 | Split into multiple docs | Separate docs for each concern | Creates fragmentation and cross-reference complexity |
 | Rewrite from scratch | Clean slate documentation | Loses valuable implementation context and lessons learned |
 ## 4. Architecture Patterns
-
 ### Three-Strategy Configuration Architecture
 
 #### Strategy 1: Global-Only Mode
@@ -95,6 +101,11 @@ Extract architectural patterns from implemented CLI project management system in
 
 **Global Config Structure - Project-First Mode (Minimal Reference):**
 ```toml
+
+### Requirements Specification
+- [`docs/CRs/MDT-077/requirements.md`](./requirements.md) — EARS-formatted behavioral requirements
+
+- [`docs/CRs/MDT-077/requirements.md`](./requirements.md) — EARS-formatted behavioral requirements
 # ~/.config/markdown-ticket/projects/{project-id}.toml
 # Used when {project}/.mdt-config.toml exists
 [project]
@@ -463,6 +474,10 @@ The configuration system has been updated to align with CONFIG_SPECIFICATION.md:
 - [x] CONFIG_SPECIFICATION.md updated to reflect simplified configuration schema
 - [x] Global registry supports both minimal reference and complete configuration
 - [x] Local config excludes legacy counter management fields
+
+> Full EARS requirements: [requirements.md](./requirements.md)
+
+> Full EARS requirements: [requirements.md](./requirements.md)
 
 > Full EARS requirements: [requirements.md](./requirements.md)
 ## 9. Implementation History (Reference)
