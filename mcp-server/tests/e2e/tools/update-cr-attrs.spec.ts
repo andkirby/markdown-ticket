@@ -73,9 +73,15 @@ Basic implementation steps.
     });
 
     // Extract the CR key from the markdown response
-    const match = createdCR.data.match(/Key: (TEST-\d+)/);
+    // New format: "✅ **Created CR TEST-001**: Title"
+    const match = createdCR.data.match(/\*\*Created CR (.+?)\*\*:/);
     if (!match) {
-      throw new Error(`Failed to extract CR key from response: ${createdCR.data}`);
+      // Fallback to old format if needed
+      const oldMatch = createdCR.data.match(/Key: (TEST-\d+)/);
+      if (!oldMatch) {
+        throw new Error(`Failed to extract CR key from response: ${createdCR.data}`);
+      }
+      return oldMatch[1];
     }
     return match[1];
   }
