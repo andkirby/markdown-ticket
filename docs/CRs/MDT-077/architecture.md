@@ -1,22 +1,22 @@
 # Architecture: MDT-077
 
-**Source**: [MDT-077](../../../docs/CRs/MDT-077.md)
+**Source**: [MDT-077](..//MDT-077-cli-project-management-tool.md)
 **Generated**: 2025-12-16
 **Complexity Score**: 25
 
 ## Overview
 
-This architecture aligns the CLI project management system's partially complete implementation with the new configuration format specified in CONFIG_SPECIFICATION.md. The transformation eliminates legacy fields, adopts structured configuration, and ensures consistency across test utilities, CLI tools, and MCP server integration.
+This architecture defines the CLI project management system with a clean, new configuration format specified in CONFIG_SPECIFICATION.md. The implementation uses a fresh schema without legacy field support, structured configuration, and ensures consistency across test utilities, CLI tools, and MCP server integration.
 
 ## Pattern
 
-**Configuration Migration Pattern** — Legacy format deprecation with structured replacement while maintaining backward compatibility through detection and validation.
+**Clean Configuration Pattern** — New structured configuration without backward compatibility support.
 
-The pattern applies configuration versioning through:
-- Format detection (legacy vs. structured)
-- Validation layer with clear error messages
-- Migration utilities for test environments
-- Dual-support during transition period
+The pattern enforces:
+- Single configuration format only
+- Strict validation with clear error messages
+- No legacy field support
+- Clean, minimal implementation
 
 ## Key Dependencies
 
@@ -81,8 +81,7 @@ shared/test-lib/core/
   ├── project-factory.ts           → Test project creation (UPDATE)
   ├── test-environment.ts         → Isolated test management
   └── utils/
-      ├── retry-helper.ts         → File I/O retry logic
-      └── config-migrator.ts      → NEW: Legacy to new format conversion
+      └── retry-helper.ts         → File I/O retry logic
 
 mcp-server/tests/e2e/helpers/
   ├── config/
@@ -100,13 +99,12 @@ mcp-server/tests/e2e/helpers/
 | `project-factory.ts` | Test creation | 400 | 600 |
 | `configuration-generator.ts` | Config generation | 150 | 225 |
 | `.mdt-config.toml` | Project config | 50 | 75 |
-| `config-migrator.ts` | Migration utility | 150 | 225 |
 
 ## Error Scenarios
 
 | Scenario | Detection | Response | Recovery |
 |----------|-----------|----------|----------|
-| Legacy config detected | Missing `[project.document]` section | Log warning, apply migration | Generate new format config |
+| Invalid config format | Validation failure | Fail fast with clear message | Manual config fix required |
 | Invalid TOML syntax | TOML parse error | Fail fast with clear message | Manual config fix required |
 | Missing required fields | Validation failure | Create with defaults | Default values applied |
 | File permission errors | fs operation failure | Retry with exponential backoff | Skip operation, log error |
@@ -115,15 +113,15 @@ mcp-server/tests/e2e/helpers/
 
 Not applicable - This is a Technical Debt CR focusing on format alignment.
 
-## Refactoring Plan
+## Implementation Plan
 
-### Transformation Matrix
+### Implementation Benefits
 
-| Component | From | To | Reduction | Reason |
-|-----------|------|----|-----------|--------|
-| `ProjectFactory` | Legacy flat config | Structured `[project.document]` | 20% code simplification | Cleaner config generation |
-| `ConfigGenerator` | Legacy fields | New format without `startNumber`, `counterFile` | 30% size reduction | Eliminate deprecated fields |
-| `.mdt-config.toml` | Mixed format | Pure new format | 15% cleaner | Remove legacy debt |
+| Component | Implementation | Benefits |
+|-----------|----------------|----------|
+| `ProjectFactory` | Clean configuration generation | Simpler code structure |
+| `ConfigGenerator` | New format without deprecated fields | Cleaner implementation |
+| `.mdt-config.toml` | Single format | Consistent configuration |
 
 ### Interface Preservation
 
@@ -137,32 +135,21 @@ Not applicable - This is a Technical Debt CR focusing on format alignment.
 ### Behavioral Equivalence
 
 - Test suite: MDT-092 isolated test environment verifies identical behavior
-- Performance: Config parsing improves ~10% due to simpler structure
-- Migration: Automatic detection prevents breaking changes
+- Performance: Config parsing is optimized with clean structure
 
-## Configuration Format Migration
+## Configuration Format
 
-### Legacy Format (Deprecated)
-```toml
-name = "Project"
-code = "PROJ"
-startNumber = 1              # REMOVE
-counterFile = ".mdt-next"    # REMOVE
-document_paths = [...]       # MOVE to [project.document]
-exclude_folders = [...]      # MOVE to [project.document]
-```
-
-### New Format (Required)
+### Required Format
 ```toml
 [project]
 name = "Project"
 code = "PROJ"
-id = "project"               # NEW: Required, must match directory name
+id = "project"               # Required, must match directory name
 
 [project.document]
-paths = [...]                # RENAMED from document_paths
-excludeFolders = [...]       # RENAMED from exclude_folders
-maxDepth = 3                 # NEW: Default depth limit
+paths = []
+excludeFolders = []
+maxDepth = 3                 # Default depth limit
 ```
 
 ## Extension Rule

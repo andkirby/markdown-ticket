@@ -30,6 +30,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "test:e2e:update": "playwright test --update-snapshots",
+    "test:project-cli": "cd shared && npm test -- --testPathPattern=project-management",
     "config": "node shared/dist/tools/config-cli.js",
     "config:get": "node shared/dist/tools/config-cli.js get",
     "config:set": "node shared/dist/tools/config-cli.js set",
