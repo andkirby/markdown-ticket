@@ -1,17 +1,17 @@
 ---
 code: MDT-096
-status: Proposed
+status: Approved
 dateCreated: 2025-12-15T20:04:14.291Z
 type: Technical Debt
 priority: Medium
 relatedTickets: MDT-095
 blocks: MDT-095
+dependsOn: MDT-097
 ---
 
 # Refactor server/fileWatcherService.ts for Git Worktree Support
 
 ## 1. Description
-
 ### Problem
 - Current fileWatcherService.ts only monitors single project path, cannot handle Git worktrees
 - File watching logic is tightly coupled to single directory structure
@@ -28,6 +28,8 @@ blocks: MDT-095
 - **In scope**: Refactor fileWatcherService to support multiple path monitoring
 - **Out of scope**: Git worktree detection logic (handled by MDT-095)
 
+### Dependency on MDT-097
+This refactoring work depends on MDT-097 (ProjectFactory refactoring). The ProjectFactory is heavily used in the E2E testing framework (MDT-091) and needs to be refactored first to ensure stable, reliable tests before making significant changes to core services like fileWatcherService. The refactored ProjectFactory will provide better test utilities for validating the multi-path file watching functionality.
 ## 2. Desired Outcome
 ### Success Conditions
 - FileWatcherService can monitor multiple directory paths simultaneously
