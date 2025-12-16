@@ -1,6 +1,6 @@
 ---
 code: MDT-095
-status: Proposed
+status: Approved
 dateCreated: 2025-12-15T15:47:05.294Z
 type: Feature Enhancement
 priority: Medium
