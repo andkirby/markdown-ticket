@@ -64,12 +64,12 @@ describe('Rate Limiting (MUST-05)', () => {
     for (let i = 0; i < count; i++) {
       const promise = mcpClient.callTool(toolName, params)
         .then(result => {
-          console.log(`Request ${i}: SUCCESS`);
+          // console.log(`Request ${i}: SUCCESS`);
           return { success: true, result, index: i };
         })
         .catch(error => {
-          console.log(`Request ${i}: FAILED - ${error.message || error}`);
-          console.log(`Error details:`, error);
+          // console.log(`Request ${i}: FAILED - ${error.message || error}`);
+          // console.log(`Error details:`, error);
           return { success: false, error, index: i };
         });
       promises.push(promise);
