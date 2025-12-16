@@ -113,28 +113,28 @@ dateRegistered = "2025-09-07"
 [project]
 name = "My Project"
 code = "MYPROJ"
-id = "my-project"                    # Optional: defaults to lowercase code
+id = "MyProject"                    # REQUIRED: Must match directory name
 ticketsPath = "docs/CRs"             # Path to tickets directory
 description = "Project description"
 repository = "https://github.com/user/repo"
-active = true                        # Whether project is active, optional, default true, shall be used if there is no global config
+active = true                        # Whether project is active, optional, default true
 
-# Document discovery settings
-exclude_folders = [
-    "docs/CRs",                      # Exclude tickets folder from document discovery
-    "node_modules",
-    ".git",
-    "test-results"
-]
-
-# Documentation paths
-document_paths = [
+[project.document]
+paths = [
     "README.md",                     # Single file from root
     "docs",                         # Directory (scans for .md files)
     "guides/*.md",                  # Glob pattern for specific files
     "architecture"                  # Directory with subdirectories
 ]
-max_depth = 3                         # Maximum directory depth for scanning
+excludeFolders = [
+    "node_modules",
+    ".git",
+    ".venv",
+    "venv",
+    ".idea",
+    "test-results"
+]
+maxDepth = 3                         # Maximum directory depth for scanning (default: 3)
 ```
 
 ## Project Configuration
@@ -146,26 +146,69 @@ The system uses a dual-configuration approach:
 
 ### Local Project Schema
 
+#### [project] Section
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | Required | Display name for the project |
 | `code` | string | Required | Unique project identifier (e.g., "MDT", "API") |
-| `id` | string | Optional | Project identifier (default: lowercase version of `code`) |
+| `id` | string | **Required** | Project identifier based on directory name (e.g., "SuperDRuper" for `/path/to/SuperDRuper`) |
 | `ticketsPath` | string | Optional | Relative path to tickets directory (default: "docs/CRs") |
 | `description` | string | Optional | Project description |
 | `repository` | string | Optional | Repository URL |
 | `active` | boolean | Optional | Whether project is visible and accessible (default: true) |
-| `document_paths` | array | Optional | Paths to documentation files/directories |
-| `exclude_folders` | array | Optional | Folders to exclude from document discovery |
-| `max_depth` | number | Optional | Maximum directory depth for document scanning (default: 3) |
+
+**Important**: The `id` field is mandatory and **must match the project directory name exactly**. This is a **deduplication mechanism** that prevents project clones and Git worktrees from being added to the projects list.
+
+#### [project.document] Section
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `paths` | array | Optional | Paths to documentation files/directories (supports files, dirs, globs) |
+| `excludeFolders` | array | Optional | Folder names to exclude from document discovery (system excludes any path containing these names) |
+| `maxDepth` | number | Optional | Maximum directory depth for document scanning (default: 3, range: 1-10) |
 
 ### Project Registry Schema
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `path` | string | Required | Absolute path to project directory |
+| `path` | string | Required | Absolute path to project directory (essential for discovery) |
 | `active` | boolean | Optional | Whether project is visible and accessible (default: true) |
 | `dateRegistered` | string | Auto | Date project was registered |
+
+**Important**: The `path` field is required in the global registry as it tells the system where to find the project. The local `.mdt-config.toml` does NOT include a `path` field since its location determines the project root.
+
+### Project Clone Prevention with Git Worktrees
+
+The system uses the `id` field to prevent duplicate projects when using Git worktrees:
+
+**Validation Rule**: `id` must equal the directory basename
+
+**How It Works**:
+```bash
+# Main repository - ACCEPTED
+/path/to/SuperDRuper/.mdt-config.toml
+  → id = "SuperDRuper" = basename("SuperDRuper") ✅
+  → Added to projects list
+
+# Git worktree - IGNORED (prevents duplication)
+/path/to/SuperDRuper-new-worktree/.mdt-config.toml
+  → id = "SuperDRuper" ≠ basename("SuperDRuper-new-worktree") ❌
+  → Ignored, not added to projects list
+
+# Invalid configuration - IGNORED
+/path/to/MyProject/.mdt-config.toml
+  → id = "different-name" ≠ basename("MyProject") ❌
+  → Ignored, not added to projects list
+```
+
+**Implementation**:
+- When scanning for projects, the system checks: `config.project.id === basename(projectPath)`
+- If they don't match, the project is skipped during discovery
+- This ensures only properly configured projects appear in the projects list
+
+**Benefits**:
+- Prevents worktree clones from cluttering the projects list
+- Ensures project identification consistency
+- Maintains a clean, single source of truth for each project
 
 ### Project Examples
 
@@ -174,28 +217,25 @@ The system uses a dual-configuration approach:
 [project]
 name = "Markdown Ticket Board"
 code = "MDT"
-id = "markdown-ticket"
+id = "markdown-ticket"           # REQUIRED: Must match directory name "markdown-ticket"
 ticketsPath = "docs/CRs"
 description = "Kanban-style ticket board using markdown files"
 repository = "https://github.com/user/markdown-ticket"
 active = true
 
-# Document discovery settings
-exclude_folders = [
-    "docs/CRs",
-    "node_modules",
-    ".git",
-    "test-results"
-]
-
-# Documentation paths
-document_paths = [
+[project.document]
+paths = [
     "generated-docs",
     "docs",
     "server",
     "shared"
 ]
-max_depth = 3
+excludeFolders = [
+    "node_modules",
+    ".git",
+    "test-results"
+]
+maxDepth = 3
 ```
 
 **Project Registry Entry** (`~/.config/markdown-ticket/projects/markdown-ticket.toml`):
@@ -233,18 +273,8 @@ The document viewer uses two complementary settings:
 ### Example Configuration
 
 ```toml
-# Document discovery settings
-exclude_folders = [
-    "docs/CRs",                      # Exclude tickets folder
-    "node_modules",                  # Exclude dependencies
-    ".git",                         # Exclude git files
-    "test-results",                 # Exclude test outputs
-    "dist",                         # Exclude build artifacts
-    "coverage"                      # Exclude coverage reports
-]
-
-# Documentation paths
-document_paths = [
+[project.document]
+paths = [
     "README.md",                     # Single file from project root
     "docs",                         # Directory (scans for .md files)
     "guides/*.md",                  # Glob pattern for specific files
@@ -253,18 +283,35 @@ document_paths = [
     "server",                       # Include source code directories
     "shared"
 ]
-
-max_depth = 3                         # Maximum directory depth for scanning
+excludeFolders = [
+    "node_modules",                  # Exclude dependencies
+    ".git",                         # Exclude git files
+    ".venv",                        # Python virtual environments
+    "venv",                         # Alternative Python venv
+    ".idea",                        # JetBrains IDE
+    ".vscode",                      # VS Code
+    "test-results",                 # Exclude test outputs
+    "dist",                         # Exclude build artifacts
+    "coverage",                     # Exclude coverage reports
+]
+maxDepth = 3                         # Maximum directory depth for scanning
 ```
 
 ### Document Discovery Rules
 
-1. **Exclusion First**: All paths in `exclude_folders` are filtered out completely
-2. **Scanning**: System scans `document_paths` for `.md` files up to `max_depth` levels
-3. **Single Files**: Direct path to specific markdown files
-4. **Directories**: Recursively scanned for `.md` files up to `max_depth` levels
-5. **Glob Patterns**: Supports `*.md` patterns for flexible file matching
-6. **Final Filter**: Only `.md` files are displayed in the document tree
+1. **Exclusion First**: Any path containing a folder name in `excludeFolders` is excluded (e.g., "src/.venv/lib" is excluded because it contains ".venv")
+2. **Auto-Exclusion**: The `ticketsPath` value (e.g., "docs/CRs") is automatically added to exclusions
+3. **Scanning**: System scans `paths` for `.md` files up to `maxDepth` levels
+4. **maxDepth Behavior**: Depth is calculated from project root (depth 0 = project root, depth 1 = immediate subdirectories)
+5. **Single Files**: Direct path to specific markdown files (depth doesn't apply)
+6. **Directories**: Recursively scanned for `.md` files up to `maxDepth` levels
+7. **Glob Patterns**: Supports `*.md` patterns for flexible file matching
+8. **Final Filter**: Only `.md` files are displayed in the document tree
+
+#### How maxDepth Works
+- `maxDepth = 1`: Scan only immediate subdirectories (e.g., `docs/` but not `docs/api/`)
+- `maxDepth = 3`: Scan up to 3 levels deep (e.g., `docs/api/v1/endpoint.md` is included)
+- The depth limit prevents scanning very deep directory structures like `node_modules`
 
 ### Document Viewer Features
 
@@ -379,11 +426,11 @@ refreshInterval = 30
 - `active` must be boolean
 
 ### Documentation Validation
-- `document_paths` entries must be valid file/directory paths relative to project root
-- `exclude_folders` entries must be valid directory paths relative to project root
-- `max_depth` must be a positive integer (1-10)
-- Glob patterns in `document_paths` must be valid
-- Referenced files/directories in `document_paths` should exist
+- `project.document.paths` entries must be valid file/directory paths relative to project root
+- `project.document.excludeFolders` entries must be folder names (not full paths)
+- `project.document.maxDepth` must be a positive integer (1-10)
+- Glob patterns in `project.document.paths` must be valid
+- Referenced files/directories in `project.document.paths` should exist
 
 ### Sorting Validation
 - System attributes (`code`, `title`, `dateCreated`, `lastModified`) cannot be removed
