@@ -1,10 +1,11 @@
 ---
 code: MDT-091
-status: In Progress
+status: Implemented
 dateCreated: 2025-12-07T23:26:35.732Z
 type: Feature Enhancement
 priority: Medium
 dependsOn: 
+blocks: MDT-090
 ---
 
 # Add comprehensive E2E testing framework for MCP server tools
@@ -31,6 +32,7 @@ This lack of E2E tests makes it risky to perform major refactoring work (such as
 
 ### Blocks
 - **MDT-090**: This CR blocks the refactoring work in MDT-090. The E2E tests must be implemented first to provide a safety net for the refactoring, ensuring we can verify that the refactoring doesn't break existing functionality.
+- **MDT-097**: This CR enables the ProjectFactory refactoring work in MDT-097. The comprehensive E2E testing framework provides the safety net needed for the major refactoring of the ProjectFactory class, ensuring the refactoring maintains all existing functionality and behavior.
 ## 2. Decision
 
 ### Chosen Approach
