@@ -200,4 +200,3 @@ maxDepth = 4
 
 **Related Documentation**:
 - [Global Configuration Specification](./CONFIG_GLOBAL_SPECIFICATION.md) - System-wide settings
-- [Project Registry Format](./PROJECT_REGISTRY_SPECIFICATION.md) - Registry-specific details
