@@ -2,6 +2,58 @@
 
 ## Recent Updates
 
+### 2025-12-17 - Added Domain-Driven Design Constraints Workflow
+
+**Problem**: Architecture workflow lacked awareness of domain boundaries and business invariants, leading to structural decisions that violated DDD principles and scattered business logic across module boundaries.
+
+**Solution**: Added optional `/mdt:domain-lens` workflow that surfaces DDD constraints before architecture decisions, ensuring structural designs respect domain boundaries.
+
+**Changes Made**:
+
+1. **mdt-domain-lens.md (v1) - New DDD constraints workflow**:
+   - Generates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines)
+   - Identifies bounded contexts, aggregates, invariants, and cross-context operations
+   - Language alignment check between CR terms and code terms
+   - Intentionally minimal - principles only, not prescriptions
+   - Consumed only by architecture workflow
+
+2. **mdt-architecture.md (v4→v5) - Domain-aware architecture**:
+   - Step 2: Load domain constraints if domain.md exists
+   - Step 4.3: Domain Boundary decision point for cross-context operations
+   - Domain Alignment section in output (when domain.md exists)
+   - Aggregate roots inform component boundaries
+   - Cross-context operations require appropriate patterns (event/service)
+
+3. **README.md** - Updated workflow documentation:
+   - Added `/mdt:domain-lens` command reference
+   - Integrated into workflow diagrams between tests and architecture
+   - Added "When to Use" guidance table
+   - Updated file structure with new command
+
+4. **install-claude.sh** - Updated command list:
+   - Added "domain-lens" to MDT_COMMANDS array
+   - Maintains alphabetical ordering
+
+**When to Use**:
+| CR Type | Use Domain Lens? |
+|---------|------------------|
+| New feature with business logic | ✅ Yes |
+| Complex integration | ✅ Yes |
+| Simple CRUD | ❌ Skip |
+| Refactoring / Tech-debt | ❌ Skip |
+
+**Impact**:
+- Architecture decisions now constrained by domain boundaries
+- Business invariants properly located within aggregate boundaries
+- Cross-context operations use appropriate integration patterns
+- Prevents leakage of domain logic across module boundaries
+
+**Files Changed**:
+- `prompts/mdt-domain-lens.md` (new)
+- `prompts/mdt-architecture.md`
+- `prompts/README.md`
+- `prompts/install-claude.sh`
+
 ### 2025-12-15 - Flexible Specification Depth
 
 **Problem**: Ticket creation forced artifact-focused specifications even when implementation approach was uncertain. Users couldn't describe WHAT they needed without also specifying HOW.

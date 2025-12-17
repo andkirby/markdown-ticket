@@ -106,6 +106,7 @@ MDT_COMMANDS=(
     "ticket-creation"
     "requirements"
     "assess"
+    "domain-lens"
     "architecture"
     "clarification"
     "tasks"
@@ -196,6 +197,7 @@ show_usage() {
     echo "  /mdt:ticket-creation    - Create CR with structured questioning"
     echo "  /mdt:requirements       - Generate EARS-formatted requirements"
     echo "  /mdt:assess             - Evaluate affected code fitness"
+    echo "  /mdt:domain-lens        - Surface DDD constraints for architecture"
     echo "  /mdt:tests              - Generate BDD test specs + executable tests"
     echo "  /mdt:architecture       - Surface decisions, define structure + size limits"
     echo "  /mdt:clarification      - Fill specification gaps"
@@ -206,7 +208,7 @@ show_usage() {
     echo
     echo "Full workflow chain:"
     echo "  /mdt:ticket-creation → /mdt:requirements → /mdt:assess → /mdt:tests"
-    echo "  → /mdt:architecture → /mdt:clarification → /mdt:tasks"
+    echo "  → /mdt:domain-lens (optional) → /mdt:architecture → /mdt:clarification → /mdt:tasks"
     echo "  → /mdt:implement → /mdt:tech-debt → /mdt:reflection"
     echo
     echo "Workflows are optional - use what you need:"
