@@ -1,4 +1,4 @@
-# MDT Architecture Design Workflow (v4)
+# MDT Architecture Design Workflow (v5)
 
 Surface architectural decisions before implementation. Output location adapts to complexity — simple stays in CR, complex extracts to `architecture.md`.
 
@@ -47,7 +47,14 @@ Do NOT use when:
 ### Step 1: Load Context
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
-2. Extract from CR:
+2. **Load domain constraints if exists**: Check `docs/CRs/{CR-KEY}/domain.md`
+   - If found: extract bounded contexts, aggregates, invariants, cross-context flags
+   - These CONSTRAIN structural decisions in Steps 4-6
+   - Aggregate roots → inform component boundaries
+   - Invariants → inform where validation logic lives
+   - Cross-context flags → require event/service patterns in structure
+   - If not found: proceed without domain constraints (normal for refactoring/tech-debt)
+3. Extract from CR:
    - **CR type**: Technical Debt, Feature Enhancement, Architecture, etc.
    - Problem statement (what's being solved)
    - Affected artifacts (existing files/components)
@@ -173,6 +180,7 @@ Common decision points:
 | **Extension** | "Easily add new X" | Plugin pattern vs. configuration vs. subclass? |
 | **Coupling** | Cross-module interaction | Who depends on whom? Shared interface? |
 | **Build vs Use** | Common solved problem | Existing library vs. custom implementation? |
+| **Domain Boundary** | Cross-context operation (from domain.md) | Event vs. service vs. direct call? |
 
 ### Step 5: Present Decision Surface
 
@@ -249,6 +257,14 @@ For Score ≤ 5, generate `## Architecture Design` section:
 
 ### Extension Rule
 To add {X}: create `{path}` ({role}, limit {N} lines) implementing `{interface}`.
+
+### Domain Alignment
+{Include ONLY if domain.md exists}
+
+| Domain Concept | Implementation | Notes |
+|----------------|----------------|-------|
+| `{Aggregate}` | `{file path}` | {role: root entity, value object, etc.} |
+| `{Invariant}` | `{method/location}` | Enforced in {aggregate/boundary} |
 ```
 
 **For Technical Debt/Refactoring**, add:
@@ -402,6 +418,17 @@ stateDiagram-v2
 - Test suite: {which tests verify identical behavior}
 - Performance: {expected impact, if any}
 - Migration: {any migration steps needed}
+
+## Domain Alignment
+
+{Include ONLY if domain.md exists}
+
+| Domain Concept | Implementation | Notes |
+|----------------|----------------|-------|
+| `{Aggregate}` (root) | `{file path}` | Entry point, owns {children} |
+| `{Aggregate}` (internal) | `{file path}` | Accessed via {root} |
+| `{Invariant}` | `{method/class}` | Enforced {where} |
+| `{Cross-context op}` | `{event/service path}` | {Pattern} to {Context} |
 
 ## Extension Rule
 
@@ -652,6 +679,9 @@ Before completing, verify:
 - [ ] State flows included ONLY if feature has states
 - [ ] Error scenarios included ONLY if non-trivial
 - [ ] Complex extracts to file, simple stays in CR
+- [ ] Domain alignment section included (if domain.md exists)
+- [ ] Aggregate roots map to component boundaries
+- [ ] Cross-context operations use appropriate patterns (event/service)
 
 ## Integration
 

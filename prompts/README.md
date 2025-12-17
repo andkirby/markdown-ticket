@@ -11,6 +11,7 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 | `/mdt:ticket-creation` | Create CR with flexible depth (WHAT only or WHAT+HOW) | CR in MDT system |
 | `/mdt:requirements` | Generate EARS-formatted requirements | `docs/CRs/{CR-KEY}/requirements.md` |
 | `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
+| `/mdt:domain-lens` | Surface DDD constraints (optional) | `docs/CRs/{CR-KEY}/domain.md` |
 | `/mdt:tests` | Generate BDD test specs + executable tests | `docs/CRs/{CR-KEY}/tests.md` + test files |
 | `/mdt:architecture` | Surface decisions, define structure + size limits | CR section or `architecture.md` |
 | `/mdt:clarification` | Fill specification gaps | Updated CR sections |
@@ -50,7 +51,9 @@ Describes outcomes and constraints, defers implementation to downstream workflow
         ↓
 /mdt:tests → BDD tests
         ↓
-/mdt:architecture → determines HOW
+/mdt:domain-lens (optional) → DDD constraints
+        ↓
+/mdt:architecture → determines HOW (consumes domain.md)
         ↓
 /mdt:tasks → /mdt:implement
 ```
@@ -93,8 +96,13 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
         │                        BDD specs from requirements or behavior
         │                        Tests written BEFORE implementation
         ▼
+/mdt:domain-lens (optional) ────── Creates: domain.md (~15-25 lines)
+        │                        DDD constraints for architecture
+        │                        ⚠️ Skip for refactoring/tech-debt/CRUD
+        ▼
 /mdt:architecture ─────────────── Simple: CR section (~60 lines)
         │                        Complex: architecture.md (extracted)
+        │                        Consumes domain.md if exists
         ▼
 /mdt:clarification (as needed)
         │
@@ -390,6 +398,26 @@ Evaluates affected code fitness before architecture:
 | 2. Refactor Inline | Small refactor improves feature | Scope expands |
 | 3. Split CRs | Substantial refactor needed | New CR created, dependency added |
 
+### `/mdt:domain-lens`
+
+Generates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines):
+
+- **Bounded Context**: Primary context + touched contexts
+- **Aggregates**: Root/Internal/Value role assignments
+- **Invariants**: Business rules with enforcement location
+- **Language Alignment**: CR terms vs code terms (if mismatched)
+- **Cross-Context Operations**: Event/Service/Saga patterns needed
+
+**When to Use**:
+| CR Type | Use? |
+|---------|------|
+| New feature with business logic | ✅ Yes |
+| Complex integration | ✅ Yes |
+| Simple CRUD | ❌ Skip |
+| Refactoring / Tech-debt | ❌ Skip |
+
+**Output consumed by**: `/mdt:architecture` only
+
 ### `/mdt:architecture`
 
 Adds Architecture Design to CR (simple) or extracts to `architecture.md` (complex):
@@ -403,6 +431,7 @@ Adds Architecture Design to CR (simple) or extracts to `architecture.md` (comple
 - **Structure**: File paths with responsibilities
 - **Size Guidance**: Per-module limits (default + hard max)
 - **Extension Rule**: "To add X, create Y"
+- **Domain Alignment**: Maps domain concepts to files (if domain.md exists)
 - **State Flows**: Mermaid diagrams (complex only)
 - **Error Scenarios**: Failure handling (complex only)
 
@@ -483,8 +512,9 @@ prompts/
 ├── mdt-ticket-creation.md   # CR creation (v5 - flexible depth)
 ├── mdt-requirements.md      # EARS requirements (v1)
 ├── mdt-assess.md            # Code fitness assessment (v2)
+├── mdt-domain-lens.md       # DDD constraints (v1)
 ├── mdt-tests.md             # BDD test generation (v1)
-├── mdt-architecture.md      # Architecture design (v4 - build vs use)
+├── mdt-architecture.md      # Architecture design (v5 - domain aware)
 ├── mdt-clarification.md     # Gap filling
 ├── mdt-tasks.md             # Task breakdown (v4)
 ├── mdt-implement.md         # Orchestrator (v4)
@@ -498,6 +528,7 @@ prompts/
 |----------|-----------------|
 | `/mdt:requirements` | `docs/CRs/{CR-KEY}/requirements.md` |
 | `/mdt:tests` | `docs/CRs/{CR-KEY}/tests.md` + `{test_dir}/*.test.{ext}` |
+| `/mdt:domain-lens` | `docs/CRs/{CR-KEY}/domain.md` |
 | `/mdt:architecture` | CR section (simple) or `docs/CRs/{CR-KEY}/architecture.md` (complex) |
 | `/mdt:tasks` | `docs/CRs/{CR-KEY}/tasks.md` |
 | `/mdt:tech-debt` | `docs/CRs/{CR-KEY}/debt.md` |
