@@ -8,16 +8,8 @@ counterFile = ".mdt-next"
 description = "Kanban-style ticket board with markdown storage"
 repository = "https://github.com/user/markdown-ticket"
 
-# Documents configuration
-exclude_folders = [
-    "docs/CRs",           # Exclude tickets folder
-    "node_modules",
-    ".git",
-    "test-results"
-]
-
-# Documentation Configuration
-document_paths = [
+[project.document]
+paths = [
     "generated-docs",
     "logger-tree",
     "docs",
@@ -28,4 +20,10 @@ document_paths = [
     "shared",
     "tests"
 ]
-max_depth = 3             # Maximum directory depth for scanning
+excludeFolders = [
+    "docs/CRs",           # Exclude tickets folder
+    "node_modules",
+    ".git",
+    "test-results"
+]
+maxDepth = 3             # Maximum directory depth for scanning

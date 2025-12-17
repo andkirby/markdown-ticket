@@ -106,8 +106,9 @@ export class ProjectConfigService implements IProjectConfigService {
       };
 
       // Preserve existing document and exclude configurations
-      if (config.document_paths) config.document_paths = config.document_paths;
-      if (config.exclude_folders) config.exclude_folders = config.exclude_folders;
+      if (!config.document) config.document = {};
+      if (config.document_paths) config.document.paths = config.document_paths;
+      if (config.exclude_folders) config.document.excludeFolders = config.exclude_folders;
 
       writeFile(configPath, stringify(config));
       logQuiet(this.quiet, `Updated local config for ${projectId} at ${configPath}`);
@@ -200,7 +201,8 @@ export class ProjectConfigService implements IProjectConfigService {
       if (fileExists(configPath)) {
         const localConfig = parseToml(readFile(configPath));
         if (!localConfig.project) localConfig.project = {};
-        localConfig.project.document_paths = documentPaths;
+        if (!localConfig.document) localConfig.document = {};
+        localConfig.document.paths = documentPaths;
         writeFile(configPath, stringify(localConfig));
         logQuiet(this.quiet, `Updated document paths for project ${projectId}: [${documentPaths.join(', ')}]`);
       } else {

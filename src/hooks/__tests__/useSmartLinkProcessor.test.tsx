@@ -28,7 +28,9 @@ describe('useSmartLinkProcessor', () => {
     currentProject: 'MDT',
     sourcePath: 'docs/CRs/MDT-001.md',
     projectConfig: {
-      document_paths: ['docs', 'generated-docs', 'README.md']
+      document: {
+        paths: ['docs', 'generated-docs', 'README.md']
+      }
     }
   };
 
@@ -201,7 +203,7 @@ describe('useSmartLinkProcessor', () => {
       const optionsNoDocs = {
         currentProject: 'MDT',
         sourcePath: 'test.md',
-        projectConfig: { document_paths: [] }
+        projectConfig: { document: { paths: [] } }
       };
 
       const { result } = renderHook(() => useSmartLinkProcessor(optionsNoDocs));

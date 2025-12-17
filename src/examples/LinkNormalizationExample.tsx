@@ -348,16 +348,18 @@ Welcome to the project! This document contains various types of links to demonst
   `;
 
   const projectConfig = {
-    document_paths: [
-      'docs',
-      'generated-docs',
-      'README.md'
-    ],
-    exclude_folders: [
-      'docs/CRs',
-      'node_modules',
-      '.git'
-    ]
+    document: {
+      paths: [
+        'docs',
+        'generated-docs',
+        'README.md'
+      ],
+      excludeFolders: [
+        'docs/CRs',
+        'node_modules',
+        '.git'
+      ]
+    }
   };
 
   return (

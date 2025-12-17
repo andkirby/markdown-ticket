@@ -12,6 +12,12 @@ export interface TreeNode {
 }
 
 export interface ProjectConfig {
+  document?: {
+    paths?: string[];
+    excludeFolders?: string[];
+    maxDepth?: number;
+  };
+  // Legacy support
   document_paths?: string[];
   exclude_folders?: string[];
   [key: string]: unknown;

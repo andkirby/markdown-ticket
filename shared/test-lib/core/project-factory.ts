@@ -268,13 +268,16 @@ export class ProjectFactory {
   private generateProjectConfig(code: string, name: string, config: ProjectConfig): string {
     return `# Project Configuration for ${name}
 
+[project]
 name = "${name}"
 code = "${code}"
 description = "${config.description || 'Test project'}"
 repository = "${config.repository || 'test-repo'}"
 ticketsPath = "${config.crPath || 'docs/CRs'}"
-document_paths = ${JSON.stringify(config.documentPaths || ['docs'])}
-exclude_folders = ${JSON.stringify(config.excludeFolders || ['node_modules', '.git', 'dist'])}
+
+[project.document]
+paths = ${JSON.stringify(config.documentPaths || ['docs'])}
+excludeFolders = ${JSON.stringify(config.excludeFolders || ['node_modules', '.git', 'dist'])}
 `;
   }
 
