@@ -408,7 +408,9 @@ describe('createLinkContext', () => {
 
   it('should create link context with custom values', () => {
     const projectConfig = {
-      document_paths: ['docs', 'generated-docs']
+      document: {
+        paths: ['docs', 'generated-docs']
+      }
     };
 
     const context = createLinkContext({

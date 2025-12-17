@@ -33,8 +33,8 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
       if (response.ok) {
         const data = await response.json();
 
-        // Use only the top-level document_paths from config, not the expanded tree
-        const configuredPaths = new Set<string>(data.config?.project?.document_paths || []);
+        // Use only the top-level document paths from config, not the expanded tree
+        const configuredPaths = new Set<string>(data.config?.document?.paths || data.config?.project?.document_paths || []);
         setSelectedPaths(configuredPaths);
       }
     } catch (error) {

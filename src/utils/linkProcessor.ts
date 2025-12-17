@@ -192,16 +192,12 @@ export function extractDocumentPaths(projectConfig: any): string[] {
   if (!projectConfig) return [];
 
   // Handle different configuration formats
-  if (projectConfig.document_paths) {
-    return projectConfig.document_paths;
+  if (projectConfig.document?.paths) {
+    return projectConfig.document.paths;
   }
 
   if (projectConfig.documentPaths) {
     return projectConfig.documentPaths;
-  }
-
-  if (projectConfig.documents?.paths) {
-    return projectConfig.documents.paths;
   }
 
   return [];
