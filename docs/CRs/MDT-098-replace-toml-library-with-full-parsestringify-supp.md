@@ -1,7 +1,8 @@
 ---
 code: MDT-098
-status: Proposed
+status: Implemented
 dateCreated: 2025-12-17T20:43:16.500Z
+dateCompleted: 2025-12-17T20:58:00.000Z
 type: Technical Debt
 priority: Medium
 ---
@@ -82,3 +83,20 @@ priority: Medium
 - Manual verification: Create/modify configuration file programmatically and verify valid TOML output
 - Automated verification: Run existing test suite with new library
 - Roundtrip verification: Parse existing TOML, stringify, and parse again to ensure data integrity
+
+## 6. Resolution
+
+### Implementation Summary
+Replaced custom TOML implementation with `smol-toml` library providing full parse/stringify support.
+
+**Changes**:
+- Added `smol-toml` dependency to shared/package.json
+- Updated shared/utils/toml.ts to use smol-toml for both parse and stringify
+- Updated tests to match new library behavior (11/11 tests passing)
+
+**Key Differences**:
+- Comments not preserved (acceptable for config files)
+- Null values removed during stringify
+- Arrays formatted with spaces: `[ "a", "b", "c" ]`
+
+**Verification**: All acceptance criteria met. Configuration files can now be both read and written programmatically with data integrity maintained through roundtrip operations.
