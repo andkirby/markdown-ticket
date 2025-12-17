@@ -80,6 +80,19 @@ Phase 2 Security (all optional):
 - `npm run test:e2e:report` - Show Playwright test report
 - `PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/specific-test.spec.ts --project=chromium` - Run specific test without server restart
 
+### Project Management CLI
+- `npm run project:create` - Create new project
+- `npm run project:list` - List all projects
+- `npm run project:get <name>` - Get project details
+- `npm run project:update <name>` - Update project configuration
+- `npm run project:delete <name>` - Delete project
+- `npm run project:enable <name>` - Enable project
+- `npm run project:disable <name>` - Disable project
+
+**Development mode commands (use tsx directly):**
+- `npm run project:create:dev` - Create project using tsx (no build needed)
+- `npm run project:list:dev` - List projects using tsx
+
 ## Architecture Overview
 
 ### Core Concept
@@ -110,7 +123,7 @@ AI-powered Kanban board where **tickets are markdown files** with YAML frontmatt
 
 ```
 server/
-├── server.js (253 lines) - Application orchestration only
+├── server.ts (253 lines) - Application orchestration only
 ├── controllers/    - HTTP request handling
 ├── services/       - Business logic
 ├── repositories/   - Data access (file system)
@@ -165,8 +178,8 @@ server/
 
 2. **Local Configuration** (`{project}/.mdt-config.toml`):
    - Operational details: name, code, CR path, repository
-   - `document_paths` array for document discovery
-   - `exclude_folders` for filtering
+   - `project.document.paths` array for document discovery
+   - `project.document.excludeFolders` for filtering
    - Counter tracking in `.mdt-next` file
 
 **Project Discovery**: Backend scans global registry on startup, validates local configs, sets up file watchers for each project.
@@ -239,7 +252,7 @@ The MCP server supports dual transport:
 - **HTTP transport** (`mcp-server/src/transports/http.ts`): Optional HTTP/JSON-RPC endpoint for containerized deployments
   - Eliminates docker-exec overhead
   - Implements MCP Streamable HTTP specification (2025-06-18)
-  - Endpoints: `POST /mcp` (JSON-RPC), `GET /health` (health check)
+  - Endpoints: POST /mcp (JSON-RPC), GET /health (health check)
   - Both transports share the same tool implementations in `mcp-server/src/tools/index.ts`
 
 **Available Tools**: `list_projects`, `get_project_info`, `list_crs`, `get_cr`, `create_cr`, `update_cr_status`, `update_cr_attrs`, `delete_cr`, `manage_cr_sections`, `suggest_cr_improvements`
@@ -278,7 +291,7 @@ The MCP server supports dual transport:
 1. Create route in `server/routes/`
 2. Add controller method in `server/controllers/`
 3. Implement business logic in `server/services/`
-4. Update `server.js` route registration if needed
+4. Update `server.ts` route registration if needed
 
 ### Frontend State Updates
 1. Check if `useProjectManager` already provides the state
@@ -287,9 +300,9 @@ The MCP server supports dual transport:
 4. Handle SSE events for real-time sync
 
 ### Document Path Configuration
-1. Edit `.mdt-config.toml` `document_paths` array
+1. Edit `.mdt-config.toml` `project.document.paths` array
 2. Use relative paths from project root
-3. Add to `exclude_folders` to filter out unwanted directories
+3. Add to `project.document.excludeFolders` to filter out unwanted directories
 4. Frontend PathSelector shows all markdown files respecting these settings
 
 ## TypeScript & Build
@@ -323,5 +336,5 @@ The MCP server supports dual transport:
 - **Check for stale closures** when adding React hooks that reference changing state
 - **Use MCP tools** before manual file operations
 - **Follow CR format** from `docs/create_ticket.md` for all tickets
-- A cli command for teseting MCP with streamable HTTP protocol: 
+- A cli command for teseting MCP with streamable HTTP protocol:
   timeout 10 npx @modelcontextprotocol/inspector --cli http://localhost:3002/mcp --transport http --method tools/list

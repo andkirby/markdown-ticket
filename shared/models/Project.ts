@@ -8,44 +8,6 @@
  */
 
 /**
- * Global registry minimal reference (Project-First Strategy)
- * Stores only project location and metadata for discovery
- */
-export interface GlobalRegistryMinimal {
-  project: {
-    path: string; // Absolute path to project directory
-  };
-  metadata: {
-    dateRegistered: string;
-    lastAccessed: string;
-    version: string;
-  };
-}
-
-/**
- * Global registry complete definition (Global-Only Strategy)
- * Stores complete project definition in global registry only
- */
-export interface GlobalRegistryComplete {
-  project: {
-    id?: string;
-    name: string;
-    code: string;
-    path: string;
-    active: boolean;
-    description?: string;
-    repository?: string;
-    startNumber?: number;
-    counterFile?: string;
-  };
-  metadata: {
-    dateRegistered: string;
-    lastAccessed: string;
-    version: string;
-  };
-}
-
-/**
  * Local project configuration (Project-First and Auto-Discovery Strategies)
  * Complete project definition stored locally for portability
  */
@@ -62,8 +24,11 @@ export interface LocalProjectConfig {
     repository?: string;
     ticketsPath?: string; // Tickets path relative to project root (e.g., "docs/CRs")
   };
-  document_paths?: string[];
-  exclude_folders?: string[];
+  document: {
+    paths?: string[];
+    excludeFolders?: string[];
+    maxDepth?: number;
+  };
 }
 
 /**
@@ -114,25 +79,11 @@ export interface ProjectConfig {
     repository?: string;
     ticketsPath?: string; // Tickets path relative to project root
   };
-}
-
-/**
- * Project status enumeration
- */
-export enum ProjectStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  ARCHIVED = 'archived'
-}
-
-/**
- * Helper function to generate ticket codes based on project configuration
- */
-export function generateTicketCode(project: Project, projectConfig: ProjectConfig | null, existingTicketCount: number): string {
-  const projectCode = projectConfig?.project?.code || project.id.toUpperCase();
-  const startNumber = projectConfig?.project?.startNumber || 1;
-  const ticketNumber = startNumber + existingTicketCount;
-  return `${projectCode}-${ticketNumber.toString().padStart(3, '0')}`;
+  document: {
+    paths?: string[];
+    excludeFolders?: string[];
+    maxDepth?: number;
+  };
 }
 
 /**
@@ -192,6 +143,11 @@ export function migrateLegacyConfig(config: ProjectConfig): ProjectConfig {
       path: ".",
       // Move the legacy path to ticketsPath where it belongs
       ticketsPath: legacyTicketsPath
+    },
+    // Add document section for legacy configs that don't have it
+    document: config.document || {
+      paths: Array.isArray((config as any).document_paths) ? (config as any).document_paths : [],
+      excludeFolders: Array.isArray((config as any).exclude_folders) ? (config as any).exclude_folders : []
     }
   };
 }
@@ -229,13 +185,13 @@ export function validateProjectConfig(config: any): config is ProjectConfig {
     typeof project.repository === 'string';
 
   // Optional fields for LocalProjectConfig - handle both array and object formats
-  const hasValidDocumentPaths = config.document_paths === undefined ||
-    (Array.isArray(config.document_paths) && config.document_paths.every((p: any) => typeof p === 'string')) ||
-    (config.document_paths && config.document_paths.paths && Array.isArray(config.document_paths.paths) && config.document_paths.paths.every((p: any) => typeof p === 'string'));
+  const hasValidDocumentPaths = config.document?.paths === undefined ||
+    (Array.isArray(config.document?.paths) && config.document.paths.every((p: any) => typeof p === 'string')) ||
+    (config.document && config.document.paths && Array.isArray(config.document.paths) && config.document.paths.every((p: any) => typeof p === 'string'));
 
-  const hasValidExcludeFolders = config.exclude_folders === undefined ||
-    (Array.isArray(config.exclude_folders) && config.exclude_folders.every((f: any) => typeof f === 'string')) ||
-    (config.exclude_folders && config.exclude_folders.folders && Array.isArray(config.exclude_folders.folders) && config.exclude_folders.folders.every((f: any) => typeof f === 'string'));
+  const hasValidExcludeFolders = config.document?.excludeFolders === undefined ||
+    (Array.isArray(config.document?.excludeFolders) && config.document.excludeFolders.every((f: any) => typeof f === 'string')) ||
+    (config.document && config.document.excludeFolders && Array.isArray(config.document.excludeFolders) && config.document.excludeFolders.every((f: any) => typeof f === 'string'));
 
   return hasValidName && hasValidCode && hasValidPath && hasValidStartNumber &&
          hasValidCounterFile && hasValidDescription && hasValidRepository &&

@@ -33,9 +33,12 @@ ticketsPath = "${finalConfig.crPath}"
 startNumber = 1
 counterFile = ".mdt-next"
 ${finalConfig.description ? `description = "${finalConfig.description}"\n` : ''}
-${finalConfig.repository ? `repository = "${finalConfig.repository}"\n` : ''}exclude_folders = [${finalConfig.excludeFolders!.map(p => `"${p}"`).join(', ')}]
-document_paths = [${finalConfig.documentPaths!.map(p => `"${p}"`).join(', ')}]
-max_depth = 3
+${finalConfig.repository ? `repository = "${finalConfig.repository}"\n` : ''}
+
+[project.document]
+paths = [${finalConfig.documentPaths!.map(p => `"${p}"`).join(', ')}]
+excludeFolders = [${finalConfig.excludeFolders!.map(p => `"${p}"`).join(', ')}]
+maxDepth = 3
 `;
   }
 
