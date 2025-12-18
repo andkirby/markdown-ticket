@@ -152,6 +152,18 @@ excludeFolders = []
 maxDepth = 3                 # Default depth limit
 ```
 
+## Domain Alignment
+
+| Domain Concept | Implementation | Notes |
+|----------------|----------------|-------|
+| `Project` (Aggregate Root) | `shared/services/ProjectService.ts` | Entry point for all project operations, owns invariants |
+| `ProjectConfig` (Internal) | `shared/models/Project.ts` | Managed within Project aggregate, no external access |
+| `ProjectValidator` (Value) | `shared/tools/ProjectValidator.ts` | Enforces code format and validation rules |
+| `Three-Strategy Config` (Value) | Configuration layer components | Storage pattern determined at creation time |
+| Project code invariant | `ProjectValidator.validateCode()` | Enforced in aggregate before persistence |
+| ID-matching-directory invariant | `ProjectService` discovery logic | Checked at project registration boundary |
+| Config location defines root | Local config file structure | Physical location determines project root path |
+
 ## Extension Rule
 
 To add new configuration field:
