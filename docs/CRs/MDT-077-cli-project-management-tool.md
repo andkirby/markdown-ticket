@@ -94,6 +94,17 @@ Performance measurements is out of scope.
 - Task breakdown for implementation
 - Testing implementation details
 
+## Architecture Design
+
+> **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
+
+**Summary**:
+- Pattern: Domain-Driven Design (DDD) with Factory Strategy Pattern
+- Components: 7 major components across CLI, Application, Domain, and Infrastructure layers
+- Key constraint: Centralized validation with shared ProjectValidator, three-strategy configuration factory
+
+**Extension Rule**: To add new CLI command, create file in `cli/src/commands/project/` (limit 75 lines) and use `ProjectApplicationService` for business logic
+
 ## 4. Acceptance Criteria
 
 ### Functional (Outcome-focused)

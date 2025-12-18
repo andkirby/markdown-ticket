@@ -1,176 +1,220 @@
 # Architecture: MDT-077
 
-**Source**: [MDT-077](..//MDT-077-cli-project-management-tool.md)
-**Generated**: 2025-12-16
-**Complexity Score**: 25
+**Source**: [MDT-077](../../../docs/CRs/MDT-077-cli-project-management-tool.md)
+**Generated**: 2025-12-18
+**Complexity Score**: 20
 
 ## Overview
 
-This architecture defines the CLI project management system with a clean, new configuration format specified in CONFIG_SPECIFICATION.md. The implementation uses a fresh schema without legacy field support, structured configuration, and ensures consistency across test utilities, CLI tools, and MCP server integration.
+This architecture establishes a consistent project management system across CLI, Web UI, and MCP interfaces using Domain-Driven Design principles. The design eliminates code duplication by centralizing business logic in shared services, implements a three-strategy configuration pattern for flexible deployment, and provides a unified configuration interface that directly maps to the TOML structure.
 
 ## Pattern
 
-**Clean Configuration Pattern** — New structured configuration without backward compatibility support.
+**Domain-Driven Design (DDD) with Factory Strategy Pattern** — Aligns with project's existing domain model while providing clear boundaries between aggregates and external contexts.
 
-The pattern enforces:
-- Single configuration format only
-- Strict validation with clear error messages
-- No legacy field support
-- Clean, minimal implementation
-
-## Key Dependencies
-
-| Capability | Package | Coverage | Rationale |
-|------------|---------|----------|----------|
-| TOML parsing | @iarna/toml | 100% | Already in project dependencies, robust parsing |
-| File system utilities | Node.js fs | 100% | Native, no additional dependencies |
-| Test isolation | Jest | 100% | Existing test framework, supports child processes |
-
-**Build Custom Decisions**:
-| Capability | Reason | Estimated Size |
-|------------|--------|---------------|
-| Configuration migration | Project-specific format requirements | ~150 lines |
-| Test project factory | Isolated test environment needs | ~200 lines |
-| MCP test helpers | E2E testing requirements | ~100 lines |
+The three-strategy configuration is implemented as a factory that creates appropriate strategy objects based on deployment needs, while maintaining a single Project aggregate root for all operations.
 
 ## Component Boundaries
 
 ```mermaid
 graph TB
-    subgraph "Configuration Layer"
-        A[Config Generator] --> B[Project Factory]
-        C[Config Validator] --> B
+    subgraph "CLI Layer"
+        CLI[CLI Commands]
+        CLIHandler[CLI Handler]
     end
 
-    subgraph "Test Infrastructure"
-        B --> D[Test Environment]
-        E[MCP Test Helpers] --> D
+    subgraph "Application Services"
+        ProjectApp[ProjectApplicationService]
+        ConfigFactory[ConfigurationStrategyFactory]
     end
 
-    subgraph "Production Code"
-        F[Project Service] --> G[CLI Tools]
-        F --> H[MCP Server]
+    subgraph "Domain Layer"
+        Project[Project Aggregate Root]
+        ProjectValidator[ProjectValidator]
+        ProjectConfig[LocalProjectConfig]
     end
 
-    D -.-> F
-    E -.-> H
+    subgraph "Infrastructure"
+        ConfigRepo[ConfigurationRepository]
+        GlobalRegistry[Global Registry Storage]
+        LocalConfig[Local TOML Files]
+    end
+
+    subgraph "External Interfaces"
+        WebUI[Web UI]
+        MCP[MCP Tools]
+    end
+
+    CLI --> CLIHandler
+    CLIHandler --> ProjectApp
+    WebUI --> ProjectApp
+    MCP --> ProjectApp
+
+    ProjectApp --> ConfigFactory
+    ProjectApp --> Project
+    ProjectApp --> ProjectValidator
+
+    ConfigFactory --> GlobalOnly
+    ConfigFactory --> ProjectFirst
+    ConfigFactory --> AutoDiscovery
+
+    Project --> ProjectConfig
+    Project --> ConfigRepo
+
+    ConfigRepo --> GlobalRegistry
+    ConfigRepo --> LocalConfig
+
+    subgraph "Strategy Objects"
+        GlobalOnly[Global-Only Strategy]
+        ProjectFirst[Project-First Strategy]
+        AutoDiscovery[Auto-Discovery Strategy]
+    end
+
+    classDef domain fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#333
+    classDef app fill:#f3e5f5,stroke:#4a148c,color:#333
+    classDef infra fill:#e8f5e8,stroke:#1b5e20,color:#333
+    classDef cli fill:#fff3e0,stroke:#e65100,color:#333
+
+    class Project,ProjectValidator,ProjectConfig domain
+    class ProjectApp,ConfigFactory app
+    class ConfigRepo,GlobalRegistry,LocalConfig,GlobalOnly,ProjectFirst,AutoDiscovery infra
+    class CLI,CLIHandler,WebUI,MCP cli
 ```
 
 | Component | Responsibility | Owns | Depends On |
 |-----------|----------------|------|------------|
-| `ConfigGenerator` | Generate TOML configs in new format | Config templates | None |
-| `ProjectFactory` | Create test projects with valid configs | Test project lifecycle | `ConfigGenerator`, `TestEnvironment` |
-| `ConfigValidator` | Validate new config format | Validation rules | New config schema |
-| `TestEnvironment` | Isolated test execution | Temporary directories | Node.js fs |
-| `MCP Test Helpers` | E2E MCP server testing | Test scenarios | Config format |
+| `CLI Commands` | Command-line interface orchestration | Command parsing, error display | `CLI Handler` |
+| `CLI Handler` | Command execution logic | Request/response mapping | `ProjectApplicationService` |
+| `ProjectApplicationService` | Use case orchestration | Business workflows | `Project`, `ConfigurationStrategyFactory`, `ProjectValidator` |
+| `Project` | Aggregate root for project operations | Project state, invariants | `LocalProjectConfig`, `ConfigurationRepository` |
+| `ConfigurationStrategyFactory` | Strategy selection based on flags | Strategy creation logic | Three strategy objects |
+| `ProjectValidator` | Centralized validation rules | Validation constraints | Pure functions (no deps) |
+| `ConfigurationRepository` | Configuration persistence | TOML I/O operations | File system, Global registry storage |
 
 ## Shared Patterns
 
 | Pattern | Occurrences | Extract To |
 |---------|-------------|------------|
-| Configuration generation | ProjectFactory, ConfigGenerator, MCP helpers | `ConfigGenerator` class |
-| Test project creation | ProjectFactory, MCP E2E tests | `ProjectFactory` class |
-| File I/O with retry | ProjectFactory, TestEnvironment | `RetryHelper` utility |
+| Configuration validation | CLI create/update, Web UI, MCP interfaces | `shared/validation/ProjectValidator.ts` |
+| Error handling with detailed messages | All interfaces | `shared/errors/ProjectErrorHandler.ts` |
+| Configuration file I/O (TOML) | CLI commands, Web UI, MCP | `shared/io/ConfigurationRepository.ts` |
+| Project code generation | CLI create, Web UI create | `shared/generation/CodeGenerator.ts` |
 
-> Phase 1 extracts these patterns BEFORE components that use them.
+> Phase 1 extracts these BEFORE features that use them.
 
 ## Structure
 
 ```
-shared/test-lib/core/
-  ├── project-factory.ts           → Test project creation (UPDATE)
-  ├── test-environment.ts         → Isolated test management
-  └── utils/
-      └── retry-helper.ts         → File I/O retry logic
+cli/
+├── src/
+│   ├── commands/
+│   │   ├── project/
+│   │   │   ├── index.ts              → Command registration and routing
+│   │   │   ├── create.ts             → Create project command (75 lines)
+│   │   │   ├── list.ts               → List projects command (50 lines)
+│   │   │   ├── update.ts             → Update project command (75 lines)
+│   │   │   ├── delete.ts             → Delete project command (50 lines)
+│   │   │   ├── enable-disable.ts     → Enable/disable command (50 lines)
+│   │   │   └── validate.ts           → Validation command (50 lines)
+│   │   └── index.ts                  → CLI entry point
+│   ├── handlers/
+│   │   ├── ProjectCLIHandler.ts      → CLI-specific logic (100 lines)
+│   │   └── index.ts
+│   └── index.ts                      → CLI main entry
 
-mcp-server/tests/e2e/helpers/
-  ├── config/
-  │   └── configuration-generator.ts  → Config generation (UPDATE)
-  └── utils/
-      └── file-helper.ts          → File I/O utilities
+shared/
+├── services/
+│   ├── ProjectApplicationService.ts  → Use case orchestration (200 lines)
+│   └── ConfigurationStrategyFactory.ts → Strategy factory (75 lines)
+├── validation/
+│   ├── ProjectValidator.ts           → Centralized validation (150 lines)
+│   └── index.ts
+├── io/
+│   ├── ConfigurationRepository.ts    → TOML I/O operations (200 lines)
+│   └── index.ts
+├── generation/
+│   ├── CodeGenerator.ts              → Project code generation (75 lines)
+│   └── index.ts
+└── errors/
+    ├── ProjectErrorHandler.ts        → Consistent error handling (100 lines)
+    └── index.ts
 
-.mdt-config.toml                  → Main project config (UPDATE)
+domain/
+├── Project.ts                        → Project aggregate (200 lines)
+├── ProjectConfig.ts                  → Configuration value objects (100 lines)
+├── strategies/
+│   ├── GlobalOnlyStrategy.ts         → Global-only implementation (100 lines)
+│   ├── ProjectFirstStrategy.ts       → Project-first implementation (100 lines)
+│   ├── AutoDiscoveryStrategy.ts      → Auto-discovery implementation (100 lines)
+│   └── index.ts
+└── index.ts
 ```
 
 ## Size Guidance
 
 | Module | Role | Limit | Hard Max |
 |--------|------|-------|----------|
-| `project-factory.ts` | Test creation | 400 | 600 |
-| `configuration-generator.ts` | Config generation | 150 | 225 |
-| `.mdt-config.toml` | Project config | 50 | 75 |
+| `cli/src/commands/project/*.ts` | Feature command | 75 | 115 |
+| `cli/src/handlers/ProjectCLIHandler.ts` | Handler | 100 | 150 |
+| `shared/services/ProjectApplicationService.ts` | Application service | 200 | 300 |
+| `shared/validation/ProjectValidator.ts` | Domain service | 150 | 225 |
+| `shared/io/ConfigurationRepository.ts` | Infrastructure | 200 | 300 |
+| `domain/Project.ts` | Aggregate root | 200 | 300 |
+| `domain/strategies/*.ts` | Strategy implementation | 100 | 150 |
 
 ## Error Scenarios
 
 | Scenario | Detection | Response | Recovery |
 |----------|-----------|----------|----------|
-| Invalid config format | Validation failure | Fail fast with clear message | Manual config fix required |
-| Invalid TOML syntax | TOML parse error | Fail fast with clear message | Manual config fix required |
-| Missing required fields | Validation failure | Create with defaults | Default values applied |
-| File permission errors | fs operation failure | Retry with exponential backoff | Skip operation, log error |
+| Invalid configuration | `ProjectValidator` | Reject with detailed field errors | User corrects input and retries |
+| Concurrent project modification | File lock/version check | Abort with conflict message | User resolves conflict manually |
+| Missing global registry | `ConfigurationRepository` | Create default registry | Automatic recovery |
+| TOML parse error | `ConfigurationRepository` | Report parse location | User fixes TOML syntax |
+| Project code collision | `CodeGenerator` | Generate new code | Automatic recovery |
 
 ## Requirement Coverage
 
-Not applicable - This is a Technical Debt CR focusing on format alignment.
+| Requirement | Component | Notes |
+|-------------|-----------|-------|
+| R1.1-R1.6 (Project Lifecycle) | CLI commands + ProjectApplicationService | All CRUD operations covered |
+| R2.1-R2.4 (Interface Structure) | ProjectConfig interface | Direct TOML mapping implemented |
+| R3.1-R3.5 (Three-Strategy) | ConfigurationStrategyFactory + strategies | Factory pattern creates appropriate strategy |
+| R4.1-R4.5 (Schema Validation) | ProjectValidator | Centralized validation ensures consistency |
+| R5.1-R5.7 (Error Handling) | ProjectErrorHandler | Consistent error messages across interfaces |
+| R6.1-R6.5 (Cross-Interface) | Shared services layer | All interfaces use same business logic |
+| R7.1-R7.4 (Config Unification) | LocalProjectConfig only | Single configuration class used |
+| R8.1-R8.4 (Performance) | Efficient design patterns | Stateless services, minimal I/O |
+| R9.1-R9.4 (Concurrency) | ConfigurationRepository | File locking and version checks |
+| R10.1-R10.4 (Test Coverage) | Modular design | Each module independently testable |
 
-## Implementation Plan
-
-### Implementation Benefits
-
-| Component | Implementation | Benefits |
-|-----------|----------------|----------|
-| `ProjectFactory` | Clean configuration generation | Simpler code structure |
-| `ConfigGenerator` | New format without deprecated fields | Cleaner implementation |
-| `.mdt-config.toml` | Single format | Consistent configuration |
-
-### Interface Preservation
-
-| Public Interface | Status | Verification |
-|------------------|--------|--------------|
-| `ProjectFactory.createProject()` | Preserved | Existing tests cover |
-| `ProjectFactory.createTestCR()` | Preserved | Existing tests cover |
-| `ConfigGenerator.generateMdtConfig()` | Modified | Update tests in MDT-092 |
-| Global config format | Changed | Update MCP server validation |
-
-### Behavioral Equivalence
-
-- Test suite: MDT-092 isolated test environment verifies identical behavior
-- Performance: Config parsing is optimized with clean structure
-
-## Configuration Format
-
-### Required Format
-```toml
-[project]
-name = "Project"
-code = "PROJ"
-id = "project"               # Required, must match directory name
-
-[project.document]
-paths = []
-excludeFolders = []
-maxDepth = 3                 # Default depth limit
-```
+**Coverage**: 10/10 requirements mapped (100%)
 
 ## Domain Alignment
 
 | Domain Concept | Implementation | Notes |
 |----------------|----------------|-------|
-| `Project` (Aggregate Root) | `shared/services/ProjectService.ts` | Entry point for all project operations, owns invariants |
-| `ProjectConfig` (Internal) | `shared/models/Project.ts` | Managed within Project aggregate, no external access |
-| `ProjectValidator` (Value) | `shared/tools/ProjectValidator.ts` | Enforces code format and validation rules |
-| `Three-Strategy Config` (Value) | Configuration layer components | Storage pattern determined at creation time |
-| Project code invariant | `ProjectValidator.validateCode()` | Enforced in aggregate before persistence |
-| ID-matching-directory invariant | `ProjectService` discovery logic | Checked at project registration boundary |
-| Config location defines root | Local config file structure | Physical location determines project root path |
+| `Project` (Aggregate Root) | `domain/Project.ts` | Entry point for all project operations |
+| `ProjectConfig` (Internal Entity) | `domain/ProjectConfig.ts` | Value object with direct TOML mapping |
+| `ProjectValidator` (Value Object) | `shared/validation/ProjectValidator.ts` | Enforces all invariants at boundaries |
+| `Three-Strategy Config` (Value) | `domain/strategies/*.ts` | Strategy pattern implementation |
+| `Cross-context: CLI Interface` | `cli/src/commands/project/*.ts` | Commands use application service |
+| `Cross-context: Config Storage` | `shared/io/ConfigurationRepository.ts` | Handles both global and local storage |
 
 ## Extension Rule
 
-To add new configuration field:
-1. Add field to `ProjectConfig` interface in types
-2. Update `ConfigGenerator.generateMdtConfig()` (limit 150 lines)
-3. Add validation in `ConfigValidator` if needed
-4. Update tests to verify new field
+To add new CLI command:
+1. Create file in `cli/src/commands/project/` (feature command, limit 75 lines)
+2. Add command registration in `cli/src/commands/project/index.ts`
+3. Use `ProjectApplicationService` for business logic
+
+To add new configuration strategy:
+1. Create strategy in `domain/strategies/` (strategy implementation, limit 100 lines)
+2. Implement strategy interface methods
+3. Register in `ConfigurationStrategyFactory`
+
+To add new validation rule:
+1. Add method to `shared/validation/ProjectValidator.ts` (domain service, limit 150 lines total)
+2. Call from `ProjectApplicationService` before persistence
 
 ---
 *Generated by /mdt:architecture*
