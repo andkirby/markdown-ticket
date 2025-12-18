@@ -110,6 +110,19 @@ export class ProjectConfigService implements IProjectConfigService {
       if (config.document_paths) config.document.paths = config.document_paths;
       if (config.exclude_folders) config.document.excludeFolders = config.exclude_folders;
 
+      // Auto-add custom tickets path to excludeFolders if it's not the default
+      // This prevents tickets from being included in document discovery
+      if (finalTicketsPath && finalTicketsPath !== DEFAULTS.TICKETS_PATH) {
+        if (!config.document.excludeFolders) {
+          config.document.excludeFolders = [];
+        }
+        // Add the custom tickets path if not already excluded
+        if (!config.document.excludeFolders.includes(finalTicketsPath)) {
+          config.document.excludeFolders.push(finalTicketsPath);
+          logQuiet(this.quiet, `Added custom tickets path to excludeFolders: ${finalTicketsPath}`);
+        }
+      }
+
       writeFile(configPath, stringify(config));
       logQuiet(this.quiet, `Updated local config for ${projectId} at ${configPath}`);
     } catch (error) {

@@ -1,6 +1,6 @@
 import { Project } from '../../models/Project.js';
 import { ProjectValidator } from '../../tools/ProjectValidator.js';
-import { CONFIG_FILES, DEFAULT_PATHS } from '../../utils/constants.js';
+import { CONFIG_FILES, DEFAULT_PATHS, DEFAULTS } from '../../utils/constants.js';
 import { logQuiet } from '../../utils/logger.js';
 import {
   joinPaths,
@@ -66,13 +66,16 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
               counterFile: registryData.project.counterFile || CONFIG_FILES.COUNTER_FILE,
               active: registryData.project.active !== false,
               description: registryData.project.description || '',
-              repository: registryData.project.repository || ''
+              repository: registryData.project.repository || '',
+              ticketsPath: registryData.project.ticketsPath
             },
             metadata: {
               dateRegistered: registryData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
               lastAccessed: registryData.metadata?.lastAccessed || new Date().toISOString().split('T')[0],
-              version: registryData.metadata?.version || '1.0.0'
+              version: registryData.metadata?.version || '1.0.0',
+              globalOnly: true
             },
+            document: registryData.project.document,
             registryFile: registryPath
           };
           projects.push(project);
@@ -115,7 +118,8 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
               counterFile: localConfig?.project?.counterFile || CONFIG_FILES.COUNTER_FILE, // Local priority
               active: localConfig?.project?.active !== false, // Local priority, default true
               description: localConfig?.project?.description || '', // Local priority
-              repository: localConfig?.project?.repository || '' // Local priority
+              repository: localConfig?.project?.repository || '', // Local priority
+              ticketsPath: localConfig?.project?.ticketsPath || DEFAULTS.TICKETS_PATH // Local priority
             },
             metadata: {
               dateRegistered: registryData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
@@ -147,7 +151,10 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
    * Stores minimal reference: path for discovery, metadata for tracking
    * Complete project definition remains in local config
    */
-  registerProject(project: Project): void {
-    this.registry.registerProject(project);
+  registerProject(project: Project, documentDiscoverySettings?: {
+    paths?: string[];
+    maxDepth?: number;
+  }): void {
+    this.registry.registerProject(project, documentDiscoverySettings);
   }
 }

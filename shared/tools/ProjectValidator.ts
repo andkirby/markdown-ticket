@@ -46,16 +46,16 @@ export class ProjectValidator {
    * Validate project code
    */
   static validateCode(code: string): ValidationResult {
-    const normalized = code.toUpperCase().trim();
+    const trimmed = code.trim();
 
-    if (!/^[A-Z0-9]{2,5}$/.test(normalized)) {
+    if (!/^[A-Z][A-Z0-9]{1,4}$/.test(trimmed)) {
       return {
         valid: false,
-        error: 'Project code must be 2-5 characters (uppercase letters and numbers)'
+        error: 'Project code must be 2-5 characters, starting with an uppercase letter followed by uppercase letters or numbers'
       };
     }
 
-    return { valid: true, normalized };
+    return { valid: true, normalized: trimmed };
   }
 
   /**

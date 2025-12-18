@@ -37,7 +37,10 @@ export interface ProjectCache {
 export interface IProjectDiscoveryService {
   getRegisteredProjects(): Project[];
   autoDiscoverProjects(searchPaths: string[]): Project[];
-  registerProject(project: Project): void;
+  registerProject(project: Project, documentDiscoverySettings?: {
+    paths?: string[];
+    maxDepth?: number;
+  }): void;
   // Additional methods from original ProjectService that weren't extracted:
   deleteProject?(projectId: string, deleteLocalConfig?: boolean): Promise<void>;
   getProjectByCodeOrId?(codeOrId: string): Promise<Project | null>;
