@@ -165,7 +165,7 @@ export const configHasRequiredFields = (config: any): boolean => {
 };
 
 export const configHasValidCode = (code: string): boolean => {
-  return /^[A-Z]{2,5}$/.test(code);
+  return /^[A-Z0-9]{2,5}$/.test(code);
 };
 
 

@@ -166,17 +166,30 @@ export class ProjectConfigService implements IProjectConfigService {
 
       // Update registry timestamp
       registryData.metadata.lastAccessed = new Date().toISOString().split('T')[0];
-      writeFile(projectFile, stringify(registryData));
 
-      // Update local config
-      const configPath = buildConfigFilePath(registryData.project.path, CONFIG_FILES.PROJECT_CONFIG);
-      if (fileExists(configPath)) {
-        const localConfig = parseToml(readFile(configPath));
-        Object.assign(localConfig.project, updates);
-        writeFile(configPath, stringify(localConfig));
-        logQuiet(this.quiet, `Updated project ${projectId} in local config`);
+      // Check if this is a global-only project
+      const isGlobalOnly = registryData.metadata?.globalOnly === true ||
+                            registryData.project.name !== undefined;
+
+      if (isGlobalOnly) {
+        // Strategy 1: Global-Only - Update project details in global registry
+        Object.assign(registryData.project, updates);
+        writeFile(projectFile, stringify(registryData));
+        logQuiet(this.quiet, `Updated project ${projectId} in global registry (global-only mode)`);
       } else {
-        logQuiet(this.quiet, `Warning: Project ${projectId} local config not found at ${configPath}`);
+        // Strategy 2: Project-First - Write registry metadata and update local config
+        writeFile(projectFile, stringify(registryData));
+
+        // Update local config
+        const configPath = buildConfigFilePath(registryData.project.path, CONFIG_FILES.PROJECT_CONFIG);
+        if (fileExists(configPath)) {
+          const localConfig = parseToml(readFile(configPath));
+          Object.assign(localConfig.project, updates);
+          writeFile(configPath, stringify(localConfig));
+          logQuiet(this.quiet, `Updated project ${projectId} in local config`);
+        } else {
+          logQuiet(this.quiet, `Warning: Project ${projectId} local config not found at ${configPath}`);
+        }
       }
     } catch (error) {
       logQuiet(this.quiet, 'Error updating project:', error);

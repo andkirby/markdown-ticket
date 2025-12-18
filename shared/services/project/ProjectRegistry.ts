@@ -7,7 +7,8 @@ import {
   createDirectory,
   writeFile,
   listFiles,
-  readFile
+  readFile,
+  fileExists
 } from '../../utils/file-utils.js';
 import {
   joinPaths,
@@ -66,9 +67,10 @@ export class ProjectRegistry {
   }
 
   /**
-   * Register a project in the global registry (Project-First Strategy)
-   * Stores minimal reference: path for discovery, metadata for tracking
-   * Complete project definition remains in local config
+   * Register a project in the global registry
+   * Strategy 1 (Global-Only): Store full project details in global registry when no local config exists
+   * Strategy 2 (Project-First): Store minimal reference: path for discovery, metadata for tracking
+   * Complete definition remains in local config for Project-First strategy
    */
   registerProject(project: Project): void {
     try {
@@ -79,23 +81,57 @@ export class ProjectRegistry {
 
       const projectFile = buildRegistryFilePath(this.projectsDir, project.id);
 
-      // Project-First Strategy: Store minimal reference in global registry
-      // Complete definition stays in local config for portability and team collaboration
-      const projectData = {
-        project: {
-          path: project.project.path  // Only store path for discovery
-        },
-        metadata: {
-          dateRegistered: project.metadata.dateRegistered,
-          lastAccessed: new Date().toISOString().split('T')[0],
-          version: project.metadata.version
-        }
-      };
+      // Determine if this is a global-only project by checking if there's no local config
+      // Global-only projects have no configFile (empty string) or the config file doesn't exist
+      const isGlobalOnly = project.project.configFile === '' ||
+                           (project.project.configFile && !fileExists(project.project.configFile));
+
+      let projectData: any;
+
+      if (isGlobalOnly) {
+        // Strategy 1: Global-Only - Store complete project definition in global registry
+        projectData = {
+          project: {
+            name: project.project.name,
+            code: project.project.code,
+            id: project.project.id,
+            path: project.project.path,
+            ticketsPath: "docs/CRs", // Default tickets path
+            description: project.project.description || "",
+            active: project.project.active,
+            dateRegistered: project.metadata.dateRegistered,
+            document: {
+              paths: [],
+              excludeFolders: [],
+              maxDepth: 3
+            }
+          },
+          metadata: {
+            dateRegistered: project.metadata.dateRegistered,
+            lastAccessed: new Date().toISOString().split('T')[0],
+            version: project.metadata.version,
+            globalOnly: true
+          }
+        };
+        logQuiet(this.quiet, `Registered project ${project.id} in global registry (global-only mode)`);
+      } else {
+        // Strategy 2: Project-First - Store minimal reference in global registry
+        // Complete definition stays in local config for portability and team collaboration
+        projectData = {
+          project: {
+            path: project.project.path  // Only store path for discovery
+          },
+          metadata: {
+            dateRegistered: project.metadata.dateRegistered,
+            lastAccessed: new Date().toISOString().split('T')[0],
+            version: project.metadata.version
+          }
+        };
+        logQuiet(this.quiet, `Registered project ${project.id} in global registry (minimal reference)`);
+      }
 
       const tomlContent = stringify(projectData);
       writeFile(projectFile, tomlContent);
-
-      logQuiet(this.quiet, `Registered project ${project.id} in global registry (minimal reference)`);
     } catch (error) {
       logQuiet(this.quiet, 'Error registering project:', error);
       throw error;

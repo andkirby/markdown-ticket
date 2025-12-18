@@ -1,4 +1,4 @@
-import { GlobalConfig } from '../services/ProjectService.js';
+import { GlobalConfig } from '../services/project/types.js';
 import { logQuiet } from './logger.js';
 
 const defaultConfig = {

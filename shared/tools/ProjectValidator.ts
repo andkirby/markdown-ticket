@@ -48,10 +48,10 @@ export class ProjectValidator {
   static validateCode(code: string): ValidationResult {
     const normalized = code.toUpperCase().trim();
 
-    if (!/^[A-Z]{2,5}$/.test(normalized)) {
+    if (!/^[A-Z0-9]{2,5}$/.test(normalized)) {
       return {
         valid: false,
-        error: 'Project code must be 2-5 uppercase letters'
+        error: 'Project code must be 2-5 characters (uppercase letters and numbers)'
       };
     }
 

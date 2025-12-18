@@ -761,7 +761,7 @@ Commands:
 
 Create Options:
   --name <name>           Project name
-  --code <code>           Project code (2-5 letters, optional)
+  --code <code>           Project code (2-5 characters, uppercase letters and numbers, optional)
   --path <path>           Project path
   --description <text>    Project description (optional)
   --repository <url>      Repository URL (optional)
