@@ -232,6 +232,11 @@ npm run project:create -- \
 
 ### Feature: Project Creation in Auto-Discovery Mode
 
+**Note**: Auto-discovery behavior is automatic based on the project's path location. When a project is created without any explicit strategy flag (no `--global-only` flag), it operates in auto-discovery mode where:
+- The project is not registered in the global registry
+- The project is automatically discoverable if located within configured search paths and maxDepth
+- The project contains a complete local `.mdt-config.toml` file
+
 #### Scenario: AD01 - Create project with auto-discovery strategy
 
 **Given** the test environment is initialized
@@ -242,13 +247,12 @@ npm run project:create -- \
   --name "Auto Discovery" \
   --code "AD01" \
   --path "/tmp/mdt-cli-tests/projects/within-depth/project-auto" \
-  --auto-discovery \
   --description "Test project in auto-discovery mode"
 ```
 **Then** the command should exit with code 0
 **And** local config should contain complete project configuration
 **And** NO entry should be created in global registry
-**And** project should be discoverable via search paths
+**And** project should be automatically discoverable via search paths (within maxDepth=2)
 **And** "npm run project:list -- --discovery" should show the project
 
 #### Scenario: AD02 - Auto-discovery project outside search depth
@@ -260,8 +264,7 @@ npm run project:create -- \
 npm run project:create -- \
   --name "Deep Auto Project" \
   --code "ADP1" \
-  --path "/tmp/mdt-cli-tests/projects/out-of-depth/level1/level2/project-auto-deep" \
-  --auto-discovery
+  --path "/tmp/mdt-cli-tests/projects/out-of-depth/level1/level2/project-auto-deep"
 ```
 **Then** the command should exit with code 0
 **And** local config should be created
@@ -276,8 +279,7 @@ npm run project:create -- \
 npm run project:create -- \
   --name "Conflict Project" \
   --code "AD01" \
-  --path "/tmp/mdt-cli-tests/projects/within-depth/project-auto-conflict" \
-  --auto-discovery
+  --path "/tmp/mdt-cli-tests/projects/within-depth/project-auto-conflict"
 ```
 **When** executing the command
 **Then** the command should exit with code 2 (validation error)
@@ -480,7 +482,7 @@ main() {
         "mkdir -p '$TEST_BASE/projects/within-depth/project-first-tickets/.mdt/adr' && npm run project:create -- --name 'Custom Tickets' --code 'PFT1' --path '$TEST_BASE/projects/within-depth/project-first-tickets' --tickets-path '.mdt/adr'"
 
     run_test "AD01 - Auto-Discovery Creation" \
-        "mkdir -p '$TEST_BASE/projects/within-depth/project-auto' && npm run project:create -- --name 'Auto Discovery' --code 'AD01' --path '$TEST_BASE/projects/within-depth/project-auto' --auto-discovery"
+        "mkdir -p '$TEST_BASE/projects/within-depth/project-auto' && npm run project:create -- --name 'Auto Discovery' --code 'AD01' --path '$TEST_BASE/projects/within-depth/project-auto'"
 
     # Add more test scenarios...
 

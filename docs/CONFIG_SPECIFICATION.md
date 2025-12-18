@@ -11,7 +11,7 @@ This specification defines the TOML configuration format for project management,
 The system uses a dual-configuration approach:
 
 1. **Global Registry** (`~/.config/markdown-ticket/projects/{project-dir}.toml`):
-   - Minimal discovery metadata
+   - Minimal discovery data
    - Enables multi-project support
    - Created/updated via UI
 
@@ -31,26 +31,43 @@ The system uses a dual-configuration approach:
 
 ## Schema Definition
 
-### Project Registry
+### Global Project Registry Configuration
 
 **File**: `~/.config/markdown-ticket/projects/{project-dir}.toml`
 
+#### Standard Configuration (Minimal)
 ```toml
 [project]
 path = "/path/to/project"
 active = true                       # optional, default true
-
-[metadata]
-dateRegistered = "2025-09-07"
 ```
 
-**Schema**:
+#### Extended Configuration (Fallback)
+If `.mdt-config.toml` hasn't been created, the global registry file may contain the complete project configuration using the schema from [Local Project Configuration](#local-project-configuration).
+
+**Schema - Minimal Configuration**:
 
 | Field | Type | Required | Description |
 |-------|------|---------|-------|
 | `path` | string | Required | Absolute path to project directory |
 | `active` | boolean | Optional | Whether project is visible (default: true) |
-| `dateRegistered` | string | Auto | Date project was registered |
+
+### Configuration File Relationships
+
+The system supports three valid file relationship states:
+
+1. **Standard**: Global minimal + Local complete
+   *This minimal configuration implies `.mdt-config.toml` contains the rest of project configuration.*
+
+2. **Fallback**: Global complete + No local file
+   *If `.mdt-config.toml` hasn't been created then the global registry file shall have complete project configuration.*
+
+3. **Auto-Discovery**: No global file + Local complete
+   *Global registry file may not be created if project path with `.mdt-config.toml` is within auto-discovery range.*
+
+### Local Project Configuration
+
+**File**: `.mdt-config.toml`
 
 **Schema - [project] section**:
 
@@ -71,6 +88,7 @@ dateRegistered = "2025-09-07"
 | `paths` | array | Optional | [] | - | Paths to documentation (files, dirs, globs) |
 | `excludeFolders` | array | Optional | [] | - | Folder names to exclude from discovery |
 | `maxDepth` | number | Optional | 3 | 1-10 | Maximum directory depth for scanning |
+
 
 ## Key Constraints
 
@@ -123,7 +141,7 @@ excludeFolders = [
 ]
 ```
 
-## Configuration Examples
+## Configuration Examples for `.mdt-config.toml`
 
 ### Minimal Configuration
 ```toml
@@ -162,6 +180,7 @@ excludeFolders = [
     ".env"
 ]
 maxDepth = 4
+
 ```
 
 ## Validation Rules
