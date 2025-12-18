@@ -1,200 +1,171 @@
 # Requirements: MDT-077
 
-**Source**: [MDT-077](../../../docs/CRs/MDT-077.md)
-**Generated**: 2025-12-16
-**CR Type**: Architecture
+**Source**: [MDT-077-cli-project-management-tool.md](../MDT-077-cli-project-management-tool.md)
+**Generated**: 2025-12-18
+**CR Type**: Feature Enhancement
 
 ## Introduction
 
-This specification defines behavioral requirements for a CLI project management system that provides consistent operations across multiple interfaces. The system eliminates code duplication through a shared service layer and supports three configuration strategies for different deployment scenarios.
+This document defines behavioral requirements for implementing a CLI project management tool that provides consistent project operations across CLI, Web UI, and MCP interfaces. The requirements focus on eliminating code duplication, establishing clear configuration patterns, and ensuring interfaces directly match the configuration structure.
 
 ## Requirements
 
-### Requirement 1: Project Creation Operations
+### Requirement 1: Project Lifecycle Management
 
-**Objective**: As a user, I want to create projects with consistent configuration, so that all interfaces work with identical project metadata.
-
-#### Acceptance Criteria
-
-1. WHEN a user initiates project creation with valid parameters, the system SHALL create a project configuration within 2 seconds.
-2. WHEN a user specifies global-only mode, the system SHALL store complete configuration only in the global registry.
-3. WHEN a user specifies project-first mode, the system SHALL store minimal reference in global registry and complete configuration locally.
-4. WHEN a user creates a project without specifying mode, the system SHALL default to project-first mode.
-5. IF required project parameters are missing or invalid, THEN the system SHALL reject creation with specific error details.
-
-### Requirement 2: Configuration Strategy Management
-
-**Objective**: As a user, I want flexible configuration storage options, so that projects can be managed according to deployment needs.
+**Objective**: As a user, I want to create, list, update, and delete projects through the CLI, so that I can manage my projects efficiently from the command line.
 
 #### Acceptance Criteria
 
-1. WHEN operating in project-first mode, the system SHALL discover projects by merging global reference with local configuration.
-2. WHEN operating in global-only mode, the system SHALL use complete configuration from global registry without local files.
-3. WHEN operating in auto-discovery mode, the system SHALL scan configured search paths for local configurations.
-4. WHILE any strategy is active, the system SHALL validate that project identifier matches directory name.
-5. IF a project's identifier does not match its directory name, THEN the system SHALL exclude it from discovery results.
+1. WHEN creating a project with valid parameters, the system shall create the project with generated or provided code.
+2. WHEN listing projects, the system shall display all registered projects with their active status.
+3. WHEN retrieving project details, the system shall display complete project information.
+4. WHEN updating a project with valid parameters, the system shall modify project attributes and persist changes.
+5. WHEN deleting a project, the system shall remove the project from registry after confirmation.
+6. WHEN enabling or disabling a project, the system shall update the project active status.
 
-### Requirement 3: Project Information Consistency
+### Requirement 2: Configuration Interface Structure
 
-**Objective**: As a user, I want to see consistent project information across all interfaces, so that CLI, Web UI, and MCP provide identical data.
-
-#### Acceptance Criteria
-
-1. WHEN multiple interfaces request project information, the system SHALL return identical metadata for the same project.
-2. WHEN project information is requested, the system SHALL validate all fields before returning data.
-3. WHILE project operations are in progress, the system SHALL maintain data consistency across all interfaces.
-4. IF validation detects invalid project codes, THEN the system SHALL normalize them to 2-5 uppercase characters.
-5. IF validation detects configuration format errors, THEN the system SHALL reject the operation with specific error messages.
-
-### Requirement 4: Document Discovery Management
-
-**Objective**: As a user, I want automatic document discovery that respects project configuration, so that relevant documents are available without manual setup.
+**Objective**: As a developer, I want configuration interfaces that directly map to the TOML structure, so that accessing configuration values is intuitive and error-free.
 
 #### Acceptance Criteria
 
-1. WHEN scanning for documents, the system SHALL automatically exclude the tickets path from discovery results.
-2. WHEN processing exclude folders, the system SHALL exclude any path containing excluded folder names at any depth.
-3. WHEN document discovery runs, the system SHALL respect the maximum depth configuration setting.
-4. WHILE document discovery is active, the system SHALL not scan excluded folders.
-5. IF document depth exceeds configured maximum, THEN the system SHALL stop scanning that path branch.
+1. WHEN accessing project name, the configuration interface shall provide direct access without nested property navigation.
+2. WHEN accessing document paths, the configuration interface shall map to the document section of the configuration.
+3. WHEN defining configuration interfaces, the system shall avoid unnecessary nesting that doesn't exist in the actual configuration format.
+4. WHEN accessing configuration values, the system shall use direct property access patterns.
 
-### Requirement 5: Caching and Performance
+### Requirement 3: Three-Strategy Configuration Architecture
 
-**Objective**: As a user, I want fast project operations, so that I can work efficiently without delays.
-
-#### Acceptance Criteria
-
-1. WHEN project listings are requested, the system SHALL return cached results when cache age is under 30 seconds.
-2. WHEN configuration changes occur, the system SHALL invalidate the project cache immediately.
-3. WHILE cache is valid, the system SHALL serve project information from cache without file system access.
-4. IF cache expiry occurs, THEN the system SHALL refresh cache with latest file system data.
-5. IF multiple concurrent operations request data, THEN the system SHALL share cache updates without redundant file reads.
-
-### Requirement 6: Command Line Interface Operations
-
-**Objective**: As a user, I want comprehensive CLI commands, so that I can manage projects entirely from command line.
+**Objective**: As a system administrator, I want to choose between Project-First, Global-Only, and Auto-Discovery configuration strategies, so that I can deploy the system according to my infrastructure needs.
 
 #### Acceptance Criteria
 
-1. WHEN executing CLI commands, the system SHALL validate all arguments before processing.
-2. WHEN CLI operations fail, the system SHALL exit with appropriate error codes (0=success, 1=error, 2=validation, 3=not_found, 6=cancelled).
-3. WHEN CLI output is requested in JSON format, the system SHALL provide structured machine-readable results.
-4. WHILE CLI commands execute, the system SHALL provide progress feedback for operations exceeding 2 seconds.
-5. IF required flags are missing, THEN the system SHALL display usage information and exit with validation error.
+1. WHEN creating projects without flags (Project-First mode), the system shall store minimal discovery data in global registry and complete operational details in local configuration.
+2. WHEN creating projects with `--global-only` flag (Global-Only mode), the system shall store complete project definition in global registry without creating local configuration.
+3. WHEN creating projects in auto-discovery paths (Auto-Discovery mode), the system shall create only local configuration without global registry entry.
+4. WHEN scanning for projects, the system shall auto-discover projects with local configuration within configured search paths.
+5. WHILE reading configurations in Project-First mode, the system shall merge global registry minimal data with complete local configuration.
 
-### Requirement 7: Project Discovery and Registration
+### Requirement 4: Configuration Schema Validation
 
-**Objective**: As a user, I want automatic project discovery, so that projects are available without manual registration.
-
-#### Acceptance Criteria
-
-1. WHEN system starts, the system SHALL scan configured search paths for projects.
-2. WHEN new projects are discovered, the system SHALL register them automatically if auto-discovery is enabled.
-3. WHEN global registry is scanned, the system SHALL validate that referenced projects exist at specified paths.
-4. WHILE discovery runs, the system SHALL skip directories without valid configuration files.
-5. IF a referenced project cannot be found, THEN the system SHALL remove it from the active project list.
-
-### Requirement 8: Configuration Validation
-
-**Objective**: As a user, I want configuration validation, so that errors are caught early with clear messages.
+**Objective**: As a user, I want configurations that follow the defined specification, so that all tools work consistently.
 
 #### Acceptance Criteria
 
-1. WHEN configuration files are loaded, the system SHALL validate all required fields are present.
-2. WHEN project codes are validated, the system SHALL enforce 2-5 uppercase character format.
-3. WHEN paths are validated, the system SHALL verify they exist and are accessible.
-4. WHILE validation runs, the system SHALL collect all errors before reporting.
-5. IF validation fails, THEN the system SHALL provide specific error messages for each invalid field.
+1. WHEN creating projects, the system shall validate that the project code matches the required pattern of 2-5 uppercase letters.
+2. WHEN validating projects, the system shall ensure the project identifier equals the directory name exactly.
+3. WHEN encountering git worktrees, the system shall skip projects where identifiers don't match directory names.
+4. WHEN setting up document discovery, the system shall automatically exclude the tickets path from document scanning.
+5. WHEN writing configurations, the system shall follow the defined TOML structure.
 
-### Requirement 9: Error Handling and Recovery
+### Requirement 5: Project Validation and Error Handling
 
-**Objective**: As a user, I want clear error messages with recovery guidance, so that I can resolve issues efficiently.
-
-#### Acceptance Criteria
-
-1. WHEN file system errors occur, the system SHALL provide error messages with permission and path details.
-2. WHEN configuration conflicts exist, the system SHALL identify specific conflicting fields.
-3. WHEN operations fail, the system SHALL maintain system state without partial updates.
-4. WHILE retry operations run, the system SHALL implement exponential backoff with maximum 3 attempts.
-5. IF project creation fails midway, THEN the system SHALL clean up any created files or registry entries.
-
-### Requirement 10: Multi-Interface Synchronization
-
-**Objective**: As a user, I want real-time synchronization across interfaces, so that changes made in one interface are immediately visible in others.
+**Objective**: As a user, I want clear validation errors for project configurations, so that I can fix issues quickly.
 
 #### Acceptance Criteria
 
-1. WHEN project information changes through any interface, the system SHALL broadcast updates to all connected clients.
-2. WHEN multiple interfaces modify the same project, the system SHALL apply changes in sequence with last-writer-wins.
-3. WHILE synchronization is active, the system SHALL maintain consistency of project metadata.
-4. IF synchronization conflicts occur, THEN the system SHALL resolve them using timestamp comparison.
-5. IF an interface disconnects during operations, THEN the system SHALL complete in-progress operations and queue updates for reconnection.
+1. WHEN validating project names, the system shall check for non-empty string values.
+2. WHEN validating project codes, the system shall enforce the 2-5 uppercase letters pattern.
+3. WHEN validating paths, the system shall ensure paths exist and are accessible.
+4. WHEN rejecting configurations, the system shall provide detailed error messages with field name and validation rule.
+5. WHEN validation fails, the system shall exit with appropriate error code and display specific validation details.
+6. WHEN project is not found, the system shall exit with appropriate error code and suggest available projects.
+7. WHEN file system errors occur, the system shall exit with appropriate error code and display error details.
+
+### Requirement 6: Cross-Interface Consistency
+
+**Objective**: As a developer, I want consistent behavior across CLI, Web UI, and MCP interfaces, so that users have a uniform experience.
+
+#### Acceptance Criteria
+
+1. WHEN a project is created via CLI, the system shall ensure Web UI can read and display the project.
+2. WHEN a project is updated via CLI, the system shall ensure MCP tools can read updated configuration.
+3. WHILE project operations execute, the system shall use shared validation modules across all interfaces.
+4. IF configuration is invalid, THEN all interfaces shall report identical validation errors.
+5. WHEN implementing CRUD operations, all interfaces shall use the same business logic layer.
+
+### Requirement 7: Configuration Class Unification
+
+**Objective**: As a maintainer, I want to use a single configuration class, so that I eliminate confusion and have a single source of truth.
+
+#### Acceptance Criteria
+
+1. WHEN implementing project operations, the system shall use the local project configuration class.
+2. WHEN refactoring existing code, the system shall remove duplicate configuration classes.
+3. WHEN generating project configurations, the system shall use the shared configuration generator.
+4. WHEN updating configuration-related code, the system shall use APIs from the shared services.
+
+### Requirement 8: Performance and Resource Management
+
+**Objective**: As a user, I want CLI operations to complete quickly and use minimal resources, so that the tool is responsive and lightweight.
+
+#### Acceptance Criteria
+
+1. WHEN performing any project operation, the system shall complete within 2 seconds for single projects.
+2. WHILE listing projects, the system shall use memory efficiently for large numbers of projects.
+3. WHEN idle, the CLI tool shall not maintain persistent connections or background processes.
+4. WHEN caching project listings, the system shall improve performance compared to uncached operations.
+
+### Requirement 9: Concurrent Operation Safety
+
+**Objective**: As a system, I want to handle concurrent operations safely, so that project data remains consistent.
+
+#### Acceptance Criteria
+
+1. WHILE multiple CLI operations execute, the system shall prevent concurrent modifications to the same project.
+2. WHEN file system operation fails during project update, the system shall preserve original state and report error.
+3. IF global registry and local configuration become inconsistent, THEN the system shall detect and report inconsistency.
+4. WHEN project operations are interrupted, the system shall not leave partial or corrupted configuration files.
+
+### Requirement 10: Test Coverage and Quality Assurance
+
+**Objective**: As a developer, I want comprehensive test coverage for CLI operations, so that I can ensure reliability across all commands.
+
+#### Acceptance Criteria
+
+1. WHEN writing unit tests, each validation method shall have dedicated test cases.
+2. WHEN writing integration tests, each CLI command shall be tested with valid and invalid inputs.
+3. WHEN testing file operations, the test suite shall use temporary directories and cleanup procedures.
+4. WHEN measuring coverage, the CLI tool tests shall achieve comprehensive coverage of all operations.
 
 ---
-
-## Artifact Mapping
-
-| Req ID | Requirement Summary | Primary Artifact | Integration Points |
-|--------|---------------------|------------------|-------------------|
-| R1.1 | Project creation operations | `shared/services/ProjectService.ts` | CLI tools, Web UI controllers |
-| R1.2 | Global-only configuration storage | `shared/services/ProjectService.ts` | Global registry storage |
-| R1.3 | Project-first configuration storage | `shared/services/ProjectService.ts` | Local config files |
-| R2.1 | Project-first discovery merging | `shared/services/ProjectService.ts` | Configuration merger |
-| R2.2 | Global-only discovery | `shared/services/ProjectService.ts` | Global registry reader |
-| R2.3 | Auto-discovery scanning | `shared/services/ProjectService.ts` | File system scanner |
-| R3.1 | Cross-interface consistency | `shared/services/ProjectService.ts` | All interface adapters |
-| R3.2 | Project information validation | `shared/tools/ProjectValidator.ts` | Validation layer |
-| R4.1 | Tickets path exclusion | Document discovery service | Configuration processor |
-| R4.2 | Exclude folder matching | Document discovery service | Path filtering logic |
-| R5.1 | 30-second project listing cache | Caching service | Project service |
-| R5.2 | Cache invalidation on changes | Caching service | File system watcher |
-| R6.1 | CLI argument validation | `shared/tools/project-cli.ts` | Argument parser |
-| R6.2 | CLI error code handling | `shared/tools/project-cli.ts` | Exit code manager |
-| R7.1 | Search path scanning | `shared/services/ProjectService.ts` | Discovery engine |
-| R7.2 | Project registration | `shared/services/ProjectService.ts` | Registry manager |
-| R8.1 | Configuration field validation | `shared/tools/ProjectValidator.ts` | Schema validator |
-| R8.2 | Project code format validation | `shared/tools/ProjectValidator.ts` | Code format checker |
-| R9.1 | File system error handling | Error handling service | File operations |
-| R9.2 | Conflict detection and reporting | Error handling service | Conflict resolver |
-| R10.1 | Real-time update broadcasting | SSE event system | Event broadcaster |
-| R10.2 | Multi-interface conflict resolution | Conflict resolution service | Timestamp comparator |
 
 ## Traceability
 
 | Req ID | CR Section | Acceptance Criteria |
 |--------|------------|---------------------|
-| R1.1-R1.5 | Problem | Eliminate multiple code paths |
-| R2.1-R2.5 | Architecture Patterns | Three-strategy configuration |
-| R3.1-R3.5 | Problem | Ensure consistent behavior |
-| R4.1-R4.5 | Implementation Guidelines | Document discovery behavior |
-| R5.1-R5.5 | Caching Strategy Pattern | Performance requirements |
-| R6.1-R6.5 | CLI API Design Patterns | Command structure |
-| R7.1-R7.5 | Integration Patterns | Project discovery |
-| R8.1-R8.5 | Validation Layer Pattern | Configuration validation |
-| R9.1-R9.5 | Error Handling Pattern | Error recovery |
-| R10.1-R10.5 | Success Criteria | Multi-interface synchronization |
+| R1.1-R1.6 | Functional Requirements | Users can create, list, update, and delete projects through CLI |
+| R2.1-R2.4 | Critical Constraints | Interface refactoring for direct configuration access |
+| R3.1-R3.5 | Problem Statement | Dual configuration system implementation |
+| R4.1-R4.5 | Critical Constraints | Schema validation compliance |
+| R5.1-R5.7 | Acceptance Criteria | Error handling and validation |
+| R6.1-R6.5 | Functional Requirements | Consistent behavior across interfaces |
+| R7.1-R7.4 | Constraints | Configuration class unification |
+| R8.1-R8.4 | Non-Functional Requirements | Performance targets |
+| R9.1-R9.4 | Edge Cases | Concurrent operation safety |
+| R10.1-R10.4 | Non-Functional Requirements | Test coverage requirements |
 
 ## Non-Functional Requirements
 
 ### Performance
-- WHEN project operations execute, the system SHALL complete single project operations within 2 seconds.
-- WHEN caching is active, the system SHALL reduce project listing time by at least 85% compared to uncached operations.
-- WHILE system is under normal load, the system SHALL maintain memory usage below 50MB for all operations.
+- WHEN executing any single-project operation, the system shall complete within 2 seconds.
+- WHILE processing project lists, memory usage shall remain efficient.
+- FOR cached operations, performance shall improve significantly compared to uncached operations.
 
 ### Reliability
-- IF file system operations fail, the system SHALL implement retry logic with exponential backoff.
-- IF partial failures occur during multi-step operations, the system SHALL roll back to original state.
-- WHILE system is operating, the system SHALL maintain data consistency across all interfaces.
+- IF configuration validation fails, THEN the system shall display specific validation errors.
+- IF file system operations fail, THEN the system shall preserve original state.
+- WHEN multiple operations target same project, the system shall prevent data corruption.
 
 ### Consistency
-- WHEN configuration changes are made, the system SHALL apply changes atomically across all storage locations.
-- WHEN multiple interfaces access project data, the system SHALL provide identical results for the same project.
-- WHILE cache updates occur, the system SHALL prevent serving stale data for more than 30 seconds.
+- WHILE projects exist, the system shall ensure global and local configurations remain synchronized.
+- WHEN configuration changes occur, the system shall validate against specification rules.
+- ACROSS all interfaces, the system shall use identical business logic and validation.
 
-### Usability
-- WHEN CLI commands fail, the system SHALL provide specific error messages with actionable guidance.
-- WHEN validation errors occur, the system SHALL indicate exactly which fields are invalid and why.
-- IF required parameters are missing, the system SHALL display clear usage examples.
+### Maintainability
+- FOR all configuration operations, the system shall use centralized validation.
+- WHEN adding new features, the system shall place business logic in shared services.
+- FOR project configurations, the system shall follow defined schema without legacy fields.
 
 ---
 *Generated from MDT-077 by /mdt:requirements*
