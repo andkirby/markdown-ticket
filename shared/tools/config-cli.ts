@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import toml from 'toml';
-import { GlobalConfig } from '../services/ProjectService.js';
+import { GlobalConfig } from '../services/project/types.js';
 import { DEFAULT_PATHS } from '../utils/constants.js';
 
 /**

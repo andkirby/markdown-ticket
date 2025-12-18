@@ -10,8 +10,8 @@ export interface ValidationResult {
 }
 
 /**
- * Validate project key format (e.g., "MDT", "API", "WEB")
- * Pattern: 2-5 uppercase letters
+ * Validate project key format (e.g., "MDT", "API", "WEB", "GLO1")
+ * Pattern: 2-5 uppercase letters and numbers
  */
 export function validateProjectKey(key: string): ValidationResult {
   if (!key || typeof key !== 'string') {
@@ -19,12 +19,12 @@ export function validateProjectKey(key: string): ValidationResult {
   }
 
   const normalized = key.trim().toUpperCase();
-  const pattern = /^[A-Z]{2,5}$/;
+  const pattern = /^[A-Z0-9]{2,5}$/;
 
   if (!pattern.test(normalized)) {
     return {
       valid: false,
-      message: `Project key '${key}' is invalid. Must be 2-5 uppercase letters (e.g., MDT, API, WEB)`
+      message: `Project key '${key}' is invalid. Must be 2-5 characters (uppercase letters and numbers) (e.g., MDT, API, GLO1)`
     };
   }
 
@@ -32,7 +32,7 @@ export function validateProjectKey(key: string): ValidationResult {
 }
 
 /**
- * Validate CR key format (e.g., "MDT-001")
+ * Validate CR key format (e.g., "MDT-001", "GLO1-123")
  * Pattern: Project code + dash + 3+ digits
  */
 export function validateCRKey(key: string): ValidationResult {
@@ -41,12 +41,12 @@ export function validateCRKey(key: string): ValidationResult {
   }
 
   const trimmed = key.trim();
-  const pattern = /^[A-Z]{2,5}-\d{3,}$/;
+  const pattern = /^[A-Z0-9]{2,5}-\d{3,}$/;
 
   if (!pattern.test(trimmed)) {
     return {
       valid: false,
-      message: `CR key '${key}' is invalid. Must be format: PROJECTCODE-### (e.g., MDT-001, API-123)`
+      message: `CR key '${key}' is invalid. Must be format: PROJECTCODE-### (e.g., MDT-001, API-123, GLO1-456)`
     };
   }
 

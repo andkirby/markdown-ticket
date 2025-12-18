@@ -15,7 +15,6 @@ import {ProjectDiscoveryService} from './project/ProjectDiscoveryService.js';
 import {ProjectConfigService} from './project/ProjectConfigService.js';
 import {ProjectCacheService} from './project/ProjectCacheService.js';
 
-export {GlobalConfig} from './project/types.js';
 
 export class ProjectService implements IProjectService {
     private discovery: IProjectDiscoveryService;
