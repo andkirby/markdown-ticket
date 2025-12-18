@@ -4,6 +4,8 @@ import { ProjectService } from '../services/ProjectService.js';
 import { ProjectValidator } from './ProjectValidator.js';
 import { Project } from '../models/Project.js';
 import { CONFIG_FILES, DEFAULTS } from '../utils/constants.js';
+import { ProjectError, CLI_ERROR_CODES } from './project-cli.js';
+import { isPathWithinSearchPaths, calculatePathDepth } from '../utils/path-resolver.js';
 
 /**
  * Project update input
@@ -28,6 +30,8 @@ export interface ProjectCreateInput {
   globalOnly?: boolean; // Strategy 1: Global-only mode
   createProjectPath?: boolean; // Flag to auto-create project directory
   ticketsPath?: string; // Relative path for tickets (default: DEFAULTS.TICKETS_PATH)
+  documentPaths?: string[]; // Document discovery paths (global-only mode only)
+  maxDepth?: number; // Document discovery max depth (global-only mode only)
 }
 
 /**
@@ -50,7 +54,7 @@ export class ProjectManager {
     // Validate name
     const nameResult = ProjectValidator.validateName(input.name);
     if (!nameResult.valid) {
-      throw new Error(nameResult.error);
+      throw new ProjectError(nameResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
     }
     const name = nameResult.normalized!;
 
@@ -59,7 +63,7 @@ export class ProjectManager {
     if (input.code) {
       const codeResult = ProjectValidator.validateCode(input.code);
       if (!codeResult.valid) {
-        throw new Error(codeResult.error);
+        throw new ProjectError(codeResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
       }
       code = codeResult.normalized!;
     } else {
@@ -71,7 +75,7 @@ export class ProjectManager {
       mustExist: !input.createProjectPath
     });
     if (!pathResult.valid) {
-      throw new Error(pathResult.error);
+      throw new ProjectError(pathResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
     }
     const projectPath = pathResult.normalized!;
 
@@ -81,7 +85,10 @@ export class ProjectManager {
     // Check if code is already used by another project
     const existingProjectByCode = allProjects.find(p => p.project.code === code);
     if (existingProjectByCode) {
-      throw new Error(`Project with code "${code}" already exists`);
+      throw new ProjectError(
+        `Project with code "${code}" already exists. To modify this project, use the update command: npm run project:update -- ${code}`,
+        CLI_ERROR_CODES.VALIDATION_ERROR
+      );
     }
 
     // Check if there's an existing project at the same path
@@ -102,7 +109,7 @@ export class ProjectManager {
     if (description) {
       const descResult = ProjectValidator.validateDescription(description);
       if (!descResult.valid) {
-        throw new Error(descResult.error);
+        throw new ProjectError(descResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
       }
     }
 
@@ -111,7 +118,7 @@ export class ProjectManager {
     if (repository) {
       const repoResult = ProjectValidator.validateRepository(repository);
       if (!repoResult.valid) {
-        throw new Error(repoResult.error);
+        throw new ProjectError(repoResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
       }
     }
 
@@ -120,7 +127,7 @@ export class ProjectManager {
     if (input.ticketsPath) {
       const ticketsPathResult = ProjectValidator.validateTicketsPath(input.ticketsPath);
       if (!ticketsPathResult.valid) {
-        throw new Error(ticketsPathResult.error);
+        throw new ProjectError(ticketsPathResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
       }
       ticketsPath = ticketsPathResult.normalized!;
     }
@@ -130,7 +137,29 @@ export class ProjectManager {
     if (input.createProjectPath && !input.globalOnly && !fs.existsSync(projectPath)) {
       fs.mkdirSync(projectPath, { recursive: true });
     } else if (!input.globalOnly && !fs.existsSync(projectPath) && !input.createProjectPath) {
-      throw new Error(`Project path does not exist: ${projectPath}. Use --create-project-path flag to auto-create.`);
+      throw new ProjectError(`Project path does not exist: ${projectPath}. Use --create-project-path flag to auto-create.`, CLI_ERROR_CODES.VALIDATION_ERROR);
+    }
+
+    // Determine if this should be an auto-discovery project
+    // Auto-discovery projects are NOT registered in the global registry
+    let isAutoDiscovery = false;
+    if (!input.globalOnly) {
+      // Check if project path is within configured search paths and depth
+      const globalConfig = this.projectService.getGlobalConfig();
+      if (globalConfig.discovery?.autoDiscover && globalConfig.discovery.searchPaths) {
+        const isWithinSearchPaths = isPathWithinSearchPaths(projectPath, globalConfig.discovery.searchPaths);
+        if (isWithinSearchPaths) {
+          // Check depth for each search path
+          const maxDepth = globalConfig.discovery.maxDepth || 2;
+          for (const searchPath of globalConfig.discovery.searchPaths) {
+            const depth = calculatePathDepth(projectPath, searchPath);
+            if (depth >= 0 && depth <= maxDepth) {
+              isAutoDiscovery = true;
+              break;
+            }
+          }
+        }
+      }
     }
 
     // Build Project object with complete configuration matching Web UI template
@@ -146,21 +175,40 @@ export class ProjectManager {
         description,
         repository,
         startNumber: 1,
-        counterFile: CONFIG_FILES.COUNTER_FILE
+        counterFile: CONFIG_FILES.COUNTER_FILE,
+        ticketsPath: ticketsPath || DEFAULTS.TICKETS_PATH
       },
       metadata: {
         dateRegistered: new Date().toISOString().split('T')[0],
         lastAccessed: new Date().toISOString().split('T')[0],
         version: '1.0.0'
-      }
+      },
+      autoDiscovered: isAutoDiscovery
     };
 
-    // Register project (global config is always created)
-    this.projectService.registerProject(project);
+    // Register project in global registry only if NOT auto-discovery
+    if (!isAutoDiscovery) {
+      // For global-only projects, pass document discovery settings
+      const documentDiscoverySettings = input.globalOnly ? {
+        paths: input.documentPaths,
+        maxDepth: input.maxDepth
+      } : undefined;
+
+      this.projectService.registerProject(project, documentDiscoverySettings);
+
+      if (input.globalOnly) {
+        console.log(`Global-only mode: Project registered only in global registry`);
+      } else {
+        console.log(`Project-first mode: Project registered in global registry with local config`);
+      }
+    } else {
+      console.log(`Auto-discovery mode: Project created with local config only (no global registry entry)`);
+    }
 
     // Create local config based on strategy
     if (!input.globalOnly) {
       // Strategy 2: Project-First Mode (default) - Create local config
+      // Strategy 3: Auto-Discovery Mode - Also creates local config
       this.projectService.createOrUpdateLocalConfig(
         projectId,
         projectPath,
@@ -179,7 +227,7 @@ export class ProjectManager {
       }
     } else {
       // Strategy 1: Global-Only Mode - Skip local config creation
-      console.log(`Global-only mode: Project registered only in global registry`);
+      // Local config would be handled by auto-discovery if needed
     }
 
     return project;
@@ -199,7 +247,7 @@ export class ProjectManager {
     const project = await this.projectService.getProjectByCodeOrId(codeOrId);
 
     if (!project) {
-      throw new Error(`Project not found: ${codeOrId}`);
+      throw new ProjectError(`Project not found: ${codeOrId}`, CLI_ERROR_CODES.NOT_FOUND);
     }
 
     return project;
@@ -218,7 +266,7 @@ export class ProjectManager {
     if (updates.name !== undefined) {
       const nameResult = ProjectValidator.validateName(updates.name);
       if (!nameResult.valid) {
-        throw new Error(nameResult.error);
+        throw new ProjectError(nameResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
       }
       validatedUpdates.name = nameResult.normalized!;
     }
@@ -226,7 +274,7 @@ export class ProjectManager {
     if (updates.description !== undefined) {
       const descResult = ProjectValidator.validateDescription(updates.description);
       if (!descResult.valid) {
-        throw new Error(descResult.error);
+        throw new ProjectError(descResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
       }
       validatedUpdates.description = descResult.normalized!;
     }
@@ -234,7 +282,7 @@ export class ProjectManager {
     if (updates.repository !== undefined) {
       const repoResult = ProjectValidator.validateRepository(updates.repository);
       if (!repoResult.valid) {
-        throw new Error(repoResult.error);
+        throw new ProjectError(repoResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
       }
       validatedUpdates.repository = repoResult.normalized!;
     }
@@ -242,7 +290,7 @@ export class ProjectManager {
     if (updates.ticketsPath !== undefined) {
       const ticketsPathResult = ProjectValidator.validateTicketsPath(updates.ticketsPath);
       if (!ticketsPathResult.valid) {
-        throw new Error(ticketsPathResult.error);
+        throw new ProjectError(ticketsPathResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR);
       }
       validatedUpdates.ticketsPath = ticketsPathResult.normalized!;
     }

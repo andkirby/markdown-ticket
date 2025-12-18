@@ -48,14 +48,21 @@ export interface Project {
     active: boolean;
     description: string;
     repository?: string;
+    ticketsPath?: string;
   };
   metadata: {
     dateRegistered: string;
     lastAccessed: string;
     version: string;
+    globalOnly?: boolean; // True for Strategy 1 (Global-Only)
   };
   tickets?: {
     codePattern?: string;
+  };
+  document?: {
+    paths?: string[];
+    excludeFolders?: string[];
+    maxDepth?: number;
   };
   autoDiscovered?: boolean; // True for Strategy 3 (Auto-Discovery)
   configPath?: string; // Path to local config (if exists)

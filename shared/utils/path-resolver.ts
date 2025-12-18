@@ -92,3 +92,45 @@ export function resolveProjectRelativePath(projectPath: string, targetPath: stri
   }
   return resolvePath(projectPath, targetPath);
 }
+
+/**
+ * Check if a target path is within any of the search paths
+ */
+export function isPathWithinSearchPaths(targetPath: string, searchPaths: string[]): boolean {
+  const normalizedTarget = normalizePath(targetPath);
+
+  for (const searchPath of searchPaths) {
+    const normalizedSearch = normalizePath(searchPath);
+    const relative = getRelativePath(normalizedSearch, normalizedTarget);
+
+    // If relative path doesn't start with '..' and is not absolute, it's within the search path
+    if (!relative.startsWith('..') && !isAbsolutePath(relative)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Calculate the depth of a target path relative to a search path
+ * Returns 0 if targetPath is the same as searchPath
+ */
+export function calculatePathDepth(targetPath: string, searchPath: string): number {
+  const normalizedTarget = normalizePath(targetPath);
+  const normalizedSearch = normalizePath(searchPath);
+  const relative = getRelativePath(normalizedSearch, normalizedTarget);
+
+  // If path is the same, depth is 0
+  if (relative === '' || relative === '.') {
+    return 0;
+  }
+
+  // If relative path goes up, it's outside the search path
+  if (relative.startsWith('..')) {
+    return -1;
+  }
+
+  // Count the number of directory separators
+  return relative.split(path.sep).length;
+}
