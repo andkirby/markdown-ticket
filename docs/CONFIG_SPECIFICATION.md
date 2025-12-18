@@ -71,15 +71,15 @@ The system supports three valid file relationship states:
 
 **Schema - [project] section**:
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `name` | string | Required | - | Display name for the project |
-| `code` | string | Required | - | Unique project identifier (2-5 uppercase letters) |
-| `id` | string | **Required** | - | **Must match directory name exactly** |
-| `ticketsPath` | string | Optional | "docs/CRs" | Relative path to tickets directory |
-| `description` | string | Optional | - | Project description |
-| `repository` | string | Optional | - | Repository URL |
-| `active` | boolean | Optional | true | Whether project is visible |
+| Field | Type | Required | Default | Description                                                                               |
+|-------|------|----------|---------|-------------------------------------------------------------------------------------------|
+| `name` | string | Required | - | Display name for the project                                                              |
+| `code` | string | Required | - | Unique project identifier (2-5 uppercase letters and digits, regex: ([A-Z][A-Z0-9]{1,4})) |
+| `id` | string | **Required** | - | **Must match directory name exactly**                                                     |
+| `ticketsPath` | string | Optional | "docs/CRs" | Relative path to tickets directory                                                        |
+| `description` | string | Optional | - | Project description                                                                       |
+| `repository` | string | Optional | - | Repository URL                                                                            |
+| `active` | boolean | Optional | true | Whether project is visible                                                                |
 
 **Schema - [project.document] section**:
 
