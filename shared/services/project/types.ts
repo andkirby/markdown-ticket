@@ -96,8 +96,30 @@ export interface IProjectService extends
 
 /** Registry data structure */
 export type RegistryData = {
-  project: { path: string; code?: string; };
-  metadata: { dateRegistered: string; lastAccessed: string; version: string; };
+  project: {
+    path: string;
+    code?: string;
+    name?: string;
+    id?: string;
+    ticketsPath?: string;
+    description?: string;
+    active?: boolean;
+    startNumber?: number;
+    counterFile?: string;
+    repository?: string;
+    dateRegistered?: string;
+    document?: {
+      paths?: string[];
+      excludeFolders?: string[];
+      maxDepth?: number;
+    };
+  };
+  metadata: {
+    dateRegistered: string;
+    lastAccessed: string;
+    version: string;
+    globalOnly?: boolean;
+  };
 };
 
 /** Project scan options */

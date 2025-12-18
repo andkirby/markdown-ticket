@@ -66,13 +66,6 @@ export class ProjectManager {
       code = ProjectValidator.generateCodeFromName(name);
     }
 
-    // Check code doesn't already exist
-    const allProjects = await this.projectService.getAllProjects();
-    const existingProject = allProjects.find(p => p.project.code === code);
-    if (existingProject) {
-      throw new Error(`Project with code "${code}" already exists`);
-    }
-
     // Validate path (require existence unless createProjectPath flag is set)
     const pathResult = ProjectValidator.validatePath(input.path, {
       mustExist: !input.createProjectPath
@@ -81,6 +74,28 @@ export class ProjectManager {
       throw new Error(pathResult.error);
     }
     const projectPath = pathResult.normalized!;
+
+    // Check for existing projects
+    const allProjects = await this.projectService.getAllProjects();
+
+    // Check if code is already used by another project
+    const existingProjectByCode = allProjects.find(p => p.project.code === code);
+    if (existingProjectByCode) {
+      throw new Error(`Project with code "${code}" already exists`);
+    }
+
+    // Check if there's an existing project at the same path
+    const existingProjectByPath = allProjects.find(p => p.project.path === projectPath);
+    let projectId: string;
+
+    if (existingProjectByPath) {
+      // If there's already a project at this path, we'll update it
+      // This happens when a minimal registry entry exists and we're converting to global-only
+      projectId = existingProjectByPath.id;
+    } else {
+      // Generate unique project ID from directory name for consistency with listing
+      projectId = await this.projectService.generateProjectId(path.basename(projectPath));
+    }
 
     // Validate description
     const description = input.description || '';
@@ -110,9 +125,7 @@ export class ProjectManager {
       ticketsPath = ticketsPathResult.normalized!;
     }
 
-    // Generate unique project ID from directory name for consistency with listing
-    const projectId = await this.projectService.generateProjectId(path.basename(projectPath));
-
+  
     // Create project directory if needed (if createProjectPath flag is set)
     if (input.createProjectPath && !input.globalOnly && !fs.existsSync(projectPath)) {
       fs.mkdirSync(projectPath, { recursive: true });

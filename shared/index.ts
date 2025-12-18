@@ -25,7 +25,7 @@ export type {
 
 // Services
 export * from './services/ProjectService.js';
-export type { GlobalConfig } from './services/ProjectService.js';
+export type { GlobalConfig } from './services/project/types.js';
 export * from './services/MarkdownService.js';
 export * from './services/TemplateService.js';
 export * from './services/CRService.js';
