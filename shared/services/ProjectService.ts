@@ -74,8 +74,11 @@ export class ProjectService implements IProjectService {
         return this.discovery.autoDiscoverProjects(p);
     }
 
-    registerProject(p: Project) {
-        return this.discovery.registerProject(p);
+    registerProject(p: Project, documentDiscoverySettings?: {
+        paths?: string[];
+        maxDepth?: number;
+    }) {
+        return this.discovery.registerProject(p, documentDiscoverySettings);
     }
 
     // Cache

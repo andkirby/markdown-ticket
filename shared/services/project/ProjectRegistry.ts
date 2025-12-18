@@ -72,7 +72,10 @@ export class ProjectRegistry {
    * Strategy 2 (Project-First): Store minimal reference: path for discovery, metadata for tracking
    * Complete definition remains in local config for Project-First strategy
    */
-  registerProject(project: Project): void {
+  registerProject(project: Project, documentDiscoverySettings?: {
+    paths?: string[];
+    maxDepth?: number;
+  }): void {
     try {
       // Ensure projects directory exists
       if (!directoryExists(this.projectsDir)) {
@@ -82,9 +85,8 @@ export class ProjectRegistry {
       const projectFile = buildRegistryFilePath(this.projectsDir, project.id);
 
       // Determine if this is a global-only project by checking if there's no local config
-      // Global-only projects have no configFile (empty string) or the config file doesn't exist
-      const isGlobalOnly = project.project.configFile === '' ||
-                           (project.project.configFile && !fileExists(project.project.configFile));
+      // Global-only projects have no configFile (empty string)
+      const isGlobalOnly = project.project.configFile === '';
 
       let projectData: any;
 
@@ -96,14 +98,14 @@ export class ProjectRegistry {
             code: project.project.code,
             id: project.project.id,
             path: project.project.path,
-            ticketsPath: "docs/CRs", // Default tickets path
+            ticketsPath: project.project.ticketsPath || "docs/CRs",
             description: project.project.description || "",
             active: project.project.active,
             dateRegistered: project.metadata.dateRegistered,
             document: {
-              paths: [],
+              paths: documentDiscoverySettings?.paths || [],
               excludeFolders: [],
-              maxDepth: 3
+              maxDepth: documentDiscoverySettings?.maxDepth || 3
             }
           },
           metadata: {
@@ -119,7 +121,8 @@ export class ProjectRegistry {
         // Complete definition stays in local config for portability and team collaboration
         projectData = {
           project: {
-            path: project.project.path  // Only store path for discovery
+            path: project.project.path,  // Only store path for discovery
+            active: project.project.active
           },
           metadata: {
             dateRegistered: project.metadata.dateRegistered,

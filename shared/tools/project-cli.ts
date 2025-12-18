@@ -105,6 +105,43 @@ class ProjectCommands {
           code = args.positional[1];
         }
 
+        // Parse document-paths parameter (JSON array string)
+        let documentPaths: string[] | undefined;
+        if (typeof args.flags['document-paths'] === 'string') {
+          try {
+            documentPaths = JSON.parse(args.flags['document-paths']);
+            if (!Array.isArray(documentPaths)) {
+              throw new ProjectError('--document-paths must be a JSON array of strings', CLI_ERROR_CODES.VALIDATION_ERROR);
+            }
+            // Validate all elements are strings
+            if (!documentPaths.every(p => typeof p === 'string')) {
+              throw new ProjectError('All elements in --document-paths must be strings', CLI_ERROR_CODES.VALIDATION_ERROR);
+            }
+          } catch (e) {
+            if (e instanceof ProjectError) {
+              throw e;
+            }
+            throw new ProjectError('--document-paths must be valid JSON: ' + (e instanceof Error ? e.message : String(e)), CLI_ERROR_CODES.VALIDATION_ERROR);
+          }
+        }
+
+        // Parse max-depth parameter (number)
+        let maxDepth: number | undefined;
+        if (args.flags['max-depth'] !== undefined) {
+          if (typeof args.flags['max-depth'] === 'string') {
+            const parsed = parseInt(args.flags['max-depth'], 10);
+            if (isNaN(parsed) || parsed < 1 || parsed > 10) {
+              throw new ProjectError('--max-depth must be a number between 1 and 10', CLI_ERROR_CODES.VALIDATION_ERROR);
+            }
+            maxDepth = parsed;
+          } else if (typeof args.flags['max-depth'] === 'number') {
+            if (args.flags['max-depth'] < 1 || args.flags['max-depth'] > 10) {
+              throw new ProjectError('--max-depth must be between 1 and 10', CLI_ERROR_CODES.VALIDATION_ERROR);
+            }
+            maxDepth = args.flags['max-depth'];
+          }
+        }
+
         input = {
           name: name.trim(),
           code: code?.trim(),
@@ -113,7 +150,9 @@ class ProjectCommands {
           repository: typeof args.flags.repository === 'string' ? args.flags.repository.trim() : undefined,
           globalOnly: args.flags['global-only'] === true,
           createProjectPath: args.flags['create-project-path'] === true,
-          ticketsPath: typeof args.flags['tickets-path'] === 'string' ? args.flags['tickets-path'].trim() : undefined
+          ticketsPath: typeof args.flags['tickets-path'] === 'string' ? args.flags['tickets-path'].trim() : undefined,
+          documentPaths,
+          maxDepth
         };
       }
 
@@ -206,11 +245,28 @@ class ProjectCommands {
         console.log(`Active: ${project.project.active ? 'Yes' : 'No'}`);
         console.log(`Description: ${project.project.description || 'N/A'}`);
         console.log(`Repository: ${project.project.repository || 'N/A'}`);
-        console.log(`Config File: ${project.project.configFile}`);
+        console.log(`Config File: ${project.project.configFile || 'N/A'}`);
+        console.log(`Tickets Path: ${project.project.ticketsPath || 'docs/CRs'}`);
+
+        // Show document discovery settings for global-only projects
+        if (project.document || project.metadata?.globalOnly) {
+          console.log('\nDocument Discovery:');
+          if (project.document?.paths) {
+            console.log(`  Paths: [${project.document.paths.map(p => `"${p}"`).join(', ')}]`);
+          } else {
+            console.log(`  Paths: []`);
+          }
+          console.log(`  Exclude Folders: [${(project.document?.excludeFolders || []).map(f => `"${f}"`).join(', ')}]`);
+          console.log(`  Max Depth: ${project.document?.maxDepth || 3}`);
+        }
+
         console.log('\nMetadata:');
         console.log(`  Date Registered: ${project.metadata.dateRegistered}`);
         console.log(`  Last Accessed: ${project.metadata.lastAccessed}`);
         console.log(`  Version: ${project.metadata.version}`);
+        if (project.metadata?.globalOnly) {
+          console.log(`  Mode: Global-Only`);
+        }
         console.log('─'.repeat(80));
       }
     } catch (error) {
@@ -699,21 +755,46 @@ class ProjectCLI {
       flags: {}
     };
 
+    // Define valid flags for each command
+    const validFlags: Record<string, Set<string>> = {
+      create: new Set([
+        'name', 'code', 'path', 'description', 'repository',
+        'global-only', 'create-project-path', 'tickets-path',
+        'document-paths', 'max-depth', 'interactive', 'i', 'help', 'h'
+      ]),
+      list: new Set(['json', 'help', 'h']),
+      get: new Set(['json', 'help', 'h']),
+      update: new Set(['name', 'description', 'repository', 'active', 'interactive', 'i', 'help', 'h']),
+      delete: new Set(['force', 'f', 'delete-config', 'help', 'h']),
+      enable: new Set(['help', 'h']),
+      disable: new Set(['help', 'h'])
+    };
+
     let i = 0;
+    let command = '';
 
     // First argument is the command
     if (args.length > 0 && !args[0].startsWith('-')) {
-      result.command = args[0];
+      command = args[0];
+      result.command = command;
       i = 1;
     }
 
     // Parse remaining arguments
     while (i < args.length) {
       const arg = args[i];
+      const originalArg = arg;
 
       if (arg.startsWith('--')) {
         // Long flag
         const flagName = arg.substring(2);
+        const normalizedFlag = flagName.replace(/-/g, ''); // Normalize for validation
+
+        // Check if flag is valid for this command
+        if (command && validFlags[command] && !validFlags[command].has(flagName) && !validFlags[command].has(normalizedFlag)) {
+          console.warn(`\nWarning: Unknown flag --${flagName} for command '${command}'`);
+        }
+
         if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
           result.flags[flagName] = args[i + 1];
           i += 2;
@@ -724,6 +805,12 @@ class ProjectCLI {
       } else if (arg.startsWith('-')) {
         // Short flag
         const flagName = arg.substring(1);
+
+        // Check if flag is valid for this command (for common short flags)
+        if (command && validFlags[command] && !validFlags[command].has(flagName) && !['h', 'i', 'f'].includes(flagName)) {
+          console.warn(`\nWarning: Unknown flag -${flagName} for command '${command}'`);
+        }
+
         if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
           result.flags[flagName] = args[i + 1];
           i += 2;
@@ -768,6 +855,8 @@ Create Options:
   --global-only           Global-only mode (no local config files)
   --create-project-path   Auto-create project directory if it doesn't exist
   --tickets-path <path>   Tickets path relative to project root (default: docs/CRs)
+  --document-paths <json> Document discovery paths (JSON array, global-only only)
+  --max-depth <number>    Document discovery max depth (1-10, global-only only)
   --interactive, -i       Interactive mode
 
 List Options:
