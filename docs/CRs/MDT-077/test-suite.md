@@ -351,19 +351,28 @@ npm run project:create -- --name "Invalid" --code "INV-1" --path "/tmp/test/d" -
 **Then** all commands should exit with code 2
 **And** error messages should explain code format requirements (2-5 uppercase letters)
 
-#### Scenario: CV02 - ID mismatch with directory name
+#### Scenario: CV02 - Code mismatch with directory name
 
-**Given** project directory "/tmp/mdt-cli-tests/projects/within-depth/wrong-id"
-**When** executing:
+**Given** the test environment is initialized
+**When** attempting to create project where directory name doesn't match code:
 ```bash
+# Case 1: Directory exists but name doesn't match code
+mkdir -p "/tmp/mdt-cli-tests/projects/within-depth/existing-dir"
 npm run project:create -- \
-  --name "Wrong ID" \
+  --name "Code Mismatch" \
   --code "WR1" \
-  --path "/tmp/mdt-cli-tests/projects/within-depth/wrong-id" \
-  --id "different-id"
+  --path "/tmp/mdt-cli-tests/projects/within-depth/existing-dir"
+
+# Case 2: Parent exists but target directory doesn't
+npm run project:create -- \
+  --name "Auto Create" \
+  --code "WR2" \
+  --path "/tmp/mdt-cli-tests/projects/within-depth/wr2-project"
 ```
-**Then** command should exit with code 2
-**And** error should mention ID must match directory name
+**Then** Case 1 should exit with code 2 (validation error)
+**And** error should mention "Directory name 'existing-dir' does not match project code 'WR1'"
+**And** Case 2 should exit with code 0 (success)
+**And** directory should be auto-created as "wr2-project" matching the code
 
 ### Feature: Error Handling and Recovery
 
