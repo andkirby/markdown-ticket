@@ -1,0 +1,140 @@
+---
+code: MDT-101
+status: Proposed
+dateCreated: 2025-12-19T14:39:23.333Z
+type: Architecture
+priority: Medium
+---
+
+# Create domain-contracts package with Zod schemas as source of truth
+
+> **Architecture Guide**: See [domain-contracts.md](MDT-101/domain-contracts.md) for detailed implementation patterns and examples.
+
+## 1. Description
+
+### Problem
+- Current system lacks single source of truth for domain entities across CLI, MCP, and UI interfaces
+- Shared types in shared/ mix implementation with contracts, creating heavy dependencies
+- No runtime validation ensures data consistency across interfaces
+- Tests cannot validate against canonical schemas, leading to potential drift
+
+### Affected Artifacts
+- `shared/models/Project.ts` - Contains Project type that should move to contracts
+- `shared/models/Ticket.ts` - Contains CR/Ticket types that should move to contracts
+- `shared/models/Types.ts` - Contains status and type enums that should move to contracts
+- `shared/services/` - Services that import and use domain types
+- `mcp-server/src/tools/` - MCP tools that return domain data
+- `server/services/` - Backend services that handle domain operations
+
+### Scope
+- **Changes**: Create new domain-contracts package, migrate types from shared/models
+- **Unchanged**: Implementation logic in services, UI components, MCP handlers
+
+## 2. Decision
+
+### Chosen Approach
+Create separate domain-contracts package with Zod schemas as source of truth for both runtime validation and TypeScript types.
+
+### Rationale
+- **Zero dependency direction**: domain-contracts has no internal dependencies, can be imported by any package
+- **Runtime validation**: Zod schemas provide both TypeScript types and runtime parsing/validation
+- **Single source of truth**: Impossible for production code and tests to drift when sharing schemas
+- **Lightweight imports**: Packages needing only types import domain-contracts without implementation
+
+## 3. Alternatives Considered
+
+| Approach | Key Difference | Why Rejected |
+|----------|---------------|--------------|
+| **Chosen Approach** | Separate package with Zod schemas | **ACCEPTED** - Clean separation, runtime validation, zero internal deps |
+| Option A: Test-only contracts | Contracts only used by tests | Production types and test contracts could drift apart |
+| Option B: Contracts in shared/ | Embed contracts in shared/ package | shared/ becomes grab-bag, heavier dependencies, harder to enforce purity |
+| Option C: Co-located tests | Tests near code with shared fixtures | Requires discipline, no enforcement of contract usage |
+
+## 4. Artifact Specifications
+
+### New Artifacts
+| Artifact | Type | Purpose |
+|----------|------|---------|
+| `domain-contracts/package.json` | Package config | Zero internal deps, only zod dependency |
+| `domain-contracts/src/project/schema.ts` | Zod schema | Project entity definition with validation |
+| `domain-contracts/src/project/index.ts` | Exports | Public API for project contracts |
+| `domain-contracts/src/index.ts` | Main exports | Production API aggregate |
+| `domain-contracts/src/testing/project.fixtures.ts` | Test factory | Builder pattern for test data |
+| `domain-contracts/src/testing/index.ts` | Test exports | Testing utilities aggregate |
+### Modified Artifacts
+
+| Artifact | Change Type | Modification |
+|----------|-------------|--------------|
+| `shared/models/Project.ts` | Types migrated | Import Project type from domain-contracts |
+| `shared/models/Ticket.ts` | Types migrated | Import CR/Ticket types from domain-contracts |
+| `shared/models/Types.ts` | Types migrated | Import enums from domain-contracts |
+| `shared/package.json` | Dependency added | Add "@mdt/domain-contracts" dependency |
+| `mcp-server/package.json` | Dependency added | Add "@mdt/domain-contracts" dependency |
+| `server/package.json` | Dependency added | Add "@mdt/domain-contracts" dependency |
+
+### Integration Points
+| From | To | Interface |
+|------|----|-----------|
+| shared/services | domain-contracts/src/index.ts | Import Project, CR types |
+| mcp-server/tools | domain-contracts/src/index.ts | Validate responses with schemas |
+| server/services | domain-contracts/src/index.ts | Parse/validate incoming data |
+| Tests | domain-contracts/src/testing/index.ts | Import fixtures and test utils |
+### Key Patterns
+- **Schema-first**: Define Zod schema, derive TypeScript type with `z.infer<typeof Schema>`
+- **Validation at boundaries**: Parse/validate at API boundaries, not internal calls
+- **Separate testing subpath**: Test fixtures in `src/testing/` to keep production API clean
+- **Cross-interface consistency**: All interfaces validate against same schemas
+- **Clean exports**: Production API from `src/index.ts`, testing utilities from `src/testing/index.ts`
+## 5. Acceptance Criteria
+### Functional
+- [ ] `domain-contracts` package exists with proper structure
+- [ ] ProjectSchema in `domain-contracts/src/project/schema.ts` with all required fields
+- [ ] Project type exported as `z.infer<typeof ProjectSchema>`
+- [ ] `shared/models/Project.ts` imports Project type from domain-contracts
+- [ ] `mcp-server` validates tool responses against ProjectSchema
+- [ ] `server/services` validate data using domain-contracts parsers
+
+### Non-Functional
+- [ ] domain-contracts package has zero internal dependencies
+- [ ] Only external dependency is `zod` for schema validation
+- [ ] All domain entities use runtime validation at boundaries
+- [ ] TypeScript types are derived from schemas (no duplicate type definitions)
+
+### Testing
+- Unit: Test schema validation with valid/invalid inputs
+- Integration: MCP tools return data that passes schema validation
+- Cross-interface: CLI, MCP, and UI all work with same validated shapes
+- Fixtures: Test builders from `domain-contracts/src/testing/` create valid data
+## 6. Verification
+
+### By CR Type
+- **Architecture**: New package structure exists, imports work correctly, runtime validation active
+
+### Artifacts Created
+- `domain-contracts/` directory with proper package structure
+- Zod schemas for Project entity with validation rules
+- Fixtures package with test data builders
+- Updated imports in shared, mcp-server, and server packages
+- Cross-interface tests verifying CLI ≡ MCP ≡ UI consistency
+## 7. Deployment
+### Phase 1: Create Package Structure
+```bash
+mkdir -p domain-contracts/src/{project,testing}
+cd domain-contracts
+npm init -y
+npm install zod
+```
+
+### Phase 2: Migrate Types and Create Schemas
+- Move Project type from `shared/models/Project.ts` to `domain-contracts/src/project/schema.ts`
+- Convert to Zod schema with validation rules
+- Create `domain-contracts/src/project/index.ts` exporting schema and derived type
+- Create `domain-contracts/src/testing/project.fixtures.ts` with test data builders
+- Update `shared/models/Project.ts` to import from domain-contracts/src/index.ts
+- Repeat for CR/Ticket types
+
+### Phase 3: Update Dependencies and Imports
+```bash
+# In shared/, mcp-server/, server/ directories
+npm install ../domain-contracts
+```
