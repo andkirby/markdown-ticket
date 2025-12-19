@@ -1,8 +1,8 @@
-# MDT Domain Lens (v1)
+# MDT Domain Lens (v2)
 
 Surface strategic DDD constraints before architectural decisions. Output is intentionally minimal — principles only, not prescriptions.
 
-**Core Principle**: Identify domain boundaries and invariants that should constrain structural decisions downstream.
+**Core Principle**: Identify domain boundaries and invariants that should constrain structural decisions downstream. All analysis MUST be grounded in actual codebase — no invented code terms.
 
 ## User Input
 
@@ -22,7 +22,7 @@ Creates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines)
 | Complex integration across modules | ✅ Yes |
 | Domain model changes | ✅ Yes |
 | Simple CRUD | ❌ Skip |
-| Refactoring / Tech-debt | ❌ Skip |
+| Refactoring / Tech-debt | ❌ Use `/mdt:domain-audit` instead |
 | Infrastructure / Config | ❌ Skip |
 | Bug fix | ❌ Skip |
 
@@ -32,6 +32,7 @@ Creates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines)
 - ❌ Verbose domain model documentation
 - ❌ Pattern prescriptions ("use repository pattern")
 - ❌ Implementation guidance
+- ❌ Invented code terms from CR descriptions
 
 ## Execution Steps
 
@@ -39,13 +40,39 @@ Creates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines)
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
 2. Load `docs/CRs/{CR-KEY}/requirements.md` if exists
-3. Scan codebase for existing domain patterns:
-   - Entity/model directories
-   - Service layer organization
-   - Event/message patterns
-   - Existing aggregate boundaries
+3. Extract list of affected artifacts from CR
 
-### Step 2: Identify Bounded Context(s)
+### Step 2: Ground in Codebase
+
+**Critical**: All domain analysis MUST be grounded in actual code.
+
+**If CR lists affected artifacts**:
+1. Read each artifact file
+2. Extract actual class/interface/type names
+3. Note actual structure and relationships
+4. Build vocabulary of real code terms
+
+**Grounding Rules**:
+- "Code Term" column MUST use actual identifiers from codebase
+- If concept is new (no code exists yet), mark as `(new)`
+- Do NOT invent code terms from CR descriptions
+- If CR describes something like "Three-Strategy Configuration", search for actual implementation before mapping
+- If unsure whether code exists, search codebase before claiming
+
+**What to extract from code**:
+| Look For | Example |
+|----------|---------|
+| Entity/Model classes | `class Project`, `interface ProjectConfig` |
+| Service classes | `ProjectService`, `ConfigService` |
+| Value objects | `class ProjectCode`, `type Email` |
+| Validation patterns | `validateCode()`, `isValidPath()` |
+| Event types | `ProjectCreated`, `ConfigUpdated` |
+
+**Greenfield detection**:
+- If NO affected artifacts exist yet → mark entire analysis as "Proposed model (greenfield)"
+- If SOME artifacts exist → ground existing, mark new concepts as `(new)`
+
+### Step 3: Identify Bounded Context(s)
 
 **Question**: What business capability does this CR touch?
 
@@ -63,15 +90,15 @@ Touches: {Other Context 1}, {Other Context 2}
 
 If CR stays within single context: `Primary: {Context Name}` only.
 
-### Step 3: Identify Aggregate Boundaries
+### Step 4: Identify Aggregate Boundaries
 
 **Question**: What's the consistency boundary?
 
 For each significant entity in CR scope:
 
-| Concept | Role | Contains | Boundary |
+| Concept | Role | Contains | Grounded |
 |---------|------|----------|----------|
-| `{Name}` | Root / Internal / Value | {children if root} | {what changes together} |
+| `{Name}` | Root / Internal / Value | {children if root} | ✅ `ClassName` / (new) |
 
 **Aggregate Root indicators**:
 - Has global identity (ID referenced externally)
@@ -89,7 +116,7 @@ For each significant entity in CR scope:
 - Immutable
 - Interchangeable if attributes equal
 
-### Step 4: Surface Invariants
+### Step 5: Surface Invariants
 
 **Question**: What business rules must ALWAYS be true?
 
@@ -97,22 +124,43 @@ For each significant entity in CR scope:
 |-----------|-------|-------------|
 | `{rule in plain English}` | `{Aggregate}` | In aggregate / At boundary / Via event |
 
+**What IS an invariant** (include):
+- Business rules: "Order total must equal sum of line items"
+- Domain constraints: "Project code must be unique"
+- State rules: "Cannot ship cancelled order"
+
+**What is NOT an invariant** (exclude):
+- Technical configs: "Cache TTL is 30 seconds"
+- Implementation details: "Store in TOML format"
+- Performance requirements: "Must respond in 2 seconds"
+
 **Enforcement guidance**:
 - **In aggregate**: Rule involves only data within one aggregate
 - **At boundary**: Rule checked on entry to bounded context
 - **Via event**: Rule spans aggregates, enforce eventually
 
-### Step 5: Note Language Alignment
+### Step 6: Note Language Alignment
 
 **Question**: Does CR terminology match code terminology?
 
-| CR/Requirements Term | Code Term | Action |
+| CR/Requirements Term | Code Term | Status |
 |---------------------|-----------|--------|
-| `{term from CR}` | `{term in code}` | Align / Keep both / Clarify |
+| `{term from CR}` | `{actual identifier}` | ✅ Aligned / ⚠️ Drift / (new) |
 
-Only note mismatches that could cause confusion.
+**Rules**:
+- "Code Term" MUST be actual identifier found in code
+- If code doesn't exist yet, use `(new)` not an invented name
+- Only note significant mismatches, skip trivial differences
+- Omit section entirely if no mismatches and no new terms
 
-### Step 6: Flag Cross-Context Operations
+**Examples**:
+| CR Term | Code Term | Status |
+|---------|-----------|--------|
+| "Project" | `Project` class | ✅ Aligned |
+| "Three-Strategy Config" | `(new)` | (new) — no implementation yet |
+| "User Profile" | `Account` class | ⚠️ Drift |
+
+### Step 7: Flag Cross-Context Operations
 
 **Question**: Does this CR require coordination across bounded contexts?
 
@@ -125,7 +173,7 @@ Only note mismatches that could cause confusion.
 - **Service**: Synchronous call needed, query or command
 - **Saga**: Multi-step, compensating transactions needed
 
-### Step 7: Generate Output
+### Step 8: Generate Output
 
 Create `docs/CRs/{CR-KEY}/domain.md`:
 
@@ -133,28 +181,29 @@ Create `docs/CRs/{CR-KEY}/domain.md`:
 # Domain Constraints: {CR-KEY}
 
 **Context**: {Primary context} {→ touches: X, Y if applicable}
+{If greenfield: **Status**: Proposed model (greenfield — no existing code)}
 
 ## Aggregates
 
-| Concept | Role | Contains |
-|---------|------|----------|
-| `{Name}` | Root | {children} |
-| `{Name}` | Internal | — |
-| `{Name}` | Value | — |
+| Concept | Role | Contains | Grounded |
+|---------|------|----------|----------|
+| `{Name}` | Root | {children} | ✅ `ClassName` |
+| `{Name}` | Internal | — | (new) |
+| `{Name}` | Value | — | ✅ `TypeName` |
 
 ## Invariants
 
 | Rule | Scope | Enforce |
 |------|-------|---------|
-| {plain English rule} | `{Aggregate}` | {where} |
+| {plain English business rule} | `{Aggregate}` | {where} |
 
 ## Language
 
-| CR Term | Code Term |
-|---------|-----------|
-| {term} | {term} |
+| CR Term | Code Term | Status |
+|---------|-----------|--------|
+| {term} | `{actual code}` or (new) | {status} |
 
-{Only if mismatches exist, otherwise omit section}
+{Only if mismatches or new terms exist, otherwise omit section}
 
 ## Cross-Context
 
@@ -170,16 +219,17 @@ Create `docs/CRs/{CR-KEY}/domain.md`:
 
 **Target size**: 15-25 lines. If output exceeds 30 lines, you're over-specifying.
 
-### Step 8: Report Completion
+### Step 9: Report Completion
 
 ```markdown
 ## Domain Analysis Complete
 
 **CR**: {CR-KEY}
 **Output**: `docs/CRs/{CR-KEY}/domain.md`
+**Grounding**: {Fully grounded / Partially grounded / Greenfield}
 
 **Context**: {Primary} {→ touches if any}
-**Aggregates**: {count}
+**Aggregates**: {count} ({N} grounded, {M} new)
 **Invariants**: {count}
 **Cross-Context Operations**: {count or "None"}
 
@@ -195,41 +245,73 @@ Create `docs/CRs/{CR-KEY}/domain.md`:
 
 ## Examples
 
-### Example 1: Order Management Feature
+### Example 1: Grounded Analysis (Existing Code)
 
 ```markdown
-# Domain Constraints: MDT-042
+# Domain Constraints: MDT-077
 
-**Context**: Order Management → touches: Inventory, Payment
+**Context**: Project Management → touches: Configuration Storage
 
 ## Aggregates
 
-| Concept | Role | Contains |
-|---------|------|----------|
-| `Order` | Root | LineItems, ShippingAddress |
-| `LineItem` | Internal | — |
-| `Product` | Reference | — (owned by Catalog) |
+| Concept | Role | Contains | Grounded |
+|---------|------|----------|----------|
+| `Project` | Root | Config, Registry | ✅ `Project` class |
+| `ProjectConfig` | Internal | — | ✅ `ProjectConfig` interface |
+| `ProjectCode` | Value | — | (new) — currently `string` |
 
 ## Invariants
 
 | Rule | Scope | Enforce |
 |------|-------|---------|
-| Order total = Σ(line prices) | `Order` | In aggregate |
-| Cannot add items to shipped order | `Order` | In aggregate |
-| Inventory reserved on order create | Cross-context | Via event |
+| Project code must be 2-5 uppercase letters | `Project` | In aggregate |
+| Project ID must match directory name | `Project` | At boundary |
 
-## Cross-Context
+## Language
 
-| Operation | Contexts | Pattern |
-|-----------|----------|---------|
-| Reserve inventory | Order → Inventory | Event |
-| Process payment | Order → Payment | Service |
+| CR Term | Code Term | Status |
+|---------|-----------|--------|
+| Three-Strategy Configuration | (new) | No implementation yet |
+| Project | `Project` class | ✅ Aligned |
 
 ---
 *Generated by /mdt:domain-lens*
 ```
 
-### Example 2: Simple Feature (Minimal Output)
+### Example 2: Greenfield Feature
+
+```markdown
+# Domain Constraints: MDT-099
+
+**Context**: Payment Processing → touches: Order Management
+**Status**: Proposed model (greenfield — no existing code)
+
+## Aggregates
+
+| Concept | Role | Contains | Grounded |
+|---------|------|----------|----------|
+| `Payment` | Root | Transactions | (new) |
+| `Transaction` | Internal | — | (new) |
+| `Money` | Value | — | (new) |
+
+## Invariants
+
+| Rule | Scope | Enforce |
+|------|-------|---------|
+| Payment total must equal order total | `Payment` | At boundary |
+| Refund cannot exceed original payment | `Payment` | In aggregate |
+
+## Cross-Context
+
+| Operation | Contexts | Pattern |
+|-----------|----------|---------|
+| Capture payment | Payment → Order | Event |
+
+---
+*Generated by /mdt:domain-lens*
+```
+
+### Example 3: Simple Feature (Minimal Output)
 
 ```markdown
 # Domain Constraints: MDT-043
@@ -238,9 +320,9 @@ Create `docs/CRs/{CR-KEY}/domain.md`:
 
 ## Aggregates
 
-| Concept | Role | Contains |
-|---------|------|----------|
-| `UserProfile` | Root | Preferences, NotificationSettings |
+| Concept | Role | Contains | Grounded |
+|---------|------|----------|----------|
+| `UserProfile` | Root | Preferences | ✅ `UserProfile` class |
 
 ## Invariants
 
@@ -257,14 +339,22 @@ Create `docs/CRs/{CR-KEY}/domain.md`:
 ## Behavioral Rules
 
 - **Minimal output** — 15-25 lines target, 30 max
+- **Grounded in code** — all code terms from actual codebase
+- **Mark new concepts** — use `(new)` not invented names
 - **Principles not prescriptions** — "Order is aggregate root" not "Create OrderRepository"
+- **Business invariants only** — no technical configs or performance requirements
 - **Skip empty sections** — no Language section if no mismatches
 - **One context focus** — if CR spans many contexts, focus on primary
-- **Existing patterns respected** — align with codebase conventions
 - **No file paths** — that's architecture's job
 - **No size limits** — that's architecture's job
 
 ## Anti-Patterns to Avoid
+
+❌ **Invented code terms**: "ConfigurationStrategyService" (doesn't exist in code)
+✅ **Actual code terms**: `ProjectService` or `(new)` if not implemented
+
+❌ **Technical constraints as invariants**: "Cache TTL must be 30 seconds"
+✅ **Business invariants**: "Project code must be unique"
 
 ❌ **Verbose domain model**: Pages of entity descriptions
 ✅ **Constraint summary**: Just boundaries and rules
@@ -275,20 +365,20 @@ Create `docs/CRs/{CR-KEY}/domain.md`:
 ❌ **Implementation leakage**: "OrderService should call InventoryClient"
 ✅ **Coordination flag**: "Order → Inventory needs event pattern"
 
-❌ **Class diagrams**: Full UML with all attributes
-✅ **Role table**: Entity | Root/Internal/Value | Contains
-
-❌ **Always generate**: Every CR gets domain.md
-✅ **Skip when irrelevant**: Refactoring, tech-debt, simple CRUD
+❌ **Hallucinated mappings**: CR says "Three-Strategy" → invent "StrategyService"
+✅ **Honest mapping**: CR says "Three-Strategy" → `(new)` or actual class if exists
 
 ## Quality Checklist
 
 Before completing, verify:
 - [ ] Output ≤ 30 lines
+- [ ] All code terms verified against actual codebase
+- [ ] New concepts marked with `(new)`, not invented names
+- [ ] Grounding status noted (fully/partially/greenfield)
+- [ ] Invariants are business rules, not technical constraints
 - [ ] No file paths or structure recommendations
 - [ ] No pattern prescriptions
 - [ ] Aggregates have clear Root/Internal/Value roles
-- [ ] Invariants are business rules, not technical constraints
 - [ ] Cross-context operations flagged with coordination pattern
 - [ ] Empty sections omitted
 
@@ -296,5 +386,8 @@ Before completing, verify:
 
 **Before**: CR exists, optionally requirements.md exists
 **After**: `/mdt:architecture` consumes domain.md as constraints
+
+**Related tools**:
+- `/mdt:domain-audit` — analyze existing code for DDD violations (use instead for refactoring)
 
 Context: $ARGUMENTS
