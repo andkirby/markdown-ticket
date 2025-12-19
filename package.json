@@ -7,10 +7,11 @@
   "workspaces": [
     "shared",
     "server",
-    "mcp-server"
+    "mcp-server",
+    "domain-contracts"
   ],
   "scripts": {
-    "install:all": "npm install && npm install --workspace=shared && npm install --workspace=server && npm install --workspace=mcp-server",
+    "install:all": "npm install && npm install --workspace=shared && npm install --workspace=server && npm install --workspace=mcp-server && npm install --workspace=domain-contracts",
     "install:prod": "npm ci --omit=dev && npm cache clean --force && npm install --workspaces --omit=dev && npm cache clean --force",
     "dev": "vite",
     "dev:server": "cd server && npm run dev",
@@ -18,7 +19,8 @@
     "build:shared": "cd shared && npm run build",
     "build:server": "cd server && npm run build",
     "build:mcp": "cd mcp-server && npm run build",
-    "build:all": "npm run build:shared && npm run build:server && npm run build:mcp && npm run build",
+    "build:all": "npm run build:shared && npm run build:server && npm run build:mcp && npm run build:domain-contracts && npm run build",
+    "build:domain-contracts": "cd domain-contracts && npm run build",
     "server": "cd server && npm start",
     "server:dev": "cd server && npm run dev",
     "build": "tsc --project tsconfig.shared.json && tsc && vite build",
@@ -56,7 +58,9 @@
     "project:update:dev": "tsx shared/tools/project-cli.ts update",
     "project:delete:dev": "tsx shared/tools/project-cli.ts delete",
     "project:enable:dev": "tsx shared/tools/project-cli.ts enable",
-    "project:disable:dev": "tsx shared/tools/project-cli.ts disable"
+    "project:disable:dev": "tsx shared/tools/project-cli.ts disable",
+    "test:domain-contracts": "cd domain-contracts && npm test",
+    "test:domain-contracts:watch": "cd domain-contracts && npm run test:watch"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.0.19",
