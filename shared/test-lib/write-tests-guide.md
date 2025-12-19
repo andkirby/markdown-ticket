@@ -85,8 +85,6 @@ searchPaths = [
     "/Users/username/home",
     "/Users/username/projects"
 ]
-scanDepth = 3
-excludePatterns = ["node_modules", ".git", "dist"]
 `;
 
   writeFileSync(join(configDir, 'config.toml'), globalConfig);
