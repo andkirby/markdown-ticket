@@ -12,6 +12,7 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 | `/mdt:requirements` | Generate EARS-formatted requirements | `docs/CRs/{CR-KEY}/requirements.md` |
 | `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
 | `/mdt:domain-lens` | Surface DDD constraints (optional) | `docs/CRs/{CR-KEY}/domain.md` |
+| `/mdt:domain-audit` | Analyze code for DDD violations | `docs/CRs/{CR-KEY}/domain-audit.md` |
 | `/mdt:tests` | Generate BDD test specs + executable tests | `docs/CRs/{CR-KEY}/tests.md` + test files |
 | `/mdt:architecture` | Surface decisions, define structure + size limits | CR section or `architecture.md` |
 | `/mdt:clarification` | Fill specification gaps | Updated CR sections |
@@ -418,6 +419,40 @@ Generates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines):
 
 **Output consumed by**: `/mdt:architecture` only
 
+### `/mdt:domain-audit`
+
+Analyzes existing code for DDD violations. Generates `docs/CRs/{CR-KEY}/domain-audit.md` or standalone report.
+
+**Invocations**:
+```bash
+/mdt:domain-audit MDT-077                    # Audit code touched by CR
+/mdt:domain-audit --path src/shared/services # Audit directory directly
+```
+
+**Detects**:
+| Violation | Severity |
+|-----------|----------|
+| Anemic domain model | High |
+| Aggregate boundary leak | High |
+| God service | High |
+| Missing value objects | Medium |
+| Invariant scatter | Medium |
+| Missing domain events | Medium |
+| Language drift | Low |
+
+**Output**: Violations report with evidence + fix direction (not prescriptions)
+
+**Workflow**:
+```
+/mdt:domain-audit → domain-audit.md
+        ↓
+    Create refactoring CR
+        ↓
+/mdt:domain-lens {CR} → target model
+        ↓
+/mdt:architecture → /mdt:tasks → /mdt:implement
+```
+
 ### `/mdt:architecture`
 
 Adds Architecture Design to CR (simple) or extracts to `architecture.md` (complex):
@@ -512,7 +547,8 @@ prompts/
 ├── mdt-ticket-creation.md   # CR creation (v5 - flexible depth)
 ├── mdt-requirements.md      # EARS requirements (v1)
 ├── mdt-assess.md            # Code fitness assessment (v2)
-├── mdt-domain-lens.md       # DDD constraints (v1)
+├── mdt-domain-lens.md       # DDD constraints (v2 - code grounded)
+├── mdt-domain-audit.md      # DDD violations analysis (v1)
 ├── mdt-tests.md             # BDD test generation (v1)
 ├── mdt-architecture.md      # Architecture design (v5 - domain aware)
 ├── mdt-clarification.md     # Gap filling
@@ -529,6 +565,7 @@ prompts/
 | `/mdt:requirements` | `docs/CRs/{CR-KEY}/requirements.md` |
 | `/mdt:tests` | `docs/CRs/{CR-KEY}/tests.md` + `{test_dir}/*.test.{ext}` |
 | `/mdt:domain-lens` | `docs/CRs/{CR-KEY}/domain.md` |
+| `/mdt:domain-audit` | `docs/CRs/{CR-KEY}/domain-audit.md` or `docs/audits/domain-audit-{timestamp}.md` |
 | `/mdt:architecture` | CR section (simple) or `docs/CRs/{CR-KEY}/architecture.md` (complex) |
 | `/mdt:tasks` | `docs/CRs/{CR-KEY}/tasks.md` |
 | `/mdt:tech-debt` | `docs/CRs/{CR-KEY}/debt.md` |

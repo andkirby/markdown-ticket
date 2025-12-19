@@ -2,6 +2,43 @@
 
 ## Recent Updates
 
+### 2025-12-17 - Added Domain-Driven Design Audit Workflow
+
+**Problem**: No mechanism existed to detect Domain-Driven Design violations in existing code, allowing architectural debt to accumulate unchecked and making refactoring decisions uninformed.
+
+**Solution**: Added `/mdt:domain-audit` workflow that analyzes existing code for DDD violations and generates evidence-based reports with fix directions.
+
+**Changes Made**:
+
+1. **mdt-domain-audit.md (v1) - New DDD violations analysis workflow**:
+   - Detects 7 types of DDD violations with severity levels
+   - Two invocation modes: CR-specific (`MDT-077`) or direct path (`--path src/shared/services`)
+   - Generates `domain-audit.md` or standalone timestamped audit reports
+   - Evidence-based analysis with fix direction (not prescriptions)
+   - Completes DDD toolkit: lens (before) → audit (after) → architecture (design)
+
+2. **README.md** - Updated documentation:
+   - Added `/mdt:domain-audit` command reference table entry
+   - Documented violation types with severity levels
+   - Added workflow diagram showing audit → refactoring CR → domain-lens → architecture
+   - Updated file structure to include new workflow
+   - Added output location documentation
+
+3. **install-claude.sh** - Updated command list:
+   - Added "domain-audit" to MDT_COMMANDS array
+   - Maintains alphabetical ordering
+
+**Impact**:
+- DDD violations can now be systematically detected and documented
+- Refactoring decisions supported by evidence-based analysis
+- Completes DDD toolkit with both design guidance and violation detection
+- Enables tracking architectural debt patterns across projects
+
+**Files Changed**:
+- `prompts/mdt-domain-audit.md` (new)
+- `prompts/README.md`
+- `prompts/install-claude.sh`
+
 ### 2025-12-17 - Added Domain-Driven Design Constraints Workflow
 
 **Problem**: Architecture workflow lacked awareness of domain boundaries and business invariants, leading to structural decisions that violated DDD principles and scattered business logic across module boundaries.

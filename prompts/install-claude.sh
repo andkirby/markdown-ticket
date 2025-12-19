@@ -106,6 +106,7 @@ MDT_COMMANDS=(
     "ticket-creation"
     "requirements"
     "assess"
+    "domain-audit"
     "domain-lens"
     "architecture"
     "clarification"
@@ -197,6 +198,7 @@ show_usage() {
     echo "  /mdt:ticket-creation    - Create CR with structured questioning"
     echo "  /mdt:requirements       - Generate EARS-formatted requirements"
     echo "  /mdt:assess             - Evaluate affected code fitness"
+    echo "  /mdt:domain-audit       - Analyze code for DDD violations"
     echo "  /mdt:domain-lens        - Surface DDD constraints for architecture"
     echo "  /mdt:tests              - Generate BDD test specs + executable tests"
     echo "  /mdt:architecture       - Surface decisions, define structure + size limits"
@@ -210,6 +212,9 @@ show_usage() {
     echo "  /mdt:ticket-creation → /mdt:requirements → /mdt:assess → /mdt:tests"
     echo "  → /mdt:domain-lens (optional) → /mdt:architecture → /mdt:clarification → /mdt:tasks"
     echo "  → /mdt:implement → /mdt:tech-debt → /mdt:reflection"
+    echo
+    echo "DDD toolkit:"
+    echo "  /mdt:domain-audit → Create refactoring CR → /mdt:domain-lens → /mdt:architecture"
     echo
     echo "Workflows are optional - use what you need:"
     echo
