@@ -608,7 +608,6 @@ describe('Project Entity - Behavioral Preservation Tests', () => {
             code: 'TEST',
             startNumber: 1,
             counterFile: '.mdt-next',
-            counterFile: undefined,
             description: undefined,
             repository: undefined
           },
