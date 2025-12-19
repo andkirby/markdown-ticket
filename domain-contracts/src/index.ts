@@ -1,7 +1,9 @@
-// Export all schemas and types from the domain contracts package
-export * from './types/schema';
-export * from './project/schema';
-export * from './ticket/schema';
+/**
+ * Domain Contracts - Centralized API
+ * Re-exports all types and schemas from entity modules
+ */
 
-// Re-export Zod for convenience
-export { z } from 'zod';
+// Re-export everything from entity modules
+export * from './types';
+export * from './project';
+export * from './ticket';
