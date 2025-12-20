@@ -64,39 +64,82 @@ domain-contracts/
 │       └── {entity}.fixtures.ts → Test builders
 ```
 
-### 3.2 Required File Patterns
+### 3.2 Configuration-to-Contract Mapping
+
+The domain-contracts package provides schemas that validate the structure of configuration data. The TOML configuration files (.mdt-config.toml) are parsed into JSON objects which are then validated against these schemas.
+
+**Flow**:
+```
+.mdt-config.toml → Parsed JSON → Contract Schema.validate() → TypeScript Type
+```
+
+**Key Points**:
+- Contracts validate the SHAPE and FORMAT of configuration data
+- Business rules (like "ID must match directory name") are enforced in services
+- Field-level validation happens at the contract boundary
+- Cross-field validation happens in the service layer
+
+### 3.3 Required File Patterns
 
 **schema.ts (Entity definition)**
 ```typescript
 import { z } from 'zod';
 
-// Entity schema with field validation ONLY
+// Project entity schema with field validation ONLY
 export const ProjectSchema = z.object({
-  key: z.string().regex(/^[A-Z]{2,5}$/, '2-5 uppercase letters'),
-  name: z.string().min(1, 'Required'),
-  active: z.boolean(),
-  // NO cross-field validation
+  code: z.string().regex(/^[A-Z][A-Z0-9]{1,4}$/, '2-5 chars, starts with letter'),
+  name: z.string().min(3, 'Minimum 3 characters'),
+  id: z.string().min(1, 'Required'),
+  ticketsPath: z.string().min(1, 'Required path'),
+  description: z.string().optional(),
+  repository: z.string().optional(),
+  active: z.boolean().optional().default(true),
+  // NO cross-field validation (e.g., id matching directory name)
+});
+
+// Document configuration schema
+export const DocumentConfigSchema = z.object({
+  paths: z.array(z.string()).default([]),
+  excludeFolders: z.array(z.string()).default([]),
+  maxDepth: z.number().int().min(1).max(10).default(3),
+});
+
+// Complete project configuration schema
+export const ProjectConfigSchema = z.object({
+  project: ProjectSchema,
+  'project.document': DocumentConfigSchema.optional(),
 });
 
 // Input schemas (derived from entity)
 export const CreateProjectInputSchema = ProjectSchema.pick({
-  key: true,
+  code: true,
   name: true,
-  active: true,
-});
+  id: true,
+  ticketsPath: true,
+}).partial();
 
 // TypeScript types (inferred)
 export type Project = z.infer<typeof ProjectSchema>;
+export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
+export type DocumentConfig = z.infer<typeof DocumentConfigSchema>;
 export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>;
 ```
 
 **validation.ts (Wrapper functions only)**
 ```typescript
-import { ProjectSchema, CreateProjectInputSchema } from './schema';
+import {
+  ProjectSchema,
+  ProjectConfigSchema,
+  CreateProjectInputSchema
+} from './schema';
 
 // Simple validation wrappers - NO business logic
 export function validateProject(input: unknown): Project {
   return ProjectSchema.parse(input);
+}
+
+export function validateProjectConfig(input: unknown): ProjectConfig {
+  return ProjectConfigSchema.parse(input);
 }
 
 export function safeValidateProject(input: unknown) {
@@ -108,19 +151,109 @@ export function validateCreateProjectInput(input: unknown): CreateProjectInput {
 }
 ```
 
-### 3.3 Validation Rules (What's Allowed)
+### 3.4 Path and Folder Validation
+
+**What belongs in contracts (field validation)**:
+```typescript
+// In DocumentConfigSchema
+export const DocumentConfigSchema = z.object({
+  paths: z.array(z.string())
+    .refine((paths) => paths.every(p => !p.includes('..')),
+           { message: 'Parent directory references (..) not allowed in paths' })
+    .refine((paths) => paths.every(p => !p.startsWith('/')),
+           { message: 'Absolute paths not allowed, use relative paths only' })
+    .min(1, 'At least one path required'),
+  excludeFolders: z.array(z.string())
+    .refine((folders) => folders.every(f => !f.includes('/')),
+           { message: 'Exclude folders must be folder names, not paths' })
+    .min(1, 'At least one folder to exclude'),
+  maxDepth: z.number().int().min(1).max(10),
+});
+```
+
+**What belongs in services (business rules)**:
+- Check if paths actually exist on filesystem
+- Validate glob patterns are properly formatted
+- Check for symlink loops and security concerns
+- Validate that resolved paths stay within project boundaries
+
+Example security validation in service:
+```typescript
+// In shared/services/project-validation.ts
+import { resolve, join } from 'path';
+import { existsSync, lstatSync } from 'fs';
+
+export function validateDocumentPaths(
+  config: DocumentConfig,
+  projectRoot: string
+): ValidationResult {
+  for (const path of config.paths) {
+    // Resolve path to check for traversal attempts
+    const resolvedPath = resolve(projectRoot, path);
+
+    // Security check: ensure resolved path is within project root
+    if (!resolvedPath.startsWith(resolve(projectRoot))) {
+      throw new Error(`Path traversal detected: ${path}`);
+    }
+
+    // Check if path exists and is safe
+    if (!existsSync(resolvedPath)) {
+      throw new Error(`Path does not exist: ${path}`);
+    }
+
+    // Additional check for symlinks
+    const stats = lstatSync(resolvedPath);
+    if (stats.isSymbolicLink()) {
+      const linkTarget = resolve(projectRoot, readlinkSync(resolvedPath));
+      if (!linkTarget.startsWith(resolve(projectRoot))) {
+        throw new Error(`Symlink points outside project: ${path}`);
+      }
+    }
+  }
+
+  return { valid: true };
+}
+```
+
+### 3.5 Validation Rules (What's Allowed)
 
 | Validation Type | Location | Example |
 |-----------------|----------|---------|
 | Type checking | Contract schema | `z.string()` |
 | Format validation | Contract schema | `email: z.string().email()` |
-| Regex patterns | Contract schema | `code: z.string().regex(/^[A-Z]{2,5}$/)` |
-| Required fields | Contract schema | `name: z.string().min(1)` |
+| Regex patterns | Contract schema | `code: z.string().regex(/^[A-Z][A-Z0-9]{1,4}$/)` |
+| Required fields | Contract schema | `name: z.string().min(3)` |
 | Length constraints | Contract schema | `title: z.string().max(200)` |
 | Enum values | Contract schema | `status: z.enum(['active', 'inactive'])` |
+| Array validation | Contract schema | `paths: z.array(z.string()).min(1)` |
+| Range validation | Contract schema | `maxDepth: z.number().min(1).max(10)` |
+| **Path traversal prevention** | **Both layers** | Contract: `!p.includes('..')`, Service: `resolve()` check |
+| **Absolute path prevention** | **Contract layer** | `!p.startsWith('/')` |
+| **Folder name format** | **Contract layer** | `!f.includes('/')` for excludeFolders |
+| **ID ↔ Directory matching** | **Service layer** | `if (project.id !== basename(projectPath))` |
+| **Path existence** | **Service layer** | `if (!existsSync(fullPath))` |
+| **Symlink validation** | **Service layer** | `linkTarget.startsWith(projectRoot)` |
 | **Cross-field checks** | **Service layer** | `if (user.email && !user.emailVerified)` |
 | **State transitions** | **Service layer** | `canTransition(status, newStatus)` |
 | **Business rules** | **Service layer** | `validateBusinessRules(data)` |
+
+#### Special Case: ID Validation
+
+The rule that "ID must match directory name" is business logic because:
+- It requires external information (the directory path)
+- It's a cross-field check between the configuration and filesystem
+- It's project-specific business rule, not data format validation
+
+**Implementation**:
+```typescript
+// Contract validates format only
+id: z.string().min(1, 'Required'),
+
+// Service validates business rule
+if (project.id !== basename(projectPath)) {
+  throw new Error(`Project ID "${project.id}" must match directory name "${basename(projectPath)}"`);
+}
+```
 
 ## 4. Implementation Phases
 
@@ -225,10 +358,22 @@ These are implemented in `shared/services` using the contracts.
 |----------|--------|----------|
 | Is it a field format check? | Yes | Contract schema |
 | Does it check one field only? | Yes | Contract schema |
+| Does it check if ID matches directory name? | No (needs filesystem) | Service layer |
+| Does it validate path existence? | No (needs filesystem) | Service layer |
 | Does it compare multiple fields? | Yes | Service layer |
 | Is it a state transition rule? | Yes | Service layer |
 | Does it involve data migration? | Yes | Service layer |
 | Is it a business rule? | Yes | Service layer |
+
+### 5.2 Examples
+
+| Logic | Contract Layer | Service Layer |
+|-------|----------------|--------------|
+| `code` format: `WEB-123` | ✅ `regex(/^[A-Z][A-Z0-9]{1,4}$/)` | ❌ |
+| `name` minimum length: 3 | ✅ `min(3)` | ❌ |
+| `id` matches directory | ❌ | ✅ `if (id !== basename(path))` |
+| `ticketsPath` exists | ❌ | ✅ `if (!existsSync(ticketsPath))` |
+| Project uniqueness | ❌ | ✅ Check across all projects |
 
 ### 5.2 Adding New Entity Checklist
 
