@@ -30,18 +30,26 @@ priority: Medium
 - **Changes**: Create new domain-contracts package, migrate types from shared/models
 - **Unchanged**: Implementation logic in services, UI components, MCP handlers
 
-## 2. Decision
+## Architecture Design
+> **Extracted**: Validation architecture details moved to [architecture.md](./architecture.md#phase-11-enhanced-project-validation)
 
-### Chosen Approach
-Create separate domain-contracts package with Zod schemas as source of truth for both runtime validation and TypeScript types.
+**Summary**:
+- Pattern: Layered Validation with Zod
+- Components: 4 modules (schema, validation, migration, index)
+- Key constraint: Schema validation at boundaries, custom rules for business logic
 
-### Rationale
-- **Zero dependency direction**: domain-contracts has no internal dependencies, can be imported by any package
-- **Runtime validation**: Zod schemas provide both TypeScript types and runtime parsing/validation
-- **Single source of truth**: Impossible for production code and tests to drift when sharing schemas
-- **Lightweight imports**: Packages needing only types import domain-contracts without implementation
+**Extension Rule**: To add Project validation, create rule in `validation.ts` (limit 100 lines) using Zod refine/superRefine.
 
 ## 3. Alternatives Considered
+
+> **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
+
+**Summary**:
+- Pattern: Schema-First Domain Contracts
+- Components: 6 (Project, Ticket, Types schemas + 3 consumer packages)
+- Key constraint: Each schema file ≤150 lines, runtime validation at boundaries
+
+**Extension Rule**: To add entity, create schema file (limit 150 lines) with Zod schema and export inferred type.
 
 | Approach | Key Difference | Why Rejected |
 |----------|---------------|--------------|
