@@ -107,10 +107,18 @@ The system supports three valid file relationship states:
   → id = "SuperDRuper" ≠ basename("SuperDRuper-new-worktree") ❌
 ```
 
+**Note on Validation Location**:
+The validation that `id` must match the directory basename is implemented as **business logic in the service layer**, not in the domain contract schema. This architectural decision is made because:
+- It requires external information (the directory path from the filesystem)
+- It's a cross-field check between configuration data and system state
+- It represents a business rule specific to this application, not a data format constraint
+
+The domain contracts validate the FORMAT of the `id` field (must be a non-empty string), while the service layer enforces the MATCHING rule with the directory name.
+
 ### Project Code Format
-- Must be 2-5 uppercase letters and digits
+- Must be 2-5 characters: first character uppercase letter, rest uppercase letters or digits
 - Must be unique across all projects
-- Regex: `/^[A-Z]{2,5}$/`
+- Regex: `/^[A-Z][A-Z0-9]{1,4}$/`
 
 ## Document Discovery Configuration
 
@@ -193,10 +201,44 @@ maxDepth = 4
 
 ### Documentation Validation
 - `project.document.paths` entries must be valid relative paths from project root
+- `project.document.paths` must not contain parent directory references (`..`)
+- `project.document.paths` must not be absolute paths (must start with `./` or folder/file name)
 - `project.document.excludeFolders` entries must be folder names (not full paths)
+- `project.document.excludeFolders` entries must not contain path separators (`/` or `\`)
 - `project.document.maxDepth` must be a positive integer (1-10)
 - Glob patterns in `project.document.paths` must be valid
 - Referenced files/directories in `project.document.paths` should exist
+
+### Security Validation
+The system implements path traversal protection at multiple levels:
+- **Contract layer**: Validates that paths don't contain `..` or absolute paths
+- **Service layer**: Resolves paths and ensures they stay within project boundaries
+- **Symlink protection**: Checks that symlinks don't point outside the project root
+
+**Forbidden path patterns**:
+```
+❌ "../../../etc/passwd"      - Parent directory traversal
+❌ "/etc/passwd"             - Absolute path
+❌ "../docs/secret.md"       - Combined traversal
+❌ "folder/../../etc"        - Mid-path traversal
+✓ "docs"                   - Valid relative path
+✓ "./docs"                 - Explicit relative path
+✓ "*.md"                   - Valid glob pattern
+```
+
+**Implementation example**:
+```typescript
+// Contract validation
+paths: z.array(z.string())
+  .refine(p => !p.includes('..'), "Parent references not allowed")
+  .refine(p => !p.startsWith('/'), "Absolute paths not allowed")
+
+// Service validation (runtime security)
+const resolved = resolve(projectRoot, path);
+if (!resolved.startsWith(resolve(projectRoot))) {
+  throw new Error("Path traversal detected");
+}
+```
 
 ### Registry Validation
 - Registry `path` must exist and be accessible
