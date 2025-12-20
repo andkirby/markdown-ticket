@@ -1,4 +1,4 @@
-# MDT Test Specification Workflow (v1)
+# MDT Test Specification Workflow (v2)
 
 Generate BDD test specifications and executable test files from requirements or behavioral assessment.
 
@@ -12,8 +12,9 @@ $ARGUMENTS
 
 ## Output Location
 
-- Specification: `docs/CRs/{CR-KEY}/tests.md`
-- Test files: Project's test directory (detected from config)
+- **Phased CR**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
+- **Non-phased CR**: `docs/CRs/{CR-KEY}/tests.md`
+- **Test files**: Project's test directory (detected from config)
 
 ## Mode Detection
 
@@ -29,6 +30,7 @@ $ARGUMENTS
 2. **Integration/E2E focus** — Test from public interface, not internals
 3. **BDD format** — Given/When/Then scenarios derived from EARS specs
 4. **Traceability** — Every test traces to requirement or behavior
+5. **Phase isolation** — Each phase gets its own tests.md in phase folder
 
 ## Execution Steps
 
@@ -39,7 +41,73 @@ $ARGUMENTS
 mdt-all:get_cr mode="full"
 ```
 
-**1b. Determine mode:**
+**1b. Detect phases in architecture:**
+
+```bash
+# Check for architecture.md
+arch_file="docs/CRs/{CR-KEY}/architecture.md"
+
+if [ -f "$arch_file" ]; then
+  # Extract phase headers: "## Phase 1.1:" or "## Phase 2:"
+  phases=$(grep -oE "^## Phase [0-9]+(\.[0-9]+)?:" "$arch_file" | \
+           sed 's/## Phase \([0-9.]*\):.*/\1/' | sort -V)
+fi
+```
+
+**1c. If phases detected — prompt for selection:**
+
+```markdown
+Detected phases in architecture.md:
+  - 1.1: Enhanced Project Validation
+  - 1.2: Enhanced Ticket Validation
+  - 2: Additional Contracts Migration
+
+Which phase to generate tests for? [1.1]: _
+```
+
+Accept input formats: `1.1`, `phase-1.1`, `Phase 1.1`
+
+**1d. Set output paths based on phase:**
+
+```yaml
+# Phased CR
+phase: "1.1"
+output_dir: "docs/CRs/{CR-KEY}/phase-1.1/"
+tests_file: "docs/CRs/{CR-KEY}/phase-1.1/tests.md"
+
+# Non-phased CR (backward compatible)  
+phase: null
+output_dir: "docs/CRs/{CR-KEY}/"
+tests_file: "docs/CRs/{CR-KEY}/tests.md"
+```
+
+**1e. Load phase-specific context from architecture.md:**
+
+If phased, extract ONLY the selected phase section:
+- Phase overview
+- Phase-specific Structure
+- Phase-specific Size Guidance
+- Phase-specific Validation Rules / Requirements
+
+Example extraction for Phase 1.1:
+```markdown
+## Phase 1.1: Enhanced Project Validation
+
+### Overview
+Phase 1.1 extends the Project schema with comprehensive validation...
+
+### Enhanced Structure
+domain-contracts/src/project/
+├── schema.ts
+├── validation.ts
+├── migration.ts
+└── index.ts
+
+### Validation Rules Specification
+...
+```
+
+**1f. Determine test mode:**
 
 ```
 IF docs/CRs/{CR-KEY}/requirements.md exists:
@@ -50,10 +118,10 @@ ELSE IF CR type is "Bug Fix" or contains refactoring keywords:
   Load assess output if exists
 ELSE:
   MODE = "feature"
-  Warn: "No requirements.md found — generate from CR description"
+  Warn: "No requirements.md found — generate from CR/phase description"
 ```
 
-**1c. Detect test framework:**
+**1g. Detect test framework:**
 
 From project config (package.json, pyproject.toml, Cargo.toml, etc.):
 
@@ -74,9 +142,9 @@ test:
 
 ### Step 2: Extract Test Subjects
 
-**For Feature Mode (from requirements.md):**
+**For Feature Mode (from requirements.md or phase description):**
 
-Parse EARS specifications:
+Parse EARS specifications or phase requirements:
 
 | EARS Type | Maps To |
 |-----------|---------|
@@ -85,15 +153,33 @@ Parse EARS specifications:
 | WHILE `<state>` the system shall | State-based scenario |
 | WHERE `<feature>` is not available | Fallback scenario |
 
-Example extraction:
-```markdown
-## R1.1
-WHEN valid URL is provided THEN the system shall extract summary points
+**For phased architecture without requirements.md:**
 
-→ Scenario: successful_extraction
-  Given: valid article URL
-  When: summarize command invoked
-  Then: returns non-empty points array
+Extract testable requirements from phase section:
+- "Validation Rules Specification" → test each rule
+- "Enhanced Structure" → test each new module exists
+- "Error Handling Strategy" → test each error scenario
+
+Example extraction from Phase 1.1:
+```markdown
+## From Phase 1.1 Validation Rules:
+
+**Required Fields:**
+- `name`: Non-empty string, trimmed length > 0
+- `code`: Non-empty string, trimmed length > 0
+
+→ Scenario: required_field_validation
+  Given: project config missing name
+  When: validated
+  Then: throws ValidationError with field "name"
+
+**Pattern Validation:**
+- `code`: Must match `^[A-Z][A-Z0-9]{1,4}$`
+
+→ Scenario: code_pattern_validation
+  Given: project config with code "mdt" (lowercase)
+  When: validated
+  Then: throws ValidationError with pattern hint
 ```
 
 **For Refactoring Mode (from code analysis):**
@@ -106,39 +192,24 @@ Identify current behaviors to preserve:
 4. Side effects (file writes, API calls, events)
 5. Edge case handling
 
-```markdown
-## Behavior: getUser()
-Currently returns: { id, name, email } or throws NotFoundError
-
-→ Scenario: preserve_user_shape
-  Given: valid user ID
-  When: getUser called
-  Then: returns object with id, name, email fields
-
-→ Scenario: preserve_not_found_error  
-  Given: non-existent user ID
-  When: getUser called
-  Then: throws NotFoundError (not generic Error)
-```
-
 ### Step 3: Generate BDD Scenarios
 
 **Scenario Template:**
 
 ```gherkin
-Feature: {Feature name from requirement group}
+Feature: {Feature name from requirement group or phase}
 
   Background:
     Given {common setup}
 
-  @requirement:{R-ID}
+  @requirement:{R-ID} OR @phase:{X.Y}
   Scenario: {descriptive_name}
     Given {initial context}
     When {action taken}
     Then {expected outcome}
     And {additional assertions}
 
-  @requirement:{R-ID}
+  @requirement:{R-ID} OR @phase:{X.Y}
   Scenario: {edge_case_name}
     Given {edge condition}
     When {action taken}
@@ -153,6 +224,7 @@ Feature: {Feature name from requirement group}
 | Conditional (IF...THEN) | 1 per condition branch |
 | Error handling | 1 per error type |
 | State-based (WHILE) | Entry, during, exit states |
+| Validation rule | 1 valid + 1 invalid per rule |
 
 ### Step 4: Generate Executable Test Files
 
@@ -167,53 +239,47 @@ Feature: {Feature name from requirement group}
         └── fixtures.{ext}
 ```
 
+For phased CRs, organize by phase if helpful:
+```
+{test_directory}/
+└── {CR-KEY}/
+    └── phase-{X.Y}/
+        ├── {feature}.test.{ext}
+        └── fixtures.{ext}
+```
+
 **4b. Generate test code (framework-specific):**
 
 **Jest/Vitest (TypeScript):**
 ```typescript
 /**
- * Tests for: {CR-KEY}
- * Requirements: {R1.1, R1.2, ...}
+ * Tests for: {CR-KEY} Phase {X.Y}
+ * Phase: {Phase Title}
+ * Requirements: {R1.1, R1.2, ...} OR derived from phase spec
  * Generated by: /mdt:tests
  * Status: RED (implementation pending)
  */
 
 describe('{Feature name}', () => {
-  // @requirement: R1.1
-  describe('when valid URL provided', () => {
-    it('should extract summary points', async () => {
+  // @phase: {X.Y} @requirement: P{X.Y}-1
+  describe('when valid project code provided', () => {
+    it('should accept uppercase 3-5 char codes', async () => {
       // Arrange
-      const url = 'https://example.com/article';
+      const config = { code: 'MDT', name: 'Test', active: true };
       
       // Act
-      const result = await summarize(url);
+      const result = ProjectSchema.safeParse(config);
       
       // Assert
-      expect(result.points).toBeInstanceOf(Array);
-      expect(result.points.length).toBeGreaterThan(0);
-      expect(result.points[0]).toHaveProperty('text');
+      expect(result.success).toBe(true);
     });
 
-    it('should include source metadata', async () => {
-      const url = 'https://example.com/article';
-      const result = await summarize(url);
+    it('should reject lowercase codes', async () => {
+      const config = { code: 'mdt', name: 'Test', active: true };
+      const result = ProjectSchema.safeParse(config);
       
-      expect(result.source).toBe(url);
-      expect(result.extractedAt).toBeInstanceOf(Date);
-    });
-  });
-
-  // @requirement: R1.2
-  describe('when URL times out', () => {
-    it('should retry up to 3 times', async () => {
-      const slowUrl = 'https://slow.example.com';
-      const startTime = Date.now();
-      
-      await expect(summarize(slowUrl)).rejects.toThrow('timeout');
-      
-      // Verify retries occurred (rough timing check)
-      const elapsed = Date.now() - startTime;
-      expect(elapsed).toBeGreaterThan(3000); // 3 retries
+      expect(result.success).toBe(false);
+      expect(result.error.issues[0].path).toContain('code');
     });
   });
 });
@@ -222,81 +288,35 @@ describe('{Feature name}', () => {
 **Pytest (Python):**
 ```python
 """
-Tests for: {CR-KEY}
-Requirements: {R1.1, R1.2, ...}
+Tests for: {CR-KEY} Phase {X.Y}
+Phase: {Phase Title}
+Requirements: derived from phase spec
 Generated by: /mdt:tests
 Status: RED (implementation pending)
 """
 import pytest
-from src.commands.summarize import summarize
+from domain_contracts.project import ProjectSchema
 
 
-class TestSummarize:
-    """Feature: Summarize Command"""
+class TestProjectValidation:
+    """Feature: Project Schema Validation (Phase {X.Y})"""
 
-    # @requirement: R1.1
-    class TestValidUrl:
-        """when valid URL provided"""
+    # @phase: {X.Y}
+    class TestCodePattern:
+        """Project code pattern validation"""
 
-        async def test_extracts_summary_points(self):
-            """should extract summary points"""
-            # Arrange
-            url = "https://example.com/article"
+        def test_accepts_uppercase_codes(self):
+            """should accept uppercase 3-5 char codes"""
+            config = {"code": "MDT", "name": "Test", "active": True}
+            result = ProjectSchema.parse(config)
+            assert result.code == "MDT"
 
-            # Act
-            result = await summarize(url)
-
-            # Assert
-            assert isinstance(result.points, list)
-            assert len(result.points) > 0
-            assert "text" in result.points[0]
-
-        async def test_includes_source_metadata(self):
-            """should include source metadata"""
-            url = "https://example.com/article"
-            result = await summarize(url)
-
-            assert result.source == url
-            assert result.extracted_at is not None
-
-    # @requirement: R1.2
-    class TestTimeout:
-        """when URL times out"""
-
-        async def test_retries_three_times(self):
-            """should retry up to 3 times"""
-            slow_url = "https://slow.example.com"
-
-            with pytest.raises(TimeoutError):
-                await summarize(slow_url)
-```
-
-**4c. Integration test patterns:**
-
-For E2E/integration focus, test from the outside:
-
-```typescript
-// CLI integration test
-describe('summarize CLI', () => {
-  it('outputs points to stdout', async () => {
-    const { stdout, exitCode } = await exec('mycli summarize https://example.com');
-    
-    expect(exitCode).toBe(0);
-    expect(stdout).toContain('Points:');
-  });
-});
-
-// API integration test  
-describe('POST /api/summarize', () => {
-  it('returns points in response body', async () => {
-    const response = await request(app)
-      .post('/api/summarize')
-      .send({ url: 'https://example.com' });
-    
-    expect(response.status).toBe(200);
-    expect(response.body.points).toBeInstanceOf(Array);
-  });
-});
+        def test_rejects_lowercase_codes(self):
+            """should reject lowercase codes"""
+            config = {"code": "mdt", "name": "Test", "active": True}
+            with pytest.raises(ValidationError) as exc:
+                ProjectSchema.parse(config)
+            assert "code" in str(exc.value)
 ```
 
 ### Step 5: Verify Tests are RED
@@ -305,6 +325,8 @@ After generating test files:
 
 ```bash
 {test_command} --filter={CR-KEY}
+# Or for phased:
+{test_command} --filter="phase-{X.Y}"
 ```
 
 Expected output:
@@ -319,68 +341,58 @@ If any tests pass before implementation → investigate:
 
 ### Step 6: Generate tests.md
 
+**Create output directory if phased:**
+```bash
+mkdir -p "docs/CRs/{CR-KEY}/phase-{X.Y}"
+```
+
+**Generate tests.md:**
+
 ```markdown
-# Tests: {CR-KEY}
+# Tests: {CR-KEY} Phase {X.Y}
 
 **Mode**: {Feature | Refactoring}
-**Source**: {requirements.md | assess + code analysis}
+**Phase**: {X.Y} - {Phase Title}
+**Source**: architecture.md → Phase {X.Y}
 **Generated**: {timestamp}
+**Scope**: Phase {X.Y} only
 
 ## Test Configuration
 
 | Setting | Value |
 |---------|-------|
 | Framework | {jest, pytest, etc.} |
-| Test directory | `{path}` |
-| Test command | `{command}` |
-| CR test filter | `--filter={CR-KEY}` |
+| Test Directory | `{path}` |
+| Test Command | `{command}` |
+| Phase Filter | `--testPathPattern="phase-{X.Y}"` |
+| Status | 🔴 RED (implementation pending) |
 
 ## Requirement → Test Mapping
 
 | Req ID | Description | Test File | Scenarios | Status |
 |--------|-------------|-----------|-----------|--------|
-| R1.1 | Extract points from URL | `summarize.test.ts` | 2 | 🔴 RED |
-| R1.2 | Retry on timeout | `summarize.test.ts` | 1 | 🔴 RED |
-| R2.1 | Show progress | `progress.test.ts` | 2 | 🔴 RED |
+| P{X.Y}-1 | Code pattern validation | `validation.test.ts` | 3 | 🔴 RED |
+| P{X.Y}-2 | Required fields | `validation.test.ts` | 2 | 🔴 RED |
+| P{X.Y}-3 | Migration support | `migration.test.ts` | 4 | 🔴 RED |
 
 ## Test Specifications
 
 ### Feature: {Feature Name}
 
 **File**: `{test_directory}/{feature}.test.{ext}`
-**Covers**: R1.1, R1.2
+**Covers**: P{X.Y}-1, P{X.Y}-2
 
-#### Scenario: successful_extraction (R1.1)
-
-```gherkin
-Given a valid article URL
-When summarize command is invoked
-Then it should return extracted points
-And points array should be non-empty
-And each point should have text property
-```
-
-**Test**: `describe('when valid URL') > it('should extract summary points')`
-
-#### Scenario: timeout_retry (R1.2)
+#### Scenario: code_pattern_validation (P{X.Y}-1)
 
 ```gherkin
-Given a slow-responding URL
-When request exceeds timeout threshold
-Then it should retry up to 3 times
-And if all retries fail, throw TimeoutError
+Given a project configuration object
+When the code field is set
+Then it must match pattern ^[A-Z][A-Z0-9]{1,4}$
+And valid codes: MDT, API1, WEB, Z2
+And invalid codes: mdt, api_01, A, ABCDEFG
 ```
 
-**Test**: `describe('when URL times out') > it('should retry up to 3 times')`
-
----
-
-### Feature: {Feature Name 2}
-
-**File**: `{test_directory}/{feature2}.test.{ext}`
-**Covers**: R2.1
-
-...
+**Test**: `describe('code field validation') > it('accepts valid project codes')`
 
 ---
 
@@ -388,33 +400,31 @@ And if all retries fail, throw TimeoutError
 
 | Scenario | Expected Behavior | Test | Req |
 |----------|-------------------|------|-----|
-| Malformed URL | ValidationError with message | `invalid_url.test.ts` | R1.1 |
-| Empty response body | EmptyContentError | `edge_cases.test.ts` | R1.1 |
-| Rate limited (429) | Backoff and retry | `edge_cases.test.ts` | R1.2 |
-| Network offline | NetworkError, no retry | `edge_cases.test.ts` | R1.2 |
+| Empty code | ValidationError | `validation.test.ts` | P{X.Y}-1 |
+| Code too long | ValidationError | `validation.test.ts` | P{X.Y}-1 |
+| Missing required field | ValidationError | `validation.test.ts` | P{X.Y}-2 |
 
 ## Generated Test Files
 
 | File | Scenarios | Lines | Status |
 |------|-----------|-------|--------|
-| `{test_dir}/summarize.test.ts` | 5 | ~80 | 🔴 RED |
-| `{test_dir}/progress.test.ts` | 2 | ~40 | 🔴 RED |
-| `{test_dir}/edge_cases.test.ts` | 4 | ~60 | 🔴 RED |
+| `{test_dir}/validation.test.ts` | 8 | ~200 | 🔴 RED |
+| `{test_dir}/migration.test.ts` | 6 | ~180 | 🔴 RED |
 
 ## Verification
 
-Run tests (should all fail):
+Run Phase {X.Y} tests (should all fail):
 ```bash
-{test_command}
+{test_command} --testPathPattern="phase-{X.Y}"
 ```
 
 Expected: **{N} failed, 0 passed**
 
 ## Coverage Checklist
 
-- [x] All requirements have at least one test
+- [x] All phase requirements have at least one test
 - [x] Error scenarios covered
-- [x] Edge cases from architecture included
+- [x] Edge cases documented
 - [ ] Tests are RED (verified manually)
 
 ---
@@ -425,9 +435,8 @@ Each task in `/mdt:tasks` should reference which tests it will make GREEN:
 
 | Task | Makes GREEN |
 |------|-------------|
-| Task 2.1 | `summarize.test.ts` (R1.1) |
-| Task 2.2 | `summarize.test.ts` (R1.2) |
-| Task 3.1 | `progress.test.ts` (R2.1) |
+| Task 1.1 | `validation.test.ts` (P{X.Y}-1, P{X.Y}-2) |
+| Task 1.2 | `migration.test.ts` (P{X.Y}-3) |
 
 After each task: `{test_command}` should show fewer failures.
 ```
@@ -436,20 +445,25 @@ After each task: `{test_command}` should show fewer failures.
 
 **7a. Save test files** to project test directory
 
-**7b. Save tests.md** to `docs/CRs/{CR-KEY}/tests.md`
+**7b. Save tests.md** to phase-aware path:
+- Phased: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
+- Non-phased: `docs/CRs/{CR-KEY}/tests.md`
 
 **7c. Report:**
 
 ```markdown
-## Tests Generated: {CR-KEY}
+## Tests Generated: {CR-KEY} Phase {X.Y}
 
 | Metric | Value |
 |--------|-------|
 | Mode | {Feature / Refactoring} |
-| Requirements covered | {N}/{M} |
+| Phase | {X.Y} - {Phase Title} |
+| Requirements covered | {N} |
 | Test files created | {N} |
 | Total scenarios | {N} |
 | Status | 🔴 All RED |
+
+**Output location**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
 
 **Test files**:
 - `{path/to/test1.test.ext}`
@@ -457,11 +471,11 @@ After each task: `{test_command}` should show fewer failures.
 
 **Verify RED**:
 ```bash
-{test_command}
+{test_command} --testPathPattern="phase-{X.Y}"
 # Expected: {N} failed, 0 passed
 ```
 
-**Next**: `/mdt:tasks {CR-KEY}` — tasks will reference which tests to make GREEN
+**Next**: `/mdt:tasks {CR-KEY}` — will auto-detect phase from tests.md location
 ```
 
 ---
@@ -480,30 +494,18 @@ When MODE = "refactoring", test generation differs:
 | Export | Signature | Current Behavior |
 |--------|-----------|------------------|
 | `getUser` | `(id: string) => Promise<User>` | Returns user or throws NotFoundError |
-| `updateUser` | `(id: string, data: Partial<User>) => Promise<User>` | Merges data, returns updated |
 
 ### Error Contracts
 
 | Function | Error Type | Condition |
 |----------|------------|-----------|
 | `getUser` | `NotFoundError` | User ID doesn't exist |
-| `getUser` | `ValidationError` | ID format invalid |
-| `updateUser` | `NotFoundError` | User ID doesn't exist |
-| `updateUser` | `ConflictError` | Concurrent modification |
-
-### Side Effects
-
-| Function | Side Effect | Observable Via |
-|----------|-------------|----------------|
-| `updateUser` | Emits 'user.updated' event | Event listener |
-| `updateUser` | Updates `modified_at` timestamp | Return value |
 
 ### Discovered Behaviors (undocumented)
 
 From code analysis:
 - `getUser` caches results for 5 minutes
-- `updateUser` silently ignores unknown fields
-- Empty string ID treated as null (returns first user?!)
+- Empty string ID treated as null
 ```
 
 ### Step 4 (Refactoring): Preservation Tests
@@ -511,38 +513,84 @@ From code analysis:
 ```typescript
 /**
  * Behavioral Preservation Tests
- * Source: Code analysis of src/users/index.ts
+ * Source: Code analysis
  * Purpose: Lock current behavior before refactoring
  * 
  * ⚠️ These tests document CURRENT behavior, not DESIRED behavior.
- * If a test seems wrong, that's a bug to fix AFTER refactoring.
  */
-
 describe('getUser - behavioral preservation', () => {
   it('returns user object with expected shape', async () => {
     const user = await getUser('user-123');
-    
-    // Lock the return shape
     expect(user).toMatchObject({
       id: expect.any(String),
       name: expect.any(String),
-      email: expect.any(String),
     });
   });
 
-  it('throws NotFoundError (not generic Error) for missing user', async () => {
+  it('throws NotFoundError for missing user', async () => {
     await expect(getUser('nonexistent'))
       .rejects
-      .toBeInstanceOf(NotFoundError); // Not just Error
-  });
-
-  // Discovered behavior - may be bug, but lock it for now
-  it('treats empty string ID as null (returns first user)', async () => {
-    const user = await getUser('');
-    expect(user).toBeDefined(); // Current behavior
-    // TODO: After refactoring, consider if this should throw
+      .toBeInstanceOf(NotFoundError);
   });
 });
+```
+
+---
+
+## Phase Detection Examples
+
+### Example 1: Phased Architecture CR
+
+```markdown
+# architecture.md
+
+## Phase 1.1: Enhanced Project Validation
+...validation rules...
+
+## Phase 1.2: Enhanced Ticket Validation  
+...ticket rules...
+
+## Phase 2: Additional Contracts
+...more contracts...
+```
+
+User runs: `/mdt:tests MDT-101`
+
+Output:
+```
+Detected phases in architecture.md:
+  - 1.1: Enhanced Project Validation
+  - 1.2: Enhanced Ticket Validation
+  - 2: Additional Contracts
+
+Which phase to generate tests for? [1.1]: 1.1
+
+Generating tests for Phase 1.1...
+Output: docs/CRs/MDT-101/phase-1.1/tests.md
+```
+
+### Example 2: Non-Phased CR (Backward Compatible)
+
+```markdown
+# CR or architecture.md without ## Phase headers
+```
+
+User runs: `/mdt:tests MDT-050`
+
+Output:
+```
+No phases detected. Generating tests...
+Output: docs/CRs/MDT-050/tests.md
+```
+
+### Example 3: Direct Phase Selection
+
+User runs: `/mdt:tests MDT-101 --phase 1.2`
+
+Output:
+```
+Generating tests for Phase 1.2...
+Output: docs/CRs/MDT-101/phase-1.2/tests.md
 ```
 
 ---
@@ -551,91 +599,18 @@ describe('getUser - behavioral preservation', () => {
 
 ### `/mdt:tasks` Receives
 
-```markdown
-## Test Context (from tests.md)
+`/mdt:tasks` will auto-discover phase from tests.md location:
 
-| Test File | Scenarios | Status |
-|-----------|-----------|--------|
-| `summarize.test.ts` | 5 | 🔴 RED |
-
-### Task → Test Mapping
-
-Task 2.1 (Extract summarize command) should make GREEN:
-- `summarize.test.ts > when valid URL > should extract summary points`
-- `summarize.test.ts > when valid URL > should include source metadata`
+```bash
+# Finds: docs/CRs/MDT-101/phase-1.1/tests.md
+# Outputs: docs/CRs/MDT-101/phase-1.1/tasks.md
 ```
 
 ### `/mdt:implement` Verifies
 
-```markdown
-## TDD Verification (Step 3d)
-
-Before task: Run `{test_command} --filter={relevant_tests}`
-- Record which tests are RED
-
-After task: Run `{test_command} --filter={relevant_tests}`
-- Verify expected tests are now GREEN
-- No previously GREEN tests became RED (regression)
-```
-
----
-
-## Examples
-
-### Feature Mode Example
-
-Input (requirements.md):
-```markdown
-## R1.1
-WHEN user provides valid URL THEN system shall return summary points
-
-## R1.2  
-IF request times out THEN system shall retry up to 3 times
-```
-
-Output (test file):
-```typescript
-describe('summarize', () => {
-  // @requirement: R1.1
-  it('returns summary points for valid URL', async () => {
-    const result = await summarize('https://example.com');
-    expect(result.points).toBeInstanceOf(Array);
-    expect(result.points.length).toBeGreaterThan(0);
-  });
-
-  // @requirement: R1.2
-  it('retries up to 3 times on timeout', async () => {
-    // ... timeout test
-  });
-});
-```
-
-### Refactoring Mode Example
-
-Input (from assess):
-```markdown
-## File: src/cli/index.ts
-Test Coverage: 23% 🔴 Critical
-Behaviors needing tests: URL validation, error codes, retry logic
-```
-
-Output (test file):
-```typescript
-/**
- * Behavioral Preservation: src/cli/index.ts
- * Lock current behavior before refactoring
- */
-describe('CLI behavioral preservation', () => {
-  it('validates URL format before processing', async () => {
-    const { exitCode, stderr } = await exec('mycli summarize not-a-url');
-    expect(exitCode).toBe(1);
-    expect(stderr).toContain('Invalid URL');
-  });
-
-  it('returns exit code 2 for network errors', async () => {
-    // ... network error test
-  });
-});
+```bash
+# Loads: docs/CRs/MDT-101/phase-1.1/tasks.md
+# References: docs/CRs/MDT-101/phase-1.1/tests.md
 ```
 
 ---
@@ -644,13 +619,14 @@ describe('CLI behavioral preservation', () => {
 
 Before completing `/mdt:tests`:
 
+- [ ] Phase correctly detected (or non-phased fallback)
 - [ ] Mode correctly detected (feature vs refactoring)
 - [ ] Test framework detected from project config
 - [ ] All requirements/behaviors have test coverage
 - [ ] BDD scenarios in Gherkin format
 - [ ] Executable test files generated
 - [ ] Tests verified as RED
-- [ ] tests.md includes requirement mapping
-- [ ] Task → test mapping prepared for `/mdt:tasks`
+- [ ] tests.md saved to correct phase folder
+- [ ] Requirement mapping prepared for `/mdt:tasks`
 
 Context: $ARGUMENTS
