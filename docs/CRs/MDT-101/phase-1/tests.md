@@ -1,4 +1,4 @@
-# MDT-101 Preservation Tests Documentation
+# MDT-101 Preservation Tests Documentation (Phase 1)
 
 **Mode**: Refactoring (Preserving Current Behavior)
 **Purpose**: Document all preservation tests that lock current implementation behavior

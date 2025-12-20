@@ -25,7 +25,7 @@ Pattern application: Each domain entity lives in its own module with a Zod schem
 |------------|--------|---------------|
 | Test fixtures | Domain-specific builders needed for testing | ~50 lines per entity |
 
-## Component Boundaries
+## Component Boundaries (Phase 1)
 
 ```mermaid
 graph TB
