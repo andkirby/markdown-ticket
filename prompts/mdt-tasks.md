@@ -1,4 +1,4 @@
-# MDT Task Breakdown Workflow (v4)
+# MDT Task Breakdown Workflow (v5)
 
 Generate a task list from a CR ticket for phased, reviewable implementation.
 
@@ -12,7 +12,8 @@ $ARGUMENTS
 
 ## Output Location
 
-`docs/CRs/{CR-KEY}/tasks.md`
+- **Phased CR**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tasks.md`
+- **Non-phased CR**: `docs/CRs/{CR-KEY}/tasks.md`
 
 ## Critical Rules
 
@@ -20,6 +21,7 @@ $ARGUMENTS
 2. **Size limits inherited** — from Architecture Design, flag/STOP thresholds
 3. **Exclusions prevent bloat** — explicitly state what NOT to move
 4. **Anti-duplication** — import from shared, never copy
+5. **Co-locate with tests** — tasks.md goes in same folder as tests.md
 
 ## Execution Steps
 
@@ -35,26 +37,104 @@ project:
   file_extension: {.ts, .py, .rs, .go, .java, ...}
 ```
 
-### Step 2: Load CR Context
+### Step 2: Load CR Context and Discover Phase
 
-1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
-2. Extract:
-   - **Architecture Design** — REQUIRED for refactoring
-     - Shared Patterns (extract first)
-     - Structure (file paths)
-     - Size Guidance (limits per module)
-   - **Acceptance Criteria** — any overrides
-3. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
-   - If found: extract requirement IDs for task mapping
-   - Each task will reference which requirements it implements
-4. **Load tests if exists**: Check `docs/CRs/{CR-KEY}/tests.md`
-   - If found: extract test→requirement mapping
-   - Each task will reference which tests it should make GREEN
-5. If Architecture Design missing: abort with "Run `/mdt:architecture` first"
+**2a. Load CR:**
+```
+mdt-all:get_cr mode="full"
+```
+
+**2b. Discover phase context:**
+
+```bash
+# Check for phase-specific tests first (co-location pattern)
+phase_tests=$(find docs/CRs/{CR-KEY} -path "*/phase-*/tests.md" 2>/dev/null | sort -V)
+
+if [ -n "$phase_tests" ]; then
+  # Phased CR - list available phases with tests
+  echo "Found phase-specific tests:"
+  for f in $phase_tests; do
+    phase=$(echo "$f" | grep -oE "phase-[0-9.]+")
+    echo "  - $phase/tests.md"
+  done
+fi
+```
+
+**2c. Determine phase and output path:**
+
+| Scenario | Behavior |
+|----------|----------|
+| `--phase 1.1` flag provided | Use specified phase |
+| Single `phase-*/tests.md` exists | Use that phase automatically |
+| Multiple `phase-*/tests.md` exist | Prompt for selection |
+| No phase folders exist | Non-phased mode (backward compatible) |
+
+```markdown
+# If multiple phases with tests exist:
+Found phases with tests:
+  - phase-1.1/tests.md
+  - phase-1.2/tests.md
+
+Which phase to generate tasks for? [1.1]: _
+```
+
+**2d. Set paths:**
+
+```yaml
+# Phased
+phase: "1.1"
+tests_file: "docs/CRs/{CR-KEY}/phase-1.1/tests.md"
+output_file: "docs/CRs/{CR-KEY}/phase-1.1/tasks.md"
+
+# Non-phased (backward compatible)
+phase: null
+tests_file: "docs/CRs/{CR-KEY}/tests.md"
+output_file: "docs/CRs/{CR-KEY}/tasks.md"
+```
+
+**2e. Load phase-specific architecture:**
+
+If phased, extract from `architecture.md`:
+- Only the selected phase section
+- Phase-specific Structure
+- Phase-specific Size Guidance
+- Phase-specific patterns
+
+```markdown
+## From architecture.md → Phase 1.1:
+
+### Enhanced Structure
+domain-contracts/src/project/
+├── schema.ts              → 150 lines
+├── validation.ts          → 100 lines
+├── migration.ts           → 80 lines
+└── index.ts              → 30 lines
+
+### Size Guidance
+| Module | Limit | Hard Max |
+|--------|-------|----------|
+| schema.ts | 150 | 225 |
+| validation.ts | 100 | 150 |
+```
+
+**2f. Load tests.md:**
+
+```bash
+# Load from phase folder or root
+if [ -f "$tests_file" ]; then
+  # Extract test→requirement mapping
+  # Each task will reference which tests it makes GREEN
+fi
+```
+
+**2g. Validate prerequisites:**
+
+- If Architecture Design missing: abort with "Run `/mdt:architecture` first"
+- If phase specified but no phase section in architecture: abort with "Phase {X.Y} not found in architecture.md"
 
 ### Step 3: Inherit Size Limits
 
-From Architecture Design `Size Guidance`:
+From Architecture Design (phase-specific if phased):
 
 ```markdown
 | Module | Default | Hard Max | Action if exceeded |
@@ -71,13 +151,12 @@ These become task `Limits`.
 
 ```
 Phase 1: Shared Utilities
-  Task 1.1: Extract validators (used by all commands)
-  Task 1.2: Extract formatters (used by all commands)
-  Task 1.3: Extract error handler (used everywhere)
+  Task 1.1: Extract validators
+  Task 1.2: Extract formatters
 
 Phase 2: Features
-  Task 2.1: Extract command-a (imports from Phase 1)
-  Task 2.2: Extract command-b (imports from Phase 1)
+  Task 2.1: Implement feature-a (imports from Phase 1)
+  Task 2.2: Implement feature-b (imports from Phase 1)
 ```
 
 ### Step 5: Task Template
@@ -87,11 +166,11 @@ Phase 2: Features
 
 **Structure**: `{exact path from Architecture Design}`
 
-**Implements**: {R1.1, R1.2, ...} *(if requirements.md exists)*
+**Implements**: {P{X.Y}-1, P{X.Y}-2, ...} *(phase requirement IDs)*
 
-**Makes GREEN**: *(if tests.md exists)*
-- `{test_file}`: `{test_name}` (R1.1)
-- `{test_file}`: `{test_name}` (R1.2)
+**Makes GREEN**: *(from tests.md)*
+- `{test_file}`: `{test_name}` (P{X.Y}-1)
+- `{test_file}`: `{test_name}` (P{X.Y}-2)
 
 **Limits**:
 - Default: {N} lines
@@ -99,10 +178,10 @@ Phase 2: Features
 - If > Default: ⚠️ flag warning
 - If > Hard Max: ⛔ STOP
 
-**From**: `{source file}`
+**From**: `{source file}` *(if refactoring)*
 **To**: `{destination file}`
 
-**Move**:
+**Move/Create**:
 - {specific function/class 1}
 - {specific function/class 2}
 
@@ -111,17 +190,16 @@ Phase 2: Features
 
 **Anti-duplication**:
 - Import `{shared utility}` from `{path}` — do NOT copy logic
-- If similar code exists in `{other file}` — refactor to shared, don't duplicate
 
 **Verify**:
 ```bash
 wc -l {destination}       # check against limits
-{test_command}
+{test_command} --testPathPattern="phase-{X.Y}"
 {build_command}
 ```
 
 **Done when**:
-- [ ] Tests RED before task, GREEN after *(if tests.md exists)*
+- [ ] Tests RED before task, GREEN after
 - [ ] File at correct path
 - [ ] Size ≤ default (or flagged if ≤ hard max)
 - [ ] No duplicated logic — uses shared imports
@@ -131,9 +209,12 @@ wc -l {destination}       # check against limits
 ### Step 6: Generate Tasks Document
 
 ```markdown
-# Tasks: {CR-KEY}
+# Tasks: {CR-KEY} Phase {X.Y}
 
-**Source**: [{CR-KEY}]({path to CR})
+**Source**: [{CR-KEY}]({path}) → Phase {X.Y}
+**Phase**: {X.Y} - {Phase Title}
+**Tests**: `phase-{X.Y}/tests.md`
+**Generated**: {timestamp}
 
 ## Project Context
 
@@ -143,29 +224,29 @@ wc -l {destination}       # check against limits
 | Test command | `{test_command}` |
 | Build command | `{build_command}` |
 | File extension | `{ext}` |
+| Phase test filter | `--testPathPattern="phase-{X.Y}"` |
 
-## Size Thresholds
+## Size Thresholds (Phase {X.Y})
 
-| Role | Default | Hard Max | Action |
-|------|---------|----------|--------|
-| Orchestration | 100 | 150 | Flag at 100+, STOP at 150+ |
-| Feature | 200 | 300 | Flag at 200+, STOP at 300+ |
-| Utility | 75 | 110 | Flag at 75+, STOP at 110+ |
+| Module | Default | Hard Max | Action |
+|--------|---------|----------|--------|
+| `schema.ts` | 150 | 225 | Flag at 150+, STOP at 225+ |
+| `validation.ts` | 100 | 150 | Flag at 100+, STOP at 150+ |
 
-*(Inherited from Architecture Design, overridden by CR if specified)*
+*(From Architecture Design → Phase {X.Y})*
 
-## Shared Patterns (from Architecture Design)
+## Shared Patterns (Phase {X.Y})
 
 | Pattern | Extract To | Used By |
 |---------|------------|---------|
 | {pattern} | `{path}` | {consumers} |
 
-> Phase 1 extracts these BEFORE features.
+> Internal phase tasks extract shared patterns BEFORE features.
 
-## Architecture Structure (from CR)
+## Architecture Structure (Phase {X.Y})
 
 ```
-{paste Structure diagram from Architecture Design}
+{paste Structure diagram from Architecture Design phase section}
 ```
 
 ## STOP Conditions
@@ -174,222 +255,232 @@ wc -l {destination}       # check against limits
 - Duplicating logic that exists in shared module → STOP, import instead
 - Structure path doesn't match Architecture Design → STOP, clarify
 
-## Requirement Coverage
-
-*(Include ONLY if requirements.md exists)*
-
-| Requirement | Task(s) | Status |
-|-------------|---------|--------|
-| R1.1 | Task 2.1 | ⬜ Pending |
-| R1.2 | Task 2.1, 2.3 | ⬜ Pending |
-| R2.1 | Task 3.1 | ⬜ Pending |
-
-**Coverage**: {N}/{M} requirements have implementing tasks
-
-## Test Coverage
-
-*(Include ONLY if tests.md exists)*
+## Test Coverage (from phase-{X.Y}/tests.md)
 
 | Test | Requirement | Task | Status |
 |------|-------------|------|--------|
-| `summarize.test > extracts points` | R1.1 | Task 2.1 | 🔴 RED |
-| `summarize.test > retries on timeout` | R1.2 | Task 2.1 | 🔴 RED |
-| `progress.test > emits events` | R2.1 | Task 3.1 | 🔴 RED |
+| `validation.test > accepts valid codes` | P{X.Y}-1 | Task 1.1 | 🔴 RED |
+| `validation.test > rejects invalid` | P{X.Y}-1 | Task 1.1 | 🔴 RED |
+| `migration.test > detects legacy` | P{X.Y}-3 | Task 1.2 | 🔴 RED |
 
-**TDD Goal**: All tests RED before implementation, GREEN after respective task completes
+**TDD Goal**: All tests RED before implementation, GREEN after respective task
 
 ---
 
 ## TDD Verification
 
-*(Include ONLY if tests.md exists)*
-
 Before starting each task:
 ```bash
-{test_command} --filter="{task_tests}"  # Should show failures
+{test_command} --testPathPattern="phase-{X.Y}"  # Should show failures
 ```
 
 After completing each task:
 ```bash
-{test_command} --filter="{task_tests}"  # Should pass
-{test_command}                           # Full suite — no regressions
+{test_command} --testPathPattern="phase-{X.Y}"  # Task tests should pass
+{test_command}                                   # Full suite — no regressions
 ```
 
 ---
 
-## Phase 1: Shared Utilities
+## Phase {X.Y} Tasks
 
-> Extract patterns used by multiple features FIRST.
+### Task 1.1: {First task}
 
-**Phase goal**: All shared utilities exist
-**Phase verify**: `{test_command}` passes, utilities importable
+**Structure**: `{path}`
 
-### Task 1.1: {Shared pattern}
+**Makes GREEN**:
+- `validation.test.ts`: `accepts valid codes` (P{X.Y}-1)
+- `validation.test.ts`: `rejects invalid codes` (P{X.Y}-1)
+
+**Limits**:
+- Default: 150 lines
+- Hard Max: 225 lines
+
 ...
 
 ---
 
-## Phase 2: Feature Extraction
+### Task 1.2: {Second task}
 
-> Features import from Phase 1, never duplicate.
-
-**Phase goal**: Features extracted, source reduced
-**Phase verify**: Source files ≤ limits, `{test_command}` passes
-
-### Task 2.1: {Feature}
 ...
 
 ---
 
-## Post-Implementation
+## Post-Implementation (Phase {X.Y})
 
 ### Task N.1: Verify no duplication
 
-**Do**: Search for duplicated patterns
 ```bash
-# Example: find similar function names across files
-grep -r "validateInput\|formatOutput\|handleError" {source_dir} | cut -d: -f1 | sort | uniq -c | sort -rn
+grep -r "{pattern}" {source_dir} | cut -d: -f1 | sort | uniq -c
 ```
 **Done when**: [ ] Each pattern exists in ONE location only
 
 ### Task N.2: Verify size compliance
 
-**Do**: Check all files
 ```bash
 find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 ```
 **Done when**: [ ] No files exceed hard max
 
-### Task N.3: Update project documentation
+### Task N.3: Run phase tests
 
-**Do**: Update CLAUDE.md (or equivalent) with new file structure
-
-### Task N.4: Run `/mdt:tech-debt {CR-KEY}`
+```bash
+{test_command} --testPathPattern="phase-{X.Y}"
+```
+**Done when**: [ ] All phase tests GREEN
 ```
 
 ### Step 7: Validate Before Saving
 
-- [ ] Project context includes all settings (source_dir, test, build, ext)
-- [ ] Phase 1 contains shared patterns from Architecture Design
-- [ ] Every task has `Limits` (default + hard max)
-- [ ] Every task has `Exclude` section
-- [ ] Every task has `Anti-duplication` section
-- [ ] Features (Phase 2+) import from shared (Phase 1)
-- [ ] Architecture Structure included for reference
-- [ ] `Verify` uses project's test and build commands
-- [ ] **Requirement coverage** (if requirements.md exists):
-  - Every requirement has at least one implementing task
-  - Flag orphans: "R1.3 has no implementing task"
-  - Requirement Coverage table populated
-- [ ] **Test coverage** (if tests.md exists):
+- [ ] Project context includes all settings
+- [ ] Phase correctly identified (or non-phased fallback)
+- [ ] Size limits from phase-specific Architecture section
+- [ ] Every task has `Limits`, `Exclude`, `Anti-duplication`
+- [ ] **Test coverage** (from phase tests.md):
   - Every test has an implementing task
   - Task `**Makes GREEN**` section populated
   - Test Coverage table populated
+- [ ] Tasks output to same folder as tests.md
 
 ### Step 8: Save and Report
 
-Save to `docs/CRs/{CR-KEY}/tasks.md`
+**Create output directory if needed:**
+```bash
+mkdir -p "docs/CRs/{CR-KEY}/phase-{X.Y}"
+```
+
+**Save to phase-aware path:**
+- Phased: `docs/CRs/{CR-KEY}/phase-{X.Y}/tasks.md`
+- Non-phased: `docs/CRs/{CR-KEY}/tasks.md`
+
+**Report:**
 
 ```markdown
-## Tasks Generated: {CR-KEY}
+## Tasks Generated: {CR-KEY} Phase {X.Y}
 
-| Phase | Tasks | Focus |
-|-------|-------|-------|
-| 1 | {N} | Shared utilities |
-| 2 | {N} | Feature extraction |
-| Post | 4 | Verification |
+| Metric | Value |
+|--------|-------|
+| Phase | {X.Y} - {Phase Title} |
+| Tasks | {N} |
+| Tests to make GREEN | {N} |
+
+**Output**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tasks.md`
+**Tests**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
 
 **Size thresholds**: Flag at default, STOP at 1.5x
-**Shared patterns**: {N} (extract in Phase 1)
 
-Next: `/mdt:implement {CR-KEY}`
+Next: `/mdt:implement {CR-KEY} --phase {X.Y}`
 ```
+
+---
 
 ## Task Examples
 
-### Complete task example (refactoring)
+### Complete task example (phased)
 
 ```markdown
-### Task 1.1: Extract input validators
+### Task 1.1: Implement ProjectSchema with validation
 
-**Structure**: `{source_dir}/cli/validators/input-validators{ext}`
+**Structure**: `domain-contracts/src/project/schema.ts`
+
+**Implements**: P1.1-1, P1.1-2
+
+**Makes GREEN**:
+- `validation.test.ts`: `accepts valid project codes` (P1.1-1)
+- `validation.test.ts`: `rejects lowercase codes` (P1.1-1)
+- `validation.test.ts`: `requires name field` (P1.1-2)
+- `validation.test.ts`: `requires code field` (P1.1-2)
 
 **Limits**:
-- Default: 75 lines (utility)
-- Hard Max: 110 lines
-- If > 75: ⚠️ flag
-- If > 110: ⛔ STOP
+- Default: 150 lines
+- Hard Max: 225 lines
+- If > 150: ⚠️ flag
+- If > 225: ⛔ STOP
 
-**From**: `{source_dir}/cli/index{ext}`
-**To**: `{source_dir}/cli/validators/input-validators{ext}`
-
-**Move**:
-- `validateUrl()` function
-- `validateFilePath()` function
-- `validateNumericOption()` function
-- Related type definitions
+**Create**:
+- `ProjectSchema` Zod schema with field validations
+- `Project` type exported via `z.infer<>`
+- Code pattern regex: `^[A-Z][A-Z0-9]{1,4}$`
 
 **Exclude**:
-- Command-specific validation (goes with each command in Phase 2)
-- Output formatting (separate task 1.2)
-- Error handling (separate task 1.3)
+- Migration logic (Task 1.2)
+- Custom business rules beyond basic validation (Task 1.3)
 
 **Anti-duplication**:
-- This IS the shared validator — other tasks will import from here
-- If similar validation exists elsewhere, consolidate HERE
+- This IS the source schema — other modules will import from here
 
 **Verify**:
 ```bash
-wc -l {source_dir}/cli/validators/input-validators{ext}  # ≤ 75 (or flag ≤ 110)
-{test_command}
-{build_command}
+wc -l domain-contracts/src/project/schema.ts  # ≤ 150
+npm test -- --testPathPattern="phase-1.1"
+npm run build
 ```
 
 **Done when**:
-- [ ] File at `{source_dir}/cli/validators/input-validators{ext}`
-- [ ] Size ≤ 75 lines (or flagged if ≤ 110)
-- [ ] All validation logic consolidated here
-- [ ] Tests pass
+- [ ] 4 tests GREEN (were RED)
+- [ ] File at `domain-contracts/src/project/schema.ts`
+- [ ] Size ≤ 150 lines
+- [ ] Exports ProjectSchema and Project type
 ```
 
-### Anti-duplication example (Phase 2 task)
+---
 
-```markdown
-### Task 2.1: Extract summarize command
+## Phase Discovery Examples
 
-**Anti-duplication**:
-- Import `validateUrl` from `validators/input-validators` — exists from Task 1.1
-- Import `formatError` from `formatters/output-formatters` — exists from Task 1.2
-- Import `handleCommandError` from `utils/error-handler` — exists from Task 1.3
-- Do NOT implement validation/formatting/error-handling in this file
+### Example 1: Auto-detect from tests.md location
+
+```bash
+$ /mdt:tasks MDT-101
+
+Found phase-specific tests:
+  - phase-1.1/tests.md
+  - phase-1.2/tests.md
+
+Which phase to generate tasks for? [1.1]: 1.1
+
+Loading architecture.md → Phase 1.1...
+Loading phase-1.1/tests.md...
+
+Output: docs/CRs/MDT-101/phase-1.1/tasks.md
 ```
 
-### Bad task (what failed in SUML-009)
+### Example 2: Direct phase selection
 
-```markdown
-### Task 3: Summarize Command Module
-**Description:** Extract summarize command logic into dedicated module
-**Deliverables:**
-- `src/cli/commands/summarize-command.ts` with complete functionality
+```bash
+$ /mdt:tasks MDT-101 --phase 1.2
+
+Loading architecture.md → Phase 1.2...
+Loading phase-1.2/tests.md...
+
+Output: docs/CRs/MDT-101/phase-1.2/tasks.md
 ```
 
-Problems:
-- No size limits → resulted in 745-line file
-- No exclusions → moved everything including shared logic
-- No anti-duplication → copied validation into every command
-- "Complete functionality" is unbounded
+### Example 3: Non-phased (backward compatible)
+
+```bash
+$ /mdt:tasks MDT-050
+
+No phases detected.
+Loading tests.md...
+
+Output: docs/CRs/MDT-050/tasks.md
+```
+
+---
 
 ## Integration
 
-**Before**: `/mdt:architecture` (required — provides shared patterns + size limits)
-**Before** (optional): `/mdt:tests` (provides test→requirement mapping)
-**After**: `/mdt:implement {CR-KEY}`
+**Before**: 
+- `/mdt:architecture` (required — provides structure + size limits)
+- `/mdt:tests` (provides test→requirement mapping in same phase folder)
 
-**With TDD**:
+**After**: `/mdt:implement {CR-KEY} --phase {X.Y}`
+
+**Co-location Pattern**:
 ```
-/mdt:tests → creates failing tests + tests.md
-/mdt:tasks → maps tasks to tests (Makes GREEN)
-/mdt:implement → verifies RED→GREEN per task
+docs/CRs/{CR-KEY}/phase-{X.Y}/
+├── tests.md    ← /mdt:tests creates
+└── tasks.md    ← /mdt:tasks creates (this prompt)
 ```
 
 Context: $ARGUMENTS

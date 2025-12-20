@@ -13,10 +13,10 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 | `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
 | `/mdt:domain-lens` | Surface DDD constraints (optional) | `docs/CRs/{CR-KEY}/domain.md` |
 | `/mdt:domain-audit` | Analyze code for DDD violations | `docs/CRs/{CR-KEY}/domain-audit.md` |
-| `/mdt:tests` | Generate BDD test specs + executable tests | `docs/CRs/{CR-KEY}/tests.md` + test files |
+| `/mdt:tests` | Generate BDD test specs + executable tests | `docs/CRs/{CR-KEY}/[phase-{X.Y}/]tests.md` + test files |
 | `/mdt:architecture` | Surface decisions, define structure + size limits | CR section or `architecture.md` |
 | `/mdt:clarification` | Fill specification gaps | Updated CR sections |
-| `/mdt:tasks` | Break CR into constrained tasks | `docs/CRs/{CR-KEY}/tasks.md` |
+| `/mdt:tasks` | Break CR into constrained tasks | `docs/CRs/{CR-KEY}/[phase-{X.Y}/]tasks.md` |
 | `/mdt:implement` | Execute tasks with verification | Code changes, updated tasks.md |
 | `/mdt:tech-debt` | Detect debt patterns | `docs/CRs/{CR-KEY}/debt.md` |
 | `/mdt:reflection` | Capture learnings | Updated CR |
@@ -549,11 +549,11 @@ prompts/
 ├── mdt-assess.md            # Code fitness assessment (v2)
 ├── mdt-domain-lens.md       # DDD constraints (v2 - code grounded)
 ├── mdt-domain-audit.md      # DDD violations analysis (v1)
-├── mdt-tests.md             # BDD test generation (v1)
+├── mdt-tests.md             # BDD test generation (v2 - phase aware)
 ├── mdt-architecture.md      # Architecture design (v5 - domain aware)
 ├── mdt-clarification.md     # Gap filling
-├── mdt-tasks.md             # Task breakdown (v4)
-├── mdt-implement.md         # Orchestrator (v4)
+├── mdt-tasks.md             # Task breakdown (v5 - phase aware)
+├── mdt-implement.md         # Orchestrator (v5 - phase aware)
 ├── mdt-tech-debt.md         # Debt detection (v2)
 └── mdt-reflection.md        # Learning capture
 ```
@@ -563,11 +563,11 @@ prompts/
 | Workflow | Output Location |
 |----------|-----------------|
 | `/mdt:requirements` | `docs/CRs/{CR-KEY}/requirements.md` |
-| `/mdt:tests` | `docs/CRs/{CR-KEY}/tests.md` + `{test_dir}/*.test.{ext}` |
+| `/mdt:tests` | `docs/CRs/{CR-KEY}/[phase-{X.Y}/]tests.md` + `{test_dir}/*.test.{ext}` |
 | `/mdt:domain-lens` | `docs/CRs/{CR-KEY}/domain.md` |
 | `/mdt:domain-audit` | `docs/CRs/{CR-KEY}/domain-audit.md` or `docs/audits/domain-audit-{timestamp}.md` |
 | `/mdt:architecture` | CR section (simple) or `docs/CRs/{CR-KEY}/architecture.md` (complex) |
-| `/mdt:tasks` | `docs/CRs/{CR-KEY}/tasks.md` |
+| `/mdt:tasks` | `docs/CRs/{CR-KEY}/[phase-{X.Y}/]tasks.md` |
 | `/mdt:tech-debt` | `docs/CRs/{CR-KEY}/debt.md` |
 
 ## Design Principles
@@ -582,6 +582,96 @@ prompts/
 8. **Violations block progress** — cannot mark complete if constraints violated
 9. **debt.md is diagnosis** — fix via new CR, not direct execution
 10. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
+11. **Phase isolation** — epic CRs use phase folders for tests.md and tasks.md
+
+## Phased CRs (Epic Tickets)
+
+For large CRs with multiple implementation phases, the workflow supports **phase-aware file organization**.
+
+### When to Use Phases
+
+| CR Scope | Approach |
+|----------|----------|
+| Single feature, <10 tasks | Non-phased (root level tests.md/tasks.md) |
+| Multiple phases in architecture.md | Phase folders (phase-1.1/, phase-1.2/, etc.) |
+| Epic with distinct milestones | Phase folders |
+
+### Phase Detection
+
+Phases are detected from `## Phase X.Y:` headers in `architecture.md`:
+
+```markdown
+## Phase 1.1: Enhanced Project Validation
+...
+## Phase 1.2: Enhanced Ticket Validation
+...
+## Phase 2: Additional Contracts
+```
+
+### Phased File Structure
+
+```
+docs/CRs/{CR-KEY}/
+├── architecture.md          # All phases (master design doc)
+├── requirements.md          # All phases (if exists)
+├── domain.md                # All phases (if exists)
+├── phase-1.1/
+│   ├── tests.md            # Phase 1.1 test specs
+│   └── tasks.md            # Phase 1.1 task list
+├── phase-1.2/
+│   ├── tests.md
+│   └── tasks.md
+└── phase-2/
+    ├── tests.md
+    └── tasks.md
+```
+
+### Phased Workflow
+
+```
+/mdt:architecture ─────────── Creates architecture.md with ## Phase X.Y sections
+        │
+        ▼
+/mdt:tests --phase 1.1 ────── Creates: phase-1.1/tests.md
+        │
+        ▼
+/mdt:tasks --phase 1.1 ────── Creates: phase-1.1/tasks.md (auto-detects from tests.md)
+        │
+        ▼
+/mdt:implement --phase 1.1 ── Executes phase-1.1/tasks.md, verifies phase-1.1/tests.md
+        │
+        ▼
+    [Phase 1.1 Complete]
+        │
+        ▼
+/mdt:tests --phase 1.2 ────── Creates: phase-1.2/tests.md
+        │
+        ▼
+    ... continue ...
+```
+
+### Phase Commands
+
+| Command | Behavior |
+|---------|---------|
+| `/mdt:tests MDT-101` | Detects phases, prompts for selection |
+| `/mdt:tests MDT-101 --phase 1.1` | Targets specific phase directly |
+| `/mdt:tasks MDT-101` | Auto-detects from existing phase-*/tests.md |
+| `/mdt:implement MDT-101` | Lists phases with completion status |
+| `/mdt:implement MDT-101 --phase 1.2` | Targets specific phase |
+
+### Backward Compatibility
+
+Non-phased CRs work exactly as before:
+
+```
+docs/CRs/{CR-KEY}/
+├── architecture.md (or embedded in CR)
+├── tests.md
+└── tasks.md
+```
+
+If no `## Phase X.Y:` headers exist in architecture.md, prompts default to root-level output.
 
 ## TDD/BDD Workflow
 

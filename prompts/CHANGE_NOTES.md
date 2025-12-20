@@ -2,6 +2,74 @@
 
 ## Recent Updates
 
+### 2025-12-20 - Phase-Aware Implementation Workflow
+
+**Problem**: The implementation workflow was monolithic, handling all tasks in a single run without phase separation. This made large CRs difficult to manage, track, and review incrementally.
+
+**Solution**: Enhanced the implementation workflow to support phase-based execution where each phase has its own tasks.md and tests.md, enabling incremental development and better progress tracking.
+
+**Changes Made**:
+
+1. **mdt-implement.md (v4→v5) - Phase-aware orchestration**:
+   - Added phase discovery that detects phase-specific tasks and tests
+   - New command-line options: `--phase {X.Y}` for specific phase execution
+   - Co-location of tasks.md with tests.md in phase folders
+   - Phase completion summaries with TDD and size metrics
+   - Support for both phased and non-phased CRs (backward compatibility)
+   - Enhanced TDD verification with phase-specific test filtering
+   - Automatic detection of multiple phases with user selection prompts
+
+2. **mdt-tasks.md (v4→v5) - Phase-specific task generation**:
+   - Phase detection based on existing phase-specific tests.md files
+   - Output to phase folders: `docs/CRs/{CR-KEY}/phase-{X.Y}/tasks.md`
+   - Phase-specific architecture section extraction from architecture.md
+   - Co-location strategy: tasks.md created alongside tests.md
+   - Phase-specific size thresholds and shared patterns
+   - Updated task template with phase requirement IDs (P{X.Y}-N format)
+   - Enhanced TDD integration with phase-based test filtering
+
+3. **mdt-tests.md (v1→v2) - Phase-aware test generation**:
+   - Added support for phase-specific test generation with `--phase` flag
+   - Output to phase folders: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
+   - Phase-specific requirement IDs (P{X.Y}-N) for better traceability
+   - Incremental test generation for each phase of development
+   - Backward compatibility with non-phased CRs
+
+**Key Features**:
+- **Phase Isolation**: Each phase has its own tasks, tests, and progress tracking
+- **Co-location Strategy**: tasks.md and tests.md in same phase folder for better organization
+- **Incremental Development**: Complete one phase before moving to the next
+- **Backward Compatibility**: Existing non-phased CRs continue to work unchanged
+- **Smart Phase Detection**: Automatically discovers available phases from test files
+- **Progress Tracking**: Phase completion summaries with detailed metrics
+
+**New Folder Structure**:
+```
+docs/CRs/{CR-KEY}/
+├── architecture.md          # All phases (unchanged)
+├── phase-1.1/
+│   ├── tests.md            # Phase 1.1 tests
+│   └── tasks.md            # Phase 1.1 tasks
+├── phase-1.2/
+│   ├── tests.md
+│   └── tasks.md
+└── phase-2/
+    ├── tests.md
+    └── tasks.md
+```
+
+**Impact**:
+- Large CRs can now be broken into manageable phases with clear boundaries
+- Better incremental development and review processes
+- Improved organization with co-located test and task files
+- Enhanced TDD workflow with phase-specific test filtering
+- Maintains full backward compatibility for existing CRs
+
+**Files Changed**:
+- `prompts/mdt-implement.md`
+- `prompts/mdt-tasks.md`
+- `prompts/mdt-tests.md`
+
 ### 2025-12-17 - Added Domain-Driven Design Audit Workflow
 
 **Problem**: No mechanism existed to detect Domain-Driven Design violations in existing code, allowing architectural debt to accumulate unchecked and making refactoring decisions uninformed.
