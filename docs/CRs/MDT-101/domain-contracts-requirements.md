@@ -4,7 +4,7 @@
 
 ### MUST
 - Be a separate package (not inside `shared/`)
-- Have zero internal dependencies (only external like `zod`)
+- Have zero internal dependencies (only external dependencies like validation libraries)
 - Be importable by any package without pulling implementation
 
 ### MUST NOT
@@ -14,8 +14,8 @@
 ## Schemas
 
 ### MUST
-- Define entity schemas using Zod (single source of truth)
-- Derive TypeScript types from schemas (`z.infer<>`)
+- Define entity schemas using a validation library (single source of truth)
+- Derive TypeScript types from schemas (library-specific inference)
 - Define input schemas in same file as entity schema
 - Be used by both production code and tests
 
@@ -27,8 +27,8 @@
 
 ### MUST
 - Export validation functions that use schemas
-- Provide both throwing (`parse`) and safe (`safeParse`) variants
-- Be called at interface boundaries (CLI, MCP, UI)
+- Provide both throwing and safe validation variants
+- Be called at interface boundaries (API controllers, CLI commands, UI forms)
 
 ### MUST NOT
 - Be duplicated across interfaces
@@ -38,7 +38,7 @@
 
 ### MUST
 - Live in `src/testing/` directory
-- Be exported via subpath `@mdt/domain-contracts/testing`
+- Be exported via separate subpath (e.g., `domain-contracts/testing`)
 - Use schemas to generate valid test data
 - Follow builder pattern for flexibility
 
@@ -49,7 +49,7 @@
 ## Dependency Direction
 
 ### MUST
-- Flow downward only: `contracts → shared → interfaces`
+- Flow downward only: `contracts → business → interfaces`
 
 ### MUST NOT
 - Have circular dependencies
