@@ -1,6 +1,6 @@
 # Architecture: MDT-101
 
-**Source**: [MDT-101](../../../docs/CRs/MDT/MDT-101.md)
+**Source**: [MDT-101](../MDT-101-create-domain-contracts-package-with-zod-schemas-a.md)
 **Generated**: 2025-12-20
 **Complexity Score**: 11
 
@@ -9,7 +9,7 @@
 Domain-contracts package extracts entity definitions into standalone contracts with Zod schemas as the single source of truth. Contracts provide field-level validation only, while all business logic lives in services. This separation ensures zero internal dependencies and enables consistent validation across all interfaces (CLI, MCP, UI).
 
 **Implementation Status**:
-- **Phase 1** ✅: Core entities (Project, Ticket) with basic field validation
+- **Phase 1** : Core entities (Project, Ticket) with basic field validation
 - **Phase 1.1** 📋: Enhanced Project field validation patterns
 - **Phase 1.2** 📋: Enhanced Ticket field validation patterns
 - **Phase 2** 📋: Additional contracts (Template, Config, Counter)
@@ -500,7 +500,7 @@ const result = projectService.create(validated);  // Business logic
 
 - **Requirements**: [domain-contracts-requirements.md](./domain-contracts-requirements.md)
 - **Specification**: [domain-contracts.md](./domain-contracts.md)
-- **Implementation**: See `domain-contracts/` package for Phase 1 completion
+- **Testing Guide**: [domain-contracts-testing-guide.md](./domain-contracts-testing-guide.md)
 
 ---
 

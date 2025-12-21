@@ -1,61 +1,84 @@
 /**
- * MDT-101: Type Enums Schema
- *
- * Zod schemas for type enums from shared/models/Types.ts
- * This is a placeholder implementation - the actual schemas will be implemented as part of MDT-101
+ * MDT Phase 1: Core Entities - Source of truth for all CR enums
+ * All other modules should import these enums from here.
  */
 
 import { z } from 'zod';
 
-// Export placeholder schemas (will be implemented in MDT-101)
-export const CRStatusSchema = z.enum([
-  'Proposed',
-  'Approved',
-  'In Progress',
-  'Implemented',
-  'Rejected',
-  'On Hold',
-  'Superseded',
-  'Deprecated',
-  'Duplicate',
-  'Partially Implemented'
-]);
+// CR Status enumeration
+export const CRStatus = {
+  PROPOSED: 'Proposed',
+  APPROVED: 'Approved',
+  IN_PROGRESS: 'In Progress',
+  IMPLEMENTED: 'Implemented',
+  REJECTED: 'Rejected',
+} as const;
 
-export const CRTypeSchema = z.enum([
-  'Architecture',
-  'Feature Enhancement',
-  'Bug Fix',
-  'Technical Debt',
-  'Documentation'
-]);
+export type CRStatus = typeof CRStatus[keyof typeof CRStatus];
 
-export const CRPrioritySchema = z.enum([
-  'Low',
-  'Medium',
-  'High',
-  'Critical'
-]);
+export const AllCRStatuses = [
+  CRStatus.PROPOSED,
+  CRStatus.APPROVED,
+  CRStatus.IN_PROGRESS,
+  CRStatus.IMPLEMENTED,
+  CRStatus.REJECTED,
+] as const;
 
-export const ProjectInfoSchema = z.object({
-  key: z.string(),
-  name: z.string(),
-  description: z.string().optional(),
-  path: z.string(),
-  crCount: z.number().int().nonnegative(),
-  lastAccessed: z.string().refine((val) => {
-  // Try parsing as ISO datetime first
-  if (val.includes('T') && val.includes('Z')) {
-    const date = new Date(val);
-    return !isNaN(date.getTime());
-  }
-  // Try parsing as simple date format (YYYY-MM-DD)
-  const date = new Date(val + 'T00:00:00Z');
-  return !isNaN(date.getTime());
-}, { message: 'Must be a valid date string (ISO or YYYY-MM-DD format)' })
-});
+export const CRStatusSchema = z.enum(AllCRStatuses);
 
-// Type exports
-export type CRStatus = z.infer<typeof CRStatusSchema>;
-export type CRType = z.infer<typeof CRTypeSchema>;
-export type CRPriority = z.infer<typeof CRPrioritySchema>;
-export type ProjectInfo = z.infer<typeof ProjectInfoSchema>;
+// CR Type enumeration
+export const CRType = {
+  ARCHITECTURE: 'Architecture',
+  FEATURE_ENHANCEMENT: 'Feature Enhancement',
+  BUG_FIX: 'Bug Fix',
+  TECHNICAL_DEBT: 'Technical Debt',
+  DOCUMENTATION: 'Documentation',
+} as const;
+
+export type CRType = typeof CRType[keyof typeof CRType];
+
+export const AllCRTypes = [
+  CRType.ARCHITECTURE,
+  CRType.FEATURE_ENHANCEMENT,
+  CRType.BUG_FIX,
+  CRType.TECHNICAL_DEBT,
+  CRType.DOCUMENTATION,
+] as const;
+
+export const CRTypeSchema = z.enum(AllCRTypes);
+
+// CR Priority enumeration
+export const CRPriority = {
+  LOW: 'Low',
+  MEDIUM: 'Medium',
+  HIGH: 'High',
+  CRITICAL: 'Critical',
+} as const;
+
+export type CRPriority = typeof CRPriority[keyof typeof CRPriority];
+
+export const AllCRPriorities = [
+  CRPriority.LOW,
+  CRPriority.MEDIUM,
+  CRPriority.HIGH,
+  CRPriority.CRITICAL,
+] as const;
+
+export const CRPrioritySchema = z.enum(AllCRPriorities);
+
+/**
+ * Inferred TypeScript types from Zod schemas
+ * These can be used when you need types that are guaranteed to match the schemas
+ */
+export type CRStatusFromSchema = z.infer<typeof CRStatusSchema>;
+export type CRTypeFromSchema = z.infer<typeof CRTypeSchema>;
+export type CRPriorityFromSchema = z.infer<typeof CRPrioritySchema>;
+
+/**
+ * Export the schemas for use in other domain contracts
+ */
+export const CREnumSchemas = {
+  status: CRStatusSchema,
+  type: CRTypeSchema,
+  priority: CRPrioritySchema,
+} as const;
