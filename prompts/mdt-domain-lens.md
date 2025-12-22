@@ -10,9 +10,13 @@ Surface strategic DDD constraints before architectural decisions. Output is inte
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 ## Output
 
-Creates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines)
+Creates `{TICKETS_PATH}/{CR-KEY}/domain.md` (~15-25 lines)
 
 ## When to Use
 
@@ -39,7 +43,7 @@ Creates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines)
 ### Step 1: Load Context
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
-2. Load `docs/CRs/{CR-KEY}/requirements.md` if exists
+2. Load `{TICKETS_PATH}/{CR-KEY}/requirements.md` if exists
 3. Extract list of affected artifacts from CR
 
 ### Step 2: Ground in Codebase
@@ -175,7 +179,7 @@ For each significant entity in CR scope:
 
 ### Step 8: Generate Output
 
-Create `docs/CRs/{CR-KEY}/domain.md`:
+Create `{TICKETS_PATH}/{CR-KEY}/domain.md`:
 
 ```markdown
 # Domain Constraints: {CR-KEY}
@@ -225,7 +229,7 @@ Create `docs/CRs/{CR-KEY}/domain.md`:
 ## Domain Analysis Complete
 
 **CR**: {CR-KEY}
-**Output**: `docs/CRs/{CR-KEY}/domain.md`
+**Output**: `{TICKETS_PATH}/{CR-KEY}/domain.md`
 **Grounding**: {Fully grounded / Partially grounded / Greenfield}
 
 **Context**: {Primary} {→ touches if any}

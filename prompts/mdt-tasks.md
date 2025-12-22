@@ -10,10 +10,14 @@ Generate a task list from a CR ticket for phased, reviewable implementation.
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 ## Output Location
 
-- **Phased CR**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tasks.md`
-- **Non-phased CR**: `docs/CRs/{CR-KEY}/tasks.md`
+- **Phased CR**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tasks.md`
+- **Non-phased CR**: `{TICKETS_PATH}/{CR-KEY}/tasks.md`
 
 ## Critical Rules
 
@@ -48,7 +52,7 @@ mdt-all:get_cr mode="full"
 
 ```bash
 # Check for phase-specific tests first (co-location pattern)
-phase_tests=$(find docs/CRs/{CR-KEY} -path "*/phase-*/tests.md" 2>/dev/null | sort -V)
+phase_tests=$(find {TICKETS_PATH}/{CR-KEY} -path "*/phase-*/tests.md" 2>/dev/null | sort -V)
 
 if [ -n "$phase_tests" ]; then
   # Phased CR - list available phases with tests
@@ -83,13 +87,13 @@ Which phase to generate tasks for? [1.1]: _
 ```yaml
 # Phased
 phase: "1.1"
-tests_file: "docs/CRs/{CR-KEY}/phase-1.1/tests.md"
-output_file: "docs/CRs/{CR-KEY}/phase-1.1/tasks.md"
+tests_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tests.md"
+output_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tasks.md"
 
 # Non-phased (backward compatible)
 phase: null
-tests_file: "docs/CRs/{CR-KEY}/tests.md"
-output_file: "docs/CRs/{CR-KEY}/tasks.md"
+tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
+output_file: "{TICKETS_PATH}/{CR-KEY}/tasks.md"
 ```
 
 **2e. Load phase-specific architecture:**
@@ -346,12 +350,12 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 
 **Create output directory if needed:**
 ```bash
-mkdir -p "docs/CRs/{CR-KEY}/phase-{X.Y}"
+mkdir -p "{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}"
 ```
 
 **Save to phase-aware path:**
-- Phased: `docs/CRs/{CR-KEY}/phase-{X.Y}/tasks.md`
-- Non-phased: `docs/CRs/{CR-KEY}/tasks.md`
+- Phased: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tasks.md`
+- Non-phased: `{TICKETS_PATH}/{CR-KEY}/tasks.md`
 
 **Report:**
 
@@ -364,8 +368,8 @@ mkdir -p "docs/CRs/{CR-KEY}/phase-{X.Y}"
 | Tasks | {N} |
 | Tests to make GREEN | {N} |
 
-**Output**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tasks.md`
-**Tests**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
+**Output**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tasks.md`
+**Tests**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tests.md`
 
 **Size thresholds**: Flag at default, STOP at 1.5x
 
@@ -441,7 +445,7 @@ Which phase to generate tasks for? [1.1]: 1.1
 Loading architecture.md → Phase 1.1...
 Loading phase-1.1/tests.md...
 
-Output: docs/CRs/MDT-101/phase-1.1/tasks.md
+Output: {TICKETS_PATH}/MDT-101/phase-1.1/tasks.md
 ```
 
 ### Example 2: Direct phase selection
@@ -452,7 +456,7 @@ $ /mdt:tasks MDT-101 --phase 1.2
 Loading architecture.md → Phase 1.2...
 Loading phase-1.2/tests.md...
 
-Output: docs/CRs/MDT-101/phase-1.2/tasks.md
+Output: {TICKETS_PATH}/MDT-101/phase-1.2/tasks.md
 ```
 
 ### Example 3: Non-phased (backward compatible)
@@ -463,7 +467,7 @@ $ /mdt:tasks MDT-050
 No phases detected.
 Loading tests.md...
 
-Output: docs/CRs/MDT-050/tasks.md
+Output: {TICKETS_PATH}/MDT-050/tasks.md
 ```
 
 ---
@@ -478,7 +482,7 @@ Output: docs/CRs/MDT-050/tasks.md
 
 **Co-location Pattern**:
 ```
-docs/CRs/{CR-KEY}/phase-{X.Y}/
+{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/
 ├── tests.md    ← /mdt:tests creates
 └── tasks.md    ← /mdt:tasks creates (this prompt)
 ```
