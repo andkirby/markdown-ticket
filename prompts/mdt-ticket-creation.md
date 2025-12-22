@@ -14,6 +14,10 @@ Interactive workflow for AI agents creating architectural decision records (ADRs
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 You **MUST** consider the user input before proceeding (if not empty). User may provide:
 - Initial description of the change needed
 - Specific files/components involved

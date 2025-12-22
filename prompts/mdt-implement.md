@@ -10,6 +10,10 @@ Execute tasks from a task list with constraint verification after each task.
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 ## Execution Modes
 
 | Command | Behavior |
@@ -28,7 +32,7 @@ $ARGUMENTS
 
 ```bash
 # Check for phase-specific tasks
-phase_tasks=$(find docs/CRs/{CR-KEY} -path "*/phase-*/tasks.md" 2>/dev/null | sort -V)
+phase_tasks=$(find {TICKETS_PATH}/{CR-KEY} -path "*/phase-*/tasks.md" 2>/dev/null | sort -V)
 
 if [ -n "$phase_tasks" ]; then
   echo "Found phase-specific tasks:"
@@ -65,13 +69,13 @@ Which phase to implement? [1.1]: _
 ```yaml
 # Phased
 phase: "1.1"
-tasks_file: "docs/CRs/{CR-KEY}/phase-1.1/tasks.md"
-tests_file: "docs/CRs/{CR-KEY}/phase-1.1/tests.md"
+tasks_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tasks.md"
+tests_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tests.md"
 
 # Non-phased (backward compatible)
 phase: null
-tasks_file: "docs/CRs/{CR-KEY}/tasks.md"
-tests_file: "docs/CRs/{CR-KEY}/tests.md"
+tasks_file: "{TICKETS_PATH}/{CR-KEY}/tasks.md"
+tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
 ```
 
 **1d. Load tasks.md:**
@@ -451,7 +455,7 @@ Implementation Complete: {CR-KEY}
 
 **Folder Structure**:
 ```
-docs/CRs/{CR-KEY}/
+{TICKETS_PATH}/{CR-KEY}/
 ├── architecture.md          # All phases
 ├── phase-1.1/
 │   ├── tests.md            # Phase 1.1 tests

@@ -1,6 +1,6 @@
 # MDT Requirements Specification Workflow (v1)
 
-Generate EARS-formatted requirements from CR context. Produces `docs/CRs/{CR-KEY}/requirements.md`.
+Generate EARS-formatted requirements from CR context. Produces `{TICKETS_PATH}/{CR-KEY}/requirements.md`.
 
 **Core Principle**: Transform behavioral needs into testable requirements using EARS syntax. Every requirement maps to concrete artifacts.
 
@@ -10,9 +10,13 @@ Generate EARS-formatted requirements from CR context. Produces `docs/CRs/{CR-KEY
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 ## Output Location
 
-`docs/CRs/{CR-KEY}/requirements.md`
+`{TICKETS_PATH}/{CR-KEY}/requirements.md`
 
 ## EARS Syntax Reference
 
@@ -106,7 +110,7 @@ For each requirement, identify:
 ```markdown
 # Requirements: {CR-KEY}
 
-**Source**: [{CR-KEY}](../../../docs/CRs/{PROJECT}/{CR-KEY}.md)
+**Source**: [{CR-KEY}](../../../{TICKETS_PATH}/{PROJECT}/{CR-KEY}.md)
 **Generated**: {YYYY-MM-DD}
 **CR Type**: {type}
 
@@ -199,17 +203,17 @@ Use `mdt-all:manage_cr_sections` to add reference in CR:
 2. Optionally add to Section 4 (Artifact Specifications):
    ```markdown
    ### Requirements Specification
-   - [`docs/CRs/{CR-KEY}/requirements.md`](./requirements.md) — EARS-formatted requirements
+   - [`{TICKETS_PATH}/{CR-KEY}/requirements.md`](./requirements.md) — EARS-formatted requirements
    ```
 
 ### Step 9: Save and Report
 
-Save to `docs/CRs/{CR-KEY}/requirements.md`
+Save to `{TICKETS_PATH}/{CR-KEY}/requirements.md`
 
 ```markdown
 ## Requirements Generated: {CR-KEY}
 
-**Output**: `docs/CRs/{CR-KEY}/requirements.md`
+**Output**: `{TICKETS_PATH}/{CR-KEY}/requirements.md`
 
 | Metric | Count |
 |--------|-------|
