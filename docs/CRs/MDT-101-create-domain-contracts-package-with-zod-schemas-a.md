@@ -125,24 +125,9 @@ priority: Medium
 - Updated imports in shared, mcp-server, and server packages
 - Cross-interface tests verifying CLI ≡ MCP ≡ UI consistency
 ## 7. Deployment
-### Phase 1: Create Package Structure
-```bash
-mkdir -p domain-contracts/src/{project,testing}
-cd domain-contracts
-npm init -y
-npm install zod
-```
 
-### Phase 2: Migrate Types and Create Schemas
-- Move Project type from `shared/models/Project.ts` to `domain-contracts/src/project/schema.ts`
-- Convert to Zod schema with validation rules
-- Create `domain-contracts/src/project/index.ts` exporting schema and derived type
-- Create `domain-contracts/src/testing/project.fixtures.ts` with test data builders
-- Update `shared/models/Project.ts` to import from domain-contracts/src/index.ts
-- Repeat for CR/Ticket types
+### Scope changes
 
-### Phase 3: Update Dependencies and Imports
-```bash
-# In shared/, mcp-server/, server/ directories
-npm install ../domain-contracts
-```
+The scope changed, see details in:
+[architecture.md](MDT-101/architecture.md)
+
