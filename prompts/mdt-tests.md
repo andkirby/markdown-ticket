@@ -10,10 +10,14 @@ Generate BDD test specifications and executable test files from requirements or 
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 ## Output Location
 
-- **Phased CR**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
-- **Non-phased CR**: `docs/CRs/{CR-KEY}/tests.md`
+- **Phased CR**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tests.md`
+- **Non-phased CR**: `{TICKETS_PATH}/{CR-KEY}/tests.md`
 - **Test files**: Project's test directory (detected from config)
 
 ## Mode Detection
@@ -45,7 +49,7 @@ mdt-all:get_cr mode="full"
 
 ```bash
 # Check for architecture.md
-arch_file="docs/CRs/{CR-KEY}/architecture.md"
+arch_file="{TICKETS_PATH}/{CR-KEY}/architecture.md"
 
 if [ -f "$arch_file" ]; then
   # Extract phase headers: "## Phase 1.1:" or "## Phase 2:"
@@ -72,13 +76,13 @@ Accept input formats: `1.1`, `phase-1.1`, `Phase 1.1`
 ```yaml
 # Phased CR
 phase: "1.1"
-output_dir: "docs/CRs/{CR-KEY}/phase-1.1/"
-tests_file: "docs/CRs/{CR-KEY}/phase-1.1/tests.md"
+output_dir: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/"
+tests_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tests.md"
 
 # Non-phased CR (backward compatible)  
 phase: null
-output_dir: "docs/CRs/{CR-KEY}/"
-tests_file: "docs/CRs/{CR-KEY}/tests.md"
+output_dir: "{TICKETS_PATH}/{CR-KEY}/"
+tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
 ```
 
 **1e. Load phase-specific context from architecture.md:**
@@ -110,7 +114,7 @@ domain-contracts/src/project/
 **1f. Determine test mode:**
 
 ```
-IF docs/CRs/{CR-KEY}/requirements.md exists:
+IF {TICKETS_PATH}/{CR-KEY}/requirements.md exists:
   MODE = "feature"
   Load requirements.md
 ELSE IF CR type is "Bug Fix" or contains refactoring keywords:
@@ -343,7 +347,7 @@ If any tests pass before implementation → investigate:
 
 **Create output directory if phased:**
 ```bash
-mkdir -p "docs/CRs/{CR-KEY}/phase-{X.Y}"
+mkdir -p "{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}"
 ```
 
 **Generate tests.md:**
@@ -446,8 +450,8 @@ After each task: `{test_command}` should show fewer failures.
 **7a. Save test files** to project test directory
 
 **7b. Save tests.md** to phase-aware path:
-- Phased: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
-- Non-phased: `docs/CRs/{CR-KEY}/tests.md`
+- Phased: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tests.md`
+- Non-phased: `{TICKETS_PATH}/{CR-KEY}/tests.md`
 
 **7c. Report:**
 
@@ -463,7 +467,7 @@ After each task: `{test_command}` should show fewer failures.
 | Total scenarios | {N} |
 | Status | 🔴 All RED |
 
-**Output location**: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
+**Output location**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tests.md`
 
 **Test files**:
 - `{path/to/test1.test.ext}`
@@ -566,7 +570,7 @@ Detected phases in architecture.md:
 Which phase to generate tests for? [1.1]: 1.1
 
 Generating tests for Phase 1.1...
-Output: docs/CRs/MDT-101/phase-1.1/tests.md
+Output: {TICKETS_PATH}/MDT-101/phase-1.1/tests.md
 ```
 
 ### Example 2: Non-Phased CR (Backward Compatible)
@@ -580,7 +584,7 @@ User runs: `/mdt:tests MDT-050`
 Output:
 ```
 No phases detected. Generating tests...
-Output: docs/CRs/MDT-050/tests.md
+Output: {TICKETS_PATH}/MDT-050/tests.md
 ```
 
 ### Example 3: Direct Phase Selection
@@ -590,7 +594,7 @@ User runs: `/mdt:tests MDT-101 --phase 1.2`
 Output:
 ```
 Generating tests for Phase 1.2...
-Output: docs/CRs/MDT-101/phase-1.2/tests.md
+Output: {TICKETS_PATH}/MDT-101/phase-1.2/tests.md
 ```
 
 ---
@@ -602,15 +606,15 @@ Output: docs/CRs/MDT-101/phase-1.2/tests.md
 `/mdt:tasks` will auto-discover phase from tests.md location:
 
 ```bash
-# Finds: docs/CRs/MDT-101/phase-1.1/tests.md
-# Outputs: docs/CRs/MDT-101/phase-1.1/tasks.md
+# Finds: {TICKETS_PATH}/MDT-101/phase-1.1/tests.md
+# Outputs: {TICKETS_PATH}/MDT-101/phase-1.1/tasks.md
 ```
 
 ### `/mdt:implement` Verifies
 
 ```bash
-# Loads: docs/CRs/MDT-101/phase-1.1/tasks.md
-# References: docs/CRs/MDT-101/phase-1.1/tests.md
+# Loads: {TICKETS_PATH}/MDT-101/phase-1.1/tasks.md
+# References: {TICKETS_PATH}/MDT-101/phase-1.1/tests.md
 ```
 
 ---

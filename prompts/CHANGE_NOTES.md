@@ -2,6 +2,29 @@
 
 ## Recent Updates
 
+### 2025-12-22 - Session Context Injection via Hooks
+
+**Problem**: Workflows used hardcoded `docs/CRs/` paths, breaking when projects configured `ticketsPath` differently.
+
+**Solution**: Added `SessionStart` hook that auto-injects `PROJECT_CODE` and `TICKETS_PATH` from `.mdt-config.toml`. Updated all workflows to use `{TICKETS_PATH}` template variable.
+
+**Changes Made**:
+
+1. **hooks/mdt-project-vars.sh (new)** - SessionStart hook script that extracts config values
+2. **install-claude.sh** - Installs and registers hook in `~/.claude/settings.json`
+3. **CLAUDE.md** - Streamlined to quick-reference format (247→130 lines)
+4. **README.md** - Added Session Context documentation
+5. **All mdt-*.md workflows** - Replaced `docs/CRs/` with `{TICKETS_PATH}` variable
+
+**Impact**: Workflows now support any `ticketsPath` configuration (`.mdt/specs`, `specs/`, etc.) without manual MCP calls.
+
+**Files Changed**:
+- `prompts/hooks/mdt-project-vars.sh` (new)
+- `prompts/install-claude.sh`
+- `prompts/CLAUDE.md`
+- `prompts/README.md`
+- `prompts/mdt-*.md` (7 workflows updated)
+
 ### 2025-12-20 - Phase-Aware Implementation Workflow
 
 **Problem**: The implementation workflow was monolithic, handling all tasks in a single run without phase separation. This made large CRs difficult to manage, track, and review incrementally.

@@ -14,6 +14,10 @@ Analyze existing code for DDD violations. Output is a diagnostic report with sev
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 **Supported invocations**:
 ```bash
 /mdt:domain-audit MDT-077                    # Audit code touched by CR
@@ -23,7 +27,7 @@ $ARGUMENTS
 
 ## Output
 
-Creates `docs/CRs/{CR-KEY}/domain-audit.md` (with CR) or `docs/audits/domain-audit-{timestamp}.md` (standalone)
+Creates `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` (with CR) or `docs/audits/domain-audit-{timestamp}.md` (standalone)
 
 Target size: 30-50 lines
 
@@ -322,7 +326,7 @@ To fix violations:
 ### Step 6: Save Report
 
 **With CR**:
-1. Save to `docs/CRs/{CR-KEY}/domain-audit.md`
+1. Save to `{TICKETS_PATH}/{CR-KEY}/domain-audit.md`
 2. Report location in completion message
 
 **Standalone**:
@@ -363,7 +367,7 @@ To fix violations:
 
 **Input**: `/mdt:domain-audit MDT-077`
 
-**Output** (`docs/CRs/MDT-077/domain-audit.md`):
+**Output** (`{TICKETS_PATH}/MDT-077/domain-audit.md`):
 
 ```markdown
 # Domain Audit: MDT-077

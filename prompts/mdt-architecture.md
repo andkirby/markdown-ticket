@@ -10,12 +10,16 @@ Surface architectural decisions before implementation. Output location adapts to
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 ## Output Location (Graduated)
 
 | Complexity | Output | Criteria |
 |------------|--------|----------|
 | **Simple** | `## Architecture Design` in CR | ≤3 components, no state flows, ≤60 lines |
-| **Complex** | `docs/CRs/{CR-KEY}/architecture.md` | >3 components, state flows, or >60 lines |
+| **Complex** | `{TICKETS_PATH}/{CR-KEY}/architecture.md` | >3 components, state flows, or >60 lines |
 
 CR always gets a reference — either the section itself or a link to the extracted file.
 
@@ -47,7 +51,7 @@ Do NOT use when:
 ### Step 1: Load Context
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
-2. **Load domain constraints if exists**: Check `docs/CRs/{CR-KEY}/domain.md`
+2. **Load domain constraints if exists**: Check `{TICKETS_PATH}/{CR-KEY}/domain.md`
    - If found: extract bounded contexts, aggregates, invariants, cross-context flags
    - These CONSTRAIN structural decisions in Steps 4-6
    - Aggregate roots → inform component boundaries
@@ -64,7 +68,7 @@ Do NOT use when:
    - Focus on: What's wrong with current structure?
    - Success criteria: Size targets, interface preservation, behavioral equivalence
    - Skip behavioral requirement analysis
-4. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
+4. **Load requirements if exists**: Check `{TICKETS_PATH}/{CR-KEY}/requirements.md`
    - If found: extract requirement IDs and artifact mappings
    - These inform component boundaries (each requirement needs a home)
    - Note: Usually absent for refactoring CRs (which is correct)
@@ -285,12 +289,12 @@ To add {X}: create `{path}` ({role}, limit {N} lines) implementing `{interface}`
 
 ## Complex Output (Extract to File)
 
-For Score > 5, generate `docs/CRs/{CR-KEY}/architecture.md`:
+For Score > 5, generate `{TICKETS_PATH}/{CR-KEY}/architecture.md`:
 
 ```markdown
 # Architecture: {CR-KEY}
 
-**Source**: [{CR-KEY}](../../../docs/CRs/{PROJECT}/{CR-KEY}.md)
+**Source**: [{CR-KEY}](../../../{TICKETS_PATH}/{PROJECT}/{CR-KEY}.md)
 **Generated**: {YYYY-MM-DD}
 **Complexity Score**: {N}
 
@@ -483,7 +487,7 @@ If misalignment detected, update Section 4 or adjust design.
 3. Update Section 5 with size verification criteria
 
 **Complex (extract)**:
-1. Save to `docs/CRs/{CR-KEY}/architecture.md`
+1. Save to `{TICKETS_PATH}/{CR-KEY}/architecture.md`
 2. Use `mdt-all:manage_cr_sections` to insert summary + link in CR
 3. Update Section 4 with new artifacts
 4. Update Section 5 with size verification criteria
