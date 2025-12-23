@@ -4,20 +4,37 @@ Structured workflows for AI agents managing Change Request tickets via MCP mdt-a
 
 **Works with any project** — Python, TypeScript, Go, Rust, Java, etc. Project context detected from CLAUDE.md or config files.
 
+## Session Context (Auto-Injected)
+
+All workflows have access to these variables, injected at session start via a `SessionStart` hook:
+
+| Variable | Source | Example |
+|----------|--------|---------|
+| `PROJECT_CODE` | `.mdt-config.toml` → `code` | `MDT`, `API`, `WEB` |
+| `TICKETS_PATH` | `.mdt-config.toml` → `ticketsPath` | `docs/CRs`, `.mdt/specs` |
+
+**How it works**: The hook (`~/.claude/hooks/mdt-project-vars.sh`) runs automatically on session start, reads the project config, and outputs variables visible to the LLM.
+
+**Benefits**:
+- No hardcoded paths in workflows — works with any `ticketsPath` configuration
+- Automatic project code detection — no manual specification needed
+- Per-project configuration — each repo can have different CR directory structures
+
 ## Available Workflows
 
 | Command | Purpose | Output |
 |---------|---------|--------|
 | `/mdt:ticket-creation` | Create CR with flexible depth (WHAT only or WHAT+HOW) | CR in MDT system |
-| `/mdt:requirements` | Generate EARS-formatted requirements | `docs/CRs/{CR-KEY}/requirements.md` |
+| `/mdt:requirements` | Generate EARS-formatted requirements | `{TICKETS_PATH}/{CR-KEY}/requirements.md` |
 | `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
-| `/mdt:domain-lens` | Surface DDD constraints (optional) | `docs/CRs/{CR-KEY}/domain.md` |
-| `/mdt:tests` | Generate BDD test specs + executable tests | `docs/CRs/{CR-KEY}/tests.md` + test files |
+| `/mdt:domain-lens` | Surface DDD constraints (optional) | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
+| `/mdt:domain-audit` | Analyze code for DDD violations | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` |
+| `/mdt:tests` | Generate BDD test specs + executable tests | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tests.md` + test files |
 | `/mdt:architecture` | Surface decisions, define structure + size limits | CR section or `architecture.md` |
 | `/mdt:clarification` | Fill specification gaps | Updated CR sections |
-| `/mdt:tasks` | Break CR into constrained tasks | `docs/CRs/{CR-KEY}/tasks.md` |
+| `/mdt:tasks` | Break CR into constrained tasks | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tasks.md` |
 | `/mdt:implement` | Execute tasks with verification | Code changes, updated tasks.md |
-| `/mdt:tech-debt` | Detect debt patterns | `docs/CRs/{CR-KEY}/debt.md` |
+| `/mdt:tech-debt` | Detect debt patterns | `{TICKETS_PATH}/{CR-KEY}/debt.md` |
 | `/mdt:reflection` | Capture learnings | Updated CR |
 
 ## Specification Depth
@@ -244,7 +261,7 @@ Override in: CR Acceptance Criteria or project CLAUDE.md
 
 ### When debt.md is generated
 
-`/mdt:tech-debt` produces `docs/CRs/{CR-KEY}/debt.md` — a **diagnostic report**, not an executable task list.
+`/mdt:tech-debt` produces `{TICKETS_PATH}/{CR-KEY}/debt.md` — a **diagnostic report**, not an executable task list.
 
 ### How to fix debt
 
@@ -346,7 +363,7 @@ Tasks and verification use these values — no hardcoded assumptions.
 
 ### `/mdt:requirements`
 
-Generates `docs/CRs/{CR-KEY}/requirements.md`:
+Generates `{TICKETS_PATH}/{CR-KEY}/requirements.md`:
 
 - **EARS Syntax**: WHEN/WHILE/IF...THEN/WHERE templates
 - **Requirement Groups**: Organized by feature/behavior
@@ -372,7 +389,7 @@ Generates BDD test specifications and executable test files:
 **Outputs**:
 | Output | Location |
 |--------|----------|
-| Test spec | `docs/CRs/{CR-KEY}/tests.md` |
+| Test spec | `{TICKETS_PATH}/{CR-KEY}/tests.md` |
 | Test files | `{test_dir}/integration/*.test.{ext}` |
 
 **Test Strategy by CR Type**:
@@ -400,7 +417,7 @@ Evaluates affected code fitness before architecture:
 
 ### `/mdt:domain-lens`
 
-Generates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines):
+Generates `{TICKETS_PATH}/{CR-KEY}/domain.md` (~15-25 lines):
 
 - **Bounded Context**: Primary context + touched contexts
 - **Aggregates**: Root/Internal/Value role assignments
@@ -417,6 +434,40 @@ Generates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines):
 | Refactoring / Tech-debt | ❌ Skip |
 
 **Output consumed by**: `/mdt:architecture` only
+
+### `/mdt:domain-audit`
+
+Analyzes existing code for DDD violations. Generates `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or standalone report.
+
+**Invocations**:
+```bash
+/mdt:domain-audit MDT-077                    # Audit code touched by CR
+/mdt:domain-audit --path src/shared/services # Audit directory directly
+```
+
+**Detects**:
+| Violation | Severity |
+|-----------|----------|
+| Anemic domain model | High |
+| Aggregate boundary leak | High |
+| God service | High |
+| Missing value objects | Medium |
+| Invariant scatter | Medium |
+| Missing domain events | Medium |
+| Language drift | Low |
+
+**Output**: Violations report with evidence + fix direction (not prescriptions)
+
+**Workflow**:
+```
+/mdt:domain-audit → domain-audit.md
+        ↓
+    Create refactoring CR
+        ↓
+/mdt:domain-lens {CR} → target model
+        ↓
+/mdt:architecture → /mdt:tasks → /mdt:implement
+```
 
 ### `/mdt:architecture`
 
@@ -446,7 +497,7 @@ Adds Architecture Design to CR (simple) or extracts to `architecture.md` (comple
 
 ### `/mdt:tasks`
 
-Generates `docs/CRs/{CR-KEY}/tasks.md`:
+Generates `{TICKETS_PATH}/{CR-KEY}/tasks.md`:
 
 - **Project Context**: Detected settings
 - **Size Thresholds**: Flag/STOP zones
@@ -474,7 +525,7 @@ Executes tasks with constraint verification:
 
 ### `/mdt:tech-debt`
 
-Generates `docs/CRs/{CR-KEY}/debt.md`:
+Generates `{TICKETS_PATH}/{CR-KEY}/debt.md`:
 
 - **Size Compliance**: Per-file pass/fail
 - **Debt Items**: By severity (High/Medium/Low)
@@ -482,6 +533,15 @@ Generates `docs/CRs/{CR-KEY}/debt.md`:
 - **Metrics**: Before/after comparison
 
 ## Installation
+
+### Hook Setup (Required for Session Context)
+
+The `SessionStart` hook auto-injects `PROJECT_CODE` and `TICKETS_PATH` variables. Already configured if you see:
+
+```bash
+~/.claude/hooks/mdt-project-vars.sh  # Hook script
+~/.claude/settings.json              # Contains SessionStart hook registration
+```
 
 ### Quick Install (Global)
 ```bash
@@ -499,8 +559,30 @@ bash prompts/install-claude.sh --verbose
 ```
 
 ### Manual Install
+
+Install `/mdt:*` commands:
+
 ```bash
 cp prompts/mdt-*.md ~/.claude/commands/
+```
+
+Also copy hooks/mdt-project-vars.sh to ~/.claude/hooks/ and register in settings.json:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/mdt-project-vars.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
 
 ## File Structure
@@ -509,15 +591,19 @@ cp prompts/mdt-*.md ~/.claude/commands/
 prompts/
 ├── README.md                # This file
 ├── CLAUDE.md                # Development guidance
+├── install-claude.sh        # Installation script (includes hook setup)
+├── hooks/
+│   └── mdt-project-vars.sh  # SessionStart hook for PROJECT_CODE/TICKETS_PATH
 ├── mdt-ticket-creation.md   # CR creation (v5 - flexible depth)
 ├── mdt-requirements.md      # EARS requirements (v1)
 ├── mdt-assess.md            # Code fitness assessment (v2)
-├── mdt-domain-lens.md       # DDD constraints (v1)
-├── mdt-tests.md             # BDD test generation (v1)
+├── mdt-domain-lens.md       # DDD constraints (v2 - code grounded)
+├── mdt-domain-audit.md      # DDD violations analysis (v1)
+├── mdt-tests.md             # BDD test generation (v2 - phase aware)
 ├── mdt-architecture.md      # Architecture design (v5 - domain aware)
 ├── mdt-clarification.md     # Gap filling
-├── mdt-tasks.md             # Task breakdown (v4)
-├── mdt-implement.md         # Orchestrator (v4)
+├── mdt-tasks.md             # Task breakdown (v5 - phase aware)
+├── mdt-implement.md         # Orchestrator (v5 - phase aware)
 ├── mdt-tech-debt.md         # Debt detection (v2)
 └── mdt-reflection.md        # Learning capture
 ```
@@ -526,12 +612,13 @@ prompts/
 
 | Workflow | Output Location |
 |----------|-----------------|
-| `/mdt:requirements` | `docs/CRs/{CR-KEY}/requirements.md` |
-| `/mdt:tests` | `docs/CRs/{CR-KEY}/tests.md` + `{test_dir}/*.test.{ext}` |
-| `/mdt:domain-lens` | `docs/CRs/{CR-KEY}/domain.md` |
-| `/mdt:architecture` | CR section (simple) or `docs/CRs/{CR-KEY}/architecture.md` (complex) |
-| `/mdt:tasks` | `docs/CRs/{CR-KEY}/tasks.md` |
-| `/mdt:tech-debt` | `docs/CRs/{CR-KEY}/debt.md` |
+| `/mdt:requirements` | `{TICKETS_PATH}/{CR-KEY}/requirements.md` |
+| `/mdt:tests` | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tests.md` + `{test_dir}/*.test.{ext}` |
+| `/mdt:domain-lens` | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
+| `/mdt:domain-audit` | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or `docs/audits/domain-audit-{timestamp}.md` |
+| `/mdt:architecture` | CR section (simple) or `{TICKETS_PATH}/{CR-KEY}/architecture.md` (complex) |
+| `/mdt:tasks` | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tasks.md` |
+| `/mdt:tech-debt` | `{TICKETS_PATH}/{CR-KEY}/debt.md` |
 
 ## Design Principles
 
@@ -545,6 +632,96 @@ prompts/
 8. **Violations block progress** — cannot mark complete if constraints violated
 9. **debt.md is diagnosis** — fix via new CR, not direct execution
 10. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
+11. **Phase isolation** — epic CRs use phase folders for tests.md and tasks.md
+
+## Phased CRs (Epic Tickets)
+
+For large CRs with multiple implementation phases, the workflow supports **phase-aware file organization**.
+
+### When to Use Phases
+
+| CR Scope | Approach |
+|----------|----------|
+| Single feature, <10 tasks | Non-phased (root level tests.md/tasks.md) |
+| Multiple phases in architecture.md | Phase folders (phase-1.1/, phase-1.2/, etc.) |
+| Epic with distinct milestones | Phase folders |
+
+### Phase Detection
+
+Phases are detected from `## Phase X.Y:` headers in `architecture.md`:
+
+```markdown
+## Phase 1.1: Enhanced Project Validation
+...
+## Phase 1.2: Enhanced Ticket Validation
+...
+## Phase 2: Additional Contracts
+```
+
+### Phased File Structure
+
+```
+{TICKETS_PATH}/{CR-KEY}/
+├── architecture.md          # All phases (master design doc)
+├── requirements.md          # All phases (if exists)
+├── domain.md                # All phases (if exists)
+├── phase-1.1/
+│   ├── tests.md            # Phase 1.1 test specs
+│   └── tasks.md            # Phase 1.1 task list
+├── phase-1.2/
+│   ├── tests.md
+│   └── tasks.md
+└── phase-2/
+    ├── tests.md
+    └── tasks.md
+```
+
+### Phased Workflow
+
+```
+/mdt:architecture ─────────── Creates architecture.md with ## Phase X.Y sections
+        │
+        ▼
+/mdt:tests --phase 1.1 ────── Creates: phase-1.1/tests.md
+        │
+        ▼
+/mdt:tasks --phase 1.1 ────── Creates: phase-1.1/tasks.md (auto-detects from tests.md)
+        │
+        ▼
+/mdt:implement --phase 1.1 ── Executes phase-1.1/tasks.md, verifies phase-1.1/tests.md
+        │
+        ▼
+    [Phase 1.1 Complete]
+        │
+        ▼
+/mdt:tests --phase 1.2 ────── Creates: phase-1.2/tests.md
+        │
+        ▼
+    ... continue ...
+```
+
+### Phase Commands
+
+| Command | Behavior |
+|---------|---------|
+| `/mdt:tests MDT-101` | Detects phases, prompts for selection |
+| `/mdt:tests MDT-101 --phase 1.1` | Targets specific phase directly |
+| `/mdt:tasks MDT-101` | Auto-detects from existing phase-*/tests.md |
+| `/mdt:implement MDT-101` | Lists phases with completion status |
+| `/mdt:implement MDT-101 --phase 1.2` | Targets specific phase |
+
+### Backward Compatibility
+
+Non-phased CRs work exactly as before:
+
+```
+{TICKETS_PATH}/{CR-KEY}/
+├── architecture.md (or embedded in CR)
+├── tests.md
+└── tasks.md
+```
+
+If no `## Phase X.Y:` headers exist in architecture.md, prompts default to root-level output.
 
 ## TDD/BDD Workflow
 
