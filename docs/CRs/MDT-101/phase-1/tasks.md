@@ -4,6 +4,15 @@
 **Phase**: 1 - Core Entities
 **Tests**: `phase-1/tests.md`
 **Generated**: 2025-12-21
+**Updated**: 2025-12-23 (added phase breakdown)
+
+## Phase Breakdown
+
+| Sub-phase | Tasks | Status |
+|-----------|-------|--------|
+| **Phase 1a**: Create domain-contracts package | Tasks 1.1 - 5.1 | ✅ COMPLETE |
+| **Phase 1b**: Integrate domain-contracts into codebase | Tasks 5.2 - 5.5 | ❌ NOT STARTED |
+| **Post-Implementation**: Verification | Tasks 6.1 - 6.4 | ⚠️ PARTIAL (awaiting 1b) |
 
 ## Project Context
 
