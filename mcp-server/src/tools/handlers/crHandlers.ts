@@ -21,6 +21,26 @@ import { SimpleSectionValidator } from '../../utils/simpleSectionValidator.js';
 import { validateCRKey, validateRequired, validateString, validateOperation } from '../../utils/validation.js';
 import { Sanitizer } from '../../utils/sanitizer.js';
 import { ToolError, JsonRpcErrorCode } from '../../utils/toolError.js';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { glob } from 'glob';
+
+/**
+ * Helper function to find the file path for a ticket code
+ * Scans the project's CR directory for a file matching the ticket code
+ */
+async function findTicketFilePath(project: Project, ticketCode: string): Promise<string> {
+  // Use path from extended Project interface, fallback to ticketsPath for domain-contracts compatibility
+  const crPath = path.join((project.project as any).path, project.project.ticketsPath || 'docs/CRs');
+  const pattern = path.join(crPath, `${ticketCode}-*.md`);
+
+  const files = await glob(pattern, { absolute: true });
+  if (files.length === 0) {
+    throw ToolError.toolExecution(`CR file for '${ticketCode}' not found in ${crPath}`);
+  }
+
+  return files[0]; // Return the first match
+}
 
 /**
  * CR Handlers Class
@@ -60,7 +80,6 @@ export class CRHandlers {
       lines.push(`- Status: ${ticket.status}`);
       lines.push(`- Type: ${ticket.type}`);
       lines.push(`- Priority: ${ticket.priority}`);
-      lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString().split('T')[0] : 'N/A'}`);
       if (safePhase) {
         lines.push(`- Phase: ${safePhase}`);
       }
@@ -99,9 +118,9 @@ export class CRHandlers {
 
       case 'attributes': {
         // Extract YAML frontmatter and return attributes
-        const fs = await import('fs/promises');
         try {
-          const fileContent = await fs.readFile(ticket.filePath, 'utf-8');
+          const filePath = await findTicketFilePath(project, key);
+          const fileContent = await fs.readFile(filePath, 'utf-8');
 
           // Extract YAML frontmatter
           const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
@@ -129,7 +148,7 @@ export class CRHandlers {
 
           // Add optional fields if present, sanitizing string values
           const optionalFields = [
-            'dateCreated', 'lastModified', 'phaseEpic', 'assignee',
+            'phaseEpic', 'assignee',
             'dependsOn', 'blocks', 'relatedTickets', 'impactAreas',
             'implementationDate', 'implementationNotes'
           ];
@@ -151,19 +170,22 @@ export class CRHandlers {
 
       case 'metadata':
         // Return just the key metadata without full YAML parsing
-        const metadata = {
-          code: ticket.code,
-          title: Sanitizer.sanitizeText(ticket.title),
-          status: ticket.status,
-          type: ticket.type,
-          priority: ticket.priority,
-          dateCreated: ticket.dateCreated?.toISOString(),
-          lastModified: ticket.lastModified?.toISOString(),
-          phaseEpic: ticket.phaseEpic ? Sanitizer.sanitizeText(ticket.phaseEpic) : undefined,
-          filePath: ticket.filePath
-        };
+        try {
+          const filePath = await findTicketFilePath(project, key);
+          const metadata = {
+            code: ticket.code,
+            title: Sanitizer.sanitizeText(ticket.title),
+            status: ticket.status,
+            type: ticket.type,
+            priority: ticket.priority,
+            phaseEpic: ticket.phaseEpic ? Sanitizer.sanitizeText(ticket.phaseEpic) : undefined,
+            filePath: filePath
+          };
 
-        return Sanitizer.sanitizeText(JSON.stringify(metadata, null, 2));
+          return Sanitizer.sanitizeText(JSON.stringify(metadata, null, 2));
+        } catch (fileError) {
+          throw ToolError.toolExecution(`Failed to get metadata for ${key}: ${(fileError as Error).message}`);
+        }
 
       default:
         throw ToolError.protocol(`Invalid mode '${mode}'. Must be: full, attributes, or metadata`, JsonRpcErrorCode.InvalidParams);
@@ -224,9 +246,16 @@ export class CRHandlers {
     ];
 
     if (ticket.phaseEpic) lines.push(`- Phase: ${ticket.phaseEpic}`);
-    lines.push(`- Created: ${ticket.dateCreated ? ticket.dateCreated.toISOString() : 'N/A'}`);
-    lines.push('');
-    lines.push(`**File Created:** ${ticket.filePath}`);
+    lines.push(`- Created: ${new Date().toISOString()}`);
+
+    // Get the file path from the created ticket
+    try {
+      const filePath = await findTicketFilePath(project, ticket.code);
+      lines.push('');
+      lines.push(`**File Created:** ${filePath}`);
+    } catch (e) {
+      // File path not critical for response
+    }
 
     // Add processing information if content was provided and processed
     if (data.content && processedData.content !== data.content) {

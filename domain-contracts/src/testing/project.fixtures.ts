@@ -9,7 +9,7 @@ import type {
   DocumentConfig,
   CreateProjectInput,
   UpdateProjectInput,
-} from '../project/schema';
+} from '../project/schema.js';
 
 /**
  * Creates a valid Project with optional overrides

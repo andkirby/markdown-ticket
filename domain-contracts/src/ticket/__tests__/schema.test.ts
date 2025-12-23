@@ -8,7 +8,7 @@ import {
   TicketSchema,
   CreateTicketInputSchema,
   UpdateTicketInputSchema,
-} from '../schema';
+} from '../schema.js';
 
 describe('CRSchema', () => {
   // Testing OUR regex rule for code field

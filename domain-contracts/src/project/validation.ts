@@ -9,7 +9,7 @@ import {
   DocumentConfigSchema,
   CreateProjectInputSchema,
   UpdateProjectInputSchema
-} from './schema';
+} from './schema.js';
 
 /**
  * Validate project data using ProjectSchema.parse()

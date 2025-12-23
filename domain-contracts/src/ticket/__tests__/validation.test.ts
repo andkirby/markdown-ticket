@@ -8,7 +8,7 @@ import {
   validateCR,
   safeValidateTicket,
   safeValidateCR,
-} from '../validation';
+} from '../validation.js';
 
 describe('validateTicket', () => {
   it('returns typed ticket on valid input', () => {

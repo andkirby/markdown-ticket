@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { CREnumSchemas } from '../types/schema';
+import { CREnumSchemas } from '../types/schema.js';
 
 /**
  * Document configuration schema for project

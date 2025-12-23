@@ -8,7 +8,7 @@ import {
   validateProjectConfig,
   safeValidateProject,
   safeValidateProjectConfig,
-} from '../validation';
+} from '../validation.js';
 
 describe('validateProject', () => {
   it('returns typed project on valid input', () => {

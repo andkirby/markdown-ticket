@@ -11,7 +11,7 @@ import {
   buildProjectWithComplexDocumentConfig,
   buildProjects,
   invalidFixtures,
-} from '../project.fixtures';
+} from '../project.fixtures.js';
 import {
   validateProject,
   validateProjectConfig,
@@ -21,7 +21,7 @@ import {
   safeValidateProjectConfig,
   safeValidateCreateProjectInput,
   safeValidateUpdateProjectInput,
-} from '../../project/index';
+} from '../../project/index.js';
 
 describe('Project Fixtures', () => {
   describe('buildProject', () => {

@@ -8,11 +8,11 @@ export {
   buildProject, buildProjectConfig, buildCreateProjectInput, buildUpdateProjectInput,
   buildMinimalProject, buildProjectWithComplexDocumentConfig, buildProjects,
   invalidFixtures
-} from './project.fixtures';
+} from './project.fixtures.js';
 
 // Ticket fixtures
 export {
   buildTicket, buildCR, buildCreateTicketInput, buildUpdateTicketInput,
   buildTicketWithRelationship, buildTicketWithDependencies, buildTicketWithBlocks,
   buildTicketWithRelations, buildFullTicket, buildTickets
-} from './ticket.fixtures';
+} from './ticket.fixtures.js';

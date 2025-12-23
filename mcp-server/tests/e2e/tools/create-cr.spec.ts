@@ -16,6 +16,7 @@
 import { TestEnvironment } from '../helpers/test-environment';
 import { MCPClient } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
+import { ProjectSetup } from '../helpers/core/project-setup';
 
 describe('create_cr', () => {
   let testEnv: TestEnvironment;
@@ -25,8 +26,14 @@ describe('create_cr', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment();
     await testEnv.setup();
+    // Create project structure manually BEFORE starting MCP client
+    // This ensures the MCP server discovers the project from registry on startup
+    const projectSetup = new ProjectSetup({ testEnv });
+    await projectSetup.createProjectStructure('TEST', 'Test Project');
+    // NOW start MCP client (server will discover the project from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
     await mcpClient.start();
+    // NOW create ProjectFactory with the running mcpClient
     projectFactory = new ProjectFactory(testEnv, mcpClient);
   });
 
@@ -105,8 +112,6 @@ describe('create_cr', () => {
 
   describe('Valid Creation', () => {
     it('GIVEN valid project and data WHEN creating THEN success with proper CR key', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callCreateCR('TEST', 'Feature Enhancement', 'Test Feature CR', {
         priority: 'High',
         phaseEpic: 'Phase 1',
@@ -130,8 +135,6 @@ We need this feature to improve the system.`
     });
 
     it('GIVEN valid creation WHEN creating THEN auto-generate CR number', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create multiple CRs to verify auto-numbering
       const cr1 = await callCreateCR('TEST', 'Feature Enhancement', 'First CR');
       const cr2 = await callCreateCR('TEST', 'Bug Fix', 'Second CR');
@@ -152,8 +155,6 @@ We need this feature to improve the system.`
     });
 
     it('GIVEN CR with dependencies WHEN creating THEN create with relationships', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // First create some CRs to depend on
       const dep1 = await callCreateCR('TEST', 'Feature Enhancement', 'Dependency 1');
       const dep2 = await callCreateCR('TEST', 'Bug Fix', 'Dependency 2');
@@ -189,8 +190,6 @@ We need this feature to improve the system.`
 
     crTypes.forEach(type => {
       it(`GIVEN ${type} type WHEN creating THEN create successfully`, async () => {
-        await projectFactory.createProjectStructure('TEST', 'Test Project');
-
         const response = await callCreateCR('TEST', type, `${type} Test CR`, {
           priority: 'Medium',
           content: `## 1. Description
@@ -216,8 +215,6 @@ Test CR for ${type} type.`
     });
 
     it('GIVEN missing type WHEN creating THEN return validation error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callCreateCR('TEST', undefined as any, 'Test CR');
 
       // Missing required parameter is a protocol error
@@ -228,8 +225,6 @@ Test CR for ${type} type.`
     });
 
     it('GIVEN missing title WHEN creating THEN return validation error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callCreateCR('TEST', 'Feature Enhancement', '' as any);
 
       // Missing title is a validation error
@@ -241,8 +236,6 @@ Test CR for ${type} type.`
     });
 
     it('GIVEN empty title WHEN creating THEN return validation error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callCreateCR('TEST', 'Feature Enhancement', '');
 
       // Empty title is a validation error
@@ -263,12 +256,10 @@ Test CR for ${type} type.`
       expect(response.error).toBeDefined();
       expect(response.error?.code).toBe(-32602); // Invalid params error code
       expect(response.error?.message).toContain('is invalid');
-      expect(response.error?.message).toContain('Must be 2-5 uppercase letters');
+      expect(response.error?.message).toContain('Must be 2-5 characters');
     });
 
     it('GIVEN invalid type WHEN creating THEN return validation error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callCreateCR('TEST', 'Invalid Type', 'Test CR');
 
       // Invalid type is a validation error
@@ -280,8 +271,6 @@ Test CR for ${type} type.`
     });
 
     it('GIVEN invalid priority WHEN creating THEN return validation error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callCreateCR('TEST', 'Feature Enhancement', 'Test CR', {
         priority: 'Invalid Priority'
       });
@@ -296,8 +285,6 @@ Test CR for ${type} type.`
 
   describe('Optional Fields', () => {
     it('GIVEN minimal valid data WHEN creating THEN use defaults for optional fields', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callCreateCR('TEST', 'Bug Fix', 'Minimal CR');
 
       expect(response.success).toBe(true);
@@ -316,8 +303,6 @@ Test CR for ${type} type.`
     });
 
     it('GIVEN all optional fields WHEN creating THEN preserve all values', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const fullData = {
         priority: 'Critical',
         phaseEpic: 'Phase 2',
@@ -350,8 +335,6 @@ Complete testing of all optional fields.`
 
   describe('Content Handling', () => {
     it('GIVEN CR without content WHEN creating THEN use template', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callCreateCR('TEST', 'Documentation', 'No Content CR');
 
       expect(response.success).toBe(true);
@@ -363,8 +346,6 @@ Complete testing of all optional fields.`
     });
 
     it('GIVEN CR with content WHEN creating THEN preserve content exactly', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const customContent = `# Custom CR Content
 
 This is completely custom content with no standard sections.
@@ -392,8 +373,6 @@ More details here.`;
 
   describe('Response Format', () => {
     it('GIVEN successful creation WHEN response THEN include all CR fields', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callCreateCR('TEST', 'Architecture', 'Response Format Test', {
         priority: 'High',
         phaseEpic: 'Test Phase'

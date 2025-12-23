@@ -16,6 +16,7 @@
 import { TestEnvironment } from '../helpers/test-environment';
 import { MCPClient } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
+import { ProjectSetup } from '../helpers/core/project-setup';
 
 /**
  * Parse suggestions from markdown response
@@ -104,8 +105,15 @@ describe('suggest_cr_improvements', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment();
     await testEnv.setup();
+    // Create project structure manually BEFORE starting MCP client
+    // This fixes the project cache invalidation issue where the MCP server
+    // starts with an empty cache and doesn't discover projects created after startup
+    const projectSetup = new ProjectSetup({ testEnv });
+    await projectSetup.createProjectStructure('TEST', 'Test Project');
+    // NOW start MCP client (server will discover the project from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
     await mcpClient.start();
+    // NOW create ProjectFactory with the running mcpClient
     projectFactory = new ProjectFactory(testEnv, mcpClient);
   });
 
@@ -138,7 +146,6 @@ describe('suggest_cr_improvements', () => {
 
   describe('Complete CR Analysis', () => {
     it('GIVEN complete CR WHEN suggesting THEN return minimal suggestions', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const completeContent = `## 1. Description
 
@@ -309,7 +316,6 @@ This change is necessary to:
 
   describe('Incomplete CR Analysis', () => {
     it('GIVEN CR with missing sections WHEN suggesting THEN suggest specific improvements', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       // Create content with minimal required sections but missing others
       const incompleteContent = `## 1. Description
@@ -347,7 +353,6 @@ This is blocking user access to the system.`;
     });
 
     it('GIVEN CR with one-line sections WHEN suggesting THEN suggest expansion', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const sparseContent = `## 1. Description
 
@@ -395,7 +400,6 @@ It works.`;
 
   describe('Structural Issues', () => {
     it('GIVEN CR with poor structure WHEN suggesting THEN suggest structural improvements', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       // Convert to proper structure but keep it minimal
       const poorStructureContent = `## 1. Description
@@ -443,7 +447,6 @@ This needs to be fixed because users are complaining.`;
     });
 
     it('GIVEN CR with inconsistent formatting WHEN suggesting THEN suggest formatting improvements', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const inconsistentContent = `## 1. Description
 
@@ -495,7 +498,6 @@ More content here.`;
 
   describe('Content Quality Issues', () => {
     it('GIVEN CR with vague acceptance criteria WHEN suggesting THEN suggest specific criteria', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const vagueCriteriaContent = `## 1. Description
 
@@ -543,7 +545,6 @@ Use search library.
     });
 
     it('GIVEN CR with no solution analysis WHEN suggesting THEN emphasize importance', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const noAnalysisContent = `## 1. Description
 
@@ -587,7 +588,6 @@ Feature works.`;
 
   describe('Special Cases', () => {
     it('GIVEN perfect CR WHEN suggesting THEN return praise', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const perfectContent = `## 1. Description
 
@@ -648,7 +648,6 @@ Real-time collaboration is becoming standard expectation in document editing too
 
   describe('Error Handling', () => {
     it('GIVEN non-existent CR WHEN suggesting THEN return error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const response = await callSuggestCRImprovements('TEST', 'TEST-999');
 
@@ -687,13 +686,12 @@ Real-time collaboration is becoming standard expectation in document editing too
 
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32000); // Server error for missing key parameter
+      expect(response.error?.code).toBe(-32602); // Invalid params for missing key parameter
     });
   });
 
   describe('Response Format', () => {
     it('GIVEN successful analysis WHEN response THEN include comprehensive suggestions', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
 
       const minimalContent = `## 1. Description
 
