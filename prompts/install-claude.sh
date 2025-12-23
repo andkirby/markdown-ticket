@@ -100,12 +100,14 @@ fi
 
 # Source directory containing MDT prompts (always where script is located)
 MDT_PROMPTS_DIR="$SCRIPT_DIR"
+MDT_HOOKS_DIR="$SCRIPT_DIR/hooks"
 
 # List of MDT commands to install (without mdt- prefix)
 MDT_COMMANDS=(
     "ticket-creation"
     "requirements"
     "assess"
+    "domain-audit"
     "domain-lens"
     "architecture"
     "clarification"
@@ -187,16 +189,91 @@ verify_installation() {
     return $failed
 }
 
+# Install SessionStart hook for project variables
+install_session_hook() {
+    local hook_source="$MDT_HOOKS_DIR/mdt-project-vars.sh"
+    local hook_target="$HOME/.claude/hooks/mdt-project-vars.sh"
+    local settings_file="$HOME/.claude/settings.json"
+
+    if [[ ! -f "$hook_source" ]]; then
+        print_warning "Hook script not found: $hook_source"
+        print_warning "Skipping SessionStart hook installation"
+        return 0
+    fi
+
+    print_verbose "Installing SessionStart hook..."
+
+    # Create hooks directory if needed
+    mkdir -p "$(dirname "$hook_target")"
+
+    # Copy hook script
+    cp "$hook_source" "$hook_target"
+    chmod +x "$hook_target"
+
+    if [[ $? -ne 0 ]]; then
+        print_warning "Failed to copy hook script"
+        return 1
+    fi
+
+    # Register hook in settings.json
+    if [[ -f "$settings_file" ]]; then
+        # Check if hook already registered
+        if grep -q "mdt-project-vars.sh" "$settings_file" 2>/dev/null; then
+            print_verbose "Hook already registered in settings.json"
+            return 0
+        fi
+
+        # Add hook to SessionStart array using jq if available
+        if command -v jq &> /dev/null; then
+            print_verbose "Registering hook in settings.json..."
+
+            # Create a backup
+            cp "$settings_file" "$settings_file.bak"
+
+            # Add the hook using jq
+            jq --arg cmd "~/.claude/hooks/mdt-project-vars.sh" '
+                .hooks.SessionStart[0].hooks += [{"type": "command", "command": $cmd}]
+            ' "$settings_file.bak" > "$settings_file" 2>/dev/null || {
+                print_warning "Failed to register hook in settings.json (jq failed)"
+                print_warning "Hook installed at $hook_target - add manually to SessionStart hooks"
+                rm -f "$settings_file.bak"
+                return 1
+            }
+
+            rm -f "$settings_file.bak"
+            print_info "SessionStart hook registered in settings.json"
+        else
+            print_warning "jq not found - hook copied but not registered in settings.json"
+            print_warning "Add manually to ~/.claude/settings.json SessionStart hooks"
+        fi
+    else
+        print_warning "settings.json not found - hook copied but not registered"
+        print_warning "Add manually to ~/.claude/settings.json SessionStart hooks"
+    fi
+
+    return 0
+}
+
 # Show usage information
 show_usage() {
     echo
     print_info "MDT commands have been installed successfully!"
     echo "Location: $CLAUDE_COMMANDS_DIR"
     echo
+
+    # Show hook installation status
+    if [[ "$LOCAL_INSTALL" != "true" ]]; then
+        if [[ -f "$HOME/.claude/hooks/mdt-project-vars.sh" ]]; then
+            print_info "SessionStart hook installed: ~/.claude/hooks/mdt-project-vars.sh"
+            echo "  Auto-injects PROJECT_CODE and TICKETS_PATH from .mdt-config.toml"
+        fi
+    fi
+    echo
     echo "Available commands:"
     echo "  /mdt:ticket-creation    - Create CR with structured questioning"
     echo "  /mdt:requirements       - Generate EARS-formatted requirements"
     echo "  /mdt:assess             - Evaluate affected code fitness"
+    echo "  /mdt:domain-audit       - Analyze code for DDD violations"
     echo "  /mdt:domain-lens        - Surface DDD constraints for architecture"
     echo "  /mdt:tests              - Generate BDD test specs + executable tests"
     echo "  /mdt:architecture       - Surface decisions, define structure + size limits"
@@ -210,6 +287,9 @@ show_usage() {
     echo "  /mdt:ticket-creation → /mdt:requirements → /mdt:assess → /mdt:tests"
     echo "  → /mdt:domain-lens (optional) → /mdt:architecture → /mdt:clarification → /mdt:tasks"
     echo "  → /mdt:implement → /mdt:tech-debt → /mdt:reflection"
+    echo
+    echo "DDD toolkit:"
+    echo "  /mdt:domain-audit → Create refactoring CR → /mdt:domain-lens → /mdt:architecture"
     echo
     echo "Workflows are optional - use what you need:"
     echo
@@ -242,6 +322,11 @@ main() {
             failed=1
         fi
     done
+
+    # Install SessionStart hook (global only)
+    if [[ "$LOCAL_INSTALL" != "true" ]]; then
+        install_session_hook
+    fi
 
     # Verify installation
     if verify_installation && [[ $failed -eq 0 ]]; then

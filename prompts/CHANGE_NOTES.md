@@ -2,6 +2,134 @@
 
 ## Recent Updates
 
+### 2025-12-22 - Session Context Injection via Hooks
+
+**Problem**: Workflows used hardcoded `docs/CRs/` paths, breaking when projects configured `ticketsPath` differently.
+
+**Solution**: Added `SessionStart` hook that auto-injects `PROJECT_CODE` and `TICKETS_PATH` from `.mdt-config.toml`. Updated all workflows to use `{TICKETS_PATH}` template variable.
+
+**Changes Made**:
+
+1. **hooks/mdt-project-vars.sh (new)** - SessionStart hook script that extracts config values
+2. **install-claude.sh** - Installs and registers hook in `~/.claude/settings.json`
+3. **CLAUDE.md** - Streamlined to quick-reference format (247→130 lines)
+4. **README.md** - Added Session Context documentation
+5. **All mdt-*.md workflows** - Replaced `docs/CRs/` with `{TICKETS_PATH}` variable
+
+**Impact**: Workflows now support any `ticketsPath` configuration (`.mdt/specs`, `specs/`, etc.) without manual MCP calls.
+
+**Files Changed**:
+- `prompts/hooks/mdt-project-vars.sh` (new)
+- `prompts/install-claude.sh`
+- `prompts/CLAUDE.md`
+- `prompts/README.md`
+- `prompts/mdt-*.md` (7 workflows updated)
+
+### 2025-12-20 - Phase-Aware Implementation Workflow
+
+**Problem**: The implementation workflow was monolithic, handling all tasks in a single run without phase separation. This made large CRs difficult to manage, track, and review incrementally.
+
+**Solution**: Enhanced the implementation workflow to support phase-based execution where each phase has its own tasks.md and tests.md, enabling incremental development and better progress tracking.
+
+**Changes Made**:
+
+1. **mdt-implement.md (v4→v5) - Phase-aware orchestration**:
+   - Added phase discovery that detects phase-specific tasks and tests
+   - New command-line options: `--phase {X.Y}` for specific phase execution
+   - Co-location of tasks.md with tests.md in phase folders
+   - Phase completion summaries with TDD and size metrics
+   - Support for both phased and non-phased CRs (backward compatibility)
+   - Enhanced TDD verification with phase-specific test filtering
+   - Automatic detection of multiple phases with user selection prompts
+
+2. **mdt-tasks.md (v4→v5) - Phase-specific task generation**:
+   - Phase detection based on existing phase-specific tests.md files
+   - Output to phase folders: `docs/CRs/{CR-KEY}/phase-{X.Y}/tasks.md`
+   - Phase-specific architecture section extraction from architecture.md
+   - Co-location strategy: tasks.md created alongside tests.md
+   - Phase-specific size thresholds and shared patterns
+   - Updated task template with phase requirement IDs (P{X.Y}-N format)
+   - Enhanced TDD integration with phase-based test filtering
+
+3. **mdt-tests.md (v1→v2) - Phase-aware test generation**:
+   - Added support for phase-specific test generation with `--phase` flag
+   - Output to phase folders: `docs/CRs/{CR-KEY}/phase-{X.Y}/tests.md`
+   - Phase-specific requirement IDs (P{X.Y}-N) for better traceability
+   - Incremental test generation for each phase of development
+   - Backward compatibility with non-phased CRs
+
+**Key Features**:
+- **Phase Isolation**: Each phase has its own tasks, tests, and progress tracking
+- **Co-location Strategy**: tasks.md and tests.md in same phase folder for better organization
+- **Incremental Development**: Complete one phase before moving to the next
+- **Backward Compatibility**: Existing non-phased CRs continue to work unchanged
+- **Smart Phase Detection**: Automatically discovers available phases from test files
+- **Progress Tracking**: Phase completion summaries with detailed metrics
+
+**New Folder Structure**:
+```
+docs/CRs/{CR-KEY}/
+├── architecture.md          # All phases (unchanged)
+├── phase-1.1/
+│   ├── tests.md            # Phase 1.1 tests
+│   └── tasks.md            # Phase 1.1 tasks
+├── phase-1.2/
+│   ├── tests.md
+│   └── tasks.md
+└── phase-2/
+    ├── tests.md
+    └── tasks.md
+```
+
+**Impact**:
+- Large CRs can now be broken into manageable phases with clear boundaries
+- Better incremental development and review processes
+- Improved organization with co-located test and task files
+- Enhanced TDD workflow with phase-specific test filtering
+- Maintains full backward compatibility for existing CRs
+
+**Files Changed**:
+- `prompts/mdt-implement.md`
+- `prompts/mdt-tasks.md`
+- `prompts/mdt-tests.md`
+
+### 2025-12-17 - Added Domain-Driven Design Audit Workflow
+
+**Problem**: No mechanism existed to detect Domain-Driven Design violations in existing code, allowing architectural debt to accumulate unchecked and making refactoring decisions uninformed.
+
+**Solution**: Added `/mdt:domain-audit` workflow that analyzes existing code for DDD violations and generates evidence-based reports with fix directions.
+
+**Changes Made**:
+
+1. **mdt-domain-audit.md (v1) - New DDD violations analysis workflow**:
+   - Detects 7 types of DDD violations with severity levels
+   - Two invocation modes: CR-specific (`MDT-077`) or direct path (`--path src/shared/services`)
+   - Generates `domain-audit.md` or standalone timestamped audit reports
+   - Evidence-based analysis with fix direction (not prescriptions)
+   - Completes DDD toolkit: lens (before) → audit (after) → architecture (design)
+
+2. **README.md** - Updated documentation:
+   - Added `/mdt:domain-audit` command reference table entry
+   - Documented violation types with severity levels
+   - Added workflow diagram showing audit → refactoring CR → domain-lens → architecture
+   - Updated file structure to include new workflow
+   - Added output location documentation
+
+3. **install-claude.sh** - Updated command list:
+   - Added "domain-audit" to MDT_COMMANDS array
+   - Maintains alphabetical ordering
+
+**Impact**:
+- DDD violations can now be systematically detected and documented
+- Refactoring decisions supported by evidence-based analysis
+- Completes DDD toolkit with both design guidance and violation detection
+- Enables tracking architectural debt patterns across projects
+
+**Files Changed**:
+- `prompts/mdt-domain-audit.md` (new)
+- `prompts/README.md`
+- `prompts/install-claude.sh`
+
 ### 2025-12-17 - Added Domain-Driven Design Constraints Workflow
 
 **Problem**: Architecture workflow lacked awareness of domain boundaries and business invariants, leading to structural decisions that violated DDD principles and scattered business logic across module boundaries.

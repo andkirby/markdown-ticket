@@ -10,6 +10,10 @@ Capture post-implementation learnings from the conversation and encode them into
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline

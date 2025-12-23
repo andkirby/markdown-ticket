@@ -10,9 +10,13 @@ On-demand detection of technical debt patterns in implemented code.
 $ARGUMENTS
 ```
 
+## Session Context
+
+Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+
 ## Output Location
 
-`docs/CRs/{CR-KEY}/debt.md`
+`{TICKETS_PATH}/{CR-KEY}/debt.md`
 
 ## Execution Steps
 
@@ -38,9 +42,9 @@ If CLAUDE.md exists, read it. Otherwise detect from project files.
    - **Affected/new artifacts** — files to analyze
    - **Architecture Design** — check for violations
    - **Acceptance Criteria** — extract size constraints to verify
-3. **Load requirements if exists**: Check `docs/CRs/{CR-KEY}/requirements.md`
+3. **Load requirements if exists**: Check `{TICKETS_PATH}/{CR-KEY}/requirements.md`
    - If found: check for unsatisfied requirements (debt indicator)
-4. **Load tasks if exists**: Check `docs/CRs/{CR-KEY}/tasks.md`
+4. **Load tasks if exists**: Check `{TICKETS_PATH}/{CR-KEY}/tasks.md`
    - If found: check Requirement Coverage table for gaps
 5. If codebase available, scan actual files
 
@@ -88,7 +92,7 @@ Compare against CR acceptance criteria. Any violation = High severity debt item.
 
 ### Step 6: Generate Debt Report
 
-Create `docs/CRs/{CR-KEY}/debt.md`:
+Create `{TICKETS_PATH}/{CR-KEY}/debt.md`:
 
 ```markdown
 # {CR-KEY} Technical Debt Analysis
@@ -175,8 +179,8 @@ Create `docs/CRs/{CR-KEY}/debt.md`:
 
 ### Step 7: Save Report
 
-1. Create directory if needed: `docs/CRs/{CR-KEY}/`
-2. Write to: `docs/CRs/{CR-KEY}/debt.md`
+1. Create directory if needed: `{TICKETS_PATH}/{CR-KEY}/`
+2. Write to: `{TICKETS_PATH}/{CR-KEY}/debt.md`
 3. Optionally update CR Section 8 with summary and link to debt.md
 
 ### Step 8: Report Completion
@@ -185,7 +189,7 @@ Create `docs/CRs/{CR-KEY}/debt.md`:
 ## Tech Debt Analysis Complete
 
 **CR**: {CR-KEY}
-**Report**: `docs/CRs/{CR-KEY}/debt.md`
+**Report**: `{TICKETS_PATH}/{CR-KEY}/debt.md`
 
 ### Findings
 | Severity | Count |
@@ -204,7 +208,7 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX}'
 {List high severity items}
 
 ### Next Steps
-- Review `docs/CRs/{CR-KEY}/debt.md`
+- Review `{TICKETS_PATH}/{CR-KEY}/debt.md`
 - For complex fixes: create follow-up CR, run `/mdt:architecture`
 - For simple fixes: address inline
 ```
@@ -251,7 +255,7 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {MAX}'
 2. **Evidence required** — what specifically indicates the debt
 3. **Fix direction, not solution** — suggest approach, don't design
 4. **Size compliance is debt** — exceeding CR limits = High severity
-5. **Save to file** — `docs/CRs/{CR-KEY}/debt.md`, not just console output
+5. **Save to file** — `{TICKETS_PATH}/{CR-KEY}/debt.md`, not just console output
 6. **Use project context** — correct paths, extensions, commands for project
 
 ## Integration
