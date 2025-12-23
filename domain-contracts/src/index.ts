@@ -4,10 +4,10 @@
  */
 
 // Export core types and enums
-export * from './types';
+export * from './types/index.js';
 
 // Export project-related schemas and validation
-export * from './project';
+export * from './project/index.js';
 
 // Export ticket/CR-related schemas and validation
-export * from './ticket';
+export * from './ticket/index.js';

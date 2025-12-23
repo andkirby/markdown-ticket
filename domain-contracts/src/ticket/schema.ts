@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { CRStatusSchema, CRTypeSchema, CRPrioritySchema } from '../types/schema';
+import { CRStatusSchema, CRTypeSchema, CRPrioritySchema } from '../types/schema.js';
 
 /**
  * Base CR schema with field validation
@@ -132,4 +132,4 @@ export const TicketSchemas = {
 /**
  * Export individual enum schemas for convenience
  */
-export { CRStatusSchema, CRTypeSchema, CRPrioritySchema } from '../types/schema';
+export { CRStatusSchema, CRTypeSchema, CRPrioritySchema } from '../types/schema.js';

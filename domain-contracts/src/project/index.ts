@@ -4,7 +4,7 @@
  */
 
 // Export all schemas and types from schema.ts
-export * from './schema';
+export * from './schema.js';
 
 // Export all validation functions from validation.ts
-export * from './validation';
+export * from './validation.js';

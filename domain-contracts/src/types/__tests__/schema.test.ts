@@ -7,7 +7,7 @@ import {
   CRStatusSchema,
   CRTypeSchema,
   CRPrioritySchema,
-} from '../schema';
+} from '../schema.js';
 
 describe('CRStatusSchema', () => {
   // Testing OUR defined status values

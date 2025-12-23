@@ -9,7 +9,7 @@ import { z } from 'zod';
 import {
   ProjectSchema,
   DocumentConfigSchema,
-} from '../schema';
+} from '../schema.js';
 
 describe('ProjectSchema', () => {
   // Testing OUR regex rule for code field

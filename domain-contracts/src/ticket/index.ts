@@ -2,5 +2,5 @@
  * Ticket module exports
  */
 
-export * from './schema';
-export * from './validation';
+export * from './schema.js';
+export * from './validation.js';

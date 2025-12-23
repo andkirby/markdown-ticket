@@ -3,4 +3,4 @@
  * Re-exports all types and schemas for easier importing
  */
 
-export * from './schema';
+export * from './schema.js';
