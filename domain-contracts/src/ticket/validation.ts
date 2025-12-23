@@ -8,7 +8,7 @@ import {
   CRSchema,
   CreateTicketInputSchema,
   UpdateTicketInputSchema
-} from './schema';
+} from './schema.js';
 import { z } from 'zod';
 
 /**

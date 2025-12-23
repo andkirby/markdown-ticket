@@ -16,6 +16,7 @@
 import { TestEnvironment } from '../helpers/test-environment';
 import { MCPClient, MCPResponse } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
+import { ProjectSetup } from '../helpers/core/project-setup';
 
 describe('update_cr_status', () => {
   let testEnv: TestEnvironment;
@@ -25,8 +26,13 @@ describe('update_cr_status', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment();
     await testEnv.setup();
+    // Create project structure manually BEFORE starting MCP client
+    const projectSetup = new ProjectSetup({ testEnv });
+    await projectSetup.createProjectStructure('TEST', 'Test Project');
+    // NOW start MCP client (server will discover the project from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
     await mcpClient.start();
+    // NOW create ProjectFactory with the running mcpClient
     projectFactory = new ProjectFactory(testEnv, mcpClient);
   });
 
@@ -109,8 +115,6 @@ The solution involves testing the status update mechanism for CRs in the system.
 
   describe('Valid Status Updates', () => {
     it('GIVEN existing CR WHEN updating status THEN success with new status', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create a CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Status Update Test CR',
@@ -135,8 +139,6 @@ The solution involves testing the status update mechanism for CRs in the system.
     });
 
     it('GIVEN valid status transitions WHEN updating THEN allow all transitions', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create a CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Status Transition Test',
@@ -179,8 +181,6 @@ The solution involves testing the status update mechanism for CRs in the system.
     });
 
     it('GIVEN same status WHEN updating THEN still return success', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create a CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Same Status Test',
@@ -202,8 +202,6 @@ The solution involves testing the status update mechanism for CRs in the system.
 
   describe('Complete Workflow', () => {
     it('GIVEN CR lifecycle WHEN updating through all statuses THEN track changes correctly', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Lifecycle Test CR',
@@ -236,8 +234,6 @@ The solution involves testing the status update mechanism for CRs in the system.
 
   describe('Multiple CR Updates', () => {
     it('GIVEN multiple CRs WHEN updating THEN update each independently', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create multiple CRs
       const cr1 = await projectFactory.createTestCR('TEST', {
         title: 'First CR',
@@ -289,8 +285,6 @@ The solution involves testing the status update mechanism for CRs in the system.
 
   describe('Status Validation', () => {
     it('GIVEN all valid statuses WHEN updating THEN accept all defined statuses', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create a CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Status Validation Test',
@@ -334,8 +328,6 @@ The solution involves testing the status update mechanism for CRs in the system.
 
   describe('Error Handling', () => {
     it('GIVEN non-existent CR WHEN updating THEN return tool execution error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callUpdateCRStatus('TEST', 'TEST-999', 'Approved');
 
       // Business logic errors (CR not found) are tool execution errors
@@ -357,8 +349,6 @@ The solution involves testing the status update mechanism for CRs in the system.
     });
 
     it('GIVEN invalid status WHEN updating THEN return protocol error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Invalid Status Test',
         type: 'Bug Fix',
@@ -398,12 +388,10 @@ The solution involves testing the status update mechanism for CRs in the system.
       // Missing required parameter is a protocol error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32000); // Server error for missing key parameter (business logic validation)
+      expect(response.error?.code).toBe(-32602); // Invalid params error for missing key parameter
     });
 
     it('GIVEN missing status parameter WHEN updating THEN return protocol error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await mcpClient.callTool('update_cr_status', {
         project: 'TEST',
         key: 'TEST-001'
@@ -417,8 +405,6 @@ The solution involves testing the status update mechanism for CRs in the system.
     });
 
     it('GIVEN empty status WHEN updating THEN return protocol error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await mcpClient.callTool('update_cr_status', {
         project: 'TEST',
         key: 'TEST-001',
@@ -435,8 +421,6 @@ The solution involves testing the status update mechanism for CRs in the system.
 
   describe('Status-Specific Behavior', () => {
     it('GIVEN CR rejected WHEN updating to implemented THEN allow re-evaluation', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Rejected to Implemented Test',
         type: 'Feature Enhancement',
@@ -458,8 +442,6 @@ The solution involves testing the status update mechanism for CRs in the system.
     });
 
     it('GIVEN CR on hold WHEN updating to in progress THEN allow resumption', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'On Hold Test',
         type: 'Technical Debt',
@@ -483,8 +465,6 @@ The solution involves testing the status update mechanism for CRs in the system.
 
   describe('Response Format', () => {
     it('GIVEN successful update WHEN response THEN include updated CR data', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Response Format Test',
         type: 'Documentation',
