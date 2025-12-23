@@ -24,6 +24,8 @@ export class TestEnvironment {
   private _createdAt: Date;
   private _ports: ReturnType<typeof getPortConfig>;
   private _cleanupHandlers: Array<() => Promise<void>> = [];
+  // Store references to exit handlers for proper cleanup
+  private _exitHandlers: Array<() => void> = [];
 
   constructor() {
     this._id = randomUUID();
@@ -113,6 +115,16 @@ export class TestEnvironment {
 
   /** Clean up all temporary files and directories */
   async cleanup(): Promise<void> {
+    // Remove exit handlers to prevent MaxListenersExceededWarning
+    for (const handler of this._exitHandlers) {
+      process.removeListener('SIGINT', handler);
+      process.removeListener('SIGTERM', handler);
+      process.removeListener('SIGHUP', handler);
+      process.removeListener('uncaughtException', handler);
+      process.removeListener('unhandledRejection', handler);
+    }
+    this._exitHandlers = [];
+
     await Promise.allSettled(
       this._cleanupHandlers.map(async (handler) => {
         try { await handler(); } catch (error) { console.error('Cleanup handler failed:', error); }
@@ -149,6 +161,9 @@ export class TestEnvironment {
       try { await this.cleanup(); } catch (error) { console.error('Error during emergency cleanup:', error); }
       process.exit(1);
     };
+
+    // Store handler references for proper cleanup
+    this._exitHandlers.push(cleanup);
 
     process.once('SIGINT', cleanup);
     process.once('SIGTERM', cleanup);
