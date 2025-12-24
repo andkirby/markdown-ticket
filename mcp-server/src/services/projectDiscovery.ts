@@ -173,9 +173,11 @@ export class ProjectDiscoveryService {
       const project: Project = {
         id: projectId,
         project: {
+          id: projectId,
           name: config.project.name || projectId,
           code: config.project.code || projectId,
           path: crDir,
+          ticketsPath: ticketsPath,
           configFile: configPath,
           startNumber: config.project.startNumber || 1,
           counterFile: config.project.counterFile || '.mdt-next',
@@ -260,9 +262,11 @@ export class ProjectDiscoveryService {
       const project: Project = {
         id: projectId,
         project: {
+          id: projectId,
           name: config.project.name || projectId,
           code: config.project.code || projectId,
           path: crDir,
+          ticketsPath: ticketsPath,
           configFile: configPath,
           startNumber: config.project.startNumber || 1,
           counterFile: config.project.counterFile || '.mdt-next',
@@ -294,25 +298,27 @@ export class ProjectDiscoveryService {
 
     try {
       // Count CRs in project
-      const crFiles = await glob('*.md', { cwd: project.project.path });
-      
+      const projectPath = (project.project as any).path || project.project.ticketsPath;
+      const crFiles = await glob('*.md', { cwd: projectPath });
+
       return {
         key: project.id,
         name: project.project.name,
-        description: project.project.description,
-        path: project.project.path,
+        description: project.project.description || '',
+        path: projectPath,
         crCount: crFiles.length,
-        lastAccessed: project.metadata.lastAccessed
+        lastAccessed: project.metadata?.lastAccessed || new Date().toISOString()
       };
     } catch (error) {
       console.warn(`Failed to get project info for ${key}:`, error);
+      const projectPath = (project.project as any).path || project.project.ticketsPath;
       return {
         key: project.id,
         name: project.project.name,
-        description: project.project.description,
-        path: project.project.path,
+        description: project.project.description || '',
+        path: projectPath,
         crCount: 0,
-        lastAccessed: project.metadata.lastAccessed
+        lastAccessed: project.metadata?.lastAccessed || new Date().toISOString()
       };
     }
   }

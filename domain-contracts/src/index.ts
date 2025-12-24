@@ -1,9 +1,13 @@
 /**
- * Domain Contracts - Centralized API
- * Re-exports all types and schemas from entity modules
+ * Domain contracts main entry point
+ * Clean public API re-exporting all production modules
  */
 
-// Re-export everything from entity modules
-export * from './types';
-export * from './project';
-export * from './ticket';
+// Export core types and enums
+export * from './types/index.js';
+
+// Export project-related schemas and validation
+export * from './project/index.js';
+
+// Export ticket/CR-related schemas and validation
+export * from './ticket/index.js';

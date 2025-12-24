@@ -16,6 +16,7 @@
 import { TestEnvironment } from '../helpers/test-environment';
 import { MCPClient, MCPResponse } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
+import { ProjectSetup } from '../helpers/core/project-setup';
 
 describe('get_cr', () => {
   let testEnv: TestEnvironment;
@@ -25,8 +26,14 @@ describe('get_cr', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment();
     await testEnv.setup();
+    // Create project structure manually BEFORE starting MCP client
+    // This ensures the MCP server discovers the project from registry on startup
+    const projectSetup = new ProjectSetup({ testEnv });
+    await projectSetup.createProjectStructure('TEST', 'Test Project');
+    // NOW start MCP client (server will discover the project from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
     await mcpClient.start();
+    // NOW create ProjectFactory with the running mcpClient
     projectFactory = new ProjectFactory(testEnv, mcpClient);
   });
 
