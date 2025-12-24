@@ -1,6 +1,6 @@
 ---
 code: MDT-103
-status: Proposed
+status: Implemented
 dateCreated: 2025-12-24T12:18:49.315Z
 type: Technical Debt
 priority: Medium
