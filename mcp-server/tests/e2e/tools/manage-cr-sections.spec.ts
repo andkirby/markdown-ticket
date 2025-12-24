@@ -16,6 +16,7 @@
 import { TestEnvironment } from '../helpers/test-environment';
 import { MCPClient } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
+import { ProjectSetup } from '../helpers/core/project-setup';
 
 describe('manage_cr_sections', () => {
   let testEnv: TestEnvironment;
@@ -25,8 +26,13 @@ describe('manage_cr_sections', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment();
     await testEnv.setup();
+    // Create project structure manually BEFORE starting MCP client
+    const projectSetup = new ProjectSetup({ testEnv });
+    await projectSetup.createProjectStructure('TEST', 'Test Project');
+    // NOW start MCP client (server will discover the project from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
     await mcpClient.start();
+    // NOW create ProjectFactory with the running mcpClient
     projectFactory = new ProjectFactory(testEnv, mcpClient);
   });
 
@@ -130,8 +136,6 @@ describe('manage_cr_sections', () => {
 
   describe('List Operation', () => {
     it('GIVEN existing CR WHEN listing sections THEN return all section names', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Section List Test',
         type: 'Feature Enhancement',
@@ -172,8 +176,6 @@ Initial criteria.`
     });
 
     it('GIVEN CR with custom sections WHEN listing THEN return all sections including custom', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const customContent = `## 1. Description
 
 Standard description.
@@ -218,8 +220,6 @@ Standard implementation.`;
 
   describe('Get Operation', () => {
     it('GIVEN existing CR WHEN getting section THEN return specific section content', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const sectionContent = `This is the detailed rationale for the change.
 
 Key points:
@@ -256,8 +256,6 @@ Analysis here.`
     });
 
     it('GIVEN flexible section matching WHEN getting THEN find section with various formats', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Flexible Matching Test',
         type: 'Feature Enhancement',
@@ -293,8 +291,6 @@ Test implementation.`
     });
 
     it('GIVEN non-existent section WHEN getting THEN return error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Non-existent Section Test',
         type: 'Documentation',
@@ -319,8 +315,6 @@ Basic rationale.`
 
   describe('Replace Operation', () => {
     it('GIVEN existing CR WHEN replacing section THEN update section completely', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Replace Section Test',
         type: 'Technical Debt',
@@ -367,8 +361,6 @@ This refactor will address all these concerns by modernizing the architecture.`;
     });
 
     it('GIVEN section with header WHEN replacing THEN preserve header format', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Header Format Test',
         type: 'Architecture',
@@ -410,8 +402,6 @@ With subsections.`;
 
   describe('Append Operation', () => {
     it('GIVEN existing CR WHEN appending section THEN add content to end', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const originalContent = `## 1. Description
 
 Initial description.
@@ -449,8 +439,6 @@ More details here.`;
     });
 
     it('GIVEN appending to existing section WHEN appending THEN add to end of section', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Append to Section Test',
         type: 'Bug Fix',
@@ -498,8 +486,6 @@ Implementation details.
 
   describe('Prepend Operation', () => {
     it('GIVEN existing CR WHEN prepending section THEN add content to beginning', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Prepend Section Test',
         type: 'Documentation',
@@ -555,8 +541,6 @@ The motivation for these changes...`;
     });
 
     it('GIVEN prepending to existing section WHEN prepending THEN add to beginning of section', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Prepend to Section Test',
         type: 'Architecture',
@@ -607,8 +591,6 @@ Context: The following describes the architectural changes...`;
 
   describe('Complex Section Operations', () => {
     it('GIVEN hierarchical sections WHEN managing THEN handle nested structure', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const hierarchicalContent = `## 1. Description
 
 Top-level description.
@@ -681,8 +663,6 @@ Updated historical perspective.`;
 
   describe('Error Handling', () => {
     it('GIVEN non-existent CR WHEN managing THEN return error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callManageCRSections('TEST', 'TEST-999', 'list');
 
       expect(response.success).toBe(false);
@@ -702,8 +682,6 @@ Updated historical perspective.`;
     });
 
     it('GIVEN invalid operation WHEN managing THEN return validation error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await mcpClient.callTool('manage_cr_sections', {
         project: 'TEST',
         key: 'TEST-001',
@@ -717,8 +695,6 @@ Updated historical perspective.`;
     });
 
     it('GIVEN missing operation WHEN managing THEN return validation error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await mcpClient.callTool('manage_cr_sections', {
         project: 'TEST',
         key: 'TEST-001'
@@ -731,7 +707,6 @@ Updated historical perspective.`;
     });
 
     it('GIVEN get operation without section WHEN managing THEN return validation error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Test CR',
         type: 'Documentation',
@@ -760,8 +735,6 @@ Test rationale.`
 
   describe('Response Format', () => {
     it('GIVEN successful operation WHEN response THEN include appropriate data', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Response Format Test',
         type: 'Documentation',

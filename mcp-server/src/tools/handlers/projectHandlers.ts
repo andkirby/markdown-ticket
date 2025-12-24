@@ -88,7 +88,10 @@ export class ProjectHandlers {
     const lines = [`📁 Found ${projects.length} project${projects.length === 1 ? '' : 's'}:`, ''];
 
     for (const project of projects) {
-      // Get CR count from project CRs
+      // Get CR count from project CRs - skip if path is not defined
+      if (!project.project.path) {
+        continue;
+      }
       const crs = await this.projectService.getProjectCRs(project.project.path);
       const crCount = crs.length;
 
@@ -117,8 +120,9 @@ export class ProjectHandlers {
   private async handleGetProjectInfo(key: string): Promise<string> {
     const project = await this.validateProject(key);
 
-    // Get CR count from project CRs
-    const crs = await this.projectService.getProjectCRs(project.project.path);
+    // Get CR count from project CRs - use path from extended Project interface
+    const projectPath = (project.project as any).path || project.project.ticketsPath || '.';
+    const crs = await this.projectService.getProjectCRs(projectPath);
     const crCount = crs.length;
 
     const projectCode = project.project.code || project.id;
@@ -129,9 +133,9 @@ export class ProjectHandlers {
       `- Code: ${project.project.code || 'None'}`,
       `- ID: ${project.id}`,
       `- Description: ${Sanitizer.sanitizeText(project.project.description || 'No description')}`,
-      `- Path: ${project.project.path}`,
+      `- Path: ${projectPath}`,
       `- Total CRs: ${crCount}`,
-      `- Last Accessed: ${project.metadata.lastAccessed}`,
+      `- Last Accessed: ${project.metadata?.lastAccessed || 'Unknown'}`,
       '',
       '**Configuration:**',
       `- Start Number: ${project.project.startNumber || 1}`,
