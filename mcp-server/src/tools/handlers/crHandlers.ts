@@ -21,26 +21,6 @@ import { SimpleSectionValidator } from '../../utils/simpleSectionValidator.js';
 import { validateCRKey, validateRequired, validateString, validateOperation } from '../../utils/validation.js';
 import { Sanitizer } from '../../utils/sanitizer.js';
 import { ToolError, JsonRpcErrorCode } from '../../utils/toolError.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { glob } from 'glob';
-
-/**
- * Helper function to find the file path for a ticket code
- * Scans the project's CR directory for a file matching the ticket code
- */
-async function findTicketFilePath(project: Project, ticketCode: string): Promise<string> {
-  // Use path from extended Project interface, fallback to ticketsPath for domain-contracts compatibility
-  const crPath = path.join((project.project as any).path, project.project.ticketsPath || 'docs/CRs');
-  const pattern = path.join(crPath, `${ticketCode}-*.md`);
-
-  const files = await glob(pattern, { absolute: true });
-  if (files.length === 0) {
-    throw ToolError.toolExecution(`CR file for '${ticketCode}' not found in ${crPath}`);
-  }
-
-  return files[0]; // Return the first match
-}
 
 /**
  * CR Handlers Class
@@ -119,8 +99,7 @@ export class CRHandlers {
       case 'attributes': {
         // Extract YAML frontmatter and return attributes
         try {
-          const filePath = await findTicketFilePath(project, key);
-          const fileContent = await fs.readFile(filePath, 'utf-8');
+          const fileContent = await MarkdownService.readFile(ticket.filePath);
 
           // Extract YAML frontmatter
           const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
@@ -171,7 +150,6 @@ export class CRHandlers {
       case 'metadata':
         // Return just the key metadata without full YAML parsing
         try {
-          const filePath = await findTicketFilePath(project, key);
           const metadata = {
             code: ticket.code,
             title: Sanitizer.sanitizeText(ticket.title),
@@ -179,7 +157,7 @@ export class CRHandlers {
             type: ticket.type,
             priority: ticket.priority,
             phaseEpic: ticket.phaseEpic ? Sanitizer.sanitizeText(ticket.phaseEpic) : undefined,
-            filePath: filePath
+            filePath: ticket.filePath
           };
 
           return Sanitizer.sanitizeText(JSON.stringify(metadata, null, 2));
@@ -249,12 +227,9 @@ export class CRHandlers {
     lines.push(`- Created: ${new Date().toISOString()}`);
 
     // Get the file path from the created ticket
-    try {
-      const filePath = await findTicketFilePath(project, ticket.code);
+    if (ticket.filePath) {
       lines.push('');
-      lines.push(`**File Created:** ${filePath}`);
-    } catch (e) {
-      // File path not critical for response
+      lines.push(`**File Created:** ${ticket.filePath}`);
     }
 
     // Add processing information if content was provided and processed

@@ -35,7 +35,7 @@ export class TicketService {
   /**
    * Get the correct CR path for a project with backward compatibility
    */
-  private async getCRPath(project: Project): Promise<string> {
+  public async getCRPath(project: Project): Promise<string> {
     try {
       const config = this.projectService.getProjectConfig(project.project.path);
       if (!config || !config.project) {
