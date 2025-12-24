@@ -1,6 +1,18 @@
-// Re-export testing utilities
-export { ProjectFixture } from './project.fixtures';
-export type { ProjectFixtureConfig, ProjectFixtureResult } from './project.fixtures';
+/**
+ * MDT-101 Phase 1: Testing Index Exports
+ * Clean testing API entry point - re-exports all fixtures
+ */
 
-// Re-export any other testing utilities if they exist
-// Add additional re-exports here as testing utilities grow
+// Project fixtures
+export {
+  buildProject, buildProjectConfig, buildCreateProjectInput, buildUpdateProjectInput,
+  buildMinimalProject, buildProjectWithComplexDocumentConfig, buildProjects,
+  invalidFixtures
+} from './project.fixtures.js';
+
+// Ticket fixtures
+export {
+  buildTicket, buildCR, buildCreateTicketInput, buildUpdateTicketInput,
+  buildTicketWithRelationship, buildTicketWithDependencies, buildTicketWithBlocks,
+  buildTicketWithRelations, buildFullTicket, buildTickets
+} from './ticket.fixtures.js';

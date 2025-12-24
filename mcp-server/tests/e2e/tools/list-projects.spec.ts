@@ -15,6 +15,7 @@
 import { TestEnvironment } from '../helpers/test-environment';
 import { MCPClient } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
+import { ProjectSetup } from '../helpers/core/project-setup';
 
 describe('list_projects', () => {
   let testEnv: TestEnvironment;
@@ -27,11 +28,16 @@ describe('list_projects', () => {
     testEnv = new TestEnvironment();
     await testEnv.setup();
 
-    // Initialize MCP client with test environment
+    // Create project structure manually BEFORE starting MCP client
+    // This ensures the MCP server discovers the project on startup
+    const projectSetup = new ProjectSetup({ testEnv });
+    await projectSetup.createProjectStructure('TEST', 'Test Project');
+
+    // NOW start MCP client (server will discover the project from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
     await mcpClient.start();
 
-    // Initialize project factory for creating test data
+    // NOW create ProjectFactory with the running mcpClient
     projectFactory = new ProjectFactory(testEnv, mcpClient);
   });
 
@@ -65,10 +71,26 @@ describe('list_projects', () => {
     expect(markdown).toContain('No projects found');
   }
 
-  describe('Project Discovery', () => {
+  describe('Edge Case: No Projects', () => {
+    let localMcpClient: MCPClient;
+    let localTestEnv: TestEnvironment;
+
+    beforeEach(async () => {
+      // Setup without creating any projects
+      localTestEnv = new TestEnvironment();
+      await localTestEnv.setup();
+      // Start MCP client without any pre-created projects
+      localMcpClient = new MCPClient(localTestEnv, { transport: 'stdio' });
+      await localMcpClient.start();
+    });
+
+    afterEach(async () => {
+      await localMcpClient.stop();
+      await localTestEnv.cleanup();
+    });
+
     it('GIVEN no registered projects WHEN listing THEN return empty message', async () => {
-      // RED: Test behavior for no projects
-      const response = await callListProjects();
+      const response = await localMcpClient.callTool('list_projects', {});
 
       // Expected behavior: Should handle empty project list gracefully
       expect(response.success).toBe(true);
@@ -78,11 +100,11 @@ describe('list_projects', () => {
       // Should contain no projects message
       expectNoProjectsInMarkdown(response.data);
     });
+  });
 
-    it('GIVEN single project exists WHEN listing THEN show project details', async () => {
-      // RED: Test behavior for single project
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
+  describe('Project Discovery', () => {
+    it('GIVEN single project exists (pre-created in beforeEach) WHEN listing THEN show project details', async () => {
+      // TEST project is created in beforeEach before MCP client starts
       const response = await callListProjects();
 
       // Expected behavior: Should show project with key, name, and path in markdown
@@ -99,7 +121,7 @@ describe('list_projects', () => {
 
     it('GIVEN multiple projects exist WHEN listing THEN show all projects', async () => {
       // RED: Test behavior for multiple projects
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
+      // TEST is already created in beforeEach, create additional projects
       await projectFactory.createProjectStructure('MDT', 'Markdown Ticket');
       await projectFactory.createProjectStructure('API', 'API Server');
 

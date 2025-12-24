@@ -2,161 +2,161 @@
 
 ## Purpose
 
-Single source of truth for entity definitions across all interfaces (CLI, MCP, UI). Provides:
-- Zod schemas for runtime validation
-- TypeScript types derived from schemas
+Single source of truth for entity definitions across all interfaces. Provides:
+- Runtime validation schemas
+- Type definitions derived from schemas
 - Validation functions called at interface boundaries
-- Test fixtures (separate subpath)
+- Test utilities (separate subpath)
 
 ## Package Structure
 
 ```
-packages/
-  domain-contracts/
-    package.json
-    src/
-      index.ts                     ← Main production exports
-      
-      project/
-        schema.ts                  ← Entity schema + input schemas + derived types
-        validation.ts              ← Validation functions
-        index.ts                   ← Public exports for project
-        
-      cr/
-        schema.ts
-        validation.ts
-        index.ts
-        
-      testing/
-        index.ts                   ← Test utilities entry point
-        project.fixtures.ts        ← Project test builders
-        cr.fixtures.ts             ← CR test builders
+domain-contracts/
+  package.json
+  src/
+    index.ts                     ← Main production exports
+
+    {entity}/                    ← One directory per domain entity
+      schema.ts                  ← Entity schema + input schemas + derived types
+      validation.ts              ← Validation functions
+      index.ts                   ← Public exports for entity
+
+    testing/
+      index.ts                   ← Test utilities entry point
+      {entity}.fixtures.ts       ← Test data builders per entity
 ```
+
+## Implementation Notes
+
+- Use any schema validation library (Zod, Joi, etc.)
+- Entity directories use domain-specific names (e.g., user, product, order)
+- Testing utilities are isolated from production exports via subpath
 
 ## Dependency Direction
 
 ```
-domain-contracts     ← Pure schemas, zero internal deps
+domain-contracts     ← Pure schemas, minimal dependencies
        ↑
-    shared           ← Implementation, depends on contracts
+    shared/business  ← Implementation, depends on contracts
        ↑
-  cli / mcp / ui     ← Depend on both
+  interfaces         ← UI, API, CLI, etc. depend on both
 ```
 
-## File Contents
+## File Patterns
 
-### `src/{entity}/schema.ts`
+### Entity Schema File (`src/{entity}/schema.ts`)
+
+Contains:
+- Primary entity schema with field validation rules
+- Input schemas derived from entity schema (create, update, etc.)
+- Type definitions derived from schemas
 
 ```typescript
-import { z } from 'zod';
+// Import your preferred validation library
+import { SchemaLibrary } from 'validation-lib';
 
-// Entity schema
-export const ProjectSchema = z.object({
-  key: z.string().regex(/^[A-Z]{2,5}$/, 'Key must be 2-5 uppercase letters'),
-  name: z.string().min(1, 'Name required'),
-  description: z.string().optional(),
-  rootPath: z.string(),
+// Primary entity schema
+export const EntitySchema = SchemaLibrary.object({
+  // Field definitions with validation rules
 });
 
-// Input schemas (derived from entity)
-export const CreateProjectInputSchema = ProjectSchema.pick({
-  key: true,
-  name: true,
-  rootPath: true,
-}).extend({
-  description: z.string().optional(),
+// Input schemas (examples)
+export const CreateEntityInputSchema = EntitySchema.pick({
+  // Selected fields for creation
 });
 
-export const UpdateProjectInputSchema = ProjectSchema.partial().required({
-  key: true,
+export const UpdateEntityInputSchema = EntitySchema.partial().required({
+  // Required identifier for updates
 });
 
-// Derived types
-export type Project = z.infer<typeof ProjectSchema>;
-export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>;
-export type UpdateProjectInput = z.infer<typeof UpdateProjectInputSchema>;
+// Type definitions
+export type Entity = InferType<typeof EntitySchema>;
+export type CreateEntityInput = InferType<typeof CreateEntityInputSchema>;
 ```
 
-### `src/{entity}/validation.ts`
+### Validation File (`src/{entity}/validation.ts`)
+
+Contains:
+- Wrapper functions using schema validation
+- Both throwing and non-throwing variants
+- Type-safe return values
 
 ```typescript
-import {
-  ProjectSchema,
-  CreateProjectInputSchema,
-  type Project,
-  type CreateProjectInput,
-} from './schema';
+import { EntitySchema, CreateEntityInputSchema, type Entity } from './schema';
 
-export function validateProject(input: unknown): Project {
-  return ProjectSchema.parse(input);
+// Throwing validation
+export function validateEntity(input: unknown): Entity {
+  return EntitySchema.parse(input);
 }
 
-export function validateCreateProjectInput(input: unknown): CreateProjectInput {
-  return CreateProjectInputSchema.parse(input);
-}
-
-// Safe version (returns result instead of throwing)
-export function safeValidateCreateProjectInput(input: unknown) {
-  return CreateProjectInputSchema.safeParse(input);
+// Safe validation (returns result object)
+export function safeValidateEntity(input: unknown) {
+  return EntitySchema.safeParse(input);
 }
 ```
 
-### `src/{entity}/index.ts`
+### Export Files
 
+**Entity exports (`src/{entity}/index.ts`)**:
 ```typescript
 export * from './schema';
 export * from './validation';
 ```
 
-### `src/index.ts`
-
+**Main exports (`src/index.ts`)**:
 ```typescript
-export * from './project';
-export * from './cr';
-// NOT: export * from './testing'
+export * from './entity1';
+export * from './entity2';
+// Add other entities as needed
+// Do NOT export testing utilities from main
 ```
 
-### `src/testing/{entity}.fixtures.ts`
+### Test Fixtures (`src/testing/{entity}.fixtures.ts`)
+
+Contains:
+- Builder functions for test data
+- Valid default objects
+- Override patterns for test variations
 
 ```typescript
-import { type Project, type CreateProjectInput } from '../project';
+import { type Entity, type CreateEntityInput } from '../entity';
 
-export function buildProject(overrides?: Partial<Project>): Project {
+export function buildEntity(overrides?: Partial<Entity>): Entity {
   return {
-    key: 'TEST',
-    name: 'Test Project',
-    rootPath: '/tmp/test',
+    // Valid default values
+    id: 'test-id',
+    name: 'Test Entity',
+    // ... other required fields
     ...overrides,
   };
 }
 
-export function buildCreateProjectInput(
-  overrides?: Partial<CreateProjectInput>
-): CreateProjectInput {
+export function buildCreateEntityInput(
+  overrides?: Partial<CreateEntityInput>
+): CreateEntityInput {
   return {
-    key: 'TEST',
-    name: 'Test Project',
-    rootPath: '/tmp/test',
+    // Values suitable for creation
+    name: 'Test Entity',
+    // ... creation fields
     ...overrides,
   };
 }
 ```
 
-### `src/testing/index.ts`
-
+**Testing exports (`src/testing/index.ts`)**:
 ```typescript
-export * from './project.fixtures';
-export * from './cr.fixtures';
+export * from './entity.fixtures';
+export * from './otherEntity.fixtures';
 ```
 
 ## Import Patterns
 
 ```typescript
 // Production code
-import { ProjectSchema, Project, validateCreateProjectInput } from '@mdt/domain-contracts';
+import { EntitySchema, Entity, validateCreateEntityInput } from 'domain-contracts';
 
-// Test code
-import { buildProject } from '@mdt/domain-contracts/testing';
+// Test code (via subpath export)
+import { buildEntity } from 'domain-contracts/testing';
 ```
 
 ## Validation Flow
@@ -164,62 +164,77 @@ import { buildProject } from '@mdt/domain-contracts/testing';
 ```
 Raw Input (unknown)
        ↓
-   [Boundary: CLI/MCP/UI]
+   [Interface Boundary]
        ↓
    validateXxxInput()  ← domain-contracts
        ↓
    Validated Input (typed)
        ↓
-   [Shared Service]
+   [Business Layer]
        ↓
    Business Logic
 ```
 
-### CLI Example
+## Usage Examples
+
+### Interface Layer Example
 
 ```typescript
-// cli/src/commands/project/create.ts
-import { validateCreateProjectInput } from '@mdt/domain-contracts';
-import { projectService } from '@mdt/shared';
+// At the boundary where external input enters the system
+// (API controllers, CLI commands, MCP tools, etc.)
 
-export async function createCommand(options: Record<string, unknown>) {
-  const input = validateCreateProjectInput({
-    key: options.key,
-    name: options.name,
-    rootPath: options.path,
-  });
-  
-  return projectService.create(input);
+import { validateCreateEntityInput } from 'domain-contracts';
+import { entityService } from 'business-layer';
+
+export async function createEndpoint(requestBody: unknown) {
+  // 1. Validate input shape using contracts
+  const input = validateCreateEntityInput(requestBody);
+
+  // 2. Pass validated data to business layer
+  return entityService.create(input);
 }
 ```
 
-### MCP Example
+### Business Layer Example
 
 ```typescript
-// mcp-server/src/tools/project/create.ts
-import { validateCreateProjectInput } from '@mdt/domain-contracts';
-import { projectService } from '@mdt/shared';
+// Business/service layer receives already-validated data
+// TypeScript enforces the contract at compile time
 
-export const createProjectTool = {
-  name: 'create_project',
-  async handler(params: unknown) {
-    const input = validateCreateProjectInput(params);
-    return projectService.create(input);
-  }
-};
-```
+import type { CreateEntityInput, Entity } from 'domain-contracts';
 
-### Shared Service Example
-
-```typescript
-// shared/src/services/project.service.ts
-import type { CreateProjectInput, Project } from '@mdt/domain-contracts';
-
-// Receives already-validated input - TypeScript enforces the contract
-export function create(input: CreateProjectInput): Project {
+// Function signature ensures only validated input is accepted
+export function create(input: CreateEntityInput): Entity {
+  // Business logic implementation
   return {
     ...input,
-    // ... additional fields
+    // ... additional computed fields
   };
 }
 ```
+
+### Testing Example
+
+```typescript
+// Tests use fixtures to create valid test data
+import { buildEntity } from 'domain-contracts/testing';
+
+describe('entity service', () => {
+  it('should create entity with valid input', () => {
+    const testEntity = buildEntity({ name: 'Custom Name' });
+
+    // Test implementation
+    const result = entityService.create(testEntity);
+
+    expect(result.name).toBe('Custom Name');
+  });
+});
+```
+
+## Key Principles
+
+1. **Validation at Boundaries**: Validate external input immediately
+2. **Trust Within System**: Once validated, data can be trusted internally
+3. **Type Safety**: TypeScript prevents invalid data from passing through
+4. **Test Isolation**: Fixtures provide valid test data without circular dependencies
+5. **Minimal Dependencies**: Contracts only depend on validation library, not on business logic
