@@ -60,7 +60,9 @@
     "project:enable:dev": "tsx shared/tools/project-cli.ts enable",
     "project:disable:dev": "tsx shared/tools/project-cli.ts disable",
     "test:domain-contracts": "cd domain-contracts && npm test",
-    "test:domain-contracts:watch": "cd domain-contracts && npm run test:watch"
+    "test:domain-contracts:watch": "cd domain-contracts && npm run test:watch",
+    "validate:ts": "bash scripts/validate-changed-ts.sh",
+    "validate:ts:all": "bash scripts/validate-all-ts.sh"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.0.19",
