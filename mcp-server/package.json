@@ -24,7 +24,7 @@
   "license": "MIT",
   "dependencies": {
     "@mdt/shared": "*",
-    "@modelcontextprotocol/sdk": "^1.24.3",
+    "@modelcontextprotocol/sdk": "^1.25.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.4",
     "cors": "^2.8.5",

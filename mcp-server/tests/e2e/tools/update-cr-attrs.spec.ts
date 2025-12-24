@@ -16,6 +16,7 @@
 import { TestEnvironment } from '../helpers/test-environment';
 import { MCPClient } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
+import { ProjectSetup } from '../helpers/core/project-setup';
 
 describe('update_cr_attrs', () => {
   let testEnv: TestEnvironment;
@@ -25,8 +26,13 @@ describe('update_cr_attrs', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment();
     await testEnv.setup();
+    // Create project structure manually BEFORE starting MCP client
+    const projectSetup = new ProjectSetup({ testEnv });
+    await projectSetup.createProjectStructure('TEST', 'Test Project');
+    // NOW start MCP client (server will discover the project from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
     await mcpClient.start();
+    // NOW create ProjectFactory with the running mcpClient
     projectFactory = new ProjectFactory(testEnv, mcpClient);
   });
 
@@ -72,6 +78,11 @@ Basic implementation steps.
       content: createTestContent(crData.title)
     });
 
+    // Check if CR creation failed
+    if (!createdCR.success) {
+      throw new Error(`Failed to create CR: ${createdCR.error || JSON.stringify(createdCR)}`);
+    }
+
     // Extract the CR key from the markdown response
     // New format: "✅ **Created CR TEST-001**: Title"
     const match = createdCR.data.match(/\*\*Created CR (.+?)\*\*:/);
@@ -88,8 +99,6 @@ Basic implementation steps.
 
   describe('Single Attribute Updates', () => {
     it('GIVEN existing CR WHEN updating priority THEN success with new priority', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Priority Update Test',
         type: 'Feature Enhancement',
@@ -120,8 +129,6 @@ Basic implementation steps.
     });
 
     it('GIVEN existing CR WHEN updating assignee THEN success with new assignee', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Assignee Update Test',
         type: 'Bug Fix',
@@ -153,8 +160,6 @@ Basic implementation steps.
     });
 
     it('GIVEN existing CR WHEN updating phaseEpic THEN success with new phase', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Phase Update Test',
         type: 'Architecture',
@@ -186,8 +191,6 @@ Basic implementation steps.
     });
 
     it('GIVEN existing CR WHEN updating dependencies THEN success with new dependencies', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create dependency CRs
       const dep1Key = await createTestCRAndGetKey('TEST', {
         title: 'Dependency 1',
@@ -230,8 +233,6 @@ Basic implementation steps.
     });
 
     it('GIVEN existing CR WHEN updating blocks THEN success with new blocks', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Blocks Update Test',
         type: 'Technical Debt'
@@ -262,8 +263,6 @@ Basic implementation steps.
     });
 
     it('GIVEN existing CR WHEN updating relatedTickets THEN success with new tickets', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Related Tickets Update Test',
         type: 'Documentation'
@@ -294,8 +293,6 @@ Basic implementation steps.
     });
 
     it('GIVEN implemented CR WHEN updating implementationDate THEN success with date', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Implementation Date Test',
         type: 'Feature Enhancement',
@@ -328,8 +325,6 @@ Basic implementation steps.
     });
 
     it('GIVEN implemented CR WHEN updating implementationNotes THEN success with notes', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Implementation Notes Test',
         type: 'Bug Fix',
@@ -364,8 +359,6 @@ Basic implementation steps.
 
   describe('Multiple Attribute Updates', () => {
     it('GIVEN existing CR WHEN updating multiple attributes THEN update all attributes', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Multiple Update Test',
         type: 'Feature Enhancement',
@@ -411,8 +404,6 @@ Basic implementation steps.
     });
 
     it('GIVEN existing CR WHEN updating all optional attributes THEN handle all fields', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'All Attributes Test',
         type: 'Architecture'
@@ -459,8 +450,6 @@ Basic implementation steps.
 
   describe('Clearing Attributes', () => {
     it('GIVEN CR with assignee WHEN updating to empty THEN clear assignee', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Clear Attribute Test',
         type: 'Documentation',
@@ -492,8 +481,6 @@ Basic implementation steps.
     });
 
     it('GIVEN CR with dependencies WHEN updating to null THEN clear dependencies', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Clear Dependencies Test',
         type: 'Feature Enhancement',
@@ -525,8 +512,6 @@ Basic implementation steps.
 
   describe('Error Handling', () => {
     it('GIVEN non-existent CR WHEN updating THEN handle gracefully', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callUpdateCRAttrs('TEST', 'TEST-999', {
         priority: 'High'
       });
@@ -560,8 +545,6 @@ Basic implementation steps.
     });
 
     it('GIVEN invalid priority WHEN updating THEN accept update', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Invalid Priority Test',
         type: 'Bug Fix'
@@ -582,8 +565,6 @@ Basic implementation steps.
     });
 
     it('GIVEN invalid date format WHEN updating implementationDate THEN accept update', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Invalid Date Test',
         type: 'Feature Enhancement',
@@ -622,10 +603,10 @@ Basic implementation steps.
         attributes: { priority: 'High' }
       });
 
-      // Missing required parameter returns business logic error
+      // Missing required parameter returns invalid params error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32000); // Business logic error
+      expect(response.error.code).toBe(-32602); // Invalid params error
     });
 
     it('GIVEN missing attributes parameter WHEN updating THEN return validation error', async () => {
@@ -634,17 +615,15 @@ Basic implementation steps.
         key: 'TEST-001'
       });
 
-      // Missing required parameter returns business logic error
+      // Missing required parameter returns invalid params error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32000); // Business logic error
+      expect(response.error.code).toBe(-32602); // Invalid params error
     });
   });
 
   describe('Restricted Attributes', () => {
     it('GIVEN attempt to update title WHEN updating attributes THEN reject update', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Original Title',
         type: 'Feature Enhancement'
@@ -663,8 +642,6 @@ Basic implementation steps.
     });
 
     it('GIVEN attempt to update status WHEN updating attributes THEN reject update', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Status Test',
         type: 'Bug Fix',
@@ -684,8 +661,6 @@ Basic implementation steps.
     });
 
     it('GIVEN attempt to update type WHEN updating attributes THEN reject update', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Type Test',
         type: 'Feature Enhancement'
@@ -706,8 +681,6 @@ Basic implementation steps.
 
   describe('Response Format', () => {
     it('GIVEN successful update WHEN response THEN include updated CR with all fields', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Response Format Test',
         type: 'Documentation',
