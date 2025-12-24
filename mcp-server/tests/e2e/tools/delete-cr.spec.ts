@@ -16,6 +16,7 @@
 import { TestEnvironment } from '../helpers/test-environment';
 import { MCPClient, MCPResponse } from '../helpers/mcp-client';
 import { ProjectFactory } from '../helpers/project-factory';
+import { ProjectSetup } from '../helpers/core/project-setup';
 
 describe('delete_cr', () => {
   let testEnv: TestEnvironment;
@@ -25,8 +26,13 @@ describe('delete_cr', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment();
     await testEnv.setup();
+    // Create project structure manually BEFORE starting MCP client
+    const projectSetup = new ProjectSetup({ testEnv });
+    await projectSetup.createProjectStructure('TEST', 'Test Project');
+    // NOW start MCP client (server will discover the project from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
     await mcpClient.start();
+    // NOW create ProjectFactory with the running mcpClient
     projectFactory = new ProjectFactory(testEnv, mcpClient);
   });
 
@@ -86,8 +92,6 @@ describe('delete_cr', () => {
 
   describe('Valid Deletions', () => {
     it('GIVEN implemented bug fix CR WHEN deleting THEN success', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create and implement a bug fix with all required sections
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Implemented Bug Fix',
@@ -144,8 +148,6 @@ The first approach was chosen as it minimizes risk while fixing the immediate is
     });
 
     it('GIVEN implemented bug fix with notes WHEN deleting THEN include notes in response', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Bug Fix with Notes',
         type: 'Bug Fix',
@@ -182,8 +184,6 @@ Critical security issue that could lead to unauthorized access.`
 
   describe('Deletion Restrictions', () => {
     it('GIVEN non-implemented CR WHEN deleting THEN return error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const statuses = ['Proposed', 'Approved', 'In Progress', 'On Hold'];
 
       for (const status of statuses) {
@@ -211,8 +211,6 @@ This needs to be fixed but is not ready for deletion.`
     });
 
     it('GIVEN non-bug fix type WHEN deleting THEN return error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const types = ['Architecture', 'Feature Enhancement', 'Technical Debt', 'Documentation'];
 
       for (const type of types) {
@@ -241,8 +239,6 @@ This is a ${type.toLowerCase()} which should be preserved for documentation.`
     });
 
     it('GIVEN CR with dependencies WHEN deleting THEN return error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create dependency
       const dependency = await projectFactory.createTestCR('TEST', {
         title: 'Dependency CR',
@@ -284,8 +280,6 @@ Requires the dependency to be implemented first.`
     });
 
     it('GIVEN CR that blocks others WHEN deleting THEN return error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create bug fix to delete
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Bug Fix that Blocks',
@@ -326,8 +320,6 @@ Requires the bug fix to be implemented first.`
     });
 
     it('GIVEN CR with related tickets WHEN deleting THEN still allow deletion', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Bug Fix with Related Tickets',
         type: 'Bug Fix',
@@ -353,8 +345,6 @@ This fix is related to external tracking tickets.`
 
   describe('Error Handling', () => {
     it('GIVEN non-existent CR WHEN deleting THEN return error', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const response = await callDeleteCR('TEST', 'TEST-999');
 
       // The tool returns an error response with success=false
@@ -393,7 +383,7 @@ This fix is related to external tracking tickets.`
       // Missing key is handled as a business logic error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32000); // Business logic error
+      expect(response.error.code).toBe(-32602); // Invalid params error
     });
 
     it('GIVEN empty key parameter WHEN deleting THEN return validation error', async () => {
@@ -405,14 +395,12 @@ This fix is related to external tracking tickets.`
       // Empty key is handled as a business logic error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32000); // Business logic error
+      expect(response.error.code).toBe(-32602); // Invalid params error
     });
   });
 
   describe('Edge Cases', () => {
     it('GIVEN recently implemented bug fix WHEN deleting THEN allow deletion', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       // Create bug fix
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Recent Bug Fix',
@@ -446,8 +434,6 @@ This fix was completed and can now be deleted.`
     });
 
     it('GIVEN implemented bug fix rejected then re-implemented WHEN deleting THEN allow deletion', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Complex Bug Fix Lifecycle',
         type: 'Bug Fix',
@@ -492,8 +478,6 @@ This CR goes through multiple status changes.`
     });
 
     it('GIVEN bug fix with self-dependency WHEN deleting THEN handle gracefully', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Self-Dependency Bug Fix',
         type: 'Bug Fix',
@@ -530,8 +514,6 @@ Edge case to test self-dependency handling.`
 
   describe('Response Format', () => {
     it('GIVEN successful deletion WHEN response THEN include deletion confirmation', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Response Format Test',
         type: 'Bug Fix',
@@ -561,8 +543,6 @@ Ensures the delete response includes all expected fields.`
     });
 
     it('GIVEN deletion with warnings WHEN response THEN include warnings', async () => {
-      await projectFactory.createProjectStructure('TEST', 'Test Project');
-
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Warning Test Bug Fix',
         type: 'Bug Fix',

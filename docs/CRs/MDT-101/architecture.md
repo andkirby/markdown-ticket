@@ -1,317 +1,599 @@
 # Architecture: MDT-101
 
-**Source**: [MDT-101](../../../docs/CRs/MDT/MDT-101.md)
+**Source**: [MDT-101](../MDT-101-create-domain-contracts-package-with-zod-schemas-a.md)
 **Generated**: 2025-12-20
 **Complexity Score**: 11
 
-## Overview
+## 1. Executive Summary
 
-This architecture extracts domain entities (Project and Ticket) into a standalone domain-contracts package with Zod schemas as the single source of truth. The migration separates type definitions from implementation logic, enabling runtime validation across all interfaces (CLI, MCP, UI) while maintaining zero internal dependencies.
+Domain-contracts package extracts entity definitions into standalone contracts with Zod schemas as the single source of truth. Contracts provide field-level validation only, while all business logic lives in services. This separation ensures zero internal dependencies and enables consistent validation across all interfaces (CLI, MCP, UI).
 
-**Key Principles**:
-- Contracts contain field-level validation only (type, format, required, length constraints, regex patterns)
-- Contracts provide validation wrapper functions (parse, safeParse) for schema validation
-- All business logic belongs in services (cross-field validation, state transitions, migrations)
+**Implementation Status**:
+- **Phase 1a** ✅: Create domain-contracts package (COMPLETE)
+- **Phase 1b** ❌: Integrate domain-contracts into existing codebase (NOT STARTED)
+- **Phase 2** 📋: Enhanced Project field validation patterns
+- **Phase 3** 📋: Enhanced Ticket field validation patterns
+- **Phase 4** 📋: Additional contracts (Template, Config, Counter)
 
-**Detailed Requirements**: See [domain-contracts-requirements.md](./domain-contracts-requirements.md) for the comprehensive requirements specification including package structure, schema definitions, validation patterns, test utilities, and dependency constraints.
+**Overall Progress**: Phase 1 is ~60% complete (1a ✅ | 1b ❌)
 
-## Pattern
+**Key Achievement**: Centralized type definitions with runtime validation while maintaining clean separation between contracts (shapes) and services (rules).
 
-**Schema-First Domain Contracts with Validation** — Zod schemas define both runtime validation and TypeScript types, with simple validation wrapper functions for field-level validation.
+## 2. Design Principles
 
-Pattern application: Each domain entity lives in its own module with:
-- Zod schema with field-level validation (regex patterns, type checks)
-- Validation wrapper functions (parse, safeParse)
-- Derived TypeScript type
-- Test fixtures
+| Principle | Contract Layer | Service Layer |
+|-----------|----------------|---------------|
+| **Purpose** | Define data shapes | Enforce business rules |
+| **Validation** | Field-level only (type, format, regex, required) | Cross-field, state transitions, migrations |
+| **Dependencies** | Zero internal deps (only zod) | Can depend on contracts and other services |
+| **Examples** | `email.regex(/@/)` | `if (user.email && user.isEmailVerified)` |
+| **Forbidden** | Business logic, cross-field checks | None (handles all logic) |
 
-Business logic (cross-field validation, status transitions, migrations) is implemented in services that consume these contracts.
-
-## Key Dependencies
-
-| Capability | Package | Coverage | Rationale |
-|------------|---------|----------|----------|
-| Schema validation | zod | 100% | Mature, 5M weekly downloads, MIT license, TypeScript-first |
-
-**Build Custom Decisions**:
-| Capability | Reason | Estimated Size |
-|------------|--------|---------------|
-| Test fixtures | Domain-specific builders needed for testing | ~50 lines per entity |
-
-## Component Boundaries
+### 2.1 Validation Boundary
 
 ```mermaid
-graph TB
-    subgraph "domain-contracts"
-        A[Project Schema<br/>Field-level validation only]
-        B[Ticket Schema<br/>Field-level validation only]
-        C[Types Enum]
-        D[Template Schema]
-        E[Config Schema]
-        F[Counter Schema]
-        G[Validation Schema]
+graph LR
+    subgraph "API Boundary"
+        A[Raw Input: unknown]
     end
-    subgraph "Business Logic (Services)"
-        H[shared/services<br/>Cross-field validation<br/>Status transitions<br/>Migrations]
+    subgraph "Contract Layer"
+        B[Schema.parse<br/>→ Shape validation only]
+        C[Type: inferred from schema]
     end
-    subgraph "Consumers"
-        I[mcp-server/tools]
-        J[server/services]
-        K[Tests]
+    subgraph "Service Layer"
+        D[Business Rules<br/>Cross-field validation<br/>State transitions]
     end
-    A --> H
-    B --> H
-    C --> H
-    D --> H
-    E --> H
-    F --> H
-    G --> H
-    H --> I
-    H --> J
-    A --> K
-    B --> K
-    C --> K
-    D --> K
-    E --> K
-    F --> K
-    G --> K
+
+    A --> B
+    B --> C
+    C --> D
 ```
 
-| Component | Responsibility | Owns | Depends On |
-|-----------|----------------|------|------------|
-| `domain-contracts/src/{entity}/schema.ts` | Entity definition with field-level validation (regex, type checks) | EntitySchema, EntityType | zod |
-| `domain-contracts/src/{entity}/validation.ts` | Validation wrapper functions (parse, safeParse) | validateProject, safeValidateProject | schema.ts |
-| `domain-contracts/src/index.ts` | Public API aggregation | All public exports | Internal modules |
-| `domain-contracts/src/testing/index.ts` | Test utilities | Fixtures, builders | Production schemas |
-| `shared/services/validation.ts` | Business rule validation | Cross-field logic, state transitions | domain-contracts |
+## 3. Domain Contracts Specification
 
-## Shared Patterns
-
-| Pattern | Occurrences | Extract To |
-|---------|-------------|------------|
-| Schema definition | All entities | `domain-contracts/src/{entity}/schema.ts` |
-| Type derivation | All entities | Each schema file exports inferred type |
-| Validation wrapper functions | All entities | `domain-contracts/src/{entity}/validation.ts` |
-| Test fixture builder | All entities | `domain-contracts/src/testing/{entity}.fixtures.ts` |
-| Field-level validation | All entities | Each schema file (regex patterns, type checks) |
-
-> Schema patterns extracted BEFORE creating dependent modules. Business logic extracted to services.
-
-## Structure
-
-*Note: Structure requirements are detailed in [domain-contracts-requirements.md](./domain-contracts-requirements.md)*
+### 3.1 Package Structure
 
 ```
 domain-contracts/
-├── package.json                 → Zero internal deps, zod only
+├── package.json                 → { "dependencies": { "zod": "^3.x" } }
 ├── src/
-│   ├── index.ts                → Production API aggregate
-│   ├── project/
-│   │   ├── schema.ts          → ProjectSchema + Project type (field validation only)
-│   │   ├── validation.ts      → validateProject, safeValidateProject
-│   │   └── index.ts           → Project exports
-│   ├── ticket/
-│   │   ├── schema.ts          → TicketSchema + CR type (field validation only)
-│   │   ├── validation.ts      → validateTicket, safeValidateTicket
-│   │   └── index.ts           → Ticket exports
-│   ├── types/
-│   │   ├── schema.ts          → Enum schemas (CRStatus, CRType)
-│   │   ├── index.ts           → Enum exports
-│   ├── template/              → NEW
-│   │   ├── schema.ts          → Template, TemplateSection
-│   │   ├── validation.ts      → Template validation wrappers
-│   │   └── index.ts
-│   ├── config/                → NEW
-│   │   ├── schema.ts          → StatusConfig, AttributeConfig, ServerConfig
-│   │   ├── validation.ts      → Config validation wrappers
-│   │   └── index.ts
-│   ├── counter/               → NEW
-│   │   ├── schema.ts          → CounterConfig, CounterResponse, CounterError
-│   │   ├── validation.ts      → Counter validation wrappers
-│   │   └── index.ts
-│   ├── validation/            → NEW
-│   │   ├── schema.ts          → ValidationResult, ValidationError, ValidationWarning, Suggestion
-│   │   ├── validation.ts      → Validation result wrappers
-│   │   └── index.ts
-│   └── testing/
-│       ├── index.ts           → Testing utilities aggregate
-│       ├── project.fixtures.ts → Project test builders
-│       ├── ticket.fixtures.ts  → Ticket test builders
-│       ├── template.fixtures.ts → Template builders
-│       └── validation.fixtures.ts → Validation builders
-└── dist/                      → Compiled output
+│   ├── index.ts                → Production exports (no testing)
+│   ├── {entity}/               → One per domain entity
+│   │   ├── schema.ts          → Zod schemas with field validation
+│   │   ├── validation.ts      → parse/safeParse wrappers only
+│   │   └── index.ts           → Public exports for entity
+│   └── testing/               → Separate subpath
+│       ├── index.ts           → Entry point for @mdt/domain-contracts/testing
+│       └── {entity}.fixtures.ts → Test builders
 ```
 
-## Size Guidance
+### 3.2 Configuration-to-Contract Mapping
 
-| Module | Role | Limit | Hard Max |
-|--------|------|-------|----------|
-| `domain-contracts/src/project/schema.ts` | Entity definition | 150 | 225 |
-| `domain-contracts/src/project/validation.ts` | Validation wrappers | 75 | 112 |
-| `domain-contracts/src/ticket/schema.ts` | Entity definition | 200 | 300 |
-| `domain-contracts/src/ticket/validation.ts` | Validation wrappers | 75 | 112 |
-| `domain-contracts/src/types/schema.ts` | Enum definitions | 50 | 75 |
-| `domain-contracts/src/template/schema.ts` | Template entity | 150 | 225 |
-| `domain-contracts/src/template/validation.ts` | Validation wrappers | 75 | 112 |
-| `domain-contracts/src/config/schema.ts` | Configuration | 200 | 300 |
-| `domain-contracts/src/config/validation.ts` | Validation wrappers | 75 | 112 |
-| `domain-contracts/src/counter/schema.ts` | Counter entity | 100 | 150 |
-| `domain-contracts/src/counter/validation.ts` | Validation wrappers | 75 | 112 |
-| `domain-contracts/src/validation/schema.ts` | Validation types | 100 | 150 |
-| `domain-contracts/src/validation/validation.ts` | Validation result wrappers | 75 | 112 |
-| `domain-contracts/src/{entity}/index.ts` | Export module | 20 | 30 |
-| `domain-contracts/src/testing/{entity}.fixtures.ts` | Test builders | 100 | 150 |
-| `domain-contracts/src/index.ts` | Public API | 30 | 45 |
+The domain-contracts package provides schemas that validate the structure of configuration data. The TOML configuration files (.mdt-config.toml) are parsed into JSON objects which are then validated against these schemas.
 
-## Error Scenarios
-
-*Note: Validation requirements and patterns are detailed in [domain-contracts-requirements.md](./domain-contracts-requirements.md)*
-
-| Scenario | Detection | Response | Recovery |
-|----------|-----------|----------|----------|
-| Invalid Project data | Zod parse error at API boundary | Reject with 400 + validation details | Client fixes data and resubmits |
-| Invalid Ticket data | Zod parse error in MCP tool | Tool returns error with validation failures | MCP client corrects request |
-| Schema mismatch | TypeScript compilation error | Build fails | Update consumer to match schema |
-
-## Refactoring Plan
-
-### Transformation Matrix
-| Component | From | To | Reduction | Reason |
-|-----------|------|----|-----------|--------|
-| Project type | `shared/models/Project.ts` (206 lines) | `domain-contracts/src/project/schema.ts` (150 lines) | 27% | Pure definition, remove unused parts |
-| Ticket type | `shared/models/Ticket.ts` (172 lines) | `domain-contracts/src/ticket/schema.ts` (200 lines) | -16% | Add field validation only |
-| Shared enums | `shared/models/Types.ts` (80 lines) | `domain-contracts/src/types/schema.ts` (50 lines) | 38% | Extract only enums |
-| Business validation | Was in contracts (Phase 1.1, 1.2) | Move to services | N/A | Contracts must remain pure |
-
-### Interface Preservation
-| Public Interface | Status | Verification |
-|------------------|--------|--------------|
-| `Project` type | Preserved | Zod infer maintains same shape |
-| `CR` type | Preserved | Zod infer maintains same shape |
-| `CRStatus` enum | Preserved | Same values, now with runtime validation |
-| `CRType` enum | Preserved | Same values, now with runtime validation |
-
-### Behavioral Equivalence
-- Test suite: New schema validation tests ensure identical shape validation
-- Performance: Zod parsing adds ~1-2ms per validation at boundaries
-- Migration: Consumers update imports, functionality unchanged
-- Business logic: Moved to services, maintaining separation of concerns
-
-## Phase 2: Additional Contracts Migration
-
-### Overview
-
-Phase 2 extends the domain-contracts package with 5 additional contract groups to achieve complete domain coverage: Template, Configuration, Counter, Validation, and Project Service contracts. This phase eliminates remaining interface drift between shared models and runtime validation while maintaining the principle that contracts contain only field-level validation.
-
-### Pattern
-
-**Pure Schema-First Contracts** - Apply the same schema-first pattern from Phase 1 to migrate remaining contracts, ensuring contracts define shapes only while business logic remains in services.
-
-Pattern application: Migrate contracts in dependency order (Validation → Template → Counter → Config) to ensure each new contract can leverage existing validated schemas. All business logic (cross-field validation, migrations, relationships) is implemented in services.
-
-### Decision Points Resolved
-
-#### 1. Config Contract Organization
-**Decision**: Consolidate StatusConfig, AttributeConfig, and ServerConfig into a single `src/config/schema.ts` file
-**Rationale**: These configurations are tightly coupled and often used together. Consolidation reduces import overhead while maintaining pure field-level validation.
-
-#### 2. Template Section Validation
-**Decision**: Embed only field-level validation rules directly in Template schema
-**Rationale**: Template business logic (section validation, content rules) belongs in services. Contracts only enforce type, format, required fields.
-
-#### 3. Validation Schema Scope
-**Decision**: Include only validation result types (ValidationResult, ValidationError) in contracts
-**Rationale**: Actual validation logic and business rules are implemented in services that consume these contracts.
-
-### Updated Structure (Phase 2)
-
+**Flow**:
 ```
-domain-contracts/
-├── src/
-│   ├── index.ts
-│   ├── project/
-│   │   ├── schema.ts          → Project entity (field validation only)
-│   │   ├── validation.ts      → Validation wrapper functions
-│   │   └── index.ts
-│   ├── ticket/
-│   │   ├── schema.ts          → Ticket entity (field validation only)
-│   │   ├── validation.ts      → Validation wrapper functions
-│   │   └── index.ts
-│   ├── types/
-│   │   ├── schema.ts          → Enum schemas (CRStatus, CRType)
-│   │   └── index.ts
-│   ├── template/              → NEW
-│   │   ├── schema.ts          → Template, TemplateSection (field validation only)
-│   │   ├── validation.ts      → Validation wrapper functions
-│   │   └── index.ts
-│   ├── config/                → NEW
-│   │   ├── schema.ts          → StatusConfig, AttributeConfig, ServerConfig (field validation only)
-│   │   ├── validation.ts      → Validation wrapper functions
-│   │   └── index.ts
-│   ├── counter/               → NEW
-│   │   ├── schema.ts          → CounterConfig, CounterResponse, CounterError
-│   │   ├── validation.ts      → Validation wrapper functions
-│   │   └── index.ts
-│   ├── validation/            → NEW
-│   │   ├── schema.ts          → ValidationResult, ValidationError, ValidationWarning, Suggestion
-│   │   ├── validation.ts      → Validation result wrappers
-│   │   └── index.ts
-│   └── testing/
-│       ├── index.ts
-│       ├── project.fixtures.ts
-│       ├── ticket.fixtures.ts
-│       ├── template.fixtures.ts → NEW
-│       └── validation.fixtures.ts → NEW
+.mdt-config.toml → Parsed JSON → Contract Schema.validate() → TypeScript Type
 ```
 
-### Migration Dependencies
+**Key Points**:
+- Contracts validate the SHAPE and FORMAT of configuration data
+- Business rules (like "ID must match directory name") are enforced in services
+- Field-level validation happens at the contract boundary
+- Cross-field validation happens in the service layer
 
+### 3.3 Required File Patterns
+
+**schema.ts (Entity definition)**
+```typescript
+import { z } from 'zod';
+
+// Project entity schema with field validation ONLY
+export const ProjectSchema = z.object({
+  code: z.string().regex(/^[A-Z][A-Z0-9]{1,4}$/, '2-5 chars, starts with letter'),
+  name: z.string().min(3, 'Minimum 3 characters'),
+  id: z.string().min(1, 'Required'),
+  ticketsPath: z.string().min(1, 'Required path'),
+  description: z.string().optional(),
+  repository: z.string().optional(),
+  active: z.boolean().optional().default(true),
+  // NO cross-field validation (e.g., id matching directory name)
+});
+
+// Document configuration schema
+export const DocumentConfigSchema = z.object({
+  paths: z.array(z.string()).default([]),
+  excludeFolders: z.array(z.string()).default([]),
+  maxDepth: z.number().int().min(1).max(10).default(3),
+});
+
+// Complete project configuration schema
+export const ProjectConfigSchema = z.object({
+  project: ProjectSchema,
+  'project.document': DocumentConfigSchema.optional(),
+});
+
+// Input schemas (derived from entity)
+export const CreateProjectInputSchema = ProjectSchema.pick({
+  code: true,
+  name: true,
+  id: true,
+  ticketsPath: true,
+}).partial();
+
+// TypeScript types (inferred)
+export type Project = z.infer<typeof ProjectSchema>;
+export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
+export type DocumentConfig = z.infer<typeof DocumentConfigSchema>;
+export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>;
 ```
-Phase 2 Dependency Graph:
 
-All contracts are independent (schemas only)
-    ↓
-Services orchestrate business logic between them
+**validation.ts (Wrapper functions only)**
+```typescript
+import {
+  ProjectSchema,
+  ProjectConfigSchema,
+  CreateProjectInputSchema
+} from './schema';
+
+// Simple validation wrappers - NO business logic
+export function validateProject(input: unknown): Project {
+  return ProjectSchema.parse(input);
+}
+
+export function validateProjectConfig(input: unknown): ProjectConfig {
+  return ProjectConfigSchema.parse(input);
+}
+
+export function safeValidateProject(input: unknown) {
+  return ProjectSchema.safeParse(input);
+}
+
+export function validateCreateProjectInput(input: unknown): CreateProjectInput {
+  return CreateProjectInputSchema.parse(input);
+}
 ```
 
-### Refactoring Plan for Phase 2
+### 3.4 Path and Folder Validation
 
-### Transformation Matrix
-| Component | From | To | Reduction | Reason |
-|-----------|------|----|-----------|--------|
-| Template types | `shared/models/Types.ts` (13 lines) | `domain-contracts/src/template/schema.ts` (150 lines) | -1054% | Add field validation only |
-| Config types | `shared/models/Config.ts` (87 lines) | `domain-contracts/src/config/schema.ts` (200 lines) | -130% | Add field validation, consolidate |
-| Counter types | `shared/models/Counter.ts` (34 lines) | `domain-contracts/src/counter/schema.ts` (100 lines) | -194% | Add field validation only |
-| Validation types | `shared/models/Types.ts` (16 lines) | `domain-contracts/src/validation/schema.ts` (100 lines) | -525% | Standardize error format types |
+**What belongs in contracts (field validation)**:
+```typescript
+// In DocumentConfigSchema
+export const DocumentConfigSchema = z.object({
+  paths: z.array(z.string())
+    .refine((paths) => paths.every(p => !p.includes('..')),
+           { message: 'Parent directory references (..) not allowed in paths' })
+    .refine((paths) => paths.every(p => !p.startsWith('/')),
+           { message: 'Absolute paths not allowed, use relative paths only' })
+    .min(1, 'At least one path required'),
+  excludeFolders: z.array(z.string())
+    .refine((folders) => folders.every(f => !f.includes('/')),
+           { message: 'Exclude folders must be folder names, not paths' })
+    .min(1, 'At least one folder to exclude'),
+  maxDepth: z.number().int().min(1).max(10),
+});
+```
 
-### Interface Preservation
-| Public Interface | Status | Verification |
-|------------------|--------|--------------|
-| `Template` types | Preserved | Zod infer maintains same shape |
-| `StatusConfig` | Preserved | Enhanced with field validation rules |
-| `CounterConfig` | Preserved | Added field validation only |
-| `ValidationResult` | Preserved | Standardized error format types |
+**What belongs in services (business rules)**:
+- Check if paths actually exist on filesystem
+- Validate glob patterns are properly formatted
+- Check for symlink loops and security concerns
+- Validate that resolved paths stay within project boundaries
 
-### Behavioral Equivalence
-- Test suite: Schema validation tests for all new contracts (field-level only)
-- Performance: Additional validation adds minimal overhead (~1ms per parse)
-- Migration: Consumers update imports, existing functionality unchanged
-- Business logic: Services handle complex validation rules
+Example security validation in service:
+```typescript
+// In shared/services/project-validation.ts
+import { resolve, join } from 'path';
+import { existsSync, lstatSync } from 'fs';
 
-## Extension Rule
+export function validateDocumentPaths(
+  config: DocumentConfig,
+  projectRoot: string
+): ValidationResult {
+  for (const path of config.paths) {
+    // Resolve path to check for traversal attempts
+    const resolvedPath = resolve(projectRoot, path);
 
-To add {X} entity:
-1. Create `domain-contracts/src/{entity}/schema.ts` (limit per module role) with Zod schema containing field-level validation only
-2. Create `domain-contracts/src/{entity}/validation.ts` (limit 75 lines) with parse/safeParse wrapper functions
-3. Create `domain-contracts/src/{entity}/index.ts` (limit 20 lines) exporting schema, type, and validation
-4. Add exports to `domain-contracts/src/index.ts`
-5. Create `domain-contracts/src/testing/{entity}.fixtures.ts` (limit per module role) for tests
-6. **DO NOT** add business logic, cross-field validation, migrations, or state transitions to contracts
+    // Security check: ensure resolved path is within project root
+    if (!resolvedPath.startsWith(resolve(projectRoot))) {
+      throw new Error(`Path traversal detected: ${path}`);
+    }
 
-To add configuration option:
-1. Add field to `domain-contracts/src/config/schema.ts` (within 200-line limit) with field-level validation only
-2. Update validation wrappers in `domain-contracts/src/config/validation.ts`
-3. Update test fixtures in `domain-contracts/src/testing/` accordingly
+    // Check if path exists and is safe
+    if (!existsSync(resolvedPath)) {
+      throw new Error(`Path does not exist: ${path}`);
+    }
+
+    // Additional check for symlinks
+    const stats = lstatSync(resolvedPath);
+    if (stats.isSymbolicLink()) {
+      const linkTarget = resolve(projectRoot, readlinkSync(resolvedPath));
+      if (!linkTarget.startsWith(resolve(projectRoot))) {
+        throw new Error(`Symlink points outside project: ${path}`);
+      }
+    }
+  }
+
+  return { valid: true };
+}
+```
+
+### 3.5 Validation Rules (What's Allowed)
+
+| Validation Type | Location | Example |
+|-----------------|----------|---------|
+| Type checking | Contract schema | `z.string()` |
+| Format validation | Contract schema | `email: z.string().email()` |
+| Regex patterns | Contract schema | `code: z.string().regex(/^[A-Z][A-Z0-9]{1,4}$/)` |
+| Required fields | Contract schema | `name: z.string().min(3)` |
+| Length constraints | Contract schema | `title: z.string().max(200)` |
+| Enum values | Contract schema | `status: z.enum(['active', 'inactive'])` |
+| Array validation | Contract schema | `paths: z.array(z.string()).min(1)` |
+| Range validation | Contract schema | `maxDepth: z.number().min(1).max(10)` |
+| **Path traversal prevention** | **Both layers** | Contract: `!p.includes('..')`, Service: `resolve()` check |
+| **Absolute path prevention** | **Contract layer** | `!p.startsWith('/')` |
+| **Folder name format** | **Contract layer** | `!f.includes('/')` for excludeFolders |
+| **ID ↔ Directory matching** | **Service layer** | `if (project.id !== basename(projectPath))` |
+| **Path existence** | **Service layer** | `if (!existsSync(fullPath))` |
+| **Symlink validation** | **Service layer** | `linkTarget.startsWith(projectRoot)` |
+| **Cross-field checks** | **Service layer** | `if (user.email && !user.emailVerified)` |
+| **State transitions** | **Service layer** | `canTransition(status, newStatus)` |
+| **Business rules** | **Service layer** | `validateBusinessRules(data)` |
+
+#### Special Case: ID Validation
+
+The rule that "ID must match directory name" is business logic because:
+- It requires external information (the directory path)
+- It's a cross-field check between the configuration and filesystem
+- It's project-specific business rule, not data format validation
+
+**Implementation**:
+```typescript
+// Contract validates format only
+id: z.string().min(1, 'Required'),
+
+// Service validates business rule
+if (project.id !== basename(projectPath)) {
+  throw new Error(`Project ID "${project.id}" must match directory name "${basename(projectPath)}"`);
+}
+```
+
+## 4. Implementation Phases
+
+### 4.1 Phase 1a: Create Domain Contracts Package ✅ COMPLETE
+
+**Status**: ✅ All deliverables complete, 90+ tests passing
+
+**Scope**: Create standalone package with core entity schemas and validation
+
+**Completion Checklist**:
+- [x] `domain-contracts/package.json` with zod dependency
+- [x] `domain-contracts/src/project/schema.ts` - Project entity with field validation
+- [x] `domain-contracts/src/project/validation.ts` - Validation wrapper functions
+- [x] `domain-contracts/src/project/index.ts` - Public exports
+- [x] `domain-contracts/src/ticket/schema.ts` - Ticket/CR entity with field validation
+- [x] `domain-contracts/src/ticket/validation.ts` - Validation wrapper functions
+- [x] `domain-contracts/src/ticket/index.ts` - Public exports
+- [x] `domain-contracts/src/types/schema.ts` - Shared enums (CRStatus, CRType, CRPriority)
+- [x] `domain-contracts/src/types/index.ts` - Public exports
+- [x] `domain-contracts/src/index.ts` - Main package entry point
+- [x] `domain-contracts/src/testing/project.fixtures.ts` - Test builders
+- [x] `domain-contracts/src/testing/ticket.fixtures.ts` - Test builders
+- [x] `domain-contracts/src/testing/index.ts` - Testing subpath exports
+- [x] All tests passing (90+ tests GREEN)
+- [x] Size limits met (all files within limits)
+
+**Test Results**:
+```
+Test Suites: 6 passed, 6 total
+Tests:       90 passed, 90 total
+```
 
 ---
+
+### 4.2 Phase 1b: Integrate Domain Contracts into Codebase ❌ NOT STARTED
+
+**Status**: ❌ Blocking Phase 1 completion
+
+**Scope**: Migrate existing codebase to use domain-contracts as single source of truth
+
+**Completion Checklist**:
+
+**Dependencies:**
+- [ ] `shared/package.json` - Add `"@mdt/domain-contracts": "file:../domain-contracts"`
+- [ ] `mcp-server/package.json` - Add `"@mdt/domain-contracts": "file:../domain-contracts"`
+- [ ] `server/package.json` - Add `"@mdt/domain-contracts": "file:../domain-contracts"`
+
+**Type Migration:**
+- [ ] `shared/models/Types.ts` - Re-export CRStatus, CRType, CRPriority from domain-contracts
+- [ ] `shared/models/Project.ts` - Re-export Project type from domain-contracts
+- [ ] `shared/models/Ticket.ts` - Re-export CR/Ticket types from domain-contracts
+- [ ] Remove duplicate type definitions from shared/models
+
+**Import Statement Updates:**
+- [ ] Update imports in `mcp-server/src/tools/handlers/crHandlers.ts`
+- [ ] Update imports in `mcp-server/src/tools/handlers/projectHandlers.ts`
+- [ ] Update imports in `mcp-server/src/services/crService.ts`
+- [ ] Update imports in `server/services/` (all service files)
+- [ ] Update imports in `server/controllers/` (all controller files)
+
+**Boundary Validation:**
+- [ ] Add `validateTicket()` call in `mcp-server` CR creation handler
+- [ ] Add `validateProject()` call in `mcp-server` project handlers
+- [ ] Add validation in `server` API entry points
+- [ ] Handle ZodError responses appropriately
+
+**Bug Fixes:**
+- [ ] Fix CR code format consistency (domain-contracts regex vs MCP validation)
+- [ ] Ensure `TEST-001`, `API-123` formats are valid
+- [ ] Fix failing MCP E2E tests (update_cr_status-fast.spec.ts, etc.)
+
+**Verification:**
+- [ ] Run `npm run build:shared` - must succeed
+- [ ] Run `cd mcp-server && npm run build` - must succeed
+- [ ] Run `cd server && npm run build` - must succeed
+- [ ] Run `cd mcp-server && npm test` - E2E tests must pass
+- [ ] Run `cd domain-contracts && npm test` - contract tests must still pass
+
+**Estimated Effort**: 4-6 hours
+
+**Phase 1 Complete When**: All items in Phase 1b checked ✅
+
+---
+
+### 4.3 Phase 2: Enhanced Project Validation 📋 PLANNED
+
+**Status**: 📋 Blocked by Phase 1b completion
+
+**Scope**: Add enhanced field-level validation patterns to Project schema
+
+**Completion Checklist**:
+- [ ] Add project code format validation: `^[A-Z][A-Z0-9]{1,4}$` (2-5 chars, starts with letter)
+- [ ] Add path format validation (relative vs absolute detection)
+- [ ] Add email format validation for assignee (when provided)
+- [ ] Add date format validation (ISO 8601)
+- [ ] Add string length constraints
+- [ ] Update `domain-contracts/src/project/schema.ts` with enhanced rules
+- [ ] Update `domain-contracts/src/project/validation.ts` with new input schemas
+- [ ] Update test fixtures for edge cases
+- [ ] Write tests for new validation rules
+- [ ] Update documentation
+
+**Size Limits**:
+- Schema file: 225 lines (expanded from 174)
+- Validation file: 112 lines (expanded from 91)
+- Test fixtures: 225 lines (expanded from 160)
+
+**Business Logic in Services** (separate from contracts):
+- Cross-field validation (e.g., path consistency rules)
+- Legacy format migration logic
+- Complex business rules
+
+---
+
+### 4.4 Phase 3: Enhanced Ticket Validation 📋 PLANNED
+
+**Status**: 📋 Blocked by Phase 2 completion
+
+**Scope**: Add enhanced field-level validation patterns to Ticket schema
+
+**Completion Checklist**:
+- [ ] Add ticket code format validation: `^[A-Z][A-Z0-9]{2,4}-\d{3,4}$` (e.g., "MDT-101")
+- [ ] Add title length constraints (max 200 characters)
+- [ ] Add date format validation and ordering
+- [ ] Add URL format validation for links
+- [ ] Add markdown structure validation (frontmatter presence)
+- [ ] Update `domain-contracts/src/ticket/schema.ts` with enhanced rules
+- [ ] Update `domain-contracts/src/ticket/validation.ts` with new input schemas
+- [ ] Update test fixtures for ticket edge cases
+- [ ] Write tests for new validation rules
+- [ ] Update documentation
+
+**Size Limits**:
+- Schema file: 300 lines (expanded from 135)
+- Validation file: 112 lines (expanded from 59)
+- Test fixtures: 225 lines (expanded from 142)
+
+**Business Logic in Services** (separate from contracts):
+- Status transition validation
+- Circular dependency detection
+- Content section validation
+- Relationship integrity checks
+
+---
+
+### 4.5 Phase 4: Additional Contracts 📋 CONSIDERING
+
+**Status**: 📋 Blocked by Phase 3 completion
+
+**Scope**: Template, Configuration, Counter, and Validation contracts
+
+**Completion Checklist**:
+- [ ] Design Template entity schema
+- [ ] Design TemplateSection schema
+- [ ] Design Config schemas (StatusConfig, AttributeConfig, ServerConfig)
+- [ ] Design Counter schemas (CounterConfig, CounterResponse, CounterError)
+- [ ] Design Validation result types (no logic)
+- [ ] Implement Template contract
+- [ ] Implement Config contracts
+- [ ] Implement Counter contracts
+- [ ] Write tests for all new contracts
+- [ ] Update documentation
+
+**Implementation Pattern**: Same as Phase 1 - schema + validation wrappers + fixtures
+
+---
+
+### 4.6 What Will NOT Be Implemented
+
+**Business logic that belongs in services**:
+- ❌ Cross-field validation (e.g., "path must match ticketsPath")
+- ❌ Status transition rules (e.g., "Rejected → In Progress not allowed")
+- ❌ Migration logic (e.g., "convert legacy format")
+- ❌ Relationship validation (e.g., "circular dependency detection")
+- ❌ Content parsing (e.g., "markdown section validation")
+
+These are implemented in `shared/services` using the contracts.
+
+## 5. Decision Guide
+
+### 5.1 Where Does Logic Go?
+
+| Question | Answer | Location |
+|----------|--------|----------|
+| Is it a field format check? | Yes | Contract schema |
+| Does it check one field only? | Yes | Contract schema |
+| Does it check if ID matches directory name? | No (needs filesystem) | Service layer |
+| Does it validate path existence? | No (needs filesystem) | Service layer |
+| Does it compare multiple fields? | Yes | Service layer |
+| Is it a state transition rule? | Yes | Service layer |
+| Does it involve data migration? | Yes | Service layer |
+| Is it a business rule? | Yes | Service layer |
+
+### 5.2 Examples
+
+| Logic | Contract Layer | Service Layer |
+|-------|----------------|--------------|
+| `code` format: `WEB-123` | ✅ `regex(/^[A-Z][A-Z0-9]{1,4}$/)` | ❌ |
+| `name` minimum length: 3 | ✅ `min(3)` | ❌ |
+| `id` matches directory | ❌ | ✅ `if (id !== basename(path))` |
+| `ticketsPath` exists | ❌ | ✅ `if (!existsSync(ticketsPath))` |
+| Project uniqueness | ❌ | ✅ Check across all projects |
+
+### 5.2 Adding New Entity Checklist
+
+**For Contracts**:
+- [ ] Create `src/{entity}/schema.ts` with field validation only
+- [ ] Create `src/{entity}/validation.ts` with parse/safeParse wrappers
+- [ ] Create `src/{entity}/index.ts` exporting schema, type, validation
+- [ ] Add to `src/index.ts`
+- [ ] Create `src/testing/{entity}.fixtures.ts`
+- [ ] Add to `src/testing/index.ts`
+
+**For Services** (Separate repository):
+- [ ] Implement business rules in `shared/services/{entity}.ts`
+- [ ] Add cross-field validation
+- [ ] Add state transition logic
+- [ ] Add migration support if needed
+
+## 6. Testing Strategy
+
+### 6.1 Contract Tests (domain-contracts package)
+```typescript
+// Test field validation only
+describe('ProjectSchema', () => {
+  it('should reject invalid key format', () => {
+    expect(() => ProjectSchema.parse({ key: 'invalid' }))
+      .toThrow('2-5 uppercase letters');
+  });
+
+  it('should accept valid project', () => {
+    expect(() => ProjectSchema.parse(validProject))
+      .not.toThrow();
+  });
+});
+```
+
+### 6.2 Service Tests (shared package)
+```typescript
+// Test business rules
+describe('projectService', () => {
+  it('should validate cross-field rules', () => {
+    expect(() => projectService.create({ active: false, path: undefined }))
+      .toThrow('Inactive project must have path');
+  });
+});
+```
+
+### 6.3 Integration Tests
+```typescript
+// Test contract + service interaction
+describe('Project Creation Flow', () => {
+  it('should validate shape then business rules', async () => {
+    // 1. Contract validates shape
+    const validated = validateProject(input);
+
+    // 2. Service validates business rules
+    const result = await projectService.create(validated);
+
+    expect(result).toBeDefined();
+  });
+});
+```
+
+## 7. Error Handling Pattern
+
+### 7.1 Contract Errors (ZodError)
+```typescript
+{
+  "issues": [
+    {
+      "code": "invalid_string",
+      "path": ["key"],
+      "message": "2-5 uppercase letters"
+    }
+  ],
+  "name": "ZodError"
+}
+```
+
+### 7.2 Service Errors (Custom)
+```typescript
+{
+  "type": "BusinessRuleViolation",
+  "field": "path",
+  "message": "Inactive project must specify path",
+  "code": "MISSING_PATH_FOR_INACTIVE"
+}
+```
+
+## 8. Migration Strategy (Phase 1b)
+
+**Note**: This migration is part of **Phase 1b** - see Section 4.2 for the complete checklist.
+
+### 8.1 From Current Implementation
+| Component | From | To | Validation |
+|-----------|------|----|------------|
+| Project type | `shared/models/Project.ts` | `domain-contracts/src/project/schema.ts` | Shape preserved |
+| Business rules | Mixed in models | `shared/services/project.ts` | Rules preserved |
+| Type imports | Direct from shared | From domain-contracts | TypeScript enforced |
+
+### 8.2 Consumer Migration
+```typescript
+// Before
+import type { Project } from '../shared/models';
+import { validate } from '../shared/validation';
+
+// After
+import type { Project, validateProject } from '@mdt/domain-contracts';
+import { projectService } from '@mdt/shared/services';
+
+// Usage
+const validated = validateProject(input);  // Shape validation
+const result = projectService.create(validated);  // Business logic
+```
+
+## 9. Size Limits
+
+| Module Type | Role | Limit | Hard Max |
+|-------------|------|-------|----------|
+| Entity Schema | Field validation only | 150-200 | 300 |
+| Validation File | parse/safeParse wrappers | 75 | 112 |
+| Index File | Exports only | 20 | 30 |
+| Test Fixtures | Builders for testing | 100-150 | 225 |
+| Public API | Aggregated exports | 30 | 45 |
+
+## 10. References
+
+- **Requirements**: [domain-contracts-requirements.md](./domain-contracts-requirements.md)
+- **Specification**: [domain-contracts.md](./domain-contracts.md)
+- **Testing Guide**: [domain-contracts-testing-guide.md](./domain-contracts-testing-guide.md)
+- **Phase 1 Tasks**: [phase-1/tasks.md](./phase-1/tasks.md) - Detailed task breakdown with TDD
+- **Phase 1 Tests**: [phase-1/tests.md](./phase-1/tests.md) - Test specifications and coverage
+- **Compliance Report**: [compliance-report.md](./compliance-report.md) - Architecture compliance status
+- **Usage Guide**: [usage-guide.md](./usage-guide.md) - How to use domain-contracts
+
+---
+
 *Generated by /mdt:architecture*
+*Last Updated: 2025-12-23 (Phase restructure for clarity)*
