@@ -2,16 +2,14 @@
 # Validate all TypeScript files in the project
 # Usage: npm run validate:ts:all
 
-set -e
-
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
+BLUE='\033[1;34m'
 NC='\033[0m' # No Color
 
-# Counter
+# Counters
 PASS=0
 FAIL=0
 TOTAL=0
@@ -37,10 +35,10 @@ validate_file() {
         return
     fi
 
-    ((TOTAL++))
+    TOTAL=$((TOTAL + 1))
 
     # Show progress for every 50 files
-    if ((TOTAL % 50 == 0)); then
+    if [ $((TOTAL % 50)) -eq 0 ]; then
         echo -e "${BLUE}Progress: $TOTAL files...${NC}"
     fi
 
@@ -49,10 +47,10 @@ validate_file() {
     # Run TypeScript validation
     if npx tsc --skipLibCheck --noEmit "$file" 2>/dev/null; then
         echo -e "${GREEN}✓${NC}"
-        ((PASS++))
+        PASS=$((PASS + 1))
     else
         echo -e "${RED}✗ FAIL${NC}"
-        ((FAIL++))
+        FAIL=$((FAIL + 1))
         # Show actual errors
         npx tsc --skipLibCheck --noEmit "$file" 2>&1 | head -10
         echo ""
