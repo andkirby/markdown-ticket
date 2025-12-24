@@ -336,5 +336,10 @@ The MCP server supports dual transport:
 - **Check for stale closures** when adding React hooks that reference changing state
 - **Use MCP tools** before manual file operations
 - **Follow CR format** from `docs/create_ticket.md` for all tickets
-- A cli command for teseting MCP with streamable HTTP protocol:
-  timeout 10 npx @modelcontextprotocol/inspector --cli http://localhost:3002/mcp --transport http --method tools/list
+- A cli command for testing MCP with streamable HTTP protocol:
+  `timeout 10 npx @modelcontextprotocol/inspector --cli http://localhost:3002/mcp --transport http --method tools/list`
+- When code changes complete in .ts files, validate with:
+  - `npm run validate:ts` - Validates only changed files
+  - `npm run validate:ts:all` - Validates all TypeScript files
+  - `bash scripts/validate-changed-ts.sh path/to/file.ts` - Validates specific files
+  Apply fixes if TypeScript errors are reported.

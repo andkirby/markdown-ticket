@@ -108,7 +108,7 @@ export class MarkdownService {
   static writeMarkdownFile(filePath: string, ticket: Ticket): void {
     try {
       const content = this.generateMarkdownContent(ticket);
-      
+
       // Ensure directory exists
       const dir = path.dirname(filePath);
       if (!fs.existsSync(dir)) {
@@ -119,6 +119,36 @@ export class MarkdownService {
     } catch (error) {
       console.error(`Error writing markdown file ${filePath}:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Read file content asynchronously
+   * @param filePath - Absolute path to file
+   * @returns File content as string
+   * @throws Error with context (path, operation) if fs fails
+   */
+  static async readFile(filePath: string): Promise<string> {
+    try {
+      const fs = await import('fs/promises');
+      return await fs.readFile(filePath, 'utf-8');
+    } catch (error) {
+      throw new Error(`Failed to read file ${filePath}: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Write file content asynchronously
+   * @param filePath - Absolute path to file
+   * @param content - Content to write
+   * @throws Error with context (path, operation) if fs fails
+   */
+  static async writeFile(filePath: string, content: string): Promise<void> {
+    try {
+      const fs = await import('fs/promises');
+      await fs.writeFile(filePath, content, 'utf-8');
+    } catch (error) {
+      throw new Error(`Failed to write file ${filePath}: ${(error as Error).message}`);
     }
   }
 
