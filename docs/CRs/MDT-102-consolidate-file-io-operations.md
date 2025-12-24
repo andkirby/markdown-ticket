@@ -130,9 +130,20 @@ graph TD
 - Not modifying MCP tool interfaces or response formats
 - Not changing business logic in handlers (only delegation layer)
 
+## Architecture Design
+
+> **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
+
+**Summary**:
+- Pattern: Service Layer Consolidation — File I/O operations belong in shared services, not in request handlers
+- Components: 5 (crHandlers, sectionHandlers, MarkdownService, TicketService, test files)
+- Key constraint: Behavioral preservation refactoring — no interface changes
+
+**Extension Rule**: To add file I/O operations, add methods to `MarkdownService.ts` (limit 30 lines per new method). Do NOT add direct fs calls to handlers.
+
 ## 3. Implementation Plan
 
-### Phase 1: Add Behavioral Preservation Tests (Critical First Step)
+### Part 1: Add Behavioral Preservation Tests (Critical First Step)
 
 | Handler | Tests to Add | Behaviors to Lock |
 |---------|--------------|-------------------|
@@ -144,7 +155,7 @@ graph TD
 - `mcp-server/src/tools/handlers/__tests__/crHandlers.test.ts`
 - `mcp-server/src/tools/handlers/__tests__/sectionHandlers.test.ts`
 
-### Phase 2: Extend Shared Services
+### Part 2: Extend Shared Services
 
 | Service | New Methods | Purpose |
 |---------|-------------|---------|
@@ -152,7 +163,7 @@ graph TD
 | `MarkdownService` | `static writeFile(path: string, content: string): Promise<void>` | Encapsulate fs.writeFile |
 | `TicketService` | `public getCRPath(project: Project): Promise<string>` | Expose path resolution |
 
-### Phase 3: Refactor MCP Handlers
+### Part 3: Refactor MCP Handlers
 
 | File | Lines | Change |
 |------|-------|--------|
@@ -160,7 +171,7 @@ graph TD
 | `sectionHandlers.ts` | 103, 170, 232, 376 | Replace `fs.readFile/fs.writeFile` with shared methods |
 | Both handlers | - | Remove `import('fs/promises')` statements |
 
-### Phase 4: Verification
+### Part 4: Verification
 
 - Run all 213 MCP e2e tests
 - Run new unit tests
@@ -198,11 +209,13 @@ grep -r "fs\.readFile\|fs\.writeFile" mcp-server/src/tools/handlers/
 grep -q "readFile\|writeFile" shared/services/MarkdownService.ts
 # Expected: Found
 
-# Run all tests
-npm test                    # Unit tests
-npm run test:e2e            # E2E tests
+# Run MCP server tests (213 Jest E2E tests - NOT Playwright frontend tests)
+npm test --workspace=mcp-server              # Unit tests
+npm run test:e2e --workspace=mcp-server      # MCP server e2e tests
 # Expected: All pass
 ```
+
+**Note**: `npm run test:e2e` from root runs Playwright frontend tests. For MDT-102, use `npm run test:e2e --workspace=mcp-server` for the 213 MCP server Jest tests.
 
 **Code Review Checks:**
 - [ ] Handlers delegate to `MarkdownService` for file operations
