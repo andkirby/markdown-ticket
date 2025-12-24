@@ -14,7 +14,6 @@
 
 // Mock ALL external modules BEFORE any imports
 jest.mock('fs/promises');
-jest.mock('glob');
 jest.mock('../../../services/crService.js');
 
 // Setup factory function for the service that needs special mocking
@@ -26,10 +25,24 @@ const mockMarkdownSectionService = {
   findHierarchicalSection: jest.fn()
 };
 
+// MDT-102: Mock MarkdownService for static file I/O methods
+const mockMarkdownService = {
+  readFile: jest.fn(),
+  writeFile: jest.fn(),
+  parseMarkdownFile: jest.fn(),
+  parseMarkdownContent: jest.fn(),
+  generateMarkdownContent: jest.fn(),
+  writeMarkdownFile: jest.fn()
+};
+
 jest.mock('@mdt/shared/services/MarkdownSectionService.js', () => ({
   MarkdownSectionService: mockMarkdownSectionService,
   SectionMatch: expect.any(Object)
 }));
+
+jest.mock('@mdt/shared/services/MarkdownService.js', () => ({
+  MarkdownService: mockMarkdownService
+}), { virtual: true });
 
 // Now we can import the handlers and other modules
 import { SectionHandlers } from '../sectionHandlers.js';
@@ -39,7 +52,6 @@ import { Project } from '@mdt/shared/models/Project.js';
 import { Ticket } from '@mdt/shared/models/Ticket.js';
 import type { SectionMatch } from '@mdt/shared/services/MarkdownSectionService.js';
 import * as fs from 'fs/promises';
-import { glob } from 'glob';
 
 describe('SectionHandlers - Behavioral Preservation Tests', () => {
   let sectionHandlers: SectionHandlers;
@@ -141,10 +153,9 @@ Criteria here.
       mockMarkdownSectionService as any
     );
 
-    // Mock glob to return test file path
-    (glob as jest.MockedFunction<typeof glob>).mockResolvedValue([
-      '/test/path/docs/CRs/MDT-001-test-cr-title.md'
-    ]);
+    // MDT-102: Mock MarkdownService static methods
+    mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
+    mockMarkdownService.writeFile.mockResolvedValue(undefined);
 
     // Mock sanitization disabled (default behavior)
     process.env.MCP_SANITIZATION_ENABLED = 'false';
@@ -157,7 +168,7 @@ Criteria here.
   describe('handleManageCRSections - list operation', () => {
     beforeEach(() => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
     });
 
     it('should return formatted section list when sections exist', async () => {
@@ -245,7 +256,7 @@ Criteria here.
   describe('handleManageCRSections - get operation', () => {
     beforeEach(() => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
     });
 
     it('should return section content when found', async () => {
@@ -330,8 +341,8 @@ Criteria here.
 
     beforeEach(() => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
-      (fs.writeFile as jest.MockedFunction<typeof fs.writeFile>).mockResolvedValue(undefined);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
+      mockMarkdownService.writeFile.mockResolvedValue(undefined);
     });
 
     it('should replace section content and return confirmation', async () => {
@@ -362,7 +373,7 @@ Criteria here.
       expect(result).toContain('Updated Section in CR MDT-001');
       expect(result).toContain('**Operation:** replace');
       expect(result).toContain('Content Length:');
-      expect(fs.writeFile).toHaveBeenCalled();
+      expect(mockMarkdownService.writeFile).toHaveBeenCalled();
     });
 
     it('should update lastModified timestamp in YAML', async () => {
@@ -388,8 +399,8 @@ Criteria here.
         newContent
       );
 
-      expect(fs.writeFile).toHaveBeenCalled();
-      const writeArgs = (fs.writeFile as jest.MockedFunction<typeof fs.writeFile>).mock.calls[0];
+      expect(mockMarkdownService.writeFile).toHaveBeenCalled();
+      const writeArgs = mockMarkdownService.writeFile.mock.calls[0];
       const writtenContent = writeArgs[1] as string;
       expect(writtenContent).toMatch(/lastModified:\s*\d{4}-\d{2}-\d{2}T/);
     });
@@ -420,8 +431,8 @@ Criteria here.
 
     beforeEach(() => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
-      (fs.writeFile as jest.MockedFunction<typeof fs.writeFile>).mockResolvedValue(undefined);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
+      mockMarkdownService.writeFile.mockResolvedValue(undefined);
     });
 
     it('should append content to section and return confirmation', async () => {
@@ -460,8 +471,8 @@ Criteria here.
 
     beforeEach(() => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
-      (fs.writeFile as jest.MockedFunction<typeof fs.writeFile>).mockResolvedValue(undefined);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
+      mockMarkdownService.writeFile.mockResolvedValue(undefined);
     });
 
     it('should prepend content to section and return confirmation', async () => {
@@ -527,8 +538,8 @@ Criteria here.
 
     it('should support legacy "update" operation mapped to "replace"', async () => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
-      (fs.writeFile as jest.MockedFunction<typeof fs.writeFile>).mockResolvedValue(undefined);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
+      mockMarkdownService.writeFile.mockResolvedValue(undefined);
 
       const mockSection: SectionMatch[] = [
         {
@@ -560,7 +571,7 @@ Criteria here.
   describe('handleManageCRSections - file I/O behavior', () => {
     it('should read file content for list operation', async () => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
 
       mockMarkdownSectionService.findSection.mockReturnValue([]);
 
@@ -570,16 +581,15 @@ Criteria here.
         'list'
       );
 
-      expect(fs.readFile).toHaveBeenCalledWith(
-        '/test/path/docs/CRs/MDT-001-test-cr-title.md',
-        'utf-8'
+      expect(mockMarkdownService.readFile).toHaveBeenCalledWith(
+        '/test/path/docs/CRs/MDT-001-test-cr-title.md'
       );
     });
 
     it('should read and write file for replace operation', async () => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
-      (fs.writeFile as jest.MockedFunction<typeof fs.writeFile>).mockResolvedValue(undefined);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
+      mockMarkdownService.writeFile.mockResolvedValue(undefined);
 
       const mockSection: SectionMatch[] = [
         {
@@ -603,13 +613,13 @@ Criteria here.
         'New content'
       );
 
-      expect(fs.readFile).toHaveBeenCalled();
-      expect(fs.writeFile).toHaveBeenCalled();
+      expect(mockMarkdownService.readFile).toHaveBeenCalled();
+      expect(mockMarkdownService.writeFile).toHaveBeenCalled();
     });
 
     it('should throw error for invalid YAML frontmatter', async () => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(
+      mockMarkdownService.readFile.mockResolvedValue(
         'No frontmatter here\nJust plain content'
       );
 
@@ -623,10 +633,10 @@ Criteria here.
     });
   });
 
-  describe('handleManageCRSections - glob behavior', () => {
-    it('should use glob to find ticket file path', async () => {
+  describe('handleManageCRSections - CR service integration (MDT-102 refactoring)', () => {
+    it('should call crService.getCR to retrieve ticket with filePath', async () => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
 
       mockMarkdownSectionService.findSection.mockReturnValue([]);
 
@@ -636,21 +646,44 @@ Criteria here.
         'list'
       );
 
-      expect(glob).toHaveBeenCalledWith(
-        '/test/path/docs/CRs/MDT-001-*.md',
-        { absolute: true }
-      );
+      // Verify crService.getCR was called with project and CR key
+      expect(mockCrServiceInstance.getCR).toHaveBeenCalledWith(mockProject, 'MDT-001');
+      expect(mockCrServiceInstance.getCR).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw error when glob returns no files', async () => {
-      mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (glob as jest.MockedFunction<typeof glob>).mockResolvedValue([]);
+    it('should throw error when crService.getCR returns null (ticket not found)', async () => {
+      // MDT-102: Previously tested glob returning empty array
+      // Now tests crService.getCR returning null
+      mockCrServiceInstance.getCR.mockResolvedValue(null);
 
       await expect(sectionHandlers.handleManageCRSections(
         mockProject,
         'MDT-001',
         'list'
-      )).rejects.toThrow("CR file for 'MDT-001' not found");
+      )).rejects.toThrow("CR 'MDT-001' not found in project");
+    });
+
+    it('should use ticket.filePath from crService.getCR result', async () => {
+      const ticketWithSpecificPath = {
+        ...mockTicket,
+        filePath: '/custom/path/to/MDT-001-custom.md'
+      };
+
+      mockCrServiceInstance.getCR.mockResolvedValue(ticketWithSpecificPath);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
+
+      mockMarkdownSectionService.findSection.mockReturnValue([]);
+
+      await sectionHandlers.handleManageCRSections(
+        mockProject,
+        'MDT-001',
+        'list'
+      );
+
+      // Verify the filePath from crService.getCR is used for file reading
+      expect(mockMarkdownService.readFile).toHaveBeenCalledWith(
+        '/custom/path/to/MDT-001-custom.md'
+      );
     });
   });
 
@@ -659,8 +692,8 @@ Criteria here.
       const contentWithNewHeader = '## 1. New Description Name\n\nNew content here.';
 
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
-      (fs.writeFile as jest.MockedFunction<typeof fs.writeFile>).mockResolvedValue(undefined);
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
+      mockMarkdownService.writeFile.mockResolvedValue(undefined);
 
       const mockSection: SectionMatch[] = [
         {

@@ -24,7 +24,13 @@ const mockMarkdownService = {
   parseTicketFromMarkdown: jest.fn(),
   formatTicketAsMarkdown: jest.fn(),
   validateYAMLFormat: jest.fn(),
-  sanitizeContent: jest.fn()
+  sanitizeContent: jest.fn(),
+  // MDT-102: Add static file I/O methods
+  readFile: jest.fn(),
+  writeFile: jest.fn(),
+  parseMarkdownFile: jest.fn(),
+  generateMarkdownContent: jest.fn(),
+  writeMarkdownFile: jest.fn()
 };
 
 const mockTitleExtractionService = {
@@ -104,6 +110,19 @@ describe('CRHandlers - Behavioral Preservation Tests', () => {
     blocks: []
   };
 
+  // Mock file content with YAML frontmatter
+  const mockFileContent = `---
+code: MDT-001
+title: Test CR Title
+status: Proposed
+type: Feature Enhancement
+priority: Medium
+phaseEpic: Phase 1
+assignee: developer
+---
+
+# Test CR Content`;
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -130,6 +149,9 @@ describe('CRHandlers - Behavioral Preservation Tests', () => {
     (glob as jest.MockedFunction<typeof glob>).mockResolvedValue([
       '/test/path/docs/CRs/MDT-001-test-cr-title.md'
     ]);
+
+    // MDT-102: Mock MarkdownService static methods
+    mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
 
     // Mock sanitization disabled (default behavior)
     process.env.MCP_SANITIZATION_ENABLED = 'false';
@@ -258,21 +280,10 @@ describe('CRHandlers - Behavioral Preservation Tests', () => {
   });
 
   describe('handleGetCR - attributes mode', () => {
-    const mockFileContent = `---
-code: MDT-001
-title: Test CR Title
-status: Proposed
-type: Feature Enhancement
-priority: Medium
-phaseEpic: Phase 1
-assignee: developer
----
-
-# Test CR Content`;
-
     beforeEach(() => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue(mockFileContent);
+      // MDT-102: Use MarkdownService.readFile instead of fs.readFile
+      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
       mockMarkdownService.parseMarkdownContent.mockResolvedValue(mockTicket);
     });
 
@@ -310,7 +321,8 @@ assignee: developer
     });
 
     it('should throw error for invalid file format', async () => {
-      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValue('No frontmatter here');
+      // MDT-102: Use MarkdownService.readFile instead of fs.readFile
+      mockMarkdownService.readFile.mockResolvedValue('No frontmatter here');
 
       await expect(crHandlers.handleGetCR(mockProject, 'MDT-001', 'attributes'))
         .rejects.toThrow('Invalid CR file format');
