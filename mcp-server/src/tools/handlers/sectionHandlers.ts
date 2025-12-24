@@ -4,6 +4,7 @@
  */
 
 import { MarkdownSectionService, SectionMatch } from '@mdt/shared/services/MarkdownSectionService.js';
+import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
 import { SimpleContentProcessor } from '../../utils/simpleContentProcessor.js';
 import { SimpleSectionValidator } from '../../utils/simpleSectionValidator.js';
 import { Project } from '@mdt/shared/models/Project.js';
@@ -11,28 +12,6 @@ import { CRService } from '../../services/crService.js';
 import { validateCRKey, validateRequired, validateString, validateOperation } from '../../utils/validation.js';
 import { Sanitizer } from '../../utils/sanitizer.js';
 import { ToolError, JsonRpcErrorCode } from '../../utils/toolError.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { glob } from 'glob';
-
-/**
- * Helper function to find the file path for a ticket code
- * Scans the project's CR directory for a file matching the ticket code
- */
-async function findTicketFilePath(project: Project, ticketCode: string): Promise<string> {
-  // Use path from extended Project interface, fallback to ticketsPath for domain-contracts compatibility
-  const projectPath = (project.project as any).path || '.';
-  const ticketsPath = project.project.ticketsPath || 'docs/CRs';
-  const crPath = path.join(projectPath, ticketsPath);
-  const pattern = path.join(crPath, `${ticketCode}-*.md`);
-
-  const files = await glob(pattern, { absolute: true });
-  if (files.length === 0) {
-    throw ToolError.toolExecution(`CR file for '${ticketCode}' not found in ${crPath}`);
-  }
-
-  return files[0]; // Return the first match
-}
 
 export interface SectionOperationResult {
   success: boolean;
@@ -120,9 +99,8 @@ export class SectionHandlers {
       throw ToolError.toolExecution(`CR '${key}' not found in project`);
     }
 
-    // Read file content
-    const filePath = await findTicketFilePath(project, key);
-    const fileContent = await fs.readFile(filePath, 'utf-8');
+    // Read file content using MarkdownService (MDT-102: shared file I/O)
+    const fileContent = await MarkdownService.readFile(ticket.filePath);
 
     // Extract markdown body (after YAML frontmatter)
     const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -187,9 +165,8 @@ export class SectionHandlers {
       throw ToolError.toolExecution(`CR '${key}' not found in project`);
     }
 
-    // Read file content
-    const filePath = await findTicketFilePath(project, key);
-    const fileContent = await fs.readFile(filePath, 'utf-8');
+    // Read file content using MarkdownService (MDT-102: shared file I/O)
+    const fileContent = await MarkdownService.readFile(ticket.filePath);
 
     // Extract markdown body (after YAML frontmatter)
     const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -249,9 +226,8 @@ export class SectionHandlers {
       throw ToolError.toolExecution(`CR '${key}' not found in project`);
     }
 
-    // Read file content
-    const filePath = await findTicketFilePath(project, key);
-    const fileContent = await fs.readFile(filePath, 'utf-8');
+    // Read file content using MarkdownService (MDT-102: shared file I/O)
+    const fileContent = await MarkdownService.readFile(ticket.filePath);
 
     // Extract markdown body (after YAML frontmatter)
     const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -394,8 +370,8 @@ export class SectionHandlers {
     // Reconstruct full document
     const updatedContent = `---\n${updatedYaml}\n---\n${updatedBody}`;
 
-    // Write back to file
-    await fs.writeFile(filePath, updatedContent, 'utf-8');
+    // Write back to file using MarkdownService (MDT-102: shared file I/O)
+    await MarkdownService.writeFile(ticket.filePath, updatedContent);
 
     const lines = [
       `✅ **Updated Section in CR ${key}**`,
@@ -406,7 +382,7 @@ export class SectionHandlers {
       '',
       `- Title: ${Sanitizer.sanitizeText(ticket.title)}`,
       `- Updated: ${now}`,
-      `- File: ${filePath}`
+      `- File: ${ticket.filePath}`
     ];
 
     // Add processing information
