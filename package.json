@@ -66,6 +66,8 @@
     "project:disable:dev": "tsx shared/tools/project-cli.ts disable",
     "test:domain-contracts": "cd domain-contracts && npm test",
     "test:domain-contracts:watch": "cd domain-contracts && npm run test:watch",
+    "mcp:test": "cd mcp-server && npm test",
+    "mcp:test:e2e": "cd mcp-server && npm run test:e2e",
     "validate:ts": "bash scripts/validate-changed-ts.sh",
     "validate:ts:all": "bash scripts/validate-all-ts.sh"
   },
