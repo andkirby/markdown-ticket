@@ -8,7 +8,12 @@
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { TestEnvironment } from './test-environment.js';
-import { RetryHelper, withRetry, withRetrySync, type RetryOptions } from '../utils/retry-helper.js';
+import {
+  RetryHelper,
+  withRetry,
+  withRetrySync,
+  type RetryOptions,
+} from '../utils/retry-helper.js';
 import type { CRType, CRStatus, CRPriority } from '../../models/Types.js';
 
 // Simple CR data structure for testing
@@ -36,7 +41,7 @@ export interface ProjectConfig {
   name?: string;
   code?: string;
   description?: string;
-  crPath?: string;
+  ticketsPath?: string;
   documentPaths?: string[];
   excludeFolders?: string[];
 }
@@ -89,7 +94,10 @@ export interface TestCRResult {
  * Error class for ProjectFactory operations
  */
 export class ProjectFactoryError extends Error {
-  constructor(message: string, public readonly cause?: Error) {
+  constructor(
+    message: string,
+    public readonly cause?: Error,
+  ) {
     super(message);
     this.name = 'ProjectFactoryError';
   }
@@ -102,15 +110,14 @@ export class ProjectFactory {
   private testEnv: TestEnvironment;
   private projectsDir: string;
   private retryHelper: RetryHelper;
+  private projectConfigs: Map<string, ProjectConfig> = new Map();
 
   constructor(testEnv: TestEnvironment) {
-    if (!testEnv) {
-      throw new ProjectFactoryError('TestEnvironment is required');
-    }
-
     this.testEnv = testEnv;
     if (!testEnv.isInitialized()) {
-      throw new ProjectFactoryError('TestEnvironment must be initialized before creating ProjectFactory');
+      throw new ProjectFactoryError(
+        'TestEnvironment must be initialized before creating ProjectFactory',
+      );
     }
 
     // Initialize retry helper with specific options for file operations
@@ -120,8 +127,15 @@ export class ProjectFactory {
       backoffMultiplier: 2.0,
       maxDelay: 1000,
       timeout: 5000,
-      retryableErrors: ['EACCES', 'ENOENT', 'EEXIST', 'EBUSY', 'EMFILE', 'ENFILE'],
-      logContext: 'ProjectFactory'
+      retryableErrors: [
+        'EACCES',
+        'ENOENT',
+        'EEXIST',
+        'EBUSY',
+        'EMFILE',
+        'ENFILE',
+      ],
+      logContext: 'ProjectFactory',
     });
 
     // Projects will be created in temp directory
@@ -134,19 +148,28 @@ export class ProjectFactory {
   /**
    * Create a test project with default configuration
    */
-  async createProject(type: 'empty' = 'empty', config: ProjectConfig = {}): Promise<ProjectData> {
+  async createProject(
+    type: 'empty' = 'empty',
+    config: ProjectConfig = {},
+  ): Promise<ProjectData> {
     const projectCode = config.code || this.generateUniqueProjectCode();
     const projectName = config.name || `Test Project ${projectCode}`;
     const finalConfig: ProjectConfig = {
       description: 'Test project for E2E testing',
-      crPath: 'docs/CRs',
+      ticketsPath: 'docs/CRs',
       repository: 'test-repo',
       documentPaths: ['docs'],
       excludeFolders: ['node_modules', '.git', 'dist'],
-      ...config
+      ...config,
     };
 
-    const projectPath = await this.createProjectStructure(projectCode, projectName, finalConfig);
+    this.projectConfigs.set(projectCode, finalConfig);
+
+    const projectPath = await this.createProjectStructure(
+      projectCode,
+      projectName,
+      finalConfig,
+    );
 
     return { key: projectCode, path: projectPath, config: finalConfig };
   }
@@ -155,7 +178,12 @@ export class ProjectFactory {
    * Generate unique project code using T{random} pattern
    */
   private generateUniqueProjectCode(): string {
-    const randomPart = Math.random().toString(36).replace(/[^a-z]/g, '').toUpperCase().substr(0, 3) || 'AAA';
+    const randomPart =
+      Math.random()
+        .toString(36)
+        .replace(/[^a-z]/g, '')
+        .toUpperCase()
+        .substr(0, 3) || 'AAA';
     return `T${randomPart}`.substr(0, 5);
   }
 
@@ -165,7 +193,7 @@ export class ProjectFactory {
   private async createProjectStructure(
     projectCode: string,
     projectName: string,
-    config: ProjectConfig = {}
+    config: ProjectConfig = {},
   ): Promise<string> {
     const projectPath = join(this.projectsDir, projectCode);
 
@@ -177,8 +205,8 @@ export class ProjectFactory {
             mkdirSync(projectPath, { recursive: true });
           },
           {
-            logContext: `ProjectFactory.createProjectDir(${projectCode})`
-          }
+            logContext: `ProjectFactory.createProjectDir(${projectCode})`,
+          },
         );
       }
 
@@ -190,32 +218,38 @@ export class ProjectFactory {
             mkdirSync(docsPath, { recursive: true });
           },
           {
-            logContext: `ProjectFactory.createDocsDir(${projectCode})`
-          }
+            logContext: `ProjectFactory.createDocsDir(${projectCode})`,
+          },
         );
       }
 
       // Create CRs directory with retry
-      const crsPath = join(projectPath, config.crPath || 'docs/CRs');
+      const crsPath = join(projectPath, config.ticketsPath || 'docs/CRs');
       if (!existsSync(crsPath)) {
         await withRetry(
           async () => {
             mkdirSync(crsPath, { recursive: true });
           },
           {
-            logContext: `ProjectFactory.createCRsDir(${projectCode})`
-          }
+            logContext: `ProjectFactory.createCRsDir(${projectCode})`,
+          },
         );
       }
 
       // Create configuration files with retry
-      await this.createProjectFiles(projectPath, projectCode, projectName, config, crsPath);
+      await this.createProjectFiles(
+        projectPath,
+        projectCode,
+        projectName,
+        config,
+        crsPath,
+      );
 
       return projectPath;
     } catch (error) {
       throw new ProjectFactoryError(
         `Failed to create project structure for ${projectCode}: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
     }
   }
@@ -228,24 +262,24 @@ export class ProjectFactory {
     projectCode: string,
     projectName: string,
     config: ProjectConfig,
-    crsPath: string
+    crsPath: string,
   ): Promise<void> {
     const files = [
       {
         path: join(projectPath, '.mdt-config.toml'),
         content: this.generateProjectConfig(projectCode, projectName, config),
-        context: `ProjectFactory.createConfigFile(${projectCode})`
+        context: `ProjectFactory.createConfigFile(${projectCode})`,
       },
       {
         path: join(projectPath, '.mdt-next'),
         content: '1',
-        context: `ProjectFactory.createNextFile(${projectCode})`
+        context: `ProjectFactory.createNextFile(${projectCode})`,
       },
       {
         path: join(crsPath, '.gitkeep'),
         content: '',
-        context: `ProjectFactory.createGitkeep(${projectCode})`
-      }
+        context: `ProjectFactory.createGitkeep(${projectCode})`,
+      },
     ];
 
     // Write all files with retry logic
@@ -256,8 +290,16 @@ export class ProjectFactory {
         },
         {
           logContext: file.context,
-          retryableErrors: ['EACCES', 'ENOENT', 'EEXIST', 'EBUSY', 'EMFILE', 'ENFILE', 'EIO']
-        }
+          retryableErrors: [
+            'EACCES',
+            'ENOENT',
+            'EEXIST',
+            'EBUSY',
+            'EMFILE',
+            'ENFILE',
+            'EIO',
+          ],
+        },
       );
     }
   }
@@ -265,7 +307,11 @@ export class ProjectFactory {
   /**
    * Generate project configuration file content
    */
-  private generateProjectConfig(code: string, name: string, config: ProjectConfig): string {
+  private generateProjectConfig(
+    code: string,
+    name: string,
+    config: ProjectConfig,
+  ): string {
     return `# Project Configuration for ${name}
 
 [project]
@@ -273,7 +319,7 @@ name = "${name}"
 code = "${code}"
 description = "${config.description || 'Test project'}"
 repository = "${config.repository || 'test-repo'}"
-ticketsPath = "${config.crPath || 'docs/CRs'}"
+ticketsPath = "${config.ticketsPath || 'docs/CRs'}"
 
 [project.document]
 paths = ${JSON.stringify(config.documentPaths || ['docs'])}
@@ -284,7 +330,10 @@ excludeFolders = ${JSON.stringify(config.excludeFolders || ['node_modules', '.gi
   /**
    * Create a test CR using direct file I/O with retry logic
    */
-  async createTestCR(projectCode: string, crData: TestCRData): Promise<TestCRResult> {
+  async createTestCR(
+    projectCode: string,
+    crData: TestCRData,
+  ): Promise<TestCRResult> {
     try {
       const projectPath = join(this.projectsDir, projectCode);
       if (!existsSync(projectPath)) {
@@ -302,13 +351,20 @@ excludeFolders = ${JSON.stringify(config.excludeFolders || ['node_modules', '.gi
           },
           {
             logContext: `ProjectFactory.readNextNumber(${projectCode})`,
-            timeout: 2000
-          }
+            timeout: 2000,
+          },
         );
       }
 
       const crCode = `${projectCode}-${String(nextNumber).padStart(3, '0')}`;
-      const crPath = join(projectPath, 'docs/CRs', `${crCode}.md`);
+      const titleSlug = this.createSlug(crData.title);
+      const filename = `${crCode}-${titleSlug}.md`;
+      const projectConfig = this.projectConfigs.get(projectCode);
+      const crPath = join(
+        projectPath,
+        projectConfig?.ticketsPath || 'docs/CRs',
+        filename,
+      );
 
       // Build CR content using template with retry
       // Use simple embedded template
@@ -352,9 +408,17 @@ ${content}`;
         },
         {
           logContext: `ProjectFactory.writeCRFile(${crCode})`,
-          retryableErrors: ['EACCES', 'ENOENT', 'EEXIST', 'EBUSY', 'EMFILE', 'ENFILE', 'EIO'],
-          timeout: 3000
-        }
+          retryableErrors: [
+            'EACCES',
+            'ENOENT',
+            'EEXIST',
+            'EBUSY',
+            'EMFILE',
+            'ENFILE',
+            'EIO',
+          ],
+          timeout: 3000,
+        },
       );
 
       // Update next number with retry
@@ -364,19 +428,19 @@ ${content}`;
         },
         {
           logContext: `ProjectFactory.updateNextNumber(${projectCode})`,
-          timeout: 2000
-        }
+          timeout: 2000,
+        },
       );
 
       return {
         success: true,
         crCode,
-        filePath: crPath
+        filePath: crPath,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -386,7 +450,7 @@ ${content}`;
    */
   async createMultipleCRs(
     projectCode: string,
-    crsData: Omit<TestCRData, 'dependsOn' | 'blocks'>[]
+    crsData: Omit<TestCRData, 'dependsOn' | 'blocks'>[],
   ): Promise<TestCRResult[]> {
     const results: TestCRResult[] = [];
 
@@ -402,10 +466,10 @@ ${content}`;
    * Create a test scenario with predefined project and CRs
    */
   async createTestScenario(
-    scenarioType: 'standard-project' | 'complex-project' = 'standard-project'
+    scenarioType: 'standard-project' | 'complex-project' = 'standard-project',
   ): Promise<TestScenario> {
     const project = await this.createProject('empty', {
-      name: `${scenarioType === 'standard-project' ? 'Standard' : 'Complex'} Test Project`
+      name: `${scenarioType === 'standard-project' ? 'Standard' : 'Complex'} Test Project`,
     });
 
     let crsData: Omit<TestCRData, 'dependsOn' | 'blocks'>[] = [];
@@ -416,20 +480,20 @@ ${content}`;
           title: 'Initial Project Setup',
           type: 'Feature Enhancement',
           priority: 'High',
-          content: 'Set up basic project structure and configuration'
+          content: 'Set up basic project structure and configuration',
         },
         {
           title: 'Add User Authentication',
           type: 'Feature Enhancement',
           priority: 'Medium',
-          content: 'Implement user login and registration functionality'
+          content: 'Implement user login and registration functionality',
         },
         {
           title: 'Fix Navigation Bug',
           type: 'Bug Fix',
           priority: 'High',
-          content: 'Navigation menu not responding on mobile devices'
-        }
+          content: 'Navigation menu not responding on mobile devices',
+        },
       ];
     } else {
       // Complex project with more CRs
@@ -438,44 +502,44 @@ ${content}`;
           title: 'Core Architecture Design',
           type: 'Architecture',
           priority: 'Critical',
-          content: 'Design overall system architecture with microservices'
+          content: 'Design overall system architecture with microservices',
         },
         {
           title: 'Database Schema Design',
           type: 'Architecture',
           priority: 'High',
-          content: 'Define database schema for all entities'
+          content: 'Define database schema for all entities',
         },
         {
           title: 'User Management Service',
           type: 'Feature Enhancement',
           priority: 'High',
-          content: 'Implement user CRUD operations and authentication'
+          content: 'Implement user CRUD operations and authentication',
         },
         {
           title: 'API Gateway Setup',
           type: 'Feature Enhancement',
           priority: 'High',
-          content: 'Configure API gateway for routing and load balancing'
+          content: 'Configure API gateway for routing and load balancing',
         },
         {
           title: 'Fix Race Condition',
           type: 'Bug Fix',
           priority: 'Critical',
-          content: 'Race condition in concurrent user creation'
+          content: 'Race condition in concurrent user creation',
         },
         {
           title: 'Refactor Legacy Code',
           type: 'Technical Debt',
           priority: 'Medium',
-          content: 'Update legacy authentication module to use new patterns'
+          content: 'Update legacy authentication module to use new patterns',
         },
         {
           title: 'API Documentation',
           type: 'Documentation',
           priority: 'Low',
-          content: 'Document all API endpoints with examples'
-        }
+          content: 'Document all API endpoints with examples',
+        },
       ];
     }
 
@@ -485,7 +549,7 @@ ${content}`;
       projectCode: project.key,
       projectName: project.config.name || project.key,
       projectDir: project.path,
-      crs: crResults
+      crs: crResults,
     };
   }
 
@@ -495,5 +559,18 @@ ${content}`;
   async cleanup(): Promise<void> {
     // Test environment cleanup will handle removing the temp directory
     // This is just for any additional cleanup if needed
+  }
+
+  /**
+   * Create URL-safe slug from title (matches TicketService behavior)
+   */
+  private createSlug(title: string): string {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 50);
   }
 }

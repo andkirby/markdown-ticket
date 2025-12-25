@@ -9,7 +9,7 @@ import type { CRType, CRStatus, CRPriority, ValidationResult } from '../../model
 export interface TicketCreationConfig {
   projectCode: string;
   projectPath: string;
-  crPath?: string;
+  ticketsPath?: string;
   validateContent?: boolean;
 }
 
@@ -37,7 +37,7 @@ export abstract class BaseTicketCreator implements ITicketCreator {
   protected readonly validPriorities: CRPriority[] = ['Low', 'Medium', 'High', 'Critical'];
 
   /** Generate next ticket code */
-  protected abstract generateTicketCode(projectCode: string, projectPath: string, crPath?: string): string;
+  protected abstract generateTicketCode(projectCode: string, projectPath: string, ticketsPath?: string): string;
 
   /** Create a single ticket/CR */
   abstract createTicket(config: TicketCreationConfig, data: TicketData): Promise<TicketCreationResult>;
