@@ -34,8 +34,8 @@ export class FileTicketCreator extends BaseTicketCreator {
   }
 
   /** Generate next ticket code */
-  protected generateTicketCode(projectCode: string, projectPath: string, crPath?: string): string {
-    const crsDir = path.join(projectPath, crPath || 'docs', 'CRs');
+  protected generateTicketCode(projectCode: string, projectPath: string, ticketsPath?: string): string {
+    const crsDir = path.join(projectPath, ticketsPath || 'docs', 'CRs');
     let maxNumber = 0;
 
     try {
@@ -74,14 +74,14 @@ export class FileTicketCreator extends BaseTicketCreator {
       }
 
       // Generate ticket code
-      const ticketCode = this.generateTicketCode(config.projectCode, config.projectPath, config.crPath);
-      const crsDir = path.join(config.projectPath, config.crPath || 'docs', 'CRs');
+      const ticketCode = this.generateTicketCode(config.projectCode, config.projectPath, config.ticketsPath);
+      const ticketsDir = path.join(config.projectPath, config.ticketsPath || 'docs', 'CRs');
 
       // Ensure CRs directory exists with retry
-      if (!fs.existsSync(crsDir)) {
+      if (!fs.existsSync(ticketsDir)) {
         await withRetry(
           async () => {
-            fs.mkdirSync(crsDir, { recursive: true });
+            fs.mkdirSync(ticketsDir, { recursive: true });
           },
           {
             logContext: `FileTicketCreator.createCRsDir(${config.projectCode})`,
@@ -131,7 +131,7 @@ export class FileTicketCreator extends BaseTicketCreator {
       const ticket = CRService.createTicket(ticketData, ticketCode, data.type, '');
       ticket.dateCreated = ticket.lastModified = new Date();
 
-      const filePath = path.join(crsDir, `${ticketCode}.md`);
+      const filePath = path.join(ticketsDir, `${ticketCode}.md`);
 
       // Write markdown file with retry
       await withRetry(
@@ -182,9 +182,9 @@ Technical details and implementation plan.
   getCreatorType(): string { return 'file'; }
 
   /** Check if ticket exists */
-  ticketExists(projectPath: string, ticketCode: string, crPath?: string): boolean {
+  ticketExists(projectPath: string, ticketCode: string, ticketsPath?: string): boolean {
     try {
-      const filePath = path.join(projectPath, crPath || 'docs', 'CRs', `${ticketCode}.md`);
+      const filePath = path.join(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
       return withRetrySync(
         () => fs.existsSync(filePath),
         {
@@ -198,9 +198,9 @@ Technical details and implementation plan.
   }
 
   /** Read existing ticket */
-  async readTicket(projectPath: string, ticketCode: string, crPath?: string): Promise<TicketData | null> {
+  async readTicket(projectPath: string, ticketCode: string, ticketsPath?: string): Promise<TicketData | null> {
     try {
-      const filePath = path.join(projectPath, crPath || 'docs', 'CRs', `${ticketCode}.md`);
+      const filePath = path.join(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
 
       // Check if file exists with retry
       const exists = await withRetry(
@@ -243,7 +243,7 @@ Technical details and implementation plan.
   async updateTicket(config: TicketCreationConfig, ticketCode: string, data: Partial<TicketData>): Promise<TicketCreationResult> {
     try {
       // Read existing ticket with retry
-      const existing = await this.readTicket(config.projectPath, ticketCode, config.crPath);
+      const existing = await this.readTicket(config.projectPath, ticketCode, config.ticketsPath);
       const mergedData: TicketData = {
         title: data.title || existing?.title || '',
         type: data.type || existing?.type || 'Feature Enhancement',
@@ -267,7 +267,7 @@ Technical details and implementation plan.
   /** Create ticket with specific code */
   private async createTicketWithCode(config: TicketCreationConfig, ticketCode: string, data: TicketData): Promise<TicketCreationResult> {
     try {
-      const crsDir = path.join(config.projectPath, config.crPath || 'docs', 'CRs');
+      const crsDir = path.join(config.projectPath, config.ticketsPath || 'docs', 'CRs');
 
       // Ensure CRs directory exists with retry
       if (!fs.existsSync(crsDir)) {
