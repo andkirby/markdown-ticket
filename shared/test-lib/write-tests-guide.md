@@ -131,7 +131,7 @@ test.describe('Level 2: Projects', () => {
       name: 'Test Project',
       code: 'TEST',
       description: 'A test project',
-      crPath: 'docs/CRs',
+      ticketsPath: 'docs/CRs',
       repository: 'test-repo'
     });
 
@@ -169,7 +169,7 @@ interface ProjectConfig {
   name?: string;              // Project display name
   code?: string;              // Project code (auto-generated if omitted)
   description?: string;
-  crPath?: string;            // Path for CRs (default: 'docs/CRs')
+  ticketsPath?: string;            // Path for CRs (default: 'docs/CRs')
   repository?: string;
   documentPaths?: string[];   // Document scan paths (default: ['docs'])
   excludeFolders?: string[];  // Excluded folders (default: ['node_modules', '.git'])
