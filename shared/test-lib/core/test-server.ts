@@ -142,13 +142,39 @@ export class TestServer {
     const port = this.ports[serverType];
     const base = { port, command: 'npm', state: 'stopped' as const };
 
+    // Get CONFIG_DIR from current process.env (set by TestEnvironment.setup())
+    // This ensures the child process uses the isolated test config directory
+    const configDir = process.env.CONFIG_DIR;
+
     switch (serverType) {
       case 'frontend':
         return { ...base, type: 'frontend', args: ['run', 'dev'], env: { PORT: port.toString() }, url: `http://localhost:${port}`, healthEndpoint: '/' };
       case 'backend':
-        return { ...base, type: 'backend', args: ['run', 'dev:server'], env: { PORT: port.toString() }, url: `http://localhost:${port}`, healthEndpoint: '/api/health' };
+        return {
+          ...base,
+          type: 'backend',
+          args: ['run', 'dev:server'],
+          env: {
+            PORT: port.toString(),
+            ...(configDir && { CONFIG_DIR: configDir }), // Pass CONFIG_DIR to child process
+          },
+          url: `http://localhost:${port}`,
+          healthEndpoint: '/api/health'
+        };
       case 'mcp':
-        return { ...base, type: 'mcp', args: ['run', 'dev'], env: { MCP_HTTP_ENABLED: 'true', MCP_HTTP_PORT: port.toString(), MCP_BIND_ADDRESS: '127.0.0.1' }, url: `http://localhost:${port}/mcp`, healthEndpoint: '/health' };
+        return {
+          ...base,
+          type: 'mcp',
+          args: ['run', 'dev'],
+          env: {
+            MCP_HTTP_ENABLED: 'true',
+            MCP_HTTP_PORT: port.toString(),
+            MCP_BIND_ADDRESS: '127.0.0.1',
+            ...(configDir && { CONFIG_DIR: configDir }) // Pass CONFIG_DIR to child process
+          },
+          url: `http://localhost:${port}/mcp`,
+          healthEndpoint: '/health'
+        };
       default:
         throw new TestFrameworkError(`Unknown server type: ${serverType}`, 'UNKNOWN_SERVER_TYPE');
     }
