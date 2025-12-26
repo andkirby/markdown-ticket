@@ -12,7 +12,7 @@ export interface ProjectConfig {
   name?: string;
   code?: string;
   description?: string;
-  crPath?: string;
+  ticketsPath?: string;
   documentPaths?: string[];
   excludeFolders?: string[];
 }

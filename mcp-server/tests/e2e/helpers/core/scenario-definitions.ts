@@ -42,7 +42,7 @@ export const COMPLEX_PROJECT_SCENARIO: ScenarioDefinition = {
   projectName: 'Complex Test Project',
   projectConfig: {
     repository: 'https://github.com/example/complex-project',
-    crPath: 'tickets',
+    ticketsPath: 'tickets',
     documentPaths: ['docs', 'specifications', 'wiki']
   },
   crsData: [
