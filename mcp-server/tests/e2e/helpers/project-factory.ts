@@ -67,7 +67,7 @@ export class ProjectFactory {
     const projectName = config.name || `Test Project ${projectCode}`;
     const finalConfig: ProjectConfig = {
       description: 'Test project for E2E testing',
-      crPath: 'docs/CRs',
+      ticketsPath: 'docs/CRs',
       repository: 'test-repo',
       ...config
     };
