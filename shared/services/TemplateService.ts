@@ -3,7 +3,7 @@ import { Template, ValidationResult, Suggestion } from '../models/Types.js';
 import type { Ticket, TicketData } from '../models/Ticket.js';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { DEFAULT_PATHS } from '../utils/constants.js';
+import { DEFAULT_PATHS, getDefaultPaths } from '../utils/constants.js';
 
 export class TemplateService {
   private templates: Map<string, Template> = new Map();
@@ -12,7 +12,7 @@ export class TemplateService {
 
   constructor(templatesPath?: string, quiet: boolean = false) {
     // Default to shared templates directory from constants
-    this.templatesPath = templatesPath || DEFAULT_PATHS.TEMPLATES_DIR;
+    this.templatesPath = templatesPath || getDefaultPaths().TEMPLATES_DIR;
     this.quiet = quiet;
     this.loadTemplates();
   }

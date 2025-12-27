@@ -1,6 +1,6 @@
 import { Project } from '../../models/Project.js';
 import { ProjectValidator } from '../../tools/ProjectValidator.js';
-import { CONFIG_FILES, DEFAULT_PATHS, DEFAULTS } from '../../utils/constants.js';
+import { CONFIG_FILES, DEFAULTS, getDefaultPaths } from '../../utils/constants.js';
 import { logQuiet } from '../../utils/logger.js';
 import {
   joinPaths,
@@ -45,7 +45,7 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
     for (const { file, data: registryData } of registeredProjects) {
       try {
         const projectPath = registryData.project.path;
-        const registryPath = joinPaths(DEFAULT_PATHS.PROJECTS_REGISTRY, file);
+        const registryPath = joinPaths(getDefaultPaths().PROJECTS_REGISTRY, file);
 
         // Check if this is a global-only project (full data in registry) or project-first (minimal data)
         const isGlobalOnly = registryData.metadata?.globalOnly === true ||
