@@ -49,10 +49,10 @@ priority: Medium
 
 ### Constraints
 
-- Must not introduce external cache library dependencies
+- ~~Must not introduce external cache library dependencies~~ → **Decided**: Use `cache-manager` v7 (see Architecture Design)
 - Must maintain backward compatibility with existing cache invalidation behavior
 - Must support existing configuration patterns (env vars for MCP, API config for backend)
-- Must not break existing MCP server cache configuration (`MCP_CACHE_TIMEOUT`)
+- ~~Must not break existing MCP server cache configuration (`MCP_CACHE_TIMEOUT`)~~ → **Decided**: Hard break, migrate to `MDT_CACHE_TIMEOUT`
 
 ### Non-Goals
 
@@ -60,53 +60,59 @@ priority: Medium
 - Not optimizing cache hit/miss ratios (beyond configurability)
 - Not adding distributed caching (single-process in-memory only)
 
-## 3. Open Questions
+## 3. Architecture Design
+> **Extracted**: Complex architecture (score 12) — see [architecture.md](./MDT-105/architecture.md)
 
-| Area | Question | Constraints |
-|------|----------|-------------|
-| Architecture | Should cache module support size-based eviction (LRU) or TTL-only? | Must remain simple, no external libraries |
-| Configuration | Single global `CACHE_TTL` or per-cache-type env vars? | MCP already has `MCP_CACHE_TIMEOUT` to preserve |
-| Migration | How to migrate existing cache usage without breaking behavior? | Must maintain existing invalidation semantics |
-| Size Limits | What default size limits for file operation caches? | Must prevent unbounded growth |
+**Summary**:
+- Pattern: Facade over `bentocache`
+- Components: 4 (CacheFacade, CacheConfig, and 4 service migrations)
+- Key constraint: Total new code ~150 lines, facade.ts ≤60 lines
 
-### Known Constraints
+**Key Decisions**:
+1. **Library**: Use `bentocache` — native tagging, namespaces, TypeScript, active community
+2. **Tagging**: Client-side tagging via invalidation timestamps (O(1) invalidation)
+3. **Namespaces**: `projects` for project list, `files` for all file caches
+4. **Location**: `shared/cache/` — clean separation from services
+5. **Breaking change**: `MCP_CACHE_TIMEOUT` → `MDT_CACHE_TIMEOUT`
 
-- No external cache libraries allowed (use native Map/Date APIs)
-- Must preserve MCP server's existing `MCP_CACHE_TIMEOUT` env var
-- Must preserve file operation cache invalidation on file changes
-- Must support per-cache-type TTL configuration for different use cases
+**Tag Patterns**:
+| Tag | Purpose |
+|-----|---------|
+| `project:{path}` | Invalidate all files for a project |
+| `list:projects` | Invalidate project list cache |
+| `type:metadata` | Invalidate all metadata caches |
+| `type:content` | Invalidate all content caches |
 
-### Decisions Deferred
-
-- Specific cache module API design (determined by `/mdt:architecture`)
-- Cache eviction strategy (TTL-only vs. LRU) - determined by `/mdt:architecture`
-- Default TTL values for different cache types - determined by `/mdt:architecture`
-- Migration strategy from current implementations - determined by `/mdt:architecture`
-
-## 5. Acceptance Criteria
+**Extension Rule**: To add a cache, choose namespace + define tag pattern + call `cache.namespace('x').set({ key, value, tags })`.
+## 4. Acceptance Criteria
 > Full EARS requirements: [requirements.md](./MDT-105/requirements.md)
 
-### Functional (Outcome-focused)
+### Functional (initial Outcome)
 
-- [ ] Dedicated shared cache module exists and is used by all backend services
-- [ ] All cache TTLs configurable via environment variables with documented defaults
-- [ ] Cache size limits enforced (no unbounded memory growth)
-- [ ] Project discovery cache TTL no longer hardcoded
-- [ ] MCP server preserves existing `MCP_CACHE_TIMEOUT` behavior
+- [ ] `bentocache` installed and integrated in shared module
+- [ ] `shared/cache/` module with facade, config, and types (≤150 lines total)
+- [ ] All cache TTLs configurable via `[system.cache]` in global config
+- [ ] `MDT_CACHE_DISABLE` and `MDT_CACHE_TIMEOUT` env vars work
+- [ ] `deleteByTag()` invalidates all entries with matching tag
+- [ ] `ProjectCacheService` migrated to use shared cache module
+- [ ] `TitleExtractionService` migrated to use shared cache module
+- [ ] `ExtractMetadataCommand` migrated to use shared cache module
+- [ ] `ReadFileCommand` migrated to use shared cache module
+- [ ] MCP server migrated from `MCP_CACHE_TIMEOUT` to `MDT_CACHE_TIMEOUT`
 
 ### Non-Functional
 
 - [ ] All existing tests pass after cache module migration
-- [ ] Cache hit/miss ratios remain similar to current implementation
-- [ ] Memory usage stays within current bounds under normal load
-- [ ] Configuration changes (TTL, size limits) take effect without server restart
+- [ ] Cache operations < 1ms latency (bentocache guarantee)
+- [ ] Memory usage bounded by `maxSize` config
 
-### Edge Cases
+### Size Verification
 
-- What happens when cache size limit reached (eviction policy)
-- What happens when invalid TTL value configured (fallback to default)
-- What happens when cache disabled (TTL=0 or size=0)
-- What happens during concurrent cache access (thread safety in Node.js)
+| Module | Limit | Hard Max |
+|--------|-------|----------|
+| `shared/cache/facade.ts` | 60 | 90 |
+| `shared/cache/config.ts` | 50 | 75 |
+| `shared/cache/types.ts` | 25 | 40 |
 ## 5. Verification
 > Full EARS requirements: [requirements.md](./MDT-105/requirements.md)
 
@@ -132,3 +138,22 @@ priority: Medium
 ### Requirements Specification
 
 - [`docs/CRs/MDT-105/requirements.md`](./MDT-105/requirements.md) — EARS-formatted behavioral requirements
+
+## 6. Clarifications
+
+### Session 2025-12-27
+
+- Q: Which file contains File Metadata/Content caches? → A: Investigated - `server/commands/ExtractMetadataCommand.ts` (metadata) and `server/commands/ReadFileCommand.ts` (content)
+- Q: What changes needed in ProjectCacheService.ts? → A: Replace internal cache object with `createCache()` call, preserve public API
+- Q: How to handle MCP_CACHE_TIMEOUT breaking change? → A: Hard break - only support `MDT_CACHE_TIMEOUT`, update docker-compose files, document in release notes
+- Q: How should cache keys be organized? → A: Absolute file paths. Each cache instance isolated by name, keys are just file paths. `TitleExtractionService` changes from composite `projectPath:relativePath` to absolute paths.
+
+### Updated Cache Inventory (with file paths)
+
+| Cache Type | Current Location | Current TTL | Migration |
+|------------|------------------|-------------|-----------|
+| Project Discovery | `shared/services/project/ProjectCacheService.ts` | 30s hardcoded | Replace cache object with `createCache('projects')` |
+| File Metadata | `server/commands/ExtractMetadataCommand.ts` | 3600s | Replace Map with `createCache('file-metadata')` |
+| File Content | `server/commands/ReadFileCommand.ts` | 3600s | Replace Map with `createCache('file-content')` |
+| Title Extraction | `shared/services/TitleExtractionService.ts` | 3600s | Replace Map with `createCache('titles')` |
+| MCP Project Discovery | `mcp-server/src/config/index.ts` | 300s via env | Use `MDT_CACHE_TIMEOUT` env var |
