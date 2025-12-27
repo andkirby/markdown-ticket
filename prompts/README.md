@@ -25,7 +25,7 @@ All workflows have access to these variables, injected at session start via a `S
 | Command | Purpose | Output |
 |---------|---------|--------|
 | `/mdt:ticket-creation` | Create CR with flexible depth (WHAT only or WHAT+HOW) | CR in MDT system |
-| `/mdt:requirements` | Generate EARS-formatted requirements | `{TICKETS_PATH}/{CR-KEY}/requirements.md` |
+| `/mdt:requirements` | Generate requirements (EARS + FR/NFR) with CR-type-aware format | `{TICKETS_PATH}/{CR-KEY}/requirements.md` |
 | `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
 | `/mdt:domain-lens` | Surface DDD constraints (optional) | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
 | `/mdt:domain-audit` | Analyze code for DDD violations | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` |
@@ -137,20 +137,28 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
 /mdt:reflection ───────────────── Updates: CR with learnings
 ```
 
-## When to Skip `/mdt:requirements`
+## When to Use `/mdt:requirements`
 
-**For refactoring and technical debt CRs, skip `/mdt:requirements`.**
+### Quick Decision Table
 
-### Why
+| CR Type | Use `/mdt:requirements`? | Alternative |
+|---------|-------------------------|-------------|
+| New feature | ✅ Yes (full) | — |
+| Enhancement | ✅ Yes (full) | — |
+| Complex bug fix | ✅ Yes (brief) | — |
+| Simple bug fix | ❌ No | CR Acceptance Criteria |
+| Refactoring | ❌ No | `/mdt:assess` → `/mdt:architecture` |
+| Tech Debt | ❌ No | `/mdt:architecture` directly |
+| Documentation | ❌ No | No requirements needed |
+| Migration | ✅ Yes (hybrid) | — |
 
-- **EARS syntax is designed for behavioral specifications** — "WHEN user clicks Save, the system shall persist..."
-- Refactoring requires *internal restructuring* specifications, not user-facing behaviors
-- Success criteria are structural: size targets, interface preservation, behavioral equivalence
-- Requirements become awkward: "WHEN the get_cr tool processes markdown content..."
+### Why Skip for Refactoring/Tech-Debt
+
+- **EARS describes behavior** — refactoring *preserves* behavior, doesn't define new behavior
+- **Focus is structural** — size targets, interface preservation, not WHEN/THEN statements
+- **Requirements become awkward** — "WHEN the cache module processes entries..." isn't useful
 
 ### Recommended Flow for Refactoring/Tech-Debt
-
-Use **Full Specification Mode** for refactoring (implementation approach is known):
 
 ```
 /mdt:ticket-creation (Full Specification)
@@ -178,16 +186,11 @@ Use **Full Specification Mode** for refactoring (implementation approach is know
 /mdt:reflection ───────────────────── Update CR with learnings
 ```
 
-### What the CR Should Capture Instead
-
-- **Problem**: What's wrong with current structure (duplication, bloat, coupling)
-- **Success criteria**: Size targets, interface preservation, behavioral equivalence
-- **Scope boundaries**: What's NOT changing
-
 ### When `/mdt:requirements` IS Valuable
 
 - **New features** with multiple user-facing behaviors
 - **Complex integrations** where WHEN/IF/WHILE conditions matter
+- **Configurable features** needing FR/NFR/Configuration tables
 - **Compliance-sensitive work** needing formal traceability
 
 ## Debt Prevention Chain
@@ -363,19 +366,42 @@ Tasks and verification use these values — no hardcoded assumptions.
 
 ### `/mdt:requirements`
 
-Generates `{TICKETS_PATH}/{CR-KEY}/requirements.md`:
+Generates `{TICKETS_PATH}/{CR-KEY}/requirements.md` with CR-type-aware format:
 
-- **EARS Syntax**: WHEN/WHILE/IF...THEN/WHERE templates
-- **Requirement Groups**: Organized by feature/behavior
-- **Artifact Mapping**: Each requirement → primary artifact + integration points
-- **Traceability**: Requirements ↔ CR sections
+**Core Principle**: Requirements describe WHAT the system does, not WHERE or HOW. Architecture decides implementation.
 
-**EARS Types**:
+**CR Type Detection**:
+| CR Type | Format | Code Refs in EARS? |
+|---------|--------|-------------------|
+| New Feature | Pure behavioral | ❌ No |
+| Enhancement | Pure behavioral | ❌ No |
+| Bug Fix | Minimal, targeted | ✅ Yes (precision) |
+| Refactoring | **Skip workflow** | — |
+| Tech Debt | **Skip workflow** | — |
+
+**Output Sections** (New Feature/Enhancement):
+- **Behavioral Requirements (EARS)**: Pure behavioral specs using "the system shall"
+- **Functional Requirements**: Capability table (FR-1, FR-2, ...)
+- **Non-Functional Requirements**: Quality attributes with measurable targets
+- **Configuration Requirements**: Env vars, defaults, rationale (if configurable)
+- **Current Implementation Context**: Informational code refs (optional, for enhancements)
+- **Artifact Mapping**: Requirement → file mapping (separate from EARS)
+
+**EARS Types** (Pure Behavioral):
 | Type | Template | Example |
 |------|----------|----------|
-| Event | WHEN `<trigger>` the `<s>` shall | WHEN user clicks Save, the `ProfileService` shall persist |
-| State | WHILE `<state>` the `<s>` shall | WHILE offline, the `SyncQueue` shall queue mutations |
-| Unwanted | IF `<error>` THEN the `<s>` shall | IF timeout, THEN `RetryHandler` shall retry 3x |
+| Event | WHEN `<trigger>` the system shall | WHEN user clicks Save, the system shall persist changes |
+| State | WHILE `<state>` the system shall | WHILE offline, the system shall queue mutations locally |
+| Unwanted | IF `<error>` THEN the system shall | IF timeout, THEN the system shall retry 3 times |
+
+**Code Reference Rules**:
+```markdown
+# ✅ Pure behavioral (new features)
+WHEN user clicks tab, the system shall display the document.
+
+# ❌ Avoid (constrains architecture)
+WHEN user clicks tab, the `useSubDocuments` hook shall call API.
+```
 
 ### `/mdt:tests`
 
@@ -595,7 +621,7 @@ prompts/
 ├── hooks/
 │   └── mdt-project-vars.sh  # SessionStart hook for PROJECT_CODE/TICKETS_PATH
 ├── mdt-ticket-creation.md   # CR creation (v5 - flexible depth)
-├── mdt-requirements.md      # EARS requirements (v1)
+├── mdt-requirements.md      # Requirements with FR/NFR (v2 - CR-type-aware)
 ├── mdt-assess.md            # Code fitness assessment (v2)
 ├── mdt-domain-lens.md       # DDD constraints (v2 - code grounded)
 ├── mdt-domain-audit.md      # DDD violations analysis (v1)
@@ -623,16 +649,18 @@ prompts/
 ## Design Principles
 
 1. **Flexible specification depth** — choose WHAT-only or WHAT+HOW based on certainty
-2. **Build vs Use evaluation** — evaluate existing libraries before building custom (>50 lines)
-3. **Constraints are explicit** — size limits, exclusions, STOP conditions
-4. **Three-zone verification** — OK, FLAG (warning), STOP (blocked)
-5. **Shared patterns first** — Phase 1 before Phase 2
-6. **Anti-duplication enforced** — import from shared, never copy
-7. **Project-agnostic** — works with any language/stack
-8. **Violations block progress** — cannot mark complete if constraints violated
-9. **debt.md is diagnosis** — fix via new CR, not direct execution
-10. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
-11. **Phase isolation** — epic CRs use phase folders for tests.md and tasks.md
+2. **Requirements describe WHAT, not WHERE** — pure behavioral EARS; architecture decides implementation
+3. **CR-type-aware formatting** — new features get full requirements; refactoring skips EARS
+4. **Build vs Use evaluation** — evaluate existing libraries before building custom (>50 lines)
+5. **Constraints are explicit** — size limits, exclusions, STOP conditions
+6. **Three-zone verification** — OK, FLAG (warning), STOP (blocked)
+7. **Shared patterns first** — Phase 1 before Phase 2
+8. **Anti-duplication enforced** — import from shared, never copy
+9. **Project-agnostic** — works with any language/stack
+10. **Violations block progress** — cannot mark complete if constraints violated
+11. **debt.md is diagnosis** — fix via new CR, not direct execution
+12. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
+13. **Phase isolation** — epic CRs use phase folders for tests.md and tasks.md
 
 ## Phased CRs (Epic Tickets)
 
@@ -794,7 +822,16 @@ When `requirements.md` exists, downstream prompts consume it:
 | Prompt | How It Uses requirements.md |
 |--------|-----------------------------|
 | `/mdt:tests` | Transforms EARS → BDD scenarios, creates test files |
-| `/mdt:architecture` | Maps components to requirements, validates coverage |
+| `/mdt:architecture` | Maps components to requirements, validates coverage; uses FR/NFR for constraints |
 | `/mdt:tasks` | Each task has `**Implements**: R1.1, R1.2` + `**Tests**: test_xxx` |
 | `/mdt:implement` | Verifies tests GREEN, marks requirements satisfied |
 | `/mdt:tech-debt` | Flags unsatisfied requirements as High severity debt |
+
+**Requirements Document Sections** (v2):
+| Section | Purpose | Used By |
+|---------|---------|---------|
+| Behavioral Requirements (EARS) | What the system does | Tests, Architecture |
+| Functional Requirements (FR) | Specific capabilities | Architecture, Tasks |
+| Non-Functional Requirements (NFR) | Quality targets | Architecture, Implement |
+| Configuration Requirements | Env vars, defaults | Architecture, Implement |
+| Artifact Mapping | Req → file traceability | Tasks, Tech-Debt |

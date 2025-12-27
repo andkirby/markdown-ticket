@@ -1,8 +1,8 @@
-# MDT Requirements Specification Workflow (v1)
+# MDT Requirements Specification Workflow (v2)
 
-Generate EARS-formatted requirements from CR context. Produces `{TICKETS_PATH}/{CR-KEY}/requirements.md`.
+Generate requirements from CR context. Produces `{TICKETS_PATH}/{CR-KEY}/requirements.md`.
 
-**Core Principle**: Transform behavioral needs into testable requirements using EARS syntax. Every requirement maps to concrete artifacts.
+**Core Principle**: Requirements describe WHAT the system does, not WHERE or HOW. Architecture decides implementation details.
 
 ## User Input
 
@@ -18,36 +18,169 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 
 `{TICKETS_PATH}/{CR-KEY}/requirements.md`
 
+## Requirements Scope Detection
+
+**Priority**: Check for explicit `**Requirements Scope**` field in CR content FIRST.
+
+### Step 1: Check for Explicit Scope
+
+Look for this pattern in CR content (typically after the H1 title):
+```markdown
+**Requirements Scope**: {full|brief|preservation|none}
+```
+
+If found, use that value directly:
+
+| Scope | Action | Output Format |
+|-------|--------|---------------|
+| `full` | Generate full requirements | EARS + FR + NFR + Config |
+| `brief` | Generate minimal requirements | Bug description + fix criteria |
+| `preservation` | Generate behavior preservation specs | Behavior lock tests for refactoring |
+| `none` | **Exit early** | Recommend `/mdt:architecture` directly |
+
+### Step 2: Fallback to CR Type Detection
+
+**Only if `Requirements Scope` field is missing**, infer from CR type:
+
+| CR Type | Inferred Scope | EARS Format | Sections to Generate |
+|---------|----------------|-------------|---------------------|
+| **Feature Enhancement** | `full` | Pure behavioral | EARS + FR + NFR + Config |
+| **Enhancement** | `full` | Pure behavioral | EARS + FR + NFR + Current Context |
+| **Bug Fix** | `brief` | Minimal, targeted | Bug description + fix criteria |
+| **Refactoring** | `none` | **Skip** | Recommend `/mdt:architecture` |
+| **Tech Debt** | `none` | **Skip** | Recommend `/mdt:architecture` |
+| **Architecture** | `none` | **Skip** | Recommend `/mdt:architecture` |
+| **Documentation** | `none` | **Skip** | No requirements needed |
+| **Migration** | `full` | Hybrid | EARS + Migration Map |
+
+### Step 3: Content Analysis Override
+
+**Only if scope is `none` (from type inference)**, check for behavioral signals:
+
+| Signal | Found In | Override To |
+|--------|----------|-------------|
+| "Open Questions" with behavior questions | Section 3 | `full` |
+| New capabilities mentioned | Problem/Scope | `full` |
+| "adds", "enables", "new feature" language | Throughout | `full` |
+| Size limits, eviction, config hot-reload | Acceptance Criteria | `full` |
+
+If behavioral signals detected, **ask user**:
+```markdown
+This CR is labeled {type} but contains behavioral requirements:
+- {signal 1}
+- {signal 2}
+
+Generate requirements? (yes → full, no → skip to architecture)
+```
+
+### When to Skip `/mdt:requirements`
+
+**Exit early** with scope = `none` for:
+- **Explicit scope = "none"**: Author declared no requirements needed
+- **Refactoring CRs**: EARS describes behavior; refactoring preserves behavior
+- **Tech Debt CRs** (no new behaviors): Focus is structure, not behavior
+- **Simple bug fixes**: Single-file scope with obvious fix
+- **Documentation-only**: No behavioral requirements
+- **CRs with <3 behavioral needs**: CR Acceptance Criteria suffices
+
 ## EARS Syntax Reference
 
 EARS (Easy Approach to Requirements Syntax) provides templates for unambiguous requirements:
 
 | Type | Template | Use When |
 |------|----------|----------|
-| **Ubiquitous** | The `<system>` shall `<action>` | Always true, no trigger |
-| **Event-Driven** | WHEN `<trigger>` the `<system>` shall `<action>` | Response to event |
-| **State-Driven** | WHILE `<state>` the `<system>` shall `<action>` | Behavior during condition |
-| **Unwanted** | IF `<condition>` THEN the `<system>` shall `<action>` | Error/exception handling |
-| **Optional** | WHERE `<feature>` the `<system>` shall `<action>` | Feature-dependent behavior |
-| **Complex** | WHILE `<state>` WHEN `<trigger>` the `<system>` shall `<action>` | Combined conditions |
+| **Ubiquitous** | The system shall `<action>` | Always true, no trigger |
+| **Event-Driven** | WHEN `<trigger>` the system shall `<action>` | Response to event |
+| **State-Driven** | WHILE `<state>` the system shall `<action>` | Behavior during condition |
+| **Unwanted** | IF `<condition>` THEN the system shall `<action>` | Error/exception handling |
+| **Optional** | WHERE `<feature>` the system shall `<action>` | Feature-dependent behavior |
+| **Complex** | WHILE `<state>` WHEN `<trigger>` the system shall `<action>` | Combined conditions |
 
 **Keywords**: WHEN, WHILE, IF...THEN, WHERE, SHALL
 
+## Code Reference Rules
+
+### For New Features and Enhancements (Pure Behavioral)
+
+EARS statements must be **implementation-agnostic**:
+
+```markdown
+# ✅ Correct (pure behavioral)
+WHEN user clicks a tab, the system shall display the corresponding document.
+WHEN cache entry age exceeds TTL, the system shall invalidate the entry.
+IF upload fails, THEN the system shall display an error message.
+
+# ❌ Avoid (constrains architecture)
+WHEN user clicks a tab, the `useSubDocuments` hook shall call the API.
+The `CacheModule.ts` shall provide TTL-based expiration.
+IF upload fails, THEN the `TicketTabs` component shall display error.
+```
+
+**Why**: Requirements should not constrain naming, file structure, or component design. The architect decides WHERE behavior lives.
+
+### For Bug Fixes (Code Refs Allowed)
+
+Bug fixes target specific code—precision matters:
+
+```markdown
+# ✅ Acceptable for bug fixes
+The race condition in `useProjectManager` state updates shall be resolved.
+WHEN `projectsRef.current` is accessed in callbacks, it SHALL reflect latest state.
+```
+
+### Current Implementation Context (Separate Section)
+
+If code references add context, place them in a **separate section**—not in EARS:
+
+```markdown
+## Current Implementation Context
+> Informational only. Architecture may restructure as needed.
+
+| Behavior | Current Location | Notes |
+|----------|------------------|-------|
+| Project caching | `ProjectService.ts:45-60` | Hardcoded 30s TTL |
+| File metadata cache | `TicketService.ts:120-150` | No size limit |
+```
+
 ## Execution Steps
 
-### Step 1: Load CR Context
+### Step 1: Load CR Context and Determine Scope
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
-2. Extract from CR:
+
+2. **Check for explicit Requirements Scope** in CR content:
+   - Search for pattern: `**Requirements Scope**: {value}`
+   - If found, use that value as `SCOPE`
+   - Store: `SCOPE_SOURCE = "explicit"`
+
+3. **If no explicit scope**, infer from CR type:
+   - Read `type` field from YAML frontmatter
+   - Apply mapping from "Step 2: Fallback to CR Type Detection" table
+   - Store: `SCOPE_SOURCE = "inferred"`
+
+4. **If inferred scope = "none"**, check for behavioral signals:
+   - Scan for "Open Questions" with behavior questions
+   - Check for new capabilities in Problem/Scope
+   - Look for behavioral language ("adds", "enables", "new capability")
+   - If signals found: Ask user to confirm scope override
+   - Store: `SCOPE_SOURCE = "override"` if user changes scope
+
+5. **Exit early if SCOPE = "none"**:
+   ```markdown
+   ## Requirements Workflow Skipped
+
+   **CR Type**: {type}
+   **Requirements Scope**: none ({SCOPE_SOURCE})
+   **Reason**: {refactoring/tech-debt/documentation-only/author-specified}
+   **Recommendation**: Use `/mdt:architecture {CR-KEY}` directly.
+   ```
+
+6. **Extract from CR** (if continuing):
    - **Problem** — behavioral needs, user goals
    - **Scope** — what changes, what doesn't
-   - **Affected/New Artifacts** — system components
+   - **Affected/New Artifacts** — system components (for Artifact Mapping, not EARS)
    - **Acceptance Criteria** — existing testable conditions
    - **Architecture Design** (if exists) — structure context
-3. Parse CR type — affects requirement focus:
-   - Feature Enhancement → functional requirements
-   - Bug Fix → unwanted behavior requirements
-   - Architecture → structural/constraint requirements
 
 ### Step 2: Identify Requirement Sources
 
@@ -107,10 +240,22 @@ For each requirement, identify:
 
 ### Step 6: Generate Requirements Document
 
+Use the appropriate template based on `SCOPE`:
+
+| SCOPE | Template | Use When |
+|-------|----------|----------|
+| `full` | Template A: Full Requirements | New features, enhancements |
+| `brief` | Template B: Bug Fix | Bug fixes, targeted changes |
+| `preservation` | Template C: Behavior Preservation | Refactoring, must preserve behavior |
+| `full` + migration | Template D: Migration | Moving/reorganizing with new behavior |
+| `none` | Exit early (no template) | Structural changes only |
+
+#### Template A: Full Requirements (SCOPE = "full")
+
 ```markdown
 # Requirements: {CR-KEY}
 
-**Source**: [{CR-KEY}](../../../{TICKETS_PATH}/{PROJECT}/{CR-KEY}.md)
+**Source**: [{CR-KEY}](../{CR-KEY}.md)
 **Generated**: {YYYY-MM-DD}
 **CR Type**: {type}
 
@@ -118,7 +263,7 @@ For each requirement, identify:
 
 {2-3 sentences describing the feature/change scope from CR Problem section}
 
-## Requirements
+## Behavioral Requirements (EARS)
 
 ### Requirement 1: {Feature/Behavior Name}
 
@@ -126,9 +271,9 @@ For each requirement, identify:
 
 #### Acceptance Criteria
 
-1. WHEN {trigger}, the `{Component}` shall {action}.
-2. WHILE {state}, the `{Component}` shall {behavior}.
-3. IF {error condition}, THEN the `{Component}` shall {recovery action}.
+1. WHEN {trigger}, the system shall {action}.
+2. WHILE {state}, the system shall {behavior}.
+3. IF {error condition}, THEN the system shall {recovery action}.
 
 ### Requirement 2: {Feature/Behavior Name}
 
@@ -136,20 +281,69 @@ For each requirement, identify:
 
 #### Acceptance Criteria
 
-1. {EARS requirement}
-2. {EARS requirement}
+1. {EARS requirement - pure behavioral, no component names}
+2. {EARS requirement - pure behavioral, no component names}
 
 {Continue for all requirements...}
 
 ---
 
+## Functional Requirements
+
+> Specific capabilities the system must provide.
+
+| ID | Requirement | Rationale |
+|----|-------------|-----------|
+| FR-1 | {Capability statement} | {Why needed} |
+| FR-2 | {Capability statement} | {Why needed} |
+| FR-3 | {Capability statement} | {Why needed} |
+
+## Non-Functional Requirements
+
+> Quality attributes and constraints.
+
+### Performance
+| ID | Requirement | Target | Rationale |
+|----|-------------|--------|-----------|
+| NFR-P1 | {Performance requirement} | {Metric} | {Why this target} |
+
+### Reliability
+| ID | Requirement | Target | Rationale |
+|----|-------------|--------|-----------|
+| NFR-R1 | {Reliability requirement} | {Metric} | {Why this target} |
+
+### Usability
+| ID | Requirement | Target | Rationale |
+|----|-------------|--------|-----------|
+| NFR-U1 | {Usability requirement} | {Metric} | {Why this target} |
+
+## Configuration Requirements
+
+> Include only if feature has configurable settings.
+
+| Setting | Description | Default | Valid Range | Rationale |
+|---------|-------------|---------|-------------|-----------|
+| `{ENV_VAR_NAME}` | {What it controls} | {Default value} | {Constraints} | {Why configurable} |
+
+## Current Implementation Context
+
+> Informational only. Architecture may restructure as needed.
+> Include only for enhancements to existing features.
+
+| Behavior | Current Location | Notes |
+|----------|------------------|-------|
+| {Existing behavior} | `{file:lines}` | {Issue or context} |
+
+---
+
 ## Artifact Mapping
+
+> Maps requirements to implementation. Architecture decides final structure.
 
 | Req ID | Requirement Summary | Primary Artifact | Integration Points |
 |--------|---------------------|------------------|-------------------|
 | R1.1 | {brief} | `{file/component}` | `{other artifacts}` |
 | R1.2 | {brief} | `{file/component}` | `{other artifacts}` |
-| R2.1 | {brief} | `{file/component}` | `{other artifacts}` |
 
 ## Traceability
 
@@ -158,37 +352,181 @@ For each requirement, identify:
 | R1.1 | Problem | AC-1 |
 | R1.2 | Scope | AC-2 |
 
-## Non-Functional Requirements
+---
+*Generated from {CR-KEY} by /mdt:requirements (v3)*
+```
 
-### Performance
-- {EARS requirement with timing constraint}
+#### Template B: Bug Fix (SCOPE = "brief")
 
-### Reliability  
-- {EARS requirement for error handling}
+```markdown
+# Requirements: {CR-KEY}
 
-### Consistency
-- {EARS requirement for state management}
+**Source**: [{CR-KEY}](../{CR-KEY}.md)
+**Generated**: {YYYY-MM-DD}
+**CR Type**: Bug Fix
+
+## Bug Description
+
+{Description of the bug, including specific code location if known}
+
+## Fix Requirements
+
+1. {EARS requirement with code refs as needed}
+2. {EARS requirement with code refs as needed}
+
+## Verification
+
+- [ ] {How to verify the fix}
+- [ ] {Regression test needed}
 
 ---
-*Generated from {CR-KEY} by /mdt:requirements*
+*Generated from {CR-KEY} by /mdt:requirements (v3)*
+```
+
+#### Template C: Behavior Preservation (SCOPE = "preservation")
+
+```markdown
+# Requirements: {CR-KEY}
+
+**Source**: [{CR-KEY}](../{CR-KEY}.md)
+**Generated**: {YYYY-MM-DD}
+**CR Type**: {type}
+**Scope**: Behavior Preservation
+
+## Introduction
+
+{Description of refactoring scope and why behavior preservation is critical}
+
+## Behaviors to Preserve
+
+> These behaviors MUST remain unchanged after refactoring.
+> Tests should be GREEN before and after changes.
+
+### Behavior Group 1: {Feature/Area Name}
+
+| ID | Current Behavior | Verification |
+|----|------------------|--------------|
+| BP-1.1 | {WHEN X happens, Y results} | {How to verify} |
+| BP-1.2 | {WHILE X state, Y behavior} | {How to verify} |
+| BP-1.3 | {IF X error, THEN Y recovery} | {How to verify} |
+
+### Behavior Group 2: {Feature/Area Name}
+
+| ID | Current Behavior | Verification |
+|----|------------------|--------------|
+| BP-2.1 | {behavior} | {verification} |
+
+## Integration Contracts
+
+> External interfaces that must remain stable.
+
+| Interface | Contract | Consumers |
+|-----------|----------|-----------|
+| {API endpoint/method} | {Input → Output contract} | {Who depends on it} |
+
+## Excluded from Preservation
+
+> Behaviors explicitly allowed to change.
+
+- {Behavior that may change and why}
+- {Internal implementation detail not part of contract}
+
+---
+
+## Test Coverage Requirements
+
+| Behavior ID | Test Type | Test Location | Current Status |
+|-------------|-----------|---------------|----------------|
+| BP-1.1 | Unit | `{test file}` | {Exists/Needed} |
+| BP-1.2 | Integration | `{test file}` | {Exists/Needed} |
+
+## Verification Checklist
+
+Before refactoring:
+- [ ] All behavior preservation tests exist
+- [ ] All tests pass (GREEN)
+- [ ] Integration contracts documented
+
+After refactoring:
+- [ ] All behavior preservation tests still pass (GREEN)
+- [ ] No test was deleted or weakened
+- [ ] Integration contracts unchanged
+
+---
+*Generated from {CR-KEY} by /mdt:requirements (v3)*
+```
+
+#### Template D: Migration (SCOPE = "full" with migration)
+
+```markdown
+# Requirements: {CR-KEY}
+
+**Source**: [{CR-KEY}](../{CR-KEY}.md)
+**Generated**: {YYYY-MM-DD}
+**CR Type**: Migration
+
+## Introduction
+
+{Description of migration scope}
+
+## Behavioral Requirements (EARS)
+
+{Pure behavioral requirements for new behavior}
+
+## Migration Map
+
+| From | To | Status |
+|------|-----|--------|
+| `{old location}` | `{new location}` | Pending |
+| `{old location}` | `{new location}` | Pending |
+
+## Backward Compatibility
+
+| Concern | Mitigation |
+|---------|------------|
+| {Breaking change risk} | {How to preserve compatibility} |
+
+---
+*Generated from {CR-KEY} by /mdt:requirements (v3)*
 ```
 
 ### Step 7: Validate Requirements
 
-Before saving, verify each requirement:
+Before saving, verify based on CR type:
 
+#### For New Features / Enhancements (Pure Behavioral)
+
+- [ ] EARS statements use "the system shall" — no component/file names
 - [ ] Uses correct EARS template for the trigger type
-- [ ] References concrete artifact (component name in backticks)
 - [ ] Has measurable/observable outcome
-- [ ] Maps to at least one artifact in Section 4
-- [ ] No behavioral descriptions ("the system that handles...")
 - [ ] No vague terms ("quickly", "properly", "correctly")
 - [ ] Timing constraints where applicable
+- [ ] FR table captures specific capabilities
+- [ ] NFR table has measurable targets
+- [ ] Code refs ONLY in "Current Implementation Context" section (if present)
+- [ ] Artifact Mapping is separate from EARS statements
 
-**Quality check:**
+**Quality check (New Feature):**
 ```
-✓ WHEN user clicks "Save", the `ProfileService` shall persist within 200ms.
-✗ The system should save data properly when the user wants to save.
+✓ WHEN user clicks "Save", the system shall persist changes within 200ms.
+✓ IF validation fails, THEN the system shall display field-specific errors.
+
+✗ WHEN user clicks "Save", the `ProfileService` shall persist...  (constrains architecture)
+✗ The `useForm` hook shall validate inputs...  (names specific component)
+✗ The system should save data properly...  (vague, no measurable outcome)
+```
+
+#### For Bug Fixes (Code Refs Allowed)
+
+- [ ] Bug location is clearly identified
+- [ ] Fix requirements are specific and testable
+- [ ] Verification steps are clear
+- [ ] Component names allowed when precision matters
+
+**Quality check (Bug Fix):**
+```
+✓ The race condition in `useProjectManager` state closure shall be resolved.
+✓ WHEN callback accesses `projectsRef.current`, it SHALL reflect latest state.
 ```
 
 ### Step 8: Update CR with Reference
@@ -244,71 +582,85 @@ Save to `{TICKETS_PATH}/{CR-KEY}/requirements.md`
 
 ## EARS Examples by Type
 
-### Event-Driven (WHEN)
+### Event-Driven (WHEN) — Pure Behavioral
 ```
 WHEN user submits login form,
-the `AuthService` shall validate credentials within 500ms.
+the system shall validate credentials within 500ms.
 
 WHEN API receives POST /users request,
-the `UserController` shall create user record and return 201 status.
+the system shall create user record and return 201 status.
 
 WHEN file upload completes,
-the `StorageService` shall trigger `FileProcessor` webhook.
+the system shall process the file and notify the user.
 ```
 
-### State-Driven (WHILE)
+### State-Driven (WHILE) — Pure Behavioral
 ```
 WHILE user session is active,
-the `SessionManager` shall refresh token every 15 minutes.
+the system shall refresh authentication token every 15 minutes.
 
 WHILE offline mode is enabled,
-the `SyncQueue` shall store mutations locally.
+the system shall store mutations locally for later sync.
 
 WHILE bulk import is running,
-the `ImportService` shall display progress percentage.
+the system shall display progress percentage to the user.
 ```
 
-### Unwanted Behavior (IF...THEN)
+### Unwanted Behavior (IF...THEN) — Pure Behavioral
 ```
 IF database connection fails,
-THEN the `ConnectionPool` shall retry 3 times with exponential backoff.
+THEN the system shall retry 3 times with exponential backoff.
 
 IF validation returns errors,
-THEN the `FormHandler` shall display error messages within 100ms.
+THEN the system shall display field-specific error messages within 100ms.
 
-IF rate limit exceeded,
-THEN the `RateLimiter` shall return 429 status with retry-after header.
+IF rate limit is exceeded,
+THEN the system shall return 429 status with retry-after header.
 ```
 
-### Ubiquitous (no trigger)
+### Ubiquitous (no trigger) — Pure Behavioral
 ```
-The `PasswordService` shall hash passwords using bcrypt with cost factor 12.
+The system shall hash passwords using bcrypt with cost factor 12.
 
-The `AuditLogger` shall record all database mutations with timestamp and user ID.
+The system shall record all database mutations with timestamp and user ID.
 
-The `ConfigLoader` shall validate environment variables on startup.
+The system shall validate environment variables on startup.
 ```
 
-### Complex (Combined)
+### Complex (Combined) — Pure Behavioral
 ```
 WHILE user is authenticated,
 WHEN session idle exceeds 30 minutes,
-the `SessionManager` shall terminate session and redirect to login.
+the system shall terminate session and redirect to login.
 
 WHILE feature flag "dark-mode" is enabled,
 WHEN user opens settings,
-the `ThemeSelector` shall display dark mode toggle.
+the system shall display dark mode toggle.
+```
+
+### Bug Fix Examples (Code Refs Allowed)
+```
+The stale closure in `useProjectManager.ts:145` shall be fixed
+by using refs for frequently-changing state.
+
+WHEN `onDragEnd` callback executes,
+the `ticketsRef.current` SHALL contain the latest ticket state.
+
+IF `ProjectService.getProjects()` returns cached data,
+THEN the cache entry SHALL be less than TTL seconds old.
 ```
 
 ## Behavioral Rules
 
 1. **One requirement = one SHALL** — don't combine multiple behaviors
-2. **Concrete artifacts only** — backtick component names from CR
-3. **Measurable outcomes** — timing, counts, states, not adjectives
-4. **EARS keywords capitalized** — WHEN, WHILE, IF, THEN, WHERE, SHALL
-5. **User stories optional** — include Objective only if it adds clarity
-6. **Map every requirement** — must trace to artifact and CR section
-7. **Skip if trivial** — simple bug fixes may not need formal requirements
+2. **Pure behavioral for new features** — use "the system shall", not component names
+3. **Code refs allowed for bug fixes** — precision matters when fixing specific code
+4. **Measurable outcomes** — timing, counts, states, not adjectives
+5. **EARS keywords capitalized** — WHEN, WHILE, IF, THEN, WHERE, SHALL
+6. **User stories optional** — include Objective only if it adds clarity
+7. **Artifact Mapping is separate** — don't embed file paths in EARS statements
+8. **Current Context is informational** — architecture may restructure
+9. **Skip if not behavioral** — refactoring/tech-debt CRs don't need EARS
 
 ## Integration
 
@@ -325,14 +677,29 @@ the `ThemeSelector` shall display dark mode toggle.
                          (optional)
 ```
 
-## When to Skip
+## When to Skip (Quick Reference)
 
-Don't generate requirements.md for:
-- Simple bug fixes with single-file scope
-- Documentation-only changes
-- Trivial refactoring without behavioral changes
-- CRs with fewer than 3 behavioral needs
+| CR Type | Skip? | Alternative |
+|---------|-------|-------------|
+| Simple bug fix (single file) | ✅ Yes | CR Acceptance Criteria |
+| Documentation-only | ✅ Yes | No requirements needed |
+| Refactoring | ✅ Yes | `/mdt:assess` → `/mdt:architecture` |
+| Tech Debt | ✅ Yes | `/mdt:architecture` directly |
+| CRs with <3 behaviors | ✅ Yes | CR Acceptance Criteria |
+| New feature | ❌ No | Generate full requirements |
+| Enhancement | ❌ No | Generate requirements |
+| Complex bug fix | ❌ No | Generate brief requirements |
+| Migration | ❌ No | Generate with Migration Map |
 
-Instead, ensure CR Acceptance Criteria (Section 5) covers the needs directly.
+## Summary: Code Reference Decision
+
+| Situation | Code Refs in EARS? | Code Refs Location |
+|-----------|-------------------|-------------------|
+| New feature | ❌ No | Artifact Mapping only |
+| Enhancement | ❌ No | Current Context + Artifact Mapping |
+| Bug fix | ✅ Yes | In EARS (precision) |
+| Migration | ✅ Yes | Migration Map section |
+
+**Principle**: Requirements describe WHAT. Architecture decides WHERE.
 
 Context: $ARGUMENTS
