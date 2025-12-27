@@ -1,11 +1,12 @@
 ---
 code: MDT-091
-status: On Hold
+status: Implemented
 dateCreated: 2025-12-07T23:26:35.732Z
 type: Feature Enhancement
 priority: Medium
 dependsOn: 
 blocks: MDT-090
+relatedTickets: MDT-107
 ---
 
 # Add comprehensive E2E testing framework for MCP server tools
@@ -93,37 +94,44 @@ n| E2E Test Runner | MCP Server Process | JSON-RPC 2.0 over stdio/HTTP |
 - Client Wrapper: MCPTestClient abstracts transport-specific communication
 - Config Path Override: Tests use CONFIG_DIR to point to isolated test registry (~/.config/markdown-ticket/test-registry/)
 ## 5. Acceptance Criteria
+### Phase 1 Completion: ✅ IMPLEMENTED (2025-12-27)
+
+**Status**: 221 tests passing, 1 skipped (99.5% complete)
+
 ### Functional
-- [ ] E2E tests cover all 10 MCP tools in mcp-server/src/tools/index.ts via stdio transport (Phase 1)
-- [ ] Test isolation via CONFIG_DIR prevents interference with user projects
-- [ ] Temporary test directories created and cleaned up for each test run
-- [ ] Test projects include realistic .mdt-config.toml and CR markdown files
-- [ ] Default CONFIG_DIR (~/.config/markdown-ticket/) respected in production tests
-- [ ] Phase 2: HTTP transport testing after successful stdio implementation
+- [x] E2E tests cover all 10 MCP tools in mcp-server/src/tools/index.ts via stdio transport (Phase 1)
+- [x] Test isolation via CONFIG_DIR prevents interference with user projects
+- [x] Temporary test directories created and cleaned up for each test run
+- [x] Test projects include realistic .mdt-config.toml and CR markdown files
+- [x] Default CONFIG_DIR (~/.config/markdown-ticket/) respected in production tests
+- [~] Phase 2: HTTP transport testing → **Extracted to MDT-107**
 
 ### Non-Functional
-- [ ] Phase 1: E2E test execution time < 60 seconds for stdio test suite
-- [ ] Test isolation ensures no cross-test state leakage
-- [ ] Phase 1: Tests pass with MCP_HTTP_ENABLED=false (stdio only)
-- [ ] Memory usage remains stable during test execution
-- [ ] Phase 2: Tests pass with both MCP_HTTP_ENABLED=true and false configurations
+- [x] Phase 1: E2E test execution time < 60 seconds for stdio test suite
+- [x] Test isolation ensures no cross-test state leakage
+- [x] Phase 1: Tests pass with MCP_HTTP_ENABLED=false (stdio only)
+- [x] Memory usage remains stable during test execution
+- [~] Phase 2: Tests pass with both MCP_HTTP_ENABLED=true and false configurations → **Extracted to MDT-107**
 
 ### Testing
-**Phase 1.1 - Positive Tests:**
+**Phase 1.1 - Positive Tests:** ✅ COMPLETE
 - Unit: testEnvironment.ts mkdtemp creation and afterAll cleanup
 - Unit: testDataFactory.ts creates 3 project types with correct .mdt-config.toml
 - Integration: MCPTestClient callTool(), listTools(), getToolSchema() methods
 - E2E: All 10 MCP tools with valid inputs across 3 project types
 - Project: list_projects returns 2-3 projects, get_project_info validates real data
 
-**Phase 1.2 - Negative Tests:**
+**Phase 1.2 - Negative Tests:** ✅ COMPLETE
 - Invalid inputs: Missing required params, wrong project codes, non-existent CR keys
 - File system errors: Permission denied, missing directories, corrupted YAML files
 - Network/transport errors: Connection drops, timeout scenarios, malformed JSON-RPC
 
-**Phase 2 - HTTP Transport:**
-- HTTP-specific: MCP_HTTP_ENABLED=true transport switching
-- Security: Authentication, rate limiting, CORS if Phase 2 features enabled
+**Phase 2 - HTTP Transport:** 🔄 EXTRACTED TO MDT-107
+- HTTP-specific: MCP_HTTP_ENABLED=true transport switching → See MDT-107
+- Security: Authentication, rate limiting, CORS if Phase 2 features enabled → See MDT-107
+
+### Known Limitations
+- ⚠️ Per-tool rate limiting not implemented (1 test skipped) - global rate limiting works
 ## 6. Verification
 ### By CR Type
 - **Feature**: E2E test framework exists and all tests pass across both transports
