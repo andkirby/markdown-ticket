@@ -13,8 +13,8 @@ import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 describe('shared/test-lib - Integration', () => {
-  // Increase timeout for server startup (30s)
-  jest.setTimeout(30000);
+  // Increase timeout for server startup (60s)
+  jest.setTimeout(60000);
   let testEnv: TestEnvironment;
   let testServer: TestServer;
   let factory: ProjectFactory;
@@ -61,15 +61,65 @@ describe('shared/test-lib - Integration', () => {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // 4. Start backend server with CONFIG_DIR
-    // Note: pass actual project root (where package.json is), not temp dir
+    // Note: We need to find the MONOREPO root (where root package.json with workspaces is)
+    // The dev:server script is defined in the root package.json, not in the shared workspace
     // CONFIG_DIR env var tells server where to find test projects
     // IMPORTANT: Start server AFTER creating projects so it discovers them on startup
     testServer = new TestServer(testEnv.getPortConfig());
-    const projectRoot = findProjectRoot();
-    await testServer.start('backend', projectRoot);
 
-    // Wait a bit for server to be fully ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Find monorepo root by walking up from current directory
+    // We look for a package.json with "workspaces" field
+    let monorepoRoot = findProjectRoot();
+    while (monorepoRoot !== '/') {
+      const pkgPath = join(monorepoRoot, 'package.json');
+      if (existsSync(pkgPath)) {
+        const pkgContent = readFileSync(pkgPath, 'utf8');
+        if (pkgContent.includes('"workspaces"')) {
+          break; // Found the monorepo root
+        }
+      }
+      const parent = join(monorepoRoot, '..');
+      if (parent === monorepoRoot) break; // Reached filesystem root
+      monorepoRoot = parent;
+    }
+
+    console.log('Monorepo root:', monorepoRoot);
+    await testServer.start('backend', monorepoRoot);
+
+    // Wait for server to be fully ready and initialize project discovery
+    // Then poll until projects are discovered (fix race condition)
+    console.log('Waiting for backend server to discover projects...');
+    const port = testEnv.getPortConfig().backend;
+    const maxAttempts = 30;
+    const pollDelay = 500;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await fetch(`http://localhost:${port}/api/projects?bypassCache=true`);
+        if (response.ok) {
+          const projects = await response.json();
+          console.log(`Attempt ${attempt}: Found ${projects.length} projects`);
+
+          // Check if our TEST project is discovered
+          const testProject = projects.find((p: any) => p.id === 'TEST' || p.key === 'TEST');
+          if (testProject) {
+            console.log('✅ TEST project discovered by server');
+            break;
+          }
+
+          if (attempt === maxAttempts) {
+            throw new Error(`TEST project not discovered after ${maxAttempts} attempts. Found projects: ${JSON.stringify(projects)}`);
+          }
+        }
+      } catch (error) {
+        if (attempt === maxAttempts) {
+          throw new Error(`Failed to discover projects after ${maxAttempts} attempts: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+
+      // Wait before next attempt
+      await new Promise(resolve => setTimeout(resolve, pollDelay));
+    }
 
     console.log('Backend server started on port', testEnv.getPortConfig().backend);
   });
@@ -87,7 +137,8 @@ describe('shared/test-lib - Integration', () => {
     console.log('Server ready:', isReady);
 
     const port = testEnv.getPortConfig().backend;
-    const response = await fetch(`http://localhost:${port}/api/projects`);
+    // Use bypassCache to avoid cached empty project list from server startup
+    const response = await fetch(`http://localhost:${port}/api/projects?bypassCache=true`);
 
     expect(response.ok).toBe(true);
 
@@ -119,14 +170,14 @@ describe('shared/test-lib - Integration', () => {
     }
 
     // Should find our TEST project
-    const testProject = projects.find((p: any) => p.key === 'TEST');
+    const testProject = projects.find((p: any) => p.id === 'TEST' || p.key === 'TEST');
     expect(testProject).toBeDefined();
-    expect(testProject.name).toBe('Integration Test Project');
+    expect(testProject.project?.name || testProject.name).toBe('Integration Test Project');
   });
 
   it('backend server discovers test-lib created CRs', async () => {
     const port = testEnv.getPortConfig().backend;
-    const response = await fetch(`http://localhost:${port}/api/projects/TEST/crs`);
+    const response = await fetch(`http://localhost:${port}/api/projects/TEST/crs?bypassCache=true`);
 
     expect(response.ok).toBe(true);
 

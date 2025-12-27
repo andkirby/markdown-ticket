@@ -6,6 +6,8 @@
 
 import { spawn, ChildProcess, exec } from 'child_process';
 import { promisify } from 'util';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { TestFrameworkError, ServerConfig } from '../types.js';
 
 const execAsync = promisify(exec);
@@ -145,3 +147,23 @@ export const processHelper = new ProcessHelper();
 export const spawnProcess = processHelper.spawnProcess.bind(processHelper);
 export const executeProcess = processHelper.executeProcess.bind(processHelper);
 export const killProcessTree = processHelper.killProcessTree.bind(processHelper);
+
+/**
+ * Find the project root by looking for package.json
+ * Starts from current directory and traverses upward
+ */
+export function findProjectRoot(startPath: string = process.cwd()): string {
+  let currentPath = startPath;
+
+  while (currentPath !== '/') {
+    if (existsSync(join(currentPath, 'package.json'))) {
+      return currentPath;
+    }
+    currentPath = join(currentPath, '..');
+  }
+
+  throw new TestFrameworkError(
+    'Could not find project root (package.json not found)',
+    'PROJECT_ROOT_NOT_FOUND'
+  );
+}

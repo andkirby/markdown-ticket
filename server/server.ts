@@ -43,8 +43,8 @@ class ProjectServiceAdapter {
   }
 
   // Methods from SharedProjectService
-  async getAllProjects() {
-    return this.projectService.getAllProjects();
+  async getAllProjects(bypassCache = false) {
+    return this.projectService.getAllProjects(bypassCache);
   }
 
   getProjectConfig(path: string) {
