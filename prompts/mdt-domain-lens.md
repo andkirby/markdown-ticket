@@ -120,6 +120,12 @@ For each significant entity in CR scope:
 - Immutable
 - Interchangeable if attributes equal
 
+**Exclusion indicators** (NOT aggregates):
+- External library types (npm packages, framework classes)
+- Internal data structures (Maps, Sets, arrays)
+- Configuration/option objects (unless they enforce domain rules)
+- Implementation details (DTOs, utility types, primitive wrappers)
+
 ### Step 5: Surface Invariants
 
 **Question**: What business rules must ALWAYS be true?
@@ -372,6 +378,9 @@ Create `{TICKETS_PATH}/{CR-KEY}/domain.md`:
 ❌ **Hallucinated mappings**: CR says "Three-Strategy" → invent "StrategyService"
 ✅ **Honest mapping**: CR says "Three-Strategy" → `(new)` or actual class if exists
 
+❌ **Library types as aggregates**: External package types, data structures
+✅ **Domain concepts only**: Wrappers around libraries, entities with behavior
+
 ## Quality Checklist
 
 Before completing, verify:
@@ -383,6 +392,7 @@ Before completing, verify:
 - [ ] No file paths or structure recommendations
 - [ ] No pattern prescriptions
 - [ ] Aggregates have clear Root/Internal/Value roles
+- [ ] Aggregates represent domain concepts, not library types or implementation details
 - [ ] Cross-context operations flagged with coordination pattern
 - [ ] Empty sections omitted
 

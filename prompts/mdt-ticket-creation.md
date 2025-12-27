@@ -121,6 +121,51 @@ Options:
 - Set MCP `type` parameter
 - Determine verification approach (Section 6)
 - Frame remaining questions
+- Set default for Requirements Scope (Question 1b)
+
+**Store as**: `CR_TYPE`
+
+#### Question 1b: Requirements Scope (Required)
+
+Ask after Question 1, with smart defaults based on CR type:
+
+```
+Question: What level of requirements documentation is needed?
+Header: Req Scope
+Options (show default first based on CR_TYPE):
+```
+
+**Defaults by CR_TYPE**:
+| CR Type | Default Option | Other Options |
+|---------|----------------|---------------|
+| Feature Enhancement | `full`: Generate EARS + FR + NFR specs | `brief`, `none` |
+| Bug Fix | `brief`: Bug description + fix criteria | `full`, `none` |
+| Architecture | `none`: Skip requirements, use /mdt:architecture | `full`, `brief` |
+| Technical Debt | `none`: Skip requirements, use /mdt:architecture | `full`, `brief` |
+| Documentation | `none`: No requirements needed | `brief` |
+
+**Option descriptions**:
+- `full`: Full EARS behavioral specs + FR + NFR tables (Recommended for new capabilities)
+- `brief`: Minimal requirements, fix criteria only (Recommended for bug fixes)
+- `preservation`: Behavior lock tests for refactoring (Recommended when preserving behavior)
+- `none`: Skip requirements workflow (Recommended for structural changes)
+
+**Override prompt** (show when CR type suggests `none` but user may need requirements):
+```
+Default for {CR_TYPE} is "none" (skip requirements).
+
+Does this CR introduce NEW behaviors or capabilities?
+- No, purely structural → keep: none
+- Yes, adds new capabilities → change to: full
+- Yes, modifies existing behavior → change to: brief
+```
+
+**Use answer to**:
+- Set `REQUIREMENTS_SCOPE` value
+- Include in generated CR content
+- Guide post-creation workflow suggestions
+
+**Store as**: `REQUIREMENTS_SCOPE` = "full" | "brief" | "preservation" | "none"
 
 #### Question 2: Trigger/Motivation (Required)
 
@@ -379,11 +424,11 @@ After successful CR creation:
 
 1. **Report CR Key**: Inform user of created CR (e.g., "Created MDT-078")
 
-2. **Suggest Next Steps** based on `SPEC_MODE` and CR type:
+2. **Suggest Next Steps** based on `REQUIREMENTS_SCOPE`:
 
-   **Requirements Mode** (WHAT only):
+   **REQUIREMENTS_SCOPE = "full"**:
    ```
-   /mdt:requirements → EARS specifications from outcomes
+   /mdt:requirements → Full EARS + FR + NFR specifications
            ↓
    /mdt:assess → evaluate affected code fitness (optional)
            ↓
@@ -396,14 +441,42 @@ After successful CR creation:
    /mdt:implement → execution
    ```
 
-   **Full Specification Mode** (WHAT + HOW):
-   - **Technical Debt/Refactoring**:
-     - Skip `/mdt:requirements` (EARS format not suitable for structural changes)
-     - Flow: `/mdt:assess` → `/mdt:tests` → `/mdt:architecture` → `/mdt:tasks` → `/mdt:implement`
-   - **New Features/Integrations**:
-     - Flow: `/mdt:requirements` → `/mdt:assess` → `/mdt:tests` → `/mdt:architecture` → `/mdt:tasks` → `/mdt:implement`
+   **REQUIREMENTS_SCOPE = "brief"**:
+   ```
+   /mdt:requirements → Brief requirements (bug description + fix criteria)
+           ↓
+   /mdt:architecture → design fix approach
+           ↓
+   /mdt:tasks → task breakdown
+           ↓
+   /mdt:implement → execution
+   ```
 
-   **Both Modes**:
+   **REQUIREMENTS_SCOPE = "preservation"**:
+   ```
+   /mdt:assess → identify behavior to preserve
+           ↓
+   /mdt:tests → behavior preservation tests (must pass before refactoring)
+           ↓
+   /mdt:architecture → design target structure
+           ↓
+   /mdt:tasks → task breakdown
+           ↓
+   /mdt:implement → execution (tests stay green)
+   ```
+
+   **REQUIREMENTS_SCOPE = "none"**:
+   ```
+   /mdt:assess → evaluate affected code (optional)
+           ↓
+   /mdt:architecture → design directly
+           ↓
+   /mdt:tasks → task breakdown
+           ↓
+   /mdt:implement → execution
+   ```
+
+   **All Scopes**:
    - If sections marked "Requires clarification": Suggest running `/mdt:clarification`
    - If exploratory CR: Suggest implementation spike before approval
    - If ready: Suggest marking as "Approved" for implementation
@@ -426,6 +499,9 @@ Choose structure based on `SPEC_MODE` from Question 0.
 Use this structure when `SPEC_MODE` = "full"
 
 ## 1. Description
+
+### Requirements Scope
+`{REQUIREMENTS_SCOPE}` — `full` | `brief` | `preservation` | `none`
 
 ### Problem
 Write 2-3 bullets describing specific technical issues:
@@ -562,6 +638,9 @@ kubectl apply -f config.yaml
 Use this structure when `SPEC_MODE` = "requirements"
 
 ## 1. Description
+
+### Requirements Scope
+`{REQUIREMENTS_SCOPE}` — `full` | `brief` | `preservation` | `none`
 
 ### Problem
 Write 2-3 bullets describing the problem in outcome terms:
