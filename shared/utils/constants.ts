@@ -99,22 +99,43 @@ function getOrCreateConfigDir(): string {
 }
 
 // Initialize config directory and create paths
+// NOTE: We provide both static and dynamic access to support test isolation
+// where process.env.CONFIG_DIR may change during runtime
+
 const CONFIG_DIR = getOrCreateConfigDir();
 
+// Function to get current CONFIG_DIR (respects process.env.CONFIG_DIR)
+export function getConfigDir(): string {
+  return process.env.CONFIG_DIR || CONFIG_DIR;
+}
+
+// Dynamic paths (for test isolation)
+export function getDefaultPaths() {
+  const configDir = getConfigDir();
+  return {
+    CONFIG_DIR: configDir,
+    CONFIG_FILE: path.join(configDir, 'config.toml'),
+    TEMPLATES_DIR: path.join(configDir, 'templates'),
+    PROJECTS_REGISTRY: path.join(configDir, 'projects'),
+    USER_CONFIG: path.join(configDir, 'user.toml')
+  };
+}
+
+// Static paths (for backwards compatibility - used at module load time)
 export const DEFAULT_PATHS = {
   CONFIG_DIR,
   CONFIG_FILE: path.join(CONFIG_DIR, 'config.toml'),
   TEMPLATES_DIR: path.join(CONFIG_DIR, 'templates'),
   PROJECTS_REGISTRY: path.join(CONFIG_DIR, 'projects'),
   USER_CONFIG: path.join(CONFIG_DIR, 'user.toml')
-} as const;
+};
 
 // Configuration Files
 export const CONFIG_FILES = {
   PROJECT_CONFIG: '.mdt-config.toml',
   COUNTER_FILE: '.mdt-next',
-  USER_CONFIG: path.join(CONFIG_DIR, 'user.toml'),
-  PROJECTS_REGISTRY: path.join(CONFIG_DIR, 'projects'),
+  get USER_CONFIG() { return path.join(getConfigDir(), 'user.toml'); },
+  get PROJECTS_REGISTRY() { return path.join(getConfigDir(), 'projects'); },
 } as const;
 
 // Default Values

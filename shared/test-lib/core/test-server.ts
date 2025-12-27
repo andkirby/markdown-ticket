@@ -159,7 +159,7 @@ export class TestServer {
             ...(configDir && { CONFIG_DIR: configDir }), // Pass CONFIG_DIR to child process
           },
           url: `http://localhost:${port}`,
-          healthEndpoint: '/api/health'
+          healthEndpoint: '/api/status'
         };
       case 'mcp':
         return {
