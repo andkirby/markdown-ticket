@@ -2,7 +2,7 @@
 
 **Source**: [MDT-105](../MDT-105-unify-and-make-cache-configurable-across-backend-s.md)
 **Generated**: 2025-12-26
-**Updated**: 2025-12-26 (simplified configuration approach)
+**Updated**: 2025-12-27 (added tag-based invalidation, smart invalidation, bentocache)
 **CR Type**: Technical Debt (with behavioral scope: full)
 
 ## Introduction
@@ -15,10 +15,12 @@ This specification defines the behavioral requirements for unifying cache implem
 
 | Constraint | Value | Rationale |
 |------------|-------|-----------|
+| Cache library | `bentocache` | Native tagging, namespaces, TypeScript, active maintenance |
 | Configuration location | `[system.cache]` in global config | Aligns with `CONFIG_GLOBAL_SPECIFICATION.md` |
 | Granularity | Single global TTL + size limit | Minimal complexity |
 | Environment variables | `MDT_CACHE_TIMEOUT`, `MDT_CACHE_DISABLE` | Testing/debugging/containers |
 | Breaking change | Remove `MCP_CACHE_TIMEOUT` | Unified under `MDT_*` namespace |
+| Tagging pattern | Entity-centric (`{entity}-{id}`, `{entities}-list`) | See [tagging-strategy.md](./tagging-strategy.md) |
 
 ## Behavioral Requirements (EARS)
 
@@ -90,15 +92,15 @@ This specification defines the behavioral requirements for unifying cache implem
 
 ### Requirement 7: Service Migration
 
-**Objective**: As a developer, I want all services to use the shared cache module.
+**Objective**: As a developer, I want all services to use the shared cache module with entity-centric tagging.
 
 #### Acceptance Criteria
 
-1. WHEN project discovery is performed, the system shall use a cache instance from the shared module.
-2. WHEN file metadata is requested, the system shall use a cache instance from the shared module.
-3. WHEN file content is requested, the system shall use a cache instance from the shared module.
-4. WHEN title extraction is performed, the system shall use a cache instance from the shared module.
-5. WHEN a file is modified, the system shall invalidate corresponding cache entries.
+1. WHEN `ProjectService` caches project data, the system shall use tags `project-{code}`, `projects-list`.
+2. WHEN `TicketService` caches ticket metadata, the system shall use tags `ticket-{key}`, `ticket-{key}-meta`, `tickets-list`.
+3. WHEN `TicketService` caches ticket content, the system shall use tags `ticket-{key}`, `ticket-{key}-content` (no list tag).
+4. WHEN `DocumentService` caches document data, the system shall use tags `doc-{id}`, `docs-list`.
+5. WHEN a file is modified, the system shall invalidate corresponding cache entries via tags.
 
 ### Requirement 8: Edge Case Handling
 
@@ -110,6 +112,30 @@ This specification defines the behavioral requirements for unifying cache implem
 2. WHEN cache key is null or undefined, the system shall throw an error with descriptive message.
 3. WHEN cache value is undefined, the system shall store it as-is (distinguish from "no entry").
 
+### Requirement 9: Tag-Based Invalidation
+
+**Objective**: As a developer, I want to invalidate groups of cache entries, so that related data is invalidated together.
+
+#### Acceptance Criteria
+
+1. WHEN a cache entry is set, the system shall allow associating tags with the entry.
+2. WHEN `deleteByTag()` is called, the system shall invalidate all entries with matching tags.
+3. The system shall support multiple tags per cache entry (recommended: 3-4, max: 5).
+4. WHEN an entity is deleted, the system shall invalidate via `{entity}-{id}` tag (drops all aspects).
+5. WHEN a list needs refresh, the system shall invalidate via `{entities}-list` tag.
+
+### Requirement 10: Smart Invalidation (Change Detection)
+
+**Objective**: As an operator, I want minimal cache invalidation, so that performance is optimized.
+
+#### Acceptance Criteria
+
+1. WHEN a file's frontmatter changes, the system shall invalidate `{entity}-{id}` and `{entities}-list` tags.
+2. WHEN only a file's body content changes, the system shall invalidate `{entity}-{id}-content` tag only (list stays cached).
+3. WHEN a file is created, the system shall invalidate `{entities}-list` tag.
+4. WHEN a file is deleted, the system shall invalidate `{entity}-{id}` and `{entities}-list` tags.
+5. The system shall compare new frontmatter with cached frontmatter to detect changes.
+
 ---
 
 ## Functional Requirements
@@ -118,13 +144,15 @@ This specification defines the behavioral requirements for unifying cache implem
 
 | ID | Requirement | Rationale |
 |----|-------------|-----------|
-| FR-1 | Shared cache module with factory function and registry | Eliminates duplicate implementations, enables `clearAll()` |
+| FR-1 | Shared cache module using `bentocache` with facade wrapper | Eliminates duplicate implementations, native tagging support |
 | FR-2 | Global configuration via `[system.cache]` in config.toml | Single source of truth for cache settings |
 | FR-3 | Environment variable overrides (`MDT_CACHE_TIMEOUT`, `MDT_CACHE_DISABLE`) | Testing, debugging, containerized deployments |
 | FR-4 | Cache statistics API (hit count, miss count, size) | Enables monitoring and debugging |
-| FR-5 | `clearAll()` method clearing all registered caches | Existing "Clear Cache" button works for all caches |
+| FR-5 | `deleteByTag()` for group invalidation | Invalidate related entries without key enumeration |
 | FR-6 | Configuration validation with fallback to defaults | Prevents misconfiguration from breaking the system |
 | FR-7 | Pass-through mode when cache is disabled | Allows caching to be disabled for debugging |
+| FR-8 | Entity-centric tagging (`{entity}-{id}`, `{entities}-list`) | Consistent invalidation patterns across all entities |
+| FR-9 | Change detector comparing frontmatter vs body | Smart invalidation — list stays cached on body-only changes |
 
 ## Non-Functional Requirements
 
@@ -199,14 +227,14 @@ maxEntries = 1000  # Global max entries per cache instance (default: 1000)
 
 > Informational only. Architecture decides migration strategy.
 
-| Behavior | Current Location | Current Config |
-|----------|------------------|----------------|
-| Project discovery cache | `shared/services/ProjectCacheService.ts` | Hardcoded 30s TTL |
-| Project discovery cache (MCP) | MCP server | `MCP_CACHE_TIMEOUT` env var (300s default) |
-| File metadata cache | `server/services/TicketService.ts` | 3600s TTL |
-| File content cache | `server/services/TicketService.ts` | 3600s TTL |
-| Title extraction cache | `shared/services/TitleExtractionService.ts` | 3600s constructor param |
-| Cache clear API | `POST /api/cache/clear` | Clears file metadata/content only |
+| Behavior | Current Location | Current Config | Migration Target                         |
+|----------|------------------|----------------|------------------------------------------|
+| Project discovery cache | `shared/services/ProjectCacheService.ts` | Hardcoded 30s TTL | `project-{code}`, `projects-list` tags   |
+| Project discovery cache (MCP) | MCP server | `MCP_CACHE_TIMEOUT` env var | Use `MDT_CACHE_TIMEOUT`                  |
+| File metadata cache | `server/services/TicketService.ts` | 3600s TTL | `ticket-{key}-meta`, `tickets-list` tags |
+| File content cache | `server/services/TicketService.ts` | 3600s TTL | `ticket-{key}-content` tag                |
+| Title extraction cache | `shared/services/TitleExtractionService.ts` | 3600s constructor param | `ticket-{key}-meta` tag                   |
+| Cache clear API | `POST /api/cache/clear` | Clears file metadata/content only | Clear all via `bentocache`               |
 
 ---
 
@@ -216,24 +244,28 @@ maxEntries = 1000  # Global max entries per cache instance (default: 1000)
 
 | Req ID | Requirement Summary | Implementation Area |
 |--------|---------------------|---------------------|
-| R1, R2 | Cache module with registry | Shared cache module |
-| R3 | Global configuration | Config loader integration |
-| R4 | Env var overrides | Cache module initialization |
-| R5 | TTL-based expiration | Cache module internals |
-| R6 | Size-limited caching | Cache module internals |
-| R7 | Service migration | All backend services using caching |
-| R8 | Edge case handling | Cache module error handling |
+| R1, R2 | Cache module with registry | `shared/cache/facade.ts` |
+| R3 | Global configuration | `shared/cache/config.ts` |
+| R4 | Env var overrides | `shared/cache/config.ts` |
+| R5 | TTL-based expiration | `bentocache` internals |
+| R6 | Size-limited caching | `bentocache` memory driver |
+| R7 | Service migration | `ProjectService`, `TicketService`, `DocumentService` |
+| R8 | Edge case handling | `shared/cache/facade.ts` |
+| R9 | Tag-based invalidation | `bentocache` + tagging-strategy.md |
+| R10 | Smart invalidation | `shared/cache/change-detector.ts` |
 
 ## Traceability
 
 | Req ID | CR Section | Acceptance Criteria |
 |--------|------------|---------------------|
-| R1, R2 | Problem - scattered implementations | AC: Shared module with registry exists |
+| R1, R2 | Problem - scattered implementations | AC: Shared module with facade exists |
 | R3, R4 | Problem - inconsistent config | AC: Single global config + env overrides |
-| R5 | Problem - hardcoded TTLs | AC: TTL configurable |
-| R6 | Problem - no size limits | AC: Size limits enforced |
-| R7 | Scope - consolidate caches | AC: All services use shared module |
-| R8 | Edge Cases | AC: Edge cases handled |
+| R5 | Problem - hardcoded TTLs | AC: TTL configurable via bentocache |
+| R6 | Problem - no size limits | AC: Size limits enforced via maxSize |
+| R7 | Scope - consolidate caches | AC: All services use shared module with entity tags |
+| R8 | Edge Cases | AC: Edge cases handled in facade |
+| R9 | Architecture - tagging | AC: `deleteByTag()` works for group invalidation |
+| R10 | Architecture - smart invalidation | AC: Body-only changes don't invalidate list |
 
 ---
-*Generated from MDT-105 by /mdt:requirements (v3)*
+*Updated from MDT-105 by /mdt:requirements (v3) + manual updates for bentocache/tagging*
