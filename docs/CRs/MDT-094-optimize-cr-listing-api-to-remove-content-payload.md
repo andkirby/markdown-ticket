@@ -1,6 +1,6 @@
 ---
 code: MDT-094
-status: Approved
+status: Proposed
 dateCreated: 2025-12-11T16:09:47.654Z
 type: Technical Debt
 priority: Medium
