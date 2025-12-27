@@ -2,6 +2,26 @@
 
 ## Recent Updates
 
+### 2025-12-27 - Pure Behavioral Requirements
+
+**Changes Made**:
+
+1. **mdt-requirements.md (v1→v2)**:
+   - Pure behavioral EARS: "the system shall" instead of component names
+   - CR-type-aware scope: explicit field → CR type → content analysis
+   - Four templates: Full, Bug Fix, Behavior Preservation, Migration
+   - New sections: FR, NFR, Configuration, Current Implementation Context
+   - Early exit for refactoring/tech-debt with clear guidance
+
+2. **mdt-domain-lens.md (v1→v2)**:
+   - Exclusion indicators: library types, data structures, DTOs
+   - Aggregate quality checks
+
+3. **mdt-ticket-creation.md (v5)** - CR-type-aware workflow recommendations
+4. **README.md** - Decision table, updated EARS examples, Design Principles 2-3
+
+**Impact**: Requirements describe WHAT (behavior), architecture decides WHERE/HOW. Refactoring skips EARS entirely.
+
 ### 2025-12-22 - Session Context Injection via Hooks
 
 **Problem**: Workflows used hardcoded `docs/CRs/` paths, breaking when projects configured `ticketsPath` differently.
