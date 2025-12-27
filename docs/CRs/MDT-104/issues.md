@@ -256,6 +256,98 @@ ticketsPath = "${config.ticketsPath || 'docs/CRs'}"  // ← Was: config.crPath
 
 ---
 
+## Issue 4: MCP Server Missing `CONFIG_DIR` Environment Variable
+
+### Location
+`shared/test-lib/core/test-server.ts:165`
+
+### Current Code
+```typescript
+case 'mcp':
+  return { ...base, type: 'mcp', args: ['run', 'dev'], env: {
+    MCP_HTTP_ENABLED: 'true',
+    MCP_HTTP_PORT: port.toString(),
+    MCP_BIND_ADDRESS: '127.0.0.1'
+  }, url: `http://localhost:${port}/mcp`, healthEndpoint: '/health' };
+```
+
+### Problem
+Both backend and MCP servers use `process.env.CONFIG_DIR` for project discovery (see `shared/utils/constants.ts:52`), but only the backend server receives this environment variable. The MCP server in isolated test environments cannot discover projects created during tests.
+
+### CONFIG_DIR Usage in Real System
+
+**File**: `shared/utils/constants.ts:50-52`
+
+```typescript
+function getOrCreateConfigDir(): string {
+  // Try environment variable first
+  let configDir = process.env.CONFIG_DIR;
+  // ...
+}
+```
+
+Both servers read this to discover projects in the global config registry.
+
+### Current Test Server CONFIG_DIR Handling
+
+| Server | Passes `CONFIG_DIR`? | Code Location |
+|--------|---------------------|---------------|
+| Backend | ✅ Yes | Line 159: `...(configDir && { CONFIG_DIR: configDir })` |
+| **MCP** | ❌ **No** | **Line 165 - Missing** |
+
+### Impact
+
+When running E2E tests that create projects via `ProjectFactory`:
+1. `TestEnvironment.setup()` sets `process.env.CONFIG_DIR` to isolated temp directory
+2. Backend server receives `CONFIG_DIR` via child process env → ✅ Can discover test projects
+3. MCP server does **not** receive `CONFIG_DIR` → ❌ Falls back to user's home directory → Cannot discover test projects
+
+### Fix Required
+
+**Change line 165 from:**
+```typescript
+case 'mcp':
+  return { ...base, type: 'mcp', args: ['run', 'dev'], env: {
+    MCP_HTTP_ENABLED: 'true',
+    MCP_HTTP_PORT: port.toString(),
+    MCP_BIND_ADDRESS: '127.0.0.1'
+  }, url: `http://localhost:${port}/mcp`, healthEndpoint: '/health' };
+```
+
+**To:**
+```typescript
+case 'mcp':
+  return {
+    ...base,
+    type: 'mcp',
+    args: ['run', 'dev'],
+    env: {
+      MCP_HTTP_ENABLED: 'true',
+      MCP_HTTP_PORT: port.toString(),
+      MCP_BIND_ADDRESS: '127.0.0.1',
+      ...(configDir && { CONFIG_DIR: configDir }) // ADD THIS - Pass CONFIG_DIR to MCP server
+    },
+    url: `http://localhost:${port}/mcp`,
+    healthEndpoint: '/health'
+  };
+```
+
+### Reference
+
+The MCP server tests already correctly pass `CONFIG_DIR`:
+- `mcp-server/tests/e2e/helpers/mcp-client-sim.ts:115`
+- `mcp-server/tests/e2e/helpers/mcp-transports.ts:44`
+- `mcp-server/tests/e2e/helpers/mcp-transports.ts:118`
+
+```typescript
+env: {
+  // ...
+  CONFIG_DIR: this.testEnv.getConfigDir()  // ← Correct pattern
+}
+```
+
+---
+
 ## Summary of Required Changes
 
 ### File: `shared/test-lib/core/project-factory.ts`
@@ -270,6 +362,12 @@ ticketsPath = "${config.ticketsPath || 'docs/CRs'}"  // ← Was: config.crPath
 | ~140 | Store config in map: `this.projectConfigs.set(projectCode, finalConfig)` | Add statement |
 | ~495 | Add `createSlug()` method | Add method |
 | 310-311 | Add title slug to filename, use stored config | Replace |
+
+### File: `shared/test-lib/core/test-server.ts`
+
+| Line | Change | Type |
+|------|--------|------|
+| 165 | Add `...(configDir && { CONFIG_DIR: configDir })` to MCP env | Add |
 
 ### File: `shared/test-lib/write-tests-guide.md`
 
@@ -311,6 +409,23 @@ await projectFactory.createTestCR(project2.key, {
 // Verify:
 // 1. Directory docs/CRs/ exists
 // 2. File: docs/CRs/TEST-001-fix-bug.md
+
+// Test 3: MCP server discovers test projects
+const testEnv = new TestEnvironment();
+await testEnv.setup();
+
+const project = await projectFactory.createProject('empty', { name: 'MCP Test' });
+await projectFactory.createTestCR(project.key, {
+  title: 'MCP Discovery Test',
+  type: 'Feature Enhancement',
+  content: 'Test'
+});
+
+const testServer = new TestServer(testEnv.getPortConfig());
+await testServer.start('mcp', testEnv.getTempDirectory());
+
+// MCP server should be able to discover and list the created project
+// via MCP tools (verify by calling mcp__mdt-all__list_projects)
 ```
 
 ---
@@ -322,5 +437,6 @@ await projectFactory.createTestCR(project2.key, {
 | #3 Naming | Low | Cosmetic inconsistency, doesn't break functionality |
 | #1 Hardcoded path | **High** | Breaks custom path feature completely |
 | #2 Missing slug | **High** | Filename format doesn't match real system |
+| #4 MCP CONFIG_DIR | **High** | MCP server cannot discover test projects in isolated environments |
 
-**Recommended fix order**: #3 → #1 → #2 (do naming first to avoid confusion, then fix the functional bugs)
+**Recommended fix order**: #3 → #1 → #2 → #4 (do naming first to avoid confusion, then fix the functional bugs, finally fix MCP discovery)
