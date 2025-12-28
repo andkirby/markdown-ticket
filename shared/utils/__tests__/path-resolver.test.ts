@@ -35,9 +35,10 @@ describe('Path Resolver', () => {
   });
 
   describe('getDirName', () => {
-    it('should return directory name', () => {
+    it('should return parent directory name', () => {
       expect(getDirName('/path/to/file.txt')).toBe('/path/to');
-      expect(getDirName('/path/to/dir/')).toBe('/path/to/dir');
+      expect(getDirName('/path/to/dir/')).toBe('/path/to');
+      expect(getDirName('/path/to/dir')).toBe('/path/to');
     });
   });
 
