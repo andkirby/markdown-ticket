@@ -141,5 +141,8 @@
     "prettier": "^3.7.4",
     "typescript": "^5.2.2",
     "vite": "^7.1.9"
+  },
+  "optionalDependencies": {
+    "minipass": "^7.1.2"
   }
 }

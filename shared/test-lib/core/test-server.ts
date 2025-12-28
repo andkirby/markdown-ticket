@@ -338,7 +338,7 @@ export class TestServer {
           });
         }
       );
-      req.on('error', (err) => {
+      req.on('error', (err: Error) => {
         req.destroy();
         reject(err);
       });
