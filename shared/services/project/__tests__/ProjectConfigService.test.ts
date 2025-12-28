@@ -1,6 +1,6 @@
 import { ProjectConfigService } from '../ProjectConfigService';
 import { fileExists, readFile, writeFile } from '../../../utils/file-utils';
-import { parse, stringify } from '../../../utils/toml';
+import { parseToml, stringify } from '../../../utils/toml';
 import { buildConfigFilePath, buildRegistryFilePath } from '../../../utils/path-resolver';
 
 jest.mock('../../../utils/file-utils');
@@ -25,7 +25,7 @@ describe('ProjectConfigService', () => {
     it('should return parsed config when file exists', () => {
       (fileExists as jest.Mock).mockReturnValue(true);
       (readFile as jest.Mock).mockReturnValue('discovery.autoDiscover = false');
-      (parse as jest.Mock).mockReturnValue({ discovery: { autoDiscover: false } });
+      (parseToml as jest.Mock).mockReturnValue({ discovery: { autoDiscover: false } });
 
       const config = service.getGlobalConfig();
       expect(config.discovery.autoDiscover).toBe(false);
@@ -45,7 +45,7 @@ describe('ProjectConfigService', () => {
       (buildConfigFilePath as jest.Mock).mockReturnValue('/config.toml');
       (fileExists as jest.Mock).mockReturnValue(true);
       (readFile as jest.Mock).mockReturnValue('content');
-      (parse as jest.Mock).mockReturnValue({ invalid: 'config' });
+      (parseToml as jest.Mock).mockReturnValue({ invalid: 'config' });
 
       const config = service.getProjectConfig('/project');
       expect(config).toBeNull();
@@ -72,8 +72,8 @@ describe('ProjectConfigService', () => {
       (buildRegistryFilePath as jest.Mock).mockReturnValue('/reg.toml');
       (buildConfigFilePath as jest.Mock).mockReturnValue('/proj/config.toml');
       (fileExists as jest.Mock).mockReturnValue(true);
-      (readFile as jest.Mock).mockReturnValue('toml');
-      (parse as jest.Mock).mockReturnValue(data);
+      (readFile as jest.Mock).mockReturnValue('[project]\npath = "/proj"\n\n[metadata]\nlastAccessed = "2024-01-01"');
+      (parseToml as jest.Mock).mockReturnValue(data);
       service.updateProject('proj', { name: 'New' });
       expect(writeFile).toHaveBeenCalledTimes(2);
     });

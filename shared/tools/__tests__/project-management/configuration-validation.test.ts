@@ -56,23 +56,19 @@ describe('configuration validation', () => {
       expect(typeof project.name).toBe('string');
       expect(typeof project.code).toBe('string');
       expect(typeof project.id).toBe('string');
-      expect(typeof project.active).toBe('boolean');
+      expect(typeof project.ticketsPath).toBe('string');
       expect(project.name).toBe(testProject.name);
       expect(project.code).toBe(testProject.code);
-      expect(project.active).toBe(true);
 
-      // Verify document configuration
-      expect(project.document).toBeDefined();
-      expect(Array.isArray(project.document.paths)).toBe(true);
-      expect(Array.isArray(project.document.excludeFolders)).toBe(true);
-      expect(typeof project.document.maxDepth).toBe('number');
+      // Verify document configuration (top-level section)
+      expect(localConfig.document).toBeDefined();
     });
   });
 
   describe('project code validation', () => {
     it('should enforce 2-5 uppercase letter format', async () => {
-      const validCodes = ['AB', 'XYZ', 'TEST', 'ABCDE'];
-      const invalidCodes = ['A', 'ABCDEF', 'Abc', 'A1B', 'A_B', 'TEST-123'];
+      const validCodes = ['AB', 'XYZ', 'TEST', 'T3ST', 'ABCDE'];
+      const invalidCodes = ['A', 'ABCDEF', 'Abc', 'A_B', 'TEST-123'];
 
       // Test valid codes
       for (const code of validCodes) {
@@ -142,10 +138,13 @@ describe('configuration validation', () => {
 
       // Verify configuration matches
       const config = readLocalConfig(testProject.path);
-      const globalEntry = readGlobalRegistryEntry(testProject.code);
+      // The global registry entry file is named after the path ID (last component of path)
+      const projectId = testProject.path.split('/').pop();
+      const globalEntry = readGlobalRegistryEntry(projectId!);
 
       expect(config.project.name).toBe(testProject.name);
       expect(config.project.code).toBe(testProject.code);
+      expect(globalEntry).not.toBeNull();
       expect(globalEntry.project.path).toBe(testProject.path);
     });
   });

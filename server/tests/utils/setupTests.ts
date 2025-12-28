@@ -1,14 +1,14 @@
 /// <reference types="jest" />
 
-// Mock TreeService before importing FileSystemService
-jest.mock('../../services/TreeService', () => ({
-  TreeService: {
-    buildTree: jest.fn(),
-    buildFileSystemTree: jest.fn(),
-    flattenTree: jest.fn(),
-    filterTree: jest.fn(),
-  }
-}));
+// Mock TreeService as a proper class mock before importing FileSystemService
+jest.mock('../../services/TreeService', () => {
+  return {
+    TreeService: jest.fn().mockImplementation(() => ({
+      getDocumentTree: jest.fn(),
+      getPathSelectionTree: jest.fn(),
+    }))
+  };
+});
 
 import { ProjectService } from '@mdt/shared/services/ProjectService';
 import { TicketService } from '../../services/TicketService';
@@ -16,13 +16,14 @@ import { ProjectController } from '../../controllers/ProjectController';
 import { FileSystemService } from '../../services/FileSystemService';
 
 // Mock console methods to reduce noise in tests
+// But pass through to real console so we can see output during debugging
 global.console = {
   ...console,
-  log: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn(),
-  debug: jest.fn(),
+  log: console.log.bind(console),
+  error: console.error.bind(console),
+  warn: console.warn.bind(console),
+  info: console.info.bind(console),
+  debug: console.debug.bind(console),
 };
 
 // Mock process.env for consistent test environment
