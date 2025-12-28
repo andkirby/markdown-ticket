@@ -71,7 +71,7 @@ export interface IProjectConfigService {
 
 /** Project cache service - handles caching for performance */
 export interface IProjectCacheService {
-  getAllProjects(): Promise<Project[]>;
+  getAllProjects(bypassCache?: boolean): Promise<Project[]>;
   getAllProjectsFromCache(): Promise<Project[] | null>;
   clearCache(): void;
   isCacheValid(): boolean;
