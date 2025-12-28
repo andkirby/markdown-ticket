@@ -1,15 +1,4 @@
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
 import { isAbsolute, normalize } from '../utils/path-browser.js';
-
-// Declare process for browser environment detection
-declare const process: {
-  versions?: {
-    node?: string;
-  };
-  cwd?: () => string;
-} | undefined;
 
 /**
  * Validation result interface
@@ -59,52 +48,21 @@ export class ProjectValidator {
   }
 
   /**
-   * Validate directory path
+   * Validate directory path (browser-safe)
    */
   static validatePath(inputPath: string, options: { mustExist?: boolean } = {}): ValidationResult {
     try {
-      // Expand tilde
+      // Expand tilde (no-op in browser)
       const expandedPath = this.expandTildePath(inputPath);
 
-      // Try to detect if we're in a Node.js environment
-      const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
-
-      if (!isNodeEnv) {
-        // Browser environment - just validate the path format
-        if (isAbsolute(expandedPath)) {
-          return { valid: true, normalized: expandedPath };
-        } else {
-          // In browser, we can't resolve relative paths to absolute paths
-          // So we'll return the path as-is with a note that it's relative
-          return { valid: true, normalized: expandedPath };
-        }
+      // Browser-safe: just format check and return the path
+      // No filesystem checking - mustExist option is ignored
+      if (isAbsolute(expandedPath)) {
+        return { valid: true, normalized: expandedPath };
+      } else {
+        // Relative path - return as-is
+        return { valid: true, normalized: expandedPath };
       }
-
-      // Node.js environment - convert to absolute path and check existence
-      const absolutePath = path.isAbsolute(expandedPath)
-        ? expandedPath
-        : path.resolve(process.cwd?.() || '.', expandedPath);
-
-      // Check if exists (if required)
-      if (options.mustExist) {
-        if (!fs.existsSync(absolutePath)) {
-          return {
-            valid: false,
-            error: `Path does not exist: ${absolutePath}`
-          };
-        }
-
-        // Verify it's a directory
-        const stats = fs.statSync(absolutePath);
-        if (!stats.isDirectory()) {
-          return {
-            valid: false,
-            error: `Path is not a directory: ${absolutePath}`
-          };
-        }
-      }
-
-      return { valid: true, normalized: absolutePath };
     } catch (error) {
       return {
         valid: false,
@@ -152,22 +110,11 @@ export class ProjectValidator {
   }
 
   /**
-   * Expand tilde path
+   * Expand tilde path (browser-safe - no-op)
    */
   static expandTildePath(inputPath: string): string {
-    if (inputPath === '~' || inputPath.startsWith('~/')) {
-      // Try to detect if we're in a Node.js environment
-      const isNodeEnv = typeof process !== 'undefined' && process.versions && process.versions.node;
-
-      if (!isNodeEnv) {
-        // Browser environment - os.homedir() is not available
-        // Return the path as-is for frontend validation
-        return inputPath;
-      }
-
-      // Node.js environment
-      return inputPath.replace(/^~/, os.homedir());
-    }
+    // Browser environment: no tilde expansion available
+    // Return input unchanged
     return inputPath;
   }
 
