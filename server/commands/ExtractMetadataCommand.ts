@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import { Command } from './Command';
+import { Command } from './Command.js';
 
 export interface FileMetadata {
   title: string | null;
