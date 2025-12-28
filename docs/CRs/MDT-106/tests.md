@@ -3,6 +3,7 @@
 **Mode**: Feature
 **Source**: requirements.md
 **Generated**: 2025-12-27
+**Updated**: 2025-12-28
 **Scope**: E2E tests for all server API endpoints
 
 ## Test Configuration
@@ -13,41 +14,41 @@
 | Contract Validation | jest-openapi (validates against server/openapi.yaml) |
 | Test Directory | `server/tests/api/` |
 | Test Command | `cd server && npm test` |
-| Status | 🔴 RED (implementation pending) |
+| Status | 🟡 YELLOW (infrastructure complete, pending ProjectService/ProjectFactory alignment) |
 
 ## Requirement → Test Mapping
 
 | Req ID | Description | Test File | Scenarios | Status |
 |--------|-------------|-----------|-----------|--------|
-| R1.1 | Test all API endpoints | All `*.test.ts` files | 70+ | 🔴 RED |
-| R1.2 | Verify success responses | All `*.test.ts` files | 35+ | 🔴 RED |
-| R1.3 | Verify error handling | All `*.test.ts` files | 35+ | 🔴 RED |
-| R2.1 | Create isolated environments | `setup.ts` | N/A | 🔴 RED |
-| R2.2 | Prevent port conflicts | `setup.ts` | N/A | 🔴 RED |
-| R2.3 | Cleanup test environments | `setup.ts` | N/A | 🔴 RED |
-| R3.1 | Store test data in temp dirs | `fixtures/` + `setup.ts` | N/A | 🔴 RED |
-| R3.2 | Delete test data on complete | `setup.ts` | N/A | 🔴 RED |
+| R1.1 | Test all API endpoints | All `*.test.ts` files | 70+ | 🟡 YELLOW |
+| R1.2 | Verify success responses | All `*.test.ts` files | 35+ | 🟡 YELLOW |
+| R1.3 | Verify error handling | All `*.test.ts` files | 35+ | 🟡 YELLOW |
+| R2.1 | Create isolated environments | `setup.ts` | N/A | ✅ DONE |
+| R2.2 | Prevent port conflicts | `setup.ts` | N/A | ✅ DONE |
+| R2.3 | Cleanup test environments | `setup.ts` | N/A | ✅ DONE |
+| R3.1 | Store test data in temp dirs | `fixtures/` + `setup.ts` | N/A | ✅ DONE |
+| R3.2 | Delete test data on complete | `setup.ts` | N/A | ✅ DONE |
 | R3.3 | Tests run concurrently | All test files | N/A | 🔴 RED |
 | R4.1 | Export Express app without listen | `server/server.ts` | N/A | ✅ DONE |
-| R4.2 | Use Supertest for requests | All test files | N/A | 🔴 RED |
-| R4.3 | Return HTTP responses | All test files | N/A | 🔴 RED |
-| R5.1 | Complete suite in 60 seconds | All test files | N/A | 🔴 RED |
+| R4.2 | Use Supertest for requests | All test files | N/A | ✅ DONE |
+| R4.3 | Return HTTP responses | All test files | N/A | 🟡 YELLOW |
+| R5.1 | Complete suite in 60 seconds | All test files | N/A | 🟡 YELLOW |
 | R5.2 | Maintain isolation during concurrency | `setup.ts` | N/A | 🔴 RED |
-| R5.3 | Fail slow tests (>5s) | Jest config | N/A | 🔴 RED |
-| R6.1 | Verify 400 errors | All `*.test.ts` files | 15+ | 🔴 RED |
-| R6.2 | Verify 404 errors | All `*.test.ts` files | 15+ | 🔴 RED |
-| R6.3 | Handle malformed YAML | `tickets.test.ts` | 2 | 🔴 RED |
-| R6.4 | Handle file system errors | `tickets.test.ts` | 2 | 🔴 RED |
+| R5.3 | Fail slow tests (>5s) | Jest config | N/A | ✅ DONE |
+| R6.1 | Verify 400 errors | All `*.test.ts` files | 15+ | 🟡 YELLOW |
+| R6.2 | Verify 404 errors | All `*.test.ts` files | 15+ | 🟡 YELLOW |
+| R6.3 | Handle malformed YAML | `tickets.test.ts` | 2 | 🟡 YELLOW |
+| R6.4 | Handle file system errors | `tickets.test.ts` | 2 | 🟡 YELLOW |
 | R7.1 | Verify SSE event delivery | `sse.test.ts` | 3 | 🔴 RED |
 | R7.2 | Verify SSE event order | `sse.test.ts` | 2 | 🔴 RED |
 | R7.3 | Handle SSE connection failures | `sse.test.ts` | 2 | 🔴 RED |
-| R8.1 | Run in CI without manual setup | CI configuration | N/A | 🔴 RED |
-| R8.2 | Generate coverage reports (Istanbul/nyc) | Jest config | N/A | 🔴 RED |
-| R8.3 | Fail CI on test failures | CI configuration | N/A | 🔴 RED |
+| R8.1 | Run in CI without manual setup | CI configuration | N/A | 🟡 YELLOW |
+| R8.2 | Generate coverage reports (Istanbul/nyc) | Jest config | N/A | ✅ DONE |
+| R8.3 | Fail CI on test failures | CI configuration | N/A | 🟡 YELLOW |
 | R9.1 | No execution order dependencies | All test files | N/A | 🔴 RED |
-| R9.2 | Isolated data during concurrency | `setup.ts` | N/A | 🔴 RED |
-| R9.3 | Handle port conflicts | `setup.ts` | N/A | 🔴 RED |
-| R10.1 | Validate responses against OpenAPI spec | All `*.test.ts` files + `helpers/assertions.ts` | 35+ | 🔴 RED |
+| R9.2 | Isolated data during concurrency | `setup.ts` | N/A | 🟡 YELLOW |
+| R9.3 | Handle port conflicts | `setup.ts` | N/A | ✅ DONE |
+| R10.1 | Validate responses against OpenAPI spec | All `*.test.ts` files + `helpers/assertions.ts` | 35+ | 🟡 YELLOW |
 
 ## Test Specifications
 
