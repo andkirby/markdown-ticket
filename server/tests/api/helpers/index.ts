@@ -6,3 +6,4 @@
 
 export * from './request';
 export * from './assertions';
+export * from './sse';
