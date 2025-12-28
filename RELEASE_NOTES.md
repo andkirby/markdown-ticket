@@ -46,6 +46,20 @@
 - **ESM Imports**: Fixed Node.js ES module compatibility in Docker builds
 - **Build Reliability**: Resolved ERR_MODULE_NOT_FOUND errors
 
+### 🔄 Migration Guide
+
+**Breaking Change**: `.mdt-config.toml` schema updated - document paths moved to nested `[project.document]` section.
+
+```bash
+# Migrate all projects automatically
+./scripts/migrate-all-projects-v0.7.2-to-v0.8.0.sh
+
+# Preview first with --dry-run
+./scripts/migrate-all-projects-v0.7.2-to-v0.8.0.sh --dry-run
+```
+
+Old: `document_paths`, `exclude_folders`, `max_depth` → New: `[project.document]` with `paths`, `excludeFolders`, `maxDepth`
+
 ### 🔧 Technical Improvements
 
 **Developer Experience**
