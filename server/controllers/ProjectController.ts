@@ -58,6 +58,7 @@ interface AuthenticatedRequest extends Request {
   query: {
     projectId?: string;
     path?: string;
+    bypassCache?: string;
   };
   body: any;
 }
@@ -65,7 +66,7 @@ interface AuthenticatedRequest extends Request {
 // Extended interfaces for methods not in shared ProjectService
 // These methods are now provided by ProjectManager
 interface ProjectServiceExtension {
-  getAllProjects(): Promise<any[]>;
+  getAllProjects(bypassCache?: boolean): Promise<any[]>;
   getProjectConfig(path: string): any;
   getProjectCRs(path: string): Promise<Ticket[]>;
   getSystemDirectories(path?: string): Promise<DirectoryListing>;
