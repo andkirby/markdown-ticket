@@ -2,6 +2,48 @@
 
 ## Recent Updates
 
+### 2025-12-28 - Proof of Concept Workflow
+
+**Problem**: Architecture workflow locked in unproven technical approaches, leading to mid-implementation pivots when assumptions about library support, performance, or integration behavior turned out wrong.
+
+**Solution**: Added `/mdt:poc` workflow for validating uncertain technical decisions through throwaway spikes before architecture commits to an approach.
+
+**Changes Made**:
+
+1. **mdt-poc.md (v1) - New PoC validation workflow**:
+   - Hands-on experimentation for "will this work?" questions
+   - Hypothesis-driven approach with success/failure criteria
+   - Outputs: `poc.md` (findings for architecture) + `poc/` folder (throwaway spike code)
+   - Three invocation modes: interactive (`--questions`), direct (`--question`), quick mode
+   - Integration points with requirements (technical Open Questions), assess (integration uncertainty), architecture (consumes findings)
+   - Clear scope boundaries: no production concerns, no tests, no clean code
+
+2. **mdt-architecture.md (v5→v6) - PoC-aware architecture**:
+   - Step 2: Load PoC findings if `poc.md` exists (validated decisions, use directly)
+   - Step 3.5: NEW — Check for technical uncertainty before proceeding
+   - Uncertainty detection table with signals and suggested actions
+   - User choice: Run PoC first / Proceed with assumption / Research only
+   - Updated "Consumes" section to include `poc.md`
+   - Enhanced quality checklist with PoC verification
+
+3. **README.md** - Updated documentation:
+   - Added `/mdt:poc` to command reference table
+   - Updated workflow diagrams to include optional PoC step
+   - Added detailed `/mdt:poc` section with invocations, when-to-use table, outputs
+   - Updated file structure with new `mdt-poc.md`
+   - Updated Design Principle #14: "Prove before commit"
+
+**Impact**:
+- Technical uncertainty resolved through experimentation before architecture locks in approach
+- Reduces mid-implementation pivots and workarounds for discovered limitations
+- Prevents incorrect assumptions from being baked into tests
+- Clear separation: research (docs) → PoC (hands-on) → architecture (decisions)
+
+**Files Changed**:
+- `prompts/mdt-poc.md` (new)
+- `prompts/mdt-architecture.md`
+- `prompts/README.md`
+
 ### 2025-12-27 - Pure Behavioral Requirements
 
 **Changes Made**:
