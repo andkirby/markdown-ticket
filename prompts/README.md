@@ -59,7 +59,9 @@ Describes outcomes and constraints, defers implementation to downstream workflow
 5. Verification
 ```
 
-**Workflow after Requirements Mode:**
+<details>
+<summary>Workflow after Requirements Mode (click to expand)</summary>
+
 ```
 /mdt:ticket-creation (Requirements)
         ↓
@@ -78,6 +80,8 @@ Describes outcomes and constraints, defers implementation to downstream workflow
 /mdt:tasks → /mdt:implement
 ```
 
+</details>
+
 ### Full Specification Mode (7 sections)
 
 Describes both outcomes AND implementation approach with concrete artifacts:
@@ -93,6 +97,9 @@ Describes both outcomes AND implementation approach with concrete artifacts:
 ```
 
 ## Full Workflow Chain
+
+<details>
+<summary>Full Specification Mode workflow (click to expand)</summary>
 
 For **Full Specification Mode** (see Requirements Mode workflow above):
 
@@ -144,6 +151,8 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
 /mdt:reflection ───────────────── Updates: CR with learnings
 ```
 
+</details>
+
 ## When to Use `/mdt:requirements`
 
 ### Quick Decision Table
@@ -159,13 +168,17 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
 | Documentation | ❌ No | No requirements needed |
 | Migration | ✅ Yes (hybrid) | — |
 
-### Why Skip for Refactoring/Tech-Debt
+<details>
+<summary>Why Skip for Refactoring/Tech-Debt (click to expand)</summary>
 
 - **EARS describes behavior** — refactoring *preserves* behavior, doesn't define new behavior
 - **Focus is structural** — size targets, interface preservation, not WHEN/THEN statements
 - **Requirements become awkward** — "WHEN the cache module processes entries..." isn't useful
 
-### Recommended Flow for Refactoring/Tech-Debt
+</details>
+
+<details>
+<summary>Recommended Flow for Refactoring/Tech-Debt (click to expand)</summary>
 
 ```
 /mdt:ticket-creation (Full Specification)
@@ -193,14 +206,22 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
 /mdt:reflection ───────────────────── Update CR with learnings
 ```
 
-### When `/mdt:requirements` IS Valuable
+</details>
+
+<details>
+<summary>When `/mdt:requirements` IS Valuable (click to expand)</summary>
 
 - **New features** with multiple user-facing behaviors
 - **Complex integrations** where WHEN/IF/WHILE conditions matter
 - **Configurable features** needing FR/NFR/Configuration tables
 - **Compliance-sensitive work** needing formal traceability
 
+</details>
+
 ## Debt Prevention Chain
+
+<details>
+<summary>How debt is prevented across workflows (click to expand)</summary>
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -248,6 +269,8 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
 └─────────────────────────────────────────────────────────────┘
 ```
 
+</details>
+
 ## Size Guidance (Three Zones)
 
 | Zone | Condition | Action |
@@ -268,6 +291,9 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
 Override in: CR Acceptance Criteria or project CLAUDE.md
 
 ## Managing Technical Debt
+
+<details>
+<summary>How technical debt is managed and fixed (click to expand)</summary>
 
 ### When debt.md is generated
 
@@ -305,7 +331,12 @@ Create new CR (e.g., "Fix technical debt from {CR-KEY}")
 | Missing abstractions | Architecture Design surfaces implicit decisions |
 | Shotgun surgery | Extension Rule ensures single-point changes |
 
+</details>
+
 ## Key Concepts
+
+<details>
+<summary>Core concepts for workflow understanding (click to expand)</summary>
 
 ### Shared Patterns (Anti-Duplication)
 
@@ -355,6 +386,8 @@ Tasks and orchestrator have explicit escalation:
 | Structure mismatch | STOP, clarify path |
 | Tests fail (2 retries) | STOP, report failure |
 
+</details>
+
 ## Project Context
 
 Prompts detect project settings from CLAUDE.md or config files:
@@ -370,6 +403,9 @@ project:
 Tasks and verification use these values — no hardcoded assumptions.
 
 ## Command Reference
+
+<details>
+<summary>Detailed documentation for each /mdt: command (click to expand)</summary>
 
 ### `/mdt:requirements`
 
@@ -607,6 +643,8 @@ Generates `{TICKETS_PATH}/{CR-KEY}/debt.md`:
 - **Suggested Fixes**: Direction, not implementation
 - **Metrics**: Before/after comparison
 
+</details>
+
 ## Installation
 
 ### Hook Setup (Required for Session Context)
@@ -662,6 +700,9 @@ Also copy hooks/mdt-project-vars.sh to ~/.claude/hooks/ and register in settings
 
 ## File Structure
 
+<details>
+<summary>Prompts directory structure (click to expand)</summary>
+
 ```
 prompts/
 ├── README.md                # This file
@@ -683,6 +724,8 @@ prompts/
 ├── mdt-tech-debt.md         # Debt detection (v2)
 └── mdt-reflection.md        # Learning capture
 ```
+
+</details>
 
 ## Output Files
 
@@ -715,6 +758,9 @@ prompts/
 14. **Prove before commit** — uncertain technical decisions get PoC spikes before architecture locks in approach
 
 ## Phased CRs (Epic Tickets)
+
+<details>
+<summary>Managing multi-phase epic tickets (click to expand)</summary>
 
 For large CRs with multiple implementation phases, the workflow supports **phase-aware file organization**.
 
@@ -803,7 +849,12 @@ Non-phased CRs work exactly as before:
 
 If no `## Phase X.Y:` headers exist in architecture.md, prompts default to root-level output.
 
+</details>
+
 ## TDD/BDD Workflow
+
+<details>
+<summary>Test-first development patterns (click to expand)</summary>
 
 ### Test-First Development
 
@@ -865,9 +916,14 @@ After each task, verify:
 | No tests deleted | ✓ | ✓ |
 | No tests weakened | ✓ | ✓ |
 
+</details>
+
 ---
 
 ## Requirements Integration
+
+<details>
+<summary>How requirements.md flows through workflows (click to expand)</summary>
 
 When `requirements.md` exists, downstream prompts consume it:
 
@@ -887,3 +943,5 @@ When `requirements.md` exists, downstream prompts consume it:
 | Non-Functional Requirements (NFR) | Quality targets | Architecture, Implement |
 | Configuration Requirements | Env vars, defaults | Architecture, Implement |
 | Artifact Mapping | Req → file traceability | Tasks, Tech-Debt |
+
+</details>
