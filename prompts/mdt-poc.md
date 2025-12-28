@@ -72,13 +72,24 @@ CR contains unresolved technical questions:
 
 ## Output
 
-### File: `{TICKETS_PATH}/{CR-KEY}/poc.md`
+### Primary: `{TICKETS_PATH}/{CR-KEY}/poc.md`
 
-Documents findings for architecture to consume.
+**This is the main deliverable.** Summary document for `/mdt:architecture` to consume. Contains findings, decisions, and architecture implications.
 
-### Folder: `{TICKETS_PATH}/{CR-KEY}/poc/`
+### Secondary: `{TICKETS_PATH}/{CR-KEY}/poc/`
 
-Contains throwaway spike code. **Not committed** — add to `.gitignore`:
+Contains throwaway spike code with minimal READMEs (run instructions only).
+
+```
+{CR-KEY}/
+├── poc.md                           ← PRIMARY: Summary for architecture
+└── poc/
+    └── {experiment-name}/
+        ├── README.md                ← Run instructions only
+        └── {spike-code-files}       ← Throwaway code
+```
+
+**Not committed** — add to `.gitignore`:
 
 ```gitignore
 # Proof of concept spikes (throwaway)
@@ -196,7 +207,18 @@ Execute the experiment:
    ```
 3. Install spike dependencies
 4. Write experimental code
-5. Create README with run instructions
+5. Create **minimal** README with run instructions ONLY:
+   ```markdown
+   # {Experiment Name}
+
+   ## How to Run
+   {commands to execute the spike}
+
+   ## Expected Output
+   {what success looks like}
+   ```
+
+**README Scope** (CRITICAL): The README in `poc/{experiment-name}/` contains ONLY run instructions. All findings, analysis, and architecture implications go in `poc.md` at the CR root (Step 7).
 
 **Code Quality Bar**: "Works enough to answer the question"
 
@@ -208,7 +230,7 @@ Execute the experiment:
 - Clean architecture
 - Error handling
 - Tests
-- Documentation beyond README
+- Findings in spike README (those go in poc.md)
 - Reusable code
 
 ### Step 6: Run and Observe
@@ -233,6 +255,8 @@ Execute the spike and document observations:
 
 ### Step 7: Document Findings
 
+**CRITICAL**: This step creates a SEPARATE file `poc.md` at the CR root — not in the spike folder. This is the file `/mdt:architecture` consumes.
+
 Create `{TICKETS_PATH}/{CR-KEY}/poc.md`:
 
 ```markdown
@@ -256,7 +280,13 @@ Create `{TICKETS_PATH}/{CR-KEY}/poc.md`:
 
 **Approach**: {what we built}
 
-**Code Location**: `poc/{experiment-name}/`
+**Spike Location**: `poc/{experiment-name}/`
+
+**Files Created**:
+| File | Purpose |
+|------|---------|
+| `poc/{experiment-name}/{main-file}` | {primary spike code} |
+| `poc/{experiment-name}/README.md` | Run instructions |
 
 **Key Code** (relevant snippet only):
 ```{language}
@@ -321,6 +351,26 @@ If investigating multiple questions:
 2. Create separate experiment folders: `poc/{question-1}/`, `poc/{question-2}/`
 3. Consolidate findings in single `poc.md` with sections per question
 4. Summarize cross-cutting implications
+
+### Step 9: Validate Deliverables
+
+Before completing, verify all artifacts exist:
+
+```bash
+# Required files check
+ls {TICKETS_PATH}/{CR-KEY}/poc.md          # Summary for architecture (REQUIRED)
+ls {TICKETS_PATH}/{CR-KEY}/poc/             # Spike folder exists
+ls {TICKETS_PATH}/{CR-KEY}/poc/*/README.md  # Run instructions for each experiment
+```
+
+**Validation Checklist**:
+- [ ] `poc.md` exists at CR root (not inside poc/ folder)
+- [ ] `poc.md` contains Decision section with clear answer
+- [ ] `poc.md` references spike location with file table
+- [ ] Each spike has minimal README with run instructions
+- [ ] Spike code is runnable (verified in Step 6)
+
+**If `poc.md` is missing**: Create it now from Step 6 observations — this is the primary deliverable.
 
 ---
 
