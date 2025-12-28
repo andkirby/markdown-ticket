@@ -9,8 +9,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.shared.json ./
 COPY shared ./shared
-COPY server/package.json ./server/
-COPY mcp-server/package.json ./mcp-server/
+COPY server/package*.json ./server/
+COPY mcp-server/package*.json ./mcp-server/
 
 # Development stage
 FROM base AS development
