@@ -1,5 +1,5 @@
 import { Project } from '../../models/Project.js';
-import { CONFIG_FILES, DEFAULT_PATHS } from '../../utils/constants.js';
+import { CONFIG_FILES, DEFAULT_PATHS, getDefaultPaths } from '../../utils/constants.js';
 import { logQuiet } from '../../utils/logger.js';
 import { stringify, parseToml } from '../../utils/toml.js';
 import {
@@ -21,12 +21,15 @@ import {
  * Extracted from ProjectDiscoveryService to reduce file size
  */
 export class ProjectRegistry {
-  private projectsDir: string;
   private quiet: boolean;
 
   constructor(quiet: boolean = false) {
     this.quiet = quiet;
-    this.projectsDir = DEFAULT_PATHS.PROJECTS_REGISTRY;
+  }
+
+  /** Get the projects directory dynamically (respects process.env.CONFIG_DIR) */
+  private get projectsDir(): string {
+    return getDefaultPaths().PROJECTS_REGISTRY;
   }
 
   /**

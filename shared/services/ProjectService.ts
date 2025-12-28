@@ -82,9 +82,11 @@ export class ProjectService implements IProjectService {
     }
 
     // Cache
-    async getAllProjects(): Promise<Project[]> {
-        const cached = await this.cache.getAllProjectsFromCache();
-        if (cached) return cached;
+    async getAllProjects(bypassCache = false): Promise<Project[]> {
+        if (!bypassCache) {
+            const cached = await this.cache.getAllProjectsFromCache();
+            if (cached) return cached;
+        }
 
         const registered = this.getRegisteredProjects();
         const globalConfig = this.getGlobalConfig();

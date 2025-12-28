@@ -1,8 +1,7 @@
 /**
  * Project Factory - Test utility for creating minimal project structures and CRs for testing.
  *
- * Simplified version for MDT-092 isolated test environment that doesn't depend on
- * shared services to avoid module resolution issues.
+ * Refactored to use shared services from @mdt/shared to avoid code duplication.
  */
 
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
@@ -15,6 +14,9 @@ import {
   type RetryOptions,
 } from '../utils/retry-helper.js';
 import type { CRType, CRStatus, CRPriority } from '../../models/Types.js';
+import { ProjectRegistry } from '../../services/project/ProjectRegistry.js';
+import { ProjectConfigService } from '../../services/project/ProjectConfigService.js';
+import type { Project } from '../../models/Project.js';
 
 // Simple CR data structure for testing
 export interface SimpleCR {
@@ -104,13 +106,15 @@ export class ProjectFactoryError extends Error {
 }
 
 /**
- * Factory for creating test projects and CRs using direct file I/O
+ * Factory for creating test projects and CRs using shared services
  */
 export class ProjectFactory {
   private testEnv: TestEnvironment;
   private projectsDir: string;
   private retryHelper: RetryHelper;
   private projectConfigs: Map<string, ProjectConfig> = new Map();
+  private registry: ProjectRegistry;
+  private configService: ProjectConfigService;
 
   constructor(testEnv: TestEnvironment) {
     this.testEnv = testEnv;
@@ -137,6 +141,10 @@ export class ProjectFactory {
       ],
       logContext: 'ProjectFactory',
     });
+
+    // Initialize services in quiet mode for tests
+    this.registry = new ProjectRegistry(true);
+    this.configService = new ProjectConfigService(true);
 
     // Projects will be created in temp directory
     this.projectsDir = join(testEnv.getTempDirectory(), 'projects');
@@ -255,7 +263,7 @@ export class ProjectFactory {
   }
 
   /**
-   * Create project configuration files with retry logic
+   * Create project configuration files using shared services
    */
   private async createProjectFiles(
     projectPath: string,
@@ -264,67 +272,85 @@ export class ProjectFactory {
     config: ProjectConfig,
     crsPath: string,
   ): Promise<void> {
-    const files = [
-      {
-        path: join(projectPath, '.mdt-config.toml'),
-        content: this.generateProjectConfig(projectCode, projectName, config),
-        context: `ProjectFactory.createConfigFile(${projectCode})`,
+    // Create .mdt-next counter file (test-specific)
+    await withRetry(
+      async () => {
+        writeFileSync(join(projectPath, '.mdt-next'), '1', 'utf8');
       },
       {
-        path: join(projectPath, '.mdt-next'),
-        content: '1',
-        context: `ProjectFactory.createNextFile(${projectCode})`,
+        logContext: `ProjectFactory.createNextFile(${projectCode})`,
+        retryableErrors: [
+          'EACCES',
+          'ENOENT',
+          'EEXIST',
+          'EBUSY',
+          'EMFILE',
+          'ENFILE',
+          'EIO',
+        ],
+      },
+    );
+
+    // Create .gitkeep in CRs directory
+    await withRetry(
+      async () => {
+        writeFileSync(join(crsPath, '.gitkeep'), '', 'utf8');
       },
       {
-        path: join(crsPath, '.gitkeep'),
-        content: '',
-        context: `ProjectFactory.createGitkeep(${projectCode})`,
+        logContext: `ProjectFactory.createGitkeep(${projectCode})`,
+        retryableErrors: [
+          'EACCES',
+          'ENOENT',
+          'EEXIST',
+          'EBUSY',
+          'EMFILE',
+          'ENFILE',
+          'EIO',
+        ],
       },
-    ];
+    );
 
-    // Write all files with retry logic
-    for (const file of files) {
-      await withRetry(
-        async () => {
-          writeFileSync(file.path, file.content, 'utf8');
-        },
-        {
-          logContext: file.context,
-          retryableErrors: [
-            'EACCES',
-            'ENOENT',
-            'EEXIST',
-            'EBUSY',
-            'EMFILE',
-            'ENFILE',
-            'EIO',
-          ],
-        },
-      );
-    }
-  }
+    // Create local config using ProjectConfigService
+    this.configService.createOrUpdateLocalConfig(
+      projectCode,
+      projectPath,
+      projectName,
+      projectCode,
+      config.description,
+      config.repository,
+      false, // globalOnly - we create local config for tests
+      config.ticketsPath,
+    );
 
-  /**
-   * Generate project configuration file content
-   */
-  private generateProjectConfig(
-    code: string,
-    name: string,
-    config: ProjectConfig,
-  ): string {
-    return `# Project Configuration for ${name}
+    // Create Project object for registry
+    const project: Project = {
+      id: projectCode,
+      project: {
+        name: projectName,
+        code: projectCode,
+        path: projectPath,
+        configFile: join(projectPath, '.mdt-config.toml'),
+        active: true,
+        description: config.description || 'Test project',
+        repository: config.repository || 'test-repo',
+        ticketsPath: config.ticketsPath || 'docs/CRs',
+      },
+      metadata: {
+        dateRegistered: new Date().toISOString().split('T')[0],
+        lastAccessed: new Date().toISOString().split('T')[0],
+        version: '1.0.0',
+      },
+      document: {
+        paths: config.documentPaths || ['docs'],
+        excludeFolders: config.excludeFolders || ['node_modules', '.git', 'dist'],
+      },
+    };
 
-[project]
-name = "${name}"
-code = "${code}"
-description = "${config.description || 'Test project'}"
-repository = "${config.repository || 'test-repo'}"
-ticketsPath = "${config.ticketsPath || 'docs/CRs'}"
-
-[project.document]
-paths = ${JSON.stringify(config.documentPaths || ['docs'])}
-excludeFolders = ${JSON.stringify(config.excludeFolders || ['node_modules', '.git', 'dist'])}
-`;
+    // Register project using ProjectRegistry
+    this.registry.registerProject(project, {
+      paths: config.documentPaths || ['docs'],
+      maxDepth: 3,
+    });
   }
 
   /**
