@@ -269,6 +269,12 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // =============================================================================
+// Export Express app for Supertest testing (MDT-106)
+// This export allows tests to use the app without calling listen()
+// =============================================================================
+export { app };
+
+// =============================================================================
 // Server Initialization
 // =============================================================================
 
@@ -288,8 +294,9 @@ async function initializeServer(): Promise<void> {
   }
 }
 
-// Start server
-app.listen(PORT, async () => {
+// Start server only when run directly (not when imported for testing)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  app.listen(PORT, async () => {
   console.log(`🚀 Ticket board server running on port ${PORT}`);
   console.log(`📁 Tasks directory: ${TICKETS_DIR}`);
   console.log(`🌐 API endpoints:`);
@@ -307,10 +314,11 @@ app.listen(PORT, async () => {
   console.log(`   GET  /api-docs - API Documentation (Redoc UI)`);
 
   // Initialize the server
-  await initializeServer();
-  await initializeMultiProjectWatchers();
-  fileWatcher.startHeartbeat();
-});
+    await initializeServer();
+    await initializeMultiProjectWatchers();
+    fileWatcher.startHeartbeat();
+  });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
