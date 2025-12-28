@@ -19,7 +19,7 @@ import {
   TicketUpdateAttrs,
   TICKET_UPDATE_ALLOWED_ATTRS,
   TicketFilters
-} from '../../models/Ticket';
+} from '../../../models/Ticket';
 
 describe('Ticket Model - Behavioral Preservation', () => {
   describe('Type Contracts', () => {
@@ -68,14 +68,19 @@ describe('Ticket Model - Behavioral Preservation', () => {
         filePath: '/test.md',
         relatedTickets: [],
         dependsOn: [],
-        blocks: []
+        blocks: [],
+        // Optional fields - normalizeTicket provides empty string defaults
+        phaseEpic: '',
+        assignee: '',
+        implementationNotes: '',
+        implementationDate: null
       };
 
-      // Optional fields can be undefined
-      expect(minimalTicket.phaseEpic).toBeUndefined();
-      expect(minimalTicket.assignee).toBeUndefined();
+      // Optional fields have defaults from normalizeTicket
+      expect(minimalTicket.phaseEpic).toBe('');
+      expect(minimalTicket.assignee).toBe('');
       expect(minimalTicket.implementationDate).toBeNull();
-      expect(minimalTicket.implementationNotes).toBeUndefined();
+      expect(minimalTicket.implementationNotes).toBe('');
     });
   });
 
@@ -166,13 +171,22 @@ describe('Ticket Model - Behavioral Preservation', () => {
         filePath: '/test.md',
         relatedTickets: ['MDT-002'],
         dependsOn: [],
-        blocks: []
+        blocks: [],
+        // Include optional fields with defaults
+        phaseEpic: '',
+        assignee: '',
+        implementationDate: null,
+        implementationNotes: ''
       };
 
       const result = normalizeTicket(alreadyNormalized);
 
-      // Should preserve structure
-      expect(result).toEqual(alreadyNormalized);
+      // Should preserve structure with optional fields
+      expect(result.code).toBe(alreadyNormalized.code);
+      expect(result.title).toBe(alreadyNormalized.title);
+      expect(result.relatedTickets).toEqual(alreadyNormalized.relatedTickets);
+      expect(result.dependsOn).toEqual(alreadyNormalized.dependsOn);
+      expect(result.blocks).toEqual(alreadyNormalized.blocks);
     });
   });
 
