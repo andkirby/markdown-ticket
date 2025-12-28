@@ -136,7 +136,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "gh-pages": "^6.3.0",
-    "jest-openapi": "^0.14.2",
+    "jest-openapi": "^0.14.1",
     "jiti": "^2.6.1",
     "prettier": "^3.7.4",
     "typescript": "^5.2.2",
