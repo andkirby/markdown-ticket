@@ -11,6 +11,33 @@
 import { TestEnvironment, TestServer, ProjectFactory, findProjectRoot } from '../index.js';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
+import http from 'http';
+
+/**
+ * HTTP GET helper using Node's http module (no keep-alive, prevents Jest hanging).
+ * The global fetch() uses keep-alive connections that block Jest from exiting.
+ */
+function httpGet(url: string): Promise<{ ok: boolean; statusCode: number; json: () => Promise<any> }> {
+  return new Promise((resolve, reject) => {
+    const req = http.get(url, { headers: { Connection: 'close' } }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        res.destroy(); // Explicitly close response socket
+        resolve({
+          ok: res.statusCode !== undefined && res.statusCode >= 200 && res.statusCode < 300,
+          statusCode: res.statusCode ?? 0,
+          json: () => Promise.resolve(JSON.parse(data))
+        });
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(5000, () => {
+      req.destroy();
+      reject(new Error('Request timeout'));
+    });
+  });
+}
 
 describe('shared/test-lib - Integration', () => {
   // Increase timeout for server startup (60s)
@@ -24,11 +51,6 @@ describe('shared/test-lib - Integration', () => {
     testEnv = new TestEnvironment();
     await testEnv.setup();
 
-    console.log('Test environment created:');
-    console.log('  Temp dir:', testEnv.getTempDirectory());
-    console.log('  Config dir:', testEnv.getConfigDirectory());
-    console.log('  Ports:', testEnv.getPortConfig());
-
     // 2. Create project factory and test project
     factory = new ProjectFactory(testEnv);
     const project = await factory.createProject('empty', {
@@ -37,25 +59,12 @@ describe('shared/test-lib - Integration', () => {
       ticketsPath: 'specs/tickets'
     });
 
-    console.log('Project created:', project.key, 'at', project.path);
-
     // 3. Create a test CR
     const crResult = await factory.createTestCR('TEST', {
       title: 'Test Server Discovery',
       type: 'Feature Enhancement',
       content: 'Verify server discovers this CR'
     });
-
-    console.log('CR created:', crResult.crCode, 'at', crResult.filePath);
-
-    // Verify registry files were created
-    const registryDir = join(testEnv.getConfigDirectory(), 'projects');
-    console.log('Registry dir:', registryDir);
-    console.log('Registry dir exists:', existsSync(registryDir));
-    if (existsSync(registryDir)) {
-      const files = readdirSync(registryDir);
-      console.log('Registry files:', files);
-    }
 
     // Wait for file system to sync
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -83,27 +92,23 @@ describe('shared/test-lib - Integration', () => {
       monorepoRoot = parent;
     }
 
-    console.log('Monorepo root:', monorepoRoot);
     await testServer.start('backend', monorepoRoot);
 
     // Wait for server to be fully ready and initialize project discovery
     // Then poll until projects are discovered (fix race condition)
-    console.log('Waiting for backend server to discover projects...');
     const port = testEnv.getPortConfig().backend;
     const maxAttempts = 30;
     const pollDelay = 500;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const response = await fetch(`http://localhost:${port}/api/projects?bypassCache=true`);
+        const response = await httpGet(`http://localhost:${port}/api/projects?bypassCache=true`);
         if (response.ok) {
           const projects = await response.json();
-          console.log(`Attempt ${attempt}: Found ${projects.length} projects`);
 
           // Check if our TEST project is discovered
           const testProject = projects.find((p: any) => p.id === 'TEST' || p.key === 'TEST');
           if (testProject) {
-            console.log('✅ TEST project discovered by server');
             break;
           }
 
@@ -120,54 +125,25 @@ describe('shared/test-lib - Integration', () => {
       // Wait before next attempt
       await new Promise(resolve => setTimeout(resolve, pollDelay));
     }
-
-    console.log('Backend server started on port', testEnv.getPortConfig().backend);
   });
 
   afterAll(async () => {
-    // 5. Cleanup
+    // 5. Cleanup - stopAll() now properly waits for process tree to exit
     await testServer.stopAll();
     await testEnv.cleanup();
-    console.log('Cleanup complete');
   });
 
   it('backend server discovers test-lib created project', async () => {
     // Verify server is still running before making request
     const isReady = await testServer.isReady('backend');
-    console.log('Server ready:', isReady);
 
     const port = testEnv.getPortConfig().backend;
     // Use bypassCache to avoid cached empty project list from server startup
-    const response = await fetch(`http://localhost:${port}/api/projects?bypassCache=true`);
+    const response = await httpGet(`http://localhost:${port}/api/projects?bypassCache=true`);
 
     expect(response.ok).toBe(true);
 
     const projects = await response.json();
-    console.log('Projects discovered:', projects);
-    console.log('Number of projects:', projects.length);
-
-    // Also check registry file content and project structure
-    const registryDir = join(testEnv.getConfigDirectory(), 'projects');
-    if (existsSync(registryDir)) {
-      const files = readdirSync(registryDir);
-      console.log('Registry files:', files);
-      for (const file of files) {
-        if (file.endsWith('.toml')) {
-          const content = readFileSync(join(registryDir, file), 'utf8');
-          console.log(`${file} content:`, content);
-        }
-      }
-    }
-
-    // Check if project directory and .mdt-config.toml exist
-    const projectPath = join(testEnv.getTempDirectory(), 'projects', 'TEST');
-    console.log('Project path exists:', existsSync(projectPath));
-    const configPath = join(projectPath, '.mdt-config.toml');
-    console.log('Project config exists:', existsSync(configPath));
-    if (existsSync(configPath)) {
-      const configContent = readFileSync(configPath, 'utf8');
-      console.log('Project config content:', configContent);
-    }
 
     // Should find our TEST project
     const testProject = projects.find((p: any) => p.id === 'TEST' || p.key === 'TEST');
@@ -177,12 +153,11 @@ describe('shared/test-lib - Integration', () => {
 
   it('backend server discovers test-lib created CRs', async () => {
     const port = testEnv.getPortConfig().backend;
-    const response = await fetch(`http://localhost:${port}/api/projects/TEST/crs?bypassCache=true`);
+    const response = await httpGet(`http://localhost:${port}/api/projects/TEST/crs?bypassCache=true`);
 
     expect(response.ok).toBe(true);
 
     const crs = await response.json();
-    console.log('CRs discovered:', crs);
 
     // Should find our TEST-001 CR
     expect(crs).toHaveLength(1);
@@ -192,7 +167,7 @@ describe('shared/test-lib - Integration', () => {
 
   it('CR file has correct filename with title slug', async () => {
     const port = testEnv.getPortConfig().backend;
-    const response = await fetch(`http://localhost:${port}/api/projects/TEST/crs`);
+    const response = await httpGet(`http://localhost:${port}/api/projects/TEST/crs`);
 
     const crs = await response.json();
 
