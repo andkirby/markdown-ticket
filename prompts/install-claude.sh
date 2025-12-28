@@ -116,6 +116,7 @@ MDT_COMMANDS=(
     "tech-debt"
     "reflection"
     "tests"
+    "poc"
 )
 
 # Check if Claude commands directory exists, create if not
@@ -282,6 +283,7 @@ show_usage() {
     echo "  /mdt:implement          - Execute tasks with TDD verification"
     echo "  /mdt:tech-debt          - Detect debt patterns"
     echo "  /mdt:reflection         - Capture learnings"
+    echo "  /mdt:poc                - Create proof-of-concept spike"
     echo
     echo "Full workflow chain:"
     echo "  /mdt:ticket-creation → /mdt:requirements → /mdt:assess → /mdt:tests"
