@@ -16,9 +16,9 @@
 /// <reference types="jest" />
 
 import request from 'supertest';
-import { setupTestEnvironment, cleanupTestEnvironment, createTestProjectWithCR } from '../api/setup';
-import { projectApi, assertSuccess, assertNotFound, assertBadRequest, assertCRUDSuccess, assertCRStructure, assertErrorMessage } from '../api/helpers';
-import { crFixtures, crUpdateFixtures, errorFixtures } from '../api/fixtures/projects';
+import { setupTestEnvironment, cleanupTestEnvironment, createTestProjectWithCR } from '../api/setup.js';
+import { projectApi, assertSuccess, assertNotFound, assertBadRequest, assertCRUDSuccess, assertCRStructure, assertErrorMessage } from '../api/helpers.js';
+import { crFixtures, crUpdateFixtures, errorFixtures } from '../api/fixtures/projects.js';
 
 describe('API Integration Tests - CRUD Endpoints (MDT-106)', () => {
   let tempDir: string;

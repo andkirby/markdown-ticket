@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { ProjectController } from '../../controllers/ProjectController';
+import { ProjectController } from '../../controllers/ProjectController.js';
 import {
   createMockProjectService,
   createMockTicketService,
@@ -8,7 +8,7 @@ import {
   createMockReqRes,
   mockProject,
   mockCR
-} from '../utils/setupTests';
+} from '../utils/setupTests.js';
 
 describe('ProjectController - CRUD Operations', () => {
   let projectController: ProjectController;

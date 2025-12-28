@@ -7,8 +7,8 @@
 
 /// <reference types="jest" />
 
-import { setupTestEnvironment, cleanupTestEnvironment } from './setup';
-import { createGetRequest, createPostRequest, assertSuccess, assertBadRequest, assertNotFound, assertBodyHasProperties, assertIsArray, assertErrorMessage } from './helpers';
+import { setupTestEnvironment, cleanupTestEnvironment } from './setup.js';
+import { createGetRequest, createPostRequest, assertSuccess, assertBadRequest, assertNotFound, assertBodyHasProperties, assertIsArray, assertErrorMessage } from './helpers/index.js';
 
 describe('System Endpoint Tests (MDT-106)', () => {
   let tempDir: string;
