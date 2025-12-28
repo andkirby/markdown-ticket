@@ -94,19 +94,19 @@ export class TicketService {
     const crPath = await this.getCRPath(project);
     const crDir = path.join(crPath, crId);
 
-
     let mdPath: string;
+    let files: string[];
 
     if (fs.existsSync(crDir)) {
       // Subdirectory pattern: docs/CRs/API-001/API-001.md
-      const files = fs.readdirSync(crDir).filter(f => f.endsWith('.md'));
+      files = fs.readdirSync(crDir).filter(f => f.endsWith('.md'));
       if (files.length === 0) {
         throw new Error('CR not found');
       }
       mdPath = path.join(crDir, files[0]);
     } else {
       // Flat file pattern: docs/CRs/API-001-test-cr-for-api-testing.md
-      const files = fs.readdirSync(crPath).filter(f => f.startsWith(crId) && f.endsWith('.md'));
+      files = fs.readdirSync(crPath).filter(f => f.startsWith(crId) && f.endsWith('.md'));
       if (files.length === 0) {
         throw new Error('CR not found');
       }
