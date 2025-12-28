@@ -11,9 +11,9 @@ jest.mock('../../services/TreeService', () => {
 });
 
 import { ProjectService } from '@mdt/shared/services/ProjectService';
-import { TicketService } from '../../services/TicketService';
-import { ProjectController } from '../../controllers/ProjectController';
-import { FileSystemService } from '../../services/FileSystemService';
+import { TicketService } from '../../services/TicketService.js';
+import { ProjectController } from '../../controllers/ProjectController.js';
+import { FileSystemService } from '../../services/FileSystemService.js';
 
 // Mock console methods to reduce noise in tests
 // But pass through to real console so we can see output during debugging

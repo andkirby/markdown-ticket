@@ -17,7 +17,7 @@
 
 import request from 'supertest';
 import type { Express } from 'express';
-import { setupTestEnvironment, cleanupTestEnvironment } from './setup';
+import { setupTestEnvironment, cleanupTestEnvironment } from './setup.js';
 import {
   assertSuccess,
   assertBadRequest,
@@ -26,8 +26,8 @@ import {
   assertBodyHasProperties,
   assertIsArray,
   assertArrayLength,
-} from './helpers';
-import { generateTestProjectCode } from './fixtures/projects';
+} from './helpers.js';
+import { generateTestProjectCode } from './fixtures/projects.js';
 
 describe('Projects API - GET /api/projects', () => {
   let tempDir: string;

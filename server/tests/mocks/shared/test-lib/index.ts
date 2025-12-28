@@ -9,12 +9,12 @@
  */
 
 // Use relative path to actual shared package source to avoid ESM issues with dist
-export { TestEnvironment } from '../../../../../shared/test-lib/core/test-environment';
-export { TestServer } from '../../../../../shared/test-lib/core/test-server';
-export { ProjectFactory } from '../../../../../shared/test-lib/core/project-factory';
+export { TestEnvironment } from '../../../../../shared/test-lib/core/test-environment.js';
+export { TestServer } from '../../../../../shared/test-lib/core/test-server.js';
+export { ProjectFactory } from '../../../../../shared/test-lib/core/project-factory.js';
 
 // Re-export types
-export type { ProjectConfig, ProjectData, TestScenario, TestCRResult } from '../../../../../shared/test-lib/core/project-factory';
+export type { ProjectConfig, ProjectData, TestScenario, TestCRResult } from '../../../../../shared/test-lib/core/project-factory.js';
 
 // Re-export other utilities
-export * from '../../../../../shared/test-lib';
+export * from '../../../../../shared/test-lib.js';
