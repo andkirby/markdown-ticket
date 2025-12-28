@@ -17,7 +17,8 @@ MDT-106 adds comprehensive end-to-end (E2E) test coverage for all server API end
 
 #### Acceptance Criteria
 
-1. WHEN the E2E test suite executes, the system shall test all endpoints defined in `server/routes/` (projects, tickets, documents, sse, system, devtools, docs).
+1. WHEN the E2E test suite executes, the system shall test all endpoints defined in `server/routes/` (projects, tickets, documents, sse, system, docs).
+   > **Note**: DevTools endpoint (`/api/devtools/*`) is excluded — development-only feature with stateful session management.
 2. WHEN an endpoint test runs, the system shall verify success responses including correct status codes and response body structure.
 3. WHEN an endpoint test runs, the system shall verify error handling for invalid inputs (400), missing resources (404), and server errors (500).
 
@@ -102,6 +103,16 @@ MDT-106 adds comprehensive end-to-end (E2E) test coverage for all server API end
 2. WHILE multiple tests execute, the system shall maintain isolated data and port allocation per test.
 3. IF a port conflict occurs during concurrent execution, THEN the system shall retry with a different port or fail the test with a clear error message.
 
+### Requirement 10: OpenAPI Contract Validation
+
+**Objective**: As a developer, I want API responses validated against the OpenAPI specification, so that implementation drift is caught automatically.
+
+#### Acceptance Criteria
+
+1. WHEN endpoint tests execute, the system shall validate response status codes, headers, and bodies against `server/openapi.yaml`.
+2. WHEN a response deviates from the OpenAPI specification, THEN the system shall fail the test with details about the mismatch.
+3. WHEN tests run, the system shall use jest-openapi for contract validation without requiring manual schema updates.
+
 ---
 
 ## Functional Requirements
@@ -111,7 +122,7 @@ MDT-106 adds comprehensive end-to-end (E2E) test coverage for all server API end
 | ID | Requirement | Rationale |
 |----|-------------|-----------|
 | FR-1 | E2E test infrastructure using `shared/test-lib` for environment isolation | Leverages existing infrastructure for consistent test environments |
-| FR-2 | Test suite covering all routes in `server/routes/` (projects, tickets, documents, sse, system, devtools, docs) | Ensures comprehensive API coverage |
+| FR-2 | Test suite covering all routes in `server/routes/` (projects, tickets, documents, sse, system, docs) | Ensures comprehensive API coverage (DevTools excluded — development-only) |
 | FR-3 | Success path verification for all endpoints (status codes, response bodies) | Validates expected behavior |
 | FR-4 | Error path verification for common error cases (400, 404, 500) | Ensures graceful error handling |
 | FR-5 | Supertest integration for HTTP requests to Express app | Enables testing without starting actual servers |
@@ -119,6 +130,7 @@ MDT-106 adds comprehensive end-to-end (E2E) test coverage for all server API end
 | FR-7 | SSE testing utilities for Server-Sent Events endpoints | Enables testing of real-time features |
 | FR-8 | Cleanup procedures for temporary test data | Ensures test isolation and prevents pollution |
 | FR-9 | Jest/Vitest configuration for running E2E tests | Aligns with existing backend test infrastructure |
+| FR-10 | OpenAPI contract validation via jest-openapi | Catches API implementation drift automatically |
 
 ## Non-Functional Requirements
 
@@ -214,6 +226,7 @@ MDT-106 adds comprehensive end-to-end (E2E) test coverage for all server API end
 | R9.1 | No execution order dependencies | All test files | Test independence validation |
 | R9.2 | Isolated data during concurrency | `shared/test-lib/core/test-environment.ts` | Environment isolation |
 | R9.3 | Handle port conflicts | `shared/test-lib/core/test-server.ts` | Port retry logic |
+| R10.1 | Validate responses against OpenAPI spec | `server/tests/api/helpers/assertions.ts` + all test files | jest-openapi, server/openapi.yaml |
 
 ---
 
@@ -249,6 +262,7 @@ MDT-106 adds comprehensive end-to-end (E2E) test coverage for all server API end
 | R9.1 | Non-Functional | AC: No tests depend on execution order |
 | R9.2 | Success Conditions | AC: Tests run concurrently without conflicts |
 | R9.3 | Problem | AC: Tests use isolated ports |
+| R10.1 | OpenAPI Contract Validation | AC: Responses validated against server/openapi.yaml |
 
 ---
 *Generated from MDT-106 by /mdt:requirements (v3)*
