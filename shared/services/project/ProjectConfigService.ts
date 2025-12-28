@@ -1,6 +1,6 @@
 import { ProjectConfig, validateProjectConfig, isLegacyConfig, migrateLegacyConfig, getTicketsPath } from '../../models/Project.js';
 import { IProjectConfigService, GlobalConfig, RegistryData } from './types.js';
-import { CONFIG_FILES, DEFAULT_PATHS, DEFAULTS } from '../../utils/constants.js';
+import { CONFIG_FILES, DEFAULT_PATHS, DEFAULTS, getDefaultPaths } from '../../utils/constants.js';
 import { logQuiet } from '../../utils/logger.js';
 import { parseToml, stringify } from '../../utils/toml.js';
 import { processConfig, getDefaultConfig as getDefaultConfigUtil } from '../../utils/config-validator.js';
@@ -17,14 +17,20 @@ import {
  * local project config, and configuration updates.
  */
 export class ProjectConfigService implements IProjectConfigService {
-  private globalConfigPath: string;
-  private projectsDir: string;
   private quiet: boolean;
 
   constructor(quiet: boolean = false) {
     this.quiet = quiet;
-    this.globalConfigPath = DEFAULT_PATHS.CONFIG_FILE;
-    this.projectsDir = DEFAULT_PATHS.PROJECTS_REGISTRY;
+  }
+
+  /** Get global configuration path dynamically (respects process.env.CONFIG_DIR) */
+  private get globalConfigPath(): string {
+    return getDefaultPaths().CONFIG_FILE;
+  }
+
+  /** Get projects directory dynamically (respects process.env.CONFIG_DIR) */
+  private get projectsDir(): string {
+    return getDefaultPaths().PROJECTS_REGISTRY;
   }
 
   /** Get global configuration */

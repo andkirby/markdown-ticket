@@ -6,6 +6,7 @@
  */
 
 import { spawn, ChildProcess } from 'child_process';
+import treeKill from 'tree-kill';
 import { ServerConfig, ServerStartupError, TestFrameworkError } from '../types.js';
 import { PortConfig } from '../config/ports.js';
 
@@ -20,6 +21,12 @@ export class TestServer {
   private configs: Map<string, ServerConfig> = new Map();
   private healthServers: Map<string, any> = new Map();
   private ports: PortConfig;
+
+  // Track event listeners for proper cleanup
+  private stdoutHandlers: Map<string, (data: Buffer) => void> = new Map();
+  private stderrHandlers: Map<string, (data: Buffer) => void> = new Map();
+  private exitHandlers: Map<string, (code: number | null, signal: NodeJS.Signals | null) => void> = new Map();
+  private sigkillTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
   constructor(ports: PortConfig) {
     this.ports = ports;
@@ -45,17 +52,31 @@ export class TestServer {
       config.pid = child.pid;
       config.state = 'starting';
 
-      // Logging
-      child.stdout?.on('data', (d) => console.debug(`[${serverType}] ${d.toString().trim()}`));
-      child.stderr?.on('data', (d) => console.error(`[${serverType}] ${d.toString().trim()}`));
-
-      // Handle process exit
-      child.on('exit', (code, signal) => {
-        console.warn(`Server ${serverType} exited with code ${code}, signal ${signal}`);
+      // Create and store event handler references for cleanup
+      const stdoutHandler = (d: Buffer) => {
+        // Optionally log: console.debug(`[${serverType}] ${d.toString().trim()}`);
+      };
+      const stderrHandler = (d: Buffer) => {
+        // Optionally log: console.error(`[${serverType}] ${d.toString().trim()}`);
+      };
+      const exitHandler = (code: number | null, signal: NodeJS.Signals | null) => {
+        // Optionally log: console.warn(`Server ${serverType} exited with code ${code}, signal ${signal}`);
         this.processes.delete(serverType);
         config.state = 'stopped';
         config.pid = undefined;
-      });
+        // Clean up handlers when process exits naturally
+        this.cleanupEventListeners(serverType);
+      };
+
+      // Attach event listeners
+      child.stdout?.on('data', stdoutHandler);
+      child.stderr?.on('data', stderrHandler);
+      child.on('exit', exitHandler);
+
+      // Store references for cleanup
+      this.stdoutHandlers.set(serverType, stdoutHandler);
+      this.stderrHandlers.set(serverType, stderrHandler);
+      this.exitHandlers.set(serverType, exitHandler);
 
       await this.waitForHealthCheck(serverType);
       config.state = 'running';
@@ -86,15 +107,79 @@ export class TestServer {
         this.healthServers.delete(serverType);
       }
 
+      // Clear any pending SIGKILL timeout
+      const sigkillTimeout = this.sigkillTimeouts.get(serverType);
+      if (sigkillTimeout) {
+        clearTimeout(sigkillTimeout);
+        this.sigkillTimeouts.delete(serverType);
+      }
+
       if (process) {
-        process.kill('SIGTERM');
-        setTimeout(() => process && !process.killed && process.kill('SIGKILL'), 5000);
-        await this.waitForProcessExit(process);
+        // Remove event listeners before killing process
+        this.cleanupEventListeners(serverType);
+
+        // Close stdin/stdout/stderr streams to prevent hanging
+        // Note: We remove listeners first, so destroying streams won't cause issues
+        if (process.stdin && !process.stdin.destroyed) {
+          process.stdin.end();
+          process.stdin.destroy();
+        }
+        if (process.stdout && !process.stdout.destroyed) {
+          process.stdout.destroy();
+        }
+        if (process.stderr && !process.stderr.destroyed) {
+          process.stderr.destroy();
+        }
+
+        // Disconnect IPC channel if present (only for IPC-enabled processes)
+        if (typeof process.disconnect === 'function') {
+          process.disconnect();
+        }
+
+        // console.debug(`[${serverType}] Killing process tree for PID ${process.pid}`);
+
+        // Use tree-kill to kill the entire process tree (npm -> tsx -> node)
+        // This ensures child processes like nodemon/tsx don't linger
+        if (process.pid) {
+          const pid = process.pid;
+
+          // First, set up the exit listener before sending kill signal
+          const exitPromise = this.waitForProcessExit(process);
+
+          // Send SIGTERM to entire process tree
+          await new Promise<void>((resolve) => {
+            treeKill(pid, 'SIGTERM', (err) => {
+              if (err) {
+                // console.debug(`[${serverType}] tree-kill SIGTERM failed, trying SIGKILL: ${err.message}`);
+                treeKill(pid, 'SIGKILL', () => resolve());
+              } else {
+                resolve();
+              }
+            });
+          });
+
+          // Wait for the process to actually exit
+          await exitPromise;
+        }
+
+        // Clean up the SIGKILL timeout after process exits
+        const storedTimeout = this.sigkillTimeouts.get(serverType);
+        if (storedTimeout) {
+          clearTimeout(storedTimeout);
+          this.sigkillTimeouts.delete(serverType);
+        }
       }
     } catch (error) {
       console.error(`Error stopping ${serverType} server:`, error);
     } finally {
       this.processes.delete(serverType);
+      // Clean up any remaining event listeners and timers
+      this.cleanupEventListeners(serverType);
+      const sigkillTimeout = this.sigkillTimeouts.get(serverType);
+      if (sigkillTimeout) {
+        clearTimeout(sigkillTimeout);
+        this.sigkillTimeouts.delete(serverType);
+      }
       if (config) {
         config.state = 'stopped';
         config.pid = undefined;
@@ -108,6 +193,33 @@ export class TestServer {
     await Promise.allSettled(
       servers.map(type => this.stop(type as 'frontend' | 'backend' | 'mcp'))
     );
+  }
+
+  /** Clean up event listeners for a specific server */
+  private cleanupEventListeners(serverType: string): void {
+    const process = this.processes.get(serverType);
+    if (!process) return;
+
+    // Remove stdout handler
+    const stdoutHandler = this.stdoutHandlers.get(serverType);
+    if (process.stdout && stdoutHandler) {
+      process.stdout.off('data', stdoutHandler);
+      this.stdoutHandlers.delete(serverType);
+    }
+
+    // Remove stderr handler
+    const stderrHandler = this.stderrHandlers.get(serverType);
+    if (process.stderr && stderrHandler) {
+      process.stderr.off('data', stderrHandler);
+      this.stderrHandlers.delete(serverType);
+    }
+
+    // Remove exit handler
+    const exitHandler = this.exitHandlers.get(serverType);
+    if (exitHandler) {
+      process.off('exit', exitHandler);
+      this.exitHandlers.delete(serverType);
+    }
   }
 
   /** Check if a server is ready and responding */
@@ -159,7 +271,7 @@ export class TestServer {
             ...(configDir && { CONFIG_DIR: configDir }), // Pass CONFIG_DIR to child process
           },
           url: `http://localhost:${port}`,
-          healthEndpoint: '/api/health'
+          healthEndpoint: '/api/status'
         };
       case 'mcp':
         return {
@@ -212,10 +324,28 @@ export class TestServer {
       const http = require('http');
       const req = http.request(
         { hostname: 'localhost', port: config.port, path: config.healthEndpoint, method: 'GET', timeout: 1000 },
-        (res: any) => res.statusCode === 200 ? resolve() : reject(new Error(`HTTP ${res.statusCode}`))
+        (res: any) => {
+          // Consume and destroy the response to ensure the socket is closed
+          res.on('data', () => {});
+          res.on('end', () => {
+            res.destroy();
+            req.destroy(); // Also destroy the request
+            if (res.statusCode === 200) {
+              resolve();
+            } else {
+              reject(new Error(`HTTP ${res.statusCode}`));
+            }
+          });
+        }
       );
-      req.on('error', reject);
-      req.on('timeout', () => { req.destroy(); reject(new Error('Health check timeout')); });
+      req.on('error', (err) => {
+        req.destroy();
+        reject(err);
+      });
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Health check timeout'));
+      });
       req.end();
     });
   }
@@ -225,12 +355,29 @@ export class TestServer {
     if (!process || process.killed) return;
 
     return new Promise((resolve) => {
-      const cleanup = () => { process.off('exit', onExit); process.off('error', onError); };
-      const onExit = () => { cleanup(); resolve(); };
-      const onError = () => { cleanup(); resolve(); };
+      let timeoutId: NodeJS.Timeout;
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        process.off('exit', onExit);
+        process.off('error', onError);
+      };
+      const onExit = () => {
+        // console.debug(`Process ${process.pid} exited with code: ${process.exitCode}`);
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        // console.debug(`Process ${process.pid} error`);
+        cleanup();
+        resolve();
+      };
       process.once('exit', onExit);
       process.once('error', onError);
-      setTimeout(() => { cleanup(); resolve(); }, 6000);
+      timeoutId = setTimeout(() => {
+        // console.debug(`Process ${process.pid} exit timeout`);
+        cleanup();
+        resolve();
+      }, 6000);
     });
   }
 }

@@ -27,13 +27,14 @@ The pattern leverages Jest's lifecycle hooks (`beforeAll`, `afterAll`) combined 
 |------------|---------|----------|-----------|
 | Test runner | Jest | 100% | Already configured in server workspace, supports parallel execution out of the box |
 | HTTP testing | Supertest | 100% | Specified in CR, industry standard for Express app testing |
+| Contract validation | jest-openapi | 100% | Validates responses against server/openapi.yaml, catches API drift |
 | Coverage | Istanbul/nyc | 100% | Specified in CR, integrates with Jest's `test:coverage` script |
 | Test environment | @mdt/shared/test-lib | 100% | Existing infrastructure provides TestEnvironment, TestServer, ProjectFactory |
 
 **Build Custom Decisions**:
 | Capability | Reason | Estimated Size |
 |------------|--------|---------------|
-| SSE EventSource helper | Simple wrapper needed (~50 lines), avoids adding `eventsource` package dependency | ~50 lines |
+| SSE EventSource helper | Custom mock using Node's built-in `Event`/`EventTarget` — no additional dependency needed | ~50 lines |
 | Test fixtures | Custom JSON/TS files, test-lib's ProjectFactory provides CR creation | ~30 lines per fixture |
 | Assertion helpers | Custom functions for status/body/error checks align with test-lib patterns | ~75 lines |
 
@@ -42,12 +43,7 @@ The pattern leverages Jest's lifecycle hooks (`beforeAll`, `afterAll`) combined 
 ```mermaid
 graph TB
     subgraph "Test Suite Layer"
-        EP1[projects.test.ts]
-        EP2[tickets.test.ts]
-        EP3[documents.test.ts]
-        EP4[sse.test.ts]
-        EP5[system.test.ts]
-        EP6[openapi-docs.test.ts]
+        Tests["*.test.ts (6 files: projects, tickets, documents, sse, system, openapi-docs)"]
     end
 
     subgraph "Test Infrastructure Layer"
@@ -59,41 +55,30 @@ graph TB
     subgraph "Application Layer"
         Server[server.ts]
         Routes[routes/]
-        Controllers[controllers/]
-        Services[services/]
     end
 
     subgraph "Test Library Layer"
-        TestLib[/shared/test-lib/]
+        TestLib["shared/test-lib"]
     end
 
-    EP1 --> Setup
-    EP2 --> Setup
-    EP3 --> Setup
-    EP4 --> Helpers
-    EP5 --> Setup
-    EP6 --> Setup
-    EP7 --> Setup
-
-    Setup --> TestLib
-    Helpers --> TestLib
+    Tests --> Setup
+    Tests --> Routes
+    Tests --> Helpers
+    Tests --> Fixtures
 
     Setup --> Server
-    EP1 --> Routes
-    EP2 --> Routes
-    EP3 --> Routes
-    EP4 --> Routes
-    EP5 --> Routes
-    EP6 --> Routes
-    EP7 --> Routes
+    Setup --> TestLib
+    Helpers --> TestLib
 ```
+
+**Note**: SSE tests additionally use `helpers/sse.ts` for EventSource mocking. All tests share the same Setup → TestLib → App initialization pattern.
 
 | Component | Responsibility | Owns | Depends On |
 |-----------|----------------|------|------------|
-| `server/tests/api/setup.ts` | Test environment lifecycle, Express app export initialization | TestEnvironment instances, Express app | `@mdt/shared/test-lib` |
+| `server/tests/api/setup.ts` | Test environment lifecycle, OpenAPI initialization, Express app export | TestEnvironment instances, jest-openapi setup, Express app | `@mdt/shared/test-lib`, jest-openapi |
 | `server/tests/api/helpers/request.ts` | Supertest request builders, HTTP method helpers | Request factory functions | Supertest, Express app |
-| `server/tests/api/helpers/assertions.ts` | Assertion utilities for status, body, errors | Assertion functions | Jest |
-| `server/tests/api/helpers/sse.ts` | EventSource wrapper for SSE testing | SSE client mock, event collection | EventSource polyfill |
+| `server/tests/api/helpers/assertions.ts` | Assertion utilities for status, body, errors, OpenAPI contract validation | Assertion functions, toSatisfyApiSpec wrapper | Jest, jest-openapi |
+| `server/tests/api/helpers/sse.ts` | EventSource wrapper for SSE testing | SSE client mock, event collection | Node built-in Event/EventTarget |
 | `server/tests/api/fixtures/` | Test data fixtures (projects, CRs, documents) | JSON/TS fixture files | `@mdt/shared/test-lib` ProjectFactory |
 | `server/tests/api/*.test.ts` | Endpoint-specific test suites | Test cases for each route | Helpers, fixtures, setup |
 
@@ -126,8 +111,10 @@ stateDiagram-v2
 
 | Pattern | Occurrences | Extract To |
 |---------|-------------|------------|
+| OpenAPI spec initialization (jest-openapi) | All endpoint test files | `server/tests/api/setup.ts` |
 | Test environment setup (TestEnvironment, ProjectFactory) | All endpoint test files | `server/tests/api/setup.ts` |
 | HTTP request creation (Supertest + Express app) | All endpoint test files | `server/tests/api/helpers/request.ts` |
+| Contract validation assertions (toSatisfyApiSpec) | All endpoint test files | `server/tests/api/helpers/assertions.ts` |
 | Status code assertions (200, 400, 404, 500) | All endpoint test files | `server/tests/api/helpers/assertions.ts` |
 | Response body structure validation | Projects, tickets, documents tests | `server/tests/api/helpers/assertions.ts` |
 | Fixture data loading (projects, CRs) | Projects, tickets tests | `server/tests/api/fixtures/` |
@@ -175,8 +162,24 @@ server/tests/api/
 |--------|------|-------|----------|
 | `server/tests/api/setup.ts` | Environment orchestration | 100 | 150 |
 | `server/tests/api/helpers/request.ts` | Request utilities | 75 | 110 |
-| `server/tests/api/helpers/assertions.ts` | Assertion utilities | 100 | 150 |
+| `server/tests/api/helpers/assertions.ts` | Assertion utilities | 125 | 185 |
 | `server/tests/api/helpers/sse.ts` | SSE testing utilities | 75 | 110 |
+
+### Application Integration
+
+**Server Export Pattern**: To enable Supertest testing without starting a server, `server/server.ts` must export the Express app:
+
+```typescript
+// Export Express app for Supertest testing (does not call listen())
+export { app };
+
+// Start server only when run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  app.listen(PORT, async () => { /* ... */ });
+}
+```
+
+**Rationale**: This change allows tests to import the app directly without binding to a port. The existing `npm run dev:server` behavior is unchanged.
 | `server/tests/api/fixtures/projects.ts` | Project fixtures | 50 | 75 |
 | `server/tests/api/fixtures/tickets.ts` | Ticket/CR fixtures | 75 | 110 |
 | `server/tests/api/fixtures/documents.ts` | Document fixtures | 50 | 75 |
@@ -186,12 +189,10 @@ server/tests/api/
 | `server/tests/api/sse.test.ts` | SSE endpoint tests | 250 | 375 |
 | `server/tests/api/system.test.ts` | System endpoint tests | 200 | 300 |
 | `server/tests/api/openapi-docs.test.ts` | OpenAPI docs UI endpoint tests | 100 | 150 |
-| **Total** | **All E2E tests** | **~2,325** | **~3,475** |
 
 **Size Rationale**:
 - Helper files kept small (75-100 lines) to maintain simplicity and reusability
 - Endpoint test files sized by complexity (tickets has most CRUD operations → largest, docs has only GET → smallest)
-- Total size (~2,475 lines) is significantly less than a monolithic approach while maintaining modularity
 
 ## Error Scenarios
 
@@ -251,7 +252,7 @@ To add E2E tests for a new endpoint:
 
 Example pattern:
 ```typescript
-import { createTestRequest, assertSuccess, assertNotFound } from './helpers/index.js';
+import { createTestRequest, assertSuccess, assertNotFound, assertSatisfiesApiSpec } from './helpers/index.js';
 import { setupTestEnvironment, cleanupTestEnvironment } from './setup.js';
 
 describe('/api/new-endpoint', () => {
@@ -269,6 +270,7 @@ describe('/api/new-endpoint', () => {
   it('should return data on GET', async () => {
     const response = await createTestRequest(app).get('/api/new-endpoint');
     assertSuccess(response);
+    assertSatisfiesApiSpec(response);  // Validates against server/openapi.yaml
     expect(response.body).toHaveProperty('data');
   });
 });
