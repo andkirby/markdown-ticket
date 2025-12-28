@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { TreeBuildingStrategy, TreeNode, ProjectConfig } from './TreeBuildingStrategy';
+import { TreeBuildingStrategy, TreeNode, ProjectConfig } from './TreeBuildingStrategy.js';
 
 interface FolderNode {
   name: string;

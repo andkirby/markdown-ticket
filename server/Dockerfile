@@ -9,9 +9,9 @@ WORKDIR /app
 # Copy workspace root package.json and shared package.json (workspace monorepo)
 COPY package*.json ./
 COPY tsconfig.shared.json ./
-COPY shared/package.json ./shared/
-COPY server/package.json ./server/
-COPY mcp-server/package.json ./mcp-server/
+COPY shared/package*.json ./shared/
+COPY server/package*.json ./server/
+COPY mcp-server/package*.json ./mcp-server/
 
 # Development stage
 FROM base AS development
@@ -83,8 +83,8 @@ WORKDIR /app
 
 # Copy workspace root package.json
 COPY package*.json ./
-COPY shared/package.json ./shared/
-COPY server/package.json ./server/
+COPY shared/package*.json ./shared/
+COPY server/package*.json ./server/
 
 # Copy node_modules from build stage (has all deps already installed)
 COPY --from=build /app/node_modules ./node_modules
@@ -108,6 +108,10 @@ VOLUME /app/config
 # Create config directory with proper ownership (after VOLUME)
 RUN mkdir -p /app/config && chown nodejs:nodejs /app/config
 
+# Copy entrypoint script before switching to non-root user
+COPY --chown=nodejs:nodejs server/docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Switch to non-root user
 USER nodejs
 
@@ -124,6 +128,9 @@ ENV CHOKIDAR_USEPOLLING=true
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Start the server
 CMD ["npm", "start"]
