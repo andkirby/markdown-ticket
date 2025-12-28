@@ -9,9 +9,9 @@ WORKDIR /app
 # Copy workspace root package.json and shared package.json (workspace monorepo)
 COPY package*.json ./
 COPY tsconfig.shared.json ./
-COPY shared/package.json ./shared/
-COPY server/package.json ./server/
-COPY mcp-server/package.json ./mcp-server/
+COPY shared/package*.json ./shared/
+COPY server/package*.json ./server/
+COPY mcp-server/package*.json ./mcp-server/
 
 # Development stage
 FROM base AS development
@@ -83,8 +83,8 @@ WORKDIR /app
 
 # Copy workspace root package.json
 COPY package*.json ./
-COPY shared/package.json ./shared/
-COPY server/package.json ./server/
+COPY shared/package*.json ./shared/
+COPY server/package*.json ./server/
 
 # Copy node_modules from build stage (has all deps already installed)
 COPY --from=build /app/node_modules ./node_modules

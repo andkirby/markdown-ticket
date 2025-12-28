@@ -9,9 +9,9 @@ WORKDIR /app
 
 # Copy workspace root package.json and shared package.json (workspace monorepo)
 COPY package*.json ./
-COPY shared/package.json ./shared/
-COPY server/package.json ./server/
-COPY mcp-server/package.json ./mcp-server/
+COPY shared/package*.json ./shared/
+COPY server/package*.json ./server/
+COPY mcp-server/package*.json ./mcp-server/
 
 # Development stage
 FROM base AS development
@@ -69,9 +69,8 @@ RUN cd shared && npm run build
 # Build config-cli tool
 RUN cd shared && npm run build:tools
 
-# Build MCP server code
-WORKDIR /app/mcp-server
-RUN npm run build
+# Build MCP server code using --prefix (runs build in mcp-server context but from root)
+RUN npm run build --prefix mcp-server
 
 # Production stage
 FROM node:20-alpine AS production
@@ -84,8 +83,8 @@ WORKDIR /app
 
 # Copy workspace root package.json
 COPY package*.json ./
-COPY shared/package.json ./shared/
-COPY mcp-server/package.json ./mcp-server/
+COPY shared/package*.json ./shared/
+COPY mcp-server/package*.json ./mcp-server/
 
 # Copy node_modules from build stage (has all deps already installed)
 COPY --from=build /app/node_modules ./node_modules
