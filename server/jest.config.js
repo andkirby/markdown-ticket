@@ -1,5 +1,6 @@
 /** @type {import('jest').Config} */
 export default {
+  resolver: '<rootDir>/jest-resolver.cjs',
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   testMatch: [
@@ -21,10 +22,20 @@ export default {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    // Map shared modules to mocks, removing .js extension
+    '^@mdt/shared/(.*)\\.js$': '<rootDir>/tests/mocks/shared/$1',
     '^@mdt/shared/(.*)$': '<rootDir>/tests/mocks/shared/$1'
   },
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.test.json',
+      },
+    ],
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$|@mdt/shared/dist))'
+  ],
   testTimeout: 10000
 };
