@@ -97,8 +97,9 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
               id: projectId,
               name: localConfig?.project?.name || projectId, // Local priority, fallback to directory name
               code: localConfig?.project?.code || (() => {
-                // Generate valid code from projectId using proper validation
-                const generatedCode = ProjectValidator.generateCodeFromName(projectId);
+                // Generate valid code from project name (local config) or projectId using proper validation
+                const nameForCode = localConfig?.project?.name || projectId;
+                const generatedCode = ProjectValidator.generateCodeFromName(nameForCode);
                 const validationResult = ProjectValidator.validateCode(generatedCode);
                 if (validationResult.valid) {
                   return validationResult.normalized!;
