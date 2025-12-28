@@ -80,12 +80,16 @@ export const runProjectCreate = async (flags: Record<string, string>): Promise<C
     .map(([key, value]) => `--${key} "${value}"`)
     .join(' ');
 
-  const command = `npm run project:create -- ${flagString}`;
+  // Use node to run the CLI directly from the root project
+  const rootDir = join(process.cwd(), '..');
+  const cliPath = join(rootDir, 'shared', 'dist', 'tools', 'project-cli.js');
+  // Add --create-project-path to auto-create directories
+  const command = `node "${cliPath}" create ${flagString} --create-project-path`;
 
   try {
     const { stdout, stderr } = await execAsync(command, {
       timeout: 5000,
-      cwd: process.cwd()
+      cwd: rootDir
     });
 
     return {
@@ -105,12 +109,15 @@ export const runProjectCreate = async (flags: Record<string, string>): Promise<C
 };
 
 export const runProjectList = async (): Promise<CLIRunnerResult> => {
-  const command = 'npm run project:list';
+  // Use node to run the CLI directly from the root project
+  const rootDir = join(process.cwd(), '..');
+  const cliPath = join(rootDir, 'shared', 'dist', 'tools', 'project-cli.js');
+  const command = `node "${cliPath}" list`;
 
   try {
     const { stdout, stderr } = await execAsync(command, {
       timeout: 5000,
-      cwd: process.cwd()
+      cwd: rootDir
     });
 
     return {
@@ -160,12 +167,13 @@ export const configHasRequiredFields = (config: any): boolean => {
     typeof project.name === 'string' &&
     typeof project.code === 'string' &&
     typeof project.id === 'string' &&
-    typeof project.active === 'boolean'
+    typeof project.ticketsPath === 'string'
   );
 };
 
 export const configHasValidCode = (code: string): boolean => {
-  return /^[A-Z0-9]{2,5}$/.test(code);
+  // Matches ProjectValidator.validateCode regex: /^[A-Z][A-Z0-9]{1,4}$/
+  return /^[A-Z][A-Z0-9]{1,4}$/.test(code);
 };
 
 

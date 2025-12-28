@@ -19,7 +19,7 @@ import {
   isLegacyConfig,
   migrateLegacyConfig,
   validateProjectConfig
-} from '../../models/Project';
+} from '../../../models/Project';
 
 describe('Project Model - Behavioral Preservation', () => {
   describe('Type Contracts', () => {
@@ -58,6 +58,10 @@ describe('Project Model - Behavioral Preservation', () => {
           startNumber: 1,
           counterFile: '.mdt-next',
           active: true
+        },
+        document: {
+          paths: ['docs'],
+          excludeFolders: ['node_modules']
         }
       };
 
@@ -66,6 +70,8 @@ describe('Project Model - Behavioral Preservation', () => {
       expect(typeof mockConfig.project.startNumber).toBe('number');
       expect(typeof mockConfig.project.counterFile).toBe('string');
       expect(typeof mockConfig.project.active).toBe('boolean');
+      expect(Array.isArray(mockConfig.document.paths)).toBe(true);
+      expect(Array.isArray(mockConfig.document.excludeFolders)).toBe(true);
     });
   });
 
@@ -83,7 +89,8 @@ describe('Project Model - Behavioral Preservation', () => {
           startNumber: 1,
           counterFile: '.mdt-next',
           ticketsPath: 'custom/tickets'
-        }
+        },
+        document: {}
       };
 
       const result = getTicketsPath(config, 'docs/CRs');
@@ -98,7 +105,8 @@ describe('Project Model - Behavioral Preservation', () => {
           startNumber: 1,
           counterFile: '.mdt-next',
           path: 'legacy/tickets'  // Legacy location
-        }
+        },
+        document: {}
       };
 
       const result = getTicketsPath(config, 'docs/CRs');
@@ -112,7 +120,8 @@ describe('Project Model - Behavioral Preservation', () => {
           code: 'TEST',
           startNumber: 1,
           counterFile: '.mdt-next'
-        }
+        },
+        document: {}
       };
 
       const result = getTicketsPath(config, 'docs/CRs');
@@ -126,38 +135,47 @@ describe('Project Model - Behavioral Preservation', () => {
     });
 
     it('should return false for config without project', () => {
-      expect(isLegacyConfig({} as any)).toBe(false);
+      expect(isLegacyConfig(null)).toBe(false);
     });
 
     it('should return false for config without project.path', () => {
-      const config = {
+      const config: ProjectConfig = {
         project: {
           name: 'Test',
-          code: 'TEST'
-        }
+          code: 'TEST',
+          startNumber: 1,
+          counterFile: '.mdt-next'
+        },
+        document: {}
       };
       expect(isLegacyConfig(config)).toBe(false);
     });
 
     it('should return false for config with new ticketsPath format', () => {
-      const config = {
+      const config: ProjectConfig = {
         project: {
           name: 'Test',
           code: 'TEST',
+          startNumber: 1,
+          counterFile: '.mdt-next',
           path: '/project/root',
           ticketsPath: 'docs/CRs'
-        }
+        },
+        document: {}
       };
       expect(isLegacyConfig(config)).toBe(false);
     });
 
     it('should return true for legacy config with project.path only', () => {
-      const config = {
+      const config: ProjectConfig = {
         project: {
           name: 'Test',
           code: 'TEST',
+          startNumber: 1,
+          counterFile: '.mdt-next',
           path: 'docs/CRs'  // This was actually tickets path in legacy
-        }
+        },
+        document: {}
       };
       expect(isLegacyConfig(config)).toBe(true);
     });
@@ -172,6 +190,9 @@ describe('Project Model - Behavioral Preservation', () => {
           startNumber: 1,
           counterFile: '.mdt-next',
           ticketsPath: 'docs/CRs'
+        },
+        document: {
+          paths: ['docs']
         }
       };
 
@@ -187,6 +208,10 @@ describe('Project Model - Behavioral Preservation', () => {
           path: 'docs/CRs',  // Legacy: this was tickets path
           startNumber: 1,
           counterFile: '.mdt-next'
+        },
+        document: {
+          paths: [],
+          excludeFolders: []
         }
       };
 
@@ -207,6 +232,10 @@ describe('Project Model - Behavioral Preservation', () => {
           path: 'docs/CRs',
           startNumber: 1,
           counterFile: '.mdt-next'
+        },
+        document: {
+          paths: [],
+          excludeFolders: []
         }
       };
 
