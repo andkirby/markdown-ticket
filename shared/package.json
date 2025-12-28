@@ -26,6 +26,11 @@
       "import": "./dist/templates/*",
       "types": "./dist/templates/*.d.ts"
     },
+    "./tools/ProjectValidator": {
+      "browser": "./dist/tools/ProjectValidator.js",
+      "node": "./dist/tools/ProjectValidator.node.js",
+      "default": "./dist/tools/ProjectValidator.node.js"
+    },
     "./tools/*": {
       "import": "./dist/tools/*",
       "types": "./dist/tools/*.d.ts"
