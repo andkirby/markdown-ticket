@@ -930,6 +930,13 @@ paths:
       summary: List all projects
       tags:
         - Projects
+      parameters:
+        - name: bypassCache
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Force cache refresh and reload all projects from disk
       responses:
         '200':
           description: List of all registered projects
@@ -962,6 +969,12 @@ paths:
         - CRs
       parameters:
         - $ref: '#/components/parameters/projectId'
+        - name: bypassCache
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Force cache refresh and reload all projects before fetching CRs
       responses:
         '200':
           description: List of CRs
