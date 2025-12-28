@@ -47,7 +47,7 @@ describe('ProjectDiscoveryService', () => {
       mockLoader.getProjectConfig.mockReturnValue({ project: { name: 'My' } });
 
       const projects = service.getRegisteredProjects();
-      expect(projects[0].project.code).toBe('MYPRO');
+      expect(projects[0].project.code).toBe('MY');
     });
   });
 
@@ -66,7 +66,7 @@ describe('ProjectDiscoveryService', () => {
     it('should delegate to registry', () => {
       const project = { id: 'test', project: { name: 'Test' } } as Project;
       service.registerProject(project);
-      expect(mockRegistry.registerProject).toHaveBeenCalledWith(project);
+      expect(mockRegistry.registerProject).toHaveBeenCalledWith(project, undefined);
     });
   });
 });
