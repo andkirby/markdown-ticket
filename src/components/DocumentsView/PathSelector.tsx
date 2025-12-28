@@ -34,7 +34,8 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
         const data = await response.json();
 
         // Use only the top-level document paths from config, not the expanded tree
-        const configuredPaths = new Set<string>(data.config?.document?.paths || data.config?.project?.document_paths || []);
+        // API returns: config.project.document.paths
+        const configuredPaths = new Set<string>(data.config?.project?.document?.paths || []);
         setSelectedPaths(configuredPaths);
       }
     } catch (error) {
