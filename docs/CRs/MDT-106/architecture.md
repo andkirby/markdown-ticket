@@ -1,8 +1,10 @@
 # Architecture: MDT-106
 
 **Source**: [MDT-106](../MDT-106.md)
-**Generated**: 2025-12-27
-**Complexity Score**: 23 (Complex)
+**Generated**: 2025-12-28
+**Complexity Score**: 24 (Complex)
+
+**PoC Validated**: Technical approach verified in `docs/CRs/MDT-106/poc.md`
 
 ## Overview
 
