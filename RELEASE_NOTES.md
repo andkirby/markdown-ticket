@@ -1,5 +1,81 @@
 # Release Notes
 
+## v0.8.0 (2025-12-29)
+
+### 🎉 New Features
+
+**Interactive API Documentation (MDT-085)**
+- **Redoc UI**: Browse and test all 43 API endpoints at `/api-docs`
+- **OpenAPI 3.0 Spec**: Machine-readable API specification with swagger-jsdoc
+- **Developer Friendly**: Try endpoints directly from your browser with live validation
+- **Always Up-to-Date**: Auto-generated from JSDoc comments in route files
+
+**Enhanced Status Buttons (MDT-086)**
+- **On Hold Toggle**: Set tickets to On Hold status with single click from any column
+- **Reject Button**: Reject tickets with proper state management and visual feedback
+- **Better UX**: Clearer error handling and status change confirmations
+
+### 🚀 Improvements
+
+**TOML Configuration (MDT-098)**
+- **Better Library**: Replaced TOML parser with full parse/stringify support
+- **Preserve Formatting**: Configuration changes maintain file structure and comments
+- **More Reliable**: Improved parsing of complex nested configurations
+
+**Test Infrastructure (MDT-104)**
+- **Test Isolation**: Enhanced test-lib with isolated test environments
+- **CONFIG_DIR Support**: Config-cli respects CONFIG_DIR environment variable
+- **Integration Tests**: Comprehensive tests for shared test library
+
+### 🐛 Bug Fixes
+
+**Drag-and-Drop Updates (MDT-088, MDT-089)**
+- **PATCH Endpoint**: New dedicated endpoint for partial ticket updates via drag-and-drop
+- **Fixed Status Updates**: On Hold and Reject buttons now work correctly
+- **Better Error Handling**: Proper HTTP status codes and error messages
+- **Missing Endpoints**: Implemented missing CRUD endpoints for full ticket management
+
+**Frontend Build (MDT-110)**
+- **Browser Compatibility**: Removed Node.js modules from browser bundle
+- **Conditional Exports**: ProjectValidator now works in both browser and Node.js
+- **Build Success**: Frontend builds without "fs" module errors
+
+**Docker Production (MDT-055)**
+- **Fixed ENTRYPOINT**: Backend production stage now properly configured
+- **Auto-Config Creation**: Default config.toml created on container startup
+- **ESM Imports**: Fixed Node.js ES module compatibility in Docker builds
+- **Build Reliability**: Resolved ERR_MODULE_NOT_FOUND errors
+
+### 🔧 Technical Improvements
+
+**Developer Experience**
+- **TypeScript Validation**: Post-commit validation scripts for type safety (MDT-103)
+- **ESLint & Prettier**: Unified code formatting across all packages (MDT-103)
+- **LSP Configuration**: Better TypeScript and Python language server support
+
+**Testing Infrastructure**
+- **E2E Framework**: Comprehensive testing for MCP server tools (MDT-091)
+- **Shared Test Utilities**: Consolidated testing patterns across projects
+
+**Code Quality**
+- **Refactored ProjectFactory**: Extracted single-responsibility classes (MDT-097)
+- **Consolidated File I/O**: Shared services for file operations (MDT-102)
+- **Domain Contracts**: Zod schema validation package (MDT-101)
+
+### 📚 Documentation
+
+**Workflow Enhancements**
+- **Proof of Concept Workflow**: Validate technical uncertainty before implementation
+- **SessionStart Hook**: Auto-inject project variables into AI sessions
+- **Improved Prompts**: CR-type-aware formatting and behavioral requirements
+
+**Internal Improvements**
+- **MCP Tool Registry**: Centralized tool configuration management
+- **Import Organization**: Standardized imports with path aliases
+- **Code Structure**: Improved component organization with consistent naming
+
+---
+
 ## v0.7.2 (2025-12-03)
 
 ### 🚀 Improvements
