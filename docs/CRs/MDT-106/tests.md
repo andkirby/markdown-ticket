@@ -10,7 +10,8 @@
 | Setting | Value |
 |---------|-------|
 | Framework | Jest |
-| Test Directory | `server/test/api/` |
+| Contract Validation | jest-openapi (validates against server/openapi.yaml) |
+| Test Directory | `server/tests/api/` |
 | Test Command | `cd server && npm test` |
 | Status | 🔴 RED (implementation pending) |
 
@@ -41,18 +42,19 @@
 | R7.2 | Verify SSE event order | `sse.test.ts` | 2 | 🔴 RED |
 | R7.3 | Handle SSE connection failures | `sse.test.ts` | 2 | 🔴 RED |
 | R8.1 | Run in CI without manual setup | CI configuration | N/A | 🔴 RED |
-| R8.2 | Generate coverage reports | Jest config | N/A | 🔴 RED |
+| R8.2 | Generate coverage reports (Istanbul/nyc) | Jest config | N/A | 🔴 RED |
 | R8.3 | Fail CI on test failures | CI configuration | N/A | 🔴 RED |
 | R9.1 | No execution order dependencies | All test files | N/A | 🔴 RED |
 | R9.2 | Isolated data during concurrency | `setup.ts` | N/A | 🔴 RED |
 | R9.3 | Handle port conflicts | `setup.ts` | N/A | 🔴 RED |
+| R10.1 | Validate responses against OpenAPI spec | All `*.test.ts` files + `helpers/assertions.ts` | 35+ | 🔴 RED |
 
 ## Test Specifications
 
 ### Feature: Projects API Endpoint Tests
 
-**File**: `server/test/api/projects.test.ts`
-**Covers**: R1.1, R1.2, R1.3, R6.1, R6.2
+**File**: `server/tests/api/projects.test.ts`
+**Covers**: R1.1, R1.2, R1.3, R6.1, R6.2, R10.1
 
 #### Scenario: get_all_projects (R1.1, R1.2)
 ```gherkin
@@ -89,8 +91,8 @@ And response body contains error message
 
 ### Feature: Tickets/Legacy Tasks Endpoint Tests
 
-**File**: `server/test/api/tickets.test.ts`
-**Covers**: R1.1, R1.2, R1.3, R6.1, R6.2, R6.3
+**File**: `server/tests/api/tickets.test.ts`
+**Covers**: R1.1, R1.2, R1.3, R6.1, R6.2, R6.3, R10.1
 
 #### Scenario: get_all_tasks (R1.1, R1.2)
 ```gherkin
@@ -136,8 +138,8 @@ And response body contains error message
 
 ### Feature: Documents Endpoint Tests
 
-**File**: `server/test/api/documents.test.ts`
-**Covers**: R1.1, R1.2, R1.3, R6.1, R6.2
+**File**: `server/tests/api/documents.test.ts`
+**Covers**: R1.1, R1.2, R1.3, R6.1, R6.2, R10.1
 
 #### Scenario: get_documents_missing_project_id (R6.1)
 ```gherkin
@@ -163,8 +165,8 @@ And response body contains error message
 
 ### Feature: SSE Endpoint Tests
 
-**File**: `server/test/api/sse.test.ts`
-**Covers**: R7.1, R7.2, R7.3
+**File**: `server/tests/api/sse.test.ts`
+**Covers**: R7.1, R7.2, R7.3, R10.1 |
 
 #### Scenario: sse_connection_established (R7.1)
 ```gherkin
@@ -203,8 +205,8 @@ And cache is disabled
 
 ### Feature: System Endpoint Tests
 
-**File**: `server/test/api/system.test.ts`
-**Covers**: R1.1, R1.2, R6.1, R6.2
+**File**: `server/tests/api/system.test.ts`
+**Covers**: R1.1, R1.2, R6.1, R6.2, R10.1 |
 
 #### Scenario: get_status (R1.1, R1.2)
 ```gherkin
@@ -241,38 +243,14 @@ And response body contains error message
 
 ---
 
-### Feature: DevTools Endpoint Tests
-
-**File**: `server/test/api/devtools.test.ts`
-**Covers**: R1.1, R1.2
-
-#### Scenario: get_server_logs (R1.1, R1.2)
-```gherkin
-Given the test environment is set up
-When GET request to /api/devtools/logs
-Then return 200 status code
-And response body is an array of log entries
-```
-
-**Test**: `describe('GET /api/devtools/logs') > it('should return server logs')`
-
-#### Scenario: get_frontend_logs_status (R1.1, R1.2)
-```gherkin
-Given the test environment is set up
-When GET request to /api/devtools/frontend/logs/status
-Then return 200 status code
-And response body contains active field
-And response body contains sessionStart field
-```
-
-**Test**: `describe('GET /api/devtools/frontend/logs/status') > it('should return frontend logging session status')`
+**Note**: DevTools endpoint (`/api/devtools/*`) is excluded from E2E test scope — development-only feature with stateful session management (per CR acceptance criteria).
 
 ---
 
 ### Feature: OpenAPI Docs Endpoint Tests
 
-**File**: `server/test/api/openapi-docs.test.ts`
-**Covers**: R1.1, R1.2
+**File**: `server/tests/api/openapi-docs.test.ts`
+**Covers**: R1.1, R1.2, R10.1
 
 #### Scenario: get_redoc_ui (R1.1, R1.2)
 ```gherkin
@@ -317,20 +295,21 @@ And response body contains components field
 
 | File | Scenarios | Lines | Status |
 |------|-----------|-------|--------|
-| `server/test/api/setup.ts` | N/A (infrastructure) | ~120 | 🔴 RED |
-| `server/test/api/helpers/request.ts` | N/A (utilities) | ~75 | 🔴 RED |
-| `server/test/api/helpers/assertions.ts` | N/A (utilities) | ~100 | 🔴 RED |
-| `server/test/api/helpers/sse.ts` | N/A (utilities) | ~110 | 🔴 RED |
-| `server/test/api/fixtures/projects.ts` | N/A (test data) | ~50 | 🔴 RED |
-| `server/test/api/fixtures/tickets.ts` | N/A (test data) | ~75 | 🔴 RED |
-| `server/test/api/fixtures/documents.ts` | N/A (test data) | ~50 | 🔴 RED |
-| `server/test/api/projects.test.ts` | 25 | ~300 | 🔴 RED |
-| `server/test/api/tickets.test.ts` | 15 | ~180 | 🔴 RED |
-| `server/test/api/documents.test.ts` | 10 | ~120 | 🔴 RED |
-| `server/test/api/sse.test.ts` | 8 | ~90 | 🔴 RED |
-| `server/test/api/system.test.ts` | 12 | ~150 | 🔴 RED |
-| `server/test/api/devtools.test.ts` | 12 | ~150 | 🔴 RED |
-| `server/test/api/openapi-docs.test.ts` | 8 | ~100 | 🔴 RED |
+| `server/tests/api/setup.ts` | N/A (infrastructure, jest-openapi init) | ~100 | 🔴 RED |
+| `server/tests/api/helpers/request.ts` | N/A (utilities) | ~75 | 🔴 RED |
+| `server/tests/api/helpers/assertions.ts` | N/A (utilities, includes toSatisfyApiSpec) | ~125 | 🔴 RED |
+| `server/tests/api/helpers/sse.ts` | N/A (utilities, EventSource mock) | ~75 | 🔴 RED |
+| `server/tests/api/fixtures/projects.ts` | N/A (test data) | ~50 | 🔴 RED |
+| `server/tests/api/fixtures/tickets.ts` | N/A (test data) | ~75 | 🔴 RED |
+| `server/tests/api/fixtures/documents.ts` | N/A (test data) | ~50 | 🔴 RED |
+| `server/tests/api/projects.test.ts` | 25 | ~300 | 🔴 RED |
+| `server/tests/api/tickets.test.ts` | 15 | ~180 | 🔴 RED |
+| `server/tests/api/documents.test.ts` | 10 | ~120 | 🔴 RED |
+| `server/tests/api/sse.test.ts` | 8 | ~90 | 🔴 RED |
+| `server/tests/api/system.test.ts` | 12 | ~150 | 🔴 RED |
+| `server/tests/api/openapi-docs.test.ts` | 8 | ~100 | 🔴 RED |
+
+**Note**: DevTools endpoint excluded — development-only feature with stateful session management.
 
 ## Verification
 
@@ -353,13 +332,14 @@ cd server && npm run test:coverage
 
 ## Coverage Checklist
 
-- [x] All API endpoints have test coverage
+- [x] All API endpoints have test coverage (DevTools excluded per CR)
 - [x] Success path tests included
 - [x] Error case tests included (400, 404, 500)
 - [x] SSE endpoint tests included
 - [x] Test infrastructure helpers created
 - [x] Fixture data defined
 - [x] Express app exported for Supertest
+- [x] OpenAPI contract validation via jest-openapi
 - [ ] Tests are RED (verified after implementation begins)
 - [ ] Coverage >80% (measured after implementation)
 
@@ -371,22 +351,23 @@ cd server && npm run test:coverage
 
 ### Test Infrastructure Created
 
-#### server/test/api/setup.ts (~120 lines)
-- `setupTestEnvironment()`: Creates TestEnvironment, initializes services, builds Express app
+#### server/tests/api/setup.ts (~100 lines)
+- `setupTestEnvironment()`: Creates TestEnvironment, initializes jest-openapi, builds Express app
 - `cleanupTestEnvironment()`: Cleans up temp directories
 - `createTestProject()`: Helper for creating test projects using ProjectFactory
 
-#### server/test/api/helpers/request.ts (~75 lines)
+#### server/tests/api/helpers/request.ts (~75 lines)
 - `createTestRequest()`: Creates Supertest instance
 - `RequestBuilder`: Fluent API for GET/POST/PATCH/PUT/DELETE requests
 
-#### server/test/api/helpers/assertions.ts (~100 lines)
+#### server/tests/api/helpers/assertions.ts (~125 lines)
 - `assertSuccess()`, `assertBadRequest()`, `assertNotFound()`, `assertServerError()`
+- `assertSatisfiesApiSpec()`: Validates response against OpenAPI spec
 - `assertBodyProperties()`, `assertIsArray()`, `assertIsObject()`
 - `assertSSEHeaders()`, `assertErrorResponse()`, `assertCreated()`, `assertNoContent()`
 
-#### server/test/api/helpers/sse.ts (~110 lines)
-- `MockEventSource`: Mock EventSource for testing SSE
+#### server/tests/api/helpers/sse.ts (~75 lines)
+- `MockEventSource`: Mock EventSource for testing SSE (uses Node built-in Event/EventTarget)
 - `parseSSEMessage()`: Parses SSE message format
 - `assertSSEEvent()`, `assertSSEConnection()`, `assertEventSequence()`
 
@@ -407,8 +388,9 @@ Each task in `/mdt:tasks` should reference which tests it will make GREEN:
 | Documents endpoint | `documents.test.ts` |
 | SSE endpoint | `sse.test.ts` |
 | System endpoints | `system.test.ts` |
-| DevTools endpoints | `devtools.test.ts` |
 | OpenAPI docs endpoint | `openapi-docs.test.ts` |
+
+**Note**: DevTools endpoints excluded from E2E test scope (per CR acceptance criteria).
 
 After each task: `cd server && npm test` should show fewer failures.
 
