@@ -14,9 +14,9 @@
 /// <reference types="jest" />
 
 import request from 'supertest';
-import { setupTestEnvironment, cleanupTestEnvironment, createTestProjectWithCR } from './setup';
-import { assertSuccess, assertBadRequest, assertNotFound, assertErrorMessage, assertIsArray } from './helpers';
-import { createTestDocument, createTestDocumentSet, documentFixtures, documentPaths } from './fixtures/documents';
+import { setupTestEnvironment, cleanupTestEnvironment, createTestProjectWithCR } from './setup.js';
+import { assertSuccess, assertBadRequest, assertNotFound, assertErrorMessage, assertIsArray } from './helpers.js';
+import { createTestDocument, createTestDocumentSet, documentFixtures, documentPaths } from './fixtures/documents.js';
 
 describe('Documents API Tests (MDT-106)', () => {
   let tempDir: string;

@@ -4,6 +4,6 @@
  * Central export point for all test helpers.
  */
 
-export * from './request';
-export * from './assertions';
-export * from './sse';
+export * from './request.js';
+export * from './assertions.js';
+export * from './sse.js';

@@ -16,13 +16,13 @@
  */
 import request from 'supertest';
 import { Readable } from 'stream';
-import { setupTestEnvironment, cleanupTestEnvironment } from './setup';
+import { setupTestEnvironment, cleanupTestEnvironment } from './setup.js';
 import {
   parseSSEMessage,
   parseSSEChunk,
   assertSSEConnection,
   assertEventSequence,
-} from './helpers/sse';
+} from './helpers/sse.js';
 describe('SSE Endpoint - /api/events', () => {
   let tempDir: string;
   let app: any;
