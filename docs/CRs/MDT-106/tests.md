@@ -14,7 +14,7 @@
 | Contract Validation | jest-openapi (validates against server/openapi.yaml) |
 | Test Directory | `server/tests/api/` |
 | Test Command | `cd server && npm test` |
-| Status | 🟡 YELLOW (12/39 tests passing, unit tests GREEN, integration tests pending CR file pattern alignment) |
+| Status | 🟡 YELLOW (infrastructure complete, pending ProjectService/ProjectFactory alignment) |
 
 ## Requirement → Test Mapping
 
