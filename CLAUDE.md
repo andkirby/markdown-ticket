@@ -83,3 +83,50 @@ Layered architecture: controllers → services → repositories
 - **Use MCP tools** before manual file operations
 - **TypeScript validation**: `npm run validate:ts` (changed files), `npm run validate:ts:all` (all files)
 - Never restart servers unless user explicitly requests
+
+## Documentation Priority
+
+**ALWAYS check existing documentation FIRST before answering "how to" questions.**
+
+### Common Questions → Documentation Reference
+
+When users ask "how to" questions, search and read the relevant documentation before responding:
+
+| Question Type | Primary Documentation |
+|---------------|----------------------|
+| "How do I run this?" | `README.md` (Quick Start section) |
+| "How do I use Docker?" | `docs/DOCKER_GUIDE.md`, `README.docker.md`, `docs/CRs/MDT-055*.md` (Docker architecture) |
+| "How do I configure projects?" | `docs/CONFIG_SPECIFICATION.md`, `docs/CONFIG_GLOBAL_SPECIFICATION.md` |
+| "How does [feature] work?" | `docs/ARCHITECTURE.md`, `server/docs/ARCHITECTURE.md`, `docs/CRs/` (feature tickets) |
+| "How do I develop locally?" | `docs/DEVELOPMENT_GUIDE.md` |
+| "How do I use MCP?" | `docs/MCP_SERVER_GUIDE.md`, `docs/CRs/MDT-074*.md` (MCP HTTP), `docs/CRs/MDT-004*.md` (MCP server) |
+| "How was [feature] implemented?" | Search `docs/CRs/MDT-*` for relevant ticket describing the implementation |
+
+### Response Pattern
+
+1. **Search for documentation first**
+   - **Project docs only**: Search in `docs/`, root-level `*.md`, and `server/docs/`
+   - Use `Glob` for specific patterns: `docs/*GUIDE.md`, `docs/CONFIG*.md`
+   - **DO NOT** glob all `**/*.md` (includes node_modules, other projects, irrelevant files)
+   - Use `Grep` in docs directory: `pattern="docker.*setup"`, `path="docs/"`
+   - Check root-level files: `README.md`, `README.docker.md`, `CLAUDE.md`
+   - Always read README.md sections before reverse-engineering from code
+
+2. **Point user to official docs** with specific file paths and line references
+   - Example: "See docs/DOCKER_GUIDE.md lines 13-45 for complete setup"
+
+3. **Only supplement** if docs are incomplete or unclear
+   - Add context or clarification
+   - Provide examples not in the docs
+
+4. **Never recreate** instructions that already exist in documentation
+   - Trust the official documentation
+   - Avoid reverse-engineering setup from code when docs exist
+
+### Why This Matters
+
+- Official docs are maintained and reviewed by project maintainers
+- Prevents conflicting or outdated instructions
+- Respects the effort put into documentation
+- Saves user time by directing them to authoritative sources
+- Documentation may contain important context, warnings, or edge cases not obvious from code alone
