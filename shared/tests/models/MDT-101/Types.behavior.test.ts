@@ -22,12 +22,12 @@ import {
   ValidationError,
   ValidationWarning,
   Suggestion
-} from '../../models/Types';
+} from '../../../models/Types';
 
 describe('Types Enum - Behavioral Preservation', () => {
   describe('CRStatus Type', () => {
     it('should include all expected status values', () => {
-      const expectedStatuses = [
+      const expectedStatuses: CRStatus[] = [
         'Proposed',
         'Approved',
         'In Progress',
@@ -41,8 +41,7 @@ describe('Types Enum - Behavioral Preservation', () => {
       ];
 
       expectedStatuses.forEach(status => {
-        const testStatus: CRStatus = status;
-        expect(testStatus).toBeDefined();
+        expect(status).toBeDefined();
       });
     });
 
@@ -60,7 +59,7 @@ describe('Types Enum - Behavioral Preservation', () => {
 
   describe('CRType Type', () => {
     it('should include all expected type values', () => {
-      const expectedTypes = [
+      const expectedTypes: CRType[] = [
         'Architecture',
         'Feature Enhancement',
         'Bug Fix',
@@ -69,19 +68,17 @@ describe('Types Enum - Behavioral Preservation', () => {
       ];
 
       expectedTypes.forEach(type => {
-        const testType: CRType = type;
-        expect(testType).toBeDefined();
+        expect(type).toBeDefined();
       });
     });
   });
 
   describe('CRPriority Type', () => {
     it('should include all expected priority values', () => {
-      const expectedPriorities = ['Low', 'Medium', 'High', 'Critical'];
+      const expectedPriorities: CRPriority[] = ['Low', 'Medium', 'High', 'Critical'];
 
       expectedPriorities.forEach(priority => {
-        const testPriority: CRPriority = priority;
-        expect(testPriority).toBeDefined();
+        expect(priority).toBeDefined();
       });
     });
   });

@@ -30,13 +30,29 @@ const runIsolatedCommand = (
     MDT_NO_GLOBAL_CACHE: 'true'
   };
 
+  // The command passed in is like "npm run project:create -- --name X --code Y --path Z"
+  // We need to convert it to run the CLI directly
+  // Extract the arguments after "--"
+  const argsMatch = command.match(/--\s+(.+)$/);
+  let actualCommand = command;
+  if (argsMatch) {
+    const args = argsMatch[1];
+    // From shared/ directory, root is ../
+    const rootDir = path.join(process.cwd(), '..');
+    const cliPath = path.join(rootDir, 'shared', 'dist', 'tools', 'project-cli.js');
+    // Parse the subcommand from npm script name (project:create -> create, project:list -> list)
+    const subcommandMatch = command.match(/project:(\w+)/);
+    const subcommand = subcommandMatch ? subcommandMatch[1] : 'create';
+    actualCommand = `node "${cliPath}" ${subcommand} ${args}`;
+  }
+
   try {
-    const result = execSync(command, {
+    const result = execSync(actualCommand, {
       encoding: 'utf8',
       timeout: 10000,
       env,
       stdio: ['pipe', 'pipe', 'pipe'],
-      cwd: path.join(process.cwd(), '../../..') // Go from shared/tools/__tests__/project-management to project root
+      cwd: path.join(process.cwd(), '..') // Go from shared to project root
     });
 
     return {
