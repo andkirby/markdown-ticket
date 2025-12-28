@@ -27,6 +27,7 @@ All workflows have access to these variables, injected at session start via a `S
 | `/mdt:ticket-creation` | Create CR with flexible depth (WHAT only or WHAT+HOW) | CR in MDT system |
 | `/mdt:requirements` | Generate requirements (EARS + FR/NFR) with CR-type-aware format | `{TICKETS_PATH}/{CR-KEY}/requirements.md` |
 | `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
+| `/mdt:poc` | Validate uncertain technical decisions | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder |
 | `/mdt:domain-lens` | Surface DDD constraints (optional) | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
 | `/mdt:domain-audit` | Analyze code for DDD violations | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` |
 | `/mdt:tests` | Generate BDD test specs + executable tests | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tests.md` + test files |
@@ -66,11 +67,13 @@ Describes outcomes and constraints, defers implementation to downstream workflow
         ↓
 /mdt:assess → code fitness (optional)
         ↓
+/mdt:poc → validate uncertain tech (optional)
+        ↓
 /mdt:tests → BDD tests
         ↓
 /mdt:domain-lens (optional) → DDD constraints
         ↓
-/mdt:architecture → determines HOW (consumes domain.md)
+/mdt:architecture → determines HOW (consumes poc.md, domain.md)
         ↓
 /mdt:tasks → /mdt:implement
 ```
@@ -109,6 +112,10 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
         └─► Option 3: Split CRs (create refactor CR first)
         │
         ▼
+/mdt:poc (optional) ────────────── Creates: poc.md + poc/ folder
+        │                        Validate uncertain technical decisions
+        │                        ⚠️ Use when "will this work?" needs proof
+        ▼
 /mdt:tests ────────────────────── Creates: tests.md + test files (RED)
         │                        BDD specs from requirements or behavior
         │                        Tests written BEFORE implementation
@@ -119,7 +126,7 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
         ▼
 /mdt:architecture ─────────────── Simple: CR section (~60 lines)
         │                        Complex: architecture.md (extracted)
-        │                        Consumes domain.md if exists
+        │                        Consumes poc.md, domain.md if exist
         ▼
 /mdt:clarification (as needed)
         │
@@ -441,6 +448,48 @@ Evaluates affected code fitness before architecture:
 | 2. Refactor Inline | Small refactor improves feature | Scope expands |
 | 3. Split CRs | Substantial refactor needed | New CR created, dependency added |
 
+### `/mdt:poc`
+
+Validates uncertain technical decisions through hands-on experimentation:
+
+- **Throwaway Spikes**: Code lives in `poc/` folder (gitignored, not committed)
+- **Thorough Investigation**: Build working examples to answer "will this work?"
+- **Findings Document**: `poc.md` captures decisions for architecture
+
+**Invocations**:
+```bash
+/mdt:poc MDT-077                              # Interactive - pick from Open Questions
+/mdt:poc MDT-077 --question "Does X support Y?"  # Direct question
+/mdt:poc MDT-077 --questions                  # List questions from CR
+/mdt:poc MDT-077 --quick                      # Brief answer, no poc.md
+```
+
+**When to Use**:
+| Situation | Use PoC? |
+|-----------|----------|
+| "Does library X support feature Y?" | ✅ Yes |
+| "Can we achieve performance target?" | ✅ Yes |
+| "How does service behave when...?" | ✅ Yes |
+| Code organization question | ❌ No (that's architecture) |
+| Question answerable by docs | ❌ No (just read docs) |
+
+**Outputs**:
+| Output | Location | Purpose |
+|--------|----------|--------|
+| Findings | `{TICKETS_PATH}/{CR-KEY}/poc.md` | Consumed by architecture |
+| Spike code | `{TICKETS_PATH}/{CR-KEY}/poc/` | Throwaway, gitignored |
+
+**Workflow Integration**:
+```
+/mdt:assess
+      ↓
+/mdt:poc ──── Creates: poc.md (findings for architecture)
+      ↓        poc/ folder (throwaway spike)
+/mdt:tests
+      ↓
+/mdt:architecture ── Consumes poc.md
+```
+
 ### `/mdt:domain-lens`
 
 Generates `{TICKETS_PATH}/{CR-KEY}/domain.md` (~15-25 lines):
@@ -623,6 +672,7 @@ prompts/
 ├── mdt-ticket-creation.md   # CR creation (v5 - flexible depth)
 ├── mdt-requirements.md      # Requirements with FR/NFR (v2 - CR-type-aware)
 ├── mdt-assess.md            # Code fitness assessment (v2)
+├── mdt-poc.md               # Proof of concept spikes (v1)
 ├── mdt-domain-lens.md       # DDD constraints (v2 - code grounded)
 ├── mdt-domain-audit.md      # DDD violations analysis (v1)
 ├── mdt-tests.md             # BDD test generation (v2 - phase aware)
@@ -642,6 +692,7 @@ prompts/
 | `/mdt:tests` | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tests.md` + `{test_dir}/*.test.{ext}` |
 | `/mdt:domain-lens` | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
 | `/mdt:domain-audit` | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or `docs/audits/domain-audit-{timestamp}.md` |
+| `/mdt:poc` | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder (gitignored) |
 | `/mdt:architecture` | CR section (simple) or `{TICKETS_PATH}/{CR-KEY}/architecture.md` (complex) |
 | `/mdt:tasks` | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tasks.md` |
 | `/mdt:tech-debt` | `{TICKETS_PATH}/{CR-KEY}/debt.md` |
@@ -661,6 +712,7 @@ prompts/
 11. **debt.md is diagnosis** — fix via new CR, not direct execution
 12. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
 13. **Phase isolation** — epic CRs use phase folders for tests.md and tasks.md
+14. **Prove before commit** — uncertain technical decisions get PoC spikes before architecture locks in approach
 
 ## Phased CRs (Epic Tickets)
 
