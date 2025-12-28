@@ -106,6 +106,7 @@ export {
   spawnProcess,
   executeProcess,
   killProcessTree,
+  findProjectRoot,
   type ProcessOptions,
   type ProcessResult
 } from './utils/process-helper.js';

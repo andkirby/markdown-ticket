@@ -5,7 +5,7 @@ import path from 'path';
 import os from 'os';
 import toml from 'toml';
 import { GlobalConfig } from '../services/project/types.js';
-import { DEFAULT_PATHS } from '../utils/constants.js';
+import { DEFAULT_PATHS, getDefaultPaths } from '../utils/constants.js';
 
 /**
  * Configuration error class
@@ -81,7 +81,7 @@ class ConfigManager {
   private configDir: string;
 
   constructor(configPath?: string) {
-    this.configPath = configPath || DEFAULT_PATHS.CONFIG_FILE;
+    this.configPath = configPath || getDefaultPaths().CONFIG_FILE;
     this.configDir = path.dirname(this.configPath);
   }
 

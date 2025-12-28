@@ -114,7 +114,8 @@ export class ProjectController {
    */
   async getAllProjects(req: Request, res: Response): Promise<void> {
     try {
-      const projects = await this.projectService.getAllProjects();
+      const bypassCache = req.query.bypassCache === 'true';
+      const projects = await this.projectService.getAllProjects(bypassCache);
       // Filter out inactive projects (MDT-001)
       const activeProjects = projects.filter(project => project.project.active === true);
       res.json(activeProjects);
@@ -366,8 +367,9 @@ export class ProjectController {
         return;
       }
 
-      // Get project by ID first
-      const projects = await this.projectService.getAllProjects();
+      // Get project by ID first, supporting bypassCache query param
+      const bypassCache = req.query.bypassCache === 'true';
+      const projects = await this.projectService.getAllProjects(bypassCache);
       const project = projects.find(p => p.id === projectId);
 
       if (!project) {
