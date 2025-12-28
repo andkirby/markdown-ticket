@@ -51,29 +51,35 @@ Do NOT use when:
 ### Step 1: Load Context
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
-2. **Load domain constraints if exists**: Check `{TICKETS_PATH}/{CR-KEY}/domain.md`
+2. **Load PoC findings if exists**: Check `{TICKETS_PATH}/{CR-KEY}/poc.md`
+   - If found: extract validated decisions, constraints discovered, recommended approach
+   - These are PROVEN approaches — use them directly, don't re-evaluate
+   - Reference in Key Dependencies: "Validated in PoC: {finding}"
+   - If not found: proceed (PoC is optional)
+3. **Load domain constraints if exists**: Check `{TICKETS_PATH}/{CR-KEY}/domain.md`
    - If found: extract bounded contexts, aggregates, invariants, cross-context flags
    - These CONSTRAIN structural decisions in Steps 4-6
    - Aggregate roots → inform component boundaries
    - Invariants → inform where validation logic lives
    - Cross-context flags → require event/service patterns in structure
    - If not found: proceed without domain constraints (normal for refactoring/tech-debt)
-3. Extract from CR:
+4. Extract from CR:
    - **CR type**: Technical Debt, Feature Enhancement, Architecture, etc.
    - Problem statement (what's being solved)
    - Affected artifacts (existing files/components)
    - New artifacts (planned files/components)
    - Scope boundaries (what changes, what doesn't)
-3. **For Technical Debt/Refactoring CRs**:
+   - **Open Questions** (tech questions that might need PoC)
+5. **For Technical Debt/Refactoring CRs**:
    - Focus on: What's wrong with current structure?
    - Success criteria: Size targets, interface preservation, behavioral equivalence
    - Skip behavioral requirement analysis
-4. **Load requirements if exists**: Check `{TICKETS_PATH}/{CR-KEY}/requirements.md`
+6. **Load requirements if exists**: Check `{TICKETS_PATH}/{CR-KEY}/requirements.md`
    - If found: extract requirement IDs and artifact mappings
    - These inform component boundaries (each requirement needs a home)
    - Note: Usually absent for refactoring CRs (which is correct)
-5. Check for project CLAUDE.md — may have project-specific size limits
-6. Scan for architectural signals:
+7. Check for project CLAUDE.md — may have project-specific size limits
+8. Scan for architectural signals:
    - Multiple similar items (providers, handlers, commands)
    - Words: "adapter", "factory", "provider", "handler", "strategy"
    - Patterns: "for each X", "multiple Y", "extensible"
@@ -109,6 +115,44 @@ Count complexity indicators to determine output location:
 **Rule**: If pattern appears in 2+ places → must extract to shared module FIRST.
 
 This prevents duplication that size limits alone won't catch.
+
+### Step 3.5: Check for Technical Uncertainty
+
+**Before proceeding to architecture decisions**, check if there are unresolved technical questions that need hands-on validation.
+
+**Uncertainty Signals**:
+| Signal | Example | Action |
+|--------|---------|--------|
+| Open Questions in CR with tech focus | "Does X support Y?" | Suggest PoC |
+| Unfamiliar library/API | First time using tool | Suggest PoC |
+| Performance-critical path | "Must handle N requests/sec" | Suggest PoC |
+| Integration unknowns | "Connect to external service" | Suggest PoC |
+| Behavior verification | "What happens when X fails?" | Suggest PoC |
+
+**If poc.md exists**: Skip this step — uncertainty already resolved.
+
+**If uncertainty detected and no poc.md**:
+
+```markdown
+⚠️ **Technical Uncertainty Detected**
+
+The following questions should be validated before finalizing architecture:
+
+| Question | Why It Matters | Suggestion |
+|----------|----------------|------------|
+| {uncertainty from CR/analysis} | {impact on design} | `/mdt:poc {CR-KEY} --question "{question}"` |
+
+**Options**:
+1. **Run PoC first** — `/mdt:poc {CR-KEY}` to validate, then return to architecture
+2. **Proceed with assumption** — Document assumption, accept pivot risk
+3. **Research only** — Question answerable from docs, no spike needed
+
+Choose: [1] [2] [3]
+```
+
+**If user chooses [1]**: Stop architecture, direct to `/mdt:poc`.
+**If user chooses [2]**: Document assumption in architecture, proceed.
+**If user chooses [3]**: Proceed without PoC.
 
 ### Step 4: Identify Decision Points
 
@@ -670,6 +714,8 @@ CR gets summary:
 ## Quality Checklist
 
 Before completing, verify:
+- [ ] PoC findings consumed if poc.md exists
+- [ ] Technical uncertainty checked — suggest PoC or document assumption
 - [ ] Existing CR decisions extracted (don't re-evaluate)
 - [ ] Build vs Use evaluated for major capabilities (>50 lines)
 - [ ] Complexity assessed and output location chosen
@@ -689,7 +735,25 @@ Before completing, verify:
 
 ## Integration
 
-**Before**: CR exists with problem/scope defined (optionally after `/mdt:assess`)
+**Before**: CR exists with problem/scope defined (optionally after `/mdt:assess` and/or `/mdt:poc`)
+**Consumes**: 
+- `poc.md` — validated technical decisions (use directly, don't re-evaluate)
+- `domain.md` — DDD constraints for structure
+- `requirements.md` — requirement-to-component mapping
+
 **After**: `/mdt:tasks` inherits shared patterns + size limits
+
+**Position in workflow**:
+```
+/mdt:assess (optional)
+        ↓
+/mdt:poc (optional) ─── Creates: poc.md
+        ↓
+/mdt:tests
+        ↓
+/mdt:architecture ─── Consumes: poc.md, domain.md, requirements.md
+        ↓
+/mdt:tasks
+```
 
 Context: $ARGUMENTS
