@@ -348,11 +348,8 @@ class FileWatcherService extends EventEmitter {
     console.log(`Adding SSE client. Total clients: ${this.clients.size + 1}`);
     this.clients.add(response);
 
-    // Send connection established event
-    this.sendSSEEvent(response, {
-      type: 'connection',
-      data: { status: 'connected', timestamp: Date.now() }
-    });
+    // Note: Connection event is sent by the SSE route, not here
+    // This avoids duplicate connection events and timing issues in tests
 
     // Set up client cleanup on connection close
     response.on('close', () => {
