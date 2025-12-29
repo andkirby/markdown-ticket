@@ -34,8 +34,13 @@ export class TreeBuilder {
    */
   async build(projectPath: string, config: ProjectConfig, maxDepth: number = 3): Promise<unknown[]> {
     // Get all markdown files
-    const pattern = path.join(projectPath, '**/*.md');
-    let filePaths = await glob(pattern, { maxDepth });
+    // Use cwd instead of absolute path pattern for better compatibility
+    let filePaths = await glob('**/*.md', {
+      cwd: projectPath,
+      maxDepth,
+      absolute: true,
+      dot: false, // don't include dot files
+    });
 
     // Apply ignore patterns
     filePaths = filePaths.filter(filePath => {
