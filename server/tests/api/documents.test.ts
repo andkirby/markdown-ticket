@@ -30,18 +30,13 @@ describe('Documents API Tests (MDT-106)', () => {
     projectFactory = context.projectFactory;
     app = context.app;
 
-    // Create test project
+    // Create test project with document paths pre-configured
     const testData = await createTestProjectWithCR(projectFactory, {
       name: 'Documents API Test Project',
       code: 'DOC',
-    });
-    projectCode = testData.projectCode;
-
-    // Configure document paths for the project (required for discovery)
-    await request(app).post('/api/documents/configure').send({
-      projectId: projectCode,
       documentPaths: ['docs', 'README.md'],
     });
+    projectCode = testData.projectCode;
   });
 
   afterAll(async () => {
@@ -148,16 +143,16 @@ describe('Documents API Tests (MDT-106)', () => {
       const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.readme}`);
 
       assertSuccess(response, 200);
-      expect(typeof response.body).toBe('string');
-      expect(response.body.length).toBeGreaterThan(0);
+      expect(typeof response.text).toBe('string');
+      expect(response.text.length).toBeGreaterThan(0);
     });
 
     it('should return markdown content with frontmatter', async () => {
       const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.api}`);
 
       assertSuccess(response, 200);
-      expect(response.body).toContain('---');
-      expect(response.body).toContain('title:');
+      expect(response.text).toContain('---');
+      expect(response.text).toContain('title:');
     });
 
     it('should reject paths with .. (path traversal)', async () => {
@@ -180,9 +175,9 @@ describe('Documents API Tests (MDT-106)', () => {
       const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/special.md`);
 
       assertSuccess(response, 200);
-      expect(response.body).toContain('&');
-      expect(response.body).toContain('<');
-      expect(response.body).toContain('>');
+      expect(response.text).toContain('&');
+      expect(response.text).toContain('<');
+      expect(response.text).toContain('>');
     });
 
     it('should validate 200 response against OpenAPI spec', async () => {
@@ -213,8 +208,8 @@ describe('Documents API Tests (MDT-106)', () => {
       const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.guide}`);
 
       assertSuccess(response, 200);
-      expect(response.body).toContain('#');
-      expect(response.body).toContain('Complex Document');
+      expect(response.text).toContain('#');
+      expect(response.text).toContain('Complex Document');
     });
 
     it('should handle documents with code blocks', async () => {
@@ -223,8 +218,8 @@ describe('Documents API Tests (MDT-106)', () => {
       const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/code.md`);
 
       assertSuccess(response, 200);
-      expect(response.body).toContain('```');
-      expect(response.body).toContain('function');
+      expect(response.text).toContain('```');
+      expect(response.text).toContain('function');
     });
 
     it('should handle documents with tables', async () => {
@@ -233,8 +228,8 @@ describe('Documents API Tests (MDT-106)', () => {
       const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/tables.md`);
 
       assertSuccess(response, 200);
-      expect(response.body).toContain('|');
-      expect(response.body).toContain('Role');
+      expect(response.text).toContain('|');
+      expect(response.text).toContain('Role');
     });
   });
 
@@ -278,9 +273,8 @@ describe('Documents API Tests (MDT-106)', () => {
     it('should validate GET /api/documents 400 error response', async () => {
       const response = await request(app).get('/api/documents');
       expect(response.status).toBe(400);
-      // Note: OpenAPI spec requires both error and message, but controller only returns error
-      // This test documents the current behavior
       expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty('message');
     });
 
     it('should validate GET /api/documents 404 error response', async () => {
@@ -297,8 +291,8 @@ describe('Documents API Tests (MDT-106)', () => {
     it('should validate GET /api/documents/content 400 error response', async () => {
       const response = await request(app).get('/api/documents/content?projectId=TEST');
       expect(response.status).toBe(400);
-      // Note: OpenAPI spec requires both error and message, but controller only returns error
       expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty('message');
     });
 
     it('should validate GET /api/documents/content 404 error response', async () => {
@@ -308,8 +302,15 @@ describe('Documents API Tests (MDT-106)', () => {
 
     it('should reject response that violates schema', async () => {
       const response = await request(app).get(`/api/documents?projectId=${projectCode}`);
-      (response.body as any).invalidProperty = 'should-fail-validation';
-      expect(() => expect(response).toSatisfyApiSpec()).toThrow();
+      // Clone response body to avoid modifying original
+      const modifiedResponse = {
+        ...response,
+        body: {
+          ...response.body[0],
+          invalidProperty: 'should-fail-validation',
+        },
+      };
+      expect(() => expect(modifiedResponse).toSatisfyApiSpec()).toThrow();
     });
   });
 });
