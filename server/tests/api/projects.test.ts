@@ -137,7 +137,7 @@ describe('Projects API - GET /api/projects/:id/config', () => {
   it('should return 404 for non-existent project', async () => {
     const res = await request(app).get('/api/projects/non-existent-id/config');
     assertNotFound(res);
-    expect(res.body.error).toContain('not found');
+    expect(res.body.message).toContain('not found');
   });
   it('should return project with configuration structure', async () => {
     const res = await request(app).get(`/api/projects/${testProjectId}/config`);
