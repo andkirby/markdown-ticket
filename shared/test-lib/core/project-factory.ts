@@ -346,11 +346,16 @@ export class ProjectFactory {
       },
     };
 
-    // Register project using ProjectRegistry
+    // Register project using ProjectRegistry FIRST (before configureDocuments)
     this.registry.registerProject(project, {
       paths: config.documentPaths || ['docs'],
       maxDepth: 3,
     });
+
+    // Configure document paths if provided (must happen AFTER registration)
+    if (config.documentPaths && config.documentPaths.length > 0) {
+      await this.configService.configureDocuments(projectCode, config.documentPaths);
+    }
   }
 
   /**

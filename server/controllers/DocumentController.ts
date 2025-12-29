@@ -41,7 +41,7 @@ export class DocumentController {
       const { projectId } = req.query;
 
       if (!projectId) {
-        res.status(400).json({ error: 'Project ID is required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' });
         return;
       }
 
@@ -54,11 +54,11 @@ export class DocumentController {
       console.error('Error discovering documents:', error.message);
 
       if (error.message === 'Project not found') {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ error: 'Not Found', message: error.message });
       } else if (error.message === 'No document configuration found') {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ error: 'Not Found', message: error.message });
       } else {
-        res.status(500).json({ error: 'Failed to discover documents' });
+        res.status(500).json({ error: 'Internal Server Error', message: 'Failed to discover documents' });
       }
     }
   }
@@ -71,7 +71,7 @@ export class DocumentController {
       const { projectId, filePath } = req.query;
 
       if (!projectId || !filePath) {
-        res.status(400).json({ error: 'Project ID and file path are required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID and file path are required' });
         return;
       }
 
@@ -83,15 +83,15 @@ export class DocumentController {
       console.error('Error reading document:', error);
 
       if (error.message === 'Project not found') {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ error: 'Not Found', message: error.message });
       } else if (error.message === 'Invalid file path') {
-        res.status(403).json({ error: error.message });
+        res.status(403).json({ error: 'Forbidden', message: error.message });
       } else if (error.message === 'Only markdown files are allowed') {
-        res.status(400).json({ error: error.message });
+        res.status(400).json({ error: 'Bad Request', message: error.message });
       } else if (error.message === 'Access denied') {
-        res.status(403).json({ error: error.message });
+        res.status(403).json({ error: 'Forbidden', message: error.message });
       } else {
-        res.status(500).json({ error: 'Failed to read document' });
+        res.status(500).json({ error: 'Internal Server Error', message: 'Failed to read document' });
       }
     }
   }

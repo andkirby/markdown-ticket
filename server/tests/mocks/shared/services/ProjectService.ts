@@ -118,10 +118,10 @@ export class ProjectService {
       id: project.code,
       project: {
         name: project.name,
-        path: project.projectDir || project.path, // Use projectDir for registry style, full path for direct projects
+        path: project.path, // Always use the full path
         active: project.active,
       },
-      configPath: path.join(currentConfigDir, 'projects', project.projectDir || path.basename(project.path), '.mdt-config.toml'),
+      configPath: path.join(project.path, '.mdt-config.toml'),
     }));
     if (result.length > 0) {
     }
@@ -223,8 +223,52 @@ export class ProjectService {
 
   /**
    * Configure documents for a project
+   * Persists the document paths to the project's TOML config file
    */
   async configureDocuments(projectId: string, documentPaths: string[]): Promise<any> {
+    // Refresh registry to pick up any newly created projects
+    this.loadProjectsRegistry();
+
+    // Try to find project by key (directory name) or by code
+    let project = this.projectsRegistry.get(projectId);
+    if (!project) {
+      // Try to find by code
+      for (const [key, value] of this.projectsRegistry.entries()) {
+        if (value.code === projectId) {
+          project = value;
+          break;
+        }
+      }
+    }
+
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    const configPath = path.join(project.path, '.mdt-config.toml');
+    if (!fs.existsSync(configPath)) {
+      throw new Error('Project configuration file not found');
+    }
+
+    // Read existing config
+    let content = fs.readFileSync(configPath, 'utf-8');
+
+    // Check if [document] section exists
+    if (content.includes('[document]')) {
+      // Replace existing paths
+      content = content.replace(/paths\s*=\s*\[[^\]]*\]/, `paths = ${JSON.stringify(documentPaths)}`);
+    } else {
+      // Add [document] section
+      content += '\n[document]\n';
+      content += `paths = ${JSON.stringify(documentPaths)}\n`;
+    }
+
+    // Write updated config
+    fs.writeFileSync(configPath, content, 'utf-8');
+
+    // Reload registry to pick up the changes
+    this.loadProjectsRegistry();
+
     return { success: true, message: 'Documents configured' };
   }
 
