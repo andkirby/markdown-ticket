@@ -77,7 +77,7 @@ export class TicketController {
       res.json(mdFiles);
     } catch (error) {
       console.error('Error loading tasks:', error);
-      res.status(500).json({ error: 'Failed to load tasks' });
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to load tasks' });
     }
   }
 
@@ -88,7 +88,7 @@ export class TicketController {
     try {
       const { filename } = req.params;
       if (!filename) {
-        res.status(400).json({ error: 'Filename is required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Filename is required' });
         return;
       }
 
@@ -97,9 +97,9 @@ export class TicketController {
     } catch (error: any) {
       console.error('Error loading task:', error);
       if (error.message === 'Task not found') {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ error: 'Not Found', message: error.message });
       } else {
-        res.status(500).json({ error: 'Failed to load task' });
+        res.status(500).json({ error: 'Internal Server Error', message: 'Failed to load task' });
       }
     }
   }
@@ -111,7 +111,7 @@ export class TicketController {
     try {
       const { filename, content } = req.body;
       if (!filename || !content) {
-        res.status(400).json({ error: 'Filename and content are required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Filename and content are required' });
         return;
       }
 
@@ -121,9 +121,9 @@ export class TicketController {
     } catch (error: any) {
       console.error('Error saving task:', error);
       if (error.message.includes('required')) {
-        res.status(400).json({ error: error.message });
+        res.status(400).json({ error: 'Bad Request', message: error.message });
       } else {
-        res.status(500).json({ error: 'Failed to save task' });
+        res.status(500).json({ error: 'Internal Server Error', message: 'Failed to save task' });
       }
     }
   }
@@ -135,7 +135,7 @@ export class TicketController {
     try {
       const { filename } = req.params;
       if (!filename) {
-        res.status(400).json({ error: 'Filename is required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Filename is required' });
         return;
       }
 
@@ -145,9 +145,9 @@ export class TicketController {
     } catch (error: any) {
       console.error('Error deleting task:', error);
       if (error.message === 'Task not found') {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ error: 'Not Found', message: error.message });
       } else {
-        res.status(500).json({ error: 'Failed to delete task' });
+        res.status(500).json({ error: 'Internal Server Error', message: 'Failed to delete task' });
       }
     }
   }
@@ -159,7 +159,7 @@ export class TicketController {
     try {
       const { projectId } = req.params;
       if (!projectId) {
-        res.status(400).json({ error: 'Project ID is required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' });
         return;
       }
 
@@ -169,7 +169,7 @@ export class TicketController {
 
       const projectPath = projectPaths[projectId];
       if (!projectPath) {
-        res.status(404).json({ error: 'Project not found' });
+        res.status(404).json({ error: 'Not Found', message: 'Project not found' });
         return;
       }
 
@@ -177,7 +177,7 @@ export class TicketController {
       res.json(result);
     } catch (error) {
       console.error('Error checking duplicates:', error);
-      res.status(500).json({ error: 'Failed to check duplicates' });
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to check duplicates' });
     }
   }
 
@@ -188,7 +188,7 @@ export class TicketController {
     try {
       const { projectId, filepath } = req.body;
       if (!projectId || !filepath) {
-        res.status(400).json({ error: 'Project ID and filepath are required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID and filepath are required' });
         return;
       }
 
@@ -198,7 +198,7 @@ export class TicketController {
 
       const project = projectInfo[projectId];
       if (!project) {
-        res.status(404).json({ error: 'Project not found' });
+        res.status(404).json({ error: 'Not Found', message: 'Project not found' });
         return;
       }
 
@@ -206,7 +206,7 @@ export class TicketController {
       res.json(result);
     } catch (error) {
       console.error('Error generating preview:', error);
-      res.status(500).json({ error: 'Failed to generate preview' });
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to generate preview' });
     }
   }
 
@@ -217,7 +217,7 @@ export class TicketController {
     try {
       const { projectId, oldFilepath, action } = req.body;
       if (!projectId || !oldFilepath || !action) {
-        res.status(400).json({ error: 'Project ID, old filepath, and action are required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID, old filepath, and action are required' });
         return;
       }
 
@@ -227,7 +227,7 @@ export class TicketController {
 
       const project = projectInfo[projectId];
       if (!project) {
-        res.status(404).json({ error: 'Project not found' });
+        res.status(404).json({ error: 'Not Found', message: 'Project not found' });
         return;
       }
 
@@ -235,7 +235,7 @@ export class TicketController {
       res.json(result);
     } catch (error) {
       console.error('Error resolving duplicate:', error);
-      res.status(500).json({ error: 'Failed to resolve duplicate' });
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to resolve duplicate' });
     }
   }
 }

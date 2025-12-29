@@ -197,7 +197,7 @@ export function createSystemRouter(
     const { path: inputPath } = req.body;
 
     if (!inputPath || typeof inputPath !== 'string') {
-      return res.status(400).json({ error: 'Path is required and must be a string' });
+      return res.status(400).json({ error: 'Bad Request', message: 'Path is required and must be a string' });
     }
 
     try {
