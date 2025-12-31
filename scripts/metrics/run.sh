@@ -13,11 +13,11 @@ SHOW_ALL=false
 OUTPUT_JSON=false
 EXIT_CODE=0
 
-# ANSI color codes
-RED='\033[31m'
-YELLOW='\033[33m'
-GREEN='\033[32m'
-RESET='\033[0m'
+# ANSI color codes (using printf to generate ESC)
+RED=$(printf '\033[31m')
+YELLOW=$(printf '\033[33m')
+GREEN=$(printf '\033[32m')
+RESET=$(printf '\033[0m')
 
 # Help function
 show_help() {
@@ -227,6 +227,42 @@ calculate_status() {
   fi
 }
 
+# Get color code for individual MI value
+get_mi_color() {
+  local mi="$1"
+  if (( $(echo "$mi <= $MI_RED_MAX" | bc -l) )); then
+    echo "$RED"
+  elif (( $(echo "$mi <= $MI_YELLOW_MAX" | bc -l) )); then
+    echo "$YELLOW"
+  else
+    echo ""
+  fi
+}
+
+# Get color code for individual CC value
+get_cc_color() {
+  local cc="$1"
+  if [ "$cc" -ge "$CC_RED_MIN" ]; then
+    echo "$RED"
+  elif [ "$cc" -ge "$CC_YELLOW_MIN" ]; then
+    echo "$YELLOW"
+  else
+    echo ""
+  fi
+}
+
+# Get color code for individual CoC value
+get_coc_color() {
+  local coc="$1"
+  if [ "$coc" -ge "$COC_RED_MIN" ]; then
+    echo "$RED"
+  elif [ "$coc" -ge "$COC_YELLOW_MIN" ]; then
+    echo "$YELLOW"
+  else
+    echo ""
+  fi
+}
+
 # Check if file should be shown based on filtering
 should_show_file() {
   local status="$1"
@@ -294,11 +330,15 @@ format_text_table() {
 
     # Check if should show
     if should_show_file "$status"; then
-      local color=""
+      # Get color for each metric
+      local mi_color=$(get_mi_color "$mi")
+      local cc_color=$(get_cc_color "$cc")
+      local coc_color=$(get_coc_color "$coc")
+      local status_color=""
       case "$status" in
-        RED) color="$RED" ;;
-        YLW) color="$YELLOW" ;;
-        GRN) color="$GREEN" ;;
+        RED) status_color="$RED" ;;
+        YLW) status_color="$YELLOW" ;;
+        GRN) status_color="$GREEN" ;;
       esac
 
       # Truncate file path if needed
@@ -307,7 +347,9 @@ format_text_table() {
         display_file="...${file: -52}"
       fi
 
-      printf "%-55s %8s %6s %6s ${color}%s${RESET}\n" "$display_file" "$mi" "$cc" "$coc" "$status"
+      # Print with colored values
+      printf "%-55s ${mi_color}%8s${RESET} ${cc_color}%6s${RESET} ${coc_color}%6s${RESET} ${status_color}%s${RESET}\n" \
+        "$display_file" "$mi" "$cc" "$coc" "$status"
 
       # Track red zone for exit code
       if [ "$status" = "RED" ]; then
