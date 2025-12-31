@@ -141,13 +141,13 @@ export class ProjectController {
       const project = projects.find(p => p.id === projectId);
 
       if (!project) {
-        res.status(404).json({ error: 'Project not found' });
+        res.status(404).json({ error: 'Not Found', message: 'Project not found' });
         return;
       }
 
       const config = this.projectService.getProjectConfig(project.project.path);
       if (!config) {
-        res.status(404).json({ error: 'Project configuration not found' });
+        res.status(404).json({ error: 'Not Found', message: 'Project configuration not found' });
         return;
       }
 
@@ -155,7 +155,7 @@ export class ProjectController {
       res.json(result);
     } catch (error: any) {
       console.error('Error getting project config:', error);
-      res.status(500).json({ error: 'Failed to get project configuration' });
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get project configuration' });
     }
   }
 
@@ -194,7 +194,7 @@ export class ProjectController {
     try {
       const { code } = req.params;
       if (!code) {
-        res.status(400).json({ error: 'Project code is required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project code is required' });
         return;
       }
 
@@ -204,9 +204,9 @@ export class ProjectController {
     } catch (error: any) {
       console.error('Error updating project:', error);
       if (error.message === 'Project not found') {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ error: 'Not Found', message: error.message });
       } else {
-        res.status(500).json({ error: 'Failed to update project' });
+        res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update project' });
       }
     }
   }
@@ -218,7 +218,7 @@ export class ProjectController {
     try {
       const { code } = req.params;
       if (!code) {
-        res.status(400).json({ error: 'Project code is required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project code is required' });
         return;
       }
 
@@ -227,9 +227,9 @@ export class ProjectController {
     } catch (error: any) {
       console.error('Error enabling project:', error);
       if (error.message === 'Project not found') {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ error: 'Not Found', message: error.message });
       } else {
-        res.status(500).json({ error: 'Failed to enable project' });
+        res.status(500).json({ error: 'Internal Server Error', message: 'Failed to enable project' });
       }
     }
   }

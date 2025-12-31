@@ -21,9 +21,9 @@ import { join } from 'path';
 import request from 'supertest';
 import type { Express } from 'express';
 import express from 'express';
-import { FileSystemService } from '../../services/FileSystemService.js';
-import { TicketController } from '../../controllers/TicketController.js';
-import { createTicketRouter } from '../../routes/tickets.js';
+import { FileSystemService } from '../../services/FileSystemService';
+import { TicketController } from '../../controllers/TicketController';
+import { createTicketRouter } from '../../routes/tickets';
 import {
   createGetRequest,
   createPostRequest,
@@ -34,8 +34,8 @@ import {
   assertErrorMessage,
   assertIsArray,
   assertStatus,
-} from './helpers/index.js';
-import { malformedYAMLFixtures } from './fixtures/tickets.js';
+} from './helpers';
+import { malformedYAMLFixtures } from './fixtures/tickets';
 
 describe('Tickets/Legacy Tasks API Tests (MDT-106)', () => {
   let app: Express;

@@ -78,11 +78,18 @@ class ProjectServiceAdapter {
 
   // Methods from SharedProjectService
   async getAllProjects(bypassCache?: boolean) {
-    // Ignore bypassCache parameter since our mock doesn't support it
+    // Always refresh registry to pick up projects created dynamically
+    if (this.projectService.refreshRegistry) {
+      this.projectService.refreshRegistry();
+    }
     return this.projectService.getAllProjects();
   }
 
   getProjectConfig(path: string) {
+    // Refresh before lookup
+    if (this.projectService.refreshRegistry) {
+      this.projectService.refreshRegistry();
+    }
     return this.projectService.getProjectConfig(path);
   }
 
@@ -131,8 +138,8 @@ export function createTestApp(): Express {
   app.use(cors());
   app.use(express.json());
 
-  // Setup log interception for dev tools
-  modules.setupLogInterception();
+  // Skip log interception for tests (devtools is OOS for E2E testing per MDT-106)
+  // modules.setupLogInterception();
 
   // Initialize FRESH service instances (not singletons)
   const fileWatcher = new modules.FileWatcherService();
@@ -167,7 +174,8 @@ export function createTestApp(): Express {
   app.use('/api/documents', modules.createDocumentRouter(documentController, projectController));
   app.use('/api/events', modules.createSSERouter(fileWatcher));
   app.use('/api', modules.createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter));
-  app.use('/api', modules.createDevToolsRouter());
+  // Devtools router is OOS for E2E testing per MDT-106 (development-only feature)
+  // app.use('/api', modules.createDevToolsRouter());
   // Note: Skipping /api-docs route due to import.meta issue in openapi/config.ts
   // app.use('/api-docs', modules.createDocsRouter());
 

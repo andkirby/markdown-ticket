@@ -138,7 +138,7 @@ server/tests/api/
   │   ├── tickets.ts              → Test CR/ticket fixtures (limit 75 lines)
   │   └── documents.ts            → Test document fixtures (limit 50 lines)
   ├── projects.test.ts            → /api/projects endpoint tests (limit 300 lines)
-  ├── tickets.test.ts             → /api/tasks endpoint tests (limit 350 lines)
+  ├── tickets.test.ts             → /api/tasks endpoint tests [LEGACY] (limit 350 lines)
   ├── documents.test.ts           → /api/documents endpoint tests (limit 300 lines)
   ├── sse.test.ts                 → /api/events SSE endpoint tests (limit 250 lines)
   ├── system.test.ts              → System endpoint tests (limit 200 lines)
@@ -164,7 +164,7 @@ server/tests/api/
 |--------|------|-------|----------|
 | `server/tests/api/setup.ts` | Environment orchestration | 100 | 150 |
 | `server/tests/api/helpers/request.ts` | Request utilities | 75 | 110 |
-| `server/tests/api/helpers/assertions.ts` | Assertion utilities | 125 | 185 |
+| `server/tests/api/helpers/assertions.ts` | Assertion utilities | 140 | 210 |
 | `server/tests/api/helpers/sse.ts` | SSE testing utilities | 75 | 110 |
 
 ### Application Integration
@@ -207,6 +207,146 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 | Test timeout (>5s) | Jest testTimeout exceeded | Fail test with timeout message | Investigate slow assertion or fixture |
 | SSE connection drops | EventSource error event | Fail test with connection error | Verify SSE endpoint health |
 | Fixture file invalid (malformed YAML) | ProjectFactory.createTestCR() throws | Fail test with fixture validation error | Fix fixture file |
+
+## Implementation Notes
+
+**Critical learnings from test implementation that must be documented for future maintenance.**
+
+### Response Type Handling
+
+Document content endpoints use `res.send()` which returns `text/plain`, **not** `application/json`:
+
+```typescript
+// DocumentController.ts
+async getDocumentContent(req, res) {
+  const content = await this.documentService.getDocumentContent(projectId, filePath);
+  res.send(content);  // ← text/plain, NOT res.json()
+}
+```
+
+**Impact on tests**:
+- Text responses: Use `response.text` (e.g., document content)
+- JSON responses: Use `response.body` (e.g., projects, tickets, documents list)
+
+```typescript
+// ✅ Correct for document content
+expect(response.text).toContain('#');
+expect(typeof response.text).toBe('string');
+
+// ✅ Correct for JSON endpoints
+expect(response.body).toHaveProperty('code');
+expect(Array.isArray(response.body)).toBe(true);
+```
+
+### Error Response Format (OpenAPI Compliance)
+
+Per `server/openapi/schemas.ts`, error responses have **different semantic meanings**:
+
+```typescript
+Error400: {
+  error: { type: 'string', example: 'Bad Request' },     // HTTP status name
+  message: { type: 'string', example: 'Invalid request parameters' }, // Specific details
+}
+```
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| `error` | HTTP status reason phrase | "Bad Request", "Not Found", "Forbidden", "Internal Server Error" |
+| `message` | Specific error details | "Project ID is required", "Project not found", "Invalid file path" |
+
+**Correct pattern** (use this):
+```json
+{ "error": "Bad Request", "message": "Project ID is required" }
+```
+
+**Wrong pattern** (never duplicate):
+```json
+{ "error": "Project ID is required", "message": "Project ID is required" }
+```
+
+**Controller implementation**:
+```typescript
+// ✅ Correct
+res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' });
+res.status(404).json({ error: 'Not Found', message: error.message });
+res.status(403).json({ error: 'Forbidden', message: 'Access denied' });
+```
+
+**Test assertions**:
+```typescript
+// helpers/assertions.ts
+export function assertErrorMessage(response: Response, message: string): void {
+  expect(response.body).toHaveProperty('message');  // ← Check message field
+  expect(response.body.message).toContain(message); // ← Not error field
+}
+```
+
+### ProjectService Registry Refresh
+
+The mock `ProjectService` must refresh its registry after `ProjectFactory` creates test projects:
+
+```typescript
+// test-app-factory.ts - ProjectServiceAdapter
+async getAllProjects(bypassCache?: boolean) {
+  // Always refresh to pick up projects created dynamically
+  if (this.projectService.refreshRegistry) {
+    this.projectService.refreshRegistry();  // ← Required!
+  }
+  return this.projectService.getAllProjects();
+}
+
+getProjectConfig(path: string) {
+  // Refresh before lookup
+  if (this.projectService.refreshRegistry) {
+    this.projectService.refreshRegistry();  // ← Required!
+  }
+  return this.projectService.getProjectConfig(path);
+}
+```
+
+**Why**: `ProjectFactory.createProject()` writes to temp directory, but `ProjectService` loads from registry on startup. Without refresh, newly created projects are not visible to tests.
+
+### Out of Scope / Excluded Endpoints
+
+| Endpoint | Status | Reason | Test Treatment |
+|----------|--------|--------|----------------|
+| `/api/devtools/*` | **OOS** | Development-only feature with stateful session management | Router disabled in `test-app-factory.ts` |
+| `/api/tasks` | **Legacy** | Maintained for backward compatibility | `tickets.test.ts` (marked legacy in requirements) |
+| `/api/duplicates` | **Deprecated** | Per MDT-082, returns empty results | `tickets.test.ts` (duplicate endpoint tests) |
+
+**Devtools exclusion in test app factory**:
+```typescript
+// test-app-factory.ts
+// Skip log interception for tests (devtools is OOS for E2E testing per MDT-106)
+// modules.setupLogInterception();
+
+// Devtools router is OOS for E2E testing per MDT-106 (development-only feature)
+// app.use('/api', modules.createDevToolsRouter());
+```
+
+### Console Output Suppression
+
+Tests suppress console output by default for cleaner output. To enable debugging:
+
+```bash
+# Normal run (console suppressed)
+npm test -- tests/api/documents.test.ts
+
+# Debug mode (console enabled)
+DEBUG=true npm test -- tests/api/documents.test.ts
+```
+
+Implementation in `tests/utils/setupTests.ts`:
+```typescript
+const shouldSuppressConsole = process.env.DEBUG !== 'true';
+
+global.console = {
+  ...console,
+  log: shouldSuppressConsole ? jest.fn() : console.log.bind(console),
+  error: shouldSuppressConsole ? jest.fn() : console.error.bind(console),
+  // ...
+};
+```
 
 ## Requirement Coverage
 

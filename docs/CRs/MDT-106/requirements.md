@@ -1,268 +1,395 @@
 # Requirements: MDT-106
 
 **Source**: [MDT-106](../MDT-106.md)
-**Generated**: 2025-12-26
+**Generated**: 2025-12-29
 **CR Type**: Feature Enhancement
 **Requirements Scope**: Full EARS + FR + NFR specifications
 
 ## Introduction
 
-MDT-106 adds comprehensive end-to-end (E2E) test coverage for all server API endpoints. The system currently lacks automated verification that API endpoints continue working after changes, requiring manual testing. This CR establishes automated E2E tests using the existing `shared/test-lib` infrastructure for isolated test environments, covering both success paths and error handling for all routes in `server/routes/`.
+MDT-106 adds comprehensive end-to-end (E2E) test coverage for all server API endpoints. This document specifies EARS-formatted requirements organized by API resource, defining what each resource should do and measurable verification criteria for E2E tests.
 
-## Behavioral Requirements (EARS)
+---
 
-### Requirement 1: API Endpoint Coverage
+## Behavioral Requirements (EARS) — By API Resource
 
-**Objective**: As a developer, I want automated E2E tests for all server API endpoints, so that I can verify API functionality after making changes.
+### Requirement 1: Projects Resource (`/api/projects`)
 
-#### Acceptance Criteria
+**Objective**: As a developer, I want project CRUD operations verified by E2E tests, so that API changes don't break project management.
 
-1. WHEN the E2E test suite executes, the system shall test all endpoints defined in `server/routes/` (projects, tickets, documents, sse, system, docs).
-   > **Note**: DevTools endpoint (`/api/devtools/*`) is excluded — development-only feature with stateful session management.
-2. WHEN an endpoint test runs, the system shall verify success responses including correct status codes and response body structure.
-3. WHEN an endpoint test runs, the system shall verify error handling for invalid inputs (400), missing resources (404), and server errors (500).
+#### 1.1 List Projects (`GET /api/projects`)
+| ID | EARS Requirement |
+|----|------------------|
+| R1.1.1 | WHEN `GET /api/projects` is called, the system shall return HTTP 200 with an array of project objects. |
+| R1.1.2 | WHEN no projects exist, the system shall return HTTP 200 with an empty array `[]`. |
 
-### Requirement 2: Test Environment Isolation
+**Measurable Result**: Response status code equals 200, response body is a valid JSON array, each element contains required project fields (`code`, `name`, `path`, `enabled`).
 
-**Objective**: As a developer, I want tests to run in isolated environments, so that tests do not interfere with each other or with development servers.
+#### 1.2 Get Project Configuration (`GET /api/projects/{projectId}/config`)
+| ID | EARS Requirement |
+|----|------------------|
+| R1.2.1 | WHEN `GET /api/projects/{projectId}/config` is called with a valid project ID, the system shall return HTTP 200 with the project configuration object. |
+| R1.2.2 | WHEN `GET /api/projects/{projectId}/config` is called with a non-existent project ID, the system shall return HTTP 404 with an error message. |
 
-#### Acceptance Criteria
+**Measurable Result**: Valid ID returns 200 + config object with `name`, `code`, `ticketsPath`. Invalid ID returns 404 + error object.
 
-1. WHEN a test runs, the system shall create an isolated test environment using `shared/test-lib` with custom ports and temporary directories.
-2. WHILE multiple tests run concurrently, the system shall prevent port conflicts by assigning unique ports per test environment.
-3. WHEN a test completes, the system shall clean up all test data including temporary files and directories.
+#### 1.3 Create Project (`POST /api/projects/create`)
+| ID | EARS Requirement |
+|----|------------------|
+| R1.3.1 | WHEN `POST /api/projects/create` is called with valid project data, the system shall create the project and return HTTP 201. |
+| R1.3.2 | WHEN `POST /api/projects/create` is called with missing required fields, the system shall return HTTP 400 with validation errors. |
+| R1.3.3 | WHEN `POST /api/projects/create` is called with a duplicate project code, the system shall return HTTP 400 with a conflict error. |
 
-### Requirement 3: Test Data Management
+**Measurable Result**: Valid request returns 201, project file persisted to disk. Invalid request returns 400 with `error` field describing the issue.
 
-**Objective**: As a developer, I want test data to be properly isolated and cleaned up, so that tests produce consistent results.
+#### 1.4 Update Project (`PUT /api/projects/{code}/update`)
+| ID | EARS Requirement |
+|----|------------------|
+| R1.4.1 | WHEN `PUT /api/projects/{code}/update` is called with valid data, the system shall update the project and return HTTP 200. |
+| R1.4.2 | WHEN `PUT /api/projects/{code}/update` is called for a non-existent project, the system shall return HTTP 404. |
 
-#### Acceptance Criteria
+**Measurable Result**: Valid update returns 200 + updated project object. Non-existent project returns 404.
 
-1. WHEN a test creates test data (projects, tickets, documents), the system shall store data in a temporary directory specific to that test.
-2. WHEN a test completes, the system shall delete all temporary files and directories created during the test.
-3. IF test cleanup fails, THEN the system shall log the failure and mark the test as failed.
+#### 1.5 Enable/Disable Project (`PUT /api/projects/{code}/enable|disable`)
+| ID | EARS Requirement |
+|----|------------------|
+| R1.5.1 | WHEN `PUT /api/projects/{code}/enable` is called, the system shall set `enabled: true` and return HTTP 200 with the updated project. |
+| R1.5.2 | WHEN `PUT /api/projects/{code}/disable` is called, the system shall set `enabled: false` and return HTTP 200 with the updated project. |
+| R1.5.3 | WHEN enable/disable is called for a non-existent project, the system shall return HTTP 404. |
 
-### Requirement 4: HTTP Testing Infrastructure
+**Measurable Result**: Project's `enabled` field matches expected boolean after operation. Response includes updated project object.
 
-**Objective**: As a developer, I want the test infrastructure to use Supertest for HTTP requests, so that tests can make HTTP calls to the Express app without starting a server.
+#### 1.6 Deprecated Register Endpoint (`POST /api/projects/register`)
+| ID | EARS Requirement |
+|----|------------------|
+| R1.6.1 | WHEN `POST /api/projects/register` is called, the system shall return HTTP 501 with a deprecation message. |
 
-#### Acceptance Criteria
+**Measurable Result**: Response status is 501, body contains `error` field with deprecation notice.
 
-1. WHEN the test server initializes, the system shall export the Express app instance without calling `listen()`.
-2. WHEN a test makes an HTTP request, the system shall use Supertest to inject the request into the Express app.
-3. WHEN Supertest executes a request, the system shall return the HTTP response including status code, headers, and body.
+---
 
-### Requirement 5: Test Execution Performance
+### Requirement 2: CRs Resource (`/api/projects/{projectId}/crs`)
 
-**Objective**: As a developer, I want tests to execute quickly, so that I can run them frequently during development.
+**Objective**: As a developer, I want CR CRUD operations verified by E2E tests, so that ticket management remains reliable.
 
-#### Acceptance Criteria
+#### 2.1 List CRs (`GET /api/projects/{projectId}/crs`)
+| ID | EARS Requirement |
+|----|------------------|
+| R2.1.1 | WHEN `GET /api/projects/{projectId}/crs` is called for a valid project, the system shall return HTTP 200 with an array of CR objects. |
+| R2.1.2 | WHEN `GET /api/projects/{projectId}/crs` is called for a non-existent project, the system shall return HTTP 404. |
+| R2.1.3 | WHEN a project has no CRs, the system shall return HTTP 200 with an empty array. |
 
-1. WHEN the full E2E test suite runs, the system shall complete all tests within 60 seconds.
-2. WHILE tests run concurrently, the system shall maintain isolation without performance degradation from port contention.
-3. IF a test exceeds 5 seconds to execute, THEN the system shall fail the test and log a performance warning.
+**Measurable Result**: Response contains array where each CR has `key`, `title`, `status`, `type`, `priority`, `filepath`. Empty project returns `[]`.
 
-### Requirement 6: Error Case Coverage
+#### 2.2 Get Single CR (`GET /api/projects/{projectId}/crs/{crId}`)
+| ID | EARS Requirement |
+|----|------------------|
+| R2.2.1 | WHEN `GET /api/projects/{projectId}/crs/{crId}` is called for a valid CR, the system shall return HTTP 200 with the full CR object including content. |
+| R2.2.2 | WHEN `GET /api/projects/{projectId}/crs/{crId}` is called for a non-existent CR, the system shall return HTTP 404. |
 
-**Objective**: As a developer, I want tests to verify error handling, so that the API handles edge cases gracefully.
+**Measurable Result**: Valid CR returns 200 + CR object with `content` field containing markdown. Non-existent CR returns 404.
 
-#### Acceptance Criteria
+#### 2.3 Create CR (`POST /api/projects/{projectId}/crs`)
+| ID | EARS Requirement |
+|----|------------------|
+| R2.3.1 | WHEN `POST /api/projects/{projectId}/crs` is called with valid CR data, the system shall create the CR file and return HTTP 201 with the new CR. |
+| R2.3.2 | WHEN `POST /api/projects/{projectId}/crs` is called, the system shall auto-assign the next sequential CR number. |
+| R2.3.3 | WHEN `POST /api/projects/{projectId}/crs` is called with missing title, the system shall return HTTP 400. |
 
-1. WHEN testing endpoints with invalid request bodies, the system shall verify 400 status codes and appropriate error messages.
-2. WHEN testing endpoints with missing resources, the system shall verify 404 status codes.
-3. WHEN testing endpoints with malformed YAML in markdown files, the system shall verify appropriate error handling.
-4. WHEN file system errors occur during ticket operations, the system shall verify error responses and recovery.
+**Measurable Result**: CR file created at expected path. Response includes `key` matching pattern `{PROJECT}-{NNN}`. Counter incremented in project config.
 
-### Requirement 7: SSE Endpoint Testing
+#### 2.4 Update CR - Full Replace (`PUT /api/projects/{projectId}/crs/{crId}`)
+| ID | EARS Requirement |
+|----|------------------|
+| R2.4.1 | WHEN `PUT /api/projects/{projectId}/crs/{crId}` is called with valid data, the system shall replace CR content and return HTTP 200. |
+| R2.4.2 | WHEN `PUT /api/projects/{projectId}/crs/{crId}` is called for a non-existent CR, the system shall return HTTP 404. |
 
-**Objective**: As a developer, I want to test Server-Sent Events endpoints, so that real-time updates work correctly.
+**Measurable Result**: File content matches PUT body. Response includes updated CR object.
 
-#### Acceptance Criteria
+#### 2.5 Update CR - Partial (`PATCH /api/projects/{projectId}/crs/{crId}`)
+| ID | EARS Requirement |
+|----|------------------|
+| R2.5.1 | WHEN `PATCH /api/projects/{projectId}/crs/{crId}` is called with status update, the system shall update only the status field and return HTTP 200. |
+| R2.5.2 | WHEN `PATCH /api/projects/{projectId}/crs/{crId}` is called with priority update, the system shall update only the priority field and return HTTP 200. |
+| R2.5.3 | WHEN `PATCH /api/projects/{projectId}/crs/{crId}` is called for a non-existent CR, the system shall return HTTP 404. |
 
-1. WHEN testing SSE endpoints, the system shall establish EventSource connections and verify event delivery.
-2. WHILE SSE connection is active, the system shall verify that events are received in the correct order.
-3. IF SSE connection fails, THEN the system shall verify appropriate error handling and reconnection logic.
+**Measurable Result**: Only patched fields change in file. Other fields remain unchanged. Response reflects updated state.
 
-### Requirement 8: Continuous Integration Support
+#### 2.6 Delete CR (`DELETE /api/projects/{projectId}/crs/{crId}`)
+| ID | EARS Requirement |
+|----|------------------|
+| R2.6.1 | WHEN `DELETE /api/projects/{projectId}/crs/{crId}` is called for an existing CR, the system shall delete the file and return HTTP 204. |
+| R2.6.2 | WHEN `DELETE /api/projects/{projectId}/crs/{crId}` is called for a non-existent CR, the system shall return HTTP 404. |
 
-**Objective**: As a developer, I want tests to run in CI/CD environments, so that code changes are automatically validated.
+**Measurable Result**: File removed from filesystem. Subsequent GET returns 404. Response has no body (204).
 
-#### Acceptance Criteria
+---
 
-1. WHEN tests run in a CI environment, the system shall execute without requiring manual setup of development servers.
-2. WHEN tests run in CI, the system shall generate coverage reports showing >80% coverage for tested endpoints.
-3. IF tests fail in CI, THEN the system shall fail the build and provide detailed failure logs.
+### Requirement 3: Documents Resource (`/api/documents`)
 
-### Requirement 9: Concurrent Test Execution
+**Objective**: As a developer, I want document discovery and retrieval verified by E2E tests, so that the Documents view functions correctly.
 
-**Objective**: As a developer, I want tests to run concurrently without conflicts, so that test execution completes quickly.
+#### 3.1 Discover Documents (`GET /api/documents?projectId={id}`)
+| ID | EARS Requirement |
+|----|------------------|
+| R3.1.1 | WHEN `GET /api/documents?projectId={id}` is called, the system shall return HTTP 200 with an array of document metadata objects. |
+| R3.1.2 | WHEN `GET /api/documents` is called without `projectId`, the system shall return HTTP 400. |
+| R3.1.3 | WHEN project has no documents, the system shall return HTTP 200 with an empty array. |
 
-#### Acceptance Criteria
+**Measurable Result**: Each document object contains `path`, `name`, `type`. Only markdown files matching project's `documentPaths` config are returned.
 
-1. WHEN tests run concurrently, the system shall ensure no test depends on execution order.
-2. WHILE multiple tests execute, the system shall maintain isolated data and port allocation per test.
-3. IF a port conflict occurs during concurrent execution, THEN the system shall retry with a different port or fail the test with a clear error message.
+#### 3.2 Get Document Content (`GET /api/documents/content?projectId={id}&path={path}`)
+| ID | EARS Requirement |
+|----|------------------|
+| R3.2.1 | WHEN `GET /api/documents/content?projectId={id}&path={path}` is called with valid parameters, the system shall return HTTP 200 with raw markdown content. |
+| R3.2.2 | WHEN `GET /api/documents/content` is called without `path`, the system shall return HTTP 400. |
+| R3.2.3 | WHEN `GET /api/documents/content` is called with a path outside project root, the system shall return HTTP 403. |
+| R3.2.4 | WHEN `GET /api/documents/content` is called for a non-existent file, the system shall return HTTP 404. |
 
-### Requirement 10: OpenAPI Contract Validation
+**Measurable Result**: Content-Type is `text/plain`. Body contains file content. Path traversal attempts return 403.
 
-**Objective**: As a developer, I want API responses validated against the OpenAPI specification, so that implementation drift is caught automatically.
+#### 3.3 Configure Document Paths (`POST /api/documents/configure`)
+| ID | EARS Requirement |
+|----|------------------|
+| R3.3.1 | WHEN `POST /api/documents/configure` is called with valid `documentPaths`, the system shall update project config and return HTTP 200. |
+| R3.3.2 | WHEN `POST /api/documents/configure` is called without `projectId`, the system shall return HTTP 400. |
 
-#### Acceptance Criteria
+**Measurable Result**: Project config file updated with new `documentPaths` array. Response includes `success: true`.
 
-1. WHEN endpoint tests execute, the system shall validate response status codes, headers, and bodies against `server/openapi.yaml`.
-2. WHEN a response deviates from the OpenAPI specification, THEN the system shall fail the test with details about the mismatch.
-3. WHEN tests run, the system shall use jest-openapi for contract validation without requiring manual schema updates.
+---
+
+### Requirement 4: Tasks Resource (`/api/tasks`) — Legacy
+
+**Objective**: As a developer, I want legacy task endpoints verified by E2E tests, so that backward compatibility is maintained.
+
+#### 4.1 List Tasks (`GET /api/tasks`)
+| ID | EARS Requirement |
+|----|------------------|
+| R4.1.1 | WHEN `GET /api/tasks` is called, the system shall return HTTP 200 with an array of task filenames. |
+
+**Measurable Result**: Response is array of strings (filenames). Files match `*.md` pattern.
+
+#### 4.2 Get Task Content (`GET /api/tasks/{filename}`)
+| ID | EARS Requirement |
+|----|------------------|
+| R4.2.1 | WHEN `GET /api/tasks/{filename}` is called for an existing file, the system shall return HTTP 200 with raw markdown content. |
+| R4.2.2 | WHEN `GET /api/tasks/{filename}` is called for a non-existent file, the system shall return HTTP 404. |
+
+**Measurable Result**: Content-Type is `text/plain`. Body contains markdown.
+
+#### 4.3 Save Task (`POST /api/tasks/save`)
+| ID | EARS Requirement |
+|----|------------------|
+| R4.3.1 | WHEN `POST /api/tasks/save` is called with `filename` and `content`, the system shall create/update the file and return HTTP 200. |
+| R4.3.2 | WHEN `POST /api/tasks/save` is called without required fields, the system shall return HTTP 400. |
+
+**Measurable Result**: File exists on disk with expected content. Response includes `success: true`.
+
+#### 4.4 Delete Task (`DELETE /api/tasks/{filename}`)
+| ID | EARS Requirement |
+|----|------------------|
+| R4.4.1 | WHEN `DELETE /api/tasks/{filename}` is called for an existing file, the system shall delete it and return HTTP 200. |
+| R4.4.2 | WHEN `DELETE /api/tasks/{filename}` is called for a non-existent file, the system shall return HTTP 404. |
+
+**Measurable Result**: File removed from filesystem. Response includes `success: true`.
+
+---
+
+### Requirement 5: Duplicates Resource (`/api/duplicates`) — Deprecated
+
+**Objective**: As a developer, I want deprecated duplicate detection endpoints to return proper deprecation responses.
+
+#### 5.1 Get Duplicates (`GET /api/duplicates/{projectId}`)
+| ID | EARS Requirement |
+|----|------------------|
+| R5.1.1 | WHEN `GET /api/duplicates/{projectId}` is called, the system shall return HTTP 200 with `duplicates: []` and `totalDuplicates: 0`. |
+
+**Measurable Result**: Response body has empty `duplicates` array (deprecated endpoint behavior per MDT-082).
+
+#### 5.2 Preview Duplicate Rename (`POST /api/duplicates/preview`)
+| ID | EARS Requirement |
+|----|------------------|
+| R5.2.1 | WHEN `POST /api/duplicates/preview` is called, the system shall return HTTP 200 with empty preview result. |
+
+**Measurable Result**: Response indicates deprecated endpoint (empty results per MDT-082).
+
+#### 5.3 Resolve Duplicate (`POST /api/duplicates/resolve`)
+| ID | EARS Requirement |
+|----|------------------|
+| R5.3.1 | WHEN `POST /api/duplicates/resolve` is called, the system shall return HTTP 200 with empty resolution result. |
+
+**Measurable Result**: Response indicates deprecated endpoint (empty results per MDT-082).
+
+---
+
+### Requirement 6: SSE Resource (`/api/events`)
+
+**Objective**: As a developer, I want Server-Sent Events streaming verified by E2E tests, so that real-time updates work correctly.
+
+#### 6.1 SSE Connection Establishment
+| ID | EARS Requirement |
+|----|------------------|
+| R6.1.1 | WHEN `GET /api/events` is called, the system shall respond with `Content-Type: text/event-stream`. |
+| R6.1.2 | WHEN SSE connection is established, the system shall send an initial connection event with `type: "connection"` and `status: "connected"`. |
+| R6.1.3 | WHILE SSE connection is open, the system shall maintain the connection with appropriate keepalive. |
+
+**Measurable Result**: Response headers include `Content-Type: text/event-stream`, `Cache-Control: no-cache`. First event contains `connection` type with timestamp.
+
+#### 6.2 File Change Event Broadcasting
+| ID | EARS Requirement |
+|----|------------------|
+| R6.2.1 | WHEN a CR file is created, the system shall broadcast an SSE event with `type: "file-change"` and `action: "add"`. |
+| R6.2.2 | WHEN a CR file is modified, the system shall broadcast an SSE event with `type: "file-change"` and `action: "change"`. |
+| R6.2.3 | WHEN a CR file is deleted, the system shall broadcast an SSE event with `type: "file-change"` and `action: "unlink"`. |
+
+**Measurable Result**: SSE event received within 5 seconds of file operation. Event data contains file path and action type.
+
+#### 6.3 Client Lifecycle Management
+| ID | EARS Requirement |
+|----|------------------|
+| R6.3.1 | WHEN SSE client disconnects, the system shall remove the client from the broadcast list. |
+| R6.3.2 | WHILE multiple SSE clients are connected, the system shall broadcast events to all clients. |
+
+**Measurable Result**: Client count (`sseClients` from `/api/status`) decrements on disconnect. All connected clients receive same event.
+
+---
+
+### Requirement 7: System Resource (`/api/status`, `/api/config`, `/api/filesystem`)
+
+**Objective**: As a developer, I want system endpoints verified by E2E tests, so that server health and configuration remain accessible.
+
+#### 7.1 Server Status (`GET /api/status`)
+| ID | EARS Requirement |
+|----|------------------|
+| R7.1.1 | WHEN `GET /api/status` is called, the system shall return HTTP 200 with status `"ok"`. |
+| R7.1.2 | WHEN `GET /api/status` is called, the response shall include `timestamp` (ISO 8601) and `sseClients` count (integer >= 0). |
+
+**Measurable Result**: Response contains `status: "ok"`, valid ISO timestamp, integer `sseClients` >= 0.
+
+#### 7.2 System Directories (`GET /api/directories`)
+| ID | EARS Requirement |
+|----|------------------|
+| R7.2.1 | WHEN `GET /api/directories` is called, the system shall return HTTP 200 with home directory and common directories list. |
+
+**Measurable Result**: Response contains `home` (string path) and `directories` (array of strings).
+
+#### 7.3 Configuration (`GET /api/config`, `GET /api/config/global`, `GET /api/config/links`)
+| ID | EARS Requirement |
+|----|------------------|
+| R7.3.1 | WHEN `GET /api/config` is called, the system shall return HTTP 200 with discovery settings. |
+| R7.3.2 | WHEN `GET /api/config/global` is called, the system shall return HTTP 200 with full configuration including `discovery`, `links`, `ui`, `system` sections. |
+| R7.3.3 | WHEN `GET /api/config/links` is called with link config present, the system shall return HTTP 200 with link settings. |
+| R7.3.4 | WHEN `GET /api/config/links` is called without link config, the system shall return HTTP 404. |
+
+**Measurable Result**: Config response includes `discovery.autoDiscover` (boolean), `discovery.searchPaths` (array), `discovery.maxDepth` (integer).
+
+#### 7.4 File System Browser (`GET /api/filesystem`, `POST /api/filesystem/exists`)
+| ID | EARS Requirement |
+|----|------------------|
+| R7.4.1 | WHEN `GET /api/filesystem?path={path}` is called, the system shall return HTTP 200 with directory tree. |
+| R7.4.2 | WHEN `POST /api/filesystem/exists` is called with a valid directory path, the system shall return `exists: 1`. |
+| R7.4.3 | WHEN `POST /api/filesystem/exists` is called with a non-existent path, the system shall return `exists: 0`. |
+| R7.4.4 | WHEN `POST /api/filesystem/exists` is called with tilde path (`~`), the system shall expand it and return `expandedPath`. |
+| R7.4.5 | WHEN `POST /api/filesystem/exists` is called without path, the system shall return HTTP 400. |
+
+**Measurable Result**: Directory tree contains `children` array with `name`, `type` (file/directory). Exists check returns integer `0` or `1`, plus `expandedPath` and `isInDiscovery`.
+
+#### 7.5 Cache Management (`POST /api/cache/clear`, `POST /api/config/clear`)
+| ID | EARS Requirement |
+|----|------------------|
+| R7.5.1 | WHEN `POST /api/cache/clear` is called, the system shall clear file operation cache and return HTTP 200 with `success: true`. |
+| R7.5.2 | WHEN `POST /api/config/clear` is called, the system shall clear config cache and return HTTP 200 with `success: true`. |
+
+**Measurable Result**: Response includes `success: true` and `timestamp`. Subsequent reads bypass cache.
+
+---
+
+### Requirement 8: OpenAPI Documentation (`/api-docs`)
+
+**Objective**: As a developer, I want API documentation endpoints verified by E2E tests, so that the docs remain accessible.
+
+#### 8.1 OpenAPI Spec (`GET /api-docs/json`)
+| ID | EARS Requirement |
+|----|------------------|
+| R8.1.1 | WHEN `GET /api-docs/json` is called, the system shall return HTTP 200 with valid OpenAPI 3.0 JSON specification. |
+
+**Measurable Result**: Response Content-Type is `application/json`. Body contains `openapi` field (version string) and `paths` object.
+
+#### 8.2 Redoc UI (`GET /api-docs`)
+| ID | EARS Requirement |
+|----|------------------|
+| R8.2.1 | WHEN `GET /api-docs` is called, the system shall return HTTP 200 with HTML page containing Redoc UI. |
+
+**Measurable Result**: Response Content-Type is `text/html`. Body contains Redoc-related markup.
 
 ---
 
 ## Functional Requirements
 
-> Specific capabilities the system must provide.
-
 | ID | Requirement | Rationale |
 |----|-------------|-----------|
-| FR-1 | E2E test infrastructure using `shared/test-lib` for environment isolation | Leverages existing infrastructure for consistent test environments |
-| FR-2 | Test suite covering all routes in `server/routes/` (projects, tickets, documents, sse, system, docs) | Ensures comprehensive API coverage (DevTools excluded — development-only) |
-| FR-3 | Success path verification for all endpoints (status codes, response bodies) | Validates expected behavior |
-| FR-4 | Error path verification for common error cases (400, 404, 500) | Ensures graceful error handling |
-| FR-5 | Supertest integration for HTTP requests to Express app | Enables testing without starting actual servers |
-| FR-6 | Test data fixtures and seed data management | Provides consistent test data across tests |
-| FR-7 | SSE testing utilities for Server-Sent Events endpoints | Enables testing of real-time features |
-| FR-8 | Cleanup procedures for temporary test data | Ensures test isolation and prevents pollution |
-| FR-9 | Jest/Vitest configuration for running E2E tests | Aligns with existing backend test infrastructure |
-| FR-10 | OpenAPI contract validation via jest-openapi | Catches API implementation drift automatically |
+| FR-1 | E2E tests shall use isolated environments via `shared/test-lib` | Prevents interference with development data |
+| FR-2 | Tests shall use unique ports to enable parallel execution | Avoids port conflicts in CI/CD |
+| FR-3 | Tests shall clean up created resources after execution | Prevents test data accumulation |
+| FR-4 | Tests shall verify both success and error response codes | Ensures complete API contract coverage |
+| FR-5 | Tests shall validate response body structure | Catches schema drift |
+| FR-6 | Tests shall cover empty/edge case scenarios | Ensures robustness |
+| FR-7 | Tests shall use Supertest for HTTP requests | Enables testing without starting servers |
+| FR-8 | Tests shall use Jest/Vitest as test runner | Aligns with existing backend tests |
+| FR-9 | Tests shall validate against OpenAPI spec via jest-openapi | Catches implementation drift |
+| FR-10 | SSE tests shall use EventSource client simulation | Enables testing real-time features |
 
 ## Non-Functional Requirements
-
-> Quality attributes and constraints.
 
 ### Performance
 | ID | Requirement | Target | Rationale |
 |----|-------------|--------|-----------|
-| NFR-P1 | Full E2E test suite execution time | < 60 seconds | Enables frequent test runs during development |
-| NFR-P2 | Individual test execution time | < 5 seconds | Prevents slow tests and provides quick feedback |
-| NFR-P3 | Concurrent test execution | No performance degradation from port contention | Enables parallel test execution |
+| NFR-P1 | Full test suite execution time | < 60 seconds | Fast feedback loop for CI/CD |
+| NFR-P2 | Individual test timeout | < 5 seconds | Identifies slow endpoints |
 
 ### Reliability
 | ID | Requirement | Target | Rationale |
 |----|-------------|--------|-----------|
-| NFR-R1 | Test isolation | Zero cross-test interference | Ensures consistent test results |
-| NFR-R2 | Cleanup success rate | 100% (fail test if cleanup fails) | Prevents test pollution |
-| NFR-R3 | CI environment pass rate | Same as local development (100% when code is correct) | Enables reliable CI/CD |
+| NFR-R1 | Test flakiness rate | < 1% | Reliable CI/CD signal |
+| NFR-R2 | Test isolation | 100% | No test interdependencies |
+| NFR-R3 | Cleanup success rate | 100% | No leftover test data |
 
-### Maintainability
+### Coverage
 | ID | Requirement | Target | Rationale |
 |----|-------------|--------|-----------|
-| NFR-M1 | Code coverage for API endpoints | > 80% | Ensures comprehensive test coverage |
-| NFR-M2 | Test organization | Clear structure matching route organization | Makes tests easy to find and update |
-| NFR-M3 | Test independence | No test depends on execution order | Enables concurrent execution and easier debugging |
-
-### Usability
-| ID | Requirement | Target | Rationale |
-|----|-------------|--------|-----------|
-| NFR-U1 | Developer workflow | Single command to run all tests (`npm test`) | Removes friction for running tests |
-| NFR-U2 | Failure clarity | Descriptive error messages showing expected vs actual | Speeds up debugging |
-| NFR-U3 | Local development | Tests run without manual server setup | Eliminates pre-test setup steps |
-
----
-
-## Configuration Requirements
-
-> Include only if feature has configurable settings.
-
-| Setting | Description | Default | Valid Range | Rationale |
-|---------|-------------|---------|-------------|-----------|
-| `TEST_PORT_START` | Starting port for test server allocation | 3100    | 1024-65535 | Avoids conflicts with dev server (3001) and frontend (5173) |
-| `TEST_TIMEOUT` | Maximum time per test before failure | 5000ms  | 1000-30000ms | Prevents hanging tests |
-| `TEST_CLEANUP_TIMEOUT` | Maximum time for cleanup procedures | 2000ms  | 500-10000ms | Ensures cleanup completes promptly |
-| `ENABLE_PARALLEL_TESTS` | Allow concurrent test execution | false   | true/false | Can disable for debugging |
-
----
-
-## Current Implementation Context
-
-> Informational only. Architecture may restructure as needed.
-
-| Behavior | Current Location | Notes |
-|----------|------------------|-------|
-| Test environment management | `shared/test-lib/core/test-environment.ts` | Provides isolated environments with custom ports |
-| Test server management | `shared/test-lib/core/test-server.ts` | Manages server lifecycle for testing |
-| Project creation for tests | `shared/test-lib/core/project-factory.ts` | Creates test projects with temp directories |
-| Existing E2E tests | `tests/e2e/` (Playwright) | Frontend E2E only, not server API |
-| Backend unit tests | `server/test/` | Unit tests exist, not E2E |
+| NFR-C1 | API endpoint coverage | > 80% | Core functionality verified |
+| NFR-C2 | Error path coverage | All 4xx/5xx cases | Error handling verified |
 
 ---
 
 ## Artifact Mapping
 
-> Maps requirements to implementation. Architecture decides final structure.
-
-| Req ID | Requirement Summary | Primary Artifact | Integration Points |
-|--------|---------------------|------------------|-------------------|
-| R1.1 | Test all API endpoints | `server/tests/api/` | All route files in `server/routes/` |
-| R1.2 | Verify success responses | `server/tests/api/*.test.ts` | Supertest, Express app |
-| R1.3 | Verify error handling | `server/tests/api/*.test.ts` | Error controllers |
-| R2.1 | Create isolated environments | `server/tests/api/setup.ts` | `shared/test-lib/core/test-environment.ts` |
-| R2.2 | Prevent port conflicts | `shared/test-lib/core/test-server.ts` | Port allocation logic |
-| R2.3 | Cleanup test environments | `server/tests/api/setup.ts` | `shared/test-lib/utils/process-helper.ts` |
-| R3.1 | Store test data in temp dirs | `server/tests/api/fixtures/` | `shared/test-lib/core/project-factory.ts` |
-| R3.2 | Delete test data on complete | `server/tests/api/setup.ts` | Jest/Vitest `afterEach` hooks |
-| R4.1 | Export Express app without listen | `server/server.ts` | App export modification |
-| R4.2 | Use Supertest for requests | `server/tests/api/*.test.ts` | Supertest library |
-| R4.3 | Return HTTP responses | Supertest integration | Response assertions |
-| R5.1 | Complete suite in 60 seconds | All test files | Jest/Vitest configuration |
-| R5.2 | Maintain isolation during concurrency | `shared/test-lib/core/test-server.ts` | Port management |
-| R5.3 | Fail slow tests (>5s) | Jest/Vitest config | Test timeout settings |
-| R6.1 | Verify 400 errors | `server/tests/api/*.test.ts` | Invalid input tests |
-| R6.2 | Verify 404 errors | `server/tests/api/*.test.ts` | Missing resource tests |
-| R6.3 | Handle malformed YAML | `server/tests/api/tickets.test.ts` | Markdown parsing tests |
-| R6.4 | Handle file system errors | `server/tests/api/*.test.ts` | FS error injection |
-| R7.1 | Verify SSE event delivery | `server/tests/api/sse.test.ts` | EventSource utilities |
-| R7.2 | Verify SSE event order | `server/tests/api/sse.test.ts` | Event sequence tracking |
-| R7.3 | Handle SSE connection failures | `server/tests/api/sse.test.ts` | Error handling tests |
-| R8.1 | Run in CI without manual setup | CI configuration files | Environment setup scripts |
-| R8.2 | Generate coverage reports | Jest/Vitest config | Coverage reporters |
-| R8.3 | Fail CI on test failures | CI configuration | Build failure logic |
-| R9.1 | No execution order dependencies | All test files | Test independence validation |
-| R9.2 | Isolated data during concurrency | `shared/test-lib/core/test-environment.ts` | Environment isolation |
-| R9.3 | Handle port conflicts | `shared/test-lib/core/test-server.ts` | Port retry logic |
-| R10.1 | Validate responses against OpenAPI spec | `server/tests/api/helpers/assertions.ts` + all test files | jest-openapi, server/openapi.yaml |
+| Req ID | Requirement Summary | Test File | Primary Route |
+|--------|---------------------|-----------|---------------|
+| R1.x | Projects CRUD | `projects.test.ts` | `server/routes/projects.ts` |
+| R2.x | CRs CRUD | `crs.test.ts` | `server/routes/projects.ts` |
+| R3.x | Documents discovery/content | `documents.test.ts` | `server/routes/documents.ts` |
+| R4.x | Legacy tasks | `tasks.test.ts` | `server/routes/tickets.ts` |
+| R5.x | Deprecated duplicates | `duplicates.test.ts` | `server/routes/tickets.ts` |
+| R6.x | SSE events | `sse.test.ts` | `server/routes/sse.ts` |
+| R7.x | System/config/filesystem | `system.test.ts` | `server/routes/system.ts` |
+| R8.x | OpenAPI docs | `openapi-docs.test.ts` | `server/routes/docs.ts` |
 
 ---
 
-## Traceability
+## Summary: Requirements by Resource
 
-| Req ID | CR Section | Acceptance Criteria |
-|--------|------------|---------------------|
-| R1.1 | Problem | AC: All API endpoints have E2E coverage |
-| R1.2 | Problem | AC: Tests verify success responses |
-| R1.3 | Problem | AC: Tests verify error handling |
-| R2.1 | Problem | AC: Tests use shared/test-lib for isolation |
-| R2.2 | Problem | AC: Tests run concurrently without conflicts |
-| R2.3 | Problem | AC: Test data properly cleaned up |
-| R3.1 | Problem | AC: Test data properly isolated |
-| R3.2 | Problem | AC: Test data properly cleaned up |
-| R3.3 | Non-Functional | AC: Tests pass when run in parallel |
-| R4.1 | Constraints | AC: Use shared/test-lib infrastructure |
-| R4.2 | Constraints | AC: Use Jest/Vitest runner |
-| R4.3 | Constraints | AC: Use Supertest for HTTP requests |
-| R5.1 | Non-Functional | AC: Tests complete in under 60 seconds |
-| R5.2 | Non-Functional | AC: Tests can run in parallel |
-| R5.3 | Non-Functional | AC: No tests depend on execution order |
-| R6.1 | Edge Cases | AC: Invalid request bodies |
-| R6.2 | Edge Cases | AC: Malformed YAML in markdown files |
-| R6.3 | Edge Cases | AC: File system errors |
-| R6.4 | Edge Cases | AC: Concurrent write operations |
-| R7.1 | Open Questions | AC: SSE endpoints require special handling |
-| R7.2 | Open Questions | AC: SSE event verification |
-| R7.3 | Open Questions | AC: SSE error handling |
-| R8.1 | Success Conditions | AC: CI/CD can run tests automatically |
-| R8.2 | Non-Functional | AC: Test coverage > 80% |
-| R8.3 | Success Conditions | AC: Tests pass in CI environment |
-| R9.1 | Non-Functional | AC: No tests depend on execution order |
-| R9.2 | Success Conditions | AC: Tests run concurrently without conflicts |
-| R9.3 | Problem | AC: Tests use isolated ports |
-| R10.1 | OpenAPI Contract Validation | AC: Responses validated against server/openapi.yaml |
+| Resource | Endpoints | Requirements | Key Behaviors Tested |
+|----------|-----------|--------------|----------------------|
+| Projects | 8 | R1.1–R1.6 (10) | CRUD, enable/disable, deprecation |
+| CRs | 5 | R2.1–R2.6 (12) | CRUD, auto-numbering, partial update |
+| Documents | 3 | R3.1–R3.3 (7) | Discovery, content retrieval, security |
+| Tasks | 4 | R4.1–R4.4 (6) | Legacy CRUD |
+| Duplicates | 3 | R5.1–R5.3 (3) | Deprecated stubs |
+| SSE | 1 | R6.1–R6.3 (7) | Connection, events, lifecycle |
+| System | 9 | R7.1–R7.5 (11) | Status, config, filesystem, cache |
+| OpenAPI | 2 | R8.1–R8.2 (2) | Spec, UI |
+| **Total** | **35** | **58** | |
 
 ---
 *Generated from MDT-106 by /mdt:requirements (v3)*
