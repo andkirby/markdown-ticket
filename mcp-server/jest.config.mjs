@@ -18,9 +18,24 @@ export default {
     'node_modules/(?!(supertest|@modelcontextprotocol|@mdt/shared))'
   ],
   moduleNameMapper: {
+    // Map local .js imports to .ts files for Jest
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    // Map @mdt/shared services to a mock implementation
+    '^@mdt/shared/services/MarkdownService$': '<rootDir>/src/__mocks__/@mdt/shared/services/MarkdownService.ts',
+    '^@mdt/shared/services/MarkdownService.js$': '<rootDir>/src/__mocks__/@mdt/shared/services/MarkdownService.ts',
+    '^@mdt/shared/services/TitleExtractionService$': '<rootDir>/src/__mocks__/@mdt/shared/services/TitleExtractionService.ts',
+    '^@mdt/shared/services/TitleExtractionService.js$': '<rootDir>/src/__mocks__/@mdt/shared/services/TitleExtractionService.ts',
+    '^@mdt/shared/services/TemplateService$': '<rootDir>/src/__mocks__/@mdt/shared/services/TemplateService.ts',
+    '^@mdt/shared/services/TemplateService.js$': '<rootDir>/src/__mocks__/@mdt/shared/services/TemplateService.ts',
+    '^@mdt/shared/services/MarkdownSectionService$': '<rootDir>/src/__mocks__/@mdt/shared/services/MarkdownSectionService.ts',
+    '^@mdt/shared/services/MarkdownSectionService.js$': '<rootDir>/src/__mocks__/@mdt/shared/services/MarkdownSectionService.ts',
+    // Map @mdt/shared models to a mock implementation
+    '^@mdt/shared/models/Types$': '<rootDir>/src/__mocks__/@mdt/shared/models/Types.ts',
+    '^@mdt/shared/models/Types.js$': '<rootDir>/src/__mocks__/@mdt/shared/models/Types.ts',
+    // Map test-lib to the actual test-lib directory
     '^@mdt/shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
     '^shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
+    // Other @mdt/shared modules to dist (for non-test files)
     '^@mdt/shared/(.*)$': '<rootDir>/../shared/dist/$1',
     '^shared/(.*)$': '<rootDir>/../shared/dist/$1'
   },
