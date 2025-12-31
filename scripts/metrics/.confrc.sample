@@ -1,0 +1,57 @@
+# Configuration for TypeScript metrics analysis
+# This file is sourced by scripts/metrics/run.sh
+# Copy to .confrc in the same directory to customize defaults
+
+# TypeScript configuration directories to analyze
+# These correspond to the main TypeScript projects in the codebase
+# - Root project: .
+# - Shared library code: shared
+# - Backend server code: server
+# - MCP server implementation: mcp-server
+# - Domain contracts and types: domain-contracts
+TSCONFIGS=(
+  "."
+  "shared"
+  "server"
+  "mcp-server"
+  "domain-contracts"
+)
+
+# ============================================================================
+# Maintainability Index (MI) Thresholds
+# Microsoft standard: MI ranges from 0 (worst) to 100 (best)
+# Higher values indicate better maintainability
+# ============================================================================
+# MI_YELLOW_MAX: Files at or below this value are flagged as yellow
+# Microsoft yellow zone: 21-40 (moderate maintainability concerns)
+MI_YELLOW_MAX=40
+
+# MI_RED_MAX: Files at or below this value are flagged as red
+# Microsoft red zone: 0-20 (significant maintainability issues)
+MI_RED_MAX=20
+
+# ============================================================================
+# Cyclomatic Complexity (CC) Thresholds
+# Measures control flow complexity based on decision points (if, for, etc.)
+# Microsoft standard: Simpler code is easier to maintain
+# ============================================================================
+# CC_YELLOW_MIN: Files at or above this value are flagged as yellow
+# Microsoft yellow zone: 11-20 (moderately complex)
+CC_YELLOW_MIN=11
+
+# CC_RED_MIN: Files at or above this value are flagged as red
+# Microsoft red zone: 21+ (highly complex, needs refactoring)
+CC_RED_MIN=21
+
+# ============================================================================
+# Cognitive Complexity (CoC) Thresholds
+# Measures mental effort to understand code flow (nesting, breaks, etc.)
+# Microsoft standard: Lower cognitive load improves readability
+# ============================================================================
+# COC_YELLOW_MIN: Files at or above this value are flagged as yellow
+# Microsoft yellow zone: 11-20 (moderate cognitive effort)
+COC_YELLOW_MIN=11
+
+# COC_RED_MIN: Files at or above this value are flagged as red
+# Microsoft red zone: 21+ (difficult to understand, simplify logic)
+COC_RED_MIN=21
