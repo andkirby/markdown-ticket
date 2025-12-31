@@ -49,18 +49,22 @@ export class TreeService {
    * Get document navigation tree with metadata
    */
   async getDocumentTree(projectId: string): Promise<TreeNode[]> {
-    const project = await this._getProject(projectId);
-    const config = await this.configRepository.getConfig(project.project.path);
+    try {
+      const project = await this._getProject(projectId);
+      const config = await this.configRepository.getConfig(project.project.path);
 
-    if ((config as any).documentPaths.length === 0) {
-      throw new Error('No document configuration found');
+      const docPaths = (config as any).documentPaths;
+      if (!docPaths || docPaths.length === 0) {
+        throw new Error('No document configuration found');
+      }
+
+      const strategy = TreeStrategyFactory.createDocumentNavigationStrategy();
+      const builder = new TreeBuilder(strategy);
+      const allFiles = await builder.build(project.project.path, config as any) as any;
+      return this._filterByDocumentPaths(allFiles, docPaths);
+    } catch (error: any) {
+      throw error;
     }
-
-    const strategy = TreeStrategyFactory.createDocumentNavigationStrategy();
-    const builder = new TreeBuilder(strategy);
-    const allFiles = await builder.build(project.project.path, config as any) as any;
-
-    return this._filterByDocumentPaths(allFiles, (config as any).documentPaths);
   }
 
   /**

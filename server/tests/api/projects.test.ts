@@ -17,7 +17,7 @@
 
 import request from 'supertest';
 import type { Express } from 'express';
-import { setupTestEnvironment, cleanupTestEnvironment } from './setup.js';
+import { setupTestEnvironment, cleanupTestEnvironment } from './setup';
 import {
   assertSuccess,
   assertBadRequest,
@@ -26,8 +26,8 @@ import {
   assertBodyHasProperties,
   assertIsArray,
   assertArrayLength,
-} from './helpers.js';
-import { generateTestProjectCode } from './fixtures/projects.js';
+} from './helpers';
+import { generateTestProjectCode } from './fixtures/projects';
 
 describe('Projects API - GET /api/projects', () => {
   let tempDir: string;
@@ -137,7 +137,7 @@ describe('Projects API - GET /api/projects/:id/config', () => {
   it('should return 404 for non-existent project', async () => {
     const res = await request(app).get('/api/projects/non-existent-id/config');
     assertNotFound(res);
-    expect(res.body.error).toContain('not found');
+    expect(res.body.message).toContain('not found');
   });
   it('should return project with configuration structure', async () => {
     const res = await request(app).get(`/api/projects/${testProjectId}/config`);

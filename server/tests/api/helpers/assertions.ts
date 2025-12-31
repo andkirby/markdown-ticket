@@ -40,6 +40,7 @@ export function assertStatus(response: Response, statusCode: number): void {
 export function assertBadRequest(response: Response): void {
   expect(response.status).toBe(400);
   expect(response.body).toHaveProperty('error');
+  expect(response.body).toHaveProperty('message');
 }
 
 /**
@@ -50,6 +51,7 @@ export function assertBadRequest(response: Response): void {
 export function assertNotFound(response: Response): void {
   expect(response.status).toBe(404);
   expect(response.body).toHaveProperty('error');
+  expect(response.body).toHaveProperty('message');
 }
 
 /**
@@ -60,6 +62,7 @@ export function assertNotFound(response: Response): void {
 export function assertServerError(response: Response): void {
   expect(response.status).toBeGreaterThanOrEqual(500);
   expect(response.body).toHaveProperty('error');
+  expect(response.body).toHaveProperty('message');
 }
 
 /**
@@ -138,8 +141,8 @@ export function assertArrayContains(response: Response, property: string, value:
  * @param message - Expected error message (partial match)
  */
 export function assertErrorMessage(response: Response, message: string): void {
-  expect(response.body).toHaveProperty('error');
-  expect(response.body.error).toContain(message);
+  expect(response.body).toHaveProperty('message');
+  expect(response.body.message).toContain(message);
 }
 
 /**

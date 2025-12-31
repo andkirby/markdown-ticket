@@ -22,6 +22,7 @@ type NextFunction = (err?: Error) => void;
 
 interface ErrorResponse {
   error: string;
+  message: string;
   path: string;
   method: string;
   timestamp: string;
@@ -40,7 +41,8 @@ export function errorHandler(err: CustomError, req: ExpressRequest, res: Express
 
   // Default error response
   const errorResponse: ErrorResponse = {
-    error: err.message || 'Internal server error',
+    error: err.statusCode === 404 ? 'Not Found' : err.statusCode === 400 ? 'Bad Request' : 'Internal Server Error',
+    message: err.message || 'Internal server error',
     path: req.path,
     method: req.method,
     timestamp: new Date().toISOString()
@@ -64,7 +66,8 @@ export function errorHandler(err: CustomError, req: ExpressRequest, res: Express
  */
 export function notFoundHandler(req: ExpressRequest, res: ExpressResponse): void {
   res.status(404).json({
-    error: 'Endpoint not found',
+    error: 'Not Found',
+    message: 'Endpoint not found',
     path: req.path,
     method: req.method,
     timestamp: new Date().toISOString()
