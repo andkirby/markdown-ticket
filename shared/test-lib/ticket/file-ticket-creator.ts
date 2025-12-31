@@ -3,7 +3,7 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
+import { join as pathJoin } from 'path';
 import { MarkdownService } from '../../services/MarkdownService.js';
 import { CRService } from '../../services/CRService.js';
 import { TemplateService } from '../../services/TemplateService.js';
@@ -35,7 +35,7 @@ export class FileTicketCreator extends BaseTicketCreator {
 
   /** Generate next ticket code */
   protected generateTicketCode(projectCode: string, projectPath: string, ticketsPath?: string): string {
-    const crsDir = path.join(projectPath, ticketsPath || 'docs', 'CRs');
+    const crsDir = pathJoin(projectPath, ticketsPath || 'docs', 'CRs');
     let maxNumber = 0;
 
     try {
@@ -75,7 +75,7 @@ export class FileTicketCreator extends BaseTicketCreator {
 
       // Generate ticket code
       const ticketCode = this.generateTicketCode(config.projectCode, config.projectPath, config.ticketsPath);
-      const ticketsDir = path.join(config.projectPath, config.ticketsPath || 'docs', 'CRs');
+      const ticketsDir = pathJoin(config.projectPath, config.ticketsPath || 'docs', 'CRs');
 
       // Ensure CRs directory exists with retry
       if (!fs.existsSync(ticketsDir)) {
@@ -131,7 +131,7 @@ export class FileTicketCreator extends BaseTicketCreator {
       const ticket = CRService.createTicket(ticketData, ticketCode, data.type, '');
       ticket.dateCreated = ticket.lastModified = new Date();
 
-      const filePath = path.join(ticketsDir, `${ticketCode}.md`);
+      const filePath = pathJoin(ticketsDir, `${ticketCode}.md`);
 
       // Write markdown file with retry
       await withRetry(
@@ -184,7 +184,7 @@ Technical details and implementation plan.
   /** Check if ticket exists */
   ticketExists(projectPath: string, ticketCode: string, ticketsPath?: string): boolean {
     try {
-      const filePath = path.join(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
+      const filePath = pathJoin(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
       return withRetrySync(
         () => fs.existsSync(filePath),
         {
@@ -200,7 +200,7 @@ Technical details and implementation plan.
   /** Read existing ticket */
   async readTicket(projectPath: string, ticketCode: string, ticketsPath?: string): Promise<TicketData | null> {
     try {
-      const filePath = path.join(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
+      const filePath = pathJoin(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
 
       // Check if file exists with retry
       const exists = await withRetry(
@@ -267,7 +267,7 @@ Technical details and implementation plan.
   /** Create ticket with specific code */
   private async createTicketWithCode(config: TicketCreationConfig, ticketCode: string, data: TicketData): Promise<TicketCreationResult> {
     try {
-      const crsDir = path.join(config.projectPath, config.ticketsPath || 'docs', 'CRs');
+      const crsDir = pathJoin(config.projectPath, config.ticketsPath || 'docs', 'CRs');
 
       // Ensure CRs directory exists with retry
       if (!fs.existsSync(crsDir)) {
@@ -299,7 +299,7 @@ Technical details and implementation plan.
       ticket.lastModified = now;
       if (!ticket.dateCreated) ticket.dateCreated = now;
 
-      const filePath = path.join(crsDir, `${ticketCode}.md`);
+      const filePath = pathJoin(crsDir, `${ticketCode}.md`);
 
       // Write markdown file with retry
       await withRetry(
