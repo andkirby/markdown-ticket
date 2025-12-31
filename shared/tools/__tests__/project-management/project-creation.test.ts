@@ -107,6 +107,9 @@ describe('project:create', () => {
   };
 
   beforeAll(async () => {
+    // Build the shared package before running CLI commands (the dist folder is deleted by the test script)
+    execSync('npm run build', { cwd: process.cwd(), stdio: 'inherit' });
+
     testEnv = new TestEnvironment();
     await testEnv.setup();
     projectsDir = path.join(testEnv.getTempDirectory(), 'projects');
@@ -139,11 +142,14 @@ describe('project:create', () => {
   };
 
   describe('when valid parameters are provided', () => {
+    let testCounter = 0;
     const testProject = TEST_PROJECTS.valid;
 
     beforeEach(() => {
-      // Create unique project path in test environment
+      testCounter++;
+      // Create unique project path and code in test environment
       testProject.path = path.join(projectsDir, `test-project-${Date.now()}-${Math.random().toString(36).substring(7)}`);
+      testProject.code = `TST${testCounter}`;
     });
 
     it('should create local .mdt-config.toml with required fields', () => {
@@ -152,7 +158,7 @@ describe('project:create', () => {
         `npm run project:create -- --name "${testProject.name}" --code ${testProject.code} --path "${testProject.path}" --create-project-path`
       );
 
-      
+
       // Assert
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('successfully');
@@ -170,7 +176,7 @@ describe('project:create', () => {
     it('should create global registry entry with minimal reference', () => {
       // Act - Create project with a different code to avoid conflicts
       const result = runIsolatedCommand(
-        `npm run project:create -- --name "${testProject.name}" --code GLBL --path "${testProject.path}" --create-project-path`
+        `npm run project:create -- --name "${testProject.name}" --code GLB${testCounter} --path "${testProject.path}" --create-project-path`
       );
 
       // Assert

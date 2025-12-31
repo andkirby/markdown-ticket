@@ -13,7 +13,6 @@ import { ProjectValidator } from '../ProjectValidator.node';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { rimrafSync } from 'rimraf';
 
 // Ensure Node.js environment is detected
 const mockNodeProcess = {
@@ -39,7 +38,7 @@ describe('MDT-110: Node.js ProjectValidator Extension', () => {
   afterEach(() => {
     // Clean up temp directory
     if (fs.existsSync(tempDir)) {
-      rimrafSync(tempDir);
+      fs.rmSync(tempDir, { recursive: true, force: true });
     }
 
     // Restore original process

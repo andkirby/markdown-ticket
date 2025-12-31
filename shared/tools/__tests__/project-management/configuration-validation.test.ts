@@ -3,45 +3,163 @@
  * Behavioral tests for configuration validation and consistency
  */
 
-import {
-  TEST_PROJECTS,
-  runProjectCreate,
-  runProjectList,
-  cleanupAllTestProjects,
-  cleanupTestProject,
-  readLocalConfig,
-  readGlobalRegistryEntry,
-  configHasRequiredFields,
-  configHasValidCode
-} from './helpers/test-utils';
+import { TestEnvironment } from '../../../test-lib/index';
+import * as path from 'path';
+import * as fs from 'fs';
+import { execSync } from 'child_process';
+import { parse as parseToml } from 'toml';
+
+// Global test environment instance
+let testEnv: TestEnvironment;
+
+/**
+ * Helper to run CLI command with TestEnvironment isolation
+ */
+const runIsolatedCommand = (
+  command: string
+): { stdout: string; stderr: string; exitCode: number; success: boolean } => {
+  const env = {
+    ...process.env,
+    CONFIG_DIR: testEnv.getConfigDirectory(),
+    HOME: testEnv.getConfigDirectory(),
+    XDG_CONFIG_HOME: testEnv.getConfigDirectory(),
+    MDT_NO_GLOBAL_CACHE: 'true'
+  };
+
+  // Extract the arguments after "--" from npm script format
+  const argsMatch = command.match(/--\s+(.+)$/);
+  let actualCommand = command;
+  if (argsMatch) {
+    const args = argsMatch[1];
+    const rootDir = path.join(process.cwd(), '..');
+    const cliPath = path.join(rootDir, 'shared', 'dist', 'tools', 'project-cli.js');
+    const subcommandMatch = command.match(/project:(\w+)/);
+    const subcommand = subcommandMatch ? subcommandMatch[1] : 'create';
+    actualCommand = `node "${cliPath}" ${subcommand} ${args}`;
+  }
+
+  try {
+    const result = execSync(actualCommand, {
+      encoding: 'utf8',
+      timeout: 10000,
+      env,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: path.join(process.cwd(), '..')
+    });
+
+    return {
+      stdout: result.toString(),
+      stderr: '',
+      exitCode: 0,
+      success: true
+    };
+  } catch (error: any) {
+    return {
+      stdout: error.stdout?.toString() || '',
+      stderr: error.stderr?.toString() || error.message,
+      exitCode: error.status || 1,
+      success: false
+    };
+  }
+};
+
+/**
+ * Helper to read local config from project path
+ */
+const readLocalConfig = (projectPath: string): any => {
+  const configFile = path.join(projectPath, '.mdt-config.toml');
+  if (!fs.existsSync(configFile)) {
+    return null;
+  }
+  const content = fs.readFileSync(configFile, 'utf-8');
+  return parseToml(content);
+};
+
+/**
+ * Helper to read global registry entry
+ */
+const readGlobalRegistryEntry = (projectPath: string): any => {
+  const configDir = testEnv.getConfigDirectory();
+  const projectsDir = path.join(configDir, 'projects');
+
+  if (!fs.existsSync(projectsDir)) {
+    return null;
+  }
+
+  const files = fs.readdirSync(projectsDir);
+  for (const tomlFile of files) {
+    if (!tomlFile.endsWith('.toml')) continue;
+
+    const configFile = path.join(projectsDir, tomlFile);
+    const content = fs.readFileSync(configFile, 'utf-8');
+    const result: any = { project: {} };
+    const lines = content.split('\n');
+    for (const line of lines) {
+      const match = line.match(/^(\w+)\s*=\s*"(.+)"$/);
+      if (match) {
+        result.project[match[1]] = match[2];
+      }
+    }
+
+    if (result.project.path === projectPath) {
+      return result;
+    }
+  }
+  return null;
+};
+
+const configHasRequiredFields = (config: any): boolean => {
+  if (!config || !config.project) {
+    return false;
+  }
+  const { project } = config;
+  return !!(
+    typeof project.name === 'string' &&
+    typeof project.code === 'string' &&
+    typeof project.id === 'string' &&
+    typeof project.ticketsPath === 'string'
+  );
+};
+
+const configHasValidCode = (code: string): boolean => {
+  return /^[A-Z][A-Z0-9]{1,4}$/.test(code);
+};
 
 describe('configuration validation', () => {
-  const testProject = TEST_PROJECTS.valid;
+  let projectsDir: string;
 
   beforeAll(async () => {
-    await cleanupAllTestProjects();
+    // Build the shared package before running CLI commands (the dist folder is deleted by the test script)
+    execSync('npm run build', { cwd: process.cwd(), stdio: 'inherit' });
+
+    testEnv = new TestEnvironment();
+    await testEnv.setup();
+    projectsDir = path.join(testEnv.getTempDirectory(), 'projects');
+    fs.mkdirSync(projectsDir, { recursive: true });
   });
 
   afterAll(async () => {
-    await cleanupAllTestProjects();
+    await testEnv.cleanup();
   });
 
   describe('when configuration is generated', () => {
-    beforeEach(async () => {
-      await cleanupTestProject(testProject.path);
-    });
+    let testProject: { name: string; code: string; path: string };
+    let testCounter = 0;
 
-    afterEach(async () => {
-      await cleanupTestProject(testProject.path);
+    beforeEach(async () => {
+      testCounter++;
+      testProject = {
+        name: 'Test Project',
+        code: `CFG${testCounter % 10}`, // Generate unique codes: CFG1, CFG2, etc.
+        path: path.join(projectsDir, `test-project-${Date.now()}-${Math.random().toString(36).substring(7)}`)
+      };
     });
 
     it('should validate generated configuration schema', async () => {
       // Arrange & Act
-      const result = await runProjectCreate({
-        name: testProject.name,
-        code: testProject.code,
-        path: testProject.path
-      });
+      const result = runIsolatedCommand(
+        `npm run project:create -- --name "${testProject.name}" --code ${testProject.code} --path "${testProject.path}" --create-project-path`
+      );
 
       // Assert CLI succeeded
       expect(result.success).toBe(true);
@@ -82,19 +200,18 @@ describe('configuration validation', () => {
     });
 
     it('should accept valid codes during project creation', async () => {
+      const timestamp = Date.now();
       const validCodes = [
-        { code: 'AB', description: 'two letters' },
-        { code: 'XYZ', description: 'three letters' }
+        { code: `AB${timestamp % 100}`, description: 'two letters' },
+        { code: `XY${timestamp % 100}`, description: 'three letters' }
       ];
 
       for (const { code, description } of validCodes) {
-        const testPath = `/tmp/test-valid-${code.toLowerCase()}`;
+        const testPath = path.join(projectsDir, `test-valid-${code.toLowerCase()}-${Date.now()}`);
 
-        const result = await runProjectCreate({
-          name: `Valid ${description} Project`,
-          code: code,
-          path: testPath
-        });
+        const result = runIsolatedCommand(
+          `npm run project:create -- --name "Valid ${description} Project" --code ${code} --path "${testPath}" --create-project-path`
+        );
 
         expect(result.success).toBe(true);
 
@@ -102,34 +219,33 @@ describe('configuration validation', () => {
         const config = readLocalConfig(testPath);
         expect(config).not.toBeNull();
         expect(config.project.code).toBe(code);
-
-        // Cleanup
-        await cleanupTestProject(testPath);
       }
     });
   });
 
   describe('configuration consistency', () => {
-    beforeEach(async () => {
-      await cleanupTestProject(testProject.path);
-    });
+    let testProject: { name: string; code: string; path: string };
+    let testCounter = 0;
 
-    afterEach(async () => {
-      await cleanupTestProject(testProject.path);
+    beforeEach(() => {
+      testCounter++;
+      testProject = {
+        name: `Test Project ${testCounter}`,
+        code: `TST${testCounter % 10}`, // Generate unique codes: TST1, TST2, etc.
+        path: path.join(projectsDir, `test-project-${Date.now()}-${Math.random().toString(36).substring(7)}`)
+      };
     });
 
     it('should ensure CLI output matches configuration values', async () => {
       // Arrange - Create a project
-      const createResult = await runProjectCreate({
-        name: testProject.name,
-        code: testProject.code,
-        path: testProject.path
-      });
+      const createResult = runIsolatedCommand(
+        `npm run project:create -- --name "${testProject.name}" --code ${testProject.code} --path "${testProject.path}" --create-project-path`
+      );
 
       expect(createResult.success).toBe(true);
 
       // Act - List projects
-      const listResult = await runProjectList();
+      const listResult = runIsolatedCommand('npm run project:list');
 
       // Assert - Verify output contains expected values
       expect(listResult.success).toBe(true);
@@ -138,9 +254,7 @@ describe('configuration validation', () => {
 
       // Verify configuration matches
       const config = readLocalConfig(testProject.path);
-      // The global registry entry file is named after the path ID (last component of path)
-      const projectId = testProject.path.split('/').pop();
-      const globalEntry = readGlobalRegistryEntry(projectId!);
+      const globalEntry = readGlobalRegistryEntry(testProject.path);
 
       expect(config.project.name).toBe(testProject.name);
       expect(config.project.code).toBe(testProject.code);

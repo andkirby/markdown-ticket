@@ -44,7 +44,7 @@
     "build": "tsc --project tsconfig.json",
     "build:tools": "tsc --project tsconfig.json",
     "clean": "rm -rf dist",
-    "test": "jest",
+    "test": "rm -rf dist && jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
