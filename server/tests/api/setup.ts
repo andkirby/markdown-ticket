@@ -78,7 +78,7 @@ export async function cleanupTestEnvironment(tempDir: string): Promise<void> {
 /** Create a test project with a CR for API testing */
 export async function createTestProjectWithCR(
   projectFactory: any,
-  projectConfig?: { name?: string; code?: string }
+  projectConfig?: { name?: string; code?: string; documentPaths?: string[] }
 ): Promise<{ projectCode: string; crCode: string }> {
   const project = await projectFactory.createProject('empty', projectConfig);
   const crResult = await projectFactory.createTestCR(project.key, {

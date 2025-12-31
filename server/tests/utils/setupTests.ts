@@ -1,12 +1,11 @@
 /// <reference types="jest" />
 
 // Mock TreeService as a proper class mock before importing FileSystemService
+// Use requireActual to get the real implementation for integration tests
 jest.mock('../../services/TreeService', () => {
+  const RealTreeService = jest.requireActual('../../services/TreeService');
   return {
-    TreeService: jest.fn().mockImplementation(() => ({
-      getDocumentTree: jest.fn(),
-      getPathSelectionTree: jest.fn(),
-    }))
+    TreeService: RealTreeService.TreeService,
   };
 });
 
@@ -16,14 +15,16 @@ import { ProjectController } from '../../controllers/ProjectController.js';
 import { FileSystemService } from '../../services/FileSystemService.js';
 
 // Mock console methods to reduce noise in tests
-// But pass through to real console so we can see output during debugging
+// Use jest.fn() to suppress output; set DEBUG=true to see logs during debugging
+const shouldSuppressConsole = process.env.DEBUG !== 'true';
+
 global.console = {
   ...console,
-  log: console.log.bind(console),
-  error: console.error.bind(console),
-  warn: console.warn.bind(console),
-  info: console.info.bind(console),
-  debug: console.debug.bind(console),
+  log: shouldSuppressConsole ? jest.fn() : console.log.bind(console),
+  error: shouldSuppressConsole ? jest.fn() : console.error.bind(console),
+  warn: shouldSuppressConsole ? jest.fn() : console.warn.bind(console),
+  info: shouldSuppressConsole ? jest.fn() : console.info.bind(console),
+  debug: shouldSuppressConsole ? jest.fn() : console.debug.bind(console),
 };
 
 // Mock process.env for consistent test environment
