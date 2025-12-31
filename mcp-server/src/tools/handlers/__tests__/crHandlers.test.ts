@@ -17,55 +17,20 @@ jest.mock('fs/promises');
 jest.mock('glob');
 jest.mock('../../../services/crService.js');
 
-// Setup factory functions for the services that need special mocking
-const mockMarkdownService = {
-  parseMarkdownContent: jest.fn(),
-  extractYAMLFrontmatter: jest.fn(),
-  parseTicketFromMarkdown: jest.fn(),
-  formatTicketAsMarkdown: jest.fn(),
-  validateYAMLFormat: jest.fn(),
-  sanitizeContent: jest.fn(),
-  // MDT-102: Add static file I/O methods
-  readFile: jest.fn(),
-  writeFile: jest.fn(),
-  parseMarkdownFile: jest.fn(),
-  generateMarkdownContent: jest.fn(),
-  writeMarkdownFile: jest.fn()
-};
-
-const mockTitleExtractionService = {
-  extractTitleFromMarkdown: jest.fn(),
-  extractTitleFromContent: jest.fn(),
-  sanitizeTitle: jest.fn()
-};
-
-const mockTemplateService = {
-  validateTicketData: jest.fn(),
-  suggestImprovements: jest.fn(),
-  getTemplate: jest.fn(),
-  generateTemplate: jest.fn(),
-  applyTemplate: jest.fn()
-};
-
-// Mock the shared services using factory pattern
-jest.mock('@mdt/shared/services/MarkdownService.js', () => ({
-  MarkdownService: mockMarkdownService
-}), { virtual: true });
-
-jest.mock('@mdt/shared/services/TitleExtractionService.js', () => ({
-  TitleExtractionService: mockTitleExtractionService
-}), { virtual: true });
-
-jest.mock('@mdt/shared/services/TemplateService.js', () => ({
-  TemplateService: mockTemplateService
-}), { virtual: true });
+// Import the mock services
+import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
+import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js';
+import { TemplateService } from '@mdt/shared/services/TemplateService.js';
+import { mockTitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js';
+import { mockTemplateService } from '@mdt/shared/services/TemplateService.js';
 
 // Now import the handlers
 import { CRHandlers } from '../crHandlers.js';
 import { CRService } from '../../../services/crService.js';
 import { ToolError, JsonRpcErrorCode } from '../../../utils/toolError.js';
-import { Project } from '@mdt/shared/models/Project.js';
-import { Ticket, TicketFilters, TicketData } from '@mdt/shared/models/Ticket.js';
+// Use local test fixtures instead of @mdt/shared imports
+import type { Project, Ticket, TicketFilters, TicketData } from '../../__tests__/test-fixtures.js';
+import { createMockProject, createMockTicket, mockFileContent } from '../../__tests__/test-fixtures.js';
 import * as fs from 'fs/promises';
 import { glob } from 'glob';
 
@@ -73,55 +38,16 @@ describe('CRHandlers - Behavioral Preservation Tests', () => {
   let crHandlers: CRHandlers;
   let mockCrServiceInstance: jest.Mocked<CRService>;
 
-  // Test project
-  const mockProject: Project = {
-    id: 'test-project-id',
+  // Test project - use fixture helper
+  const mockProject: Project = createMockProject({
     project: {
-      code: 'MDT',
-      name: 'Test Project',
-      path: '/test/path',
-      configFile: '/test/path/.mdt-config.toml',
-      ticketsPath: 'docs/CRs',
-      active: true,
+      ...createMockProject().project,
       description: 'Test project for MDT-102'
-    },
-    metadata: {
-      dateRegistered: '2024-01-01T00:00:00.000Z',
-      lastAccessed: '2024-01-02T00:00:00.000Z',
-      version: '1.0.0'
     }
-  };
+  });
 
-  // Test ticket
-  const mockTicket: Ticket = {
-    code: 'MDT-001',
-    title: 'Test CR Title',
-    status: 'Proposed',
-    type: 'Feature Enhancement',
-    priority: 'Medium',
-    phaseEpic: 'Phase 1',
-    assignee: 'developer',
-    dateCreated: new Date('2024-01-01'),
-    lastModified: new Date('2024-01-02'),
-    content: '# Test CR\n\n## Description\nTest content here.',
-    filePath: '/test/path/docs/CRs/MDT-001-test-cr-title.md',
-    relatedTickets: [],
-    dependsOn: [],
-    blocks: []
-  };
-
-  // Mock file content with YAML frontmatter
-  const mockFileContent = `---
-code: MDT-001
-title: Test CR Title
-status: Proposed
-type: Feature Enhancement
-priority: Medium
-phaseEpic: Phase 1
-assignee: developer
----
-
-# Test CR Content`;
+  // Test ticket - use fixture helper
+  const mockTicket: Ticket = createMockTicket();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -140,7 +66,7 @@ assignee: developer
     // Create handlers with mocked dependencies
     crHandlers = new CRHandlers(
       mockCrServiceInstance,
-      mockMarkdownService as any,
+      MarkdownService as any,
       mockTitleExtractionService as any,
       mockTemplateService as any
     );
@@ -151,7 +77,7 @@ assignee: developer
     ]);
 
     // MDT-102: Mock MarkdownService static methods
-    mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
+    (MarkdownService.readFile as jest.MockedFunction<typeof MarkdownService.readFile>).mockResolvedValue(mockFileContent);
 
     // Mock sanitization disabled (default behavior)
     process.env.MCP_SANITIZATION_ENABLED = 'false';
@@ -282,9 +208,9 @@ assignee: developer
   describe('handleGetCR - attributes mode', () => {
     beforeEach(() => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
-      // MDT-102: Use MarkdownService.readFile instead of fs.readFile
-      mockMarkdownService.readFile.mockResolvedValue(mockFileContent);
-      mockMarkdownService.parseMarkdownContent.mockResolvedValue(mockTicket);
+      // MDT-102: Use MarkdownService static methods
+      (MarkdownService.readFile as jest.MockedFunction<typeof MarkdownService.readFile>).mockResolvedValue(mockFileContent);
+      (MarkdownService.parseMarkdownContent as jest.MockedFunction<typeof MarkdownService.parseMarkdownContent>).mockResolvedValue(mockTicket);
     });
 
     it('should return JSON with YAML frontmatter attributes', async () => {
@@ -311,7 +237,7 @@ assignee: developer
       };
 
       mockCrServiceInstance.getCR.mockResolvedValue(ticketWithOptional);
-      mockMarkdownService.parseMarkdownContent.mockResolvedValue(ticketWithOptional);
+      (MarkdownService.parseMarkdownContent as jest.MockedFunction<typeof MarkdownService.parseMarkdownContent>).mockResolvedValue(ticketWithOptional);
 
       const result = await crHandlers.handleGetCR(mockProject, 'MDT-001', 'attributes');
 
@@ -321,8 +247,8 @@ assignee: developer
     });
 
     it('should throw error for invalid file format', async () => {
-      // MDT-102: Use MarkdownService.readFile instead of fs.readFile
-      mockMarkdownService.readFile.mockResolvedValue('No frontmatter here');
+      // MDT-102: Use MarkdownService static methods
+      (MarkdownService.readFile as jest.MockedFunction<typeof MarkdownService.readFile>).mockResolvedValue('No frontmatter here');
 
       await expect(crHandlers.handleGetCR(mockProject, 'MDT-001', 'attributes'))
         .rejects.toThrow('Invalid CR file format');
