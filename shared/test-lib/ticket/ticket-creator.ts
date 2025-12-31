@@ -1,9 +1,9 @@
 /**
- * Ticket Creator Interface and Base Classes
+ * Ticket Creator Interface and Base Classes.
  */
 
 import type { TicketData } from '../../models/Ticket.js';
-import type { CRType, CRStatus, CRPriority, ValidationResult } from '../../models/Types.js';
+import type { CRPriority, CRStatus, CRType, ValidationResult } from '../../models/Types.js';
 
 /** Configuration for ticket creation */
 export interface TicketCreationConfig {
@@ -24,10 +24,10 @@ export interface TicketCreationResult {
 
 /** Interface for creating CRs/tickets */
 export interface ITicketCreator {
-  createTicket(config: TicketCreationConfig, data: TicketData): Promise<TicketCreationResult>;
-  createMultipleTickets(config: TicketCreationConfig, ticketsData: TicketData[]): Promise<TicketCreationResult[]>;
-  validateTicket(data: TicketData): ValidationResult;
-  getCreatorType(): string;
+  createTicket: (config: TicketCreationConfig, data: TicketData) => Promise<TicketCreationResult>;
+  createMultipleTickets: (config: TicketCreationConfig, ticketsData: TicketData[]) => Promise<TicketCreationResult[]>;
+  validateTicket: (data: TicketData) => ValidationResult;
+  getCreatorType: () => string;
 }
 
 /** Abstract base class for ticket creators */
@@ -45,10 +45,13 @@ export abstract class BaseTicketCreator implements ITicketCreator {
   /** Create multiple tickets */
   async createMultipleTickets(config: TicketCreationConfig, ticketsData: TicketData[]): Promise<TicketCreationResult[]> {
     const results: TicketCreationResult[] = [];
+
     for (const data of ticketsData) {
       const result = await this.createTicket(config, data);
+
       results.push(result);
     }
+
     return results;
   }
 
@@ -57,30 +60,31 @@ export abstract class BaseTicketCreator implements ITicketCreator {
     const errors: { field: string; message: string }[] = [];
     const warnings: { field: string; message: string }[] = [];
 
-    if (!data.title?.trim()) errors.push({ field: 'title', message: 'Title is required' });
-    else if (data.title.length > 100) warnings.push({ field: 'title', message: 'Title longer than 100 characters' });
+    if (!data.title.trim()) {errors.push({ field: 'title', message: 'Title is required' });}
+    else if (data.title.length > 100) {warnings.push({ field: 'title', message: 'Title longer than 100 characters' });}
 
-    if (!data.type?.trim()) errors.push({ field: 'type', message: 'Type is required' });
+    if (!data.type.trim()) {errors.push({ field: 'type', message: 'Type is required' });}
     else if (!this.validTypes.includes(data.type as CRType))
-      errors.push({ field: 'type', message: `Type must be one of: ${this.validTypes.join(', ')}` });
+      {errors.push({ field: 'type', message: `Type must be one of: ${this.validTypes.join(', ')}` });}
 
-    if (!data.content?.trim()) errors.push({ field: 'content', message: 'Content is required' });
+    if (!data.content?.trim()) {errors.push({ field: 'content', message: 'Content is required' });}
 
     if (data.priority && !this.validPriorities.includes(data.priority as CRPriority))
-      errors.push({ field: 'priority', message: `Priority must be one of: ${this.validPriorities.join(', ')}` });
+      {errors.push({ field: 'priority', message: `Priority must be one of: ${this.validPriorities.join(', ')}` });}
 
     if (data.content) {
       const requiredSections = ['## 1. Description', '## 2. Rationale', '## 3. Solution Analysis',
                                 '## 4. Implementation Specification', '## 5. Acceptance Criteria'];
+
       requiredSections.forEach(section => {
-        if (!data.content!.includes(section))
-          errors.push({ field: 'content', message: `Missing required section: ${section}` });
+        if (!data.content?.includes(section))
+          {errors.push({ field: 'content', message: `Missing required section: ${section}` });}
       });
     }
 
     return { valid: errors.length === 0, errors, warnings };
   }
 
-  /** Get creator type identifier */
+  /** Get creator type identifier. */
   abstract getCreatorType(): string;
 }

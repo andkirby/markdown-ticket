@@ -38,7 +38,7 @@ describe('MDT-110: Conditional Exports Configuration', () => {
 
     it('should export ProjectValidator with conditions', () => {
       const exports = packageJson.exports as Record<string, unknown>;
-      expect(exports).toHaveProperty('./tools/ProjectValidator');
+      expect('./tools/ProjectValidator' in exports).toBe(true);
     });
 
     it('should have browser condition pointing to .js file', () => {
