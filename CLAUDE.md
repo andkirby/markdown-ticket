@@ -33,6 +33,13 @@ Guidance for Claude Code working with this repository.
 - `npm run test:e2e` - Playwright E2E
 - `PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/file.spec.ts --project=chromium` - Run specific test without server restart
 
+### Code Quality Metrics
+- `scripts/metrics/run.sh` - Analyze code complexity for changed TypeScript files (shows yellow/red zones)
+- `scripts/metrics/run.sh --all` - Show all changed files regardless of thresholds
+- `scripts/metrics/run.sh path/to/dir-or-file.ts` - Analyze specific directory or file
+- `scripts/metrics/run.sh --json` - Output LLM-friendly JSON format
+- See `scripts/metrics/README.md` for full documentation and configuration options
+
 ## Architecture
 
 **Core Concept**: Kanban board where tickets are markdown files with YAML frontmatter in `docs/CRs/`, version-controlled with Git, with real-time file watching and MCP integration.
