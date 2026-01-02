@@ -8,7 +8,7 @@ import { MarkdownService } from '../../services/MarkdownService.js';
 import { CRService } from '../../services/CRService.js';
 import { TemplateService } from '../../services/TemplateService.js';
 import { BaseTicketCreator, type TicketCreationConfig, type TicketCreationResult } from './ticket-creator.js';
-import { RetryHelper, withRetry, withRetrySync, type RetryOptions } from '../utils/retry-helper.js';
+import { RetryHelper } from '../utils/retry-helper.js';
 import type { TicketData } from '../../models/Ticket.js';
 import type { CRType } from '../../models/Types.js';
 
@@ -40,12 +40,9 @@ export class FileTicketCreator extends BaseTicketCreator {
 
     try {
       if (fs.existsSync(crsDir)) {
-        const files = withRetrySync(
+        const files = this.retryHelper.executeSync(
           () => fs.readdirSync(crsDir),
-          {
-            logContext: `FileTicketCreator.readDir(${projectCode})`,
-            retryableErrors: ['EACCES', 'ENOENT', 'EBUSY', 'EMFILE', 'ENFILE']
-          }
+          { logContext: `FileTicketCreator.readDir(${projectCode})` }
         );
 
         const regex = new RegExp(`^${projectCode}-(\\d+)\\.md$`, 'i');
@@ -57,7 +54,6 @@ export class FileTicketCreator extends BaseTicketCreator {
       return `${projectCode}-${String(maxNumber + 1).padStart(3, '0')}`;
     } catch (error) {
       console.error(`Failed to generate ticket code for ${projectCode}:`, error);
-      // Fallback to basic numbering
       return `${projectCode}-001`;
     }
   }
@@ -77,33 +73,24 @@ export class FileTicketCreator extends BaseTicketCreator {
       const ticketCode = this.generateTicketCode(config.projectCode, config.projectPath, config.ticketsPath);
       const ticketsDir = pathJoin(config.projectPath, config.ticketsPath || 'docs', 'CRs');
 
-      // Ensure CRs directory exists with retry
+      // Ensure CRs directory exists
       if (!fs.existsSync(ticketsDir)) {
-        await withRetry(
-          async () => {
-            fs.mkdirSync(ticketsDir, { recursive: true });
-          },
-          {
-            logContext: `FileTicketCreator.createCRsDir(${config.projectCode})`,
-            retryableErrors: ['EACCES', 'ENOENT', 'EEXIST', 'EBUSY', 'EMFILE', 'ENFILE']
-          }
+        await this.retryHelper.execute(
+          async () => fs.mkdirSync(ticketsDir, { recursive: true }),
+          { logContext: `FileTicketCreator.createCRsDir(${config.projectCode})` }
         );
       }
 
-      // Get or generate content with retry
+      // Get or generate content
       let content = data.content;
       if (!content && data.type) {
         try {
-          content = await withRetry(
+          content = await this.retryHelper.execute(
             async () => {
               const template = this.templateService.getTemplate(data.type as CRType);
               return template ? template.template.replace('[Ticket Title]', data.title) : undefined;
             },
-            {
-              logContext: `FileTicketCreator.getTemplate(${data.type})`,
-              retryableErrors: ['ENOENT', 'EACCES', 'EMFILE'],
-              timeout: 2000
-            }
+            { logContext: `FileTicketCreator.getTemplate(${data.type})`, timeout: 2000 }
           );
         } catch {
           content = undefined;
@@ -133,16 +120,10 @@ export class FileTicketCreator extends BaseTicketCreator {
 
       const filePath = pathJoin(ticketsDir, `${ticketCode}.md`);
 
-      // Write markdown file with retry
-      await withRetry(
-        async () => {
-          MarkdownService.writeMarkdownFile(filePath, ticket);
-        },
-        {
-          logContext: `FileTicketCreator.writeMarkdownFile(${ticketCode})`,
-          retryableErrors: ['EACCES', 'ENOENT', 'EEXIST', 'EBUSY', 'EMFILE', 'ENFILE', 'EIO'],
-          timeout: 5000
-        }
+      // Write markdown file
+      await this.retryHelper.execute(
+        async () => MarkdownService.writeMarkdownFile(filePath, ticket),
+        { logContext: `FileTicketCreator.writeMarkdownFile(${ticketCode})` }
       );
 
       return { success: true, ticketCode, ticket, filePath };
@@ -185,12 +166,9 @@ Technical details and implementation plan.
   ticketExists(projectPath: string, ticketCode: string, ticketsPath?: string): boolean {
     try {
       const filePath = pathJoin(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
-      return withRetrySync(
+      return this.retryHelper.executeSync(
         () => fs.existsSync(filePath),
-        {
-          logContext: `FileTicketCreator.ticketExists(${ticketCode})`,
-          retryableErrors: ['EACCES', 'ENOENT', 'EBUSY']
-        }
+        { logContext: `FileTicketCreator.ticketExists(${ticketCode})` }
       );
     } catch {
       return false;
@@ -202,25 +180,18 @@ Technical details and implementation plan.
     try {
       const filePath = pathJoin(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
 
-      // Check if file exists with retry
-      const exists = await withRetry(
+      // Check if file exists
+      const exists = await this.retryHelper.execute(
         async () => fs.existsSync(filePath),
-        {
-          logContext: `FileTicketCreator.checkTicketExists(${ticketCode})`,
-          retryableErrors: ['EACCES', 'ENOENT', 'EBUSY']
-        }
+        { logContext: `FileTicketCreator.checkTicketExists(${ticketCode})` }
       );
 
       if (!exists) return null;
 
-      // Parse markdown file with retry
-      const ticket = await withRetry(
+      // Parse markdown file
+      const ticket = await this.retryHelper.execute(
         async () => await MarkdownService.parseMarkdownFile(filePath),
-        {
-          logContext: `FileTicketCreator.parseMarkdownFile(${ticketCode})`,
-          retryableErrors: ['EACCES', 'ENOENT', 'EIO', 'EMFILE'],
-          timeout: 3000
-        }
+        { logContext: `FileTicketCreator.parseMarkdownFile(${ticketCode})`, timeout: 3000 }
       );
 
       return ticket ? {
@@ -269,16 +240,11 @@ Technical details and implementation plan.
     try {
       const crsDir = pathJoin(config.projectPath, config.ticketsPath || 'docs', 'CRs');
 
-      // Ensure CRs directory exists with retry
+      // Ensure CRs directory exists
       if (!fs.existsSync(crsDir)) {
-        await withRetry(
-          async () => {
-            fs.mkdirSync(crsDir, { recursive: true });
-          },
-          {
-            logContext: `FileTicketCreator.ensureCRsDirForUpdate(${config.projectCode})`,
-            retryableErrors: ['EACCES', 'ENOENT', 'EEXIST', 'EBUSY', 'EMFILE', 'ENFILE']
-          }
+        await this.retryHelper.execute(
+          async () => fs.mkdirSync(crsDir, { recursive: true }),
+          { logContext: `FileTicketCreator.ensureCRsDirForUpdate(${config.projectCode})` }
         );
       }
 
@@ -301,16 +267,10 @@ Technical details and implementation plan.
 
       const filePath = pathJoin(crsDir, `${ticketCode}.md`);
 
-      // Write markdown file with retry
-      await withRetry(
-        async () => {
-          MarkdownService.writeMarkdownFile(filePath, ticket);
-        },
-        {
-          logContext: `FileTicketCreator.updateMarkdownFile(${ticketCode})`,
-          retryableErrors: ['EACCES', 'ENOENT', 'EEXIST', 'EBUSY', 'EMFILE', 'ENFILE', 'EIO'],
-          timeout: 5000
-        }
+      // Write markdown file
+      await this.retryHelper.execute(
+        async () => MarkdownService.writeMarkdownFile(filePath, ticket),
+        { logContext: `FileTicketCreator.updateMarkdownFile(${ticketCode})` }
       );
 
       return { success: true, ticketCode, ticket, filePath };

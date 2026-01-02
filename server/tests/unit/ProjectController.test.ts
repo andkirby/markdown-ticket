@@ -57,7 +57,7 @@ describe('ProjectController - CRUD Operations', () => {
       await projectController.getCR(req as any, res as any);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Project ID and CR ID are required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' });
     });
 
     it('should return 400 when crId is missing', async () => {
@@ -67,7 +67,7 @@ describe('ProjectController - CRUD Operations', () => {
       await projectController.getCR(req as any, res as any);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Project ID and CR ID are required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' });
     });
 
     it('should return 404 when CR not found', async () => {
@@ -79,7 +79,7 @@ describe('ProjectController - CRUD Operations', () => {
       await projectController.getCR(req as any, res as any);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'CR not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Not Found', message: 'CR not found' });
     });
 
     it('should return 501 when ticketService is not available', async () => {
@@ -133,7 +133,7 @@ describe('ProjectController - CRUD Operations', () => {
       await projectController.createCR(req as any, res as any);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Project ID is required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID is required' });
     });
   });
 
@@ -171,7 +171,7 @@ describe('ProjectController - CRUD Operations', () => {
       await projectController.updateCR(req as any, res as any);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Project ID and CR ID are required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' });
     });
   });
 
@@ -201,7 +201,7 @@ describe('ProjectController - CRUD Operations', () => {
       await projectController.deleteCR(req as any, res as any);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Project ID and CR ID are required' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' });
     });
 
     it('should return 500 when delete operation fails', async () => {
@@ -214,7 +214,8 @@ describe('ProjectController - CRUD Operations', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Failed to delete CR',
+        error: 'Internal Server Error',
+        message: 'Failed to delete CR',
         details: 'File system error'
       });
     });
