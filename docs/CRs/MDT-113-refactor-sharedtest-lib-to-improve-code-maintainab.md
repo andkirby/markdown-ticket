@@ -1,6 +1,6 @@
 ---
 code: MDT-113
-status: Proposed
+status: Implemented
 dateCreated: 2025-12-31T01:58:27.418Z
 type: Technical Debt
 priority: Medium
@@ -70,7 +70,8 @@ phaseEpic: Code Quality
 - Task breakdown (determined by `/mdt:tasks`)
 
 ## Architecture Design
-> **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
+> **Extracted**: Complex architecture — see [architecture.md](./MDT-113/architecture.md)
+> **Extracted**: Complex architecture — see [MDT-113-1/architecture.md](MDT-113/.sub/1/architecture.md)
 
 **Summary**:
 - Pattern: Extraction Decomposition
