@@ -2,6 +2,79 @@
 
 ## Recent Updates
 
+### 2025-01-02 - Prep Workflow for Refactoring Before Feature
+
+**Problem**: When assessment identifies that refactoring fundamentally changes the code landscape (e.g., breaking up a God class), the feature architecture depends on the refactored structure. Designing both together in a single architecture.md forced speculative feature design against code that doesn't exist yet.
+
+**Solution**: Added `--prep` flag to architecture, tests, tasks, and implement workflows. Prep work gets its own `prep/` folder with separate architecture.md because refactoring is a different design problem than the feature itself.
+
+**Changes Made**:
+
+1. **mdt-assess.md (v2) - Prep Required signal**:
+   - Added "⚠️ Prep Required" signal when refactoring changes code landscape
+   - Added "Choose prep workflow when" guidance
+   - New execution path for Option 2 with prep workflow
+   - Updated workflow diagram to show prep path
+
+2. **mdt-architecture.md (v5→v6) - Prep mode support**:
+   - Added `--prep` flag → outputs to `prep/architecture.md`
+   - Added "Prep vs Feature Architecture" comparison table
+   - Step 0: Detect mode (prep vs feature)
+   - Prep mode skips PoC/domain loading (focus on refactoring)
+   - Separate completion report for prep mode with next steps
+
+3. **mdt-tests.md (v2→v3) - Prep mode support**:
+   - Added `--prep` flag → outputs to `prep/tests.md`
+   - Prep mode expects GREEN tests (behavior preservation)
+   - Added prep mode to Mode Detection table
+   - Updated validation checklist for prep mode
+
+4. **mdt-tasks.md (v5→v6) - Prep mode support**:
+   - Added `--prep` flag → outputs to `prep/tasks.md`
+   - Reads from `prep/architecture.md` in prep mode
+   - Added Critical Rule #6: "Prep reads prep architecture"
+   - Updated phase detection to handle prep folder
+
+5. **mdt-implement.md (v5→v6) - Prep mode support**:
+   - Added `--prep` flag → executes `prep/tasks.md`
+   - TDD verification: GREEN→GREEN for behavior preservation
+   - Prep completion report with "Codebase Restructured" message
+   - Next steps guide to feature architecture
+
+6. **README.md** - Updated documentation:
+   - New "Prep Workflow (Refactoring Before Feature)" section
+   - Design Principle #15: "Prep before feature"
+   - Updated Output Files table with prep paths
+   - Prep file structure and workflow diagram
+
+**Prep File Structure**:
+```
+{TICKETS_PATH}/{CR-KEY}/
+├── architecture.md          # Feature design (AFTER prep)
+├── prep/                    # Preparatory refactoring
+│   ├── architecture.md     # Refactoring design
+│   ├── tests.md            # Behavior preservation tests
+│   └── tasks.md            # Refactoring tasks
+├── phase-1/                 # Feature phases
+│   ├── tests.md
+│   └── tasks.md
+└── ...
+```
+
+**Impact**:
+- Feature architecture designed against actual refactored code, not speculation
+- Clear separation between refactoring work and feature work
+- Behavior preservation enforced through GREEN→GREEN TDD
+- Assessment signals when prep workflow is needed
+
+**Files Changed**:
+- `prompts/mdt-assess.md`
+- `prompts/mdt-architecture.md`
+- `prompts/mdt-tests.md`
+- `prompts/mdt-tasks.md`
+- `prompts/mdt-implement.md`
+- `prompts/README.md`
+
 ### 2025-12-28 - Proof of Concept Workflow
 
 **Problem**: Architecture workflow locked in unproven technical approaches, leading to mid-implementation pivots when assumptions about library support, performance, or integration behavior turned out wrong.

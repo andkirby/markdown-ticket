@@ -143,6 +143,15 @@ Add refactoring to this CR scope.
 
 **Total Added Effort**: ~{N} hours
 
+{If refactoring fundamentally changes code structure (e.g., breaking up God class, introducing new services):}
+
+**⚠️ Prep Required**: Refactoring changes the code landscape.
+- Feature architecture depends on refactored structure
+- Design refactoring first, then design feature against NEW code
+- Use `prep/` workflow: `/mdt:architecture {CR-KEY} --prep`
+
+{End if}
+
 **Pros**:
 - Improves feature work
 - Reduces debt
@@ -154,6 +163,8 @@ Add refactoring to this CR scope.
 - {specific risks}
 
 **Choose when**: Refactoring is small, directly improves feature work
+
+**Choose prep workflow when**: Refactoring creates new components that feature will interact with differently
 
 ---
 
@@ -213,7 +224,7 @@ Create prerequisite CR(s) first, feature CR depends on them.
 Next: `/mdt:architecture {CR-KEY}`
 ```
 
-**If Option 2 chosen**:
+**If Option 2 chosen (simple refactoring)**:
 1. Update CR scope via `mdt-all:manage_cr_sections`:
    - Add refactoring items to Section 1 (Scope)
    - Add refactoring artifacts to Section 4
@@ -227,6 +238,26 @@ Added to scope:
 - {refactoring item 2}
 
 Next: `/mdt:architecture {CR-KEY}`
+```
+
+**If Option 2 chosen (prep required — refactoring changes code landscape)**:
+1. Update CR scope via `mdt-all:manage_cr_sections`:
+   - Add refactoring items to Section 1 (Scope)
+   - Note "Prep workflow required" in Scope
+
+```markdown
+✓ CR scope updated. Prep workflow activated.
+
+Workflow:
+1. `/mdt:architecture {CR-KEY} --prep` — design refactoring
+2. `/mdt:tests {CR-KEY} --prep` — lock current behavior
+3. `/mdt:tasks {CR-KEY} --prep` — refactoring tasks
+4. `/mdt:implement {CR-KEY} --prep` — execute refactoring
+   *** Codebase now restructured ***
+5. `/mdt:architecture {CR-KEY}` — design feature against NEW code
+6. Continue normal workflow...
+
+Next: `/mdt:architecture {CR-KEY} --prep`
 ```
 
 **If Option 3 chosen**:
@@ -335,6 +366,13 @@ Outputs condensed version:
 /mdt:ticket-creation → /mdt:requirements → /mdt:assess → /mdt:architecture → ...
                                                ↓
                                     Decision point: 1/2/3
+                                               ↓
+                          Option 2 with prep? → /mdt:architecture --prep
+                                               → /mdt:tests --prep
+                                               → /mdt:tasks --prep
+                                               → /mdt:implement --prep
+                                               → /mdt:architecture (feature)
+                                               → normal workflow...
 ```
 
 Context: $ARGUMENTS
