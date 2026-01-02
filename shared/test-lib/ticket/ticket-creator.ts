@@ -37,7 +37,7 @@ export abstract class BaseTicketCreator implements ITicketCreator {
   protected readonly validPriorities: CRPriority[] = ['Low', 'Medium', 'High', 'Critical'];
 
   /** Generate next ticket code */
-  protected abstract generateTicketCode(projectCode: string, projectPath: string, ticketsPath?: string): string;
+  protected abstract generateTicketCode(projectCode: string, projectPath: string, ticketsPath?: string): string | Promise<string>;
 
   /** Create a single ticket/CR */
   abstract createTicket(config: TicketCreationConfig, data: TicketData): Promise<TicketCreationResult>;
