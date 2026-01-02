@@ -712,15 +712,15 @@ prompts/
 │   └── mdt-project-vars.sh  # SessionStart hook for PROJECT_CODE/TICKETS_PATH
 ├── mdt-ticket-creation.md   # CR creation (v5 - flexible depth)
 ├── mdt-requirements.md      # Requirements with FR/NFR (v2 - CR-type-aware)
-├── mdt-assess.md            # Code fitness assessment (v2)
+├── mdt-assess.md            # Code fitness assessment (v3 - prep aware)
 ├── mdt-poc.md               # Proof of concept spikes (v1)
 ├── mdt-domain-lens.md       # DDD constraints (v2 - code grounded)
 ├── mdt-domain-audit.md      # DDD violations analysis (v1)
-├── mdt-tests.md             # BDD test generation (v2 - phase aware)
-├── mdt-architecture.md      # Architecture design (v5 - domain aware)
+├── mdt-tests.md             # BDD test generation (v3 - prep aware)
+├── mdt-architecture.md      # Architecture design (v6 - prep aware)
 ├── mdt-clarification.md     # Gap filling
-├── mdt-tasks.md             # Task breakdown (v5 - phase aware)
-├── mdt-implement.md         # Orchestrator (v5 - phase aware)
+├── mdt-tasks.md             # Task breakdown (v6 - prep aware)
+├── mdt-implement.md         # Orchestrator (v6 - prep aware)
 ├── mdt-tech-debt.md         # Debt detection (v2)
 └── mdt-reflection.md        # Learning capture
 ```
@@ -732,12 +732,12 @@ prompts/
 | Workflow | Output Location |
 |----------|-----------------|
 | `/mdt:requirements` | `{TICKETS_PATH}/{CR-KEY}/requirements.md` |
-| `/mdt:tests` | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tests.md` + `{test_dir}/*.test.{ext}` |
+| `/mdt:tests` | `{TICKETS_PATH}/{CR-KEY}/[prep/][phase-{X.Y}/]tests.md` + `{test_dir}/*.test.{ext}` |
 | `/mdt:domain-lens` | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
 | `/mdt:domain-audit` | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or `docs/audits/domain-audit-{timestamp}.md` |
 | `/mdt:poc` | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder (gitignored) |
-| `/mdt:architecture` | CR section (simple) or `{TICKETS_PATH}/{CR-KEY}/architecture.md` (complex) |
-| `/mdt:tasks` | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tasks.md` |
+| `/mdt:architecture` | CR section (simple) or `{TICKETS_PATH}/{CR-KEY}/[prep/]architecture.md` |
+| `/mdt:tasks` | `{TICKETS_PATH}/{CR-KEY}/[prep/][phase-{X.Y}/]tasks.md` |
 | `/mdt:tech-debt` | `{TICKETS_PATH}/{CR-KEY}/debt.md` |
 
 ## Design Principles
@@ -756,6 +756,7 @@ prompts/
 12. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
 13. **Phase isolation** — epic CRs use phase folders for tests.md and tasks.md
 14. **Prove before commit** — uncertain technical decisions get PoC spikes before architecture locks in approach
+15. **Prep before feature** — when refactoring changes the code landscape, design and execute refactoring first
 
 ## Phased CRs (Epic Tickets)
 
@@ -848,6 +849,100 @@ Non-phased CRs work exactly as before:
 ```
 
 If no `## Phase X.Y:` headers exist in architecture.md, prompts default to root-level output.
+
+</details>
+
+## Prep Workflow (Refactoring Before Feature)
+
+<details>
+<summary>When refactoring must happen before feature design (click to expand)</summary>
+
+When `/mdt:assess` identifies that **refactoring fundamentally changes the code landscape** (e.g., breaking up a God class, introducing new services), the feature architecture depends on the refactored structure. Use the **prep workflow** to design and execute refactoring first.
+
+### When to Use Prep
+
+| Situation | Use Prep? |
+|-----------|-----------|
+| Minor extraction (one utility) | ❌ No — refactor inline |
+| God class → multiple services | ✅ Yes |
+| Feature interacts with NEW components | ✅ Yes |
+| Refactoring benefits unrelated features | ❌ No — split CRs |
+
+### Prep vs Phases
+
+| Concept | Purpose | Architecture |
+|---------|---------|---------------|
+| **Prep** | Get codebase ready (refactoring) | `prep/architecture.md` |
+| **Phases** | Implement feature incrementally | Shared `architecture.md` |
+
+Prep is a **different design problem** than the feature — it gets its own architecture file.
+
+### Prep File Structure
+
+```
+{TICKETS_PATH}/{CR-KEY}/
+├── architecture.md          # Feature design (created AFTER prep)
+├── prep/                    # Preparatory refactoring
+│   ├── architecture.md     # Refactoring design
+│   ├── tests.md            # Behavior preservation tests (GREEN)
+│   └── tasks.md            # Refactoring tasks
+├── phase-1/                 # Feature phases (after prep)
+│   ├── tests.md            # Feature tests (RED → GREEN)
+│   └── tasks.md
+└── ...
+```
+
+### Prep Workflow
+
+```
+/mdt:assess
+    │
+    └─► "⚠️ Prep Required" signal
+        │
+        ▼
+/mdt:architecture {CR-KEY} --prep ─── Creates: prep/architecture.md
+        │                            Refactoring design
+        ▼
+/mdt:tests {CR-KEY} --prep ──────── Creates: prep/tests.md
+        │                            Lock current behavior (GREEN)
+        ▼
+/mdt:tasks {CR-KEY} --prep ──────── Creates: prep/tasks.md
+        │                            Refactoring tasks
+        ▼
+/mdt:implement {CR-KEY} --prep ──── Execute refactoring
+        │                            Tests stay GREEN
+        ▼
+    *** Codebase Restructured ***
+        │
+        ▼
+/mdt:architecture {CR-KEY} ─────── Creates: architecture.md
+        │                            Feature design against NEW code
+        ▼
+/mdt:tests {CR-KEY} --phase 1 ──── Normal feature workflow...
+        │
+        ▼
+    ... continue ...
+```
+
+### Prep Commands
+
+| Command | Behavior |
+|---------|----------|
+| `/mdt:architecture {CR} --prep` | Design refactoring → `prep/architecture.md` |
+| `/mdt:tests {CR} --prep` | Lock behavior (tests should be GREEN) |
+| `/mdt:tasks {CR} --prep` | Generate refactoring tasks |
+| `/mdt:implement {CR} --prep` | Execute refactoring, verify GREEN→GREEN |
+
+### Prep TDD: GREEN → GREEN
+
+Unlike feature development (RED → GREEN), prep uses **behavior preservation**:
+
+| Mode | Before | After | Meaning |
+|------|--------|-------|---------|
+| Feature | RED | GREEN | New behavior implemented |
+| **Prep** | GREEN | GREEN | Existing behavior preserved |
+
+If prep tests go RED, you've broken existing behavior — STOP and fix.
 
 </details>
 

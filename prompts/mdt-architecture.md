@@ -1,4 +1,4 @@
-# MDT Architecture Design Workflow (v5)
+# MDT Architecture Design Workflow (v6)
 
 Surface architectural decisions before implementation. Output location adapts to complexity — simple stays in CR, complex extracts to `architecture.md`.
 
@@ -16,12 +16,22 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 
 ## Output Location (Graduated)
 
-| Complexity | Output | Criteria |
-|------------|--------|----------|
+| Mode | Output | Criteria |
+|------|--------|----------|
+| **Prep** (`--prep` flag) | `{TICKETS_PATH}/{CR-KEY}/prep/architecture.md` | Preparatory refactoring design |
 | **Simple** | `## Architecture Design` in CR | ≤3 components, no state flows, ≤60 lines |
 | **Complex** | `{TICKETS_PATH}/{CR-KEY}/architecture.md` | >3 components, state flows, or >60 lines |
 
 CR always gets a reference — either the section itself or a link to the extracted file.
+
+### Prep vs Feature Architecture
+
+| Aspect | Prep Architecture | Feature Architecture |
+|--------|-------------------|----------------------|
+| **Purpose** | How to restructure existing code | How to build new capability |
+| **Focus** | Behavior preservation, structure change | New behavior, extend structure |
+| **Reads** | Current code state | New code state (after prep) |
+| **Output** | `prep/architecture.md` | Root `architecture.md` or CR section |
 
 ## Problem This Solves
 
@@ -41,6 +51,12 @@ Use this workflow when:
 - CR affects code organization across files/modules
 - Previous implementation attempts produced poor structure
 
+Use `--prep` flag when:
+- Assessment indicated "Prep Required"
+- Refactoring fundamentally changes code structure
+- Feature design depends on refactored structure
+- Breaking up God class, introducing new services, etc.
+
 Do NOT use when:
 - Simple bug fix with clear single-file scope
 - Documentation-only change
@@ -48,10 +64,33 @@ Do NOT use when:
 
 ## Execution Steps
 
+### Step 0: Detect Mode
+
+Check for `--prep` flag in arguments:
+
+```yaml
+# If --prep flag present
+mode: "prep"
+output_path: "{TICKETS_PATH}/{CR-KEY}/prep/architecture.md"
+focus: "refactoring design"
+
+# Otherwise (default)
+mode: "feature"
+output_path: "{TICKETS_PATH}/{CR-KEY}/architecture.md"  # or CR section if simple
+focus: "feature design"
+```
+
+**If mode is prep**:
+- Create `prep/` directory if not exists
+- Focus on: How to restructure existing code safely
+- Skip: Feature-specific design (that comes after prep)
+- Output sections emphasize: behavior preservation, interface stability, size reduction
+
 ### Step 1: Load Context
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
-2. **Load PoC findings if exists**: Check `{TICKETS_PATH}/{CR-KEY}/poc.md`
+2. **If prep mode**: Skip PoC/domain loading — focus on refactoring
+3. **Load PoC findings if exists** (feature mode only): Check `{TICKETS_PATH}/{CR-KEY}/poc.md`
    - If found: extract validated decisions, constraints discovered, recommended approach
    - These are PROVEN approaches — use them directly, don't re-evaluate
    - Reference in Key Dependencies: "Validated in PoC: {finding}"
@@ -536,7 +575,15 @@ If misalignment detected, update Section 4 or adjust design.
 3. Update Section 4 with new artifacts
 4. Update Section 5 with size verification criteria
 
+**Prep mode**:
+1. Create `{TICKETS_PATH}/{CR-KEY}/prep/` directory
+2. Save to `{TICKETS_PATH}/{CR-KEY}/prep/architecture.md`
+3. Use `mdt-all:manage_cr_sections` to note prep workflow in CR Section 1 (Scope)
+4. Do NOT update Section 4 yet — feature artifacts come after prep
+
 ### Step 9: Report Completion
+
+**For feature mode (default):**
 
 ```markdown
 ## Architecture Design Complete
@@ -568,6 +615,36 @@ If misalignment detected, update Section 4 or adjust design.
 ### Next Steps
 - Review architecture {in CR | in architecture.md}
 - Run `/mdt:tasks {CR-KEY}` — inherits limits
+```
+
+**For prep mode (`--prep`):**
+
+```markdown
+## Prep Architecture Complete
+
+**CR**: {CR-KEY}
+**Mode**: Preparatory Refactoring
+**Output**: `prep/architecture.md`
+
+### Refactoring Goal
+{what's being restructured and why}
+
+### Target Structure
+{new file organization after refactoring}
+
+### Size Limits
+| Module | Current | Target | Hard Max |
+|--------|---------|--------|----------|
+| ... | ... | ... | ... |
+
+### Behavior Preservation
+{interfaces that must remain stable}
+
+### Next Steps (Prep Workflow)
+1. `/mdt:tests {CR-KEY} --prep` — lock current behavior
+2. `/mdt:tasks {CR-KEY} --prep` — refactoring tasks
+3. `/mdt:implement {CR-KEY} --prep` — execute refactoring
+4. `/mdt:architecture {CR-KEY}` — design feature (after prep complete)
 ```
 
 ---
