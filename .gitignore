@@ -78,4 +78,5 @@ counter-api/
 # TypeScript incremental compilation
 *.tsbuildinfo
 .claude
-*.scip
+# ignore SCIP files
+**/*.scip
