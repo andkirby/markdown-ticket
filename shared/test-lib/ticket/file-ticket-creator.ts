@@ -1,14 +1,18 @@
 /**
  * File-based Ticket Creator Implementation
+ *
+ * Refactored to use helper classes for code generation and data transformation.
+ * Reuses existing shared services: MarkdownService, CRService, TemplateService.
  */
 
 import * as fs from 'fs';
 import { join as pathJoin } from 'path';
 import { MarkdownService } from '../../services/MarkdownService.js';
-import { CRService } from '../../services/CRService.js';
 import { TemplateService } from '../../services/TemplateService.js';
 import { BaseTicketCreator, type TicketCreationConfig, type TicketCreationResult } from './ticket-creator.js';
 import { RetryHelper } from '../utils/retry-helper.js';
+import { TicketCodeHelper } from './helpers/TicketCodeHelper.js';
+import { TicketDataHelper } from './helpers/TicketDataHelper.js';
 import type { TicketData } from '../../models/Ticket.js';
 import type { CRType } from '../../models/Types.js';
 
@@ -33,94 +37,51 @@ export class FileTicketCreator extends BaseTicketCreator {
     });
   }
 
-  /** Generate next ticket code */
-  protected generateTicketCode(projectCode: string, projectPath: string, ticketsPath?: string): string {
-    const crsDir = pathJoin(projectPath, ticketsPath || 'docs', 'CRs');
-    let maxNumber = 0;
+  /** Generate next ticket code - uses TicketCodeHelper */
+  protected async generateTicketCode(
+    projectCode: string,
+    projectPath: string,
+    ticketsPath?: string
+  ): Promise<string> {
+    const ticketsDir = pathJoin(projectPath, ticketsPath || 'docs', 'CRs');
 
-    try {
-      if (fs.existsSync(crsDir)) {
-        const files = this.retryHelper.executeSync(
-          () => fs.readdirSync(crsDir),
-          { logContext: `FileTicketCreator.readDir(${projectCode})` }
-        );
+    const nextNumber = await this.retryHelper.execute(
+      async () => TicketCodeHelper.findNextNumber(projectCode, ticketsDir),
+      { logContext: `FileTicketCreator.findNextNumber(${projectCode})` }
+    );
 
-        const regex = new RegExp(`^${projectCode}-(\\d+)\\.md$`, 'i');
-        for (const file of files) {
-          const match = file.match(regex);
-          if (match) maxNumber = Math.max(maxNumber, parseInt(match[1], 10));
-        }
-      }
-      return `${projectCode}-${String(maxNumber + 1).padStart(3, '0')}`;
-    } catch (error) {
-      console.error(`Failed to generate ticket code for ${projectCode}:`, error);
-      return `${projectCode}-001`;
-    }
+    return TicketCodeHelper.generateCode(projectCode, nextNumber);
   }
 
   /** Create a single ticket file */
   async createTicket(config: TicketCreationConfig, data: TicketData): Promise<TicketCreationResult> {
+    // Validate
+    if (config.validateContent !== false) {
+      const validation = this.validateTicket(data);
+      if (!validation.valid) {
+        return { success: false, error: `Validation failed: ${validation.errors.map(e => e.message).join(', ')}` };
+      }
+    }
+
+    const ticketCode = await this.generateTicketCode(config.projectCode, config.projectPath, config.ticketsPath);
+    const ticketsDir = pathJoin(config.projectPath, config.ticketsPath || 'docs', 'CRs');
+
     try {
-      // Validate content if requested
-      if (config.validateContent !== false) {
-        const validation = this.validateTicket(data);
-        if (!validation.valid) {
-          return { success: false, error: `Validation failed: ${validation.errors.map(e => e.message).join(', ')}` };
-        }
-      }
-
-      // Generate ticket code
-      const ticketCode = this.generateTicketCode(config.projectCode, config.projectPath, config.ticketsPath);
-      const ticketsDir = pathJoin(config.projectPath, config.ticketsPath || 'docs', 'CRs');
-
-      // Ensure CRs directory exists
-      if (!fs.existsSync(ticketsDir)) {
-        await this.retryHelper.execute(
-          async () => fs.mkdirSync(ticketsDir, { recursive: true }),
-          { logContext: `FileTicketCreator.createCRsDir(${config.projectCode})` }
-        );
-      }
+      // Ensure directory
+      await this.ensureCRsDirectory(ticketsDir, config.projectCode);
 
       // Get or generate content
-      let content = data.content;
-      if (!content && data.type) {
-        try {
-          content = await this.retryHelper.execute(
-            async () => {
-              const template = this.templateService.getTemplate(data.type as CRType);
-              return template ? template.template.replace('[Ticket Title]', data.title) : undefined;
-            },
-            { logContext: `FileTicketCreator.getTemplate(${data.type})`, timeout: 2000 }
-          );
-        } catch {
-          content = undefined;
-        }
+      const content = await this.getTemplateContent(data.title, data.type as CRType, data.content);
 
-        // Fallback to minimal content if template fails
-        if (!content) {
-          content = this.generateMinimalContent(data.title, data.type as CRType);
-        }
-      }
-
-      // Create and write ticket with retry
-      const ticketData = {
-        title: data.title,
-        type: data.type,
-        content,
-        priority: data.priority || 'Medium',
-        phaseEpic: data.phaseEpic,
-        relatedTickets: data.relatedTickets,
-        dependsOn: data.dependsOn,
-        blocks: data.blocks,
-        assignee: data.assignee
-      };
-
-      const ticket = CRService.createTicket(ticketData, ticketCode, data.type, '');
-      ticket.dateCreated = ticket.lastModified = new Date();
-
+      // Build ticket using helper
       const filePath = pathJoin(ticketsDir, `${ticketCode}.md`);
+      const ticket = TicketDataHelper.buildTicket(
+        { ...data, content: content ?? data.content },
+        ticketCode,
+        filePath
+      );
 
-      // Write markdown file
+      // Write using MarkdownService (shared service)
       await this.retryHelper.execute(
         async () => MarkdownService.writeMarkdownFile(filePath, ticket),
         { logContext: `FileTicketCreator.writeMarkdownFile(${ticketCode})` }
@@ -135,7 +96,76 @@ export class FileTicketCreator extends BaseTicketCreator {
     }
   }
 
-  /** Generate minimal content structure */
+  /** Read existing ticket - uses MarkdownService (shared) */
+  async readTicket(projectPath: string, ticketCode: string, ticketsPath?: string): Promise<TicketData | null> {
+    const filePath = pathJoin(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
+
+    const ticket = await this.retryHelper.execute(
+      async () => MarkdownService.parseMarkdownFile(filePath),
+      { logContext: `FileTicketCreator.parseMarkdownFile(${ticketCode})`, timeout: 3000 }
+    );
+
+    return ticket ? TicketDataHelper.ticketToTicketData(ticket) : null;
+  }
+
+  /** Update existing ticket - uses helper for merge */
+  async updateTicket(
+    config: TicketCreationConfig,
+    ticketCode: string,
+    data: Partial<TicketData>
+  ): Promise<TicketCreationResult> {
+    try {
+      const existing = await this.readTicket(config.projectPath, ticketCode, config.ticketsPath);
+      const mergedData = TicketDataHelper.mergeTicketData(existing, data);
+      return await this.createTicketWithCode(config, ticketCode, mergedData);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      };
+    }
+  }
+
+  /** Check if ticket exists */
+  ticketExists(projectPath: string, ticketCode: string, ticketsPath?: string): boolean {
+    const filePath = pathJoin(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
+    return this.retryHelper.executeSync(
+      () => fs.existsSync(filePath),
+      { logContext: `FileTicketCreator.ticketExists(${ticketCode})` }
+    );
+  }
+
+  // Private helpers
+
+  private async ensureCRsDirectory(ticketsDir: string, projectCode: string): Promise<void> {
+    if (fs.existsSync(ticketsDir)) return;
+
+    await this.retryHelper.execute(
+      async () => fs.mkdirSync(ticketsDir, { recursive: true }),
+      { logContext: `FileTicketCreator.ensureCRsDir(${projectCode})` }
+    );
+  }
+
+  private async getTemplateContent(
+    title: string,
+    type: CRType,
+    existingContent?: string
+  ): Promise<string | undefined> {
+    if (existingContent) return existingContent;
+
+    try {
+      const template = await this.retryHelper.execute(
+        async () => this.templateService.getTemplate(type),
+        { logContext: `FileTicketCreator.getTemplate(${type})`, timeout: 2000 }
+      );
+      return template?.template.replace('[Ticket Title]', title);
+    } catch {
+      // Fall through to minimal content
+    }
+
+    return this.generateMinimalContent(title, type);
+  }
+
   private generateMinimalContent(title: string, type: CRType): string {
     const now = new Date().toISOString().split('T')[0];
     return `# ${title}
@@ -160,127 +190,26 @@ Technical details and implementation plan.
 *CR created on ${now}*`;
   }
 
+  private async createTicketWithCode(
+    config: TicketCreationConfig,
+    ticketCode: string,
+    data: TicketData
+  ): Promise<TicketCreationResult> {
+    const ticketsDir = pathJoin(config.projectPath, config.ticketsPath || 'docs', 'CRs');
+    await this.ensureCRsDirectory(ticketsDir, config.projectCode);
+
+    const filePath = pathJoin(ticketsDir, `${ticketCode}.md`);
+    const ticket = TicketDataHelper.buildTicket(data, ticketCode, filePath);
+
+    await this.retryHelper.execute(
+      async () => MarkdownService.writeMarkdownFile(filePath, ticket),
+      { logContext: `FileTicketCreator.updateMarkdownFile(${ticketCode})` }
+    );
+
+    return { success: true, ticketCode, ticket, filePath };
+  }
+
   getCreatorType(): string { return 'file'; }
-
-  /** Check if ticket exists */
-  ticketExists(projectPath: string, ticketCode: string, ticketsPath?: string): boolean {
-    try {
-      const filePath = pathJoin(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
-      return this.retryHelper.executeSync(
-        () => fs.existsSync(filePath),
-        { logContext: `FileTicketCreator.ticketExists(${ticketCode})` }
-      );
-    } catch {
-      return false;
-    }
-  }
-
-  /** Read existing ticket */
-  async readTicket(projectPath: string, ticketCode: string, ticketsPath?: string): Promise<TicketData | null> {
-    try {
-      const filePath = pathJoin(projectPath, ticketsPath || 'docs', 'CRs', `${ticketCode}.md`);
-
-      // Check if file exists
-      const exists = await this.retryHelper.execute(
-        async () => fs.existsSync(filePath),
-        { logContext: `FileTicketCreator.checkTicketExists(${ticketCode})` }
-      );
-
-      if (!exists) return null;
-
-      // Parse markdown file
-      const ticket = await this.retryHelper.execute(
-        async () => await MarkdownService.parseMarkdownFile(filePath),
-        { logContext: `FileTicketCreator.parseMarkdownFile(${ticketCode})`, timeout: 3000 }
-      );
-
-      return ticket ? {
-        title: ticket.title,
-        type: ticket.type,
-        content: ticket.content,
-        priority: ticket.priority,
-        phaseEpic: ticket.phaseEpic,
-        relatedTickets: ticket.relatedTickets.join(','),
-        dependsOn: ticket.dependsOn.join(','),
-        blocks: ticket.blocks.join(','),
-        assignee: ticket.assignee
-      } : null;
-    } catch {
-      return null;
-    }
-  }
-
-  /** Update existing ticket */
-  async updateTicket(config: TicketCreationConfig, ticketCode: string, data: Partial<TicketData>): Promise<TicketCreationResult> {
-    try {
-      // Read existing ticket with retry
-      const existing = await this.readTicket(config.projectPath, ticketCode, config.ticketsPath);
-      const mergedData: TicketData = {
-        title: data.title || existing?.title || '',
-        type: data.type || existing?.type || 'Feature Enhancement',
-        content: data.content || existing?.content || '',
-        priority: data.priority || existing?.priority || 'Medium',
-        phaseEpic: data.phaseEpic || existing?.phaseEpic,
-        relatedTickets: data.relatedTickets || existing?.relatedTickets,
-        dependsOn: data.dependsOn || existing?.dependsOn,
-        blocks: data.blocks || existing?.blocks,
-        assignee: data.assignee || existing?.assignee
-      };
-      return await this.createTicketWithCode(config, ticketCode, mergedData);
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error)
-      };
-    }
-  }
-
-  /** Create ticket with specific code */
-  private async createTicketWithCode(config: TicketCreationConfig, ticketCode: string, data: TicketData): Promise<TicketCreationResult> {
-    try {
-      const crsDir = pathJoin(config.projectPath, config.ticketsPath || 'docs', 'CRs');
-
-      // Ensure CRs directory exists
-      if (!fs.existsSync(crsDir)) {
-        await this.retryHelper.execute(
-          async () => fs.mkdirSync(crsDir, { recursive: true }),
-          { logContext: `FileTicketCreator.ensureCRsDirForUpdate(${config.projectCode})` }
-        );
-      }
-
-      const ticketData = {
-        title: data.title,
-        type: data.type,
-        content: data.content,
-        priority: data.priority || 'Medium',
-        phaseEpic: data.phaseEpic,
-        relatedTickets: data.relatedTickets,
-        dependsOn: data.dependsOn,
-        blocks: data.blocks,
-        assignee: data.assignee
-      };
-
-      const ticket = CRService.createTicket(ticketData, ticketCode, data.type, '');
-      const now = new Date();
-      ticket.lastModified = now;
-      if (!ticket.dateCreated) ticket.dateCreated = now;
-
-      const filePath = pathJoin(crsDir, `${ticketCode}.md`);
-
-      // Write markdown file
-      await this.retryHelper.execute(
-        async () => MarkdownService.writeMarkdownFile(filePath, ticket),
-        { logContext: `FileTicketCreator.updateMarkdownFile(${ticketCode})` }
-      );
-
-      return { success: true, ticketCode, ticket, filePath };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error)
-      };
-    }
-  }
 }
 
 // Re-export types for convenience
