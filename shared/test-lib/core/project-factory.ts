@@ -1,24 +1,17 @@
 /**
  * Project Factory - Test utility for creating minimal project structures and CRs for testing.
  *
- * Refactored to use shared services from @mdt/shared to avoid code duplication.
+ * Refactored to delegate to TestProjectBuilder and TestTicketBuilder for implementation.
+ * This class acts as an orchestrator, coordinating the builders for creating test scenarios.
  */
 
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { TestEnvironment } from './test-environment.js';
-import {
-  RetryHelper,
-  withRetry,
-  withRetrySync,
-  type RetryOptions,
-} from '../utils/retry-helper.js';
 import type { CRType, CRStatus, CRPriority } from '../../models/Types.js';
-import { ProjectRegistry } from '../../services/project/ProjectRegistry.js';
-import { ProjectConfigService } from '../../services/project/ProjectConfigService.js';
-import type { Project } from '../../models/Project.js';
+import { TestEnvironment } from './test-environment.js';
+import { TestProjectBuilder } from '../ticket/test-project-builder.js';
+import { TestTicketBuilder } from '../ticket/test-ticket-builder.js';
 
-// Simple CR data structure for testing
+/** Simple CR data structure for testing (legacy compatibility) */
 export interface SimpleCR {
   code: string;
   title: string;
@@ -35,9 +28,7 @@ export interface SimpleCR {
   blocks?: string;
 }
 
-/**
- * Project configuration for test projects
- */
+/** Project configuration for test projects */
 export interface ProjectConfig {
   repository?: string;
   name?: string;
@@ -48,18 +39,14 @@ export interface ProjectConfig {
   excludeFolders?: string[];
 }
 
-/**
- * Created project data
- */
+/** Created project data */
 export interface ProjectData {
   key: string;
   path: string;
   config: ProjectConfig;
 }
 
-/**
- * Test CR data structure
- */
+/** Test CR data structure */
 export interface TestCRData {
   title: string;
   type: CRType;
@@ -72,9 +59,7 @@ export interface TestCRData {
   content: string;
 }
 
-/**
- * Test scenario results
- */
+/** Test scenario results */
 export interface TestScenario {
   projectCode: string;
   projectName: string;
@@ -82,9 +67,7 @@ export interface TestScenario {
   crs: TestCRResult[];
 }
 
-/**
- * Result of creating a test CR
- */
+/** Result of creating a test CR */
 export interface TestCRResult {
   success: boolean;
   crCode?: string;
@@ -106,15 +89,16 @@ export class ProjectFactoryError extends Error {
 }
 
 /**
- * Factory for creating test projects and CRs using shared services
+ * Factory for creating test projects and CRs using extracted builders.
+ *
+ * This class orchestrates TestProjectBuilder and TestTicketBuilder to provide
+ * the same public API as before, while delegating implementation to the builders.
  */
 export class ProjectFactory {
   private testEnv: TestEnvironment;
   private projectsDir: string;
-  private retryHelper: RetryHelper;
-  private projectConfigs: Map<string, ProjectConfig> = new Map();
-  private registry: ProjectRegistry;
-  private configService: ProjectConfigService;
+  private projectBuilder: TestProjectBuilder;
+  private ticketBuilder: TestTicketBuilder;
 
   constructor(testEnv: TestEnvironment) {
     this.testEnv = testEnv;
@@ -124,33 +108,12 @@ export class ProjectFactory {
       );
     }
 
-    // Initialize retry helper with specific options for file operations
-    this.retryHelper = new RetryHelper({
-      maxAttempts: 3,
-      initialDelay: 100,
-      backoffMultiplier: 2.0,
-      maxDelay: 1000,
-      timeout: 5000,
-      retryableErrors: [
-        'EACCES',
-        'ENOENT',
-        'EEXIST',
-        'EBUSY',
-        'EMFILE',
-        'ENFILE',
-      ],
-      logContext: 'ProjectFactory',
-    });
-
-    // Initialize services in quiet mode for tests
-    this.registry = new ProjectRegistry(true);
-    this.configService = new ProjectConfigService(true);
-
     // Projects will be created in temp directory
     this.projectsDir = join(testEnv.getTempDirectory(), 'projects');
-    if (!existsSync(this.projectsDir)) {
-      mkdirSync(this.projectsDir, { recursive: true });
-    }
+
+    // Initialize builders with the projects directory
+    this.projectBuilder = new TestProjectBuilder(this.projectsDir);
+    this.ticketBuilder = new TestTicketBuilder(this.projectsDir);
   }
 
   /**
@@ -160,324 +123,33 @@ export class ProjectFactory {
     type: 'empty' = 'empty',
     config: ProjectConfig = {},
   ): Promise<ProjectData> {
-    const projectCode = config.code || this.generateUniqueProjectCode();
-    const projectName = config.name || `Test Project ${projectCode}`;
-    const finalConfig: ProjectConfig = {
-      description: 'Test project for E2E testing',
-      ticketsPath: 'docs/CRs',
-      repository: 'test-repo',
-      documentPaths: ['docs'],
-      excludeFolders: ['node_modules', '.git', 'dist'],
-      ...config,
-    };
+    // Generate unique code if not provided
+    const projectCode = config.code || this.projectBuilder.generateUniqueProjectCode();
 
-    this.projectConfigs.set(projectCode, finalConfig);
+    // Create project using TestProjectBuilder
+    const result = await this.projectBuilder.createProject(projectCode, config);
 
-    const projectPath = await this.createProjectStructure(
-      projectCode,
-      projectName,
-      finalConfig,
-    );
+    // Register the project config with the ticket builder
+    this.ticketBuilder.registerProject(result.key, result.config.ticketsPath);
 
-    return { key: projectCode, path: projectPath, config: finalConfig };
+    return result;
   }
 
   /**
-   * Generate unique project code using T{random} pattern
-   */
-  private generateUniqueProjectCode(): string {
-    const randomPart =
-      Math.random()
-        .toString(36)
-        .replace(/[^a-z]/g, '')
-        .toUpperCase()
-        .substr(0, 3) || 'AAA';
-    return `T${randomPart}`.substr(0, 5);
-  }
-
-  /**
-   * Create the project directory structure and configuration files
-   */
-  private async createProjectStructure(
-    projectCode: string,
-    projectName: string,
-    config: ProjectConfig = {},
-  ): Promise<string> {
-    const projectPath = join(this.projectsDir, projectCode);
-
-    try {
-      // Create project directory with retry
-      if (!existsSync(projectPath)) {
-        await withRetry(
-          async () => {
-            mkdirSync(projectPath, { recursive: true });
-          },
-          {
-            logContext: `ProjectFactory.createProjectDir(${projectCode})`,
-          },
-        );
-      }
-
-      // Create docs directory with retry
-      const docsPath = join(projectPath, 'docs');
-      if (!existsSync(docsPath)) {
-        await withRetry(
-          async () => {
-            mkdirSync(docsPath, { recursive: true });
-          },
-          {
-            logContext: `ProjectFactory.createDocsDir(${projectCode})`,
-          },
-        );
-      }
-
-      // Create CRs directory with retry
-      const crsPath = join(projectPath, config.ticketsPath || 'docs/CRs');
-      if (!existsSync(crsPath)) {
-        await withRetry(
-          async () => {
-            mkdirSync(crsPath, { recursive: true });
-          },
-          {
-            logContext: `ProjectFactory.createCRsDir(${projectCode})`,
-          },
-        );
-      }
-
-      // Create configuration files with retry
-      await this.createProjectFiles(
-        projectPath,
-        projectCode,
-        projectName,
-        config,
-        crsPath,
-      );
-
-      return projectPath;
-    } catch (error) {
-      throw new ProjectFactoryError(
-        `Failed to create project structure for ${projectCode}: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error : undefined,
-      );
-    }
-  }
-
-  /**
-   * Create project configuration files using shared services
-   */
-  private async createProjectFiles(
-    projectPath: string,
-    projectCode: string,
-    projectName: string,
-    config: ProjectConfig,
-    crsPath: string,
-  ): Promise<void> {
-    // Create .mdt-next counter file (test-specific)
-    await withRetry(
-      async () => {
-        writeFileSync(join(projectPath, '.mdt-next'), '1', 'utf8');
-      },
-      {
-        logContext: `ProjectFactory.createNextFile(${projectCode})`,
-        retryableErrors: [
-          'EACCES',
-          'ENOENT',
-          'EEXIST',
-          'EBUSY',
-          'EMFILE',
-          'ENFILE',
-          'EIO',
-        ],
-      },
-    );
-
-    // Create .gitkeep in CRs directory
-    await withRetry(
-      async () => {
-        writeFileSync(join(crsPath, '.gitkeep'), '', 'utf8');
-      },
-      {
-        logContext: `ProjectFactory.createGitkeep(${projectCode})`,
-        retryableErrors: [
-          'EACCES',
-          'ENOENT',
-          'EEXIST',
-          'EBUSY',
-          'EMFILE',
-          'ENFILE',
-          'EIO',
-        ],
-      },
-    );
-
-    // Create local config using ProjectConfigService
-    this.configService.createOrUpdateLocalConfig(
-      projectCode,
-      projectPath,
-      projectName,
-      projectCode,
-      config.description,
-      config.repository,
-      false, // globalOnly - we create local config for tests
-      config.ticketsPath,
-    );
-
-    // Create Project object for registry
-    const project: Project = {
-      id: projectCode,
-      project: {
-        name: projectName,
-        code: projectCode,
-        path: projectPath,
-        configFile: join(projectPath, '.mdt-config.toml'),
-        active: true,
-        description: config.description || 'Test project',
-        repository: config.repository || 'test-repo',
-        ticketsPath: config.ticketsPath || 'docs/CRs',
-      },
-      metadata: {
-        dateRegistered: new Date().toISOString().split('T')[0],
-        lastAccessed: new Date().toISOString().split('T')[0],
-        version: '1.0.0',
-      },
-      document: {
-        paths: config.documentPaths || ['docs'],
-        excludeFolders: config.excludeFolders || ['node_modules', '.git', 'dist'],
-      },
-    };
-
-    // Register project using ProjectRegistry FIRST (before configureDocuments)
-    this.registry.registerProject(project, {
-      paths: config.documentPaths || ['docs'],
-      maxDepth: 3,
-    });
-
-    // Configure document paths if provided (must happen AFTER registration)
-    if (config.documentPaths && config.documentPaths.length > 0) {
-      await this.configService.configureDocuments(projectCode, config.documentPaths);
-    }
-  }
-
-  /**
-   * Create a test CR using direct file I/O with retry logic
+   * Create a test CR using TestTicketBuilder
    */
   async createTestCR(
     projectCode: string,
     crData: TestCRData,
   ): Promise<TestCRResult> {
-    try {
-      const projectPath = join(this.projectsDir, projectCode);
-      if (!existsSync(projectPath)) {
-        return { success: false, error: `Project ${projectCode} not found` };
-      }
-
-      // Read next CR number with retry
-      const nextPath = join(projectPath, '.mdt-next');
-      let nextNumber = 1;
-      if (existsSync(nextPath)) {
-        nextNumber = await withRetry(
-          async () => {
-            const content = readFileSync(nextPath, 'utf8');
-            return parseInt(content || '1', 10);
-          },
-          {
-            logContext: `ProjectFactory.readNextNumber(${projectCode})`,
-            timeout: 2000,
-          },
-        );
-      }
-
-      const crCode = `${projectCode}-${String(nextNumber).padStart(3, '0')}`;
-      const titleSlug = this.createSlug(crData.title);
-      const filename = `${crCode}-${titleSlug}.md`;
-      const projectConfig = this.projectConfigs.get(projectCode);
-      const crPath = join(
-        projectPath,
-        projectConfig?.ticketsPath || 'docs/CRs',
-        filename,
-      );
-
-      // Build CR content using template with retry
-      // Use simple embedded template
-      const content = `# ${crData.title}
-
-## 1. Description
-${crData.content}
-
-## 2. Rationale
-To be filled...
-
-## 3. Solution Analysis
-To be filled...
-
-## 4. Implementation Specification
-To be filled...
-
-## 5. Acceptance Criteria
-To be filled...
-`;
-
-      // Create full markdown with frontmatter
-      const fullContent = `---
-code: ${crCode}
-title: ${crData.title}
-status: ${crData.status || 'Proposed'}
-type: ${crData.type}
-priority: ${crData.priority || 'Medium'}
-${crData.phaseEpic ? `phaseEpic: ${crData.phaseEpic}` : ''}
-${crData.dependsOn ? `dependsOn: ${crData.dependsOn}` : ''}
-${crData.blocks ? `blocks: ${crData.blocks}` : ''}
-${crData.assignee ? `assignee: ${crData.assignee}` : ''}
----
-
-${content}`;
-
-      // Write CR file with retry
-      await withRetry(
-        async () => {
-          writeFileSync(crPath, fullContent, 'utf8');
-        },
-        {
-          logContext: `ProjectFactory.writeCRFile(${crCode})`,
-          retryableErrors: [
-            'EACCES',
-            'ENOENT',
-            'EEXIST',
-            'EBUSY',
-            'EMFILE',
-            'ENFILE',
-            'EIO',
-          ],
-          timeout: 3000,
-        },
-      );
-
-      // Update next number with retry
-      await withRetry(
-        async () => {
-          writeFileSync(nextPath, String(nextNumber + 1), 'utf8');
-        },
-        {
-          logContext: `ProjectFactory.updateNextNumber(${projectCode})`,
-          timeout: 2000,
-        },
-      );
-
-      return {
-        success: true,
-        crCode,
-        filePath: crPath,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-      };
-    }
+    return this.ticketBuilder.createTicket(projectCode, crData);
   }
 
   /**
    * Create multiple CRs for a project
+   *
+   * This orchestrator method calls TestTicketBuilder multiple times
+   * to create a series of tickets for the same project.
    */
   async createMultipleCRs(
     projectCode: string,
@@ -495,6 +167,9 @@ ${content}`;
 
   /**
    * Create a test scenario with predefined project and CRs
+   *
+   * This orchestrator method creates a project and then populates it
+   * with a set of predefined CRs based on the scenario type.
    */
   async createTestScenario(
     scenarioType: 'standard-project' | 'complex-project' = 'standard-project',
@@ -590,18 +265,5 @@ ${content}`;
   async cleanup(): Promise<void> {
     // Test environment cleanup will handle removing the temp directory
     // This is just for any additional cleanup if needed
-  }
-
-  /**
-   * Create URL-safe slug from title (matches TicketService behavior)
-   */
-  private createSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-      .substring(0, 50);
   }
 }

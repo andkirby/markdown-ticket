@@ -46,7 +46,11 @@
 export { TestEnvironment } from './core/test-environment.js';
 export { TestServer } from './core/test-server.js';
 export { ProjectFactory, type ProjectConfig, type ProjectData, type TestScenario, type TestCRResult } from './core/project-factory.js';
+export { EventListenerRegistry } from './core/event-listener-registry.js';
+export { ServerConfigFactory } from './core/server-config-factory.js';
 export { FileTicketCreator, type TicketCreationConfig, type TicketCreationResult } from './ticket/file-ticket-creator.js';
+export { TestTicketBuilder, type TestCRData } from './ticket/test-ticket-builder.js';
+export { TestProjectBuilder, TestProjectBuilderError, type ProjectConfig as TestProjectBuilderConfig, type ProjectData as TestProjectData } from './ticket/test-project-builder.js';
 
 // ============================================================================
 // Types

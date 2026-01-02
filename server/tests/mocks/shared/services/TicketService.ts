@@ -13,7 +13,7 @@ export interface Ticket {
   type: string;
   priority: string;
   filename?: string;
-  path?: string;
+  filePath?: string;  // Changed from 'path' to 'filePath' to match real service
   content?: string;
   description?: string;
   phaseEpic?: string;
@@ -136,7 +136,7 @@ export class TicketService {
       priority: priorityMatch ? priorityMatch[1].trim() : 'Medium',
       description: descriptionMatch ? descriptionMatch[1].trim() : '',
       filename: files[0],
-      path: mdPath,
+      filePath: mdPath,  // Changed from 'path' to 'filePath' to match real service
       content,
     };
   }
@@ -201,9 +201,40 @@ export class TicketService {
       dependsOn: data.dependsOn,
       blocks: data.blocks,
       filename,
-      path: mdPath,
+      filePath: mdPath,  // Changed from 'path' to 'filePath' to match real service
       content: yaml,
     };
+  }
+
+  /**
+   * Validate status transitions
+   */
+  private validateStatusTransition(currentStatus: string, newStatus: string): void {
+    // Allow same status (no-op updates)
+    if (currentStatus === newStatus) {
+      return;
+    }
+
+    // Define valid status transitions
+    const validTransitions: Record<string, string[]> = {
+      'Proposed': ['Approved', 'Rejected', 'In Progress', 'On Hold', 'Implemented', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
+      'Approved': ['In Progress', 'Rejected', 'On Hold', 'Implemented', 'Proposed', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
+      'In Progress': ['Implemented', 'Approved', 'On Hold', 'Rejected', 'Proposed', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
+      'Implemented': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'On Hold', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
+      'Rejected': ['Proposed', 'Approved', 'Implemented', 'On Hold', 'In Progress', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
+      'On Hold': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'Implemented', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
+      'Superseded': ['Proposed', 'Approved', 'In Progress', 'Implemented', 'On Hold', 'Rejected', 'Deprecated', 'Duplicate', 'Partially Implemented'],
+      'Deprecated': ['Superseded', 'Proposed'],
+      'Duplicate': ['Superseded', 'Rejected'],
+      'Partially Implemented': ['Implemented', 'In Progress', 'On Hold', 'Superseded', 'Rejected', 'Proposed'],
+    };
+
+    const allowedTransitions = validTransitions[currentStatus] || [];
+
+    if (!allowedTransitions.includes(newStatus)) {
+      const validOptions = allowedTransitions.join(', ');
+      throw new Error(`Invalid status transition from '${currentStatus}' to '${newStatus}'. Valid transitions from '${currentStatus}': ${validOptions}`);
+    }
   }
 
   /**
@@ -211,13 +242,16 @@ export class TicketService {
    */
   async updateCRStatus(project: any, crId: string, status: string): Promise<void> {
     const cr = await this.getCR(project, crId);
-    if (!cr.path) {
+    if (!cr.filePath) {
       throw new Error('CR file not found');
     }
 
-    let content = fs.readFileSync(cr.path, 'utf-8');
+    // Validate status transition
+    this.validateStatusTransition(cr.status, status);
+
+    let content = fs.readFileSync(cr.filePath, 'utf-8');
     content = content.replace(/status:\s*\S+/, `status: ${status}`);
-    fs.writeFileSync(cr.path, content, 'utf-8');
+    fs.writeFileSync(cr.filePath, content, 'utf-8');
   }
 
   /**
@@ -225,11 +259,11 @@ export class TicketService {
    */
   async updateCRAttrs(project: any, crId: string, updates: Partial<Ticket>): Promise<void> {
     const cr = await this.getCR(project, crId);
-    if (!cr.path) {
+    if (!cr.filePath) {
       throw new Error('CR file not found');
     }
 
-    let content = fs.readFileSync(cr.path, 'utf-8');
+    let content = fs.readFileSync(cr.filePath, 'utf-8');
     const yamlMatch = content.match(/^---\n([\s\S]*?)\n---/);
     if (!yamlMatch) {
       throw new Error('Invalid CR format');
@@ -239,7 +273,7 @@ export class TicketService {
 
     // Update each attribute
     for (const [key, value] of Object.entries(updates)) {
-      if (value === undefined || key === 'code' || key === 'filename' || key === 'path') {
+      if (value === undefined || key === 'code' || key === 'filename' || key === 'filePath') {
         continue;
       }
 
@@ -262,7 +296,7 @@ export class TicketService {
     }
 
     content = content.replace(/^---\n[\s\S]*?\n---/, `---\n${yaml}\n---`);
-    fs.writeFileSync(cr.path, content, 'utf-8');
+    fs.writeFileSync(cr.filePath, content, 'utf-8');
   }
 
   /**
@@ -272,10 +306,18 @@ export class TicketService {
     const crPath = await this.getCRPath(project);
     const crDir = path.join(crPath, crId);
 
-    if (!fs.existsSync(crDir)) {
-      throw new Error('CR not found');
+    if (fs.existsSync(crDir)) {
+      // Subdirectory pattern: docs/CRs/API-001/
+      fs.rmSync(crDir, { recursive: true, force: true });
+    } else {
+      // Flat file pattern: docs/CRs/API-001-title.md
+      const files = fs.readdirSync(crPath).filter(f => f.startsWith(crId) && f.endsWith('.md'));
+      if (files.length === 0) {
+        throw new Error('CR not found');
+      }
+      for (const file of files) {
+        fs.unlinkSync(path.join(crPath, file));
+      }
     }
-
-    fs.rmSync(crDir, { recursive: true, force: true });
   }
 }

@@ -287,7 +287,7 @@ export class ProjectController {
       console.log(`🗂️ Filesystem API called for project: ${projectId}`);
 
       if (!projectId) {
-        res.status(400).json({ error: 'Project ID is required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' });
         return;
       }
 
@@ -364,7 +364,7 @@ export class ProjectController {
     try {
       const { projectId } = req.params;
       if (!projectId) {
-        res.status(400).json({ error: 'Project ID is required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' });
         return;
       }
 
@@ -374,7 +374,7 @@ export class ProjectController {
       const project = projects.find(p => p.id === projectId);
 
       if (!project) {
-        res.status(404).json({ error: 'Project not found' });
+        res.status(404).json({ error: 'Not Found', message: 'Project not found' });
         return;
       }
 
@@ -382,7 +382,7 @@ export class ProjectController {
       res.json(crs);
     } catch (error: any) {
       console.error('Error getting project CRs:', error);
-      res.status(500).json({ error: 'Failed to get project CRs' });
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get project CRs' });
     }
   }
 
@@ -391,7 +391,7 @@ export class ProjectController {
       const { projectId, crId } = req.params;
 
       if (!projectId || !crId) {
-        res.status(400).json({ error: 'Project ID and CR ID are required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' });
         return;
       }
 
@@ -414,11 +414,11 @@ export class ProjectController {
       console.error('Error getting CR:', error);
 
       if (error.message === 'Project not found' || error.message === 'CR not found') {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ error: 'Not Found', message: error.message });
         return;
       }
 
-      res.status(500).json({ error: 'Failed to get CR', details: error.message });
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get CR', details: error.message });
     }
   }
 
@@ -428,7 +428,7 @@ export class ProjectController {
       const crData = req.body;
 
       if (!projectId) {
-        res.status(400).json({ error: 'Project ID is required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' });
         return;
       }
 
@@ -442,7 +442,18 @@ export class ProjectController {
       res.status(501).json({ error: 'Ticket service not available for creating CR' });
     } catch (error: any) {
       console.error('Error creating CR:', error);
-      res.status(500).json({ error: 'Failed to create CR', details: error.message });
+
+      if (error.message === 'Project not found') {
+        res.status(404).json({ error: 'Not Found', message: error.message });
+        return;
+      }
+
+      if (error.message.includes('required')) {
+        res.status(400).json({ error: 'Bad Request', message: error.message });
+        return;
+      }
+
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to create CR', details: error.message });
     }
   }
 
@@ -452,12 +463,12 @@ export class ProjectController {
       const updates = req.body;
 
       if (!projectId || !crId) {
-        res.status(400).json({ error: 'Project ID and CR ID are required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' });
         return;
       }
 
       if (!updates || Object.keys(updates).length === 0) {
-        res.status(400).json({ error: 'No update data provided' });
+        res.status(400).json({ error: 'Bad Request', message: 'No update data provided' });
         return;
       }
 
@@ -481,27 +492,27 @@ export class ProjectController {
 
       // Handle validation errors with appropriate status codes
       if (error.message.includes('Invalid status transition')) {
-        res.status(400).json({ error: 'Invalid status transition', details: error.message });
+        res.status(400).json({ error: 'Bad Request', message: error.message });
         return;
       }
 
       if (error.message === 'Project not found' || error.message === 'CR not found' || error.message.includes('not found')) {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ error: 'Not Found', message: error.message });
         return;
       }
 
       if (error.message.includes('No fields provided') || error.message.includes('required') || error.message.includes('Invalid')) {
-        res.status(400).json({ error: error.message });
+        res.status(400).json({ error: 'Bad Request', message: error.message });
         return;
       }
 
       if (error.message.includes('Permission denied')) {
-        res.status(403).json({ error: 'Permission denied', details: error.message });
+        res.status(403).json({ error: 'Forbidden', message: error.message });
         return;
       }
 
       // Generic errors
-      res.status(500).json({ error: 'Failed to update CR', details: error.message });
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update CR', details: error.message });
     }
   }
 
@@ -511,7 +522,7 @@ export class ProjectController {
       const crData = req.body;
 
       if (!projectId || !crId) {
-        res.status(400).json({ error: 'Project ID and CR ID are required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' });
         return;
       }
 
@@ -525,7 +536,13 @@ export class ProjectController {
       res.status(501).json({ error: 'Ticket service not available for updating CR' });
     } catch (error: any) {
       console.error('Error updating CR:', error);
-      res.status(500).json({ error: 'Failed to update CR', details: error.message });
+
+      if (error.message === 'Project not found' || error.message === 'CR not found') {
+        res.status(404).json({ error: 'Not Found', message: error.message });
+        return;
+      }
+
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update CR', details: error.message });
     }
   }
 
@@ -534,7 +551,7 @@ export class ProjectController {
       const { projectId, crId } = req.params;
 
       if (!projectId || !crId) {
-        res.status(400).json({ error: 'Project ID and CR ID are required' });
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' });
         return;
       }
 
@@ -548,7 +565,13 @@ export class ProjectController {
       res.status(501).json({ error: 'Ticket service not available for deleting CR' });
     } catch (error: any) {
       console.error('Error deleting CR:', error);
-      res.status(500).json({ error: 'Failed to delete CR', details: error.message });
+
+      if (error.message === 'Project not found' || error.message === 'CR not found') {
+        res.status(404).json({ error: 'Not Found', message: error.message });
+        return;
+      }
+
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to delete CR', details: error.message });
     }
   }
 }

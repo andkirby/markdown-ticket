@@ -44,14 +44,16 @@
     "build": "tsc --project tsconfig.json",
     "build:tools": "tsc --project tsconfig.json",
     "clean": "rm -rf dist",
-    "test": "rm -rf dist && jest",
+    "pretest": "npm run build",
+    "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "fs-extra": "^11.2.0",
     "smol-toml": "^1.5.2",
-    "toml": "^3.0.0"
+    "toml": "^3.0.0",
+    "tree-kill": "^1.2.2"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

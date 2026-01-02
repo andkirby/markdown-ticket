@@ -12,7 +12,7 @@
     "build:watch": "tsc --watch",
     "create-samples": "tsx createSampleTickets.ts",
     "test": "jest",
-    "test:watch": "jest --watch",
+    "test:watch": "jest --watchAll",
     "test:coverage": "jest --coverage",
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
