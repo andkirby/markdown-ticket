@@ -1,4 +1,4 @@
-# MDT Implementation Orchestrator (v5)
+# MDT Implementation Orchestrator (v6)
 
 Execute tasks from a task list with constraint verification after each task.
 
@@ -19,6 +19,7 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 | Command | Behavior |
 |---------|----------|
 | `/mdt:implement {CR-KEY}` | Interactive — auto-detect phase or prompt |
+| `/mdt:implement {CR-KEY} --prep` | Execute prep (refactoring) tasks |
 | `/mdt:implement {CR-KEY} --phase {X.Y}` | Target specific phase |
 | `/mdt:implement {CR-KEY} --all` | Run all tasks, pause at phase boundaries |
 | `/mdt:implement {CR-KEY} --continue` | Resume from last incomplete |
@@ -28,7 +29,21 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 
 ### Step 1: Load Context and Discover Phase
 
-**1a. Discover phase context:**
+**1a. Check for prep mode:**
+
+```bash
+# If --prep flag in arguments
+if [[ "$ARGUMENTS" == *"--prep"* ]]; then
+  mode="prep"
+  tasks_file="{TICKETS_PATH}/{CR-KEY}/prep/tasks.md"
+  tests_file="{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
+  # Prep mode: tests should STAY GREEN (behavior preservation)
+  test_expectation="GREEN"
+  # Skip phase discovery
+fi
+```
+
+**1b. Discover phase context (if not prep mode):**
 
 ```bash
 # Check for phase-specific tasks
@@ -46,31 +61,60 @@ if [ -n "$phase_tasks" ]; then
 fi
 ```
 
-**1b. Determine phase:**
+**1c. Determine phase:**
 
 | Scenario | Behavior |
 |----------|----------|
+| `--prep` flag provided | Use prep mode |
 | `--phase 1.1` flag provided | Use specified phase |
 | Single `phase-*/tasks.md` exists | Use that phase automatically |
 | Multiple `phase-*/tasks.md` exist | Prompt for selection |
+| `prep/tasks.md` exists (no flags) | Check prep completion, prompt if unclear |
 | No phase folders, `tasks.md` at root | Non-phased mode |
 
-```markdown
-# If multiple phases exist:
-Found phases:
-  - phase-1.1/tasks.md (0/5 complete)
-  - phase-1.2/tasks.md (0/8 complete)
+```bash
+# If prep/tasks.md exists, check completion status
+if [ -f "{TICKETS_PATH}/{CR-KEY}/prep/tasks.md" ]; then
+  # Read first 20 lines for checkbox status
+  head -n 20 "{TICKETS_PATH}/{CR-KEY}/prep/tasks.md" | grep -q "^\- \[ \]"
+  prep_incomplete=$?
 
-Which phase to implement? [1.1]: _
+  if [ $prep_incomplete -eq 0 ]; then
+    # Unchecked tasks found → prep incomplete
+    mode="prep"
+  else
+    # All checked or unclear → prompt user
+    echo "Prep tasks found. Check completion status and prompt if needed"
+  fi
+fi
 ```
 
-**1c. Set paths:**
+```markdown
+# If prep exists but status unclear:
+Found both prep and phase tasks:
+  - prep/tasks.md (incomplete)
+  - phase-1/tasks.md (0/5 complete)
+
+Prep refactoring appears incomplete. Continue prep or proceed to feature work?
+  [1] Continue prep (recommended)
+  [2] Proceed to feature mode
+Choice [1]: _
+```
+
+**1d. Set paths:**
 
 ```yaml
+# Prep mode
+mode: "prep"
+tasks_file: "{TICKETS_PATH}/{CR-KEY}/prep/tasks.md"
+tests_file: "{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
+test_expectation: "GREEN"  # Behavior preservation
+
 # Phased
 phase: "1.1"
 tasks_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tasks.md"
 tests_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tests.md"
+test_expectation: "RED"  # TDD - tests start RED
 
 # Non-phased (backward compatible)
 phase: null
@@ -78,7 +122,7 @@ tasks_file: "{TICKETS_PATH}/{CR-KEY}/tasks.md"
 tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
 ```
 
-**1d. Load tasks.md:**
+**1e. Load tasks.md:**
 
 Extract from header:
 - **Project Context** (source_dir, test_command, ext)
@@ -86,20 +130,20 @@ Extract from header:
 - **Shared Patterns** (what should be imported)
 - **Test Coverage** table (test→task mapping)
 
-**1e. Load tests.md (if exists):**
+**1f. Load tests.md (if exists):**
 
 - Extract test file locations
 - Extract requirement→test mapping
 - Enable TDD verification mode
 
-**1f. Load CR for Architecture Design:**
+**1g. Load CR for Architecture Design:**
 ```
 mdt-all:get_cr mode="full"
 ```
 
 If phased, extract only the relevant phase section.
 
-**1g. Find first incomplete task:**
+**1h. Find first incomplete task:**
 
 ```bash
 # Find first unchecked task
@@ -199,7 +243,10 @@ After each task, verify **before** marking complete:
 
 ```bash
 {test_command} --testPathPattern="phase-{X.Y}"
+# Or for prep: --testPathPattern="prep"
 ```
+
+**For feature/phase mode** (test_expectation = RED):
 
 | Pre-Task | Post-Task | Verdict |
 |----------|-----------|---------|  
@@ -207,6 +254,15 @@ After each task, verify **before** marking complete:
 | RED | RED | ⛔ Implementation incomplete |
 | GREEN | GREEN | ⚠️ Tests were already passing |
 | GREEN | RED | ⛔ REGRESSION |
+
+**For prep mode** (test_expectation = GREEN, behavior preservation):
+
+| Pre-Task | Post-Task | Verdict |
+|----------|-----------|---------|  
+| GREEN | GREEN | ✅ Behavior preserved |
+| GREEN | RED | ⛔ REGRESSION — behavior broken |
+| RED | GREEN | ⚠️ Unexpected — test was already failing |
+| RED | RED | ⚠️ Test still failing |
 
 **TDD Failure Handling**:
 
@@ -298,7 +354,47 @@ Only after verification:
    - `🔴 RED` → `✅ GREEN` for completed tests
 4. Report result
 
-### Step 6: Phase Completion
+### Step 6: Prep/Phase Completion
+
+**For prep mode completion:**
+
+```markdown
+═══════════════════════════════════════════
+✓ Prep Complete: {CR-KEY}
+═══════════════════════════════════════════
+
+**Mode**: Preparatory Refactoring
+**Tasks completed**: {N}/{N}
+
+### Behavior Preservation
+| Test File | Before | After |
+|-----------|--------|-------|
+| existing.test.ts | 12 GREEN | 12 GREEN |
+| integration.test.ts | 8 GREEN | 8 GREEN |
+
+**Regressions**: 0 ✅
+
+### Size Summary (Refactored Files)
+| File | Before | After | Target | Status |
+|------|--------|-------|--------|---------|
+| god-class.ts | 450 | 120 | 150 | ✅ OK |
+| new-service.ts | — | 95 | 100 | ✅ OK |
+
+═══════════════════════════════════════════
+
+### Codebase Restructured — Ready for Feature Design
+
+The refactoring is complete. Now design the feature against the NEW code structure.
+
+**Next Steps**:
+1. `/mdt:architecture {CR-KEY}` — design feature against restructured code
+2. `/mdt:tests {CR-KEY} --phase 1` — generate feature tests
+3. Continue normal workflow...
+
+Next: `/mdt:architecture {CR-KEY}`
+```
+
+**For phase mode completion:**
 
 At end of phase:
 
@@ -430,8 +526,8 @@ Implementation Complete: {CR-KEY}
 
 ## Behavioral Rules
 
-1. **Phase isolation** — each phase has its own tasks.md and tests.md
-2. **TDD verification** — if tests.md exists, verify RED→GREEN
+1. **Phase isolation** — each phase/prep has its own tasks.md and tests.md
+2. **TDD verification** — feature: RED→GREEN; prep: GREEN→GREEN
 3. **Three zones**: OK (≤default), FLAG (≤1.5x), STOP (>1.5x)
 4. **FLAG completes task** — warning recorded
 5. **STOP blocks task** — must resolve
@@ -456,13 +552,14 @@ Implementation Complete: {CR-KEY}
 **Folder Structure**:
 ```
 {TICKETS_PATH}/{CR-KEY}/
-├── architecture.md          # All phases
-├── phase-1.1/
-│   ├── tests.md            # Phase 1.1 tests
-│   └── tasks.md            # Phase 1.1 tasks
-├── phase-1.2/
-│   ├── tests.md
-│   └── tasks.md
+├── architecture.md          # Feature design (after prep)
+├── prep/                    # Preparatory refactoring
+│   ├── architecture.md     # Refactoring design
+│   ├── tests.md            # Behavior preservation tests
+│   └── tasks.md            # Refactoring tasks
+├── phase-1/                 # Feature phase 1
+│   ├── tests.md            # Feature tests (RED → GREEN)
+│   └── tasks.md            # Feature tasks
 └── phase-2/
     ├── tests.md
     └── tasks.md

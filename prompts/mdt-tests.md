@@ -1,4 +1,4 @@
-# MDT Test Specification Workflow (v2)
+# MDT Test Specification Workflow (v3)
 
 Generate BDD test specifications and executable test files from requirements or behavioral assessment.
 
@@ -16,14 +16,16 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 
 ## Output Location
 
+- **Prep mode** (`--prep`): `{TICKETS_PATH}/{CR-KEY}/prep/tests.md`
 - **Phased CR**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tests.md`
 - **Non-phased CR**: `{TICKETS_PATH}/{CR-KEY}/tests.md`
 - **Test files**: Project's test directory (detected from config)
 
 ## Mode Detection
 
-| CR Type | Input Source | Test Strategy |
-|---------|--------------|---------------|
+| Mode | Input Source | Test Strategy |
+|------|--------------|---------------|
+| **Prep** (`--prep`) | existing code | Behavior preservation — lock before refactoring |
 | Feature | requirements.md | Behavior specification — test what SHOULD happen |
 | Refactoring | assess output + existing code | Behavior preservation — test what CURRENTLY happens |
 | Tech Debt | assess output + existing code | Behavior preservation — lock before changing |
@@ -35,6 +37,7 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 3. **BDD format** — Given/When/Then scenarios derived from EARS specs
 4. **Traceability** — Every test traces to requirement or behavior
 5. **Phase isolation** — Each phase gets its own tests.md in phase folder
+6. **Prep tests must pass** — Prep mode locks current behavior (tests should be GREEN)
 
 ## Execution Steps
 
@@ -45,7 +48,21 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 mdt-all:get_cr mode="full"
 ```
 
-**1b. Detect phases in architecture:**
+**1b. Check for prep mode:**
+
+```bash
+# If --prep flag in arguments
+if [[ "$ARGUMENTS" == *"--prep"* ]]; then
+  mode="prep"
+  output_dir="{TICKETS_PATH}/{CR-KEY}/prep/"
+  tests_file="{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
+  # Prep tests lock current behavior — should be GREEN
+  test_expectation="GREEN"
+  # Skip phase detection
+fi
+```
+
+**1c. Detect phases in architecture (if not prep mode):**
 
 ```bash
 # Check for architecture.md
@@ -58,7 +75,7 @@ if [ -f "$arch_file" ]; then
 fi
 ```
 
-**1c. If phases detected — prompt for selection:**
+**1d. If phases detected — prompt for selection:**
 
 ```markdown
 Detected phases in architecture.md:
@@ -543,6 +560,21 @@ describe('getUser - behavioral preservation', () => {
 
 ## Phase Detection Examples
 
+### Example 0: Prep Mode
+
+User runs: `/mdt:tests MDT-101 --prep`
+
+Output:
+```
+Prep mode activated.
+Analyzing files targeted for refactoring...
+Generating behavior preservation tests...
+
+Output: {TICKETS_PATH}/MDT-101/prep/tests.md
+
+✔ Tests should pass against CURRENT code (locking behavior)
+```
+
 ### Example 1: Phased Architecture CR
 
 ```markdown
@@ -623,14 +655,14 @@ Output: {TICKETS_PATH}/MDT-101/phase-1.2/tests.md
 
 Before completing `/mdt:tests`:
 
-- [ ] Phase correctly detected (or non-phased fallback)
-- [ ] Mode correctly detected (feature vs refactoring)
+- [ ] Mode correctly detected (prep / feature / refactoring)
+- [ ] Phase correctly detected (or non-phased / prep fallback)
 - [ ] Test framework detected from project config
 - [ ] All requirements/behaviors have test coverage
 - [ ] BDD scenarios in Gherkin format
 - [ ] Executable test files generated
-- [ ] Tests verified as RED
-- [ ] tests.md saved to correct phase folder
+- [ ] Tests verified as correct state (RED for feature, GREEN for prep/refactoring)
+- [ ] tests.md saved to correct folder (`prep/` or `phase-{X.Y}/` or root)
 - [ ] Requirement mapping prepared for `/mdt:tasks`
 
 Context: $ARGUMENTS

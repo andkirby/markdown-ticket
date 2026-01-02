@@ -1,4 +1,4 @@
-# MDT Task Breakdown Workflow (v5)
+# MDT Task Breakdown Workflow (v6)
 
 Generate a task list from a CR ticket for phased, reviewable implementation.
 
@@ -16,6 +16,7 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 
 ## Output Location
 
+- **Prep mode** (`--prep`): `{TICKETS_PATH}/{CR-KEY}/prep/tasks.md`
 - **Phased CR**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tasks.md`
 - **Non-phased CR**: `{TICKETS_PATH}/{CR-KEY}/tasks.md`
 
@@ -26,6 +27,7 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 3. **Exclusions prevent bloat** — explicitly state what NOT to move
 4. **Anti-duplication** — import from shared, never copy
 5. **Co-locate with tests** — tasks.md goes in same folder as tests.md
+6. **Prep reads prep architecture** — `--prep` reads from `prep/architecture.md`
 
 ## Execution Steps
 
@@ -48,7 +50,20 @@ project:
 mdt-all:get_cr mode="full"
 ```
 
-**2b. Discover phase context:**
+**2b. Check for prep mode:**
+
+```bash
+# If --prep flag in arguments
+if [[ "$ARGUMENTS" == *"--prep"* ]]; then
+  mode="prep"
+  arch_file="{TICKETS_PATH}/{CR-KEY}/prep/architecture.md"
+  tests_file="{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
+  output_file="{TICKETS_PATH}/{CR-KEY}/prep/tasks.md"
+  # Skip phase discovery
+fi
+```
+
+**2c. Discover phase context (if not prep mode):**
 
 ```bash
 # Check for phase-specific tests first (co-location pattern)
@@ -64,13 +79,15 @@ if [ -n "$phase_tests" ]; then
 fi
 ```
 
-**2c. Determine phase and output path:**
+**2d. Determine phase and output path:**
 
 | Scenario | Behavior |
 |----------|----------|
+| `--prep` flag provided | Use prep mode |
 | `--phase 1.1` flag provided | Use specified phase |
 | Single `phase-*/tests.md` exists | Use that phase automatically |
 | Multiple `phase-*/tests.md` exist | Prompt for selection |
+| `prep/tests.md` exists (no phase flag) | Prompt: prep or phase? |
 | No phase folders exist | Non-phased mode (backward compatible) |
 
 ```markdown
@@ -82,11 +99,18 @@ Found phases with tests:
 Which phase to generate tasks for? [1.1]: _
 ```
 
-**2d. Set paths:**
+**2e. Set paths:**
 
 ```yaml
+# Prep mode
+mode: "prep"
+arch_file: "{TICKETS_PATH}/{CR-KEY}/prep/architecture.md"
+tests_file: "{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
+output_file: "{TICKETS_PATH}/{CR-KEY}/prep/tasks.md"
+
 # Phased
 phase: "1.1"
+arch_file: "{TICKETS_PATH}/{CR-KEY}/architecture.md"  # Shared for all phases
 tests_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tests.md"
 output_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tasks.md"
 
@@ -96,9 +120,14 @@ tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
 output_file: "{TICKETS_PATH}/{CR-KEY}/tasks.md"
 ```
 
-**2e. Load phase-specific architecture:**
+**2f. Load architecture:**
 
-If phased, extract from `architecture.md`:
+**If prep mode**: Load from `prep/architecture.md`
+- Full prep architecture (not phase-specific)
+- Refactoring targets and size limits
+- Behavior preservation requirements
+
+**If phased**: Extract from root `architecture.md`:
 - Only the selected phase section
 - Phase-specific Structure
 - Phase-specific Size Guidance
@@ -131,8 +160,9 @@ if [ -f "$tests_file" ]; then
 fi
 ```
 
-**2g. Validate prerequisites:**
+**2h. Validate prerequisites:**
 
+- If prep mode but no `prep/architecture.md`: abort with "Run `/mdt:architecture {CR-KEY} --prep` first"
 - If Architecture Design missing: abort with "Run `/mdt:architecture` first"
 - If phase specified but no phase section in architecture: abort with "Phase {X.Y} not found in architecture.md"
 
