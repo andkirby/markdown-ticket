@@ -2,11 +2,11 @@
 allowed-tools: Read, Glob, Grep, mcp__mdt-all__get_cr, mcp__mdt-all__get_project_info, mcp__mdt-all__list_crs, mcp__mdt-all__list_projects, mcp__mdt-all__manage_cr_sections, mcp__mdt-all__suggest_cr_improvements, mcp__mdt-all__update_cr_attrs, mcp__mdt-all__update_cr_status
 ---
 
-# MDT Domain Audit (v1)
+# MDT Domain Audit (v2)
 
-Analyze existing code for DDD violations. Output is a diagnostic report with severity and fix direction — not prescriptions.
+Analyze existing code for DDD violations AND structural issues. Output is a diagnostic report with severity and fix direction — not prescriptions.
 
-**Core Principle**: Surface domain modeling problems that create maintenance burden, coupling, and inconsistency.
+**Core Principle**: Surface domain modeling problems AND structural cohesion issues that create maintenance burden, coupling, and inconsistency.
 
 ## User Input
 
@@ -29,7 +29,7 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 
 Creates `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` (with CR) or `docs/audits/domain-audit-{timestamp}.md` (standalone)
 
-Target size: 30-50 lines
+Target size: 40-60 lines
 
 ## When to Use
 
@@ -39,10 +39,14 @@ Target size: 30-50 lines
 | Before major refactoring | ✅ Yes |
 | Code feels coupled/rigid | ✅ Yes |
 | Validation scattered everywhere | ✅ Yes |
+| Related code scattered across directories | ✅ Yes |
+| Suspect layer violations | ✅ Yes |
 | New feature, clean slate | ❌ Use `/mdt:domain-lens` instead |
 | Simple CRUD with no domain logic | ❌ Skip |
 
 ## What This Detects
+
+### DDD Violations
 
 | Violation | Signal | Severity |
 |-----------|--------|----------|
@@ -56,6 +60,16 @@ Target size: 30-50 lines
 | Language drift | Code terms ≠ ubiquitous language | Low |
 | God service | Single service doing everything | High |
 | Feature envy | Service knows too much about entity internals | Medium |
+
+### Structural Issues
+
+| Issue | Signal | Severity |
+|-------|--------|----------|
+| Layer violation | Presentation in utils, domain in infrastructure | High |
+| Scattered cohesion | Related concepts spread across directories | High |
+| Mixed responsibility | Single file with multiple unrelated concerns | Medium |
+| Dependency direction | Utils depending on handlers, cycles | High |
+| Orphan utilities | Helpers that belong with their consumers | Medium |
 
 ## What This Is NOT
 
@@ -99,7 +113,32 @@ Repositories: (implicit in services)
 Events: (none detected)
 ```
 
-### Step 3: Detect Violations
+### Step 2.5: Build Dependency Graph
+
+Parse imports/requires to build dependency relationships:
+
+1. For each file in scope, extract imports
+2. Build directed graph: `A imports B` → `A → B`
+3. Identify:
+   - Inbound dependencies (who depends on this?)
+   - Outbound dependencies (what does this depend on?)
+   - Cycles (A → B → C → A)
+   - Layer crossings (utils → handlers, domain → infrastructure)
+
+**Output** (internal, for analysis):
+```
+ModifyOperation.ts
+  → CRFileReader (utils/)
+  → SectionResolver (utils/)
+  → ValidationFormatter (utils/) ← contains presentation
+  → CRService (services/)
+  
+ValidationFormatter.ts
+  → SectionMatch (shared/)
+  → Sanitizer (utils/)
+```
+
+### Step 3: Detect DDD Violations
 
 #### 3.1 Anemic Domain Model
 
@@ -242,7 +281,161 @@ Accesses: project.name, project.code, project.config, project.registry (4 fields
 Suggestion: Move to Project.getStats()
 ```
 
-### Step 4: Assess Severity
+### Step 4: Detect Structural Issues
+
+#### 4.1 Layer Violation
+
+**Detection**:
+- Identify file's layer from location:
+  - `handlers/`, `controllers/`, `routes/` → Presentation/Interface
+  - `services/`, `domain/` → Domain/Business Logic
+  - `utils/`, `shared/`, `common/` → Infrastructure/Utilities
+  - `repositories/`, `data/` → Data Access
+- Check if content matches expected layer:
+  - Presentation: HTTP handling, CLI output, formatted responses
+  - Domain: Business rules, entities, value objects
+  - Utils: Generic helpers, no domain or presentation specifics
+
+**Signals of violation**:
+- Utils file returns formatted markdown/HTML/CLI output
+- Utils file imports from handlers/controllers
+- Domain file imports presentation libraries
+- Repository contains business rules
+
+**Evidence format**:
+```
+File: utils/section/ValidationFormatter.ts
+Location layer: Utils/Infrastructure
+Contains: formatModifyOutput() — tool-specific markdown with emoji ✅
+Actual layer: Presentation
+Fix direction: Move to handlers/sections/SectionPresenter.ts
+```
+
+#### 4.2 Scattered Cohesion
+
+**Detection**:
+- Find files with related names/concepts
+- Check if they're co-located or scattered
+- Look for:
+  - Same prefix/suffix in different directories
+  - Files that always change together (conceptually)
+  - Imports that form a cluster
+
+**Signals**:
+- `utils/section/CRFileReader.ts` + `utils/section/SectionResolver.ts` + `handlers/operations/ModifyOperation.ts` — all about sections but scattered
+- Files with same domain concept in 3+ different directories
+
+**Evidence format**:
+```
+Concept: Section manipulation
+Scattered across:
+  - utils/section/CRFileReader.ts
+  - utils/section/SectionResolver.ts
+  - utils/section/ValidationFormatter.ts
+  - utils/simpleSectionValidator.ts
+  - utils/simpleContentProcessor.ts
+  - handlers/operations/ModifyOperation.ts
+Count: 6 files in 3 directories
+Fix direction: Consolidate to handlers/sections/
+```
+
+#### 4.3 Mixed Responsibility
+
+**Detection**:
+- Single file with multiple unrelated method groups
+- Methods that don't call each other
+- Class doing orchestration AND business logic AND formatting
+
+**Signals**:
+- File > 200 lines with distinct "sections" of functionality
+- Constructor with 5+ dependencies of different types
+- Methods grouped by concern that don't interact
+
+**Evidence format**:
+```
+File: ModifyOperation.ts (219 lines)
+Responsibilities detected:
+  1. Orchestration — coordinate read/validate/write flow
+  2. Business logic — header rename detection (lines 95-130)
+  3. Content processing — coordinate sanitization
+Count: 3 distinct responsibilities
+Fix direction: Extract HeaderRenamer utility, keep orchestration only
+```
+
+#### 4.4 Dependency Direction
+
+**Detection**:
+- Parse import graph from Step 2.5
+- Check for violations:
+  - Cycles: A → B → C → A
+  - Upward dependencies: utils → handlers, infrastructure → domain
+  - Skip violations: lower layer reaching up
+
+**Layer order** (lower should not import higher):
+```
+1. Presentation (handlers, controllers, CLI)
+2. Application (use cases, orchestration)
+3. Domain (entities, services, value objects)
+4. Infrastructure (utils, repositories, external)
+```
+
+**Evidence format**:
+```
+Cycle detected:
+  ServiceA.ts → ServiceB.ts → ServiceC.ts → ServiceA.ts
+
+Direction violation:
+  utils/ValidationFormatter.ts imports types from handlers/
+  Expected: handlers import from utils, not reverse
+  
+Severity: High (cycles), Medium (direction)
+```
+
+#### 4.5 Orphan Utilities
+
+**Detection**:
+- Utils that are only used by one consumer
+- Helpers that contain domain-specific logic
+- Files in `utils/` that belong with their single consumer
+
+**Signals**:
+- `utils/section/*` only imported by `handlers/sections/*`
+- Utility with domain-specific naming (e.g., `CRFileReader`)
+
+**Evidence format**:
+```
+Orphan: utils/section/CRFileReader.ts
+Used by: Only handlers/operations/ModifyOperation.ts (and related)
+Contains: CR-specific file reading logic
+Fix direction: Move to handlers/sections/ with its consumers
+```
+
+### Step 5: Extract Domain Concept
+
+After analyzing violations and structure, synthesize:
+
+1. **Core Domain**: What is this code fundamentally about?
+2. **Operations**: What actions can be performed?
+3. **Current State**: How cohesive is the current structure?
+4. **Natural Grouping**: What should live together?
+
+**Output format**:
+```markdown
+## Domain Concept
+
+**Core Domain**: Section Manipulation
+**Operations**: find, read, modify (replace/append/prepend), format output
+**Current State**: Scattered (6 files, 3 directories)
+**Natural Grouping**:
+```
+handlers/sections/
+├── SectionService.ts      # Core: find, read, modify
+├── SectionPresenter.ts    # Format tool output  
+└── models.ts              # SectionMatch, ModifyResult
+```
+```
+
+### Step 6: Assess Severity
 
 | Severity | Criteria | Action |
 |----------|----------|--------|
@@ -250,7 +443,7 @@ Suggestion: Move to Project.getStats()
 | **Medium** | Maintenance burden, code smell, friction | Fix in next refactoring cycle |
 | **Low** | Inconsistency, minor friction | Fix opportunistically |
 
-### Step 5: Generate Report
+### Step 7: Generate Report
 
 ```markdown
 # Domain Audit: {CR-KEY or path}
@@ -260,50 +453,68 @@ Suggestion: Move to Project.getStats()
 
 ## Summary
 
-| Severity | Count |
-|----------|-------|
-| 🔴 High | {N} |
-| 🟡 Medium | {N} |
-| 🟢 Low | {N} |
+| Category | 🔴 High | 🟡 Medium | 🟢 Low |
+|----------|---------|-----------|--------|
+| DDD Violations | {N} | {N} | {N} |
+| Structural Issues | {N} | {N} | {N} |
 
-## Violations
+## DDD Violations
 
 ### 🔴 High Severity
 
-#### Anemic Domain Model
-- **Entity**: `Project.ts` (50 lines) — data only
-- **Service**: `ProjectService.ts` (497 lines) — all logic
-- **Ratio**: 10:1 (threshold: 3:1)
-- **Fix direction**: Move validation, state transitions, invariants into `Project`
-
-#### {Next high severity violation}
-...
+#### {Violation Type}
+- **Evidence**: {specific file:line references}
+- **Impact**: {why this matters}
+- **Fix direction**: {what to do, not how}
 
 ### 🟡 Medium Severity
-
-#### Missing Value Objects
-- **Field**: `code: string` in `Project.ts`
-- **Validation**: Found in 3 locations
-- **Fix direction**: Extract `ProjectCode` value object with validation
-
-#### {Next medium severity violation}
 ...
 
 ### 🟢 Low Severity
+...
 
-#### Language Drift
-- **Domain**: "Three-Strategy Configuration"
-- **Code**: `ConfigurationStrategyService`
-- **Fix direction**: Align naming or document mapping
+## Structural Issues
 
-## Domain Map (Current)
+### 🔴 High Severity
 
-| Element | Type | Lines | Notes |
-|---------|------|-------|-------|
-| `Project` | Entity | 50 | Anemic |
-| `ProjectService` | Service | 497 | God service |
-| `ProjectValidator` | Service | 150 | Validation logic |
-| `ProjectConfig` | Internal | 30 | Boundary leak risk |
+#### Layer Violation
+- **File**: `{path}`
+- **Location layer**: {where it lives}
+- **Actual layer**: {what it contains}
+- **Fix direction**: Move to {appropriate location}
+
+#### Scattered Cohesion
+- **Concept**: {what's scattered}
+- **Scattered across**: {list of locations}
+- **Fix direction**: Consolidate to {single location}
+
+### 🟡 Medium Severity
+
+#### Mixed Responsibility
+- **File**: `{path}` ({N} lines)
+- **Responsibilities**: {list}
+- **Fix direction**: Extract {what} to {where}
+
+## Dependency Analysis
+
+```
+{Primary file}
+  ├── {dependency} ({location})
+  ├── {dependency} ({location}) ← {issue if any}
+  └── {dependency} ({location})
+```
+
+{Note any cycles or direction violations}
+
+## Domain Concept
+
+**Core Domain**: {what this code is about}
+**Operations**: {what can be done}
+**Current State**: {Scattered / Partially cohesive / Cohesive}
+**Natural Grouping**:
+```
+{suggested structure}
+```
 
 ## Recommendations
 
@@ -315,15 +526,14 @@ Suggestion: Move to Project.getStats()
 
 To fix violations:
 1. Create refactoring CR from this audit
-2. Run `/mdt:domain-lens {NEW-CR}` for target domain model
-3. Use `/mdt:architecture` to plan structural changes
-4. Execute via `/mdt:tasks` → `/mdt:implement`
+2. Run `/mdt:architecture {CR-KEY} --prep` to design the fix
+3. Execute via `/mdt:tasks` → `/mdt:implement`
 
 ---
-*Generated by /mdt:domain-audit*
+*Generated by /mdt:domain-audit v2*
 ```
 
-### Step 6: Save Report
+### Step 8: Save Report
 
 **With CR**:
 1. Save to `{TICKETS_PATH}/{CR-KEY}/domain-audit.md`
@@ -333,7 +543,7 @@ To fix violations:
 1. Create `docs/audits/` directory if needed
 2. Save to `docs/audits/domain-audit-{YYYY-MM-DD-HHMMSS}.md`
 
-### Step 7: Report Completion
+### Step 9: Report Completion
 
 ```markdown
 ## Domain Audit Complete
@@ -341,29 +551,142 @@ To fix violations:
 **Scope**: {CR-KEY or paths}
 **Output**: `{output path}`
 
-### Violation Summary
-| Severity | Count |
-|----------|-------|
-| 🔴 High | {N} |
-| 🟡 Medium | {N} |
-| 🟢 Low | {N} |
+### Summary
+| Category | 🔴 High | 🟡 Medium | 🟢 Low |
+|----------|---------|-----------|--------|
+| DDD Violations | {N} | {N} | {N} |
+| Structural Issues | {N} | {N} | {N} |
 
 ### Top Issues
 1. {Highest severity issue + one-line fix direction}
 2. {Second issue}
 3. {Third issue}
 
+### Domain Concept
+**Core**: {what this code is about}
+**State**: {Scattered / Partially cohesive / Cohesive}
+
 ### Next Steps
 - Review full audit: `{output path}`
 - Create refactoring CR if High severity issues found
-- Run `/mdt:domain-lens` on refactoring CR for target model
+- Run `/mdt:architecture {CR-KEY} --prep` to design fix
 ```
 
 ---
 
 ## Examples
 
-### Example 1: Audit via CR
+### Example 1: Audit with Structural Issues (MDT-114 style)
+
+**Input**: `/mdt:domain-audit MDT-114`
+
+**Output** (`{TICKETS_PATH}/MDT-114/domain-audit.md`):
+
+```markdown
+# Domain Audit: MDT-114
+
+**Scope**: mcp-server/src/tools/handlers/**, mcp-server/src/utils/section/**
+**Generated**: 2026-01-03
+
+## Summary
+
+| Category | 🔴 High | 🟡 Medium | 🟢 Low |
+|----------|---------|-----------|--------|
+| DDD Violations | 1 | 1 | 0 |
+| Structural Issues | 2 | 1 | 0 |
+
+## DDD Violations
+
+### 🔴 High Severity
+
+#### God Service
+- **File**: `ModifyOperation.ts` (219 lines)
+- **Methods**: 1 execute() with 140 lines internal
+- **Dependencies**: 9 constructor parameters
+- **Fix direction**: Break into focused components
+
+### 🟡 Medium Severity
+
+#### Feature Envy
+- **Method**: `ModifyOperation.execute()` lines 95-130
+- **Accesses**: headerLevel, headerText, content from SectionMatch
+- **Fix direction**: Extract HeaderRenamer utility
+
+## Structural Issues
+
+### 🔴 High Severity
+
+#### Layer Violation
+- **File**: `utils/section/ValidationFormatter.ts`
+- **Location layer**: Utils/Infrastructure
+- **Contains**: `formatModifyOutput()` — tool-specific markdown with ✅ emoji
+- **Actual layer**: Presentation
+- **Fix direction**: Move to handlers/sections/SectionPresenter.ts
+
+#### Scattered Cohesion
+- **Concept**: Section manipulation
+- **Scattered across**:
+  - `utils/section/CRFileReader.ts`
+  - `utils/section/SectionResolver.ts`
+  - `utils/section/ValidationFormatter.ts`
+  - `utils/simpleSectionValidator.ts`
+  - `utils/simpleContentProcessor.ts`
+  - `handlers/operations/ModifyOperation.ts`
+- **Count**: 6 files in 3 directories
+- **Fix direction**: Consolidate to handlers/sections/
+
+### 🟡 Medium Severity
+
+#### Mixed Responsibility
+- **File**: `ModifyOperation.ts` (219 lines)
+- **Responsibilities**:
+  1. Orchestration (read → validate → write)
+  2. Business logic (header rename detection)
+  3. Content processing coordination
+- **Fix direction**: Extract HeaderRenamer, keep orchestration only
+
+## Dependency Analysis
+
+```
+ModifyOperation.ts (handlers/operations/)
+  ├── CRFileReader (utils/section/)
+  ├── SectionResolver (utils/section/)
+  ├── ValidationFormatter (utils/section/) ← LAYER VIOLATION
+  ├── SimpleSectionValidator (utils/)
+  ├── SimpleContentProcessor (utils/)
+  ├── MarkdownSectionService (shared/)
+  ├── MarkdownService (shared/)
+  └── CRService (services/)
+```
+
+No cycles detected.
+Direction issue: utils/ValidationFormatter contains presentation logic.
+
+## Domain Concept
+
+**Core Domain**: Section Manipulation
+**Operations**: find, read, modify (replace/append/prepend), format output
+**Current State**: Scattered (6 files, 3 directories)
+**Natural Grouping**:
+```
+handlers/sections/
+├── SectionService.ts      # Core: find, read, modify
+├── SectionPresenter.ts    # Format tool output (from ValidationFormatter)
+├── SectionHandlers.ts     # MCP tool interface
+└── models.ts              # SectionMatch, ModifyResult
+```
+
+## Recommendations
+
+1. **Immediate**: Fix layer violation — move ValidationFormatter → SectionPresenter
+2. **Immediate**: Consolidate scattered section logic into handlers/sections/
+3. **Next cycle**: Extract HeaderRenamer from ModifyOperation
+
+---
+*Generated by /mdt:domain-audit v2*
+```
+
+### Example 2: Clean DDD Audit (minimal structural issues)
 
 **Input**: `/mdt:domain-audit MDT-077`
 
@@ -372,18 +695,17 @@ To fix violations:
 ```markdown
 # Domain Audit: MDT-077
 
-**Scope**: shared/services/ProjectService.ts, shared/models/Project.ts, shared/tools/*
+**Scope**: shared/services/ProjectService.ts, shared/models/Project.ts
 **Generated**: 2024-12-17
 
 ## Summary
 
-| Severity | Count |
-|----------|-------|
-| 🔴 High | 2 |
-| 🟡 Medium | 3 |
-| 🟢 Low | 1 |
+| Category | 🔴 High | 🟡 Medium | 🟢 Low |
+|----------|---------|-----------|--------|
+| DDD Violations | 2 | 2 | 1 |
+| Structural Issues | 0 | 0 | 0 |
 
-## Violations
+## DDD Violations
 
 ### 🔴 High Severity
 
@@ -403,17 +725,13 @@ To fix violations:
 
 #### Missing Value Objects
 - **Field**: `code: string` in `Project.ts`
-- **Validation**: 3 locations
+- **Validation**: Found in 3 locations
 - **Fix direction**: Extract `ProjectCode` value object
 
 #### Invariant Scatter
 - **Rule**: "2-5 uppercase letters"
 - **Locations**: ProjectValidator.ts, ProjectService.ts, project-cli.ts
 - **Fix direction**: Single validation in `ProjectCode`
-
-#### Missing Domain Events
-- **Coupling**: ProjectService → DocumentDiscovery (direct call)
-- **Fix direction**: Emit `ProjectCreated` event
 
 ### 🟢 Low Severity
 
@@ -422,17 +740,28 @@ To fix violations:
 - **Code**: `ConfigurationStrategyService`
 - **Fix direction**: Document mapping in glossary
 
+## Structural Issues
+
+No structural issues detected. Code is well-organized by layer.
+
+## Domain Concept
+
+**Core Domain**: Project Management
+**Operations**: create, validate, configure, discover documents
+**Current State**: Cohesive (single directory)
+**Natural Grouping**: Already correct — focus on DDD fixes
+
 ## Recommendations
 
 1. **Immediate**: Fix anemic model — move logic into `Project` aggregate
 2. **Next cycle**: Extract `ProjectCode` value object, consolidate validation
-3. **Opportunistic**: Add domain events for cross-context communication
+3. **Opportunistic**: Document language mapping
 
 ---
-*Generated by /mdt:domain-audit*
+*Generated by /mdt:domain-audit v2*
 ```
 
-### Example 2: Standalone Audit
+### Example 3: Standalone Path Audit
 
 **Input**: `/mdt:domain-audit --path src/orders`
 
@@ -446,13 +775,12 @@ To fix violations:
 
 ## Summary
 
-| Severity | Count |
-|----------|-------|
-| 🔴 High | 1 |
-| 🟡 Medium | 2 |
-| 🟢 Low | 0 |
+| Category | 🔴 High | 🟡 Medium | 🟢 Low |
+|----------|---------|-----------|--------|
+| DDD Violations | 1 | 2 | 0 |
+| Structural Issues | 1 | 0 | 0 |
 
-## Violations
+## DDD Violations
 
 ### 🔴 High Severity
 
@@ -473,8 +801,30 @@ To fix violations:
 - **Accesses**: 5 fields from Order
 - **Fix direction**: Move to `Order.calculateTotal()`
 
+## Structural Issues
+
+### 🔴 High Severity
+
+#### Dependency Direction
+- **Violation**: `src/orders/utils/orderHelper.ts` imports from `src/orders/handlers/`
+- **Expected**: Utils should not depend on handlers
+- **Fix direction**: Move helper logic into handler or domain layer
+
+## Domain Concept
+
+**Core Domain**: Order Processing
+**Operations**: create, calculate totals, process payment, manage line items
+**Current State**: Partially cohesive (minor dependency issue)
+**Natural Grouping**: Mostly correct
+
+## Recommendations
+
+1. **Immediate**: Fix cross-aggregate transaction with domain events
+2. **Next cycle**: Fix dependency direction in orderHelper
+3. **Next cycle**: Move calculateTotal into Order entity
+
 ---
-*Generated by /mdt:domain-audit*
+*Generated by /mdt:domain-audit v2*
 ```
 
 ---
@@ -486,6 +836,8 @@ To fix violations:
 - **Severity guides priority** — High blocks features, Medium is friction, Low is cleanup
 - **Thresholds are guidelines** — use judgment for edge cases
 - **Skip if clean** — if no violations found, say so briefly
+- **Both DDD and structural** — always check both categories
+- **Domain concept required** — always synthesize what the code is about
 
 ## Anti-Patterns to Avoid
 
@@ -496,7 +848,7 @@ To fix violations:
 ✅ **Focused scope**: CR artifacts or specified paths only
 
 ❌ **Verbose report**: 200 lines of analysis
-✅ **Concise findings**: 30-50 lines, actionable
+✅ **Concise findings**: 40-60 lines, actionable
 
 ❌ **Opinion-based**: "This code is ugly"
 ✅ **Evidence-based**: "Ratio 10:1, threshold 3:1"
@@ -504,20 +856,47 @@ To fix violations:
 ❌ **Perfect DDD or nothing**: Flag everything that's not textbook
 ✅ **Pragmatic assessment**: Focus on violations causing real problems
 
+❌ **DDD only**: Ignore structural issues
+✅ **Holistic view**: Check both domain modeling AND code organization
+
+❌ **Skip domain concept**: Just list violations
+✅ **Synthesize understanding**: What is this code fundamentally about?
+
 ## Quality Checklist
 
 Before completing, verify:
 - [ ] All violations have file:line evidence
 - [ ] Severity assigned to each violation
 - [ ] Fix direction is actionable but not prescriptive
-- [ ] Report is 30-50 lines
+- [ ] Report is 40-60 lines
 - [ ] Recommendations prioritized by impact
+- [ ] Both DDD violations AND structural issues checked
+- [ ] Dependency analysis included
+- [ ] Domain Concept section synthesized
+- [ ] Natural grouping suggested
 - [ ] Next steps point to MDT workflow
 
 ## Integration
 
 **Standalone**: Run anytime on any codebase
 **With CR**: Audit code touched by CR before refactoring
-**Output feeds**: New refactoring CR → `/mdt:domain-lens` → `/mdt:architecture`
+**Output feeds**: `/mdt:architecture --prep` consumes audit findings
+
+**Workflow position**:
+```
+/mdt:assess
+    │
+    └─► "⚠️ Prep Required" or refactoring CR
+        │
+        ▼
+/mdt:domain-audit {CR-KEY} ─── Diagnoses DDD + structural issues
+        │                      Extracts domain concept
+        │                      Suggests natural grouping
+        ▼
+/mdt:architecture {CR-KEY} --prep ─── Consumes audit
+        │                             Designs fix based on findings
+        ▼
+/mdt:tasks → /mdt:implement
+```
 
 Context: $ARGUMENTS

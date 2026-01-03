@@ -2,6 +2,53 @@
 
 ## Recent Updates
 
+### 2026-01-03 - Structural Analysis in Domain Audit
+
+**Problem**: Domain audit workflow only detected DDD violations (anemic models, missing aggregates), missing critical structural problems like layer violations, scattered cohesion, and dependency direction issues that cause maintenance burden and coupling.
+
+**Solution**: Enhanced `/mdt:domain-audit` to detect both DDD violations AND structural issues, with dependency graph analysis and domain concept synthesis that directly informs prep architecture design.
+
+**Changes Made**:
+
+1. **mdt-domain-audit.md (v1→v2) - Structural analysis added**:
+   - New Step 2.5: Build dependency graph from imports/requires
+   - Step 4: Detect 5 types of structural issues:
+     - Layer violation (utils containing presentation, domain importing infrastructure)
+     - Scattered cohesion (related concepts spread across directories)
+     - Mixed responsibility (files doing multiple unrelated things)
+     - Dependency direction (cycles, upward violations)
+     - Orphan utilities (helpers used by single consumer)
+   - Step 5: Extract Domain Concept (core domain, operations, natural grouping)
+   - Updated output format with separate DDD/Structural sections, dependency analysis, domain concept
+   - Target size increased: 30-50 lines → 40-60 lines
+
+2. **mdt-architecture.md (v6→v7) - Consumes domain audit findings**:
+   - Prep mode now loads `domain-audit.md` as PRIMARY input (diagnosis drives design)
+   - Step 1 enhanced: Extract DDD violations, structural issues, dependency analysis, domain concept
+   - Architecture decisions informed by audit findings (violations → fixes, domain concept → organizing principle)
+   - Updated "Consumes" section to include domain-audit.md for prep/refactoring
+   - Workflow diagram updated: domain-audit → architecture for prep path
+
+3. **README.md** - Updated documentation:
+   - `/mdt:domain-audit` description: "DDD violations" → "DDD + structural issues"
+   - Refactoring workflow updated to include domain-audit step before architecture
+   - Detects table expanded with 5 structural issue types
+   - Output sections documented (DDD, Structural, Dependencies, Domain Concept)
+   - Workflow updated: domain-audit → architecture --prep (no longer needs separate domain-lens)
+   - File structure versions updated: domain-audit v2, architecture v7
+
+**Impact**:
+- Prep architecture design now driven by evidence-based diagnosis, not guesswork
+- Structural problems (layer violations, scattered cohesion) surfaced before design
+- Domain concept synthesis provides organizing principle for refactored structure
+- Natural grouping suggestions guide consolidation decisions
+- Dependency analysis prevents cycles and layer crossing issues
+
+**Files Changed**:
+- `prompts/mdt-domain-audit.md`
+- `prompts/mdt-architecture.md`
+- `prompts/README.md`
+
 ### 2025-01-02 - Prep Workflow for Refactoring Before Feature
 
 **Problem**: When assessment identifies that refactoring fundamentally changes the code landscape (e.g., breaking up a God class), the feature architecture depends on the refactored structure. Designing both together in a single architecture.md forced speculative feature design against code that doesn't exist yet.

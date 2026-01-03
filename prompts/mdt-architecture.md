@@ -1,4 +1,4 @@
-# MDT Architecture Design Workflow (v6)
+# MDT Architecture Design Workflow (v7)
 
 Surface architectural decisions before implementation. Output location adapts to complexity — simple stays in CR, complex extracts to `architecture.md`.
 
@@ -82,14 +82,20 @@ focus: "feature design"
 
 **If mode is prep**:
 - Create `prep/` directory if not exists
+- **Load domain-audit.md** — this provides the diagnosis that drives design
 - Focus on: How to restructure existing code safely
 - Skip: Feature-specific design (that comes after prep)
 - Output sections emphasize: behavior preservation, interface stability, size reduction
+- Use Domain Concept from audit as the organizing principle
 
 ### Step 1: Load Context
 
 1. `mdt-all:get_cr` with `mode="full"` — abort if CR doesn't exist
-2. **If prep mode**: Skip PoC/domain loading — focus on refactoring
+2. **If prep mode**: 
+   - Load `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` if exists — this is the PRIMARY input
+   - Extract: DDD violations, structural issues, dependency analysis, domain concept, natural grouping
+   - These findings DRIVE the architecture decisions
+   - If domain-audit.md doesn't exist, suggest running `/mdt:domain-audit {CR-KEY}` first
 3. **Load PoC findings if exists** (feature mode only): Check `{TICKETS_PATH}/{CR-KEY}/poc.md`
    - If found: extract validated decisions, constraints discovered, recommended approach
    - These are PROVEN approaches — use them directly, don't re-evaluate
@@ -814,8 +820,9 @@ Before completing, verify:
 
 **Before**: CR exists with problem/scope defined (optionally after `/mdt:assess` and/or `/mdt:poc`)
 **Consumes**: 
+- `domain-audit.md` — DDD + structural diagnosis for prep/refactoring (PRIMARY for prep mode)
 - `poc.md` — validated technical decisions (use directly, don't re-evaluate)
-- `domain.md` — DDD constraints for structure
+- `domain.md` — DDD constraints for structure (feature mode)
 - `requirements.md` — requirement-to-component mapping
 
 **After**: `/mdt:tasks` inherits shared patterns + size limits
@@ -826,9 +833,11 @@ Before completing, verify:
         ↓
 /mdt:poc (optional) ─── Creates: poc.md
         ↓
+/mdt:domain-audit ───── Creates: domain-audit.md (for prep/refactoring)
+        ↓
 /mdt:tests
         ↓
-/mdt:architecture ─── Consumes: poc.md, domain.md, requirements.md
+/mdt:architecture ─── Consumes: domain-audit.md (prep), poc.md, domain.md, requirements.md
         ↓
 /mdt:tasks
 ```
