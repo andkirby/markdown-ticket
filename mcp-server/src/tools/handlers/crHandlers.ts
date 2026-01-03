@@ -16,8 +16,7 @@ import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
 import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js';
 import { TemplateService } from '@mdt/shared/services/TemplateService.js';
 import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js';
-import { SimpleContentProcessor } from '../../utils/simpleContentProcessor.js';
-import { SimpleSectionValidator } from '../../utils/simpleSectionValidator.js';
+import { ContentProcessor } from '../../services/SectionManagement/ContentProcessor.js';
 import { validateCRKey, validateRequired, validateString, validateOperation } from '../../utils/validation.js';
 import { Sanitizer } from '../../utils/sanitizer.js';
 import { ToolError, JsonRpcErrorCode } from '../../utils/toolError.js';
@@ -194,13 +193,13 @@ export class CRHandlers {
     let contentProcessingResult: any = null;
 
     if (data.content) {
-      contentProcessingResult = SimpleContentProcessor.processContent(data.content, {
+      contentProcessingResult = ContentProcessor.processContent(data.content, {
         operation: 'replace',
         maxLength: 1000000 // 1MB limit for full CR content
       });
 
-      // Check for content processing errors (SimpleContentProcessor throws exceptions directly)
-      // No need to check .errors field as SimpleContentProcessor throws on errors
+      // Check for content processing errors (ContentProcessor throws exceptions directly)
+      // No need to check .errors field as ContentProcessor throws on errors
 
       // Show warnings if any
       if (contentProcessingResult.warnings.length > 0) {
