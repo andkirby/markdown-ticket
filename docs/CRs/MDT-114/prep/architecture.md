@@ -2,89 +2,69 @@
 
 **CR**: [MDT-114](../../MDT-114-fix-managecrsections-tool-section-path-resolution-.md)
 **Mode**: Preparatory Refactoring
-**Generated**: 2026-01-02
-**Target**: Reduce `sectionHandlers.ts` complexity from critical (MI: 19.97%, CC: 40) to maintainable
+**Generated**: 2026-01-03
+**Approach**: Fresh service design for cohesive section management
 
 ---
 
 ## Overview
 
-**Refactoring Goal**: Restructure `SectionHandlers` from a monolithic 410-line class (CC: 40, MI: 19.97%) into focused, composable components while preserving all public interfaces and behaviors. This refactoring is a prerequisite for implementing hierarchical section path parsing (MDT-114 feature work).
+**Refactoring Goal**: Reorganize scattered section manipulation code (8 files, 3 directories) into a single cohesive **Section Management Service** with clear boundaries and minimal complexity.
 
-**Why Refactor First?** The current monolithic structure makes hierarchical path parsing error-prone:
-- Complex switch-case logic (lines 56-90) mixed with validation
-- Duplicate error handling patterns in `handleGetSection` and `handleModifySection`
-- Section path resolution scattered across 3 methods
-- Adding hierarchical parsing would increase CC from 40 → 50+, pushing further into "unmaintainable" territory
+**Current Problem**: Section management is scattered across utilities and handlers, making it hard to:
+- Add hierarchical path resolution (MDT-114 feature)
+- Understand the complete section management workflow
+- Test and modify in isolation
 
-**Refactoring Strategy**: Extract shared concerns into focused utilities, then apply strategy pattern to operations. This reduces complexity, isolates section path logic (making MDT-114 easier), and improves long-term maintainability.
-
----
-
-## Current Architecture Analysis
-
-### Component Context
-
-```
-mcp-server/src/tools/
-  ├── index.ts                 → MCPTools (router, 175 lines)
-  ├── config/
-  │   └── allTools.ts          → Tool schema registry (381 lines)
-  └── handlers/
-      ├── projectHandlers.ts   → Project operations (155 lines, 2 methods)
-      ├── crHandlers.ts        → CR operations (est. 300-400 lines, 7 methods)
-      └── sectionHandlers.ts   → Section operations (410 lines, 4 methods) 🔴
-```
-
-### Dependencies
-
-```
-SectionHandlers depends on:
-  ├─ CRService (project injection)
-  ├─ MarkdownSectionService (static class, mocked in tests)
-  ├─ SimpleContentProcessor (utility)
-  ├─ SimpleSectionValidator (utility)
-  ├─ Sanitizer (utility)
-  ├─ ToolError (utility)
-  └─ Validation utilities (functions)
-```
-
-### Complexity Hotspots
-
-| Location | Lines | Issue | Impact |
-|----------|-------|-------|--------|
-| `handleManageCRSections` | 31-90 | Switch-case + validation | CC contributor, hard to extend |
-| `handleListSections` | 96-157 | Manual tree building | Missing hierarchical output |
-| `handleGetSection` | 162-212 | Duplicate error logic | Repeated patterns |
-| `handleModifySection` | 217-410 | 193-line method | CC hotspot, header rename logic |
-
-### Shared Patterns Identified
-
-| Pattern | Occurrences | Extract To |
-|---------|-------------|------------|
-| CR file reading (YAML extraction) | `handleListSections`, `handleGetSection`, `handleModifySection` | `CRFileReader` utility |
-| Section validation with errors | `handleGetSection`, `handleModifySection` | Consolidate in one place |
-| Operation-specific error formatting | All handlers | `SectionOperationError` utility |
-| `findSection` + match handling | 3 locations | `SectionResolver` utility |
-
-**Key Insight**: 4 handlers share 80% of their setup logic (file read, YAML parse, section find). Only the operation differs.
+**Solution**: Design a clean service architecture where **Section Management** is a first-class domain with clear responsibilities.
 
 ---
 
-## Proposed Architecture
+## Domain Analysis
 
-### Pattern: **Strategy + Utilities Extraction**
+### What This Functionality Does
 
-**Why Strategy?**
-- Each operation (list/get/replace/append/prepend) is a distinct algorithm
-- Current switch-case mixes dispatch with execution
-- Strategy isolates operation logic, making each easier to test and modify
-- New operations require adding a strategy, not modifying switch-case
+**Section Management Service** — CRUD operations for markdown document sections:
 
-**Why Utilities Extraction?**
-- 80% of handler code is setup/teardown shared across operations
-- Extracting setup reduces each handler to pure operation logic
-- Section path resolution becomes a focused utility (MDT-114 requirement)
+| Operation | Purpose | Input | Output |
+|-----------|---------|-------|--------|
+| **List** | Enumerate all sections | CR key | Hierarchical tree |
+| **Get** | Read section content | CR key + path | Section content |
+| **Modify** | Replace/append/prepend | CR key + path + content | Updated section |
+| **Resolve** | Find section by path | Document + path | Section match |
+| **Validate** | Check section path | Path + available | Valid/invalid + suggestions |
+
+### Natural Service Boundaries
+
+```
+Section Management
+├── Find sections (by simple or hierarchical path)
+├── Read section content
+├── Modify section content
+├── List all sections with hierarchy
+└── Present results to users
+```
+
+---
+
+## Architecture Pattern
+
+**Pattern: Service Layer with Cohesive Components**
+
+```
+SectionService (Public API)
+  ├── SectionRepository (Read operations)
+  ├── SectionEditor (Write operations)
+  ├── PathResolver (Path resolution logic)
+  └── SectionPresenter (Output formatting)
+```
+
+**Why this pattern?**
+- **Service Layer**: Clean API for MCP tools to call
+- **Repository Pattern**: Separates read concerns from write concerns
+- **Single Responsibility**: Each component has one clear job
+- **Testability**: Each component can be tested in isolation
+- **Extensibility**: New path resolution strategies add to `PathResolver`, not scattered
 
 ---
 
@@ -92,140 +72,232 @@ SectionHandlers depends on:
 
 ```mermaid
 graph TB
-    subgraph "SectionHandlers (Orchestrator)"
-        SH[SectionHandlers.handleManageCRSections]
+    subgraph "MCP Tool Layer"
+        MCP[manage_cr_sections tool]
     end
 
-    subgraph "Operation Strategies"
-        List[ListOperation]
-        Get[GetOperation]
-        Modify[ModifyOperation]
+    subgraph "SectionService (Cohesive API)"
+        SVC[SectionService]
     end
 
-    subgraph "Shared Utilities"
-        FR[CRFileReader]
-        SR[SectionResolver]
-        VF[ValidationFormatter]
+    subgraph "Service Components"
+        REPO[SectionRepository]
+        EDIT[SectionEditor]
+        RESOLVE[PathResolver]
+        PRES[SectionPresenter]
     end
 
-    subgraph "External Services"
+    subgraph "Shared Services"
         CR[CRService]
-        MS[MarkdownSectionService]
+        MD[MarkdownSectionService]
+        SAN[Sanitizer]
     end
 
-    SH --> List
-    SH --> Get
-    SH --> Modify
+    MCP --> SVC
+    SVC --> REPO
+    SVC --> EDIT
+    SVC --> RESOLVE
+    SVC --> PRES
 
-    List --> FR
-    List --> SR
-    Get --> FR
-    Get --> SR
-    Modify --> FR
-    Modify --> SR
+    REPO --> CR
+    REPO --> MD
+    REPO --> RESOLVE
 
-    FR --> CR
-    FR --> MS
-    SR --> MS
-    SR --> VF
+    EDIT --> CR
+    EDIT --> MD
+    EDIT --> RESOLVE
+
+    PRES --> SAN
 ```
 
 ### Component Responsibilities
 
 | Component | Responsibility | Owns | Depends On |
 |-----------|----------------|------|------------|
-| `SectionHandlers` | Operation dispatch only | Routing logic | `CRService`, strategies |
-| `ListOperation` | List all sections with hierarchy | Tree building | `CRFileReader`, `SectionResolver` |
-| `GetOperation` | Retrieve single section content | Section lookup | `CRFileReader`, `SectionResolver` |
-| `ModifyOperation` | Execute replace/append/prepend | Section updates | `CRFileReader`, `SectionResolver`, `MarkdownSectionService` |
-| `CRFileReader` | CR file I/O abstraction | YAML parsing, caching | `CRService`, `MarkdownService` |
-| `SectionResolver` | Section path resolution | Hierarchical parsing, fallback | `MarkdownSectionService`, `ValidationFormatter` |
-| `ValidationFormatter` | Error message formatting | User-friendly suggestions | None |
+| `SectionService` | Public API for section operations | Orchestration, routing | All components |
+| `SectionRepository` | Read operations (find, get, list) | Section lookup, tree building | `PathResolver`, `CRService`, `MarkdownSectionService` |
+| `SectionEditor` | Write operations (replace, append, prepend) | Section modification, file updates | `PathResolver`, `CRService`, `MarkdownSectionService` |
+| `PathResolver` | Path resolution (simple + hierarchical) | Path parsing, section matching, fallback | `MarkdownSectionService` |
+| `SectionPresenter` | Output formatting | Result presentation, error messages | `Sanitizer` |
 
 ---
 
 ## Refactoring Transformation
 
-### Phase 1: Extract Shared Utilities
+### From Scattered → Cohesive
 
-| Utility | Extracted From | Lines | Purpose |
-|---------|----------------|-------|---------|
-| `CRFileReader` | `handleListSections` (103-111), `handleGetSection` (168-177), `handleModifySection` (229-239) | ~60 | Centralize CR file reading + YAML extraction |
-| `SectionResolver` | All handlers' `findSection` calls + duplicate handling | ~80 | Hierarchical path resolution (MDT-114 enabler) |
-| `ValidationFormatter` | Scattered error messages | ~40 | Consistent error formatting with suggestions |
+| Concept | From (Scattered) | To (Cohesive) | Lines | Reduction |
+|---------|------------------|---------------|-------|-----------|
+| **Service API** | `sectionHandlers.ts` (110 lines) | `SectionService.ts` | ≤80 | -27% |
+| **Repository** | `CRFileReader.ts`, `GetOperation.ts`, `ListOperation.ts` (201 lines) | `SectionRepository.ts` | ≤150 | -25% |
+| **Editor** | `ModifyOperation.ts` (219 lines) | `SectionEditor.ts` | ≤175 | -20% |
+| **Resolver** | `SectionResolver.ts`, `SimpleSectionValidator.ts` (190 lines) | `PathResolver.ts` | ≤200 | -5% |
+| **Presenter** | `ValidationFormatter.ts` (71 lines) | `SectionPresenter.ts` | ≤100 | +41% |
+| **Content** | `SimpleContentProcessor.ts` (124 lines) | `ContentProcessor.ts` | ≤125 | -1% |
+| **Total** | 8 files, 915 lines | 6 files, 830 lines | - | -9% |
 
-**Size Limits**:
-- `CRFileReader`: ≤75 lines (utility)
-- `SectionResolver`: ≤150 lines (complex logic, MDT-114 target)
-- `ValidationFormatter`: ≤75 lines (utility)
-
-### Phase 2: Apply Strategy Pattern
-
-| Strategy | From | To | Lines | Role |
-|----------|------|----|----|------|
-| `ListOperation` | `handleListSections` (62 lines) | strategy method | ≤100 | Build hierarchical tree |
-| `GetOperation` | `handleGetSection` (51 lines) | strategy method | ≤75 | Return section content |
-| `ModifyOperation` | `handleModifySection` (193 lines) | strategy class | ≤150 | Execute replace/append/prepend |
-
-**Size Limit**: `SectionHandlers` (orchestrator) ≤100 lines
+**Key Improvements**:
+- **Cohesion**: All section logic in one place (`services/SectionManagement/`)
+- **Clarity**: Each component has a single, clear responsibility
+- **Testability**: Components can be tested independently
+- **Extensibility**: Hierarchical path resolution adds to `PathResolver`, not scattered across 3 files
 
 ---
 
 ## Structure
 
 ```
-mcp-server/src/tools/handlers/
-  ├── sectionHandlers.ts          → Orchestrator only (≤100 lines)
-  ├── operations/                 → Strategy pattern
-  │   ├── index.ts                → Operation registry
-  │   ├── ListOperation.ts        → List handler (≤100 lines)
-  │   ├── GetOperation.ts         → Get handler (≤75 lines)
-  │   └── ModifyOperation.ts      → Modify handler (≤150 lines)
-  └── __tests__/
-      └── sectionHandlers.test.ts → Existing 23 tests (keep passing)
+mcp-server/src/services/SectionManagement/
+  ├── SectionService.ts           → Public API, orchestration (≤80 lines)
+  ├── SectionRepository.ts        → Read operations: list, get, find (≤150 lines)
+  ├── SectionEditor.ts            → Write operations: replace, append, prepend (≤175 lines)
+  ├── PathResolver.ts             → Path resolution: simple, hierarchical, fallback (≤200 lines)
+  ├── ContentProcessor.ts         → Content sanitization and validation (≤125 lines)
+  ├── SectionPresenter.ts         → Output formatting and error messages (≤100 lines)
+  └── types.ts                    → Shared types and interfaces
 
-mcp-server/src/utils/section/    → New namespace for section utilities
-  ├── CRFileReader.ts             → CR file I/O (≤75 lines)
-  ├── SectionResolver.ts          → Path resolution (≤150 lines)
-  └── ValidationFormatter.ts     → Error formatting (≤75 lines)
+mcp-server/src/tools/handlers/
+  └── sectionHandlers.ts          → Thin wrapper (≤50 lines, just routes to SectionService)
+
+mcp-server/src/utils/
+  └── (delete) section/, simple*  → Remove scattered utilities
 ```
+
+**Removed files**:
+- `utils/section/CRFileReader.ts` → merged into `SectionRepository`
+- `utils/section/SectionResolver.ts` → merged into `PathResolver`
+- `utils/section/ValidationFormatter.ts` → merged into `SectionPresenter`
+- `utils/simpleSectionValidator.ts` → merged into `PathResolver`
+- `utils/simpleContentProcessor.ts` → merged into `ContentProcessor`
+- `handlers/operations/*.ts` → merged into `SectionRepository` and `SectionEditor`
 
 ---
 
 ## Size Guidance
 
-| Module | Current | Target | Hard Max | Role |
-|--------|---------|--------|----------|------|
-| `sectionHandlers.ts` | 410 | ≤100 | 150 | Orchestrator |
-| `operations/ListOperation.ts` | - | ≤100 | 150 | Feature |
-| `operations/GetOperation.ts` | - | ≤75 | 110 | Feature |
-| `operations/ModifyOperation.ts` | - | ≤150 | 225 | Complex logic |
-| `CRFileReader.ts` | - | ≤75 | 110 | Utility |
-| `SectionResolver.ts` | - | ≤150 | 225 | Complex logic |
-| `ValidationFormatter.ts` | - | ≤75 | 110 | Utility |
+| Module | Role | Limit | Hard Max |
+|--------|------|-------|----------|
+| `SectionService.ts` | Orchestration | 80 | 120 |
+| `SectionRepository.ts` | Read operations | 150 | 225 |
+| `SectionEditor.ts` | Write operations | 175 | 260 |
+| `PathResolver.ts` | Complex logic (hierarchical parsing) | 200 | 300 |
+| `ContentProcessor.ts` | Utility | 125 | 190 |
+| `SectionPresenter.ts` | Presentation | 100 | 150 |
+| `types.ts` | Shared types | 50 | 75 |
 
-**Total**: 410 lines → ≤725 lines (refactor overhead) BUT with clear boundaries and testable components
+**Total**: 830 lines (down from 915) with better cohesion and clearer boundaries.
+
+---
+
+## Public Interfaces
+
+### SectionService (Public API)
+
+```typescript
+class SectionService {
+  // List all sections with hierarchy
+  async listSections(project: Project, key: string): Promise<string>
+
+  // Get section content
+  async getSection(project: Project, key: string, path: string): Promise<string>
+
+  // Modify section
+  async modifySection(
+    project: Project,
+    key: string,
+    path: string,
+    content: string,
+    operation: 'replace' | 'append' | 'prepend'
+  ): Promise<string>
+}
+```
+
+### SectionRepository (Internal)
+
+```typescript
+class SectionRepository {
+  // Find section by path
+  find(document: string, path: string): SectionMatch
+
+  // List all sections
+  listAll(document: string): SectionMatch[]
+
+  // Read CR file
+  readCR(project: Project, key: string): CRFileContent
+}
+```
+
+### SectionEditor (Internal)
+
+```typescript
+class SectionEditor {
+  // Replace section content
+  replace(document: string, section: SectionMatch, content: string): string
+
+  // Append to section
+  append(document: string, section: SectionMatch, content: string): string
+
+  // Prepend to section
+  prepend(document: string, section: SectionMatch, content: string): string
+
+  // Write updated document
+  write(project: Project, key: string, content: string): Promise<void>
+}
+```
+
+### PathResolver (Internal)
+
+```typescript
+class PathResolver {
+  // Resolve path to section
+  resolve(document: string, path: string): SectionMatch
+
+  // Parse hierarchical path
+  parseHierarchical(path: string): HierarchicalPath
+
+  // Validate path
+  validate(path: string, available: string[]): ValidationResult
+}
+```
+
+### SectionPresenter (Internal)
+
+```typescript
+class SectionPresenter {
+  // Format list output
+  formatList(key: string, title: string, sections: SectionMatch[]): string
+
+  // Format get output
+  formatGet(key: string, section: SectionMatch, content: string): string
+
+  // Format modify output
+  formatModify(...): string
+
+  // Format error
+  formatError(...): string
+}
+```
 
 ---
 
 ## Interface Preservation
 
-### Public Interfaces (Stable)
+### Stable Public Interfaces
 
 | Interface | Current | After | Verification |
 |-----------|---------|-------|--------------|
-| `SectionHandlers` class | Public | Public | Existing tests cover |
-| `handleManageCRSections()` | Public | Public | Existing tests cover |
-| `SectionOperationResult` | Public | Public | Existing tests cover |
+| `SectionHandlers.handleManageCRSections()` | Public | Public (routes to `SectionService`) | Existing 23 tests cover |
+| MCP tool schema | Stable | Stable | No changes to tool interface |
 
 ### Internal Interfaces (New)
 
 | Interface | Purpose | Location |
 |-----------|---------|----------|
-| `SectionOperation` | Strategy interface | `operations/index.ts` |
-| `CRFileReader.readCRFile()` | File I/O abstraction | `utils/section/CRFileReader.ts` |
-| `SectionResolver.resolve()` | Path resolution | `utils/section/SectionResolver.ts` |
-| `ValidationFormatter.formatError()` | Error formatting | `utils/section/ValidationFormatter.ts` |
+| `SectionService` | Public API for section operations | `services/SectionManagement/` |
+| `SectionRepository` | Read operations | `services/SectionManagement/` |
+| `SectionEditor` | Write operations | `services/SectionManagement/` |
+| `PathResolver` | Path resolution | `services/SectionManagement/` |
+| `SectionPresenter` | Output formatting | `services/SectionManagement/` |
 
 ---
 
@@ -233,114 +305,125 @@ mcp-server/src/utils/section/    → New namespace for section utilities
 
 ### Test Coverage (Excellent)
 
-- **23 behavioral preservation tests** in `sectionHandlers.test.ts`
-- All 5 operations tested (list, get, replace, append, prepend)
+- **23 behavioral tests** in `sectionHandlers.test.ts`
+- All operations tested (list, get, replace, append, prepend)
 - Error handling validated
 - File I/O behavior locked
 - Section renaming tested
-- **Key**: These tests must all pass after refactoring
+- **These tests must all pass after refactoring**
 
 ### Refactoring Safety
 
-1. **Extract utilities first** (Phase 1) — tests pass after each extraction
-2. **Extract strategies second** (Phase 2) — tests pass after each strategy
-3. **Verify hierarchical output** (new behavior) — add tests for improved `list` output
+1. **Create `SectionService` first** — implement using existing scattered code
+2. **Route `SectionHandlers` to `SectionService`** — tests should pass
+3. **Extract into components incrementally** — one component at a time
+4. **Delete old files** — after all tests pass
 
 ### Performance
 
-- Expected: Neutral or slight improvement (less repeated YAML parsing)
+- Expected: Neutral to better (less file reading, centralized caching)
 - Section path resolution: Target < 50ms per operation (MDT-114 AC)
 
 ---
 
 ## Refactoring Plan
 
-### Phase 1: Utility Extraction (2-3 hours)
+### Phase 1: Create SectionService (1-2 hours)
 
-**Step 1.1**: Extract `CRFileReader`
-- Move file read + YAML extraction logic
-- Add caching (same file read multiple times in one operation)
-- Tests: Verify existing tests still pass
+**Step 1.1**: Create `SectionService` shell
+- Create `services/SectionManagement/` directory
+- Implement `listSections`, `getSection`, `modifySection` using existing code
+- Keep everything in one file initially (just routing)
 
-**Step 1.2**: Extract `SectionResolver` (MDT-114 enabler)
-- Consolidate `findSection` + match handling
-- Add hierarchical path parsing infrastructure (stub for now)
-- Add fallback resolution (parent section targeting)
-- Tests: Verify ambiguous section errors improve
+**Step 1.2**: Route `SectionHandlers` to `SectionService`
+- `SectionHandlers.handleManageCRSections` calls `SectionService`
+- Tests should pass (behavior unchanged)
 
-**Step 1.3**: Extract `ValidationFormatter`
-- Consolidate error message generation
-- Add suggestion logic (did you mean...?)
-- Tests: Verify error messages remain helpful
+### Phase 2: Extract Repository (1-2 hours)
 
-### Phase 2: Strategy Pattern (2-3 hours)
+**Step 2.1**: Create `SectionRepository`
+- Extract `readCR` from `CRFileReader`
+- Extract `listAll`, `find` from operations
+- Implement tree building for hierarchical list output
+- Tests: Verify list operation works
 
-**Step 2.1**: Define `SectionOperation` interface
-- Create `operations/index.ts`
-- Define `execute()` contract
+**Step 2.2**: Extract `ContentProcessor`
+- Move `SimpleContentProcessor` to new location
+- Clean up interface
 
-**Step 2.2**: Extract `ListOperation`
-- Move `handleListSections` logic
-- Improve hierarchical tree building (MDT-114 feature)
-- Tests: Verify list output shows all subsections
+### Phase 3: Extract Editor (1-2 hours)
 
-**Step 2.3**: Extract `GetOperation`
-- Move `handleGetSection` logic
-- Use `SectionResolver` for path resolution
-- Tests: Verify get operation works with hierarchical paths
-
-**Step 2.4**: Extract `ModifyOperation`
-- Move `handleModifySection` logic
-- Split into replace/append/prepend helpers
-- Use `SectionResolver` for path resolution
+**Step 3.1**: Create `SectionEditor`
+- Extract modify logic from `ModifyOperation`
+- Split into `replace`, `append`, `prepend` methods
+- Extract header renaming logic
 - Tests: Verify all modify operations work
 
-**Step 2.5**: Refactor `SectionHandlers` to orchestrator
-- Replace switch-case with strategy dispatch
-- Reduce to ≤100 lines
-- Tests: Verify all existing tests pass
+### Phase 4: Extract PathResolver (1-2 hours)
 
-### Phase 3: MDT-114 Feature Implementation (2-4 hours)
+**Step 4.1**: Create `PathResolver`
+- Merge `SectionResolver` + `SimpleSectionValidator`
+- Add hierarchical path parsing infrastructure
+- Add fallback resolution (parent section targeting)
+- Tests: Verify path resolution works
 
-**Step 3.1**: Implement hierarchical path parsing in `SectionResolver`
-- Parse `# H1 / ## H2 / ### H3` format
-- Handle edge cases (spaces, case sensitivity)
-- Tests: Unit tests for path parsing
+### Phase 5: Extract Presenter (1 hour)
 
-**Step 3.2**: Improve `list` output in `ListOperation`
-- Show full hierarchy tree
-- Include all subsections
-- Tests: Verify no missing subsections
+**Step 5.1**: Create `SectionPresenter`
+- Move `ValidationFormatter` to new location
+- Consolidate all output formatting
+- Tests: Verify error messages remain helpful
 
-**Step 3.3**: Enhance error messages with working suggestions
-- When hierarchical path fails, suggest parent targeting
-- Show working examples in errors
-- Tests: Verify error messages are actionable
+### Phase 6: Cleanup (1 hour)
+
+**Step 6.1**: Delete old files
+- Remove `utils/section/` directory
+- Remove `utils/simple*.ts` files
+- Remove `handlers/operations/` directory
+- Verify tests still pass
+
+**Step 6.2**: Size verification
+- Run code metrics
+- Verify all modules within limits
+- Adjust if any module exceeds hard max
 
 ---
 
-## Domain Alignment
+## Success Criteria
 
-**Not applicable** — This is a technical refactoring CR without domain modeling (no `domain.md`).
+### Quantitative
+
+| Metric | Before | After | Target |
+|--------|--------|-------|--------|
+| File count (section-related) | 8 files | 6 files | -25% |
+| Total lines | 915 | ≤830 | -9% |
+| Directory scatter | 3 directories | 1 directory | -67% |
+| Largest file | 219 lines | ≤200 | -9% |
+| Test coverage | 23 tests | 23+ tests | No regression |
+
+### Qualitative
+
+- All 23 existing tests pass
+- Section operations work identically from user perspective
+- Code is organized by **domain** (Section Management), not **layer** (utils/handlers)
+- Hierarchical path resolution is straightforward (adds to `PathResolver`)
+- Easy to understand: "Section management is in `services/SectionManagement/`"
 
 ---
 
 ## Extension Rule
 
-### After Prep Refactoring
+### After Refactoring
 
 To add a new section operation:
-1. Create `operations/{Name}Operation.ts` (limit per role, e.g., ≤150 for complex)
-2. Implement `SectionOperation` interface
-3. Register in `operations/index.ts`
-4. Add case in `SectionHandlers.handleManageCRSections` dispatch
+1. Add method to `SectionService` (if new public operation)
+2. Implement in `SectionRepository` or `SectionEditor` (depending on read/write)
+3. Update `SectionPresenter` if new output format needed
 
-### For MDT-114 Feature Work
-
-To add hierarchical path support:
-1. Implement in `SectionResolver.resolve()` (≤150 lines)
-2. Update `ListOperation` to show full hierarchy
-3. Update error messages to suggest hierarchical paths
+To add hierarchical path support (MDT-114):
+1. Implement in `PathResolver.resolve()` (≤200 lines)
+2. Update `SectionRepository.listAll()` to show full hierarchy
+3. Update `SectionPresenter` to format hierarchical output
 4. Add unit tests for path parsing edge cases
 
 ---
@@ -351,36 +434,16 @@ To add hierarchical path support:
 
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
-| Test failures during refactoring | Medium | High | Extract incrementally, run tests after each step |
-| Performance regression | Low | Low | Benchmark before/after, add caching to `CRFileReader` |
-| Interface breakage | Low | High | Keep `SectionHandlers` public API stable, add deprecation warnings if needed |
-| Over-engineering | Medium | Medium | Size limits prevent bloat, review each utility against "is this simpler?" |
+| Test failures during refactoring | Medium | High | Create `SectionService` first, route incrementally |
+| Interface breakage | Low | High | Keep MCP tool schema stable, route internally |
+| Component size exceeds limits | Low | Medium | Size limits guide design, adjust if needed |
+| Over-engineering | Low | Medium | Focus on cohesion, not perfection |
 
 ### Rollback Plan
 
-- Git commits after each phase (1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5)
+- Git commits after each phase
 - If phase fails, revert to previous phase commit
 - Tests failing = revert immediately, fix issue, retry
-
----
-
-## Success Criteria
-
-### Quantitative
-
-| Metric | Before | After | Target |
-|--------|--------|-------|--------|
-| Maintainability Index | 19.97% | ≥35% | +15 percentage points |
-| Cyclomatic Complexity | 40 | ≤20 | -50% |
-| Largest method | 193 lines | ≤150 | -22% |
-| Test coverage | 23 tests | 23+ tests | No regression |
-
-### Qualitative
-
-- All 23 existing tests pass
-- Section operations work identically from user perspective
-- Code is easier to understand (clear component boundaries)
-- MDT-114 feature work is straightforward (hierarchical path parsing in one place)
 
 ---
 

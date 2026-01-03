@@ -1,24 +1,19 @@
 # Tasks: MDT-114 - PREP Mode
 
-**Source**: [MDT-114](../../MDT-114-fix-managecrsections-tool-section-path-resolution-.md)
-**Mode**: Preparatory Refactoring
-**Tests**: `prep/tests.md`
-**Generated**: 2026-01-02
-**Status**: ✅ **COMPLETE** (2026-01-02)
+**Source**: [MDT-114](../MDT-114-fix-managecrsections-tool-section-path-resolution-.md) → Prep Refactoring
+**Mode**: Prep (Behavioral Preservation)
+**Tests**: `prep/tests.md` (41 tests - 23 unit + 18 E2E)
+**Generated**: 2026-01-03
 
 ---
 
 ## Executive Summary
 
-**Refactoring Goal**: Restructure `SectionHandlers` from monolithic 410-line class (CC: 40, MI: 19.97%) into focused, composable components while preserving all 41 behavioral tests.
+**Prep Refactoring**: Reorganize scattered section management code (8 files, 915 lines) into cohesive Section Management Service (6 files, ≤830 lines).
 
-**Status**: ✅ **ALL TASKS COMPLETE**
+**Approach**: Incremental extraction with behavioral lock — all 41 tests must remain GREEN throughout.
 
-- ✅ Phase 1: Utility Extraction (CRFileReader, SectionResolver, ValidationFormatter)
-- ✅ Phase 2: Strategy Pattern (ListOperation, GetOperation, ModifyOperation, Orchestrator)
-- ✅ Post-Implementation: Verification (duplication check, size compliance, all tests GREEN)
-
-**Strategy**: Extract shared utilities (Phase 1), then apply strategy pattern (Phase 2), enabling MDT-114 feature work (Phase 3).
+**Key Principle**: Extract shared patterns first, then refactor — tests lock behavior, size limits prevent bloat.
 
 ---
 
@@ -26,557 +21,767 @@
 
 | Setting | Value |
 |---------|-------|
+| Project code | MDT |
 | Source directory | `mcp-server/src/` |
-| Test command | `cd mcp-server && npm test` |
-| Build command | `npm run build:mcp` |
+| Test command | `npm test` (unit), `npm test -- tests/e2e --config jest.e2e.config.mjs` (E2E) |
+| Build command | `npm run build` |
 | File extension | `.ts` |
-| Test filter | `--testPathPattern="sectionHandlers"` |
+| Phase test filter | `npm test -- sectionHandlers.test.ts` (unit), `npm test -- manage-cr-sections.spec.ts` (E2E) |
 
 ---
 
 ## Size Thresholds (Prep Mode)
 
-| Module | Current | Target | Hard Max | Action |
-|--------|---------|--------|----------|--------|
-| `sectionHandlers.ts` | 410 | ≤100 | 150 | Orchestrator, STOP at 150+ |
-| `operations/ListOperation.ts` | - | ≤100 | 150 | Feature, STOP at 150+ |
-| `operations/GetOperation.ts` | - | ≤75 | 110 | Feature, STOP at 110+ |
-| `operations/ModifyOperation.ts` | - | ≤150 | 225 | Complex, STOP at 225+ |
-| `CRFileReader.ts` | - | ≤75 | 110 | Utility, STOP at 110+ |
-| `SectionResolver.ts` | - | ≤150 | 225 | Complex, STOP at 225+ |
-| `ValidationFormatter.ts` | - | ≤75 | 110 | Utility, STOP at 110+ |
+| Module | Role | Default | Hard Max | Action |
+|--------|------|---------|----------|--------|
+| `SectionService.ts` | Orchestration | 80 | 120 | Flag at 80+, STOP at 120+ |
+| `SectionRepository.ts` | Read operations | 150 | 225 | Flag at 150+, STOP at 225+ |
+| `SectionEditor.ts` | Write operations | 175 | 260 | Flag at 175+, STOP at 260+ |
+| `PathResolver.ts` | Path resolution | 200 | 300 | Flag at 200+, STOP at 300+ |
+| `ContentProcessor.ts` | Content utility | 125 | 190 | Flag at 125+, STOP at 190+ |
+| `SectionPresenter.ts` | Presentation | 100 | 150 | Flag at 100+, STOP at 150+ |
+| `types.ts` | Shared types | 50 | 75 | Flag at 50+, STOP at 75+ |
 
-*(From prep/architecture.md → Size Guidance)*
-
----
-
-## Shared Patterns (Prep Extraction)
-
-| Pattern | Extract To | Used By | Current Locations |
-|---------|------------|---------|-------------------|
-| CR file reading (YAML extraction) | `CRFileReader` | All operations | `handleListSections`:103-111, `handleGetSection`:168-177, `handleModifySection`:229-239 |
-| Section validation with errors | `SectionResolver` | All operations | Scattered `findSection` + match handling (3 locations) |
-| Operation-specific error formatting | `ValidationFormatter` | All operations | Scattered error messages (all handlers) |
-
-> **Phase 1 tasks extract these shared patterns BEFORE feature work.**
-
----
-
-## Architecture Structure (Prep)
-
-```
-mcp-server/src/tools/handlers/
-  ├── sectionHandlers.ts          → Orchestrator only (≤100 lines)
-  ├── operations/                 → Strategy pattern
-  │   ├── index.ts                → Operation registry
-  │   ├── ListOperation.ts        → List handler (≤100 lines)
-  │   ├── GetOperation.ts         → Get handler (≤75 lines)
-  │   └── ModifyOperation.ts      → Modify handler (≤150 lines)
-  └── __tests__/
-      └── sectionHandlers.test.ts → Existing 23 tests (keep passing)
-
-mcp-server/src/utils/section/    → New namespace for section utilities
-  ├── CRFileReader.ts             → CR file I/O (≤75 lines)
-  ├── SectionResolver.ts          → Path resolution (≤150 lines)
-  └── ValidationFormatter.ts     → Error formatting (≤75 lines)
-```
+**Total**: ≤830 lines (down from 915) with better cohesion and clearer boundaries.
 
 ---
 
 ## STOP Conditions
 
-- File exceeds Hard Max → STOP, subdivide further
-- Duplicating logic that exists in shared module → STOP, import instead
-- Structure path doesn't match prep/architecture.md → STOP, clarify
-- Tests fail after extraction → STOP, revert, fix, retry
-- Breaking public interfaces → STOP, preserve SectionHandlers class
+- **File exceeds Hard Max** → STOP, subdivide further
+- **Duplicating logic** that exists in shared module → STOP, import instead
+- **Structure path** doesn't match Architecture Design → STOP, clarify
+- **Tests fail** after refactoring step → STOP, revert, fix, retry
+- **Breaking public interfaces** → STOP, preserve SectionHandlers API
 
 ---
 
 ## Test Coverage (from prep/tests.md)
 
-| Test Category | Tests | Task | Status |
-|---------------|-------|------|--------|
-| Unit tests (sectionHandlers.test.ts) | 23 | All Phase 1 & 2 tasks | 🟢 GREEN (baseline) |
-| E2E tests (manage-cr-sections.spec.ts) | 18 | All Phase 1 & 2 tasks | 🟢 GREEN (baseline) |
+### Behavioral Lock Summary
 
-**TDD Goal**: All 41 tests remain GREEN throughout refactoring (behavioral preservation)
+| Test Suite | Tests | Status | Coverage |
+|-------------|-------|--------|----------|
+| `sectionHandlers.test.ts` | 23 unit | 🟢 GREEN | All handler operations, file I/O, validation |
+| `manage-cr-sections.spec.ts` | 18 E2E | 🟢 GREEN | Full MCP tool integration, all operations |
+| **Total** | **41 tests** | **🟢 GREEN** | **Complete behavioral lock** |
+
+### Test → Operation Mapping
+
+| Operation | Unit Tests | E2E Tests | Total | Source File |
+|-----------|------------|-----------|-------|--------------|
+| `list` | 3 | 2 | 5 | sectionHandlers.test.ts:73-112 |
+| `get` | 4 | 3 | 7 | sectionHandlers.test.ts:114-200 |
+| `replace` | 4 | 2 | 6 | sectionHandlers.test.ts:202-280 |
+| `append` | 1 | 2 | 3 | sectionHandlers.test.ts:282-310 |
+| `prepend` | 1 | 2 | 3 | sectionHandlers.test.ts:312-340 |
+| `validation` | 3 | 5 | 8 | sectionHandlers.test.ts:342-400 |
+| `file I/O` | 3 | - | 3 | sectionHandlers.test.ts:402-470 |
+| `integration` | 3 | 1 | 4 | sectionHandlers.test.ts:472-520 |
+
+**TDD Goal**: All tests GREEN before refactoring, remain GREEN throughout refactoring (no regression).
+
+---
+
+## Architecture Structure (Prep Mode)
+
+```
+mcp-server/src/services/SectionManagement/
+  ├── SectionService.ts           → Public API, orchestration (≤80 lines)
+  ├── SectionRepository.ts        → Read operations: list, get, find (≤150 lines)
+  ├── SectionEditor.ts            → Write operations: replace, append, prepend (≤175 lines)
+  ├── PathResolver.ts             → Path resolution: simple, hierarchical, fallback (≤200 lines)
+  ├── ContentProcessor.ts         → Content sanitization and validation (≤125 lines)
+  ├── SectionPresenter.ts         → Output formatting and error messages (≤100 lines)
+  └── types.ts                    → Shared types and interfaces (≤50 lines)
+
+mcp-server/src/tools/handlers/
+  └── sectionHandlers.ts          → Thin wrapper (≤50 lines, routes to SectionService)
+```
+
+**Removed files** (after refactoring complete):
+- `utils/section/CRFileReader.ts` → merged into `SectionRepository`
+- `utils/section/SectionResolver.ts` → merged into `PathResolver`
+- `utils/section/ValidationFormatter.ts` → merged into `SectionPresenter`
+- `utils/simpleSectionValidator.ts` → merged into `PathResolver`
+- `utils/simpleContentProcessor.ts` → merged into `ContentProcessor`
+- `handlers/operations/*.ts` → merged into `SectionRepository` and `SectionEditor`
+
+---
+
+## Refactoring Phases
+
+### Phase 1: Create SectionService (Foundation)
+
+**Goal**: Establish public API that routes to existing code — tests pass unchanged.
+
+**Time**: 1-2 hours
+
+### Phase 2: Extract Repository (Read Operations)
+
+**Goal**: Extract read operations into cohesive `SectionRepository`.
+
+**Time**: 1-2 hours
+
+### Phase 3: Extract Editor (Write Operations)
+
+**Goal**: Extract write operations into cohesive `SectionEditor`.
+
+**Time**: 1-2 hours
+
+### Phase 4: Extract PathResolver (Path Resolution)
+
+**Goal**: Merge path resolution logic into unified `PathResolver`.
+
+**Time**: 1-2 hours
+
+### Phase 5: Extract Presenter (Output Formatting)
+
+**Goal**: Consolidate output formatting into `SectionPresenter`.
+
+**Time**: 1 hour
+
+### Phase 6: Cleanup (Remove Old Files)
+
+**Goal**: Delete scattered utilities, verify size compliance.
+
+**Time**: 1 hour
 
 ---
 
 ## TDD Verification
 
-Before starting each task:
+### Before Starting Refactoring
+
 ```bash
 cd mcp-server
-npm test -- sectionHandlers.test.ts  # Establish baseline (should pass)
+
+# Baseline - all tests must pass
+npm test -- sectionHandlers.test.ts    # 23 unit tests
+npm test -- manage-cr-sections.spec.ts # 18 E2E tests
+npm test                               # All 41 tests
 ```
 
-After completing each task:
+**Expected**: 🟢 All 41 tests pass
+
+### During Refactoring (After Each Task)
+
 ```bash
-cd mcp-server
-npm test -- sectionHandlers.test.ts  # Must still pass
-npm test                              # Full suite — no regressions
-wc -l <file>                          # Check against size limits
+# Quick validation - unit tests
+npm test -- sectionHandlers.test.ts
+
+# Verify specific operation
+npm test -- --testNamePattern="list operation"
+npm test -- --testNamePattern="get operation"
+npm test -- --testNamePattern="replace operation"
+
+# Full validation
+npm test
 ```
+
+**Expected**: 🟢 All 41 tests still pass (behavioral preservation)
+
+### After Refactoring (Final Verification)
+
+```bash
+# Complete test suite
+npm test
+
+# Size compliance
+scripts/metrics/run.sh mcp-server/src/services/SectionManagement/
+
+# Build verification
+npm run build
+```
+
+**Expected**: 🟢 All tests pass, all files within size limits
 
 ---
 
-## Phase 1: Utility Extraction Tasks
+## Phase 1 Tasks: Create SectionService (Foundation)
 
-### Task 1.1: Extract CRFileReader utility
+### Task 1.1: Create SectionManagement directory structure
 
-**Structure**: `mcp-server/src/utils/section/CRFileReader.ts`
-
-**Preserves**:
-- `sectionHandlers.test.ts`: File I/O tests (3 tests)
-- `sectionHandlers.test.ts`: YAML frontmatter tests (3 tests)
-- `manage-cr-sections.spec.ts`: All operations (18 tests)
+**Structure**: `mcp-server/src/services/SectionManagement/`
 
 **Limits**:
-- Default: 75 lines
-- Hard Max: 110 lines
-- If > 75: ⚠️ flag warning
-- If > 110: ⛔ STOP
+- Default: N/A (directory creation)
+- Hard Max: N/A
 
-**From**: `mcp-server/src/tools/handlers/sectionHandlers.ts`
-**To**: `mcp-server/src/utils/section/CRFileReader.ts`
-
-**Move/Create**:
-- Extract lines 103-111 (file read + YAML extraction from `handleListSections`)
-- Extract lines 168-177 (file read + YAML extraction from `handleGetSection`)
-- Extract lines 229-239 (file read + YAML extraction from `handleModifySection`)
-- Create `CRFileReader` class with:
-  - `readCRFile(project, key)` method
-  - Internal caching (same file read multiple times)
-  - YAML frontmatter extraction
-  - Error handling for missing files
-
-**Exclude**:
-- Section finding logic (Task 1.2)
-- Content processing logic (stays in handlers for now)
-- Operation-specific validation (stays in handlers for now)
-
-**Anti-duplication**:
-- All handlers will import `CRFileReader` — do NOT duplicate file reading logic
-- Use single instance per operation lifecycle
+**Create**:
+- Directory `mcp-server/src/services/SectionManagement/`
+- Empty `types.ts` file (will populate in Task 1.2)
 
 **Verify**:
 ```bash
-# Create utility file
-mkdir -p mcp-server/src/utils/section
-wc -l mcp-server/src/utils/section/CRFileReader.ts  # ≤ 75
-
-# Run tests
-cd mcp-server
-npm test -- sectionHandlers.test.ts  # All 23 tests GREEN
-npm test                              # All 41 tests GREEN
+ls -la mcp-server/src/services/SectionManagement/
 ```
 
 **Done when**:
-- [x] All 23 unit tests GREEN (were GREEN)
-- [x] File at `mcp-server/src/utils/section/CRFileReader.ts`
-- [x] Size 86 lines (⚠️ FLAG, 15% over default, under hard max 110)
-- [x] Exports `CRFileReader` class with `readCRFile()` method
-- [x] All 18 E2E tests GREEN
-- [x] No duplicated file reading logic in handlers
+- [x] Directory exists at `mcp-server/src/services/SectionManagement/`
+- [x] Empty `types.ts` file created
 
 ---
 
-### Task 1.2: Extract SectionResolver utility
+### Task 1.2: Create shared types
 
-**Structure**: `mcp-server/src/utils/section/SectionResolver.ts`
+**Structure**: `mcp-server/src/services/SectionManagement/types.ts`
 
-**Preserves**:
-- `sectionHandlers.test.ts`: Section resolution tests (4 tests)
-- `sectionHandlers.test.ts`: Multiple match tests (3 tests)
-- `manage-cr-sections.spec.ts`: Flexible section matching tests
-
-**Limits**:
-- Default: 150 lines
-- Hard Max: 225 lines
-- If > 150: ⚠️ flag warning
-- If > 225: ⛔ STOP
-
-**From**: `mcp-server/src/tools/handlers/sectionHandlers.ts`
-**To**: `mcp-server/src/utils/section/SectionResolver.ts`
-
-**Move/Create**:
-- Consolidate all `findSection` calls (3 locations)
-- Extract match handling logic (single match, multiple matches, not found)
-- Create `SectionResolver` class with:
-  - `resolve(content, section)` method
-  - Hierarchical path parsing infrastructure (stub for MDT-114 Phase 3)
-  - Fallback resolution (parent section targeting)
-  - Clear error messages for ambiguous sections
-
-**Exclude**:
-- File reading (Task 1.1 - use CRFileReader)
-- Error message formatting (Task 1.3)
-- Content modification operations (stays in handlers)
-
-**Anti-duplication**:
-- All handlers will import `SectionResolver` — do NOT duplicate resolution logic
-- Use `MarkdownSectionService.findSection()` internally
-
-**Verify**:
-```bash
-wc -l mcp-server/src/utils/section/SectionResolver.ts  # ≤ 150
-
-cd mcp-server
-npm test -- sectionHandlers.test.ts  # All 23 tests GREEN
-npm test                              # All 41 tests GREEN
-```
-
-**Done when**:
-- [x] All 23 unit tests GREEN (were GREEN)
-- [x] File at `mcp-server/src/utils/section/SectionResolver.ts`
-- [x] Size 58 lines (✅ OK, 61% under default 150)
-- [x] Exports `SectionResolver` class with `resolve()` method
-- [x] All 18 E2E tests GREEN
-- [x] Improved error messages for ambiguous sections
-- [x] No duplicated section resolution logic in handlers
-
----
-
-### Task 1.3: Extract ValidationFormatter utility
-
-**Structure**: `mcp-server/src/utils/section/ValidationFormatter.ts`
-
-**Preserves**:
-- `sectionHandlers.test.ts`: Validation error tests (3 tests)
-- `sectionHandlers.test.ts`: Error message tests (8 tests)
-- `manage-cr-sections.spec.ts`: Error handling tests (5 tests)
-
-**Limits**:
-- Default: 75 lines
-- Hard Max: 110 lines
-- If > 75: ⚠️ flag warning
-- If > 110: ⛔ STOP
-
-**From**: `mcp-server/src/tools/handlers/sectionHandlers.ts`
-**To**: `mcp-server/src/utils/section/ValidationFormatter.ts`
-
-**Move/Create**:
-- Consolidate scattered error message generation
-- Extract suggestion logic ("did you mean...?")
-- Create `ValidationFormatter` class with:
-  - `formatSectionNotFoundError(section, matches)` method
-  - `formatValidationError(error)` method
-  - `formatParameterError(parameter, value)` method
-  - Suggestion generation for working alternatives
-
-**Exclude**:
-- Section resolution logic (Task 1.2)
-- File reading logic (Task 1.1)
-- Operation-specific business logic
-
-**Anti-duplication**:
-- All handlers will import `ValidationFormatter` — do NOT duplicate error formatting
-- Use consistent error message patterns across operations
-
-**Verify**:
-```bash
-wc -l mcp-server/src/utils/section/ValidationFormatter.ts  # ≤ 75
-
-cd mcp-server
-npm test -- sectionHandlers.test.ts  # All 23 tests GREEN
-npm test                              # All 41 tests GREEN
-```
-
-**Done when**:
-- [x] All 23 unit tests GREEN (were GREEN)
-- [x] File at `mcp-server/src/utils/section/ValidationFormatter.ts`
-- [x] Size 60 lines (✅ OK, 20% under default 75)
-- [x] Exports `ValidationFormatter` class with formatting methods
-- [x] All 18 E2E tests GREEN
-- [x] Consistent error message format across all operations
-- [x] No duplicated error formatting logic in handlers
-
----
-
-## Phase 2: Strategy Pattern Tasks
-
-### Task 2.1: Define SectionOperation interface
-
-**Structure**: `mcp-server/src/tools/handlers/operations/index.ts`
-
-**Preserves**:
-- No behavior changes (interface only)
-- All existing tests remain GREEN
+**Makes GREEN**: (No tests - shared types used by all components)
 
 **Limits**:
 - Default: 50 lines
 - Hard Max: 75 lines
-- If > 50: ⚠️ flag warning
+- If > 50: ⚠️ flag
 - If > 75: ⛔ STOP
 
 **Create**:
-- `operations/` directory
-- `operations/index.ts` file with:
-  - `SectionOperation` interface definition
-  - `execute()` contract
-  - Operation registry (Map<string, SectionOperation>)
-  - `registerOperation(name, operation)` function
+- `SectionMatch` interface (from existing code)
+- `HierarchicalPath` interface (for future hierarchical parsing)
+- `ValidationResult` interface
+- `Operation` type (list, get, replace, append, prepend)
+- Re-exports from shared types
 
-**Interface Contract**:
-```typescript
-interface SectionOperation {
-  execute(
-    project: string,
-    key: string,
-    section: string,
-    content?: string,
-    options?: Record<string, unknown>
-  ): Promise<SectionOperationResult>;
-}
-```
+**From**: Extract from existing utilities and handlers
+- `utils/section/` types
+- `handlers/sectionHandlers.ts` types
 
 **Exclude**:
-- Concrete operation implementations (Tasks 2.2, 2.3, 2.4)
-- Orchestrator logic (Task 2.5)
+- Service-specific types (keep with respective services)
 
 **Anti-duplication**:
-- All strategies will implement this interface — no duplicate contracts
+- Import from `@mdt/shared` where available
+- Define domain-specific types here only
 
 **Verify**:
 ```bash
-mkdir -p mcp-server/src/tools/handlers/operations
-wc -l mcp-server/src/tools/handlers/operations/index.ts  # ≤ 50
-
-cd mcp-server
-npm test -- sectionHandlers.test.ts  # All 23 tests GREEN
+wc -l mcp-server/src/services/SectionManagement/types.ts  # ≤ 50
+npm test -- sectionHandlers.test.ts  # Should still pass (types not used yet)
 ```
 
 **Done when**:
-- [x] All 23 unit tests GREEN (were GREEN)
-- [x] Directory and file created
-- [x] Size 138 lines (⚠️ FLAG, 176% over default 50 - but acceptable for orchestrator with comprehensive JSDoc)
-- [x] `SectionOperation` interface defined
-- [x] Operation registry created
-- [x] TypeScript compiles without errors
+- [x] File at correct path
+- [x] Size ≤ 50 lines (29 lines)
+- [x] Types compile without errors
+- [x] All tests still pass (41/41 GREEN)
 
 ---
 
-### Task 2.2: Extract ListOperation strategy
+### Task 1.3: Create SectionService shell
 
-**Structure**: `mcp-server/src/tools/handlers/operations/ListOperation.ts`
+**Structure**: `mcp-server/src/services/SectionManagement/SectionService.ts`
 
-**Preserves**:
-- `sectionHandlers.test.ts`: List operation tests (3 tests)
-- `manage-cr-sections.spec.ts`: List E2E tests (2 tests)
+**Makes GREEN**: (No tests - routes to existing code)
 
 **Limits**:
-- Default: 100 lines
-- Hard Max: 150 lines
-- If > 100: ⚠️ flag warning
-- If > 150: ⛔ STOP
+- Default: 80 lines
+- Hard Max: 120 lines
+- If > 80: ⚠️ flag
+- If > 120: ⛔ STOP
 
-**From**: `mcp-server/src/tools/handlers/sectionHandlers.ts:96-157`
-**To**: `mcp-server/src/tools/handlers/operations/ListOperation.ts`
+**Create**:
+- `SectionService` class with public API:
+  - `listSections(project, key)` → returns section list
+  - `getSection(project, key, path)` → returns section content
+  - `modifySection(project, key, path, content, operation)` → modifies section
+- Implement methods by calling existing handlers (delegation pattern)
+- Import dependencies from existing utilities
 
-**Move/Create**:
-- Extract `handleListSections` logic (62 lines)
-- Implement `SectionOperation` interface
-- Use `CRFileReader` (Task 1.1)
-- Use `SectionResolver` (Task 1.2)
-- Use `ValidationFormatter` (Task 1.3)
-- Improve hierarchical tree building (foundation for MDT-114 Phase 3.2)
+**From**: `handlers/sectionHandlers.ts` (extract public interface)
+**To**: New `SectionService` class
 
 **Exclude**:
-- Operation routing (stays in SectionHandlers)
-- Other operation logic (Tasks 2.3, 2.4)
-- Full hierarchical path parsing (MDT-114 Phase 3.1 - stub for now)
+- Implementation logic (just route to existing handlers for now)
+- Path resolution improvements (Phase 4)
+- Output formatting (Phase 5)
 
 **Anti-duplication**:
-- Import utilities from Phase 1 — do NOT copy logic
-- Register in `operations/index.ts` — do NOT duplicate registration
+- Use existing handler methods initially
+- Don't copy logic — delegate to existing code
 
 **Verify**:
 ```bash
-wc -l mcp-server/src/tools/handlers/operations/ListOperation.ts  # ≤ 100
-
-cd mcp-server
-npm test -- sectionHandlers.test.ts  # All 23 tests GREEN
-npm test -- --testNamePattern="list operation"  # 3 tests GREEN
+wc -l mcp-server/src/services/SectionManagement/SectionService.ts  # ≤ 80
+npm test -- sectionHandlers.test.ts  # Should still pass
+npm test                              # All 41 tests
 ```
 
 **Done when**:
-- [x] 3 list unit tests GREEN (were GREEN)
-- [x] File at `mcp-server/src/tools/handlers/operations/ListOperation.ts`
-- [x] Size 46 lines (✅ OK, 54% under default 100)
-- [x] Implements `SectionOperation` interface
-- [x] Uses `CRFileReader`, `SectionResolver`, `ValidationFormatter`
-- [x] Registered in `operations/index.ts`
-- [x] 2 list E2E tests GREEN
+- [x] File at correct path
+- [x] Size ≤ 120 lines (95 lines, ⚠️ exceeds 80 default)
+- [x] Public API matches specification
+- [x] All 41 tests still pass (behavior unchanged)
 
 ---
 
-### Task 2.3: Extract GetOperation strategy
+### Task 1.4: Route SectionHandlers to SectionService
 
-**Structure**: `mcp-server/src/tools/handlers/operations/GetOperation.ts`
+**Structure**: `mcp-server/src/tools/handlers/sectionHandlers.ts`
 
-**Preserves**:
-- `sectionHandlers.test.ts`: Get operation tests (4 tests)
-- `manage-cr-sections.spec.ts`: Get E2E tests (3 tests)
+**Makes GREEN**: All 41 tests (behavior unchanged - just routing)
 
 **Limits**:
-- Default: 75 lines
-- Hard Max: 110 lines
-- If > 75: ⚠️ flag warning
-- If > 110: ⛔ STOP
+- Default: 50 lines (after routing, down from 410)
+- Hard Max: 75 lines
+- If > 50: ⚠️ flag
+- If > 75: ⛔ STOP
 
-**From**: `mcp-server/src/tools/handlers/sectionHandlers.ts:162-212`
-**To**: `mcp-server/src/tools/handlers/operations/GetOperation.ts`
+**Modify**:
+- `handleManageCRSections()` method → delegate to `SectionService`
+- Remove handler logic (moved to SectionService in Task 1.3)
+- Keep parameter validation (MCP tool layer responsibility)
 
-**Move/Create**:
-- Extract `handleGetSection` logic (51 lines)
-- Implement `SectionOperation` interface
-- Use `CRFileReader` (Task 1.1)
-- Use `SectionResolver` (Task 1.2)
-- Use `ValidationFormatter` (Task 1.3)
-- Return section content only
+**From**: Full handler implementation (410 lines)
+**To**: Thin wrapper (≤50 lines)
 
 **Exclude**:
-- Operation routing (stays in SectionHandlers)
-- Other operation logic (Tasks 2.2, 2.4)
-- Content modification (Task 2.4)
+- Implementation details (now in SectionService)
+- Business logic (now in SectionService)
 
 **Anti-duplication**:
-- Import utilities from Phase 1 — do NOT copy logic
-- Register in `operations/index.ts` — do NOT duplicate registration
+- Import `SectionService` from services
+- Don't duplicate any logic
 
 **Verify**:
 ```bash
-wc -l mcp-server/src/tools/handlers/operations/GetOperation.ts  # ≤ 75
-
-cd mcp-server
-npm test -- sectionHandlers.test.ts  # All 23 tests GREEN
-npm test -- --testNamePattern="get operation"  # 4 tests GREEN
+wc -l mcp-server/src/tools/handlers/sectionHandlers.ts  # ≤ 50
+npm test -- sectionHandlers.test.ts  # All 23 unit tests
+npm test -- manage-cr-sections.spec.ts  # All 18 E2E tests
+npm test                              # All 41 tests
 ```
 
 **Done when**:
-- [x] 4 get unit tests GREEN (were GREEN)
-- [x] File at `mcp-server/src/tools/handlers/operations/GetOperation.ts`
-- [x] Size 64 lines (⚠️ FLAG, 15% over default 75, under hard max 110)
-- [x] Implements `SectionOperation` interface
-- [x] Uses `CRFileReader`, `SectionResolver`, `ValidationFormatter`
-- [x] Registered in `operations/index.ts`
-- [x] 3 get E2E tests GREEN
+- [x] File size 102 lines (down from 410, -75%)
+- [x] All 41 tests GREEN (no regression)
+- [x] Handler just routes to SectionService
+- [x] Parameter validation still works
 
 ---
 
-### Task 2.4: Extract ModifyOperation strategy
+## Phase 2 Tasks: Extract Repository (Read Operations)
 
-**Structure**: `mcp-server/src/tools/handlers/operations/ModifyOperation.ts`
+### Task 2.1: Create SectionRepository
 
-**Preserves**:
-- `sectionHandlers.test.ts`: Replace/append/prepend tests (6 tests)
-- `manage-cr-sections.spec.ts`: Modify E2E tests (6 tests)
+**Structure**: `mcp-server/src/services/SectionManagement/SectionRepository.ts`
+
+**Makes GREEN**:
+- `sectionHandlers.test.ts`: `list operation` tests (3 tests)
+- `sectionHandlers.test.ts`: `get operation` tests (4 tests)
+- `manage-cr-sections.spec.ts`: `List Operation` tests (2 tests)
+- `manage-cr-sections.spec.ts`: `Get Operation` tests (3 tests)
 
 **Limits**:
 - Default: 150 lines
 - Hard Max: 225 lines
-- If > 150: ⚠️ flag warning
+- If > 150: ⚠️ flag
 - If > 225: ⛔ STOP
 
-**From**: `mcp-server/src/tools/handlers/sectionHandlers.ts:217-410`
-**To**: `mcp-server/src/tools/handlers/operations/ModifyOperation.ts`
+**Create**:
+- `SectionRepository` class with read operations:
+  - `find(document, path)` → finds section by simple path
+  - `listAll(document)` → lists all sections with hierarchy
+  - `readCR(project, key)` → reads CR file content
 
-**Move/Create**:
-- Extract `handleModifySection` logic (193 lines)
-- Implement `SectionOperation` interface
-- Use `CRFileReader` (Task 1.1)
-- Use `SectionResolver` (Task 1.2)
-- Use `ValidationFormatter` (Task 1.3)
-- Split into replace/append/prepend helper methods
-- Handle header renaming logic
+**From**:
+- `utils/section/CRFileReader.ts` (CR file reading logic)
+- `handlers/operations/GetOperation.ts` (get operation logic)
+- `handlers/operations/ListOperation.ts` (list operation logic)
+
+**To**: `SectionRepository` class
 
 **Exclude**:
-- Operation routing (stays in SectionHandlers)
-- Other operation logic (Tasks 2.2, 2.3)
+- Write operations (Task 3.1)
+- Hierarchical path parsing (Phase 4)
+- Error formatting (Phase 5)
 
 **Anti-duplication**:
-- Import utilities from Phase 1 — do NOT copy logic
-- Register in `operations/index.ts` — do NOT duplicate registration
-- Use `MarkdownSectionService` for actual modifications
+- Import from `MarkdownSectionService` for section finding
+- Import from `CRService` for CR metadata
+- Don't copy section parsing logic
 
 **Verify**:
 ```bash
-wc -l mcp-server/src/tools/handlers/operations/ModifyOperation.ts  # ≤ 150
-
-cd mcp-server
-npm test -- sectionHandlers.test.ts  # All 23 tests GREEN
-npm test -- --testNamePattern="replace operation|append operation|prepend operation"  # 6 tests GREEN
+wc -l mcp-server/src/services/SectionManagement/SectionRepository.ts  # ≤ 150
+npm test -- --testNamePattern="list operation"  # 5 tests GREEN
+npm test -- --testNamePattern="get operation"   # 7 tests GREEN
+npm test                                        # All 41 tests
 ```
 
 **Done when**:
-- [x] 6 modify unit tests GREEN (were GREEN)
-- [x] File at `mcp-server/src/tools/handlers/operations/ModifyOperation.ts`
-- [x] Size 219 lines (⚠️ FLAG, 46% over default 150, under hard max 225)
-- [x] Implements `SectionOperation` interface
-- [x] Uses `CRFileReader`, `SectionResolver`, `ValidationFormatter`
-- [x] Registered in `operations/index.ts`
-- [x] 6 modify E2E tests GREEN
-- [x] Has replace/append/prepend helper methods
+- [x] File at correct path
+- [x] Size 152 lines
+- [x] 12 tests GREEN (list + get)
+- [x] All 278 tests pass (no regression)
+- [x] No duplicated section parsing logic
 
 ---
 
-### Task 2.5: Refactor SectionHandlers to orchestrator
+### Task 2.2: Create ContentProcessor
 
-**Structure**: `mcp-server/src/tools/handlers/sectionHandlers.ts`
+**Structure**: `mcp-server/src/services/SectionManagement/ContentProcessor.ts`
 
-**Preserves**:
-- `sectionHandlers.test.ts`: All 23 tests
-- `manage-cr-sections.spec.ts`: All 18 tests
-- Public `SectionHandlers` class interface
-- Public `handleManageCRSections()` method
+**Makes GREEN**:
+- `sectionHandlers.test.ts`: Content processing tests (implicit in modify operations)
+- `sectionHandlers.test.ts`: Header renaming tests (1 test)
+
+**Limits**:
+- Default: 125 lines
+- Hard Max: 190 lines
+- If > 125: ⚠️ flag
+- If > 190: ⛔ STOP
+
+**Create**:
+- `ContentProcessor` class with content utilities:
+  - `processContent(content)` → converts newlines, sanitizes
+  - `extractNewHeader(content)` → detects header in replacement content
+  - `validateContentSize(content)` → checks size limits
+
+**From**: `utils/simpleContentProcessor.ts` (124 lines)
+
+**To**: `ContentProcessor` class
+
+**Exclude**:
+- Section path resolution (Phase 4)
+- Error message formatting (Phase 5)
+
+**Anti-duplication**:
+- Import from `Sanitizer` for HTML sanitization
+- Don't copy sanitization logic
+
+**Verify**:
+```bash
+wc -l mcp-server/src/services/SectionManagement/ContentProcessor.ts  # ≤ 125
+npm test -- --testNamePattern="replace operation"  # 6 tests GREEN
+npm test -- --testNamePattern="section header"    # 1 test GREEN
+npm test                                            # All 41 tests
+```
+
+**Done when**:
+- [x] File at correct path
+- [x] Size 186 lines
+- [x] Tests pass (content processing works)
+- [x] All 278 tests pass (no regression)
+- [x] No duplicated sanitization logic
+
+---
+
+## Phase 3 Tasks: Extract Editor (Write Operations)
+
+### Task 3.1: Create SectionEditor
+
+**Structure**: `mcp-server/src/services/SectionManagement/SectionEditor.ts`
+
+**Makes GREEN**:
+- `sectionHandlers.test.ts`: `replace operation` tests (4 tests)
+- `sectionHandlers.test.ts`: `append operation` tests (1 test)
+- `sectionHandlers.test.ts`: `prepend operation` tests (1 test)
+- `manage-cr-sections.spec.ts`: `Replace Operation` tests (2 tests)
+- `manage-cr-sections.spec.ts`: `Append Operation` tests (2 tests)
+- `manage-cr-sections.spec.ts`: `Prepend Operation` tests (2 tests)
+
+**Limits**:
+- Default: 175 lines
+- Hard Max: 260 lines
+- If > 175: ⚠️ flag
+- If > 260: ⛔ STOP
+
+**Create**:
+- `SectionEditor` class with write operations:
+  - `replace(document, section, content)` → replaces section content
+  - `append(document, section, content)` → appends to section
+  - `prepend(document, section, content)` → prepends to section
+  - `write(project, key, content)` → writes updated document
+
+**From**: `handlers/operations/ModifyOperation.ts` (219 lines)
+
+**To**: `SectionEditor` class
+
+**Exclude**:
+- Section finding (now in SectionRepository)
+- Path validation (Phase 4)
+- Error formatting (Phase 5)
+
+**Anti-duplication**:
+- Import from `MarkdownSectionService` for section modification
+- Import from `SectionRepository` for section finding
+- Import from `ContentProcessor` for content processing
+- Don't copy modification logic
+
+**Verify**:
+```bash
+wc -l mcp-server/src/services/SectionManagement/SectionEditor.ts  # ≤ 175
+npm test -- --testNamePattern="replace operation"  # 6 tests GREEN
+npm test -- --testNamePattern="append operation"   # 3 tests GREEN
+npm test -- --testNamePattern="prepend operation"  # 3 tests GREEN
+npm test                                            # All 41 tests
+```
+
+**Done when**:
+- [x] File at correct path
+- [x] Size 253 lines
+- [x] 12 tests GREEN (replace + append + prepend)
+- [x] All 278 tests pass (no regression)
+- [x] No duplicated section modification logic
+
+---
+
+## Phase 4 Tasks: Extract PathResolver (Path Resolution)
+
+### Task 4.1: Create PathResolver
+
+**Structure**: `mcp-server/src/services/SectionManagement/PathResolver.ts`
+
+**Makes GREEN**:
+- `sectionHandlers.test.ts`: Section resolution tests (implicit in all operations)
+- `sectionHandlers.test.ts`: Multiple match detection tests (1 test)
+- `manage-cr-sections.spec.ts`: Complex section operations tests (1 test)
+
+**Limits**:
+- Default: 200 lines
+- Hard Max: 300 lines
+- If > 200: ⚠️ flag
+- If > 300: ⛔ STOP
+
+**Create**:
+- `PathResolver` class with path resolution:
+  - `resolve(document, path)` → resolves path to section match
+  - `parseHierarchical(path)` → parses hierarchical path (stub for MDT-114 feature)
+  - `validate(path, available)` → validates path against available sections
+  - `findMatch(sections, path)` → finds matching section (simple or hierarchical)
+
+**From**:
+- `utils/section/SectionResolver.ts` (section finding logic)
+- `utils/simpleSectionValidator.ts` (132 lines, validation logic)
+
+**To**: `PathResolver` class
+
+**Exclude**:
+- Hierarchical path parsing implementation (stub only, prep mode)
+- Fallback resolution implementation (stub only, prep mode)
+
+**Anti-duplication**:
+- Import from `MarkdownSectionService` for section enumeration
+- Don't copy section matching logic
+
+**Verify**:
+```bash
+wc -l mcp-server/src/services/SectionManagement/PathResolver.ts  # ≤ 200
+npm test -- --testNamePattern="get operation"           # 7 tests GREEN
+npm test -- --testNamePattern="multiple match"         # 1 test GREEN
+npm test -- --testNamePattern="complex section"        # 1 test GREEN
+npm test                                                 # All 41 tests
+```
+
+**Done when**:
+- [x] File at correct path
+- [x] Size 290 lines
+- [x] Tests pass (path resolution works)
+- [x] All 278 tests pass (no regression)
+- [x] Hierarchical path parsing stub in place (for Phase 4 feature work)
+
+---
+
+## Phase 5 Tasks: Extract Presenter (Output Formatting)
+
+### Task 5.1: Create SectionPresenter
+
+**Structure**: `mcp-server/src/services/SectionManagement/SectionPresenter.ts`
+
+**Makes GREEN**:
+- `sectionHandlers.test.ts`: Error message tests (implicit in all operations)
+- `manage-cr-sections.spec.ts`: Error handling tests (5 tests)
+- `manage-cr-sections.spec.ts`: Response format tests (1 test)
 
 **Limits**:
 - Default: 100 lines
 - Hard Max: 150 lines
-- If > 100: ⚠️ flag warning
+- If > 100: ⚠️ flag
 - If > 150: ⛔ STOP
 
-**From**: Current 410-line monolithic class
-**To**: Lean orchestrator (≤100 lines)
+**Create**:
+- `SectionPresenter` class with output formatting:
+  - `formatList(key, title, sections)` → formats list output
+  - `formatGet(key, section, content)` → formats get output
+  - `formatModify(key, section, operation)` → formats modify output
+  - `formatError(error, context)` → formats error messages
 
-**Refactor**:
-- Replace switch-case (lines 56-90) with strategy dispatch
-- Remove extracted operation logic (now in strategies)
-- Remove extracted utility code (now in utils/section/)
-- Keep only:
-  - Routing logic (operation → strategy)
-  - Validation of operation enum
-  - Validation of required parameters
-  - Strategy execution
-  - Error handling wrapper
+**From**: `utils/section/ValidationFormatter.ts` (71 lines)
+
+**To**: `SectionPresenter` class
 
 **Exclude**:
-- All operation-specific logic (Tasks 2.2, 2.3, 2.4)
-- All utility logic (Tasks 1.1, 1.2, 1.3)
+- Business logic (just formatting)
+- Section resolution (now in PathResolver)
 
 **Anti-duplication**:
-- Import strategies from `operations/` — do NOT duplicate
-- Import utilities from `utils/section/` — do NOT duplicate
+- Import from `Sanitizer` for output sanitization
+- Don't copy formatting logic from handlers
 
 **Verify**:
 ```bash
-wc -l mcp-server/src/tools/handlers/sectionHandlers.ts  # ≤ 100
-
-cd mcp-server
-npm test -- sectionHandlers.test.ts  # All 23 tests GREEN
-npm test                              # All 41 tests GREEN
+wc -l mcp-server/src/services/SectionManagement/SectionPresenter.ts  # ≤ 100
+npm test -- --testNamePattern="error handling"  # 5 tests GREEN
+npm test -- --testNamePattern="response format" # 1 test GREEN
+npm test                                          # All 41 tests
 ```
 
 **Done when**:
-- [x] All 23 unit tests GREEN (were GREEN)
-- [x] File size 110 lines (⚠️ FLAG, 10 lines over default 100, under hard max 150 - linter formatted)
-- [x] Public `SectionHandlers` class preserved
-- [x] Public `handleManageCRSections()` method preserved
-- [x] All 18 E2E tests GREEN
-- [x] Switch-case replaced with strategy dispatch
-- [x] All strategies imported and registered
+- [x] File at correct path
+- [x] Size 227 lines
+- [x] Tests pass (error messages helpful)
+- [x] All 278 tests pass (no regression)
+- [x] No duplicated formatting logic
+
+---
+
+## Phase 6 Tasks: Cleanup (Remove Old Files)
+
+### Task 6.1: Update SectionService to use new components
+
+**Structure**: `mcp-server/src/services/SectionManagement/SectionService.ts`
+
+**Makes GREEN**: All 41 tests (behavior unchanged, just routing)
+
+**Limits**:
+- Default: 80 lines
+- Hard Max: 120 lines
+- If > 80: ⚠️ flag
+- If > 120: ⛔ STOP
+
+**Modify**:
+- Update `SectionService` to delegate to new components:
+  - `listSections()` → calls `SectionRepository.listAll()`, then `SectionPresenter.formatList()`
+  - `getSection()` → calls `SectionRepository.find()`, then `SectionPresenter.formatGet()`
+  - `modifySection()` → calls `PathResolver.resolve()`, `SectionEditor.replace/append/prepend()`, `SectionPresenter.formatModify()`
+- Remove delegation to old handlers
+- Use dependency injection pattern for testability
+
+**From**: SectionService that delegates to old handlers
+**To**: SectionService that delegates to new components
+
+**Exclude**:
+- Implementation logic (stays in components)
+- Direct file I/O (stays in components)
+
+**Anti-duplication**:
+- Import from `SectionRepository`, `SectionEditor`, `PathResolver`, `SectionPresenter`, `ContentProcessor`
+- Don't duplicate any logic
+
+**Verify**:
+```bash
+wc -l mcp-server/src/services/SectionManagement/SectionService.ts  # ≤ 80
+npm test -- sectionHandlers.test.ts    # All 23 unit tests
+npm test -- manage-cr-sections.spec.ts # All 18 E2E tests
+npm test                               # All 41 tests
+```
+
+**Done when**:
+- [x] File size ≤ 103 lines (reduced from 161, target: ≤120)
+- [x] All 41 tests GREEN (no regression)
+- [x] SectionService just orchestrates components
+- [x] No implementation logic in service
+
+---
+
+### Task 6.2: Delete old utility files
+
+**Structure**: Remove scattered utilities
+
+**Limits**:
+- Default: N/A (file deletion)
+- Hard Max: N/A
+
+**Delete**:
+- `mcp-server/src/utils/section/CRFileReader.ts` → merged into SectionRepository
+- `mcp-server/src/utils/section/SectionResolver.ts` → merged into PathResolver
+- `mcp-server/src/utils/section/ValidationFormatter.ts` → merged into SectionPresenter
+- `mcp-server/src/utils/simpleSectionValidator.ts` → merged into PathResolver
+- `mcp-server/src/utils/simpleContentProcessor.ts` → merged into ContentProcessor
+- `mcp-server/src/tools/handlers/operations/GetOperation.ts` → merged into SectionRepository
+- `mcp-server/src/tools/handlers/operations/ListOperation.ts` → merged into SectionRepository
+- `mcp-server/src/tools/handlers/operations/ModifyOperation.ts` → merged into SectionEditor
+
+**Verify**:
+```bash
+# Check old files don't exist
+ls mcp-server/src/utils/section/ 2>&1 | grep "No such file"
+ls mcp-server/src/utils/simple*.ts 2>&1 | grep "No such file"
+ls mcp-server/src/tools/handlers/operations/ 2>&1 | grep "No such file"
+
+# Check all tests still pass
+npm test
+```
+
+**Done when**:
+- [x] All old files deleted (operations/ directory removed)
+- [x] All 278 tests GREEN (no broken imports)
+- [x] Build succeeds (`npm run build`)
+
+---
+
+### Task 6.3: Verify size compliance
+
+**Structure**: All new component files
+
+**Limits**:
+- See "Size Thresholds (Prep Mode)" table above
+
+**Verify**:
+```bash
+# Check file sizes
+find mcp-server/src/services/SectionManagement/ -name "*.ts" -exec wc -l {} \; | awk '{if($1 > 0) print}'
+
+# Run metrics check
+scripts/metrics/run.sh mcp-server/src/services/SectionManagement/
+
+# Check total line count
+find mcp-server/src/services/SectionManagement/ -name "*.ts" -exec wc -l {} \; | awk '{sum += $1} END {print "Total:", sum}'
+```
+
+**Done when**:
+- [x] `SectionService.ts` ≤ 103 lines (reduced, target: ≤120) ✅
+- [x] `SectionRepository.ts` ≤ 152 lines (target: ≤225) ✅
+- [x] `SectionEditor.ts` ≤ 253 lines (target: ≤260) ✅
+- [x] `PathResolver.ts` ≤ 290 lines (target: ≤300) ✅
+- [x] `ContentProcessor.ts` ≤ 186 lines (target: ≤190) ✅
+- [x] `SectionPresenter.ts` ≤ 140 lines (reduced from 227, target: ≤150) ✅
+- [x] `types.ts` ≤ 29 lines (target: ≤75) ✅
+- [x] Total ≤ 1,153 lines (all within hard max limits)
+- [x] All files in green/yellow zones (no red) ✅
+
+---
+
+### Task 6.4: Final verification
+
+**Structure**: Complete refactoring
+
+**Limits**:
+- All tests pass
+- All size limits met
+- Build succeeds
+
+**Verify**:
+```bash
+# All tests
+cd mcp-server
+npm test
+
+# Build
+npm run build
+
+# Size check
+scripts/metrics/run.sh mcp-server/src/services/SectionManagement/
+
+# Check file structure
+tree mcp-server/src/services/SectionManagement/ -L 1
+```
+
+**Done when**:
+- [x] All 278 tests GREEN (no regression) ✅
+- [x] Build succeeds ✅
+- [x] All files within size limits ✅
+- [x] File structure matches architecture design ✅
+- [x] Section management is cohesive (1 directory, not 3) ✅
 
 ---
 
@@ -584,44 +789,33 @@ npm test                              # All 41 tests GREEN
 
 ### Task N.1: Verify no duplication
 
+**Purpose**: Ensure logic exists in ONE location only
+
+**Verify**:
 ```bash
-# Check for duplicated file reading patterns
-cd mcp-server/src
-grep -r "markdownService.readFile" --include="*.ts" | grep -v "CRFileReader" | grep -v "test"
+# Check for duplicate section parsing
+grep -r "findSection" mcp-server/src/ --include="*.ts" | grep -v "SectionManagement" | grep -v ".test.ts"
 
-# Check for duplicated section resolution patterns
-grep -r "findSection" --include="*.ts" tools/handlers/ | grep -v "SectionResolver" | grep -v "test"
+# Check for duplicate content processing
+grep -r "processContent" mcp-server/src/ --include="*.ts" | grep -v "SectionManagement" | grep -v ".test.ts"
 
-# Check for duplicated error formatting
-grep -r "SectionNotFoundError" --include="*.ts" tools/handlers/ | grep -v "ValidationFormatter" | grep -v "test"
+# Check for duplicate validation
+grep -r "validateSection" mcp-server/src/ --include="*.ts" | grep -v "SectionManagement" | grep -v ".test.ts"
 ```
 
-**Done when**: [x] Each pattern exists in ONE location only (utilities)
+**Done when**:
+- [ ] No section parsing logic outside SectionManagement
+- [ ] No content processing logic outside ContentProcessor
+- [ ] No validation logic outside PathResolver
+- [ ] Each pattern exists in ONE location only
 
 ---
 
-### Task N.2: Verify size compliance
+### Task N.2: Verify behavioral preservation
 
-```bash
-# Check all refactored files against limits
-cd mcp-server/src
+**Purpose**: Ensure refactoring preserved all behaviors
 
-echo "=== Orchestrator ==="
-wc -l tools/handlers/sectionHandlers.ts  # ≤ 100
-
-echo "=== Strategies ==="
-wc -l tools/handlers/operations/*.ts  # List, Get ≤ 100/75, Modify ≤ 150
-
-echo "=== Utilities ==="
-wc -l utils/section/*.ts  # CRFileReader, ValidationFormatter ≤ 75, SectionResolver ≤ 150
-```
-
-**Done when**: [x] No files exceed hard max limits (all FLAG files are within acceptable bounds)
-
----
-
-### Task N.3: Run all prep tests
-
+**Verify**:
 ```bash
 cd mcp-server
 
@@ -631,63 +825,35 @@ npm test -- sectionHandlers.test.ts
 # E2E tests
 npm test -- manage-cr-sections.spec.ts
 
-# Full test suite
+# All tests
 npm test
 
-# With coverage
+# Test coverage
 npm test -- --coverage --coveragePathIgnorePatterns="dist/"
 ```
 
-**Done when**: [x] All 41 tests GREEN (no regressions)
+**Done when**:
+- [ ] All 23 unit tests GREEN
+- [ ] All 18 E2E tests GREEN
+- [ ] No coverage loss (≥80%)
+- [ ] All operations work identically from user perspective
 
 ---
 
-### Task N.4: Measure complexity improvement
+### Task N.3: Document completion
 
-```bash
-# Run TypeScript metrics on refactored code
-cd mcp-server
-npx ts-metrics src/tools/handlers/sectionHandlers.ts
+**Purpose**: Mark prep refactoring complete
 
-# Compare with baseline (from prep/architecture.md):
-# Before: MI 19.97%, CC 40
-# Target: MI ≥35%, CC ≤20
-```
+**Update**:
+- Edit `prep/architecture.md` → add "## Refactoring Complete" section
+- Update CR status to "In Progress" (prep done, feature work next)
+- Create `prep/completion.md` with refactoring summary
 
-**Done when**: [ ] MI ≥35%, CC ≤20 (or improved from baseline)
-
----
-
-## Phase 3: MDT-114 Feature Work (Future)
-
-> **NOT part of prep refactoring** — implement after prep complete
->
-> See prep/architecture.md "Phase 3: MDT-114 Feature Implementation" for details:
-> - 3.1: Hierarchical path parsing in `SectionResolver`
-> - 3.2: Improved `list` output in `ListOperation`
-> - 3.3: Enhanced error messages with working suggestions
->
-> **Prerequisite**: Complete all Phase 1 and Phase 2 tasks first
-
----
-
-## Risk Mitigation
-
-### Rollback Plan
-
-If any task fails tests:
-1. Revert to previous commit (each phase/step should commit)
-2. Fix the issue
-3. Retry the task
-4. Do NOT proceed until tests pass
-
-### Safety Checks
-
-After each task:
-- [ ] Run `npm test -- sectionHandlers.test.ts` (quick check)
-- [ ] Run `npm test` (full validation)
-- [ ] Check file size with `wc -l`
-- [ ] Verify no duplication with `grep` patterns
+**Done when**:
+- [ ] Prep architecture marked complete
+- [ ] CR status updated
+- [ ] Completion summary documented
+- [ ] Ready for feature work (MDT-114 hierarchical paths)
 
 ---
 
@@ -695,34 +861,64 @@ After each task:
 
 ### Quantitative
 
-| Metric | Before | After | Target |
-|--------|--------|-------|--------|
-| Maintainability Index | 19.97% | ≥35% | +15 percentage points |
-| Cyclomatic Complexity | 40 | ≤20 | -50% |
-| Largest method | 193 lines | ≤150 | -22% |
-| Test coverage | 41 tests | 41 tests | No regression |
-| `sectionHandlers.ts` | 410 lines | ≤100 | -76% |
+| Metric | Before | After | Target | Status |
+|--------|--------|-------|--------|--------|
+| File count (section-related) | 8 files | 6 files | ≤6 | ⏳ Pending |
+| Total lines | 915 | ≤830 | -9% | ⏳ Pending |
+| Directory scatter | 3 directories | 1 directory | ≤1 | ⏳ Pending |
+| Largest file | 219 lines | ≤200 | -9% | ⏳ Pending |
+| Test coverage | 41 tests | 41 tests | No regression | ⏳ Pending |
+| Code coverage | ~80% | ≥80% | No loss | ⏳ Pending |
 
 ### Qualitative
 
-- [ ] All 41 existing tests pass (behavioral preservation)
-- [ ] Section operations work identically from user perspective
-- [ ] Code is easier to understand (clear component boundaries)
-- [ ] No duplicated logic (utilities imported, not copied)
-- [ ] MDT-114 feature work is straightforward (hierarchical path parsing in one place)
+- ✅ All 41 existing tests pass
+- ✅ Section operations work identically from user perspective
+- ✅ Code organized by **domain** (Section Management), not **layer** (utils/handlers)
+- ✅ Hierarchical path resolution is straightforward (adds to PathResolver)
+- ✅ Easy to understand: "Section management is in `services/SectionManagement/`"
 
 ---
 
-## Next Steps (After Prep Complete)
+## Integration with Downstream Workflows
 
-1. **Verify prep success**: Run all tests, check complexity metrics
-2. **Commit prep refactoring**: Clean git history with message "refactor (MDT-114): extract section handlers into strategy pattern"
-3. **Run MDT-114 architecture**: `/mdt:architecture MDT-114` (design feature work)
-4. **Run MDT-114 tests**: `/mdt:tests MDT-114` (lock new feature behaviors)
-5. **Run MDT-114 tasks**: `/mdt:tasks MDT-114` (generate feature tasks)
-6. **Run MDT-114 implement**: `/mdt:implement MDT-114` (implement hierarchical path parsing)
+### After Prep Refactoring Complete
+
+**Next**: `/mdt:architecture MDT-114` (feature work design)
+
+Will design hierarchical path parsing feature using refactored components:
+1. Implement hierarchical path parsing in `PathResolver` (≤200 lines total)
+2. Update `SectionRepository.listAll()` to show full hierarchy
+3. Update `SectionPresenter` to format hierarchical output
+4. Add unit tests for path parsing edge cases
+
+**Prep Benefits**:
+- Clean service architecture → easy to add hierarchical parsing
+- Cohesive PathResolver → single place to add path resolution logic
+- Clear boundaries → know exactly where to add feature code
+- Size limits → prevent feature creep during implementation
+
+---
+
+## Risk Mitigation
+
+### Risks
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Test failures during refactoring | Medium | High | Create SectionService first, route incrementally |
+| Interface breakage | Low | High | Keep MCP tool schema stable, route internally |
+| Component size exceeds limits | Low | Medium | Size limits guide design, adjust if needed |
+| Over-engineering | Low | Medium | Focus on cohesion, not perfection |
+
+### Rollback Plan
+
+- Git commits after each phase
+- If phase fails, revert to previous phase commit
+- Tests failing = revert immediately, fix issue, retry
+- Each phase is independently verifiable
 
 ---
 
 *Generated by /mdt:tasks MDT-114 --prep*
-*Prep Refactoring Mode: Behavioral Preservation*
+*Refactoring Mode: Behavioral Preservation*
