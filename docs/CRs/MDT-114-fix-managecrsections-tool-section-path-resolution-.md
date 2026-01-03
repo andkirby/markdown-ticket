@@ -9,6 +9,8 @@ priority: High
 # Fix manage_cr_sections tool section path resolution and ambiguous subsection handling
 
 ## 1. Description
+> **Prep Required**: Preparatory refactoring design complete — see [prep/architecture.md](./prep/architecture.md)
+
 ### Problem
 
 - Section path syntax is unreliable - hierarchical path format (`# H1 / ## H2 / ### H3`) shown in error messages may not work in actual MCP calls
