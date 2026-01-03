@@ -205,7 +205,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         'MDT-001',
         'get',
         'NonExistent'
-      )).rejects.toThrow('Section "NonExistent" not found in CR MDT-001');
+      )).rejects.toThrow("Section 'NonExistent' not found in CR MDT-001.");
     });
 
     it('should throw error when multiple sections match', async () => {
