@@ -29,7 +29,7 @@ All workflows have access to these variables, injected at session start via a `S
 | `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
 | `/mdt:poc` | Validate uncertain technical decisions | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder |
 | `/mdt:domain-lens` | Surface DDD constraints (optional) | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
-| `/mdt:domain-audit` | Analyze code for DDD violations | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` |
+| `/mdt:domain-audit` | Analyze code for DDD + structural issues | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` |
 | `/mdt:tests` | Generate BDD test specs + executable tests | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tests.md` + test files |
 | `/mdt:architecture` | Surface decisions, define structure + size limits | CR section or `architecture.md` |
 | `/mdt:clarification` | Fill specification gaps | Updated CR sections |
@@ -187,11 +187,14 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
 /mdt:assess (recommended) ─────────── Decision point + test coverage gaps
         │
         ▼
+/mdt:domain-audit ─────────────────── Diagnose DDD + structural issues
+        │                             Extracts domain concept + natural grouping
+        ▼
 /mdt:tests ────────────────────────── Behavior preservation tests
         │                             Lock current behavior before changes
         │                             Tests must be GREEN before refactoring
         ▼
-/mdt:architecture ─────────────────── Define target structure + size limits
+/mdt:architecture --prep ──────────── Design fix based on audit findings
         │
         ▼
 /mdt:tasks ────────────────────────── Constrained task list
@@ -548,7 +551,7 @@ Generates `{TICKETS_PATH}/{CR-KEY}/domain.md` (~15-25 lines):
 
 ### `/mdt:domain-audit`
 
-Analyzes existing code for DDD violations. Generates `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or standalone report.
+Analyzes existing code for DDD violations AND structural issues. Generates `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or standalone report.
 
 **Invocations**:
 ```bash
@@ -557,6 +560,8 @@ Analyzes existing code for DDD violations. Generates `{TICKETS_PATH}/{CR-KEY}/do
 ```
 
 **Detects**:
+
+*DDD Violations:*
 | Violation | Severity |
 |-----------|----------|
 | Anemic domain model | High |
@@ -567,17 +572,29 @@ Analyzes existing code for DDD violations. Generates `{TICKETS_PATH}/{CR-KEY}/do
 | Missing domain events | Medium |
 | Language drift | Low |
 
-**Output**: Violations report with evidence + fix direction (not prescriptions)
+*Structural Issues (v2):*
+| Issue | Severity |
+|-------|----------|
+| Layer violation | High |
+| Scattered cohesion | High |
+| Mixed responsibility | Medium |
+| Dependency direction | High |
+| Orphan utilities | Medium |
+
+**Output sections**:
+- DDD Violations (with evidence)
+- Structural Issues (with evidence)
+- Dependency Analysis (import graph)
+- Domain Concept (what the code is about + natural grouping)
+- Recommendations (prioritized fix directions)
 
 **Workflow**:
 ```
 /mdt:domain-audit → domain-audit.md
         ↓
-    Create refactoring CR
+/mdt:architecture --prep → designs fix based on audit findings
         ↓
-/mdt:domain-lens {CR} → target model
-        ↓
-/mdt:architecture → /mdt:tasks → /mdt:implement
+/mdt:tasks → /mdt:implement
 ```
 
 ### `/mdt:architecture`
@@ -715,9 +732,9 @@ prompts/
 ├── mdt-assess.md            # Code fitness assessment (v3 - prep aware)
 ├── mdt-poc.md               # Proof of concept spikes (v1)
 ├── mdt-domain-lens.md       # DDD constraints (v2 - code grounded)
-├── mdt-domain-audit.md      # DDD violations analysis (v1)
+├── mdt-domain-audit.md      # DDD + structural analysis (v2)
 ├── mdt-tests.md             # BDD test generation (v3 - prep aware)
-├── mdt-architecture.md      # Architecture design (v6 - prep aware)
+├── mdt-architecture.md      # Architecture design (v7 - consumes domain-audit)
 ├── mdt-clarification.md     # Gap filling
 ├── mdt-tasks.md             # Task breakdown (v6 - prep aware)
 ├── mdt-implement.md         # Orchestrator (v6 - prep aware)
