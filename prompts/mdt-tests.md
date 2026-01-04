@@ -1,4 +1,4 @@
-# MDT Test Specification Workflow (v3)
+# MDT Test Specification Workflow (v4)
 
 Generate BDD test specifications and executable test files from requirements or behavioral assessment.
 
@@ -17,8 +17,8 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 ## Output Location
 
 - **Prep mode** (`--prep`): `{TICKETS_PATH}/{CR-KEY}/prep/tests.md`
-- **Phased CR**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tests.md`
-- **Non-phased CR**: `{TICKETS_PATH}/{CR-KEY}/tests.md`
+- **Multi-part CR**: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tests.md`
+- **Single-part CR**: `{TICKETS_PATH}/{CR-KEY}/tests.md`
 - **Test files**: Project's test directory (detected from config)
 
 ## Mode Detection
@@ -36,7 +36,7 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 2. **Integration/E2E focus** — Test from public interface, not internals
 3. **BDD format** — Given/When/Then scenarios derived from EARS specs
 4. **Traceability** — Every test traces to requirement or behavior
-5. **Phase isolation** — Each phase gets its own tests.md in phase folder
+5. **Part isolation** — Each part gets its own tests.md in part folder
 6. **Prep tests must pass** — Prep mode locks current behavior (tests should be GREEN)
 
 ## Execution Steps
@@ -58,64 +58,64 @@ if [[ "$ARGUMENTS" == *"--prep"* ]]; then
   tests_file="{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
   # Prep tests lock current behavior — should be GREEN
   test_expectation="GREEN"
-  # Skip phase detection
+  # Skip part detection
 fi
 ```
 
-**1c. Detect phases in architecture (if not prep mode):**
+**1c. Detect parts in architecture (if not prep mode):**
 
 ```bash
 # Check for architecture.md
 arch_file="{TICKETS_PATH}/{CR-KEY}/architecture.md"
 
 if [ -f "$arch_file" ]; then
-  # Extract phase headers: "## Phase 1.1:" or "## Phase 2:"
-  phases=$(grep -oE "^## Phase [0-9]+(\.[0-9]+)?:" "$arch_file" | \
-           sed 's/## Phase \([0-9.]*\):.*/\1/' | sort -V)
+  # Extract part headers: "## Part 1.1:" or "## Part 2:"
+  parts=$(grep -oE "^## Part [0-9]+(\.[0-9]+)?:" "$arch_file" | \
+           sed 's/## Part \([0-9.]*\):.*/\1/' | sort -V)
 fi
 ```
 
-**1d. If phases detected — prompt for selection:**
+**1d. If parts detected — prompt for selection:**
 
 ```markdown
-Detected phases in architecture.md:
+Detected parts in architecture.md:
   - 1.1: Enhanced Project Validation
   - 1.2: Enhanced Ticket Validation
   - 2: Additional Contracts Migration
 
-Which phase to generate tests for? [1.1]: _
+Which part to generate tests for? [1.1]: _
 ```
 
-Accept input formats: `1.1`, `phase-1.1`, `Phase 1.1`
+Accept input formats: `1.1`, `part-1.1`, `Part 1.1`
 
-**1d. Set output paths based on phase:**
+**1d. Set output paths based on part:**
 
 ```yaml
-# Phased CR
-phase: "1.1"
-output_dir: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/"
-tests_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tests.md"
+# Multi-part CR
+part: "1.1"
+output_dir: "{TICKETS_PATH}/{CR-KEY}/part-1.1/"
+tests_file: "{TICKETS_PATH}/{CR-KEY}/part-1.1/tests.md"
 
-# Non-phased CR (backward compatible)  
-phase: null
+# Single-part CR (backward compatible)
+part: null
 output_dir: "{TICKETS_PATH}/{CR-KEY}/"
 tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
 ```
 
-**1e. Load phase-specific context from architecture.md:**
+**1e. Load part-specific context from architecture.md:**
 
-If phased, extract ONLY the selected phase section:
-- Phase overview
-- Phase-specific Structure
-- Phase-specific Size Guidance
-- Phase-specific Validation Rules / Requirements
+If multi-part, extract ONLY the selected part section:
+- Part overview
+- Part-specific Structure
+- Part-specific Size Guidance
+- Part-specific Validation Rules / Requirements
 
-Example extraction for Phase 1.1:
+Example extraction for Part 1.1:
 ```markdown
-## Phase 1.1: Enhanced Project Validation
+## Part 1.1: Enhanced Project Validation
 
 ### Overview
-Phase 1.1 extends the Project schema with comprehensive validation...
+Part 1.1 extends the Project schema with comprehensive validation...
 
 ### Enhanced Structure
 domain-contracts/src/project/
@@ -135,11 +135,11 @@ IF {TICKETS_PATH}/{CR-KEY}/requirements.md exists:
   MODE = "feature"
   Load requirements.md
 ELSE IF CR type is "Bug Fix" or contains refactoring keywords:
-  MODE = "refactoring"  
+  MODE = "refactoring"
   Load assess output if exists
 ELSE:
   MODE = "feature"
-  Warn: "No requirements.md found — generate from CR/phase description"
+  Warn: "No requirements.md found — generate from CR/part description"
 ```
 
 **1g. Detect test framework:**
@@ -163,9 +163,9 @@ test:
 
 ### Step 2: Extract Test Subjects
 
-**For Feature Mode (from requirements.md or phase description):**
+**For Feature Mode (from requirements.md or part description):**
 
-Parse EARS specifications or phase requirements:
+Parse EARS specifications or part requirements:
 
 | EARS Type | Maps To |
 |-----------|---------|
@@ -174,16 +174,16 @@ Parse EARS specifications or phase requirements:
 | WHILE `<state>` the system shall | State-based scenario |
 | WHERE `<feature>` is not available | Fallback scenario |
 
-**For phased architecture without requirements.md:**
+**For multi-part architecture without requirements.md:**
 
-Extract testable requirements from phase section:
+Extract testable requirements from part section:
 - "Validation Rules Specification" → test each rule
 - "Enhanced Structure" → test each new module exists
 - "Error Handling Strategy" → test each error scenario
 
-Example extraction from Phase 1.1:
+Example extraction from Part 1.1:
 ```markdown
-## From Phase 1.1 Validation Rules:
+## From Part 1.1 Validation Rules:
 
 **Required Fields:**
 - `name`: Non-empty string, trimmed length > 0
@@ -218,19 +218,19 @@ Identify current behaviors to preserve:
 **Scenario Template:**
 
 ```gherkin
-Feature: {Feature name from requirement group or phase}
+Feature: {Feature name from requirement group or part}
 
   Background:
     Given {common setup}
 
-  @requirement:{R-ID} OR @phase:{X.Y}
+  @requirement:{R-ID} OR @part:{X.Y}
   Scenario: {descriptive_name}
     Given {initial context}
     When {action taken}
     Then {expected outcome}
     And {additional assertions}
 
-  @requirement:{R-ID} OR @phase:{X.Y}
+  @requirement:{R-ID} OR @part:{X.Y}
   Scenario: {edge_case_name}
     Given {edge condition}
     When {action taken}
@@ -260,11 +260,11 @@ Feature: {Feature name from requirement group or phase}
         └── fixtures.{ext}
 ```
 
-For phased CRs, organize by phase if helpful:
+For multi-part CRs, organize by part if helpful:
 ```
 {test_directory}/
 └── {CR-KEY}/
-    └── phase-{X.Y}/
+    └── part-{X.Y}/
         ├── {feature}.test.{ext}
         └── fixtures.{ext}
 ```
@@ -274,15 +274,15 @@ For phased CRs, organize by phase if helpful:
 **Jest/Vitest (TypeScript):**
 ```typescript
 /**
- * Tests for: {CR-KEY} Phase {X.Y}
- * Phase: {Phase Title}
- * Requirements: {R1.1, R1.2, ...} OR derived from phase spec
+ * Tests for: {CR-KEY} Part {X.Y}
+ * Part: {Part Title}
+ * Requirements: {R1.1, R1.2, ...} OR derived from part spec
  * Generated by: /mdt:tests
  * Status: RED (implementation pending)
  */
 
 describe('{Feature name}', () => {
-  // @phase: {X.Y} @requirement: P{X.Y}-1
+  // @part: {X.Y} @requirement: P{X.Y}-1
   describe('when valid project code provided', () => {
     it('should accept uppercase 3-5 char codes', async () => {
       // Arrange
@@ -309,9 +309,9 @@ describe('{Feature name}', () => {
 **Pytest (Python):**
 ```python
 """
-Tests for: {CR-KEY} Phase {X.Y}
-Phase: {Phase Title}
-Requirements: derived from phase spec
+Tests for: {CR-KEY} Part {X.Y}
+Part: {Part Title}
+Requirements: derived from part spec
 Generated by: /mdt:tests
 Status: RED (implementation pending)
 """
@@ -320,9 +320,9 @@ from domain_contracts.project import ProjectSchema
 
 
 class TestProjectValidation:
-    """Feature: Project Schema Validation (Phase {X.Y})"""
+    """Feature: Project Schema Validation (Part {X.Y})"""
 
-    # @phase: {X.Y}
+    # @part: {X.Y}
     class TestCodePattern:
         """Project code pattern validation"""
 
@@ -346,8 +346,8 @@ After generating test files:
 
 ```bash
 {test_command} --filter={CR-KEY}
-# Or for phased:
-{test_command} --filter="phase-{X.Y}"
+# Or for multi-part:
+{test_command} --filter="part-{X.Y}"
 ```
 
 Expected output:
@@ -362,21 +362,21 @@ If any tests pass before implementation → investigate:
 
 ### Step 6: Generate tests.md
 
-**Create output directory if phased:**
+**Create output directory if multi-part:**
 ```bash
-mkdir -p "{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}"
+mkdir -p "{TICKETS_PATH}/{CR-KEY}/part-{X.Y}"
 ```
 
 **Generate tests.md:**
 
 ```markdown
-# Tests: {CR-KEY} Phase {X.Y}
+# Tests: {CR-KEY} Part {X.Y}
 
 **Mode**: {Feature | Refactoring}
-**Phase**: {X.Y} - {Phase Title}
-**Source**: architecture.md → Phase {X.Y}
+**Part**: {X.Y} - {Part Title}
+**Source**: architecture.md → Part {X.Y}
 **Generated**: {timestamp}
-**Scope**: Phase {X.Y} only
+**Scope**: Part {X.Y} only
 
 ## Test Configuration
 
@@ -385,7 +385,7 @@ mkdir -p "{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}"
 | Framework | {jest, pytest, etc.} |
 | Test Directory | `{path}` |
 | Test Command | `{command}` |
-| Phase Filter | `--testPathPattern="phase-{X.Y}"` |
+| Part Filter | `--testPathPattern="part-{X.Y}"` |
 | Status | 🔴 RED (implementation pending) |
 
 ## Requirement → Test Mapping
@@ -434,16 +434,16 @@ And invalid codes: mdt, api_01, A, ABCDEFG
 
 ## Verification
 
-Run Phase {X.Y} tests (should all fail):
+Run Part {X.Y} tests (should all fail):
 ```bash
-{test_command} --testPathPattern="phase-{X.Y}"
+{test_command} --testPathPattern="part-{X.Y}"
 ```
 
 Expected: **{N} failed, 0 passed**
 
 ## Coverage Checklist
 
-- [x] All phase requirements have at least one test
+- [x] All part requirements have at least one test
 - [x] Error scenarios covered
 - [x] Edge cases documented
 - [ ] Tests are RED (verified manually)
@@ -466,25 +466,25 @@ After each task: `{test_command}` should show fewer failures.
 
 **7a. Save test files** to project test directory
 
-**7b. Save tests.md** to phase-aware path:
-- Phased: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tests.md`
-- Non-phased: `{TICKETS_PATH}/{CR-KEY}/tests.md`
+**7b. Save tests.md** to part-aware path:
+- Multi-part: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tests.md`
+- Single-part: `{TICKETS_PATH}/{CR-KEY}/tests.md`
 
 **7c. Report:**
 
 ```markdown
-## Tests Generated: {CR-KEY} Phase {X.Y}
+## Tests Generated: {CR-KEY} Part {X.Y}
 
 | Metric | Value |
 |--------|-------|
 | Mode | {Feature / Refactoring} |
-| Phase | {X.Y} - {Phase Title} |
+| Part | {X.Y} - {Part Title} |
 | Requirements covered | {N} |
 | Test files created | {N} |
 | Total scenarios | {N} |
 | Status | 🔴 All RED |
 
-**Output location**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tests.md`
+**Output location**: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tests.md`
 
 **Test files**:
 - `{path/to/test1.test.ext}`
@@ -492,11 +492,11 @@ After each task: `{test_command}` should show fewer failures.
 
 **Verify RED**:
 ```bash
-{test_command} --testPathPattern="phase-{X.Y}"
+{test_command} --testPathPattern="part-{X.Y}"
 # Expected: {N} failed, 0 passed
 ```
 
-**Next**: `/mdt:tasks {CR-KEY}` — will auto-detect phase from tests.md location
+**Next**: `/mdt:tasks {CR-KEY}` — will auto-detect part from tests.md location
 ```
 
 ---
@@ -558,7 +558,7 @@ describe('getUser - behavioral preservation', () => {
 
 ---
 
-## Phase Detection Examples
+## Part Detection Examples
 
 ### Example 0: Prep Mode
 
@@ -575,18 +575,18 @@ Output: {TICKETS_PATH}/MDT-101/prep/tests.md
 ✔ Tests should pass against CURRENT code (locking behavior)
 ```
 
-### Example 1: Phased Architecture CR
+### Example 1: Multi-part Architecture CR
 
 ```markdown
 # architecture.md
 
-## Phase 1.1: Enhanced Project Validation
+## Part 1.1: Enhanced Project Validation
 ...validation rules...
 
-## Phase 1.2: Enhanced Ticket Validation  
+## Part 1.2: Enhanced Ticket Validation
 ...ticket rules...
 
-## Phase 2: Additional Contracts
+## Part 2: Additional Contracts
 ...more contracts...
 ```
 
@@ -594,39 +594,39 @@ User runs: `/mdt:tests MDT-101`
 
 Output:
 ```
-Detected phases in architecture.md:
+Detected parts in architecture.md:
   - 1.1: Enhanced Project Validation
   - 1.2: Enhanced Ticket Validation
   - 2: Additional Contracts
 
-Which phase to generate tests for? [1.1]: 1.1
+Which part to generate tests for? [1.1]: 1.1
 
-Generating tests for Phase 1.1...
-Output: {TICKETS_PATH}/MDT-101/phase-1.1/tests.md
+Generating tests for Part 1.1...
+Output: {TICKETS_PATH}/MDT-101/part-1.1/tests.md
 ```
 
-### Example 2: Non-Phased CR (Backward Compatible)
+### Example 2: Single-part CR (Backward Compatible)
 
 ```markdown
-# CR or architecture.md without ## Phase headers
+# CR or architecture.md without ## Part headers
 ```
 
 User runs: `/mdt:tests MDT-050`
 
 Output:
 ```
-No phases detected. Generating tests...
+No parts detected. Generating tests...
 Output: {TICKETS_PATH}/MDT-050/tests.md
 ```
 
-### Example 3: Direct Phase Selection
+### Example 3: Direct Part Selection
 
-User runs: `/mdt:tests MDT-101 --phase 1.2`
+User runs: `/mdt:tests MDT-101 --part 1.2`
 
 Output:
 ```
-Generating tests for Phase 1.2...
-Output: {TICKETS_PATH}/MDT-101/phase-1.2/tests.md
+Generating tests for Part 1.2...
+Output: {TICKETS_PATH}/MDT-101/part-1.2/tests.md
 ```
 
 ---
@@ -635,18 +635,18 @@ Output: {TICKETS_PATH}/MDT-101/phase-1.2/tests.md
 
 ### `/mdt:tasks` Receives
 
-`/mdt:tasks` will auto-discover phase from tests.md location:
+`/mdt:tasks` will auto-discover part from tests.md location:
 
 ```bash
-# Finds: {TICKETS_PATH}/MDT-101/phase-1.1/tests.md
-# Outputs: {TICKETS_PATH}/MDT-101/phase-1.1/tasks.md
+# Finds: {TICKETS_PATH}/MDT-101/part-1.1/tests.md
+# Outputs: {TICKETS_PATH}/MDT-101/part-1.1/tasks.md
 ```
 
 ### `/mdt:implement` Verifies
 
 ```bash
-# Loads: {TICKETS_PATH}/MDT-101/phase-1.1/tasks.md
-# References: {TICKETS_PATH}/MDT-101/phase-1.1/tests.md
+# Loads: {TICKETS_PATH}/MDT-101/part-1.1/tasks.md
+# References: {TICKETS_PATH}/MDT-101/part-1.1/tests.md
 ```
 
 ---
@@ -656,13 +656,13 @@ Output: {TICKETS_PATH}/MDT-101/phase-1.2/tests.md
 Before completing `/mdt:tests`:
 
 - [ ] Mode correctly detected (prep / feature / refactoring)
-- [ ] Phase correctly detected (or non-phased / prep fallback)
+- [ ] Part correctly detected (or single-part / prep fallback)
 - [ ] Test framework detected from project config
 - [ ] All requirements/behaviors have test coverage
 - [ ] BDD scenarios in Gherkin format
 - [ ] Executable test files generated
 - [ ] Tests verified as correct state (RED for feature, GREEN for prep/refactoring)
-- [ ] tests.md saved to correct folder (`prep/` or `phase-{X.Y}/` or root)
+- [ ] tests.md saved to correct folder (`prep/` or `part-{X.Y}/` or root)
 - [ ] Requirement mapping prepared for `/mdt:tasks`
 
 Context: $ARGUMENTS

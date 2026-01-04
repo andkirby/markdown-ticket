@@ -30,10 +30,10 @@ All workflows have access to these variables, injected at session start via a `S
 | `/mdt:poc` | Validate uncertain technical decisions | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder |
 | `/mdt:domain-lens` | Surface DDD constraints (optional) | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
 | `/mdt:domain-audit` | Analyze code for DDD + structural issues | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` |
-| `/mdt:tests` | Generate BDD test specs + executable tests | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tests.md` + test files |
+| `/mdt:tests` | Generate BDD test specs + executable tests | `{TICKETS_PATH}/{CR-KEY}/[part-{X.Y}/]tests.md` + test files |
 | `/mdt:architecture` | Surface decisions, define structure + size limits | CR section or `architecture.md` |
 | `/mdt:clarification` | Fill specification gaps | Updated CR sections |
-| `/mdt:tasks` | Break CR into constrained tasks | `{TICKETS_PATH}/{CR-KEY}/[phase-{X.Y}/]tasks.md` |
+| `/mdt:tasks` | Break CR into constrained tasks | `{TICKETS_PATH}/{CR-KEY}/[part-{X.Y}/]tasks.md` |
 | `/mdt:implement` | Execute tasks with verification | Code changes, updated tasks.md |
 | `/mdt:tech-debt` | Detect debt patterns | `{TICKETS_PATH}/{CR-KEY}/debt.md` |
 | `/mdt:reflection` | Capture learnings | Updated CR |
@@ -243,7 +243,7 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
 │                                                             │
 │ Inherits:                                                   │
 │ - Size limits → Task Limits (flag/STOP thresholds)          │
-│ - Shared patterns → Phase 1 (extract before consumers)      │
+│ - Shared patterns → Part 1 (extract before consumers)      │
 │                                                             │
 │ Adds:                                                       │
 │ - Exclude section (what NOT to move)                        │
@@ -330,7 +330,7 @@ Create new CR (e.g., "Fix technical debt from {CR-KEY}")
 | Prevention | How |
 |------------|-----|
 | Size violations | Architecture defines limits, tasks enforce, implement verifies |
-| Duplication | Shared Patterns identified in architecture, extracted in Phase 1 |
+| Duplication | Shared Patterns identified in architecture, extracted in Part 1 |
 | Missing abstractions | Architecture Design surfaces implicit decisions |
 | Shotgun surgery | Extension Rule ensures single-point changes |
 
@@ -354,7 +354,7 @@ Architecture Design identifies patterns appearing in 2+ places:
 | Error handling | all handlers | `utils/error-handler` |
 ```
 
-**Rule**: Phase 1 extracts these BEFORE Phase 2 extracts features.
+**Rule**: Part 1 extracts these BEFORE Part 2 extracts features.
 
 Features then **import** from shared utilities, never duplicate.
 
@@ -630,8 +630,8 @@ Generates `{TICKETS_PATH}/{CR-KEY}/tasks.md`:
 - **Project Context**: Detected settings
 - **Size Thresholds**: Flag/STOP zones
 - **Shared Patterns**: From Architecture Design
-- **Phase 1**: Shared utilities (extract first)
-- **Phase 2+**: Features (import from Phase 1)
+- **Part 1**: Shared utilities (extract first)
+- **Part 2+**: Features (import from Part 1)
 - **Post-Implementation**: Verification tasks
 
 ### `/mdt:implement`
@@ -640,7 +640,7 @@ Executes tasks with constraint verification:
 
 ```bash
 /mdt:implement {CR-KEY}            # Interactive
-/mdt:implement {CR-KEY} --all      # Run all, pause at phases
+/mdt:implement {CR-KEY} --all      # Run all, pause at parts
 /mdt:implement {CR-KEY} --continue # Resume
 /mdt:implement {CR-KEY} --task 1.3 # Specific task
 ```
@@ -749,12 +749,12 @@ prompts/
 | Workflow | Output Location |
 |----------|-----------------|
 | `/mdt:requirements` | `{TICKETS_PATH}/{CR-KEY}/requirements.md` |
-| `/mdt:tests` | `{TICKETS_PATH}/{CR-KEY}/[prep/][phase-{X.Y}/]tests.md` + `{test_dir}/*.test.{ext}` |
+| `/mdt:tests` | `{TICKETS_PATH}/{CR-KEY}/[prep/][part-{X.Y}/]tests.md` + `{test_dir}/*.test.{ext}` |
 | `/mdt:domain-lens` | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
 | `/mdt:domain-audit` | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or `docs/audits/domain-audit-{timestamp}.md` |
 | `/mdt:poc` | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder (gitignored) |
 | `/mdt:architecture` | CR section (simple) or `{TICKETS_PATH}/{CR-KEY}/[prep/]architecture.md` |
-| `/mdt:tasks` | `{TICKETS_PATH}/{CR-KEY}/[prep/][phase-{X.Y}/]tasks.md` |
+| `/mdt:tasks` | `{TICKETS_PATH}/{CR-KEY}/[prep/][part-{X.Y}/]tasks.md` |
 | `/mdt:tech-debt` | `{TICKETS_PATH}/{CR-KEY}/debt.md` |
 
 ## Design Principles
@@ -765,98 +765,98 @@ prompts/
 4. **Build vs Use evaluation** — evaluate existing libraries before building custom (>50 lines)
 5. **Constraints are explicit** — size limits, exclusions, STOP conditions
 6. **Three-zone verification** — OK, FLAG (warning), STOP (blocked)
-7. **Shared patterns first** — Phase 1 before Phase 2
+7. **Shared patterns first** — Part 1 before Part 2
 8. **Anti-duplication enforced** — import from shared, never copy
 9. **Project-agnostic** — works with any language/stack
 10. **Violations block progress** — cannot mark complete if constraints violated
 11. **debt.md is diagnosis** — fix via new CR, not direct execution
 12. **Requirements flow downstream** — requirements.md consumed by architecture, tasks, implement, tech-debt
-13. **Phase isolation** — epic CRs use phase folders for tests.md and tasks.md
+13. **Part isolation** — epic CRs use part folders for tests.md and tasks.md
 14. **Prove before commit** — uncertain technical decisions get PoC spikes before architecture locks in approach
 15. **Prep before feature** — when refactoring changes the code landscape, design and execute refactoring first
 
-## Phased CRs (Epic Tickets)
+## Multi-Part CRs (Epic Tickets)
 
 <details>
-<summary>Managing multi-phase epic tickets (click to expand)</summary>
+<summary>Managing multi-part epic tickets (click to expand)</summary>
 
-For large CRs with multiple implementation phases, the workflow supports **phase-aware file organization**.
+For large CRs with multiple implementation parts, the workflow supports **part-aware file organization**.
 
-### When to Use Phases
+### When to Use Parts
 
 | CR Scope | Approach |
 |----------|----------|
-| Single feature, <10 tasks | Non-phased (root level tests.md/tasks.md) |
-| Multiple phases in architecture.md | Phase folders (phase-1.1/, phase-1.2/, etc.) |
-| Epic with distinct milestones | Phase folders |
+| Single feature, <10 tasks | Single-part (root level tests.md/tasks.md) |
+| Multiple parts in architecture.md | Part folders (part-1.1/, part-1.2/, etc.) |
+| Epic with distinct milestones | Part folders |
 
-### Phase Detection
+### Part Detection
 
-Phases are detected from `## Phase X.Y:` headers in `architecture.md`:
+Parts are detected from `## Part X.Y:` headers in `architecture.md`:
 
 ```markdown
-## Phase 1.1: Enhanced Project Validation
+## Part 1.1: Enhanced Project Validation
 ...
-## Phase 1.2: Enhanced Ticket Validation
+## Part 1.2: Enhanced Ticket Validation
 ...
-## Phase 2: Additional Contracts
+## Part 2: Additional Contracts
 ```
 
-### Phased File Structure
+### Multi-Part File Structure
 
 ```
 {TICKETS_PATH}/{CR-KEY}/
-├── architecture.md          # All phases (master design doc)
-├── requirements.md          # All phases (if exists)
-├── domain.md                # All phases (if exists)
-├── phase-1.1/
-│   ├── tests.md            # Phase 1.1 test specs
-│   └── tasks.md            # Phase 1.1 task list
-├── phase-1.2/
+├── architecture.md          # All parts (master design doc)
+├── requirements.md          # All parts (if exists)
+├── domain.md                # All parts (if exists)
+├── part-1.1/
+│   ├── tests.md            # Part 1.1 test specs
+│   └── tasks.md            # Part 1.1 task list
+├── part-1.2/
 │   ├── tests.md
 │   └── tasks.md
-└── phase-2/
+└── part-2/
     ├── tests.md
     └── tasks.md
 ```
 
-### Phased Workflow
+### Multi-Part Workflow
 
 ```
-/mdt:architecture ─────────── Creates architecture.md with ## Phase X.Y sections
+/mdt:architecture ─────────── Creates architecture.md with ## Part X.Y sections
         │
         ▼
-/mdt:tests --phase 1.1 ────── Creates: phase-1.1/tests.md
+/mdt:tests --part 1.1 ────── Creates: part-1.1/tests.md
         │
         ▼
-/mdt:tasks --phase 1.1 ────── Creates: phase-1.1/tasks.md (auto-detects from tests.md)
+/mdt:tasks --part 1.1 ────── Creates: part-1.1/tasks.md (auto-detects from tests.md)
         │
         ▼
-/mdt:implement --phase 1.1 ── Executes phase-1.1/tasks.md, verifies phase-1.1/tests.md
+/mdt:implement --part 1.1 ── Executes part-1.1/tasks.md, verifies part-1.1/tests.md
         │
         ▼
-    [Phase 1.1 Complete]
+    [Part 1.1 Complete]
         │
         ▼
-/mdt:tests --phase 1.2 ────── Creates: phase-1.2/tests.md
+/mdt:tests --part 1.2 ────── Creates: part-1.2/tests.md
         │
         ▼
     ... continue ...
 ```
 
-### Phase Commands
+### Part Commands
 
 | Command | Behavior |
 |---------|---------|
-| `/mdt:tests MDT-101` | Detects phases, prompts for selection |
-| `/mdt:tests MDT-101 --phase 1.1` | Targets specific phase directly |
-| `/mdt:tasks MDT-101` | Auto-detects from existing phase-*/tests.md |
-| `/mdt:implement MDT-101` | Lists phases with completion status |
-| `/mdt:implement MDT-101 --phase 1.2` | Targets specific phase |
+| `/mdt:tests MDT-101` | Detects parts, prompts for selection |
+| `/mdt:tests MDT-101 --part 1.1` | Targets specific part directly |
+| `/mdt:tasks MDT-101` | Auto-detects from existing part-*/tests.md |
+| `/mdt:implement MDT-101` | Lists parts with completion status |
+| `/mdt:implement MDT-101 --part 1.2` | Targets specific part |
 
 ### Backward Compatibility
 
-Non-phased CRs work exactly as before:
+Single-part CRs work exactly as before:
 
 ```
 {TICKETS_PATH}/{CR-KEY}/
@@ -865,7 +865,7 @@ Non-phased CRs work exactly as before:
 └── tasks.md
 ```
 
-If no `## Phase X.Y:` headers exist in architecture.md, prompts default to root-level output.
+If no `## Part X.Y:` headers exist in architecture.md, prompts default to root-level output.
 
 </details>
 
@@ -885,12 +885,12 @@ When `/mdt:assess` identifies that **refactoring fundamentally changes the code 
 | Feature interacts with NEW components | ✅ Yes |
 | Refactoring benefits unrelated features | ❌ No — split CRs |
 
-### Prep vs Phases
+### Prep vs Parts
 
 | Concept | Purpose | Architecture |
 |---------|---------|---------------|
 | **Prep** | Get codebase ready (refactoring) | `prep/architecture.md` |
-| **Phases** | Implement feature incrementally | Shared `architecture.md` |
+| **Parts** | Implement feature incrementally | Shared `architecture.md` |
 
 Prep is a **different design problem** than the feature — it gets its own architecture file.
 
@@ -903,7 +903,7 @@ Prep is a **different design problem** than the feature — it gets its own arch
 │   ├── architecture.md     # Refactoring design
 │   ├── tests.md            # Behavior preservation tests (GREEN)
 │   └── tasks.md            # Refactoring tasks
-├── phase-1/                 # Feature phases (after prep)
+├── part-1/                  # Feature parts (after prep)
 │   ├── tests.md            # Feature tests (RED → GREEN)
 │   └── tasks.md
 └── ...
@@ -935,7 +935,7 @@ Prep is a **different design problem** than the feature — it gets its own arch
 /mdt:architecture {CR-KEY} ─────── Creates: architecture.md
         │                            Feature design against NEW code
         ▼
-/mdt:tests {CR-KEY} --phase 1 ──── Normal feature workflow...
+/mdt:tests {CR-KEY} --part 1 ──── Normal feature workflow...
         │
         ▼
     ... continue ...

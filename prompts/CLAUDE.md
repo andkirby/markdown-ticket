@@ -19,7 +19,7 @@ You are in the **prompts/** directory of the markdown-ticket project. This is an
 - Complete workflow chain documentation
 - Command reference and usage
 - Installation instructions
-- Phase-aware CR patterns
+- Part-aware CR patterns
 - TDD/BDD workflow details
 
 ## Quick Reference
@@ -33,10 +33,10 @@ You are in the **prompts/** directory of the markdown-ticket project. This is an
 | `mdt-assess.md` | Code fitness evaluation | Decision: integrate/refactor/split |
 | `mdt-domain-lens.md` | DDD constraints | `{CR-KEY}/domain.md` |
 | `mdt-domain-audit.md` | DDD violations analysis | `{CR-KEY}/domain-audit.md` |
-| `mdt-tests.md` | BDD test generation | `{CR-KEY}/[phase-*/]tests.md` + test files |
+| `mdt-tests.md` | BDD test generation | `{CR-KEY}/[part-*/]tests.md` + test files |
 | `mdt-architecture.md` | Architecture design | CR section or `{CR-KEY}/architecture.md` |
 | `mdt-clarification.md` | Fill specification gaps | Updated CR sections |
-| `mdt-tasks.md` | Task breakdown | `{CR-KEY}/[phase-*/]tasks.md` |
+| `mdt-tasks.md` | Task breakdown | `{CR-KEY}/[part-*/]tasks.md` |
 | `mdt-implement.md` | Execute with verification | Code changes |
 | `mdt-tech-debt.md` | Debt detection | `{CR-KEY}/debt.md` |
 | `mdt-reflection.md` | Capture learnings | Updated CR |
@@ -134,7 +134,7 @@ Use `mcp__mdt-all__manage_cr_sections` for surgical updates:
 | Workflow | Prevention Mechanism |
 |----------|---------------------|
 | Architecture | Defines size limits, shared patterns, structure |
-| Tasks | Inherits limits, Phase 1 (shared first), exclusions |
+| Tasks | Inherits limits, Part 1 (shared first), exclusions |
 | Implement | Verifies size (OK/FLAG/STOP), no duplication |
 | Tech-Debt | Catches violations, produces diagnostic for fix CR |
 

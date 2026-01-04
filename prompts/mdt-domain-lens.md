@@ -1,4 +1,4 @@
-# MDT Domain Lens (v2)
+# MDT Domain Lens (v3)
 
 Surface strategic DDD constraints before architectural decisions. Output is intentionally minimal — principles only, not prescriptions.
 
@@ -401,7 +401,7 @@ Before completing, verify:
 **Before**: CR exists, optionally requirements.md exists
 **After**: `/mdt:architecture` consumes domain.md as constraints
 
-**Related tools**:
+**Related workflows**:
 - `/mdt:domain-audit` — analyze existing code for DDD violations (use instead for refactoring)
 
 Context: $ARGUMENTS
