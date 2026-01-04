@@ -1,4 +1,4 @@
-# MDT Ticket Clarification Workflow (v1)
+# MDT Ticket Clarification Workflow (v2)
 
 Interactive clarification workflow for MDT architectural decision records (ADRs) using MCP mdt-all ticket system. Identifies underspecified areas in CR tickets and encodes answers directly into the ticket content.
 
@@ -98,7 +98,7 @@ Execution steps:
 
    For each category with Partial or Missing status, add a candidate question unless:
    - Information would not materially change artifact specifications
-   - Information is better deferred to implementation phase
+   - Information is better deferred to implementation part
 
 3. Generate (internally) a prioritized queue of candidate clarification questions (maximum 10). Do NOT output them all at once. Apply these constraints:
     - Maximum of 10 total questions across the whole session

@@ -2,6 +2,69 @@
 
 ## Recent Updates
 
+### 2026-01-04 - Terminology: "Phase" → "Part"
+
+**Problem**: MDT used "phase" to mean a distinct chunk of an epic CR with its own test/task cycle and folder. However, "phase" collides with casual LLM usage meaning "implementation steps," causing confusion between MDT's structural concept (phase folders) and generic development phases (step 1, step 2, etc.).
+
+**Solution**: Renamed "Phase" to "Part" throughout all workflow prompts—same meaning (distinct chunk of an epic CR), less collision risk with generic "phase" terminology.
+
+**Changes Made**:
+
+1. **All mdt-*.md workflow files** - Terminology standardized:
+   - `phase` → `part`, `Phase` → `Part`, `PHASE` → `PART`
+   - Path patterns: `phase-{X.Y}/` → `part-{X.Y}/`
+   - Command flags: `--phase {X.Y}` → `--part {X.Y}`
+   - Context-aware replacements:
+     - "Phased CRs" → "Multi-part CRs"
+     - "Non-phased" → "Single-part"
+     - "Phase-aware" → "Part-aware"
+     - "Phase 1" → "Part 1", "Phase 2+" → "Part 2+"
+     - "Phased Workflow" → "Multi-part Workflow"
+   - Variable names: `phase: "1.1"` → `part: "1.1"`, `phase_tasks` → `part_tasks`
+   - Test filters: `--testPathPattern="phase-{X.Y}"` → `--testPathPattern="part-{X.Y}"`
+   - Section headers: "## Phase {X.Y}" → "## Part {X.Y}"
+
+2. **Core workflow files updated** (mdt-tasks.md, mdt-tests.md, mdt-implement.md):
+   - Output paths updated to use `part-{X.Y}/` folders
+   - Discovery logic renamed (phase discovery → part discovery)
+   - Completion messages updated ("Phase {X.Y} Complete" → "Part {X.Y} Complete")
+   - Task context headers updated
+
+3. **Documentation files** (README.md, GUIDE.md, CLAUDE.md):
+   - "When to Use Phases" → "When to Use Parts"
+   - "Phase Detection" → "Part Detection"
+   - "Phased File Structure" → "Multi-Part File Structure"
+   - All examples updated with `part-1.1/` instead of `phase-1.1/`
+   - Workflow descriptions updated
+
+4. **Agent-specific files** (mdt-implement-*.md):
+   - Code agent: YAML context `phase:` → `part:`
+   - Test agent: All language test filters updated (TypeScript, Python, Rust, Go, Java)
+   - Orchestrator: State machine `PHASE_COMPLETE` → `PART_COMPLETE`
+
+5. **Preserved** (correctly NOT changed):
+   - `phaseEpic` - MCP tool field name (external interface, should not change)
+   - CHANGE_NOTES.md - Historical changelog (preserved as-is)
+
+**Impact**:
+- Clearer distinction between MDT's structural concept ("Part") and generic development terminology
+- Reduces LLM confusion between MDT parts and implementation steps
+- Maintains all functionality—purely a terminology change
+- Backward compatible: existing CRs with `phase-*/` folders still work (can be renamed gradually)
+
+**Files Changed**:
+- `prompts/mdt-ticket-creation.md` (v5→v6)
+- `prompts/mdt-architecture.md` (v7→v8)
+- `prompts/mdt-clarification.md` (v1→v2)
+- `prompts/mdt-tasks.md` (v6→v7)
+- `prompts/mdt-tests.md` (v3→v4)
+- `prompts/mdt-implement.md` (v6→v7)
+- `prompts/mdt-reflection.md` (v1→v2)
+- `prompts/mdt-domain-lens.md` (v2→v3)
+- `prompts/README.md`
+- `prompts/GUIDE.md`
+- `prompts/CLAUDE.md`
+
 ### 2026-01-03 - Structural Analysis in Domain Audit
 
 **Problem**: Domain audit workflow only detected DDD violations (anemic models, missing aggregates), missing critical structural problems like layer violations, scattered cohesion, and dependency direction issues that cause maintenance burden and coupling.

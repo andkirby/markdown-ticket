@@ -1,4 +1,4 @@
-# ADR Creation Workflow for MCP mdt-all (v5)
+# ADR Creation Workflow for MCP mdt-all (v6)
 
 Interactive workflow for AI agents creating architectural decision records (ADRs) using MCP mdt-all ticket system with structured questioning.
 
@@ -406,7 +406,7 @@ Using answers from questioning flow and context from Step 1:
   "type": "Architecture|Feature Enhancement|Bug Fix|Technical Debt|Documentation",
   "data": {
     "title": "Generated title from Step 3",
-    "phaseEpic": "Optional phase/epic if mentioned in context",
+    "phaseEpic": "Optional part/epic if mentioned in context",
     "assignee": "Optional assignee if mentioned in context",
     "content": "Full markdown content (no YAML frontmatter)"
   }
@@ -620,7 +620,7 @@ Use bullets:
 ### Complex Changes
 Use table format:
 
-| Phase | Artifacts Deployed | Rollback |
+| Part | Artifacts Deployed | Rollback |
 |-------|-------------------|----------|
 | 1 | File A, B | Revert commits X, Y |
 | 2 | File C, D | Disable feature flag |
