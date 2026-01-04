@@ -1,4 +1,4 @@
-# MDT Architecture Design Workflow (v7)
+# MDT Architecture Design Workflow (v8)
 
 Surface architectural decisions before implementation. Output location adapts to complexity — simple stays in CR, complex extracts to `architecture.md`.
 
@@ -452,7 +452,7 @@ stateDiagram-v2
 |---------|-------------|------------|
 | {pattern} | {where appears} | `{path}` |
 
-> Phase 1 extracts these BEFORE features that use them.
+> Part 1 extracts these BEFORE features that use them.
 
 ## Structure
 

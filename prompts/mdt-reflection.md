@@ -1,4 +1,4 @@
-# MDT Ticket Reflection Workflow (v1)
+# MDT Ticket Reflection Workflow (v2)
 
 Capture post-implementation learnings from the conversation and encode them into CR tickets. Focus on **artifact-level insights** and **specification adjustments**—NOT on abstract learnings or process improvements.
 
@@ -90,13 +90,13 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    ### [Category 1]: Artifact Discoveries
 
-   1. **[Artifact Name/Path]**
+   1. **[Artifact Name/Part]**
       - Original Spec: [What CR specified or didn't specify]
       - Actual Implementation: [What was actually created/modified]
       - Impact: [How this affects CR artifact specifications]
       - Will update: [Target CR section(s)]
 
-   2. **[Artifact Name/Path]**
+   2. **[Artifact Name/Part]**
       - Original Spec: [What CR specified]
       - Actual Implementation: [What was actually implemented]
       - Impact: [How this affects CR]

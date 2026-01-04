@@ -110,7 +110,7 @@ Use when you need complete traceability and rigorous development process. Ideal 
 - Create clear extension rules
 
 ### During Tasks
-- Put shared utilities in Phase 1
+- Put shared utilities in Part 1
 - Be explicit about exclusions
 - Reference exact paths from architecture
 
@@ -146,8 +146,8 @@ Use when you need complete traceability and rigorous development process. Ideal 
 # Size limits: AuthService (150 lines), LoginForm (100 lines)
 
 # 4. Tasks created
-# Phase 1: Extract validation utilities (shared)
-# Phase 2: Implement AuthService, LoginForm, SessionMiddleware
+# Part 1: Extract validation utilities (shared)
+# Part 2: Implement AuthService, LoginForm, SessionMiddleware
 # Each task maps to requirements (e.g., Task 2.1 implements R1.1, R1.2)
 
 # 5. Implementation executed

@@ -1,6 +1,6 @@
-# MDT Task Breakdown Workflow (v6)
+# MDT Task Breakdown Workflow (v7)
 
-Generate a task list from a CR ticket for phased, reviewable implementation.
+Generate a task list from a CR ticket for multi-part, reviewable implementation.
 
 **Core Principle**: Tasks must include **constraints** (size limits, exclusions, anti-duplication) not just actions.
 
@@ -17,12 +17,12 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 ## Output Location
 
 - **Prep mode** (`--prep`): `{TICKETS_PATH}/{CR-KEY}/prep/tasks.md`
-- **Phased CR**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tasks.md`
-- **Non-phased CR**: `{TICKETS_PATH}/{CR-KEY}/tasks.md`
+- **Multi-part CR**: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tasks.md`
+- **Single-part CR**: `{TICKETS_PATH}/{CR-KEY}/tasks.md`
 
 ## Critical Rules
 
-1. **Shared utilities FIRST** — Phase 1 extracts patterns used by multiple features
+1. **Shared utilities FIRST** — Part 1 extracts patterns used by multiple features
 2. **Size limits inherited** — from Architecture Design, flag/STOP thresholds
 3. **Exclusions prevent bloat** — explicitly state what NOT to move
 4. **Anti-duplication** — import from shared, never copy
@@ -43,7 +43,7 @@ project:
   file_extension: {.ts, .py, .rs, .go, .java, ...}
 ```
 
-### Step 2: Load CR Context and Discover Phase
+### Step 2: Load CR Context and Discover Part
 
 **2a. Load CR:**
 ```
@@ -59,44 +59,44 @@ if [[ "$ARGUMENTS" == *"--prep"* ]]; then
   arch_file="{TICKETS_PATH}/{CR-KEY}/prep/architecture.md"
   tests_file="{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
   output_file="{TICKETS_PATH}/{CR-KEY}/prep/tasks.md"
-  # Skip phase discovery
+  # Skip part discovery
 fi
 ```
 
-**2c. Discover phase context (if not prep mode):**
+**2c. Discover part context (if not prep mode):**
 
 ```bash
-# Check for phase-specific tests first (co-location pattern)
-phase_tests=$(find {TICKETS_PATH}/{CR-KEY} -path "*/phase-*/tests.md" 2>/dev/null | sort -V)
+# Check for part-specific tests first (co-location pattern)
+part_tests=$(find {TICKETS_PATH}/{CR-KEY} -path "*/part-*/tests.md" 2>/dev/null | sort -V)
 
-if [ -n "$phase_tests" ]; then
-  # Phased CR - list available phases with tests
-  echo "Found phase-specific tests:"
-  for f in $phase_tests; do
-    phase=$(echo "$f" | grep -oE "phase-[0-9.]+")
-    echo "  - $phase/tests.md"
+if [ -n "$part_tests" ]; then
+  # Multi-part CR - list available parts with tests
+  echo "Found part-specific tests:"
+  for f in $part_tests; do
+    part=$(echo "$f" | grep -oE "part-[0-9.]+")
+    echo "  - $part/tests.md"
   done
 fi
 ```
 
-**2d. Determine phase and output path:**
+**2d. Determine part and output path:**
 
 | Scenario | Behavior |
 |----------|----------|
 | `--prep` flag provided | Use prep mode |
-| `--phase 1.1` flag provided | Use specified phase |
-| Single `phase-*/tests.md` exists | Use that phase automatically |
-| Multiple `phase-*/tests.md` exist | Prompt for selection |
-| `prep/tests.md` exists (no phase flag) | Prompt: prep or phase? |
-| No phase folders exist | Non-phased mode (backward compatible) |
+| `--part 1.1` flag provided | Use specified part |
+| Single `part-*/tests.md` exists | Use that part automatically |
+| Multiple `part-*/tests.md` exist | Prompt for selection |
+| `prep/tests.md` exists (no part flag) | Prompt: prep or part? |
+| No part folders exist | Single-part mode (backward compatible) |
 
 ```markdown
-# If multiple phases with tests exist:
-Found phases with tests:
-  - phase-1.1/tests.md
-  - phase-1.2/tests.md
+# If multiple parts with tests exist:
+Found parts with tests:
+  - part-1.1/tests.md
+  - part-1.2/tests.md
 
-Which phase to generate tasks for? [1.1]: _
+Which part to generate tasks for? [1.1]: _
 ```
 
 **2e. Set paths:**
@@ -108,14 +108,14 @@ arch_file: "{TICKETS_PATH}/{CR-KEY}/prep/architecture.md"
 tests_file: "{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
 output_file: "{TICKETS_PATH}/{CR-KEY}/prep/tasks.md"
 
-# Phased
-phase: "1.1"
-arch_file: "{TICKETS_PATH}/{CR-KEY}/architecture.md"  # Shared for all phases
-tests_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tests.md"
-output_file: "{TICKETS_PATH}/{CR-KEY}/phase-1.1/tasks.md"
+# Multi-part
+part: "1.1"
+arch_file: "{TICKETS_PATH}/{CR-KEY}/architecture.md"  # Shared for all parts
+tests_file: "{TICKETS_PATH}/{CR-KEY}/part-1.1/tests.md"
+output_file: "{TICKETS_PATH}/{CR-KEY}/part-1.1/tasks.md"
 
-# Non-phased (backward compatible)
-phase: null
+# Single-part (backward compatible)
+part: null
 tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
 output_file: "{TICKETS_PATH}/{CR-KEY}/tasks.md"
 ```
@@ -123,18 +123,18 @@ output_file: "{TICKETS_PATH}/{CR-KEY}/tasks.md"
 **2f. Load architecture:**
 
 **If prep mode**: Load from `prep/architecture.md`
-- Full prep architecture (not phase-specific)
+- Full prep architecture (not part-specific)
 - Refactoring targets and size limits
 - Behavior preservation requirements
 
-**If phased**: Extract from root `architecture.md`:
-- Only the selected phase section
-- Phase-specific Structure
-- Phase-specific Size Guidance
-- Phase-specific patterns
+**If multi-part**: Extract from root `architecture.md`:
+- Only the selected part section
+- Part-specific Structure
+- Part-specific Size Guidance
+- Part-specific patterns
 
 ```markdown
-## From architecture.md → Phase 1.1:
+## From architecture.md → Part 1.1:
 
 ### Enhanced Structure
 domain-contracts/src/project/
@@ -153,7 +153,7 @@ domain-contracts/src/project/
 **2f. Load tests.md:**
 
 ```bash
-# Load from phase folder or root
+# Load from part folder or root
 if [ -f "$tests_file" ]; then
   # Extract test→requirement mapping
   # Each task will reference which tests it makes GREEN
@@ -164,11 +164,11 @@ fi
 
 - If prep mode but no `prep/architecture.md`: abort with "Run `/mdt:architecture {CR-KEY} --prep` first"
 - If Architecture Design missing: abort with "Run `/mdt:architecture` first"
-- If phase specified but no phase section in architecture: abort with "Phase {X.Y} not found in architecture.md"
+- If part specified but no part section in architecture: abort with "Part {X.Y} not found in architecture.md"
 
 ### Step 3: Inherit Size Limits
 
-From Architecture Design (phase-specific if phased):
+From Architecture Design (part-specific if multi-part):
 
 ```markdown
 | Module | Default | Hard Max | Action if exceeded |
@@ -180,27 +180,27 @@ These become task `Limits`.
 
 ### Step 4: Determine Task Order
 
-**Phase 1**: Shared patterns (from Architecture Design)
-**Phase 2+**: Features that import from Phase 1
+**Part 1**: Shared patterns (from Architecture Design)
+**Part 2+**: Features that import from Part 1
 
 ```
-Phase 1: Shared Utilities
+Part 1: Shared Utilities
   Task 1.1: Extract validators
   Task 1.2: Extract formatters
 
-Phase 2: Features
-  Task 2.1: Implement feature-a (imports from Phase 1)
-  Task 2.2: Implement feature-b (imports from Phase 1)
+Part 2: Features
+  Task 2.1: Implement feature-a (imports from Part 1)
+  Task 2.2: Implement feature-b (imports from Part 1)
 ```
 
 ### Step 5: Task Template
 
 ```markdown
-### Task {phase}.{number}: {Brief description}
+### Task {part}.{number}: {Brief description}
 
 **Structure**: `{exact path from Architecture Design}`
 
-**Implements**: {P{X.Y}-1, P{X.Y}-2, ...} *(phase requirement IDs)*
+**Implements**: {P{X.Y}-1, P{X.Y}-2, ...} *(part requirement IDs)*
 
 **Makes GREEN**: *(from tests.md)*
 - `{test_file}`: `{test_name}` (P{X.Y}-1)
@@ -228,7 +228,7 @@ Phase 2: Features
 **Verify**:
 ```bash
 wc -l {destination}       # check against limits
-{test_command} --testPathPattern="phase-{X.Y}"
+{test_command} --testPathPattern="part-{X.Y}"
 {build_command}
 ```
 
@@ -243,11 +243,11 @@ wc -l {destination}       # check against limits
 ### Step 6: Generate Tasks Document
 
 ```markdown
-# Tasks: {CR-KEY} Phase {X.Y}
+# Tasks: {CR-KEY} Part {X.Y}
 
-**Source**: [{CR-KEY}]({path}) → Phase {X.Y}
-**Phase**: {X.Y} - {Phase Title}
-**Tests**: `phase-{X.Y}/tests.md`
+**Source**: [{CR-KEY}]({path}) → Part {X.Y}
+**Part**: {X.Y} - {Part Title}
+**Tests**: `part-{X.Y}/tests.md`
 **Generated**: {timestamp}
 
 ## Project Context
@@ -258,29 +258,29 @@ wc -l {destination}       # check against limits
 | Test command | `{test_command}` |
 | Build command | `{build_command}` |
 | File extension | `{ext}` |
-| Phase test filter | `--testPathPattern="phase-{X.Y}"` |
+| Part test filter | `--testPathPattern="part-{X.Y}"` |
 
-## Size Thresholds (Phase {X.Y})
+## Size Thresholds (Part {X.Y})
 
 | Module | Default | Hard Max | Action |
 |--------|---------|----------|--------|
 | `schema.ts` | 150 | 225 | Flag at 150+, STOP at 225+ |
 | `validation.ts` | 100 | 150 | Flag at 100+, STOP at 150+ |
 
-*(From Architecture Design → Phase {X.Y})*
+*(From Architecture Design → Part {X.Y})*
 
-## Shared Patterns (Phase {X.Y})
+## Shared Patterns (Part {X.Y})
 
 | Pattern | Extract To | Used By |
 |---------|------------|---------|
 | {pattern} | `{path}` | {consumers} |
 
-> Internal phase tasks extract shared patterns BEFORE features.
+> Internal part tasks extract shared patterns BEFORE features.
 
-## Architecture Structure (Phase {X.Y})
+## Architecture Structure (Part {X.Y})
 
 ```
-{paste Structure diagram from Architecture Design phase section}
+{paste Structure diagram from Architecture Design part section}
 ```
 
 ## STOP Conditions
@@ -289,7 +289,7 @@ wc -l {destination}       # check against limits
 - Duplicating logic that exists in shared module → STOP, import instead
 - Structure path doesn't match Architecture Design → STOP, clarify
 
-## Test Coverage (from phase-{X.Y}/tests.md)
+## Test Coverage (from part-{X.Y}/tests.md)
 
 | Test | Requirement | Task | Status |
 |------|-------------|------|--------|
@@ -305,18 +305,18 @@ wc -l {destination}       # check against limits
 
 Before starting each task:
 ```bash
-{test_command} --testPathPattern="phase-{X.Y}"  # Should show failures
+{test_command} --testPathPattern="part-{X.Y}"  # Should show failures
 ```
 
 After completing each task:
 ```bash
-{test_command} --testPathPattern="phase-{X.Y}"  # Task tests should pass
+{test_command} --testPathPattern="part-{X.Y}"  # Task tests should pass
 {test_command}                                   # Full suite — no regressions
 ```
 
 ---
 
-## Phase {X.Y} Tasks
+## Part {X.Y} Tasks
 
 ### Task 1.1: {First task}
 
@@ -340,7 +340,7 @@ After completing each task:
 
 ---
 
-## Post-Implementation (Phase {X.Y})
+## Post-Implementation (Part {X.Y})
 
 ### Task N.1: Verify no duplication
 
@@ -356,21 +356,21 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 ```
 **Done when**: [ ] No files exceed hard max
 
-### Task N.3: Run phase tests
+### Task N.3: Run part tests
 
 ```bash
-{test_command} --testPathPattern="phase-{X.Y}"
+{test_command} --testPathPattern="part-{X.Y}"
 ```
-**Done when**: [ ] All phase tests GREEN
+**Done when**: [ ] All part tests GREEN
 ```
 
 ### Step 7: Validate Before Saving
 
 - [ ] Project context includes all settings
-- [ ] Phase correctly identified (or non-phased fallback)
-- [ ] Size limits from phase-specific Architecture section
+- [ ] Part correctly identified (or single-part fallback)
+- [ ] Size limits from part-specific Architecture section
 - [ ] Every task has `Limits`, `Exclude`, `Anti-duplication`
-- [ ] **Test coverage** (from phase tests.md):
+- [ ] **Test coverage** (from part tests.md):
   - Every test has an implementing task
   - Task `**Makes GREEN**` section populated
   - Test Coverage table populated
@@ -380,37 +380,37 @@ find {source_dir} -name "*{ext}" -exec wc -l {} \; | awk '$1 > {HARD_MAX}'
 
 **Create output directory if needed:**
 ```bash
-mkdir -p "{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}"
+mkdir -p "{TICKETS_PATH}/{CR-KEY}/part-{X.Y}"
 ```
 
-**Save to phase-aware path:**
-- Phased: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tasks.md`
-- Non-phased: `{TICKETS_PATH}/{CR-KEY}/tasks.md`
+**Save to part-aware path:**
+- Multi-part: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tasks.md`
+- Single-part: `{TICKETS_PATH}/{CR-KEY}/tasks.md`
 
 **Report:**
 
 ```markdown
-## Tasks Generated: {CR-KEY} Phase {X.Y}
+## Tasks Generated: {CR-KEY} Part {X.Y}
 
 | Metric | Value |
 |--------|-------|
-| Phase | {X.Y} - {Phase Title} |
+| Part | {X.Y} - {Part Title} |
 | Tasks | {N} |
 | Tests to make GREEN | {N} |
 
-**Output**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tasks.md`
-**Tests**: `{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/tests.md`
+**Output**: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tasks.md`
+**Tests**: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tests.md`
 
 **Size thresholds**: Flag at default, STOP at 1.5x
 
-Next: `/mdt:implement {CR-KEY} --phase {X.Y}`
+Next: `/mdt:implement {CR-KEY} --part {X.Y}`
 ```
 
 ---
 
 ## Task Examples
 
-### Complete task example (phased)
+### Complete task example (multi-part)
 
 ```markdown
 ### Task 1.1: Implement ProjectSchema with validation
@@ -446,7 +446,7 @@ Next: `/mdt:implement {CR-KEY} --phase {X.Y}`
 **Verify**:
 ```bash
 wc -l domain-contracts/src/project/schema.ts  # ≤ 150
-npm test -- --testPathPattern="phase-1.1"
+npm test -- --testPathPattern="part-1.1"
 npm run build
 ```
 
@@ -459,42 +459,42 @@ npm run build
 
 ---
 
-## Phase Discovery Examples
+## Part Discovery Examples
 
 ### Example 1: Auto-detect from tests.md location
 
 ```bash
 $ /mdt:tasks MDT-101
 
-Found phase-specific tests:
-  - phase-1.1/tests.md
-  - phase-1.2/tests.md
+Found part-specific tests:
+  - part-1.1/tests.md
+  - part-1.2/tests.md
 
-Which phase to generate tasks for? [1.1]: 1.1
+Which part to generate tasks for? [1.1]: 1.1
 
-Loading architecture.md → Phase 1.1...
-Loading phase-1.1/tests.md...
+Loading architecture.md → Part 1.1...
+Loading part-1.1/tests.md...
 
-Output: {TICKETS_PATH}/MDT-101/phase-1.1/tasks.md
+Output: {TICKETS_PATH}/MDT-101/part-1.1/tasks.md
 ```
 
-### Example 2: Direct phase selection
+### Example 2: Direct part selection
 
 ```bash
-$ /mdt:tasks MDT-101 --phase 1.2
+$ /mdt:tasks MDT-101 --part 1.2
 
-Loading architecture.md → Phase 1.2...
-Loading phase-1.2/tests.md...
+Loading architecture.md → Part 1.2...
+Loading part-1.2/tests.md...
 
-Output: {TICKETS_PATH}/MDT-101/phase-1.2/tasks.md
+Output: {TICKETS_PATH}/MDT-101/part-1.2/tasks.md
 ```
 
-### Example 3: Non-phased (backward compatible)
+### Example 3: Single-part (backward compatible)
 
 ```bash
 $ /mdt:tasks MDT-050
 
-No phases detected.
+No parts detected.
 Loading tests.md...
 
 Output: {TICKETS_PATH}/MDT-050/tasks.md
@@ -504,15 +504,15 @@ Output: {TICKETS_PATH}/MDT-050/tasks.md
 
 ## Integration
 
-**Before**: 
+**Before**:
 - `/mdt:architecture` (required — provides structure + size limits)
-- `/mdt:tests` (provides test→requirement mapping in same phase folder)
+- `/mdt:tests` (provides test→requirement mapping in same part folder)
 
-**After**: `/mdt:implement {CR-KEY} --phase {X.Y}`
+**After**: `/mdt:implement {CR-KEY} --part {X.Y}`
 
 **Co-location Pattern**:
 ```
-{TICKETS_PATH}/{CR-KEY}/phase-{X.Y}/
+{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/
 ├── tests.md    ← /mdt:tests creates
 └── tasks.md    ← /mdt:tasks creates (this prompt)
 ```
