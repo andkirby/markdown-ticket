@@ -99,7 +99,7 @@ else
 fi
 
 # Source directory containing MDT prompts (always where script is located)
-MDT_PROMPTS_DIR="$SCRIPT_DIR"
+MDT_PROMPTS_DIR="$SCRIPT_DIR/commands"
 MDT_HOOKS_DIR="$SCRIPT_DIR/hooks"
 
 # List of MDT commands to install (without mdt- prefix)
