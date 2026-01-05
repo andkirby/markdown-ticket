@@ -1,4 +1,4 @@
-# MDT Prompt Commands
+# Spec-Driven Development Framework for MDT
 
 AI-driven workflow management for spec-driven development.
 
