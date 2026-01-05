@@ -2,50 +2,103 @@
 
 Structured workflows for AI agents managing Change Request tickets via MCP mdt-all system.
 
-**Works with any project** — Python, TypeScript, Go, Rust, Java, etc. Project context detected from CLAUDE.md or config files.
+**Works with any project** — Python, TypeScript, Go, Rust, Java, etc. Project context detected from CLAUDE.md or config
+files.
+
+## Full Workflow Chain
+
+```
+/mdt:ticket-creation (Full Specification)
+        │
+        ▼
+/mdt:requirements (optional) ─── Creates: requirements.md
+        │                        EARS-formatted behavioral specs
+        │                        ⚠️ Skip for refactoring/tech-debt
+        ▼
+/mdt:assess (optional) ────────── Decision point: 1/2/3
+        │                        Evaluate code fitness + test coverage
+        │
+        ├─► Option 1: Just integrate (proceed)
+        ├─► Option 2: Refactor inline (expand CR scope)
+        └─► Option 3: Split CRs (create refactor CR first)
+        │
+        ▼
+/mdt:poc (optional) ────────────── Creates: poc.md + poc/ folder
+        │                        Validate uncertain technical decisions
+        │                        ⚠️ Use when "will this work?" needs proof
+        ▼
+/mdt:tests ────────────────────── Creates: tests.md + test files (RED)
+        │                        BDD specs from requirements or behavior
+        │                        Tests written BEFORE implementation
+        ▼
+/mdt:domain-lens (optional) ────── Creates: domain.md (~15-25 lines)
+        │                        DDD constraints for architecture
+        │                        ⚠️ Skip for refactoring/tech-debt/CRUD
+        ▼
+/mdt:architecture ─────────────── Simple: CR section (~60 lines)
+        │                        Complex: architecture.md (extracted)
+        │                        Consumes poc.md, domain.md if exist
+        ▼
+/mdt:clarification (as needed)
+        │
+        ▼
+/mdt:tasks ────────────────────── Creates: tasks.md
+        │                        Constrained task list
+        │                        Each task → makes specific tests GREEN
+        ▼
+/mdt:implement ────────────────── Executes tasks with TDD verification
+        │                        RED → GREEN → Refactor cycle
+        ▼
+/mdt:tech-debt ────────────────── Creates: debt.md
+        │                        Post-implementation analysis
+        ▼
+/mdt:reflection ───────────────── Updates: CR with learnings
+```
 
 ## Session Context (Auto-Injected)
 
 All workflows have access to these variables, injected at session start via a `SessionStart` hook:
 
-| Variable | Source | Example |
-|----------|--------|---------|
-| `PROJECT_CODE` | `.mdt-config.toml` → `code` | `MDT`, `API`, `WEB` |
+| Variable       | Source                             | Example                  |
+|----------------|------------------------------------|--------------------------|
+| `PROJECT_CODE` | `.mdt-config.toml` → `code`        | `MDT`, `API`, `WEB`      |
 | `TICKETS_PATH` | `.mdt-config.toml` → `ticketsPath` | `docs/CRs`, `.mdt/specs` |
 
-**How it works**: The hook (`~/.claude/hooks/mdt-project-vars.sh`) runs automatically on session start, reads the project config, and outputs variables visible to the LLM.
+**How it works**: The hook (`~/.claude/hooks/mdt-project-vars.sh`) runs automatically on session start, reads the
+project config, and outputs variables visible to the LLM.
 
 **Benefits**:
+
 - No hardcoded paths in workflows — works with any `ticketsPath` configuration
 - Automatic project code detection — no manual specification needed
 - Per-project configuration — each repo can have different CR directory structures
 
 ## Available Workflows
 
-| Command | Purpose | Output |
-|---------|---------|--------|
-| `/mdt:ticket-creation` | Create CR with flexible depth (WHAT only or WHAT+HOW) | CR in MDT system |
-| `/mdt:requirements` | Generate requirements (EARS + FR/NFR) with CR-type-aware format | `{TICKETS_PATH}/{CR-KEY}/requirements.md` |
-| `/mdt:assess` | Evaluate affected code fitness | Decision: integrate / refactor / split |
-| `/mdt:poc` | Validate uncertain technical decisions | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder |
-| `/mdt:domain-lens` | Surface DDD constraints (optional) | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
-| `/mdt:domain-audit` | Analyze code for DDD + structural issues | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` |
-| `/mdt:tests` | Generate BDD test specs + executable tests | `{TICKETS_PATH}/{CR-KEY}/[part-{X.Y}/]tests.md` + test files |
-| `/mdt:architecture` | Surface decisions, define structure + size limits | CR section or `architecture.md` |
-| `/mdt:clarification` | Fill specification gaps | Updated CR sections |
-| `/mdt:tasks` | Break CR into constrained tasks | `{TICKETS_PATH}/{CR-KEY}/[part-{X.Y}/]tasks.md` |
-| `/mdt:implement` | Execute tasks with verification | Code changes, updated tasks.md |
-| `/mdt:tech-debt` | Detect debt patterns | `{TICKETS_PATH}/{CR-KEY}/debt.md` |
-| `/mdt:reflection` | Capture learnings | Updated CR |
+| Command                | Purpose                                                         | Output                                                       |
+|------------------------|-----------------------------------------------------------------|--------------------------------------------------------------|
+| `/mdt:ticket-creation` | Create CR with flexible depth (WHAT only or WHAT+HOW)           | CR in MDT system                                             |
+| `/mdt:requirements`    | Generate requirements (EARS + FR/NFR) with CR-type-aware format | `{TICKETS_PATH}/{CR-KEY}/requirements.md`                    |
+| `/mdt:assess`          | Evaluate affected code fitness                                  | Decision: integrate / refactor / split                       |
+| `/mdt:poc`             | Validate uncertain technical decisions                          | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder             |
+| `/mdt:domain-lens`     | Surface DDD constraints (optional)                              | `{TICKETS_PATH}/{CR-KEY}/domain.md`                          |
+| `/mdt:domain-audit`    | Analyze code for DDD + structural issues                        | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md`                    |
+| `/mdt:tests`           | Generate BDD test specs + executable tests                      | `{TICKETS_PATH}/{CR-KEY}/[part-{X.Y}/]tests.md` + test files |
+| `/mdt:architecture`    | Surface decisions, define structure + size limits               | CR section or `architecture.md`                              |
+| `/mdt:clarification`   | Fill specification gaps                                         | Updated CR sections                                          |
+| `/mdt:tasks`           | Break CR into constrained tasks                                 | `{TICKETS_PATH}/{CR-KEY}/[part-{X.Y}/]tasks.md`              |
+| `/mdt:implement`       | Execute tasks with verification                                 | Code changes, updated tasks.md                               |
+| `/mdt:tech-debt`       | Detect debt patterns                                            | `{TICKETS_PATH}/{CR-KEY}/debt.md`                            |
+| `/mdt:reflection`      | Capture learnings                                               | Updated CR                                                   |
 
 ## Specification Depth
 
 `/mdt:ticket-creation` offers two modes, selected as the first question:
 
-| Mode | Focus | Use When |
-|------|-------|----------|
-| **Requirements only** | WHAT outcome is needed | Complex/uncertain features, defer HOW to architecture |
-| **Full specification** | WHAT + HOW with artifacts | Small/well-understood changes, implementation known |
+| Mode                   | Focus                     | Use When                                              |
+|------------------------|---------------------------|-------------------------------------------------------|
+| **Requirements only**  | WHAT outcome is needed    | Complex/uncertain features, defer HOW to architecture |
+| **Full specification** | WHAT + HOW with artifacts | Small/well-understood changes, implementation known   |
 
 ### Requirements Mode (5 sections)
 
@@ -96,77 +149,20 @@ Describes both outcomes AND implementation approach with concrete artifacts:
 7. Deployment
 ```
 
-## Full Workflow Chain
-
-<details>
-<summary>Full Specification Mode workflow (click to expand)</summary>
-
-For **Full Specification Mode** (see Requirements Mode workflow above):
-
-```
-/mdt:ticket-creation (Full Specification)
-        │
-        ▼
-/mdt:requirements (optional) ─── Creates: requirements.md
-        │                        EARS-formatted behavioral specs
-        │                        ⚠️ Skip for refactoring/tech-debt
-        ▼
-/mdt:assess (optional) ────────── Decision point: 1/2/3
-        │                        Evaluate code fitness + test coverage
-        │
-        ├─► Option 1: Just integrate (proceed)
-        ├─► Option 2: Refactor inline (expand CR scope)
-        └─► Option 3: Split CRs (create refactor CR first)
-        │
-        ▼
-/mdt:poc (optional) ────────────── Creates: poc.md + poc/ folder
-        │                        Validate uncertain technical decisions
-        │                        ⚠️ Use when "will this work?" needs proof
-        ▼
-/mdt:tests ────────────────────── Creates: tests.md + test files (RED)
-        │                        BDD specs from requirements or behavior
-        │                        Tests written BEFORE implementation
-        ▼
-/mdt:domain-lens (optional) ────── Creates: domain.md (~15-25 lines)
-        │                        DDD constraints for architecture
-        │                        ⚠️ Skip for refactoring/tech-debt/CRUD
-        ▼
-/mdt:architecture ─────────────── Simple: CR section (~60 lines)
-        │                        Complex: architecture.md (extracted)
-        │                        Consumes poc.md, domain.md if exist
-        ▼
-/mdt:clarification (as needed)
-        │
-        ▼
-/mdt:tasks ────────────────────── Creates: tasks.md
-        │                        Constrained task list
-        │                        Each task → makes specific tests GREEN
-        ▼
-/mdt:implement ────────────────── Executes tasks with TDD verification
-        │                        RED → GREEN → Refactor cycle
-        ▼
-/mdt:tech-debt ────────────────── Creates: debt.md
-        │                        Post-implementation analysis
-        ▼
-/mdt:reflection ───────────────── Updates: CR with learnings
-```
-
-</details>
-
 ## When to Use `/mdt:requirements`
 
 ### Quick Decision Table
 
-| CR Type | Use `/mdt:requirements`? | Alternative |
-|---------|-------------------------|-------------|
-| New feature | ✅ Yes (full) | — |
-| Enhancement | ✅ Yes (full) | — |
-| Complex bug fix | ✅ Yes (brief) | — |
-| Simple bug fix | ❌ No | CR Acceptance Criteria |
-| Refactoring | ❌ No | `/mdt:assess` → `/mdt:architecture` |
-| Tech Debt | ❌ No | `/mdt:architecture` directly |
-| Documentation | ❌ No | No requirements needed |
-| Migration | ✅ Yes (hybrid) | — |
+| CR Type         | Use `/mdt:requirements`? | Alternative                         |
+|-----------------|--------------------------|-------------------------------------|
+| New feature     | ✅ Yes (full)             | —                                   |
+| Enhancement     | ✅ Yes (full)             | —                                   |
+| Complex bug fix | ✅ Yes (brief)            | —                                   |
+| Simple bug fix  | ❌ No                     | CR Acceptance Criteria              |
+| Refactoring     | ❌ No                     | `/mdt:assess` → `/mdt:architecture` |
+| Tech Debt       | ❌ No                     | `/mdt:architecture` directly        |
+| Documentation   | ❌ No                     | No requirements needed              |
+| Migration       | ✅ Yes (hybrid)           | —                                   |
 
 <details>
 <summary>Why Skip for Refactoring/Tech-Debt (click to expand)</summary>
@@ -276,20 +272,20 @@ For **Full Specification Mode** (see Requirements Mode workflow above):
 
 ## Size Guidance (Three Zones)
 
-| Zone | Condition | Action |
-|------|-----------|--------|
-| ✅ OK | ≤ Default | Proceed |
-| ⚠️ FLAG | Default to 1.5x | Task completes with warning |
-| ⛔ STOP | > 1.5x (Hard Max) | Cannot complete, must resolve |
+| Zone    | Condition         | Action                        |
+|---------|-------------------|-------------------------------|
+| ✅ OK    | ≤ Default         | Proceed                       |
+| ⚠️ FLAG | Default to 1.5x   | Task completes with warning   |
+| ⛔ STOP  | > 1.5x (Hard Max) | Cannot complete, must resolve |
 
 **Defaults by module role:**
 
-| Role | Default | Hard Max |
-|------|---------|----------|
-| Orchestration (index, main) | 100 | 150 |
-| Feature module | 200 | 300 |
-| Complex logic (parser, algorithm) | 300 | 450 |
-| Utility / helper | 75 | 110 |
+| Role                              | Default | Hard Max |
+|-----------------------------------|---------|----------|
+| Orchestration (index, main)       | 100     | 150      |
+| Feature module                    | 200     | 300      |
+| Complex logic (parser, algorithm) | 300     | 450      |
+| Utility / helper                  | 75      | 110      |
 
 Override in: CR Acceptance Criteria or project CLAUDE.md
 
@@ -318,21 +314,21 @@ Create new CR (e.g., "Fix technical debt from {CR-KEY}")
 
 **debt.md informs what goes into the fix CR:**
 
-| Debt Finding | Fix CR Content |
-|--------------|----------------|
-| Size violation (745-line file) | "Break down {file} into focused modules" |
-| Duplication (logic in 4 places) | "Extract shared {pattern} to utility" |
-| Missing abstraction | "Create {type/interface} for {concept}" |
-| Shotgun surgery | "Consolidate {concern} to single extension point" |
+| Debt Finding                    | Fix CR Content                                    |
+|---------------------------------|---------------------------------------------------|
+| Size violation (745-line file)  | "Break down {file} into focused modules"          |
+| Duplication (logic in 4 places) | "Extract shared {pattern} to utility"             |
+| Missing abstraction             | "Create {type/interface} for {concept}"           |
+| Shotgun surgery                 | "Consolidate {concern} to single extension point" |
 
 ### Preventing debt (upstream)
 
-| Prevention | How |
-|------------|-----|
-| Size violations | Architecture defines limits, tasks enforce, implement verifies |
-| Duplication | Shared Patterns identified in architecture, extracted in Part 1 |
-| Missing abstractions | Architecture Design surfaces implicit decisions |
-| Shotgun surgery | Extension Rule ensures single-point changes |
+| Prevention           | How                                                             |
+|----------------------|-----------------------------------------------------------------|
+| Size violations      | Architecture defines limits, tasks enforce, implement verifies  |
+| Duplication          | Shared Patterns identified in architecture, extracted in Part 1 |
+| Missing abstractions | Architecture Design surfaces implicit decisions                 |
+| Shotgun surgery      | Extension Rule ensures single-point changes                     |
 
 </details>
 
@@ -366,14 +362,17 @@ Every task includes:
 ### Task 2.1: Extract summarize command
 
 **Limits**:
+
 - Default: 150 lines
 - Hard Max: 225 lines
 
 **Exclude** (stays in source):
+
 - Shared validation (already in validators/)
 - Output formatting (already in formatters/)
 
 **Anti-duplication**:
+
 - Import `validateUrl` from `validators/input-validators`
 - Do NOT implement validation in this file
 ```
@@ -382,12 +381,12 @@ Every task includes:
 
 Tasks and orchestrator have explicit escalation:
 
-| Trigger | Action |
-|---------|--------|
-| File > Hard Max | STOP, subdivide or justify |
-| Duplicating shared logic | STOP, import instead |
-| Structure mismatch | STOP, clarify path |
-| Tests fail (2 retries) | STOP, report failure |
+| Trigger                  | Action                     |
+|--------------------------|----------------------------|
+| File > Hard Max          | STOP, subdivide or justify |
+| Duplicating shared logic | STOP, import instead       |
+| Structure mismatch       | STOP, clarify path         |
+| Tests fail (2 retries)   | STOP, report failure       |
 
 </details>
 
@@ -426,6 +425,7 @@ Generates `{TICKETS_PATH}/{CR-KEY}/requirements.md` with CR-type-aware format:
 | Tech Debt | **Skip workflow** | — |
 
 **Output Sections** (New Feature/Enhancement):
+
 - **Behavioral Requirements (EARS)**: Pure behavioral specs using "the system shall"
 - **Functional Requirements**: Capability table (FR-1, FR-2, ...)
 - **Non-Functional Requirements**: Quality attributes with measurable targets
@@ -441,11 +441,14 @@ Generates `{TICKETS_PATH}/{CR-KEY}/requirements.md` with CR-type-aware format:
 | Unwanted | IF `<error>` THEN the system shall | IF timeout, THEN the system shall retry 3 times |
 
 **Code Reference Rules**:
+
 ```markdown
 # ✅ Pure behavioral (new features)
+
 WHEN user clicks tab, the system shall display the document.
 
 # ❌ Avoid (constrains architecture)
+
 WHEN user clicks tab, the `useSubDocuments` hook shall call API.
 ```
 
@@ -496,6 +499,7 @@ Validates uncertain technical decisions through hands-on experimentation:
 - **Findings Document**: `poc.md` captures decisions for architecture
 
 **Invocations**:
+
 ```bash
 /mdt:poc MDT-077                              # Interactive - pick from Open Questions
 /mdt:poc MDT-077 --question "Does X support Y?"  # Direct question
@@ -519,6 +523,7 @@ Validates uncertain technical decisions through hands-on experimentation:
 | Spike code | `{TICKETS_PATH}/{CR-KEY}/poc/` | Throwaway, gitignored |
 
 **Workflow Integration**:
+
 ```
 /mdt:assess
       ↓
@@ -551,9 +556,11 @@ Generates `{TICKETS_PATH}/{CR-KEY}/domain.md` (~15-25 lines):
 
 ### `/mdt:domain-audit`
 
-Analyzes existing code for DDD violations AND structural issues. Generates `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or standalone report.
+Analyzes existing code for DDD violations AND structural issues. Generates `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or
+standalone report.
 
 **Invocations**:
+
 ```bash
 /mdt:domain-audit MDT-077                    # Audit code touched by CR
 /mdt:domain-audit --path src/shared/services # Audit directory directly
@@ -582,6 +589,7 @@ Analyzes existing code for DDD violations AND structural issues. Generates `{TIC
 | Orphan utilities | Medium |
 
 **Output sections**:
+
 - DDD Violations (with evidence)
 - Structural Issues (with evidence)
 - Dependency Analysis (import graph)
@@ -589,6 +597,7 @@ Analyzes existing code for DDD violations AND structural issues. Generates `{TIC
 - Recommendations (prioritized fix directions)
 
 **Workflow**:
+
 ```
 /mdt:domain-audit → domain-audit.md
         ↓
@@ -646,6 +655,7 @@ Executes tasks with constraint verification:
 ```
 
 **After each task verifies:**
+
 1. Tests pass
 2. Size: OK / FLAG / STOP
 3. Structure: correct path
@@ -674,12 +684,14 @@ The `SessionStart` hook auto-injects `PROJECT_CODE` and `TICKETS_PATH` variables
 ```
 
 ### Quick Install (Global)
+
 ```bash
 # Run from project root - installs to ~/.claude/commands/
 bash prompts/install-claude.sh
 ```
 
 ### Local Install (Project-specific)
+
 ```bash
 # Install to project's .claude/commands/mdt/ (no mdt- prefix)
 bash prompts/install-claude.sh --project-path /path/to/project
@@ -746,16 +758,16 @@ prompts/
 
 ## Output Files
 
-| Workflow | Output Location |
-|----------|-----------------|
-| `/mdt:requirements` | `{TICKETS_PATH}/{CR-KEY}/requirements.md` |
-| `/mdt:tests` | `{TICKETS_PATH}/{CR-KEY}/[prep/][part-{X.Y}/]tests.md` + `{test_dir}/*.test.{ext}` |
-| `/mdt:domain-lens` | `{TICKETS_PATH}/{CR-KEY}/domain.md` |
+| Workflow            | Output Location                                                                        |
+|---------------------|----------------------------------------------------------------------------------------|
+| `/mdt:requirements` | `{TICKETS_PATH}/{CR-KEY}/requirements.md`                                              |
+| `/mdt:tests`        | `{TICKETS_PATH}/{CR-KEY}/[prep/][part-{X.Y}/]tests.md` + `{test_dir}/*.test.{ext}`     |
+| `/mdt:domain-lens`  | `{TICKETS_PATH}/{CR-KEY}/domain.md`                                                    |
 | `/mdt:domain-audit` | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` or `docs/audits/domain-audit-{timestamp}.md` |
-| `/mdt:poc` | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder (gitignored) |
-| `/mdt:architecture` | CR section (simple) or `{TICKETS_PATH}/{CR-KEY}/[prep/]architecture.md` |
-| `/mdt:tasks` | `{TICKETS_PATH}/{CR-KEY}/[prep/][part-{X.Y}/]tasks.md` |
-| `/mdt:tech-debt` | `{TICKETS_PATH}/{CR-KEY}/debt.md` |
+| `/mdt:poc`          | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder (gitignored)                          |
+| `/mdt:architecture` | CR section (simple) or `{TICKETS_PATH}/{CR-KEY}/[prep/]architecture.md`                |
+| `/mdt:tasks`        | `{TICKETS_PATH}/{CR-KEY}/[prep/][part-{X.Y}/]tasks.md`                                 |
+| `/mdt:tech-debt`    | `{TICKETS_PATH}/{CR-KEY}/debt.md`                                                      |
 
 ## Design Principles
 
@@ -784,11 +796,11 @@ For large CRs with multiple implementation parts, the workflow supports **part-a
 
 ### When to Use Parts
 
-| CR Scope | Approach |
-|----------|----------|
-| Single feature, <10 tasks | Single-part (root level tests.md/tasks.md) |
-| Multiple parts in architecture.md | Part folders (part-1.1/, part-1.2/, etc.) |
-| Epic with distinct milestones | Part folders |
+| CR Scope                          | Approach                                   |
+|-----------------------------------|--------------------------------------------|
+| Single feature, <10 tasks         | Single-part (root level tests.md/tasks.md) |
+| Multiple parts in architecture.md | Part folders (part-1.1/, part-1.2/, etc.)  |
+| Epic with distinct milestones     | Part folders                               |
 
 ### Part Detection
 
@@ -796,9 +808,13 @@ Parts are detected from `## Part X.Y:` headers in `architecture.md`:
 
 ```markdown
 ## Part 1.1: Enhanced Project Validation
+
 ...
+
 ## Part 1.2: Enhanced Ticket Validation
+
 ...
+
 ## Part 2: Additional Contracts
 ```
 
@@ -846,13 +862,13 @@ Parts are detected from `## Part X.Y:` headers in `architecture.md`:
 
 ### Part Commands
 
-| Command | Behavior |
-|---------|---------|
-| `/mdt:tests MDT-101` | Detects parts, prompts for selection |
-| `/mdt:tests MDT-101 --part 1.1` | Targets specific part directly |
-| `/mdt:tasks MDT-101` | Auto-detects from existing part-*/tests.md |
-| `/mdt:implement MDT-101` | Lists parts with completion status |
-| `/mdt:implement MDT-101 --part 1.2` | Targets specific part |
+| Command                             | Behavior                                   |
+|-------------------------------------|--------------------------------------------|
+| `/mdt:tests MDT-101`                | Detects parts, prompts for selection       |
+| `/mdt:tests MDT-101 --part 1.1`     | Targets specific part directly             |
+| `/mdt:tasks MDT-101`                | Auto-detects from existing part-*/tests.md |
+| `/mdt:implement MDT-101`            | Lists parts with completion status         |
+| `/mdt:implement MDT-101 --part 1.2` | Targets specific part                      |
 
 ### Backward Compatibility
 
@@ -874,23 +890,25 @@ If no `## Part X.Y:` headers exist in architecture.md, prompts default to root-l
 <details>
 <summary>When refactoring must happen before feature design (click to expand)</summary>
 
-When `/mdt:assess` identifies that **refactoring fundamentally changes the code landscape** (e.g., breaking up a God class, introducing new services), the feature architecture depends on the refactored structure. Use the **prep workflow** to design and execute refactoring first.
+When `/mdt:assess` identifies that **refactoring fundamentally changes the code landscape** (e.g., breaking up a God
+class, introducing new services), the feature architecture depends on the refactored structure. Use the **prep workflow
+** to design and execute refactoring first.
 
 ### When to Use Prep
 
-| Situation | Use Prep? |
-|-----------|-----------|
-| Minor extraction (one utility) | ❌ No — refactor inline |
-| God class → multiple services | ✅ Yes |
-| Feature interacts with NEW components | ✅ Yes |
-| Refactoring benefits unrelated features | ❌ No — split CRs |
+| Situation                               | Use Prep?              |
+|-----------------------------------------|------------------------|
+| Minor extraction (one utility)          | ❌ No — refactor inline |
+| God class → multiple services           | ✅ Yes                  |
+| Feature interacts with NEW components   | ✅ Yes                  |
+| Refactoring benefits unrelated features | ❌ No — split CRs       |
 
 ### Prep vs Parts
 
-| Concept | Purpose | Architecture |
-|---------|---------|---------------|
-| **Prep** | Get codebase ready (refactoring) | `prep/architecture.md` |
-| **Parts** | Implement feature incrementally | Shared `architecture.md` |
+| Concept   | Purpose                          | Architecture             |
+|-----------|----------------------------------|--------------------------|
+| **Prep**  | Get codebase ready (refactoring) | `prep/architecture.md`   |
+| **Parts** | Implement feature incrementally  | Shared `architecture.md` |
 
 Prep is a **different design problem** than the feature — it gets its own architecture file.
 
@@ -943,21 +961,21 @@ Prep is a **different design problem** than the feature — it gets its own arch
 
 ### Prep Commands
 
-| Command | Behavior |
-|---------|----------|
+| Command                         | Behavior                                    |
+|---------------------------------|---------------------------------------------|
 | `/mdt:architecture {CR} --prep` | Design refactoring → `prep/architecture.md` |
-| `/mdt:tests {CR} --prep` | Lock behavior (tests should be GREEN) |
-| `/mdt:tasks {CR} --prep` | Generate refactoring tasks |
-| `/mdt:implement {CR} --prep` | Execute refactoring, verify GREEN→GREEN |
+| `/mdt:tests {CR} --prep`        | Lock behavior (tests should be GREEN)       |
+| `/mdt:tasks {CR} --prep`        | Generate refactoring tasks                  |
+| `/mdt:implement {CR} --prep`    | Execute refactoring, verify GREEN→GREEN     |
 
 ### Prep TDD: GREEN → GREEN
 
 Unlike feature development (RED → GREEN), prep uses **behavior preservation**:
 
-| Mode | Before | After | Meaning |
-|------|--------|-------|---------|
-| Feature | RED | GREEN | New behavior implemented |
-| **Prep** | GREEN | GREEN | Existing behavior preserved |
+| Mode     | Before | After | Meaning                     |
+|----------|--------|-------|-----------------------------|
+| Feature  | RED    | GREEN | New behavior implemented    |
+| **Prep** | GREEN  | GREEN | Existing behavior preserved |
 
 If prep tests go RED, you've broken existing behavior — STOP and fix.
 
@@ -981,10 +999,10 @@ Requirements (EARS) → Tests (BDD/Gherkin) → Implementation → Tests GREEN
 
 ### Two Modes
 
-| CR Type | Test Strategy | Expected Test State |
-|---------|---------------|--------------------|
-| Feature / Enhancement | Behavior specification | RED before implementation |
-| Refactoring / Tech-Debt | Behavior preservation | GREEN before refactoring |
+| CR Type                 | Test Strategy          | Expected Test State       |
+|-------------------------|------------------------|---------------------------|
+| Feature / Enhancement   | Behavior specification | RED before implementation |
+| Refactoring / Tech-Debt | Behavior preservation  | GREEN before refactoring  |
 
 ### Feature Flow (RED → GREEN)
 
@@ -1020,13 +1038,13 @@ Requirements (EARS) → Tests (BDD/Gherkin) → Implementation → Tests GREEN
 
 After each task, verify:
 
-| Check | Feature CR | Refactoring CR |
-|-------|------------|----------------|
-| Tests exist | Required | Required |
-| Initial state | Were RED | Were GREEN |
-| Final state | Now GREEN | Still GREEN |
-| No tests deleted | ✓ | ✓ |
-| No tests weakened | ✓ | ✓ |
+| Check             | Feature CR | Refactoring CR |
+|-------------------|------------|----------------|
+| Tests exist       | Required   | Required       |
+| Initial state     | Were RED   | Were GREEN     |
+| Final state       | Now GREEN  | Still GREEN    |
+| No tests deleted  | ✓          | ✓              |
+| No tests weakened | ✓          | ✓              |
 
 </details>
 
@@ -1039,13 +1057,13 @@ After each task, verify:
 
 When `requirements.md` exists, downstream prompts consume it:
 
-| Prompt | How It Uses requirements.md |
-|--------|-----------------------------|
-| `/mdt:tests` | Transforms EARS → BDD scenarios, creates test files |
+| Prompt              | How It Uses requirements.md                                                      |
+|---------------------|----------------------------------------------------------------------------------|
+| `/mdt:tests`        | Transforms EARS → BDD scenarios, creates test files                              |
 | `/mdt:architecture` | Maps components to requirements, validates coverage; uses FR/NFR for constraints |
-| `/mdt:tasks` | Each task has `**Implements**: R1.1, R1.2` + `**Tests**: test_xxx` |
-| `/mdt:implement` | Verifies tests GREEN, marks requirements satisfied |
-| `/mdt:tech-debt` | Flags unsatisfied requirements as High severity debt |
+| `/mdt:tasks`        | Each task has `**Implements**: R1.1, R1.2` + `**Tests**: test_xxx`               |
+| `/mdt:implement`    | Verifies tests GREEN, marks requirements satisfied                               |
+| `/mdt:tech-debt`    | Flags unsatisfied requirements as High severity debt                             |
 
 **Requirements Document Sections** (v2):
 | Section | Purpose | Used By |
