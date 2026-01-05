@@ -40,6 +40,17 @@ Guidance for Claude Code working with this repository.
 - `scripts/metrics/run.sh --json` - Output LLM-friendly JSON format
 - See `scripts/metrics/README.md` for full documentation and configuration options
 
+### Code Analysis Tools
+- `scip-finder <symbol>` - Search for symbols in SCIP code intelligence indexes (more accurate than grep)
+  - `--scip <path>` - Path to SCIP index file (auto-discovers if not provided), you should use the one from root: `index.scip`
+  - `--from <file>` - Filter to symbols defined in specific file
+  - `--folder <path>` - Filter occurrences to files within folder
+  - `--format json` - Output JSON for programmatic analysis
+  - Examples:
+    - Find usages of Ticket declared in a certain file: `scip-finder --from shared/models/Ticket.ts Ticket`
+    - Find usages of method Ticket.save(): `scip-finder Ticket.save()`
+    - Find usages of myFunction declared in handler.ts: `scip-finder --from handler.ts myFunction`
+
 ## Architecture
 
 **Core Concept**: Kanban board where tickets are markdown files with YAML frontmatter in `docs/CRs/`, version-controlled with Git, with real-time file watching and MCP integration.
