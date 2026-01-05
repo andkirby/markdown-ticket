@@ -4,9 +4,11 @@ This file provides guidance to Claude Code when working on the CR workflow promp
 
 ## Working Context
 
-You are in the **prompts/** directory of the markdown-ticket project. This is an AI-powered Kanban board where **tickets are markdown files** stored in `docs/CRs/` with YAML frontmatter, version-controlled via Git.
+You are in the **prompts/** directory of the markdown-ticket project. This is an AI-powered Kanban board where **tickets
+are markdown files** stored in `docs/CRs/` with YAML frontmatter, version-controlled via Git.
 
-**Parent project architecture:** React+Vite frontend, Express backend, shared TypeScript services, and an MCP (Model Context Protocol) server for AI integration. The backend watches CR directories for changes and broadcasts via SSE.
+**Parent project architecture:** React+Vite frontend, Express backend, shared TypeScript services, and an MCP (Model
+Context Protocol) server for AI integration. The backend watches CR directories for changes and broadcasts via SSE.
 
 **This directory** contains AI workflow prompts that guide CR creation and management. When working here, focus on:
 
@@ -16,6 +18,7 @@ You are in the **prompts/** directory of the markdown-ticket project. This is an
 - Maintaining consistency across workflows
 
 **See [README.md](README.md) for:**
+
 - Complete workflow chain documentation
 - Command reference and usage
 - Installation instructions
@@ -26,28 +29,30 @@ You are in the **prompts/** directory of the markdown-ticket project. This is an
 
 ### Workflow Prompts
 
-| File | Purpose | Output |
-|------|---------|--------|
-| `mdt-ticket-creation.md` | CR creation (WHAT or WHAT+HOW) | CR in MDT system |
-| `mdt-requirements.md` | EARS requirements | `{CR-KEY}/requirements.md` |
-| `mdt-assess.md` | Code fitness evaluation | Decision: integrate/refactor/split |
-| `mdt-domain-lens.md` | DDD constraints | `{CR-KEY}/domain.md` |
-| `mdt-domain-audit.md` | DDD violations analysis | `{CR-KEY}/domain-audit.md` |
-| `mdt-tests.md` | BDD test generation | `{CR-KEY}/[part-*/]tests.md` + test files |
-| `mdt-architecture.md` | Architecture design | CR section or `{CR-KEY}/architecture.md` |
-| `mdt-clarification.md` | Fill specification gaps | Updated CR sections |
-| `mdt-tasks.md` | Task breakdown | `{CR-KEY}/[part-*/]tasks.md` |
-| `mdt-implement.md` | Execute with verification | Code changes |
-| `mdt-tech-debt.md` | Debt detection | `{CR-KEY}/debt.md` |
-| `mdt-reflection.md` | Capture learnings | Updated CR |
+All workflow commands are in the `commands/` subdirectory.
+
+| File                              | Purpose                        | Output                                    |
+|-----------------------------------|--------------------------------|-------------------------------------------|
+| `commands/mdt-ticket-creation.md` | CR creation (WHAT or WHAT+HOW) | CR in MDT system                          |
+| `commands/mdt-requirements.md`    | EARS requirements              | `{CR-KEY}/requirements.md`                |
+| `commands/mdt-assess.md`          | Code fitness evaluation        | Decision: integrate/refactor/split        |
+| `commands/mdt-domain-lens.md`     | DDD constraints                | `{CR-KEY}/domain.md`                      |
+| `commands/mdt-domain-audit.md`    | DDD violations analysis        | `{CR-KEY}/domain-audit.md`                |
+| `commands/mdt-tests.md`           | BDD test generation            | `{CR-KEY}/[part-*/]tests.md` + test files |
+| `commands/mdt-architecture.md`    | Architecture design            | CR section or `{CR-KEY}/architecture.md`  |
+| `commands/mdt-clarification.md`   | Fill specification gaps        | Updated CR sections                       |
+| `commands/mdt-tasks.md`           | Task breakdown                 | `{CR-KEY}/[part-*/]tasks.md`              |
+| `commands/mdt-implement.md`       | Execute with verification      | Code changes                              |
+| `commands/mdt-tech-debt.md`       | Debt detection                 | `{CR-KEY}/debt.md`                        |
+| `commands/mdt-reflection.md`      | Capture learnings              | Updated CR                                |
 
 ### Session Context
 
 All workflows have access to these variables (auto-injected via `~/.claude/hooks/mdt-project-vars.sh`):
 
-| Variable | Source | Example |
-|----------|--------|---------|
-| `PROJECT_CODE` | `.mdt-config.toml` → `code` | `MDT`, `API`, `WEB` |
+| Variable       | Source                             | Example                  |
+|----------------|------------------------------------|--------------------------|
+| `PROJECT_CODE` | `.mdt-config.toml` → `code`        | `MDT`, `API`, `WEB`      |
 | `TICKETS_PATH` | `.mdt-config.toml` → `ticketsPath` | `docs/CRs`, `.mdt/specs` |
 
 ## Prompt Development Workflow
@@ -74,6 +79,7 @@ All workflows have access to these variables (auto-injected via `~/.claude/hooks
 Workflows are **project-agnostic** and auto-detect settings from:
 
 **Sources checked in order:**
+
 1. `CLAUDE.md` - Project settings section
 2. `package.json` - Node.js
 3. `Cargo.toml` - Rust
@@ -82,15 +88,17 @@ Workflows are **project-agnostic** and auto-detect settings from:
 6. `Makefile` - Make-based
 
 **Extracted values:**
+
 ```yaml
 project:
-  source_dir: {src/, lib/, app/, pkg/, ...}
-  test_command: {npm test, pytest, cargo test, go test, make test, ...}
-  build_command: {npm run build, cargo build, go build, make, ...}
-  file_extension: {.ts, .py, .rs, .go, .java, .kt, ...}
+  source_dir: { src/, lib/, app/, pkg/, ... }
+  test_command: { npm test, pytest, cargo test, go test, make test, ... }
+  build_command: { npm run build, cargo build, go build, make, ... }
+  file_extension: { .ts, .py, .rs, .go, .java, .kt, ... }
 ```
 
 **Fallbacks:**
+
 - `source_dir`: Ask user or use `.`
 - `test_command`: Skip with warning
 - `build_command`: Skip with warning
@@ -103,12 +111,14 @@ project:
 **Core principle**: Specify concrete artifacts, not behaviors
 
 **Valid** (concrete):
+
 - File paths: `src/components/UserProfile.tsx`
 - Components: `AuthenticationService`
 - Endpoints: `/api/v2/users/profile`
 - Methods: `validateCredentials()`
 
 **Invalid** (behavioral):
+
 - "Component that handles X"
 - "Service for Y"
 - "Function that does Z"
@@ -116,6 +126,7 @@ project:
 ### 2. Structured Interactions
 
 Use `AskUserQuestion` tool for all user interactions:
+
 - Single-select with recommendations
 - Multi-select for artifact selection
 - Short-answer with constraints (≤5 words)
@@ -125,28 +136,30 @@ Never use free-form text prompts.
 ### 3. Atomic Section Updates
 
 Use `mcp__mdt-all__manage_cr_sections` for surgical updates:
+
 - List sections first
 - Update specific sections only
 - 84-94% more efficient than full rewrites
 
 ### 4. Debt Prevention
 
-| Workflow | Prevention Mechanism |
-|----------|---------------------|
-| Architecture | Defines size limits, shared patterns, structure |
-| Tasks | Inherits limits, Part 1 (shared first), exclusions |
-| Implement | Verifies size (OK/FLAG/STOP), no duplication |
-| Tech-Debt | Catches violations, produces diagnostic for fix CR |
+| Workflow     | Prevention Mechanism                               |
+|--------------|----------------------------------------------------|
+| Architecture | Defines size limits, shared patterns, structure    |
+| Tasks        | Inherits limits, Part 1 (shared first), exclusions |
+| Implement    | Verifies size (OK/FLAG/STOP), no duplication       |
+| Tech-Debt    | Catches violations, produces diagnostic for fix CR |
 
 ### 5. Three-Zone Size Enforcement
 
-| Zone | Condition | Action |
-|------|-----------|--------|
-| OK | ≤ Default | Proceed |
-| FLAG | Default to 1.5x | Complete with warning |
-| STOP | > 1.5x | Cannot complete, must resolve |
+| Zone | Condition       | Action                        |
+|------|-----------------|-------------------------------|
+| OK   | ≤ Default       | Proceed                       |
+| FLAG | Default to 1.5x | Complete with warning         |
+| STOP | > 1.5x          | Cannot complete, must resolve |
 
 **Defaults by module role:**
+
 - Orchestration: 100 lines (max 150)
 - Feature: 200 lines (max 300)
 - Complex logic: 300 lines (max 450)
@@ -157,34 +170,59 @@ Use `mcp__mdt-all__manage_cr_sections` for surgical updates:
 ### Core Tools
 
 **Get CR:**
+
 ```json
-{"project": "MDT", "key": "MDT-001", "mode": "full"} // full/attributes/metadata
+{
+  "project": "MDT",
+  "key": "MDT-001",
+  "mode": "full"
+} // full/attributes/metadata
 ```
 
 **Manage Sections:**
+
 ```json
-{"project": "MDT", "key": "MDT-001", "operation": "list"} // list/get/replace/append/prepend
+{
+  "project": "MDT",
+  "key": "MDT-001",
+  "operation": "list"
+} // list/get/replace/append/prepend
 ```
 
 **Create CR:**
+
 ```json
-{"project": "MDT", "type": "Feature Enhancement", "data": {"title": "...", "content": "..."}}
+{
+  "project": "MDT",
+  "type": "Feature Enhancement",
+  "data": {
+    "title": "...",
+    "content": "..."
+  }
+}
 ```
 
 **Update Status:**
+
 ```json
-{"project": "MDT", "key": "MDT-001", "status": "Implemented"}
+{
+  "project": "MDT",
+  "key": "MDT-001",
+  "status": "Implemented"
+}
 ```
 
 ## Markdown Standards
 
 ### Headers
+
 - One H1 (`#`) - document title only
 - Main: `## 1. Description`, `## 2. Decision`
 - Sub: `### Problem`, `### Affected Artifacts`
 - Never bold as headers
 
 ### Structure
+
 - No YAML frontmatter (MCP auto-generates)
 - No duplicate headers
 - Lists as plain markdown (NOT in code blocks)
@@ -207,20 +245,24 @@ Before committing prompt changes:
 ## Troubleshooting
 
 **MCP tool failures:**
+
 1. Prompt user to verify MCP server connection
 2. Check tool parameters (project, key, operation)
 
 **Section update failures:**
+
 1. List sections with `operation="list"` first
 2. Use exact section name (case-sensitive)
 3. Verify `updateMode` (replace/append/prepend)
 
 **Workflow hangs:**
+
 1. Check for missing approval gates
 2. Verify loop exit conditions are reachable
 
 ## Git Commit Convention
 
 For commits in this folder, always start with:
+
 - `feat(prompts): ...` for new features
 - `fix(prompts): ...` for bug fixes
