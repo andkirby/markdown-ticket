@@ -10,6 +10,7 @@ AI-driven workflow management for spec-driven development.
 
 ## Quick Start
 
+0. Install [MDT project](../README.md)
 1. Install: `bash prompts/install-claude.sh`
 2. Create a ticket: `/mdt:ticket-creation`
 3. Learn workflows: [WORKFLOWS.md](./WORKFLOWS.md)
