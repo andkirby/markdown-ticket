@@ -35,11 +35,12 @@ All workflow commands are in the `commands/` subdirectory.
 |-----------------------------------|--------------------------------|-------------------------------------------|
 | `commands/mdt-ticket-creation.md` | CR creation (WHAT or WHAT+HOW) | CR in MDT system                          |
 | `commands/mdt-requirements.md`    | EARS requirements              | `{CR-KEY}/requirements.md`                |
+| `commands/mdt-bdd.md`             | BDD acceptance tests (E2E)     | `{CR-KEY}/bdd.md` + E2E test files        |
 | `commands/mdt-assess.md`          | Code fitness evaluation        | Decision: integrate/refactor/split        |
 | `commands/mdt-domain-lens.md`     | DDD constraints                | `{CR-KEY}/domain.md`                      |
 | `commands/mdt-domain-audit.md`    | DDD violations analysis        | `{CR-KEY}/domain-audit.md`                |
-| `commands/mdt-tests.md`           | BDD test generation            | `{CR-KEY}/[part-*/]tests.md` + test files |
 | `commands/mdt-architecture.md`    | Architecture design            | CR section or `{CR-KEY}/architecture.md`  |
+| `commands/mdt-tests.md`           | Module tests (unit/integration)| `{CR-KEY}/[part-*/]tests.md` + test files |
 | `commands/mdt-clarification.md`   | Fill specification gaps        | Updated CR sections                       |
 | `commands/mdt-tasks.md`           | Task breakdown                 | `{CR-KEY}/[part-*/]tasks.md`              |
 | `commands/mdt-implement.md`       | Execute with verification      | Code changes                              |

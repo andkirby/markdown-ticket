@@ -249,15 +249,16 @@ Next: `/mdt:architecture {CR-KEY}`
 ✓ CR scope updated. Prep workflow activated.
 
 Workflow:
-1. `/mdt:architecture {CR-KEY} --prep` — design refactoring
-2. `/mdt:tests {CR-KEY} --prep` — lock current behavior
-3. `/mdt:tasks {CR-KEY} --prep` — refactoring tasks
-4. `/mdt:implement {CR-KEY} --prep` — execute refactoring
+1. `/mdt:bdd {CR-KEY} --prep` — lock E2E user journeys (GREEN)
+2. `/mdt:architecture {CR-KEY} --prep` — design refactoring
+3. `/mdt:tests {CR-KEY} --prep` — lock module behavior (GREEN)
+4. `/mdt:tasks {CR-KEY} --prep` — refactoring tasks
+5. `/mdt:implement {CR-KEY} --prep` — execute refactoring (tests stay GREEN)
    *** Codebase now restructured ***
-5. `/mdt:architecture {CR-KEY}` — design feature against NEW code
-6. Continue normal workflow...
+6. `/mdt:architecture {CR-KEY}` — design feature against NEW code
+7. Continue normal workflow...
 
-Next: `/mdt:architecture {CR-KEY} --prep`
+Next: `/mdt:bdd {CR-KEY} --prep`
 ```
 
 **If Option 3 chosen**:
@@ -271,12 +272,13 @@ Next: `/mdt:architecture {CR-KEY} --prep`
 ✓ Updated {CR-KEY} with dependency
 
 Workflow:
-1. `/mdt:tests {TEST-CR-KEY}` — generate behavioral preservation tests
-2. `/mdt:tasks {TEST-CR-KEY}` — plan test implementation
-3. `/mdt:implement {TEST-CR-KEY}` — write tests (should pass against current code)
-4. Then return to {CR-KEY} (now safe to refactor)
+1. `/mdt:bdd {TEST-CR-KEY} --prep` — lock E2E user journeys (GREEN)
+2. `/mdt:architecture {TEST-CR-KEY}` — design test structure
+3. `/mdt:tests {TEST-CR-KEY} --prep` — lock module behavior (GREEN)
+4. `/mdt:implement {TEST-CR-KEY}` — write tests (should pass against current code)
+5. Then return to {CR-KEY} (now safe to refactor)
 
-Next: `/mdt:tests {TEST-CR-KEY}`
+Next: `/mdt:bdd {TEST-CR-KEY} --prep`
 ```
 
 **3b. If Refactor CR needed (tests OK)**:
@@ -288,12 +290,14 @@ Next: `/mdt:tests {TEST-CR-KEY}`
 ✓ Updated {CR-KEY} with dependency
 
 Workflow:
-1. `/mdt:architecture {NEW-CR-KEY}` — design refactoring
-2. `/mdt:tasks {NEW-CR-KEY}` — plan refactoring
-3. `/mdt:implement {NEW-CR-KEY}` — execute refactoring
-4. Then return to {CR-KEY}
+1. `/mdt:bdd {NEW-CR-KEY} --prep` — lock E2E behavior (GREEN)
+2. `/mdt:architecture {NEW-CR-KEY}` — design refactoring
+3. `/mdt:tests {NEW-CR-KEY} --prep` — lock module behavior (GREEN)
+4. `/mdt:tasks {NEW-CR-KEY}` — plan refactoring
+5. `/mdt:implement {NEW-CR-KEY}` — execute refactoring (tests stay GREEN)
+6. Then return to {CR-KEY}
 
-Next: `/mdt:architecture {NEW-CR-KEY}`
+Next: `/mdt:bdd {NEW-CR-KEY} --prep`
 ```
 
 **3c. If Both needed**:
@@ -307,11 +311,11 @@ Next: `/mdt:architecture {NEW-CR-KEY}`
 ✓ Updated {CR-KEY} (depends on {REFACTOR-CR-KEY})
 
 Workflow:
-1. `/mdt:tests {TEST-CR-KEY}` → implement → tests pass
-2. `/mdt:architecture {REFACTOR-CR-KEY}` → tasks → implement (tests stay green)
+1. `/mdt:bdd {TEST-CR-KEY} --prep` → lock E2E → implement → tests GREEN
+2. `/mdt:bdd {REFACTOR-CR-KEY} --prep` → architecture → tests --prep → implement (tests stay GREEN)
 3. Return to {CR-KEY}
 
-Next: `/mdt:tests {TEST-CR-KEY}`
+Next: `/mdt:bdd {TEST-CR-KEY} --prep`
 ```
 
 ---
@@ -356,22 +360,24 @@ Outputs condensed version:
 ## Integration
 
 **Before**: CR exists with Affected Artifacts defined
-**After**: 
-- Option 1 → `/mdt:architecture {CR-KEY}`
-- Option 2 → `/mdt:architecture {CR-KEY}` (with expanded scope)
-- Option 3 → `/mdt:architecture {NEW-CR-KEY}` (refactoring CR first)
+**After**:
+- Option 1 → `/mdt:bdd {CR-KEY}` (then architecture)
+- Option 2 → `/mdt:bdd {CR-KEY} --prep` (prep workflow, then feature)
+- Option 3 → `/mdt:bdd {NEW-CR-KEY} --prep` (refactoring CR first)
 
 **Position in workflow**:
 ```
-/mdt:ticket-creation → /mdt:requirements → /mdt:assess → /mdt:architecture → ...
-                                               ↓
-                                    Decision point: 1/2/3
-                                               ↓
-                          Option 2 with prep? → /mdt:architecture --prep
+/mdt:ticket-creation → /mdt:requirements → /mdt:bdd → /mdt:assess → /mdt:architecture → ...
+                                                          ↓
+                                               Decision point: 1/2/3
+                                                          ↓
+                          Option 2 with prep? → /mdt:bdd --prep
+                                               → /mdt:architecture --prep
                                                → /mdt:tests --prep
                                                → /mdt:tasks --prep
                                                → /mdt:implement --prep
                                                → /mdt:architecture (feature)
+                                               → /mdt:tests (feature)
                                                → normal workflow...
 ```
 

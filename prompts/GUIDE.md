@@ -41,25 +41,31 @@ Use when you need complete traceability and rigorous development process. Ideal 
 # 2. Generate formal requirements (EARS format)
 /mdt:requirements
 
-# 3. Assess code fitness before designing
+# 3. Generate BDD acceptance tests (E2E, user-visible)
+/mdt:bdd
+
+# 4. Assess code fitness before designing
 /mdt:assess
 
-# 4. Design architecture with constraints
+# 5. Design architecture with constraints
 /mdt:architecture
 
-# 5. Fill any specification gaps
+# 6. Generate module tests (unit/integration)
+/mdt:tests
+
+# 7. Fill any specification gaps
 /mdt:clarification
 
-# 6. Break down into constrained tasks
+# 8. Break down into constrained tasks
 /mdt:tasks
 
-# 7. Execute with verification
+# 9. Execute with verification
 /mdt:implement
 
-# 8. Detect any technical debt created
+# 10. Detect any technical debt created
 /mdt:tech-debt
 
-# 9. Capture learnings for improvement
+# 11. Capture learnings for improvement
 /mdt:reflection
 ```
 
@@ -71,7 +77,9 @@ Use when you need complete traceability and rigorous development process. Ideal 
 
 **Outputs Generated:**
 - `docs/CRs/{CR-KEY}/requirements.md` - EARS-formatted requirements
+- `docs/CRs/{CR-KEY}/bdd.md` - BDD acceptance tests (E2E)
 - `docs/CRs/{CR-KEY}/architecture.md` - Architecture design (if complex)
+- `docs/CRs/{CR-KEY}/tests.md` - Module tests (unit/integration)
 - `docs/CRs/{CR-KEY}/tasks.md` - Task breakdown with constraints
 - `docs/CRs/{CR-KEY}/debt.md` - Technical debt diagnostic
 - Updated CR with Section 8 clarifications

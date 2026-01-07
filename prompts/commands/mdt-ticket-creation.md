@@ -430,39 +430,47 @@ After successful CR creation:
    ```
    /mdt:requirements → Full EARS + FR + NFR specifications
            ↓
+   /mdt:bdd → E2E acceptance tests (user-visible behavior)
+           ↓
    /mdt:assess → evaluate affected code fitness (optional)
            ↓
-   /mdt:tests → BDD tests from requirements
+   /mdt:architecture → determines HOW (artifacts, patterns, parts)
            ↓
-   /mdt:architecture → determines HOW (artifacts, patterns)
+   /mdt:tests → module-level tests from architecture
            ↓
    /mdt:tasks → task breakdown
            ↓
-   /mdt:implement → execution
+   /mdt:implement → execution (all tests go GREEN)
    ```
 
    **REQUIREMENTS_SCOPE = "brief"**:
    ```
    /mdt:requirements → Brief requirements (bug description + fix criteria)
            ↓
+   /mdt:bdd → E2E test reproducing the bug (RED)
+           ↓
    /mdt:architecture → design fix approach
+           ↓
+   /mdt:tests → module tests for fix
            ↓
    /mdt:tasks → task breakdown
            ↓
-   /mdt:implement → execution
+   /mdt:implement → execution (bug test goes GREEN)
    ```
 
    **REQUIREMENTS_SCOPE = "preservation"**:
    ```
    /mdt:assess → identify behavior to preserve
            ↓
-   /mdt:tests → behavior preservation tests (must pass before refactoring)
+   /mdt:bdd --prep → lock E2E user journeys (GREEN)
            ↓
    /mdt:architecture → design target structure
            ↓
+   /mdt:tests --prep → lock module behavior (GREEN)
+           ↓
    /mdt:tasks → task breakdown
            ↓
-   /mdt:implement → execution (tests stay green)
+   /mdt:implement → execution (all tests stay GREEN)
    ```
 
    **REQUIREMENTS_SCOPE = "none"**:

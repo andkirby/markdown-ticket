@@ -576,8 +576,9 @@ Save to `{TICKETS_PATH}/{CR-KEY}/requirements.md`
 
 ### Next Steps
 - Review requirements for completeness
-- Run `/mdt:architecture {CR-KEY}` — requirements inform structure
-- Run `/mdt:tasks {CR-KEY}` — tasks implement requirements
+- Run `/mdt:bdd {CR-KEY}` — generate E2E acceptance tests from requirements
+- Run `/mdt:architecture {CR-KEY}` — requirements + BDD inform structure
+- Run `/mdt:tests {CR-KEY}` — generate module tests from architecture
 ```
 
 ## EARS Examples by Type
@@ -665,16 +666,17 @@ THEN the cache entry SHALL be less than TTL seconds old.
 ## Integration
 
 **Before**: CR exists with Problem/Scope defined
-**After**: 
-- `/mdt:architecture` — requirements inform structure decisions
-- `/mdt:tasks` — tasks implement requirements
-- `/mdt:implement` — verify requirements met
+**After**:
+- `/mdt:bdd` — generate E2E acceptance tests from requirements (next step)
+- `/mdt:architecture` — requirements + BDD inform structure decisions
+- `/mdt:tests` — generate module tests from architecture
+- `/mdt:implement` — verify all tests pass
 
 **Workflow position:**
 ```
-/mdt:ticket-creation → /mdt:requirements → /mdt:architecture → /mdt:tasks → /mdt:implement
-                              ↑
-                         (optional)
+/mdt:ticket-creation → /mdt:requirements → /mdt:bdd → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
+                              ↑               ↑
+                         (optional)      (next step)
 ```
 
 ## When to Skip (Quick Reference)

@@ -51,6 +51,10 @@ What type of work?
         │                        EARS-formatted behavioral specs
         │                        ⚠️ Skip for refactoring/tech-debt
         ▼
+/mdt:bdd ──────────────────────── Creates: bdd.md + E2E test files
+        │                        User-visible acceptance tests (RED)
+        │                        ⚠️ Before architecture - no parts needed
+        ▼
 /mdt:assess (optional) ────────── Decision point: 1/2/3
         │                        Evaluate code fitness + test coverage
         │
@@ -63,17 +67,19 @@ What type of work?
         │                        Validate uncertain technical decisions
         │                        ⚠️ Use when "will this work?" needs proof
         ▼
-/mdt:tests ────────────────────── Creates: tests.md + test files (RED)
-        │                        BDD specs from requirements or behavior
-        │                        Tests written BEFORE implementation
-        ▼
 /mdt:domain-lens (optional) ────── Creates: domain.md (~15-25 lines)
         │                        DDD constraints for architecture
         │                        ⚠️ Skip for refactoring/tech-debt/CRUD
         ▼
 /mdt:architecture ─────────────── Simple: CR section (~60 lines)
         │                        Complex: architecture.md (extracted)
-        │                        Consumes poc.md, domain.md if exist
+        │                        Defines: parts, modules, structure
+        │                        Consumes: poc.md, domain.md, bdd.md
+        ▼
+/mdt:tests ────────────────────── Creates: tests.md + unit/integration files
+        │                        Module-level tests from architecture
+        │                        Part-aware (part-X.Y/tests.md)
+        │                        Tests written BEFORE implementation (RED)
         ▼
 /mdt:clarification (as needed)
         │
@@ -98,15 +104,17 @@ What type of work?
         ↓
 /mdt:requirements → EARS specifications
         ↓
+/mdt:bdd → User-visible acceptance tests (E2E)
+        ↓
 /mdt:assess → code fitness (optional)
         ↓
 /mdt:poc → validate uncertain tech (optional)
         ↓
-/mdt:tests → BDD tests
-        ↓
 /mdt:domain-lens (optional) → DDD constraints
         ↓
-/mdt:architecture → determines HOW (consumes poc.md, domain.md)
+/mdt:architecture → determines HOW, defines parts (consumes poc.md, domain.md, bdd.md)
+        ↓
+/mdt:tests → module-level tests (part-aware)
         ↓
 /mdt:tasks → /mdt:implement
 ```
@@ -123,12 +131,15 @@ What type of work?
 /mdt:domain-audit ─────────────────── Diagnose DDD + structural issues
         │                             Extracts domain concept + natural grouping
         ▼
+/mdt:bdd --prep (optional) ────────── Lock existing E2E user journeys
+        │                             Tests must be GREEN
+        ▼
+/mdt:architecture ─────────────────── Design fix based on audit findings
+        │
+        ▼
 /mdt:tests ────────────────────────── Behavior preservation tests
         │                             Lock current behavior before changes
         │                             Tests must be GREEN before refactoring
-        ▼
-/mdt:architecture --prep ──────────── Design fix based on audit findings
-        │
         ▼
 /mdt:tasks ────────────────────────── Constrained task list
         │
@@ -150,11 +161,14 @@ What type of work?
     └─► "⚠️ Prep Required" signal
         │
         ▼
+/mdt:bdd {CR-KEY} --prep (optional)── Creates: prep/bdd.md
+        │                            Lock existing E2E behavior (GREEN)
+        ▼
 /mdt:architecture {CR-KEY} --prep ─── Creates: prep/architecture.md
         │                            Refactoring design
         ▼
 /mdt:tests {CR-KEY} --prep ──────── Creates: prep/tests.md
-        │                            Lock current behavior (GREEN)
+        │                            Lock module behavior (GREEN)
         ▼
 /mdt:tasks {CR-KEY} --prep ──────── Creates: prep/tasks.md
         │                            Refactoring tasks
@@ -236,24 +250,42 @@ Create new CR (e.g., "Fix technical debt from {CR-KEY}")
 /mdt:implement {NEW-CR-KEY}
 ```
 
-## TDD/BDD Flow Comparison
+## Test Strategy: BDD + TDD
+
+### Two Test Levels
+
+| Level | Command | When | Input | Tests | State |
+|-------|---------|------|-------|-------|-------|
+| **BDD (E2E)** | `/mdt:bdd` | Before architecture | requirements.md | User journeys | RED |
+| **TDD (Unit/Integration)** | `/mdt:tests` | After architecture | architecture.md | Modules | RED |
 
 ### Feature Flow (RED → GREEN)
 
 ```
-/mdt:requirements → /mdt:tests → /mdt:architecture → /mdt:tasks → /mdt:implement
-        │                │                                              │
-        ↓                ↓                                              ↓
-   EARS specs     Tests written                                   Tests pass
-                  (should FAIL)                                   (now GREEN)
+/mdt:requirements → /mdt:bdd → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
+        │               │              │                │                          │
+        ↓               ↓              ↓                ↓                          ↓
+   EARS specs     E2E tests      Defines parts    Module tests              All tests
+                  (RED)                           (RED)                     now GREEN
 ```
 
 ### Refactoring Flow (GREEN → GREEN)
 
 ```
-/mdt:assess → /mdt:tests → /mdt:architecture → /mdt:tasks → /mdt:implement
-      │            │                                              │
-      ↓            ↓                                              ↓
-  Find gaps   Lock behavior                                  Behavior
-             (must PASS now)                                 preserved
+/mdt:assess → /mdt:bdd --prep → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
+      │            │                    │                │                          │
+      ↓            ↓                    ↓                ↓                          ↓
+  Find gaps   Lock E2E            Design fix       Lock modules              Behavior
+             (GREEN)                               (GREEN)                   preserved
 ```
+
+### Why Two Levels?
+
+| BDD (Acceptance) | TDD (Unit/Integration) |
+|------------------|------------------------|
+| User perspective | Developer perspective |
+| "User can log in" | "AuthService.validate() returns token" |
+| No architecture knowledge | Requires architecture |
+| Whole feature behavior | Module behavior |
+| Playwright, Cypress | Jest, Pytest, Vitest |
+| Few, slow, high-value | Many, fast, detailed |
