@@ -535,6 +535,8 @@ For simpler questions that don't need full documentation:
 ```
 /mdt:requirements
         ↓
+/mdt:bdd (E2E acceptance tests)
+        ↓
 /mdt:assess (optional)
         ↓
 ┌─────────────────────────────────────────┐
@@ -550,9 +552,9 @@ For simpler questions that don't need full documentation:
 │ - poc/ folder (throwaway spike code)    │
 └─────────────────────────────────────────┘
         ↓
-/mdt:tests (informed by PoC findings)
+/mdt:architecture (consumes poc.md, bdd.md)
         ↓
-/mdt:architecture (consumes poc.md)
+/mdt:tests (module tests from architecture)
         ↓
 /mdt:tasks → /mdt:implement
 ```

@@ -818,28 +818,51 @@ Before completing, verify:
 
 ## Integration
 
-**Before**: CR exists with problem/scope defined (optionally after `/mdt:assess` and/or `/mdt:poc`)
+**Before**: CR exists with problem/scope defined (optionally after `/mdt:assess`, `/mdt:poc`, and/or `/mdt:bdd`)
+
 **Consumes**: 
 - `domain-audit.md` — DDD + structural diagnosis for prep/refactoring (PRIMARY for prep mode)
 - `poc.md` — validated technical decisions (use directly, don't re-evaluate)
 - `domain.md` — DDD constraints for structure (feature mode)
 - `requirements.md` — requirement-to-component mapping
+- `bdd.md` — user journeys inform component boundaries (if exists)
 
-**After**: `/mdt:tasks` inherits shared patterns + size limits
+**After**: `/mdt:tests` generates module-level tests based on architecture structure
 
-**Position in workflow**:
+**Position in workflow (Feature)**:
 ```
+/mdt:requirements
+        ↓
+/mdt:bdd ─────────────── Creates: bdd.md (user-visible E2E tests)
+        ↓
 /mdt:assess (optional)
         ↓
-/mdt:poc (optional) ─── Creates: poc.md
+/mdt:poc (optional) ──── Creates: poc.md
         ↓
-/mdt:domain-audit ───── Creates: domain-audit.md (for prep/refactoring)
+/mdt:domain-lens (optional)
         ↓
-/mdt:tests
+/mdt:architecture ────── Creates: architecture.md (defines parts, modules)
         ↓
-/mdt:architecture ─── Consumes: domain-audit.md (prep), poc.md, domain.md, requirements.md
+/mdt:tests ───────────── Creates: tests.md (module-level, part-aware)
         ↓
 /mdt:tasks
 ```
+
+**Position in workflow (Prep)**:
+```
+/mdt:assess
+        ↓
+/mdt:bdd --prep (optional) ─ Lock existing E2E behavior
+        ↓
+/mdt:domain-audit ────────── Creates: domain-audit.md
+        ↓
+/mdt:architecture --prep ─── Creates: prep/architecture.md
+        ↓
+/mdt:tests --prep ────────── Creates: prep/tests.md (lock module behavior)
+        ↓
+/mdt:tasks --prep
+```
+
+**Key change (v8)**: `/mdt:bdd` now handles user-visible acceptance tests BEFORE architecture. `/mdt:tests` handles module-level tests AFTER architecture.
 
 Context: $ARGUMENTS

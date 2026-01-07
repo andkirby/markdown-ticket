@@ -1,8 +1,8 @@
-# MDT Test Specification Workflow (v4)
+# MDT Test Specification Workflow (v5)
 
-Generate BDD test specifications and executable test files from requirements or behavioral assessment.
+Generate unit and integration test specifications from architecture design. Produces part-aware tests that validate implementation details.
 
-**Core Principle**: Tests are written BEFORE implementation. They define success criteria, not verify after-the-fact.
+**Core Principle**: Tests are written AFTER architecture (which defines parts and modules) but BEFORE implementation. They define success criteria at the module level.
 
 ## User Input
 
@@ -16,28 +16,57 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 
 ## Output Location
 
-- **Prep mode** (`--prep`): `{TICKETS_PATH}/{CR-KEY}/prep/tests.md`
-- **Multi-part CR**: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tests.md`
-- **Single-part CR**: `{TICKETS_PATH}/{CR-KEY}/tests.md`
-- **Test files**: Project's test directory (detected from config)
+| Mode | Output |
+|------|--------|
+| **Prep** (`--prep`) | `{TICKETS_PATH}/{CR-KEY}/prep/tests.md` + test files |
+| **Multi-part CR** | `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tests.md` + test files |
+| **Single-part CR** | `{TICKETS_PATH}/{CR-KEY}/tests.md` + test files |
 
 ## Mode Detection
 
-| Mode | Input Source | Test Strategy |
-|------|--------------|---------------|
-| **Prep** (`--prep`) | existing code | Behavior preservation — lock before refactoring |
-| Feature | requirements.md | Behavior specification — test what SHOULD happen |
-| Refactoring | assess output + existing code | Behavior preservation — test what CURRENTLY happens |
-| Tech Debt | assess output + existing code | Behavior preservation — lock before changing |
+| Mode | Input Source | Test Strategy | Expected State |
+|------|--------------|---------------|----------------|
+| **Feature** | architecture.md | Behavior specification — test modules | RED |
+| **Prep** (`--prep`) | existing code + prep/architecture.md | Behavior preservation — lock before refactoring | GREEN |
+| **Refactoring** | architecture.md (refactoring CR) | Behavior preservation — lock before changing | GREEN |
+
+## Problem This Solves
+
+After architecture defines components, parts, and modules:
+- Each module needs tests before implementation
+- Parts need isolated test suites
+- Refactoring needs behavior-locking tests
+- Implementation needs clear RED→GREEN targets
+
+Unit/integration tests written AFTER architecture ensure:
+- Tests align with actual component boundaries
+- Part isolation is maintained
+- Module interfaces are tested
+- Implementation has clear targets
+
+## When to Use
+
+**Use `/mdt:tests`:**
+- After `/mdt:architecture` has defined structure
+- For each part in multi-part CRs
+- Before refactoring to lock module behavior (`--prep`)
+- When you need unit/integration tests (not E2E)
+
+**Do NOT use:**
+- Before architecture exists (use `/mdt:bdd` for acceptance tests)
+- For user-visible behavior tests (use `/mdt:bdd`)
+- When no modules/components are defined yet
+
+**Prerequisite**: `architecture.md` must exist (or `prep/architecture.md` for prep mode)
 
 ## Critical Rules
 
-1. **Tests before code** — Generate failing tests, implementation makes them pass
-2. **Integration/E2E focus** — Test from public interface, not internals
-3. **BDD format** — Given/When/Then scenarios derived from EARS specs
-4. **Traceability** — Every test traces to requirement or behavior
-5. **Part isolation** — Each part gets its own tests.md in part folder
-6. **Prep tests must pass** — Prep mode locks current behavior (tests should be GREEN)
+1. **Requires architecture** — cannot run without architecture.md defining structure
+2. **Part-aware** — each part gets its own tests.md in part folder
+3. **Module-level focus** — test components, services, adapters (not user journeys)
+4. **Feature mode = RED** — tests should fail until module is implemented
+5. **Prep/Refactoring mode = GREEN** — tests must pass against current code
+6. **Integration with BDD** — `/mdt:bdd` tests user behavior, `/mdt:tests` tests modules
 
 ## Execution Steps
 
@@ -50,101 +79,103 @@ mdt-all:get_cr mode="full"
 
 **1b. Check for prep mode:**
 
-```bash
-# If --prep flag in arguments
-if [[ "$ARGUMENTS" == *"--prep"* ]]; then
-  mode="prep"
-  output_dir="{TICKETS_PATH}/{CR-KEY}/prep/"
-  tests_file="{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
-  # Prep tests lock current behavior — should be GREEN
-  test_expectation="GREEN"
-  # Skip part detection
-fi
+```yaml
+if "--prep" in ARGUMENTS:
+  mode: "prep"
+  architecture_file: "{TICKETS_PATH}/{CR-KEY}/prep/architecture.md"
+  output_dir: "{TICKETS_PATH}/{CR-KEY}/prep/"
+  tests_file: "{TICKETS_PATH}/{CR-KEY}/prep/tests.md"
+  test_expectation: "GREEN"  # Must pass against current code
+else:
+  mode: "feature"  # or "refactoring" based on CR type
+  architecture_file: "{TICKETS_PATH}/{CR-KEY}/architecture.md"
+  # output determined by part detection
+  test_expectation: "RED"  # or GREEN for refactoring CRs
 ```
 
-**1c. Detect parts in architecture (if not prep mode):**
+**1c. Verify architecture exists:**
 
-```bash
-# Check for architecture.md
-arch_file="{TICKETS_PATH}/{CR-KEY}/architecture.md"
-
-if [ -f "$arch_file" ]; then
-  # Extract part headers: "## Part 1.1:" or "## Part 2:"
-  parts=$(grep -oE "^## Part [0-9]+(\.[0-9]+)?:" "$arch_file" | \
-           sed 's/## Part \([0-9.]*\):.*/\1/' | sort -V)
-fi
+```yaml
+if not exists(architecture_file):
+  # Check if embedded in CR
+  cr_architecture = get_cr_section("Architecture Design")
+  if not cr_architecture:
+    ERROR: """
+    Architecture not found. /mdt:tests requires architecture.md.
+    
+    Run `/mdt:architecture {CR-KEY}` first to define:
+    - Component structure
+    - Module boundaries  
+    - Part breakdown (if multi-part)
+    
+    For user-visible acceptance tests without architecture,
+    use `/mdt:bdd {CR-KEY}` instead.
+    """
+    EXIT
 ```
 
-**1d. If parts detected — prompt for selection:**
+**1d. Detect parts (if not prep mode):**
+
+```bash
+# Check architecture.md for part headers
+if mode != "prep":
+  parts = grep "^## Part [0-9]+(\.[0-9]+)?:" architecture_file
+  
+  if parts.count > 0:
+    # Multi-part CR
+    prompt_for_part_selection(parts)
+  else:
+    # Single-part CR
+    part = null
+```
+
+**1e. If parts detected — prompt for selection:**
 
 ```markdown
 Detected parts in architecture.md:
   - 1.1: Enhanced Project Validation
-  - 1.2: Enhanced Ticket Validation
+  - 1.2: Enhanced Ticket Validation  
   - 2: Additional Contracts Migration
 
 Which part to generate tests for? [1.1]: _
 ```
 
-Accept input formats: `1.1`, `part-1.1`, `Part 1.1`
+Accept input formats: `1.1`, `part-1.1`, `Part 1.1`, or `--part 1.1` flag
 
-**1d. Set output paths based on part:**
+**1f. Set output paths based on part:**
 
 ```yaml
 # Multi-part CR
-part: "1.1"
-output_dir: "{TICKETS_PATH}/{CR-KEY}/part-1.1/"
-tests_file: "{TICKETS_PATH}/{CR-KEY}/part-1.1/tests.md"
+if part:
+  output_dir: "{TICKETS_PATH}/{CR-KEY}/part-{part}/"
+  tests_file: "{TICKETS_PATH}/{CR-KEY}/part-{part}/tests.md"
 
 # Single-part CR (backward compatible)
-part: null
-output_dir: "{TICKETS_PATH}/{CR-KEY}/"
-tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
+else:
+  output_dir: "{TICKETS_PATH}/{CR-KEY}/"
+  tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
 ```
 
-**1e. Load part-specific context from architecture.md:**
+**1g. Load part-specific context from architecture.md:**
 
 If multi-part, extract ONLY the selected part section:
 - Part overview
 - Part-specific Structure
 - Part-specific Size Guidance
-- Part-specific Validation Rules / Requirements
+- Part-specific modules and interfaces
 
-Example extraction for Part 1.1:
-```markdown
-## Part 1.1: Enhanced Project Validation
+**1h. Determine test expectation by CR type:**
 
-### Overview
-Part 1.1 extends the Project schema with comprehensive validation...
-
-### Enhanced Structure
-domain-contracts/src/project/
-├── schema.ts
-├── validation.ts
-├── migration.ts
-└── index.ts
-
-### Validation Rules Specification
-...
+```yaml
+if mode == "prep":
+  test_expectation: "GREEN"
+elif CR.type in ["Refactoring", "Technical Debt"]:
+  test_expectation: "GREEN"  # Behavior preservation
+else:
+  test_expectation: "RED"  # Feature specification
 ```
 
-**1f. Determine test mode:**
-
-```
-IF {TICKETS_PATH}/{CR-KEY}/requirements.md exists:
-  MODE = "feature"
-  Load requirements.md
-ELSE IF CR type is "Bug Fix" or contains refactoring keywords:
-  MODE = "refactoring"
-  Load assess output if exists
-ELSE:
-  MODE = "feature"
-  Warn: "No requirements.md found — generate from CR/part description"
-```
-
-**1g. Detect test framework:**
-
-From project config (package.json, pyproject.toml, Cargo.toml, etc.):
+**1i. Detect test framework:**
 
 | Language | Common Frameworks | Detection |
 |----------|-------------------|-----------|
@@ -155,97 +186,91 @@ From project config (package.json, pyproject.toml, Cargo.toml, etc.):
 
 ```yaml
 test:
-  framework: {jest, pytest, etc.}
-  directory: {tests/, __tests__/, test/, etc.}
+  framework: {jest, vitest, pytest, etc.}
+  directory: {tests/, __tests__/, test/, src/**/*.test.ts, etc.}
   pattern: {*.test.ts, test_*.py, *_test.go, etc.}
   command: {npm test, pytest, cargo test, go test}
 ```
 
-### Step 2: Extract Test Subjects
+### Step 2: Extract Test Subjects from Architecture
 
-**For Feature Mode (from requirements.md or part description):**
+**For Feature Mode (from architecture.md):**
 
-Parse EARS specifications or part requirements:
+Extract modules and their responsibilities:
 
-| EARS Type | Maps To |
-|-----------|---------|
-| WHEN `<trigger>` THEN `<response>` | Happy path scenario |
-| IF `<condition>` THEN `<response>` | Conditional scenario |
-| WHILE `<state>` the system shall | State-based scenario |
-| WHERE `<feature>` is not available | Fallback scenario |
+| Architecture Element | Test Type |
+|---------------------|-----------|
+| Component/Module | Unit tests for public interface |
+| Service | Integration tests for dependencies |
+| Adapter | Integration tests for external systems |
+| Shared utilities | Unit tests for helpers |
+| Validators | Unit tests for validation rules |
 
-**For multi-part architecture without requirements.md:**
-
-Extract testable requirements from part section:
-- "Validation Rules Specification" → test each rule
-- "Enhanced Structure" → test each new module exists
-- "Error Handling Strategy" → test each error scenario
-
-Example extraction from Part 1.1:
+**From part-specific Structure section:**
 ```markdown
-## From Part 1.1 Validation Rules:
-
-**Required Fields:**
-- `name`: Non-empty string, trimmed length > 0
-- `code`: Non-empty string, trimmed length > 0
-
-→ Scenario: required_field_validation
-  Given: project config missing name
-  When: validated
-  Then: throws ValidationError with field "name"
-
-**Pattern Validation:**
-- `code`: Must match `^[A-Z][A-Z0-9]{1,4}$`
-
-→ Scenario: code_pattern_validation
-  Given: project config with code "mdt" (lowercase)
-  When: validated
-  Then: throws ValidationError with pattern hint
+## Part 1.1 Structure
+domain-contracts/src/project/
+├── schema.ts      → Unit: schema validation
+├── validation.ts  → Unit: validation rules
+├── migration.ts   → Integration: migration process
+└── index.ts       → Unit: exports
 ```
 
-**For Refactoring Mode (from code analysis):**
+**For Prep/Refactoring Mode (from code analysis):**
 
-Identify current behaviors to preserve:
+Identify current module behaviors to preserve:
 
 1. Public function signatures
 2. Return value shapes
-3. Error conditions and codes
-4. Side effects (file writes, API calls, events)
+3. Error types and conditions
+4. Side effects (if any)
 5. Edge case handling
 
-### Step 3: Generate BDD Scenarios
+### Step 3: Generate Test Specifications
 
-**Scenario Template:**
+**Test Specification Template:**
 
-```gherkin
-Feature: {Feature name from requirement group or part}
+```typescript
+/**
+ * Tests for: {CR-KEY} {Part X.Y if applicable}
+ * Module: {module name from architecture}
+ * Generated by: /mdt:tests
+ * Status: {RED (implementation pending) | GREEN (behavior locked)}
+ */
 
-  Background:
-    Given {common setup}
+describe('{Module name}', () => {
+  describe('{public method/function}', () => {
+    // Happy path
+    it('should {expected behavior} when {condition}', () => {
+      // Arrange
+      // Act  
+      // Assert
+    });
 
-  @requirement:{R-ID} OR @part:{X.Y}
-  Scenario: {descriptive_name}
-    Given {initial context}
-    When {action taken}
-    Then {expected outcome}
-    And {additional assertions}
+    // Error cases
+    it('should throw {ErrorType} when {invalid condition}', () => {
+      // Arrange
+      // Act & Assert
+    });
 
-  @requirement:{R-ID} OR @part:{X.Y}
-  Scenario: {edge_case_name}
-    Given {edge condition}
-    When {action taken}
-    Then {expected handling}
+    // Edge cases
+    it('should handle {edge case}', () => {
+      // Arrange
+      // Act
+      // Assert
+    });
+  });
+});
 ```
 
-**Coverage Requirements:**
+**Coverage Requirements per Module:**
 
-| Requirement Type | Minimum Scenarios |
-|------------------|-------------------|
-| Happy path (WHEN...THEN) | 1 success + 1 variation |
-| Conditional (IF...THEN) | 1 per condition branch |
-| Error handling | 1 per error type |
-| State-based (WHILE) | Entry, during, exit states |
-| Validation rule | 1 valid + 1 invalid per rule |
+| Module Type | Minimum Tests |
+|-------------|---------------|
+| Public function | 1 happy path + 1 error + edge cases |
+| Class/Service | Constructor + each public method |
+| Validator | 1 valid + 1 invalid per rule |
+| Adapter | 1 success + 1 failure per operation |
 
 ### Step 4: Generate Executable Test Files
 
@@ -254,19 +279,11 @@ Feature: {Feature name from requirement group or part}
 ```
 {test_directory}/
 └── {CR-KEY}/                    # or integrated into existing structure
-    ├── {feature-a}.test.{ext}
-    ├── {feature-b}.test.{ext}
-    └── helpers/
-        └── fixtures.{ext}
-```
-
-For multi-part CRs, organize by part if helpful:
-```
-{test_directory}/
-└── {CR-KEY}/
-    └── part-{X.Y}/
-        ├── {feature}.test.{ext}
-        └── fixtures.{ext}
+    └── part-{X.Y}/              # if multi-part
+        ├── {module-a}.test.{ext}
+        ├── {module-b}.test.{ext}
+        └── helpers/
+            └── fixtures.{ext}
 ```
 
 **4b. Generate test code (framework-specific):**
@@ -275,32 +292,35 @@ For multi-part CRs, organize by part if helpful:
 ```typescript
 /**
  * Tests for: {CR-KEY} Part {X.Y}
- * Part: {Part Title}
- * Requirements: {R1.1, R1.2, ...} OR derived from part spec
+ * Module: {module name}
+ * Architecture: {path in structure}
  * Generated by: /mdt:tests
  * Status: RED (implementation pending)
  */
+import { describe, it, expect, beforeEach } from 'vitest';
+// Import will fail until module exists (RED state)
+import { ModuleName } from '@/path/to/module';
 
-describe('{Feature name}', () => {
-  // @part: {X.Y} @requirement: P{X.Y}-1
-  describe('when valid project code provided', () => {
-    it('should accept uppercase 3-5 char codes', async () => {
+describe('ModuleName', () => {
+  describe('publicMethod', () => {
+    it('should return expected result for valid input', () => {
       // Arrange
-      const config = { code: 'MDT', name: 'Test', active: true };
+      const input = { /* valid data */ };
       
       // Act
-      const result = ProjectSchema.safeParse(config);
+      const result = ModuleName.publicMethod(input);
       
       // Assert
-      expect(result.success).toBe(true);
+      expect(result).toEqual(/* expected */);
     });
 
-    it('should reject lowercase codes', async () => {
-      const config = { code: 'mdt', name: 'Test', active: true };
-      const result = ProjectSchema.safeParse(config);
+    it('should throw ValidationError for invalid input', () => {
+      // Arrange
+      const invalidInput = { /* invalid data */ };
       
-      expect(result.success).toBe(false);
-      expect(result.error.issues[0].path).toContain('code');
+      // Act & Assert
+      expect(() => ModuleName.publicMethod(invalidInput))
+        .toThrow(ValidationError);
     });
   });
 });
@@ -310,42 +330,49 @@ describe('{Feature name}', () => {
 ```python
 """
 Tests for: {CR-KEY} Part {X.Y}
-Part: {Part Title}
-Requirements: derived from part spec
+Module: {module name}
+Architecture: {path in structure}
 Generated by: /mdt:tests
 Status: RED (implementation pending)
 """
 import pytest
-from domain_contracts.project import ProjectSchema
+# Import will fail until module exists (RED state)
+from package.module import ModuleName
 
 
-class TestProjectValidation:
-    """Feature: Project Schema Validation (Part {X.Y})"""
+class TestModuleName:
+    """Unit tests for ModuleName"""
 
-    # @part: {X.Y}
-    class TestCodePattern:
-        """Project code pattern validation"""
+    class TestPublicMethod:
+        """Tests for public_method"""
 
-        def test_accepts_uppercase_codes(self):
-            """should accept uppercase 3-5 char codes"""
-            config = {"code": "MDT", "name": "Test", "active": True}
-            result = ProjectSchema.parse(config)
-            assert result.code == "MDT"
+        def test_returns_expected_for_valid_input(self):
+            """should return expected result for valid input"""
+            # Arrange
+            input_data = {}  # valid data
+            
+            # Act
+            result = ModuleName.public_method(input_data)
+            
+            # Assert
+            assert result == expected
 
-        def test_rejects_lowercase_codes(self):
-            """should reject lowercase codes"""
-            config = {"code": "mdt", "name": "Test", "active": True}
-            with pytest.raises(ValidationError) as exc:
-                ProjectSchema.parse(config)
-            assert "code" in str(exc.value)
+        def test_raises_for_invalid_input(self):
+            """should raise ValidationError for invalid input"""
+            # Arrange
+            invalid_input = {}
+            
+            # Act & Assert
+            with pytest.raises(ValidationError):
+                ModuleName.public_method(invalid_input)
 ```
 
-### Step 5: Verify Tests are RED
+### Step 5: Verify Test State
 
-After generating test files:
+**For Feature Mode (expect RED):**
 
 ```bash
-{test_command} --filter={CR-KEY}
+{test_command} --filter="{CR-KEY}"
 # Or for multi-part:
 {test_command} --filter="part-{X.Y}"
 ```
@@ -355,98 +382,123 @@ Expected output:
 Tests: X failed, 0 passed
 ```
 
-If any tests pass before implementation → investigate:
-- Is there existing code that satisfies this?
-- Is the test too loose?
-- Is this a duplicate requirement?
+Tests fail because modules don't exist yet. This is correct.
+
+If tests pass → investigate:
+- Module already exists?
+- Test is too loose?
+- Duplicate functionality?
+
+**For Prep/Refactoring Mode (expect GREEN):**
+
+```bash
+{test_command} --filter="{CR-KEY}"
+```
+
+Expected output:
+```
+Tests: 0 failed, X passed
+```
+
+Tests pass because they lock existing behavior.
+
+If tests fail → investigate:
+- Test incorrect?
+- Bug in current code?
+- Behavior actually broken?
 
 ### Step 6: Generate tests.md
 
-**Create output directory if multi-part:**
+**Create output directory if needed:**
 ```bash
-mkdir -p "{TICKETS_PATH}/{CR-KEY}/part-{X.Y}"
+mkdir -p "{output_dir}"
 ```
 
 **Generate tests.md:**
 
 ```markdown
-# Tests: {CR-KEY} Part {X.Y}
+# Tests: {CR-KEY} {Part X.Y if applicable}
 
-**Mode**: {Feature | Refactoring}
-**Part**: {X.Y} - {Part Title}
-**Source**: architecture.md → Part {X.Y}
+**Mode**: {Feature | Prep | Refactoring}
+**Part**: {X.Y - Part Title | N/A}
+**Source**: architecture.md {→ Part X.Y section}
 **Generated**: {timestamp}
-**Scope**: Part {X.Y} only
+**Status**: {🔴 RED (implementation pending) | 🟢 GREEN (behavior locked)}
 
 ## Test Configuration
 
 | Setting | Value |
 |---------|-------|
-| Framework | {jest, pytest, etc.} |
+| Framework | {jest, vitest, pytest, etc.} |
 | Test Directory | `{path}` |
 | Test Command | `{command}` |
-| Part Filter | `--testPathPattern="part-{X.Y}"` |
-| Status | 🔴 RED (implementation pending) |
+| Filter | `--filter="{pattern}"` |
 
-## Requirement → Test Mapping
+## Architecture → Test Mapping
 
-| Req ID | Description | Test File | Scenarios | Status |
-|--------|-------------|-----------|-----------|--------|
-| P{X.Y}-1 | Code pattern validation | `validation.test.ts` | 3 | 🔴 RED |
-| P{X.Y}-2 | Required fields | `validation.test.ts` | 2 | 🔴 RED |
-| P{X.Y}-3 | Migration support | `migration.test.ts` | 4 | 🔴 RED |
+| Module | Path | Test File | Tests | Status |
+|--------|------|-----------|-------|--------|
+| `{ModuleName}` | `{src/path}` | `{test/path}` | {N} | {🔴/🟢} |
+| `{ModuleName2}` | `{src/path}` | `{test/path}` | {N} | {🔴/🟢} |
 
 ## Test Specifications
 
-### Feature: {Feature Name}
+### Module: {ModuleName}
 
-**File**: `{test_directory}/{feature}.test.{ext}`
-**Covers**: P{X.Y}-1, P{X.Y}-2
+**Source**: `{architecture path}`
+**Test File**: `{test_directory}/{module}.test.{ext}`
+**Size Limit**: {N} lines (from architecture)
 
-#### Scenario: code_pattern_validation (P{X.Y}-1)
+#### Public Interface Tests
 
-```gherkin
-Given a project configuration object
-When the code field is set
-Then it must match pattern ^[A-Z][A-Z0-9]{1,4}$
-And valid codes: MDT, API1, WEB, Z2
-And invalid codes: mdt, api_01, A, ABCDEFG
+| Method | Test | Type | Status |
+|--------|------|------|--------|
+| `{method}` | valid input returns expected | Happy path | 🔴 |
+| `{method}` | invalid input throws error | Error | 🔴 |
+| `{method}` | edge case handled | Edge case | 🔴 |
+
+#### Test Code
+
+```typescript
+describe('{ModuleName}', () => {
+  describe('{method}', () => {
+    it('should {behavior}', () => {
+      // Test implementation
+    });
+  });
+});
 ```
 
-**Test**: `describe('code field validation') > it('accepts valid project codes')`
+---
+
+### Module: {ModuleName2}
+
+{Continue for all modules in part...}
 
 ---
 
 ## Edge Cases
 
-| Scenario | Expected Behavior | Test | Req |
-|----------|-------------------|------|-----|
-| Empty code | ValidationError | `validation.test.ts` | P{X.Y}-1 |
-| Code too long | ValidationError | `validation.test.ts` | P{X.Y}-1 |
-| Missing required field | ValidationError | `validation.test.ts` | P{X.Y}-2 |
+| Module | Scenario | Expected Behavior | Test |
+|--------|----------|-------------------|------|
+| `{module}` | {edge case} | {handling} | `{test name}` |
 
 ## Generated Test Files
 
-| File | Scenarios | Lines | Status |
-|------|-----------|-------|--------|
-| `{test_dir}/validation.test.ts` | 8 | ~200 | 🔴 RED |
-| `{test_dir}/migration.test.ts` | 6 | ~180 | 🔴 RED |
+| File | Module | Tests | Lines | Status |
+|------|--------|-------|-------|--------|
+| `{path}` | `{module}` | {N} | ~{N} | {🔴/🟢} |
 
 ## Verification
 
-Run Part {X.Y} tests (should all fail):
+Run tests:
 ```bash
-{test_command} --testPathPattern="part-{X.Y}"
+{test_command} --filter="{pattern}"
 ```
 
-Expected: **{N} failed, 0 passed**
-
-## Coverage Checklist
-
-- [x] All part requirements have at least one test
-- [x] Error scenarios covered
-- [x] Edge cases documented
-- [ ] Tests are RED (verified manually)
+**Expected**: 
+{Feature}: `{N} failed, 0 passed` (RED until implemented)
+{Prep/Refactoring}: `{N} passed, 0 failed` (GREEN, behavior locked)
 
 ---
 
@@ -454,200 +506,141 @@ Expected: **{N} failed, 0 passed**
 
 Each task in `/mdt:tasks` should reference which tests it will make GREEN:
 
-| Task | Makes GREEN |
-|------|-------------|
-| Task 1.1 | `validation.test.ts` (P{X.Y}-1, P{X.Y}-2) |
-| Task 1.2 | `migration.test.ts` (P{X.Y}-3) |
+| Task | Module | Makes GREEN |
+|------|--------|-------------|
+| Task {N}.1 | `{module}` | `{test file}` ({N} tests) |
+| Task {N}.2 | `{module}` | `{test file}` ({N} tests) |
 
-After each task: `{test_command}` should show fewer failures.
+After each task: run `{test_command}` — failures should decrease.
+
+---
+
+## Relationship to BDD Tests
+
+| Test Type | Command | Tests | When Runs |
+|-----------|---------|-------|-----------|
+| BDD/E2E | `/mdt:bdd` | User journeys | After full feature |
+| Unit/Integration | `/mdt:tests` | Modules | After each task |
+
+BDD tests validate user-visible behavior.
+These tests validate module implementation.
+
+---
+*Generated by /mdt:tests v5*
 ```
 
 ### Step 7: Save and Report
 
 **7a. Save test files** to project test directory
 
-**7b. Save tests.md** to part-aware path:
+**7b. Save tests.md** to appropriate path:
+- Prep: `{TICKETS_PATH}/{CR-KEY}/prep/tests.md`
 - Multi-part: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tests.md`
 - Single-part: `{TICKETS_PATH}/{CR-KEY}/tests.md`
 
 **7c. Report:**
 
 ```markdown
-## Tests Generated: {CR-KEY} Part {X.Y}
+## Tests Generated: {CR-KEY} {Part X.Y if applicable}
 
 | Metric | Value |
 |--------|-------|
-| Mode | {Feature / Refactoring} |
-| Part | {X.Y} - {Part Title} |
-| Requirements covered | {N} |
+| Mode | {Feature / Prep / Refactoring} |
+| Part | {X.Y - Title / N/A} |
+| Modules covered | {N} |
 | Test files created | {N} |
-| Total scenarios | {N} |
-| Status | 🔴 All RED |
+| Total tests | {N} |
+| Expected State | {🔴 RED / 🟢 GREEN} |
 
-**Output location**: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/tests.md`
+**Output**: `{tests_file}`
 
 **Test files**:
-- `{path/to/test1.test.ext}`
-- `{path/to/test2.test.ext}`
+- `{path/to/module1.test.ext}`
+- `{path/to/module2.test.ext}`
 
-**Verify RED**:
+**Verify**:
 ```bash
-{test_command} --testPathPattern="part-{X.Y}"
-# Expected: {N} failed, 0 passed
+{test_command} --filter="{pattern}"
+# Expected: {N} {failed|passed}
 ```
 
-**Next**: `/mdt:tasks {CR-KEY}` — will auto-detect part from tests.md location
-```
+**Next Steps**:
+{Feature mode}:
+- Verify tests are RED (imports fail)
+- Run `/mdt:tasks {CR-KEY}` — tasks will make tests GREEN
 
----
+{Prep mode}:
+- Verify tests are GREEN (behavior locked)
+- Run `/mdt:tasks {CR-KEY} --prep` — refactoring tasks
 
-## Refactoring Mode Details
-
-When MODE = "refactoring", test generation differs:
-
-### Step 2 (Refactoring): Analyze Current Behavior
-
-```markdown
-## Behavioral Analysis: {file}
-
-### Public Interface
-
-| Export | Signature | Current Behavior |
-|--------|-----------|------------------|
-| `getUser` | `(id: string) => Promise<User>` | Returns user or throws NotFoundError |
-
-### Error Contracts
-
-| Function | Error Type | Condition |
-|----------|------------|-----------|
-| `getUser` | `NotFoundError` | User ID doesn't exist |
-
-### Discovered Behaviors (undocumented)
-
-From code analysis:
-- `getUser` caches results for 5 minutes
-- Empty string ID treated as null
-```
-
-### Step 4 (Refactoring): Preservation Tests
-
-```typescript
-/**
- * Behavioral Preservation Tests
- * Source: Code analysis
- * Purpose: Lock current behavior before refactoring
- * 
- * ⚠️ These tests document CURRENT behavior, not DESIRED behavior.
- */
-describe('getUser - behavioral preservation', () => {
-  it('returns user object with expected shape', async () => {
-    const user = await getUser('user-123');
-    expect(user).toMatchObject({
-      id: expect.any(String),
-      name: expect.any(String),
-    });
-  });
-
-  it('throws NotFoundError for missing user', async () => {
-    await expect(getUser('nonexistent'))
-      .rejects
-      .toBeInstanceOf(NotFoundError);
-  });
-});
+{Multi-part}:
+- Continue with `/mdt:tasks {CR-KEY} --part {X.Y}`
+- Or generate tests for next part: `/mdt:tests {CR-KEY} --part {next}`
 ```
 
 ---
 
-## Part Detection Examples
+## Examples
 
-### Example 0: Prep Mode
+### Example 1: Feature Mode (Single Part)
 
-User runs: `/mdt:tests MDT-101 --prep`
+**Input**: `/mdt:tests MDT-050`
 
-Output:
-```
-Prep mode activated.
-Analyzing files targeted for refactoring...
-Generating behavior preservation tests...
-
-Output: {TICKETS_PATH}/MDT-101/prep/tests.md
-
-✔ Tests should pass against CURRENT code (locking behavior)
-```
-
-### Example 1: Multi-part Architecture CR
-
+**architecture.md contains** (embedded or extracted):
 ```markdown
-# architecture.md
+### Structure
+src/services/
+└── user-service.ts  → Business logic
 
+### Size Guidance
+| Module | Limit |
+|--------|-------|
+| user-service.ts | 200 |
+```
+
+**Output**:
+```markdown
+# Tests: MDT-050
+
+**Mode**: Feature
+**Status**: 🔴 RED
+
+## Architecture → Test Mapping
+
+| Module | Path | Test File | Tests | Status |
+|--------|------|-----------|-------|--------|
+| `UserService` | `src/services/user-service.ts` | `tests/user-service.test.ts` | 8 | 🔴 |
+```
+
+### Example 2: Multi-Part Feature
+
+**Input**: `/mdt:tests MDT-101 --part 1.1`
+
+**architecture.md contains**:
+```markdown
 ## Part 1.1: Enhanced Project Validation
-...validation rules...
 
-## Part 1.2: Enhanced Ticket Validation
-...ticket rules...
-
-## Part 2: Additional Contracts
-...more contracts...
+### Structure
+domain-contracts/src/project/
+├── schema.ts
+├── validation.ts
+└── index.ts
 ```
 
-User runs: `/mdt:tests MDT-101`
+**Output**:
+- Location: `{TICKETS_PATH}/MDT-101/part-1.1/tests.md`
+- Tests for: schema.ts, validation.ts modules only
 
-Output:
-```
-Detected parts in architecture.md:
-  - 1.1: Enhanced Project Validation
-  - 1.2: Enhanced Ticket Validation
-  - 2: Additional Contracts
+### Example 3: Prep Mode
 
-Which part to generate tests for? [1.1]: 1.1
+**Input**: `/mdt:tests MDT-102 --prep`
 
-Generating tests for Part 1.1...
-Output: {TICKETS_PATH}/MDT-101/part-1.1/tests.md
-```
+**prep/architecture.md contains** refactoring design.
 
-### Example 2: Single-part CR (Backward Compatible)
-
-```markdown
-# CR or architecture.md without ## Part headers
-```
-
-User runs: `/mdt:tests MDT-050`
-
-Output:
-```
-No parts detected. Generating tests...
-Output: {TICKETS_PATH}/MDT-050/tests.md
-```
-
-### Example 3: Direct Part Selection
-
-User runs: `/mdt:tests MDT-101 --part 1.2`
-
-Output:
-```
-Generating tests for Part 1.2...
-Output: {TICKETS_PATH}/MDT-101/part-1.2/tests.md
-```
-
----
-
-## Integration with Downstream Prompts
-
-### `/mdt:tasks` Receives
-
-`/mdt:tasks` will auto-discover part from tests.md location:
-
-```bash
-# Finds: {TICKETS_PATH}/MDT-101/part-1.1/tests.md
-# Outputs: {TICKETS_PATH}/MDT-101/part-1.1/tasks.md
-```
-
-### `/mdt:implement` Verifies
-
-```bash
-# Loads: {TICKETS_PATH}/MDT-101/part-1.1/tasks.md
-# References: {TICKETS_PATH}/MDT-101/part-1.1/tests.md
-```
+**Output**:
+- Location: `{TICKETS_PATH}/MDT-102/prep/tests.md`
+- Tests lock current behavior (must be GREEN)
+- Used to verify refactoring doesn't break anything
 
 ---
 
@@ -655,14 +648,82 @@ Output: {TICKETS_PATH}/MDT-101/part-1.2/tests.md
 
 Before completing `/mdt:tests`:
 
-- [ ] Mode correctly detected (prep / feature / refactoring)
-- [ ] Part correctly detected (or single-part / prep fallback)
+- [ ] Architecture exists (architecture.md or prep/architecture.md)
+- [ ] Mode correctly detected (feature / prep / refactoring)
+- [ ] Part correctly detected (or single-part fallback)
 - [ ] Test framework detected from project config
-- [ ] All requirements/behaviors have test coverage
-- [ ] BDD scenarios in Gherkin format
-- [ ] Executable test files generated
-- [ ] Tests verified as correct state (RED for feature, GREEN for prep/refactoring)
-- [ ] tests.md saved to correct folder (`prep/` or `part-{X.Y}/` or root)
-- [ ] Requirement mapping prepared for `/mdt:tasks`
+- [ ] All modules from architecture have test coverage
+- [ ] Tests follow module structure from architecture
+- [ ] Test files generated with correct imports
+- [ ] Expected state verified (RED for feature, GREEN for prep)
+- [ ] tests.md saved to correct folder
+
+## Integration
+
+**Requires**: 
+- `architecture.md` (from `/mdt:architecture`)
+- OR `prep/architecture.md` (from `/mdt:architecture --prep`)
+
+**Optionally consumes**:
+- `requirements.md` — for requirement traceability
+- `bdd.md` — for test relationship documentation
+
+**Output consumed by**:
+- `/mdt:tasks` — tasks reference which tests they make GREEN
+- `/mdt:implement` — verifies tests pass after each task
+
+**Workflow position**:
+```
+/mdt:requirements
+        ↓
+/mdt:bdd ←────────── User-visible behavior (E2E)
+        ↓
+/mdt:architecture ←── Defines modules and parts
+        ↓
+/mdt:tests ←───────── Module-level tests (unit/integration)
+        ↓
+/mdt:tasks
+        ↓
+/mdt:implement
+```
+
+**Prep workflow position**:
+```
+/mdt:assess
+        ↓
+/mdt:bdd --prep (optional)
+        ↓
+/mdt:architecture --prep
+        ↓
+/mdt:tests --prep ←── Lock module behavior
+        ↓
+/mdt:tasks --prep
+        ↓
+/mdt:implement --prep
+```
+
+## Error Handling
+
+**No architecture found:**
+```markdown
+❌ Architecture not found
+
+`/mdt:tests` requires architecture.md to define modules and structure.
+
+**Options**:
+1. Run `/mdt:architecture {CR-KEY}` first
+2. For acceptance tests without architecture, use `/mdt:bdd {CR-KEY}`
+```
+
+**Part not found:**
+```markdown
+❌ Part {X.Y} not found in architecture.md
+
+Available parts:
+- 1.1: Enhanced Project Validation
+- 1.2: Enhanced Ticket Validation
+
+Run: `/mdt:tests {CR-KEY} --part {available_part}`
+```
 
 Context: $ARGUMENTS

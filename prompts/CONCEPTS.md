@@ -152,73 +152,92 @@ Tasks and orchestrator have explicit escalation for violations:
 
 **Override Location**: CR Acceptance Criteria or project CLAUDE.md
 
-## TDD/BDD Workflow
+## BDD + TDD Workflow
 
-### Test-First Development
+### Two Test Levels
 
-Tests are **specifications**, not verification. `/mdt:tests` generates executable tests BEFORE implementation:
+SDD uses two distinct test levels, each with its own command:
+
+| Level | Command | When | Input | Focus | Framework |
+|-------|---------|------|-------|-------|----------|
+| **BDD (Acceptance)** | `/mdt:bdd` | Before architecture | requirements.md | User-visible behavior | Playwright, Cypress |
+| **TDD (Unit/Integration)** | `/mdt:tests` | After architecture | architecture.md | Module behavior | Jest, Pytest, Vitest |
+
+### Why Two Levels?
+
+| BDD (Acceptance) | TDD (Unit/Integration) |
+|------------------|------------------------|
+| User perspective | Developer perspective |
+| "User can log in" | "AuthService.validate() returns token" |
+| No architecture knowledge | Requires architecture |
+| Whole feature behavior | Module/part behavior |
+| Few, slow, high-value | Many, fast, detailed |
+
+**Key Insight**: Classical BDD said "tests before architecture" to prevent premature design. But that only works for acceptance-level tests. Module tests **require** knowing the module structure.
+
+### Test-First Principle
+
+Both levels follow test-first:
 
 ```
-Requirements (EARS) → Tests (BDD/Gherkin) → Implementation → Tests GREEN
-         ↑                    ↑                    ↑              ↑
-    What should       How to verify        Make it         Prove it
-      happen           it works             work            works
+Requirements → BDD Tests (E2E) → Architecture → TDD Tests (Unit) → Implementation
+     ↑              ↑                 ↑               ↑                  ↑
+   WHAT         User behavior      HOW          Module behavior      Make it
+   needed       (RED)              structured   (RED)                GREEN
 ```
 
 **Core Principle**: Tests define desired behavior. Implementation makes tests pass. Tests never deleted or weakened.
 
-### Two Modes
-
-| CR Type                 | Test Strategy          | Expected Test State       |
-|-------------------------|------------------------|---------------------------|
-| Feature / Enhancement   | Behavior specification | RED before implementation |
-| Refactoring / Tech-Debt | Behavior preservation  | GREEN before refactoring  |
-
 ### Feature Flow (RED → GREEN)
 
 ```
-/mdt:requirements → /mdt:tests → /mdt:architecture → /mdt:tasks → /mdt:implement
-        │                │                                              │
-        ↓                ↓                                              ↓
-   EARS specs     Tests written                                   Tests pass
-                  (should FAIL)                                   (now GREEN)
+/mdt:requirements → /mdt:bdd → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
+        │              │              │                  │                        │
+        ↓              ↓              ↓                  ↓                        ↓
+   EARS specs    E2E tests      Defines parts     Module tests             All tests
+                 (RED)                             (RED)                   now GREEN
 ```
 
 **Process**:
 
-1. `/mdt:tests` reads requirements.md
-2. Generates BDD scenarios from EARS statements
-3. Creates test files that FAIL (module doesn't exist yet)
-4. `/mdt:implement` writes code to make tests GREEN
+1. `/mdt:bdd` reads requirements.md, generates E2E tests (Playwright/Cypress)
+2. E2E tests are RED (feature doesn't exist yet)
+3. `/mdt:architecture` defines module structure and parts
+4. `/mdt:tests` reads architecture.md, generates module tests
+5. Module tests are RED (modules don't exist yet)
+6. `/mdt:implement` writes code to make all tests GREEN
 
 ### Refactoring Flow (GREEN → GREEN)
 
 ```
-/mdt:assess → /mdt:tests → /mdt:architecture → /mdt:tasks → /mdt:implement
-      │            │                                              │
-      ↓            ↓                                              ↓
-  Find gaps   Lock behavior                                  Behavior
-             (must PASS now)                                 preserved
+/mdt:assess → /mdt:bdd --prep → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
+      │            │                    │                │                        │
+      ↓            ↓                    ↓                ↓                        ↓
+  Find gaps   Lock E2E            Design fix       Lock modules            Behavior
+              (GREEN)                               (GREEN)                preserved
 ```
 
 **Process**:
 
-1. `/mdt:assess` identifies test coverage gaps
-2. `/mdt:tests` generates behavior preservation tests
-3. Tests must PASS against current code (locking behavior)
-4. `/mdt:implement` refactors while keeping tests GREEN
+1. `/mdt:bdd --prep` locks existing user journeys (tests must be GREEN now)
+2. `/mdt:architecture` designs the refactoring
+3. `/mdt:tests --prep` locks existing module behavior (tests must be GREEN now)
+4. `/mdt:implement` refactors while keeping ALL tests GREEN
 
 ### TDD Verification in `/mdt:implement`
 
 After each task, verify:
 
-| Check             | Feature CR | Refactoring CR |
-|-------------------|------------|----------------|
-| Tests exist       | Required   | Required       |
-| Initial state     | Were RED   | Were GREEN     |
-| Final state       | Now GREEN  | Still GREEN    |
-| No tests deleted  | ✓          | ✓              |
-| No tests weakened | ✓          | ✓              |
+| Check | Feature CR | Refactoring CR |
+|-------|------------|----------------|
+| BDD tests exist | Required | Required |
+| Module tests exist | Required | Required |
+| BDD initial state | Were RED | Were GREEN |
+| Module initial state | Were RED | Were GREEN |
+| BDD final state | Now GREEN | Still GREEN |
+| Module final state | Now GREEN | Still GREEN |
+| No tests deleted | ✓ | ✓ |
+| No tests weakened | ✓ | ✓ |
 
 **If refactoring tests go RED**: You've broken existing behavior — STOP and fix.
 
