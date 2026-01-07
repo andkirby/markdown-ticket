@@ -541,24 +541,38 @@ Implementation Complete: {CR-KEY}
 
 ## Integration
 
+**Position in workflow**:
+```
+Feature:     requirements → bdd → architecture → tests → tasks → implement
+Refactoring: assess → bdd --prep → architecture → tests --prep → tasks → implement
+```
+
 **Before**:
-- `/mdt:tests` creates `part-{X.Y}/tests.md`
+- `/mdt:bdd` creates `bdd.md` + E2E tests (user-visible behavior)
+- `/mdt:tests` creates `part-{X.Y}/tests.md` + module tests (from architecture)
 - `/mdt:tasks` creates `part-{X.Y}/tasks.md`
 
 **After**:
 - `/mdt:tech-debt` catches anything that slipped through
 - Or `/mdt:tests --part {next}` for next part
 
+**Test Verification**:
+- BDD tests (E2E): Verify user-visible behavior
+- Module tests (unit/integration): Verify component behavior
+- Both must go GREEN for feature completion
+
 **Folder Structure**:
 ```
 {TICKETS_PATH}/{CR-KEY}/
+├── bdd.md                   # BDD acceptance scenarios
 ├── architecture.md          # Feature design (after prep)
 ├── prep/                    # Preparatory refactoring
+│   ├── bdd.md              # Locked E2E behavior (GREEN)
 │   ├── architecture.md     # Refactoring design
-│   ├── tests.md            # Behavior preservation tests
+│   ├── tests.md            # Locked module behavior (GREEN)
 │   └── tasks.md            # Refactoring tasks
 ├── part-1/                  # Feature part 1
-│   ├── tests.md            # Feature tests (RED → GREEN)
+│   ├── tests.md            # Module tests (RED → GREEN)
 │   └── tasks.md            # Feature tasks
 └── part-2/
     ├── tests.md

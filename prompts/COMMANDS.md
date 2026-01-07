@@ -7,14 +7,14 @@
 
 **Purpose**: Generate EARS-based requirements specification
 
-**When to use**: After CR creation, before architecture design
+**When to use**: After CR creation, before BDD tests
 
 **Outputs**: `{TICKETS_PATH}/{CR-KEY}/requirements.md`
 
 **Invocation**:
 
 ```bash
-/mdt:requirements MDT-001
+/mdt:requirements ABC-001
 ```
 
 **Core Principle**: Requirements describe WHAT the system does, not WHERE or HOW. Architecture decides implementation.
@@ -34,7 +34,6 @@
 - **Functional Requirements**: Capability table (FR-1, FR-2, ...)
 - **Non-Functional Requirements**: Quality attributes with measurable targets
 - **Configuration Requirements**: Env vars, defaults, rationale (if configurable)
-- **Current Implementation Context**: Informational code refs (optional, for enhancements)
 - **Artifact Mapping**: Requirement → file mapping (separate from EARS)
 
 **EARS Types** (Pure Behavioral):
@@ -42,51 +41,47 @@
 |------|----------|----------|
 | Event | WHEN `<trigger>` the system shall | WHEN user clicks Save, the system shall persist changes |
 | State | WHILE `<state>` the system shall | WHILE offline, the system shall queue mutations locally |
-| Unwanted | IF `<error>` THEN the system shall | IF timeout, THEN the system shall retry 3 times |
+| Unwanted | IF `<e>` THEN the system shall | IF timeout, THEN the system shall retry 3 times |
 
-**Code Reference Rules**:
+## /mdt:bdd
 
-```markdown
-# Pure behavioral (new features)
+**Purpose**: Generate BDD acceptance tests from requirements (user-visible behavior)
 
-WHEN user clicks tab, the system shall display the document.
-
-# Avoid (constrains architecture)
-
-WHEN user clicks tab, the `useSubDocuments` hook shall call API.
-```
-
-## /mdt:tests
-
-**Purpose**: Generate BDD test specifications and executable test files
-
-**When to use**: After requirements, before implementation
+**When to use**: After requirements, BEFORE architecture
 
 **Outputs**:
 | Output | Location |
 |--------|----------|
-| Test spec | `{TICKETS_PATH}/{CR-KEY}/tests.md` |
-| Test files | `{test_dir}/integration/*.test.{ext}` |
+| BDD spec | `{TICKETS_PATH}/{CR-KEY}/bdd.md` |
+| E2E test files | `{e2e_dir}/*.spec.{ext}` (Playwright, Cypress, etc.) |
 
 **Invocation**:
 
 ```bash
-/mdt:tests MDT-001
+/mdt:bdd ABC-001           # Normal mode - specify new behavior (RED)
+/mdt:bdd ABC-001 --prep    # Prep mode - lock existing behavior (GREEN)
 ```
 
 **Overview**:
 
-- **Mode Detection**: Feature (RED tests) vs Refactoring (GREEN tests)
-- **BDD Scenarios**: Gherkin format from EARS requirements
-- **Test Files**: Executable tests in project's test directory
-- **Coverage Mapping**: Requirement → Test → Task traceability
+- **User Perspective**: Tests describe what user sees/does, not internal mechanics
+- **No Architecture Needed**: BDD tests don't reference components or modules
+- **Gherkin Format**: Given/When/Then scenarios
+- **E2E Focus**: Test through real interfaces (browser, API, CLI)
 
-**Test Strategy by CR Type**:
-| CR Type | Input | Test State |
-|---------|-------|------------|
-| Feature | requirements.md | RED (implementation pending) |
-| Refactoring | assess output | GREEN (locking behavior) |
-| Bug Fix | CR problem | RED (reproduces bug) |
+**Test Strategy by Mode**:
+| Mode | Input | Test State | Purpose |
+|------|-------|------------|---------|
+| Normal | requirements.md | RED | Specify new behavior |
+| Prep (`--prep`) | existing system | GREEN | Lock behavior before refactoring |
+
+**Key Distinction from /mdt:tests**:
+| /mdt:bdd | /mdt:tests |
+|----------|------------|
+| User-visible behavior | Module-level behavior |
+| Before architecture | After architecture |
+| No part awareness | Part-aware |
+| E2E tests | Unit/Integration tests |
 
 ## /mdt:assess
 
@@ -97,7 +92,7 @@ WHEN user clicks tab, the `useSubDocuments` hook shall call API.
 **Invocation**:
 
 ```bash
-/mdt:assess MDT-001
+/mdt:assess ABC-001
 ```
 
 **Overview**:
@@ -129,10 +124,10 @@ WHEN user clicks tab, the `useSubDocuments` hook shall call API.
 **Invocations**:
 
 ```bash
-/mdt:poc MDT-077                              # Interactive - pick from Open Questions
-/mdt:poc MDT-077 --question "Does X support Y?"  # Direct question
-/mdt:poc MDT-077 --questions                  # List questions from CR
-/mdt:poc MDT-077 --quick                      # Brief answer, no poc.md
+/mdt:poc ABC-077                              # Interactive - pick from Open Questions
+/mdt:poc ABC-077 --question "Does X support Y?"  # Direct question
+/mdt:poc ABC-077 --questions                  # List questions from CR
+/mdt:poc ABC-077 --quick                      # Brief answer, no poc.md
 ```
 
 **Overview**:
@@ -150,18 +145,6 @@ WHEN user clicks tab, the `useSubDocuments` hook shall call API.
 | Code organization question | No (that's architecture) |
 | Question answerable by docs | No (just read docs) |
 
-**Workflow Integration**:
-
-```
-/mdt:assess
-      ↓
-/mdt:poc ──── Creates: poc.md (findings for architecture)
-      ↓        poc/ folder (throwaway spike)
-/mdt:tests
-      ↓
-/mdt:architecture ── Consumes poc.md
-```
-
 ## /mdt:domain-lens
 
 **Purpose**: Generate DDD-focused domain model specification
@@ -173,7 +156,7 @@ WHEN user clicks tab, the `useSubDocuments` hook shall call API.
 **Invocation**:
 
 ```bash
-/mdt:domain-lens MDT-001
+/mdt:domain-lens ABC-001
 ```
 
 **Overview**:
@@ -208,7 +191,7 @@ WHEN user clicks tab, the `useSubDocuments` hook shall call API.
 **Invocations**:
 
 ```bash
-/mdt:domain-audit MDT-077                    # Audit code touched by CR
+/mdt:domain-audit ABC-077                    # Audit code touched by CR
 /mdt:domain-audit --path src/shared/services # Audit directory directly
 ```
 
@@ -224,64 +207,41 @@ Detects DDD violations and structural problems that impede maintainability.
 | God service | High |
 | Missing value objects | Medium |
 | Invariant scatter | Medium |
-| Missing domain events | Medium |
-| Language drift | Low |
 
-*Structural Issues (v2):*
+*Structural Issues:*
 | Issue | Severity |
 |-------|----------|
 | Layer violation | High |
 | Scattered cohesion | High |
 | Mixed responsibility | Medium |
 | Dependency direction | High |
-| Orphan utilities | Medium |
-
-**Output sections**:
-
-- DDD Violations (with evidence)
-- Structural Issues (with evidence)
-- Dependency Analysis (import graph)
-- Domain Concept (what the code is about + natural grouping)
-- Recommendations (prioritized fix directions)
-
-**Workflow**:
-
-```
-/mdt:domain-audit → domain-audit.md
-        ↓
-/mdt:architecture --prep → designs fix based on audit findings
-        ↓
-/mdt:tasks → /mdt:implement
-```
 
 ## /mdt:architecture
 
 **Purpose**: Generate architecture design with build vs use evaluation
 
-**When to use**: After requirements, before task breakdown
+**When to use**: After BDD tests, before module-level tests
 
 **Outputs**: Architecture Design (CR section) or `{TICKETS_PATH}/{CR-KEY}/architecture.md`
 
 **Invocation**:
 
 ```bash
-/mdt:architecture MDT-001
+/mdt:architecture ABC-001           # Feature architecture
+/mdt:architecture ABC-001 --prep    # Prep (refactoring) architecture
 ```
 
 **Overview**:
 
-- **Extract Existing CR Decisions**: Don't re-evaluate what's already decided in CR
-- **Build vs Use Evaluation**: Evaluate existing libraries before building custom (>50 lines triggers)
+- **Consumes**: requirements.md, bdd.md, poc.md, domain.md (if exist)
+- **Build vs Use Evaluation**: Evaluate existing libraries before building custom
 - **Complexity Assessment**: Score determines output location
-- **Key Dependencies**: Documents package choices and rationale
 - **Pattern**: Structural approach
 - **Shared Patterns**: Logic to extract first (prevents duplication)
 - **Structure**: File paths with responsibilities
 - **Size Guidance**: Per-module limits (default + hard max)
 - **Extension Rule**: "To add X, create Y"
-- **Domain Alignment**: Maps domain concepts to files (if domain.md exists)
-- **State Flows**: Mermaid diagrams (complex only)
-- **Error Scenarios**: Failure handling (complex only)
+- **Part Definition**: Multi-part CRs get `## Part X.Y:` sections
 
 **Build vs Use Criteria** (all must be YES to use existing):
 | Criterion | Question |
@@ -292,28 +252,72 @@ Detects DDD violations and structural problems that impede maintainability.
 | Footprint | <10 transitive deps? |
 | Fit | Consistent with existing deps? |
 
-## /mdt:tasks
+## /mdt:tests
 
-**Purpose**: Generate implementation task breakdown with size enforcement
+**Purpose**: Generate unit/integration test specifications from architecture
 
-**When to use**: After architecture design, before implementation
+**When to use**: AFTER architecture (which defines modules and parts)
 
-**Outputs**: `{TICKETS_PATH}/{CR-KEY}/tasks.md`
+**Outputs**:
+| Output | Location |
+|--------|----------|
+| Test spec | `{TICKETS_PATH}/{CR-KEY}/tests.md` (or `part-X.Y/tests.md`) |
+| Test files | `{test_dir}/unit/*.test.{ext}`, `{test_dir}/integration/*.test.{ext}` |
 
 **Invocation**:
 
 ```bash
-/mdt:tasks MDT-001
+/mdt:tests ABC-001                # Single-part or prompt for part
+/mdt:tests ABC-001 --part 1.1     # Specific part
+/mdt:tests ABC-001 --prep         # Prep mode (lock module behavior)
+```
+
+**Overview**:
+
+- **Requires Architecture**: Cannot run without architecture.md defining modules
+- **Part-Aware**: Each part gets its own tests.md in part folder
+- **Module-Level Focus**: Tests components, services, adapters (not user journeys)
+- **Coverage Mapping**: Module → Test → Task traceability
+
+**Test Strategy by Mode**:
+| Mode | Input | Test State |
+|------|-------|------------|
+| Feature | architecture.md | RED (implementation pending) |
+| Refactoring | architecture.md | GREEN (locking behavior) |
+| Prep (`--prep`) | prep/architecture.md | GREEN (locking behavior) |
+
+**Key Distinction from /mdt:bdd**:
+| /mdt:tests | /mdt:bdd |
+|------------|----------|
+| Module-level behavior | User-visible behavior |
+| After architecture | Before architecture |
+| Part-aware | No part awareness |
+| Unit/Integration tests | E2E tests |
+
+## /mdt:tasks
+
+**Purpose**: Generate implementation task breakdown with size enforcement
+
+**When to use**: After tests, before implementation
+
+**Outputs**: `{TICKETS_PATH}/{CR-KEY}/tasks.md` (or `part-X.Y/tasks.md`)
+
+**Invocation**:
+
+```bash
+/mdt:tasks ABC-001
+/mdt:tasks ABC-001 --part 1.1
+/mdt:tasks ABC-001 --prep
 ```
 
 **Overview**:
 
 - **Project Context**: Detected settings
-- **Size Thresholds**: Flag/STOP zones
+- **Size Thresholds**: Flag/STOP zones from architecture
 - **Shared Patterns**: From Architecture Design
 - **Part 1**: Shared utilities (extract first)
 - **Part 2+**: Features (import from Part 1)
-- **Post-Implementation**: Verification tasks
+- **Test Mapping**: Each task lists which tests it makes GREEN
 
 ## /mdt:implement
 
@@ -324,10 +328,12 @@ Detects DDD violations and structural problems that impede maintainability.
 **Invocation**:
 
 ```bash
-/mdt:implement MDT-001            # Interactive
-/mdt:implement MDT-001 --all      # Run all, pause at parts
-/mdt:implement MDT-001 --continue # Resume
-/mdt:implement MDT-001 --task 1.3 # Specific task
+/mdt:implement ABC-001            # Interactive
+/mdt:implement ABC-001 --all      # Run all, pause at parts
+/mdt:implement ABC-001 --continue # Resume
+/mdt:implement ABC-001 --task 1.3 # Specific task
+/mdt:implement ABC-001 --part 1.1 # Specific part
+/mdt:implement ABC-001 --prep     # Prep implementation
 ```
 
 **Overview**:
@@ -336,7 +342,7 @@ Executes tasks from tasks.md with verification after each task.
 
 **After each task verifies:**
 
-1. Tests pass
+1. Tests pass (module tests + affected BDD tests)
 2. Size: OK / FLAG / STOP
 3. Structure: correct path
 4. No duplication
@@ -352,7 +358,7 @@ Executes tasks from tasks.md with verification after each task.
 **Invocation**:
 
 ```bash
-/mdt:tech-debt MDT-001
+/mdt:tech-debt ABC-001
 ```
 
 **Overview**:
@@ -371,29 +377,13 @@ Executes tasks from tasks.md with verification after each task.
 **Invocation**:
 
 ```bash
-/mdt:clarification MDT-001
+/mdt:clarification ABC-001
 ```
 
 **Overview**:
 
 Identifies and resolves specification gaps by asking targeted questions about unclear requirements, ambiguous behaviors,
-or missing technical details. Answers are recorded in **Section 8 (Clarifications)** of the CR to maintain decision
-history.
-
-**What it addresses**:
-
-- Ambiguous requirements ("user-friendly" → specific criteria)
-- Missing edge cases ("what happens if X fails?")
-- Unclear constraints ("performance" → measurable targets)
-- Incomplete behaviors ("handle errors" → specific error types)
-- Integration points (API contracts, data formats)
-
-**Section 8 structure**:
-
-- Question asked during clarification
-- Answer provided with artifact references
-- Rationale for the decision
-- Related CR sections updated
+or missing technical details. Answers are recorded in **Section 8 (Clarifications)** of the CR.
 
 ## /mdt:reflection
 
@@ -404,26 +394,17 @@ history.
 **Invocation**:
 
 ```bash
-/mdt:reflection MDT-001
+/mdt:reflection ABC-001
 ```
 
 **Overview**:
 
 Captures lessons learned during implementation and updates the CR with insights that improve future development cycles.
-Reflection transforms experience into actionable knowledge.
 
 **What "learnings" include**:
 
 - **Unexpected discoveries**: Assumptions that proved wrong, hidden complexities
 - **Process improvements**: Workflow changes that would have helped
 - **Technical insights**: Patterns that worked well, anti-patterns to avoid
-- **Missing documentation**: Gaps discovered during implementation
 - **Testing insights**: Edge cases missed, test coverage gaps
 - **Architecture feedback**: Design decisions that need revision
-
-**CR updates**:
-
-- **Section 8 (Clarifications)**: Add post-implementation learnings
-- **Section 1 (Description)**: Update if scope changed significantly
-- **Architecture Design**: Note patterns to reuse or avoid
-- **Requirements**: Flag ambiguities for future CRs

@@ -2,6 +2,78 @@
 
 ## Recent Updates
 
+### 2026-01-07 - BDD/TDD Separation: Two-Level Test Strategy
+
+**Problem**: The single `/mdt:tests` command conflated two fundamentally different testing activities:
+- Acceptance tests (BDD) that verify user-visible behavior from requirements
+- Implementation tests (TDD) that verify module-level behavior from architecture
+
+This caused a chicken-and-egg problem in multi-part CRs: BDD tests don't need architecture, but module tests require knowing the part structure. The workflow couldn't determine correct test timing.
+
+**Solution**: Separated testing into two distinct phases with dedicated commands:
+- `/mdt:bdd` - BDD acceptance tests BEFORE architecture (from requirements.md)
+- `/mdt:tests` - TDD unit/integration tests AFTER architecture (from architecture.md)
+
+**Changes Made**:
+
+1. **mdt-bdd.md (v1 - NEW) - BDD acceptance test workflow**:
+   - Input: requirements.md (not architecture)
+   - Output: bdd.md + E2E test files (Playwright, Cypress)
+   - Timing: Before architecture, no part awareness needed
+   - Focus: User-visible behavior in Gherkin format
+   - Modes: Normal (RED) and Prep (GREEN for locking behavior)
+
+2. **mdt-tests.md (v4→v5) - Refocused on module-level tests**:
+   - Input: architecture.md (requires architecture to exist)
+   - Output: tests.md + unit/integration test files
+   - Timing: After architecture, part-aware
+   - Focus: Module behavior, component interfaces
+   - Added prerequisite check for architecture.md
+   - Removed BDD/Gherkin content (moved to mdt-bdd.md)
+
+3. **mdt-architecture.md (v7→v8) - Updated integration section**:
+   - Consumes bdd.md in addition to other inputs
+   - Updated workflow position diagrams
+   - Added key change note about BDD/TDD split
+
+4. **Workflow documentation updated** (WORKFLOWS.md, COMMANDS.md, CONCEPTS.md):
+   - Feature flow: `requirements → bdd → architecture → tests → tasks → implement`
+   - Refactoring flow: `assess → bdd --prep → architecture → tests --prep → tasks → implement`
+   - New "Two Test Levels" section explaining BDD vs TDD distinction
+   - Updated all workflow diagrams
+
+5. **Reference documentation updated** (QUICKREF.md, CLAUDE.md, README.md, GUIDE.md):
+   - Added /mdt:bdd to command tables
+   - Updated /mdt:tests descriptions (module tests, not BDD)
+   - Updated workflow chains
+   - Added bdd.md and tests.md to output listings
+
+6. **install-claude.sh - Installation support**:
+   - Added "bdd" to MDT_COMMANDS array
+   - Added /mdt:bdd to help text
+   - Updated workflow chain in help output
+
+**Impact**:
+- Resolves chicken-and-egg: BDD tests don't need architecture, module tests come after
+- Clearer separation of concerns: user perspective (BDD) vs developer perspective (TDD)
+- Aligns with industry standards: V-Model, Test Pyramid, BDD/TDD practices
+- Better multi-part CR support: acceptance tests are whole-feature, module tests are part-aware
+- Refactoring safety: lock E2E behavior with `--prep` before restructuring
+
+**Files Changed**:
+- `prompts/commands/mdt-bdd.md` (v1 - NEW)
+- `prompts/commands/mdt-tests.md` (v4→v5)
+- `prompts/commands/mdt-architecture.md` (v7→v8)
+- `prompts/commands/mdt-ticket-creation.md`
+- `prompts/WORKFLOWS.md`
+- `prompts/COMMANDS.md`
+- `prompts/CONCEPTS.md`
+- `prompts/QUICKREF.md`
+- `prompts/CLAUDE.md`
+- `prompts/README.md`
+- `prompts/GUIDE.md`
+- `prompts/install-claude.sh`
+
 ### 2026-01-04 - Terminology: "Phase" → "Part"
 
 **Problem**: MDT used "phase" to mean a distinct chunk of an epic CR with its own test/task cycle and folder. However, "phase" collides with casual LLM usage meaning "implementation steps," causing confusion between MDT's structural concept (phase folders) and generic development phases (step 1, step 2, etc.).

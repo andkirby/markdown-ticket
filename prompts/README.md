@@ -5,7 +5,7 @@ AI-driven workflow management for spec-driven development.
 ## What It Does
 
 - Creates and manages Change Requests via MCP
-- Guides: Assessment → Tests → Architecture → Tasks → Implementation
+- Guides: Requirements → BDD → Architecture → Tests → Tasks → Implementation
 - Prevents technical debt through explicit constraints
 
 ## Quick Start
