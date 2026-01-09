@@ -132,6 +132,9 @@ n| E2E Test Runner | MCP Server Process | JSON-RPC 2.0 over stdio/HTTP |
 
 ### Known Limitations
 - ⚠️ Per-tool rate limiting not implemented (1 test skipped) - global rate limiting works
+
+### Post-Implementation Fixes
+**2025-01-09**: Removed hardcoded `MCP_HTTP_ENABLED=false` from npm scripts (commit d4736ba originally added it for E2E tests). E2E test helpers already explicitly set this in their spawn() env, so the hardcoded value was unnecessary and broke Docker. Scripts now respect environment variables.
 ## 6. Verification
 ### By CR Type
 - **Feature**: E2E test framework exists and all tests pass across both transports
