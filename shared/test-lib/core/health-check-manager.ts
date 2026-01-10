@@ -127,6 +127,7 @@ export class HealthCheckManager {
           initialDelay: this.options.initialDelay,
           backoffMultiplier: this.options.backoffMultiplier,
           maxDelay: this.options.maxDelay,
+          retryableErrors: [], // Allow all errors to be retryable for health checks
           logContext: `HealthCheck-${serverType}`
         }
       );
