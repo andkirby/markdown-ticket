@@ -61,8 +61,21 @@ export class ProjectService implements IProjectService {
         this.clearCache();
     }
 
-    configureDocuments(id: string, p: string[]) {
-        return this.config.configureDocuments(id, p);
+    async configureDocuments(id: string, p: string[]): Promise<void> {
+        // Find project from registered or auto-discovered projects
+        const allProjects = await this.getAllProjects();
+        const project = allProjects.find(proj => proj.id === id);
+
+        if (!project) {
+            throw new Error('Project not found');
+        }
+
+        // Use project path directly instead of relying on registry
+        return this.configureDocumentsByPath(id, project.project.path, p);
+    }
+
+    async configureDocumentsByPath(id: string, projectPath: string, p: string[]): Promise<void> {
+        return this.config.configureDocumentsByPath(id, projectPath, p);
     }
 
     // Discovery

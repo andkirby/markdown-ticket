@@ -67,6 +67,7 @@ export interface IProjectConfigService {
     updates: Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>
   ): void;
   configureDocuments(projectId: string, documentPaths: string[]): Promise<void>;
+  configureDocumentsByPath(projectId: string, projectPath: string, documentPaths: string[]): Promise<void>;
 }
 
 /** Project cache service - handles caching for performance */
