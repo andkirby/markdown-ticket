@@ -216,7 +216,7 @@ export class ProjectConfigService implements IProjectConfigService {
     }
   }
 
-  /** Configure document paths for a project */
+  /** Configure document paths for a project (by registry lookup) */
   async configureDocuments(projectId: string, documentPaths: string[]): Promise<void> {
     try {
       const projectFile = buildRegistryFilePath(this.projectsDir, projectId);
@@ -229,7 +229,17 @@ export class ProjectConfigService implements IProjectConfigService {
         throw new Error('Project registry entry missing project path');
       }
 
-      const configPath = buildConfigFilePath(registryData.project.path, CONFIG_FILES.PROJECT_CONFIG);
+      return this.configureDocumentsByPath(projectId, registryData.project.path, documentPaths);
+    } catch (error) {
+      logQuiet(this.quiet, `Error configuring documents for project ${projectId}: ${error}`);
+      throw error;
+    }
+  }
+
+  /** Configure document paths for a project (direct path - supports auto-discovered projects) */
+  async configureDocumentsByPath(projectId: string, projectPath: string, documentPaths: string[]): Promise<void> {
+    try {
+      const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG);
       if (fileExists(configPath)) {
         const localConfig = parseToml(readFile(configPath));
         if (!localConfig.project) localConfig.project = {};
