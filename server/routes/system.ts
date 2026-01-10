@@ -5,7 +5,7 @@ import * as toml from 'toml';
 import * as os from 'os';
 import FileWatcherService from '../fileWatcherService.js';
 import { ProjectController } from '../controllers/ProjectController.js';
-import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js';
+import { getConfigDir } from '@mdt/shared/utils/constants.js';
 
 interface FileInvoker {
   clearCache(): void;
@@ -108,7 +108,8 @@ export function createSystemRouter(
    */
   router.get('/config/links', async (req: Request, res: Response) => {
     try {
-      const configPath = DEFAULT_PATHS.CONFIG_FILE;
+      const configDir = getConfigDir();
+      const configPath = path.join(configDir, 'config.toml');
       const configData = await fs.readFile(configPath, 'utf8');
 
       // Simple TOML parsing for [links] section
@@ -220,7 +221,8 @@ export function createSystemRouter(
       // Check if path is within discovery search paths
       let isInDiscovery = 0;
       try {
-        const configPath = DEFAULT_PATHS.CONFIG_FILE;
+        const configDir = getConfigDir();
+        const configPath = path.join(configDir, 'config.toml');
         const configContent = await fs.readFile(configPath, 'utf8');
         const parsedConfig = toml.parse(configContent);
         const discoveryPaths = parsedConfig.discovery?.searchPaths || [];
@@ -324,7 +326,8 @@ export function createSystemRouter(
    */
   router.get('/config', async (req: Request, res: Response) => {
     try {
-      const configPath = DEFAULT_PATHS.CONFIG_FILE;
+      const configDir = getConfigDir();
+      const configPath = path.join(configDir, 'config.toml');
       console.log(`Reading config from: ${configPath}`);
 
       try {
@@ -333,7 +336,7 @@ export function createSystemRouter(
 
         // Extract configuration using proper TOML parsing
         const response = {
-          configDir: DEFAULT_PATHS.CONFIG_DIR,
+          configDir: configDir,
           discovery: {
             autoDiscover: parsedConfig.discovery?.autoDiscover ?? true,
             searchPaths: parsedConfig.discovery?.searchPaths ?? [],
@@ -345,7 +348,7 @@ export function createSystemRouter(
       } catch (_error) {
         // Config file doesn't exist, return defaults
         const response = {
-          configDir: DEFAULT_PATHS.CONFIG_DIR,
+          configDir: configDir,
           discovery: {
             autoDiscover: true,
             searchPaths: [],
@@ -387,7 +390,8 @@ export function createSystemRouter(
    */
   router.get('/config/global', async (req: Request, res: Response) => {
     try {
-      const configPath = DEFAULT_PATHS.CONFIG_FILE;
+      const configDir = getConfigDir();
+      const configPath = path.join(configDir, 'config.toml');
       console.log(`Reading global config from: ${configPath}`);
 
       try {

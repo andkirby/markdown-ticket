@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import matter from 'gray-matter';
 import * as os from 'os';
-import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js';
+import { getConfigDir } from '@mdt/shared/utils/constants.js';
 
 // Type definitions
 interface ProjectPath {
@@ -131,10 +131,11 @@ class FileWatcherService extends EventEmitter {
 
   /**
    * Initialize file watcher for global project registry
-   * Watches {DEFAULT_PATHS.PROJECTS_REGISTRY}/*.toml for project lifecycle events
+   * Watches {getConfigDir()}/projects/*.toml for project lifecycle events
    */
   initGlobalRegistryWatcher(): void {
-    const registryPath = DEFAULT_PATHS.PROJECTS_REGISTRY;
+    const configDir = getConfigDir();
+    const registryPath = path.join(configDir, 'projects');
 
     // Check if registry directory exists
     if (!fs.existsSync(registryPath)) {
