@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "server.ts",
+    "fileWatcherService.ts",
+    "counterAPI.ts",
+    "createSampleTickets.ts",
+    "services/**/*.ts",
+    "controllers/**/*.ts",
+    "routes/**/*.ts",
+    "strategies/**/*.ts",
+    "utils/**/*.ts",
+    "repositories/**/*.ts",
+    "factories/**/*.ts",
+    "commands/**/*.ts",
+    "invokers/**/*.ts",
+    "middleware/**/*.ts",
+    "openapi/**/*.ts",
+    "scripts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "mcp-dev-tools",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "tests/**"
+  ]
+}

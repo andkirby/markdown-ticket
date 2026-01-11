@@ -15,7 +15,6 @@
 
 /// <reference types="jest" />
 
-import request from 'supertest';
 import { setupTestEnvironment, cleanupTestEnvironment, createTestProjectWithCR } from '../api/setup';
 import { projectApi, assertSuccess, assertNotFound, assertBadRequest, assertCRUDSuccess, assertCRStructure, assertErrorMessage } from '../api/helpers';
 import { crFixtures, crUpdateFixtures, errorFixtures } from '../api/fixtures/projects';
