@@ -42,14 +42,14 @@
     "invokers/**/*.ts",
     "middleware/**/*.ts",
     "openapi/**/*.ts",
-    "scripts/**/*.ts"
+    "scripts/**/*.ts",
+    "tests/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "mcp-dev-tools",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "tests/mocks"
   ],
   "references": [
     { "path": "../tsconfig.shared.json" }
