@@ -69,7 +69,8 @@
     "mcp:test": "cd mcp-server && npm test",
     "mcp:test:e2e": "cd mcp-server && npm run test:e2e",
     "validate:ts": "bash scripts/validate-changed-ts.sh",
-    "validate:ts:all": "bash scripts/validate-all-ts.sh"
+    "validate:ts:all": "bash scripts/validate-all-ts.sh",
+    "hooks:install": "bash scripts/install-git-hooks.sh"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.0.19",
