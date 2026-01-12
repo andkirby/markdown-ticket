@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Pre-commit hook: Block commits with ../shared/ imports and Co-Authored-By in message
+#
+# 1. Enforces @mdt/shared path alias instead of relative imports to shared modules
+# 2. Blocks "Co-Authored-By" in commit messages (no AI attribution)
+#
+# Usage: Files should import via @mdt/shared/* (mapped to ../shared/dist/* in tsconfig.json)
+#   Bad:  import { X } from '../../../shared/test-lib/...'
+#   Good: import { X } from '@mdt/shared/test-lib/...'
+
+set -e
+
+# ============================================================================
+# Check 1: Block Co-Authored-By in commit message
+# ============================================================================
+
+commit_msg_file=$(git rev-parse --git-dir)/COMMIT_EDITMSG
+if [ -f "$commit_msg_file" ]; then
+    if grep -qi "Co-Authored-By" "$commit_msg_file"; then
+        echo "❌ ERROR: Commit message contains 'Co-Authored-By'"
+        echo ""
+        echo "   AI/tool attribution is not allowed in commit messages."
+        echo "   Please remove 'Co-Authored-By' lines and try again."
+        echo ""
+        echo "   Current message:"
+        cat "$commit_msg_file" | sed 's/^/   /'
+        exit 1
+    fi
+fi
+
+# ============================================================================
+# Check 2: Block ../shared/ imports in TypeScript files
+# ============================================================================
+
+# Get list of staged .ts files (excluding .d.ts files)
+staged_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.ts$' | grep -v -E '\.d\.ts$' || true)
+
+if [ -z "$staged_files" ]; then
+    exit 0
+fi
+
+# Pattern for disallowed imports: ../shared/ or ../../shared/ etc.
+# This matches from the start of a string or after "from '"
+disallowed_pattern="from ['\"](\.\.\/)+shared\/"
+
+violations=0
+
+for file in $staged_files; do
+    if [ ! -f "$file" ]; then
+        continue
+    fi
+
+    # Check for disallowed imports (case insensitive)
+    # Look for: from '../shared/...' or from "../../shared/..." etc.
+    if grep -iE "$disallowed_pattern" "$file" > /dev/null 2>&1; then
+        echo "❌ ERROR: Disallowed relative import to shared module in: $file"
+        echo ""
+        echo "   Found import using '../shared/' which breaks TypeScript project references."
+        echo ""
+        echo "   Please use '@mdt/shared' path alias instead:"
+        echo "   Bad:  from '../../../shared/test-lib/...'"
+        echo "   Good: from '@mdt/shared/test-lib/...'"
+        echo ""
+
+        # Show the offending lines
+        grep -n -E --color=always "$disallowed_pattern" "$file" | sed 's/^/   /'
+        echo ""
+        violations=$((violations + 1))
+    fi
+done
+
+if [ $violations -gt 0 ]; then
+    echo ""
+    echo "❌ Commit blocked: $violations file(s) with disallowed relative imports to shared module."
+    echo "   Fix the imports and try again."
+    exit 1
+fi
+
+exit 0
