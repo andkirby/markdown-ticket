@@ -1,7 +1,7 @@
 /**
  * Common blacklist patterns for file system filtering
  */
-export const COMMON_IGNORE_PATTERNS: string[] = [
+const COMMON_IGNORE_PATTERNS: string[] = [
   'node_modules', 'vendor', 'venv', '.venv', 'dist', 'build',
   'target', 'bin', 'obj', 'out', '__pycache__', 'coverage',
   '.next', '.nuxt', '.svelte-kit', 'Pods', '.gradle', '.cargo',

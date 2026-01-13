@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 /**
  * swagger-jsdoc configuration options
  */
-export const swaggerOptions: swaggerJsdoc.Options = {
+const swaggerOptions: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -172,4 +172,3 @@ All endpoints return consistent error responses with \`error\` and \`message\` f
  */
 export const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-export default swaggerSpec;
