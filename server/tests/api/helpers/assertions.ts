@@ -59,7 +59,7 @@ export function assertNotFound(response: Response): void {
  *
  * @param response - Supertest response
  */
-export function assertServerError(response: Response): void {
+function assertServerError(response: Response): void {
   expect(response.status).toBeGreaterThanOrEqual(500);
   expect(response.body).toHaveProperty('error');
   expect(response.body).toHaveProperty('message');
@@ -83,7 +83,7 @@ export function assertBodyHasProperties(response: Response, properties: string[]
  * @param response - Supertest response
  * @param expectedBody - Expected body structure (partial match)
  */
-export function assertBodyMatches<T = unknown>(response: Response, expectedBody: Partial<T>): void {
+function assertBodyMatches<T = unknown>(response: Response, expectedBody: Partial<T>): void {
   expect(response.body).toMatchObject(expectedBody);
 }
 
@@ -102,7 +102,7 @@ export function assertIsArray(response: Response): void {
  * @param response - Supertest response
  * @param minLength - Minimum expected length
  */
-export function assertArrayHasMinLength(response: Response, minLength: number): void {
+function assertArrayHasMinLength(response: Response, minLength: number): void {
   expect(Array.isArray(response.body)).toBe(true);
   expect(response.body.length).toBeGreaterThanOrEqual(minLength);
 }
@@ -125,7 +125,7 @@ export function assertArrayLength(response: Response, length: number): void {
  * @param property - Property name to check
  * @param value - Expected value
  */
-export function assertArrayContains(response: Response, property: string, value: unknown): void {
+function assertArrayContains(response: Response, property: string, value: unknown): void {
   expect(Array.isArray(response.body)).toBe(true);
   expect(response.body).toEqual(
     expect.arrayContaining([
@@ -159,7 +159,7 @@ export function assertCRStructure(response: Response): void {
  *
  * @param response - Supertest response
  */
-export function assertProjectStructure(response: Response): void {
+function assertProjectStructure(response: Response): void {
   assertBodyHasProperties(response, ['id', 'project']);
   expect(response.body.project).toHaveProperty('name');
   expect(response.body.project).toHaveProperty('path');
@@ -194,7 +194,7 @@ export function assertCRUDSuccess(response: Response, operation: 'create' | 'upd
  * @param response - Supertest response
  * @param queryParams - Query parameters used in request
  */
-export function assertPagination(response: Response, queryParams: { page?: number; limit?: number }): void {
+function assertPagination(response: Response, queryParams: { page?: number; limit?: number }): void {
   if (queryParams.page || queryParams.limit) {
     expect(response.body).toHaveProperty('pagination');
     expect(response.body.pagination).toMatchObject({
@@ -210,7 +210,7 @@ export function assertPagination(response: Response, queryParams: { page?: numbe
  * @param response - Supertest response
  * @param contentType - Expected content type
  */
-export function assertContentType(response: Response, contentType: string): void {
+function assertContentType(response: Response, contentType: string): void {
   expect(response.headers['content-type']).toContain(contentType);
 }
 
@@ -219,6 +219,6 @@ export function assertContentType(response: Response, contentType: string): void
  *
  * @param response - Supertest response
  */
-export function assertCORSHeaders(response: Response): void {
+function assertCORSHeaders(response: Response): void {
   expect(response.headers['access-control-allow-origin']).toBeDefined();
 }

@@ -10,14 +10,14 @@ interface Ticket {
   filename: string;
 }
 
-export interface DuplicateTicket {
+interface DuplicateTicket {
   filename: string;
   filepath: string;
   title: string;
   code: string;
 }
 
-export interface DuplicateGroup {
+interface DuplicateGroup {
   code: string;
   tickets: DuplicateTicket[];
 }

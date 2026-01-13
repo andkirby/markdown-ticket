@@ -189,7 +189,7 @@ export function createTestApp(): Express {
 /**
  * Reset the cached app (useful between test suites if needed)
  */
-export function resetTestAppCache(): void {
+function resetTestAppCache(): void {
   // Clear require cache for server modules
   const modulesToClear = [
     '../../fileWatcherService',

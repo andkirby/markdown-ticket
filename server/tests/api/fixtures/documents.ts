@@ -6,30 +6,30 @@
 import type { ProjectFactory } from '@mdt/shared/test-lib';
 
 // Valid markdown document with YAML frontmatter
-export const validDocumentWithFrontmatter =
+const validDocumentWithFrontmatter =
   '---\ntitle: API Documentation\nauthor: John Doe\ntags: [api, rest]\n---\n\n# API Documentation\n\nThis document describes the REST API endpoints.';
 
 // Valid markdown document without frontmatter
-export const validDocumentNoFrontmatter =
+const validDocumentNoFrontmatter =
   '# Project Overview\n\nThis is a simple markdown document without YAML frontmatter.\n\n## Features\n\n- Feature 1\n- Feature 2\n- Feature 3';
 
 // Empty document (edge case for testing)
-export const emptyDocument = '';
+const emptyDocument = '';
 
 // Document with special characters in content
-export const documentWithSpecialChars =
+const documentWithSpecialChars =
   '---\ntitle: Special Characters & Symbols\n---\n\n# Special Characters Test\n\n\' " `code` & < > | @ # $ © ® ™ 🎉';
 
 // Document with complex YAML frontmatter
-export const documentWithComplexFrontmatter =
+const documentWithComplexFrontmatter =
   '---\ntitle: Complex Frontmatter\nauthor: Jane Smith\nversion: 1.0.0\ntags: [documentation, example]\nmetadata:\n  priority: high\n  status: draft\n  reviewers: [alice@example.com, bob@example.com]\nrelated: [DOC-001, DOC-002]\n---\n\n# Complex Document\n\nThis demonstrates nested YAML structures.';
 
 // Document with code blocks
-export const documentWithCodeBlocks =
+const documentWithCodeBlocks =
   '# Code Examples\n\n```javascript\nfunction greet(name) { return \'Hello, ${name}!\'; }\n```\n\n```typescript\ninterface User { id: number; name: string; }\n```';
 
 // Document with tables
-export const documentWithTables =
+const documentWithTables =
   '# Data Reference\n\n| Role | Description | Permissions |\n|------|-------------|--------------|\n| Admin | Full access | CRUD |\n| Editor | Content | CRU |';
 
 // Document fixtures collection

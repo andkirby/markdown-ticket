@@ -18,7 +18,7 @@ import jestOpenAPI from 'jest-openapi';
 const openApiSpecPath = join(__dirname, '../../openapi.yaml');
 
 /** Initialize jest-openapi validator - also auto-called on module load */
-export function initJestOpenAPI(): void {
+function initJestOpenAPI(): void {
   jestOpenAPI(openApiSpecPath);
 }
 initJestOpenAPI();
@@ -94,7 +94,7 @@ export async function createTestProjectWithCR(
 }
 
 /** Reset the test setup cache (useful for testing multiple isolated scenarios) */
-export function resetTestSetupCache(): void {
+function resetTestSetupCache(): void {
   cachedApp = null;
   cachedConfigDir = null;
 }

@@ -11,7 +11,7 @@ const tpl = (code: string, s: CRStatus, t: CRType, p = 'Medium', extra = '', des
   `---\ncode: ${code}\nstatus: ${s}\ntype: ${t}\npriority: ${p}${extra}\n---\n\n## 1. Description\n${desc}`;
 
 // Status fixtures
-export const statusFixtures: Record<CRStatus, string> = {
+const statusFixtures: Record<CRStatus, string> = {
   Proposed: tpl('TEST-001', 'Proposed', 'Feature Enhancement'),
   Approved: tpl('TEST-002', 'Approved', 'Architecture', 'High'),
   'In Progress': tpl('TEST-003', 'In Progress', 'Bug Fix', 'Critical', '\nassignee: dev@example.com'),
@@ -25,7 +25,7 @@ export const statusFixtures: Record<CRStatus, string> = {
 };
 
 // Type fixtures (Feature Enhancement, Bug Fix, Technical Debt, Architecture, Documentation)
-export const typeFixtures: Record<CRType, string> = {
+const typeFixtures: Record<CRType, string> = {
   'Feature Enhancement': tpl('TEST-006', 'Proposed', 'Feature Enhancement'),
   'Bug Fix': tpl('TEST-007', 'Approved', 'Bug Fix', 'High'),
   'Technical Debt': tpl('TEST-008', 'Proposed', 'Technical Debt'),
@@ -43,7 +43,7 @@ export const malformedYAMLFixtures = {
 };
 
 // Edge case fixtures
-export const edgeCaseFixtures = {
+const edgeCaseFixtures = {
   emptyContent: `---\ncode: TEST-801\nstatus: Proposed\ntype: Feature Enhancement\npriority: Low\n---\n\n## 1. Description\n\n\n## 2. Rationale\nNo content.`,
   specialCharacters: `---\ncode: TEST-802\ntitle: 'Test <special> & "chars"'\nstatus: Proposed\ntype: Bug Fix\npriority: Medium\n---\n\n## 1. Description\nUnicode: 你好 世界 🎉`,
   longTitle: `---\ncode: TEST-803\ntitle: ${'Long '.repeat(50)}\nstatus: Proposed\n---\n\n## 1. Description\nLong title test.`,
