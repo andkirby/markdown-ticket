@@ -11,7 +11,13 @@ export default {
   transform: {
     '^.+\\.ts$': ['ts-jest', {
       useESM: true,
-      tsconfig: 'tsconfig.json'
+      tsconfig: (filename) => {
+        // Use tsconfig.test.json for files in tests/ directory
+        if (filename.includes('/tests/')) {
+          return 'tsconfig.test.json';
+        }
+        return 'tsconfig.json';
+      }
     }]
   },
   transformIgnorePatterns: [

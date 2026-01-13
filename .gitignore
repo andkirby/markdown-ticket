@@ -80,7 +80,6 @@ counter-api/
 .claude
 # ignore SCIP files
 **/*.scip
-scripts/
 # suppress unused file copies
 **/.unused
 **/unused.*

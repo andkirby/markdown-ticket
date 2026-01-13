@@ -214,7 +214,7 @@ name = "Test Project"
       // Check for error response (project might not be discovered)
       if (response.success === false) {
         expect(response.error).toBeDefined();
-        expect(response.error.message).toContain('not found');
+        expect(response.error!.message).toContain('not found');
       } else {
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();
@@ -277,7 +277,7 @@ name = "Test Project"
       // Check for error response (project might not exist)
       if (response.success === false) {
         expect(response.error).toBeDefined();
-        expect(response.error.message).toContain('not found');
+        expect(response.error!.message).toContain('not found');
       } else {
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();

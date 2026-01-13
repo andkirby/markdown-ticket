@@ -160,7 +160,7 @@ Initial implementation.
 Initial criteria.`
       });
 
-      const response = await callManageCRSections('TEST', createdCR.key, 'list');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'list');
 
       expect(response.success).toBe(true);
       expect(response.data).toBeDefined();
@@ -202,7 +202,7 @@ Standard implementation.`;
         content: customContent
       });
 
-      const response = await callManageCRSections('TEST', createdCR.key, 'list');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'list');
 
       expect(response.success).toBe(true);
 
@@ -243,7 +243,7 @@ ${sectionContent}
 Analysis here.`
       });
 
-      const response = await callManageCRSections('TEST', createdCR.key, 'get', 'Rationale');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'get', 'Rationale');
 
       expect(response.success).toBe(true);
       expect(response.data).toBeDefined();
@@ -283,7 +283,7 @@ Test implementation.`
       ];
 
       for (const test of tests) {
-        const response = await callManageCRSections('TEST', createdCR.key, 'get', test.section);
+        const response = await callManageCRSections('TEST', createdCR.key!, 'get', test.section);
         expect(response.success).toBe(true);
         const parsed = parseSectionContentFromMarkdown(response.data);
         expect(parsed.content).toContain(test.shouldContain);
@@ -303,7 +303,7 @@ Basic description.
 Basic rationale.`
       });
 
-      const response = await callManageCRSections('TEST', createdCR.key, 'get', 'Non-existent Section');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'get', 'Non-existent Section');
 
       // The tool returns a section even for non-existent sections
       expect(response.success).toBe(true);
@@ -342,7 +342,7 @@ This refactor will address all these concerns by modernizing the architecture.`;
 
       const response = await callManageCRSections(
         'TEST',
-        createdCR.key,
+        createdCR.key!,
         'replace',
         'Rationale',
         newContent
@@ -355,7 +355,7 @@ This refactor will address all these concerns by modernizing the architecture.`;
       expect(response.data).toContain('The section content has been completely replaced');
 
       // Verify other sections remain unchanged
-      const getDescriptionResponse = await callManageCRSections('TEST', createdCR.key, 'get', 'Description');
+      const getDescriptionResponse = await callManageCRSections('TEST', createdCR.key!, 'get', 'Description');
       const parsed = parseSectionContentFromMarkdown(getDescriptionResponse.data);
       expect(parsed.content).toContain('Old description');
     });
@@ -387,7 +387,7 @@ With subsections.`;
 
       const response = await callManageCRSections(
         'TEST',
-        createdCR.key,
+        createdCR.key!,
         'replace',
         'Implementation Specification',
         contentWithHeader
@@ -426,7 +426,7 @@ More details here.`;
 
       const response = await callManageCRSections(
         'TEST',
-        createdCR.key,
+        createdCR.key!,
         'append',
         '2. Rationale', // Append to the Rationale section
         appendContent
@@ -470,7 +470,7 @@ Implementation details.
 
       const response = await callManageCRSections(
         'TEST',
-        createdCR.key,
+        createdCR.key!,
         'append',
         'Acceptance Criteria',
         additionalCriteria
@@ -527,7 +527,7 @@ The motivation for these changes...`;
 
       const response = await callManageCRSections(
         'TEST',
-        createdCR.key,
+        createdCR.key!,
         'prepend',
         '1. Description', // Prepend to the Description section
         prependContent
@@ -576,7 +576,7 @@ Context: The following describes the architectural changes...`;
 
       const response = await callManageCRSections(
         'TEST',
-        createdCR.key,
+        createdCR.key!,
         'prepend',
         'Description',
         prependToSection
@@ -631,7 +631,7 @@ Implementation details.
       });
 
       // Test getting hierarchical section
-      const response = await callManageCRSections('TEST', createdCR.key, 'get', '1.1 Background');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'get', '1.1 Background');
       expect(response.success).toBe(true);
       const parsed = parseSectionContentFromMarkdown(response.data);
       expect(parsed.content).toContain('Background information');
@@ -648,7 +648,7 @@ Updated historical perspective.`;
 
       const replaceResponse = await callManageCRSections(
         'TEST',
-        createdCR.key,
+        createdCR.key!,
         'replace',
         '1.1 Background',
         newBackground
@@ -721,7 +721,7 @@ Test rationale.`
 
       const response = await mcpClient.callTool('manage_cr_sections', {
         project: 'TEST',
-        key: createdCR.key,
+        key: createdCR.key!,
         operation: 'get'
       });
 
@@ -761,7 +761,7 @@ Implementation details.
       });
 
       // Test list response format
-      const listResponse = await callManageCRSections('TEST', createdCR.key, 'list');
+      const listResponse = await callManageCRSections('TEST', createdCR.key!, 'list');
       expect(listResponse.success).toBe(true);
       expect(listResponse.data).toBeDefined();
       expect(listResponse.data).toContain('📑');
@@ -772,7 +772,7 @@ Implementation details.
       expect(sections.length).toBeGreaterThan(0);
 
       // Test get response format
-      const getResponse = await callManageCRSections('TEST', createdCR.key, 'get', 'Description');
+      const getResponse = await callManageCRSections('TEST', createdCR.key!, 'get', 'Description');
       expect(getResponse.success).toBe(true);
       expect(getResponse.data).toBeDefined();
       expect(getResponse.data).toContain('📖');
@@ -785,7 +785,7 @@ Implementation details.
       // Test replace response format
       const replaceResponse = await callManageCRSections(
         'TEST',
-        createdCR.key,
+        createdCR.key!,
         'replace',
         'Description',
         'New description content'

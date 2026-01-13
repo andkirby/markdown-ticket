@@ -120,12 +120,21 @@ for project in "${!PROJECT_FILES[@]}"; do
     else
         # Validate the project
         if [ "$project" == "root" ]; then
-            # For root-level files, validate individually (first file only)
-            local first_file="${files[0]}"
-            if npx tsc --skipLibCheck --noEmit "$first_file" 2>/dev/null; then
-                project_status="PASS"
+            # For root-level files, use project tsconfig if it exists
+            if [ -f "tsconfig.json" ]; then
+                if npx tsc --noEmit -p tsconfig.json 2>/dev/null; then
+                    project_status="PASS"
+                else
+                    project_status="FAIL"
+                fi
             else
-                project_status="FAIL"
+                # Fallback to individual file validation with ES settings
+                local first_file="${files[0]}"
+                if npx tsc --skipLibCheck --noEmit --module ESNext --target ES2020 --esModuleInterop "$first_file" 2>/dev/null; then
+                    project_status="PASS"
+                else
+                    project_status="FAIL"
+                fi
             fi
         else
             # Validate using project tsconfig
@@ -147,7 +156,11 @@ for project in "${!PROJECT_FILES[@]}"; do
         FAIL=$((FAIL + 1))
         # Show errors
         if [ "$project" == "root" ]; then
-            npx tsc --skipLibCheck --noEmit "${files[0]}" 2>&1 | sed 's/^/    /' | head -10
+            if [ -f "tsconfig.json" ]; then
+                npx tsc --noEmit -p tsconfig.json 2>&1 | sed 's/^/    /' | head -10
+            else
+                npx tsc --skipLibCheck --noEmit --module ESNext --target ES2020 --esModuleInterop "${files[0]}" 2>&1 | sed 's/^/    /' | head -10
+            fi
         else
             npx tsc --project "$project/tsconfig.json" --noEmit 2>&1 | sed 's/^/    /' | head -10
         fi

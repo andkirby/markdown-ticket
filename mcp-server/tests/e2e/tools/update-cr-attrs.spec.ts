@@ -540,8 +540,8 @@ Basic implementation steps.
       // The tool should return an error response
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32602); // Invalid params (project key invalid)
-      expect(response.error.message).toContain('invalid');
+      expect(response.error!.code).toBe(-32602); // Invalid params (project key invalid)
+      expect(response.error!.message).toContain('invalid');
     });
 
     it('GIVEN invalid priority WHEN updating THEN accept update', async () => {
@@ -594,7 +594,7 @@ Basic implementation steps.
       // Missing required parameter should return validation error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32602); // Invalid params error
+      expect(response.error!.code).toBe(-32602); // Invalid params error
     });
 
     it('GIVEN missing key parameter WHEN updating THEN return validation error', async () => {
@@ -606,7 +606,7 @@ Basic implementation steps.
       // Missing required parameter returns invalid params error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32602); // Invalid params error
+      expect(response.error!.code).toBe(-32602); // Invalid params error
     });
 
     it('GIVEN missing attributes parameter WHEN updating THEN return validation error', async () => {
@@ -618,7 +618,7 @@ Basic implementation steps.
       // Missing required parameter returns invalid params error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32602); // Invalid params error
+      expect(response.error!.code).toBe(-32602); // Invalid params error
     });
   });
 
@@ -636,9 +636,9 @@ Basic implementation steps.
       // The tool rejects restricted attributes with error response
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32000); // Business logic error
-      expect(response.error.message).toContain('Invalid attributes: title');
-      expect(response.error.message).toContain('Allowed attributes for update_cr_attrs are');
+      expect(response.error!.code).toBe(-32000); // Business logic error
+      expect(response.error!.message).toContain('Invalid attributes: title');
+      expect(response.error!.message).toContain('Allowed attributes for update_cr_attrs are');
     });
 
     it('GIVEN attempt to update status WHEN updating attributes THEN reject update', async () => {
@@ -655,9 +655,9 @@ Basic implementation steps.
       // The tool rejects restricted attributes with error response
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32000); // Business logic error
-      expect(response.error.message).toContain('Invalid attributes: status');
-      expect(response.error.message).toContain('Allowed attributes for update_cr_attrs are');
+      expect(response.error!.code).toBe(-32000); // Business logic error
+      expect(response.error!.message).toContain('Invalid attributes: status');
+      expect(response.error!.message).toContain('Allowed attributes for update_cr_attrs are');
     });
 
     it('GIVEN attempt to update type WHEN updating attributes THEN reject update', async () => {
@@ -673,9 +673,9 @@ Basic implementation steps.
       // The tool rejects restricted attributes with error response
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32000); // Business logic error
-      expect(response.error.message).toContain('Invalid attributes: type');
-      expect(response.error.message).toContain('Allowed attributes for update_cr_attrs are');
+      expect(response.error!.code).toBe(-32000); // Business logic error
+      expect(response.error!.message).toContain('Invalid attributes: type');
+      expect(response.error!.message).toContain('Allowed attributes for update_cr_attrs are');
     });
   });
 
