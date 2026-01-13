@@ -28,21 +28,21 @@ export interface Ticket {
 }
 
 // Ticket Update Interface
-export interface TicketUpdate {
+interface TicketUpdate {
   code: string;
   updates: Partial<Ticket>;
   updateImplementationDate?: boolean;
 }
 
 // File Event Types
-export interface FileEvent {
+interface FileEvent {
   type: 'create' | 'update' | 'delete';
   filePath: string;
   cr?: Ticket;
 }
 
 // Suggestion Interface
-export interface Suggestion {
+interface Suggestion {
   code: string;
   title: string;
   type: string;
@@ -51,7 +51,7 @@ export interface Suggestion {
 }
 
 // Zod Schemas for Validation
-export const TicketSchema = z.object({
+const TicketSchema = z.object({
   // Required Core Attributes
   code: z.string().regex(/^[A-Z]{2,}-[A-Z]\d{3}$/, 'Invalid ticket code format'),
   title: z.string().min(1, 'Title is required'),
@@ -77,10 +77,10 @@ export const TicketSchema = z.object({
   content: z.string(),
 });
 
-export type TicketFormData = z.infer<typeof TicketSchema>;
+type TicketFormData = z.infer<typeof TicketSchema>;
 
 // Status Enum Values
-export const STATUSES = [
+const STATUSES = [
   'Proposed',
   'Approved',
   'In Progress',
@@ -96,7 +96,7 @@ export const STATUSES = [
 export type Status = typeof STATUSES[number];
 
 // Type Enum Values
-export const TYPES = [
+const TYPES = [
   'Feature Enhancement',
   'Bug Fix',
   'Technical Debt',
@@ -104,9 +104,9 @@ export const TYPES = [
   'Documentation',
 ] as const;
 
-export type Type = typeof TYPES[number];
+type Type = typeof TYPES[number];
 
 // Priority Enum Values
-export const PRIORITIES = ['Low', 'Medium', 'High', 'Critical'] as const;
+const PRIORITIES = ['Low', 'Medium', 'High', 'Critical'] as const;
 
-export type Priority = typeof PRIORITIES[number];
+type Priority = typeof PRIORITIES[number];

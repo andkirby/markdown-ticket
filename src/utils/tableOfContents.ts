@@ -26,7 +26,7 @@ export function extractTableOfContents(content: string, headerLevelStart: number
   return extractTableOfContentsFromHtml(html);
 }
 
-export function extractTableOfContentsFromHtml(html: string): TocItem[] {
+function extractTableOfContentsFromHtml(html: string): TocItem[] {
   const toc: TocItem[] = [];
   const headingRegex = /<h([1-6])(?:\s+id="([^"]*)")?[^>]*>(.*?)<\/h[1-6]>/gi;
   let match;

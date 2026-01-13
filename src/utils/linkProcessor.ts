@@ -123,7 +123,7 @@ export function classifyLink(href: string, currentProject: string): ParsedLink {
   };
 }
 
-export function isValidURL(href: string): boolean {
+function isValidURL(href: string): boolean {
   try {
     const url = new URL(href, window.location.origin);
     const allowedProtocols = ['http:', 'https:', 'mailto:', 'tel:'];
@@ -133,11 +133,11 @@ export function isValidURL(href: string): boolean {
   }
 }
 
-export function validateTicketLink(ticketKey: string, availableTickets: string[]): boolean {
+function validateTicketLink(ticketKey: string, availableTickets: string[]): boolean {
   return availableTickets.includes(ticketKey);
 }
 
-export function validateDocumentLink(docPath: string, availableDocuments: string[]): boolean {
+function validateDocumentLink(docPath: string, availableDocuments: string[]): boolean {
   return availableDocuments.includes(docPath);
 }
 
@@ -188,7 +188,7 @@ export function classifyAndNormalizeLink(
 /**
  * Extract document paths from project configuration
  */
-export function extractDocumentPaths(projectConfig: any): string[] {
+function extractDocumentPaths(projectConfig: any): string[] {
   if (!projectConfig) return [];
 
   // Handle different configuration formats

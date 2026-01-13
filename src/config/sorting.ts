@@ -1,4 +1,4 @@
-export interface SortAttribute {
+interface SortAttribute {
   name: string;
   label: string;
   defaultDirection: 'asc' | 'desc';
@@ -17,7 +17,7 @@ export const DEFAULT_SORT_ATTRIBUTES: SortAttribute[] = [
   { name: 'lastModified', label: 'Update Date', defaultDirection: 'desc', system: true },
 ];
 
-export const DEFAULT_SORT_PREFERENCES: SortPreferences = {
+const DEFAULT_SORT_PREFERENCES: SortPreferences = {
   selectedAttribute: 'code',
   selectedDirection: 'desc',
 };

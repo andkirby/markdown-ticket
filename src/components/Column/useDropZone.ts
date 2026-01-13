@@ -1,7 +1,7 @@
 import { useDrop } from 'react-dnd';
 import { Ticket } from '../../types';
 
-export interface DropZoneOptions {
+interface DropZoneOptions {
   /**
    * Function called when an item is dropped on the zone
    * @param item - The dropped item containing the ticket
@@ -31,7 +31,7 @@ export interface DropZoneOptions {
   canDrop?: (item: { ticket: Ticket }) => boolean;
 }
 
-export interface DropZoneResult {
+interface DropZoneResult {
   /**
    * Ref to attach to the drop target element
    */

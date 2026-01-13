@@ -11,7 +11,7 @@
  * @param filePath Optional file path for fallback extraction
  * @returns Extracted title or null if no H1 found
  */
-export function extractTitleFromH1(content: string, filePath?: string): string | null {
+function extractTitleFromH1(content: string, filePath?: string): string | null {
   const lines = content.split('\n');
   const h1Pattern = /^#\s+(.+)$/m;
 
@@ -37,7 +37,7 @@ export function extractTitleFromH1(content: string, filePath?: string): string |
  * @param filePath File path
  * @returns Extracted filename-based title
  */
-export function extractTitleFromFilename(filePath: string): string {
+function extractTitleFromFilename(filePath: string): string {
   const filename = filePath.split('/').pop()?.replace(/\.md$/, '') || '';
 
   // Look for pattern: CODE-NUMBER-title
@@ -92,7 +92,7 @@ export function processContentForDisplay(content: string): string {
  * @param content User-provided content
  * @returns Content without leading H1
  */
-export function stripLeadingH1(content: string): string {
+function stripLeadingH1(content: string): string {
   const lines = content.split('\n');
   const h1Pattern = /^#\s+(.+)$/m;
 
@@ -125,7 +125,7 @@ export function stripLeadingH1(content: string): string {
  * @param title Title to use for H1
  * @returns Content with H1 header
  */
-export function ensureH1Header(content: string, title: string): string {
+function ensureH1Header(content: string, title: string): string {
   const hasH1 = content.split('\n').some(line => {
     const trimmedLine = line.trim();
     return trimmedLine.match(/^#\s+(.+)$/);
@@ -144,7 +144,7 @@ export function ensureH1Header(content: string, title: string): string {
  * @param content Markdown content
  * @returns True if content has H1 header
  */
-export function hasH1Header(content: string): boolean {
+function hasH1Header(content: string): boolean {
   const lines = content.split('\n');
   const h1Pattern = /^#\s+(.+)$/m;
 

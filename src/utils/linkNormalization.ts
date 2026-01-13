@@ -431,7 +431,7 @@ export function createLinkContext(params: {
 /**
  * Utility function to normalize multiple links
  */
-export function normalizeMultipleLinks(
+function normalizeMultipleLinks(
   hrefs: string[],
   context: LinkContext
 ): NormalizedLink[] {

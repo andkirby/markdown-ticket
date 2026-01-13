@@ -39,7 +39,7 @@ function isValidFileChangeData(data: any): boolean {
   return data.eventType && data.filename && typeof data.eventType === 'string' && typeof data.filename === 'string';
 }
 
-export class SSEClient {
+class SSEClient {
   private eventSource: EventSource | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -383,7 +383,7 @@ export class SSEClient {
 }
 
 // Export singleton instance
-export const sseClient = new SSEClient();
+const sseClient = new SSEClient();
 
 // Auto-connect on module load (can be disabled if needed)
 if (typeof window !== 'undefined') {

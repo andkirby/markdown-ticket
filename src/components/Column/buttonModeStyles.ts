@@ -4,7 +4,7 @@
  */
 
 // Orange theme color palette
-export const ORANGE_THEME = {
+const ORANGE_THEME = {
   // Light mode colors
   light: {
     background: {
@@ -91,7 +91,7 @@ export function getButtonModeClasses(mode: keyof typeof MODE_CLASSES): string {
  * @param isDark - Whether dark mode is active
  * @returns CSS color value
  */
-export function getThemeColor(
+function getThemeColor(
   mode: string,
   colorType: 'background' | 'border' | 'text',
   isDark: boolean = false
@@ -116,6 +116,6 @@ export function getThemeColor(
  * @param mode - Button mode to check
  * @returns True if mode uses orange theme
  */
-export function isOrangeMode(mode: string): mode is keyof typeof MODE_CLASSES {
+function isOrangeMode(mode: string): mode is keyof typeof MODE_CLASSES {
   return mode.startsWith('orange') || mode === 'status-on-hold' || mode === 'status-reject';
 }

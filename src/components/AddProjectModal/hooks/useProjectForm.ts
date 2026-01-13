@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator';
 
-export interface ProjectFormData {
+interface ProjectFormData {
   name: string;
   code: string;
   path: string;
@@ -11,7 +11,7 @@ export interface ProjectFormData {
   useGlobalConfigOnly: boolean;
 }
 
-export interface EditProjectData {
+interface EditProjectData {
   name: string;
   code: string;
   path: string;
@@ -20,7 +20,7 @@ export interface EditProjectData {
   repositoryUrl: string;
 }
 
-export interface UseProjectFormReturn {
+interface UseProjectFormReturn {
   formData: ProjectFormData;
   errors: Record<string, string>;
   hasFormData: () => boolean;

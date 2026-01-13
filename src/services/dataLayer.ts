@@ -281,4 +281,4 @@ class DataLayer {
 export const dataLayer = new DataLayer();
 
 // Export class for testing
-export { DataLayer };
+;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, Search, FolderOpen } from 'lucide-react';
 
-export interface StrategyIndicatorProps {
+interface StrategyIndicatorProps {
   path: string;
   isPathInDiscovery: boolean;
   discoveryPaths: string[];

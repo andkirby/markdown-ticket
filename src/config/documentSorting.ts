@@ -3,7 +3,7 @@ export interface DocumentSortPreferences {
   sortDirection: 'asc' | 'desc';
 }
 
-export const DEFAULT_DOCUMENT_SORT_PREFERENCES: DocumentSortPreferences = {
+const DEFAULT_DOCUMENT_SORT_PREFERENCES: DocumentSortPreferences = {
   sortBy: 'name',
   sortDirection: 'asc',
 };
