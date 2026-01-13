@@ -22,6 +22,8 @@ export default {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    // Map shared modules to mocks, but exclude test-lib (uses real implementation from TypeScript source)
+    '^@mdt/shared/test-lib/(.*)$': '<rootDir>/../shared/test-lib/$1',
     // Map shared modules to mocks, removing .js extension
     '^@mdt/shared/(.*)\\.js$': '<rootDir>/tests/mocks/shared/$1',
     '^@mdt/shared/(.*)$': '<rootDir>/tests/mocks/shared/$1'
