@@ -350,8 +350,8 @@ This fix is related to external tracking tickets.`
       // The tool returns an error response with success=false
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32000); // Business logic error
-      expect(response.error.message).toContain('not found');
+      expect(response.error!.code).toBe(-32000); // Business logic error
+      expect(response.error!.message).toContain('not found');
     });
 
     it('GIVEN non-existent project WHEN deleting THEN return error', async () => {
@@ -360,8 +360,8 @@ This fix is related to external tracking tickets.`
       // The tool returns an error response with success=false
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32602); // Invalid params error (project not found)
-      expect(response.error.message).toContain('invalid');
+      expect(response.error!.code).toBe(-32602); // Invalid params error (project not found)
+      expect(response.error!.message).toContain('invalid');
     });
 
     it('GIVEN missing project parameter WHEN deleting THEN return validation error', async () => {
@@ -372,7 +372,7 @@ This fix is related to external tracking tickets.`
       // Parameter validation errors return success=false
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32602); // Invalid params error
+      expect(response.error!.code).toBe(-32602); // Invalid params error
     });
 
     it('GIVEN missing key parameter WHEN deleting THEN return validation error', async () => {
@@ -383,7 +383,7 @@ This fix is related to external tracking tickets.`
       // Missing key is handled as a business logic error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32602); // Invalid params error
+      expect(response.error!.code).toBe(-32602); // Invalid params error
     });
 
     it('GIVEN empty key parameter WHEN deleting THEN return validation error', async () => {
@@ -395,7 +395,7 @@ This fix is related to external tracking tickets.`
       // Empty key is handled as a business logic error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.code).toBe(-32602); // Invalid params error
+      expect(response.error!.code).toBe(-32602); // Invalid params error
     });
   });
 

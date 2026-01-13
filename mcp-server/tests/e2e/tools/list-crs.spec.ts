@@ -540,7 +540,7 @@ The solution is straightforward as this is test content.
       // Non-existent project results in a protocol error
       expect(response.success).toBe(false);
       expect(response.error).toBeDefined();
-      expect(response.error.message).toContain('invalid');
+      expect(response.error!.message).toContain('invalid');
     });
 
     it('GIVEN missing project parameter WHEN listing THEN return validation error', async () => {

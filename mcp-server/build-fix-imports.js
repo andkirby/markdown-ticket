@@ -5,7 +5,7 @@ import { globSync } from 'glob';
 
 // First, run the TypeScript build
 console.log('🏗️  Running TypeScript build...');
-execSync('tsc', { stdio: 'inherit' });
+execSync('tsc -p tsconfig.build.json', { stdio: 'inherit' });
 
 // Fix import statements to add .js extensions
 console.log('🔧 Fixing import statements for ES modules...');

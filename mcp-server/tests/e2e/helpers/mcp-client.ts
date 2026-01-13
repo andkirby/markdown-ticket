@@ -263,7 +263,7 @@ export class MCPClient {
             });
             // Create a proper Error object for the test
             const rateLimitError = new Error(response.error.message);
-            rateLimitError.code = response.error.code;
+            (rateLimitError as any).code = response.error.code;
             throw rateLimitError;
           }
 
@@ -295,7 +295,7 @@ export class MCPClient {
           // The error message should be in the content array
           let errorMessage = 'Tool execution error';
           if (response.result.content && Array.isArray(response.result.content)) {
-            const textContent = response.result.content.find(c => c.type === 'text');
+            const textContent = response.result.content.find((c: any) => c.type === 'text');
             if (textContent && textContent.text) {
               errorMessage = textContent.text;
             }

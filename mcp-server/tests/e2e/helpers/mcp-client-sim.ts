@@ -29,6 +29,17 @@ export interface MCPResponse {
   };
 }
 
+interface JSONRPCResponse {
+  result?: {
+    tools?: any[];
+    content?: any;
+  };
+  error?: {
+    code?: number;
+    message?: string;
+  };
+}
+
 export interface MCPClientOptions {
   transport?: 'stdio' | 'http';
   timeout?: number;
@@ -344,10 +355,10 @@ export class MCPClient {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
+      const result = await response.json() as JSONRPCResponse;
 
       if (result.error) {
-        throw new Error(result.error.message || 'RPC error');
+        throw new Error(result.error!.message || 'RPC error');
       }
 
       return result.result?.tools || [];
@@ -390,14 +401,14 @@ export class MCPClient {
         };
       }
 
-      const result = await response.json();
+      const result = await response.json() as JSONRPCResponse;
 
       if (result.error) {
         return {
           success: false,
           error: {
-            code: result.error.code || -32000,
-            message: result.error.message || 'RPC error'
+            code: result.error!.code || -32000,
+            message: result.error!.message || 'RPC error'
           }
         };
       }
