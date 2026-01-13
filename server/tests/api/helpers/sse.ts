@@ -9,7 +9,7 @@ export interface SSEMessage { data?: string; event?: string; id?: string; retry?
 export interface ExpectedSSEEvent { event?: string; data?: string | Record<string, unknown>; id?: string; }
 
 /** Mock EventSource using Node's EventTarget */
-export class MockEventSource extends EventTarget {
+class MockEventSource extends EventTarget {
   private connected = false;
   readonly url: string;
   constructor(url: string) { super(); this.url = url; }
@@ -43,7 +43,7 @@ export function parseSSEChunk(chunk: string): SSEMessage[] {
 }
 
 /** Assert SSE event structure */
-export function assertSSEEvent(actual: SSEMessage, expected: ExpectedSSEEvent): void {
+function assertSSEEvent(actual: SSEMessage, expected: ExpectedSSEEvent): void {
   if (expected.event !== undefined) expect(actual.event).toBe(expected.event);
   if (expected.id !== undefined) expect(actual.id).toBe(expected.id);
   if (expected.data !== undefined) {

@@ -23,7 +23,7 @@ export interface RequestOptions {
  * @param app - Express application instance
  * @returns Supertest Test instance
  */
-export function createTestRequest(app: Express): ReturnType<typeof request> {
+function createTestRequest(app: Express): ReturnType<typeof request> {
   return request(app);
 }
 
@@ -84,7 +84,7 @@ export function createPostRequest<T extends string | object | undefined = object
  * @param options - Optional request configuration
  * @returns Promise resolving to Supertest Response
  */
-export function createPatchRequest<T extends string | object | undefined = object>(
+function createPatchRequest<T extends string | object | undefined = object>(
   app: Express,
   path: string,
   body: T,
@@ -107,7 +107,7 @@ export function createPatchRequest<T extends string | object | undefined = objec
  * @param options - Optional request configuration
  * @returns Promise resolving to Supertest Response
  */
-export function createPutRequest<T extends string | object | undefined = object>(
+function createPutRequest<T extends string | object | undefined = object>(
   app: Express,
   path: string,
   body: T,
@@ -197,7 +197,7 @@ export const projectApi = {
 /**
  * System API request builders
  */
-export const systemApi = {
+const systemApi = {
   /**
    * GET /api/status - Get server status
    */

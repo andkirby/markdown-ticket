@@ -9,7 +9,7 @@ import type { ProjectConfig } from '@mdt/shared/test-lib';
 /**
  * Default project configuration for API testing
  */
-export const defaultProjectConfig: ProjectConfig = {
+const defaultProjectConfig: ProjectConfig = {
   name: 'API Test Project',
   code: 'API',
   description: 'Test project for API integration testing',
@@ -22,7 +22,7 @@ export const defaultProjectConfig: ProjectConfig = {
 /**
  * Minimal project configuration
  */
-export const minimalProjectConfig: ProjectConfig = {
+const minimalProjectConfig: ProjectConfig = {
   name: 'Minimal Test Project',
   code: 'MIN',
 };
@@ -30,7 +30,7 @@ export const minimalProjectConfig: ProjectConfig = {
 /**
  * Project configuration with custom tickets path
  */
-export const customPathProjectConfig: ProjectConfig = {
+const customPathProjectConfig: ProjectConfig = {
   name: 'Custom Path Project',
   code: 'CUST',
   ticketsPath: 'specifications/change-requests',
@@ -40,7 +40,7 @@ export const customPathProjectConfig: ProjectConfig = {
 /**
  * Create project config with custom code
  */
-export function createProjectConfig(overrides?: Partial<ProjectConfig>): ProjectConfig {
+function createProjectConfig(overrides?: Partial<ProjectConfig>): ProjectConfig {
   return {
     ...defaultProjectConfig,
     ...overrides,
