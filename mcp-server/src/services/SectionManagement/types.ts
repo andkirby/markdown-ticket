@@ -11,14 +11,14 @@ import type { SectionMatch } from '@mdt/shared/services/MarkdownSectionService.j
 export type { SectionMatch } from '@mdt/shared/services/MarkdownSectionService.js';
 
 /** Hierarchical path representation for MDT-114 feature (Format: "# H1 / ## H2 / ### H3") */
-export interface HierarchicalPath {
+interface HierarchicalPath {
   parts: string[];
   level: number;
   fullPath: string;
 }
 
 /** Validation result for section operations */
-export interface ValidationResult {
+interface ValidationResult {
   valid: boolean;
   normalized?: string;
   errors: string[];

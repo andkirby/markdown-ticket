@@ -21,11 +21,7 @@ export enum ErrorType {
  */
 export enum JsonRpcErrorCode {
   /** Invalid JSON was received by the server */
-  ParseError = -32700,
-
   /** JSON sent is not a valid request object */
-  InvalidRequest = -32600,
-
   /** The method does not exist / is not available */
   MethodNotFound = -32601,
 
@@ -36,8 +32,7 @@ export enum JsonRpcErrorCode {
   InternalError = -32603,
 
   /** Server error range (-32000 to -32099) */
-  ServerError = -32000
-}
+  }
 
 /**
  * Custom error class for MCP tool errors
