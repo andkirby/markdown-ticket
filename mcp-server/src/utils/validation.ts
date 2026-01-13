@@ -123,7 +123,7 @@ export function validateOperation(
 /**
  * Validate and sanitize file path parameter
  */
-export function validatePath(path: string, name: string = 'path'): ValidationResult {
+function validatePath(path: string, name: string = 'path'): ValidationResult {
   const result = validateRequired(path, name);
   if (!result.valid) return result;
 

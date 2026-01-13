@@ -18,7 +18,7 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 /**
  * Tools for project management operations
  */
-export const PROJECT_TOOLS: Tool[] = [
+const PROJECT_TOOLS: Tool[] = [
   {
     name: 'list_projects',
     description: 'List all discovered projects',
@@ -51,15 +51,15 @@ export const PROJECT_TOOLS: Tool[] = [
 /**
  * Shared enums for tool schemas
  */
-export const CR_STATUS_ENUM = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected'];
-export const CR_STATUS_EXTENDED_ENUM = [...CR_STATUS_ENUM, 'On Hold'];
-export const CR_TYPE_ENUM = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'];
-export const CR_PRIORITY_ENUM = ['Low', 'Medium', 'High', 'Critical'];
+const CR_STATUS_ENUM = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected'];
+const CR_STATUS_EXTENDED_ENUM = [...CR_STATUS_ENUM, 'On Hold'];
+const CR_TYPE_ENUM = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'];
+const CR_PRIORITY_ENUM = ['Low', 'Medium', 'High', 'Critical'];
 
 /**
  * Tools for CR and section management operations
  */
-export const CR_SECTION_TOOLS: Tool[] = [
+const CR_SECTION_TOOLS: Tool[] = [
   // CR Operations
   {
     name: 'list_crs',
@@ -358,7 +358,7 @@ export const ALL_TOOLS: Tool[] = [
 /**
  * Group tools by category for easier access
  */
-export const TOOL_CATEGORIES = {
+const TOOL_CATEGORIES = {
   PROJECT: PROJECT_TOOLS.map(t => t.name),
   CR_SECTION: CR_SECTION_TOOLS.map(t => t.name)
 } as const;
@@ -378,4 +378,4 @@ export const TOOL_NAMES = {
 } as const;
 
 // Export type for tool names
-export type ToolName = typeof TOOL_NAMES[keyof typeof TOOL_NAMES];
+type ToolName = typeof TOOL_NAMES[keyof typeof TOOL_NAMES];
