@@ -173,7 +173,7 @@ export function preprocessMarkdown(
 /**
  * Test function to validate the preprocessor works correctly
  */
-export function testPreprocessor(): boolean {
+function testPreprocessor(): boolean {
   const testMarkdown = `# Test Document
 
 Here's a mermaid diagram:

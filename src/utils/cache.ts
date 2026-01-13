@@ -46,7 +46,7 @@ export const clearAllCache = () => {
   }
 };
 
-export const clearProjectCache = (projectId?: string) => {
+const clearProjectCache = (projectId?: string) => {
   if (typeof window !== 'undefined' && window.localStorage) {
     localStorage.removeItem('md-tickets');
     if (projectId) {
@@ -56,7 +56,7 @@ export const clearProjectCache = (projectId?: string) => {
   }
 };
 
-export const clearBackendCache = async () => {
+const clearBackendCache = async () => {
   try {
     const response = await fetch('/api/cache/clear', {
       method: 'POST',

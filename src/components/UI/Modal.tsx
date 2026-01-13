@@ -28,7 +28,7 @@ const modalVariants = cva(
   }
 );
 
-export interface ModalProps
+interface ModalProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof modalVariants> {
   isOpen: boolean;
@@ -122,7 +122,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
 Modal.displayName = 'Modal';
 
-export interface ModalHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
+interface ModalHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: React.ReactNode;
   description?: React.ReactNode;
   onClose?: () => void;
@@ -186,7 +186,7 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
 
 ModalHeader.displayName = 'ModalHeader';
 
-export interface ModalBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface ModalBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const ModalBody = React.forwardRef<HTMLDivElement, ModalBodyProps>(
   ({ className, children, ...props }, ref) => {
@@ -204,7 +204,7 @@ const ModalBody = React.forwardRef<HTMLDivElement, ModalBodyProps>(
 
 ModalBody.displayName = 'ModalBody';
 
-export interface ModalFooterProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ModalFooterProps extends React.HTMLAttributes<HTMLDivElement> {
   justify?: 'start' | 'center' | 'end' | 'between';
 }
 
@@ -231,4 +231,4 @@ const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
 
 ModalFooter.displayName = 'ModalFooter';
 
-export { Modal, ModalHeader, ModalBody, ModalFooter, modalVariants };
+export { Modal, ModalHeader, ModalBody, ModalFooter,  };

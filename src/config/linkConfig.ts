@@ -4,7 +4,7 @@ export interface LinkConfig {
   enableDocumentLinks: boolean;
 }
 
-export const defaultLinkConfig: LinkConfig = {
+const defaultLinkConfig: LinkConfig = {
   enableAutoLinking: true,
   enableTicketLinks: true,
   enableDocumentLinks: true,
@@ -24,7 +24,7 @@ export function getLinkConfig(): LinkConfig {
   return defaultLinkConfig;
 }
 
-export function setLinkConfig(config: Partial<LinkConfig>): void {
+function setLinkConfig(config: Partial<LinkConfig>): void {
   try {
     const current = getLinkConfig();
     const updated = { ...current, ...config };

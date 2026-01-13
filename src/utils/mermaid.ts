@@ -2,7 +2,7 @@ import mermaid from 'mermaid';
 
 let initialized = false;
 
-export function initMermaid() {
+function initMermaid() {
   if (!initialized) {
     const isDark = document.documentElement.classList.contains('dark');
     
@@ -50,7 +50,7 @@ export async function renderMermaid() {
   addFullscreenButtons();
 }
 
-export function addFullscreenButtons() {
+function addFullscreenButtons() {
   const mermaidContainers = document.querySelectorAll('.mermaid-container');
 
   mermaidContainers.forEach((container) => {
@@ -446,7 +446,7 @@ function disableZoom(container: HTMLElement) {
 }
 
 // Debug function to analyze mermaid diagram sizing (for development use)
-export function debugMermaidSizing() {
+function debugMermaidSizing() {
   const containers = document.querySelectorAll('.mermaid-container');
 
   if (containers.length === 0) {

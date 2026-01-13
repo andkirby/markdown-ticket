@@ -18,7 +18,7 @@ export function buildDocumentLink(projectCode: string, documentPath: string): st
   return `/prj/${projectCode}/documents?file=${encodeURIComponent(documentPath)}`;
 }
 
-export function buildProjectLink(projectCode: string, view: 'board' | 'list' | 'documents' = 'board'): string {
+function buildProjectLink(projectCode: string, view: 'board' | 'list' | 'documents' = 'board'): string {
   if (!projectCode?.trim()) {
     throw new Error('Project code is required');
   }

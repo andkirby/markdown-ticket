@@ -1,10 +1,10 @@
 import { StatusConfig } from '@mdt/shared/models/Config';
 import { CRStatus } from '@mdt/shared/models/Types';
 
-export type { StatusConfig };
+;
 
 // Status Configuration using shared interface
-export const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
+const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
   Proposed: {
     label: 'Proposed',
     color: 'gray',
@@ -88,7 +88,7 @@ export const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
 };
 
 // Simplified Board Column Configuration
-export const BOARD_COLUMNS = {
+const BOARD_COLUMNS = {
   // Column 1: Backlog
   backlog: {
     label: 'Backlog',
@@ -141,7 +141,7 @@ export const BOARD_COLUMNS = {
 };
 
 // Status Groupings (for compatibility)
-export const STATUS_GROUPS = {
+const STATUS_GROUPS = {
   // Active statuses that can be worked on
   active: ['Proposed', 'Approved', 'In Progress', 'On Hold', 'Deprecated'] as CRStatus[],
   
@@ -177,48 +177,48 @@ export const getColumnForStatus = (status: CRStatus) => {
 };
 
 // Check if status is visible on main board
-export const isStatusVisible = (status: CRStatus) => {
+const isStatusVisible = (status: CRStatus) => {
   const column = getColumnForStatus(status);
   return column.visible;
 };
 
 // Toggle column visibility
-export const toggleColumnVisibility = (columnName: keyof typeof BOARD_COLUMNS) => {
+const toggleColumnVisibility = (columnName: keyof typeof BOARD_COLUMNS) => {
   BOARD_COLUMNS[columnName].visible = !BOARD_COLUMNS[columnName].visible;
 };
 
 // Status Transitions
-export const canTransitionFromTo = (fromStatus: CRStatus, toStatus: CRStatus): boolean => {
+const canTransitionFromTo = (fromStatus: CRStatus, toStatus: CRStatus): boolean => {
   const config = STATUS_CONFIG[fromStatus];
   return config.canTransitionTo.includes(toStatus);
 };
 
 // Get valid transitions for a status
-export const getValidTransitions = (fromStatus: CRStatus): CRStatus[] => {
+const getValidTransitions = (fromStatus: CRStatus): CRStatus[] => {
   return STATUS_CONFIG[fromStatus].canTransitionTo;
 };
 
 // Get status by order
-export const getStatusByOrder = (order: number): CRStatus | undefined => {
+const getStatusByOrder = (order: number): CRStatus | undefined => {
   return Object.entries(STATUS_CONFIG).find(([_, config]) => config.order === order)?.[0] as CRStatus;
 };
 
 // Get next status in workflow
-export const getNextStatus = (currentStatus: CRStatus): CRStatus | undefined => {
+const getNextStatus = (currentStatus: CRStatus): CRStatus | undefined => {
   const currentOrder = STATUS_CONFIG[currentStatus].order;
   const nextStatus = getStatusByOrder(currentOrder + 1);
   return nextStatus && canTransitionFromTo(currentStatus, nextStatus) ? nextStatus : undefined;
 };
 
 // Get previous status in workflow
-export const getPreviousStatus = (currentStatus: CRStatus): CRStatus | undefined => {
+const getPreviousStatus = (currentStatus: CRStatus): CRStatus | undefined => {
   const currentOrder = STATUS_CONFIG[currentStatus].order;
   const previousStatus = getStatusByOrder(currentOrder - 1);
   return previousStatus && canTransitionFromTo(previousStatus, currentStatus) ? previousStatus : undefined;
 };
 
 // Check if status is editable
-export const isStatusEditable = (status: CRStatus): boolean => {
+const isStatusEditable = (status: CRStatus): boolean => {
   return !STATUS_CONFIG[status].isTerminal;
 };
 
@@ -238,29 +238,29 @@ export const getStatusLabel = (status: CRStatus): string => {
 };
 
 // Sort statuses by order
-export const sortStatusesByOrder = (statuses: CRStatus[]): CRStatus[] => {
+const sortStatusesByOrder = (statuses: CRStatus[]): CRStatus[] => {
   return statuses.sort((a, b) => STATUS_CONFIG[a].order - STATUS_CONFIG[b].order);
 };
 
 // Get initial statuses for new tickets
-export const getInitialStatuses = (): CRStatus[] => {
+const getInitialStatuses = (): CRStatus[] => {
   return ['Proposed'];
 };
 
 // Get statuses that can be set for new tickets
-export const getNewTicketStatuses = (): CRStatus[] => {
+const getNewTicketStatuses = (): CRStatus[] => {
   return ['Proposed'];
 };
 
 // Check if status change requires implementation date update
-export const shouldUpdateImplementationDate = (oldStatus: CRStatus, newStatus: CRStatus): boolean => {
+const shouldUpdateImplementationDate = (oldStatus: CRStatus, newStatus: CRStatus): boolean => {
   // Update implementation date when transitioning to "In Progress" or "Implemented"
   const statusesThatTriggerUpdate = ['In Progress', 'Implemented'];
   return statusesThatTriggerUpdate.includes(newStatus) && oldStatus !== newStatus;
 };
 
 // Get workflow suggestions for a status
-export const getWorkflowSuggestions = (currentStatus: CRStatus): CRStatus[] => {
+const getWorkflowSuggestions = (currentStatus: CRStatus): CRStatus[] => {
   const config = STATUS_CONFIG[currentStatus];
   
   // Common workflow suggestions based on current status
