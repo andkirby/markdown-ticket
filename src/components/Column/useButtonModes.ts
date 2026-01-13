@@ -3,12 +3,12 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 /**
  * Types of button modes for StatusToggle component
  */
-export type ButtonMode = 'normal' | 'switch' | 'merge';
+type ButtonMode = 'normal' | 'switch' | 'merge';
 
 /**
  * Interface for button state configuration
  */
-export interface ButtonState {
+interface ButtonState {
   /** Whether the button is in switch mode (orange background/border/number) */
   viewMode: boolean;
   /** Whether the button is in merge mode (checkbox shown) */
@@ -20,7 +20,7 @@ export interface ButtonState {
 /**
  * Interface for hover state management
  */
-export interface HoverState {
+interface HoverState {
   /** Whether the checkbox area is being hovered */
   isHovering: boolean;
   /** Whether to show checkbox instead of ticket count */
@@ -30,7 +30,7 @@ export interface HoverState {
 /**
  * Interface for actions that can be performed on button modes
  */
-export interface ButtonModeActions {
+interface ButtonModeActions {
   /** Toggle between normal and switch mode */
   toggleViewMode: () => void;
   /** Set merge mode on/off */
@@ -50,7 +50,7 @@ export interface ButtonModeActions {
 /**
  * Return type for useButtonModes hook
  */
-export type useButtonModesReturn = ButtonState & HoverState & ButtonModeActions;
+type useButtonModesReturn = ButtonState & HoverState & ButtonModeActions;
 
 /**
  * Hook for managing button modes and hover states in StatusToggle component.
@@ -175,4 +175,3 @@ export const useButtonModes = (): useButtonModesReturn => {
   };
 };
 
-export default useButtonModes;

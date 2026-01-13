@@ -4,7 +4,7 @@ import { Button } from '../../UI';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../UI/tooltip';
 import FolderBrowserModal from './FolderBrowserModal';
 
-export interface FormFieldProps {
+interface FormFieldProps {
   label: string;
   value: string | number;
   onChange: (value: string) => void;

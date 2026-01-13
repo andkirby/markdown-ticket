@@ -35,7 +35,7 @@ const cardVariants = cva(
   }
 );
 
-export interface CardProps
+interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof cardVariants> {
   header?: React.ReactNode;
@@ -110,7 +110,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
 
 Card.displayName = 'Card';
 
-export interface CardHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
+interface CardHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
@@ -149,7 +149,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
 
 CardHeader.displayName = 'CardHeader';
 
-export interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const CardBody = React.forwardRef<HTMLDivElement, CardBodyProps>(
   ({ className, children, ...props }, ref) => {
@@ -167,7 +167,7 @@ const CardBody = React.forwardRef<HTMLDivElement, CardBodyProps>(
 
 CardBody.displayName = 'CardBody';
 
-export interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
   justify?: 'start' | 'center' | 'end' | 'between';
 }
 
@@ -226,4 +226,4 @@ const CardContent = React.forwardRef<
 ));
 CardContent.displayName = 'CardContent';
 
-export { Card, CardHeader, CardBody, CardFooter, CardTitle, CardDescription, CardContent, cardVariants };
+export { Card, CardHeader,   CardTitle, CardDescription, CardContent,  };

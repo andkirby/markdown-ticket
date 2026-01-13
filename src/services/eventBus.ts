@@ -32,24 +32,24 @@ export type EventType =
   | 'system:refresh';
 
 // Event payload types
-export interface TicketEventPayload {
+interface TicketEventPayload {
   ticketCode: string;
   projectId: string;
   ticket?: Ticket; // Use proper Ticket type
 }
 
-export interface ProjectEventPayload {
+interface ProjectEventPayload {
   projectId: string;
   project?: Project; // Use proper Project type
 }
 
-export interface SSEEventPayload {
+interface SSEEventPayload {
   url?: string;
   error?: Error | unknown;
   status?: string;
 }
 
-export interface ErrorEventPayload {
+interface ErrorEventPayload {
   message: string;
   error?: Error;
   context?: Record<string, any>;
@@ -68,10 +68,10 @@ export interface Event<T = any> {
 export type EventListener<T = any> = (event: Event<T>) => void;
 
 // Unsubscribe function type
-export type UnsubscribeFn = () => void;
+type UnsubscribeFn = () => void;
 
 // Listener metadata for debugging
-export interface ListenerMetadata {
+interface ListenerMetadata {
   handler: EventListener;
   source: string; // Component or hook name
   registeredAt: number;
@@ -360,7 +360,7 @@ class EventBus {
 export const eventBus = new EventBus();
 
 // Export class for testing
-export { EventBus };
+;
 
 /**
  * React hook for using event bus in components

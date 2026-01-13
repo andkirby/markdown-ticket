@@ -1,4 +1,4 @@
-export interface ValidationResult {
+interface ValidationResult {
   success: boolean;
   message: string;
   elementInfo?: {
@@ -8,7 +8,7 @@ export interface ValidationResult {
   };
 }
 
-export function validateTicketReferences(container: HTMLElement): ValidationResult[] {
+function validateTicketReferences(container: HTMLElement): ValidationResult[] {
   const results: ValidationResult[] = [];
   
   // Find all text nodes that contain ticket patterns
@@ -82,7 +82,7 @@ export function validateTicketReferences(container: HTMLElement): ValidationResu
   return results;
 }
 
-export function validateDocumentReferences(container: HTMLElement): ValidationResult[] {
+function validateDocumentReferences(container: HTMLElement): ValidationResult[] {
   const results: ValidationResult[] = [];
   
   // Find all text nodes that contain .md references
