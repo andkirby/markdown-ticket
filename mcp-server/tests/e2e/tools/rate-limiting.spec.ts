@@ -141,7 +141,7 @@ describe('Rate Limiting (MUST-05)', () => {
         await mcpClient.callTool('get_project_info', { key: 'TEST' });
         // If no project exists, should get "not found" error, not rate limit error
       } catch (error) {
-        expect(error.message).not.toMatch(/rate limit/i);
+        expect((error as Error).message).not.toMatch(/rate limit/i);
       }
     });
 
@@ -287,10 +287,10 @@ it.skip('should track rate limits separately for different tools', async () => {
         await mcpClient.callTool('list_projects', {});
       } catch (error) {
         // Then: Error should not expose internal details
-        expect(error.message).toMatch(/rate limit/i);
-        expect(error.message).not.toContain('internal');
-        expect(error.message).not.toContain('database');
-        expect(error.message).not.toContain('stack trace');
+        expect((error as Error).message).toMatch(/rate limit/i);
+        expect((error as Error).message).not.toContain('internal');
+        expect((error as Error).message).not.toContain('database');
+        expect((error as Error).message).not.toContain('stack trace');
       }
     });
   });

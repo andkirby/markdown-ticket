@@ -17,12 +17,20 @@ jest.mock('fs/promises');
 jest.mock('glob');
 jest.mock('../../../services/crService.js');
 
-// Import the mock services
+// Import the real services
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
 import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js';
 import { TemplateService } from '@mdt/shared/services/TemplateService.js';
-import { mockTitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js';
-import { mockTemplateService } from '@mdt/shared/services/TemplateService.js';
+
+// Create local mock instances with jest.fn()
+const mockTitleExtractionService = {
+  extractTitle: jest.fn(),
+} as any;
+
+const mockTemplateService = {
+  validateTicketData: jest.fn(),
+  suggestImprovements: jest.fn(),
+} as any;
 
 // Now import the handlers
 import { CRHandlers } from '../crHandlers.js';

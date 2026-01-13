@@ -15,10 +15,21 @@
 // Mock ALL external modules BEFORE any imports
 jest.mock('fs/promises');
 jest.mock('../../../services/crService.js');
+jest.mock('@mdt/shared/services/MarkdownSectionService.js', () => ({
+  MarkdownSectionService: {
+    findSection: jest.fn(),
+    replaceSection: jest.fn(),
+    appendToSection: jest.fn(),
+    prependToSection: jest.fn()
+  }
+}));
 
 // Import the mock services
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
-import { mockMarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js';
+import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js';
+
+// Cast the mocked service to jest.Mocked<any>
+const MockMarkdownSectionService = MarkdownSectionService as any;
 
 // Now we can import the handlers and other modules
 import { SectionHandlers } from '../sectionHandlers.js';
@@ -61,7 +72,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
     // Create handlers with mocked dependencies
     sectionHandlers = new SectionHandlers(
       mockCrServiceInstance,
-      mockMarkdownSectionService as any
+      MarkdownSectionService as any
     );
 
     // MDT-102: Mock MarkdownService static methods
@@ -111,7 +122,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSections);
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSections);
 
       const result = await sectionHandlers.handleManageCRSections(
         mockProject,
@@ -127,7 +138,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
 
     it('should return message when no sections found', async () => {
       // Mock findSection to return empty array
-      mockMarkdownSectionService.findSection.mockReturnValue([]);
+      MockMarkdownSectionService.findSection.mockReturnValue([]);
 
       const result = await sectionHandlers.handleManageCRSections(
         mockProject,
@@ -151,7 +162,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSections);
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSections);
 
       const result = await sectionHandlers.handleManageCRSections(
         mockProject,
@@ -182,7 +193,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSection);
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSection);
 
       const result = await sectionHandlers.handleManageCRSections(
         mockProject,
@@ -198,7 +209,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
     });
 
     it('should throw error when section not found', async () => {
-      mockMarkdownSectionService.findSection.mockReturnValue([]);
+      MockMarkdownSectionService.findSection.mockReturnValue([]);
 
       await expect(sectionHandlers.handleManageCRSections(
         mockProject,
@@ -228,7 +239,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSections);
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSections);
 
       await expect(sectionHandlers.handleManageCRSections(
         mockProject,
@@ -268,8 +279,8 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSection);
-      mockMarkdownSectionService.replaceSection.mockReturnValue(
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSection);
+      MockMarkdownSectionService.replaceSection.mockReturnValue(
         mockFullFileContent.replace('This is the description section.', newContent)
       );
 
@@ -299,8 +310,8 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSection);
-      mockMarkdownSectionService.replaceSection.mockReturnValue(mockFullFileContent);
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSection);
+      MockMarkdownSectionService.replaceSection.mockReturnValue(mockFullFileContent);
 
       await sectionHandlers.handleManageCRSections(
         mockProject,
@@ -317,7 +328,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
     });
 
     it('should throw error when section not found', async () => {
-      mockMarkdownSectionService.findSection.mockReturnValue([]);
+      MockMarkdownSectionService.findSection.mockReturnValue([]);
 
       await expect(sectionHandlers.handleManageCRSections(
         mockProject,
@@ -358,8 +369,8 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSection);
-      mockMarkdownSectionService.appendToSection.mockReturnValue(
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSection);
+      MockMarkdownSectionService.appendToSection.mockReturnValue(
         mockFullFileContent.replace('Existing content.', 'Existing content.\n\n' + contentToAppend)
       );
 
@@ -398,8 +409,8 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSection);
-      mockMarkdownSectionService.prependToSection.mockReturnValue(
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSection);
+      MockMarkdownSectionService.prependToSection.mockReturnValue(
         mockFullFileContent.replace('Existing content.', contentToPrepend + '\n\nExisting content.')
       );
 
@@ -463,8 +474,8 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSection);
-      mockMarkdownSectionService.replaceSection.mockReturnValue(mockFullFileContent);
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSection);
+      MockMarkdownSectionService.replaceSection.mockReturnValue(mockFullFileContent);
 
       // Should work the same as 'replace'
       const result = await sectionHandlers.handleManageCRSections(
@@ -484,7 +495,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
       (MarkdownService.readFile as jest.MockedFunction<typeof MarkdownService.readFile>).mockResolvedValue(mockFullFileContent);
 
-      mockMarkdownSectionService.findSection.mockReturnValue([]);
+      MockMarkdownSectionService.findSection.mockReturnValue([]);
 
       await sectionHandlers.handleManageCRSections(
         mockProject,
@@ -513,8 +524,8 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSection);
-      mockMarkdownSectionService.replaceSection.mockReturnValue(mockFullFileContent);
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSection);
+      MockMarkdownSectionService.replaceSection.mockReturnValue(mockFullFileContent);
 
       await sectionHandlers.handleManageCRSections(
         mockProject,
@@ -534,7 +545,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         'No frontmatter here\nJust plain content'
       );
 
-      mockMarkdownSectionService.findSection.mockReturnValue([]);
+      MockMarkdownSectionService.findSection.mockReturnValue([]);
 
       await expect(sectionHandlers.handleManageCRSections(
         mockProject,
@@ -549,7 +560,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket);
       (MarkdownService.readFile as jest.MockedFunction<typeof MarkdownService.readFile>).mockResolvedValue(mockFullFileContent);
 
-      mockMarkdownSectionService.findSection.mockReturnValue([]);
+      MockMarkdownSectionService.findSection.mockReturnValue([]);
 
       await sectionHandlers.handleManageCRSections(
         mockProject,
@@ -583,7 +594,7 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
       mockCrServiceInstance.getCR.mockResolvedValue(ticketWithSpecificPath);
       (MarkdownService.readFile as jest.MockedFunction<typeof MarkdownService.readFile>).mockResolvedValue(mockFullFileContent);
 
-      mockMarkdownSectionService.findSection.mockReturnValue([]);
+      MockMarkdownSectionService.findSection.mockReturnValue([]);
 
       await sectionHandlers.handleManageCRSections(
         mockProject,
@@ -617,8 +628,8 @@ describe('SectionHandlers - Behavioral Preservation Tests', () => {
         }
       ];
 
-      mockMarkdownSectionService.findSection.mockReturnValue(mockSection);
-      mockMarkdownSectionService.replaceSection.mockReturnValue(mockFullFileContent);
+      MockMarkdownSectionService.findSection.mockReturnValue(mockSection);
+      MockMarkdownSectionService.replaceSection.mockReturnValue(mockFullFileContent);
 
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 

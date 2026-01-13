@@ -91,14 +91,14 @@ export class ProjectFactory {
   }
 
   async createTestCR(projectCode: string, crData: TestCRData): Promise<MCPResponse> {
-    return this.testDataFactory.createTestCR(projectCode, crData);
+    return this.testDataFactory.createTestCR(projectCode, crData) as unknown as MCPResponse;
   }
 
   async createMultipleCRs(
     projectCode: string,
     crsData: Omit<TestCRData, 'dependsOn' | 'blocks'>[]
   ): Promise<MCPResponse[]> {
-    return this.testDataFactory.createMultipleCRs(projectCode, crsData);
+    return this.testDataFactory.createMultipleCRs(projectCode, crsData) as unknown as MCPResponse[];
   }
 
   async createTestScenario(

@@ -119,11 +119,11 @@ describe('Behavioral Preservation: Tool Configuration Structure', () => {
       expect(listCRsTool).toBeDefined();
 
       // Check status filter enum
-      const statusProp = listCRsTool?.inputSchema.properties?.filters?.properties?.status;
+      const statusProp = (listCRsTool?.inputSchema as any).properties?.filters?.properties?.status;
       expect(statusProp?.oneOf).toBeDefined();
 
       // Extract enum values
-      const statusEnum = statusProp?.oneOf?.find(item => item.enum)?.enum;
+      const statusEnum = statusProp?.oneOf?.find((item: any) => item.enum)?.enum;
       expect(statusEnum).toEqual(['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected']);
     });
 
@@ -132,11 +132,11 @@ describe('Behavioral Preservation: Tool Configuration Structure', () => {
       expect(listCRsTool).toBeDefined();
 
       // Check type filter enum
-      const typeProp = listCRsTool?.inputSchema.properties?.filters?.properties?.type;
+      const typeProp = (listCRsTool?.inputSchema as any).properties?.filters?.properties?.type;
       expect(typeProp?.oneOf).toBeDefined();
 
       // Extract enum values
-      const typeEnum = typeProp?.oneOf?.find(item => item.enum)?.enum;
+      const typeEnum = typeProp?.oneOf?.find((item: any) => item.enum)?.enum;
       expect(typeEnum).toEqual(['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation']);
     });
 
@@ -145,11 +145,11 @@ describe('Behavioral Preservation: Tool Configuration Structure', () => {
       expect(listCRsTool).toBeDefined();
 
       // Check priority filter enum
-      const priorityProp = listCRsTool?.inputSchema.properties?.filters?.properties?.priority;
+      const priorityProp = (listCRsTool?.inputSchema as any).properties?.filters?.properties?.priority;
       expect(priorityProp?.oneOf).toBeDefined();
 
       // Extract enum values
-      const priorityEnum = priorityProp?.oneOf?.find(item => item.enum)?.enum;
+      const priorityEnum = priorityProp?.oneOf?.find((item: any) => item.enum)?.enum;
       expect(priorityEnum).toEqual(['Low', 'Medium', 'High', 'Critical']);
     });
   });

@@ -145,7 +145,7 @@ export class ContentTemplates {
     };
 
     const scenario = templates[scenarioType];
-    const template = scenario[crData.type] || {};
+    const template = (scenario as any)[crData.type] || {};
 
     return this.generateStandardCRContent({
       title: crData.title,

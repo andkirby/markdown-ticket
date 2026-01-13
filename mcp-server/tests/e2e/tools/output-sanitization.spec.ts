@@ -401,9 +401,9 @@ console.log('safe code');
         await mcpClient.callTool('get_cr', maliciousInput);
       } catch (error) {
         // Then: Error message should not contain malicious content
-        expect(error.message).not.toContain('<script>');
-        expect(error.message).not.toContain('javascript:');
-        expect(error.message).not.toContain('alert(');
+        expect((error as Error).message).not.toContain('<script>');
+        expect((error as Error).message).not.toContain('javascript:');
+        expect((error as Error).message).not.toContain('alert(');
       }
     });
 
@@ -416,8 +416,8 @@ console.log('safe code');
         await mcpClient.callTool(maliciousToolName, {});
       } catch (error) {
         // Then: Error should not reflect malicious input
-        expect(error.message).not.toContain('<script>');
-        expect(error.message).not.toContain('alert(');
+        expect((error as Error).message).not.toContain('<script>');
+        expect((error as Error).message).not.toContain('alert(');
       }
     });
   });
