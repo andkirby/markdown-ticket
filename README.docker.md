@@ -7,17 +7,17 @@ This guide explains how to run the Markdown Ticket Board application using Docke
 The application uses a **three-container architecture**:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                Docker Compose                        │
+┌────────────────────────────────────────────────────┐
+│                Docker Compose                      │
 ├──────────────┬──────────────┬──────────────────────┤
 │  Frontend    │   Backend    │    MCP Server        │
-│  :5173       │   :3001      │    :3002             │
+│  5174:5173   │   :3001      │    3012:3002         │
 │  (Vite)      │  (Express)   │  (HTTP Transport)    │
 └──────────────┴──────────────┴──────────────────────┘
        │              │                  │
        └──────────────┴──────────────────┘
                       │
-              ┌───────┴────────┐
+              ┌───────┴─────────┐
               │  Docker Volume  │
               │  (Project CRs)  │
               └─────────────────┘
@@ -32,14 +32,14 @@ The application uses a **three-container architecture**:
 
 2. **Backend** (`mdt-backend`)
    - Express.js API server
-   - Port: `3001`
+   - Port: `3001` (internal network only, not exposed to host)
    - File watching with Chokidar (polling mode)
    - SSE for real-time updates
 
 3. **MCP Server** (`mdt-mcp`)
    - Model Context Protocol HTTP transport
-   - Port: `3002`
-   - Endpoint: `http://localhost:3002/mcp`
+   - Port: `3012` (host) → `3002` (container)
+   - Endpoint: `http://localhost:3012/mcp`
    - Implements MCP Streamable HTTP specification (MDT-074)
 
 ## Quick Start
@@ -82,12 +82,12 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
 Access the application:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3001/api
-- MCP HTTP: http://localhost:3002/mcp
+- Frontend: http://localhost:5174
+- Backend API: Accessible via frontend proxy at `/api/*` (not exposed to host)
+- MCP HTTP: http://localhost:3012/mcp
 - Health checks:
-  - http://localhost:3001/api/health
-  - http://localhost:3002/health
+  - Frontend: http://localhost:5174/
+  - MCP: http://localhost:3012/health
 
 ### Production Mode
 
@@ -123,7 +123,7 @@ MCP_PROJECTS_DIR=/path/to/your/workspace
 # MCP Security (optional - Phase 2 features)
 MCP_SECURITY_AUTH=true
 MCP_AUTH_TOKEN=your-secret-token
-MCP_ALLOWED_ORIGINS=http://localhost:5173
+MCP_ALLOWED_ORIGINS=http://localhost:5174
 ```
 
 ### Multi-Project Setup
@@ -237,15 +237,14 @@ docker-compose top
 
 #### Check Health
 ```bash
-# Backend health
-curl http://localhost:3001/api/health
+# Frontend (should return HTML)
+curl http://localhost:5174/
 
 # MCP health
-curl http://localhost:3002/health
-
-# Frontend (should return HTML)
-curl http://localhost:5173/
+curl http://localhost:3012/health
 ```
+
+**Note:** Backend is not exposed to the host. It runs on the internal Docker network and is accessible via the frontend's proxy at `/api/*`.
 
 #### Inspect Container
 ```bash
@@ -261,7 +260,7 @@ docker-compose exec mcp ps aux
 
 ## MCP Integration
 
-The MCP server runs with HTTP transport enabled, accessible at `http://localhost:3002/mcp`.
+The MCP server runs with HTTP transport enabled, accessible at `http://localhost:3012/mcp`.
 
 ### Connecting LLM Clients
 
@@ -271,7 +270,7 @@ Configure your LLM client (Claude Desktop, etc.) to use the HTTP transport:
 {
   "mcpServers": {
     "markdown-ticket": {
-      "url": "http://localhost:3002/mcp",
+      "url": "http://localhost:3012/mcp",
       "transport": "http"
     }
   }
@@ -280,9 +279,9 @@ Configure your LLM client (Claude Desktop, etc.) to use the HTTP transport:
 
 ### MCP Endpoints
 
-- **JSON-RPC**: `POST http://localhost:3002/mcp`
-- **SSE Streaming**: `GET http://localhost:3002/mcp`
-- **Health Check**: `GET http://localhost:3002/health`
+- **JSON-RPC**: `POST http://localhost:3012/mcp`
+- **SSE Streaming**: `GET http://localhost:3012/mcp`
+- **Health Check**: `GET http://localhost:3012/health`
 - **Session Management**: Use `Mcp-Session-Id` header
 
 ### Phase 2 Security Features (Optional)
@@ -322,13 +321,10 @@ If ports are already in use:
 
 ```bash
 # Check what's using the port (macOS/Linux)
-lsof -i :5173
-lsof -i :3001
-lsof -i :3002
+lsof -i :5174   # Frontend host port
+lsof -i :3012   # MCP host port
 
-# Change ports in docker-compose.yml
-ports:
-  - "5174:5173"  # Map host 5174 to container 5173
+# Note: Backend (port 3001) is not exposed to host
 ```
 
 ### File Watching Not Working
@@ -358,7 +354,7 @@ sudo chown -R $(whoami):$(whoami) /path/to/projects
 ./bin/dc ps mcp
 
 # Check MCP health endpoint
-curl http://localhost:3002/health
+curl http://localhost:3012/health
 
 # View MCP logs
 ./bin/dc logs -f mcp
