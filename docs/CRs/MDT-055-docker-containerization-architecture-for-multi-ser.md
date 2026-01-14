@@ -49,15 +49,15 @@ graph LR
 ```mermaid
 graph TB
     subgraph "Docker Containers (MVP)"
-        FE[Frontend Container<br/>Vite Dev Server<br/>Port 5173]
-        BE[Backend Container<br/>Express API<br/>Port 3001]
-        MCP[MCP Container<br/>HTTP Transport<br/>Port 3002]
+        FE[Frontend Container<br/>Vite Dev Server<br/>Container Port 5173]
+        BE[Backend Container<br/>Express API<br/>Container Port 3001<br/>Not exposed to host]
+        MCP[MCP Container<br/>HTTP Transport<br/>Container Port 3002]
         VOLUMES[Docker Volumes]
     end
 
-    LLM_CLIENT[LLM Client] -->|localhost:3002/mcp| MCP
-    USER[User] -->|localhost:5173| FE
-    USER -->|localhost:3001| BE
+    LLM_CLIENT[LLM Client] -->|localhost:3012/mcp| MCP
+    USER[User] -->|localhost:5174| FE
+    USER -.->|via frontend proxy| BE
 
     BE -->|Read/Write| VOLUMES
     MCP -->|Read/Write| VOLUMES
@@ -324,7 +324,7 @@ environment:
 
 #### Service Communication
 
-**Container Network Communication**: Services communicate via Docker network names (`backend:3001`, `frontend:5173`). Host access uses mapped ports (`localhost:3011`, `localhost:5174`).
+**Container Network Communication**: Services communicate via Docker network names (`backend:3001`, `frontend:5173`). Host access uses mapped ports (`localhost:5174` for frontend, `localhost:3012` for MCP). Backend is not exposed to host.
 
 **URL Resolution**:
 - Frontend proxy routes `/api/*` to backend container
