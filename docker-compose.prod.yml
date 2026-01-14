@@ -30,16 +30,9 @@ services:
     build:
       target: production  # Use production stage from Dockerfile
     volumes:
-      # Mount global config (read-only in production)
-      - ${HOME}/.config/markdown-ticket:/root/.config/markdown-ticket:ro
-
-      # Mount projects directory - REQUIRED for production
-      # Customize these paths for your production environment
-      - ${MCP_PROJECTS_DIR:-${HOME}/home}:/workspace:ro
-
-      # Alternative: Mount specific projects
-      # - /data/projects/project-a:/projects/project-a:ro
-      # - /data/projects/project-b:/projects/project-b:ro
+      # Mount specific projects
+      # - /path/to/projects/project-a:/projects/project-a
+      # - /path/to/projects/project-b:/projects/project-b
     environment:
       - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
@@ -99,10 +92,7 @@ services:
         max-file: "3"
 
 # Production Tips:
-# 1. Set MCP_PROJECTS_DIR to your production data directory:
-#    export MCP_PROJECTS_DIR=/data/projects
-#
-# 2. Use .env file for production secrets:
+# 1. Use .env file for production secrets:
 #    - MCP_AUTH_TOKEN=your-secret-token
 #    - Database credentials (if applicable)
 #

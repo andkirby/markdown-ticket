@@ -118,9 +118,6 @@ The wrapper script supports customization via environment variables:
 # Set custom container name
 export MCP_CONTAINER_NAME="my-mcp-server"
 
-# Set custom projects directory
-export MCP_PROJECTS_DIR="/path/to/projects"
-
 # Set custom image name
 export MCP_IMAGE_NAME="my-org/mcp-server:latest"
 
@@ -137,48 +134,18 @@ The default setup mounts:
    - Container: `/root/.config/markdown-ticket:ro`
 
 2. **Projects workspace**:
-   - Host: `~/home` (default)
-   - Container: `/workspace`
+   - Host: `~/projects` (or your project directory)
+   - Container: `/projects`
 
 To mount additional project directories, edit `docker-compose.mcp.yml`:
 
 ```yaml
 volumes:
   - ~/.config/markdown-ticket:/root/.config/markdown-ticket:ro
-  - ~/my-projects:/workspace/my-projects
-  - /var/work/project-a:/workspace/project-a
+  - ~/my-projects:/projects/my-projects
+  - /var/work/project-a:/projects/project-a
 ```
 
-### MCP Server Configuration
-
-Create or edit `~/.config/markdown-ticket/mcp-server.toml`:
-
-```toml
-[server]
-port = 8000
-logLevel = "info"
-
-[discovery]
-# In Docker, use container paths
-scanPaths = [
-  "/workspace",           # Main workspace
-  "/workspace/project-a", # Specific project
-  "/workspace/project-b"
-]
-
-excludePaths = [
-  "node_modules",
-  ".git",
-  "vendor"
-]
-
-maxDepth = 4
-cacheTimeout = 300
-
-[templates]
-# Optional custom templates
-# customPath = "/root/.config/markdown-ticket/templates"
-```
 
 ## How It Works
 
@@ -196,7 +163,7 @@ The wrapper script does two things:
    docker run --rm -i \
      --name markdown-ticket-mcp-$$ \
      -v ~/.config:/root/.config:ro \
-     -v ~/home:/workspace \
+     -v ~/projects:/projects \
      markdown-ticket/mcp-server:latest
    ```
 
@@ -248,7 +215,7 @@ docker info
 docker inspect markdown-ticket-mcp | jq '.[0].Mounts'
 
 # Test file access in container
-docker exec -it markdown-ticket-mcp ls -la /workspace
+docker exec -it markdown-ticket-mcp ls -la /projects
 docker exec -it markdown-ticket-mcp ls -la /root/.config/markdown-ticket
 ```
 
@@ -277,7 +244,6 @@ MCP_CONTAINER_NAME=mcp-project-a docker-compose -f docker-compose.mcp.yml up -d
 
 # Start second instance with different volumes
 MCP_CONTAINER_NAME=mcp-project-b \
-MCP_PROJECTS_DIR=/path/to/project-b \
 docker-compose -f docker-compose.mcp.yml up -d
 
 # Configure LLMs

@@ -17,6 +17,8 @@ build/
 !/server/**/*.js
 
 # Docker files (not ignored)
+docker-compose.*.yml
+#docker-compose.override.yml
 !/Dockerfile.frontend
 !/nginx.conf
 !/docker-compose.yml
