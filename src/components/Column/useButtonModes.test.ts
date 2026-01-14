@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useButtonModes } from '../useButtonModes';
+import { useButtonModes } from './useButtonModes';
 
 describe('useButtonModes', () => {
   it('should initialize with default values', () => {

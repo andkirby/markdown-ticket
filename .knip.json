@@ -1,33 +1,30 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": [
-    
-  ],
-  "project": [
-
-  ],
   "workspaces": {
+    ".": {
+      "entry": ["src/**/*.tsx", "src/**/*.ts", "**/*.test.ts", "tailwind.config.js", "postcss.config.js"],
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
+    },
     "server": {
-
       "project": ["**/*.ts"]
     },
     "mcp-server": {
-
       "project": ["src/**/*.ts"]
     }
   },
   "ignore": [
+    "shared/**",
+    "domain-contracts/**",
     "**/node_modules/**",
     "**/dist/**",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "**/__tests__/**",
+    "**/coverage/**",
+    "**/.next/**",
+    "**/build/**",
+    "**/mocks/**",
     "**/__mocks__/**",
-    "**/tests/mocks/**",
     "**/mcp-dev-tools/**",
     "scripts/**",
     ".gitWT/**",
-    "docs/**",
-    "shared/**"
+    "docs/**"
   ]
 }
