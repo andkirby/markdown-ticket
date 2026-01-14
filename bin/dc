@@ -32,6 +32,12 @@ if [[ -n "${MDT_DOCKER_PROJECTS_YML}" ]]; then
     fi
 fi
 
+# Add custom projects yml file if specified
+if [[ -f "${PROJECT_ROOT}/${MDT_DOCKER_PROJECTS_YML}" ]]; then
+    compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.override.yml")
+    echo "Added projects file: ${MDT_DOCKER_PROJECTS_YML}" > /dev/stderr
+fi
+
 # Auto-join all dc-prj.*.yml files with full paths
 for project_file in "${PROJECT_ROOT}"/docker-compose."${mode}".*.yml; do
     if [[ -f "${project_file}" ]]; then

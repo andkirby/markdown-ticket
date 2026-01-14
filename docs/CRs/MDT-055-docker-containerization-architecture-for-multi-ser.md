@@ -182,12 +182,49 @@ The implementation uses **three separate files** for flexibility:
 
 **Development Usage:**
 ```bash
+# Using bin/dc wrapper (recommended)
+./bin/dc up
+
+# Or directly with docker-compose
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
 **Production Usage:**
 ```bash
+# Using bin/dc wrapper (recommended)
+MDT_DOCKER_MODE=prod ./bin/dc up
+
+# Or directly with docker-compose
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+```
+
+#### Convenience Wrapper: `bin/dc`
+
+The project includes `bin/dc`, a bash script that simplifies Docker Compose command execution:
+
+**Features:**
+- **Mode selection**: Uses `MDT_DOCKER_MODE` environment variable (default: `prod`)
+  - `MDT_DOCKER_MODE=dev` → Development mode with hot reload
+  - `MDT_DOCKER_MODE=prod` → Production mode (default)
+- **Auto-discovery**: Automatically includes `docker-compose.{mode}.*.yml` files
+- **Custom project files**: Supports `MDT_DOCKER_PROJECTS_YML` for additional compose files
+- **Environment loading**: Automatically loads `.env` and `.env.local` files
+
+**Usage Examples:**
+```bash
+# Development mode with hot reload
+MDT_DOCKER_MODE=dev ./bin/dc up
+
+# Production mode (default)
+./bin/dc up
+
+# With custom project volumes file
+MDT_DOCKER_MODE=dev MDT_DOCKER_PROJECTS_YML=docker-compose.dev.mdt.yml ./bin/dc up
+
+# Any docker-compose command works
+./bin/dc logs -f backend
+./bin/dc ps
+./bin/dc down
 ```
 
 **Key Architecture Decisions:**
