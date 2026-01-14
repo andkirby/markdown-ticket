@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useDropZone } from '../useDropZone';
+import { useDropZone } from './useDropZone';
 import { Ticket } from '../../types';
 
 // Mock react-dnd
@@ -18,7 +18,14 @@ describe('useDropZone', () => {
     title: 'Test Ticket',
     status: 'Proposed',
     type: 'Feature Enhancement',
-    priority: 'Medium'
+    priority: 'Medium',
+    dateCreated: null,
+    lastModified: null,
+    content: '',
+    filePath: 'docs/CRs/MDT-001.md',
+    relatedTickets: [],
+    dependsOn: [],
+    blocks: []
   };
 
   beforeEach(() => {
@@ -77,7 +84,7 @@ describe('useDropZone', () => {
       draggedItem: null
     });
 
-    const { result } = renderHook(() => useDropZone({ onDrop }));
+    renderHook(() => useDropZone({ onDrop }));
 
     // Get the drop handler that was passed to react-dnd's useDrop
     const dropHandler = useDrop.mock.calls[0][0].drop;
