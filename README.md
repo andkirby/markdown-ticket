@@ -39,6 +39,13 @@ npm run build:all
 claude mcp add mdt-all node $PWD/mcp-server/dist/index.js
 ```
 
+#### Install Spec-Driven Development (SDD) Commands
+
+```shell
+bash prompts/install-claude.sh
+```
+[SDD Commands README.md](prompts/README.md)
+
 ## **Access Points:**
 - **Web Interface**: Docker http://localhost:5174 | Local http://localhost:4173 (production) | http://localhost:5173 (development)
 - **MCP Endpoint**: Docker http://localhost:3012/mcp | Local `mcp-server/dist/index.js`
@@ -65,90 +72,6 @@ Create detailed specifications first, then let AI implement exactly what was spe
 ---
 
 ## 🔄 How It Works
-
-### Planning & Organization
-
-```mermaid
-%%{
-  init: {
-    'themeVariables': {
-      'lineColor': '#e507'
-    }
-  }
-}%%
-flowchart TD
-    User[User / Developer]
-    LLM[AI Assistant<br/>Claude, GPT, Q]
-
-    subgraph "Phase 1: Planning"
-        A1[Discuss requirements<br/>with AI Assistant]
-        A2[AI creates structured<br/>tickets with full specs]
-    end
-
-    subgraph "Phase 2: Organization"
-        B1[Read tickets through<br/>web interface]
-        B2[Organize tickets with<br/>drag-and-drop columns]
-    end
-
-    User --> A1
-    A1 --> LLM
-    LLM --> A2
-    A2 --> User
-
-    User --> B1
-    B1 --> B2
-    B2 --> User
-
-    style User fill:#4a90e2,stroke:#2e5c8a,stroke-width:2px,color:#fff
-    style LLM fill:#9b59b6,stroke:#6c3483,stroke-width:2px,color:#fff
-
-    classDef phaseBox stroke:#718096,stroke-width:1px,stroke-dasharray: 5 5
-    class A1,A2,B1,B2 phaseBox
-    
-    linkStyle default stroke:#e507,stroke-width:2px
-```
-
-### Implementation & Review
-
-```mermaid
-%%{
-  init: {
-    'themeVariables': {
-      'lineColor': '#e507'
-    }
-  }
-}%%
-flowchart TD
-    User[User / Developer]
-    LLM[AI Assistant<br/>Claude, GPT, Q]
-
-    subgraph "Phase 3: Implementation"
-        C1[User assigns ticket<br/>to AI Assistant]
-        C2[AI implements exactly<br/>as specified]
-    end
-
-    subgraph "Phase 4: Review"
-        D1[User reviews implementation<br/>against requirements]
-        D2[Merge completed work<br/>to Git]
-    end
-
-    User --> C1
-    C1 --> LLM
-    LLM --> C2
-    C2 --> User
-
-    User --> D1
-    D1 --> D2
-    D2 --> User
-
-    style User fill:#4a90e2,stroke:#2e5c8a,stroke-width:2px,color:#fff
-    style LLM fill:#9b59b6,stroke:#6c3483,stroke-width:2px,color:#fff
-
-    classDef phaseBox stroke:#718096,stroke-width:1px,stroke-dasharray: 5 5
-    class C1,C2,D1,D2 phaseBox
-    
-    linkStyle default stroke:#e507,stroke-width:2px
-```
 
 ### The Workflow Explained
 

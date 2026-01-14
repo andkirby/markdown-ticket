@@ -116,7 +116,7 @@ description = "Debug project for testing Docker configuration"
 
 ## 🚀 Best Practices
 
-1. **Use container paths** (`/workspace/...`) not host paths
+1. **Use container paths** (`/projects/...`) not host paths
 2. **Keep config in docker-config/** directory
 3. **Mount projects read-write** for development
 4. **Mount config read-only** (`:ro`) to prevent accidental changes

@@ -10,11 +10,11 @@ AI-driven workflow management for spec-driven development.
 
 ## Quick Start
 
-0. Install [MDT project](../README.md)
-1. Install commands for Claude Code: `bash prompts/install-claude.sh` 
-2. Create a first ticket: `/mdt:ticket-creation`
-3. Learn workflows: [WORKFLOWS.md](./WORKFLOWS.md)
-4. See all commands: [QUICKREF.md](./QUICKREF.md)
+1. Install [MDT project](../README.md)
+2. Install commands for Claude Code: `bash prompts/install-claude.sh`
+3. Create a first ticket: `/mdt:ticket-creation`
+4. Learn workflows: [WORKFLOWS.md](./WORKFLOWS.md)
+5. See all commands: [QUICKREF.md](./QUICKREF.md)
 
 ## Documentation
 

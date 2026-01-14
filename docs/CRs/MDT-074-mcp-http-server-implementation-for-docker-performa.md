@@ -573,7 +573,7 @@ services:
       - "3002:3002"                      # Expose HTTP port (when enabled)
     volumes:
       - ${HOME}/.config/markdown-ticket:/root/.config/markdown-ticket:ro
-      - ${MCP_PROJECTS_DIR:-${HOME}/home}:/workspace
+      - ${HOME}/projects:/projects
     environment:
       - NODE_ENV=production
       - MCP_HTTP_ENABLED=true            # Enable HTTP transport

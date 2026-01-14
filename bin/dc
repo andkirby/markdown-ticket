@@ -33,7 +33,7 @@ if [[ -n "${MDT_DOCKER_PROJECTS_YML}" ]]; then
 fi
 
 # Add custom projects yml file if specified
-if [[ -f "${PROJECT_ROOT}/${MDT_DOCKER_PROJECTS_YML}" ]]; then
+if [[ -f "${PROJECT_ROOT}/docker-compose.override.yml" ]]; then
     compose_args+=("--file" "${PROJECT_ROOT}/docker-compose.override.yml")
     echo "Added projects file: ${MDT_DOCKER_PROJECTS_YML}" > /dev/stderr
 fi
