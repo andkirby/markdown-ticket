@@ -51,22 +51,34 @@ The application uses a **three-container architecture**:
 - 2GB+ available RAM
 - Markdown ticket projects configured in `~/.config/markdown-ticket/`
 
+### Convenience Wrapper: `bin/dc`
+
+The project includes `bin/dc`, a bash script that simplifies Docker Compose commands:
+
+**Features:**
+- **Mode selection**: Uses `MDT_DOCKER_MODE` environment variable (default: `prod`)
+  - `MDT_DOCKER_MODE=dev` → Development mode with hot reload
+  - `MDT_DOCKER_MODE=prod` → Production mode (default)
+- **Auto-discovery**: Automatically includes `docker-compose.{mode}.*.yml` files
+- **Custom project files**: Supports `MDT_DOCKER_PROJECTS_YML` for additional compose files
+- **Environment loading**: Automatically loads `.env` and `.env.local` files
+
 ### Development Mode (Recommended)
 
 Start all services with hot reload:
 
 ```bash
-# Start in foreground (see logs)
+# Using bin/dc wrapper (recommended)
+./bin/dc up                    # Start in foreground
+./bin/dc up -d                 # Start in background
+./bin/dc logs -f               # View logs
+./bin/dc down                  # Stop containers
+
+# Or with explicit mode
+MDT_DOCKER_MODE=dev ./bin/dc up
+
+# Or directly with docker-compose
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-
-# Start in background
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop containers
-docker-compose down
 ```
 
 Access the application:
@@ -82,17 +94,18 @@ Access the application:
 Build and run optimized containers:
 
 ```bash
-# Build production images
+# Using bin/dc wrapper (recommended)
+./bin/dc build                 # Build production images
+./bin/dc up -d                 # Start in background
+./bin/dc logs -f               # View logs
+./bin/dc down                  # Stop and remove containers
+
+# Or with explicit mode
+MDT_DOCKER_MODE=prod ./bin/dc up -d
+
+# Or directly with docker-compose
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
-
-# Start in background
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop and remove containers
-docker-compose down
 ```
 
 **Note:** In production mode, the frontend runs on port 80 with Nginx.
@@ -146,58 +159,60 @@ The application requires access to the global registry at `~/.config/markdown-ti
 
 ## Container Management
 
+The `bin/dc` wrapper passes all arguments through to docker-compose, so it works with any docker-compose command:
+
 ### View Running Containers
 
 ```bash
-docker-compose ps
+./bin/dc ps
 ```
 
 ### View Logs
 
 ```bash
 # All services
-docker-compose logs -f
+./bin/dc logs -f
 
 # Specific service
-docker-compose logs -f frontend
-docker-compose logs -f backend
-docker-compose logs -f mcp
+./bin/dc logs -f frontend
+./bin/dc logs -f backend
+./bin/dc logs -f mcp
 ```
 
 ### Rebuild Containers
 
 ```bash
 # Rebuild all services
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml build
+./bin/dc build
 
 # Rebuild specific service
-docker-compose build frontend
+./bin/dc build frontend
 
 # Rebuild without cache
-docker-compose build --no-cache
+./bin/dc build --no-cache
 ```
 
 ### Restart Services
 
 ```bash
 # Restart all services
-docker-compose restart
+./bin/dc restart
 
 # Restart specific service
-docker-compose restart backend
+./bin/dc restart backend
 ```
 
 ### Execute Commands in Containers
 
 ```bash
 # Open shell in backend container
-docker-compose exec backend sh
+./bin/dc exec backend sh
 
 # Run npm command in frontend container
-docker-compose exec frontend npm run lint
+./bin/dc exec frontend npm run lint
 
 # Check MCP server version
-docker-compose exec mcp node -v
+./bin/dc exec mcp node -v
 ```
 
 ## Development Workflow
@@ -293,12 +308,12 @@ environment:
 docker info
 
 # View detailed error logs
-docker-compose logs
+./bin/dc logs
 
 # Remove containers and volumes, then rebuild
-docker-compose down -v
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml build --no-cache
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+MDT_DOCKER_MODE=dev ./bin/dc down -v
+MDT_DOCKER_MODE=dev ./bin/dc build --no-cache
+MDT_DOCKER_MODE=dev ./bin/dc up
 ```
 
 ### Port Conflicts
@@ -321,8 +336,8 @@ ports:
 File watching uses polling mode (`CHOKIDAR_USEPOLLING=true`) to work reliably in Docker. If changes aren't detected:
 
 1. Verify volume mounts in `docker-compose.dev.yml`
-2. Restart the containers: `docker-compose restart`
-3. Check container logs: `docker-compose logs -f backend`
+2. Restart the containers: `./bin/dc restart`
+3. Check container logs: `./bin/dc logs -f backend`
 
 ### Permission Issues
 
@@ -330,7 +345,7 @@ If you get permission errors accessing mounted volumes:
 
 ```bash
 # Check file ownership in container
-docker-compose exec backend ls -la /workspace
+./bin/dc exec backend ls -la /workspace
 
 # Fix ownership (development only)
 sudo chown -R $(whoami):$(whoami) /path/to/projects
@@ -340,16 +355,16 @@ sudo chown -R $(whoami):$(whoami) /path/to/projects
 
 ```bash
 # Check MCP container is running
-docker-compose ps mcp
+./bin/dc ps mcp
 
 # Check MCP health endpoint
 curl http://localhost:3002/health
 
 # View MCP logs
-docker-compose logs -f mcp
+./bin/dc logs -f mcp
 
 # Verify HTTP transport is enabled
-docker-compose exec mcp env | grep MCP_HTTP
+./bin/dc exec mcp env | grep MCP_HTTP
 ```
 
 ## Performance Considerations
@@ -401,7 +416,7 @@ If you need to go back to native Node.js:
 
 ```bash
 # Stop containers
-docker-compose down
+./bin/dc down
 
 # Use native commands
 npm run dev:full
@@ -421,7 +436,7 @@ All your projects and configuration remain unchanged.
 
 For issues or questions:
 
-1. Check container logs: `docker-compose logs -f`
+1. Check container logs: `./bin/dc logs -f`
 2. Verify configuration in docker-compose files
 3. Review this README and troubleshooting section
 4. File an issue in the project repository
