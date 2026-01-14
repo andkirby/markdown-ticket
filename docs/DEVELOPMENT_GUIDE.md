@@ -97,6 +97,25 @@ npm run build
 npm start
 ```
 
+## Code Quality
+
+### Dead Code Detection
+
+| Tool | Detects | Scope |
+|------|---------|-------|
+| **scip-finder** | All symbols (exports + internal) | Full codebase |
+| **knip** | Unused exports | Public API only |
+| **TS noUnusedLocals** | Block-scoped unused | Local variables only |
+
+- `scip-finder <symbol>` - Find all usages of any symbol (requires index.scip)
+- `npx knip` - Find unused exports (use `--include-entry-exports` for entry files)
+- Use scip-finder for internal dead code; knip for unused public APIs
+
+### Code Complexity Metrics
+- `scripts/metrics/run.sh` - Analyze code complexity for changed TypeScript files
+- `scripts/metrics/run.sh --all` - Show all changed files regardless of thresholds
+- See `scripts/metrics/README.md` for full documentation
+
 ## Architecture
 
 ### Shared Core Architecture
