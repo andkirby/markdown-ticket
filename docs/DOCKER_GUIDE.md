@@ -1,111 +1,56 @@
-# Docker Guide for Markdown Ticket Board 1
+# Docker Guide for Markdown Ticket Board
 
-Quick start guide for Docker containerization of the Markdown Ticket (MDT) application.
+**Implementation patterns and configuration for Docker containerization.**
 
-## Quick Start
+For quick start and basic commands, see [README.docker.md](../README.docker.md). For technical reference,
+see [DOCKER_REFERENCE.md](DOCKER_REFERENCE.md).
 
-### Prerequisites
-- Docker Engine 20.10+
-- Docker Compose 2.0+
+---
 
-### Quick Start
+## bin/dc Wrapper
 
-```bash
-# Development
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+The `bin/dc` script simplifies Docker Compose commands with automatic file discovery and environment loading.
 
-# Production
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
-# Stop
-docker-compose down -v
-```
-
-**Access**: Frontend `http://localhost:5174`, MCP `http://localhost:3012/mcp`
-
-## Architecture
-
-Ticket: MDT-055
-
-### Container Overview
-
-| Service | Port Mapping | Purpose | Access |
-|---------|---------------|---------|--------|
-| **Frontend** | `5174:5173` | React + Vite dev server | `http://localhost:5174` |
-| **Backend** | Network only | Express.js API + SSE | Via frontend proxy |
-| **MCP** | `3012:3002` | HTTP transport for LLM | `http://localhost:3012/mcp` |
-
-### Container Paths
-
-```
-/app/                    # Application code (excluded from discovery)
-/projects/              # Project mount point
-/app/config             # Docker configuration directory
-```
-
-## Configuration
-
-### Environment Variables
-
-```yaml
-environment:
-  # Core
-  - NODE_ENV=development
-  - CHOKIDAR_USEPOLLING=true
-  - DOCKER=true
-
-  # MCP
-  - MCP_HTTP_ENABLED=true
-  - MCP_HTTP_PORT=3002
-  - MCP_BIND_ADDRESS=0.0.0.0
-
-  # Configuration Management (MDT-073)
-  - CONFIG_DIR=/app/config
-  - CONFIG_DISCOVER_PATH=/projects
-```
-
-### Configuration Management (MDT-073)
-
-The `bin/dc` script automatically loads `.env` and `.env.local` files, where you can declare `MDT_DOCKER_MODE`.
-
-#### Environment Variables
-
-Backend and MCP containers have predefined environment variables:
-```yaml
-environment:
-  - CONFIG_DIR=/app/config
-  - CONFIG_DISCOVER_PATH=/projects
-```
-
-#### Usage
+### How It Works
 
 ```bash
-# View configuration
-bin/dc exec backend node /app/shared/dist/tools/config-cli.js show
-
-# Set discovery paths
-bin/dc exec backend node /app/shared/dist/tools/config-cli.js set discovery.searchPaths "/projects,/workspace"
+./bin/dc [docker-compose-options] [command]
 ```
 
-Configuration persists in mounted volume `./docker-config:/app/config`
+**Features:**
 
-## Usage Patterns
+- **Mode selection**: `MDT_DOCKER_MODE` environment variable (default: `prod`)
+    - `dev` → Includes `docker-compose.dev.yml`
+    - `prod` → Includes `docker-compose.prod.yml`
+- **Auto-discovery**: Automatically includes `docker-compose.{mode}.*.yml` files
+- **Custom projects**: Supports `MDT_DOCKER_PROJECTS_YML` for additional compose files
+- **Simply override**: Supports `docker-compose.override.yml` as an additional compose files
+- **Environment loading**: Loads `.env` and `.env.local` files
 
-### Development
+**Sample file volume mapping**: `docker-compose.override.sample.yml`
 
-**Using bin/dc wrapper (recommended):**
+### Examples
+
 ```bash
-# Production mode
-bin/dc up
+# Start in dev mode
+MDT_DOCKER_MODE=dev ./bin/dc up
 
-# Production mode (detached)
-bin/dc up -d
+# Start in prod mode (default)
+./bin/dc up -d
 
-# Demo mode
-bin/dc -f docker-compose.demo.yml up
+# Add custom project mounts
+MDT_DOCKER_PROJECTS_YML=docker-compose.my-projects.yml ./bin/dc up
+
+# Pass any docker-compose option
+./bin/dc logs -f backend
+./bin/dc exec backend sh
+./bin/dc ps
 ```
 
-**Direct docker-compose commands:**
+### Direct docker-compose Commands
+
+For advanced use cases, you can use docker-compose directly:
+
 ```bash
 # Development
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
@@ -113,15 +58,78 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 # Production
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# Demo
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.demo.yml up
+# Custom compose files
+docker-compose -f docker-compose.yml -f docker-compose.projects.yml up -d
 ```
 
-### Volume Mount Examples
+---
 
-Use YAML anchor syntax for shared volumes (from `docker-compose.demo.yml`):
+## Volume Mount Patterns
+
+### Single Workspace (Recommended)
+
+Mount your entire workspace directory:
 
 ```yaml
+# docker-compose.dev.yml or docker-compose.prod.yml
+services:
+  backend:
+    volumes:
+      - ~/projects:/projects
+  mcp:
+    volumes:
+      - ~/projects:/projects
+```
+
+### Multiple Project Directories
+
+Mount specific projects:
+
+```yaml
+services:
+  backend:
+    volumes:
+      - ~/work/project-a:/projects/project-a
+      - ~/personal/project-b:/projects/project-b
+      - /data/project-c:/projects/project-c
+  mcp:
+    volumes:
+      - ~/work/project-a:/projects/project-a
+      - ~/personal/project-b:/projects/project-b
+      - /data/project-c:/projects/project-c
+```
+
+### docker-compose.override.yml (Recommended for Local)
+
+Use the provided sample for local customization:
+
+```bash
+# Copy and customize
+cp docker-compose.override.sample.yml docker-compose.override.yml
+# Edit with your project paths
+```
+
+The override file is automatically loaded by `./bin/dc`. This is the standard Docker Compose pattern for local customizations.
+
+```yaml
+# docker-compose.override.yml
+x-shared-volumes: &project-volumes
+  volumes:
+    - ~/my-project:/projects/my-project
+
+services:
+  backend:
+    <<: *project-volumes
+  mcp:
+    <<: *project-volumes
+```
+
+### YAML Anchor Syntax (Custom Files)
+
+For named override files, use YAML anchors:
+
+```yaml
+# docker-compose.projects.yml
 x-shared-volumes: &project-volumes
   volumes:
     - ./debug-tasks:/projects/demo-project
@@ -134,47 +142,195 @@ services:
     <<: *project-volumes
 ```
 
-To use custom project mounts:
+Use custom project files:
+
 ```bash
-bin/dc -f docker-compose.projects.yml up -d [--force-recreate]
+./bin/dc -f docker-compose.projects.yml up -d --force-recreate
 ```
 
-## Troubleshooting
+---
 
-### Common Issues
+## Configuration Management (MDT-073)
 
-**Port conflicts**: Check with `lsof -i :5174` and `lsof -i :3012`
+The backend and MCP containers use a shared configuration system for project discovery.
 
-**File watching not working**: Verify `CHOKIDAR_USEPOLLING=true` is set
+### Container Paths
 
-**Volume mount issues**: Check with `docker-compose exec backend ls -la /projects`
-
-**Configuration not persisting**:
-```bash
-docker-compose exec backend ls -la /app/config
-docker-compose exec backend node /app/shared/dist/tools/config-cli.js show
+```
+/app/                    # Application code (excluded from discovery)
+/projects/               # Project mount point
+/app/config             # Docker configuration directory (persisted in volume)
 ```
 
-**MCP connection**: Test with `curl http://localhost:3012/health`
+### Environment Variables
+
+Backend and MCP containers have these predefined:
+
+```yaml
+environment:
+  - CONFIG_DIR=/app/config
+  - CONFIG_DISCOVER_PATH=/projects
+```
+
+### Using config-cli.js
+
+View and modify configuration from within containers:
+
+```bash
+# View current configuration
+./bin/dc exec backend node /app/shared/dist/tools/config-cli.js show
+
+# Set discovery paths
+./bin/dc exec backend node /app/shared/dist/tools/config-cli.js set discovery.searchPaths "/projects"
+
+# Get specific value
+./bin/dc exec backend node /app/shared/dist/tools/config-cli.js get discovery.searchPaths
+```
+
+Configuration persists in the `docker-config` volume at `/app/config`.
+
+---
+
+## Demo Mode
+
+Demo mode includes pre-configured projects for testing and demonstration.
+
+```bash
+# Start with demo projects
+./bin/dc -f docker-compose.demo.yml up
+
+# Or combine with other compose files
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.demo.yml up
+```
+
+Demo projects are mounted from `./demo-projects/` and provide sample tickets for testing the UI and MCP tools.
+
+---
+
+## Container Architecture
+
+### Container Overview
+
+| Service             | Container Port | Host Port | Purpose                  |
+|---------------------|----------------|-----------|--------------------------|
+| **Frontend** (dev)  | 5173           | 5174      | Vite dev server with HMR |
+| **Frontend** (prod) | 80             | 5174      | Nginx static server      |
+| **Backend**         | 3001           | (none)    | Express.js API + SSE     |
+| **MCP**             | 3002           | 3012      | HTTP transport for LLM   |
+
+**Note:** Backend is internal only, accessible via frontend proxy at `/api/*`.
+
+### Container Communication
+
+```
+Host (localhost:5174, :3012)
+    ↓
+Frontend Container
+    └── /api/* → Backend:3001 (proxy, includes SSE)
+
+Backend Container
+    ├── SSE → Frontend (real-time ticket updates)
+    └── Mounted volumes (/projects)
+
+MCP Container
+    ├── HTTP transport → Host:3012 (LLM clients)
+    └── Mounted volumes (/projects) [same as backend]
+```
+
+---
+
+## Common Issues
+
+### Port Conflicts
+
+```bash
+# Check what's using the port
+lsof -i :5174   # Frontend
+lsof -i :3012   # MCP
+
+# Change ports in docker-compose files if needed
+```
+
+### File Watching Not Working
+
+```bash
+# Verify polling is enabled
+./bin/dc exec backend printenv | grep CHOKIDAR
+
+# Check volume mounts
+./bin/dc exec backend ls -la /projects
+
+# Restart backend
+./bin/dc restart backend
+```
+
+### Configuration Not Persisting
+
+```bash
+# Check config volume
+./bin/dc exec backend ls -la /app/config
+
+# View current config
+./bin/dc exec backend node /app/shared/dist/tools/config-cli.js show
+```
+
+### MCP Connection Issues
+
+```bash
+# Test health endpoint
+curl http://localhost:3012/health
+
+# Check MCP container
+./bin/dc ps mcp
+./bin/dc logs -f mcp
+
+# Verify HTTP transport enabled
+./bin/dc exec mcp printenv | grep MCP_HTTP
+```
 
 ### Health Checks
 
 ```bash
-docker-compose ps
+# Check all containers
+./bin/dc ps
+
+# Test frontend
+curl http://localhost:5174/
+
+# Test backend (via frontend proxy)
 curl http://localhost:5174/api/projects
+
+# Test MCP
 curl http://localhost:3012/health
 ```
 
-### bin/dc Wrapper
+---
 
-The `bin/dc` script simplifies Docker Compose commands:
+## Security Configuration
 
-- **Environment mode**: `MDT_DOCKER_MODE=prod|dev` (default: prod)
-- **Auto file discovery**: Automatically includes matching compose files
-- **Environment loading**: Loads `.env` and `.env.local` files
+For production deployments, enable optional security features.
+See [DOCKER_REFERENCE.md - Security Configuration](DOCKER_REFERENCE.md#security-configuration) for details.
 
-Usage: `bin/dc [docker-compose-options] [command]`
+```yaml
+environment:
+  # Origin validation
+  - MCP_SECURITY_ORIGIN_VALIDATION=true
+  - MCP_ALLOWED_ORIGINS=https://yourdomain.com
 
-- `bin/dc up` - Start with logs (foreground mode)
-- `bin/dc up -d` - Start detached (background mode)
-- `bin/dc exec <service> <command>` - Execute commands in containers
+  # Rate limiting
+  - MCP_SECURITY_RATE_LIMITING=true
+  - MCP_RATE_LIMIT_MAX=100
+
+  # Authentication
+  - MCP_SECURITY_AUTH=true
+  - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}
+```
+
+---
+
+## Related Documentation
+
+- [README.docker.md](../README.docker.md) - Quick start guide
+- [DOCKER_REFERENCE.md](DOCKER_REFERENCE.md) - Technical reference, troubleshooting
+- [MDT-055](../CRs/MDT-055-docker-containerization-architecture-for-multi-ser.md) - Docker Architecture CR
+- [MDT-073](../CRs/MDT-073-docker-based-configuration-management.md) - Configuration Management CR
