@@ -8,13 +8,13 @@
  * The test-lib is a pure test utility that doesn't need to be mocked.
  */
 
-// Use @mdt/shared path alias (mapped to ../shared/dist/* in tsconfig.json)
-export { TestEnvironment } from '@mdt/shared/test-lib/core/test-environment';
-export { TestServer } from '@mdt/shared/test-lib/core/test-server';
-export { ProjectFactory } from '@mdt/shared/test-lib/core/project-factory';
-
-// Re-export types
-export type { ProjectConfig, ProjectData, TestScenario, TestCRResult } from '@mdt/shared/test-lib/core/project-factory';
-
 // Re-export other utilities
-export * from '@mdt/shared/test-lib';
+export * from '@mdt/shared/test-lib'
+export { ProjectFactory } from '@mdt/shared/test-lib/core/project-factory'
+// Re-export types
+export type { ProjectConfig, ProjectData, TestCRResult, TestScenario } from '@mdt/shared/test-lib/core/project-factory'
+
+// Use @mdt/shared path alias (mapped to ../shared/dist/* in tsconfig.json)
+export { TestEnvironment } from '@mdt/shared/test-lib/core/test-environment'
+
+export { TestServer } from '@mdt/shared/test-lib/core/test-server'

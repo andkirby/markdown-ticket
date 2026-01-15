@@ -1,55 +1,59 @@
-import * as path from 'path';
+import * as path from 'node:path'
 
 /**
- * Base strategy for tree building operations
+ * Base strategy for tree building operations.
  */
 
 export interface TreeNode {
-  name: string;
-  path: string;
-  type: 'file' | 'directory' | 'folder';
-  children?: TreeNode[];
+  name: string
+  path: string
+  type: 'file' | 'directory' | 'folder'
+  children?: TreeNode[]
 }
 
 export interface ProjectConfig {
   document?: {
-    paths?: string[];
-    excludeFolders?: string[];
-    maxDepth?: number;
-  };
-  // Legacy support
-  document_paths?: string[];
-  exclude_folders?: string[];
-  [key: string]: unknown;
+    paths?: string[]
+    excludeFolders?: string[]
+    maxDepth?: number
+  }
+  /**
+   * Legacy support.
+   */
+  document_paths?: string[]
+  exclude_folders?: string[]
+  [key: string]: unknown
 }
 
 export class TreeBuildingStrategy {
   /**
-   * Build tree from file paths
-   * @param filePaths - Array of file paths
-   * @param projectPath - Project root path
-   * @param config - Project configuration
-   * @returns Tree structure
+   * Build tree from file paths.
+   *
+   * @param _filePaths - Array of file paths.
+   * @param _projectPath - Project root path.
+   * @param _config - Project configuration.
+   * @returns Tree structure.
    */
   async buildTree(
     _filePaths: string[],
     _projectPath: string,
-    _config: ProjectConfig
+    _config: ProjectConfig,
   ): Promise<TreeNode[]> {
-    throw new Error('buildTree must be implemented by strategy');
+    throw new Error('buildTree must be implemented by strategy')
   }
 
   /**
-   * Process individual file for tree inclusion
-   * @param filePath - File path
-   * @param relativePath - Relative path from project root
-   * @returns File object
+   * Process individual file for tree inclusion.
+   *
+   * @param _filePath - File path.
+   * @param relativePath - Relative path from project root.
+   * @returns File object.
    */
   protected async processFile(_filePath: string, relativePath: string): Promise<TreeNode> {
     return {
       name: path.basename(relativePath),
       path: relativePath,
-      type: 'file'
-    };
+      type: 'file',
+    }
   }
 }

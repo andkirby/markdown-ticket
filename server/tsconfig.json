@@ -1,31 +1,34 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ES2020",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "rootDir": "./",
-    "declaration": true,
-    "sourceMap": true,
-    "resolveJsonModule": true,
-    "allowImportingTsExtensions": false,
-    "noEmit": false,
-    "allowJs": true,
-    "checkJs": false,
     "lib": ["ES2020"],
-    "types": ["node"],
 
     /* Path Mapping */
     "baseUrl": "..",
+    "rootDir": "./",
+    "module": "ES2020",
+    "moduleResolution": "bundler",
     "paths": {
       "@mdt/shared/*": ["../shared/dist/*"]
-    }
+    },
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "allowImportingTsExtensions": false,
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true,
+    "declaration": true,
+    "noEmit": false,
+    "outDir": "./dist",
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   },
+  "references": [
+    { "path": "../tsconfig.shared.json" }
+  ],
   "include": [
     "server.ts",
     "fileWatcherService.ts",
@@ -50,8 +53,5 @@
     "dist",
     "mcp-dev-tools",
     "tests/mocks"
-  ],
-  "references": [
-    { "path": "../tsconfig.shared.json" }
   ]
 }

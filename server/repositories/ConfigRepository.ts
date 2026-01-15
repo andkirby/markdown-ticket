@@ -1,76 +1,80 @@
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import * as toml from 'toml';
-import { DEFAULTS } from '@mdt/shared/utils/constants.js';
+import { promises as fs } from 'node:fs'
+import * as path from 'node:path'
+import { DEFAULTS } from '@mdt/shared/utils/constants.js'
+import * as toml from 'toml'
 
 export interface ProjectConfiguration {
-  documentPaths: string[];
-  excludeFolders: string[];
-  ticketsPath: string | null;
+  documentPaths: string[]
+  excludeFolders: string[]
+  ticketsPath: string | null
 }
 
 /**
- * Repository for project configuration access
+ * Repository for project configuration access.
  */
 export class ConfigRepository {
   /**
-   * Get project configuration
+   * Get project configuration.
    */
   async getConfig(projectPath: string): Promise<ProjectConfiguration> {
-    const configPath = path.join(projectPath, '.mdt-config.toml');
+    const configPath = path.join(projectPath, '.mdt-config.toml')
 
     try {
-      const content = await fs.readFile(configPath, 'utf8');
-      return this._parseConfig(content);
-    } catch {
-      return this._getDefaultConfig();
+      const content = await fs.readFile(configPath, 'utf8')
+
+      return this._parseConfig(content)
+    }
+    catch {
+      return this._getDefaultConfig()
     }
   }
 
   private _parseConfig(content: string): ProjectConfiguration {
-    const config = this._getDefaultConfig();
+    const config = this._getDefaultConfig()
 
     try {
       // Parse TOML content properly using TOML library
-      const parsed = toml.parse(content);
+      const parsed = toml.parse(content)
 
       // Parse document paths (current format: project.document.paths, legacy: document.paths, document_paths, project.document_paths)
-      const docPaths = parsed.project?.document?.paths || parsed.document?.paths || parsed.document_paths || parsed.project?.document_paths;
+      const docPaths = parsed.project?.document?.paths || parsed.document?.paths || parsed.document_paths || parsed.project?.document_paths
+
       if (docPaths && Array.isArray(docPaths)) {
-        config.documentPaths = docPaths.filter(path => typeof path === 'string');
+        config.documentPaths = docPaths.filter(path => typeof path === 'string')
       }
 
       // Parse exclude folders (current format: project.document.excludeFolders, legacy: document.excludeFolders, exclude_folders, project.exclude_folders)
-      const exclFolders = parsed.project?.document?.excludeFolders || parsed.document?.excludeFolders || parsed.exclude_folders || parsed.project?.exclude_folders;
+      const exclFolders = parsed.project?.document?.excludeFolders || parsed.document?.excludeFolders || parsed.exclude_folders || parsed.project?.exclude_folders
+
       if (exclFolders && Array.isArray(exclFolders)) {
-        config.excludeFolders = exclFolders.filter(folder => typeof folder === 'string');
+        config.excludeFolders = exclFolders.filter(folder => typeof folder === 'string')
       }
 
       // Parse tickets path from project section
       if (parsed.project) {
         // New format: project.ticketsPath
         if (parsed.project.ticketsPath && typeof parsed.project.ticketsPath === 'string') {
-          config.ticketsPath = parsed.project.ticketsPath.trim();
+          config.ticketsPath = parsed.project.ticketsPath.trim()
         }
         // Legacy format: project.path
         else if (parsed.project.path && typeof parsed.project.path === 'string') {
-          config.ticketsPath = parsed.project.path.trim();
+          config.ticketsPath = parsed.project.path.trim()
         }
       }
-    } catch (error) {
-      console.error('Failed to parse TOML configuration:', error);
+    }
+    catch (error) {
+      console.error('Failed to parse TOML configuration:', error)
       // Return default config if parsing fails - TOML files should be valid
     }
 
-    return config;
+    return config
   }
 
-  
   private _getDefaultConfig(): ProjectConfiguration {
     return {
       documentPaths: [],
       excludeFolders: [DEFAULTS.TICKETS_PATH, 'node_modules', '.git'],
-      ticketsPath: null
-    };
+      ticketsPath: null,
+    }
   }
 }

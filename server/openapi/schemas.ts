@@ -1,25 +1,31 @@
 /**
  * OpenAPI 3.0 Schema Definitions - Single source of truth for all API schemas
- * Route JSDoc annotations should use $ref: '#/components/schemas/{Name}'
+ * Route JSDoc annotations should use $ref: '#/components/schemas/{Name}'.
  */
 
 // Enums
-const CRStatusEnum = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold'] as const;
-const CRTypeEnum = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'] as const;
-const CRPriorityEnum = ['Low', 'Medium', 'High', 'Critical'] as const;
+const CRStatusEnum = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold'] as const
+const CRTypeEnum = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'] as const
+const CRPriorityEnum = ['Low', 'Medium', 'High', 'Critical'] as const
 
 export const schemas = {
   CRStatus: {
-    type: 'string', enum: CRStatusEnum,
-    description: 'Change Request status', example: 'Proposed'
+    type: 'string',
+    enum: CRStatusEnum,
+    description: 'Change Request status',
+    example: 'Proposed',
   },
   CRType: {
-    type: 'string', enum: CRTypeEnum,
-    description: 'Change Request type', example: 'Feature Enhancement'
+    type: 'string',
+    enum: CRTypeEnum,
+    description: 'Change Request type',
+    example: 'Feature Enhancement',
   },
   CRPriority: {
-    type: 'string', enum: CRPriorityEnum,
-    description: 'Change Request priority level', example: 'Medium'
+    type: 'string',
+    enum: CRPriorityEnum,
+    description: 'Change Request priority level',
+    example: 'Medium',
   },
 
   CR: {
@@ -39,8 +45,8 @@ export const schemas = {
       relatedTickets: { type: 'string', description: 'Comma-separated related CR codes', example: 'MDT-003' },
       impactAreas: { type: 'array', items: { type: 'string' }, description: 'System areas impacted', example: ['backend', 'api'] },
       implementationDate: { type: 'string', format: 'date', description: 'Date implementation completed (ISO 8601)', example: '2025-09-20' },
-      implementationNotes: { type: 'string', description: 'Notes about the implementation' }
-    }
+      implementationNotes: { type: 'string', description: 'Notes about the implementation' },
+    },
   },
 
   CRInput: {
@@ -56,8 +62,8 @@ export const schemas = {
       blocks: { type: 'string' },
       assignee: { type: 'string' },
       relatedTickets: { type: 'string' },
-      impactAreas: { type: 'array', items: { type: 'string' } }
-    }
+      impactAreas: { type: 'array', items: { type: 'string' } },
+    },
   },
 
   Project: {
@@ -71,8 +77,8 @@ export const schemas = {
       enabled: { type: 'boolean', description: 'Whether the project is active', example: true },
       crPath: { type: 'string', description: 'Path to CR directory relative to project root', example: 'docs/CRs' },
       documentPaths: { type: 'array', items: { type: 'string' }, description: 'Paths for document discovery', example: ['docs'] },
-      excludeFolders: { type: 'array', items: { type: 'string' }, description: 'Folders to exclude', example: ['node_modules'] }
-    }
+      excludeFolders: { type: 'array', items: { type: 'string' }, description: 'Folders to exclude', example: ['node_modules'] },
+    },
   },
 
   Document: {
@@ -81,8 +87,8 @@ export const schemas = {
     properties: {
       path: { type: 'string', description: 'Relative path from project root', example: 'docs/architecture.md' },
       name: { type: 'string', description: 'Document filename', example: 'architecture.md' },
-      content: { type: 'string', description: 'Document content (when requested)' }
-    }
+      content: { type: 'string', description: 'Document content (when requested)' },
+    },
   },
 
   Error400: {
@@ -91,8 +97,8 @@ export const schemas = {
     properties: {
       error: { type: 'string', example: 'Bad Request' },
       message: { type: 'string', example: 'Invalid request parameters' },
-      details: { type: 'array', items: { type: 'object', properties: { field: { type: 'string' }, message: { type: 'string' } } } }
-    }
+      details: { type: 'array', items: { type: 'object', properties: { field: { type: 'string' }, message: { type: 'string' } } } },
+    },
   },
 
   Error404: {
@@ -100,8 +106,8 @@ export const schemas = {
     required: ['error', 'message'],
     properties: {
       error: { type: 'string', example: 'Not Found' },
-      message: { type: 'string', example: 'Resource not found' }
-    }
+      message: { type: 'string', example: 'Resource not found' },
+    },
   },
 
   Error500: {
@@ -109,8 +115,8 @@ export const schemas = {
     required: ['error', 'message'],
     properties: {
       error: { type: 'string', example: 'Internal Server Error' },
-      message: { type: 'string', example: 'An unexpected error occurred' }
-    }
+      message: { type: 'string', example: 'An unexpected error occurred' },
+    },
   },
 
   Error: {
@@ -118,8 +124,8 @@ export const schemas = {
     required: ['error', 'message'],
     properties: {
       error: { type: 'string', example: 'Error' },
-      message: { type: 'string', example: 'An error occurred' }
-    }
+      message: { type: 'string', example: 'An error occurred' },
+    },
   },
 
   ProjectConfig: {
@@ -131,12 +137,12 @@ export const schemas = {
         properties: {
           name: { type: 'string', example: 'Markdown Ticket' },
           code: { type: 'string', example: 'MDT' },
-          crPath: { type: 'string', example: 'docs/CRs' }
-        }
+          crPath: { type: 'string', example: 'docs/CRs' },
+        },
       },
       documentPaths: { type: 'array', items: { type: 'string' }, example: ['docs'] },
-      excludeFolders: { type: 'array', items: { type: 'string' }, example: ['node_modules'] }
-    }
+      excludeFolders: { type: 'array', items: { type: 'string' }, example: ['node_modules'] },
+    },
   },
 
   // DevTools schemas
@@ -145,8 +151,8 @@ export const schemas = {
     properties: {
       timestamp: { type: 'integer', example: 1701234567890 },
       level: { type: 'string', enum: ['info', 'warn', 'error'], example: 'info' },
-      message: { type: 'string', example: 'Server started on port 3001' }
-    }
+      message: { type: 'string', example: 'Server started on port 3001' },
+    },
   },
 
   FrontendLogEntry: {
@@ -159,8 +165,8 @@ export const schemas = {
       type: { type: 'string', example: 'log' },
       url: { type: 'string', example: 'http://localhost:5173/board' },
       line: { type: 'integer', example: 42 },
-      column: { type: 'integer', example: 15 }
-    }
+      column: { type: 'integer', example: 15 },
+    },
   },
 
   FrontendSessionStatus: {
@@ -168,16 +174,16 @@ export const schemas = {
     properties: {
       active: { type: 'boolean', example: true },
       sessionStart: { type: 'integer', nullable: true, example: 1701234567890 },
-      timeRemaining: { type: 'integer', nullable: true, example: 1800000 }
-    }
+      timeRemaining: { type: 'integer', nullable: true, example: 1800000 },
+    },
   },
 
   FrontendLogsResponse: {
     type: 'object',
     properties: {
       logs: { type: 'array', items: { $ref: '#/components/schemas/FrontendLogEntry' } },
-      total: { type: 'integer', example: 150 }
-    }
+      total: { type: 'integer', example: 150 },
+    },
   },
 
   DevModeStatus: {
@@ -191,10 +197,10 @@ export const schemas = {
         properties: {
           limit: { type: 'integer', example: 300 },
           current: { type: 'integer', example: 42 },
-          resetTime: { type: 'integer', example: 1701234627890 }
-        }
-      }
-    }
+          resetTime: { type: 'integer', example: 1701234627890 },
+        },
+      },
+    },
   },
 
   DevModeLogResponse: {
@@ -205,10 +211,10 @@ export const schemas = {
         type: 'object',
         properties: {
           remaining: { type: 'integer', example: 258 },
-          resetTime: { type: 'integer', example: 1701234627890 }
-        }
-      }
-    }
+          resetTime: { type: 'integer', example: 1701234627890 },
+        },
+      },
+    },
   },
 
   DevModeLogsResponse: {
@@ -217,26 +223,37 @@ export const schemas = {
       logs: { type: 'array', items: { $ref: '#/components/schemas/FrontendLogEntry' } },
       total: { type: 'integer', example: 150 },
       devMode: { type: 'boolean', example: true },
-      timeRemaining: { type: 'integer', nullable: true, example: 3600000 }
-    }
-  }
-};
+      timeRemaining: { type: 'integer', nullable: true, example: 3600000 },
+    },
+  },
+}
 
 // Common Parameters for reuse in route definitions
 export const parameters = {
   projectId: {
-    name: 'projectId', in: 'path', required: true,
-    schema: { type: 'string' }, description: 'Project identifier', example: 'mdt'
+    name: 'projectId',
+    in: 'path',
+    required: true,
+    schema: { type: 'string' },
+    description: 'Project identifier',
+    example: 'mdt',
   },
   crId: {
-    name: 'crId', in: 'path', required: true,
-    schema: { type: 'string', pattern: '^[A-Z]+-\\d{3,}$' }, description: 'CR identifier', example: 'MDT-001'
+    name: 'crId',
+    in: 'path',
+    required: true,
+    schema: { type: 'string', pattern: '^[A-Z]+-\\d{3,}$' },
+    description: 'CR identifier',
+    example: 'MDT-001',
   },
   projectCode: {
-    name: 'code', in: 'path', required: true,
-    schema: { type: 'string', pattern: '^[A-Z]+$' }, description: 'Project code', example: 'MDT'
-  }
-};
+    name: 'code',
+    in: 'path',
+    required: true,
+    schema: { type: 'string', pattern: '^[A-Z]+$' },
+    description: 'Project code',
+    example: 'MDT',
+  },
+}
 
 // Export enums for TypeScript usage
-;

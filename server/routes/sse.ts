@@ -1,22 +1,24 @@
-import { Router, Request } from 'express';
-import FileWatcherService from '../fileWatcherService.js';
+import type { Request } from 'express'
+import type FileWatcherService from '../fileWatcherService.js'
+import { Router } from 'express'
 
 interface _ResponseLike {
-  write(data: string): void;
-  on(event: string, callback: (...args: any[]) => void): void;
-  headersSent: boolean;
-  destroyed?: boolean;
-  closed?: boolean;
-  end?(): void;
+  write: (data: string) => void
+  on: (event: string, callback: (...args: any[]) => void) => void
+  headersSent: boolean
+  destroyed?: boolean
+  closed?: boolean
+  end?: () => void
 }
 
 /**
- * Router for Server-Sent Events endpoints
- * @param fileWatcher - File watcher service instance
- * @returns Express router
+ * Router for Server-Sent Events endpoints.
+ *
+ * @param fileWatcher - File watcher service instance.
+ * @returns Express router.
  */
 export function createSSERouter(fileWatcher: FileWatcherService): Router {
-  const router = Router();
+  const router = Router()
 
   /**
    * @openapi
@@ -41,35 +43,35 @@ export function createSSERouter(fileWatcher: FileWatcherService): Router {
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Cache-Control'
-    });
+      'Access-Control-Allow-Headers': 'Cache-Control',
+    })
 
     // Add client to file watcher service first (so it's tracked before sending data)
-    fileWatcher.addClient(res);
+    fileWatcher.addClient(res)
 
     // Send initial connection event on next tick to ensure stream is ready
     // This is critical for test environments where data listeners are attached asynchronously
     setImmediate(() => {
-      res.write('data: {"type":"connection","data":{"status":"connected","timestamp":' + Date.now() + '}}\n\n');
+      res.write(`data: {"type":"connection","data":{"status":"connected","timestamp":${Date.now()}}}\n\n`)
       // Flush the stream to ensure data is sent immediately
       if (typeof res.flush === 'function') {
-        res.flush();
+        res.flush()
       }
-    });
+    })
 
-    console.log(`SSE client connected. Total clients: ${fileWatcher.getClientCount()}`);
+    console.log(`SSE client connected. Total clients: ${fileWatcher.getClientCount()}`)
 
     // Handle client disconnect
     req.on('close', () => {
-      console.log('SSE client disconnected');
-      fileWatcher.removeClient(res);
-    });
+      console.log('SSE client disconnected')
+      fileWatcher.removeClient(res)
+    })
 
     req.on('aborted', () => {
-      console.log('SSE client aborted');
-      fileWatcher.removeClient(res);
-    });
-  });
+      console.log('SSE client aborted')
+      fileWatcher.removeClient(res)
+    })
+  })
 
-  return router;
+  return router
 }
