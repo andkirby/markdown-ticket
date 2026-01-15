@@ -1,18 +1,19 @@
-import { Router } from 'express';
-import { DocumentController } from '../controllers/DocumentController.js';
-import { ProjectController } from '../controllers/ProjectController.js';
+import type { DocumentController } from '../controllers/DocumentController.js'
+import type { ProjectController } from '../controllers/ProjectController.js'
+import { Router } from 'express'
 
 /**
- * Router for document-related endpoints
- * @param documentController - Document controller instance
- * @param projectController - Project controller instance (for configuration)
- * @returns Express router
+ * Router for document-related endpoints.
+ *
+ * @param documentController - Document controller instance.
+ * @param projectController - Project controller instance (for configuration).
+ * @returns Express router.
  */
 export function createDocumentRouter(
   documentController: DocumentController,
-  projectController: ProjectController
+  projectController: ProjectController,
 ): Router {
-  const router = Router();
+  const router = Router()
 
   /**
    * @openapi
@@ -34,7 +35,7 @@ export function createDocumentRouter(
    *       400: { $ref: '#/components/responses/BadRequest' }
    *       404: { $ref: '#/components/responses/NotFound' }
    */
-  router.get('/', (req, res) => documentController.getDocuments(req, res));
+  router.get('/', (req, res) => documentController.getDocuments(req, res))
 
   /**
    * @openapi
@@ -62,7 +63,7 @@ export function createDocumentRouter(
    *       403: { description: Access denied or invalid file path }
    *       404: { $ref: '#/components/responses/NotFound' }
    */
-  router.get('/content', (req, res) => documentController.getDocumentContent(req, res));
+  router.get('/content', (req, res) => documentController.getDocumentContent(req, res))
 
   /**
    * @openapi
@@ -89,7 +90,7 @@ export function createDocumentRouter(
    *       400: { $ref: '#/components/responses/BadRequest' }
    *       404: { $ref: '#/components/responses/NotFound' }
    */
-  router.post('/configure', (req, res) => projectController.configureDocuments(req, res));
+  router.post('/configure', (req, res) => projectController.configureDocuments(req, res))
 
-  return router;
+  return router
 }

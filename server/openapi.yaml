@@ -127,7 +127,7 @@ components:
           type: string
           format: date
           description: Date implementation completed (ISO 8601)
-          example: '2025-09-20'
+          example: 2025-09-20
         implementationNotes:
           type: string
           description: Notes about the implementation

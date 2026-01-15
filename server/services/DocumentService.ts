@@ -1,89 +1,89 @@
-import * as path from 'path';
-import { TreeService } from './TreeService.js';
-import { FileOperationInvoker } from '../invokers/FileOperationInvoker.js';
+import * as path from 'node:path'
+import { FileOperationInvoker } from '../invokers/FileOperationInvoker.js'
+import { TreeService } from './TreeService.js'
 
 // Type definitions
 interface TreeNode {
-  name: string;
-  path: string;
-  type: 'file' | 'folder';
-  children?: TreeNode[];
-  size?: number;
-  lastModified?: Date;
-  metadata?: Record<string, any>;
+  name: string
+  path: string
+  type: 'file' | 'folder'
+  children?: TreeNode[]
+  size?: number
+  lastModified?: Date
+  metadata?: Record<string, any>
 }
 
 interface Project {
-  id: string;
+  id: string
   project: {
-    name: string;
-    path: string;
-    active: boolean;
-  };
+    name: string
+    path: string
+    active: boolean
+  }
 }
 
 interface ProjectDiscovery {
-  getAllProjects(): Promise<Project[]>;
+  getAllProjects: () => Promise<Project[]>
 }
 
 interface FileInvoker {
-  readFile(filePath: string): Promise<string>;
+  readFile: (filePath: string) => Promise<string>
 }
 
 /**
- * Service layer for document discovery and management
+ * Service layer for document discovery and management.
  */
 export class DocumentService {
-  private projectDiscovery: ProjectDiscovery;
-  private treeService: TreeService;
-  private _fileInvoker: FileInvoker;
+  private projectDiscovery: ProjectDiscovery
+  private treeService: TreeService
+  private _fileInvoker: FileInvoker
 
   constructor(projectDiscovery: ProjectDiscovery) {
-    this.projectDiscovery = projectDiscovery;
-    this.treeService = new TreeService(projectDiscovery);
-    this._fileInvoker = new FileOperationInvoker();
+    this.projectDiscovery = projectDiscovery
+    this.treeService = new TreeService(projectDiscovery)
+    this._fileInvoker = new FileOperationInvoker()
   }
 
   /**
-   * Discover documents for a project
+   * Discover documents for a project.
    */
   async discoverDocuments(projectId: string): Promise<TreeNode[]> {
-    return await this.treeService.getDocumentTree(projectId);
+    return await this.treeService.getDocumentTree(projectId)
   }
 
   /**
-   * Get document content
+   * Get document content.
    */
   async getDocumentContent(projectId: string, filePath: string): Promise<string> {
     if (filePath.includes('..')) {
-      throw new Error('Invalid file path');
+      throw new Error('Invalid file path')
     }
 
     if (!filePath.endsWith('.md')) {
-      throw new Error('Only markdown files are allowed');
+      throw new Error('Only markdown files are allowed')
     }
 
-    const projects = await this.projectDiscovery.getAllProjects();
-    const project = projects.find(p => p.id === projectId);
+    const projects = await this.projectDiscovery.getAllProjects()
+    const project = projects.find(p => p.id === projectId)
 
     if (!project) {
-      throw new Error('Project not found');
+      throw new Error('Project not found')
     }
 
-    const projectPath = project.project.path;
-    const resolvedPath = path.join(projectPath, filePath);
+    const projectPath = project.project.path
+    const resolvedPath = path.join(projectPath, filePath)
 
     if (!resolvedPath.startsWith(projectPath)) {
-      throw new Error('Access denied');
+      throw new Error('Access denied')
     }
 
-    return await this._fileInvoker.readFile(resolvedPath);
+    return await this._fileInvoker.readFile(resolvedPath)
   }
 
   /**
-   * Expose file invoker for external use
+   * Expose file invoker for external use.
    */
   get fileInvoker(): FileInvoker {
-    return this._fileInvoker;
+    return this._fileInvoker
   }
 }

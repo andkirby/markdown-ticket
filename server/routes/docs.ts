@@ -1,17 +1,19 @@
 /**
- * API Documentation Routes - Serves OpenAPI spec and Redoc UI
+ * API Documentation Routes - Serves OpenAPI spec and Redoc UI.
  */
 
-import { Router, Request, Response } from 'express';
-import redoc from 'redoc-express';
-import { swaggerSpec } from '../openapi/config.js';
+import type { Request, Response } from 'express'
+import { Router } from 'express'
+import redoc from 'redoc-express'
+import { swaggerSpec } from '../openapi/config.js'
 
 /**
- * Creates router for API documentation endpoints
- * @returns Express router with /api-docs endpoints
+ * Creates router for API documentation endpoints.
+ *
+ * @returns Express router with /api-docs endpoints.
  */
 export function createDocsRouter(): Router {
-  const router = Router();
+  const router = Router()
 
   /**
    * @openapi
@@ -30,8 +32,8 @@ export function createDocsRouter(): Router {
    *               description: OpenAPI 3.0.0 specification document
    */
   router.get('/json', (req: Request, res: Response) => {
-    res.json(swaggerSpec);
-  });
+    res.json(swaggerSpec)
+  })
 
   /**
    * @openapi
@@ -51,10 +53,10 @@ export function createDocsRouter(): Router {
   // Use type assertion to handle redoc-express middleware typing
   const redocMiddleware = redoc({
     title: 'Markdown Ticket API',
-    specUrl: '/api-docs/json'
-  }) as unknown as (req: Request, res: Response) => void;
+    specUrl: '/api-docs/json',
+  }) as unknown as (req: Request, res: Response) => void
 
-  router.get('/', redocMiddleware);
+  router.get('/', redocMiddleware)
 
-  return router;
+  return router
 }

@@ -117,6 +117,13 @@ export class ProjectFactory {
   }
 
   /**
+   * Get the projects directory path.
+   */
+  getProjectsDir(): string {
+    return this.projectsDir;
+  }
+
+  /**
    * Create a test project with default configuration
    */
   async createProject(

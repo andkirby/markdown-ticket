@@ -1,36 +1,39 @@
-import { Router, Request, Response } from 'express';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import * as toml from 'toml';
-import * as os from 'os';
-import FileWatcherService from '../fileWatcherService.js';
-import { ProjectController } from '../controllers/ProjectController.js';
-import { getConfigDir } from '@mdt/shared/utils/constants.js';
+import type { Request, Response } from 'express'
+import type { ProjectController } from '../controllers/ProjectController.js'
+import type FileWatcherService from '../fileWatcherService.js'
+import * as fs from 'node:fs/promises'
+import * as os from 'node:os'
+import * as path from 'node:path'
+import process from 'node:process'
+import { getConfigDir } from '@mdt/shared/utils/constants.js'
+import { Router } from 'express'
+import * as toml from 'toml'
 
 interface FileInvoker {
-  clearCache(): void;
-  invalidateFile(filePath: string): void;
+  clearCache: () => void
+  invalidateFile: (filePath: string) => void
 }
 
 interface ProjectDiscovery {
-  clearCache?(): void | Promise<void>;
+  clearCache?: () => void | Promise<void>
 }
 
 /**
- * Router for system-related endpoints (status, directories, filesystem, config)
- * @param fileWatcher - File watcher service instance
- * @param projectController - Project controller instance
- * @param projectDiscovery - Project discovery service
- * @param fileInvoker - File operation invoker for cache management
- * @returns Express router
+ * Router for system-related endpoints (status, directories, filesystem, config).
+ *
+ * @param fileWatcher - File watcher service instance.
+ * @param projectController - Project controller instance.
+ * @param projectDiscovery - Project discovery service.
+ * @param fileInvoker - File operation invoker for cache management.
+ * @returns Express router.
  */
 export function createSystemRouter(
   fileWatcher: FileWatcherService,
   projectController: ProjectController,
   projectDiscovery: ProjectDiscovery,
-  fileInvoker: FileInvoker
+  fileInvoker: FileInvoker,
 ): Router {
-  const router = Router();
+  const router = Router()
 
   /**
    * @openapi
@@ -59,9 +62,9 @@ export function createSystemRouter(
       message: 'Ticket board server is running',
       tasksDir: process.env.TICKETS_DIR || './sample-tasks',
       timestamp: new Date().toISOString(),
-      sseClients: fileWatcher.getClientCount()
-    });
-  });
+      sseClients: fileWatcher.getClientCount(),
+    })
+  })
 
   /**
    * @openapi
@@ -82,8 +85,8 @@ export function createSystemRouter(
    *                 directories: { type: array, items: { type: string } }
    */
   router.get('/directories', (req: Request, res: Response) => {
-    projectController.getSystemDirectories(req, res);
-  });
+    projectController.getSystemDirectories(req, res)
+  })
 
   /**
    * @openapi
@@ -108,31 +111,35 @@ export function createSystemRouter(
    */
   router.get('/config/links', async (req: Request, res: Response) => {
     try {
-      const configDir = getConfigDir();
-      const configPath = path.join(configDir, 'config.toml');
-      const configData = await fs.readFile(configPath, 'utf8');
+      const configDir = getConfigDir()
+      const configPath = path.join(configDir, 'config.toml')
+      const configData = await fs.readFile(configPath, 'utf8')
 
       // Simple TOML parsing for [links] section
-      const linkSection = configData.match(/\[links\]([\s\S]*?)(?=\[|$)/);
+      const linkSection = configData.match(/\[links\]([\s\S]*?)(?=\[|$)/)
+
       if (linkSection) {
-        const linkConfig: Record<string, boolean> = {};
-        const lines = linkSection[1].split('\n');
+        const linkConfig: Record<string, boolean> = {}
+        const lines = linkSection[1].split('\n')
 
         for (const line of lines) {
-          const match = line.trim().match(/^(\w+)\s*=\s*(true|false)$/);
+          const match = line.trim().match(/^(\w+)\s*=\s*(true|false)$/)
+
           if (match) {
-            linkConfig[match[1]] = match[2] === 'true';
+            linkConfig[match[1]] = match[2] === 'true'
           }
         }
 
-        res.json(linkConfig);
-      } else {
-        res.status(404).json({ error: 'Link configuration not found' });
+        res.json(linkConfig)
       }
-    } catch (_error) {
-      res.status(404).json({ error: 'Configuration file not found' });
+      else {
+        res.status(404).json({ error: 'Link configuration not found' })
+      }
     }
-  });
+    catch {
+      res.status(404).json({ error: 'Configuration file not found' })
+    }
+  })
 
   /**
    * @openapi
@@ -158,8 +165,8 @@ export function createSystemRouter(
    *                 children: { type: array, items: { type: object } }
    */
   router.get('/filesystem', (req: Request, res: Response) => {
-    projectController.getFileSystemTree(req, res);
-  });
+    projectController.getFileSystemTree(req, res)
+  })
 
   /**
    * @openapi
@@ -195,72 +202,83 @@ export function createSystemRouter(
    *             schema: { $ref: '#/components/schemas/Error400' }
    */
   router.post('/filesystem/exists', async (req: Request, res: Response) => {
-    const { path: inputPath } = req.body;
+    const { path: inputPath } = req.body
 
     if (!inputPath || typeof inputPath !== 'string') {
-      return res.status(400).json({ error: 'Bad Request', message: 'Path is required and must be a string' });
+      return res.status(400).json({ error: 'Bad Request', message: 'Path is required and must be a string' })
     }
 
     try {
       // Server-side tilde expansion for security and consistency
-      let expandedPath = inputPath;
+      let expandedPath = inputPath
+
       if (inputPath.startsWith('~')) {
-        const homeDir = os.homedir();
-        expandedPath = inputPath.replace(/^~($|\/)/, `${homeDir}$1`);
+        const homeDir = os.homedir()
+
+        expandedPath = inputPath.replace(/^~($|\/)/, `${homeDir}$1`)
       }
 
       // Check if directory exists
-      let exists = false;
+      let exists = false
+
       try {
-        const stats = await fs.stat(expandedPath);
-        exists = stats.isDirectory();
-      } catch {
-        exists = false;
+        const stats = await fs.stat(expandedPath)
+
+        exists = stats.isDirectory()
+      }
+      catch {
+        exists = false
       }
 
       // Check if path is within discovery search paths
-      let isInDiscovery = 0;
+      let isInDiscovery = 0
+
       try {
-        const configDir = getConfigDir();
-        const configPath = path.join(configDir, 'config.toml');
-        const configContent = await fs.readFile(configPath, 'utf8');
-        const parsedConfig = toml.parse(configContent);
-        const discoveryPaths = parsedConfig.discovery?.searchPaths || [];
+        const configDir = getConfigDir()
+        const configPath = path.join(configDir, 'config.toml')
+        const configContent = await fs.readFile(configPath, 'utf8')
+        const parsedConfig = toml.parse(configContent)
+        const discoveryPaths = parsedConfig.discovery?.searchPaths || []
 
         // More precise matching: path must start with discovery path AND
         // either be exactly the discovery path OR have a separator after it
         for (const discoveryPath of discoveryPaths) {
-          let expandedDiscoveryPath = discoveryPath;
+          let expandedDiscoveryPath = discoveryPath
+
           if (discoveryPath.startsWith('~')) {
-            const homeDir = os.homedir();
-            expandedDiscoveryPath = discoveryPath.replace(/^~($|\/)/, `${homeDir}$1`);
+            const homeDir = os.homedir()
+
+            expandedDiscoveryPath = discoveryPath.replace(/^~($|\/)/, `${homeDir}$1`)
           }
 
           if (expandedPath === expandedDiscoveryPath) {
-            isInDiscovery = 1; // Exact match
-            break;
-          } else if (expandedPath.startsWith(expandedDiscoveryPath + '/')) {
-            isInDiscovery = 1; // Match with proper path separator
-            break;
+            isInDiscovery = 1 // Exact match
+            break
+          }
+          else if (expandedPath.startsWith(`${expandedDiscoveryPath}/`)) {
+            isInDiscovery = 1 // Match with proper path separator
+            break
           }
         }
-      } catch (error) {
-        console.warn('Could not check discovery paths:', error);
+      }
+      catch (error) {
+        console.warn('Could not check discovery paths:', error)
       }
 
       const result = {
         exists: exists ? 1 : 0,
         isInDiscovery,
-        expandedPath
-      };
+        expandedPath,
+      }
 
-      console.log(`🔍 Enhanced path check for "${inputPath}": expanded="${expandedPath}", exists=${result.exists}, inDiscovery=${result.isInDiscovery}`);
-      res.json(result);
-    } catch (error) {
-      console.error('Error checking directory existence:', error);
-      res.status(500).json({ error: 'Failed to check directory existence' });
+      console.log(`🔍 Enhanced path check for "${inputPath}": expanded="${expandedPath}", exists=${result.exists}, inDiscovery=${result.isInDiscovery}`)
+      res.json(result)
     }
-  });
+    catch (error) {
+      console.error('Error checking directory existence:', error)
+      res.status(500).json({ error: 'Failed to check directory existence' })
+    }
+  })
 
   /**
    * @openapi
@@ -288,18 +306,19 @@ export function createSystemRouter(
    */
   router.post('/cache/clear', async (req: Request, res: Response) => {
     try {
-      console.log('🗑️  Clearing file operation cache');
-      fileInvoker.clearCache();
+      console.log('🗑️  Clearing file operation cache')
+      fileInvoker.clearCache()
       res.json({
         success: true,
         message: 'Cache cleared successfully',
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Error clearing cache:', error);
-      res.status(500).json({ error: 'Failed to clear cache' });
+        timestamp: new Date().toISOString(),
+      })
     }
-  });
+    catch (error) {
+      console.error('Error clearing cache:', error)
+      res.status(500).json({ error: 'Failed to clear cache' })
+    }
+  })
 
   /**
    * @openapi
@@ -326,42 +345,46 @@ export function createSystemRouter(
    */
   router.get('/config', async (req: Request, res: Response) => {
     try {
-      const configDir = getConfigDir();
-      const configPath = path.join(configDir, 'config.toml');
-      console.log(`Reading config from: ${configPath}`);
+      const configDir = getConfigDir()
+      const configPath = path.join(configDir, 'config.toml')
+
+      console.log(`Reading config from: ${configPath}`)
 
       try {
-        const configContent = await fs.readFile(configPath, 'utf8');
-        const parsedConfig = toml.parse(configContent);
+        const configContent = await fs.readFile(configPath, 'utf8')
+        const parsedConfig = toml.parse(configContent)
 
         // Extract configuration using proper TOML parsing
         const response = {
-          configDir: configDir,
+          configDir,
           discovery: {
             autoDiscover: parsedConfig.discovery?.autoDiscover ?? true,
             searchPaths: parsedConfig.discovery?.searchPaths ?? [],
-            maxDepth: parsedConfig.discovery?.maxDepth ?? 3
-          }
-        };
+            maxDepth: parsedConfig.discovery?.maxDepth ?? 3,
+          },
+        }
 
-        res.json(response);
-      } catch (_error) {
+        res.json(response)
+      }
+      catch {
         // Config file doesn't exist, return defaults
         const response = {
-          configDir: configDir,
+          configDir,
           discovery: {
             autoDiscover: true,
             searchPaths: [],
-            maxDepth: 3
-          }
-        };
-        res.json(response);
+            maxDepth: 3,
+          },
+        }
+
+        res.json(response)
       }
-    } catch (error) {
-      console.error('Error reading config:', error);
-      res.status(500).json({ error: 'Failed to read config' });
     }
-  });
+    catch (error) {
+      console.error('Error reading config:', error)
+      res.status(500).json({ error: 'Failed to read config' })
+    }
+  })
 
   /**
    * @openapi
@@ -390,46 +413,51 @@ export function createSystemRouter(
    */
   router.get('/config/global', async (req: Request, res: Response) => {
     try {
-      const configDir = getConfigDir();
-      const configPath = path.join(configDir, 'config.toml');
-      console.log(`Reading global config from: ${configPath}`);
+      const configDir = getConfigDir()
+      const configPath = path.join(configDir, 'config.toml')
+
+      console.log(`Reading global config from: ${configPath}`)
 
       try {
-        const configContent = await fs.readFile(configPath, 'utf8');
-        const parsedConfig = toml.parse(configContent);
-        res.json(parsedConfig);
-      } catch (_error) {
+        const configContent = await fs.readFile(configPath, 'utf8')
+        const parsedConfig = toml.parse(configContent)
+
+        res.json(parsedConfig)
+      }
+      catch {
         // Config file doesn't exist, return default config
         const defaultConfig = {
           discovery: {
             autoDiscover: true,
             searchPaths: [],
-            maxDepth: 3
+            maxDepth: 3,
           },
           links: {
             enableAutoLinking: true,
             enableTicketLinks: true,
             enableDocumentLinks: true,
             enableHoverPreviews: false,
-            linkValidation: false
+            linkValidation: false,
           },
           ui: {
             theme: 'auto',
             autoRefresh: true,
-            refreshInterval: 5000
+            refreshInterval: 5000,
           },
           system: {
             logLevel: 'info',
-            cacheTimeout: 30000
-          }
-        };
-        res.json(defaultConfig);
+            cacheTimeout: 30000,
+          },
+        }
+
+        res.json(defaultConfig)
       }
-    } catch (error) {
-      console.error('Error reading global config:', error);
-      res.status(500).json({ error: 'Failed to read global config' });
     }
-  });
+    catch (error) {
+      console.error('Error reading global config:', error)
+      res.status(500).json({ error: 'Failed to read global config' })
+    }
+  })
 
   /**
    * @openapi
@@ -459,20 +487,21 @@ export function createSystemRouter(
     try {
       // Clear project discovery cache if it has one
       if (projectDiscovery.clearCache) {
-        projectDiscovery.clearCache();
+        projectDiscovery.clearCache()
       }
 
-      console.log('🔄 Config cache cleared');
+      console.log('🔄 Config cache cleared')
       res.json({
         success: true,
         message: 'Config cache cleared successfully',
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Error clearing config cache:', error);
-      res.status(500).json({ error: 'Failed to clear config cache' });
+        timestamp: new Date().toISOString(),
+      })
     }
-  });
+    catch (error) {
+      console.error('Error clearing config cache:', error)
+      res.status(500).json({ error: 'Failed to clear config cache' })
+    }
+  })
 
-  return router;
+  return router
 }

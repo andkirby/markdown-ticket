@@ -1,144 +1,157 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express'
+import { Router } from 'express'
 
 // Type definitions
 interface LogEntry {
-  timestamp: number;
-  level: string;
-  message: string;
+  timestamp: number
+  level: string
+  message: string
 }
 
 interface FrontendLogEntry extends LogEntry {
-  source?: string;
-  type?: string;
-  url?: string;
-  line?: number;
-  column?: number;
+  source?: string
+  type?: string
+  url?: string
+  line?: number
+  column?: number
 }
 
 interface FrontendSessionStatus {
-  active: boolean;
-  sessionStart: number | null;
-  timeRemaining: number | null;
+  active: boolean
+  sessionStart: number | null
+  timeRemaining: number | null
 }
 
 interface DevModeStatus {
-  active: boolean;
-  sessionStart: number | null;
-  timeRemaining: number | null;
+  active: boolean
+  sessionStart: number | null
+  timeRemaining: number | null
   rateLimit: {
-    limit: number;
-    current: number;
-    resetTime: number;
-  };
+    limit: number
+    current: number
+    resetTime: number
+  }
 }
 
 // In-memory log buffer for development
-const logBuffer: LogEntry[] = [];
-const MAX_LOG_ENTRIES = 100;
+const logBuffer: LogEntry[] = []
+const MAX_LOG_ENTRIES = 100
 
 // Frontend logging session management
-let frontendSessionActive = false;
-let frontendSessionStart: number | null = null;
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-const frontendLogs: FrontendLogEntry[] = [];
-const MAX_FRONTEND_LOGS = 1000;
+let frontendSessionActive = false
+let frontendSessionStart: number | null = null
+/**
+ * 30 minutes.
+ */
+const SESSION_TIMEOUT = 30 * 60 * 1000
+const frontendLogs: FrontendLogEntry[] = []
+const MAX_FRONTEND_LOGS = 1000
 
 // DEV mode logging state management
-let devModeActive = false;
-let devModeStart: number | null = null;
-const DEV_MODE_TIMEOUT = 60 * 60 * 1000; // 1 hour
-const devModeLogs: FrontendLogEntry[] = [];
-const MAX_DEV_MODE_LOGS = 1000;
-const DEV_MODE_RATE_LIMIT = 300; // 300 logs per minute
-let devModeLogCount = 0;
-let devModeRateLimitStart = Date.now();
+let devModeActive = false
+let devModeStart: number | null = null
+/**
+ * 1 hour.
+ */
+const DEV_MODE_TIMEOUT = 60 * 60 * 1000
+const devModeLogs: FrontendLogEntry[] = []
+const MAX_DEV_MODE_LOGS = 1000
+/**
+ * 300 logs per minute.
+ */
+const DEV_MODE_RATE_LIMIT = 300
+let devModeLogCount = 0
+let devModeRateLimitStart = Date.now()
 
 interface AuthenticatedRequest extends Request {
   query: {
-    lines?: string;
-    filter?: string;
-  };
+    lines?: string
+    filter?: string
+  }
   body: {
-    logs?: FrontendLogEntry[];
-  };
-}
-
-/**
- * Add log entry to buffer
- * @param level - Log level (info, error, warn)
- * @param args - Log arguments
- */
-function addToLogBuffer(level: string, ...args: any[]): void {
-  const message = args.map(arg =>
-    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-  ).join(' ');
-
-  logBuffer.push({
-    timestamp: Date.now(),
-    level,
-    message
-  });
-
-  // Keep only last MAX_LOG_ENTRIES
-  if (logBuffer.length > MAX_LOG_ENTRIES) {
-    logBuffer.shift();
+    logs?: FrontendLogEntry[]
   }
 }
 
 /**
- * Intercept console methods to capture logs
+ * Add log entry to buffer.
+ *
+ * @param level - Log level (info, error, warn).
+ * @param args - Log arguments.
  */
-export function setupLogInterception(): void {
-  const originalLog = console.log;
-  const originalError = console.error;
-  const originalWarn = console.warn;
+function addToLogBuffer(level: string, ...args: any[]): void {
+  const message = args.map(arg =>
+    typeof arg === 'object' ? JSON.stringify(arg) : String(arg),
+  ).join(' ')
 
-  console.log = (...args: any[]) => {
-    addToLogBuffer('info', ...args);
-    originalLog(...args);
-  };
+  logBuffer.push({
+    timestamp: Date.now(),
+    level,
+    message,
+  })
 
-  console.error = (...args: any[]) => {
-    addToLogBuffer('error', ...args);
-    originalError(...args);
-  };
-
-  console.warn = (...args: any[]) => {
-    addToLogBuffer('warn', ...args);
-    originalWarn(...args);
-  };
+  // Keep only last MAX_LOG_ENTRIES
+  if (logBuffer.length > MAX_LOG_ENTRIES) {
+    logBuffer.shift()
+  }
 }
 
 /**
- * Rate limiting middleware for DEV endpoints
+ * Intercept console methods to capture logs.
+ */
+export function setupLogInterception(): void {
+  const originalLog = console.log
+  const originalError = console.error
+  const originalWarn = console.warn
+
+  console.log = (...args: any[]) => {
+    addToLogBuffer('info', ...args)
+    originalLog(...args)
+  }
+
+  console.error = (...args: any[]) => {
+    addToLogBuffer('error', ...args)
+    originalError(...args)
+  }
+
+  console.warn = (...args: any[]) => {
+    addToLogBuffer('warn', ...args)
+    originalWarn(...args)
+  }
+}
+
+/**
+ * Rate limiting middleware for DEV endpoints.
  */
 function devModeRateLimit(req: Request, res: Response, next: NextFunction): void {
-  const now = Date.now();
+  const now = Date.now()
 
   // Reset counter every minute
   if (now - devModeRateLimitStart > 60000) {
-    devModeLogCount = 0;
-    devModeRateLimitStart = now;
+    devModeLogCount = 0
+    devModeRateLimitStart = now
   }
 
   // Check rate limit
   if (devModeLogCount >= DEV_MODE_RATE_LIMIT) {
     res.status(429).json({
       error: 'Rate limit exceeded',
-      message: 'DEV mode logging rate limit of 300 logs per minute exceeded'
-    });
-    return;
+      message: 'DEV mode logging rate limit of 300 logs per minute exceeded',
+    })
+
+    return
   }
 
-  next();
+  next()
 }
 
 /**
- * Router for development tools and logging endpoints
- * @returns Express router
+ * Router for development tools and logging endpoints.
+ *
+ * @returns Express router.
  */
 export function createDevToolsRouter(): Router {
-  const router = Router();
+  const router = Router()
 
   // ============================================================================
   // Server Logs API
@@ -166,19 +179,19 @@ export function createDevToolsRouter(): Router {
    *             schema: { type: array, items: { $ref: '#/components/schemas/LogEntry' } }
    */
   router.get('/logs', (req: AuthenticatedRequest, res: Response) => {
-    const lines = Math.min(parseInt(req.query.lines || '20'), MAX_LOG_ENTRIES);
-    const filter = req.query.filter;
+    const lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_LOG_ENTRIES)
+    const { filter } = req.query
 
-    let logs = logBuffer.slice(-lines);
+    let logs = logBuffer.slice(-lines)
 
     if (filter) {
       logs = logs.filter(log =>
-        log.message.toLowerCase().includes(filter.toLowerCase())
-      );
+        log.message.toLowerCase().includes(filter.toLowerCase()),
+      )
     }
 
-    res.json(logs);
-  });
+    res.json(logs)
+  })
 
   /**
    * @openapi
@@ -202,40 +215,40 @@ export function createDevToolsRouter(): Router {
    *               example: 'data: {"type":"connected","message":"Log stream connected"}'
    */
   router.get('/logs/stream', (req: Request, res: Response) => {
-    const filter = req.query.filter;
+    const { filter } = req.query
 
     // Set SSE headers
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*'
-    });
+      'Access-Control-Allow-Origin': '*',
+    })
 
     // Send initial connection message
     res.write(`data: ${JSON.stringify({
       type: 'connected',
       message: 'Log stream connected',
-      filter: filter || null
-    })}\n\n`);
+      filter: filter || null,
+    })}\n\n`)
 
     // Handle client disconnect
     req.on('close', () => {
-      console.log('SSE client disconnected');
-    });
+      console.log('SSE client disconnected')
+    })
 
     // Send periodic heartbeat
     const heartbeat = setInterval(() => {
       res.write(`data: ${JSON.stringify({
         type: 'heartbeat',
-        timestamp: Date.now()
-      })}\n\n`);
-    }, 30000);
+        timestamp: Date.now(),
+      })}\n\n`)
+    }, 30000)
 
     req.on('close', () => {
-      clearInterval(heartbeat);
-    });
-  });
+      clearInterval(heartbeat)
+    })
+  })
 
   // ============================================================================
   // Frontend Logging API
@@ -259,10 +272,11 @@ export function createDevToolsRouter(): Router {
     const status: FrontendSessionStatus = {
       active: frontendSessionActive,
       sessionStart: frontendSessionStart,
-      timeRemaining: frontendSessionActive ? (SESSION_TIMEOUT - (Date.now() - (frontendSessionStart || 0))) : null
-    };
-    res.json(status);
-  });
+      timeRemaining: frontendSessionActive ? (SESSION_TIMEOUT - (Date.now() - (frontendSessionStart || 0))) : null,
+    }
+
+    res.json(status)
+  })
 
   /**
    * @openapi
@@ -283,11 +297,11 @@ export function createDevToolsRouter(): Router {
    *                 sessionStart: { type: integer, example: 1701234567890 }
    */
   router.post('/frontend/logs/start', (req: Request, res: Response) => {
-    frontendSessionActive = true;
-    frontendSessionStart = Date.now();
-    console.log('🔍 Frontend logging session started');
-    res.json({ status: 'started', sessionStart: frontendSessionStart });
-  });
+    frontendSessionActive = true
+    frontendSessionStart = Date.now()
+    console.log('🔍 Frontend logging session started')
+    res.json({ status: 'started', sessionStart: frontendSessionStart })
+  })
 
   /**
    * @openapi
@@ -307,11 +321,11 @@ export function createDevToolsRouter(): Router {
    *                 status: { type: string, example: 'stopped' }
    */
   router.post('/frontend/logs/stop', (req: Request, res: Response) => {
-    frontendSessionActive = false;
-    frontendSessionStart = null;
-    console.log('🔍 Frontend logging session stopped');
-    res.json({ status: 'stopped' });
-  });
+    frontendSessionActive = false
+    frontendSessionStart = null
+    console.log('🔍 Frontend logging session stopped')
+    res.json({ status: 'stopped' })
+  })
 
   /**
    * @openapi
@@ -335,17 +349,18 @@ export function createDevToolsRouter(): Router {
    *             schema: { type: object, properties: { received: { type: integer } } }
    */
   router.post('/frontend/logs', (req: AuthenticatedRequest, res: Response) => {
-    const { logs } = req.body;
+    const { logs } = req.body
+
     if (logs && Array.isArray(logs)) {
-      frontendLogs.push(...logs);
+      frontendLogs.push(...logs)
       // Trim buffer if too large
       if (frontendLogs.length > MAX_FRONTEND_LOGS) {
-        frontendLogs.splice(0, frontendLogs.length - MAX_FRONTEND_LOGS);
+        frontendLogs.splice(0, frontendLogs.length - MAX_FRONTEND_LOGS)
       }
-      console.log(`📝 Received ${logs.length} frontend log entries`);
+      console.log(`📝 Received ${logs.length} frontend log entries`)
     }
-    res.json({ received: logs?.length || 0 });
-  });
+    res.json({ received: logs?.length || 0 })
+  })
 
   /**
    * @openapi
@@ -369,19 +384,21 @@ export function createDevToolsRouter(): Router {
    *             schema: { $ref: '#/components/schemas/FrontendLogsResponse' }
    */
   router.get('/frontend/logs', (req: AuthenticatedRequest, res: Response) => {
-    const lines = Math.min(parseInt(req.query.lines || '20'), MAX_FRONTEND_LOGS);
-    const filter = req.query.filter;
+    const lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_FRONTEND_LOGS)
+    const { filter } = req.query
 
-    let filteredLogs = frontendLogs;
+    let filteredLogs = frontendLogs
+
     if (filter) {
       filteredLogs = frontendLogs.filter(log =>
-        log.message.toLowerCase().includes(filter.toLowerCase())
-      );
+        log.message.toLowerCase().includes(filter.toLowerCase()),
+      )
     }
 
-    const recentLogs = filteredLogs.slice(-lines);
-    res.json({ logs: recentLogs, total: filteredLogs.length });
-  });
+    const recentLogs = filteredLogs.slice(-lines)
+
+    res.json({ logs: recentLogs, total: filteredLogs.length })
+  })
 
   // ============================================================================
   // DEV Mode Logging API
@@ -402,13 +419,13 @@ export function createDevToolsRouter(): Router {
    *             schema: { $ref: '#/components/schemas/DevModeStatus' }
    */
   router.get('/frontend/dev-logs/status', (req: Request, res: Response) => {
-    const now = Date.now();
+    const now = Date.now()
 
     // Auto-disable after timeout
     if (devModeActive && devModeStart && (now - devModeStart) > DEV_MODE_TIMEOUT) {
-      devModeActive = false;
-      devModeStart = null;
-      console.log('🔍 DEV mode logging auto-disabled after 1 hour timeout');
+      devModeActive = false
+      devModeStart = null
+      console.log('🔍 DEV mode logging auto-disabled after 1 hour timeout')
     }
 
     const status: DevModeStatus = {
@@ -418,11 +435,12 @@ export function createDevToolsRouter(): Router {
       rateLimit: {
         limit: DEV_MODE_RATE_LIMIT,
         current: devModeLogCount,
-        resetTime: devModeRateLimitStart + 60000
-      }
-    };
-    res.json(status);
-  });
+        resetTime: devModeRateLimitStart + 60000,
+      },
+    }
+
+    res.json(status)
+  })
 
   /**
    * @openapi
@@ -446,36 +464,37 @@ export function createDevToolsRouter(): Router {
    *       403: { $ref: '#/components/responses/DevModeInactive' }
    */
   router.post('/frontend/dev-logs', devModeRateLimit, (req: AuthenticatedRequest, res: Response) => {
-    const { logs } = req.body;
+    const { logs } = req.body
 
     if (!devModeActive) {
       res.status(403).json({
         error: 'DEV mode not active',
-        message: 'DEV mode logging is not currently active'
-      });
-      return;
+        message: 'DEV mode logging is not currently active',
+      })
+
+      return
     }
 
     if (logs && Array.isArray(logs)) {
-      devModeLogs.push(...logs);
-      devModeLogCount += logs.length;
+      devModeLogs.push(...logs)
+      devModeLogCount = devModeLogCount + logs.length
 
       // Trim buffer if too large
       if (devModeLogs.length > MAX_DEV_MODE_LOGS) {
-        devModeLogs.splice(0, devModeLogs.length - MAX_DEV_MODE_LOGS);
+        devModeLogs.splice(0, devModeLogs.length - MAX_DEV_MODE_LOGS)
       }
 
-      console.log(`🛠️ DEV: Received ${logs.length} frontend log entries`);
+      console.log(`🛠️ DEV: Received ${logs.length} frontend log entries`)
     }
 
     res.json({
       received: logs?.length || 0,
       rateLimit: {
         remaining: DEV_MODE_RATE_LIMIT - devModeLogCount,
-        resetTime: devModeRateLimitStart + 60000
-      }
-    });
-  });
+        resetTime: devModeRateLimitStart + 60000,
+      },
+    })
+  })
 
   /**
    * @openapi
@@ -502,29 +521,32 @@ export function createDevToolsRouter(): Router {
     if (!devModeActive) {
       res.status(403).json({
         error: 'DEV mode not active',
-        message: 'DEV mode logging is not currently active'
-      });
-      return;
+        message: 'DEV mode logging is not currently active',
+      })
+
+      return
     }
 
-    const lines = Math.min(parseInt(req.query.lines || '20'), MAX_DEV_MODE_LOGS);
-    const filter = req.query.filter;
+    const lines = Math.min(Number.parseInt(req.query.lines || '20'), MAX_DEV_MODE_LOGS)
+    const { filter } = req.query
 
-    let filteredLogs = devModeLogs;
+    let filteredLogs = devModeLogs
+
     if (filter) {
       filteredLogs = devModeLogs.filter(log =>
-        log.message.toLowerCase().includes(filter.toLowerCase())
-      );
+        log.message.toLowerCase().includes(filter.toLowerCase()),
+      )
     }
 
-    const recentLogs = filteredLogs.slice(-lines);
+    const recentLogs = filteredLogs.slice(-lines)
+
     res.json({
       logs: recentLogs,
       total: filteredLogs.length,
       devMode: true,
-      timeRemaining: devModeStart ? (DEV_MODE_TIMEOUT - (Date.now() - devModeStart)) : null
-    });
-  });
+      timeRemaining: devModeStart ? (DEV_MODE_TIMEOUT - (Date.now() - devModeStart)) : null,
+    })
+  })
 
-  return router;
+  return router
 }

@@ -9,6 +9,6 @@ export const swaggerSpec = {
     version: '1.0.0',
   },
   paths: {},
-};
+}
 
-export const validateResponse = () => ({ valid: true });
+export const validateResponse = () => ({ valid: true })

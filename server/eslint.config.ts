@@ -1,16 +1,21 @@
-import { sheriff, type SheriffSettings } from 'eslint-config-sheriff';
+import antfu from '@antfu/eslint-config'
 
-const sheriffOptions: SheriffSettings = {
-  react: false,
-  lodash: false,
-  remeda: false,
-  next: false,
-  astro: false,
-  playwright: false,
-  storybook: false,
-  jest: true,
-  vitest: false,
-  tsconfigRootDir: import.meta.dirname
-};
-
-export default sheriff(sheriffOptions);
+export default antfu(
+  {
+    typescript: true,
+    test: true,
+    ignores: [
+      'dist',
+      'node_modules',
+      'coverage',
+      'docs/**/*.md',
+    ],
+  },
+  {
+    rules: {
+      // Test file overrides - disable rules that cause issues in test files
+      'no-console': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+)

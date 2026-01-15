@@ -5,7 +5,7 @@ export default {
   roots: ['<rootDir>/tests'],
   testMatch: [
     '**/tests/**/*.test.ts',
-    '**/tests/**/*.spec.ts'
+    '**/tests/**/*.spec.ts',
   ],
   collectCoverageFrom: [
     '**/controllers/**/*.ts',
@@ -13,12 +13,12 @@ export default {
     '!**/node_modules/**',
     '!**/dist/**',
     '!**/*.d.ts',
-    '!**/tests/**'
+    '!**/tests/**',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: [
-    '<rootDir>/tests/utils/setupTests.ts'
+    '<rootDir>/tests/utils/setupTests.ts',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
@@ -26,7 +26,7 @@ export default {
     '^@mdt/shared/test-lib/(.*)$': '<rootDir>/../shared/test-lib/$1',
     // Map shared modules to mocks, removing .js extension
     '^@mdt/shared/(.*)\\.js$': '<rootDir>/tests/mocks/shared/$1',
-    '^@mdt/shared/(.*)$': '<rootDir>/tests/mocks/shared/$1'
+    '^@mdt/shared/(.*)$': '<rootDir>/tests/mocks/shared/$1',
   },
   transform: {
     '^.+\\.ts$': [
@@ -37,7 +37,7 @@ export default {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$|@mdt/shared/dist))'
+    'node_modules/(?!(.*\\.mjs$|@mdt/shared/dist))',
   ],
-  testTimeout: 10000
-};
+  testTimeout: 10000,
+}

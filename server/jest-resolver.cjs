@@ -5,22 +5,21 @@
  * using .js extensions (for ESM compatibility) but Jest needs to find the .ts files.
  */
 
-const path = require('path');
-
 function resolve(source, options) {
-  const { defaultResolver } = options;
+  const { defaultResolver } = options
 
   // If the source ends with .js, try resolving to .ts first
   if (source.endsWith('.js')) {
-    const tsSource = source.replace(/\.js$/, '.ts');
+    const tsSource = source.replace(/\.js$/, '.ts')
     try {
-      return defaultResolver(tsSource, options);
-    } catch (e) {
+      return defaultResolver(tsSource, options)
+    }
+    catch {
       // Fall through to default resolver
     }
   }
 
-  return defaultResolver(source, options);
+  return defaultResolver(source, options)
 }
 
-module.exports = resolve;
+module.exports = resolve

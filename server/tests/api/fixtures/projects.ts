@@ -1,13 +1,13 @@
 /**
- * Project Fixtures - MDT-106
+ * Project Fixtures - MDT-106.
  *
  * Test data fixtures for project-related API tests.
  */
 
-import type { ProjectConfig } from '@mdt/shared/test-lib';
+import type { ProjectConfig } from '@mdt/shared/test-lib'
 
 /**
- * Default project configuration for API testing
+ * Default project configuration for API testing.
  */
 const defaultProjectConfig: ProjectConfig = {
   name: 'API Test Project',
@@ -17,45 +17,45 @@ const defaultProjectConfig: ProjectConfig = {
   documentPaths: ['docs'],
   excludeFolders: ['node_modules', '.git', 'dist'],
   repository: 'test-repo',
-};
+}
 
 /**
- * Minimal project configuration
+ * Minimal project configuration.
  */
-const minimalProjectConfig: ProjectConfig = {
+const _minimalProjectConfig: ProjectConfig = {
   name: 'Minimal Test Project',
   code: 'MIN',
-};
+}
 
 /**
- * Project configuration with custom tickets path
+ * Project configuration with custom tickets path.
  */
-const customPathProjectConfig: ProjectConfig = {
+const _customPathProjectConfig: ProjectConfig = {
   name: 'Custom Path Project',
   code: 'CUST',
   ticketsPath: 'specifications/change-requests',
   documentPaths: ['specifications', 'docs'],
-};
+}
 
 /**
- * Create project config with custom code
+ * Create project config with custom code.
  */
-function createProjectConfig(overrides?: Partial<ProjectConfig>): ProjectConfig {
+function _createProjectConfig(overrides?: Partial<ProjectConfig>): ProjectConfig {
   return {
     ...defaultProjectConfig,
     ...overrides,
-  };
+  }
 }
 
 /**
- * Generate unique project code for testing
+ * Generate unique project code for testing.
  */
 export function generateTestProjectCode(): string {
-  return `TEST${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+  return `TEST${Math.random().toString(36).slice(2, 5).toUpperCase()}`
 }
 
 /**
- * CR creation data fixtures
+ * CR creation data fixtures.
  */
 export const crFixtures = {
   feature: {
@@ -92,10 +92,10 @@ export const crFixtures = {
     priority: 'Medium' as const,
     content: 'Update legacy authentication code to use new patterns',
   },
-};
+}
 
 /**
- * CR update data fixtures for PATCH/PUT tests
+ * CR update data fixtures for PATCH/PUT tests.
  */
 export const crUpdateFixtures = {
   statusChange: {
@@ -121,10 +121,10 @@ export const crUpdateFixtures = {
   },
 
   empty: {},
-};
+}
 
 /**
- * Error scenario fixtures
+ * Error scenario fixtures.
  */
 export const errorFixtures = {
   missingTitle: {
@@ -138,4 +138,4 @@ export const errorFixtures = {
   },
 
   emptyCR: {},
-};
+}

@@ -3,4 +3,4 @@ export const TreeService = {
   buildFileSystemTree: jest.fn(),
   flattenTree: jest.fn(),
   filterTree: jest.fn(),
-};
+}
