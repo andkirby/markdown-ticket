@@ -1,38 +1,34 @@
-import { sheriff, type SheriffSettings } from 'eslint-config-sheriff';
+import antfu from '@antfu/eslint-config'
 
-const sheriffOptions: SheriffSettings = {
-  react: true,
-  lodash: false,
-  remeda: false,
-  next: false,
-  astro: false,
-  playwright: false,
-  storybook: true,
-  jest: true,
-  vitest: false,
-  tsconfigRootDir: import.meta.dirname
-};
+export default antfu(
+  {
+    typescript: true,
+    react: true,
+    ignores: [
+      'dist',
+      'node_modules',
+      'coverage',
+      '.gitWT',
+    ],
+  },
+  {
+    rules: {
+      // Disable storybook rules as @antfu/eslint-config doesn't include them
+      // Re-enable if needed via eslint-plugin-storybook
+      '@typescript-eslint/no-explicit-any': 'warn',
 
-const baseConfig = sheriff(sheriffOptions);
-
-// Block relative imports to shared module - use @mdt/shared path alias instead
-// This is required because TypeScript project references expect imports from
-// built output (../shared/dist/*), not source files (../shared/*)
-const customConfig = {
-  rules: {
-    'no-restricted-imports': [
-      'error',
-      {
-        patterns: [{
-          group: ['../shared/**', '../../shared/**', '../../../shared/**', '../../../../shared/**'],
-          message: 'Use "@mdt/shared" path alias instead of relative imports to shared module. This breaks TypeScript project references.'
-        }]
-      }
-    ]
+      // Block relative imports to shared module - use @mdt/shared path alias instead
+      // This is required because TypeScript project references expect imports from
+      // built output (../shared/dist/*), not source files (../shared/*)
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [{
+            group: ['../shared/**', '../../shared/**', '../../../shared/**', '../../../../shared/**'],
+            message: 'Use "@mdt/shared" path alias instead of relative imports to shared module. This breaks TypeScript project references.'
+          }]
+        }
+      ]
+    }
   }
-};
-
-export default [
-  ...baseConfig,
-  customConfig
-];
+)

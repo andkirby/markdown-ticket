@@ -1,13 +1,14 @@
-import { Router } from 'express';
-import { ProjectController } from '../controllers/ProjectController.js';
+import type { ProjectController } from '../controllers/ProjectController.js'
+import { Router } from 'express'
 
 /**
- * Router for project-related endpoints
- * @param projectController - Project controller instance
- * @returns Express router
+ * Router for project-related endpoints.
+ *
+ * @param projectController - Project controller instance.
+ * @returns Express router.
  */
 export function createProjectRouter(projectController: ProjectController): Router {
-  const router = Router();
+  const router = Router()
 
   /**
    * @openapi
@@ -25,7 +26,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *               items:
    *                 $ref: '#/components/schemas/Project'
    */
-  router.get('/', (req, res) => projectController.getAllProjects(req, res));
+  router.get('/', (req, res) => projectController.getAllProjects(req, res))
 
   /**
    * @openapi
@@ -45,7 +46,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.get('/:projectId/config', (req, res) => projectController.getProjectConfig(req, res));
+  router.get('/:projectId/config', (req, res) => projectController.getProjectConfig(req, res))
 
   /**
    * @openapi
@@ -67,7 +68,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.get('/:projectId/crs', (req, res) => projectController.getProjectCRs(req, res));
+  router.get('/:projectId/crs', (req, res) => projectController.getProjectCRs(req, res))
 
   /**
    * @openapi
@@ -88,7 +89,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.get('/:projectId/crs/:crId', (req, res) => projectController.getCR(req, res));
+  router.get('/:projectId/crs/:crId', (req, res) => projectController.getCR(req, res))
 
   /**
    * @openapi
@@ -108,7 +109,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.post('/:projectId/crs', (req, res) => projectController.createCR(req, res));
+  router.post('/:projectId/crs', (req, res) => projectController.createCR(req, res))
 
   /**
    * @openapi
@@ -129,7 +130,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.patch('/:projectId/crs/:crId', (req, res) => projectController.patchCR(req, res));
+  router.patch('/:projectId/crs/:crId', (req, res) => projectController.patchCR(req, res))
 
   /**
    * @openapi
@@ -150,7 +151,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.put('/:projectId/crs/:crId', (req, res) => projectController.updateCR(req, res));
+  router.put('/:projectId/crs/:crId', (req, res) => projectController.updateCR(req, res))
 
   /**
    * @openapi
@@ -167,7 +168,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.delete('/:projectId/crs/:crId', (req, res) => projectController.deleteCR(req, res));
+  router.delete('/:projectId/crs/:crId', (req, res) => projectController.deleteCR(req, res))
 
   /**
    * @openapi
@@ -187,9 +188,9 @@ export function createProjectRouter(projectController: ProjectController): Route
   router.post('/register', (req, res) => {
     res.status(501).json({
       error: 'This endpoint is deprecated',
-      message: 'Please use POST /api/projects/create instead'
-    });
-  });
+      message: 'Please use POST /api/projects/create instead',
+    })
+  })
 
   /**
    * @openapi
@@ -205,7 +206,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       400:
    *         $ref: '#/components/responses/BadRequest'
    */
-  router.post('/create', (req, res) => projectController.createProject(req, res));
+  router.post('/create', (req, res) => projectController.createProject(req, res))
 
   /**
    * @openapi
@@ -225,7 +226,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.put('/:code/update', (req, res) => projectController.updateProject(req, res));
+  router.put('/:code/update', (req, res) => projectController.updateProject(req, res))
 
   /**
    * @openapi
@@ -245,7 +246,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.put('/:code/enable', (req, res) => projectController.enableProject(req, res));
+  router.put('/:code/enable', (req, res) => projectController.enableProject(req, res))
 
   /**
    * @openapi
@@ -265,7 +266,7 @@ export function createProjectRouter(projectController: ProjectController): Route
    *       404:
    *         $ref: '#/components/responses/NotFound'
    */
-  router.put('/:code/disable', (req, res) => projectController.disableProject(req, res));
+  router.put('/:code/disable', (req, res) => projectController.disableProject(req, res))
 
-  return router;
+  return router
 }

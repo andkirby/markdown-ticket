@@ -1,13 +1,14 @@
-import { Router } from 'express';
-import { TicketController } from '../controllers/TicketController.js';
+import type { TicketController } from '../controllers/TicketController.js'
+import { Router } from 'express'
 
 /**
- * Router for ticket/task-related endpoints (legacy and duplicate detection)
- * @param ticketController - Ticket controller instance
- * @returns Express router
+ * Router for ticket/task-related endpoints (legacy and duplicate detection).
+ *
+ * @param ticketController - Ticket controller instance.
+ * @returns Express router.
  */
 export function createTicketRouter(ticketController: TicketController): Router {
-  const router = Router();
+  const router = Router()
 
   /**
    * @openapi
@@ -30,7 +31,7 @@ export function createTicketRouter(ticketController: TicketController): Router {
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
-  router.get('/', (req, res) => ticketController.getAllTasks(req, res));
+  router.get('/', (req, res) => ticketController.getAllTasks(req, res))
 
   /**
    * @openapi
@@ -66,7 +67,7 @@ export function createTicketRouter(ticketController: TicketController): Router {
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
-  router.get('/:filename', (req, res) => ticketController.getTask(req, res));
+  router.get('/:filename', (req, res) => ticketController.getTask(req, res))
 
   /**
    * @openapi
@@ -107,7 +108,7 @@ export function createTicketRouter(ticketController: TicketController): Router {
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
-  router.post('/save', (req, res) => ticketController.saveTask(req, res));
+  router.post('/save', (req, res) => ticketController.saveTask(req, res))
 
   /**
    * @openapi
@@ -148,18 +149,19 @@ export function createTicketRouter(ticketController: TicketController): Router {
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
-  router.delete('/:filename', (req, res) => ticketController.deleteTask(req, res));
+  router.delete('/:filename', (req, res) => ticketController.deleteTask(req, res))
 
-  return router;
+  return router
 }
 
 /**
- * Router for duplicate detection endpoints
- * @param ticketController - Ticket controller instance
- * @returns Express router
+ * Router for duplicate detection endpoints.
+ *
+ * @param ticketController - Ticket controller instance.
+ * @returns Express router.
  */
 export function createDuplicateRouter(ticketController: TicketController): Router {
-  const router = Router();
+  const router = Router()
 
   /**
    * @openapi
@@ -199,7 +201,7 @@ export function createDuplicateRouter(ticketController: TicketController): Route
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
-  router.get('/:projectId', (req, res) => ticketController.getDuplicates(req, res));
+  router.get('/:projectId', (req, res) => ticketController.getDuplicates(req, res))
 
   /**
    * @openapi
@@ -250,7 +252,7 @@ export function createDuplicateRouter(ticketController: TicketController): Route
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
-  router.post('/preview', (req, res) => ticketController.previewDuplicateRename(req, res));
+  router.post('/preview', (req, res) => ticketController.previewDuplicateRename(req, res))
 
   /**
    * @openapi
@@ -302,7 +304,7 @@ export function createDuplicateRouter(ticketController: TicketController): Route
    *           application/json:
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
-  router.post('/resolve', (req, res) => ticketController.resolveDuplicateTicket(req, res));
+  router.post('/resolve', (req, res) => ticketController.resolveDuplicateTicket(req, res))
 
-  return router;
+  return router
 }
