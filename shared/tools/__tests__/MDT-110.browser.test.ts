@@ -9,207 +9,207 @@
  * without importing any Node.js modules (fs, os, path).
  */
 
-import { ProjectValidator } from '../ProjectValidator';
+import { ProjectValidator } from '../ProjectValidator'
 
 // Mock browser environment (no process.versions.node)
-const mockBrowserProcess = undefined;
-const originalProcess = global.process;
+const mockBrowserProcess = undefined
+const originalProcess = global.process
 
-describe('MDT-110: Browser-Safe ProjectValidator', () => {
+describe('mDT-110: Browser-Safe ProjectValidator', () => {
   beforeEach(() => {
     // Simulate browser environment
-    (global as any).process = mockBrowserProcess;
-  });
+    (global as any).process = mockBrowserProcess
+  })
 
   afterEach(() => {
     // Restore original process
-    (global as any).process = originalProcess;
-  });
+    (global as any).process = originalProcess
+  })
 
   // P1-1: Browser validateName
   describe('validateName() in browser environment', () => {
     it('should accept valid project names', () => {
-      const result = ProjectValidator.validateName('My Test Project');
-      expect(result.valid).toBe(true);
-      expect(result.normalized).toBe('My Test Project');
-    });
+      const result = ProjectValidator.validateName('My Test Project')
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe('My Test Project')
+    })
 
     it('should trim whitespace from names', () => {
-      const result = ProjectValidator.validateName('  Spaced Project  ');
-      expect(result.valid).toBe(true);
-      expect(result.normalized).toBe('Spaced Project');
-    });
+      const result = ProjectValidator.validateName('  Spaced Project  ')
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe('Spaced Project')
+    })
 
     it('should reject empty names', () => {
-      const result = ProjectValidator.validateName('');
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Project name cannot be empty');
-    });
+      const result = ProjectValidator.validateName('')
+      expect(result.valid).toBe(false)
+      expect(result.error).toBe('Project name cannot be empty')
+    })
 
     it('should reject whitespace-only names', () => {
-      const result = ProjectValidator.validateName('   ');
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Project name cannot be empty');
-    });
+      const result = ProjectValidator.validateName('   ')
+      expect(result.valid).toBe(false)
+      expect(result.error).toBe('Project name cannot be empty')
+    })
 
     it('should reject names over 100 characters', () => {
-      const longName = 'A'.repeat(101);
-      const result = ProjectValidator.validateName(longName);
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Project name must be 100 characters or less');
-    });
+      const longName = 'A'.repeat(101)
+      const result = ProjectValidator.validateName(longName)
+      expect(result.valid).toBe(false)
+      expect(result.error).toBe('Project name must be 100 characters or less')
+    })
 
     it('should accept exactly 100 character names', () => {
-      const maxName = 'A'.repeat(100);
-      const result = ProjectValidator.validateName(maxName);
-      expect(result.valid).toBe(true);
-    });
-  });
+      const maxName = 'A'.repeat(100)
+      const result = ProjectValidator.validateName(maxName)
+      expect(result.valid).toBe(true)
+    })
+  })
 
   // P1-1: Browser validateCode
   describe('validateCode() in browser environment', () => {
     it('should accept valid uppercase codes', () => {
-      const validCodes = ['MDT', 'API1', 'WEB', 'Z2', 'ABCDE'];
-      validCodes.forEach(code => {
-        const result = ProjectValidator.validateCode(code);
-        expect(result.valid).toBe(true);
-        expect(result.normalized).toBe(code);
-      });
-    });
+      const validCodes = ['MDT', 'API1', 'WEB', 'Z2', 'ABCDE']
+      validCodes.forEach((code) => {
+        const result = ProjectValidator.validateCode(code)
+        expect(result.valid).toBe(true)
+        expect(result.normalized).toBe(code)
+      })
+    })
 
     it('should reject lowercase codes', () => {
-      const result = ProjectValidator.validateCode('mdt');
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('Project code must be 2-5 characters');
-    });
+      const result = ProjectValidator.validateCode('mdt')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('Project code must be 2-5 characters')
+    })
 
     it('should reject mixed case codes', () => {
-      const result = ProjectValidator.validateCode('Mdt');
-      expect(result.valid).toBe(false);
-    });
+      const result = ProjectValidator.validateCode('Mdt')
+      expect(result.valid).toBe(false)
+    })
 
     it('should reject codes starting with number', () => {
-      const result = ProjectValidator.validateCode('1MDT');
-      expect(result.valid).toBe(false);
-    });
+      const result = ProjectValidator.validateCode('1MDT')
+      expect(result.valid).toBe(false)
+    })
 
     it('should reject single character codes', () => {
-      const result = ProjectValidator.validateCode('A');
-      expect(result.valid).toBe(false);
-    });
+      const result = ProjectValidator.validateCode('A')
+      expect(result.valid).toBe(false)
+    })
 
     it('should reject codes over 5 characters', () => {
-      const result = ProjectValidator.validateCode('ABCDEF');
-      expect(result.valid).toBe(false);
-    });
+      const result = ProjectValidator.validateCode('ABCDEF')
+      expect(result.valid).toBe(false)
+    })
 
     it('should reject codes with special characters', () => {
-      const result = ProjectValidator.validateCode('MDT-1');
-      expect(result.valid).toBe(false);
-    });
-  });
+      const result = ProjectValidator.validateCode('MDT-1')
+      expect(result.valid).toBe(false)
+    })
+  })
 
   // P1-2: Browser validatePath (format-only, no filesystem)
   describe('validatePath() in browser environment - format validation only', () => {
     it('should accept absolute paths without checking filesystem', () => {
-      const result = ProjectValidator.validatePath('/Users/test/project');
-      expect(result.valid).toBe(true);
+      const result = ProjectValidator.validatePath('/Users/test/project')
+      expect(result.valid).toBe(true)
       // Browser returns path as-is, can't resolve without fs
-      expect(result.normalized).toBe('/Users/test/project');
-    });
+      expect(result.normalized).toBe('/Users/test/project')
+    })
 
     it('should accept relative paths without checking filesystem', () => {
-      const result = ProjectValidator.validatePath('docs/tickets');
-      expect(result.valid).toBe(true);
-      expect(result.normalized).toBe('docs/tickets');
-    });
+      const result = ProjectValidator.validatePath('docs/tickets')
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe('docs/tickets')
+    })
 
     it('should ignore mustExist option in browser environment', () => {
       // Browser can't check filesystem, should still return valid
-      const result = ProjectValidator.validatePath('/nonexistent/path', { mustExist: true });
-      expect(result.valid).toBe(true);
-    });
+      const result = ProjectValidator.validatePath('/nonexistent/path', { mustExist: true })
+      expect(result.valid).toBe(true)
+    })
 
     it('should handle Windows-style absolute paths', () => {
-      const result = ProjectValidator.validatePath('C:\\Users\\test\\project');
-      expect(result.valid).toBe(true);
-    });
+      const result = ProjectValidator.validatePath('C:\\Users\\test\\project')
+      expect(result.valid).toBe(true)
+    })
 
     it('should accept paths with trailing slashes', () => {
-      const result = ProjectValidator.validatePath('/Users/test/project/');
-      expect(result.valid).toBe(true);
-    });
-  });
+      const result = ProjectValidator.validatePath('/Users/test/project/')
+      expect(result.valid).toBe(true)
+    })
+  })
 
   // P1-3: Browser expandTildePath (no-op)
   describe('expandTildePath() in browser environment', () => {
     it('should return path unchanged when starts with tilde', () => {
-      const result = ProjectValidator.expandTildePath('~/documents');
-      expect(result).toBe('~/documents');
-    });
+      const result = ProjectValidator.expandTildePath('~/documents')
+      expect(result).toBe('~/documents')
+    })
 
     it('should return bare tilde unchanged', () => {
-      const result = ProjectValidator.expandTildePath('~');
-      expect(result).toBe('~');
-    });
+      const result = ProjectValidator.expandTildePath('~')
+      expect(result).toBe('~')
+    })
 
     it('should return regular paths unchanged', () => {
-      const result = ProjectValidator.expandTildePath('/Users/test');
-      expect(result).toBe('/Users/test');
-    });
-  });
+      const result = ProjectValidator.expandTildePath('/Users/test')
+      expect(result).toBe('/Users/test')
+    })
+  })
 
   // Additional browser-safe methods
-  describe('Other validation methods in browser environment', () => {
+  describe('other validation methods in browser environment', () => {
     it('should validate descriptions correctly', () => {
-      const result = ProjectValidator.validateDescription('A valid description');
-      expect(result.valid).toBe(true);
-    });
+      const result = ProjectValidator.validateDescription('A valid description')
+      expect(result.valid).toBe(true)
+    })
 
     it('should reject descriptions over 500 characters', () => {
-      const longDesc = 'A'.repeat(501);
-      const result = ProjectValidator.validateDescription(longDesc);
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Description must be 500 characters or less');
-    });
+      const longDesc = 'A'.repeat(501)
+      const result = ProjectValidator.validateDescription(longDesc)
+      expect(result.valid).toBe(false)
+      expect(result.error).toBe('Description must be 500 characters or less')
+    })
 
     it('should accept empty repository (optional field)', () => {
-      const result = ProjectValidator.validateRepository('');
-      expect(result.valid).toBe(true);
-      expect(result.normalized).toBe('');
-    });
+      const result = ProjectValidator.validateRepository('')
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe('')
+    })
 
     it('should validate repository URLs', () => {
-      const result = ProjectValidator.validateRepository('https://github.com/user/repo');
-      expect(result.valid).toBe(true);
-    });
+      const result = ProjectValidator.validateRepository('https://github.com/user/repo')
+      expect(result.valid).toBe(true)
+    })
 
     it('should reject invalid repository URLs', () => {
-      const result = ProjectValidator.validateRepository('not-a-url');
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Repository must be a valid URL');
-    });
+      const result = ProjectValidator.validateRepository('not-a-url')
+      expect(result.valid).toBe(false)
+      expect(result.error).toBe('Repository must be a valid URL')
+    })
 
     it('should generate code from project name', () => {
-      const code = ProjectValidator.generateCodeFromName('My Test Project');
-      expect(code).toBe('MTP');
-    });
+      const code = ProjectValidator.generateCodeFromName('My Test Project')
+      expect(code).toBe('MTP')
+    })
 
     it('should validate tickets paths', () => {
-      const result = ProjectValidator.validateTicketsPath('docs/CRs');
-      expect(result.valid).toBe(true);
-    });
+      const result = ProjectValidator.validateTicketsPath('docs/CRs')
+      expect(result.valid).toBe(true)
+    })
 
     it('should reject absolute paths in tickets path', () => {
-      const result = ProjectValidator.validateTicketsPath('/absolute/path');
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('must be relative');
-    });
+      const result = ProjectValidator.validateTicketsPath('/absolute/path')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('must be relative')
+    })
 
     it('should reject tickets paths going outside project root', () => {
-      const result = ProjectValidator.validateTicketsPath('../outside');
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('cannot go outside project root');
-    });
-  });
-});
+      const result = ProjectValidator.validateTicketsPath('../outside')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('cannot go outside project root')
+    })
+  })
+})

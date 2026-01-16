@@ -9,23 +9,24 @@
  * while delegating implementation to focused components.
  */
 
-import { ServerConfig, TestFrameworkError } from '../types.js';
-import { PortConfig } from '../config/ports.js';
-import { ProcessLifecycleManager } from './process-lifecycle-manager.js';
-import { ServerConfigFactory } from './server-config-factory.js';
+import type { PortConfig } from '../config/ports.js'
+import type { ServerConfig } from '../types.js'
+import { TestFrameworkError } from '../types.js'
+import { ProcessLifecycleManager } from './process-lifecycle-manager.js'
+import { ServerConfigFactory } from './server-config-factory.js'
 
 /**
  * Orchestrates server processes for isolated test environments
  */
 export class TestServer {
-  private lifecycle: ProcessLifecycleManager;
-  private configFactory: ServerConfigFactory;
-  private ports: PortConfig;
+  private lifecycle: ProcessLifecycleManager
+  private configFactory: ServerConfigFactory
+  private ports: PortConfig
 
   constructor(ports: PortConfig) {
-    this.ports = ports;
-    this.lifecycle = new ProcessLifecycleManager();
-    this.configFactory = new ServerConfigFactory();
+    this.ports = ports
+    this.lifecycle = new ProcessLifecycleManager()
+    this.configFactory = new ServerConfigFactory()
   }
 
   /**
@@ -34,8 +35,8 @@ export class TestServer {
    * @param projectRoot - Root directory for server execution
    */
   async start(serverType: 'frontend' | 'backend' | 'mcp', projectRoot: string): Promise<void> {
-    const config = this.configFactory.createConfig(serverType, projectRoot, this.ports);
-    await this.lifecycle.start(serverType, projectRoot, config);
+    const config = this.configFactory.createConfig(serverType, projectRoot, this.ports)
+    await this.lifecycle.start(serverType, projectRoot, config)
   }
 
   /**
@@ -43,14 +44,14 @@ export class TestServer {
    * @param serverType - Server type to stop
    */
   async stop(serverType: 'frontend' | 'backend' | 'mcp'): Promise<void> {
-    await this.lifecycle.stop(serverType);
+    await this.lifecycle.stop(serverType)
   }
 
   /**
    * Stop all running servers
    */
   async stopAll(): Promise<void> {
-    await this.lifecycle.stopAll();
+    await this.lifecycle.stopAll()
   }
 
   /**
@@ -59,7 +60,7 @@ export class TestServer {
    * @returns true if server is ready and running
    */
   async isReady(serverType: 'frontend' | 'backend' | 'mcp'): Promise<boolean> {
-    return this.lifecycle.isReady(serverType);
+    return this.lifecycle.isReady(serverType)
   }
 
   /**
@@ -68,7 +69,7 @@ export class TestServer {
    * @returns Server configuration or undefined if not configured
    */
   getConfig(serverType: 'frontend' | 'backend' | 'mcp'): ServerConfig | undefined {
-    return this.lifecycle.getConfig(serverType);
+    return this.lifecycle.getConfig(serverType)
   }
 
   /**
@@ -78,17 +79,17 @@ export class TestServer {
    * @throws {TestFrameworkError} If server not configured
    */
   getUrl(serverType: 'frontend' | 'backend' | 'mcp'): string {
-    const config = this.getConfig(serverType);
+    const config = this.getConfig(serverType)
     if (!config?.url) {
-      throw new TestFrameworkError(`Server ${serverType} not configured`, 'SERVER_NOT_CONFIGURED');
+      throw new TestFrameworkError(`Server ${serverType} not configured`, 'SERVER_NOT_CONFIGURED')
     }
-    return config.url;
+    return config.url
   }
 
   /**
    * Clean up all resources
    */
   dispose(): void {
-    this.lifecycle.dispose();
+    this.lifecycle.dispose()
   }
 }

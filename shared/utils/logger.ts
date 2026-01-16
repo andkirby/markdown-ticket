@@ -11,7 +11,7 @@
  */
 export function logQuiet(quiet: boolean, message: string, ...args: any[]): void {
   if (!quiet) {
-    console.error(message, ...args);
+    console.error(message, ...args)
   }
 }
 
@@ -22,6 +22,6 @@ export function logQuiet(quiet: boolean, message: string, ...args: any[]): void 
  */
 export function createQuietLogger(quiet: boolean = false): (message: string, ...args: any[]) => void {
   return (message: string, ...args: any[]): void => {
-    logQuiet(quiet, message, ...args);
-  };
+    logQuiet(quiet, message, ...args)
+  }
 }

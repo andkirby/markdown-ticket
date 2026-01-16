@@ -14,70 +14,70 @@
 
 // We'll verify package.json exports by reading the file directly in tests
 
-describe('MDT-110: Conditional Exports Configuration', () => {
-  const fs = require('fs');
-  const path = require('path');
+describe('mDT-110: Conditional Exports Configuration', () => {
+  const fs = require('node:fs')
+  const path = require('node:path')
 
   // Helper to read package.json
   const getPackageJson = () => {
-    const pkgPath = path.resolve(__dirname, '../../package.json');
-    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-  };
+    const pkgPath = path.resolve(__dirname, '../../package.json')
+    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
+  }
 
   // P3-1: Verify package.json exports structure
   describe('package.json exports field', () => {
-    let packageJson: any;
+    let packageJson: any
 
     beforeEach(() => {
-      packageJson = getPackageJson();
-    });
+      packageJson = getPackageJson()
+    })
 
     it('should have exports field defined', () => {
-      expect(packageJson).toHaveProperty('exports');
-    });
+      expect(packageJson).toHaveProperty('exports')
+    })
 
     it('should export ProjectValidator with conditions', () => {
-      const exports = packageJson.exports as Record<string, unknown>;
-      expect('./tools/ProjectValidator' in exports).toBe(true);
-    });
+      const exports = packageJson.exports as Record<string, unknown>
+      expect('./tools/ProjectValidator' in exports).toBe(true)
+    })
 
     it('should have browser condition pointing to .js file', () => {
-      const validatorExport = packageJson.exports['./tools/ProjectValidator'] as Record<string, unknown>;
-      expect(validatorExport).toHaveProperty('browser');
-      expect(validatorExport.browser).toBe('./dist/tools/ProjectValidator.js');
-    });
+      const validatorExport = packageJson.exports['./tools/ProjectValidator'] as Record<string, unknown>
+      expect(validatorExport).toHaveProperty('browser')
+      expect(validatorExport.browser).toBe('./dist/tools/ProjectValidator.js')
+    })
 
     it('should have node condition pointing to .node.js file', () => {
-      const validatorExport = packageJson.exports['./tools/ProjectValidator'] as Record<string, unknown>;
-      expect(validatorExport).toHaveProperty('node');
-      expect(validatorExport.node).toBe('./dist/tools/ProjectValidator.node.js');
-    });
+      const validatorExport = packageJson.exports['./tools/ProjectValidator'] as Record<string, unknown>
+      expect(validatorExport).toHaveProperty('node')
+      expect(validatorExport.node).toBe('./dist/tools/ProjectValidator.node.js')
+    })
 
     it('should have default condition pointing to .node.js file', () => {
-      const validatorExport = packageJson.exports['./tools/ProjectValidator'] as Record<string, unknown>;
-      expect(validatorExport).toHaveProperty('default');
-      expect(validatorExport.default).toBe('./dist/tools/ProjectValidator.node.js');
-    });
-  });
+      const validatorExport = packageJson.exports['./tools/ProjectValidator'] as Record<string, unknown>
+      expect(validatorExport).toHaveProperty('default')
+      expect(validatorExport.default).toBe('./dist/tools/ProjectValidator.node.js')
+    })
+  })
 
   // P3-1: Verify both implementations exist
-  describe('Implementation files existence', () => {
+  describe('implementation files existence', () => {
     it('should have browser-safe implementation at ProjectValidator.ts', () => {
-      const sourcePath = path.resolve(__dirname, '../ProjectValidator.ts');
-      expect(fs.existsSync(sourcePath)).toBe(true);
-    });
+      const sourcePath = path.resolve(__dirname, '../ProjectValidator.ts')
+      expect(fs.existsSync(sourcePath)).toBe(true)
+    })
 
     it('should have Node.js extension at ProjectValidator.node.ts', () => {
-      const nodePath = path.resolve(__dirname, '../ProjectValidator.node.ts');
-      expect(fs.existsSync(nodePath)).toBe(true);
-    });
-  });
+      const nodePath = path.resolve(__dirname, '../ProjectValidator.node.ts')
+      expect(fs.existsSync(nodePath)).toBe(true)
+    })
+  })
 
   // P3-1: Interface compatibility
-  describe('Interface compatibility', () => {
+  describe('interface compatibility', () => {
     it('should export same interface from both implementations', () => {
-      const BrowserValidator = require('../ProjectValidator').ProjectValidator;
-      const NodeValidator = require('../ProjectValidator.node').ProjectValidator;
+      const BrowserValidator = require('../ProjectValidator').ProjectValidator
+      const NodeValidator = require('../ProjectValidator.node').ProjectValidator
 
       // Both should have static validation methods
       const staticMethods = [
@@ -89,25 +89,25 @@ describe('MDT-110: Conditional Exports Configuration', () => {
         'expandTildePath',
         'isValidUrl',
         'generateCodeFromName',
-        'validateTicketsPath'
-      ];
+        'validateTicketsPath',
+      ]
 
-      staticMethods.forEach(method => {
-        expect(BrowserValidator).toHaveProperty(method);
-        expect(NodeValidator).toHaveProperty(method);
-        expect(typeof BrowserValidator[method]).toBe('function');
-        expect(typeof NodeValidator[method]).toBe('function');
-      });
-    });
-  });
+      staticMethods.forEach((method) => {
+        expect(BrowserValidator).toHaveProperty(method)
+        expect(NodeValidator).toHaveProperty(method)
+        expect(typeof BrowserValidator[method]).toBe('function')
+        expect(typeof NodeValidator[method]).toBe('function')
+      })
+    })
+  })
 
   // P3-1: Import path unchanged
-  describe('Single import path compatibility', () => {
+  describe('single import path compatibility', () => {
     it('should allow imports from @mdt/shared/tools/ProjectValidator', () => {
       // This test verifies the import path works
       // The actual routing happens at build/runtime based on environment
-      const { ProjectValidator } = require('../ProjectValidator');
-      expect(ProjectValidator).toBeDefined();
-    });
-  });
-});
+      const { ProjectValidator } = require('../ProjectValidator')
+      expect(ProjectValidator).toBeDefined()
+    })
+  })
+})

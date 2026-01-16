@@ -6,31 +6,32 @@
  * health checking component.
  */
 
-import { ServerConfig, TestFrameworkError } from '../types.js';
-import { RetryHelper } from '../utils/retry-helper.js';
+import type { ServerConfig } from '../types.js'
+import { TestFrameworkError } from '../types.js'
+import { RetryHelper } from '../utils/retry-helper.js'
 
 /** Default health check configuration */
 const HEALTH = {
   maxAttempts: 30,
   initialDelay: 100,
   maxDelay: 2000,
-  backoffMultiplier: 1.5
-};
+  backoffMultiplier: 1.5,
+}
 
 /**
  * Health check configuration options
  */
 export interface HealthCheckOptions {
   /** Maximum number of health check attempts (default: 30) */
-  maxAttempts?: number;
+  maxAttempts?: number
   /** Initial delay before first check in ms (default: 100) */
-  initialDelay?: number;
+  initialDelay?: number
   /** Multiplier for exponential backoff (default: 1.5) */
-  backoffMultiplier?: number;
+  backoffMultiplier?: number
   /** Maximum delay between attempts in ms (default: 2000) */
-  maxDelay?: number;
+  maxDelay?: number
   /** Request timeout in ms (default: 1000) */
-  requestTimeout?: number;
+  requestTimeout?: number
 }
 
 /**
@@ -40,8 +41,8 @@ export interface HealthCheckOptions {
  * retry logic, exponential backoff, and request timeouts.
  */
 export class HealthCheckManager {
-  private retryHelper: RetryHelper;
-  private options: Required<HealthCheckOptions>;
+  private retryHelper: RetryHelper
+  private options: Required<HealthCheckOptions>
 
   /**
    * Create a new HealthCheckManager
@@ -53,9 +54,9 @@ export class HealthCheckManager {
       initialDelay: options.initialDelay ?? HEALTH.initialDelay,
       backoffMultiplier: options.backoffMultiplier ?? HEALTH.backoffMultiplier,
       maxDelay: options.maxDelay ?? HEALTH.maxDelay,
-      requestTimeout: options.requestTimeout ?? 1000
-    };
-    this.retryHelper = new RetryHelper();
+      requestTimeout: options.requestTimeout ?? 1000,
+    }
+    this.retryHelper = new RetryHelper()
   }
 
   /**
@@ -66,42 +67,43 @@ export class HealthCheckManager {
    */
   async check(config: ServerConfig): Promise<void> {
     return new Promise((resolve, reject) => {
-      const http = require('http');
+      const http = require('node:http')
       const req = http.request(
         {
           hostname: 'localhost',
           port: config.port,
           path: config.healthEndpoint,
           method: 'GET',
-          timeout: this.options.requestTimeout
+          timeout: this.options.requestTimeout,
         },
         (res: any) => {
           // Consume and destroy the response to ensure the socket is closed
-          res.on('data', () => {});
+          res.on('data', () => {})
           res.on('end', () => {
-            res.destroy();
-            req.destroy();
+            res.destroy()
+            req.destroy()
             if (res.statusCode === 200) {
-              resolve();
-            } else {
-              reject(new Error(`HTTP ${res.statusCode}`));
+              resolve()
             }
-          });
-        }
-      );
+            else {
+              reject(new Error(`HTTP ${res.statusCode}`))
+            }
+          })
+        },
+      )
 
       req.on('error', (err: Error) => {
-        req.destroy();
-        reject(err);
-      });
+        req.destroy()
+        reject(err)
+      })
 
       req.on('timeout', () => {
-        req.destroy();
-        reject(new Error('Health check timeout'));
-      });
+        req.destroy()
+        reject(new Error('Health check timeout'))
+      })
 
-      req.end();
-    });
+      req.end()
+    })
   }
 
   /**
@@ -115,8 +117,8 @@ export class HealthCheckManager {
     if (!config.healthEndpoint) {
       throw new TestFrameworkError(
         `No health endpoint configured for ${serverType}`,
-        'NO_HEALTH_ENDPOINT'
-      );
+        'NO_HEALTH_ENDPOINT',
+      )
     }
 
     try {
@@ -128,14 +130,15 @@ export class HealthCheckManager {
           backoffMultiplier: this.options.backoffMultiplier,
           maxDelay: this.options.maxDelay,
           retryableErrors: [], // Allow all errors to be retryable for health checks
-          logContext: `HealthCheck-${serverType}`
-        }
-      );
-    } catch (error) {
+          logContext: `HealthCheck-${serverType}`,
+        },
+      )
+    }
+    catch (error) {
       throw new TestFrameworkError(
         `Health check failed for ${serverType}: ${error instanceof Error ? error.message : String(error)}`,
-        'HEALTH_CHECK_FAILED'
-      );
+        'HEALTH_CHECK_FAILED',
+      )
     }
   }
 
@@ -145,13 +148,15 @@ export class HealthCheckManager {
    * @returns Promise that resolves to true if server is ready, false otherwise
    */
   async isReady(config: ServerConfig): Promise<boolean> {
-    if (!config.healthEndpoint) return false;
+    if (!config.healthEndpoint)
+      return false
 
     try {
-      await this.check(config);
-      return true;
-    } catch {
-      return false;
+      await this.check(config)
+      return true
+    }
+    catch {
+      return false
     }
   }
 
@@ -160,6 +165,6 @@ export class HealthCheckManager {
    * @returns The health check options being used
    */
   getOptions(): Readonly<Required<HealthCheckOptions>> {
-    return { ...this.options };
+    return { ...this.options }
   }
 }

@@ -1,20 +1,20 @@
-import React from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react'
+import * as React from 'react'
 
 interface FilterControlsProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  placeholder?: string;
+  searchQuery: string
+  onSearchChange: (query: string) => void
+  placeholder?: string
 }
 
 export const FilterControls: React.FC<FilterControlsProps> = ({
   searchQuery,
   onSearchChange,
-  placeholder = "Filter tickets..."
+  placeholder = 'Filter tickets...',
 }) => {
   const handleClear = () => {
-    onSearchChange('');
-  };
+    onSearchChange('')
+  }
 
   return (
     <div className="relative">
@@ -23,7 +23,7 @@ export const FilterControls: React.FC<FilterControlsProps> = ({
         type="text"
         placeholder={placeholder}
         value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
+        onChange={e => onSearchChange(e.target.value)}
         className="pl-10 pr-10 py-1 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-w-[200px]"
       />
       {searchQuery && (
@@ -36,5 +36,5 @@ export const FilterControls: React.FC<FilterControlsProps> = ({
         </button>
       )}
     </div>
-  );
-};
+  )
+}

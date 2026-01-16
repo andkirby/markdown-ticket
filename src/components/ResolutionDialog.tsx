@@ -1,16 +1,16 @@
-import React from 'react';
-import { Status } from '../types';
-import { getStatusLabel, getStatusDescription, getStatusColor } from '../config/statusConfig';
-import { Modal, ModalHeader, ModalBody, ModalFooter } from './UI/Modal';
-import { Button } from './UI/Button';
+import type { Status } from '../types'
+import * as React from 'react'
+import { getStatusColor, getStatusDescription, getStatusLabel } from '../config/statusConfig'
+import { Button } from './UI/Button'
+import { Modal, ModalBody, ModalFooter, ModalHeader } from './UI/Modal'
 
 interface ResolutionDialogProps {
-  isOpen: boolean;
-  ticketCode: string;
-  ticketTitle: string;
-  availableStatuses: Status[];
-  onResolve: (status: Status) => void;
-  onCancel: () => void;
+  isOpen: boolean
+  ticketCode: string
+  ticketTitle: string
+  availableStatuses: Status[]
+  onResolve: (status: Status) => void
+  onCancel: () => void
 }
 
 export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
@@ -22,8 +22,8 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
   onCancel,
 }) => {
   const handleStatusClick = (status: Status) => {
-    onResolve(status);
-  };
+    onResolve(status)
+  }
 
   return (
     <Modal
@@ -34,12 +34,14 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
         title="Choose Resolution Status"
         onClose={onCancel}
       />
-      
+
       <ModalBody>
         <div className="space-y-4">
           <div className="text-sm text-gray-600 dark:text-gray-300">
             <p>
-              <strong className="text-gray-900 dark:text-white">{ticketCode}</strong>: {ticketTitle}
+              <strong className="text-gray-900 dark:text-white">{ticketCode}</strong>
+              :
+              {ticketTitle}
             </p>
             <p className="mt-2 text-gray-700 dark:text-gray-200">
               How would you like to mark this ticket as complete?
@@ -47,7 +49,7 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
           </div>
 
           <div className="space-y-3">
-            {availableStatuses.map((status) => (
+            {availableStatuses.map(status => (
               <button
                 key={status}
                 onClick={() => handleStatusClick(status)}
@@ -61,7 +63,7 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
-                      <div 
+                      <div
                         className={`
                           w-4 h-4 rounded-full
                           ${getStatusColor(status) === 'teal' ? 'bg-teal-500' : ''}
@@ -77,17 +79,17 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
                     </p>
                   </div>
                   <div className="ml-4">
-                    <svg 
-                      className="w-5 h-5 text-gray-400" 
-                      fill="none" 
-                      stroke="currentColor" 
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M9 5l7 7-7 7" 
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
                       />
                     </svg>
                   </div>
@@ -107,5 +109,5 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
         </Button>
       </ModalFooter>
     </Modal>
-  );
-};
+  )
+}

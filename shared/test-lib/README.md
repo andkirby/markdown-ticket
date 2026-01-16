@@ -18,61 +18,61 @@ The library is part of the `@mdt/shared` workspace package:
 
 ```typescript
 import {
-  TestEnvironment,
   ProjectFactory,
+  TestEnvironment,
   TestServer,
-} from "@mdt/shared/test-lib";
+} from '@mdt/shared/test-lib'
 ```
 
 ## Quick Start
 
 ```typescript
-import { test, expect } from "@playwright/test";
 import {
-  TestEnvironment,
   ProjectFactory,
+  TestEnvironment,
   TestServer,
-} from "@mdt/shared/test-lib";
+} from '@mdt/shared/test-lib'
+import { expect, test } from '@playwright/test'
 
-let testEnv: TestEnvironment;
-let projectFactory: ProjectFactory;
-let testServer: TestServer;
+let testEnv: TestEnvironment
+let projectFactory: ProjectFactory
+let testServer: TestServer
 
 test.beforeAll(async () => {
   // 1. Set up isolated environment
-  testEnv = new TestEnvironment();
-  await testEnv.setup();
+  testEnv = new TestEnvironment()
+  await testEnv.setup()
 
   // 2. Initialize project factory
-  projectFactory = new ProjectFactory(testEnv);
+  projectFactory = new ProjectFactory(testEnv)
 
   // 3. Start backend server with isolated ports
-  testServer = new TestServer(testEnv.getPortConfig());
-  await testServer.start("backend", testEnv.getTempDirectory());
-});
+  testServer = new TestServer(testEnv.getPortConfig())
+  await testServer.start('backend', testEnv.getTempDirectory())
+})
 
-test("should create test project and CR", async () => {
+test('should create test project and CR', async () => {
   // Create test project
-  const project = await projectFactory.createProject("empty", {
-    code: "TEST",
-    name: "Test Project",
-  });
+  const project = await projectFactory.createProject('empty', {
+    code: 'TEST',
+    name: 'Test Project',
+  })
 
   // Create CR
   const cr = await projectFactory.createTestCR(project.key, {
-    title: "Add User Authentication",
-    type: "Feature Enhancement",
-    content: "Implement login functionality",
-  });
+    title: 'Add User Authentication',
+    type: 'Feature Enhancement',
+    content: 'Implement login functionality',
+  })
 
-  expect(cr.success).toBe(true);
-  expect(cr.crCode).toBe("TEST-001");
-});
+  expect(cr.success).toBe(true)
+  expect(cr.crCode).toBe('TEST-001')
+})
 
 test.afterAll(async () => {
-  await testServer.stopAll();
-  await testEnv.cleanup();
-});
+  await testServer.stopAll()
+  await testEnv.cleanup()
+})
 ```
 
 ## Core Components
@@ -82,19 +82,19 @@ test.afterAll(async () => {
 Manages isolated test sessions with unique temporary directories and port allocation.
 
 ```typescript
-const testEnv = new TestEnvironment();
-await testEnv.setup();
+const testEnv = new TestEnvironment()
+await testEnv.setup()
 
 // Get paths
-const tempDir = testEnv.getTempDirectory(); // /tmp/mdt-test-{uuid}/
-const configDir = testEnv.getConfigDirectory(); // /tmp/mdt-test-{uuid}/config/
+const tempDir = testEnv.getTempDirectory() // /tmp/mdt-test-{uuid}/
+const configDir = testEnv.getConfigDirectory() // /tmp/mdt-test-{uuid}/config/
 
 // Get port configuration
-const ports = testEnv.getPortConfig();
+const ports = testEnv.getPortConfig()
 // { frontend: 6173, backend: 4001, mcp: 4002 }
 
 // Cleanup
-await testEnv.cleanup();
+await testEnv.cleanup()
 ```
 
 **Key Features:**
@@ -109,35 +109,35 @@ await testEnv.cleanup();
 Creates test projects with proper directory structure, configuration files, and CRs.
 
 ```typescript
-const projectFactory = new ProjectFactory(testEnv);
+const projectFactory = new ProjectFactory(testEnv)
 
 // Create empty project
-const project = await projectFactory.createProject("empty", {
-  code: "TEST",
-  name: "Test Project",
-  ticketsPath: "docs/CRs",
-  documentPaths: ["docs"],
-  excludeFolders: ["node_modules", ".git"],
-});
+const project = await projectFactory.createProject('empty', {
+  code: 'TEST',
+  name: 'Test Project',
+  ticketsPath: 'docs/CRs',
+  documentPaths: ['docs'],
+  excludeFolders: ['node_modules', '.git'],
+})
 
 // Create CR
-const cr = await projectFactory.createTestCR("TEST", {
-  title: "Add User Authentication",
-  type: "Feature Enhancement",
-  status: "Proposed",
-  priority: "High",
-  content: "Implement login and registration",
-});
+const cr = await projectFactory.createTestCR('TEST', {
+  title: 'Add User Authentication',
+  type: 'Feature Enhancement',
+  status: 'Proposed',
+  priority: 'High',
+  content: 'Implement login and registration',
+})
 // Result: { success: true, crCode: 'TEST-001', filePath: '/path/to/TEST-001-add-user-authentication.md' }
 
 // Create multiple CRs
-const crs = await projectFactory.createMultipleCRs("TEST", [
-  { title: "CR One", type: "Feature Enhancement", content: "..." },
-  { title: "CR Two", type: "Bug Fix", content: "..." },
-]);
+const crs = await projectFactory.createMultipleCRs('TEST', [
+  { title: 'CR One', type: 'Feature Enhancement', content: '...' },
+  { title: 'CR Two', type: 'Bug Fix', content: '...' },
+])
 
 // Create pre-configured test scenario
-const scenario = await projectFactory.createTestScenario("standard-project");
+const scenario = await projectFactory.createTestScenario('standard-project')
 // Creates project with 3 pre-created CRs
 ```
 
@@ -155,13 +155,13 @@ const scenario = await projectFactory.createTestScenario("standard-project");
 
 ```typescript
 interface ProjectConfig {
-  name?: string; // Project display name
-  code?: string; // Project code (auto-generated if omitted)
-  description?: string;
-  ticketsPath?: string; // Path for CRs (default: 'docs/CRs')
-  repository?: string;
-  documentPaths?: string[]; // Document scan paths (default: ['docs'])
-  excludeFolders?: string[]; // Excluded folders (default: ['node_modules', '.git'])
+  name?: string // Project display name
+  code?: string // Project code (auto-generated if omitted)
+  description?: string
+  ticketsPath?: string // Path for CRs (default: 'docs/CRs')
+  repository?: string
+  documentPaths?: string[] // Document scan paths (default: ['docs'])
+  excludeFolders?: string[] // Excluded folders (default: ['node_modules', '.git'])
 }
 ```
 
@@ -169,15 +169,15 @@ interface ProjectConfig {
 
 ```typescript
 interface TestCRData {
-  title: string; // Required
-  type: CRType; // Required: 'Feature Enhancement', 'Bug Fix', etc.
-  status?: CRStatus; // Optional: Defaults to 'Proposed'
-  priority?: CRPriority; // Optional: Defaults to 'Medium'
-  phaseEpic?: string;
-  dependsOn?: string; // CR code this depends on
-  blocks?: string; // CR code this blocks
-  assignee?: string;
-  content: string; // Required: CR description
+  title: string // Required
+  type: CRType // Required: 'Feature Enhancement', 'Bug Fix', etc.
+  status?: CRStatus // Optional: Defaults to 'Proposed'
+  priority?: CRPriority // Optional: Defaults to 'Medium'
+  phaseEpic?: string
+  dependsOn?: string // CR code this depends on
+  blocks?: string // CR code this blocks
+  assignee?: string
+  content: string // Required: CR description
 }
 ```
 
@@ -186,22 +186,22 @@ interface TestCRData {
 Manages frontend, backend, and MCP server lifecycles with health checks.
 
 ```typescript
-const testServer = new TestServer(testEnv.getPortConfig());
+const testServer = new TestServer(testEnv.getPortConfig())
 
 // Start backend server
-await testServer.start("backend", testEnv.getTempDirectory());
+await testServer.start('backend', testEnv.getTempDirectory())
 
 // Check if server is ready
-const isReady = await testServer.isReady("backend");
+const isReady = await testServer.isReady('backend')
 
 // Get server configuration
-const config = testServer.getConfig("backend");
+const config = testServer.getConfig('backend')
 
 // Stop server
-await testServer.stop("backend");
+await testServer.stop('backend')
 
 // Stop all servers
-await testServer.stopAll();
+await testServer.stopAll()
 ```
 
 **Server Types:**
@@ -217,25 +217,25 @@ await testServer.stopAll();
 Create isolated environment without servers:
 
 ```typescript
-let testEnv: TestEnvironment;
+let testEnv: TestEnvironment
 
 test.beforeAll(async () => {
-  testEnv = new TestEnvironment();
-  await testEnv.setup();
-});
+  testEnv = new TestEnvironment()
+  await testEnv.setup()
+})
 
-test("should have isolated environment", () => {
-  const tempDir = testEnv.getTempDirectory();
-  expect(tempDir).toMatch(/\/mdt-test-[a-f0-9-]{36}$/);
+test('should have isolated environment', () => {
+  const tempDir = testEnv.getTempDirectory()
+  expect(tempDir).toMatch(/\/mdt-test-[a-f0-9-]{36}$/)
 
-  const ports = testEnv.getPortConfig();
-  expect(ports.frontend).toBe(6173);
-  expect(ports.backend).toBe(4001);
-});
+  const ports = testEnv.getPortConfig()
+  expect(ports.frontend).toBe(6173)
+  expect(ports.backend).toBe(4001)
+})
 
 test.afterAll(async () => {
-  await testEnv.cleanup();
-});
+  await testEnv.cleanup()
+})
 ```
 
 ### Pattern 2: Project Creation
@@ -243,29 +243,29 @@ test.afterAll(async () => {
 Create test projects in isolated environment:
 
 ```typescript
-let testEnv: TestEnvironment;
-let projectFactory: ProjectFactory;
+let testEnv: TestEnvironment
+let projectFactory: ProjectFactory
 
 test.beforeAll(async () => {
-  testEnv = new TestEnvironment();
-  await testEnv.setup();
-  projectFactory = new ProjectFactory(testEnv);
-});
+  testEnv = new TestEnvironment()
+  await testEnv.setup()
+  projectFactory = new ProjectFactory(testEnv)
+})
 
-test("should create project with custom ticketsPath", async () => {
-  const project = await projectFactory.createProject("empty", {
-    code: "TEST",
-    ticketsPath: "custom/specs",
-  });
+test('should create project with custom ticketsPath', async () => {
+  const project = await projectFactory.createProject('empty', {
+    code: 'TEST',
+    ticketsPath: 'custom/specs',
+  })
 
-  expect(project.key).toBe("TEST");
-  expect(project.path).toContain("/projects/TEST");
-});
+  expect(project.key).toBe('TEST')
+  expect(project.path).toContain('/projects/TEST')
+})
 
 test.afterAll(async () => {
-  await projectFactory.cleanup();
-  await testEnv.cleanup();
-});
+  await projectFactory.cleanup()
+  await testEnv.cleanup()
+})
 ```
 
 ### Pattern 3: Full Stack Testing
@@ -273,67 +273,66 @@ test.afterAll(async () => {
 Complete integration with servers:
 
 ```typescript
-import http from "http";
+import http from 'node:http'
 
-let testEnv: TestEnvironment;
-let projectFactory: ProjectFactory;
-let testServer: TestServer;
+let testEnv: TestEnvironment
+let projectFactory: ProjectFactory
+let testServer: TestServer
 
 async function httpRequest(options: http.RequestOptions) {
   return new Promise((resolve, reject) => {
     const req = http.request(options, (res) => {
-      let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () =>
-        resolve({ statusCode: res.statusCode, data: JSON.parse(data || "{}") }),
-      );
-    });
-    req.on("error", reject);
-    req.end();
-  });
+      let data = ''
+      res.on('data', chunk => (data += chunk))
+      res.on('end', () =>
+        resolve({ statusCode: res.statusCode, data: JSON.parse(data || '{}') }),)
+    })
+    req.on('error', reject)
+    req.end()
+  })
 }
 
 test.beforeAll(async () => {
-  testEnv = new TestEnvironment();
-  await testEnv.setup();
+  testEnv = new TestEnvironment()
+  await testEnv.setup()
 
-  projectFactory = new ProjectFactory(testEnv);
-  testServer = new TestServer(testEnv.getPortConfig());
+  projectFactory = new ProjectFactory(testEnv)
+  testServer = new TestServer(testEnv.getPortConfig())
 
   // Start backend server
-  await testServer.start("backend", testEnv.getTempDirectory());
-});
+  await testServer.start('backend', testEnv.getTempDirectory())
+})
 
-test("backend discovers test project", async () => {
+test('backend discovers test project', async () => {
   // Create test project
-  const project = await projectFactory.createProject("empty", {
-    code: "TEST",
-    name: "Test Project",
-  });
+  const project = await projectFactory.createProject('empty', {
+    code: 'TEST',
+    name: 'Test Project',
+  })
 
   // Wait for backend discovery
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1000))
 
   // Query backend API
-  const ports = testEnv.getPortConfig();
+  const ports = testEnv.getPortConfig()
   const response = await httpRequest({
-    hostname: "localhost",
+    hostname: 'localhost',
     port: ports.backend,
-    path: "/api/projects",
-    method: "GET",
-  });
+    path: '/api/projects',
+    method: 'GET',
+  })
 
-  expect(response.statusCode).toBe(200);
-  const testProject = response.data.find((p: any) => p.key === "TEST");
-  expect(testProject).toBeDefined();
-  expect(testProject.name).toBe("Test Project");
-});
+  expect(response.statusCode).toBe(200)
+  const testProject = response.data.find((p: any) => p.key === 'TEST')
+  expect(testProject).toBeDefined()
+  expect(testProject.name).toBe('Test Project')
+})
 
 test.afterAll(async () => {
-  await testServer.stopAll();
-  await projectFactory.cleanup();
-  await testEnv.cleanup();
-});
+  await testServer.stopAll()
+  await projectFactory.cleanup()
+  await testEnv.cleanup()
+})
 ```
 
 ### Pattern 4: CR Dependencies
@@ -341,33 +340,33 @@ test.afterAll(async () => {
 Create CRs with dependency chains:
 
 ```typescript
-test("should create CRs with dependencies", async () => {
-  const project = await projectFactory.createProject("empty", {
-    code: "DEP",
-  });
+test('should create CRs with dependencies', async () => {
+  const project = await projectFactory.createProject('empty', {
+    code: 'DEP',
+  })
 
   // Create architecture CR
-  const archCR = await projectFactory.createTestCR("DEP", {
-    title: "System Architecture",
-    type: "Architecture",
-    priority: "Critical",
-    content: "Design microservices architecture",
-  });
+  const archCR = await projectFactory.createTestCR('DEP', {
+    title: 'System Architecture',
+    type: 'Architecture',
+    priority: 'Critical',
+    content: 'Design microservices architecture',
+  })
 
   // Create implementation CR depending on architecture
-  const implCR = await projectFactory.createTestCR("DEP", {
-    title: "Implement User Service",
-    type: "Feature Enhancement",
-    priority: "High",
+  const implCR = await projectFactory.createTestCR('DEP', {
+    title: 'Implement User Service',
+    type: 'Feature Enhancement',
+    priority: 'High',
     dependsOn: archCR.crCode,
-    content: "Create user management service",
-  });
+    content: 'Create user management service',
+  })
 
-  expect(archCR.success).toBe(true);
-  expect(archCR.crCode).toBe("DEP-001");
-  expect(implCR.success).toBe(true);
-  expect(implCR.crCode).toBe("DEP-002");
-});
+  expect(archCR.success).toBe(true)
+  expect(archCR.crCode).toBe('DEP-001')
+  expect(implCR.success).toBe(true)
+  expect(implCR.crCode).toBe('DEP-002')
+})
 ```
 
 ## Best Practices
@@ -376,34 +375,37 @@ test("should create CRs with dependencies", async () => {
 
 ```typescript
 test.afterAll(async () => {
-  if (testServer) await testServer.stopAll();
-  if (projectFactory) await projectFactory.cleanup();
-  if (testEnv && testEnv.isInitialized()) await testEnv.cleanup();
-});
+  if (testServer)
+    await testServer.stopAll()
+  if (projectFactory)
+    await projectFactory.cleanup()
+  if (testEnv && testEnv.isInitialized())
+    await testEnv.cleanup()
+})
 ```
 
 ### 2. Use Unique Project Codes
 
 ```typescript
 // Good - let system generate unique code
-const project = await projectFactory.createProject("empty", {
-  name: "Test Project",
-});
+const project = await projectFactory.createProject('empty', {
+  name: 'Test Project',
+})
 
 // Good - use timestamp for uniqueness
-const code = `TEST${Date.now()}`;
-const project = await projectFactory.createProject("empty", { code });
+const code = `TEST${Date.now()}`
+const project = await projectFactory.createProject('empty', { code })
 ```
 
 ### 3. Verify Results
 
 ```typescript
-const result = await projectFactory.createTestCR("TEST", crData);
-expect(result.success).toBe(true);
-expect(result.crCode).toBe("TEST-001");
+const result = await projectFactory.createTestCR('TEST', crData)
+expect(result.success).toBe(true)
+expect(result.crCode).toBe('TEST-001')
 
 if (!result.success) {
-  console.error("CR creation failed:", result.error);
+  console.error('CR creation failed:', result.error)
 }
 ```
 
@@ -424,13 +426,13 @@ const response = await httpRequest({ ... });
 
 ```typescript
 // Always use test environment ports, not hardcoded dev ports
-const ports = testEnv.getPortConfig();
+const ports = testEnv.getPortConfig()
 const response = await httpRequest({
-  hostname: "localhost",
+  hostname: 'localhost',
   port: ports.backend, // Use this, not 3001
-  path: "/api/health",
-  method: "GET",
-});
+  path: '/api/health',
+  method: 'GET',
+})
 ```
 
 ## Port Configuration
@@ -478,9 +480,9 @@ TEST_BACKEND_PORT=5001 npm run test:e2e
 
 ```typescript
 test.beforeAll(async () => {
-  testEnv = new TestEnvironment();
-  await testEnv.setup(); // Don't forget this!
-});
+  testEnv = new TestEnvironment()
+  await testEnv.setup() // Don't forget this!
+})
 ```
 
 ### CR Creation Fails
@@ -513,10 +515,10 @@ const cr = await projectFactory.createTestCR(project.key, { ... });  // Use proj
 
 ```typescript
 test.afterAll(async () => {
-  await testServer.stopAll(); // Stop servers first
-  await projectFactory.cleanup();
-  await testEnv.cleanup(); // Then cleanup environment
-});
+  await testServer.stopAll() // Stop servers first
+  await projectFactory.cleanup()
+  await testEnv.cleanup() // Then cleanup environment
+})
 ```
 
 ## Example: Complete Test Suite

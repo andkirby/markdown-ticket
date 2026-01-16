@@ -1,18 +1,18 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    "rootDir": ".",
     "module": "ES2022",
     "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
     "strict": true,
+    "noImplicitAny": false,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": ".",
-    "skipLibCheck": true,
-    "noImplicitAny": false
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": [
     "**/*.ts"

@@ -1,21 +1,22 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { ExternalLink, FileText, FileCode, Hash, File } from 'lucide-react';
-import { ParsedLink, LinkType, classifyAndNormalizeLink, createLinkContextFromProject } from '../utils/linkProcessor';
-import { buildTicketLink, buildDocumentLink } from '../utils/linkBuilder';
-import { LinkContext, NormalizedLink } from '../utils/linkNormalization';
-import { getLinkConfig } from '../config/linkConfig';
+import type { LinkContext, NormalizedLink } from '../utils/linkNormalization'
+import type { ParsedLink } from '../utils/linkProcessor'
+/* eslint-disable node/prefer-global/process -- Using import.meta.env for browser compatibility */
+import { ExternalLink, File, FileCode, FileText, Hash } from 'lucide-react'
+import * as React from 'react'
+import { Link } from 'react-router-dom'
+import { getLinkConfig } from '../config/linkConfig'
+import { classifyAndNormalizeLink, createLinkContextFromProject, LinkType } from '../utils/linkProcessor'
 
 interface SmartLinkProps {
-  link: ParsedLink;
-  currentProject: string;
-  children: React.ReactNode;
-  className?: string;
-  showIcon?: boolean;
+  link: ParsedLink
+  currentProject: string
+  children: React.ReactNode
+  className?: string
+  showIcon?: boolean
   /** Optional link context for enhanced normalization */
-  linkContext?: Partial<LinkContext>;
+  linkContext?: Partial<LinkContext>
   /** Original href before normalization */
-  originalHref?: string;
+  originalHref?: string
 }
 
 const linkStyles = {
@@ -25,8 +26,8 @@ const linkStyles = {
   anchor: 'text-gray-600 hover:underline anchor-link',
   file: 'text-orange-600 hover:underline file-link',
   crossProject: 'text-indigo-600 hover:underline cross-project-link',
-  broken: 'text-red-400 line-through broken-link'
-};
+  broken: 'text-red-400 line-through broken-link',
+}
 
 const SmartLink: React.FC<SmartLinkProps> = ({
   link,
@@ -35,17 +36,17 @@ const SmartLink: React.FC<SmartLinkProps> = ({
   className = '',
   showIcon = true,
   linkContext,
-  originalHref
+  originalHref,
 }) => {
   // Force hot reload - showIcon should hide icons
   const baseClassName = showIcon
     ? `inline-flex items-center gap-1 ${className}`
-    : `inline ${className}`;
+    : `inline ${className}`
 
-  const linkConfig = getLinkConfig();
+  const linkConfig = getLinkConfig()
 
   // Enhanced link processing if context is provided
-  const [normalizedLink, setNormalizedLink] = React.useState<NormalizedLink | null>(null);
+  const [normalizedLink, setNormalizedLink] = React.useState<NormalizedLink | null>(null)
 
   React.useEffect(() => {
     if (linkContext && originalHref) {
@@ -53,50 +54,41 @@ const SmartLink: React.FC<SmartLinkProps> = ({
         const context = createLinkContextFromProject(
           currentProject,
           linkContext.sourcePath || '',
-          linkContext.projectConfig
-        );
+          linkContext.projectConfig,
+        )
 
-        const { normalized } = classifyAndNormalizeLink(originalHref, currentProject, context);
+        const { normalized } = classifyAndNormalizeLink(originalHref, currentProject, context)
         if (normalized) {
-          setNormalizedLink(normalized);
+          setNormalizedLink(normalized)
         }
-      } catch (error) {
-        console.warn('Failed to normalize link:', error);
+      }
+      catch (error) {
+        console.warn('Failed to normalize link:', error)
       }
     }
-  }, [linkContext, originalHref, currentProject]);
+  }, [linkContext, originalHref, currentProject])
 
   // Use normalized href for document/file links, but keep original for ticket links
   // This prevents overriding correctly built ticket URLs
-  const shouldUseNormalizedHref = normalizedLink &&
-    link.type !== LinkType.TICKET &&
-    link.type !== LinkType.CROSS_PROJECT;
+  const shouldUseNormalizedHref = normalizedLink
+    && link.type !== LinkType.TICKET
+    && link.type !== LinkType.CROSS_PROJECT
 
-  const effectiveHref = shouldUseNormalizedHref ? normalizedLink.webHref : link.href;
-  const effectiveLink = shouldUseNormalizedHref ? { ...link, href: effectiveHref } : link;
-
-  // Debug: Log the final href being used for navigation
-  if (process.env.NODE_ENV === 'development' && effectiveHref.includes('MDT-')) {
-    console.log('SmartLink rendering:', {
-      type: effectiveLink.type,
-      href: effectiveHref,
-      projectCode: effectiveLink.projectCode,
-      ticketKey: effectiveLink.ticketKey
-    });
-  }
+  const effectiveHref = shouldUseNormalizedHref ? normalizedLink.webHref : link.href
+  const effectiveLink = shouldUseNormalizedHref ? { ...link, href: effectiveHref } : link
 
   // If auto-linking is disabled, render as plain text
   if (!linkConfig.enableAutoLinking) {
-    return <span className={className}>{children}</span>;
+    return <span className={className}>{children}</span>
   }
 
   // Check specific link type configurations
   if (effectiveLink.type === LinkType.TICKET && !linkConfig.enableTicketLinks) {
-    return <span className={className}>{children}</span>;
+    return <span className={className}>{children}</span>
   }
 
   if (effectiveLink.type === LinkType.DOCUMENT && !linkConfig.enableDocumentLinks) {
-    return <span className={className}>{children}</span>;
+    return <span className={className}>{children}</span>
   }
 
   // Show error state if normalization failed
@@ -105,7 +97,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
       <span className={`${baseClassName} ${linkStyles.broken}`} title={normalizedLink.error}>
         {children}
       </span>
-    );
+    )
   }
 
   switch (effectiveLink.type) {
@@ -120,7 +112,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           {children}
           {showIcon && <ExternalLink className="w-3 h-3" />}
         </a>
-      );
+      )
 
     case LinkType.TICKET:
       return (
@@ -131,7 +123,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           {showIcon && <FileText className="w-3 h-3" />}
           {children}
         </Link>
-      );
+      )
 
     case LinkType.DOCUMENT:
       return (
@@ -142,7 +134,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           {showIcon && <FileCode className="w-3 h-3" />}
           {children}
         </Link>
-      );
+      )
 
     case LinkType.ANCHOR:
       return (
@@ -153,7 +145,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           {showIcon && <Hash className="w-3 h-3" />}
           {children}
         </a>
-      );
+      )
 
     case LinkType.FILE:
       return (
@@ -166,7 +158,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           {showIcon && <File className="w-3 h-3" />}
           {children}
         </a>
-      );
+      )
 
     case LinkType.CROSS_PROJECT:
       return (
@@ -180,7 +172,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
             {effectiveLink.projectCode || normalizedLink?.targetProject}
           </span>
         </Link>
-      );
+      )
 
     case LinkType.UNKNOWN:
     default:
@@ -188,8 +180,8 @@ const SmartLink: React.FC<SmartLinkProps> = ({
         <span className={`${baseClassName} ${linkStyles.broken}`}>
           {children}
         </span>
-      );
+      )
   }
-};
+}
 
-export default SmartLink;
+export default SmartLink

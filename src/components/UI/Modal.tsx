@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { cva, type VariantProps } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
+import * as React from 'react'
+import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 const modalVariants = cva(
   'relative overflow-hidden rounded-lg bg-white dark:bg-slate-900 shadow-xl transition-all sm:my-8 sm:w-full',
@@ -8,7 +10,7 @@ const modalVariants = cva(
     variants: {
       size: {
         sm: 'sm:max-w-lg',
-        md: 'sm:max-w-xl', 
+        md: 'sm:max-w-xl',
         lg: 'sm:max-w-3xl',
         xl: 'sm:max-w-5xl',
         full: 'sm:max-w-full',
@@ -25,19 +27,19 @@ const modalVariants = cva(
       size: 'md',
       variant: 'default',
     },
-  }
-);
+  },
+)
 
 interface ModalProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof modalVariants> {
-  isOpen: boolean;
-  onClose: () => void;
-  closeOnOverlayClick?: boolean;
-  closeOnEscape?: boolean;
-  showCloseButton?: boolean;
-  overlayClassName?: string;
-  children: React.ReactNode;
+  VariantProps<typeof modalVariants> {
+  isOpen: boolean
+  onClose: () => void
+  closeOnOverlayClick?: boolean
+  closeOnEscape?: boolean
+  showCloseButton?: boolean
+  overlayClassName?: string
+  children: React.ReactNode
 }
 
 const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
@@ -53,47 +55,48 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     children,
     ...props
   }, _ref) => { // ref not used
-    const modalRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
       const handleEscape = (event: KeyboardEvent) => {
         if (closeOnEscape && event.key === 'Escape') {
-          onClose();
+          onClose()
         }
-      };
+      }
 
       if (isOpen) {
-        document.addEventListener('keydown', handleEscape);
-        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', handleEscape)
+        document.body.style.overflow = 'hidden'
       }
 
       return () => {
-        document.removeEventListener('keydown', handleEscape);
-        document.body.style.overflow = '';
-      };
-    }, [isOpen, closeOnEscape, onClose]);
+        document.removeEventListener('keydown', handleEscape)
+        document.body.style.overflow = ''
+      }
+    }, [isOpen, closeOnEscape, onClose])
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
         if (
-          closeOnOverlayClick &&
-          modalRef.current &&
-          !modalRef.current.contains(event.target as Node)
+          closeOnOverlayClick
+          && modalRef.current
+          && !modalRef.current.contains(event.target as Node)
         ) {
-          onClose();
+          onClose()
         }
-      };
+      }
 
       if (isOpen) {
-        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('mousedown', handleClickOutside)
       }
 
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }, [isOpen, closeOnOverlayClick, onClose]);
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }, [isOpen, closeOnOverlayClick, onClose])
 
-    if (!isOpen) return null;
+    if (!isOpen)
+      return null
 
     const modalContent = (
       <div className={`fixed inset-0 z-50 overflow-y-auto ${overlayClassName}`}>
@@ -103,7 +106,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
             className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
             onClick={closeOnOverlayClick ? onClose : undefined}
           />
-          
+
           {/* Modal content */}
           <div
             ref={modalRef}
@@ -114,30 +117,30 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           </div>
         </div>
       </div>
-    );
+    )
 
-    return createPortal(modalContent, document.body);
-  }
-);
+    return createPortal(modalContent, document.body)
+  },
+)
 
-Modal.displayName = 'Modal';
+Modal.displayName = 'Modal'
 
 interface ModalHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
-  title?: React.ReactNode;
-  description?: React.ReactNode;
-  onClose?: () => void;
-  showCloseButton?: boolean;
+  title?: React.ReactNode
+  description?: React.ReactNode
+  onClose?: () => void
+  showCloseButton?: boolean
 }
 
 const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
-  ({ 
-    className, 
-    title, 
-    description, 
-    onClose, 
-    showCloseButton = true, 
-    children, 
-    ...props 
+  ({
+    className,
+    title,
+    description,
+    onClose,
+    showCloseButton = true,
+    children,
+    ...props
   }, ref) => {
     return (
       <div
@@ -180,11 +183,11 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
           </button>
         )}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-ModalHeader.displayName = 'ModalHeader';
+ModalHeader.displayName = 'ModalHeader'
 
 interface ModalBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -198,14 +201,14 @@ const ModalBody = React.forwardRef<HTMLDivElement, ModalBodyProps>(
       >
         {children}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-ModalBody.displayName = 'ModalBody';
+ModalBody.displayName = 'ModalBody'
 
 interface ModalFooterProps extends React.HTMLAttributes<HTMLDivElement> {
-  justify?: 'start' | 'center' | 'end' | 'between';
+  justify?: 'start' | 'center' | 'end' | 'between'
 }
 
 const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
@@ -215,7 +218,7 @@ const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
       center: 'justify-center',
       end: 'justify-end',
       between: 'justify-between',
-    };
+    }
 
     return (
       <div
@@ -225,10 +228,10 @@ const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
       >
         {children}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-ModalFooter.displayName = 'ModalFooter';
+ModalFooter.displayName = 'ModalFooter'
 
-export { Modal, ModalHeader, ModalBody, ModalFooter,  };
+export { Modal, ModalBody, ModalFooter, ModalHeader }

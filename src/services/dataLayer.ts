@@ -8,42 +8,42 @@
  * - Provide typed interfaces for data operations
  */
 
-import { Ticket, Status } from '../types';
-import { Project, ProjectConfig } from '@mdt/shared/models/Project';
+import type { Project, ProjectConfig } from '@mdt/shared/models/Project'
+import type { Status, Ticket } from '../types'
 
 interface CreateTicketData {
-  code?: string;
-  title: string;
-  type: string;
-  status?: Status;
-  priority?: string;
-  [key: string]: any;
+  code?: string
+  title: string
+  type: string
+  status?: Status
+  priority?: string
+  [key: string]: any
 }
 
 /**
  * DataLayer class for API operations
  */
 class DataLayer {
-  private baseUrl = '/api';
+  private baseUrl = '/api'
 
   /**
    * Fetch all projects
    */
   async fetchProjects(): Promise<Project[]> {
     try {
-
-      const response = await fetch(`${this.baseUrl}/projects`);
+      const response = await fetch(`${this.baseUrl}/projects`)
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch projects: ${response.statusText}`);
+        throw new Error(`Failed to fetch projects: ${response.statusText}`)
       }
 
-      const projects = await response.json();
+      const projects = await response.json()
 
-      return projects;
-    } catch (error) {
-      console.error('[DataLayer] ❌ Error fetching projects:', error);
-      throw error;
+      return projects
+    }
+    catch (error) {
+      console.error('[DataLayer] ❌ Error fetching projects:', error)
+      throw error
     }
   }
 
@@ -52,26 +52,26 @@ class DataLayer {
    */
   async fetchProjectConfig(projectId: string): Promise<ProjectConfig | null> {
     try {
-
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/config`);
+      const response = await fetch(`${this.baseUrl}/projects/${projectId}/config`)
 
       if (!response.ok) {
         if (response.status === 404) {
-          return null;
+          return null
         }
-        throw new Error(`Failed to fetch project config: ${response.statusText}`);
+        throw new Error(`Failed to fetch project config: ${response.statusText}`)
       }
 
-      const data = await response.json();
+      const data = await response.json()
 
-      return data.config;
-    } catch (error) {
-      console.error(`[DataLayer] ❌ Error fetching project config:`, error);
+      return data.config
+    }
+    catch (error) {
+      console.error(`[DataLayer] ❌ Error fetching project config:`, error)
       // Only return null for 404s, throw for real errors
       if (error instanceof Error && error.message.includes('404')) {
-        return null;
+        return null
       }
-      throw error;
+      throw error
     }
   }
 
@@ -80,21 +80,20 @@ class DataLayer {
    */
   async fetchTickets(projectId: string): Promise<Ticket[]> {
     try {
-
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`);
+      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`)
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch tickets: ${response.statusText}`);
+        throw new Error(`Failed to fetch tickets: ${response.statusText}`)
       }
 
-      const data = await response.json();
-      const tickets = this.normalizeTickets(data);
+      const data = await response.json()
+      const tickets = this.normalizeTickets(data)
 
-
-      return tickets;
-    } catch (error) {
-      console.error(`[DataLayer] ❌ Error fetching tickets:`, error);
-      throw error;
+      return tickets
+    }
+    catch (error) {
+      console.error(`[DataLayer] ❌ Error fetching tickets:`, error)
+      throw error
     }
   }
 
@@ -103,26 +102,27 @@ class DataLayer {
    */
   async fetchTicket(projectId: string, ticketCode: string): Promise<Ticket | null> {
     try {
-      console.log(`[DataLayer] 🔍 Fetching ticket: ${ticketCode} from project: ${projectId}`);
+      console.warn(`[DataLayer] 🔍 Fetching ticket: ${ticketCode} from project: ${projectId}`)
 
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`);
+      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`)
 
       if (!response.ok) {
         if (response.status === 404) {
-          return null;
+          return null
         }
-        throw new Error(`Failed to fetch ticket: ${response.statusText}`);
+        throw new Error(`Failed to fetch ticket: ${response.statusText}`)
       }
 
-      const data = await response.json();
-      const ticket = this.normalizeTicket(data);
+      const data = await response.json()
+      const ticket = this.normalizeTicket(data)
 
-      console.log(`[DataLayer] ✅ Fetched ticket: ${ticketCode} (content length: ${ticket.content?.length || 0})`);
+      console.warn(`[DataLayer] ✅ Fetched ticket: ${ticketCode} (content length: ${ticket.content?.length || 0})`)
 
-      return ticket;
-    } catch (error) {
-      console.error(`[DataLayer] ❌ Error fetching ticket:`, error);
-      throw error;
+      return ticket
+    }
+    catch (error) {
+      console.error(`[DataLayer] ❌ Error fetching ticket:`, error)
+      throw error
     }
   }
 
@@ -131,28 +131,27 @@ class DataLayer {
    */
   async createTicket(projectId: string, data: CreateTicketData): Promise<Ticket> {
     try {
-
       const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
-      });
+        body: JSON.stringify(data),
+      })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to create ticket: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to create ticket: ${response.statusText}`)
       }
 
-      const createdTicket = await response.json();
-      const ticket = this.normalizeTicket(createdTicket);
+      const createdTicket = await response.json()
+      const ticket = this.normalizeTicket(createdTicket)
 
-
-      return ticket;
-    } catch (error) {
-      console.error(`[DataLayer] ❌ Error creating ticket:`, error);
-      throw error;
+      return ticket
+    }
+    catch (error) {
+      console.error(`[DataLayer] ❌ Error creating ticket:`, error)
+      throw error
     }
   }
 
@@ -162,36 +161,36 @@ class DataLayer {
   async updateTicket(
     projectId: string,
     ticketCode: string,
-    updates: Partial<Ticket>
+    updates: Partial<Ticket>,
   ): Promise<void> {
     try {
-
       // Prepare update data (convert dates to ISO strings)
-      const updateData: Record<string, any> = {};
+      const updateData: Record<string, any> = {}
       for (const [key, value] of Object.entries(updates)) {
         if (value instanceof Date) {
-          updateData[key] = value.toISOString();
-        } else if (value !== undefined) {
-          updateData[key] = value;
+          updateData[key] = value.toISOString()
+        }
+        else if (value !== undefined) {
+          updateData[key] = value
         }
       }
 
       const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updateData)
-      });
+        body: JSON.stringify(updateData),
+      })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to update ticket: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to update ticket: ${response.statusText}`)
       }
-
-    } catch (error) {
-      console.error(`[DataLayer] ❌ Error updating ticket:`, error);
-      throw error;
+    }
+    catch (error) {
+      console.error(`[DataLayer] ❌ Error updating ticket:`, error)
+      throw error
     }
   }
 
@@ -200,19 +199,18 @@ class DataLayer {
    */
   async deleteTicket(projectId: string, ticketCode: string): Promise<void> {
     try {
-
       const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs/${ticketCode}`, {
-        method: 'DELETE'
-      });
+        method: 'DELETE',
+      })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to delete ticket: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to delete ticket: ${response.statusText}`)
       }
-
-    } catch (error) {
-      console.error(`[DataLayer] ❌ Error deleting ticket:`, error);
-      throw error;
+    }
+    catch (error) {
+      console.error(`[DataLayer] ❌ Error deleting ticket:`, error)
+      throw error
     }
   }
 
@@ -220,7 +218,7 @@ class DataLayer {
    * Normalize tickets from API response
    */
   private normalizeTickets(data: any[]): Ticket[] {
-    return data.map(item => this.normalizeTicket(item));
+    return data.map(item => this.normalizeTicket(item))
   }
 
   /**
@@ -229,23 +227,26 @@ class DataLayer {
   private normalizeTicket(item: any): Ticket {
     // Helper to normalize arrays
     const normalizeArray = (value: any): string[] => {
-      if (Array.isArray(value)) return value.filter(Boolean);
+      if (Array.isArray(value))
+        return value.filter(Boolean)
       if (typeof value === 'string' && value.trim()) {
-        return value.split(',').map(s => s.trim()).filter(Boolean);
+        return value.split(',').map(s => s.trim()).filter(Boolean)
       }
-      return [];
-    };
+      return []
+    }
 
     // Helper to parse dates
     const parseDate = (dateValue: any): Date | null => {
-      if (!dateValue) return null;
-      if (dateValue instanceof Date) return dateValue;
+      if (!dateValue)
+        return null
+      if (dateValue instanceof Date)
+        return dateValue
       if (typeof dateValue === 'string') {
-        const parsed = new Date(dateValue);
-        return isNaN(parsed.getTime()) ? null : parsed;
+        const parsed = new Date(dateValue)
+        return Number.isNaN(parsed.getTime()) ? null : parsed
       }
-      return null;
-    };
+      return null
+    }
 
     return {
       // Core fields
@@ -272,13 +273,12 @@ class DataLayer {
       // Relationship fields (normalize to arrays)
       relatedTickets: normalizeArray(item.relatedTickets),
       dependsOn: normalizeArray(item.dependsOn),
-      blocks: normalizeArray(item.blocks)
-    };
+      blocks: normalizeArray(item.blocks),
+    }
   }
 }
 
 // Export singleton instance
-export const dataLayer = new DataLayer();
+export const dataLayer = new DataLayer()
 
 // Export class for testing
-;

@@ -5,8 +5,7 @@
  * Pattern: Adapted from TicketService.getNextCRNumber() and TestTicketBuilder.generateTicketCode()
  */
 
-import { readdir } from 'fs/promises';
-import { join } from 'path';
+import { readdir } from 'node:fs/promises'
 
 export class TicketCodeHelper {
   /**
@@ -19,27 +18,28 @@ export class TicketCodeHelper {
    */
   static async findNextNumber(
     projectCode: string,
-    ticketsDir: string
+    ticketsDir: string,
   ): Promise<number> {
     try {
-      const allFiles = await readdir(ticketsDir);
-      const crFiles = allFiles.filter(file => file.endsWith('.md'));
-      let highestNumber = 0;
+      const allFiles = await readdir(ticketsDir)
+      const crFiles = allFiles.filter(file => file.endsWith('.md'))
+      let highestNumber = 0
 
-      const regex = new RegExp(`^${projectCode}-(\\d+)`, 'i');
+      const regex = new RegExp(`^${projectCode}-(\\d+)`, 'i')
       for (const filename of crFiles) {
-        const match = filename.match(regex);
+        const match = filename.match(regex)
         if (match) {
-          const number = parseInt(match[1], 10);
+          const number = Number.parseInt(match[1], 10)
           if (!isNaN(number) && number > highestNumber) {
-            highestNumber = number;
+            highestNumber = number
           }
         }
       }
 
-      return highestNumber + 1;
-    } catch {
-      return 1;
+      return highestNumber + 1
+    }
+    catch {
+      return 1
     }
   }
 
@@ -52,7 +52,7 @@ export class TicketCodeHelper {
    * @returns Formatted ticket code (e.g., "MDT-001")
    */
   static generateCode(projectCode: string, number: number): string {
-    return `${projectCode}-${String(number).padStart(3, '0')}`;
+    return `${projectCode}-${String(number).padStart(3, '0')}`
   }
 
   /**
@@ -69,6 +69,6 @@ export class TicketCodeHelper {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
-      .substring(0, 50);
+      .substring(0, 50)
   }
 }

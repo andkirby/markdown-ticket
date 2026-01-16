@@ -5,28 +5,28 @@
 
 export interface TicketDTO {
   // Core required fields
-  code: string;
-  title: string;
-  status: string;
-  type: string;
-  priority: string;
-  dateCreated: Date | null;
-  lastModified: Date | null;
-  content: string;
-  filePath: string;
-  
+  code: string
+  title: string
+  status: string
+  type: string
+  priority: string
+  dateCreated: Date | null
+  lastModified: Date | null
+  content: string
+  filePath: string
+
   // Optional fields
-  phaseEpic?: string;
-  description?: string;
-  rationale?: string;
-  assignee?: string;
-  implementationDate?: Date | null;
-  implementationNotes?: string;
-  
+  phaseEpic?: string
+  description?: string
+  rationale?: string
+  assignee?: string
+  implementationDate?: Date | null
+  implementationNotes?: string
+
   // Relationship fields (always arrays)
-  relatedTickets: string[];
-  dependsOn: string[];
-  blocks: string[];
+  relatedTickets: string[]
+  dependsOn: string[]
+  blocks: string[]
 }
 
 /**
@@ -42,24 +42,24 @@ export function normalizeTicket(rawTicket: any): TicketDTO {
     priority: rawTicket.priority || 'Medium',
     content: rawTicket.content || '',
     filePath: rawTicket.filePath || rawTicket.path || '',
-    
+
     // Handle dates
     dateCreated: parseDate(rawTicket.dateCreated),
     lastModified: parseDate(rawTicket.lastModified),
     implementationDate: parseDate(rawTicket.implementationDate),
-    
+
     // Map optional fields
     phaseEpic: rawTicket.phaseEpic || '',
     description: rawTicket.description || '',
     rationale: rawTicket.rationale || '',
     assignee: rawTicket.assignee || '',
     implementationNotes: rawTicket.implementationNotes || '',
-    
+
     // Normalize relationship fields to arrays (never undefined)
     relatedTickets: normalizeArray(rawTicket.relatedTickets),
     dependsOn: normalizeArray(rawTicket.dependsOn),
-    blocks: normalizeArray(rawTicket.blocks)
-  };
+    blocks: normalizeArray(rawTicket.blocks),
+  }
 }
 
 /**
@@ -68,52 +68,56 @@ export function normalizeTicket(rawTicket: any): TicketDTO {
 function normalizeArray(value: any): string[] {
   if (Array.isArray(value)) {
     // Handle array elements that might be JSON strings
-    const flattened = value.flatMap(item => {
+    const flattened = value.flatMap((item) => {
       if (typeof item === 'string' && item.trim().startsWith('[')) {
         try {
-          const parsed = JSON.parse(item);
-          return Array.isArray(parsed) ? parsed : [item];
-        } catch {
-          return [item];
+          const parsed = JSON.parse(item)
+          return Array.isArray(parsed) ? parsed : [item]
+        }
+        catch {
+          return [item]
         }
       }
-      return item;
-    });
-    return flattened.filter(Boolean);
+      return item
+    })
+    return flattened.filter(Boolean)
   }
   if (typeof value === 'string' && value.trim()) {
     // Try to parse as JSON first
     if (value.trim().startsWith('[')) {
       try {
-        const parsed = JSON.parse(value);
+        const parsed = JSON.parse(value)
         if (Array.isArray(parsed)) {
-          return parsed.filter(Boolean);
+          return parsed.filter(Boolean)
         }
-      } catch {
+      }
+      catch {
         // Fall through to comma-separated parsing
       }
     }
-    return value.split(',').map(s => s.trim()).filter(Boolean);
+    return value.split(',').map(s => s.trim()).filter(Boolean)
   }
-  return [];
+  return []
 }
 
 /**
  * Parse date from various formats
  */
 function parseDate(dateValue: any): Date | null {
-  if (!dateValue) return null;
-  if (dateValue instanceof Date) return dateValue;
+  if (!dateValue)
+    return null
+  if (dateValue instanceof Date)
+    return dateValue
   if (typeof dateValue === 'string') {
-    const parsed = new Date(dateValue);
-    return isNaN(parsed.getTime()) ? null : parsed;
+    const parsed = new Date(dateValue)
+    return isNaN(parsed.getTime()) ? null : parsed
   }
-  return null;
+  return null
 }
 
 /**
  * Convert arrays back to comma-separated strings for YAML
  */
 export function arrayToString(arr: string[]): string {
-  return Array.isArray(arr) ? arr.join(',') : '';
+  return Array.isArray(arr) ? arr.join(',') : ''
 }

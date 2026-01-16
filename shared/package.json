@@ -1,30 +1,28 @@
 {
   "name": "@mdt/shared",
+  "type": "module",
   "version": "1.0.0",
   "description": "Shared TypeScript code for Markdown Ticket",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./services/*": {
-      "import": "./dist/services/*",
-      "types": "./dist/services/*.d.ts"
+      "types": "./dist/services/*.d.ts",
+      "import": "./dist/services/*"
     },
     "./models/*": {
-      "import": "./dist/models/*",
-      "types": "./dist/models/*.d.ts"
+      "types": "./dist/models/*.d.ts",
+      "import": "./dist/models/*"
     },
     "./utils/*": {
-      "import": "./dist/utils/*",
-      "types": "./dist/utils/*.d.ts"
+      "types": "./dist/utils/*.d.ts",
+      "import": "./dist/utils/*"
     },
     "./templates/*": {
-      "import": "./dist/templates/*",
-      "types": "./dist/templates/*.d.ts"
+      "types": "./dist/templates/*.d.ts",
+      "import": "./dist/templates/*"
     },
     "./tools/ProjectValidator": {
       "browser": "./dist/tools/ProjectValidator.js",
@@ -32,14 +30,16 @@
       "default": "./dist/tools/ProjectValidator.node.js"
     },
     "./tools/*": {
-      "import": "./dist/tools/*",
-      "types": "./dist/tools/*.d.ts"
+      "types": "./dist/tools/*.d.ts",
+      "import": "./dist/tools/*"
     },
     "./test-lib": {
-      "import": "./dist/test-lib/index.js",
-      "types": "./dist/test-lib/index.d.ts"
+      "types": "./dist/test-lib/index.d.ts",
+      "import": "./dist/test-lib/index.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "build:tools": "tsc --project tsconfig.json",

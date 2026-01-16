@@ -1,35 +1,37 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Ticket } from '../types';
-import { Badge } from './UI/badge';
-import { classifyLink } from '../utils/linkProcessor';
-import { buildTicketLink } from '../utils/linkBuilder';
-import SmartLink from './SmartLink';
+import type { Ticket } from '../types'
+import * as React from 'react'
+import { useParams } from 'react-router-dom'
+import { buildTicketLink } from '../utils/linkBuilder'
+import { classifyLink } from '../utils/linkProcessor'
+import SmartLink from './SmartLink'
+import { Badge } from './UI/badge'
 
 interface TicketAttributesProps {
-  ticket: Ticket;
-  className?: string;
+  ticket: Ticket
+  className?: string
 }
 
 const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className = '' }) => {
-  const { projectCode } = useParams<{ projectCode: string }>();
-  
+  const { projectCode } = useParams<{ projectCode: string }>()
+
   const formatDate = (date: Date | string | null) => {
-    if (!date) return 'N/A';
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    if (isNaN(dateObj.getTime())) return 'Invalid Date';
-    return dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+    if (!date)
+      return 'N/A'
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    if (Number.isNaN(dateObj.getTime()))
+      return 'Invalid Date'
+    return `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+  }
 
   // Helper function to render ticket references as links
   const renderTicketLinks = (tickets: string[]) => {
     return tickets.map((ticketRef, index) => {
       // Extract clean ticket code from strings like "CR-A017 (Service Provider Architecture)"
-      const ticketCodeMatch = ticketRef.match(/^([A-Z]+-\d+)/);
-      const cleanTicketCode = ticketCodeMatch ? ticketCodeMatch[1] : ticketRef;
+      const ticketCodeMatch = ticketRef.match(/^([A-Z]+-\d+)/)
+      const cleanTicketCode = ticketCodeMatch ? ticketCodeMatch[1] : ticketRef
       // Use centralized link builder
-      const fullTicketUrl = buildTicketLink(projectCode || '', cleanTicketCode);
-      const parsedLink = classifyLink(fullTicketUrl, projectCode || '');
+      const fullTicketUrl = buildTicketLink(projectCode || '', cleanTicketCode)
+      const parsedLink = classifyLink(fullTicketUrl, projectCode || '')
       return (
         <React.Fragment key={ticketRef}>
           {index > 0 && ', '}
@@ -42,60 +44,60 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
             {cleanTicketCode}
           </SmartLink>
         </React.Fragment>
-      );
-    });
-  };
+      )
+    })
+  }
 
-  const formatArray = (arr: string[]) => {
-    return arr.length > 0 ? arr.join(', ') : 'None';
-  };
+  const _formatArray = (arr: string[]) => {
+    return arr.length > 0 ? arr.join(', ') : 'None'
+  }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High':
-        return 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700';
+        return 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700'
       case 'Medium':
-        return 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700';
+        return 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700'
       case 'Low':
-        return 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700';
+        return 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700'
       default:
-        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
+        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
     }
-  };
+  }
 
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'Bug Fix':
-        return 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700';
+        return 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700'
       case 'Feature Enhancement':
-        return 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700';
+        return 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700'
       case 'Technical Debt':
-        return 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700';
+        return 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700'
       case 'Architecture':
-        return 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-700';
+        return 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-700'
       case 'Documentation':
-        return 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-700';
+        return 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-700'
       default:
-        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
+        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
     }
-  };
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Proposed':
-        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
+        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
       case 'Approved':
-        return 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700';
+        return 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700'
       case 'In Progress':
-        return 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700';
+        return 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700'
       case 'Implemented':
-        return 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700';
+        return 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700'
       case 'Rejected':
-        return 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700';
+        return 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700'
       default:
-        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
+        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
     }
-  };
+  }
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -117,7 +119,9 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
         )}
         {ticket.assignee && (
           <Badge variant="outline" className="bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700">
-            👤 {ticket.assignee}
+            👤
+            {' '}
+            {ticket.assignee}
           </Badge>
         )}
       </div>
@@ -148,17 +152,23 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
           <div className="flex flex-wrap gap-2">
             {(ticket.relatedTickets?.length || 0) > 0 && (
               <Badge variant="outline" className="bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-700" title={`Related: ${ticket.relatedTickets.join(', ')}`}>
-                🔗 {renderTicketLinks(ticket.relatedTickets)}
+                🔗
+                {' '}
+                {renderTicketLinks(ticket.relatedTickets)}
               </Badge>
             )}
             {(ticket.dependsOn?.length || 0) > 0 && (
               <Badge variant="outline" className="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-700" title={`Depends on: ${ticket.dependsOn.join(', ')}`}>
-                ⬅️ {renderTicketLinks(ticket.dependsOn)}
+                ⬅️
+                {' '}
+                {renderTicketLinks(ticket.dependsOn)}
               </Badge>
             )}
             {(ticket.blocks?.length || 0) > 0 && (
               <Badge variant="outline" className="bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-700" title={`Blocks: ${ticket.blocks.join(', ')}`}>
-                ➡️ {renderTicketLinks(ticket.blocks)}
+                ➡️
+                {' '}
+                {renderTicketLinks(ticket.blocks)}
               </Badge>
             )}
           </div>
@@ -191,7 +201,7 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default TicketAttributes;
+export default TicketAttributes
