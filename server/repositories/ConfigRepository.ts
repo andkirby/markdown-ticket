@@ -3,7 +3,7 @@ import * as path from 'node:path'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import * as toml from 'toml'
 
-export interface ProjectConfiguration {
+interface ProjectConfiguration {
   documentPaths: string[]
   excludeFolders: string[]
   ticketsPath: string | null
