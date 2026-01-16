@@ -5,25 +5,25 @@
  * server lifecycle, and test execution with custom port configuration.
  */
 
-import { PortConfig } from './config/ports.js';
-import { Project, LocalProjectConfig } from '../models/Project.js';
-import type { CRStatus, CRType, CRPriority } from '../models/Types.js';
-import type { TicketData } from '../models/Ticket.js';
+import type { LocalProjectConfig, Project } from '../models/Project.js'
+import type { TicketData } from '../models/Ticket.js'
+import type { CRPriority, CRStatus, CRType } from '../models/Types.js'
+import type { PortConfig } from './config/ports.js'
 
 /**
  * Isolated test environment session configuration
  */
 export interface TestEnvironment {
   /** Unique identifier for this test session */
-  id: string;
+  id: string
   /** Temporary directory path for test isolation */
-  tempDir: string;
+  tempDir: string
   /** Port configuration for all servers */
-  ports: PortConfig;
+  ports: PortConfig
   /** Whether environment is initialized */
-  isInitialized: boolean;
+  isInitialized: boolean
   /** Test session creation timestamp */
-  createdAt: Date;
+  createdAt: Date
 }
 
 /**
@@ -31,16 +31,16 @@ export interface TestEnvironment {
  */
 export interface ProjectConfig extends LocalProjectConfig {
   /** Project-specific port overrides */
-  ports?: Partial<PortConfig>;
+  ports?: Partial<PortConfig>
   /** Test-specific metadata */
   testMetadata?: {
     /** Test data templates to use */
-    templates?: string[];
+    templates?: string[]
     /** Whether to use sample data */
-    useSamples?: boolean;
+    useSamples?: boolean
     /** Custom test fixtures */
-    fixtures?: Record<string, unknown>;
-  };
+    fixtures?: Record<string, unknown>
+  }
 }
 
 /**
@@ -48,23 +48,23 @@ export interface ProjectConfig extends LocalProjectConfig {
  */
 export interface ServerConfig {
   /** Server type identifier */
-  type: 'frontend' | 'backend' | 'mcp';
+  type: 'frontend' | 'backend' | 'mcp'
   /** Port number for this server */
-  port: number;
+  port: number
   /** Command to start the server */
-  command: string;
+  command: string
   /** Arguments for the command */
-  args: string[];
+  args: string[]
   /** Environment variables */
-  env?: Record<string, string>;
+  env?: Record<string, string>
   /** Process ID if running */
-  pid?: number;
+  pid?: number
   /** Current server state */
-  state: 'stopped' | 'starting' | 'running' | 'stopping' | 'error';
+  state: 'stopped' | 'starting' | 'running' | 'stopping' | 'error'
   /** Server URL for HTTP requests */
-  url?: string;
+  url?: string
   /** Health check endpoint */
-  healthEndpoint?: string;
+  healthEndpoint?: string
 }
 
 /**
@@ -72,17 +72,17 @@ export interface ServerConfig {
  */
 export interface TestOptions {
   /** Test timeout in milliseconds */
-  timeout?: number;
+  timeout?: number
   /** Whether to cleanup after test */
-  cleanup?: boolean;
+  cleanup?: boolean
   /** Test run mode */
-  mode?: 'isolated' | 'integrated';
+  mode?: 'isolated' | 'integrated'
   /** Logging level */
-  logLevel?: 'silent' | 'error' | 'warn' | 'info' | 'debug';
+  logLevel?: 'silent' | 'error' | 'warn' | 'info' | 'debug'
   /** Custom test data */
-  testData?: Record<string, unknown>;
+  testData?: Record<string, unknown>
   /** Whether to skip server startup */
-  skipServerStart?: boolean;
+  skipServerStart?: boolean
 }
 
 /**
@@ -90,24 +90,24 @@ export interface TestOptions {
  */
 export interface TestResult {
   /** Test identifier */
-  id: string;
+  id: string
   /** Whether test passed */
-  passed: boolean;
+  passed: boolean
   /** Test execution duration in milliseconds */
-  duration: number;
+  duration: number
   /** Error message if test failed */
-  error?: string;
+  error?: string
   /** Test output/logs */
-  output?: string[];
+  output?: string[]
   /** Additional metadata */
   metadata?: {
     /** Server processes used */
-    servers?: ServerConfig[];
+    servers?: ServerConfig[]
     /** Test coverage metrics */
-    coverage?: unknown;
+    coverage?: unknown
     /** Performance metrics */
-    performance?: Record<string, number>;
-  };
+    performance?: Record<string, number>
+  }
 }
 
 /**
@@ -115,18 +115,18 @@ export interface TestResult {
  */
 export interface TestSuite {
   /** Suite identifier */
-  name: string;
+  name: string
   /** List of test cases */
-  tests: TestCase[];
+  tests: TestCase[]
   /** Global suite configuration */
-  config?: TestOptions;
+  config?: TestOptions
   /** Setup and teardown hooks */
   hooks?: {
-    beforeAll?: () => Promise<void>;
-    afterAll?: () => Promise<void>;
-    beforeEach?: () => Promise<void>;
-    afterEach?: () => Promise<void>;
-  };
+    beforeAll?: () => Promise<void>
+    afterAll?: () => Promise<void>
+    beforeEach?: () => Promise<void>
+    afterEach?: () => Promise<void>
+  }
 }
 
 /**
@@ -134,18 +134,18 @@ export interface TestSuite {
  */
 export interface TestCase {
   /** Test name/description */
-  name: string;
+  name: string
   /** Test function or identifier */
-  test: string | (() => Promise<void>);
+  test: string | (() => Promise<void>)
   /** Test-specific options */
-  options?: TestOptions;
+  options?: TestOptions
   /** Expected test CR metadata */
   expectedCR?: {
-    title?: string;
-    type?: CRType;
-    status?: CRStatus;
-    priority?: CRPriority;
-  };
+    title?: string
+    type?: CRType
+    status?: CRStatus
+    priority?: CRPriority
+  }
 }
 
 /**
@@ -153,8 +153,8 @@ export interface TestCase {
  */
 export class TestFrameworkError extends Error {
   constructor(message: string, public readonly code?: string) {
-    super(message);
-    this.name = 'TestFrameworkError';
+    super(message)
+    this.name = 'TestFrameworkError'
   }
 }
 
@@ -163,8 +163,8 @@ export class TestFrameworkError extends Error {
  */
 export class ServerStartupError extends TestFrameworkError {
   constructor(message: string, public readonly serverType: string) {
-    super(message);
-    this.name = 'ServerStartupError';
+    super(message)
+    this.name = 'ServerStartupError'
   }
 }
 
@@ -173,18 +173,18 @@ export class ServerStartupError extends TestFrameworkError {
  */
 export class TestTimeoutError extends TestFrameworkError {
   constructor(testId: string, timeout: number) {
-    super(`Test ${testId} timed out after ${timeout}ms`);
-    this.name = 'TestTimeoutError';
+    super(`Test ${testId} timed out after ${timeout}ms`)
+    this.name = 'TestTimeoutError'
   }
 }
 
 // Export all types for use in other modules
 export type {
-  PortConfig,
-  Project,
-  LocalProjectConfig,
+  CRPriority,
   CRStatus,
   CRType,
-  CRPriority,
-  TicketData
-};
+  LocalProjectConfig,
+  PortConfig,
+  Project,
+  TicketData,
+}

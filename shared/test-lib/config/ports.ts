@@ -8,9 +8,9 @@
  */
 
 export interface PortConfig {
-  readonly frontend: number;
-  readonly backend: number;
-  readonly mcp: number;
+  readonly frontend: number
+  readonly backend: number
+  readonly mcp: number
 }
 
 /**
@@ -21,7 +21,7 @@ export const DEFAULT_TEST_PORTS: PortConfig = {
   frontend: 6173,
   backend: 4001,
   mcp: 4002,
-};
+}
 
 /**
  * Validate that a port number is within the valid range
@@ -29,7 +29,7 @@ export const DEFAULT_TEST_PORTS: PortConfig = {
  * @returns true if port is valid (1024-65535)
  */
 export function isValidPort(port: number): boolean {
-  return Number.isInteger(port) && port >= 1024 && port <= 65535;
+  return Number.isInteger(port) && port >= 1024 && port <= 65535
 }
 
 /**
@@ -38,25 +38,25 @@ export function isValidPort(port: number): boolean {
  * @throws Error if any port is invalid
  */
 export function validatePortConfig(config: PortConfig): void {
-  const { frontend, backend, mcp } = config;
+  const { frontend, backend, mcp } = config
 
   if (!isValidPort(frontend)) {
-    throw new Error(`Invalid frontend port: ${frontend}. Must be between 1024 and 65535.`);
+    throw new Error(`Invalid frontend port: ${frontend}. Must be between 1024 and 65535.`)
   }
 
   if (!isValidPort(backend)) {
-    throw new Error(`Invalid backend port: ${backend}. Must be between 1024 and 65535.`);
+    throw new Error(`Invalid backend port: ${backend}. Must be between 1024 and 65535.`)
   }
 
   if (!isValidPort(mcp)) {
-    throw new Error(`Invalid MCP port: ${mcp}. Must be between 1024 and 65535.`);
+    throw new Error(`Invalid MCP port: ${mcp}. Must be between 1024 and 65535.`)
   }
 
   // Ensure ports are unique
-  const ports = [frontend, backend, mcp];
-  const uniquePorts = new Set(ports);
+  const ports = [frontend, backend, mcp]
+  const uniquePorts = new Set(ports)
   if (uniquePorts.size !== ports.length) {
-    throw new Error('All ports must be unique. Found duplicate ports in configuration.');
+    throw new Error('All ports must be unique. Found duplicate ports in configuration.')
   }
 }
 
@@ -68,19 +68,19 @@ export function validatePortConfig(config: PortConfig): void {
 export function getPortConfig(): PortConfig {
   // Support environment variable overrides
   const frontend = process.env.TEST_FRONTEND_PORT
-    ? parseInt(process.env.TEST_FRONTEND_PORT, 10)
-    : DEFAULT_TEST_PORTS.frontend;
+    ? Number.parseInt(process.env.TEST_FRONTEND_PORT, 10)
+    : DEFAULT_TEST_PORTS.frontend
 
   const backend = process.env.TEST_BACKEND_PORT
-    ? parseInt(process.env.TEST_BACKEND_PORT, 10)
-    : DEFAULT_TEST_PORTS.backend;
+    ? Number.parseInt(process.env.TEST_BACKEND_PORT, 10)
+    : DEFAULT_TEST_PORTS.backend
 
   const mcp = process.env.TEST_MCP_PORT
-    ? parseInt(process.env.TEST_MCP_PORT, 10)
-    : DEFAULT_TEST_PORTS.mcp;
+    ? Number.parseInt(process.env.TEST_MCP_PORT, 10)
+    : DEFAULT_TEST_PORTS.mcp
 
-  const config = { frontend, backend, mcp };
-  validatePortConfig(config);
+  const config = { frontend, backend, mcp }
+  validatePortConfig(config)
 
-  return config;
+  return config
 }

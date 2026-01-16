@@ -1,5 +1,5 @@
-import { useDrop } from 'react-dnd';
-import { Ticket } from '../../types';
+import type { Ticket } from '../../types'
+import { useDrop } from 'react-dnd'
 
 interface DropZoneOptions {
   /**
@@ -7,50 +7,50 @@ interface DropZoneOptions {
    * @param item - The dropped item containing the ticket
    * @returns Optional drop result to signal handling
    */
-  onDrop: (item: { ticket: Ticket }) => any | void;
+  onDrop: (item: { ticket: Ticket }) => any | void
 
   /**
    * The item type(s) to accept. Defaults to 'ticket'
    */
-  accept?: string | string[];
+  accept?: string | string[]
 
   /**
    * Whether this drop zone should mark itself as handled
    * When true, prevents parent drop zones from also handling the drop
    */
-  markHandled?: boolean;
+  markHandled?: boolean
 
   /**
    * Optional custom hover handler
    */
-  onHover?: (item: { ticket: Ticket }, monitor: any) => void;
+  onHover?: (item: { ticket: Ticket }, monitor: any) => void
 
   /**
    * Optional custom can drop handler
    */
-  canDrop?: (item: { ticket: Ticket }) => boolean;
+  canDrop?: (item: { ticket: Ticket }) => boolean
 }
 
 interface DropZoneResult {
   /**
    * Ref to attach to the drop target element
    */
-  drop: React.RefObject<any> | ((node: any) => void);
+  drop: React.RefObject<any> | ((node: any) => void)
 
   /**
    * Whether a draggable item is currently over the drop zone
    */
-  isOver: boolean;
+  isOver: boolean
 
   /**
    * Whether the current item can be dropped
    */
-  canDrop: boolean;
+  canDrop: boolean
 
   /**
    * The currently dragged item (if any)
    */
-  draggedItem: { ticket: Ticket } | null;
+  draggedItem: { ticket: Ticket } | null
 }
 
 /**
@@ -72,14 +72,14 @@ interface DropZoneResult {
  * </div>
  * ```
  */
-export const useDropZone = (options: DropZoneOptions): DropZoneResult => {
+export function useDropZone(options: DropZoneOptions): DropZoneResult {
   const {
     onDrop,
     accept = 'ticket',
     markHandled = false,
     onHover,
-    canDrop: customCanDrop
-  } = options;
+    canDrop: customCanDrop,
+  } = options
 
   const [{ isOver, canDrop, draggedItem }, drop] = useDrop(() => ({
     accept,
@@ -88,36 +88,37 @@ export const useDropZone = (options: DropZoneOptions): DropZoneResult => {
         // Check if a child drop zone already handled this drop
         if (monitor && monitor.didDrop && monitor.didDrop()) {
           // A child component already handled this drop
-          return { handled: true };
+          return { handled: true }
         }
 
-        const result = onDrop?.(item);
+        const result = onDrop?.(item)
 
         // If markHandled is true or drop handler returns handled=true,
         // mark this drop as handled to prevent parent zones from also handling it
         if (markHandled || result?.handled) {
-          return { ...result, handled: true };
+          return { ...result, handled: true }
         }
 
-        return result;
-      } catch (error) {
-        console.error('useDropZone: Error in drop handler:', error);
-        return { handled: false };
+        return result
+      }
+      catch (error) {
+        console.error('useDropZone: Error in drop handler:', error)
+        return { handled: false }
       }
     },
     hover: onHover,
     canDrop: customCanDrop ? (item: any) => customCanDrop(item) : undefined,
-    collect: (monitor) => ({
+    collect: monitor => ({
       isOver: !!monitor.isOver({ shallow: true }),
       canDrop: !!monitor.canDrop(),
       draggedItem: monitor.getItem() || null,
     }),
-  }));
+  }))
 
   return {
     drop,
     isOver,
     canDrop,
-    draggedItem
-  };
-};
+    draggedItem,
+  }
+}

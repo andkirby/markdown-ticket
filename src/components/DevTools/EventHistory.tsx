@@ -5,45 +5,46 @@
  * Only renders in development mode.
  */
 
-import { useState, useEffect } from 'react';
-import { eventBus, Event } from '../../services/eventBus';
+import type { Event } from '../../services/eventBus'
+import { useEffect, useState } from 'react'
+import { eventBus } from '../../services/eventBus'
 
 interface EventItemProps {
-  event: Event;
+  event: Event
 }
 
 export function EventHistory() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [filter, setFilter] = useState<string>('');
+  const [events, setEvents] = useState<Event[]>([])
+  const [isOpen, setIsOpen] = useState(false)
+  const [filter, setFilter] = useState<string>('')
 
   // Update events periodically
   useEffect(() => {
     const updateEvents = () => {
-      setEvents(eventBus.getRecentEvents(50));
-    };
+      setEvents(eventBus.getRecentEvents(50))
+    }
 
-    updateEvents(); // Initial load
-    const interval = setInterval(updateEvents, 1000); // Update every second
+    updateEvents() // Initial load
+    const interval = setInterval(updateEvents, 1000) // Update every second
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
 
   // Don't render in production
   if (import.meta.env.PROD) {
-    return null;
+    return null
   }
 
   // Filter events
   const filteredEvents = filter
     ? events.filter(e =>
-        e.type.toLowerCase().includes(filter.toLowerCase()) ||
-        JSON.stringify(e.payload).toLowerCase().includes(filter.toLowerCase())
+        e.type.toLowerCase().includes(filter.toLowerCase())
+        || JSON.stringify(e.payload).toLowerCase().includes(filter.toLowerCase()),
       )
-    : events;
+    : events
 
   // Get stats
-  const stats = eventBus.getStats();
+  const stats = eventBus.getStats()
 
   if (!isOpen) {
     return (
@@ -52,9 +53,11 @@ export function EventHistory() {
         className="fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-gray-800 transition-colors z-50"
         title="Open Event History"
       >
-        📡 Events ({events.length})
+        📡 Events (
+        {events.length}
+        )
       </button>
-    );
+    )
   }
 
   return (
@@ -64,7 +67,12 @@ export function EventHistory() {
         <div className="flex items-center space-x-4">
           <h3 className="font-bold">📡 Event History</h3>
           <div className="text-xs text-gray-400">
-            {stats.totalListeners} listeners | {filteredEvents.length} events
+            {stats.totalListeners}
+            {' '}
+            listeners |
+            {filteredEvents.length}
+            {' '}
+            events
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -89,22 +97,24 @@ export function EventHistory() {
           type="text"
           placeholder="Filter events..."
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={e => setFilter(e.target.value)}
           className="w-full px-3 py-1 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:border-blue-500"
         />
       </div>
 
       {/* Event List */}
       <div className="flex-1 overflow-auto p-2 space-y-1">
-        {filteredEvents.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            No events yet
-          </div>
-        ) : (
-          filteredEvents.map((event) => (
-            <EventItem key={event.id} event={event} />
-          ))
-        )}
+        {filteredEvents.length === 0
+          ? (
+              <div className="text-center text-gray-500 py-8">
+                No events yet
+              </div>
+            )
+          : (
+              filteredEvents.map(event => (
+                <EventItem key={event.id} event={event} />
+              ))
+            )}
       </div>
 
       {/* Stats Footer */}
@@ -124,47 +134,53 @@ export function EventHistory() {
         </details>
       </div>
     </div>
-  );
+  )
 }
 
 function EventItem({ event }: EventItemProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false)
 
   // Color based on event type
   const getEventColor = (type: string) => {
-    if (type.startsWith('ticket:')) return 'text-green-400';
-    if (type.startsWith('project:')) return 'text-blue-400';
-    if (type.startsWith('sse:')) return 'text-purple-400';
-    if (type.startsWith('error:')) return 'text-red-400';
-    return 'text-yellow-400';
-  };
+    if (type.startsWith('ticket:'))
+      return 'text-green-400'
+    if (type.startsWith('project:'))
+      return 'text-blue-400'
+    if (type.startsWith('sse:'))
+      return 'text-purple-400'
+    if (type.startsWith('error:'))
+      return 'text-red-400'
+    return 'text-yellow-400'
+  }
 
   // Source badge color
   const getSourceColor = (source: string) => {
     switch (source) {
-      case 'sse': return 'bg-purple-600';
-      case 'ui': return 'bg-blue-600';
-      case 'api': return 'bg-green-600';
-      default: return 'bg-gray-600';
+      case 'sse': return 'bg-purple-600'
+      case 'ui': return 'bg-blue-600'
+      case 'api': return 'bg-green-600'
+      default: return 'bg-gray-600'
     }
-  };
+  }
 
   // Get listener information for this event type
-  const listeners = eventBus.getListenersForType(event.type);
-  const listenerCount = eventBus.getListenerCount(event.type);
-  const [expandedListener, setExpandedListener] = useState<number | null>(null);
+  const listeners = eventBus.getListenersForType(event.type)
+  const listenerCount = eventBus.getListenerCount(event.type)
+  const [expandedListener, setExpandedListener] = useState<number | null>(null)
 
   // Format time relative to now
   const formatTimeAgo = (timestamp: number) => {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ago`;
-  };
+    const seconds = Math.floor((Date.now() - timestamp) / 1000)
+    if (seconds < 60)
+      return `${seconds}s ago`
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60)
+      return `${minutes}m ago`
+    const hours = Math.floor(minutes / 60)
+    return `${hours}h ago`
+  }
 
-  const timeStr = new Date(event.timestamp).toLocaleTimeString();
+  const timeStr = new Date(event.timestamp).toLocaleTimeString()
 
   return (
     <div className="bg-gray-800 rounded px-3 py-2 text-xs">
@@ -188,12 +204,19 @@ function EventItem({ event }: EventItemProps) {
         <div className="mt-2 pt-2 border-t border-gray-700 space-y-2">
           {/* Listener Information */}
           <div className="text-gray-400">
-            <span className="text-gray-500">Listeners:</span>{' '}
-            {listenerCount === 0 ? (
-              <span className="text-yellow-400">0 subscribed</span>
-            ) : (
-              <span className="text-green-400">({listenerCount})</span>
-            )}
+            <span className="text-gray-500">Listeners:</span>
+            {' '}
+            {listenerCount === 0
+              ? (
+                  <span className="text-yellow-400">0 subscribed</span>
+                )
+              : (
+                  <span className="text-green-400">
+                    (
+                    {listenerCount}
+                    )
+                  </span>
+                )}
           </div>
           {listeners.length > 0 && (
             <div className="ml-4 space-y-1">
@@ -202,18 +225,22 @@ function EventItem({ event }: EventItemProps) {
                   <div
                     className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 rounded px-1 py-0.5"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandedListener(expandedListener === idx ? null : idx);
+                      e.stopPropagation()
+                      setExpandedListener(expandedListener === idx ? null : idx)
                     }}
                   >
                     <span className="text-gray-600">{expandedListener === idx ? '▼' : '▶'}</span>
                     <span className="text-gray-600">↳</span>
                     <span className="text-blue-400 font-mono">{listener.source}</span>
                     <span className="text-purple-400 font-mono">
-                      {listener.functionName}()
+                      {listener.functionName}
+                      ()
                     </span>
                     <span className="text-gray-500">
-                      (registered {formatTimeAgo(listener.registeredAt)})
+                      (registered
+                      {' '}
+                      {formatTimeAgo(listener.registeredAt)}
+                      )
                     </span>
                   </div>
 
@@ -232,7 +259,9 @@ function EventItem({ event }: EventItemProps) {
 
           {/* Event ID */}
           <div className="text-gray-400">
-            <span className="text-gray-500">ID:</span> {event.id}
+            <span className="text-gray-500">ID:</span>
+            {' '}
+            {event.id}
           </div>
 
           {/* Payload */}
@@ -245,5 +274,5 @@ function EventItem({ event }: EventItemProps) {
         </div>
       )}
     </div>
-  );
+  )
 }

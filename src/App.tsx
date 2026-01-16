@@ -1,24 +1,24 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Moon, Sun } from 'lucide-react';
-import ProjectView from './components/ProjectView';
-import TicketViewer from './components/TicketViewer';
-import { EventHistory } from './components/DevTools/EventHistory';
-import { ProjectSelector, getProjectCode } from './components/ProjectSelector';
-import { RedirectToCurrentProject } from './components/RedirectToCurrentProject';
-import { DirectTicketAccess } from './components/DirectTicketAccess';
-import { RouteErrorModal } from './components/RouteErrorModal';
-import { Ticket } from './types';
-import { useTheme } from './hooks/useTheme';
-import { useProjectManager } from './hooks/useProjectManager';
-import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing';
-import './utils/cache'; // Import cache utilities for development
-import './services/sseClient'; // Initialize SSE connection
-import { Toaster } from './components/UI/sonner';
+import type { Ticket } from './types'
+import { Moon, Sun } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { EventHistory } from './components/DevTools/EventHistory'
+import { DirectTicketAccess } from './components/DirectTicketAccess'
+import { getProjectCode, ProjectSelector } from './components/ProjectSelector'
+import ProjectView from './components/ProjectView'
+import { RedirectToCurrentProject } from './components/RedirectToCurrentProject'
+import { RouteErrorModal } from './components/RouteErrorModal'
+import TicketViewer from './components/TicketViewer'
+import { Toaster } from './components/UI/sonner'
+import { useProjectManager } from './hooks/useProjectManager'
+import { useTheme } from './hooks/useTheme'
+import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
+import './utils/cache' // Import cache utilities for development
+import './services/sseClient' // Initialize SSE connection
 
 interface ViewModeSwitcherProps {
-  viewMode: 'board' | 'list' | 'documents';
-  onViewModeChange: (mode: 'board' | 'list' | 'documents') => void;
+  viewMode: 'board' | 'list' | 'documents'
+  onViewModeChange: (mode: 'board' | 'list' | 'documents') => void
 }
 
 function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps) {
@@ -33,9 +33,9 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
         }`}
         title="Board View"
       >
-        <img 
-          src="/icon_board_col_64.webp" 
-          alt="Board" 
+        <img
+          src="/icon_board_col_64.webp"
+          alt="Board"
           className="w-8 h-8 mx-auto dark:invert"
         />
       </button>
@@ -48,9 +48,9 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
         }`}
         title="List View"
       >
-        <img 
-          src="/icon_list_64.webp" 
-          alt="List" 
+        <img
+          src="/icon_list_64.webp"
+          alt="List"
           className="w-8 h-8 mx-auto dark:invert"
         />
       </button>
@@ -63,130 +63,135 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
         }`}
         title="Documents View"
       >
-        <img 
-          src="/icon_docs_64.webp" 
-          alt="Documents" 
+        <img
+          src="/icon_docs_64.webp"
+          alt="Documents"
           className="w-8 h-8 mx-auto dark:invert"
         />
       </button>
     </div>
-  );
+  )
 }
 
 function ProjectRouteHandler() {
-  const { projectCode } = useParams<{ projectCode: string }>();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const { theme, toggleTheme } = useTheme();
-  
-  const { 
-    projects, 
-    selectedProject, 
-    setSelectedProject, 
+  const { projectCode } = useParams<{ projectCode: string }>()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const { theme, toggleTheme } = useTheme()
+
+  const {
+    projects,
+    selectedProject,
+    setSelectedProject,
     tickets,
     refreshProjects,
-    loading: projectsLoading 
-  } = useProjectManager({ autoSelectFirst: false, handleSSEEvents: true });
+    loading: projectsLoading,
+  } = useProjectManager({ autoSelectFirst: false, handleSSEEvents: true })
 
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Determine current view mode from URL
   const getCurrentViewMode = (): 'board' | 'list' | 'documents' => {
-    if (location.pathname.includes('/list')) return 'list';
-    if (location.pathname.includes('/documents')) return 'documents';
-    return 'board';
-  };
+    if (location.pathname.includes('/list'))
+      return 'list'
+    if (location.pathname.includes('/documents'))
+      return 'documents'
+    return 'board'
+  }
 
-  const viewMode = getCurrentViewMode();
+  const viewMode = getCurrentViewMode()
 
   // Handle project selection and validation
   useEffect(() => {
     if (projectsLoading) {
-      setError(null); // Clear errors when loading
-      return;
+      setError(null) // Clear errors when loading
+      return
     }
-    
-    if (!projectCode) return;
+
+    if (!projectCode)
+      return
 
     // Validate project code format
     if (!validateProjectCode(projectCode)) {
-      setError(`Invalid project code format: '${projectCode}'`);
-      return;
+      setError(`Invalid project code format: '${projectCode}'`)
+      return
     }
 
-    const project = projects.find(p => getProjectCode(p) === projectCode);
+    const project = projects.find(p => getProjectCode(p) === projectCode)
     if (!project) {
-      setError(`Project '${projectCode}' not found`);
-      return;
+      setError(`Project '${projectCode}' not found`)
+      return
     }
 
     if (!selectedProject || getProjectCode(selectedProject) !== projectCode) {
-      setSelectedProject(project);
-      setCurrentProject(projectCode);
+      setSelectedProject(project)
+      setCurrentProject(projectCode)
     }
-    setError(null);
-  }, [projectCode, projects, projectsLoading, selectedProject, setSelectedProject]);
+    setError(null)
+  }, [projectCode, projects, projectsLoading, selectedProject, setSelectedProject])
 
   // Handle ticket modal from URL
   useEffect(() => {
-    const ticketMatch = location.pathname.match(/\/ticket\/([^\/]+)/);
+    const ticketMatch = location.pathname.match(/\/ticket\/([^/]+)/)
     if (ticketMatch) {
-      const ticketKey = normalizeTicketKey(ticketMatch[1]);
-      const ticket = tickets.find(t => t.code === ticketKey);
+      const ticketKey = normalizeTicketKey(ticketMatch[1])
+      const ticket = tickets.find(t => t.code === ticketKey)
       if (ticket) {
-        setSelectedTicket(ticket);
-        setError(null); // Clear any previous error
-      } else if (!projectsLoading && selectedProject) {
+        setSelectedTicket(ticket)
+        setError(null) // Clear any previous error
+      }
+      else if (!projectsLoading && selectedProject) {
         // Only set error if projects are loaded and we have a selected project with loaded tickets
         // This prevents false errors during initial loading
-        setError(`Ticket '${ticketMatch[1]}' not found`);
+        setError(`Ticket '${ticketMatch[1]}' not found`)
       }
-    } else {
-      setSelectedTicket(null);
     }
-  }, [location.pathname, tickets, projectsLoading, selectedProject]);
+    else {
+      setSelectedTicket(null)
+    }
+  }, [location.pathname, tickets, projectsLoading, selectedProject])
 
   const handleViewModeChange = (mode: 'board' | 'list' | 'documents') => {
-    const basePath = `/prj/${projectCode}`;
-    const newPath = mode === 'board' ? basePath : `${basePath}/${mode}`;
+    const basePath = `/prj/${projectCode}`
+    const newPath = mode === 'board' ? basePath : `${basePath}/${mode}`
     // Store current view mode preference
-    localStorage.setItem('lastViewMode', mode);
-    navigate(newPath);
-  };
+    localStorage.setItem('lastViewMode', mode)
+    navigate(newPath)
+  }
 
   const handleProjectSelect = (project: any) => {
     // Preserve current view mode when switching projects
-    const lastViewMode = localStorage.getItem('lastViewMode') || 'board';
-    const projectCode = getProjectCode(project);
-    const basePath = `/prj/${projectCode}`;
-    const newPath = lastViewMode === 'board' ? basePath : `${basePath}/${lastViewMode}`;
-    navigate(newPath);
-  };
+    const lastViewMode = localStorage.getItem('lastViewMode') || 'board'
+    const projectCode = getProjectCode(project)
+    const basePath = `/prj/${projectCode}`
+    const newPath = lastViewMode === 'board' ? basePath : `${basePath}/${lastViewMode}`
+    navigate(newPath)
+  }
 
   const handleTicketClick = (ticket: Ticket) => {
-    const viewParam = viewMode !== 'board' ? `?view=${viewMode}` : '';
-    navigate(`/prj/${projectCode}/ticket/${ticket.code}${viewParam}`);
-  };
+    const viewParam = viewMode !== 'board' ? `?view=${viewMode}` : ''
+    navigate(`/prj/${projectCode}/ticket/${ticket.code}${viewParam}`)
+  }
 
   const handleTicketClose = () => {
-    const viewContext = searchParams.get('view') || 'board';
-    const basePath = `/prj/${projectCode}`;
-    const targetPath = viewContext === 'board' ? basePath : `${basePath}/${viewContext}`;
-    navigate(targetPath);
-  };
+    const viewContext = searchParams.get('view') || 'board'
+    const basePath = `/prj/${projectCode}`
+    const targetPath = viewContext === 'board' ? basePath : `${basePath}/${viewContext}`
+    navigate(targetPath)
+  }
 
   if (projectsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
-    );
+    )
   }
 
   if (error) {
-    return <RouteErrorModal error={error} />;
+    return <RouteErrorModal error={error} />
   }
 
   return (
@@ -200,7 +205,7 @@ function ProjectRouteHandler() {
                 <img src="/logo.jpeg" alt="Logo" className="w-auto dark:invert" style={{ height: '3.8rem' }} />
               </div>
               <ViewModeSwitcher viewMode={viewMode} onViewModeChange={handleViewModeChange} />
-              <ProjectSelector 
+              <ProjectSelector
                 projects={projects}
                 selectedProject={selectedProject}
                 onProjectSelect={handleProjectSelect}
@@ -213,35 +218,37 @@ function ProjectRouteHandler() {
                 className="btn btn-ghost p-2 h-10 w-10"
                 aria-label="Toggle theme"
               >
-                {theme === 'dark' ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
+                {theme === 'dark'
+                  ? (
+                      <Sun className="h-5 w-5" />
+                    )
+                  : (
+                      <Moon className="h-5 w-5" />
+                    )}
               </button>
             </div>
           </div>
         </div>
       </nav>
-      
-      <ProjectView 
+
+      <ProjectView
         onTicketClick={handleTicketClick}
-        selectedProject={selectedProject} 
+        selectedProject={selectedProject}
         tickets={tickets}
         viewMode={viewMode}
         refreshProjects={refreshProjects}
       />
-      
-      <TicketViewer 
-        ticket={selectedTicket} 
-        isOpen={!!selectedTicket} 
-        onClose={handleTicketClose} 
+
+      <TicketViewer
+        ticket={selectedTicket}
+        isOpen={!!selectedTicket}
+        onClose={handleTicketClose}
       />
 
       <EventHistory />
       <Toaster />
     </div>
-  );
+  )
 }
 
 function App() {
@@ -257,7 +264,7 @@ function App() {
         <Route path="*" element={<RouteErrorModal error="Page not found" />} />
       </Routes>
     </BrowserRouter>
-  );
+  )
 }
 
-export default App;
+export default App

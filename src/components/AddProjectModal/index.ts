@@ -1,4 +1,1 @@
-export { AddProjectModal } from './AddProjectModal';
-;
-;
-;
+export { AddProjectModal } from './AddProjectModal'

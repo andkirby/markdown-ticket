@@ -6,30 +6,31 @@
  * to focus solely on process spawning concerns.
  */
 
-import { spawn, ChildProcess } from 'child_process';
-import { ServerConfig } from '../types.js';
-import { EventListenerRegistry } from './event-listener-registry.js';
+import type { ChildProcess } from 'node:child_process'
+import type { ServerConfig } from '../types.js'
+import { spawn } from 'node:child_process'
+import { EventListenerRegistry } from './event-listener-registry.js'
 
 /**
  * Event handlers for process lifecycle events
  */
 export interface ProcessHandlers {
   /** Handler for stdout data */
-  stdout?: (data: Buffer) => void;
+  stdout?: (data: Buffer) => void
   /** Handler for stderr data */
-  stderr?: (data: Buffer) => void;
+  stderr?: (data: Buffer) => void
   /** Handler for process exit */
-  exit?: (code: number | null, signal: NodeJS.Signals | null) => void;
+  exit?: (code: number | null, signal: NodeJS.Signals | null) => void
 }
 
 /**
  * Manages spawning child processes and attaching event handlers
  */
 export class ProcessSpawner {
-  private listeners: EventListenerRegistry;
+  private listeners: EventListenerRegistry
 
   constructor() {
-    this.listeners = new EventListenerRegistry();
+    this.listeners = new EventListenerRegistry()
   }
 
   /**
@@ -44,9 +45,9 @@ export class ProcessSpawner {
       cwd: projectRoot,
       env: { ...process.env, ...config.env },
       stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    })
 
-    return child;
+    return child
   }
 
   /**
@@ -58,13 +59,13 @@ export class ProcessSpawner {
   attachHandlers(
     serverType: string,
     process: ChildProcess,
-    handlers: ProcessHandlers
+    handlers: ProcessHandlers,
   ): void {
-    const stdoutHandler = handlers.stdout || ((d: Buffer) => {});
-    const stderrHandler = handlers.stderr || ((d: Buffer) => {});
-    const exitHandler = handlers.exit || ((_: number | null, __: NodeJS.Signals | null) => {});
+    const stdoutHandler = handlers.stdout || ((d: Buffer) => {})
+    const stderrHandler = handlers.stderr || ((d: Buffer) => {})
+    const exitHandler = handlers.exit || ((_: number | null, __: NodeJS.Signals | null) => {})
 
-    this.listeners.register(serverType, process, stdoutHandler, stderrHandler, exitHandler);
+    this.listeners.register(serverType, process, stdoutHandler, stderrHandler, exitHandler)
   }
 
   /**
@@ -73,13 +74,13 @@ export class ProcessSpawner {
    * @param process - Child process to cleanup listeners for
    */
   cleanupHandlers(serverType: string, process: ChildProcess): void {
-    this.listeners.cleanup(serverType, process);
+    this.listeners.cleanup(serverType, process)
   }
 
   /**
    * Clean up all event listeners
    */
   dispose(): void {
-    this.listeners.clear();
+    this.listeners.clear()
   }
 }

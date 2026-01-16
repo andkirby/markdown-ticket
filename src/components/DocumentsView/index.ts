@@ -1,3 +1,1 @@
-export { default as DocumentsLayout } from './DocumentsLayout';
-;
-;
+export { default as DocumentsLayout } from './DocumentsLayout'

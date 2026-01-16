@@ -2,18 +2,18 @@
  * Retry Helper - Centralized retry logic with exponential backoff for MDT-092 test environment
  */
 
-import { promisify } from 'util';
-import { setTimeout } from 'timers';
+import { setTimeout } from 'node:timers'
+import { promisify } from 'node:util'
 
 /** Retry configuration options */
 export interface RetryOptions {
-  maxAttempts?: number;
-  initialDelay?: number;
-  backoffMultiplier?: number;
-  maxDelay?: number;
-  timeout?: number;
-  retryableErrors?: string[];
-  logContext?: string;
+  maxAttempts?: number
+  initialDelay?: number
+  backoffMultiplier?: number
+  maxDelay?: number
+  timeout?: number
+  retryableErrors?: string[]
+  logContext?: string
 }
 
 /** Default retry configuration */
@@ -24,8 +24,8 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   maxDelay: 1000,
   timeout: 5000,
   retryableErrors: ['EACCES', 'ENOENT', 'EEXIST', 'EBUSY', 'EMFILE', 'ENFILE'],
-  logContext: 'RetryHelper'
-};
+  logContext: 'RetryHelper',
+}
 
 /**
  * Error class for retry failures
@@ -35,10 +35,10 @@ export class RetryError extends Error {
     message: string,
     public readonly attempts: number,
     public readonly lastError: Error,
-    public readonly context?: string
+    public readonly context?: string,
   ) {
-    super(message);
-    this.name = 'RetryError';
+    super(message)
+    this.name = 'RetryError'
   }
 }
 
@@ -46,10 +46,10 @@ export class RetryError extends Error {
  * Retry helper class with exponential backoff
  */
 export class RetryHelper {
-  private options: Required<RetryOptions>;
+  private options: Required<RetryOptions>
 
   constructor(options: RetryOptions = {}) {
-    this.options = { ...DEFAULT_OPTIONS, ...options };
+    this.options = { ...DEFAULT_OPTIONS, ...options }
   }
 
   /**
@@ -57,56 +57,56 @@ export class RetryHelper {
    */
   async execute<T>(
     operation: () => Promise<T>,
-    customOptions?: RetryOptions
+    customOptions?: RetryOptions,
   ): Promise<T> {
-    const mergedOptions = { ...this.options, ...customOptions };
-    const { maxAttempts, initialDelay, backoffMultiplier, maxDelay, timeout, retryableErrors, logContext } = mergedOptions;
+    const mergedOptions = { ...this.options, ...customOptions }
+    const { maxAttempts, initialDelay, backoffMultiplier, maxDelay, timeout, retryableErrors, logContext } = mergedOptions
 
-    let lastError: Error | null = null;
-    let delay = initialDelay;
+    let lastError: Error | null = null
+    let delay = initialDelay
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         // Create timeout promise
         const timeoutPromise = timeout > 0
           ? this.createTimeout(timeout, `${logContext} operation timed out after ${timeout}ms`)
-          : Promise.resolve(null);
+          : Promise.resolve(null)
 
         // Race between operation and timeout
         const result = await Promise.race([
           operation(),
-          timeoutPromise
-        ]);
+          timeoutPromise,
+        ])
 
         // Success
         if (attempt > 1) {
-          console.log(`[${logContext}] Operation succeeded on attempt ${attempt}/${maxAttempts}`);
+          console.log(`[${logContext}] Operation succeeded on attempt ${attempt}/${maxAttempts}`)
         }
-        return result as T;
-
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
+        return result as T
+      }
+      catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
 
         // Check if error is retryable
-        const errorCode = this.extractErrorCode(lastError);
-        const isRetryable = !retryableErrors.length || retryableErrors.includes(errorCode);
+        const errorCode = this.extractErrorCode(lastError)
+        const isRetryable = !retryableErrors.length || retryableErrors.includes(errorCode)
 
         // Don't retry if it's the last attempt or error is not retryable
         if (attempt === maxAttempts || !isRetryable) {
-          break;
+          break
         }
 
         // Log retry attempt
         console.warn(
-          `[${logContext}] Attempt ${attempt}/${maxAttempts} failed (${errorCode}). ` +
-          `Retrying in ${delay}ms... Error: ${lastError.message}`
-        );
+          `[${logContext}] Attempt ${attempt}/${maxAttempts} failed (${errorCode}). `
+          + `Retrying in ${delay}ms... Error: ${lastError.message}`,
+        )
 
         // Wait before retry
-        await promisify(setTimeout)(delay);
+        await promisify(setTimeout)(delay)
 
         // Calculate next delay with exponential backoff
-        delay = Math.min(delay * backoffMultiplier, maxDelay);
+        delay = Math.min(delay * backoffMultiplier, maxDelay)
       }
     }
 
@@ -115,8 +115,8 @@ export class RetryHelper {
       `Operation failed after ${maxAttempts} attempts`,
       maxAttempts,
       lastError!,
-      logContext
-    );
+      logContext,
+    )
   }
 
   /**
@@ -124,21 +124,23 @@ export class RetryHelper {
    */
   executeSync<T>(
     operation: () => T,
-    customOptions?: RetryOptions
+    customOptions?: RetryOptions,
   ): T {
     // Convert sync operation to async
-    const asyncOp = async () => operation();
+    const asyncOp = async () => operation()
     // Use async execute but block on result (this is acceptable in test context)
-    let result: T | undefined;
-    let error: Error | undefined;
+    let result: T | undefined
+    let error: Error | undefined
 
     this.execute(asyncOp, customOptions)
-      .then(r => { result = r; })
-      .catch(e => { error = e; });
+      .then((r) => { result = r })
+      .catch((e) => { error = e })
 
-    if (error) throw error;
-    if (result === undefined) throw new Error('Sync operation did not complete');
-    return result;
+    if (error)
+      throw error
+    if (result === undefined)
+      throw new Error('Sync operation did not complete')
+    return result
   }
 
   /**
@@ -146,8 +148,8 @@ export class RetryHelper {
    */
   private createTimeout(timeoutMs: number, message: string): Promise<never> {
     return new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(message)), timeoutMs);
-    });
+      setTimeout(() => reject(new Error(message)), timeoutMs)
+    })
   }
 
   /**
@@ -155,53 +157,58 @@ export class RetryHelper {
    */
   private extractErrorCode(error: Error): string {
     if ('code' in error && typeof error.code === 'string') {
-      return error.code;
+      return error.code
     }
 
     // Check for common error patterns
-    if (error.message.includes('permission')) return 'EACCES';
-    if (error.message.includes('not found')) return 'ENOENT';
-    if (error.message.includes('exists')) return 'EEXIST';
-    if (error.message.includes('timeout')) return 'TIMEOUT';
-    if (error.message.includes('busy')) return 'EBUSY';
+    if (error.message.includes('permission'))
+      return 'EACCES'
+    if (error.message.includes('not found'))
+      return 'ENOENT'
+    if (error.message.includes('exists'))
+      return 'EEXIST'
+    if (error.message.includes('timeout'))
+      return 'TIMEOUT'
+    if (error.message.includes('busy'))
+      return 'EBUSY'
 
-    return 'UNKNOWN';
+    return 'UNKNOWN'
   }
 
   /**
    * Check if an error is retryable based on configured error codes
    */
   isRetryableError(error: Error, customOptions?: RetryOptions): boolean {
-    const options = { ...this.options, ...customOptions };
-    const errorCode = this.extractErrorCode(error);
-    return !options.retryableErrors.length || options.retryableErrors.includes(errorCode);
+    const options = { ...this.options, ...customOptions }
+    const errorCode = this.extractErrorCode(error)
+    return !options.retryableErrors.length || options.retryableErrors.includes(errorCode)
   }
 
   /**
    * Wait with exponential backoff
    */
   async wait(attempt: number, customOptions?: RetryOptions): Promise<void> {
-    const options = { ...this.options, ...customOptions };
-    const { initialDelay, backoffMultiplier, maxDelay } = options;
+    const options = { ...this.options, ...customOptions }
+    const { initialDelay, backoffMultiplier, maxDelay } = options
 
-    const delay = Math.min(initialDelay * Math.pow(backoffMultiplier, attempt - 1), maxDelay);
-    await promisify(setTimeout)(delay);
+    const delay = Math.min(initialDelay * backoffMultiplier ** (attempt - 1), maxDelay)
+    await promisify(setTimeout)(delay)
   }
 }
 
 /**
  * Default retry helper instance
  */
-export const retryHelper = new RetryHelper();
+export const retryHelper = new RetryHelper()
 
 /**
  * Convenience function to execute with retry
  */
 export async function withRetry<T>(
   operation: () => Promise<T>,
-  options?: RetryOptions
+  options?: RetryOptions,
 ): Promise<T> {
-  return retryHelper.execute(operation, options);
+  return retryHelper.execute(operation, options)
 }
 
 /**
@@ -209,7 +216,7 @@ export async function withRetry<T>(
  */
 export function withRetrySync<T>(
   operation: () => T,
-  options?: RetryOptions
+  options?: RetryOptions,
 ): T {
-  return retryHelper.executeSync(operation, options);
+  return retryHelper.executeSync(operation, options)
 }

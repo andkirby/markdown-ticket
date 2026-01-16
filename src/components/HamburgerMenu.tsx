@@ -1,57 +1,58 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Plus, Edit, Hash, Trash2 } from 'lucide-react';
-import { Button } from './UI/index';
-import { useConfig } from '../hooks/useConfig';
-import { clearAllCache, nuclearCacheClear } from '../utils/cache';
+import { Edit, Hash, Menu, Plus, Trash2 } from 'lucide-react'
+import * as React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useConfig } from '../hooks/useConfig'
+import { nuclearCacheClear } from '../utils/cache'
+import { Button } from './UI/index'
 
 interface HamburgerMenuProps {
-  onAddProject: () => void;
-  onEditProject?: () => void;
-  onCounterAPI?: () => void;
-  hasActiveProject?: boolean;
+  onAddProject: () => void
+  onEditProject?: () => void
+  onCounterAPI?: () => void
+  hasActiveProject?: boolean
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onAddProject,
   onEditProject,
   onCounterAPI,
-  hasActiveProject = false
+  hasActiveProject = false,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const { isCounterAPIEnabled } = useConfig();
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const { isCounterAPIEnabled } = useConfig()
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        setIsOpen(false)
       }
-    };
+    }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleAddProject = () => {
-    setIsOpen(false);
-    onAddProject();
-  };
+    setIsOpen(false)
+    onAddProject()
+  }
 
   const handleEditProject = () => {
-    setIsOpen(false);
-    onEditProject?.();
-  };
+    setIsOpen(false)
+    onEditProject?.()
+  }
 
   const handleCounterAPI = () => {
-    setIsOpen(false);
-    onCounterAPI?.();
-  };
+    setIsOpen(false)
+    onCounterAPI?.()
+  }
 
   const handleClearCache = () => {
-    console.log('🔧 Cache clear button clicked');
-    setIsOpen(false);
-    nuclearCacheClear();
-  };
+    console.warn('🔧 Cache clear button clicked')
+    setIsOpen(false)
+    nuclearCacheClear()
+  }
 
   return (
     <div className="relative" ref={menuRef}>
@@ -103,5 +104,5 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}

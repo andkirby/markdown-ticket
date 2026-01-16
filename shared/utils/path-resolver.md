@@ -31,21 +31,21 @@ The `path-resolver.ts` utility provides centralized path operations for the mark
 
 ```typescript
 import {
-  joinPaths,
-  resolvePath,
-  getBaseName,
   buildConfigFilePath,
-  buildProjectPath
-} from '../utils/path-resolver.js';
+  buildProjectPath,
+  getBaseName,
+  joinPaths,
+  resolvePath
+} from '../utils/path-resolver.js'
 
 // Instead of: path.join(dir, 'config.toml')
-const configPath = buildConfigFilePath(projectPath, 'config.toml');
+const configPath = buildConfigFilePath(projectPath, 'config.toml')
 
 // Instead of: path.join(projectPath, 'docs', 'CRs')
-const crPath = buildProjectPath(projectPath, joinPaths('docs', 'CRs'));
+const crPath = buildProjectPath(projectPath, joinPaths('docs', 'CRs'))
 
 // Instead of: path.basename(filePath)
-const fileName = getBaseName(filePath);
+const fileName = getBaseName(filePath)
 ```
 
 ## Migration Notes

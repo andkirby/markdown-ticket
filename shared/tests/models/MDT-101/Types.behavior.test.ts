@@ -11,21 +11,21 @@
  * Framework: Jest
  */
 
-import {
+import type {
+  CRPriority,
   CRStatus,
   CRType,
-  CRPriority,
   ProjectInfo,
+  Suggestion,
   Template,
   TemplateSection,
-  ValidationResult,
   ValidationError,
+  ValidationResult,
   ValidationWarning,
-  Suggestion
-} from '../../../models/Types';
+} from '../../../models/Types'
 
-describe('Types Enum - Behavioral Preservation', () => {
-  describe('CRStatus Type', () => {
+describe('types Enum - Behavioral Preservation', () => {
+  describe('cRStatus Type', () => {
     it('should include all expected status values', () => {
       const expectedStatuses: CRStatus[] = [
         'Proposed',
@@ -37,53 +37,53 @@ describe('Types Enum - Behavioral Preservation', () => {
         'Superseded',
         'Deprecated',
         'Duplicate',
-        'Partially Implemented'
-      ];
+        'Partially Implemented',
+      ]
 
-      expectedStatuses.forEach(status => {
-        expect(status).toBeDefined();
-      });
-    });
+      expectedStatuses.forEach((status) => {
+        expect(status).toBeDefined()
+      })
+    })
 
     it('should only allow valid status values', () => {
       // These assignments should work
-      const validStatus1: CRStatus = 'Proposed';
-      const validStatus2: CRStatus = 'Implemented';
-      const validStatus3: CRStatus = 'Partially Implemented';
+      const validStatus1: CRStatus = 'Proposed'
+      const validStatus2: CRStatus = 'Implemented'
+      const validStatus3: CRStatus = 'Partially Implemented'
 
-      expect(validStatus1).toBe('Proposed');
-      expect(validStatus2).toBe('Implemented');
-      expect(validStatus3).toBe('Partially Implemented');
-    });
-  });
+      expect(validStatus1).toBe('Proposed')
+      expect(validStatus2).toBe('Implemented')
+      expect(validStatus3).toBe('Partially Implemented')
+    })
+  })
 
-  describe('CRType Type', () => {
+  describe('cRType Type', () => {
     it('should include all expected type values', () => {
       const expectedTypes: CRType[] = [
         'Architecture',
         'Feature Enhancement',
         'Bug Fix',
         'Technical Debt',
-        'Documentation'
-      ];
+        'Documentation',
+      ]
 
-      expectedTypes.forEach(type => {
-        expect(type).toBeDefined();
-      });
-    });
-  });
+      expectedTypes.forEach((type) => {
+        expect(type).toBeDefined()
+      })
+    })
+  })
 
-  describe('CRPriority Type', () => {
+  describe('cRPriority Type', () => {
     it('should include all expected priority values', () => {
-      const expectedPriorities: CRPriority[] = ['Low', 'Medium', 'High', 'Critical'];
+      const expectedPriorities: CRPriority[] = ['Low', 'Medium', 'High', 'Critical']
 
-      expectedPriorities.forEach(priority => {
-        expect(priority).toBeDefined();
-      });
-    });
-  });
+      expectedPriorities.forEach((priority) => {
+        expect(priority).toBeDefined()
+      })
+    })
+  })
 
-  describe('ProjectInfo Interface', () => {
+  describe('projectInfo Interface', () => {
     it('should maintain ProjectInfo interface shape', () => {
       const projectInfo: ProjectInfo = {
         key: 'MDT',
@@ -91,16 +91,16 @@ describe('Types Enum - Behavioral Preservation', () => {
         description: 'A ticketing system',
         path: '/path/to/project',
         crCount: 42,
-        lastAccessed: '2024-01-01T12:00:00Z'
-      };
+        lastAccessed: '2024-01-01T12:00:00Z',
+      }
 
-      expect(typeof projectInfo.key).toBe('string');
-      expect(typeof projectInfo.name).toBe('string');
-      expect(typeof projectInfo.description).toBe('string');
-      expect(typeof projectInfo.path).toBe('string');
-      expect(typeof projectInfo.crCount).toBe('number');
-      expect(typeof projectInfo.lastAccessed).toBe('string');
-    });
+      expect(typeof projectInfo.key).toBe('string')
+      expect(typeof projectInfo.name).toBe('string')
+      expect(typeof projectInfo.description).toBe('string')
+      expect(typeof projectInfo.path).toBe('string')
+      expect(typeof projectInfo.crCount).toBe('number')
+      expect(typeof projectInfo.lastAccessed).toBe('string')
+    })
 
     it('should allow optional description field', () => {
       const projectInfoWithoutDesc: ProjectInfo = {
@@ -108,14 +108,14 @@ describe('Types Enum - Behavioral Preservation', () => {
         name: 'Test Project',
         path: '/test',
         crCount: 0,
-        lastAccessed: '2024-01-01'
-      };
+        lastAccessed: '2024-01-01',
+      }
 
-      expect(projectInfoWithoutDesc.description).toBeUndefined();
-    });
-  });
+      expect(projectInfoWithoutDesc.description).toBeUndefined()
+    })
+  })
 
-  describe('Template Interfaces', () => {
+  describe('template Interfaces', () => {
     it('should maintain Template interface shape', () => {
       const template: Template = {
         type: 'Feature Enhancement',
@@ -125,103 +125,103 @@ describe('Types Enum - Behavioral Preservation', () => {
           {
             name: 'Description',
             required: true,
-            placeholder: 'Describe the feature...'
+            placeholder: 'Describe the feature...',
           },
           {
             name: 'Acceptance Criteria',
-            required: true
-          }
-        ]
-      };
+            required: true,
+          },
+        ],
+      }
 
-      expect(typeof template.type).toBe('string');
-      expect(Array.isArray(template.requiredFields)).toBe(true);
-      expect(typeof template.template).toBe('string');
-      expect(Array.isArray(template.sections)).toBe(true);
-    });
+      expect(typeof template.type).toBe('string')
+      expect(Array.isArray(template.requiredFields)).toBe(true)
+      expect(typeof template.template).toBe('string')
+      expect(Array.isArray(template.sections)).toBe(true)
+    })
 
     it('should maintain TemplateSection interface shape', () => {
       const section: TemplateSection = {
         name: 'Description',
         required: true,
-        placeholder: 'Enter description here'
-      };
+        placeholder: 'Enter description here',
+      }
 
-      expect(typeof section.name).toBe('string');
-      expect(typeof section.required).toBe('boolean');
-      expect(typeof section.placeholder).toBe('string');
-    });
+      expect(typeof section.name).toBe('string')
+      expect(typeof section.required).toBe('boolean')
+      expect(typeof section.placeholder).toBe('string')
+    })
 
     it('should allow optional placeholder in TemplateSection', () => {
       const sectionWithoutPlaceholder: TemplateSection = {
         name: 'Title',
-        required: true
-      };
+        required: true,
+      }
 
-      expect(sectionWithoutPlaceholder.placeholder).toBeUndefined();
-    });
-  });
+      expect(sectionWithoutPlaceholder.placeholder).toBeUndefined()
+    })
+  })
 
-  describe('Validation Interfaces', () => {
+  describe('validation Interfaces', () => {
     it('should maintain ValidationResult interface shape', () => {
       const result: ValidationResult = {
         valid: false,
         errors: [
           {
             field: 'title',
-            message: 'Title is required'
-          }
+            message: 'Title is required',
+          },
         ],
         warnings: [
           {
             field: 'description',
-            message: 'Description is short'
-          }
-        ]
-      };
+            message: 'Description is short',
+          },
+        ],
+      }
 
-      expect(typeof result.valid).toBe('boolean');
-      expect(Array.isArray(result.errors)).toBe(true);
-      expect(Array.isArray(result.warnings)).toBe(true);
-    });
+      expect(typeof result.valid).toBe('boolean')
+      expect(Array.isArray(result.errors)).toBe(true)
+      expect(Array.isArray(result.warnings)).toBe(true)
+    })
 
     it('should maintain ValidationError interface shape', () => {
       const error: ValidationError = {
         field: 'status',
-        message: 'Invalid status value'
-      };
+        message: 'Invalid status value',
+      }
 
-      expect(typeof error.field).toBe('string');
-      expect(typeof error.message).toBe('string');
-    });
+      expect(typeof error.field).toBe('string')
+      expect(typeof error.message).toBe('string')
+    })
 
     it('should maintain ValidationWarning interface shape', () => {
       const warning: ValidationWarning = {
         field: 'priority',
-        message: 'Consider using higher priority'
-      };
+        message: 'Consider using higher priority',
+      }
 
-      expect(typeof warning.field).toBe('string');
-      expect(typeof warning.message).toBe('string');
-    });
-  });
+      expect(typeof warning.field).toBe('string')
+      expect(typeof warning.message).toBe('string')
+    })
+  })
 
-  describe('Suggestion Interface', () => {
+  describe('suggestion Interface', () => {
     it('should maintain Suggestion interface shape', () => {
       const suggestion: Suggestion = {
         type: 'improvement',
         title: 'Add more details',
         description: 'Consider adding implementation details',
         priority: 'medium',
-        actionable: true
-      };
+        actionable: true,
+      }
 
-      expect(['improvement', 'related', 'validation']).toContain(suggestion.type);
-      expect(typeof suggestion.title).toBe('string');
-      expect(typeof suggestion.description).toBe('string');
-      expect(['low', 'medium', 'high']).toContain(suggestion.priority);
-      expect(typeof suggestion.actionable).toBe('boolean');
-    });
+      expect(['improvement', 'related', 'validation']).toContain(suggestion.type)
+      expect(typeof suggestion.title).toBe('string')
+      expect(typeof suggestion.description).toBe('string')
+      expect(['low', 'medium', 'high']).toContain(suggestion.priority)
+      expect(typeof suggestion.actionable).toBe('boolean')
+    })
 
     it('should accept all suggestion types', () => {
       const improvement: Suggestion = {
@@ -229,28 +229,28 @@ describe('Types Enum - Behavioral Preservation', () => {
         title: 'Improve',
         description: 'desc',
         priority: 'low',
-        actionable: true
-      };
+        actionable: true,
+      }
 
       const related: Suggestion = {
         type: 'related',
         title: 'Related',
         description: 'desc',
         priority: 'high',
-        actionable: false
-      };
+        actionable: false,
+      }
 
       const validation: Suggestion = {
         type: 'validation',
         title: 'Validation',
         description: 'desc',
         priority: 'medium',
-        actionable: true
-      };
+        actionable: true,
+      }
 
-      expect(improvement.type).toBe('improvement');
-      expect(related.type).toBe('related');
-      expect(validation.type).toBe('validation');
-    });
-  });
-});
+      expect(improvement.type).toBe('improvement')
+      expect(related.type).toBe('related')
+      expect(validation.type).toBe('validation')
+    })
+  })
+})

@@ -21,16 +21,12 @@
  *
  * @throws {Error} When the timeout is reached before the promise resolves
  */
-export const withTimeout = <T>(
-  promise: Promise<T>,
-  timeoutMs: number = 5000,
-  errorMessage?: string
-): Promise<T> => {
+export function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 5000, errorMessage?: string): Promise<T> {
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
-      reject(new Error(errorMessage || `Operation timed out after ${timeoutMs}ms`));
-    }, timeoutMs);
-  });
+      reject(new Error(errorMessage || `Operation timed out after ${timeoutMs}ms`))
+    }, timeoutMs)
+  })
 
-  return Promise.race([promise, timeoutPromise]);
-};
+  return Promise.race([promise, timeoutPromise])
+}

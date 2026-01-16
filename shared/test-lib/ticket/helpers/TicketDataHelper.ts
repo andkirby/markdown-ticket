@@ -5,8 +5,8 @@
  * Reuses: CRService from shared/services/
  */
 
-import type { TicketData, Ticket } from '../../../models/Ticket.js';
-import { CRService } from '../../../services/CRService.js';
+import type { Ticket, TicketData } from '../../../models/Ticket.js'
+import { CRService } from '../../../services/CRService.js'
 
 export class TicketDataHelper {
   /**
@@ -19,7 +19,7 @@ export class TicketDataHelper {
    */
   static mergeTicketData(
     existing: TicketData | null,
-    updates: Partial<TicketData>
+    updates: Partial<TicketData>,
   ): TicketData {
     return {
       title: updates.title || existing?.title || '',
@@ -30,8 +30,8 @@ export class TicketDataHelper {
       relatedTickets: updates.relatedTickets || existing?.relatedTickets,
       dependsOn: updates.dependsOn || existing?.dependsOn,
       blocks: updates.blocks || existing?.blocks,
-      assignee: updates.assignee || existing?.assignee
-    };
+      assignee: updates.assignee || existing?.assignee,
+    }
   }
 
   /**
@@ -46,13 +46,13 @@ export class TicketDataHelper {
   static buildTicket(
     data: TicketData,
     ticketCode: string,
-    filePath: string
+    filePath: string,
   ): Ticket {
-    const ticket = CRService.createTicket(data, ticketCode, data.type, filePath);
-    const now = new Date();
-    ticket.dateCreated = ticket.dateCreated || now;
-    ticket.lastModified = now;
-    return ticket;
+    const ticket = CRService.createTicket(data, ticketCode, data.type, filePath)
+    const now = new Date()
+    ticket.dateCreated = ticket.dateCreated || now
+    ticket.lastModified = now
+    return ticket
   }
 
   /**
@@ -72,7 +72,7 @@ export class TicketDataHelper {
       relatedTickets: ticket.relatedTickets.join(','),
       dependsOn: ticket.dependsOn.join(','),
       blocks: ticket.blocks.join(','),
-      assignee: ticket.assignee
-    };
+      assignee: ticket.assignee,
+    }
   }
 }

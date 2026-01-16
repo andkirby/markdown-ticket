@@ -1,10 +1,10 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Position tracking interface for ticket restoration
 export interface TicketPosition {
-  columnIndex: number;
-  ticketIndex: number;
-  timestamp: number;
+  columnIndex: number
+  ticketIndex: number
+  timestamp: number
 }
 
 /**
@@ -14,14 +14,14 @@ export interface TicketPosition {
  */
 export function useTicketPosition() {
   // Position tracking for ticket restoration
-  const [ticketPositions, setTicketPositions] = useState<Map<string, TicketPosition>>(new Map());
+  const [ticketPositions, setTicketPositions] = useState<Map<string, TicketPosition>>(new Map())
 
   // Use ref to always get current ticket positions (prevents stale closure)
-  const ticketPositionsRef = useRef<Map<string, TicketPosition>>(ticketPositions);
+  const ticketPositionsRef = useRef<Map<string, TicketPosition>>(ticketPositions)
 
   useEffect(() => {
-    ticketPositionsRef.current = ticketPositions;
-  }, [ticketPositions]);
+    ticketPositionsRef.current = ticketPositions
+  }, [ticketPositions])
 
   // Position tracking methods
 
@@ -35,10 +35,10 @@ export function useTicketPosition() {
     const position: TicketPosition = {
       columnIndex,
       ticketIndex,
-      timestamp: Date.now()
-    };
-    setTicketPositions(prev => new Map(prev.set(ticketCode, position)));
-  }, []);
+      timestamp: Date.now(),
+    }
+    setTicketPositions(prev => new Map(prev.set(ticketCode, position)))
+  }, [])
 
   /**
    * Retrieve the stored position for a ticket
@@ -46,35 +46,35 @@ export function useTicketPosition() {
    * @returns The ticket position if found, undefined otherwise
    */
   const getTicketPosition = useCallback((ticketCode: string): TicketPosition | undefined => {
-    return ticketPositionsRef.current.get(ticketCode);
-  }, []);
+    return ticketPositionsRef.current.get(ticketCode)
+  }, [])
 
   /**
    * Remove the stored position for a ticket
    * @param ticketCode - The unique identifier for the ticket
    */
   const clearTicketPosition = useCallback((ticketCode: string): void => {
-    setTicketPositions(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(ticketCode);
-      return newMap;
-    });
-  }, []);
+    setTicketPositions((prev) => {
+      const newMap = new Map(prev)
+      newMap.delete(ticketCode)
+      return newMap
+    })
+  }, [])
 
   /**
    * Get all stored ticket positions
    * @returns A copy of the ticket positions map
    */
   const getAllTicketPositions = useCallback((): Map<string, TicketPosition> => {
-    return new Map(ticketPositionsRef.current);
-  }, []);
+    return new Map(ticketPositionsRef.current)
+  }, [])
 
   /**
    * Clear all stored ticket positions
    */
   const clearAllTicketPositions = useCallback((): void => {
-    setTicketPositions(new Map());
-  }, []);
+    setTicketPositions(new Map())
+  }, [])
 
   return {
     storeTicketPosition,
@@ -82,5 +82,5 @@ export function useTicketPosition() {
     clearTicketPosition,
     getAllTicketPositions,
     clearAllTicketPositions,
-  };
+  }
 }

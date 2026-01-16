@@ -1,6 +1,6 @@
-import { Project } from '../../models/Project.js';
-import { ProjectCache, IProjectCacheService } from './types.js';
-import { logQuiet } from '../../utils/logger.js';
+import type { Project } from '../../models/Project.js'
+import type { IProjectCacheService, ProjectCache } from './types.js'
+import { logQuiet } from '../../utils/logger.js'
 
 /**
  * Project Cache Service
@@ -8,16 +8,16 @@ import { logQuiet } from '../../utils/logger.js';
  * Implements IProjectCacheService interface for testability and dependency injection
  */
 export class ProjectCacheService implements IProjectCacheService {
-  private cache: ProjectCache;
-  private quiet: boolean;
+  private cache: ProjectCache
+  private quiet: boolean
 
   constructor(quiet: boolean = false, defaultTTL: number = 30000) {
-    this.quiet = quiet;
+    this.quiet = quiet
     this.cache = {
       projects: null,
       timestamp: 0,
-      ttl: defaultTTL // 30 seconds by default
-    };
+      ttl: defaultTTL, // 30 seconds by default
+    }
   }
 
   /**
@@ -25,8 +25,8 @@ export class ProjectCacheService implements IProjectCacheService {
    * @returns True if cache contains valid data
    */
   isCacheValid(): boolean {
-    const now = Date.now();
-    return !!(this.cache.projects && (now - this.cache.timestamp) < this.cache.ttl);
+    const now = Date.now()
+    return !!(this.cache.projects && (now - this.cache.timestamp) < this.cache.ttl)
   }
 
   /**
@@ -35,9 +35,9 @@ export class ProjectCacheService implements IProjectCacheService {
    */
   getCacheAge(): number {
     if (!this.cache.projects) {
-      return 0;
+      return 0
     }
-    return Date.now() - this.cache.timestamp;
+    return Date.now() - this.cache.timestamp
   }
 
   /**
@@ -46,10 +46,10 @@ export class ProjectCacheService implements IProjectCacheService {
    */
   getCachedProjects(): Project[] | null {
     if (this.isCacheValid()) {
-      logQuiet(this.quiet,'📦 Using cached projects data');
-      return this.cache.projects;
+      logQuiet(this.quiet, '📦 Using cached projects data')
+      return this.cache.projects
     }
-    return null;
+    return null
   }
 
   /**
@@ -57,9 +57,9 @@ export class ProjectCacheService implements IProjectCacheService {
    * @param projects - Projects array to cache
    */
   setCachedProjects(projects: Project[]): void {
-    this.cache.projects = projects;
-    this.cache.timestamp = Date.now();
-    logQuiet(this.quiet,`📦 Cached ${projects.length} projects`);
+    this.cache.projects = projects
+    this.cache.timestamp = Date.now()
+    logQuiet(this.quiet, `📦 Cached ${projects.length} projects`)
   }
 
   /**
@@ -68,7 +68,7 @@ export class ProjectCacheService implements IProjectCacheService {
    * @returns Promise resolving to cached projects or null if cache invalid
    */
   async getAllProjectsFromCache(): Promise<Project[] | null> {
-    return this.getCachedProjects();
+    return this.getCachedProjects()
   }
 
   /**
@@ -77,8 +77,8 @@ export class ProjectCacheService implements IProjectCacheService {
    * @returns Promise resolving to cached projects or empty array if cache invalid
    */
   async getAllProjects(): Promise<Project[]> {
-    const cached = this.getCachedProjects();
-    return cached || [];
+    const cached = this.getCachedProjects()
+    return cached || []
   }
 
   /**
@@ -86,9 +86,9 @@ export class ProjectCacheService implements IProjectCacheService {
    * Forces next getAllProjects() call to refresh data
    */
   clearCache(): void {
-    this.cache.projects = null;
-    this.cache.timestamp = 0;
-    logQuiet(this.quiet,'📦 Cache cleared');
+    this.cache.projects = null
+    this.cache.timestamp = 0
+    logQuiet(this.quiet, '📦 Cache cleared')
   }
 
   /**
@@ -96,8 +96,8 @@ export class ProjectCacheService implements IProjectCacheService {
    * @param ttl - New TTL in milliseconds
    */
   setCacheTTL(ttl: number): void {
-    this.cache.ttl = ttl;
-    logQuiet(this.quiet,`📦 Cache TTL set to ${ttl}ms`);
+    this.cache.ttl = ttl
+    logQuiet(this.quiet, `📦 Cache TTL set to ${ttl}ms`)
   }
 
   /**
@@ -105,7 +105,7 @@ export class ProjectCacheService implements IProjectCacheService {
    * @returns Current TTL in milliseconds
    */
   getCacheTTL(): number {
-    return this.cache.ttl;
+    return this.cache.ttl
   }
 
   /**
@@ -113,7 +113,7 @@ export class ProjectCacheService implements IProjectCacheService {
    * @returns True if cache contains data
    */
   hasCachedData(): boolean {
-    return this.cache.projects !== null;
+    return this.cache.projects !== null
   }
 
   /**
@@ -121,6 +121,6 @@ export class ProjectCacheService implements IProjectCacheService {
    * @returns Cache timestamp or 0 if no data
    */
   getCacheTimestamp(): number {
-    return this.cache.timestamp;
+    return this.cache.timestamp
   }
 }

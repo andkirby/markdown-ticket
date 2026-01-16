@@ -1,43 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Eye, EyeOff, AlertTriangle, Copy, Loader2, Hash, Users, ArrowLeft, 
-  Settings as SettingsIcon, Plus, Trash2, Power, PowerOff, Mail, Shield, Server, Zap
-} from 'lucide-react';
-import { Button } from './UI/Button';
-import { Input } from './UI/Input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './UI/Card';
-import { Badge } from './UI/badge';
-import { useCounterAPI } from '../hooks/useCounterAPI';
+import {
+  ArrowLeft,
+  Copy,
+  Eye,
+  EyeOff,
+  Hash,
+  Loader2,
+  Mail,
+  Plus,
+  Power,
+  PowerOff,
+  Server,
+  Settings as SettingsIcon,
+  Shield,
+  Trash2,
+  Users,
+  Zap,
+} from 'lucide-react'
+import * as React from 'react'
+import { useEffect, useState } from 'react'
+import { useCounterAPI } from '../hooks/useCounterAPI'
+import { Badge } from './UI/badge'
+import { Button } from './UI/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './UI/Card'
+import { Input } from './UI/Input'
 
-type ViewState = 'loading' | 'setup' | 'dashboard' | 'projects' | 'users' | 'settings';
-type UserRole = 'admin' | 'client' | 'guest';
+type ViewState = 'loading' | 'setup' | 'dashboard' | 'projects' | 'users' | 'settings'
+type UserRole = 'admin' | 'client' | 'guest'
 
 // Setup Flow - First Time Configuration
 const SetupFlow: React.FC<{
-  onComplete: () => void;
-  loading: boolean;
-}> = ({ onComplete, loading }) => {
-  const [step, setStep] = useState<'endpoint' | 'admin' | 'client'>('endpoint');
-  const [endpoint, setEndpoint] = useState('');
-  const [adminKey, setAdminKey] = useState('');
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [registrationToken, setRegistrationToken] = useState('');
+  onComplete: () => void
+}> = ({ onComplete }) => {
+  const [step, setStep] = useState<'endpoint' | 'admin' | 'client'>('endpoint')
+  const [endpoint, setEndpoint] = useState('')
+  const [adminKey, setAdminKey] = useState('')
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [registrationToken, setRegistrationToken] = useState('')
 
   const handleEndpointSave = async () => {
     // Save endpoint configuration
-    setStep('admin');
-  };
+    setStep('admin')
+  }
 
   const handleAdminInvite = async () => {
     // Send admin invitation
-    setStep('client');
-  };
+    setStep('client')
+  }
 
   const handleClientRegistration = async () => {
     // Complete client registration
-    onComplete();
-  };
+    onComplete()
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -65,7 +79,7 @@ const SetupFlow: React.FC<{
             <Input
               placeholder="https://your-api-gateway.amazonaws.com/Prod"
               value={endpoint}
-              onChange={(e) => setEndpoint(e.target.value)}
+              onChange={e => setEndpoint(e.target.value)}
             />
             <Button onClick={handleEndpointSave} disabled={!endpoint.trim()}>
               Save & Test Connection
@@ -90,18 +104,18 @@ const SetupFlow: React.FC<{
               type="password"
               placeholder="Admin key from Lambda deployment"
               value={adminKey}
-              onChange={(e) => setAdminKey(e.target.value)}
+              onChange={e => setAdminKey(e.target.value)}
             />
             <Input
               type="email"
               placeholder="Your email address"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
             />
             <Input
               placeholder="Your company/organization name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
             />
             <Button onClick={handleAdminInvite} disabled={!adminKey.trim() || !email.trim()}>
               Send Invitation
@@ -124,13 +138,15 @@ const SetupFlow: React.FC<{
           <CardContent className="space-y-4">
             <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
               <p className="text-sm text-green-700 dark:text-green-300">
-                Registration email sent to {email}
+                Registration email sent to
+                {' '}
+                {email}
               </p>
             </div>
             <Input
               placeholder="Registration token from email"
               value={registrationToken}
-              onChange={(e) => setRegistrationToken(e.target.value)}
+              onChange={e => setRegistrationToken(e.target.value)}
             />
             <Button onClick={handleClientRegistration} disabled={!registrationToken.trim()}>
               Complete Setup
@@ -139,60 +155,63 @@ const SetupFlow: React.FC<{
         </Card>
       )}
     </div>
-  );
-};
+  )
+}
 
 // Main Dashboard
 const Dashboard: React.FC<{
-  userRole: UserRole;
-  onNavigate: (view: ViewState) => void;
-  onGenerateTicket: (projectId: string) => Promise<any>;
-  getProjects: () => Promise<any>;
+  userRole: UserRole
+  onNavigate: (view: ViewState) => void
+  onGenerateTicket: (projectId: string) => Promise<any>
+  getProjects: () => Promise<any>
 }> = ({ userRole, onNavigate, onGenerateTicket, getProjects }) => {
-  const [projectId, setProjectId] = useState('WEB');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [projectCount, setProjectCount] = useState(0);
-
-  // Load project count on mount
-  useEffect(() => {
-    loadProjectCount();
-  }, []);
+  const [projectId, setProjectId] = useState('WEB')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<any>(null)
+  const [projectCount, setProjectCount] = useState(0)
 
   const loadProjectCount = async () => {
     try {
       // Check if counter API is configured first
-      const configResponse = await fetch('/api/counter/config');
-      const config = await configResponse.json();
-      
+      const configResponse = await fetch('/api/counter/config')
+      const config = await configResponse.json()
+
       if (!config.enabled || !config.api_key_set) {
-        console.log('Counter API not configured, skipping project count load');
-        return;
+        console.warn('Counter API not configured, skipping project count load')
+        return
       }
-      
-      const projects = await getProjects();
-      setProjectCount(projects.length);
-    } catch (error) {
-      console.error('Failed to load project count:', error);
+
+      const projects = await getProjects()
+      setProjectCount(projects.length)
+    }
+    catch (error) {
+      console.error('Failed to load project count:', error)
       // Don't retry automatically on API key errors
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error)
       if (errorMessage.includes('API key invalid')) {
-        console.log('Invalid API key - please configure a valid client API key');
+        console.warn('Invalid API key - please configure a valid client API key')
       }
     }
-  };
+  }
+
+  // Load project count on mount
+  useEffect(() => {
+    loadProjectCount()
+  }, [])
 
   const handleGenerate = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const ticket = await onGenerateTicket(projectId.toUpperCase());
-      setResult(ticket);
-    } catch (error) {
-      console.error('Failed:', error);
-    } finally {
-      setLoading(false);
+      const ticket = await onGenerateTicket(projectId.toUpperCase())
+      setResult(ticket)
     }
-  };
+    catch (error) {
+      console.error('Failed:', error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -209,7 +228,7 @@ const Dashboard: React.FC<{
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
@@ -248,7 +267,7 @@ const Dashboard: React.FC<{
               <Input
                 placeholder="Project ID (e.g., WEB)"
                 value={projectId}
-                onChange={(e) => setProjectId(e.target.value.toUpperCase())}
+                onChange={e => setProjectId(e.target.value.toUpperCase())}
                 className="uppercase"
               />
               <Button onClick={handleGenerate} disabled={loading || !projectId.trim()}>
@@ -265,7 +284,9 @@ const Dashboard: React.FC<{
                       {result.ticketId}
                     </p>
                     <p className="text-sm text-green-600 dark:text-green-400">
-                      Number: {result.nextNumber}
+                      Number:
+                      {' '}
+                      {result.nextNumber}
                     </p>
                   </div>
                   <Button
@@ -288,18 +309,18 @@ const Dashboard: React.FC<{
             <CardDescription>Manage your counter API resources</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full justify-start"
               onClick={() => onNavigate('projects')}
             >
               <Hash className="h-4 w-4 mr-2" />
               Manage Projects
             </Button>
-            
+
             {(userRole === 'admin' || userRole === 'client') && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
                 onClick={() => onNavigate('users')}
               >
@@ -307,9 +328,9 @@ const Dashboard: React.FC<{
                 Manage Users
               </Button>
             )}
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               className="w-full justify-start"
               onClick={() => onNavigate('settings')}
             >
@@ -320,72 +341,79 @@ const Dashboard: React.FC<{
         </Card>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Project Management
 const ProjectManagement: React.FC<{
-  onBack: () => void;
-  userRole: UserRole;
-  getProjects: () => Promise<any>;
-  createProject: (data: { id: string; name?: string }) => Promise<any>;
-  updateProject: (id: string, updates: { enabled?: boolean }) => Promise<any>;
-  deleteProject: (id: string) => Promise<any>;
+  onBack: () => void
+  userRole: UserRole
+  getProjects: () => Promise<any>
+  createProject: (data: { id: string, name?: string }) => Promise<any>
+  updateProject: (id: string, updates: { enabled?: boolean }) => Promise<any>
+  deleteProject: (id: string) => Promise<any>
 }> = ({ onBack, userRole, getProjects, createProject, updateProject, deleteProject }) => {
-  const [projects, setProjects] = useState<any[]>([]);
-  const [newProjectId, setNewProjectId] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loadingProjects, setLoadingProjects] = useState(true);
-
-  // Load projects on mount
-  useEffect(() => {
-    loadProjects();
-  }, []);
+  const [projects, setProjects] = useState<any[]>([])
+  const [newProjectId, setNewProjectId] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [loadingProjects, setLoadingProjects] = useState(true)
 
   const loadProjects = async () => {
     try {
-      setLoadingProjects(true);
-      const data = await getProjects();
-      setProjects(data);
-    } catch (error) {
-      console.error('Failed to load projects:', error);
-    } finally {
-      setLoadingProjects(false);
+      setLoadingProjects(true)
+      const data = await getProjects()
+      setProjects(data)
     }
-  };
+    catch (error) {
+      console.error('Failed to load projects:', error)
+    }
+    finally {
+      setLoadingProjects(false)
+    }
+  }
+
+  // Load projects on mount
+  useEffect(() => {
+    loadProjects()
+  }, [])
 
   const handleCreateProject = async () => {
-    if (!newProjectId.trim()) return;
-    setLoading(true);
+    if (!newProjectId.trim())
+      return
+    setLoading(true)
     try {
-      await createProject({ id: newProjectId.toUpperCase() });
-      setNewProjectId('');
-      await loadProjects(); // Reload projects
-    } catch (error) {
-      console.error('Failed to create project:', error);
-    } finally {
-      setLoading(false);
+      await createProject({ id: newProjectId.toUpperCase() })
+      setNewProjectId('')
+      await loadProjects() // Reload projects
     }
-  };
+    catch (error) {
+      console.error('Failed to create project:', error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
   const handleToggleProject = async (projectId: string) => {
     try {
-      const project = projects.find(p => p.id === projectId);
-      await updateProject(projectId, { enabled: !project.enabled });
-      await loadProjects(); // Reload projects
-    } catch (error) {
-      console.error('Failed to toggle project:', error);
+      const project = projects.find(p => p.id === projectId)
+      await updateProject(projectId, { enabled: !project.enabled })
+      await loadProjects() // Reload projects
     }
-  };
+    catch (error) {
+      console.error('Failed to toggle project:', error)
+    }
+  }
 
   const handleDeleteProject = async (projectId: string) => {
     try {
-      await deleteProject(projectId);
-      await loadProjects(); // Reload projects
-    } catch (error) {
-      console.error('Failed to delete project:', error);
+      await deleteProject(projectId)
+      await loadProjects() // Reload projects
     }
-  };
+    catch (error) {
+      console.error('Failed to delete project:', error)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -410,7 +438,7 @@ const ProjectManagement: React.FC<{
               <Input
                 placeholder="Project ID (e.g., MOBILE)"
                 value={newProjectId}
-                onChange={(e) => setNewProjectId(e.target.value.toUpperCase())}
+                onChange={e => setNewProjectId(e.target.value.toUpperCase())}
                 className="uppercase"
               />
               <Button onClick={handleCreateProject} disabled={loading || !newProjectId.trim()}>
@@ -430,108 +458,115 @@ const ProjectManagement: React.FC<{
           <CardDescription>Manage existing projects and their settings</CardDescription>
         </CardHeader>
         <CardContent>
-          {loadingProjects ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {projects.map((project) => (
-                <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div>
-                      <p className="font-medium">{project.id}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {project.count || 0} tickets generated
-                      </p>
+          {loadingProjects
+            ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              )
+            : (
+                <div className="space-y-3">
+                  {projects.map(project => (
+                    <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div>
+                          <p className="font-medium">{project.id}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {project.count || 0}
+                            {' '}
+                            tickets generated
+                          </p>
+                        </div>
+                        <Badge variant={project.enabled ? 'default' : 'secondary'}>
+                          {project.enabled ? 'Active' : 'Disabled'}
+                        </Badge>
+                      </div>
+
+                      {(userRole === 'admin' || userRole === 'client') && (
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleToggleProject(project.id)}
+                          >
+                            {project.enabled
+                              ? (
+                                  <PowerOff className="h-4 w-4" />
+                                )
+                              : (
+                                  <Power className="h-4 w-4" />
+                                )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteProject(project.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <Badge variant={project.enabled ? "default" : "secondary"}>
-                      {project.enabled ? "Active" : "Disabled"}
-                    </Badge>
-                  </div>
-                  
-                  {(userRole === 'admin' || userRole === 'client') && (
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleProject(project.id)}
-                      >
-                        {project.enabled ? (
-                          <PowerOff className="h-4 w-4" />
-                        ) : (
-                          <Power className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteProject(project.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  ))}
+                  {projects.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No projects found. Create your first project above.
+                    </p>
                   )}
                 </div>
-              ))}
-              {projects.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">
-                  No projects found. Create your first project above.
-                </p>
               )}
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}
 
 // User Management
 const UserManagement: React.FC<{
-  onBack: () => void;
-  userRole: UserRole;
-  inviteGuest: (email: string, projects: string[]) => Promise<void>;
-  getUsers: () => Promise<any>;
-  getProjects: () => Promise<any>;
-}> = ({ onBack, userRole, inviteGuest, getUsers, getProjects }) => {
-  const [guestEmail, setGuestEmail] = useState('');
-  const [selectedProjects, setSelectedProjects] = useState(['WEB']);
-  const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState<any[]>([]);
-  const [availableProjects, setAvailableProjects] = useState<string[]>([]);
-
-  useEffect(() => {
-    loadData();
-  }, []);
+  onBack: () => void
+  inviteGuest: (email: string, projects: string[]) => Promise<void>
+  getProjects: () => Promise<any>
+}> = ({ onBack, inviteGuest, getProjects }) => {
+  const [guestEmail, setGuestEmail] = useState('')
+  const [selectedProjects, setSelectedProjects] = useState(['WEB'])
+  const [loading, setLoading] = useState(false)
+  const [availableProjects, setAvailableProjects] = useState<string[]>([])
 
   const loadData = async () => {
     try {
-      const projectsData = await getProjects();
-      setAvailableProjects(projectsData.map((p: any) => p.id));
+      const projectsData = await getProjects()
+      setAvailableProjects(projectsData.map((p: any) => p.id))
       // Note: Counter API doesn't provide user listing endpoint
       // Users are managed on the Lambda side
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      // Fallback data
-      setAvailableProjects(['WEB', 'API', 'MOBILE', 'DOCS']);
     }
-  };
+    catch (error) {
+      console.error('Failed to load data:', error)
+      // Fallback data
+      setAvailableProjects(['WEB', 'API', 'MOBILE', 'DOCS'])
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
 
   const handleInviteGuest = async () => {
-    if (!guestEmail.trim()) return;
-    setLoading(true);
+    if (!guestEmail.trim())
+      return
+    setLoading(true)
     try {
-      await inviteGuest(guestEmail.trim(), selectedProjects);
-      setGuestEmail('');
-      setSelectedProjects(['WEB']);
-      await loadData(); // Reload users
-    } catch (error) {
-      console.error('Invite failed:', error);
-    } finally {
-      setLoading(false);
+      await inviteGuest(guestEmail.trim(), selectedProjects)
+      setGuestEmail('')
+      setSelectedProjects(['WEB'])
+      await loadData() // Reload users
     }
-  };
+    catch (error) {
+      console.error('Invite failed:', error)
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -555,9 +590,9 @@ const UserManagement: React.FC<{
             type="email"
             placeholder="guest@company.com"
             value={guestEmail}
-            onChange={(e) => setGuestEmail(e.target.value)}
+            onChange={e => setGuestEmail(e.target.value)}
           />
-          
+
           <div>
             <label className="text-sm font-medium block mb-2">Project Access:</label>
             <div className="flex flex-wrap gap-2">
@@ -568,9 +603,10 @@ const UserManagement: React.FC<{
                     checked={selectedProjects.includes(project)}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedProjects([...selectedProjects, project]);
-                      } else {
-                        setSelectedProjects(selectedProjects.filter(p => p !== project));
+                        setSelectedProjects([...selectedProjects, project])
+                      }
+                      else {
+                        setSelectedProjects(selectedProjects.filter(p => p !== project))
                       }
                     }}
                   />
@@ -606,21 +642,21 @@ const UserManagement: React.FC<{
         </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}
 
 // Settings
 const Settings: React.FC<{
-  onBack: () => void;
-  config: any;
-  onSave: (key: string) => void;
-  onReset: (email: string) => void;
+  onBack: () => void
+  config: any
+  onSave: (key: string) => void
+  onReset: (email: string) => void
 }> = ({ onBack, config, onSave, onReset }) => {
-  const [showKey, setShowKey] = useState(false);
-  const [newKey, setNewKey] = useState('');
-  const [resetEmail, setResetEmail] = useState('');
+  const [showKey, setShowKey] = useState(false)
+  const [newKey, setNewKey] = useState('')
+  const [resetEmail, setResetEmail] = useState('')
 
-  const maskKey = (key: string) => key ? '•'.repeat(key.length - 4) + key.slice(-4) : '';
+  const maskKey = (key: string) => key ? '•'.repeat(key.length - 4) + key.slice(-4) : ''
 
   return (
     <div className="space-y-6">
@@ -646,7 +682,7 @@ const Settings: React.FC<{
               {config.endpoint}
             </code>
           </div>
-          
+
           <div>
             <label className="text-sm font-medium">API Key:</label>
             <div className="flex items-center space-x-2 mt-1">
@@ -672,7 +708,7 @@ const Settings: React.FC<{
             type="password"
             placeholder="New API key"
             value={newKey}
-            onChange={(e) => setNewKey(e.target.value)}
+            onChange={e => setNewKey(e.target.value)}
           />
           <Button onClick={() => onSave(newKey)} disabled={!newKey.trim()}>
             Update Key
@@ -691,7 +727,7 @@ const Settings: React.FC<{
             type="email"
             placeholder="your@email.com"
             value={resetEmail}
-            onChange={(e) => setResetEmail(e.target.value)}
+            onChange={e => setResetEmail(e.target.value)}
           />
           <Button variant="outline" onClick={() => onReset(resetEmail)} disabled={!resetEmail.trim()}>
             Request Reset
@@ -699,56 +735,53 @@ const Settings: React.FC<{
         </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}
 
 // Main Component
 export const CounterAPI: React.FC = () => {
   const {
     config,
-    connectionStatus,
     loading,
     saveApiKey,
-    testConnection,
     generateTicket,
     inviteGuest,
     resetApiKey,
-    completeReset,
-    inviteAdmin,
-    registerClient,
     getProjects,
     createProject,
     updateProject,
-    deleteProject
-  } = useCounterAPI();
+    deleteProject,
+  } = useCounterAPI()
 
-  const [view, setView] = useState<ViewState>('loading');
-  const [userRole] = useState<UserRole>('client'); // This would come from API
+  const [view, setView] = useState<ViewState>('loading')
+  const [userRole] = useState<UserRole>('client') // This would come from API
 
   // Determine initial view
   useEffect(() => {
-    if (loading) return;
-    
+    if (loading)
+      return
+
     if (!config.api_key_set) {
-      setView('setup');
-    } else {
-      setView('dashboard');
+      setView('setup')
     }
-  }, [config.api_key_set, loading]);
+    else {
+      setView('dashboard')
+    }
+  }, [config.api_key_set, loading])
 
   const handleSaveKey = async (key: string) => {
-    const result = await saveApiKey(key);
+    const result = await saveApiKey(key)
     if (result.success) {
-      setView('dashboard');
+      setView('dashboard')
     }
-  };
+  }
 
   if (view === 'loading') {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
-    );
+    )
   }
 
   return (
@@ -764,7 +797,6 @@ export const CounterAPI: React.FC = () => {
       {view === 'setup' && (
         <SetupFlow
           onComplete={() => setView('dashboard')}
-          loading={loading}
         />
       )}
 
@@ -791,9 +823,7 @@ export const CounterAPI: React.FC = () => {
       {view === 'users' && (
         <UserManagement
           onBack={() => setView('dashboard')}
-          userRole={userRole}
           inviteGuest={inviteGuest}
-          getUsers={() => Promise.resolve([])}
           getProjects={getProjects}
         />
       )}
@@ -807,5 +837,5 @@ export const CounterAPI: React.FC = () => {
         />
       )}
     </div>
-  );
-};
+  )
+}

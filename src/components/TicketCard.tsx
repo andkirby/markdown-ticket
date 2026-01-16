@@ -1,18 +1,17 @@
-import React from 'react';
-import { Ticket } from '../types';
-import { TicketCode } from './TicketCode';
-import TicketAttributeTags from './TicketAttributeTags';
+import type { Ticket } from '../types'
+import * as React from 'react'
+import TicketAttributeTags from './TicketAttributeTags'
+import { TicketCode } from './TicketCode'
 
 interface TicketCardProps {
-  ticket: Ticket;
-  onMove: (newStatus: string) => void;
-  onEdit: () => void;
+  ticket: Ticket
+  onMove: (newStatus: string) => void
+  onEdit: () => void
 }
 
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
-
   return (
-    <div 
+    <div
       className="ticket-card bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       onClick={onEdit}
       data-testid="ticket-card"
@@ -20,18 +19,21 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
     >
       <div className="flex items-start justify-between mb-2">
         <h4 className="ticket-title font-semibold text-gray-900 dark:text-white text-sm">
-          <TicketCode code={ticket.code} /> • {ticket.title}
+          <TicketCode code={ticket.code} />
+          {' '}
+          •
+          {ticket.title}
         </h4>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <TicketAttributeTags ticket={ticket} />
-        
+
         <div className="flex items-center space-x-1">
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
+              e.stopPropagation()
+              onEdit()
             }}
             className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             title="Edit ticket"
@@ -42,9 +44,9 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
           </button>
         </div>
       </div>
-      
-    </div>
-  );
-};
 
-export default TicketCard;
+    </div>
+  )
+}
+
+export default TicketCard

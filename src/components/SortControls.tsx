@@ -1,10 +1,11 @@
-import React from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { DEFAULT_SORT_ATTRIBUTES, SortPreferences } from '../config/sorting';
+import type { SortPreferences } from '../config/sorting'
+import { ChevronDown, ChevronUp } from 'lucide-react'
+import * as React from 'react'
+import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
 
 interface SortControlsProps {
-  preferences: SortPreferences;
-  onPreferencesChange: (preferences: SortPreferences) => void;
+  preferences: SortPreferences
+  onPreferencesChange: (preferences: SortPreferences) => void
 }
 
 export const SortControls: React.FC<SortControlsProps> = ({
@@ -12,34 +13,34 @@ export const SortControls: React.FC<SortControlsProps> = ({
   onPreferencesChange,
 }) => {
   const handleAttributeChange = (attribute: string) => {
-    const sortAttribute = DEFAULT_SORT_ATTRIBUTES.find(attr => attr.name === attribute);
+    const sortAttribute = DEFAULT_SORT_ATTRIBUTES.find(attr => attr.name === attribute)
     const newPreferences = {
       selectedAttribute: attribute,
       selectedDirection: sortAttribute?.defaultDirection || 'desc',
-    };
-    onPreferencesChange(newPreferences);
-  };
+    }
+    onPreferencesChange(newPreferences)
+  }
 
   const handleDirectionToggle = () => {
-    const newDirection = preferences.selectedDirection === 'asc' ? 'desc' : 'asc';
+    const newDirection = preferences.selectedDirection === 'asc' ? 'desc' : 'asc'
     onPreferencesChange({
       ...preferences,
       selectedDirection: newDirection,
-    });
-  };
+    })
+  }
 
-  const selectedAttribute = DEFAULT_SORT_ATTRIBUTES.find(
-    attr => attr.name === preferences.selectedAttribute
-  );
+  const _selectedAttribute = DEFAULT_SORT_ATTRIBUTES.find(
+    attr => attr.name === preferences.selectedAttribute,
+  )
 
   return (
     <div className="flex items-center space-x-2">
       <select
         value={preferences.selectedAttribute}
-        onChange={(e) => handleAttributeChange(e.target.value)}
+        onChange={e => handleAttributeChange(e.target.value)}
         className="border border-border rounded-md px-3 py-1 pr-8 text-sm bg-background shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-border appearance-none"
       >
-        {DEFAULT_SORT_ATTRIBUTES.map((attr) => (
+        {DEFAULT_SORT_ATTRIBUTES.map(attr => (
           <option key={attr.name} value={attr.name}>
             {attr.label}
           </option>
@@ -50,12 +51,14 @@ export const SortControls: React.FC<SortControlsProps> = ({
         className="p-1 border border-border rounded-md bg-background hover:bg-muted transition-colors"
         title={`Sort ${preferences.selectedDirection === 'asc' ? 'ascending' : 'descending'}`}
       >
-        {preferences.selectedDirection === 'asc' ? (
-          <ChevronUp className="h-4 w-4" />
-        ) : (
-          <ChevronDown className="h-4 w-4" />
-        )}
+        {preferences.selectedDirection === 'asc'
+          ? (
+              <ChevronUp className="h-4 w-4" />
+            )
+          : (
+              <ChevronDown className="h-4 w-4" />
+            )}
       </button>
     </div>
-  );
-};
+  )
+}

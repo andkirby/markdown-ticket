@@ -5,62 +5,61 @@
  * Supports relative path resolution, security validation, and multi-project configurations.
  */
 
-import { isAbsolute, normalize, dirname, basename, join, resolve, relative, extname, sep } from '@mdt/shared/utils/path-browser.js';
-import { Project } from '@mdt/shared/models/Project.js';
-import { ProjectConfig } from '@mdt/shared/models/Project.js';
+import type { ProjectConfig } from '@mdt/shared/models/Project.js'
+import { basename, dirname, extname, normalize, relative, resolve, sep } from '@mdt/shared/utils/path-browser.js'
 
 export interface LinkContext {
   /** Current project code */
-  currentProject: string;
+  currentProject: string
   /** Source file path (relative to project root) */
-  sourcePath: string;
+  sourcePath: string
   /** Project configuration */
-  projectConfig?: ProjectConfig;
+  projectConfig?: ProjectConfig
   /** Available document paths from project config */
-  documentPaths?: string[];
+  documentPaths?: string[]
   /** Base path for web routes */
-  webBasePath?: string;
+  webBasePath?: string
 }
 
 export interface NormalizedLink {
   /** Original href */
-  originalHref: string;
+  originalHref: string
   /** Normalized href for web routing */
-  webHref: string;
+  webHref: string
   /** Resolved file system path */
-  filePath?: string;
+  filePath?: string
   /** Link type */
-  type: 'ticket' | 'document' | 'external' | 'anchor' | 'file' | 'cross-project' | 'broken';
+  type: 'ticket' | 'document' | 'external' | 'anchor' | 'file' | 'cross-project' | 'broken'
   /** Whether the link is valid */
-  isValid: boolean;
+  isValid: boolean
   /** Error message if invalid */
-  error?: string;
+  error?: string
   /** Target project code (for cross-project links) */
-  targetProject?: string;
+  targetProject?: string
 }
 
 export interface PathResolutionResult {
   /** Resolved absolute path */
-  absolutePath: string;
+  absolutePath: string
   /** Relative path from project root */
-  relativePath: string;
+  relativePath: string
   /** Whether path is within allowed boundaries */
-  isAllowed: boolean;
+  isAllowed: boolean
   /** Security violation details */
-  securityViolation?: string;
+  securityViolation?: string
 }
 
 /**
  * Core link normalization service
  */
 export class LinkNormalizer {
-  private static readonly DEFAULT_WEB_BASE = '/prj';
+  private static readonly DEFAULT_WEB_BASE = '/prj'
   private static readonly SECURITY_VIOLATIONS = {
     PATH_TRAVERSAL: 'Path traversal attempt detected',
     OUTSIDE_BOUNDS: 'Path resolves outside project boundaries',
     SYMLINK_ESCAPE: 'Symbolic link escape attempt detected',
-    BLACKLISTED: 'Path contains blacklisted components'
-  };
+    BLACKLISTED: 'Path contains blacklisted components',
+  }
 
   private static readonly DEFAULT_BLACKLIST = [
     'node_modules',
@@ -69,8 +68,8 @@ export class LinkNormalizer {
     '.env',
     '.DS_Store',
     'Thumbs.db',
-    '__MACOSX'
-  ];
+    '__MACOSX',
+  ]
 
   /**
    * Normalize a link based on context
@@ -78,36 +77,36 @@ export class LinkNormalizer {
   static normalizeLink(href: string, context: LinkContext): NormalizedLink {
     try {
       // Strip any surrounding whitespace
-      const cleanHref = href.trim();
+      const cleanHref = href.trim()
 
       // Handle different link types
       if (this.isTicketLink(cleanHref)) {
-        return this.normalizeTicketLink(cleanHref, context);
+        return this.normalizeTicketLink(cleanHref, context)
       }
 
       if (this.isExternalLink(cleanHref)) {
-        return this.normalizeExternalLink(cleanHref, context);
+        return this.normalizeExternalLink(cleanHref, context)
       }
 
       if (this.isAnchorLink(cleanHref)) {
-        return this.normalizeAnchorLink(cleanHref, context);
+        return this.normalizeAnchorLink(cleanHref, context)
       }
 
       if (this.isCrossProjectTicket(cleanHref, context)) {
-        return this.normalizeCrossProjectLink(cleanHref, context);
+        return this.normalizeCrossProjectLink(cleanHref, context)
       }
 
       // Handle document and file links
-      return this.normalizeDocumentOrFileLink(cleanHref, context);
-
-    } catch (error) {
+      return this.normalizeDocumentOrFileLink(cleanHref, context)
+    }
+    catch (error) {
       return {
         originalHref: href,
         webHref: href,
         type: 'broken',
         isValid: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   }
 
@@ -121,51 +120,51 @@ export class LinkNormalizer {
         absolutePath: '',
         relativePath: '',
         isAllowed: false,
-        securityViolation: this.SECURITY_VIOLATIONS.PATH_TRAVERSAL
-      };
+        securityViolation: this.SECURITY_VIOLATIONS.PATH_TRAVERSAL,
+      }
     }
 
     // Check for blacklisted components
-    const normalizedPath = normalize(relativePath);
+    const normalizedPath = normalize(relativePath)
     if (this.containsBlacklistedComponents(normalizedPath)) {
       return {
         absolutePath: '',
         relativePath: '',
         isAllowed: false,
-        securityViolation: this.SECURITY_VIOLATIONS.BLACKLISTED
-      };
+        securityViolation: this.SECURITY_VIOLATIONS.BLACKLISTED,
+      }
     }
 
     // Resolve relative to source file directory
-    const sourceDir = dirname(context.sourcePath);
-    const resolvedRelativeToSource = resolve(sourceDir, normalizedPath);
+    const sourceDir = dirname(context.sourcePath)
+    const resolvedRelativeToSource = resolve(sourceDir, normalizedPath)
 
     // For relative path normalization, we need to determine the project root
     // Since we're in frontend context, we'll use relative path logic
-    const relativeToProject = this.normalizeRelativeToProject(resolvedRelativeToSource, context);
+    const relativeToProject = this.normalizeRelativeToProject(resolvedRelativeToSource, context)
 
     return {
       absolutePath: resolvedRelativeToSource,
       relativePath: relativeToProject,
-      isAllowed: true
-    };
+      isAllowed: true,
+    }
   }
 
   /**
    * Build web route for a document link
    */
   static buildDocumentWebRoute(projectCode: string, documentPath: string): string {
-    const webBase = this.DEFAULT_WEB_BASE;
-    const encodedPath = encodeURIComponent(documentPath);
-    return `${webBase}/${projectCode}/documents?file=${encodedPath}`;
+    const webBase = this.DEFAULT_WEB_BASE
+    const encodedPath = encodeURIComponent(documentPath)
+    return `${webBase}/${projectCode}/documents?file=${encodedPath}`
   }
 
   /**
    * Build web route for a ticket link
    */
   static buildTicketWebRoute(projectCode: string, ticketKey: string, anchor?: string): string {
-    const webBase = this.DEFAULT_WEB_BASE;
-    return `${webBase}/${projectCode}/ticket/${ticketKey}${anchor || ''}`;
+    const webBase = this.DEFAULT_WEB_BASE
+    return `${webBase}/${projectCode}/ticket/${ticketKey}${anchor || ''}`
   }
 
   /**
@@ -173,100 +172,101 @@ export class LinkNormalizer {
    */
   static isPathInDocumentPaths(filePath: string, documentPaths: string[]): boolean {
     if (!documentPaths || documentPaths.length === 0) {
-      return true; // If no restrictions, allow all paths
+      return true // If no restrictions, allow all paths
     }
 
-    const normalizedFilePath = normalize(filePath);
+    const normalizedFilePath = normalize(filePath)
 
-    return documentPaths.some(docPath => {
-      const normalizedDocPath = normalize(docPath);
+    return documentPaths.some((docPath) => {
+      const normalizedDocPath = normalize(docPath)
 
       // Exact match
       if (normalizedFilePath === normalizedDocPath) {
-        return true;
+        return true
       }
 
       // Check if file is within document path directory
       if (normalizedFilePath.startsWith(normalizedDocPath + sep)) {
-        return true;
+        return true
       }
 
-      return false;
-    });
+      return false
+    })
   }
 
   // Private helper methods
 
   private static normalizeTicketLink(href: string, context: LinkContext): NormalizedLink {
-    const ticketMatch = href.match(/^([A-Z]+-[A-Z]?\d+)(\.md)?(#.*)?$/);
+    const ticketMatch = href.match(/^([A-Z]+-[A-Z]?\d+)(\.md)?(#.*)?$/)
     if (!ticketMatch) {
       return {
         originalHref: href,
         webHref: href,
         type: 'broken',
         isValid: false,
-        error: 'Invalid ticket format'
-      };
+        error: 'Invalid ticket format',
+      }
     }
 
-    const [, ticketKey, , anchor] = ticketMatch;
-    const webRoute = this.buildTicketWebRoute(context.currentProject, ticketKey, anchor);
+    const [, ticketKey, , anchor] = ticketMatch
+    const webRoute = this.buildTicketWebRoute(context.currentProject, ticketKey, anchor)
 
     return {
       originalHref: href,
       webHref: webRoute,
       type: 'ticket',
-      isValid: true
-    };
+      isValid: true,
+    }
   }
 
   private static normalizeCrossProjectLink(href: string, context: LinkContext): NormalizedLink {
-    const crossProjectMatch = href.match(/^([A-Z]+)-(\d+)(\.md)?(#.*)?$/);
+    const crossProjectMatch = href.match(/^([A-Z]+)-(\d+)(\.md)?(#.*)?$/)
     if (!crossProjectMatch) {
       return {
         originalHref: href,
         webHref: href,
         type: 'broken',
         isValid: false,
-        error: 'Invalid cross-project ticket format'
-      };
+        error: 'Invalid cross-project ticket format',
+      }
     }
 
-    const [, projectCode, number, , anchor] = crossProjectMatch;
-    const ticketKey = `${projectCode}-${number}`;
+    const [, projectCode, number, , anchor] = crossProjectMatch
+    const ticketKey = `${projectCode}-${number}`
 
     if (projectCode === context.currentProject) {
       // Convert to regular ticket link
-      return this.normalizeTicketLink(href, context);
+      return this.normalizeTicketLink(href, context)
     }
 
-    const webRoute = this.buildTicketWebRoute(projectCode, ticketKey, anchor);
+    const webRoute = this.buildTicketWebRoute(projectCode, ticketKey, anchor)
 
     return {
       originalHref: href,
       webHref: webRoute,
       type: 'cross-project',
       isValid: true,
-      targetProject: projectCode
-    };
+      targetProject: projectCode,
+    }
   }
 
   private static normalizeDocumentOrFileLink(href: string, context: LinkContext): NormalizedLink {
     // Determine if this is a relative path
-    const isRelative = href.startsWith('./') || href.startsWith('../') || !href.startsWith('/');
+    const isRelative = href.startsWith('./') || href.startsWith('../') || !href.startsWith('/')
 
-    let resolvedPath: PathResolutionResult;
+    let resolvedPath: PathResolutionResult
 
     if (isRelative) {
       // Resolve relative path
-      resolvedPath = this.resolveRelativePath(href, context);
-    } else {
+      resolvedPath = this.resolveRelativePath(href, context)
+    }
+    else {
       // Handle absolute paths (relative to project root)
       resolvedPath = {
-        absolutePath: resolve('/' + href.replace(/^\//, '')),
+        absolutePath: resolve(`/${href.replace(/^\//, '')}`),
         relativePath: href.replace(/^\//, ''),
-        isAllowed: true
-      };
+        isAllowed: true,
+      }
     }
 
     if (!resolvedPath.isAllowed) {
@@ -275,8 +275,8 @@ export class LinkNormalizer {
         webHref: href,
         type: 'broken',
         isValid: false,
-        error: resolvedPath.securityViolation || 'Path not allowed'
-      };
+        error: resolvedPath.securityViolation || 'Path not allowed',
+      }
     }
 
     // Check if path is in allowed document paths
@@ -286,108 +286,127 @@ export class LinkNormalizer {
         webHref: href,
         type: 'broken',
         isValid: false,
-        error: 'Path not in configured document paths'
-      };
+        error: 'Path not in configured document paths',
+      }
     }
 
     // Determine link type and build web route
-    const isMarkdown = resolvedPath.relativePath.endsWith('.md');
-    const isFile = this.isFileExtension(resolvedPath.relativePath);
+    const isMarkdown = resolvedPath.relativePath.endsWith('.md')
+    const isFile = this.isFileExtension(resolvedPath.relativePath)
 
     if (isMarkdown) {
-      const webRoute = this.buildDocumentWebRoute(context.currentProject, resolvedPath.relativePath);
+      const webRoute = this.buildDocumentWebRoute(context.currentProject, resolvedPath.relativePath)
       return {
         originalHref: href,
         webHref: webRoute,
         filePath: resolvedPath.relativePath,
         type: 'document',
-        isValid: true
-      };
-    } else if (isFile) {
+        isValid: true,
+      }
+    }
+    else if (isFile) {
       // For non-markdown files, we'll treat them as file links
       return {
         originalHref: href,
         webHref: href, // Keep original href for file links
         filePath: resolvedPath.relativePath,
         type: 'file',
-        isValid: true
-      };
-    } else {
+        isValid: true,
+      }
+    }
+    else {
       return {
         originalHref: href,
         webHref: href,
         type: 'broken',
         isValid: false,
-        error: 'Unsupported file type'
-      };
+        error: 'Unsupported file type',
+      }
     }
   }
 
-  private static normalizeExternalLink(href: string, context: LinkContext): NormalizedLink {
+  private static normalizeExternalLink(href: string, _context: LinkContext): NormalizedLink {
     return {
       originalHref: href,
       webHref: href,
       type: 'external',
-      isValid: this.isValidURL(href)
-    };
+      isValid: this.isValidURL(href),
+    }
   }
 
-  private static normalizeAnchorLink(href: string, context: LinkContext): NormalizedLink {
+  private static normalizeAnchorLink(href: string, _context: LinkContext): NormalizedLink {
     return {
       originalHref: href,
       webHref: href,
       type: 'anchor',
-      isValid: true
-    };
+      isValid: true,
+    }
   }
 
   private static isTicketLink(href: string): boolean {
-    return /^([A-Z]+-[A-Z]?\d+)(\.md)?(#.*)?$/.test(href);
+    return /^[A-Z]+-[A-Z]?\d+(?:\.md)?(?:#.+)?$/.test(href)
   }
 
   private static isCrossProjectTicket(href: string, context: LinkContext): boolean {
-    const match = href.match(/^([A-Z]+)-(\d+)(\.md)?(#.*)?$/);
-    if (!match) return false;
+    const match = href.match(/^([A-Z]+)-(\d+)(\.md)?(#.*)?$/)
+    if (!match)
+      return false
 
-    const [, projectCode] = match;
-    return projectCode !== context.currentProject;
+    const [, projectCode] = match
+    return projectCode !== context.currentProject
   }
 
   private static isExternalLink(href: string): boolean {
-    return /^https?:\/\//.test(href) || /^mailto:/.test(href) || /^tel:/.test(href);
+    return /^https?:\/\//.test(href) || href.startsWith('mailto:') || href.startsWith('tel:')
   }
 
   private static isAnchorLink(href: string): boolean {
-    return href.startsWith('#');
+    return href.startsWith('#')
   }
 
   private static containsPathTraversal(pathStr: string): boolean {
-    return /\.\./.test(pathStr) || pathStr.includes('\\..') || pathStr.includes('..\\');
+    return /\.\./.test(pathStr) || pathStr.includes('\\..') || pathStr.includes('..\\')
   }
 
   private static containsBlacklistedComponents(pathStr: string): boolean {
-    const parts = pathStr.split(sep);
+    const parts = pathStr.split(sep)
     return this.DEFAULT_BLACKLIST.some(blacklisted =>
-      parts.some(part => part === blacklisted)
-    );
+      parts.includes(blacklisted),
+    )
   }
 
   private static isFileExtension(filePath: string): boolean {
-    const ext = extname(filePath).toLowerCase();
+    const ext = extname(filePath).toLowerCase()
     return [
-      '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp',
-      '.pdf', '.txt', '.json', '.yaml', '.yml', '.xml',
-      '.zip', '.tar', '.gz', '.csv', '.xlsx', '.docx'
-    ].includes(ext);
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.gif',
+      '.svg',
+      '.webp',
+      '.pdf',
+      '.txt',
+      '.json',
+      '.yaml',
+      '.yml',
+      '.xml',
+      '.zip',
+      '.tar',
+      '.gz',
+      '.csv',
+      '.xlsx',
+      '.docx',
+    ].includes(ext)
   }
 
   private static isValidURL(href: string): boolean {
     try {
-      const url = new URL(href, window.location.origin);
-      const allowedProtocols = ['http:', 'https:', 'mailto:', 'tel:'];
-      return allowedProtocols.includes(url.protocol);
-    } catch {
-      return false;
+      const url = new URL(href, window.location.origin)
+      const allowedProtocols = ['http:', 'https:', 'mailto:', 'tel:']
+      return allowedProtocols.includes(url.protocol)
+    }
+    catch {
+      return false
     }
   }
 
@@ -396,16 +415,16 @@ export class LinkNormalizer {
     // This is a simplified approach - in a real implementation,
     // you might need to fetch project configuration from the backend
 
-    const sourceDir = dirname(context.sourcePath);
-    const rel = relative(sourceDir, absolutePath);
+    const sourceDir = dirname(context.sourcePath)
+    const rel = relative(sourceDir, absolutePath)
 
     // If we're at the same level or deeper, use relative path
     if (!rel.startsWith('..')) {
-      return rel;
+      return rel
     }
 
     // Otherwise, use the absolute path's basename
-    return basename(absolutePath);
+    return basename(absolutePath)
   }
 }
 
@@ -413,27 +432,27 @@ export class LinkNormalizer {
  * Factory function to create link context
  */
 export function createLinkContext(params: {
-  currentProject: string;
-  sourcePath: string;
-  projectConfig?: ProjectConfig;
-  documentPaths?: string[];
-  webBasePath?: string;
+  currentProject: string
+  sourcePath: string
+  projectConfig?: ProjectConfig
+  documentPaths?: string[]
+  webBasePath?: string
 }): LinkContext {
   return {
     currentProject: params.currentProject,
     sourcePath: params.sourcePath,
     projectConfig: params.projectConfig,
     documentPaths: params.documentPaths || [],
-    webBasePath: params.webBasePath || LinkNormalizer['DEFAULT_WEB_BASE']
-  };
+    webBasePath: params.webBasePath || LinkNormalizer.DEFAULT_WEB_BASE,
+  }
 }
 
 /**
  * Utility function to normalize multiple links
  */
-function normalizeMultipleLinks(
+function _normalizeMultipleLinks(
   hrefs: string[],
-  context: LinkContext
+  context: LinkContext,
 ): NormalizedLink[] {
-  return hrefs.map(href => LinkNormalizer.normalizeLink(href, context));
+  return hrefs.map(href => LinkNormalizer.normalizeLink(href, context))
 }

@@ -1,78 +1,80 @@
+import type { Ticket, TicketData } from '../models/Ticket.js'
 // Direct imports for standard usage
-import { Template, ValidationResult, Suggestion } from '../models/Types.js';
-import type { Ticket, TicketData } from '../models/Ticket.js';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
-import { DEFAULT_PATHS, getDefaultPaths } from '../utils/constants.js';
+import type { Suggestion, Template, ValidationResult } from '../models/Types.js'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { getDefaultPaths } from '../utils/constants.js'
 
 export class TemplateService {
-  private templates: Map<string, Template> = new Map();
-  private templatesPath: string;
-  private quiet: boolean;
+  private templates: Map<string, Template> = new Map()
+  private templatesPath: string
+  private quiet: boolean
 
   constructor(templatesPath?: string, quiet: boolean = false) {
     // Default to shared templates directory from constants
-    this.templatesPath = templatesPath || getDefaultPaths().TEMPLATES_DIR;
-    this.quiet = quiet;
-    this.loadTemplates();
+    this.templatesPath = templatesPath || getDefaultPaths().TEMPLATES_DIR
+    this.quiet = quiet
+    this.loadTemplates()
   }
 
   private log(message: string): void {
     if (!this.quiet) {
-      console.warn(message);
+      console.warn(message)
     }
   }
 
   private loadTemplates(): void {
     try {
-      const configPath = join(this.templatesPath, 'templates.json');
+      const configPath = join(this.templatesPath, 'templates.json')
 
       if (!existsSync(configPath)) {
-        this.log(`Templates config not found at ${configPath}, using fallback`);
-        this.initializeFallbackTemplates();
-        return;
+        this.log(`Templates config not found at ${configPath}, using fallback`)
+        this.initializeFallbackTemplates()
+        return
       }
 
-      const configContent = readFileSync(configPath, 'utf-8');
-      const templatesConfig = JSON.parse(configContent);
+      const configContent = readFileSync(configPath, 'utf-8')
+      const templatesConfig = JSON.parse(configContent)
 
       for (const [type, config] of Object.entries(templatesConfig)) {
-        const templatePath = join(this.templatesPath, (config as any).file);
+        const templatePath = join(this.templatesPath, (config as any).file)
 
         if (existsSync(templatePath)) {
-          const templateContent = readFileSync(templatePath, 'utf-8');
+          const templateContent = readFileSync(templatePath, 'utf-8')
 
           this.templates.set(type, {
             type: type as any,
             requiredFields: (config as any).requiredFields,
             sections: (config as any).sections,
-            template: templateContent
-          });
-        } else {
-          this.log(`Template file not found: ${templatePath}`);
+            template: templateContent,
+          })
+        }
+        else {
+          this.log(`Template file not found: ${templatePath}`)
         }
       }
 
-      this.log(`Loaded ${this.templates.size} templates from ${this.templatesPath}`);
-    } catch (error) {
-      this.log('Failed to load templates from files: ' + error);
-      this.initializeFallbackTemplates();
+      this.log(`Loaded ${this.templates.size} templates from ${this.templatesPath}`)
+    }
+    catch (error) {
+      this.log(`Failed to load templates from files: ${error}`)
+      this.initializeFallbackTemplates()
     }
   }
 
   private initializeFallbackTemplates(): void {
-    this.log('Using fallback hardcoded templates');
-    
+    this.log('Using fallback hardcoded templates')
+
     // Bug Fix Template (fallback)
     this.templates.set('Bug Fix', {
       type: 'Bug Fix',
       requiredFields: ['title', 'description', 'priority'],
       sections: [
         { name: 'Problem Statement', required: true, placeholder: 'Describe the bug with clear reproduction steps' },
-        { name: 'Current Behavior', required: true, placeholder: "What's actually happening (wrong behavior)" },
+        { name: 'Current Behavior', required: true, placeholder: 'What\'s actually happening (wrong behavior)' },
         { name: 'Expected Behavior', required: true, placeholder: 'What should happen instead' },
         { name: 'Root Cause Analysis', required: false, placeholder: 'Why this bug exists - fill after investigation' },
-        { name: 'Impact Assessment', required: true, placeholder: 'User impact, system stability, data integrity' }
+        { name: 'Impact Assessment', required: true, placeholder: 'User impact, system stability, data integrity' },
       ],
       template: `# [Bug Title]
 
@@ -110,8 +112,8 @@ export class TemplateService {
 *To be filled during/after implementation*
 
 ## 6. References
-*Related bug reports, documentation, code changes*`
-    });
+*Related bug reports, documentation, code changes*`,
+    })
 
     // Feature Enhancement Template
     this.templates.set('Feature Enhancement', {
@@ -122,7 +124,7 @@ export class TemplateService {
         { name: 'Current State', required: true },
         { name: 'Desired State', required: true },
         { name: 'Rationale', required: true },
-        { name: 'Impact Areas', required: false }
+        { name: 'Impact Areas', required: false },
       ],
       template: `# [Feature Title]
 
@@ -178,8 +180,8 @@ export class TemplateService {
 *To be filled during/after implementation*
 
 ## 6. References
-*Related documents, designs, discussions*`
-    });
+*Related documents, designs, discussions*`,
+    })
 
     // Architecture Template
     this.templates.set('Architecture', {
@@ -189,7 +191,7 @@ export class TemplateService {
         { name: 'Problem Statement', required: true },
         { name: 'Architecture Overview', required: true },
         { name: 'Design Decisions', required: true },
-        { name: 'Trade-offs', required: true }
+        { name: 'Trade-offs', required: true },
       ],
       template: `# [Architecture Title]
 
@@ -242,8 +244,8 @@ export class TemplateService {
 *To be filled during/after implementation*
 
 ## 6. References
-*Architecture diagrams, related ADRs, documentation*`
-    });
+*Architecture diagrams, related ADRs, documentation*`,
+    })
 
     // Technical Debt Template
     this.templates.set('Technical Debt', {
@@ -252,7 +254,7 @@ export class TemplateService {
       sections: [
         { name: 'Problem Statement', required: true },
         { name: 'Current Impact', required: true },
-        { name: 'Proposed Solution', required: true }
+        { name: 'Proposed Solution', required: true },
       ],
       template: `# [Technical Debt Title]
 
@@ -299,8 +301,8 @@ export class TemplateService {
 *To be filled during/after implementation*
 
 ## 6. References
-*Code analysis, metrics, related improvements*`
-    });
+*Code analysis, metrics, related improvements*`,
+    })
 
     // Documentation Template
     this.templates.set('Documentation', {
@@ -309,7 +311,7 @@ export class TemplateService {
       sections: [
         { name: 'Documentation Gap', required: true },
         { name: 'Target Audience', required: true },
-        { name: 'Content Outline', required: true }
+        { name: 'Content Outline', required: true },
       ],
       template: `# [Documentation Title]
 
@@ -356,67 +358,71 @@ export class TemplateService {
 *To be filled during/after implementation*
 
 ## 6. References
-*Existing documentation, style guides, examples*`
-    });
+*Existing documentation, style guides, examples*`,
+    })
   }
 
   getTemplate(type: string): Template {
-    const template = this.templates.get(type);
+    const template = this.templates.get(type)
     if (!template) {
-      const validTypes = Array.from(this.templates.keys());
-      throw new Error(`Invalid CR type '${type}'. Must be one of: ${validTypes.join(', ')}`);
+      const validTypes = Array.from(this.templates.keys())
+      throw new Error(`Invalid CR type '${type}'. Must be one of: ${validTypes.join(', ')}`)
     }
-    return template;
+    return template
   }
 
   validateTicketData(data: TicketData, type?: string): ValidationResult {
-    const errors: Array<{field: string, message: string}> = [];
-    const warnings: Array<{field: string, message: string}> = [];
+    const errors: Array<{ field: string, message: string }> = []
+    const warnings: Array<{ field: string, message: string }> = []
 
     // Basic validation
     if (!data.title || data.title.trim().length === 0) {
-      errors.push({ field: 'title', message: 'Title is required' });
-    } else if (data.title.length > 200) {
-      warnings.push({ field: 'title', message: 'Title is very long, consider shortening' });
+      errors.push({ field: 'title', message: 'Title is required' })
+    }
+    else if (data.title.length > 200) {
+      warnings.push({ field: 'title', message: 'Title is very long, consider shortening' })
     }
 
     // Use type parameter if data.type is not provided (common in MCP calls)
-    const effectiveType = data.type || type;
-    
+    const effectiveType = data.type || type
+
     if (!effectiveType) {
-      errors.push({ field: 'type', message: 'Type is required' });
-    } else {
-      const validTypes: string[] = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'];
+      errors.push({ field: 'type', message: 'Type is required' })
+    }
+    else {
+      const validTypes: string[] = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation']
       if (!validTypes.includes(effectiveType)) {
         errors.push({
           field: 'type',
-          message: `Invalid type '${effectiveType}'. Must be one of: ${validTypes.join(', ')}`
-        });
+          message: `Invalid type '${effectiveType}'. Must be one of: ${validTypes.join(', ')}`,
+        })
       }
     }
 
     if (data.priority) {
-      const validPriorities = ['Low', 'Medium', 'High', 'Critical'];
+      const validPriorities = ['Low', 'Medium', 'High', 'Critical']
       if (!validPriorities.includes(data.priority)) {
-        errors.push({ 
-          field: 'priority', 
-          message: `Invalid priority '${data.priority}'. Must be one of: ${validPriorities.join(', ')}` 
-        });
+        errors.push({
+          field: 'priority',
+          message: `Invalid priority '${data.priority}'. Must be one of: ${validPriorities.join(', ')}`,
+        })
       }
-    } else {
-      warnings.push({ field: 'priority', message: 'Priority not specified, will default to Medium' });
+    }
+    else {
+      warnings.push({ field: 'priority', message: 'Priority not specified, will default to Medium' })
     }
 
     // Type-specific validation
     if (effectiveType) {
-      const template = this.templates.get(effectiveType);
+      const template = this.templates.get(effectiveType)
       if (template) {
         for (const field of template.requiredFields) {
           if (field === 'content' && (!data.content || data.content.trim().length === 0)) {
             if (effectiveType === 'Bug Fix') {
-              warnings.push({ field: 'content', message: 'Consider providing full content with ## Description (including reproduction steps) for bug fixes' });
-            } else {
-              warnings.push({ field: 'content', message: 'Consider providing full content with ## Description and ## Rationale sections for better CR quality' });
+              warnings.push({ field: 'content', message: 'Consider providing full content with ## Description (including reproduction steps) for bug fixes' })
+            }
+            else {
+              warnings.push({ field: 'content', message: 'Consider providing full content with ## Description and ## Rationale sections for better CR quality' })
             }
           }
         }
@@ -425,26 +431,26 @@ export class TemplateService {
 
     // General recommendations
     if (!data.content) {
-      warnings.push({ field: 'content', message: 'Consider adding full markdown content with ## Description and ## Rationale sections for better context' });
+      warnings.push({ field: 'content', message: 'Consider adding full markdown content with ## Description and ## Rationale sections for better context' })
     }
 
     if (!data.impactAreas || data.impactAreas.length === 0) {
-      warnings.push({ field: 'impactAreas', message: 'Consider specifying affected system areas' });
+      warnings.push({ field: 'impactAreas', message: 'Consider specifying affected system areas' })
     }
 
     if (data.type === 'Bug Fix' && data.priority !== 'High' && data.priority !== 'Critical') {
-      warnings.push({ field: 'priority', message: 'Bug fixes typically have High or Critical priority' });
+      warnings.push({ field: 'priority', message: 'Bug fixes typically have High or Critical priority' })
     }
 
     return {
       valid: errors.length === 0,
       errors,
-      warnings
-    };
+      warnings,
+    }
   }
 
   suggestImprovements(ticket: Ticket): Suggestion[] {
-    const suggestions: Suggestion[] = [];
+    const suggestions: Suggestion[] = []
 
     // Content analysis
     if (!ticket.content || ticket.content.length < 200) {
@@ -453,8 +459,8 @@ export class TemplateService {
         title: 'Expand Content',
         description: 'CR content is minimal. Consider adding more detailed description, analysis, and implementation notes.',
         actionable: true,
-        priority: 'medium'
-      });
+        priority: 'medium',
+      })
     }
 
     // Architecture-specific suggestions
@@ -464,8 +470,9 @@ export class TemplateService {
           type: 'improvement',
           title: 'Add Architecture Diagrams',
           description: 'Architecture CRs benefit from visual diagrams showing system structure and data flow.',
-          actionable: true, priority: 'medium'
-        });
+          actionable: true,
+          priority: 'medium',
+        })
       }
     }
 
@@ -476,8 +483,9 @@ export class TemplateService {
           type: 'improvement',
           title: 'Add Reproduction Steps',
           description: 'Bug fix CRs should include clear steps to reproduce the issue.',
-          actionable: true, priority: 'medium'
-        });
+          actionable: true,
+          priority: 'medium',
+        })
       }
 
       if (!ticket.content.includes('root cause')) {
@@ -485,8 +493,9 @@ export class TemplateService {
           type: 'improvement',
           title: 'Root Cause Analysis',
           description: 'Identify and document the root cause, not just the symptoms.',
-          actionable: true, priority: 'medium'
-        });
+          actionable: true,
+          priority: 'medium',
+        })
       }
     }
 
@@ -496,8 +505,9 @@ export class TemplateService {
         type: 'improvement',
         title: 'Define Acceptance Criteria',
         description: 'Add specific, testable criteria that define when this CR is complete.',
-        actionable: true, priority: 'medium'
-      });
+        actionable: true,
+        priority: 'medium',
+      })
     }
 
     if (!ticket.phaseEpic || ticket.phaseEpic.includes('undefined')) {
@@ -505,8 +515,9 @@ export class TemplateService {
         type: 'improvement',
         title: 'Assign to Phase/Epic',
         description: 'Link this CR to a specific project phase or epic for better planning.',
-        actionable: true, priority: 'medium'
-      });
+        actionable: true,
+        priority: 'medium',
+      })
     }
 
     if (!ticket.implementationNotes && ticket.status === 'Implemented') {
@@ -514,8 +525,9 @@ export class TemplateService {
         type: 'improvement',
         title: 'Add Implementation Notes',
         description: 'Document what was actually implemented, any deviations from the plan, and lessons learned.',
-        actionable: true, priority: 'medium'
-      });
+        actionable: true,
+        priority: 'medium',
+      })
     }
 
     // Related CR suggestions
@@ -523,8 +535,9 @@ export class TemplateService {
       type: 'related',
       title: 'Find Related CRs',
       description: 'Use find_related_crs tool to discover CRs that might be related to this one.',
-      actionable: true, priority: 'medium'
-    });
+      actionable: true,
+      priority: 'medium',
+    })
 
     // Priority and urgency
     if (ticket.type === 'Technical Debt' && ticket.priority === 'Low') {
@@ -532,10 +545,11 @@ export class TemplateService {
         type: 'improvement',
         title: 'Consider Priority',
         description: 'Technical debt often has compound effects. Consider if priority should be higher.',
-        actionable: true, priority: 'medium'
-      });
+        actionable: true,
+        priority: 'medium',
+      })
     }
 
-    return suggestions.slice(0, 8); // Return top 8 suggestions
+    return suggestions.slice(0, 8) // Return top 8 suggestions
   }
 }

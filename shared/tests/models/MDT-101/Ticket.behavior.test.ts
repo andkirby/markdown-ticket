@@ -11,18 +11,20 @@
  * Framework: Jest
  */
 
-import {
+import type {
   Ticket,
-  normalizeTicket,
-  arrayToString,
   TicketData,
+  TicketFilters,
   TicketUpdateAttrs,
+} from '../../../models/Ticket'
+import {
+  arrayToString,
+  normalizeTicket,
   TICKET_UPDATE_ALLOWED_ATTRS,
-  TicketFilters
-} from '../../../models/Ticket';
+} from '../../../models/Ticket'
 
-describe('Ticket Model - Behavioral Preservation', () => {
-  describe('Type Contracts', () => {
+describe('ticket Model - Behavioral Preservation', () => {
+  describe('type Contracts', () => {
     it('should maintain Ticket interface shape', () => {
       // This test locks the expected shape
       const mockTicket: Ticket = {
@@ -37,23 +39,23 @@ describe('Ticket Model - Behavioral Preservation', () => {
         filePath: '/path/to/ticket.md',
         relatedTickets: ['MDT-002'],
         dependsOn: ['MDT-000'],
-        blocks: ['MDT-003']
-      };
+        blocks: ['MDT-003'],
+      }
 
       // Verify required fields exist and are of expected type
-      expect(typeof mockTicket.code).toBe('string');
-      expect(typeof mockTicket.title).toBe('string');
-      expect(typeof mockTicket.status).toBe('string');
-      expect(typeof mockTicket.type).toBe('string');
-      expect(typeof mockTicket.priority).toBe('string');
-      expect(mockTicket.dateCreated).toBeInstanceOf(Date);
-      expect(mockTicket.lastModified).toBeInstanceOf(Date);
-      expect(typeof mockTicket.content).toBe('string');
-      expect(typeof mockTicket.filePath).toBe('string');
-      expect(Array.isArray(mockTicket.relatedTickets)).toBe(true);
-      expect(Array.isArray(mockTicket.dependsOn)).toBe(true);
-      expect(Array.isArray(mockTicket.blocks)).toBe(true);
-    });
+      expect(typeof mockTicket.code).toBe('string')
+      expect(typeof mockTicket.title).toBe('string')
+      expect(typeof mockTicket.status).toBe('string')
+      expect(typeof mockTicket.type).toBe('string')
+      expect(typeof mockTicket.priority).toBe('string')
+      expect(mockTicket.dateCreated).toBeInstanceOf(Date)
+      expect(mockTicket.lastModified).toBeInstanceOf(Date)
+      expect(typeof mockTicket.content).toBe('string')
+      expect(typeof mockTicket.filePath).toBe('string')
+      expect(Array.isArray(mockTicket.relatedTickets)).toBe(true)
+      expect(Array.isArray(mockTicket.dependsOn)).toBe(true)
+      expect(Array.isArray(mockTicket.blocks)).toBe(true)
+    })
 
     it('should maintain optional fields behavior', () => {
       const minimalTicket: Ticket = {
@@ -73,21 +75,21 @@ describe('Ticket Model - Behavioral Preservation', () => {
         phaseEpic: '',
         assignee: '',
         implementationNotes: '',
-        implementationDate: null
-      };
+        implementationDate: null,
+      }
 
       // Optional fields have defaults from normalizeTicket
-      expect(minimalTicket.phaseEpic).toBe('');
-      expect(minimalTicket.assignee).toBe('');
-      expect(minimalTicket.implementationDate).toBeNull();
-      expect(minimalTicket.implementationNotes).toBe('');
-    });
-  });
+      expect(minimalTicket.phaseEpic).toBe('')
+      expect(minimalTicket.assignee).toBe('')
+      expect(minimalTicket.implementationDate).toBeNull()
+      expect(minimalTicket.implementationNotes).toBe('')
+    })
+  })
 
-  describe('Function: normalizeTicket', () => {
+  describe('function: normalizeTicket', () => {
     it('should normalize raw ticket data correctly', () => {
       const rawTicket = {
-        key: 'MDT-001',  // Legacy field
+        key: 'MDT-001', // Legacy field
         title: 'Test Ticket',
         status: 'Approved',
         type: 'Bug Fix',
@@ -98,65 +100,65 @@ describe('Ticket Model - Behavioral Preservation', () => {
         path: '/test/path.md',
         phaseEpic: 'Phase 1',
         assignee: 'john.doe',
-        relatedTickets: 'MDT-002,MDT-003',  // String format
+        relatedTickets: 'MDT-002,MDT-003', // String format
         dependsOn: 'MDT-000',
-        blocks: ''  // Empty string
-      };
+        blocks: '', // Empty string
+      }
 
-      const normalized = normalizeTicket(rawTicket);
+      const normalized = normalizeTicket(rawTicket)
 
       // Verify field mapping
-      expect(normalized.code).toBe('MDT-001');
-      expect(normalized.title).toBe('Test Ticket');
-      expect(normalized.status).toBe('Approved');
-      expect(normalized.type).toBe('Bug Fix');
-      expect(normalized.priority).toBe('High');
-      expect(normalized.filePath).toBe('/test/path.md');
-      expect(normalized.phaseEpic).toBe('Phase 1');
-      expect(normalized.assignee).toBe('john.doe');
+      expect(normalized.code).toBe('MDT-001')
+      expect(normalized.title).toBe('Test Ticket')
+      expect(normalized.status).toBe('Approved')
+      expect(normalized.type).toBe('Bug Fix')
+      expect(normalized.priority).toBe('High')
+      expect(normalized.filePath).toBe('/test/path.md')
+      expect(normalized.phaseEpic).toBe('Phase 1')
+      expect(normalized.assignee).toBe('john.doe')
 
       // Verify array normalization
-      expect(normalized.relatedTickets).toEqual(['MDT-002', 'MDT-003']);
-      expect(normalized.dependsOn).toEqual(['MDT-000']);
-      expect(normalized.blocks).toEqual([]);  // Empty string becomes empty array
+      expect(normalized.relatedTickets).toEqual(['MDT-002', 'MDT-003'])
+      expect(normalized.dependsOn).toEqual(['MDT-000'])
+      expect(normalized.blocks).toEqual([]) // Empty string becomes empty array
 
       // Verify date parsing
-      expect(normalized.dateCreated).toBeInstanceOf(Date);
-      expect(normalized.lastModified).toBeInstanceOf(Date);
-    });
+      expect(normalized.dateCreated).toBeInstanceOf(Date)
+      expect(normalized.lastModified).toBeInstanceOf(Date)
+    })
 
     it('should provide defaults for missing fields', () => {
       const rawTicket = {
-        code: 'MDT-001'
-      };
+        code: 'MDT-001',
+      }
 
-      const normalized = normalizeTicket(rawTicket);
+      const normalized = normalizeTicket(rawTicket)
 
-      expect(normalized.title).toBe('');
-      expect(normalized.status).toBe('Proposed');
-      expect(normalized.type).toBe('Feature Enhancement');
-      expect(normalized.priority).toBe('Medium');
-      expect(normalized.content).toBe('');
-      expect(normalized.filePath).toBe('');
-      expect(normalized.relatedTickets).toEqual([]);
-      expect(normalized.dependsOn).toEqual([]);
-      expect(normalized.blocks).toEqual([]);
-    });
+      expect(normalized.title).toBe('')
+      expect(normalized.status).toBe('Proposed')
+      expect(normalized.type).toBe('Feature Enhancement')
+      expect(normalized.priority).toBe('Medium')
+      expect(normalized.content).toBe('')
+      expect(normalized.filePath).toBe('')
+      expect(normalized.relatedTickets).toEqual([])
+      expect(normalized.dependsOn).toEqual([])
+      expect(normalized.blocks).toEqual([])
+    })
 
     it('should handle null/undefined dates', () => {
       const rawTicket = {
         code: 'MDT-001',
         dateCreated: null,
         lastModified: undefined,
-        implementationDate: 'invalid-date'
-      };
+        implementationDate: 'invalid-date',
+      }
 
-      const normalized = normalizeTicket(rawTicket);
+      const normalized = normalizeTicket(rawTicket)
 
-      expect(normalized.dateCreated).toBeNull();
-      expect(normalized.lastModified).toBeNull();
-      expect(normalized.implementationDate).toBeNull();  // Invalid date becomes null
-    });
+      expect(normalized.dateCreated).toBeNull()
+      expect(normalized.lastModified).toBeNull()
+      expect(normalized.implementationDate).toBeNull() // Invalid date becomes null
+    })
 
     it('should handle already normalized data', () => {
       const alreadyNormalized: Ticket = {
@@ -176,35 +178,35 @@ describe('Ticket Model - Behavioral Preservation', () => {
         phaseEpic: '',
         assignee: '',
         implementationDate: null,
-        implementationNotes: ''
-      };
+        implementationNotes: '',
+      }
 
-      const result = normalizeTicket(alreadyNormalized);
+      const result = normalizeTicket(alreadyNormalized)
 
       // Should preserve structure with optional fields
-      expect(result.code).toBe(alreadyNormalized.code);
-      expect(result.title).toBe(alreadyNormalized.title);
-      expect(result.relatedTickets).toEqual(alreadyNormalized.relatedTickets);
-      expect(result.dependsOn).toEqual(alreadyNormalized.dependsOn);
-      expect(result.blocks).toEqual(alreadyNormalized.blocks);
-    });
-  });
+      expect(result.code).toBe(alreadyNormalized.code)
+      expect(result.title).toBe(alreadyNormalized.title)
+      expect(result.relatedTickets).toEqual(alreadyNormalized.relatedTickets)
+      expect(result.dependsOn).toEqual(alreadyNormalized.dependsOn)
+      expect(result.blocks).toEqual(alreadyNormalized.blocks)
+    })
+  })
 
-  describe('Function: arrayToString', () => {
+  describe('function: arrayToString', () => {
     it('should convert arrays to comma-separated strings', () => {
-      expect(arrayToString(['MDT-001', 'MDT-002', 'MDT-003'])).toBe('MDT-001,MDT-002,MDT-003');
-      expect(arrayToString(['single'])).toBe('single');
-      expect(arrayToString([])).toBe('');
-    });
+      expect(arrayToString(['MDT-001', 'MDT-002', 'MDT-003'])).toBe('MDT-001,MDT-002,MDT-003')
+      expect(arrayToString(['single'])).toBe('single')
+      expect(arrayToString([])).toBe('')
+    })
 
     it('should handle non-array inputs', () => {
-      expect(arrayToString(null as any)).toBe('');
-      expect(arrayToString(undefined as any)).toBe('');
-      expect(arrayToString('string' as any)).toBe('');
-    });
-  });
+      expect(arrayToString(null as any)).toBe('')
+      expect(arrayToString(undefined as any)).toBe('')
+      expect(arrayToString('string' as any)).toBe('')
+    })
+  })
 
-  describe('Type: TicketData', () => {
+  describe('type: TicketData', () => {
     it('should maintain TicketData interface shape', () => {
       const ticketData: TicketData = {
         title: 'New Ticket',
@@ -215,18 +217,18 @@ describe('Ticket Model - Behavioral Preservation', () => {
         relatedTickets: 'MDT-001',
         dependsOn: 'MDT-000',
         assignee: 'developer@example.com',
-        content: '# Description\n\nImplementation details'
-      };
+        content: '# Description\n\nImplementation details',
+      }
 
-      expect(typeof ticketData.title).toBe('string');
-      expect(typeof ticketData.type).toBe('string');
-      expect(ticketData.priority).toBe('High');  // Optional
-      expect(ticketData.phaseEpic).toBe('Phase 1');  // Optional
-      expect(Array.isArray(ticketData.impactAreas)).toBe(true);
-    });
-  });
+      expect(typeof ticketData.title).toBe('string')
+      expect(typeof ticketData.type).toBe('string')
+      expect(ticketData.priority).toBe('High') // Optional
+      expect(ticketData.phaseEpic).toBe('Phase 1') // Optional
+      expect(Array.isArray(ticketData.impactAreas)).toBe(true)
+    })
+  })
 
-  describe('Type: TicketUpdateAttrs', () => {
+  describe('type: TicketUpdateAttrs', () => {
     it('should maintain TicketUpdateAttrs interface shape', () => {
       const updateAttrs: TicketUpdateAttrs = {
         priority: 'Critical',
@@ -236,16 +238,16 @@ describe('Ticket Model - Behavioral Preservation', () => {
         blocks: 'MDT-003',
         assignee: 'new.assignee@example.com',
         implementationDate: new Date(),
-        implementationNotes: 'Implementation completed successfully'
-      };
+        implementationNotes: 'Implementation completed successfully',
+      }
 
-      expect(updateAttrs.priority).toBe('Critical');
-      expect(updateAttrs.implementationDate).toBeInstanceOf(Date);
-      expect(typeof updateAttrs.implementationNotes).toBe('string');
-    });
-  });
+      expect(updateAttrs.priority).toBe('Critical')
+      expect(updateAttrs.implementationDate).toBeInstanceOf(Date)
+      expect(typeof updateAttrs.implementationNotes).toBe('string')
+    })
+  })
 
-  describe('Constant: TICKET_UPDATE_ALLOWED_ATTRS', () => {
+  describe('constant: TICKET_UPDATE_ALLOWED_ATTRS', () => {
     it('should include all expected attributes', () => {
       const expectedAttrs = [
         'priority',
@@ -255,24 +257,24 @@ describe('Ticket Model - Behavioral Preservation', () => {
         'blocks',
         'assignee',
         'implementationDate',
-        'implementationNotes'
-      ];
+        'implementationNotes',
+      ]
 
-      expectedAttrs.forEach(attr => {
-        expect(TICKET_UPDATE_ALLOWED_ATTRS.has(attr as any)).toBe(true);
-      });
-    });
+      expectedAttrs.forEach((attr) => {
+        expect(TICKET_UPDATE_ALLOWED_ATTRS.has(attr as any)).toBe(true)
+      })
+    })
 
     it('should exclude immutable attributes', () => {
-      const immutableAttrs = ['code', 'title', 'type', 'status', 'content', 'dateCreated', 'lastModified'];
+      const immutableAttrs = ['code', 'title', 'type', 'status', 'content', 'dateCreated', 'lastModified']
 
-      immutableAttrs.forEach(attr => {
-        expect(TICKET_UPDATE_ALLOWED_ATTRS.has(attr as any)).toBe(false);
-      });
-    });
-  });
+      immutableAttrs.forEach((attr) => {
+        expect(TICKET_UPDATE_ALLOWED_ATTRS.has(attr as any)).toBe(false)
+      })
+    })
+  })
 
-  describe('Type: TicketFilters', () => {
+  describe('type: TicketFilters', () => {
     it('should maintain TicketFilters interface shape', () => {
       const filters: TicketFilters = {
         status: ['Proposed', 'In Progress'],
@@ -280,28 +282,28 @@ describe('Ticket Model - Behavioral Preservation', () => {
         priority: ['High', 'Critical'],
         dateRange: {
           start: new Date('2024-01-01'),
-          end: new Date('2024-12-31')
-        }
-      };
+          end: new Date('2024-12-31'),
+        },
+      }
 
-      expect(Array.isArray(filters.status)).toBe(true);
-      expect(typeof filters.type).toBe('string');
-      expect(Array.isArray(filters.priority)).toBe(true);
-      expect(filters.dateRange?.start).toBeInstanceOf(Date);
-      expect(filters.dateRange?.end).toBeInstanceOf(Date);
-    });
+      expect(Array.isArray(filters.status)).toBe(true)
+      expect(typeof filters.type).toBe('string')
+      expect(Array.isArray(filters.priority)).toBe(true)
+      expect(filters.dateRange?.start).toBeInstanceOf(Date)
+      expect(filters.dateRange?.end).toBeInstanceOf(Date)
+    })
 
     it('should accept single string values', () => {
       const filters: TicketFilters = {
         status: 'Proposed',
         type: 'Bug Fix',
-        priority: 'High'
+        priority: 'High',
         // dateRange is optional
-      };
+      }
 
-      expect(typeof filters.status).toBe('string');
-      expect(typeof filters.type).toBe('string');
-      expect(typeof filters.priority).toBe('string');
-    });
-  });
-});
+      expect(typeof filters.status).toBe('string')
+      expect(typeof filters.type).toBe('string')
+      expect(typeof filters.priority).toBe('string')
+    })
+  })
+})

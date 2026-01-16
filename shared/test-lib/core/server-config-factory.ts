@@ -10,9 +10,9 @@
  * - Returns properly typed ServerConfig objects
  */
 
-import type { ServerConfig } from '../types.js';
-import type { PortConfig } from '../config/ports.js';
-import { TestFrameworkError } from '../types.js';
+import type { PortConfig } from '../config/ports.js'
+import type { ServerConfig } from '../types.js'
+import { TestFrameworkError } from '../types.js'
 
 /**
  * Factory class for creating server configurations
@@ -30,14 +30,14 @@ export class ServerConfigFactory {
   createConfig(
     serverType: 'frontend' | 'backend' | 'mcp',
     projectRoot: string,
-    ports: PortConfig
+    ports: PortConfig,
   ): ServerConfig {
-    const port = ports[serverType];
-    const base = { port, command: 'npm', state: 'stopped' as const };
+    const port = ports[serverType]
+    const base = { port, command: 'npm', state: 'stopped' as const }
 
     // Get CONFIG_DIR from current process.env (set by TestEnvironment.setup())
     // This ensures the child process uses the isolated test config directory
-    const configDir = process.env.CONFIG_DIR;
+    const configDir = process.env.CONFIG_DIR
 
     switch (serverType) {
       case 'frontend':
@@ -47,8 +47,8 @@ export class ServerConfigFactory {
           args: ['run', 'dev'],
           env: { PORT: port.toString() },
           url: `http://localhost:${port}`,
-          healthEndpoint: '/'
-        };
+          healthEndpoint: '/',
+        }
 
       case 'backend':
         return {
@@ -57,11 +57,11 @@ export class ServerConfigFactory {
           args: ['run', 'dev:server'],
           env: {
             PORT: port.toString(),
-            ...(configDir && { CONFIG_DIR: configDir }) // Pass CONFIG_DIR to child process
+            ...(configDir && { CONFIG_DIR: configDir }), // Pass CONFIG_DIR to child process
           },
           url: `http://localhost:${port}`,
-          healthEndpoint: '/api/status'
-        };
+          healthEndpoint: '/api/status',
+        }
 
       case 'mcp':
         return {
@@ -72,14 +72,14 @@ export class ServerConfigFactory {
             MCP_HTTP_ENABLED: 'true',
             MCP_HTTP_PORT: port.toString(),
             MCP_BIND_ADDRESS: '127.0.0.1',
-            ...(configDir && { CONFIG_DIR: configDir }) // Pass CONFIG_DIR to child process
+            ...(configDir && { CONFIG_DIR: configDir }), // Pass CONFIG_DIR to child process
           },
           url: `http://localhost:${port}/mcp`,
-          healthEndpoint: '/health'
-        };
+          healthEndpoint: '/health',
+        }
 
       default:
-        throw new TestFrameworkError(`Unknown server type: ${serverType}`, 'UNKNOWN_SERVER_TYPE');
+        throw new TestFrameworkError(`Unknown server type: ${serverType}`, 'UNKNOWN_SERVER_TYPE')
     }
   }
 }

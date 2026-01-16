@@ -1,5 +1,6 @@
-import React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
+import * as React from 'react'
 
 const cardVariants = cva(
   'bg-card text-card-foreground rounded-lg border shadow-sm',
@@ -32,17 +33,17 @@ const cardVariants = cva(
       size: 'default',
       shadow: 'sm',
     },
-  }
-);
+  },
+)
 
 interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {
-  header?: React.ReactNode;
-  footer?: React.ReactNode;
-  hoverable?: boolean;
-  clickable?: boolean;
-  loading?: boolean;
+  VariantProps<typeof cardVariants> {
+  header?: React.ReactNode
+  footer?: React.ReactNode
+  hoverable?: boolean
+  clickable?: boolean
+  loading?: boolean
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
@@ -61,23 +62,23 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
   }, ref) => {
     const handleClick = () => {
       if (clickable) {
-        props.onClick?.(new Event('click') as any);
+        props.onClick?.(new Event('click') as any)
       }
-    };
+    }
 
     return (
       <div
         ref={ref}
-        className={cardVariants({ 
-          variant, 
-          size, 
+        className={cardVariants({
+          variant,
+          size,
           shadow,
           className: `
             ${hoverable ? 'transition-all duration-200 hover:shadow-md hover:border-border/80' : ''}
             ${clickable ? 'cursor-pointer' : ''}
             ${loading ? 'opacity-60 pointer-events-none' : ''}
             ${className}
-          `
+          `,
         })}
         onClick={handleClick}
         {...props}
@@ -104,16 +105,16 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           </div>
         )}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-Card.displayName = 'Card';
+Card.displayName = 'Card'
 
 interface CardHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
-  title?: React.ReactNode;
-  subtitle?: React.ReactNode;
-  actions?: React.ReactNode;
+  title?: React.ReactNode
+  subtitle?: React.ReactNode
+  actions?: React.ReactNode
 }
 
 const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
@@ -143,11 +144,11 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
           </div>
         )}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-CardHeader.displayName = 'CardHeader';
+CardHeader.displayName = 'CardHeader'
 
 interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -161,14 +162,14 @@ const CardBody = React.forwardRef<HTMLDivElement, CardBodyProps>(
       >
         {children}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-CardBody.displayName = 'CardBody';
+CardBody.displayName = 'CardBody'
 
 interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
-  justify?: 'start' | 'center' | 'end' | 'between';
+  justify?: 'start' | 'center' | 'end' | 'between'
 }
 
 const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
@@ -178,7 +179,7 @@ const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
       center: 'justify-center',
       end: 'justify-end',
       between: 'justify-between',
-    };
+    }
 
     return (
       <div
@@ -188,11 +189,11 @@ const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
       >
         {children}
       </div>
-    );
-  }
-);
+    )
+  },
+)
 
-CardFooter.displayName = 'CardFooter';
+CardFooter.displayName = 'CardFooter'
 
 const CardTitle = React.forwardRef<
   HTMLParagraphElement,
@@ -203,8 +204,8 @@ const CardTitle = React.forwardRef<
     className={`text-2xl font-semibold leading-none tracking-tight ${className}`}
     {...props}
   />
-));
-CardTitle.displayName = 'CardTitle';
+))
+CardTitle.displayName = 'CardTitle'
 
 const CardDescription = React.forwardRef<
   HTMLParagraphElement,
@@ -215,15 +216,15 @@ const CardDescription = React.forwardRef<
     className={`text-sm text-muted-foreground ${className}`}
     {...props}
   />
-));
-CardDescription.displayName = 'CardDescription';
+))
+CardDescription.displayName = 'CardDescription'
 
 const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div ref={ref} className={`p-6 pt-0 ${className}`} {...props} />
-));
-CardContent.displayName = 'CardContent';
+))
+CardContent.displayName = 'CardContent'
 
-export { Card, CardHeader,   CardTitle, CardDescription, CardContent,  };
+export { Card, CardContent, CardDescription, CardHeader, CardTitle }
