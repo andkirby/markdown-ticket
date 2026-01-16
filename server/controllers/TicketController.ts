@@ -1,40 +1,10 @@
 import type { Request, Response } from 'express'
-// NOTE: Duplicate detection functionality deprecated per MDT-082
-// These functions now return empty results or throw deprecation errors
-import { findDuplicates, previewRename, resolveDuplicate } from '../utils/duplicateDetection.js'
 
 // Type definitions
 interface TaskResult {
   success: boolean
   message: string
   filename?: string
-}
-
-interface _DuplicateResult {
-  duplicates: {
-    title: string
-    files: {
-      filepath: string
-      content: string
-    }[]
-  }[]
-  totalDuplicates: number
-}
-
-interface _RenamePreview {
-  originalFilepath: string
-  newFilepath: string
-  oldCode: string
-  newCode: string
-  changesPreview: string
-}
-
-interface _ResolveDuplicateResult {
-  success: boolean
-  message: string
-  action?: string
-  originalFilepath?: string
-  newFilepath?: string
 }
 
 interface AuthenticatedRequest extends Request {
@@ -59,7 +29,7 @@ interface FileSystemService {
 }
 
 /**
- * Controller layer for ticket/task operations (legacy and duplicate detection).
+ * Controller layer for legacy ticket/task operations.
  */
 export class TicketController {
   private fileSystemService: FileSystemService
@@ -166,111 +136,6 @@ export class TicketController {
       else {
         res.status(500).json({ error: 'Internal Server Error', message: 'Failed to delete task' })
       }
-    }
-  }
-
-  /**
-   * Find duplicate tickets.
-   */
-  async getDuplicates(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const { projectId } = req.params
-
-      if (!projectId) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
-
-        return
-      }
-
-      // Map project IDs to paths (simplified for now)
-      const projectPaths: Record<string, string> = {
-      }
-
-      const projectPath = projectPaths[projectId]
-
-      if (!projectPath) {
-        res.status(404).json({ error: 'Not Found', message: 'Project not found' })
-
-        return
-      }
-
-      const result = await findDuplicates(projectPath)
-
-      res.json(result)
-    }
-    catch (error) {
-      console.error('Error checking duplicates:', error)
-      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to check duplicates' })
-    }
-  }
-
-  /**
-   * Preview rename changes for duplicate.
-   */
-  async previewDuplicateRename(req: Request, res: Response): Promise<void> {
-    try {
-      const { projectId, filepath } = req.body
-
-      if (!projectId || !filepath) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project ID and filepath are required' })
-
-        return
-      }
-
-      // Map project IDs to paths and codes
-      const projectInfo: Record<string, { path: string, code: string }> = {
-      }
-
-      const project = projectInfo[projectId]
-
-      if (!project) {
-        res.status(404).json({ error: 'Not Found', message: 'Project not found' })
-
-        return
-      }
-
-      const result = await previewRename(filepath, project.path, project.code)
-
-      res.json(result)
-    }
-    catch (error) {
-      console.error('Error generating preview:', error)
-      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to generate preview' })
-    }
-  }
-
-  /**
-   * Resolve duplicate by renaming or deleting.
-   */
-  async resolveDuplicateTicket(req: Request, res: Response): Promise<void> {
-    try {
-      const { projectId, oldFilepath, action } = req.body
-
-      if (!projectId || !oldFilepath || !action) {
-        res.status(400).json({ error: 'Bad Request', message: 'Project ID, old filepath, and action are required' })
-
-        return
-      }
-
-      // Map project IDs to paths and codes
-      const projectInfo: Record<string, { path: string, code: string }> = {
-      }
-
-      const project = projectInfo[projectId]
-
-      if (!project) {
-        res.status(404).json({ error: 'Not Found', message: 'Project not found' })
-
-        return
-      }
-
-      const result = await resolveDuplicate(action, oldFilepath, project.path, project.code)
-
-      res.json(result)
-    }
-    catch (error) {
-      console.error('Error resolving duplicate:', error)
-      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to resolve duplicate' })
     }
   }
 }

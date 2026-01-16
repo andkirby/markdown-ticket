@@ -46,7 +46,6 @@ interface ProjectServiceExtension {
   getProjectCRs: (path: string) => Promise<Ticket[]>
   getSystemDirectories: (path?: string) => Promise<DirectoryListing>
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<any>
-  checkDirectoryExists: (dirPath: string) => Promise<{ exists: boolean }>
   projectDiscovery: any
 }
 
@@ -343,29 +342,6 @@ export class ProjectController {
       else {
         res.status(500).json({ error: 'Failed to configure documents' })
       }
-    }
-  }
-
-  /**
-   * Check if directory exists.
-   */
-  async checkDirectoryExists(req: Request, res: Response): Promise<void> {
-    const { path } = req.body
-
-    if (!path || typeof path !== 'string') {
-      res.status(400).json({ error: 'Path is required and must be a string' })
-
-      return
-    }
-
-    try {
-      const result = await this.projectService.checkDirectoryExists(path)
-
-      res.json(result)
-    }
-    catch (error: any) {
-      console.error('Error checking directory existence:', error)
-      res.status(500).json({ error: 'Failed to check directory existence' })
     }
   }
 

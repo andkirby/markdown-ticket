@@ -8,7 +8,6 @@ import { AddProjectModal } from './AddProjectModal'
 import Board from './Board'
 import { CounterAPI } from './CounterAPI'
 import { DocumentsLayout } from './DocumentsView'
-import { DuplicateResolver } from './DuplicateResolver'
 import { getProjectCode } from './ProjectSelector'
 import { SecondaryHeader } from './SecondaryHeader'
 import { TicketCode } from './TicketCode'
@@ -44,7 +43,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   const [showEditProjectModal, setShowEditProjectModal] = useState(false)
   const [loading, _setLoading] = useState(false)
   const [showCounterAPIModal, setShowCounterAPIModal] = useState(false)
-  const [showDuplicateResolver, setShowDuplicateResolver] = useState(false)
 
   // Use ref to prevent stale closure bug when switching projects
   const selectedProjectRef = useRef<Project | null>(selectedProject)
@@ -223,17 +221,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
             </div>
           </div>
         </div>
-      )}
-
-      {/* Duplicate Resolver Modal */}
-      {showDuplicateResolver && selectedProject && (
-        <DuplicateResolver
-          projectId={selectedProject.id}
-          onResolved={() => {
-            setShowDuplicateResolver(false)
-            // Ticket updates are now handled by SSE events automatically
-          }}
-        />
       )}
 
       <AddProjectModal
