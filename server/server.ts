@@ -23,7 +23,7 @@ import { createDocumentRouter } from './routes/documents.js'
 import { createProjectRouter } from './routes/projects.js'
 import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
-import { createDuplicateRouter, createTicketRouter } from './routes/tickets.js'
+import { createTicketRouter } from './routes/tickets.js'
 import { DocumentService } from './services/DocumentService.js'
 import { FileSystemService } from './services/FileSystemService.js'
 import { TicketService } from './services/TicketService.js'
@@ -255,9 +255,6 @@ app.use('/api/projects', createProjectRouter(projectController))
 
 // Legacy single-project task routes
 app.use('/api/tasks', createTicketRouter(ticketController))
-
-// Duplicate detection routes
-app.use('/api/duplicates', createDuplicateRouter(ticketController))
 
 // Document routes
 app.use('/api/documents', createDocumentRouter(documentController, projectController))

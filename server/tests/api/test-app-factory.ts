@@ -27,7 +27,7 @@ import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
 import { createSSERouter } from '../../routes/sse'
 import { createSystemRouter } from '../../routes/system'
-import { createDuplicateRouter, createTicketRouter } from '../../routes/tickets'
+import { createTicketRouter } from '../../routes/tickets'
 import { DocumentService } from '../../services/DocumentService'
 import { FileSystemService } from '../../services/FileSystemService'
 import { TicketService } from '../../services/TicketService'
@@ -143,7 +143,6 @@ export function createTestApp(): Express {
   // Register Routes
   app.use('/api/projects', createProjectRouter(projectController))
   app.use('/api/tasks', createTicketRouter(ticketController))
-  app.use('/api/duplicates', createDuplicateRouter(ticketController))
   app.use('/api/documents', createDocumentRouter(documentController, projectController))
   app.use('/api/events', createSSERouter(fileWatcher))
   app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))

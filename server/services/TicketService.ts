@@ -33,13 +33,6 @@ interface UpdateCRResult {
   crId: string
 }
 
-interface UpdateResult {
-  success: boolean
-  message: string
-  filename?: string
-  path?: string
-}
-
 interface DeleteResult {
   success: boolean
   message: string
@@ -185,15 +178,6 @@ export class TicketService {
       projectId,
       crId,
     }
-  }
-
-  /**
-   * Update CR completely (full content) - NOT RECOMMENDED
-   * This method is kept for backward compatibility but not implemented
-   * Use MCP server's manage_cr_sections for content updates.
-   */
-  async updateCR(_projectId: string, _crId: string, _content: string): Promise<UpdateResult> {
-    throw new Error('Full CR content updates should use MCP server manage_cr_sections tool. This method is deprecated.')
   }
 
   /**
