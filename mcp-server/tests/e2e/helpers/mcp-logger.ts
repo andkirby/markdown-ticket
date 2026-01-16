@@ -4,6 +4,8 @@
  * Provides structured logging for debugging MCP client operations
  */
 
+import process from 'node:process'
+
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
@@ -12,45 +14,45 @@ export enum LogLevel {
 }
 
 export interface LogEntry {
-  level: LogLevel;
-  message: string;
-  timestamp: Date;
-  context?: any;
-  error?: Error;
+  level: LogLevel
+  message: string
+  timestamp: Date
+  context?: any
+  error?: Error
 }
 
 export class MCPLogger {
-  private static instance: MCPLogger;
-  private logs: LogEntry[] = [];
-  private maxLogs = 1000;
-  private isVerbose: boolean;
+  private static instance: MCPLogger
+  private logs: LogEntry[] = []
+  private maxLogs = 1000
+  private isVerbose: boolean
 
   private constructor() {
     // Check if verbose mode is enabled
-    this.isVerbose = process.argv.includes('--verbose') || process.env.npm_config_verbose === 'true';
+    this.isVerbose = process.argv.includes('--verbose') || process.env.npm_config_verbose === 'true'
   }
 
   static getInstance(): MCPLogger {
     if (!MCPLogger.instance) {
-      MCPLogger.instance = new MCPLogger();
+      MCPLogger.instance = new MCPLogger()
     }
-    return MCPLogger.instance;
+    return MCPLogger.instance
   }
 
   debug(message: string, context?: any): void {
-    this.log(LogLevel.DEBUG, message, context);
+    this.log(LogLevel.DEBUG, message, context)
   }
 
   info(message: string, context?: any): void {
-    this.log(LogLevel.INFO, message, context);
+    this.log(LogLevel.INFO, message, context)
   }
 
   warn(message: string, context?: any): void {
-    this.log(LogLevel.WARN, message, context);
+    this.log(LogLevel.WARN, message, context)
   }
 
   error(message: string, error?: Error, context?: any): void {
-    this.log(LogLevel.ERROR, message, context, error);
+    this.log(LogLevel.ERROR, message, context, error)
   }
 
   private log(level: LogLevel, message: string, context?: any, error?: Error): void {
@@ -60,42 +62,43 @@ export class MCPLogger {
       timestamp: new Date(),
       context,
       error,
-    };
+    }
 
     // Add to logs
-    this.logs.push(entry);
+    this.logs.push(entry)
 
     // Keep only recent logs
     if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(-this.maxLogs);
+      this.logs = this.logs.slice(-this.maxLogs)
     }
 
     // Only output to console if verbose mode is enabled or level is ERROR/WARN
     if (this.isVerbose || entry.level >= LogLevel.WARN) {
-      const levelName = LogLevel[level];
-      const timestamp = entry.timestamp.toISOString();
-      const contextStr = context ? ` ${JSON.stringify(context)}` : '';
-      const errorStr = error ? ` ${error.message}` : '';
+      // Logging disabled for tests
+      // const levelName = LogLevel[level];
+      // const timestamp = entry.timestamp.toISOString();
+      // const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+      // const errorStr = error ? ` ${error.message}` : '';
       // console.log(`[${timestamp}] ${levelName}: ${message}${contextStr}${errorStr}`);
     }
   }
 
   getLogs(level?: LogLevel): LogEntry[] {
     if (level === undefined) {
-      return [...this.logs];
+      return [...this.logs]
     }
-    return this.logs.filter(log => log.level >= level);
+    return this.logs.filter(log => log.level >= level)
   }
 
   clearLogs(): void {
-    this.logs = [];
+    this.logs = []
   }
 
   getErrorLogs(): LogEntry[] {
-    return this.getLogs(LogLevel.ERROR);
+    return this.getLogs(LogLevel.ERROR)
   }
 
   getRecentLogs(count: number = 10): LogEntry[] {
-    return this.logs.slice(-count);
+    return this.logs.slice(-count)
   }
 }

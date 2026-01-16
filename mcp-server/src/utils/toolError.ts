@@ -13,7 +13,7 @@ export enum ErrorType {
   PROTOCOL = 'protocol',
 
   /** Tool execution errors - should return { result: { content: [...], isError: true } } */
-  TOOL_EXECUTION = 'tool_execution'
+  TOOL_EXECUTION = 'tool_execution',
 }
 
 /**
@@ -32,7 +32,7 @@ export enum JsonRpcErrorCode {
   InternalError = -32603,
 
   /** Server error range (-32000 to -32099) */
-  }
+}
 
 /**
  * Custom error class for MCP tool errors
@@ -44,25 +44,25 @@ export enum JsonRpcErrorCode {
  * and converted to { result: { content: [...], isError: true } } responses.
  */
 export class ToolError extends Error {
-  public readonly type: ErrorType;
-  public readonly code?: JsonRpcErrorCode;
-  public readonly data?: any;
+  public readonly type: ErrorType
+  public readonly code?: JsonRpcErrorCode
+  public readonly data?: any
 
   constructor(
     message: string,
     type: ErrorType = ErrorType.TOOL_EXECUTION,
     code?: JsonRpcErrorCode,
-    data?: any
+    data?: any,
   ) {
-    super(message);
-    this.name = 'ToolError';
-    this.type = type;
-    this.code = code;
-    this.data = data;
+    super(message)
+    this.name = 'ToolError'
+    this.type = type
+    this.code = code
+    this.data = data
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ToolError);
+      Error.captureStackTrace(this, ToolError)
     }
   }
 
@@ -71,7 +71,7 @@ export class ToolError extends Error {
    * These will be converted to JSON-RPC error responses
    */
   static protocol(message: string, code: JsonRpcErrorCode, data?: any): ToolError {
-    return new ToolError(message, ErrorType.PROTOCOL, code, data);
+    return new ToolError(message, ErrorType.PROTOCOL, code, data)
   }
 
   /**
@@ -79,56 +79,56 @@ export class ToolError extends Error {
    * These will be converted to { result: { content: [...], isError: true } }
    */
   static toolExecution(message: string, data?: any): ToolError {
-    return new ToolError(message, ErrorType.TOOL_EXECUTION, undefined, data);
+    return new ToolError(message, ErrorType.TOOL_EXECUTION, undefined, data)
   }
 
   /**
    * Check if this is a protocol error
    */
   isProtocolError(): boolean {
-    return this.type === ErrorType.PROTOCOL;
+    return this.type === ErrorType.PROTOCOL
   }
 
   /**
    * Check if this is a tool execution error
    */
   isToolExecutionError(): boolean {
-    return this.type === ErrorType.TOOL_EXECUTION;
+    return this.type === ErrorType.TOOL_EXECUTION
   }
 
   /**
    * Convert to JSON-RPC error response format
    * Only used for protocol errors
    */
-  toJsonRpcError(): { code: number; message: string; data?: any } {
+  toJsonRpcError(): { code: number, message: string, data?: any } {
     if (!this.isProtocolError()) {
-      throw new Error('Cannot convert tool execution error to JSON-RPC error');
+      throw new Error('Cannot convert tool execution error to JSON-RPC error')
     }
 
     return {
       code: this.code || JsonRpcErrorCode.InternalError,
       message: this.message,
-      data: this.data
-    };
+      data: this.data,
+    }
   }
 
   /**
    * Convert to MCP tool error result format
    * Only used for tool execution errors
    */
-  toToolErrorResult(): { content: Array<{ type: string; text: string }>; isError: true } {
+  toToolErrorResult(): { content: Array<{ type: string, text: string }>, isError: true } {
     if (!this.isToolExecutionError()) {
-      throw new Error('Cannot convert protocol error to tool error result');
+      throw new Error('Cannot convert protocol error to tool error result')
     }
 
     return {
       content: [
         {
           type: 'text',
-          text: this.message
-        }
+          text: this.message,
+        },
       ],
-      isError: true
-    };
+      isError: true,
+    }
   }
 }

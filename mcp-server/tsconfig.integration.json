@@ -1,20 +1,20 @@
 {
   "compilerOptions": {
+    "target": "ES2022",
+    "baseUrl": ".",
+    "rootDir": "../",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "target": "ES2022",
+    "paths": {
+      "@mdt/shared/*": ["../shared/*"]
+    },
+    "types": ["node", "jest"],
+    "strict": false,
+    "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "isolatedModules": false,
-    "types": ["node", "jest"],
-    "skipLibCheck": true,
-    "noEmit": true,
-    "strict": false,
-    "rootDir": "../",
-    "baseUrl": ".",
-    "paths": {
-      "@mdt/shared/*": ["../shared/*"]
-    }
+    "skipLibCheck": true
   },
   "include": [
     "tests/integration/**/*.ts",

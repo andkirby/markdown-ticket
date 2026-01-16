@@ -19,47 +19,46 @@
  * - No copying of modification logic
  */
 
-import type { Project } from '@mdt/shared/models/Project.js';
-import type { SectionMatch } from '@mdt/shared/services/MarkdownSectionService.js';
-import type { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js';
-import { MarkdownService } from '@mdt/shared/services/MarkdownService.js';
-import type { CRService } from '../../services/crService.js';
-import { ToolError } from '../../utils/toolError.js';
-import { SectionRepository } from './SectionRepository.js';
-import { ContentProcessor, type HeaderExtractionResult } from './ContentProcessor.js';
+import type { Project } from '@mdt/shared/models/Project.js'
+import type { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js'
+import type { CRService } from '../../services/crService.js'
+import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
+import { ToolError } from '../../utils/toolError.js'
+import { ContentProcessor } from './ContentProcessor.js'
+import { SectionRepository } from './SectionRepository.js'
 
-export type ModifyOperation = 'replace' | 'append' | 'prepend';
+export type ModifyOperation = 'replace' | 'append' | 'prepend'
 
 export interface ModifyResult {
-  success: boolean;
-  key: string;
-  sectionPath: string;
-  operation: ModifyOperation;
-  contentLength: number;
-  title: string;
-  filePath: string;
-  timestamp: string;
-  contentModified: boolean;
-  warningsCount: number;
+  success: boolean
+  key: string
+  sectionPath: string
+  operation: ModifyOperation
+  contentLength: number
+  title: string
+  filePath: string
+  timestamp: string
+  contentModified: boolean
+  warningsCount: number
 }
 
 /**
  * SectionEditor - Handles write operations for CR sections
  */
 export class SectionEditor {
-  private sectionRepository: SectionRepository;
-  private markdownSectionService: typeof MarkdownSectionService;
-  private markdownService: typeof MarkdownService;
-  private crService: CRService;
+  private sectionRepository: SectionRepository
+  private markdownSectionService: typeof MarkdownSectionService
+  private markdownService: typeof MarkdownService
+  private crService: CRService
 
   constructor(
     crService: CRService,
-    markdownSectionService: typeof MarkdownSectionService
+    markdownSectionService: typeof MarkdownSectionService,
   ) {
-    this.crService = crService;
-    this.markdownSectionService = markdownSectionService;
-    this.markdownService = MarkdownService;
-    this.sectionRepository = new SectionRepository(crService, markdownSectionService);
+    this.crService = crService
+    this.markdownSectionService = markdownSectionService
+    this.markdownService = MarkdownService
+    this.sectionRepository = new SectionRepository(crService, markdownSectionService)
   }
 
   /**
@@ -74,9 +73,9 @@ export class SectionEditor {
     project: Project,
     key: string,
     section: string,
-    content: string
+    content: string,
   ): Promise<ModifyResult> {
-    return this.modify(project, key, section, content, 'replace');
+    return this.modify(project, key, section, content, 'replace')
   }
 
   /**
@@ -91,9 +90,9 @@ export class SectionEditor {
     project: Project,
     key: string,
     section: string,
-    content: string
+    content: string,
   ): Promise<ModifyResult> {
-    return this.modify(project, key, section, content, 'append');
+    return this.modify(project, key, section, content, 'append')
   }
 
   /**
@@ -108,9 +107,9 @@ export class SectionEditor {
     project: Project,
     key: string,
     section: string,
-    content: string
+    content: string,
   ): Promise<ModifyResult> {
-    return this.modify(project, key, section, content, 'prepend');
+    return this.modify(project, key, section, content, 'prepend')
   }
 
   /**
@@ -127,88 +126,89 @@ export class SectionEditor {
     key: string,
     sectionPath: string,
     content: string,
-    operation: ModifyOperation
+    operation: ModifyOperation,
   ): Promise<ModifyResult> {
     // Step 1: Read CR file
-    const { filePath, title, yamlBody, markdownBody } = await this.sectionRepository.readCR(project, key);
+    const { filePath, title, yamlBody, markdownBody } = await this.sectionRepository.readCR(project, key)
 
     // Step 2: Find section
-    const matchedSection = await this.sectionRepository.find(project, key, sectionPath);
+    const matchedSection = await this.sectionRepository.find(project, key, sectionPath)
 
     // Step 3: Process content
-    const contentResult = ContentProcessor.processContent(content, { operation });
+    const contentResult = ContentProcessor.processContent(content, { operation })
 
     // Show warnings if any
     if (contentResult.warnings.length > 0) {
-      console.warn(`Content processing warnings for ${key}:`, contentResult.warnings);
+      console.warn(`Content processing warnings for ${key}:`, contentResult.warnings)
     }
 
     // Step 4: Handle header renaming logic
     // If content starts with a header at the same level as the section, use it as the new section header
-    const headerResult = ContentProcessor.extractNewHeader(contentResult.content);
-    let newSectionHeader: string | null = null;
-    let sectionBody = contentResult.content;
+    const headerResult = ContentProcessor.extractNewHeader(contentResult.content)
+    let newSectionHeader: string | null = null
+    let sectionBody = contentResult.content
 
     if (headerResult.hasHeader && headerResult.newHeader) {
       // Check if header is at same level as target section
-      const headerLevelMatch = headerResult.newHeader.match(/^(#+)\s/);
-      const sectionHeaderLevel = matchedSection.headerLevel;
+      const headerLevelMatch = headerResult.newHeader.match(/^(#+)\s/)
+      const sectionHeaderLevel = matchedSection.headerLevel
 
       if (headerLevelMatch && headerLevelMatch[1].length === sectionHeaderLevel) {
         // Found a header at the same level - use it as new section header
-        newSectionHeader = headerResult.newHeader;
-        sectionBody = headerResult.remainingContent;
+        newSectionHeader = headerResult.newHeader
+        sectionBody = headerResult.remainingContent
 
         console.warn(
-          `ℹ️ Section "${matchedSection.headerText}" is being renamed to "${headerResult.newHeader}". ` +
-          `This is intentional since you provided the new header in the content.`
-        );
+          `ℹ️ Section "${matchedSection.headerText}" is being renamed to "${headerResult.newHeader}". `
+          + `This is intentional since you provided the new header in the content.`,
+        )
       }
     }
 
     // Step 5: Perform replace/append/prepend with MarkdownSectionService
-    let updatedBody: string;
+    let updatedBody: string
 
     switch (operation) {
-      case 'replace':
+      case 'replace': {
         // CRITICAL BUG FIX: replaceSection keeps the old header from matchedSection
         // and adds the body we provide. So we MUST NOT include a header in the content!
         // If a new header was detected, we'll replace it after calling replaceSection.
-        const replaceContent = newSectionHeader ? sectionBody : contentResult.content;
-        updatedBody = this.markdownSectionService.replaceSection(markdownBody, matchedSection, replaceContent);
+        const replaceContent = newSectionHeader ? sectionBody : contentResult.content
+        updatedBody = this.markdownSectionService.replaceSection(markdownBody, matchedSection, replaceContent)
 
         // If header changed, replace the old header with the new one
         if (newSectionHeader) {
           // matchedSection.headerText includes the markdown prefix (e.g., "## 2. Solution Analysis")
-          const escapedOldHeader = matchedSection.headerText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const oldHeaderRegex = new RegExp(`^${escapedOldHeader}$`, 'm');
-          updatedBody = updatedBody.replace(oldHeaderRegex, newSectionHeader);
+          const escapedOldHeader = matchedSection.headerText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          const oldHeaderRegex = new RegExp(`^${escapedOldHeader}$`, 'm')
+          updatedBody = updatedBody.replace(oldHeaderRegex, newSectionHeader)
         }
-        break;
+        break
+      }
       case 'append':
         // For append, use sectionBody only (don't append the header)
-        updatedBody = this.markdownSectionService.appendToSection(markdownBody, matchedSection, sectionBody);
-        break;
+        updatedBody = this.markdownSectionService.appendToSection(markdownBody, matchedSection, sectionBody)
+        break
       case 'prepend':
         // For prepend, use sectionBody only (don't prepend the header)
-        updatedBody = this.markdownSectionService.prependToSection(markdownBody, matchedSection, sectionBody);
-        break;
+        updatedBody = this.markdownSectionService.prependToSection(markdownBody, matchedSection, sectionBody)
+        break
       default:
-        throw ToolError.toolExecution(`Invalid operation '${operation}'. Must be: replace, append, or prepend`);
+        throw ToolError.toolExecution(`Invalid operation '${operation}'. Must be: replace, append, or prepend`)
     }
 
     // Step 6: Update YAML lastModified timestamp
-    const now = new Date().toISOString();
+    const now = new Date().toISOString()
     const updatedYaml = yamlBody.replace(
       /lastModified:.*$/m,
-      `lastModified: ${now}`
-    );
+      `lastModified: ${now}`,
+    )
 
     // Step 7: Reconstruct full document
-    const updatedContent = `---\n${updatedYaml}\n---\n${updatedBody}`;
+    const updatedContent = `---\n${updatedYaml}\n---\n${updatedBody}`
 
     // Step 8: Write file
-    await this.write(project, key, updatedContent);
+    await this.write(project, key, updatedContent)
 
     return {
       success: true,
@@ -220,8 +220,8 @@ export class SectionEditor {
       filePath,
       timestamp: now,
       contentModified: contentResult.modified,
-      warningsCount: contentResult.warnings.length
-    };
+      warningsCount: contentResult.warnings.length,
+    }
   }
 
   /**
@@ -232,15 +232,15 @@ export class SectionEditor {
    */
   private async write(project: Project, key: string, content: string): Promise<void> {
     // Get ticket info to get file path
-    const ticket = await this.crService.getCR(project, key);
+    const ticket = await this.crService.getCR(project, key)
     if (!ticket) {
-      throw ToolError.toolExecution(`CR '${key}' not found in project`);
+      throw ToolError.toolExecution(`CR '${key}' not found in project`)
     }
 
-    await this.markdownService.writeFile(ticket.filePath, content);
+    await this.markdownService.writeFile(ticket.filePath, content)
 
     // Clear cache after write
-    this.sectionRepository.clearCache();
+    this.sectionRepository.clearCache()
   }
 
   /**
@@ -248,6 +248,6 @@ export class SectionEditor {
    * Useful for testing or advanced operations
    */
   getRepository(): SectionRepository {
-    return this.sectionRepository;
+    return this.sectionRepository
   }
 }

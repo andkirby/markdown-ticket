@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { jest } from '@jest/globals'
 
 /**
  * Mock implementation of MarkdownSectionService for testing
@@ -8,23 +8,22 @@ import { jest } from '@jest/globals';
  */
 
 export interface SectionMatch {
-  headerText: string;
-  headerLevel: number;
-  startLine: number;
-  endLine: number;
-  content: string;
-  hierarchicalPath: string;
+  headerText: string
+  headerLevel: number
+  startLine: number
+  endLine: number
+  content: string
+  hierarchicalPath: string
 }
 
 export class MarkdownSectionService {
   // Static methods to match the real service
-  static findSection = jest.fn();
-  static replaceSection = jest.fn();
-  static appendToSection = jest.fn();
-  static prependToSection = jest.fn();
-  static findHierarchicalSection = jest.fn();
+  static findSection = jest.fn()
+  static replaceSection = jest.fn()
+  static appendToSection = jest.fn()
+  static prependToSection = jest.fn()
+  static findHierarchicalSection = jest.fn()
 }
 
 // Export the class itself as the mock (matches typeof MarkdownSectionService)
-export const mockMarkdownSectionService = MarkdownSectionService;
-
+export const mockMarkdownSectionService = MarkdownSectionService
