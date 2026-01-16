@@ -12,7 +12,7 @@ describe('cross-Package Consistency', () => {
   describe('cLI → MCP Data Consistency', () => {
     it('should validate CLI project data in MCP tools', () => {
       // Simulate CLI project data
-      const cliProjectData = {
+      const _cliProjectData = {
         id: 'test-project',
         name: 'Test Project',
         code: 'TEST',

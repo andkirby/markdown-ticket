@@ -64,7 +64,7 @@ export class ProcessTerminator {
     if (!process)
       return { signal: 'SIGTERM', forceKilled: false }
 
-    const { signal = 'SIGTERM', gracefulTimeout = 5000 } = options || {}
+    const { signal = 'SIGTERM', gracefulTimeout: _gracefulTimeout = 5000 } = options || {}
 
     // Remove event listeners before killing process
     closeAllStreams(process)
@@ -72,9 +72,6 @@ export class ProcessTerminator {
     // Use tree-kill to kill the entire process tree
     if (process.pid) {
       const pid = process.pid
-
-      // Set up the exit listener before sending kill signal
-      const exitPromise = this.waitForExit(process)
 
       // Send SIGTERM to entire process tree
       await new Promise<void>((resolve) => {
@@ -90,7 +87,7 @@ export class ProcessTerminator {
       })
 
       // Wait for the process to actually exit
-      await exitPromise
+      await this.waitForExit(process)
     }
 
     return { signal, forceKilled: false }
@@ -129,19 +126,23 @@ export class ProcessTerminator {
 
     return new Promise((resolve) => {
       let timeoutId: NodeJS.Timeout
-      const cleanup = () => {
+
+      function cleanup(): void {
         clearTimeout(timeoutId)
         process.off('exit', onExit)
         process.off('error', onError)
       }
-      const onExit = () => {
+
+      function onExit(): void {
         cleanup()
         resolve()
       }
-      const onError = () => {
+
+      function onError(): void {
         cleanup()
         resolve()
       }
+
       process.once('exit', onExit)
       process.once('error', onError)
       timeoutId = setTimeout(() => {

@@ -9,6 +9,7 @@ import type { ServerConfig } from '../types.js'
 import { exec, spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import process from 'node:process'
 import { promisify } from 'node:util'
 import { TestFrameworkError } from '../types.js'
 

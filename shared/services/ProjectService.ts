@@ -1,5 +1,5 @@
-import type {Project} from '../models/Project.js'
-import type {Ticket} from '../models/Ticket.js'
+import type { Project } from '../models/Project.js'
+import type { Ticket } from '../models/Ticket.js'
 import type {
   IProjectCacheService,
   IProjectConfigService,
@@ -7,13 +7,14 @@ import type {
   IProjectFileSystemService,
   IProjectService,
 } from './project/types.js'
-import {CONFIG_FILES, DEFAULTS} from '../utils/constants.js'
-import {deleteFile, directoryExists, fileExists} from '../utils/file-utils.js'
-import {logQuiet} from '../utils/logger.js'
-import {buildConfigFilePath, buildProjectPath, resolvePath} from '../utils/path-resolver.js'
-import {ProjectCacheService} from './project/ProjectCacheService.js'
-import {ProjectConfigService} from './project/ProjectConfigService.js'
-import {ProjectDiscoveryService} from './project/ProjectDiscoveryService.js'
+import process from 'node:process'
+import { CONFIG_FILES, DEFAULTS } from '../utils/constants.js'
+import { deleteFile, directoryExists, fileExists } from '../utils/file-utils.js'
+import { logQuiet } from '../utils/logger.js'
+import { buildConfigFilePath, buildProjectPath, resolvePath } from '../utils/path-resolver.js'
+import { ProjectCacheService } from './project/ProjectCacheService.js'
+import { ProjectConfigService } from './project/ProjectConfigService.js'
+import { ProjectDiscoveryService } from './project/ProjectDiscoveryService.js'
 
 export class ProjectService implements IProjectService {
   private discovery: IProjectDiscoveryService
@@ -30,7 +31,8 @@ export class ProjectService implements IProjectService {
       this.config = new ProjectConfigService(quietOrDiscovery)
       this.cache = new ProjectCacheService(quietOrDiscovery, 30000)
       this.fs = new ProjectFileSystemService(quietOrDiscovery)
-    } else {
+    }
+    else {
       // New signature with dependency injection
       this.quiet = quiet || false
       this.discovery = quietOrDiscovery || new ProjectDiscoveryService(this.quiet)
@@ -156,9 +158,10 @@ export class ProjectService implements IProjectService {
       const fullCRPath = resolvePath(path, ticketsPath)
       if (!directoryExists(fullCRPath))
         return []
-      const {MarkdownService} = await import('./MarkdownService.js')
+      const { MarkdownService } = await import('./MarkdownService.js')
       return await MarkdownService.scanMarkdownFiles(fullCRPath, path)
-    } catch (e) {
+    }
+    catch (e) {
       logQuiet(this.quiet, `Error getting CRs for project ${path}:`, e)
       return []
     }
@@ -177,7 +180,8 @@ export class ProjectService implements IProjectService {
           deleteFile(counterFile)
       }
       this.clearCache()
-    } catch (e) {
+    }
+    catch (e) {
       logQuiet(this.quiet, 'Error deleting project:', e)
       throw e
     }
@@ -216,14 +220,15 @@ class ProjectFileSystemService implements IProjectFileSystemService {
   }
 
   async getSystemDirectories(p?: string) {
-    const fs = await import('node:fs/promises');
-    const path = await import('node:path');
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
     const os = await import('node:os')
     const targetPath = path.resolve(p || os.homedir())
     try {
       if (!(await fs.stat(targetPath)).isDirectory())
         throw new Error('Not a directory')
-    } catch {
+    }
+    catch {
       throw new Error('Directory not found')
     }
     const entries = await fs.readdir(targetPath)
@@ -234,8 +239,9 @@ class ProjectFileSystemService implements IProjectFileSystemService {
       try {
         const ep = path.join(targetPath, e)
         if ((await fs.stat(ep)).isDirectory())
-          dirs.push({name: e, path: ep, isDirectory: true})
-      } catch {
+          dirs.push({ name: e, path: ep, isDirectory: true })
+      }
+      catch {
       }
     }
     dirs.sort((a, b) => a.name.localeCompare(b.name))
@@ -248,20 +254,21 @@ class ProjectFileSystemService implements IProjectFileSystemService {
 
   async checkDirectoryExists(p: string): Promise<{ exists: boolean }> {
     if (!p || typeof p !== 'string')
-      return {exists: false}
+      return { exists: false }
     try {
-      const fs = await import('node:fs/promises');
-      const path = await import('node:path');
+      const fs = await import('node:fs/promises')
+      const path = await import('node:path')
       const os = await import('node:os')
-      const rp = path.resolve(p);
+      const rp = path.resolve(p)
       const allowed = [os.homedir(), '/tmp', '/var/tmp', process.cwd(), '/Users']
       if (!allowed.some(ap => rp.startsWith(ap) || rp === ap)) {
         logQuiet(this.quiet, `⚠️ Path denied: ${rp}`)
-        return {exists: false}
+        return { exists: false }
       }
-      return {exists: (await fs.stat(rp)).isDirectory()}
-    } catch {
-      return {exists: false}
+      return { exists: (await fs.stat(rp)).isDirectory() }
+    }
+    catch {
+      return { exists: false }
     }
   }
 }

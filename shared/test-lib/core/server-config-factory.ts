@@ -12,6 +12,7 @@
 
 import type { PortConfig } from '../config/ports.js'
 import type { ServerConfig } from '../types.js'
+import process from 'node:process'
 import { TestFrameworkError } from '../types.js'
 
 /**

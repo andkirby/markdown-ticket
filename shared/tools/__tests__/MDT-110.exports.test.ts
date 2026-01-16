@@ -13,11 +13,12 @@
  */
 
 // We'll verify package.json exports by reading the file directly in tests
+import fs from 'node:fs'
+import path from 'node:path'
+import { ProjectValidator as BrowserValidator } from '../ProjectValidator'
+import { ProjectValidator as NodeValidator } from '../ProjectValidator.node'
 
 describe('mDT-110: Conditional Exports Configuration', () => {
-  const fs = require('node:fs')
-  const path = require('node:path')
-
   // Helper to read package.json
   const getPackageJson = () => {
     const pkgPath = path.resolve(__dirname, '../../package.json')
@@ -76,9 +77,6 @@ describe('mDT-110: Conditional Exports Configuration', () => {
   // P3-1: Interface compatibility
   describe('interface compatibility', () => {
     it('should export same interface from both implementations', () => {
-      const BrowserValidator = require('../ProjectValidator').ProjectValidator
-      const NodeValidator = require('../ProjectValidator.node').ProjectValidator
-
       // Both should have static validation methods
       const staticMethods = [
         'validateName',
@@ -106,8 +104,7 @@ describe('mDT-110: Conditional Exports Configuration', () => {
     it('should allow imports from @mdt/shared/tools/ProjectValidator', () => {
       // This test verifies the import path works
       // The actual routing happens at build/runtime based on environment
-      const { ProjectValidator } = require('../ProjectValidator')
-      expect(ProjectValidator).toBeDefined()
+      expect(BrowserValidator).toBeDefined()
     })
   })
 })

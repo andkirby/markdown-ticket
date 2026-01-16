@@ -199,16 +199,6 @@ export class ProjectManager {
         : undefined
 
       this.projectService.registerProject(project, documentDiscoverySettings)
-
-      if (input.globalOnly) {
-        console.log(`Global-only mode: Project registered only in global registry`)
-      }
-      else {
-        console.log(`Project-first mode: Project registered in global registry with local config`)
-      }
-    }
-    else {
-      console.log(`Auto-discovery mode: Project created with local config only (no global registry entry)`)
     }
 
     // Create local config based on strategy

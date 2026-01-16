@@ -7,6 +7,8 @@
  * - MCP: 4002 (dev server uses 3002)
  */
 
+import process from 'node:process'
+
 export interface PortConfig {
   readonly frontend: number
   readonly backend: number

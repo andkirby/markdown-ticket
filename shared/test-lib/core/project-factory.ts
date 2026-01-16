@@ -127,7 +127,7 @@ export class ProjectFactory {
    * Create a test project with default configuration
    */
   async createProject(
-    type: 'empty' = 'empty',
+    _type: 'empty' = 'empty',
     config: ProjectConfig = {},
   ): Promise<ProjectData> {
     // Generate unique code if not provided

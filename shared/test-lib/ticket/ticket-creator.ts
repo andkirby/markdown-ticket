@@ -60,21 +60,35 @@ export abstract class BaseTicketCreator implements ITicketCreator {
     const errors: { field: string, message: string }[] = []
     const warnings: { field: string, message: string }[] = []
 
-    if (!data.title.trim()) { errors.push({ field: 'title', message: 'Title is required' }) }
-    else if (data.title.length > 100) { warnings.push({ field: 'title', message: 'Title longer than 100 characters' }) }
+    if (!data.title.trim()) {
+      errors.push({ field: 'title', message: 'Title is required' })
+    }
+    else if (data.title.length > 100) {
+      warnings.push({ field: 'title', message: 'Title longer than 100 characters' })
+    }
 
-    if (!data.type.trim()) { errors.push({ field: 'type', message: 'Type is required' }) }
-    else if (!this.validTypes.includes(data.type as CRType)) { errors.push({ field: 'type', message: `Type must be one of: ${this.validTypes.join(', ')}` }) }
+    if (!data.type.trim()) {
+      errors.push({ field: 'type', message: 'Type is required' })
+    }
+    else if (!this.validTypes.includes(data.type as CRType)) {
+      errors.push({ field: 'type', message: `Type must be one of: ${this.validTypes.join(', ')}` })
+    }
 
-    if (!data.content?.trim()) { errors.push({ field: 'content', message: 'Content is required' }) }
+    if (!data.content?.trim()) {
+      errors.push({ field: 'content', message: 'Content is required' })
+    }
 
-    if (data.priority && !this.validPriorities.includes(data.priority as CRPriority)) { errors.push({ field: 'priority', message: `Priority must be one of: ${this.validPriorities.join(', ')}` }) }
+    if (data.priority && !this.validPriorities.includes(data.priority as CRPriority)) {
+      errors.push({ field: 'priority', message: `Priority must be one of: ${this.validPriorities.join(', ')}` })
+    }
 
     if (data.content) {
       const requiredSections = ['## 1. Description', '## 2. Rationale', '## 3. Solution Analysis', '## 4. Implementation Specification', '## 5. Acceptance Criteria']
 
       requiredSections.forEach((section) => {
-        if (!data.content?.includes(section)) { errors.push({ field: 'content', message: `Missing required section: ${section}` }) }
+        if (!data.content?.includes(section)) {
+          errors.push({ field: 'content', message: `Missing required section: ${section}` })
+        }
       })
     }
 

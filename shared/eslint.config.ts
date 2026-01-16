@@ -7,5 +7,7 @@ export default antfu({
     'dist',
     'node_modules',
     'coverage',
+    'test-lib/README.md',
+    'test-lib/write-tests-guide.md',
   ],
 })
