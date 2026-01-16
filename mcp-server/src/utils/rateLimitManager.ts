@@ -5,23 +5,25 @@
  * Tracks requests per tool with configurable limits.
  */
 
+import process from 'node:process'
+
 export interface RateLimitConfig {
-  enabled: boolean;
-  maxRequests: number;
-  windowMs: number;
+  enabled: boolean
+  maxRequests: number
+  windowMs: number
 }
 
 export interface RateLimitResult {
-  allowed: boolean;
-  remainingRequests: number;
-  resetTime: Date;
-  retryAfter?: number; // seconds until retry
+  allowed: boolean
+  remainingRequests: number
+  resetTime: Date
+  retryAfter?: number // seconds until retry
 }
 
 export interface ToolRateLimitInfo {
-  count: number;
-  windowStart: number;
-  lastRequest: number;
+  count: number
+  windowStart: number
+  lastRequest: number
 }
 
 /**
@@ -35,18 +37,19 @@ export interface ToolRateLimitInfo {
  * - Logging for monitoring
  */
 export class RateLimitManager {
-  private config: RateLimitConfig;
-  private toolLimits = new Map<string, ToolRateLimitInfo>();
-  private logger: (message: string) => void;
+  private config: RateLimitConfig
+  private toolLimits = new Map<string, ToolRateLimitInfo>()
+  private logger: (message: string) => void
 
   constructor(config: RateLimitConfig, logger?: (message: string) => void) {
-    this.config = config;
-    this.logger = logger || console.error;
+    this.config = config
+    this.logger = logger || console.error
 
     if (this.config.enabled) {
-      this.logger(`🛡️  Rate limiting enabled: ${this.config.maxRequests} requests per ${this.config.windowMs / 1000}s per tool`);
-    } else {
-      this.logger(`ℹ️  Rate limiting disabled`);
+      this.logger(`🛡️  Rate limiting enabled: ${this.config.maxRequests} requests per ${this.config.windowMs / 1000}s per tool`)
+    }
+    else {
+      this.logger(`ℹ️  Rate limiting disabled`)
     }
   }
 
@@ -62,80 +65,80 @@ export class RateLimitManager {
       return {
         allowed: true,
         remainingRequests: this.config.maxRequests,
-        resetTime: new Date(Date.now() + this.config.windowMs)
-      };
+        resetTime: new Date(Date.now() + this.config.windowMs),
+      }
     }
 
-    const now = Date.now();
-    const toolInfo = this.toolLimits.get(toolName);
+    const now = Date.now()
+    const toolInfo = this.toolLimits.get(toolName)
 
     // Initialize tool info if not exists
     if (!toolInfo) {
       this.toolLimits.set(toolName, {
         count: 1,
         windowStart: now,
-        lastRequest: now
-      });
+        lastRequest: now,
+      })
 
       return {
         allowed: true,
         remainingRequests: this.config.maxRequests - 1,
-        resetTime: new Date(now + this.config.windowMs)
-      };
+        resetTime: new Date(now + this.config.windowMs),
+      }
     }
 
     // Check if we need to slide the window
-    const windowElapsed = now - toolInfo.windowStart;
+    const windowElapsed = now - toolInfo.windowStart
     if (windowElapsed >= this.config.windowMs) {
       // Window has passed, reset
       this.toolLimits.set(toolName, {
         count: 1,
         windowStart: now,
-        lastRequest: now
-      });
+        lastRequest: now,
+      })
 
       return {
         allowed: true,
         remainingRequests: this.config.maxRequests - 1,
-        resetTime: new Date(now + this.config.windowMs)
-      };
+        resetTime: new Date(now + this.config.windowMs),
+      }
     }
 
     // Check if within rate limit
     if (toolInfo.count < this.config.maxRequests) {
       // Increment counter
-      const newCount = toolInfo.count + 1;
+      const newCount = toolInfo.count + 1
       this.toolLimits.set(toolName, {
         ...toolInfo,
         count: newCount,
-        lastRequest: now
-      });
+        lastRequest: now,
+      })
 
       // Debug log
       if (newCount % 10 === 0 || newCount > 95) {
-        this.logger(`📊 Rate limit status for '${toolName}': ${newCount}/${this.config.maxRequests} used`);
+        this.logger(`📊 Rate limit status for '${toolName}': ${newCount}/${this.config.maxRequests} used`)
       }
 
       return {
         allowed: true,
         remainingRequests: this.config.maxRequests - newCount,
-        resetTime: new Date(toolInfo.windowStart + this.config.windowMs)
-      };
+        resetTime: new Date(toolInfo.windowStart + this.config.windowMs),
+      }
     }
 
     // Rate limit exceeded
-    const resetTime = toolInfo.windowStart + this.config.windowMs;
-    const retryAfter = Math.ceil((resetTime - now) / 1000);
+    const resetTime = toolInfo.windowStart + this.config.windowMs
+    const retryAfter = Math.ceil((resetTime - now) / 1000)
 
     // Log rate limit event
-    this.logger(`🚫 Rate limit exceeded for tool '${toolName}': ${toolInfo.count}/${this.config.maxRequests} used, retry after ${retryAfter}s`);
+    this.logger(`🚫 Rate limit exceeded for tool '${toolName}': ${toolInfo.count}/${this.config.maxRequests} used, retry after ${retryAfter}s`)
 
     return {
       allowed: false,
       remainingRequests: 0,
       resetTime: new Date(resetTime),
-      retryAfter
-    };
+      retryAfter,
+    }
   }
 
   /**
@@ -145,19 +148,19 @@ export class RateLimitManager {
    * @returns Current rate limit info or null if tool not tracked
    */
   getToolStatus(toolName: string): ToolRateLimitInfo | null {
-    const info = this.toolLimits.get(toolName);
+    const info = this.toolLimits.get(toolName)
     if (!info) {
-      return null;
+      return null
     }
 
     // Check if window has expired
-    const now = Date.now();
+    const now = Date.now()
     if (now - info.windowStart >= this.config.windowMs) {
-      this.toolLimits.delete(toolName);
-      return null;
+      this.toolLimits.delete(toolName)
+      return null
     }
 
-    return { ...info };
+    return { ...info }
   }
 
   /**
@@ -166,35 +169,35 @@ export class RateLimitManager {
    * @param toolName - Name of the tool to reset
    */
   resetToolLimit(toolName: string): void {
-    this.toolLimits.delete(toolName);
-    this.logger(`🔄 Rate limit reset for tool '${toolName}'`);
+    this.toolLimits.delete(toolName)
+    this.logger(`🔄 Rate limit reset for tool '${toolName}'`)
   }
 
   /**
    * Reset all rate limits
    */
   resetAllLimits(): void {
-    const count = this.toolLimits.size;
-    this.toolLimits.clear();
-    this.logger(`🔄 Reset ${count} tool rate limits`);
+    const count = this.toolLimits.size
+    this.toolLimits.clear()
+    this.logger(`🔄 Reset ${count} tool rate limits`)
   }
 
   /**
    * Cleanup expired entries to prevent memory leaks
    */
   cleanup(): void {
-    const now = Date.now();
-    let cleaned = 0;
+    const now = Date.now()
+    let cleaned = 0
 
     for (const [toolName, info] of this.toolLimits.entries()) {
       if (now - info.windowStart >= this.config.windowMs) {
-        this.toolLimits.delete(toolName);
-        cleaned++;
+        this.toolLimits.delete(toolName)
+        cleaned++
       }
     }
 
     if (cleaned > 0) {
-      this.logger(`🧹 Cleaned up ${cleaned} expired rate limit entries`);
+      this.logger(`🧹 Cleaned up ${cleaned} expired rate limit entries`)
     }
   }
 
@@ -202,39 +205,39 @@ export class RateLimitManager {
    * Get statistics for monitoring
    */
   getStats(): {
-    enabled: boolean;
-    totalTools: number;
-    activeTools: number;
-    config: RateLimitConfig;
+    enabled: boolean
+    totalTools: number
+    activeTools: number
+    config: RateLimitConfig
   } {
-    const now = Date.now();
+    const now = Date.now()
     const activeTools = Array.from(this.toolLimits.values()).filter(
-      info => now - info.windowStart < this.config.windowMs
-    ).length;
+      info => now - info.windowStart < this.config.windowMs,
+    ).length
 
     return {
       enabled: this.config.enabled,
       totalTools: this.toolLimits.size,
       activeTools,
-      config: { ...this.config }
-    };
+      config: { ...this.config },
+    }
   }
 
   /**
    * Create RateLimitManager from environment variables
    */
   static fromEnvironment(logger?: (message: string) => void): RateLimitManager {
-    const enabled = process.env.MCP_SECURITY_RATE_LIMITING !== 'false';
-    const maxRequests = parseInt(process.env.MCP_RATE_LIMIT_MAX || '100');
-    const windowMs = parseInt(process.env.MCP_RATE_LIMIT_WINDOW_MS || '60000');
+    const enabled = process.env.MCP_SECURITY_RATE_LIMITING !== 'false'
+    const maxRequests = Number.parseInt(process.env.MCP_RATE_LIMIT_MAX || '100')
+    const windowMs = Number.parseInt(process.env.MCP_RATE_LIMIT_WINDOW_MS || '60000')
 
     return new RateLimitManager(
       {
         enabled,
         maxRequests,
-        windowMs
+        windowMs,
       },
-      logger
-    );
+      logger,
+    )
   }
 }

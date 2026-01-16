@@ -8,13 +8,13 @@
  * import { TestEnvironment } from '@mdt/shared/test-lib';
  */
 
-import { TestEnvironment as SharedTestEnvironment } from '@mdt/shared/test-lib';
-import { existsSync, mkdirSync, rmSync, writeFileSync, statSync } from 'fs';
-import { join, resolve, sep } from 'path';
-
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import process from 'node:process'
+import { TestEnvironment as SharedTestEnvironment } from '@mdt/shared/test-lib'
 
 export interface ProjectStructure {
-  [key: string]: boolean | string; // Directory (true) or file content (string)
+  [key: string]: boolean | string // Directory (true) or file content (string)
 }
 
 /**
@@ -22,17 +22,17 @@ export interface ProjectStructure {
  */
 export class TestEnvironmentError extends Error {
   constructor(message: string) {
-    super(message);
-    this.name = 'TestEnvironmentError';
+    super(message)
+    this.name = 'TestEnvironmentError'
   }
 }
 
 export class TestEnvironment {
-  private sharedTestEnv: SharedTestEnvironment;
-  private projectDirs: Map<string, string> = new Map();
+  private sharedTestEnv: SharedTestEnvironment
+  private projectDirs: Map<string, string> = new Map()
 
   constructor() {
-    this.sharedTestEnv = new SharedTestEnvironment();
+    this.sharedTestEnv = new SharedTestEnvironment()
   }
 
   /**
@@ -41,12 +41,13 @@ export class TestEnvironment {
    */
   async setup(): Promise<void> {
     try {
-      await this.sharedTestEnv.setup();
-    } catch (error) {
+      await this.sharedTestEnv.setup()
+    }
+    catch (error) {
       if (error instanceof TestEnvironmentError) {
-        throw error;
+        throw error
       }
-      throw new TestEnvironmentError(`Setup failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new TestEnvironmentError(`Setup failed: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -56,9 +57,10 @@ export class TestEnvironment {
    */
   getTempDir(): string {
     try {
-      return this.sharedTestEnv.getTempDirectory();
-    } catch (error) {
-      throw new TestEnvironmentError(error instanceof Error ? error.message : String(error));
+      return this.sharedTestEnv.getTempDirectory()
+    }
+    catch (error) {
+      throw new TestEnvironmentError(error instanceof Error ? error.message : String(error))
     }
   }
 
@@ -68,9 +70,10 @@ export class TestEnvironment {
    */
   getConfigDir(): string {
     try {
-      return this.sharedTestEnv.getConfigDirectory();
-    } catch (error) {
-      throw new TestEnvironmentError(error instanceof Error ? error.message : String(error));
+      return this.sharedTestEnv.getConfigDirectory()
+    }
+    catch (error) {
+      throw new TestEnvironmentError(error instanceof Error ? error.message : String(error))
     }
   }
 
@@ -80,7 +83,7 @@ export class TestEnvironment {
    */
   getProjectRoot(): string {
     // Assuming tests are run from the mcp-server directory
-    return process.cwd();
+    return process.cwd()
   }
 
   /**
@@ -91,35 +94,36 @@ export class TestEnvironment {
    */
   createProjectDir(projectName: string): string {
     if (!this.isInitialized()) {
-      throw new TestEnvironmentError('Test environment not initialized. Call setup() first.');
+      throw new TestEnvironmentError('Test environment not initialized. Call setup() first.')
     }
 
     // Validate project name
     if (!projectName || projectName.trim().length === 0) {
-      throw new TestEnvironmentError('Project name cannot be empty');
+      throw new TestEnvironmentError('Project name cannot be empty')
     }
 
     // Sanitize project name for cross-platform compatibility
-    const sanitizedName = projectName.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const sanitizedName = projectName.replace(/[^\w-]/g, '_')
 
     try {
-      const projectDir = join(this.getTempDir(), 'projects', sanitizedName);
-      mkdirSync(projectDir, { recursive: true });
+      const projectDir = join(this.getTempDir(), 'projects', sanitizedName)
+      mkdirSync(projectDir, { recursive: true })
 
       // Verify directory was created
       if (!existsSync(projectDir)) {
-        throw new TestEnvironmentError(`Failed to create project directory: ${projectDir}`);
+        throw new TestEnvironmentError(`Failed to create project directory: ${projectDir}`)
       }
 
       // Store reference for cleanup
-      this.projectDirs.set(projectName, projectDir);
+      this.projectDirs.set(projectName, projectDir)
 
-      return projectDir;
-    } catch (error) {
+      return projectDir
+    }
+    catch (error) {
       if (error instanceof TestEnvironmentError) {
-        throw error;
+        throw error
       }
-      throw new TestEnvironmentError(`Failed to create project directory: ${error instanceof Error ? error.message : String(error)}`);
+      throw new TestEnvironmentError(`Failed to create project directory: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -131,52 +135,55 @@ export class TestEnvironment {
    */
   createProjectStructure(projectName: string, structure: ProjectStructure): void {
     if (!this.isInitialized()) {
-      throw new TestEnvironmentError('Test environment not initialized. Call setup() first.');
+      throw new TestEnvironmentError('Test environment not initialized. Call setup() first.')
     }
 
     if (!structure || typeof structure !== 'object') {
-      throw new TestEnvironmentError('Project structure must be a valid object');
+      throw new TestEnvironmentError('Project structure must be a valid object')
     }
 
     try {
-      const projectDir = this.projectDirs.get(projectName) || this.createProjectDir(projectName);
+      const projectDir = this.projectDirs.get(projectName) || this.createProjectDir(projectName)
 
       for (const [path, value] of Object.entries(structure)) {
         // Validate path
         if (!path || typeof path !== 'string') {
-          throw new TestEnvironmentError(`Invalid path in structure: ${path}`);
+          throw new TestEnvironmentError(`Invalid path in structure: ${path}`)
         }
 
-        const fullPath = join(projectDir, path);
+        const fullPath = join(projectDir, path)
 
         if (value === true) {
           // It's a directory
-          mkdirSync(fullPath, { recursive: true });
+          mkdirSync(fullPath, { recursive: true })
 
           // Verify directory was created
           if (!existsSync(fullPath)) {
-            throw new TestEnvironmentError(`Failed to create directory: ${fullPath}`);
+            throw new TestEnvironmentError(`Failed to create directory: ${fullPath}`)
           }
-        } else if (typeof value === 'string') {
+        }
+        else if (typeof value === 'string') {
           // It's a file - create parent directories if needed
-          const parentDir = resolve(fullPath, '..');
-          mkdirSync(parentDir, { recursive: true });
+          const parentDir = resolve(fullPath, '..')
+          mkdirSync(parentDir, { recursive: true })
 
-          writeFileSync(fullPath, value, 'utf8');
+          writeFileSync(fullPath, value, 'utf8')
 
           // Verify file was created
           if (!existsSync(fullPath)) {
-            throw new TestEnvironmentError(`Failed to create file: ${fullPath}`);
+            throw new TestEnvironmentError(`Failed to create file: ${fullPath}`)
           }
-        } else {
-          throw new TestEnvironmentError(`Invalid value for path "${path}". Expected true for directory or string for file content.`);
+        }
+        else {
+          throw new TestEnvironmentError(`Invalid value for path "${path}". Expected true for directory or string for file content.`)
         }
       }
-    } catch (error) {
+    }
+    catch (error) {
       if (error instanceof TestEnvironmentError) {
-        throw error;
+        throw error
       }
-      throw new TestEnvironmentError(`Failed to create project structure: ${error instanceof Error ? error.message : String(error)}`);
+      throw new TestEnvironmentError(`Failed to create project structure: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -186,11 +193,12 @@ export class TestEnvironment {
    */
   async cleanup(): Promise<void> {
     try {
-      await this.sharedTestEnv.cleanup();
-      this.projectDirs.clear();
-    } catch (error) {
+      await this.sharedTestEnv.cleanup()
+      this.projectDirs.clear()
+    }
+    catch (error) {
       // Log error but don't throw - cleanup failures shouldn't crash tests
-      console.error('Test environment cleanup failed:', error instanceof Error ? error.message : String(error));
+      console.error('Test environment cleanup failed:', error instanceof Error ? error.message : String(error))
     }
   }
 
@@ -199,6 +207,6 @@ export class TestEnvironment {
    * @returns True if setup has been called successfully
    */
   isInitialized(): boolean {
-    return this.sharedTestEnv.isInitialized();
+    return this.sharedTestEnv.isInitialized()
   }
 }

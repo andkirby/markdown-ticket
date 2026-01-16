@@ -10,19 +10,19 @@
  * - Fallback resolution stub (full implementation in MDT-114 feature work)
  */
 
-import { MarkdownSectionService, SectionMatch } from '@mdt/shared/services/MarkdownSectionService.js';
-import { ToolError } from '../../utils/toolError.js';
+import type { MarkdownSectionService, SectionMatch } from '@mdt/shared/services/MarkdownSectionService.js'
+import { ToolError } from '../../utils/toolError.js'
 
 export interface PathResolutionResult {
-  match: SectionMatch;
-  normalizedPath: string;
+  match: SectionMatch
+  normalizedPath: string
 }
 
 export interface ValidationResult {
-  valid: boolean;
-  normalized?: string;
-  errors: string[];
-  suggestions: string[];
+  valid: boolean
+  normalized?: string
+  errors: string[]
+  suggestions: string[]
 }
 
 /**
@@ -42,18 +42,18 @@ export class PathResolver {
    * @throws ToolError if section not found or multiple matches
    */
   resolve(document: string, path: string, key?: string): PathResolutionResult {
-    const normalized = this.validatePath(path);
+    const normalized = this.validatePath(path)
 
     // Use MarkdownSectionService for section finding
-    const matches = this.markdownSectionService.findSection(document, normalized);
+    const matches = this.markdownSectionService.findSection(document, normalized)
 
     // Validate uniqueness
-    const uniqueMatch = this.validateUnique(matches, normalized, key);
+    const uniqueMatch = this.validateUnique(matches, normalized, key)
 
     return {
       match: uniqueMatch,
-      normalizedPath: normalized
-    };
+      normalizedPath: normalized,
+    }
   }
 
   /**
@@ -63,7 +63,7 @@ export class PathResolver {
    * @returns All sections in document
    */
   resolveAll(document: string): SectionMatch[] {
-    return this.markdownSectionService.findSection(document, '');
+    return this.markdownSectionService.findSection(document, '')
   }
 
   /**
@@ -75,17 +75,17 @@ export class PathResolver {
    * @throws ToolError if path is invalid
    */
   validatePath(path: string, availableSections?: string[]): string {
-    const result = this.validate(path, availableSections);
+    const result = this.validate(path, availableSections)
 
     if (!result.valid) {
-      const errorMsg = result.errors.join('\n');
+      const errorMsg = result.errors.join('\n')
       const suggestions = result.suggestions.length > 0
-        ? '\n' + result.suggestions.join('\n')
-        : '';
-      throw ToolError.toolExecution(`${errorMsg}${suggestions}`);
+        ? `\n${result.suggestions.join('\n')}`
+        : ''
+      throw ToolError.toolExecution(`${errorMsg}${suggestions}`)
     }
 
-    return result.normalized || path;
+    return result.normalized || path
   }
 
   /**
@@ -98,7 +98,7 @@ export class PathResolver {
    */
   parseHierarchical(path: string): string[] {
     if (!path.includes(' / ')) {
-      return [path];
+      return [path]
     }
 
     // Stub: Basic split for now
@@ -106,7 +106,7 @@ export class PathResolver {
     // - Multi-level paths
     // - Path validation
     // - Path normalization
-    return path.split(' / ').map(p => p.trim());
+    return path.split(' / ').map(p => p.trim())
   }
 
   /**
@@ -119,62 +119,64 @@ export class PathResolver {
    * @returns Validation result with normalization and suggestions
    */
   validate(path: string, availableSections: string[] = []): ValidationResult {
-    const errors: string[] = [];
-    const suggestions: string[] = [];
+    const errors: string[] = []
+    const suggestions: string[] = []
 
     // Basic format validation
     if (!path || path.trim() === '') {
-      errors.push('Section identifier cannot be empty');
-      return { valid: false, errors, suggestions };
+      errors.push('Section identifier cannot be empty')
+      return { valid: false, errors, suggestions }
     }
 
-    const normalized = this.normalizePath(path);
+    const normalized = this.normalizePath(path)
 
     // Check against available sections if provided
     if (availableSections.length > 0) {
-      const normalizedInput = this.normalizeForMatching(normalized);
+      const normalizedInput = this.normalizeForMatching(normalized)
 
       // Find exact matches (comparing normalized forms)
-      const exactMatches = availableSections.filter(s => {
-        const normalizedSection = this.normalizeForMatching(s);
-        return normalizedSection === normalizedInput;
-      });
+      const exactMatches = availableSections.filter((s) => {
+        const normalizedSection = this.normalizeForMatching(s)
+        return normalizedSection === normalizedInput
+      })
 
       if (exactMatches.length === 0) {
-        errors.push(`Section "${normalized}" not found`);
+        errors.push(`Section "${normalized}" not found`)
 
         // Try to find partial matches for suggestions
-        const partialMatches = availableSections.filter(s => {
-          const normalizedSection = this.normalizeForMatching(s);
+        const partialMatches = availableSections.filter((s) => {
+          const normalizedSection = this.normalizeForMatching(s)
           return (
-            normalizedSection.includes(normalizedInput) ||
-            normalizedInput.includes(normalizedSection)
-          );
-        });
+            normalizedSection.includes(normalizedInput)
+            || normalizedInput.includes(normalizedSection)
+          )
+        })
 
         if (partialMatches.length > 0) {
-          suggestions.push('Did you mean one of:');
-          suggestions.push(...partialMatches.slice(0, 5).map((s) => `  "${s}"`));
-        } else if (availableSections.length <= 10) {
-          suggestions.push('Available sections:');
-          suggestions.push(...availableSections.map((s) => `  "${s}"`));
-        } else {
+          suggestions.push('Did you mean one of:')
+          suggestions.push(...partialMatches.slice(0, 5).map(s => `  "${s}"`))
+        }
+        else if (availableSections.length <= 10) {
+          suggestions.push('Available sections:')
+          suggestions.push(...availableSections.map(s => `  "${s}"`))
+        }
+        else {
           suggestions.push(
-            `Use manage_cr_sections with operation="list" to see all ${availableSections.length} available sections`
-          );
+            `Use manage_cr_sections with operation="list" to see all ${availableSections.length} available sections`,
+          )
         }
 
-        return { valid: false, errors, suggestions };
+        return { valid: false, errors, suggestions }
       }
 
       if (exactMatches.length > 1) {
         errors.push(
-          `Multiple sections match "${normalized}". Please use a hierarchical path or the exact heading format.`
-        );
-        suggestions.push('Matching sections:');
-        suggestions.push(...exactMatches.map((s) => `  "${s}"`));
+          `Multiple sections match "${normalized}". Please use a hierarchical path or the exact heading format.`,
+        )
+        suggestions.push('Matching sections:')
+        suggestions.push(...exactMatches.map(s => `  "${s}"`))
 
-        return { valid: false, errors, suggestions };
+        return { valid: false, errors, suggestions }
       }
 
       // Single exact match found
@@ -182,18 +184,18 @@ export class PathResolver {
         valid: true,
         normalized: exactMatches[0],
         errors: [],
-        suggestions: []
-      };
+        suggestions: [],
+      }
     }
 
     // No available sections provided - just validate format
     // Check for hierarchical path format
     if (normalized.includes(' / ')) {
-      const parts = normalized.split(' / ');
+      const parts = normalized.split(' / ')
       if (parts.length > 2) {
-        errors.push('Section path too deep - maximum 2 levels: "Parent / Child"');
-        suggestions.push('Use simpler section name or flatten document structure');
-        return { valid: false, errors, suggestions };
+        errors.push('Section path too deep - maximum 2 levels: "Parent / Child"')
+        suggestions.push('Use simpler section name or flatten document structure')
+        return { valid: false, errors, suggestions }
       }
     }
 
@@ -202,8 +204,8 @@ export class PathResolver {
       valid: true,
       normalized,
       errors: [],
-      suggestions: []
-    };
+      suggestions: [],
+    }
   }
 
   /**
@@ -216,12 +218,12 @@ export class PathResolver {
    * @returns Array of matching sections
    */
   findMatch(sections: SectionMatch[], path: string): SectionMatch[] {
-    const normalized = this.normalizeForMatching(path);
+    const normalized = this.normalizeForMatching(path)
 
     return sections.filter((section) => {
-      const normalizedHeader = this.normalizeForMatching(section.headerText);
-      return normalizedHeader.includes(normalized);
-    });
+      const normalizedHeader = this.normalizeForMatching(section.headerText)
+      return normalizedHeader.includes(normalized)
+    })
   }
 
   /**
@@ -233,14 +235,14 @@ export class PathResolver {
    * - Context-aware resolution
    * - User prompts for disambiguation
    *
-   * @param document - Full markdown document content
-   * @param path - Ambiguous path
+   * @param _document - Full markdown document content
+   * @param _path - Ambiguous path
    * @returns Best-guess section match or null
    */
-  fallbackResolution(document: string, path: string): SectionMatch | null {
+  fallbackResolution(_document: string, _path: string): SectionMatch | null {
     // Stub: Return null for now
     // Full implementation in MDT-114 feature
-    return null;
+    return null
   }
 
   /**
@@ -254,18 +256,18 @@ export class PathResolver {
    */
   private validateUnique(matches: SectionMatch[], path: string, key?: string): SectionMatch {
     if (matches.length === 0) {
-      const keyMsg = key ? ` in CR ${key}` : '';
-      throw ToolError.toolExecution(`Section '${path}' not found${keyMsg}.`);
+      const keyMsg = key ? ` in CR ${key}` : ''
+      throw ToolError.toolExecution(`Section '${path}' not found${keyMsg}.`)
     }
 
     if (matches.length > 1) {
-      const paths = matches.map((m) => m.hierarchicalPath).join('\n  - ');
+      const paths = matches.map(m => m.hierarchicalPath).join('\n  - ')
       throw ToolError.toolExecution(
-        `Multiple sections match '${path}'. Please use hierarchical path:\n  - ${paths}`
-      );
+        `Multiple sections match '${path}'. Please use hierarchical path:\n  - ${paths}`,
+      )
     }
 
-    return matches[0];
+    return matches[0]
   }
 
   /**
@@ -273,7 +275,7 @@ export class PathResolver {
    * Removes extra whitespace but preserves format
    */
   private normalizePath(path: string): string {
-    return path.trim();
+    return path.trim()
   }
 
   /**
@@ -285,6 +287,6 @@ export class PathResolver {
       .replace(/^#+\s*/, '') // Remove leading # characters
       .replace(/^\d+\.\s*/, '') // Remove leading numbers like "1. "
       .trim()
-      .toLowerCase();
+      .toLowerCase()
   }
 }

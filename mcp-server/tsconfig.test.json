@@ -2,15 +2,15 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "ES2020",
-    "noEmit": true,
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "noEmit": true
   },
+  "references": [
+    { "path": "../shared/tsconfig.json" }
+  ],
   "include": [
     "tests/**/*.ts",
     "**/*.test.ts",
     "**/*.spec.ts"
-  ],
-  "references": [
-    { "path": "../shared/tsconfig.json" }
   ]
 }

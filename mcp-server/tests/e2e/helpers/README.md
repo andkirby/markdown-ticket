@@ -9,34 +9,34 @@ The `TestEnvironment` class provides isolated temporary directories for E2E test
 ### Usage Example
 
 ```typescript
-import { TestEnvironment } from './test-environment';
+import { TestEnvironment } from './test-environment'
 
 describe('My E2E Test', () => {
-  let testEnv: TestEnvironment;
+  let testEnv: TestEnvironment
 
   beforeEach(async () => {
-    testEnv = new TestEnvironment();
-    await testEnv.setup();
-  });
+    testEnv = new TestEnvironment()
+    await testEnv.setup()
+  })
 
   afterEach(async () => {
-    await testEnv.cleanup();
-  });
+    await testEnv.cleanup()
+  })
 
   it('should create isolated test environment', async () => {
-    const tempDir = testEnv.getTempDir();
-    const configDir = testEnv.getConfigDir();
+    const tempDir = testEnv.getTempDir()
+    const configDir = testEnv.getConfigDir()
 
     // Create a test project structure
-    const projectDir = testEnv.createProjectDir('test-project');
+    const projectDir = testEnv.createProjectDir('test-project')
 
     testEnv.createProjectStructure('test-project', {
-      'docs/CRs': true,                    // Directory
-      '.mdt-config.toml': 'code = TEST',   // File with content
-      'README.md': '# Test Project'         // File with content
-    });
-  });
-});
+      'docs/CRs': true, // Directory
+      '.mdt-config.toml': 'code = TEST', // File with content
+      'README.md': '# Test Project' // File with content
+    })
+  })
+})
 ```
 
 ### Features

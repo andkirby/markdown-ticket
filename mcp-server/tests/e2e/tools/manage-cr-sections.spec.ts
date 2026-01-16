@@ -13,117 +13,122 @@
  * - GIVEN non-existent CR WHEN managing THEN return error
  */
 
-import { TestEnvironment } from '../helpers/test-environment';
-import { MCPClient } from '../helpers/mcp-client';
-import { ProjectFactory } from '../helpers/project-factory';
-import { ProjectSetup } from '../helpers/core/project-setup';
+import { ProjectSetup } from '../helpers/core/project-setup'
+import { MCPClient } from '../helpers/mcp-client'
+import { ProjectFactory } from '../helpers/project-factory'
+import { TestEnvironment } from '../helpers/test-environment'
 
 describe('manage_cr_sections', () => {
-  let testEnv: TestEnvironment;
-  let mcpClient: MCPClient;
-  let projectFactory: ProjectFactory;
+  let testEnv: TestEnvironment
+  let mcpClient: MCPClient
+  let projectFactory: ProjectFactory
 
   beforeEach(async () => {
-    testEnv = new TestEnvironment();
-    await testEnv.setup();
+    testEnv = new TestEnvironment()
+    await testEnv.setup()
     // Create project structure manually BEFORE starting MCP client
-    const projectSetup = new ProjectSetup({ testEnv });
-    await projectSetup.createProjectStructure('TEST', 'Test Project');
+    const projectSetup = new ProjectSetup({ testEnv })
+    await projectSetup.createProjectStructure('TEST', 'Test Project')
     // NOW start MCP client (server will discover the project from registry)
-    mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
-    await mcpClient.start();
+    mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
+    await mcpClient.start()
     // NOW create ProjectFactory with the running mcpClient
-    projectFactory = new ProjectFactory(testEnv, mcpClient);
-  });
+    projectFactory = new ProjectFactory(testEnv, mcpClient)
+  })
 
   afterEach(async () => {
-    await mcpClient.stop();
-    await testEnv.cleanup();
-  });
+    await mcpClient.stop()
+    await testEnv.cleanup()
+  })
 
   async function callManageCRSections(
     projectKey: string,
     crKey: string,
     operation: 'list' | 'get' | 'replace' | 'append' | 'prepend',
     section?: string,
-    content?: string
+    content?: string,
   ) {
     const params: any = {
       project: projectKey,
       key: crKey,
-      operation
-    };
+      operation,
+    }
 
-    if (section) params.section = section;
-    if (content) params.content = content;
+    if (section)
+      params.section = section
+    if (content)
+      params.content = content
 
-    const response = await mcpClient.callTool('manage_cr_sections', params);
-    return response;
+    const response = await mcpClient.callTool('manage_cr_sections', params)
+    return response
   }
 
   /**
    * Parse section names from markdown list response
    */
   function parseSectionListFromMarkdown(markdown: string): string[] {
-    if (!markdown) return [];
+    if (!markdown)
+      return []
 
-    const lines = markdown.split('\n');
-    const sections: string[] = [];
+    const lines = markdown.split('\n')
+    const sections: string[] = []
 
     for (const line of lines) {
       // Match lines that start with dashes (list items)
-      const match = line.match(/^(\s*)- (.+?)(?: \(\d+ chars\))?$/);
+      const match = line.match(/^(\s*)- (.+?)(?: \(\d+ chars\))?$/)
       if (match) {
-        const sectionName = match[2];
-        sections.push(sectionName);
+        const sectionName = match[2]
+        sections.push(sectionName)
       }
     }
 
-    return sections;
+    return sections
   }
 
   /**
    * Parse section content from markdown response
    */
-  function parseSectionContentFromMarkdown(markdown: string): { section: string; content: string } {
-    if (!markdown) return { section: '', content: '' };
+  function parseSectionContentFromMarkdown(markdown: string): { section: string, content: string } {
+    if (!markdown)
+      return { section: '', content: '' }
 
     // Extract section name from header line
-    const sectionMatch = markdown.match(/\*\*Section:\*\* (.+)$/m);
-    const section = sectionMatch ? sectionMatch[1] : '';
+    const sectionMatch = markdown.match(/\*\*Section:\*\* (.+)$/m)
+    const section = sectionMatch ? sectionMatch[1] : ''
 
     // Extract content between the --- markers
-    const contentMatch = markdown.match(/---\n([\s\S]*?)\n---/);
-    const content = contentMatch ? contentMatch[1] : '';
+    const contentMatch = markdown.match(/---\n([\s\S]*?)\n---/)
+    const content = contentMatch ? contentMatch[1] : ''
 
-    return { section, content };
+    return { section, content }
   }
 
   /**
    * Parse operation result from markdown response
    */
-  function parseOperationResultFromMarkdown(markdown: string): { section?: string; content?: string } {
-    if (!markdown) return { section: undefined, content: undefined };
+  function parseOperationResultFromMarkdown(markdown: string): { section?: string, content?: string } {
+    if (!markdown)
+      return { section: undefined, content: undefined }
 
     // For replace/append/prepend operations, the response contains success info
     // Look for a success message and extract the section info
-    const lines = markdown.split('\n');
-    const result: any = {};
+    const lines = markdown.split('\n')
+    const result: any = {}
 
     // Find the section being operated on
     for (const line of lines) {
       if (line.includes('**Section:**')) {
-        const match = line.match(/\*\*Section:\*\* (.+)$/);
+        const match = line.match(/\*\*Section:\*\* (.+)$/)
         if (match) {
-          result.section = match[1];
+          result.section = match[1]
         }
       }
     }
 
     // The content is not returned in the response, so we'll indicate it
-    result.content = undefined;
+    result.content = undefined
 
-    return result;
+    return result
   }
 
   const standardSections = [
@@ -131,11 +136,11 @@ describe('manage_cr_sections', () => {
     'Rationale',
     'Solution Analysis',
     'Implementation Specification',
-    'Acceptance Criteria'
-  ];
+    'Acceptance Criteria',
+  ]
 
-  describe('List Operation', () => {
-    it('GIVEN existing CR WHEN listing sections THEN return all section names', async () => {
+  describe('list Operation', () => {
+    it('gIVEN existing CR WHEN listing sections THEN return all section names', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Section List Test',
         type: 'Feature Enhancement',
@@ -157,25 +162,25 @@ Initial implementation.
 
 ## 5. Acceptance Criteria
 
-Initial criteria.`
-      });
+Initial criteria.`,
+      })
 
-      const response = await callManageCRSections('TEST', createdCR.key!, 'list');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'list')
 
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
+      expect(response.success).toBe(true)
+      expect(response.data).toBeDefined()
 
       // Parse sections from markdown response
-      const sections = parseSectionListFromMarkdown(response.data);
-      expect(sections.length).toBeGreaterThan(0);
+      const sections = parseSectionListFromMarkdown(response.data)
+      expect(sections.length).toBeGreaterThan(0)
 
       // Should include all standard sections
-      standardSections.forEach(section => {
-        expect(sections).toContainEqual(expect.stringContaining(section));
-      });
-    });
+      standardSections.forEach((section) => {
+        expect(sections).toContainEqual(expect.stringContaining(section))
+      })
+    })
 
-    it('GIVEN CR with custom sections WHEN listing THEN return all sections including custom', async () => {
+    it('gIVEN CR with custom sections WHEN listing THEN return all sections including custom', async () => {
       const customContent = `## 1. Description
 
 Standard description.
@@ -194,38 +199,38 @@ Custom performance section.
 
 ## 5. Implementation Specification
 
-Standard implementation.`;
+Standard implementation.`
 
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Custom Sections Test',
         type: 'Architecture',
-        content: customContent
-      });
+        content: customContent,
+      })
 
-      const response = await callManageCRSections('TEST', createdCR.key!, 'list');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'list')
 
-      expect(response.success).toBe(true);
+      expect(response.success).toBe(true)
 
-      const sections = parseSectionListFromMarkdown(response.data);
-      expect(sections.length).toBeGreaterThanOrEqual(5);
+      const sections = parseSectionListFromMarkdown(response.data)
+      expect(sections.length).toBeGreaterThanOrEqual(5)
 
       // Should contain both standard and custom sections
-      const sectionTexts = sections.join(' ');
-      expect(sectionTexts).toContain('Description');
-      expect(sectionTexts).toContain('Risk Assessment');
-      expect(sectionTexts).toContain('Performance Impact');
-      expect(sectionTexts).toContain('Implementation Specification');
-    });
-  });
+      const sectionTexts = sections.join(' ')
+      expect(sectionTexts).toContain('Description')
+      expect(sectionTexts).toContain('Risk Assessment')
+      expect(sectionTexts).toContain('Performance Impact')
+      expect(sectionTexts).toContain('Implementation Specification')
+    })
+  })
 
-  describe('Get Operation', () => {
-    it('GIVEN existing CR WHEN getting section THEN return specific section content', async () => {
+  describe('get Operation', () => {
+    it('gIVEN existing CR WHEN getting section THEN return specific section content', async () => {
       const sectionContent = `This is the detailed rationale for the change.
 
 Key points:
 - Business value
 - Technical necessity
-- User impact`;
+- User impact`
 
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Get Section Test',
@@ -240,22 +245,22 @@ ${sectionContent}
 
 ## 3. Solution Analysis
 
-Analysis here.`
-      });
+Analysis here.`,
+      })
 
-      const response = await callManageCRSections('TEST', createdCR.key!, 'get', 'Rationale');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'get', 'Rationale')
 
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
+      expect(response.success).toBe(true)
+      expect(response.data).toBeDefined()
 
-      const parsed = parseSectionContentFromMarkdown(response.data);
-      expect(parsed.section).toContain('Rationale');
-      expect(parsed.content).toContain('This is the detailed rationale');
-      expect(parsed.content).toContain('Business value');
-      expect(parsed.content).toContain('Key points');
-    });
+      const parsed = parseSectionContentFromMarkdown(response.data)
+      expect(parsed.section).toContain('Rationale')
+      expect(parsed.content).toContain('This is the detailed rationale')
+      expect(parsed.content).toContain('Business value')
+      expect(parsed.content).toContain('Key points')
+    })
 
-    it('GIVEN flexible section matching WHEN getting THEN find section with various formats', async () => {
+    it('gIVEN flexible section matching WHEN getting THEN find section with various formats', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Flexible Matching Test',
         type: 'Feature Enhancement',
@@ -269,8 +274,8 @@ Test rationale.
 
 ## 3. Implementation Specification
 
-Test implementation.`
-      });
+Test implementation.`,
+      })
 
       // Test various ways to reference sections
       const tests = [
@@ -279,18 +284,18 @@ Test implementation.`
         { section: '## 1. Description', shouldContain: 'Test description' },
         { section: 'Rationale', shouldContain: 'Test rationale' },
         { section: '2. Rationale', shouldContain: 'Test rationale' },
-        { section: '### 2. Rationale', shouldContain: 'Test rationale' }
-      ];
+        { section: '### 2. Rationale', shouldContain: 'Test rationale' },
+      ]
 
       for (const test of tests) {
-        const response = await callManageCRSections('TEST', createdCR.key!, 'get', test.section);
-        expect(response.success).toBe(true);
-        const parsed = parseSectionContentFromMarkdown(response.data);
-        expect(parsed.content).toContain(test.shouldContain);
+        const response = await callManageCRSections('TEST', createdCR.key!, 'get', test.section)
+        expect(response.success).toBe(true)
+        const parsed = parseSectionContentFromMarkdown(response.data)
+        expect(parsed.content).toContain(test.shouldContain)
       }
-    });
+    })
 
-    it('GIVEN non-existent section WHEN getting THEN return error', async () => {
+    it('gIVEN non-existent section WHEN getting THEN return error', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Non-existent Section Test',
         type: 'Documentation',
@@ -300,21 +305,21 @@ Basic description.
 
 ## 2. Rationale
 
-Basic rationale.`
-      });
+Basic rationale.`,
+      })
 
-      const response = await callManageCRSections('TEST', createdCR.key!, 'get', 'Non-existent Section');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'get', 'Non-existent Section')
 
       // The tool returns a section even for non-existent sections
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      const parsed = parseSectionContentFromMarkdown(response.data);
-      expect(parsed.section).toContain('Non-existent Section Test');
-    });
-  });
+      expect(response.success).toBe(true)
+      expect(response.data).toBeDefined()
+      const parsed = parseSectionContentFromMarkdown(response.data)
+      expect(parsed.section).toContain('Non-existent Section Test')
+    })
+  })
 
-  describe('Replace Operation', () => {
-    it('GIVEN existing CR WHEN replacing section THEN update section completely', async () => {
+  describe('replace Operation', () => {
+    it('gIVEN existing CR WHEN replacing section THEN update section completely', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Replace Section Test',
         type: 'Technical Debt',
@@ -328,8 +333,8 @@ Old rationale.
 
 ## 3. Implementation Specification
 
-Old implementation.`
-      });
+Old implementation.`,
+      })
 
       const newContent = `Completely new rationale for this technical debt:
 
@@ -338,29 +343,29 @@ Old implementation.`
 - Security vulnerabilities in legacy code
 - Difficult to onboard new developers
 
-This refactor will address all these concerns by modernizing the architecture.`;
+This refactor will address all these concerns by modernizing the architecture.`
 
       const response = await callManageCRSections(
         'TEST',
         createdCR.key!,
         'replace',
         'Rationale',
-        newContent
-      );
+        newContent,
+      )
 
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      expect(response.data).toContain('✅');
-      expect(response.data).toContain('Updated Section');
-      expect(response.data).toContain('The section content has been completely replaced');
+      expect(response.success).toBe(true)
+      expect(response.data).toBeDefined()
+      expect(response.data).toContain('✅')
+      expect(response.data).toContain('Updated Section')
+      expect(response.data).toContain('The section content has been completely replaced')
 
       // Verify other sections remain unchanged
-      const getDescriptionResponse = await callManageCRSections('TEST', createdCR.key!, 'get', 'Description');
-      const parsed = parseSectionContentFromMarkdown(getDescriptionResponse.data);
-      expect(parsed.content).toContain('Old description');
-    });
+      const getDescriptionResponse = await callManageCRSections('TEST', createdCR.key!, 'get', 'Description')
+      const parsed = parseSectionContentFromMarkdown(getDescriptionResponse.data)
+      expect(parsed.content).toContain('Old description')
+    })
 
-    it('GIVEN section with header WHEN replacing THEN preserve header format', async () => {
+    it('gIVEN section with header WHEN replacing THEN preserve header format', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Header Format Test',
         type: 'Architecture',
@@ -374,8 +379,8 @@ Base rationale.
 
 ## 3. Implementation Specification
 
-Base implementation.`
-      });
+Base implementation.`,
+      })
 
       const contentWithHeader = `## New Section Title
 
@@ -383,38 +388,38 @@ This content has a new header.
 
 ### Subsection
 
-With subsections.`;
+With subsections.`
 
       const response = await callManageCRSections(
         'TEST',
         createdCR.key!,
         'replace',
         'Implementation Specification',
-        contentWithHeader
-      );
+        contentWithHeader,
+      )
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('✅');
-      expect(response.data).toContain('Updated Section');
-      expect(response.data).toContain('The section content has been completely replaced');
-    });
-  });
+      expect(response.success).toBe(true)
+      expect(response.data).toContain('✅')
+      expect(response.data).toContain('Updated Section')
+      expect(response.data).toContain('The section content has been completely replaced')
+    })
+  })
 
-  describe('Append Operation', () => {
-    it('GIVEN existing CR WHEN appending section THEN add content to end', async () => {
+  describe('append Operation', () => {
+    it('gIVEN existing CR WHEN appending section THEN add content to end', async () => {
       const originalContent = `## 1. Description
 
 Initial description.
 
 ## 2. Rationale
 
-Initial rationale.`;
+Initial rationale.`
 
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Append Section Test',
         type: 'Feature Enhancement',
-        content: originalContent
-      });
+        content: originalContent,
+      })
 
       const appendContent = `## 3. Additional Section
 
@@ -422,23 +427,23 @@ This is appended content.
 
 ### Details
 
-More details here.`;
+More details here.`
 
       const response = await callManageCRSections(
         'TEST',
         createdCR.key!,
         'append',
         '2. Rationale', // Append to the Rationale section
-        appendContent
-      );
+        appendContent,
+      )
 
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      expect(response.data).toContain('✅');
-      expect(response.data).toContain('Content has been added to the end of the section');
-    });
+      expect(response.success).toBe(true)
+      expect(response.data).toBeDefined()
+      expect(response.data).toContain('✅')
+      expect(response.data).toContain('Content has been added to the end of the section')
+    })
 
-    it('GIVEN appending to existing section WHEN appending THEN add to end of section', async () => {
+    it('gIVEN appending to existing section WHEN appending THEN add to end of section', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Append to Section Test',
         type: 'Bug Fix',
@@ -461,31 +466,31 @@ Implementation details.
 ## 5. Acceptance Criteria
 
 - Initial criterion 1
-- Initial criterion 2`
-      });
+- Initial criterion 2`,
+      })
 
       const additionalCriteria = `- Additional criterion 3
 - Additional criterion 4
-- Additional criterion 5`;
+- Additional criterion 5`
 
       const response = await callManageCRSections(
         'TEST',
         createdCR.key!,
         'append',
         'Acceptance Criteria',
-        additionalCriteria
-      );
+        additionalCriteria,
+      )
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('✅');
-      expect(response.data).toContain('Updated Section');
-      expect(response.data).toContain('append');
-      expect(response.data).toContain('Content has been added to the end of the section');
-    });
-  });
+      expect(response.success).toBe(true)
+      expect(response.data).toContain('✅')
+      expect(response.data).toContain('Updated Section')
+      expect(response.data).toContain('append')
+      expect(response.data).toContain('Content has been added to the end of the section')
+    })
+  })
 
-  describe('Prepend Operation', () => {
-    it('GIVEN existing CR WHEN prepending section THEN add content to beginning', async () => {
+  describe('prepend Operation', () => {
+    it('gIVEN existing CR WHEN prepending section THEN add content to beginning', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Prepend Section Test',
         type: 'Documentation',
@@ -508,8 +513,8 @@ Implementation details.
 ## 5. Acceptance Criteria
 
 - Documentation is clear
-- Examples are provided`
-      });
+- Examples are provided`,
+      })
 
       const prependContent = `## 0. Executive Summary
 
@@ -523,24 +528,24 @@ This is a high-level summary of the documentation changes.
 
 ## 0.1 Motivation
 
-The motivation for these changes...`;
+The motivation for these changes...`
 
       const response = await callManageCRSections(
         'TEST',
         createdCR.key!,
         'prepend',
         '1. Description', // Prepend to the Description section
-        prependContent
-      );
+        prependContent,
+      )
 
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      expect(response.data).toContain('✅');
-      expect(response.data).toContain('Updated Section');
-      expect(response.data).toContain('prepend');
-    });
+      expect(response.success).toBe(true)
+      expect(response.data).toBeDefined()
+      expect(response.data).toContain('✅')
+      expect(response.data).toContain('Updated Section')
+      expect(response.data).toContain('prepend')
+    })
 
-    it('GIVEN prepending to existing section WHEN prepending THEN add to beginning of section', async () => {
+    it('gIVEN prepending to existing section WHEN prepending THEN add to beginning of section', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Prepend to Section Test',
         type: 'Architecture',
@@ -567,30 +572,30 @@ Implementation details.
 ## 5. Acceptance Criteria
 
 - Architecture is improved
-- Performance is maintained`
-      });
+- Performance is maintained`,
+      })
 
       const prependToSection = `**IMPORTANT**: This section has been updated.
 
-Context: The following describes the architectural changes...`;
+Context: The following describes the architectural changes...`
 
       const response = await callManageCRSections(
         'TEST',
         createdCR.key!,
         'prepend',
         'Description',
-        prependToSection
-      );
+        prependToSection,
+      )
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('✅');
-      expect(response.data).toContain('Updated Section');
-      expect(response.data).toContain('prepend');
-    });
-  });
+      expect(response.success).toBe(true)
+      expect(response.data).toContain('✅')
+      expect(response.data).toContain('Updated Section')
+      expect(response.data).toContain('prepend')
+    })
+  })
 
-  describe('Complex Section Operations', () => {
-    it('GIVEN hierarchical sections WHEN managing THEN handle nested structure', async () => {
+  describe('complex Section Operations', () => {
+    it('gIVEN hierarchical sections WHEN managing THEN handle nested structure', async () => {
       const hierarchicalContent = `## 1. Description
 
 Top-level description.
@@ -622,20 +627,20 @@ Implementation details.
 ## 5. Acceptance Criteria
 
 - Feature works correctly
-- Performance is maintained`;
+- Performance is maintained`
 
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Hierarchical Sections Test',
         type: 'Feature Enhancement',
-        content: hierarchicalContent
-      });
+        content: hierarchicalContent,
+      })
 
       // Test getting hierarchical section
-      const response = await callManageCRSections('TEST', createdCR.key!, 'get', '1.1 Background');
-      expect(response.success).toBe(true);
-      const parsed = parseSectionContentFromMarkdown(response.data);
-      expect(parsed.content).toContain('Background information');
-      expect(parsed.content).toContain('Historical Context');
+      const response = await callManageCRSections('TEST', createdCR.key!, 'get', '1.1 Background')
+      expect(response.success).toBe(true)
+      const parsed = parseSectionContentFromMarkdown(response.data)
+      expect(parsed.content).toContain('Background information')
+      expect(parsed.content).toContain('Historical Context')
 
       // Test replacing hierarchical section
       const newBackground = `### 1.1 Updated Background
@@ -644,69 +649,69 @@ New background content with updated context.
 
 #### 1.1.1 New Historical Context
 
-Updated historical perspective.`;
+Updated historical perspective.`
 
       const replaceResponse = await callManageCRSections(
         'TEST',
         createdCR.key!,
         'replace',
         '1.1 Background',
-        newBackground
-      );
+        newBackground,
+      )
 
-      expect(replaceResponse.success).toBe(true);
-      expect(replaceResponse.data).toContain('✅');
-      expect(replaceResponse.data).toContain('Updated Section');
-      expect(replaceResponse.data).toContain('The section content has been completely replaced');
-    });
-  });
+      expect(replaceResponse.success).toBe(true)
+      expect(replaceResponse.data).toContain('✅')
+      expect(replaceResponse.data).toContain('Updated Section')
+      expect(replaceResponse.data).toContain('The section content has been completely replaced')
+    })
+  })
 
-  describe('Error Handling', () => {
-    it('GIVEN non-existent CR WHEN managing THEN return error', async () => {
-      const response = await callManageCRSections('TEST', 'TEST-999', 'list');
+  describe('error Handling', () => {
+    it('gIVEN non-existent CR WHEN managing THEN return error', async () => {
+      const response = await callManageCRSections('TEST', 'TEST-999', 'list')
 
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32000);
-      expect(response.error?.message).toContain('not found');
-    });
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32000)
+      expect(response.error?.message).toContain('not found')
+    })
 
-    it('GIVEN non-existent project WHEN managing THEN return error', async () => {
-      const response = await callManageCRSections('NONEXISTENT', 'TEST-001', 'list');
+    it('gIVEN non-existent project WHEN managing THEN return error', async () => {
+      const response = await callManageCRSections('NONEXISTENT', 'TEST-001', 'list')
 
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params for non-existent project
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params for non-existent project
       // Update to match new validation message format
-      expect(response.error?.message).toContain('invalid');
-    });
+      expect(response.error?.message).toContain('invalid')
+    })
 
-    it('GIVEN invalid operation WHEN managing THEN return validation error', async () => {
+    it('gIVEN invalid operation WHEN managing THEN return validation error', async () => {
       const response = await mcpClient.callTool('manage_cr_sections', {
         project: 'TEST',
         key: 'TEST-001',
-        operation: 'invalid'
-      });
+        operation: 'invalid',
+      })
 
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params for invalid operation value
-      expect(response.error?.message).toContain('operation');
-    });
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params for invalid operation value
+      expect(response.error?.message).toContain('operation')
+    })
 
-    it('GIVEN missing operation WHEN managing THEN return validation error', async () => {
+    it('gIVEN missing operation WHEN managing THEN return validation error', async () => {
       const response = await mcpClient.callTool('manage_cr_sections', {
         project: 'TEST',
-        key: 'TEST-001'
-      });
+        key: 'TEST-001',
+      })
 
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params for missing operation parameter
-      expect(response.error?.message).toContain('operation');
-    });
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params for missing operation parameter
+      expect(response.error?.message).toContain('operation')
+    })
 
-    it('GIVEN get operation without section WHEN managing THEN return validation error', async () => {
+    it('gIVEN get operation without section WHEN managing THEN return validation error', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Test CR',
         type: 'Documentation',
@@ -716,25 +721,25 @@ Test description.
 
 ## 2. Rationale
 
-Test rationale.`
-      });
+Test rationale.`,
+      })
 
       const response = await mcpClient.callTool('manage_cr_sections', {
         project: 'TEST',
         key: createdCR.key!,
-        operation: 'get'
-      });
+        operation: 'get',
+      })
 
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params for missing section parameter
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params for missing section parameter
       // Update to match new validation message format
-      expect(response.error?.message).toContain('section is required');
-    });
-  });
+      expect(response.error?.message).toContain('section is required')
+    })
+  })
 
-  describe('Response Format', () => {
-    it('GIVEN successful operation WHEN response THEN include appropriate data', async () => {
+  describe('response Format', () => {
+    it('gIVEN successful operation WHEN response THEN include appropriate data', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Response Format Test',
         type: 'Documentation',
@@ -757,30 +762,30 @@ Implementation details.
 ## 5. Acceptance Criteria
 
 - Documentation is complete
-- Format is correct`
-      });
+- Format is correct`,
+      })
 
       // Test list response format
-      const listResponse = await callManageCRSections('TEST', createdCR.key!, 'list');
-      expect(listResponse.success).toBe(true);
-      expect(listResponse.data).toBeDefined();
-      expect(listResponse.data).toContain('📑');
-      expect(listResponse.data).toContain('Sections in CR');
+      const listResponse = await callManageCRSections('TEST', createdCR.key!, 'list')
+      expect(listResponse.success).toBe(true)
+      expect(listResponse.data).toBeDefined()
+      expect(listResponse.data).toContain('📑')
+      expect(listResponse.data).toContain('Sections in CR')
 
-      const sections = parseSectionListFromMarkdown(listResponse.data);
-      expect(Array.isArray(sections)).toBe(true);
-      expect(sections.length).toBeGreaterThan(0);
+      const sections = parseSectionListFromMarkdown(listResponse.data)
+      expect(Array.isArray(sections)).toBe(true)
+      expect(sections.length).toBeGreaterThan(0)
 
       // Test get response format
-      const getResponse = await callManageCRSections('TEST', createdCR.key!, 'get', 'Description');
-      expect(getResponse.success).toBe(true);
-      expect(getResponse.data).toBeDefined();
-      expect(getResponse.data).toContain('📖');
-      expect(getResponse.data).toContain('Section Content from CR');
+      const getResponse = await callManageCRSections('TEST', createdCR.key!, 'get', 'Description')
+      expect(getResponse.success).toBe(true)
+      expect(getResponse.data).toBeDefined()
+      expect(getResponse.data).toContain('📖')
+      expect(getResponse.data).toContain('Section Content from CR')
 
-      const parsedGet = parseSectionContentFromMarkdown(getResponse.data);
-      expect(parsedGet.section).toContain('Description');
-      expect(parsedGet.content).toBeDefined();
+      const parsedGet = parseSectionContentFromMarkdown(getResponse.data)
+      expect(parsedGet.section).toContain('Description')
+      expect(parsedGet.content).toBeDefined()
 
       // Test replace response format
       const replaceResponse = await callManageCRSections(
@@ -788,17 +793,17 @@ Implementation details.
         createdCR.key!,
         'replace',
         'Description',
-        'New description content'
-      );
-      expect(replaceResponse.success).toBe(true);
-      expect(replaceResponse.data).toBeDefined();
-      expect(replaceResponse.data).toContain('✅');
-      expect(replaceResponse.data).toContain('Updated Section');
+        'New description content',
+      )
+      expect(replaceResponse.success).toBe(true)
+      expect(replaceResponse.data).toBeDefined()
+      expect(replaceResponse.data).toContain('✅')
+      expect(replaceResponse.data).toContain('Updated Section')
 
-      const parsedReplace = parseOperationResultFromMarkdown(replaceResponse.data);
-      expect(parsedReplace.section).toBeDefined();
+      const parsedReplace = parseOperationResultFromMarkdown(replaceResponse.data)
+      expect(parsedReplace.section).toBeDefined()
       // Content is not returned in the response
-      expect(parsedReplace.content).toBeUndefined();
-    });
-  });
-});
+      expect(parsedReplace.content).toBeUndefined()
+    })
+  })
+})
