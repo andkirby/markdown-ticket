@@ -172,7 +172,7 @@ export class FileTicketCreator extends BaseTicketCreator {
     return this.generateMinimalContent(title, type)
   }
 
-  private generateMinimalContent(title: string, type: CRType): string {
+  private generateMinimalContent(title: string, _type: CRType): string {
     const now = new Date().toISOString().split('T')[0]
     return `# ${title}
 

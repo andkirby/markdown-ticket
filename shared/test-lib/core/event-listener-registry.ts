@@ -5,6 +5,7 @@
  * proper cleanup and prevent memory leaks.
  */
 
+import type { Buffer } from 'node:buffer'
 import type { ChildProcess } from 'node:child_process'
 
 /**

@@ -3,6 +3,7 @@
 import type { GlobalConfig } from '../services/project/types.js'
 import fs from 'node:fs'
 import path from 'node:path'
+import process from 'node:process'
 import toml from 'toml'
 import { getDefaultPaths } from '../utils/constants.js'
 
@@ -82,6 +83,13 @@ class ConfigManager {
   constructor(configPath?: string) {
     this.configPath = configPath || getDefaultPaths().CONFIG_FILE
     this.configDir = path.dirname(this.configPath)
+  }
+
+  /**
+   * Get the configuration file path
+   */
+  getConfigPath(): string {
+    return this.configPath
   }
 
   /**
@@ -169,7 +177,7 @@ class ConfigManager {
     // If current value is a number, parse as number
     if (typeof currentValue === 'number') {
       const parsed = Number(value)
-      if (isNaN(parsed)) {
+      if (Number.isNaN(parsed)) {
         throw new ConfigError(`Invalid number value: ${value}`)
       }
       return parsed
@@ -354,13 +362,13 @@ class ConfigCommands {
       const value = await this.configManager.get(key)
       if (value !== undefined) {
         if (Array.isArray(value)) {
-          console.log(`${key}: [${value.map(item => `"${item}"`).join(', ')}]`)
+          console.error(`${key}: [${value.map(item => `"${item}"`).join(', ')}]`)
         }
         else if (typeof value === 'string') {
-          console.log(`${key}: "${value}"`)
+          console.error(`${key}: "${value}"`)
         }
         else {
-          console.log(`${key}: ${value}`)
+          console.error(`${key}: ${value}`)
         }
       }
       else {
@@ -377,9 +385,9 @@ class ConfigCommands {
   async setCommand(key: string, value: string): Promise<void> {
     try {
       await this.configManager.set(key, value)
-      console.log(`✅ Configuration updated successfully`)
-      console.log(`   File: ${this.configManager.configPath}`)
-      console.log(`   Key: ${key} = ${value}`)
+      console.error(`✅ Configuration updated successfully`)
+      console.error(`   File: ${this.configManager.getConfigPath()}`)
+      console.error(`   Key: ${key} = ${value}`)
     }
     catch (error) {
       console.error('Error setting configuration:', error instanceof Error ? error.message : String(error))
@@ -390,13 +398,13 @@ class ConfigCommands {
   async showCommand(): Promise<void> {
     try {
       const config = await this.configManager.readConfig()
-      console.log('# Markdown Ticket Configuration')
-      console.log(`# Path: ${this.configManager.configPath}`)
-      console.log('')
+      console.error('# Markdown Ticket Configuration')
+      console.error(`# Path: ${this.configManager.getConfigPath()}`)
+      console.error('')
 
       // Use a temporary instance to access private method for serialization
       const tempManager = new ConfigManager()
-      console.log((tempManager as any).objectToToml(config))
+      console.error((tempManager as any).objectToToml(config))
     }
     catch (error) {
       console.error('Error reading configuration:', error instanceof Error ? error.message : String(error))
@@ -407,18 +415,18 @@ class ConfigCommands {
   async initCommand(): Promise<void> {
     try {
       // Check if config already exists
-      if (fs.existsSync(this.configManager.configPath)) {
-        console.log('ℹ️  Configuration file already exists')
-        console.log(`   File: ${this.configManager.configPath}`)
-        console.log('   Use "show" command to view current configuration.')
+      if (fs.existsSync(this.configManager.getConfigPath())) {
+        console.error('ℹ️  Configuration file already exists')
+        console.error(`   File: ${this.configManager.getConfigPath()}`)
+        console.error('   Use "show" command to view current configuration.')
         return
       }
 
       // Use a temporary instance to access private method for default config
       const tempManager = new ConfigManager()
       await this.configManager.writeConfig((tempManager as any).getDefaultConfig())
-      console.log('✅ Configuration file created successfully')
-      console.log(`   File: ${this.configManager.configPath}`)
+      console.error('✅ Configuration file created successfully')
+      console.error(`   File: ${this.configManager.getConfigPath()}`)
     }
     catch (error) {
       console.error('Error initializing configuration:', error instanceof Error ? error.message : String(error))
@@ -488,26 +496,26 @@ class ConfigCLI {
   }
 
   private showUsage(): void {
-    console.log('Markdown Ticket Configuration CLI')
-    console.log('')
-    console.log('Usage: config <command> [args]')
-    console.log('')
-    console.log('Commands:')
-    console.log('  get <key>     Get configuration value using dot notation')
-    console.log('                 Examples: config get discovery.autoDiscover')
-    console.log('                           config get discovery.searchPaths')
-    console.log('                           config get links.enableTicketLinks')
-    console.log('')
-    console.log('  set <key> <value>  Set configuration value using dot notation')
-    console.log('                 Examples: config set discovery.autoDiscover true')
-    console.log('                           config set discovery.searchPaths "/path1,/path2"')
-    console.log('                           config set links.enableTicketLinks false')
-    console.log('')
-    console.log('  show          Display current configuration')
-    console.log('  init          Create default configuration file')
-    console.log('  help          Show this help message')
-    console.log('')
-    console.log('Configuration file location: ~/.config/markdown-ticket/config.toml')
+    console.error('Markdown Ticket Configuration CLI')
+    console.error('')
+    console.error('Usage: config <command> [args]')
+    console.error('')
+    console.error('Commands:')
+    console.error('  get <key>     Get configuration value using dot notation')
+    console.error('                 Examples: config get discovery.autoDiscover')
+    console.error('                           config get discovery.searchPaths')
+    console.error('                           config get links.enableTicketLinks')
+    console.error('')
+    console.error('  set <key> <value>  Set configuration value using dot notation')
+    console.error('                 Examples: config set discovery.autoDiscover true')
+    console.error('                           config set discovery.searchPaths "/path1,/path2"')
+    console.error('                           config set links.enableTicketLinks false')
+    console.error('')
+    console.error('  show          Display current configuration')
+    console.error('  init          Create default configuration file')
+    console.error('  help          Show this help message')
+    console.error('')
+    console.error('Configuration file location: ~/.config/markdown-ticket/config.toml')
   }
 }
 

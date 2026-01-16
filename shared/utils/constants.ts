@@ -1,6 +1,7 @@
 import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
+import process from 'node:process'
 
 /**
  * Shared Constants for Frontend, Backend, and MCP
@@ -69,7 +70,7 @@ function getOrCreateConfigDir(): string {
 
     return configDir
   }
-  catch (error) {
+  catch {
     // If creation or write test fails, use fallback
     const fallbackDir = path.join(os.homedir(), '.config', 'markdown-ticket')
 
@@ -81,7 +82,7 @@ function getOrCreateConfigDir(): string {
       console.warn(`⚠️  Could not create or write to config directory "${configDir}". Using fallback: "${fallbackDir}"`)
       return fallbackDir
     }
-    catch (fallbackError) {
+    catch {
       // Last resort: use temp directory
       const tempDir = path.join(os.tmpdir(), 'markdown-ticket')
       try {
@@ -91,7 +92,7 @@ function getOrCreateConfigDir(): string {
         console.error(`❌ Could not create config directory. Using temporary directory: "${tempDir}"`)
         return tempDir
       }
-      catch (tempError) {
+      catch {
         // Ultimate fallback - use current working directory
         const cwdFallback = path.join(process.cwd(), '.mdt-config')
         console.error(`🚨 All config directory creation failed. Using current directory: "${cwdFallback}"`)
@@ -155,7 +156,7 @@ export const DEFAULTS = {
 export const PATTERNS = {
   TICKET_CODE: /^[A-Z0-9]{2,5}-\d{3,}$/,
   PROJECT_CODE: /^[A-Z0-9]{2,5}$/,
-  YAML_FRONTMATTER: /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/,
+  YAML_FRONTMATTER: /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n([\s\S]*)$/,
 } as const
 
 // CLI Error Codes

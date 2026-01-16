@@ -6,9 +6,11 @@
  * to focus solely on process spawning concerns.
  */
 
+import type { Buffer } from 'node:buffer'
 import type { ChildProcess } from 'node:child_process'
 import type { ServerConfig } from '../types.js'
 import { spawn } from 'node:child_process'
+import process from 'node:process'
 import { EventListenerRegistry } from './event-listener-registry.js'
 
 /**
@@ -61,9 +63,9 @@ export class ProcessSpawner {
     process: ChildProcess,
     handlers: ProcessHandlers,
   ): void {
-    const stdoutHandler = handlers.stdout || ((d: Buffer) => {})
-    const stderrHandler = handlers.stderr || ((d: Buffer) => {})
-    const exitHandler = handlers.exit || ((_: number | null, __: NodeJS.Signals | null) => {})
+    const stdoutHandler = handlers.stdout || ((_d: Buffer) => {})
+    const stderrHandler = handlers.stderr || ((_d: Buffer) => {})
+    const exitHandler = handlers.exit || ((_code: number | null, _signal: NodeJS.Signals | null) => {})
 
     this.listeners.register(serverType, process, stdoutHandler, stderrHandler, exitHandler)
   }

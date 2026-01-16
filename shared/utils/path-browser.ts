@@ -272,7 +272,7 @@ export function relative(from: string, to: string): string {
 
   // Calculate how many directories to go up
   const upLevels = fromParts.length - commonLength
-  const relativeParts = new Array(upLevels).fill('..').concat(toParts.slice(commonLength))
+  const relativeParts = Array.from({ length: upLevels }, () => '..').concat(toParts.slice(commonLength))
 
   // If no relative path needed
   if (relativeParts.length === 0) {

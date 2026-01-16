@@ -77,7 +77,7 @@ This MCP server integrates with the main application via API endpoints rather th
 {
   "mcpServers": {
     "mdt-logging-local": {
-      "type": "stdio", 
+      "type": "stdio",
       "command": "node",
       "args": [
         "~/home/markdown-ticket/server/mcp-dev-tools/dist/index.js"
@@ -121,7 +121,7 @@ The health check verifies that:
 cd server
 node server.js
 
-# Terminal 2: Start frontend  
+# Terminal 2: Start frontend
 npm run dev
 
 # Terminal 3: Test MCP server

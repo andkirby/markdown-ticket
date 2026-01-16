@@ -6,6 +6,7 @@
  * solely on process management concerns.
  */
 
+import type { Buffer } from 'node:buffer'
 import type { ChildProcess } from 'node:child_process'
 import type { ServerConfig } from '../types.js'
 import { ServerStartupError, TestFrameworkError } from '../types.js'
@@ -44,14 +45,14 @@ export class ProcessLifecycleManager {
 
       // Attach event handlers
       this.spawner.attachHandlers(serverType, child, {
-        stdout: (d: Buffer) => {
-          // Optionally log: console.debug(`[${serverType}] ${d.toString().trim()}`);
+        stdout: (_d: Buffer) => {
+          // Optionally log: console.debug(`[${serverType}] ${_d.toString().trim()}`);
         },
-        stderr: (d: Buffer) => {
-          // Optionally log: console.error(`[${serverType}] ${d.toString().trim()}`);
+        stderr: (_d: Buffer) => {
+          // Optionally log: console.error(`[${serverType}] ${_d.toString().trim()}`);
         },
-        exit: (code: number | null, signal: NodeJS.Signals | null) => {
-          // Optionally log: console.warn(`Server ${serverType} exited with code ${code}, signal ${signal}`);
+        exit: (_code: number | null, _signal: NodeJS.Signals | null) => {
+          // Optionally log: console.warn(`Server ${serverType} exited with code ${_code}, signal ${_signal}`);
           const serverConfig = this.registry.getConfig(serverType)
           this.registry.unregister(serverType)
           if (serverConfig) {

@@ -97,7 +97,7 @@ const testCRData = {
 }
 
 /** Edge case titles for slug generation testing */
-const edgeCaseTitles = [
+const _edgeCaseTitles = [
   'Simple Title',
   'Title with Special!!! Chars???',
   'A very long title that should be truncated to fifty characters max',
@@ -247,7 +247,7 @@ describe('projectFactory - Project Creation', () => {
   })
 
   it('registry files creates global registry entry', async () => {
-    const project = await factory.createProject('empty', testProjectConfig)
+    await factory.createProject('empty', testProjectConfig)
 
     const configDir = testEnv.getConfigDirectory()
     const registryDir = join(configDir, 'projects')

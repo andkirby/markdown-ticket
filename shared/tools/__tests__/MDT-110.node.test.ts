@@ -22,14 +22,14 @@ const mockNodeProcess = {
   cwd: () => process.cwd(),
 }
 
-const originalProcess = global.process
+const originalProcess = globalThis.process
 
 describe('mDT-110: Node.js ProjectValidator Extension', () => {
   let tempDir: string
 
   beforeEach(() => {
     // Simulate Node.js environment
-    (global as any).process = mockNodeProcess
+    (globalThis as any).process = mockNodeProcess
 
     // Create temporary directory for filesystem tests
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mdt-test-'))
@@ -42,7 +42,7 @@ describe('mDT-110: Node.js ProjectValidator Extension', () => {
     }
 
     // Restore original process
-    (global as any).process = originalProcess
+    (globalThis as any).process = originalProcess
   })
 
   // P2-1, P2-2: Node validatePath with filesystem

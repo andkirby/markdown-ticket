@@ -25,10 +25,10 @@ function runIsolatedCommand(command: string): { stdout: string, stderr: string, 
   }
 
   // Extract the arguments after "--" from npm script format
-  const argsMatch = command.match(/--\s+(.+)$/)
+  const dashIndex = command.indexOf('--')
   let actualCommand = command
-  if (argsMatch) {
-    const args = argsMatch[1]
+  if (dashIndex !== -1) {
+    const args = command.slice(dashIndex + 2).trim()
     const rootDir = path.join(process.cwd(), '..')
     const cliPath = path.join(rootDir, 'shared', 'dist', 'tools', 'project-cli.js')
     const subcommandMatch = command.match(/project:(\w+)/)
@@ -37,17 +37,33 @@ function runIsolatedCommand(command: string): { stdout: string, stderr: string, 
   }
 
   try {
-    const result = execSync(actualCommand, {
-      encoding: 'utf8',
+    // Capture both stdout and stderr using temporary files
+    const tmpDir = testEnv.getTempDirectory()
+    const stdoutFile = path.join(tmpDir, `stdout-${Date.now()}-${Math.random()}.tmp`)
+    const stderrFile = path.join(tmpDir, `stderr-${Date.now()}-${Math.random()}.tmp`)
+
+    execSync(`${actualCommand} > "${stdoutFile}" 2> "${stderrFile}"`, {
       timeout: 10000,
       env,
-      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: '/bin/sh',
       cwd: path.join(process.cwd(), '..'),
     })
 
+    const stdout = fs.readFileSync(stdoutFile, 'utf8')
+    const stderr = fs.readFileSync(stderrFile, 'utf8')
+
+    // Clean up temp files
+    try {
+      fs.unlinkSync(stdoutFile)
+      fs.unlinkSync(stderrFile)
+    }
+    catch {
+      // Ignore cleanup errors
+    }
+
     return {
-      stdout: result.toString(),
-      stderr: '',
+      stdout,
+      stderr,
       exitCode: 0,
       success: true,
     }
@@ -249,8 +265,8 @@ describe('configuration validation', () => {
 
       // Assert - Verify output contains expected values
       expect(listResult.success).toBe(true)
-      expect(listResult.stdout).toContain(testProject.code)
-      expect(listResult.stdout).toContain(testProject.name)
+      expect(listResult.stderr).toContain(testProject.code)
+      expect(listResult.stderr).toContain(testProject.name)
 
       // Verify configuration matches
       const config = readLocalConfig(testProject.path)

@@ -7,6 +7,7 @@
  */
 
 import type { ServerConfig } from '../types.js'
+import http from 'node:http'
 import { TestFrameworkError } from '../types.js'
 import { RetryHelper } from '../utils/retry-helper.js'
 
@@ -67,7 +68,6 @@ export class HealthCheckManager {
    */
   async check(config: ServerConfig): Promise<void> {
     return new Promise((resolve, reject) => {
-      const http = require('node:http')
       const req = http.request(
         {
           hostname: 'localhost',

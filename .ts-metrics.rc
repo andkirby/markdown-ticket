@@ -1,0 +1,77 @@
+# Configuration for TypeScript metrics analysis
+# ts-metrics - Standalone npm package
+#
+# This file can be placed in:
+# 1. $PROJECT_ROOT/.ts-metrics.rc (project-specific, highest priority)
+# 2. $HOME/.ts-metrics.rc (user-level, fallback)
+#
+# Copy this file to .ts-metrics.rc and customize as needed.
+
+# ============================================================================
+# TypeScript Configuration Paths
+# ============================================================================
+# Array of tsconfig directories (relative to project root)
+# If commented out or empty, ts-metrics will auto-discover all tsconfig.json
+# files in the project (excluding node_modules, dist, and hidden directories)
+#
+# Example for monorepo with multiple TypeScript projects:
+# TSCONFIGS=(
+#   "."
+#   "packages/shared"
+#   "packages/server"
+#   "packages/cli"
+# )
+#
+# Example for single project (commented out to enable auto-discovery):
+# TSCONFIGS=(".")
+#
+# Default: Auto-discovery (comment out or leave empty to use auto-discovery)
+# TSCONFIGS=(
+#   "."
+#   "shared"
+#   "server"
+#   "mcp-server"
+#   "domain-contracts"
+# )
+
+# ============================================================================
+# Maintainability Index (MI) Thresholds
+# ============================================================================
+# Microsoft standard: MI ranges from 0 (worst) to 100 (best)
+# Higher values indicate better maintainability
+#
+# MI_YELLOW_MAX: Files at or below this value are flagged as yellow
+# Microsoft yellow zone: 21-40 (moderate maintainability concerns)
+MI_YELLOW_MAX=40
+
+# MI_RED_MAX: Files at or below this value are flagged as red
+# Microsoft red zone: 0-20 (significant maintainability issues)
+MI_RED_MAX=20
+
+# ============================================================================
+# Cyclomatic Complexity (CC) Thresholds
+# ============================================================================
+# Measures control flow complexity based on decision points (if, for, etc.)
+# Microsoft standard: Simpler code is easier to maintain
+#
+# CC_YELLOW_MIN: Files at or above this value are flagged as yellow
+# Microsoft yellow zone: 11-20 (moderately complex)
+CC_YELLOW_MIN=11
+
+# CC_RED_MIN: Files at or above this value are flagged as red
+# Microsoft red zone: 21+ (highly complex, needs refactoring)
+CC_RED_MIN=21
+
+# ============================================================================
+# Cognitive Complexity (CoC) Thresholds
+# ============================================================================
+# Measures mental effort to understand code flow (nesting, breaks, etc.)
+# Microsoft standard: Lower cognitive load improves readability
+#
+# COC_YELLOW_MIN: Files at or above this value are flagged as yellow
+# Microsoft yellow zone: 11-20 (moderate cognitive effort)
+COC_YELLOW_MIN=11
+
+# COC_RED_MIN: Files at or above this value are flagged as red
+# Microsoft red zone: 21+ (difficult to understand, simplify logic)
+COC_RED_MIN=21

@@ -66,35 +66,35 @@ The test suite covers:
 ### Unit Tests
 
 ```typescript
-import { createMockReqRes, mockProject } from '../utils/setupTests.js';
+import { createMockReqRes, mockProject } from '../utils/setupTests.js'
 
 describe('SomeClass', () => {
   beforeEach(() => {
     // Setup mocks
-  });
+  })
 
   it('should do something', async () => {
-    const { req, res } = createMockReqRes();
+    const { req, res } = createMockReqRes()
     // Arrange, Act, Assert
-  });
-});
+  })
+})
 ```
 
 ### Integration Tests
 
 ```typescript
-import request from 'supertest';
-import { app } from '../utils/testApp.js';
+import request from 'supertest'
+import { app } from '../utils/testApp.js'
 
 describe('API Endpoint', () => {
   it('should return 200', async () => {
     const response = await request(app)
       .get('/api/endpoint')
-      .expect(200);
+      .expect(200)
 
-    expect(response.body).toEqual(expectedData);
-  });
-});
+    expect(response.body).toEqual(expectedData)
+  })
+})
 ```
 
 ## Mocking

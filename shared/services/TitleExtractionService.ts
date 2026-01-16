@@ -24,7 +24,7 @@ export class TitleExtractionService {
   private cache: Map<string, TitleCacheEntry>
   private ttl: number
   private readonly DEFAULT_TTL = 60 * 60 * 1000
-  private readonly H1_PATTERN = /^#\s+(.+)$/m // Strict H1 detection: starts with "# "
+  private readonly H1_PATTERN = /^#\s+(\S#?(?:[^\n]*\S)?)$/m // Strict H1 detection: starts with "# "
 
   constructor(ttl: number = 60 * 60 * 1000) { // 1 hour in milliseconds default
     this.cache = new Map()
@@ -197,7 +197,7 @@ export class TitleExtractionService {
         return null
       }
     }
-    catch (error) {
+    catch {
       // File might not exist, invalidate cache
       this.cache.delete(cacheKey)
       return null

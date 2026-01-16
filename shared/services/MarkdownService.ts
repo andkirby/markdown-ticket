@@ -186,7 +186,7 @@ export class MarkdownService {
         // Parse dates
         if (key.includes('Date') || key.includes('Modified') || key.includes('Created')) {
           const dateValue = new Date(value)
-          result[key] = isNaN(dateValue.getTime()) ? value : dateValue
+          result[key] = Number.isNaN(dateValue.getTime()) ? value : dateValue
         }
         else {
           result[key] = value

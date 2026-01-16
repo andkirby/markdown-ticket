@@ -30,10 +30,10 @@ function runIsolatedCommand(command: string): { stdout: string, stderr: string, 
   // The command passed in is like "npm run project:create -- --name X --code Y --path Z"
   // We need to convert it to run the CLI directly
   // Extract the arguments after "--"
-  const argsMatch = command.match(/--\s+(.+)$/)
+  const dashIndex = command.indexOf('--')
   let actualCommand = command
-  if (argsMatch) {
-    const args = argsMatch[1]
+  if (dashIndex !== -1) {
+    const args = command.slice(dashIndex + 2).trim()
     // From shared/ directory, root is ../
     const rootDir = path.join(process.cwd(), '..')
     const cliPath = path.join(rootDir, 'shared', 'dist', 'tools', 'project-cli.js')
@@ -44,17 +44,33 @@ function runIsolatedCommand(command: string): { stdout: string, stderr: string, 
   }
 
   try {
-    const result = execSync(actualCommand, {
-      encoding: 'utf8',
+    // Capture both stdout and stderr using temporary files
+    const tmpDir = testEnv.getTempDirectory()
+    const stdoutFile = path.join(tmpDir, `stdout-${Date.now()}-${Math.random()}.tmp`)
+    const stderrFile = path.join(tmpDir, `stderr-${Date.now()}-${Math.random()}.tmp`)
+
+    execSync(`${actualCommand} > "${stdoutFile}" 2> "${stderrFile}"`, {
       timeout: 10000,
       env,
-      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: '/bin/sh',
       cwd: path.join(process.cwd(), '..'), // Go from shared to project root
     })
 
+    const stdout = fs.readFileSync(stdoutFile, 'utf8')
+    const stderr = fs.readFileSync(stderrFile, 'utf8')
+
+    // Clean up temp files
+    try {
+      fs.unlinkSync(stdoutFile)
+      fs.unlinkSync(stderrFile)
+    }
+    catch {
+      // Ignore cleanup errors
+    }
+
     return {
-      stdout: result.toString(),
-      stderr: '',
+      stdout,
+      stderr,
       exitCode: 0,
     }
   }
@@ -159,7 +175,7 @@ describe('project:create', () => {
 
       // Assert
       expect(result.exitCode).toBe(0)
-      expect(result.stdout).toContain('successfully')
+      expect(result.stderr).toContain('successfully')
 
       // Verify local config was created
       const config = readLocalConfig(testProject.path)
