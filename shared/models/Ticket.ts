@@ -45,7 +45,7 @@ function parseDate(dateValue: any): Date | null {
     return dateValue
   if (typeof dateValue === 'string') {
     const parsed = new Date(dateValue)
-    return isNaN(parsed.getTime()) ? null : parsed
+    return Number.isNaN(parsed.getTime()) ? null : parsed
   }
   return null
 }

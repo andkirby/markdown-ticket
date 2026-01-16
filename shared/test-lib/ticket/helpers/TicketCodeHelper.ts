@@ -30,7 +30,7 @@ export class TicketCodeHelper {
         const match = filename.match(regex)
         if (match) {
           const number = Number.parseInt(match[1], 10)
-          if (!isNaN(number) && number > highestNumber) {
+          if (!Number.isNaN(number) && number > highestNumber) {
             highestNumber = number
           }
         }

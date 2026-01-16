@@ -182,7 +182,7 @@ export class MarkdownSectionService {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
-      const headerMatch = line.match(/^(#{1,6})\s+(.+)$/)
+      const headerMatch = line.match(/^(#{1,6})\s+(\S#?(?:[^\n]*\S)?)$/)
 
       if (headerMatch) {
         const level = headerMatch[1].length
@@ -201,7 +201,6 @@ export class MarkdownSectionService {
 
           // Build hierarchical path
           const hierarchicalPath = [...headerStack.map(h => h.text), prevHeader.text]
-            .map(h => h)
             .join(' / ')
 
           sections.push({
@@ -229,7 +228,6 @@ export class MarkdownSectionService {
         .trim()
 
       const hierarchicalPath = [...headerStack.map(h => h.text), header.text]
-        .map(h => h)
         .join(' / ')
 
       sections.push({
@@ -258,7 +256,7 @@ export class MarkdownSectionService {
     let inSubsection = false
 
     for (const line of lines) {
-      const headerMatch = line.match(/^(#{2,6})\s+(.+)$/)
+      const headerMatch = line.match(/^(#{2,6})\s+(\S#?(?:[^\n]*\S)?)$/)
 
       if (headerMatch) {
         // Found a subsection header

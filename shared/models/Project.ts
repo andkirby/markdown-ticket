@@ -179,7 +179,7 @@ export function validateProjectConfig(config: any): config is ProjectConfig {
   // Optional fields with defaults if missing
   const hasValidStartNumber = project.startNumber === undefined
     || typeof project.startNumber === 'number'
-    || (typeof project.startNumber === 'string' && !isNaN(Number(project.startNumber)))
+    || (typeof project.startNumber === 'string' && !Number.isNaN(Number(project.startNumber)))
 
   const hasValidCounterFile = project.counterFile === undefined
     || typeof project.counterFile === 'string'

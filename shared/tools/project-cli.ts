@@ -3,6 +3,7 @@
 import type { ProjectCreateInput, ProjectUpdateInput } from './ProjectManager.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import process from 'node:process'
 import * as readline from 'node:readline'
 import { ProjectManager } from './ProjectManager.js'
 
@@ -134,7 +135,7 @@ class ProjectCommands {
         if (args.flags['max-depth'] !== undefined) {
           if (typeof args.flags['max-depth'] === 'string') {
             const parsed = Number.parseInt(args.flags['max-depth'], 10)
-            if (isNaN(parsed) || parsed < 1 || parsed > 10) {
+            if (Number.isNaN(parsed) || parsed < 1 || parsed > 10) {
               throw new ProjectError('--max-depth must be a number between 1 and 10', CLI_ERROR_CODES.VALIDATION_ERROR)
             }
             maxDepth = parsed
@@ -164,16 +165,16 @@ class ProjectCommands {
       // Create project
       const project = await this.manager.createProject(input)
 
-      console.log('\nProject created successfully!')
-      console.log(`  ID: ${project.id}`)
-      console.log(`  Name: ${project.project.name}`)
-      console.log(`  Code: ${project.project.code}`)
-      console.log(`  Path: ${project.project.path}`)
+      console.error('\nProject created successfully!')
+      console.error(`  ID: ${project.id}`)
+      console.error(`  Name: ${project.project.name}`)
+      console.error(`  Code: ${project.project.code}`)
+      console.error(`  Path: ${project.project.path}`)
       if (project.project.description) {
-        console.log(`  Description: ${project.project.description}`)
+        console.error(`  Description: ${project.project.description}`)
       }
       if (project.project.repository) {
-        console.log(`  Repository: ${project.project.repository}`)
+        console.error(`  Repository: ${project.project.repository}`)
       }
     }
     catch (error) {
@@ -196,28 +197,28 @@ class ProjectCommands {
       const projects = await this.manager.listProjects()
 
       if (projects.length === 0) {
-        console.log('No projects found.')
+        console.error('No projects found.')
         return
       }
 
       if (args.flags.json) {
-        console.log(JSON.stringify(projects, null, 2))
+        console.error(JSON.stringify(projects, null, 2))
       }
       else {
-        console.log('\nProjects:')
-        console.log('─'.repeat(80))
+        console.error('\nProjects:')
+        console.error('─'.repeat(80))
         for (const project of projects) {
-          console.log(`ID: ${project.id}`)
-          console.log(`  Name: ${project.project.name}`)
-          console.log(`  Code: ${project.project.code || 'N/A'}`)
-          console.log(`  Path: ${project.project.path}`)
-          console.log(`  Active: ${project.project.active ? 'Yes' : 'No'}`)
+          console.error(`ID: ${project.id}`)
+          console.error(`  Name: ${project.project.name}`)
+          console.error(`  Code: ${project.project.code || 'N/A'}`)
+          console.error(`  Path: ${project.project.path}`)
+          console.error(`  Active: ${project.project.active ? 'Yes' : 'No'}`)
           if (project.project.description) {
-            console.log(`  Description: ${project.project.description}`)
+            console.error(`  Description: ${project.project.description}`)
           }
-          console.log('─'.repeat(80))
+          console.error('─'.repeat(80))
         }
-        console.log(`\nTotal: ${projects.length} project${projects.length !== 1 ? 's' : ''}`)
+        console.error(`\nTotal: ${projects.length} project${projects.length !== 1 ? 's' : ''}`)
       }
     }
     catch (error) {
@@ -242,42 +243,42 @@ class ProjectCommands {
       const project = await this.manager.getProject(codeOrId)
 
       if (args.flags.json) {
-        console.log(JSON.stringify(project, null, 2))
+        console.error(JSON.stringify(project, null, 2))
       }
       else {
-        console.log('\nProject Details:')
-        console.log('─'.repeat(80))
-        console.log(`ID: ${project.id}`)
-        console.log(`Name: ${project.project.name}`)
-        console.log(`Code: ${project.project.code || 'N/A'}`)
-        console.log(`Path: ${project.project.path}`)
-        console.log(`Active: ${project.project.active ? 'Yes' : 'No'}`)
-        console.log(`Description: ${project.project.description || 'N/A'}`)
-        console.log(`Repository: ${project.project.repository || 'N/A'}`)
-        console.log(`Config File: ${project.project.configFile || 'N/A'}`)
-        console.log(`Tickets Path: ${project.project.ticketsPath || 'docs/CRs'}`)
+        console.error('\nProject Details:')
+        console.error('─'.repeat(80))
+        console.error(`ID: ${project.id}`)
+        console.error(`Name: ${project.project.name}`)
+        console.error(`Code: ${project.project.code || 'N/A'}`)
+        console.error(`Path: ${project.project.path}`)
+        console.error(`Active: ${project.project.active ? 'Yes' : 'No'}`)
+        console.error(`Description: ${project.project.description || 'N/A'}`)
+        console.error(`Repository: ${project.project.repository || 'N/A'}`)
+        console.error(`Config File: ${project.project.configFile || 'N/A'}`)
+        console.error(`Tickets Path: ${project.project.ticketsPath || 'docs/CRs'}`)
 
         // Show document discovery settings for global-only projects
         if (project.document || project.metadata?.globalOnly) {
-          console.log('\nDocument Discovery:')
+          console.error('\nDocument Discovery:')
           if (project.document?.paths) {
-            console.log(`  Paths: [${project.document.paths.map(p => `"${p}"`).join(', ')}]`)
+            console.error(`  Paths: [${project.document.paths.map(p => `"${p}"`).join(', ')}]`)
           }
           else {
-            console.log(`  Paths: []`)
+            console.error(`  Paths: []`)
           }
-          console.log(`  Exclude Folders: [${(project.document?.excludeFolders || []).map(f => `"${f}"`).join(', ')}]`)
-          console.log(`  Max Depth: ${project.document?.maxDepth || 3}`)
+          console.error(`  Exclude Folders: [${(project.document?.excludeFolders || []).map(f => `"${f}"`).join(', ')}]`)
+          console.error(`  Max Depth: ${project.document?.maxDepth || 3}`)
         }
 
-        console.log('\nMetadata:')
-        console.log(`  Date Registered: ${project.metadata.dateRegistered}`)
-        console.log(`  Last Accessed: ${project.metadata.lastAccessed}`)
-        console.log(`  Version: ${project.metadata.version}`)
+        console.error('\nMetadata:')
+        console.error(`  Date Registered: ${project.metadata.dateRegistered}`)
+        console.error(`  Last Accessed: ${project.metadata.lastAccessed}`)
+        console.error(`  Version: ${project.metadata.version}`)
         if (project.metadata?.globalOnly) {
-          console.log(`  Mode: Global-Only`)
+          console.error(`  Mode: Global-Only`)
         }
-        console.log('─'.repeat(80))
+        console.error('─'.repeat(80))
       }
     }
     catch (error) {
@@ -330,17 +331,17 @@ class ProjectCommands {
 
       const project = await this.manager.updateProject(codeOrId, updates)
 
-      console.log('\nProject updated successfully!')
-      console.log(`  ID: ${project.id}`)
-      console.log(`  Name: ${project.project.name}`)
-      console.log(`  Code: ${project.project.code}`)
-      console.log(`  Path: ${project.project.path}`)
-      console.log(`  Active: ${project.project.active ? 'Yes' : 'No'}`)
+      console.error('\nProject updated successfully!')
+      console.error(`  ID: ${project.id}`)
+      console.error(`  Name: ${project.project.name}`)
+      console.error(`  Code: ${project.project.code}`)
+      console.error(`  Path: ${project.project.path}`)
+      console.error(`  Active: ${project.project.active ? 'Yes' : 'No'}`)
       if (project.project.description) {
-        console.log(`  Description: ${project.project.description}`)
+        console.error(`  Description: ${project.project.description}`)
       }
       if (project.project.repository) {
-        console.log(`  Repository: ${project.project.repository}`)
+        console.error(`  Repository: ${project.project.repository}`)
       }
     }
     catch (error) {
@@ -373,18 +374,18 @@ class ProjectCommands {
 
       // Confirm deletion (skip with --force flag)
       if (!args.flags.force) {
-        console.log('\nProject to be deleted:')
-        console.log(`  ID: ${project.id}`)
-        console.log(`  Name: ${project.project.name}`)
-        console.log(`  Path: ${project.project.path}`)
+        console.error('\nProject to be deleted:')
+        console.error(`  ID: ${project.id}`)
+        console.error(`  Name: ${project.project.name}`)
+        console.error(`  Path: ${project.project.path}`)
 
         // Red background WARNING
-        console.log(`\n\x1B[41m\x1B[1;37m ⚠️  WARNING: PERMANENT ACTION \x1B[0m`)
-        console.log(`\x1B[41m\x1B[37m  This will permanently delete the project profile.     \x1B[0m`)
-        console.log(`\x1B[41m\x1B[37m  Project files and folders will NOT be affected.       \x1B[0m`)
-        console.log(`\x1B[41m\x1B[37m  There is no way to undo this action.                 \x1B[0m`)
+        console.error(`\n\x1B[41m\x1B[1;37m ⚠️  WARNING: PERMANENT ACTION \x1B[0m`)
+        console.error(`\x1B[41m\x1B[37m  This will permanently delete the project profile.     \x1B[0m`)
+        console.error(`\x1B[41m\x1B[37m  Project files and folders will NOT be affected.       \x1B[0m`)
+        console.error(`\x1B[41m\x1B[37m  There is no way to undo this action.                 \x1B[0m`)
 
-        console.log(`\n\x1B[1;31mFiles that will be removed:\x1B[0m`)
+        console.error(`\n\x1B[1;31mFiles that will be removed:\x1B[0m`)
 
         // Check if files actually exist and apply strikethrough if not
         const registryFile = project.registryFile || path.join(process.env.HOME || '', '.config', 'markdown-ticket', 'projects', `${project.id}.toml`)
@@ -395,17 +396,17 @@ class ProjectCommands {
         const configExists = fs.existsSync(configFile)
         const counterExists = fs.existsSync(counterFile)
 
-        console.log(`  - Registry entry: ${!registryExists ? `\x1B[9m${registryFile.replace(process.env.HOME || '', '~')}\x1B[0m` : registryFile.replace(process.env.HOME || '', '~')}`)
-        console.log(`  - Project config: ${!configExists ? `\x1B[9m${project.project.path}/.mdt-config.toml\x1B[0m` : `${project.project.path}/.mdt-config.toml`}`)
-        console.log(`  - Counter file: ${!counterExists ? `\x1B[9m${project.project.path}/.mdt-next\x1B[0m` : `${project.project.path}/.mdt-next`}`)
+        console.error(`  - Registry entry: ${!registryExists ? `\x1B[9m${registryFile.replace(process.env.HOME || '', '~')}\x1B[0m` : registryFile.replace(process.env.HOME || '', '~')}`)
+        console.error(`  - Project config: ${!configExists ? `\x1B[9m${project.project.path}/.mdt-config.toml\x1B[0m` : `${project.project.path}/.mdt-config.toml`}`)
+        console.error(`  - Counter file: ${!counterExists ? `\x1B[9m${project.project.path}/.mdt-next\x1B[0m` : `${project.project.path}/.mdt-next`}`)
 
         // Orange background DISABLE OPTION
-        console.log(`\n\x1B[43m\x1B[1;30m 💡 ALTERNATIVE: DISABLE THIS PROJECT \x1B[0m`)
-        console.log(`\x1B[43m\x1B[30m  Type "d" to disable instead of delete. \x1B[0m`)
-        console.log(`\x1B[43m\x1B[30m  The project will be hidden but all files remain intact.    \x1B[0m`)
+        console.error(`\n\x1B[43m\x1B[1;30m 💡 ALTERNATIVE: DISABLE THIS PROJECT \x1B[0m`)
+        console.error(`\x1B[43m\x1B[30m  Type "d" to disable instead of delete. \x1B[0m`)
+        console.error(`\x1B[43m\x1B[30m  The project will be hidden but all files remain intact.    \x1B[0m`)
 
         const projectCode = project.project.code || project.id
-        console.log(`\nType "\x1B[1;31m${projectCode}\x1B[0m" for project \x1B[1;31mdeletion\x1B[0m, "\x1B[1;33md\x1B[0m" to \x1B[1;33mdisable\x1B[0m, or "\x1B[1;32mn\x1B[0m" to \x1B[1;32mcancel\x1B[0m: `)
+        console.error(`\nType "\x1B[1;31m${projectCode}\x1B[0m" for project \x1B[1;31mdeletion\x1B[0m, "\x1B[1;33md\x1B[0m" to \x1B[1;33mdisable\x1B[0m, or "\x1B[1;32mn\x1B[0m" to \x1B[1;32mcancel\x1B[0m: `)
         const action = await this.prompt.question(`> `)
 
         const actionLower = action.toLowerCase()
@@ -417,9 +418,9 @@ class ProjectCommands {
         if (actionLower === 'd') {
           // Disable project instead of deleting
           await this.manager.disableProject(codeOrId)
-          console.log('\n✅ Project disabled successfully!')
-          console.log('  - Project marked as inactive')
-          console.log('  - All files and data preserved')
+          console.error('\n✅ Project disabled successfully!')
+          console.error('  - Project marked as inactive')
+          console.error('  - All files and data preserved')
           return
         }
 
@@ -432,16 +433,16 @@ class ProjectCommands {
           const deletedConfig = !fs.existsSync(configFile)
           const deletedCounter = !fs.existsSync(counterFile)
 
-          console.log('\n✅ Project deleted successfully!')
+          console.error('\n✅ Project deleted successfully!')
           if (deletedRegistry) {
             const registryFileName = (project.registryFile || '').replace(process.env.HOME || '', '~')
-            console.log(`  - Registry entry: \x1B[9m${registryFileName}\x1B[0m \x1B[32m✅\x1B[0m`)
+            console.error(`  - Registry entry: \x1B[9m${registryFileName}\x1B[0m \x1B[32m✅\x1B[0m`)
           }
           if (deletedConfig) {
-            console.log(`  - Project config: \x1B[9m${project.project.path}/.mdt-config.toml\x1B[0m \x1B[32m✅\x1B[0m`)
+            console.error(`  - Project config: \x1B[9m${project.project.path}/.mdt-config.toml\x1B[0m \x1B[32m✅\x1B[0m`)
           }
           if (deletedCounter) {
-            console.log(`  - Counter file: \x1B[9m${project.project.path}/.mdt-next\x1B[0m \x1B[32m✅\x1B[0m`)
+            console.error(`  - Counter file: \x1B[9m${project.project.path}/.mdt-next\x1B[0m \x1B[32m✅\x1B[0m`)
           }
           return
         }
@@ -452,10 +453,10 @@ class ProjectCommands {
         // Immediate deletion with --force or --immediate flag
         await this.manager.deleteProject(codeOrId, true)
 
-        console.log('\n✅ Project deleted successfully!')
-        console.log(`  - Registry entry: ${(project.registryFile || '').replace(process.env.HOME || '', '~')}`)
-        console.log(`  - Project config: ${project.project.path}/.mdt-config.toml`)
-        console.log(`  - Counter file: ${project.project.path}/.mdt-next`)
+        console.error('\n✅ Project deleted successfully!')
+        console.error(`  - Registry entry: ${(project.registryFile || '').replace(process.env.HOME || '', '~')}`)
+        console.error(`  - Project config: ${project.project.path}/.mdt-config.toml`)
+        console.error(`  - Counter file: ${project.project.path}/.mdt-next`)
       }
     }
     catch (error) {
@@ -486,15 +487,15 @@ class ProjectCommands {
       // Get project to show details
       const project = await this.manager.getProject(codeOrId)
 
-      console.log('\nProject to be enabled:')
-      console.log(`  ID: ${project.id}`)
-      console.log(`  Name: ${project.project.name}`)
-      console.log(`  Path: ${project.project.path}`)
-      console.log(`  Current Status: ${project.project.active ? '\x1B[32mActive\x1B[0m' : '\x1B[31mInactive\x1B[0m'}`)
+      console.error('\nProject to be enabled:')
+      console.error(`  ID: ${project.id}`)
+      console.error(`  Name: ${project.project.name}`)
+      console.error(`  Path: ${project.project.path}`)
+      console.error(`  Current Status: ${project.project.active ? '\x1B[32mActive\x1B[0m' : '\x1B[31mInactive\x1B[0m'}`)
 
       // Check if already active
       if (project.project.active) {
-        console.log('\n⚠️  Project is already active')
+        console.error('\n⚠️  Project is already active')
         return
       }
 
@@ -507,9 +508,9 @@ class ProjectCommands {
       // Enable project
       await this.manager.enableProject(codeOrId)
 
-      console.log('\n✅ Project enabled successfully!')
-      console.log('  - Project marked as active')
-      console.log('  - Project will appear in UI and CLI listings')
+      console.error('\n✅ Project enabled successfully!')
+      console.error('  - Project marked as active')
+      console.error('  - Project will appear in UI and CLI listings')
     }
     catch (error) {
       if (error instanceof Error && error.message.includes('not found')) {
@@ -539,15 +540,15 @@ class ProjectCommands {
       // Get project to show details
       const project = await this.manager.getProject(codeOrId)
 
-      console.log('\nProject to be disabled:')
-      console.log(`  ID: ${project.id}`)
-      console.log(`  Name: ${project.project.name}`)
-      console.log(`  Path: ${project.project.path}`)
-      console.log(`  Current Status: ${project.project.active ? '\x1B[32mActive\x1B[0m' : '\x1B[31mInactive\x1B[0m'}`)
+      console.error('\nProject to be disabled:')
+      console.error(`  ID: ${project.id}`)
+      console.error(`  Name: ${project.project.name}`)
+      console.error(`  Path: ${project.project.path}`)
+      console.error(`  Current Status: ${project.project.active ? '\x1B[32mActive\x1B[0m' : '\x1B[31mInactive\x1B[0m'}`)
 
       // Check if already inactive
       if (!project.project.active) {
-        console.log('\n⚠️  Project is already inactive')
+        console.error('\n⚠️  Project is already inactive')
         return
       }
 
@@ -560,10 +561,10 @@ class ProjectCommands {
       // Disable project
       await this.manager.disableProject(codeOrId)
 
-      console.log('\n✅ Project disabled successfully!')
-      console.log('  - Project marked as inactive')
-      console.log('  - Project will be hidden from UI and CLI listings')
-      console.log('  - All files and data preserved')
+      console.error('\n✅ Project disabled successfully!')
+      console.error('  - Project marked as inactive')
+      console.error('  - Project will be hidden from UI and CLI listings')
+      console.error('  - All files and data preserved')
     }
     catch (error) {
       if (error instanceof Error && error.message.includes('not found')) {
@@ -584,8 +585,8 @@ class ProjectCommands {
    * Interactive project creation
    */
   private async interactiveCreate(): Promise<ProjectCreateInput> {
-    console.log('\nCreate New Project')
-    console.log('─'.repeat(80))
+    console.error('\nCreate New Project')
+    console.error('─'.repeat(80))
 
     const name = await this.promptWithValidation(
       'Project name: ',
@@ -631,9 +632,9 @@ class ProjectCommands {
     // Load current project
     const project = await this.manager.getProject(codeOrId)
 
-    console.log('\nUpdate Project')
-    console.log('─'.repeat(80))
-    console.log('Current values shown in [brackets]. Press Enter to keep current value.\n')
+    console.error('\nUpdate Project')
+    console.error('─'.repeat(80))
+    console.error('Current values shown in [brackets]. Press Enter to keep current value.\n')
 
     const name = await this.prompt.question(`Name [${project.project.name}]: `)
     const description = await this.prompt.question(`Description [${project.project.description || 'none'}]: `)
@@ -674,7 +675,7 @@ class ProjectCommands {
   ): Promise<string> {
     let value = await this.prompt.question(promptText)
     while (!validator(value)) {
-      console.log(`  Error: ${errorMessage}`)
+      console.error(`  Error: ${errorMessage}`)
       value = await this.prompt.question(promptText)
     }
     return value
@@ -813,7 +814,6 @@ class ProjectCLI {
     // Parse remaining arguments
     while (i < args.length) {
       const arg = args[i]
-      const originalArg = arg
 
       if (arg.startsWith('--')) {
         // Long flag
@@ -866,7 +866,7 @@ class ProjectCLI {
    * Show usage information
    */
   private showUsage(): void {
-    console.log(`
+    console.error(`
 Project Management CLI
 
 Usage: project <command> [options]

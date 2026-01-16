@@ -80,7 +80,7 @@ export class RetryHelper {
 
         // Success
         if (attempt > 1) {
-          console.log(`[${logContext}] Operation succeeded on attempt ${attempt}/${maxAttempts}`)
+          console.error(`[${logContext}] Operation succeeded on attempt ${attempt}/${maxAttempts}`)
         }
         return result as T
       }

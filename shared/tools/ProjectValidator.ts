@@ -50,7 +50,7 @@ export class ProjectValidator {
   /**
    * Validate directory path (browser-safe)
    */
-  static validatePath(inputPath: string, options: { mustExist?: boolean } = {}): ValidationResult {
+  static validatePath(inputPath: string, _options: { mustExist?: boolean } = {}): ValidationResult {
     try {
       // Expand tilde (no-op in browser)
       const expandedPath = this.expandTildePath(inputPath)
@@ -125,6 +125,7 @@ export class ProjectValidator {
    */
   static isValidUrl(urlString: string): boolean {
     try {
+      // eslint-disable-next-line no-new
       new URL(urlString)
       return true
     }

@@ -10,6 +10,7 @@ import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import process from 'node:process'
 import { getPortConfig, validatePortConfig } from '../config/ports.js'
 import { TestFrameworkError } from '../types.js'
 

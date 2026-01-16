@@ -85,3 +85,4 @@ counter-api/
 # suppress unused file copies
 **/.unused
 **/unused.*
+typescript-graph.md

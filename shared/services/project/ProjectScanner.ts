@@ -39,8 +39,8 @@ export class ProjectScanner {
           this.scanDirectoryForProjects(searchPath, discovered, 3) // Max depth 3
         }
       }
-      catch (error) {
-        logQuiet(this.quiet, `Error scanning ${searchPath}:`, error)
+      catch {
+        logQuiet(this.quiet, `Error scanning ${searchPath}`)
       }
     }
     logQuiet(this.quiet, `🔍 Auto-discovery complete. Found ${discovered.length} projects:`)
@@ -109,7 +109,7 @@ export class ProjectScanner {
         }
       }
     }
-    catch (error) {
+    catch {
       // Silently skip directories we can't read
     }
   }

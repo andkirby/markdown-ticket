@@ -21,9 +21,12 @@ function httpGet(url: string): Promise<{ ok: boolean, statusCode: number, json: 
   return new Promise((resolve, reject) => {
     const req = http.get(url, { headers: { Connection: 'close' } }, (res) => {
       let data = ''
-      res.on('data', (chunk) => { data += chunk })
+      res.on('data', (chunk) => {
+        data += chunk
+      })
       res.on('end', () => {
-        res.destroy() // Explicitly close response socket
+        // Explicitly close response socket
+        res.destroy()
         resolve({
           ok: res.statusCode !== undefined && res.statusCode >= 200 && res.statusCode < 300,
           statusCode: res.statusCode ?? 0,
@@ -53,14 +56,14 @@ describe('shared/test-lib - Integration', () => {
 
     // 2. Create project factory and test project
     factory = new ProjectFactory(testEnv)
-    const project = await factory.createProject('empty', {
+    await factory.createProject('empty', {
       name: 'Integration Test Project',
       code: 'TEST',
       ticketsPath: 'specs/tickets',
     })
 
     // 3. Create a test CR
-    const crResult = await factory.createTestCR('TEST', {
+    await factory.createTestCR('TEST', {
       title: 'Test Server Discovery',
       type: 'Feature Enhancement',
       content: 'Verify server discovers this CR',
@@ -137,7 +140,7 @@ describe('shared/test-lib - Integration', () => {
 
   it('backend server discovers test-lib created project', async () => {
     // Verify server is still running before making request
-    const isReady = await testServer.isReady('backend')
+    await testServer.isReady('backend')
 
     const port = testEnv.getPortConfig().backend
     // Use bypassCache to avoid cached empty project list from server startup

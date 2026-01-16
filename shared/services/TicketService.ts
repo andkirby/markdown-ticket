@@ -336,7 +336,7 @@ export class TicketService {
         const match = filename.match(new RegExp(`${project.project.code}-(\\d+)-`, 'i'))
         if (match) {
           const number = Number.parseInt(match[1], 10)
-          if (!isNaN(number) && number > highestExistingNumber) {
+          if (!Number.isNaN(number) && number > highestExistingNumber) {
             highestExistingNumber = number
           }
         }
