@@ -7,20 +7,20 @@
 
 import process from 'node:process'
 
-export interface RateLimitConfig {
+interface RateLimitConfig {
   enabled: boolean
   maxRequests: number
   windowMs: number
 }
 
-export interface RateLimitResult {
+interface RateLimitResult {
   allowed: boolean
   remainingRequests: number
   resetTime: Date
   retryAfter?: number // seconds until retry
 }
 
-export interface ToolRateLimitInfo {
+interface ToolRateLimitInfo {
   count: number
   windowStart: number
   lastRequest: number

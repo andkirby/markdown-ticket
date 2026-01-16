@@ -376,6 +376,3 @@ export const TOOL_NAMES = {
   MANAGE_CR_SECTIONS: 'manage_cr_sections',
   SUGGEST_CR_IMPROVEMENTS: 'suggest_cr_improvements',
 } as const
-
-// Export type for tool names
-export type ToolName = typeof TOOL_NAMES[keyof typeof TOOL_NAMES]

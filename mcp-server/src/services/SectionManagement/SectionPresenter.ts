@@ -100,42 +100,4 @@ export class SectionPresenter {
 
     return Sanitizer.sanitizeText(lines.join('\n'))
   }
-
-  /** Format section not found error */
-  static formatSectionNotFoundError(section: string, key?: string): string {
-    return `Section '${section}' not found${key ? ` in CR ${key}` : ''}.`
-  }
-
-  /** Format multiple matches error with suggestions */
-  static formatMultipleMatchesError(section: string, matches: SectionMatch[]): string {
-    const paths = matches.map(m => m.hierarchicalPath).join('\n  - ')
-    return `Multiple sections match '${section}'. Please use hierarchical path:\n  - ${paths}`
-  }
-
-  /** Format section validation error with suggestions */
-  static formatValidationError(
-    section: string,
-    errors: string[],
-    suggestions: string[],
-    key: string,
-  ): string {
-    const parts = [
-      `❌ **Section validation failed**\n\n**Errors:**\n${errors.map(e => `- ${e}`).join('\n')}\n`,
-    ]
-
-    if (suggestions.length > 0) {
-      parts.push(`**Suggestions:**\n${suggestions.map(s => `- ${s}`).join('\n')}\n`)
-    }
-
-    parts.push(`Use \`manage_cr_sections\` with operation="list" to see all available sections in CR ${key}.`)
-
-    return parts.join('\n')
-  }
-
-  /** Format generic error with context */
-  static formatError(error: Error | string, context?: string): string {
-    const errorMessage = error instanceof Error ? error.message : error
-    const sanitizedMessage = Sanitizer.sanitizeError(errorMessage)
-    return context ? `${context}: ${sanitizedMessage}` : sanitizedMessage
-  }
 }

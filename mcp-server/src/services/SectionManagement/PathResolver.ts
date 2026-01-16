@@ -89,27 +89,6 @@ export class PathResolver {
   }
 
   /**
-   * Parse hierarchical path into components
-   *
-   * Phase 4 (prep): Stub implementation - full version in MDT-114 feature
-   *
-   * @param path - Hierarchical path (e.g., "Parent / Child")
-   * @returns Array of path components
-   */
-  parseHierarchical(path: string): string[] {
-    if (!path.includes(' / ')) {
-      return [path]
-    }
-
-    // Stub: Basic split for now
-    // Full implementation in MDT-114 feature will handle:
-    // - Multi-level paths
-    // - Path validation
-    // - Path normalization
-    return path.split(' / ').map(p => p.trim())
-  }
-
-  /**
    * Validate path against available sections
    *
    * Supports both user-friendly format ("1. Description") and exact format ("## 1. Description")
@@ -206,24 +185,6 @@ export class PathResolver {
       errors: [],
       suggestions: [],
     }
-  }
-
-  /**
-   * Find matching section(s) for a given path
-   *
-   * Uses MarkdownSectionService for actual section finding
-   *
-   * @param sections - All sections in document
-   * @param path - Path to match
-   * @returns Array of matching sections
-   */
-  findMatch(sections: SectionMatch[], path: string): SectionMatch[] {
-    const normalized = this.normalizeForMatching(path)
-
-    return sections.filter((section) => {
-      const normalizedHeader = this.normalizeForMatching(section.headerText)
-      return normalizedHeader.includes(normalized)
-    })
   }
 
   /**
