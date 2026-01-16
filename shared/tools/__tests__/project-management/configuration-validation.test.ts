@@ -3,39 +3,37 @@
  * Behavioral tests for configuration validation and consistency
  */
 
-import { TestEnvironment } from '../../../test-lib/index';
-import * as path from 'path';
-import * as fs from 'fs';
-import { execSync } from 'child_process';
-import { parse as parseToml } from 'toml';
+import { execSync } from 'node:child_process'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { parse as parseToml } from 'toml'
+import { TestEnvironment } from '../../../test-lib/index'
 
 // Global test environment instance
-let testEnv: TestEnvironment;
+let testEnv: TestEnvironment
 
 /**
  * Helper to run CLI command with TestEnvironment isolation
  */
-const runIsolatedCommand = (
-  command: string
-): { stdout: string; stderr: string; exitCode: number; success: boolean } => {
+function runIsolatedCommand(command: string): { stdout: string, stderr: string, exitCode: number, success: boolean } {
   const env = {
     ...process.env,
     CONFIG_DIR: testEnv.getConfigDirectory(),
     HOME: testEnv.getConfigDirectory(),
     XDG_CONFIG_HOME: testEnv.getConfigDirectory(),
-    MDT_NO_GLOBAL_CACHE: 'true'
-  };
+    MDT_NO_GLOBAL_CACHE: 'true',
+  }
 
   // Extract the arguments after "--" from npm script format
-  const argsMatch = command.match(/--\s+(.+)$/);
-  let actualCommand = command;
+  const argsMatch = command.match(/--\s+(.+)$/)
+  let actualCommand = command
   if (argsMatch) {
-    const args = argsMatch[1];
-    const rootDir = path.join(process.cwd(), '..');
-    const cliPath = path.join(rootDir, 'shared', 'dist', 'tools', 'project-cli.js');
-    const subcommandMatch = command.match(/project:(\w+)/);
-    const subcommand = subcommandMatch ? subcommandMatch[1] : 'create';
-    actualCommand = `node "${cliPath}" ${subcommand} ${args}`;
+    const args = argsMatch[1]
+    const rootDir = path.join(process.cwd(), '..')
+    const cliPath = path.join(rootDir, 'shared', 'dist', 'tools', 'project-cli.js')
+    const subcommandMatch = command.match(/project:(\w+)/)
+    const subcommand = subcommandMatch ? subcommandMatch[1] : 'create'
+    actualCommand = `node "${cliPath}" ${subcommand} ${args}`
   }
 
   try {
@@ -44,222 +42,224 @@ const runIsolatedCommand = (
       timeout: 10000,
       env,
       stdio: ['pipe', 'pipe', 'pipe'],
-      cwd: path.join(process.cwd(), '..')
-    });
+      cwd: path.join(process.cwd(), '..'),
+    })
 
     return {
       stdout: result.toString(),
       stderr: '',
       exitCode: 0,
-      success: true
-    };
-  } catch (error: any) {
+      success: true,
+    }
+  }
+  catch (error: any) {
     return {
       stdout: error.stdout?.toString() || '',
       stderr: error.stderr?.toString() || error.message,
       exitCode: error.status || 1,
-      success: false
-    };
+      success: false,
+    }
   }
-};
+}
 
 /**
  * Helper to read local config from project path
  */
-const readLocalConfig = (projectPath: string): any => {
-  const configFile = path.join(projectPath, '.mdt-config.toml');
+function readLocalConfig(projectPath: string): any {
+  const configFile = path.join(projectPath, '.mdt-config.toml')
   if (!fs.existsSync(configFile)) {
-    return null;
+    return null
   }
-  const content = fs.readFileSync(configFile, 'utf-8');
-  return parseToml(content);
-};
+  const content = fs.readFileSync(configFile, 'utf-8')
+  return parseToml(content)
+}
 
 /**
  * Helper to read global registry entry
  */
-const readGlobalRegistryEntry = (projectPath: string): any => {
-  const configDir = testEnv.getConfigDirectory();
-  const projectsDir = path.join(configDir, 'projects');
+function readGlobalRegistryEntry(projectPath: string): any {
+  const configDir = testEnv.getConfigDirectory()
+  const projectsDir = path.join(configDir, 'projects')
 
   if (!fs.existsSync(projectsDir)) {
-    return null;
+    return null
   }
 
-  const files = fs.readdirSync(projectsDir);
+  const files = fs.readdirSync(projectsDir)
   for (const tomlFile of files) {
-    if (!tomlFile.endsWith('.toml')) continue;
+    if (!tomlFile.endsWith('.toml'))
+      continue
 
-    const configFile = path.join(projectsDir, tomlFile);
-    const content = fs.readFileSync(configFile, 'utf-8');
-    const result: any = { project: {} };
-    const lines = content.split('\n');
+    const configFile = path.join(projectsDir, tomlFile)
+    const content = fs.readFileSync(configFile, 'utf-8')
+    const result: any = { project: {} }
+    const lines = content.split('\n')
     for (const line of lines) {
-      const match = line.match(/^(\w+)\s*=\s*"(.+)"$/);
+      const match = line.match(/^(\w+)\s*=\s*"(.+)"$/)
       if (match) {
-        result.project[match[1]] = match[2];
+        result.project[match[1]] = match[2]
       }
     }
 
     if (result.project.path === projectPath) {
-      return result;
+      return result
     }
   }
-  return null;
-};
+  return null
+}
 
-const configHasRequiredFields = (config: any): boolean => {
+function configHasRequiredFields(config: any): boolean {
   if (!config || !config.project) {
-    return false;
+    return false
   }
-  const { project } = config;
+  const { project } = config
   return !!(
-    typeof project.name === 'string' &&
-    typeof project.code === 'string' &&
-    typeof project.id === 'string' &&
-    typeof project.ticketsPath === 'string'
-  );
-};
+    typeof project.name === 'string'
+    && typeof project.code === 'string'
+    && typeof project.id === 'string'
+    && typeof project.ticketsPath === 'string'
+  )
+}
 
-const configHasValidCode = (code: string): boolean => {
-  return /^[A-Z][A-Z0-9]{1,4}$/.test(code);
-};
+function configHasValidCode(code: string): boolean {
+  return /^[A-Z][A-Z0-9]{1,4}$/.test(code)
+}
 
 describe('configuration validation', () => {
-  let projectsDir: string;
+  let projectsDir: string
 
   beforeAll(async () => {
     // Build the shared package before running CLI commands (the dist folder is deleted by the test script)
-    execSync('npm run build', { cwd: process.cwd(), stdio: 'inherit' });
+    execSync('npm run build', { cwd: process.cwd(), stdio: 'inherit' })
 
-    testEnv = new TestEnvironment();
-    await testEnv.setup();
-    projectsDir = path.join(testEnv.getTempDirectory(), 'projects');
-    fs.mkdirSync(projectsDir, { recursive: true });
-  });
+    testEnv = new TestEnvironment()
+    await testEnv.setup()
+    projectsDir = path.join(testEnv.getTempDirectory(), 'projects')
+    fs.mkdirSync(projectsDir, { recursive: true })
+  })
 
   afterAll(async () => {
-    await testEnv.cleanup();
-  });
+    await testEnv.cleanup()
+  })
 
   describe('when configuration is generated', () => {
-    let testProject: { name: string; code: string; path: string };
-    let testCounter = 0;
+    let testProject: { name: string, code: string, path: string }
+    let testCounter = 0
 
     beforeEach(async () => {
-      testCounter++;
+      testCounter++
       testProject = {
         name: 'Test Project',
         code: `CFG${testCounter % 10}`, // Generate unique codes: CFG1, CFG2, etc.
-        path: path.join(projectsDir, `test-project-${Date.now()}-${Math.random().toString(36).substring(7)}`)
-      };
-    });
+        path: path.join(projectsDir, `test-project-${Date.now()}-${Math.random().toString(36).substring(7)}`),
+      }
+    })
 
     it('should validate generated configuration schema', async () => {
       // Arrange & Act
       const result = runIsolatedCommand(
-        `npm run project:create -- --name "${testProject.name}" --code ${testProject.code} --path "${testProject.path}" --create-project-path`
-      );
+        `npm run project:create -- --name "${testProject.name}" --code ${testProject.code} --path "${testProject.path}" --create-project-path`,
+      )
 
       // Assert CLI succeeded
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(true)
 
       // Verify local configuration schema
-      const localConfig = readLocalConfig(testProject.path);
-      expect(localConfig).not.toBeNull();
-      expect(configHasRequiredFields(localConfig)).toBe(true);
+      const localConfig = readLocalConfig(testProject.path)
+      expect(localConfig).not.toBeNull()
+      expect(configHasRequiredFields(localConfig)).toBe(true)
 
       // Verify specific field types and values
-      const { project } = localConfig;
-      expect(typeof project.name).toBe('string');
-      expect(typeof project.code).toBe('string');
-      expect(typeof project.id).toBe('string');
-      expect(typeof project.ticketsPath).toBe('string');
-      expect(project.name).toBe(testProject.name);
-      expect(project.code).toBe(testProject.code);
+      const { project } = localConfig
+      expect(typeof project.name).toBe('string')
+      expect(typeof project.code).toBe('string')
+      expect(typeof project.id).toBe('string')
+      expect(typeof project.ticketsPath).toBe('string')
+      expect(project.name).toBe(testProject.name)
+      expect(project.code).toBe(testProject.code)
 
       // Verify document configuration (top-level section)
-      expect(localConfig.document).toBeDefined();
-    });
-  });
+      expect(localConfig.document).toBeDefined()
+    })
+  })
 
   describe('project code validation', () => {
     it('should enforce 2-5 uppercase letter format', async () => {
-      const validCodes = ['AB', 'XYZ', 'TEST', 'T3ST', 'ABCDE'];
-      const invalidCodes = ['A', 'ABCDEF', 'Abc', 'A_B', 'TEST-123'];
+      const validCodes = ['AB', 'XYZ', 'TEST', 'T3ST', 'ABCDE']
+      const invalidCodes = ['A', 'ABCDEF', 'Abc', 'A_B', 'TEST-123']
 
       // Test valid codes
       for (const code of validCodes) {
-        expect(configHasValidCode(code)).toBe(true);
+        expect(configHasValidCode(code)).toBe(true)
       }
 
       // Test invalid codes
       for (const code of invalidCodes) {
-        expect(configHasValidCode(code)).toBe(false);
+        expect(configHasValidCode(code)).toBe(false)
       }
-    });
+    })
 
     it('should accept valid codes during project creation', async () => {
-      const timestamp = Date.now();
+      const timestamp = Date.now()
       const validCodes = [
         { code: `AB${timestamp % 100}`, description: 'two letters' },
-        { code: `XY${timestamp % 100}`, description: 'three letters' }
-      ];
+        { code: `XY${timestamp % 100}`, description: 'three letters' },
+      ]
 
       for (const { code, description } of validCodes) {
-        const testPath = path.join(projectsDir, `test-valid-${code.toLowerCase()}-${Date.now()}`);
+        const testPath = path.join(projectsDir, `test-valid-${code.toLowerCase()}-${Date.now()}`)
 
         const result = runIsolatedCommand(
-          `npm run project:create -- --name "Valid ${description} Project" --code ${code} --path "${testPath}" --create-project-path`
-        );
+          `npm run project:create -- --name "Valid ${description} Project" --code ${code} --path "${testPath}" --create-project-path`,
+        )
 
-        expect(result.success).toBe(true);
+        expect(result.success).toBe(true)
 
         // Verify the code was stored correctly
-        const config = readLocalConfig(testPath);
-        expect(config).not.toBeNull();
-        expect(config.project.code).toBe(code);
+        const config = readLocalConfig(testPath)
+        expect(config).not.toBeNull()
+        expect(config.project.code).toBe(code)
       }
-    });
-  });
+    })
+  })
 
   describe('configuration consistency', () => {
-    let testProject: { name: string; code: string; path: string };
-    let testCounter = 0;
+    let testProject: { name: string, code: string, path: string }
+    let testCounter = 0
 
     beforeEach(() => {
-      testCounter++;
+      testCounter++
       testProject = {
         name: `Test Project ${testCounter}`,
         code: `TST${testCounter % 10}`, // Generate unique codes: TST1, TST2, etc.
-        path: path.join(projectsDir, `test-project-${Date.now()}-${Math.random().toString(36).substring(7)}`)
-      };
-    });
+        path: path.join(projectsDir, `test-project-${Date.now()}-${Math.random().toString(36).substring(7)}`),
+      }
+    })
 
     it('should ensure CLI output matches configuration values', async () => {
       // Arrange - Create a project
       const createResult = runIsolatedCommand(
-        `npm run project:create -- --name "${testProject.name}" --code ${testProject.code} --path "${testProject.path}" --create-project-path`
-      );
+        `npm run project:create -- --name "${testProject.name}" --code ${testProject.code} --path "${testProject.path}" --create-project-path`,
+      )
 
-      expect(createResult.success).toBe(true);
+      expect(createResult.success).toBe(true)
 
       // Act - List projects
-      const listResult = runIsolatedCommand('npm run project:list');
+      const listResult = runIsolatedCommand('npm run project:list')
 
       // Assert - Verify output contains expected values
-      expect(listResult.success).toBe(true);
-      expect(listResult.stdout).toContain(testProject.code);
-      expect(listResult.stdout).toContain(testProject.name);
+      expect(listResult.success).toBe(true)
+      expect(listResult.stdout).toContain(testProject.code)
+      expect(listResult.stdout).toContain(testProject.name)
 
       // Verify configuration matches
-      const config = readLocalConfig(testProject.path);
-      const globalEntry = readGlobalRegistryEntry(testProject.path);
+      const config = readLocalConfig(testProject.path)
+      const globalEntry = readGlobalRegistryEntry(testProject.path)
 
-      expect(config.project.name).toBe(testProject.name);
-      expect(config.project.code).toBe(testProject.code);
-      expect(globalEntry).not.toBeNull();
-      expect(globalEntry.project.path).toBe(testProject.path);
-    });
-  });
-});
+      expect(config.project.name).toBe(testProject.name)
+      expect(config.project.code).toBe(testProject.code)
+      expect(globalEntry).not.toBeNull()
+      expect(globalEntry.project.path).toBe(testProject.path)
+    })
+  })
+})

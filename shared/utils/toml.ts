@@ -1,4 +1,4 @@
-import { parse as parseTomlContent, stringify } from 'smol-toml';
+import { parse as parseTomlContent, stringify } from 'smol-toml'
 
 /**
  * Parse TOML string to JavaScript object
@@ -6,7 +6,7 @@ import { parse as parseTomlContent, stringify } from 'smol-toml';
  * @returns Parsed JavaScript object
  */
 export function parseToml(content: string): any {
-  return parseTomlContent(content);
+  return parseTomlContent(content)
 }
 
 /**
@@ -14,11 +14,11 @@ export function parseToml(content: string): any {
  * @param content - TOML content as string
  * @returns Parsed JavaScript object
  */
-export const parse = parseTomlContent;
+export const parse = parseTomlContent
 
 /**
  * Convert JavaScript object to TOML string using smol-toml
  * @param obj - Object to serialize to TOML
  * @returns TOML formatted string
  */
-export { stringify };
+export { stringify }

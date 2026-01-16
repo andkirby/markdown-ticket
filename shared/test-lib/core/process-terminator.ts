@@ -7,18 +7,18 @@
  * tree-kill for process tree cleanup, and exit waiting.
  */
 
-import { ChildProcess } from 'child_process';
-import treeKill from 'tree-kill';
-import { closeAllStreams } from '../utils/process-streams.js';
+import type { ChildProcess } from 'node:child_process'
+import treeKill from 'tree-kill'
+import { closeAllStreams } from '../utils/process-streams.js'
 
 /**
  * Options for process termination
  */
 export interface TerminationOptions {
   /** Signal to send for graceful termination (default: SIGTERM) */
-  signal?: NodeJS.Signals;
+  signal?: NodeJS.Signals
   /** Timeout in ms before force kill (default: 5000) */
-  gracefulTimeout?: number;
+  gracefulTimeout?: number
 }
 
 /**
@@ -26,9 +26,9 @@ export interface TerminationOptions {
  */
 export interface TerminationResult {
   /** The signal that was sent */
-  signal: NodeJS.Signals;
+  signal: NodeJS.Signals
   /** Whether the process had to be forcefully killed */
-  forceKilled: boolean;
+  forceKilled: boolean
 }
 
 /**
@@ -36,7 +36,7 @@ export interface TerminationResult {
  */
 export class ProcessTerminator {
   /** Map of server types to their SIGKILL timeout IDs */
-  private sigkillTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private sigkillTimeouts: Map<string, NodeJS.Timeout> = new Map()
 
   /**
    * Terminate a process gracefully with SIGTERM, fallback to SIGKILL
@@ -59,39 +59,41 @@ export class ProcessTerminator {
   async terminate(
     serverType: string,
     process: ChildProcess | undefined,
-    options?: TerminationOptions
+    options?: TerminationOptions,
   ): Promise<TerminationResult> {
-    if (!process) return { signal: 'SIGTERM', forceKilled: false };
+    if (!process)
+      return { signal: 'SIGTERM', forceKilled: false }
 
-    const { signal = 'SIGTERM', gracefulTimeout = 5000 } = options || {};
+    const { signal = 'SIGTERM', gracefulTimeout = 5000 } = options || {}
 
     // Remove event listeners before killing process
-    closeAllStreams(process);
+    closeAllStreams(process)
 
     // Use tree-kill to kill the entire process tree
     if (process.pid) {
-      const pid = process.pid;
+      const pid = process.pid
 
       // Set up the exit listener before sending kill signal
-      const exitPromise = this.waitForExit(process);
+      const exitPromise = this.waitForExit(process)
 
       // Send SIGTERM to entire process tree
       await new Promise<void>((resolve) => {
         treeKill(pid, signal, (err) => {
           if (err) {
             // If SIGTERM fails, fall back to SIGKILL
-            treeKill(pid, 'SIGKILL', () => resolve());
-          } else {
-            resolve();
+            treeKill(pid, 'SIGKILL', () => resolve())
           }
-        });
-      });
+          else {
+            resolve()
+          }
+        })
+      })
 
       // Wait for the process to actually exit
-      await exitPromise;
+      await exitPromise
     }
 
-    return { signal, forceKilled: false };
+    return { signal, forceKilled: false }
   }
 
   /**
@@ -108,8 +110,8 @@ export class ProcessTerminator {
    */
   async forceKill(pid: number): Promise<void> {
     return new Promise<void>((resolve) => {
-      treeKill(pid, 'SIGKILL', () => resolve());
-    });
+      treeKill(pid, 'SIGKILL', () => resolve())
+    })
   }
 
   /**
@@ -122,30 +124,31 @@ export class ProcessTerminator {
    * @private
    */
   private async waitForExit(process: ChildProcess, timeout = 6000): Promise<void> {
-    if (!process || process.killed) return;
+    if (!process || process.killed)
+      return
 
     return new Promise((resolve) => {
-      let timeoutId: NodeJS.Timeout;
+      let timeoutId: NodeJS.Timeout
       const cleanup = () => {
-        clearTimeout(timeoutId);
-        process.off('exit', onExit);
-        process.off('error', onError);
-      };
+        clearTimeout(timeoutId)
+        process.off('exit', onExit)
+        process.off('error', onError)
+      }
       const onExit = () => {
-        cleanup();
-        resolve();
-      };
+        cleanup()
+        resolve()
+      }
       const onError = () => {
-        cleanup();
-        resolve();
-      };
-      process.once('exit', onExit);
-      process.once('error', onError);
+        cleanup()
+        resolve()
+      }
+      process.once('exit', onExit)
+      process.once('error', onError)
       timeoutId = setTimeout(() => {
-        cleanup();
-        resolve();
-      }, timeout);
-    });
+        cleanup()
+        resolve()
+      }, timeout)
+    })
   }
 
   /**
@@ -160,10 +163,10 @@ export class ProcessTerminator {
    * ```
    */
   clearSigkillTimeout(serverType: string): void {
-    const timeout = this.sigkillTimeouts.get(serverType);
+    const timeout = this.sigkillTimeouts.get(serverType)
     if (timeout) {
-      clearTimeout(timeout);
-      this.sigkillTimeouts.delete(serverType);
+      clearTimeout(timeout)
+      this.sigkillTimeouts.delete(serverType)
     }
   }
 
@@ -178,7 +181,7 @@ export class ProcessTerminator {
    * ```
    */
   dispose(): void {
-    this.sigkillTimeouts.forEach(timeout => clearTimeout(timeout));
-    this.sigkillTimeouts.clear();
+    this.sigkillTimeouts.forEach(timeout => clearTimeout(timeout))
+    this.sigkillTimeouts.clear()
   }
 }

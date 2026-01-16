@@ -5,13 +5,13 @@
 
 export interface Ticket {
   // Core required fields
-  code: string;
-  title: string;
-  status: string;
-  type: string;
-  priority: string;
-  dateCreated: Date | null;
-  lastModified: Date | null;
+  code: string
+  title: string
+  status: string
+  type: string
+  priority: string
+  dateCreated: Date | null
+  lastModified: Date | null
   /**
    * Full markdown content including:
    * - ## Description section (problem statement, current/desired state)
@@ -20,43 +20,46 @@ export interface Ticket {
    * - ## Implementation Specification
    * - ## Acceptance Criteria
    */
-  content: string;
-  filePath: string;
+  content: string
+  filePath: string
 
   // Optional fields
-  phaseEpic?: string;
-  assignee?: string;
-  implementationDate?: Date | null;
-  implementationNotes?: string;
-  
+  phaseEpic?: string
+  assignee?: string
+  implementationDate?: Date | null
+  implementationNotes?: string
+
   // Relationship fields (always arrays)
-  relatedTickets: string[];
-  dependsOn: string[];
-  blocks: string[];
+  relatedTickets: string[]
+  dependsOn: string[]
+  blocks: string[]
 }
 
 /**
  * Helper function to safely parse date values
  */
 function parseDate(dateValue: any): Date | null {
-  if (!dateValue) return null;
-  if (dateValue instanceof Date) return dateValue;
+  if (!dateValue)
+    return null
+  if (dateValue instanceof Date)
+    return dateValue
   if (typeof dateValue === 'string') {
-    const parsed = new Date(dateValue);
-    return isNaN(parsed.getTime()) ? null : parsed;
+    const parsed = new Date(dateValue)
+    return isNaN(parsed.getTime()) ? null : parsed
   }
-  return null;
+  return null
 }
 
 /**
  * Helper function to normalize array fields
  */
 function normalizeArray(value: any): string[] {
-  if (Array.isArray(value)) return value.filter(Boolean);
+  if (Array.isArray(value))
+    return value.filter(Boolean)
   if (typeof value === 'string' && value.trim()) {
-    return value.split(',').map(s => s.trim()).filter(Boolean);
+    return value.split(',').map(s => s.trim()).filter(Boolean)
   }
-  return [];
+  return []
 }
 
 /**
@@ -72,45 +75,45 @@ export function normalizeTicket(rawTicket: any): Ticket {
     priority: rawTicket.priority || 'Medium',
     content: rawTicket.content || '',
     filePath: rawTicket.filePath || rawTicket.path || '',
-    
+
     // Handle dates
     dateCreated: parseDate(rawTicket.dateCreated),
     lastModified: parseDate(rawTicket.lastModified),
     implementationDate: parseDate(rawTicket.implementationDate),
-    
+
     // Map optional fields
     phaseEpic: rawTicket.phaseEpic || '',
     assignee: rawTicket.assignee || '',
     implementationNotes: rawTicket.implementationNotes || '',
-    
+
     // Normalize relationship fields to arrays
     relatedTickets: normalizeArray(rawTicket.relatedTickets),
     dependsOn: normalizeArray(rawTicket.dependsOn),
-    blocks: normalizeArray(rawTicket.blocks)
-  };
+    blocks: normalizeArray(rawTicket.blocks),
+  }
 }
 
 /**
  * Convert arrays back to comma-separated strings for YAML
  */
 export function arrayToString(arr: string[]): string {
-  return Array.isArray(arr) ? arr.join(',') : '';
+  return Array.isArray(arr) ? arr.join(',') : ''
 }
 
 /**
  * Data interface for creating new tickets
  */
 export interface TicketData {
-  title: string;
-  type: string;
-  priority?: string;
-  phaseEpic?: string;
-  impactAreas?: string[];
-  relatedTickets?: string;
-  dependsOn?: string;
-  blocks?: string;
-  assignee?: string;
-  content?: string;
+  title: string
+  type: string
+  priority?: string
+  phaseEpic?: string
+  impactAreas?: string[]
+  relatedTickets?: string
+  dependsOn?: string
+  blocks?: string
+  assignee?: string
+  content?: string
 }
 
 /**
@@ -124,14 +127,14 @@ export interface TicketData {
  * - This enforces H1 as the authoritative title source
  */
 export interface TicketUpdateAttrs {
-  priority?: string;
-  phaseEpic?: string;
-  relatedTickets?: string;
-  dependsOn?: string;
-  blocks?: string;
-  assignee?: string;
-  implementationDate?: Date | null;
-  implementationNotes?: string;
+  priority?: string
+  phaseEpic?: string
+  relatedTickets?: string
+  dependsOn?: string
+  blocks?: string
+  assignee?: string
+  implementationDate?: Date | null
+  implementationNotes?: string
 }
 
 /**
@@ -155,18 +158,18 @@ export const TICKET_UPDATE_ALLOWED_ATTRS = new Set<keyof TicketUpdateAttrs>([
   'blocks',
   'assignee',
   'implementationDate',
-  'implementationNotes'
-]);
+  'implementationNotes',
+])
 
 /**
  * Filtering interface for ticket queries
  */
 export interface TicketFilters {
-  status?: string | string[];
-  type?: string | string[];
-  priority?: string | string[];
+  status?: string | string[]
+  type?: string | string[]
+  priority?: string | string[]
   dateRange?: {
-    start?: Date;
-    end?: Date;
-  };
+    start?: Date
+    end?: Date
+  }
 }

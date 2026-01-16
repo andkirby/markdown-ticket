@@ -11,18 +11,20 @@
  * Framework: Jest
  */
 
-import {
-  Project,
+import type {
   LocalProjectConfig,
+  Project,
   ProjectConfig,
+} from '../../../models/Project'
+import {
   getTicketsPath,
   isLegacyConfig,
   migrateLegacyConfig,
-  validateProjectConfig
-} from '../../../models/Project';
+  validateProjectConfig,
+} from '../../../models/Project'
 
-describe('Project Model - Behavioral Preservation', () => {
-  describe('Type Contracts', () => {
+describe('project Model - Behavioral Preservation', () => {
+  describe('type Contracts', () => {
     it('should maintain Project interface shape', () => {
       // This test locks the expected shape
       const mockProject: Project = {
@@ -32,23 +34,23 @@ describe('Project Model - Behavioral Preservation', () => {
           path: '/test/path',
           configFile: '/test/config.toml',
           active: true,
-          description: 'Test description'
+          description: 'Test description',
         },
         metadata: {
           dateRegistered: '2024-01-01',
           lastAccessed: '2024-01-01',
-          version: '1.0.0'
-        }
-      };
+          version: '1.0.0',
+        },
+      }
 
       // Verify required fields exist and are of expected type
-      expect(typeof mockProject.id).toBe('string');
-      expect(typeof mockProject.project.name).toBe('string');
-      expect(typeof mockProject.project.path).toBe('string');
-      expect(typeof mockProject.project.configFile).toBe('string');
-      expect(typeof mockProject.project.active).toBe('boolean');
-      expect(typeof mockProject.metadata.dateRegistered).toBe('string');
-    });
+      expect(typeof mockProject.id).toBe('string')
+      expect(typeof mockProject.project.name).toBe('string')
+      expect(typeof mockProject.project.path).toBe('string')
+      expect(typeof mockProject.project.configFile).toBe('string')
+      expect(typeof mockProject.project.active).toBe('boolean')
+      expect(typeof mockProject.metadata.dateRegistered).toBe('string')
+    })
 
     it('should maintain LocalProjectConfig interface shape', () => {
       const mockConfig: LocalProjectConfig = {
@@ -57,29 +59,29 @@ describe('Project Model - Behavioral Preservation', () => {
           code: 'TEST',
           startNumber: 1,
           counterFile: '.mdt-next',
-          active: true
+          active: true,
         },
         document: {
           paths: ['docs'],
-          excludeFolders: ['node_modules']
-        }
-      };
+          excludeFolders: ['node_modules'],
+        },
+      }
 
-      expect(typeof mockConfig.project.name).toBe('string');
-      expect(typeof mockConfig.project.code).toBe('string');
-      expect(typeof mockConfig.project.startNumber).toBe('number');
-      expect(typeof mockConfig.project.counterFile).toBe('string');
-      expect(typeof mockConfig.project.active).toBe('boolean');
-      expect(Array.isArray(mockConfig.document.paths)).toBe(true);
-      expect(Array.isArray(mockConfig.document.excludeFolders)).toBe(true);
-    });
-  });
+      expect(typeof mockConfig.project.name).toBe('string')
+      expect(typeof mockConfig.project.code).toBe('string')
+      expect(typeof mockConfig.project.startNumber).toBe('number')
+      expect(typeof mockConfig.project.counterFile).toBe('string')
+      expect(typeof mockConfig.project.active).toBe('boolean')
+      expect(Array.isArray(mockConfig.document.paths)).toBe(true)
+      expect(Array.isArray(mockConfig.document.excludeFolders)).toBe(true)
+    })
+  })
 
-  describe('Function: getTicketsPath', () => {
+  describe('function: getTicketsPath', () => {
     it('should return default path when config is null', () => {
-      const result = getTicketsPath(null, 'docs/CRs');
-      expect(result).toBe('docs/CRs');
-    });
+      const result = getTicketsPath(null, 'docs/CRs')
+      expect(result).toBe('docs/CRs')
+    })
 
     it('should return ticketsPath from project config when available', () => {
       const config: ProjectConfig = {
@@ -88,14 +90,14 @@ describe('Project Model - Behavioral Preservation', () => {
           code: 'TEST',
           startNumber: 1,
           counterFile: '.mdt-next',
-          ticketsPath: 'custom/tickets'
+          ticketsPath: 'custom/tickets',
         },
-        document: {}
-      };
+        document: {},
+      }
 
-      const result = getTicketsPath(config, 'docs/CRs');
-      expect(result).toBe('custom/tickets');
-    });
+      const result = getTicketsPath(config, 'docs/CRs')
+      expect(result).toBe('custom/tickets')
+    })
 
     it('should fall back to legacy project.path for backward compatibility', () => {
       const config: ProjectConfig = {
@@ -104,14 +106,14 @@ describe('Project Model - Behavioral Preservation', () => {
           code: 'TEST',
           startNumber: 1,
           counterFile: '.mdt-next',
-          path: 'legacy/tickets'  // Legacy location
+          path: 'legacy/tickets', // Legacy location
         },
-        document: {}
-      };
+        document: {},
+      }
 
-      const result = getTicketsPath(config, 'docs/CRs');
-      expect(result).toBe('legacy/tickets');
-    });
+      const result = getTicketsPath(config, 'docs/CRs')
+      expect(result).toBe('legacy/tickets')
+    })
 
     it('should return default when no paths configured', () => {
       const config: ProjectConfig = {
@@ -119,24 +121,24 @@ describe('Project Model - Behavioral Preservation', () => {
           name: 'Test',
           code: 'TEST',
           startNumber: 1,
-          counterFile: '.mdt-next'
+          counterFile: '.mdt-next',
         },
-        document: {}
-      };
+        document: {},
+      }
 
-      const result = getTicketsPath(config, 'docs/CRs');
-      expect(result).toBe('docs/CRs');
-    });
-  });
+      const result = getTicketsPath(config, 'docs/CRs')
+      expect(result).toBe('docs/CRs')
+    })
+  })
 
-  describe('Function: isLegacyConfig', () => {
+  describe('function: isLegacyConfig', () => {
     it('should return false for null config', () => {
-      expect(isLegacyConfig(null)).toBe(false);
-    });
+      expect(isLegacyConfig(null)).toBe(false)
+    })
 
     it('should return false for config without project', () => {
-      expect(isLegacyConfig(null)).toBe(false);
-    });
+      expect(isLegacyConfig(null)).toBe(false)
+    })
 
     it('should return false for config without project.path', () => {
       const config: ProjectConfig = {
@@ -144,12 +146,12 @@ describe('Project Model - Behavioral Preservation', () => {
           name: 'Test',
           code: 'TEST',
           startNumber: 1,
-          counterFile: '.mdt-next'
+          counterFile: '.mdt-next',
         },
-        document: {}
-      };
-      expect(isLegacyConfig(config)).toBe(false);
-    });
+        document: {},
+      }
+      expect(isLegacyConfig(config)).toBe(false)
+    })
 
     it('should return false for config with new ticketsPath format', () => {
       const config: ProjectConfig = {
@@ -159,12 +161,12 @@ describe('Project Model - Behavioral Preservation', () => {
           startNumber: 1,
           counterFile: '.mdt-next',
           path: '/project/root',
-          ticketsPath: 'docs/CRs'
+          ticketsPath: 'docs/CRs',
         },
-        document: {}
-      };
-      expect(isLegacyConfig(config)).toBe(false);
-    });
+        document: {},
+      }
+      expect(isLegacyConfig(config)).toBe(false)
+    })
 
     it('should return true for legacy config with project.path only', () => {
       const config: ProjectConfig = {
@@ -173,15 +175,15 @@ describe('Project Model - Behavioral Preservation', () => {
           code: 'TEST',
           startNumber: 1,
           counterFile: '.mdt-next',
-          path: 'docs/CRs'  // This was actually tickets path in legacy
+          path: 'docs/CRs', // This was actually tickets path in legacy
         },
-        document: {}
-      };
-      expect(isLegacyConfig(config)).toBe(true);
-    });
-  });
+        document: {},
+      }
+      expect(isLegacyConfig(config)).toBe(true)
+    })
+  })
 
-  describe('Function: migrateLegacyConfig', () => {
+  describe('function: migrateLegacyConfig', () => {
     it('should return unchanged config if not legacy', () => {
       const config: ProjectConfig = {
         project: {
@@ -189,40 +191,40 @@ describe('Project Model - Behavioral Preservation', () => {
           code: 'TEST',
           startNumber: 1,
           counterFile: '.mdt-next',
-          ticketsPath: 'docs/CRs'
+          ticketsPath: 'docs/CRs',
         },
         document: {
-          paths: ['docs']
-        }
-      };
+          paths: ['docs'],
+        },
+      }
 
-      const result = migrateLegacyConfig(config);
-      expect(result).toBe(config);  // Should return same object
-    });
+      const result = migrateLegacyConfig(config)
+      expect(result).toBe(config) // Should return same object
+    })
 
     it('should migrate legacy config correctly', () => {
       const legacyConfig: ProjectConfig = {
         project: {
           name: 'Test Project',
           code: 'TEST',
-          path: 'docs/CRs',  // Legacy: this was tickets path
+          path: 'docs/CRs', // Legacy: this was tickets path
           startNumber: 1,
-          counterFile: '.mdt-next'
+          counterFile: '.mdt-next',
         },
         document: {
           paths: [],
-          excludeFolders: []
-        }
-      };
+          excludeFolders: [],
+        },
+      }
 
-      const result = migrateLegacyConfig(legacyConfig);
+      const result = migrateLegacyConfig(legacyConfig)
 
       // Verify migration
-      expect(result.project.path).toBe('.');  // Project root
-      expect(result.project.ticketsPath).toBe('docs/CRs');  // Moved to ticketsPath
-      expect(result.project.name).toBe('Test Project');  // Preserved
-      expect(result.project.code).toBe('TEST');  // Preserved
-    });
+      expect(result.project.path).toBe('.') // Project root
+      expect(result.project.ticketsPath).toBe('docs/CRs') // Moved to ticketsPath
+      expect(result.project.name).toBe('Test Project') // Preserved
+      expect(result.project.code).toBe('TEST') // Preserved
+    })
 
     it('should add default document section for legacy configs', () => {
       const legacyConfig: ProjectConfig = {
@@ -231,23 +233,23 @@ describe('Project Model - Behavioral Preservation', () => {
           code: 'TEST',
           path: 'docs/CRs',
           startNumber: 1,
-          counterFile: '.mdt-next'
+          counterFile: '.mdt-next',
         },
         document: {
           paths: [],
-          excludeFolders: []
-        }
-      };
+          excludeFolders: [],
+        },
+      }
 
-      const result = migrateLegacyConfig(legacyConfig);
+      const result = migrateLegacyConfig(legacyConfig)
 
-      expect(result.document).toBeDefined();
-      expect(Array.isArray(result.document?.paths)).toBe(true);
-      expect(Array.isArray(result.document?.excludeFolders)).toBe(true);
-    });
-  });
+      expect(result.document).toBeDefined()
+      expect(Array.isArray(result.document?.paths)).toBe(true)
+      expect(Array.isArray(result.document?.excludeFolders)).toBe(true)
+    })
+  })
 
-  describe('Function: validateProjectConfig', () => {
+  describe('function: validateProjectConfig', () => {
     it('should validate correct configuration', () => {
       const config = {
         project: {
@@ -256,63 +258,63 @@ describe('Project Model - Behavioral Preservation', () => {
           startNumber: 1,
           counterFile: '.mdt-next',
           description: 'Valid description',
-          repository: 'https://github.com/test/repo'
+          repository: 'https://github.com/test/repo',
         },
         document: {
           paths: ['docs', 'src'],
-          excludeFolders: ['node_modules', '.git']
-        }
-      };
+          excludeFolders: ['node_modules', '.git'],
+        },
+      }
 
-      expect(validateProjectConfig(config)).toBe(true);
-    });
+      expect(validateProjectConfig(config)).toBe(true)
+    })
 
     it('should reject configuration without project', () => {
-      expect(validateProjectConfig({})).toBe(false);
-      expect(validateProjectConfig(null)).toBe(false);
-    });
+      expect(validateProjectConfig({})).toBe(false)
+      expect(validateProjectConfig(null)).toBe(false)
+    })
 
     it('should reject configuration with invalid name', () => {
       const config = {
         project: {
           name: '',
-          code: 'TEST'
-        }
-      };
-      expect(validateProjectConfig(config)).toBe(false);
-    });
+          code: 'TEST',
+        },
+      }
+      expect(validateProjectConfig(config)).toBe(false)
+    })
 
     it('should reject configuration with invalid code', () => {
       const config = {
         project: {
           name: 'Test',
-          code: ''
-        }
-      };
-      expect(validateProjectConfig(config)).toBe(false);
-    });
+          code: '',
+        },
+      }
+      expect(validateProjectConfig(config)).toBe(false)
+    })
 
     it('should accept optional document fields', () => {
       const config = {
         project: {
           name: 'Test',
-          code: 'TEST'
-        }
+          code: 'TEST',
+        },
         // No document section
-      };
-      expect(validateProjectConfig(config)).toBe(true);
-    });
+      }
+      expect(validateProjectConfig(config)).toBe(true)
+    })
 
     it('should handle document_paths legacy format', () => {
       const config = {
         project: {
           name: 'Test',
-          code: 'TEST'
+          code: 'TEST',
         },
-        document_paths: ['docs', 'src'],  // Legacy format
-        exclude_folders: ['node_modules']
-      };
-      expect(validateProjectConfig(config)).toBe(true);
-    });
-  });
-});
+        document_paths: ['docs', 'src'], // Legacy format
+        exclude_folders: ['node_modules'],
+      }
+      expect(validateProjectConfig(config)).toBe(true)
+    })
+  })
+})

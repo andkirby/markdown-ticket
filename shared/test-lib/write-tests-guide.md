@@ -5,7 +5,7 @@ A concise guide for using the MDT-092 isolated test environment library with 3 p
 ## Quick Overview
 
 ```typescript
-import { TestEnvironment, ProjectFactory } from '@mdt/shared/test-lib';
+import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
 ```
 
 ## Level 1: Basic Isolated Environment
@@ -13,44 +13,44 @@ import { TestEnvironment, ProjectFactory } from '@mdt/shared/test-lib';
 Setup isolated test environments with unique temporary directories and dedicated ports.
 
 ```typescript
-import { test } from '@playwright/test';
-import { TestEnvironment } from '@mdt/shared/test-lib';
+import { TestEnvironment } from '@mdt/shared/test-lib'
+import { test } from '@playwright/test'
 
 test.describe('Level 1: Isolation', () => {
-  let testEnv: TestEnvironment;
+  let testEnv: TestEnvironment
 
   test.beforeAll(async () => {
-    testEnv = new TestEnvironment();
-    await testEnv.setup();
+    testEnv = new TestEnvironment()
+    await testEnv.setup()
 
-    console.log('Temp dir:', testEnv.getTempDirectory());
-    console.log('Ports:', testEnv.getPortConfig());
-  });
+    console.log('Temp dir:', testEnv.getTempDirectory())
+    console.log('Ports:', testEnv.getPortConfig())
+  })
 
   test.afterAll(async () => {
-    await testEnv.cleanup();
-  });
+    await testEnv.cleanup()
+  })
 
   test('should have isolated environment', () => {
-    expect(testEnv.getTempDirectory()).toContain('/mdt-test-');
+    expect(testEnv.getTempDirectory()).toContain('/mdt-test-')
 
-    const ports = testEnv.getPortConfig();
-    expect(ports.frontend).toBe(6173);  // Test ports
-    expect(ports.backend).toBe(4001);   // Not dev ports
-    expect(ports.mcp).toBe(4002);
-  });
-});
+    const ports = testEnv.getPortConfig()
+    expect(ports.frontend).toBe(6173) // Test ports
+    expect(ports.backend).toBe(4001) // Not dev ports
+    expect(ports.mcp).toBe(4002)
+  })
+})
 ```
 
 ### Key Methods
 
 ```typescript
 class TestEnvironment {
-  async setup(): Promise<void>           // Initialize environment
-  async cleanup(): Promise<void>         // Remove all temp files
-  getTempDirectory(): string             // Unique temp directory path
-  getPortConfig(): PortConfig            // Test port configuration
-  createSubdir(name: string): string     // Create subdirectory
+  async setup(): Promise<void> // Initialize environment
+  async cleanup(): Promise<void> // Remove all temp files
+  getTempDirectory(): string // Unique temp directory path
+  getPortConfig(): PortConfig // Test port configuration
+  createSubdir(name: string): string // Create subdirectory
 }
 ```
 
@@ -66,17 +66,17 @@ class TestEnvironment {
 TestEnvironment creates an empty config directory for MCP server use. You can add custom global config:
 
 ```typescript
-import { writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 test.beforeAll(async () => {
-  testEnv = new TestEnvironment();
-  await testEnv.setup();
+  testEnv = new TestEnvironment()
+  await testEnv.setup()
 
-  const configDir = testEnv.getConfigDirectory();
+  const configDir = testEnv.getConfigDirectory()
 
   // Create projects subdirectory
-  mkdirSync(join(configDir, 'projects'), { recursive: true });
+  mkdirSync(join(configDir, 'projects'), { recursive: true })
 
   // Create custom global config with discovery settings
   const globalConfig = `[discovery]
@@ -85,19 +85,19 @@ searchPaths = [
     "/Users/username/home",
     "/Users/username/projects"
 ]
-`;
+`
 
-  writeFileSync(join(configDir, 'config.toml'), globalConfig);
+  writeFileSync(join(configDir, 'config.toml'), globalConfig)
 
   // Create project registry entry
   const projectRegistry = `[project]
 name = "Test Project"
 path = "${testEnv.getTempDirectory()}/projects/TEST"
 code = "TEST"
-`;
+`
 
-  writeFileSync(join(configDir, 'projects', 'test-project.toml'), projectRegistry);
-});
+  writeFileSync(join(configDir, 'projects', 'test-project.toml'), projectRegistry)
+})
 ```
 
 **Note**: TestEnvironment only creates the config directory structure. Global config files are not created automatically - you must create them manually if needed for specific test scenarios.
@@ -109,22 +109,22 @@ code = "TEST"
 Create test projects with proper directory structure in the isolated environment.
 
 ```typescript
-import { test } from '@playwright/test';
-import { TestEnvironment, ProjectFactory } from '@mdt/shared/test-lib';
+import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
+import { test } from '@playwright/test'
 
 test.describe('Level 2: Projects', () => {
-  let testEnv: TestEnvironment;
-  let projectFactory: ProjectFactory;
+  let testEnv: TestEnvironment
+  let projectFactory: ProjectFactory
 
   test.beforeAll(async () => {
-    testEnv = new TestEnvironment();
-    await testEnv.setup();
-    projectFactory = new ProjectFactory(testEnv);
-  });
+    testEnv = new TestEnvironment()
+    await testEnv.setup()
+    projectFactory = new ProjectFactory(testEnv)
+  })
 
   test.afterAll(async () => {
-    await testEnv.cleanup();
-  });
+    await testEnv.cleanup()
+  })
 
   test('should create empty project', async () => {
     const project = await projectFactory.createProject('empty', {
@@ -133,19 +133,19 @@ test.describe('Level 2: Projects', () => {
       description: 'A test project',
       ticketsPath: 'docs/CRs',
       repository: 'test-repo'
-    });
+    })
 
-    expect(project.key).toBe('TEST');
-    expect(project.path).toContain('/projects/TEST');
-  });
+    expect(project.key).toBe('TEST')
+    expect(project.path).toContain('/projects/TEST')
+  })
 
   test('should create pre-configured project', async () => {
-    const scenario = await projectFactory.createTestScenario('standard-project');
+    const scenario = await projectFactory.createTestScenario('standard-project')
 
-    expect(scenario.projectCode).toMatch(/^T[A-Z0-9]{3}$/);
-    expect(scenario.crs).toHaveLength(3); // Pre-created CRs
-  });
-});
+    expect(scenario.projectCode).toMatch(/^T[A-Z0-9]{3}$/)
+    expect(scenario.crs).toHaveLength(3) // Pre-created CRs
+  })
+})
 ```
 
 ### ProjectFactory Methods
@@ -166,13 +166,13 @@ class ProjectFactory {
 
 ```typescript
 interface ProjectConfig {
-  name?: string;              // Project display name
-  code?: string;              // Project code (auto-generated if omitted)
-  description?: string;
-  ticketsPath?: string;            // Path for CRs (default: 'docs/CRs')
-  repository?: string;
-  documentPaths?: string[];   // Document scan paths (default: ['docs'])
-  excludeFolders?: string[];  // Excluded folders (default: ['node_modules', '.git'])
+  name?: string // Project display name
+  code?: string // Project code (auto-generated if omitted)
+  description?: string
+  ticketsPath?: string // Path for CRs (default: 'docs/CRs')
+  repository?: string
+  documentPaths?: string[] // Document scan paths (default: ['docs'])
+  excludeFolders?: string[] // Excluded folders (default: ['node_modules', '.git'])
 }
 ```
 
@@ -192,29 +192,29 @@ interface ProjectConfig {
 Create CRs with proper YAML frontmatter and markdown content in isolated projects.
 
 ```typescript
-import { test } from '@playwright/test';
-import { TestEnvironment, ProjectFactory } from '@mdt/shared/test-lib';
+import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
+import { test } from '@playwright/test'
 
 test.describe('Level 3: Complete Scenario', () => {
-  let testEnv: TestEnvironment;
-  let projectFactory: ProjectFactory;
+  let testEnv: TestEnvironment
+  let projectFactory: ProjectFactory
 
   test.beforeAll(async () => {
-    testEnv = new TestEnvironment();
-    await testEnv.setup();
-    projectFactory = new ProjectFactory(testEnv);
-  });
+    testEnv = new TestEnvironment()
+    await testEnv.setup()
+    projectFactory = new ProjectFactory(testEnv)
+  })
 
   test.afterAll(async () => {
-    await testEnv.cleanup();
-  });
+    await testEnv.cleanup()
+  })
 
   test('should create CR with dependencies', async () => {
     // Create project
     const project = await projectFactory.createProject('empty', {
       name: 'Full Test Project',
       code: 'FULL'
-    });
+    })
 
     // Create architecture CR
     const archCR = await projectFactory.createTestCR('FULL', {
@@ -222,7 +222,7 @@ test.describe('Level 3: Complete Scenario', () => {
       type: 'Architecture',
       priority: 'Critical',
       content: 'Design microservices architecture'
-    });
+    })
 
     // Create implementation CR depending on architecture
     const implCR = await projectFactory.createTestCR('FULL', {
@@ -231,30 +231,30 @@ test.describe('Level 3: Complete Scenario', () => {
       priority: 'High',
       dependsOn: archCR.crCode,
       content: 'Create user management service'
-    });
+    })
 
-    expect(archCR.success).toBe(true);
-    expect(archCR.crCode).toBe('FULL-001');
-    expect(implCR.success).toBe(true);
-    expect(implCR.crCode).toBe('FULL-002');
-  });
+    expect(archCR.success).toBe(true)
+    expect(archCR.crCode).toBe('FULL-001')
+    expect(implCR.success).toBe(true)
+    expect(implCR.crCode).toBe('FULL-002')
+  })
 
   test('should create multiple CRs', async () => {
-    const project = await projectFactory.createProject('empty', { code: 'MULTI' });
+    const project = await projectFactory.createProject('empty', { code: 'MULTI' })
 
     const crData = [
       { title: 'User Login', type: 'Feature Enhancement', content: 'Login page' },
       { title: 'Fix Bug', type: 'Bug Fix', content: 'Fix navigation' },
       { title: 'API Docs', type: 'Documentation', content: 'Document API' }
-    ];
+    ]
 
-    const results = await projectFactory.createMultipleCRs('MULTI', crData);
+    const results = await projectFactory.createMultipleCRs('MULTI', crData)
 
-    expect(results).toHaveLength(3);
-    expect(results.every(r => r.success)).toBe(true);
-    expect(results[0].crCode).toBe('MULTI-001');
-  });
-});
+    expect(results).toHaveLength(3)
+    expect(results.every(r => r.success)).toBe(true)
+    expect(results[0].crCode).toBe('MULTI-001')
+  })
+})
 ```
 
 ### CR Creation Methods
@@ -271,22 +271,22 @@ async createMultipleCRs(projectCode: string, crsData: TestCRData[]): Promise<Tes
 
 ```typescript
 interface TestCRData {
-  title: string;                    // Required
-  type: CRType;                     // Required: 'Feature Enhancement', 'Bug Fix', etc.
-  status?: CRStatus;                // Optional: Defaults to 'Proposed'
-  priority?: CRPriority;            // Optional: Defaults to 'Medium'
-  phaseEpic?: string;
-  assignee?: string;
-  dependsOn?: string;               // CR code this depends on
-  blocks?: string;                  // CR code this blocks
-  content: string;                  // Required: CR description
+  title: string // Required
+  type: CRType // Required: 'Feature Enhancement', 'Bug Fix', etc.
+  status?: CRStatus // Optional: Defaults to 'Proposed'
+  priority?: CRPriority // Optional: Defaults to 'Medium'
+  phaseEpic?: string
+  assignee?: string
+  dependsOn?: string // CR code this depends on
+  blocks?: string // CR code this blocks
+  content: string // Required: CR description
 }
 
 interface TestCRResult {
-  success: boolean;
-  crCode?: string;      // e.g., 'FULL-001'
-  filePath?: string;    // Full path to CR file
-  error?: string;
+  success: boolean
+  crCode?: string // e.g., 'FULL-001'
+  filePath?: string // Full path to CR file
+  error?: string
 }
 ```
 
@@ -329,15 +329,14 @@ To be filled...
 ## Quick Reference
 
 ```typescript
+import type { PortConfig, ProjectConfig, TestCRData, TestCRResult } from '@mdt/shared/test-lib'
 // All imports
 import {
-  TestEnvironment,
+
   ProjectFactory,
-  type PortConfig,
-  type ProjectConfig,
-  type TestCRData,
-  type TestCRResult
-} from '@mdt/shared/test-lib';
+
+  TestEnvironment
+} from '@mdt/shared/test-lib'
 
 // Environment variables (optional)
 // TEST_FRONTEND_PORT=6173

@@ -3,34 +3,34 @@
  * Main exports for Frontend, Backend, and MCP systems
  */
 
+export * from './models/Config.js'
+export * from './models/Project.js'
 // Models
-export * from './models/Ticket.js';
-export * from './models/Project.js';
-export * from './models/Config.js';
+export * from './models/Ticket.js'
 
 // Types
 export type {
+  CRPriority,
   CRStatus,
   CRType,
-  CRPriority,
   ProjectInfo,
+  Suggestion,
   Template,
   TemplateSection,
-  ValidationResult,
   ValidationError,
+  ValidationResult,
   ValidationWarning,
-  Suggestion
-} from './models/Types.js';
+} from './models/Types.js'
 
+export * from './services/CRService.js'
+export * from './services/MarkdownService.js'
+export type { GlobalConfig } from './services/project/types.js'
 // Services
-export * from './services/ProjectService.js';
-export type { GlobalConfig } from './services/project/types.js';
-export * from './services/MarkdownService.js';
-export * from './services/TemplateService.js';
-export * from './services/CRService.js';
+export * from './services/ProjectService.js'
+export * from './services/TemplateService.js'
 
 // Tools
-export * from './tools/ProjectManager.js';
+export * from './tools/ProjectManager.js'
 
 // Constants
-export * from './utils/constants.js';
+export * from './utils/constants.js'

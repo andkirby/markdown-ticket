@@ -6,9 +6,8 @@
 
 // Board Column Configuration
 export {
-  
-  getVisibleColumns,
+
   getColumnForStatus,
-  
-  
-} from './statusConfig';
+  getVisibleColumns,
+
+} from './statusConfig'

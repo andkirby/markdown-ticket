@@ -1,73 +1,79 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { TocItem } from '../../utils/tableOfContents';
-import { TocView, getTocState, setTocState } from '../../config/tocConfig';
+import type { TocView } from '../../config/tocConfig'
+import type { TocItem } from '../../utils/tableOfContents'
+import * as React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { getTocState, setTocState } from '../../config/tocConfig'
 
 interface TableOfContentsProps {
-  items: TocItem[];
-  view: TocView;
+  items: TocItem[]
+  view: TocView
 }
 
 export default function TableOfContents({ items, view }: TableOfContentsProps) {
-  const [isExpanded, setIsExpanded] = useState(() => getTocState(view).isExpanded);
-  const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set());
-  const navRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(() => getTocState(view).isExpanded)
+  const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set())
+  const navRef = useRef<HTMLDivElement>(null)
 
   // Persist ToC state changes
   useEffect(() => {
-    setTocState(view, { isExpanded });
-  }, [isExpanded, view]);
+    setTocState(view, { isExpanded })
+  }, [isExpanded, view])
 
   // Calculate minimum level for relative padding
-  const minLevel = items.length > 0 ? Math.min(...items.map(item => item.level)) : 1;
+  const minLevel = items.length > 0 ? Math.min(...items.map(item => item.level)) : 1
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        setVisibleIds(prev => {
-          const newSet = new Set(prev);
+        setVisibleIds((prev) => {
+          const newSet = new Set(prev)
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
-              newSet.add(entry.target.id);
-            } else {
-              newSet.delete(entry.target.id);
+              newSet.add(entry.target.id)
             }
-          });
-          return newSet;
-        });
+            else {
+              newSet.delete(entry.target.id)
+            }
+          })
+          return newSet
+        })
       },
-      { rootMargin: '-0% 0px -10% 0px' }
-    );
+      { rootMargin: '-0% 0px -10% 0px' },
+    )
 
     items.forEach((item) => {
-      const element = document.getElementById(item.id);
-      if (element) observer.observe(element);
-    });
+      const element = document.getElementById(item.id)
+      if (element)
+        observer.observe(element)
+    })
 
-    return () => observer.disconnect();
-  }, [items]);
+    return () => observer.disconnect()
+  }, [items])
 
   // Auto-scroll ToC to keep visible items in view
   useEffect(() => {
     if (visibleIds.size > 0 && navRef.current) {
-      visibleIds.forEach(id => {
-        const activeButton = navRef.current?.querySelector(`[data-id="${id}"]`);
+      visibleIds.forEach((id) => {
+        const activeButton = navRef.current?.querySelector(`[data-id="${id}"]`)
         if (activeButton) {
-          activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
         }
-      });
+      })
     }
-  }, [visibleIds]);
+  }, [visibleIds])
 
-  if (items.length === 0) return null;
+  if (items.length === 0)
+    return null
 
   const scrollToHeading = (id: string) => {
     if (id === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      const element = document.getElementById(id);
-      element?.scrollIntoView({ behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-  };
+    else {
+      const element = document.getElementById(id)
+      element?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   return (
     <div className="fixed bottom-20 right-4 z-50">
@@ -80,7 +86,7 @@ export default function TableOfContents({ items, view }: TableOfContentsProps) {
           ▶
         </span>
       </button>
-      
+
       {isExpanded && (
         <div className="absolute bottom-full right-0 mb-1 w-80 border border-border rounded-lg bg-card/70 hover:bg-card/90 backdrop-blur-sm shadow-lg z-50 transition-colors" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
           <div className="px-4 py-3">
@@ -102,14 +108,17 @@ export default function TableOfContents({ items, view }: TableOfContentsProps) {
                     visibleIds.has(item.id) ? 'text-primary' : 'text-foreground/80 hover:text-foreground'
                   } ${
                     (() => {
-                      const relativeLevel = item.level - minLevel;
+                      const relativeLevel = item.level - minLevel
                       if (relativeLevel === 0) {
-                        return 'font-bold';
+                        return 'font-bold'
                       }
-                      return relativeLevel === 1 ? '' :
-                             relativeLevel === 2 ? 'pl-4' :
-                             relativeLevel === 3 ? 'pl-8' :
-                             relativeLevel === 4 ? 'pl-12' : 'pl-16';
+                      return relativeLevel === 1
+                        ? ''
+                        : relativeLevel === 2
+                          ? 'pl-4'
+                          : relativeLevel === 3
+                            ? 'pl-8'
+                            : relativeLevel === 4 ? 'pl-12' : 'pl-16'
                     })()
                   }`}
                 >
@@ -121,5 +130,5 @@ export default function TableOfContents({ items, view }: TableOfContentsProps) {
         </div>
       )}
     </div>
-  );
+  )
 }

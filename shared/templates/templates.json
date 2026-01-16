@@ -23,7 +23,7 @@
     ]
   },
   "Feature Enhancement": {
-    "type": "Feature Enhancement", 
+    "type": "Feature Enhancement",
     "file": "feature-enhancement.md",
     "requiredFields": ["title", "description"],
     "sections": [
@@ -35,7 +35,7 @@
   },
   "Technical Debt": {
     "type": "Technical Debt",
-    "file": "technical-debt.md", 
+    "file": "technical-debt.md",
     "requiredFields": ["title", "description", "rationale"],
     "sections": [
       { "name": "Current State", "required": true, "placeholder": "What technical debt exists?" },

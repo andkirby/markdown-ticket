@@ -9,172 +9,172 @@
  * filesystem capabilities in Node.js environment.
  */
 
-import { ProjectValidator } from '../ProjectValidator.node';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+import * as fs from 'node:fs'
+import * as os from 'node:os'
+import * as path from 'node:path'
+import { ProjectValidator } from '../ProjectValidator.node'
 
 // Ensure Node.js environment is detected
 const mockNodeProcess = {
   versions: {
-    node: '18.0.0'
+    node: '18.0.0',
   },
-  cwd: () => process.cwd()
-};
+  cwd: () => process.cwd(),
+}
 
-const originalProcess = global.process;
+const originalProcess = global.process
 
-describe('MDT-110: Node.js ProjectValidator Extension', () => {
-  let tempDir: string;
+describe('mDT-110: Node.js ProjectValidator Extension', () => {
+  let tempDir: string
 
   beforeEach(() => {
     // Simulate Node.js environment
-    (global as any).process = mockNodeProcess;
+    (global as any).process = mockNodeProcess
 
     // Create temporary directory for filesystem tests
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mdt-test-'));
-  });
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mdt-test-'))
+  })
 
   afterEach(() => {
     // Clean up temp directory
     if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      fs.rmSync(tempDir, { recursive: true, force: true })
     }
 
     // Restore original process
-    (global as any).process = originalProcess;
-  });
+    (global as any).process = originalProcess
+  })
 
   // P2-1, P2-2: Node validatePath with filesystem
   describe('validatePath() in Node.js environment - with filesystem checks', () => {
     it('should accept existing directory with mustExist: true', () => {
-      const result = ProjectValidator.validatePath(tempDir, { mustExist: true });
-      expect(result.valid).toBe(true);
-      expect(result.normalized).toBe(path.resolve(tempDir));
-    });
+      const result = ProjectValidator.validatePath(tempDir, { mustExist: true })
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe(path.resolve(tempDir))
+    })
 
     it('should reject non-existent path with mustExist: true', () => {
-      const nonExistent = path.join(tempDir, 'does-not-exist');
-      const result = ProjectValidator.validatePath(nonExistent, { mustExist: true });
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('does not exist');
-    });
+      const nonExistent = path.join(tempDir, 'does-not-exist')
+      const result = ProjectValidator.validatePath(nonExistent, { mustExist: true })
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('does not exist')
+    })
 
     it('should reject file path (not directory) with mustExist: true', () => {
       // Create a file
-      const filePath = path.join(tempDir, 'test-file.txt');
-      fs.writeFileSync(filePath, 'test');
+      const filePath = path.join(tempDir, 'test-file.txt')
+      fs.writeFileSync(filePath, 'test')
 
-      const result = ProjectValidator.validatePath(filePath, { mustExist: true });
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('not a directory');
-    });
+      const result = ProjectValidator.validatePath(filePath, { mustExist: true })
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('not a directory')
+    })
 
     it('should accept non-existent path without mustExist option', () => {
-      const nonExistent = path.join(tempDir, 'future-dir');
-      const result = ProjectValidator.validatePath(nonExistent);
-      expect(result.valid).toBe(true);
-      expect(result.normalized).toBe(path.resolve(nonExistent));
-    });
+      const nonExistent = path.join(tempDir, 'future-dir')
+      const result = ProjectValidator.validatePath(nonExistent)
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe(path.resolve(nonExistent))
+    })
 
     it('should resolve relative paths to absolute', () => {
-      const relativePath = 'some/relative/path';
-      const result = ProjectValidator.validatePath(relativePath);
-      expect(result.valid).toBe(true);
-      expect(path.isAbsolute(result.normalized || '')).toBe(true);
-    });
-  });
+      const relativePath = 'some/relative/path'
+      const result = ProjectValidator.validatePath(relativePath)
+      expect(result.valid).toBe(true)
+      expect(path.isAbsolute(result.normalized || '')).toBe(true)
+    })
+  })
 
   // P2-3: Node expandTildePath with os.homedir()
   describe('expandTildePath() in Node.js environment', () => {
     it('should expand tilde to home directory', () => {
-      const result = ProjectValidator.expandTildePath('~/documents');
-      const homeDir = os.homedir();
-      expect(result).toBe(path.join(homeDir, 'documents'));
-    });
+      const result = ProjectValidator.expandTildePath('~/documents')
+      const homeDir = os.homedir()
+      expect(result).toBe(path.join(homeDir, 'documents'))
+    })
 
     it('should expand bare tilde to home directory', () => {
-      const result = ProjectValidator.expandTildePath('~');
-      expect(result).toBe(os.homedir());
-    });
+      const result = ProjectValidator.expandTildePath('~')
+      expect(result).toBe(os.homedir())
+    })
 
     it('should not affect regular paths', () => {
-      const result = ProjectValidator.expandTildePath('/Users/test');
-      expect(result).toBe('/Users/test');
-    });
+      const result = ProjectValidator.expandTildePath('/Users/test')
+      expect(result).toBe('/Users/test')
+    })
 
     it('should handle multiple tildes in path', () => {
-      const result = ProjectValidator.expandTildePath('~/test/~backup');
-      const homeDir = os.homedir();
-      expect(result).toBe(path.join(homeDir, 'test', '~backup'));
-    });
-  });
+      const result = ProjectValidator.expandTildePath('~/test/~backup')
+      const homeDir = os.homedir()
+      expect(result).toBe(path.join(homeDir, 'test', '~backup'))
+    })
+  })
 
   // P2-1: All other methods unchanged from base
-  describe('Other validation methods - behavior preserved', () => {
+  describe('other validation methods - behavior preserved', () => {
     it('should validate names identically to browser version', () => {
-      const result = ProjectValidator.validateName('My Test Project');
-      expect(result.valid).toBe(true);
-      expect(result.normalized).toBe('My Test Project');
-    });
+      const result = ProjectValidator.validateName('My Test Project')
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe('My Test Project')
+    })
 
     it('should validate codes identically to browser version', () => {
-      const result = ProjectValidator.validateCode('MDT1');
-      expect(result.valid).toBe(true);
-      expect(result.normalized).toBe('MDT1');
-    });
+      const result = ProjectValidator.validateCode('MDT1')
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe('MDT1')
+    })
 
     it('should reject lowercase codes', () => {
-      const result = ProjectValidator.validateCode('mdt');
-      expect(result.valid).toBe(false);
-    });
+      const result = ProjectValidator.validateCode('mdt')
+      expect(result.valid).toBe(false)
+    })
 
     it('should validate descriptions correctly', () => {
-      const result = ProjectValidator.validateDescription('A valid description');
-      expect(result.valid).toBe(true);
-    });
+      const result = ProjectValidator.validateDescription('A valid description')
+      expect(result.valid).toBe(true)
+    })
 
     it('should validate repository URLs', () => {
-      const result = ProjectValidator.validateRepository('https://github.com/user/repo');
-      expect(result.valid).toBe(true);
-    });
+      const result = ProjectValidator.validateRepository('https://github.com/user/repo')
+      expect(result.valid).toBe(true)
+    })
 
     it('should generate code from project name', () => {
-      const code = ProjectValidator.generateCodeFromName('My Test Project');
-      expect(code).toBe('MTP');
-    });
+      const code = ProjectValidator.generateCodeFromName('My Test Project')
+      expect(code).toBe('MTP')
+    })
 
     it('should validate tickets paths', () => {
-      const result = ProjectValidator.validateTicketsPath('docs/CRs');
-      expect(result.valid).toBe(true);
-    });
+      const result = ProjectValidator.validateTicketsPath('docs/CRs')
+      expect(result.valid).toBe(true)
+    })
 
     it('should reject absolute tickets paths', () => {
-      const result = ProjectValidator.validateTicketsPath('/absolute/path');
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('must be relative');
-    });
-  });
+      const result = ProjectValidator.validateTicketsPath('/absolute/path')
+      expect(result.valid).toBe(false)
+      expect(result.error).toContain('must be relative')
+    })
+  })
 
   // Integration tests
-  describe('Integration: Full validation workflow', () => {
+  describe('integration: Full validation workflow', () => {
     it('should validate complete project configuration with filesystem', () => {
-      const nameResult = ProjectValidator.validateName('Test Project');
-      expect(nameResult.valid).toBe(true);
+      const nameResult = ProjectValidator.validateName('Test Project')
+      expect(nameResult.valid).toBe(true)
 
-      const codeResult = ProjectValidator.validateCode('TST');
-      expect(codeResult.valid).toBe(true);
+      const codeResult = ProjectValidator.validateCode('TST')
+      expect(codeResult.valid).toBe(true)
 
-      const pathResult = ProjectValidator.validatePath(tempDir, { mustExist: true });
-      expect(pathResult.valid).toBe(true);
+      const pathResult = ProjectValidator.validatePath(tempDir, { mustExist: true })
+      expect(pathResult.valid).toBe(true)
 
-      const ticketsResult = ProjectValidator.validateTicketsPath('docs/tickets');
-      expect(ticketsResult.valid).toBe(true);
-    });
+      const ticketsResult = ProjectValidator.validateTicketsPath('docs/tickets')
+      expect(ticketsResult.valid).toBe(true)
+    })
 
     it('should fail validation on invalid path with mustExist', () => {
-      const pathResult = ProjectValidator.validatePath('/this/path/does/not/exist', { mustExist: true });
-      expect(pathResult.valid).toBe(false);
-    });
-  });
-});
+      const pathResult = ProjectValidator.validatePath('/this/path/does/not/exist', { mustExist: true })
+      expect(pathResult.valid).toBe(false)
+    })
+  })
+})

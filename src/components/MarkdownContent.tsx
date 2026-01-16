@@ -1,23 +1,26 @@
-import React, { useMemo, useEffect, useRef } from 'react';
-import showdown from 'showdown';
-import DOMPurify from 'dompurify';
-import parse, { HTMLReactParserOptions, Element } from 'html-react-parser';
-import { processMermaidBlocks, renderMermaid } from '../utils/mermaid';
-import { highlightCodeBlocks, loadPrismTheme } from '../utils/syntaxHighlight';
-import { classifyLink } from '../utils/linkProcessor';
-import { validateAllReferences } from '../utils/linkValidator';
-import { getLinkConfig } from '../config/linkConfig';
-import { preprocessMarkdown } from '../utils/markdownPreprocessor';
-import SmartLink from './SmartLink';
-import { MarkdownErrorBoundary } from './MarkdownErrorBoundary';
-import { useTheme } from '../hooks/useTheme';
+import type { HTMLReactParserOptions } from 'html-react-parser'
+/* eslint-disable node/prefer-global/process -- Using import.meta.env for browser compatibility */
+import DOMPurify from 'dompurify'
+import parse, { Element } from 'html-react-parser'
+import * as React from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import showdown from 'showdown'
+import { getLinkConfig } from '../config/linkConfig'
+import { useTheme } from '../hooks/useTheme'
+import { classifyLink } from '../utils/linkProcessor'
+import { validateAllReferences } from '../utils/linkValidator'
+import { preprocessMarkdown } from '../utils/markdownPreprocessor'
+import { processMermaidBlocks, renderMermaid } from '../utils/mermaid'
+import { highlightCodeBlocks, loadPrismTheme } from '../utils/syntaxHighlight'
+import { MarkdownErrorBoundary } from './MarkdownErrorBoundary'
+import SmartLink from './SmartLink'
 
 interface MarkdownContentProps {
-  markdown: string;
-  currentProject: string;
-  className?: string;
-  headerLevelStart?: number;
-  onRenderComplete?: () => void;
+  markdown: string
+  currentProject: string
+  className?: string
+  headerLevelStart?: number
+  onRenderComplete?: () => void
 }
 
 const MarkdownContent: React.FC<MarkdownContentProps> = ({
@@ -27,13 +30,13 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
   headerLevelStart = 1,
   onRenderComplete,
 }) => {
-  const { theme } = useTheme();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme()
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Load Prism theme based on current theme
   useEffect(() => {
-    loadPrismTheme(theme);
-  }, [theme]);
+    loadPrismTheme(theme)
+  }, [theme])
 
   // Initialize Showdown converter
   const converter = useMemo(() => {
@@ -50,148 +53,182 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
       excludeTrailingPunctuationFromURLs: true,
       literalMidWordUnderscores: true,
       ghCompatibleHeaderId: true,
-    });
-  }, [headerLevelStart]);
+    })
+  }, [headerLevelStart])
 
   // Get link configuration (outside useMemo to ensure proper caching)
-  const linkConfig = getLinkConfig();
+  const linkConfig = getLinkConfig()
 
   // Process markdown through the rendering pipeline
   const processedContent = useMemo(() => {
-    if (!markdown) return '';
+    if (!markdown)
+      return ''
 
     try {
       // Step 1: Preprocess markdown with safe link conversion
-      const preprocessedMarkdown = preprocessMarkdown(markdown, currentProject, linkConfig);
+      const preprocessedMarkdown = preprocessMarkdown(markdown, currentProject, linkConfig)
 
       // Step 2: Convert markdown to HTML
-      const rawHTML = converter.makeHtml(preprocessedMarkdown);
+      const rawHTML = converter.makeHtml(preprocessedMarkdown)
 
-      // Debug: Log the raw HTML to see what URLs are generated
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Preprocessed markdown sample:', preprocessedMarkdown.substring(0, 500));
-        console.log('Raw HTML sample:', rawHTML.substring(0, 500));
-      }
-      
       // Step 3: Process Mermaid diagrams
-      const mermaidProcessed = processMermaidBlocks(rawHTML);
-      
+      const mermaidProcessed = processMermaidBlocks(rawHTML)
+
       // Step 4: Highlight code blocks
-      const codeHighlighted = highlightCodeBlocks(mermaidProcessed);
-      
+      const codeHighlighted = highlightCodeBlocks(mermaidProcessed)
+
       // Step 5: Sanitize HTML
       const sanitized = DOMPurify.sanitize(codeHighlighted, {
         ALLOWED_TAGS: [
-          'a', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-          'code', 'pre', 'ul', 'ol', 'li', 'blockquote',
-          'strong', 'em', 'del', 'table', 'thead', 'tbody',
-          'tr', 'th', 'td', 'br', 'hr', 'img', 'div', 'span',
-          'svg', 'g', 'path', 'rect', 'circle', 'text' // For Mermaid
+          'a',
+          'p',
+          'h1',
+          'h2',
+          'h3',
+          'h4',
+          'h5',
+          'h6',
+          'code',
+          'pre',
+          'ul',
+          'ol',
+          'li',
+          'blockquote',
+          'strong',
+          'em',
+          'del',
+          'table',
+          'thead',
+          'tbody',
+          'tr',
+          'th',
+          'td',
+          'br',
+          'hr',
+          'img',
+          'div',
+          'span',
+          'svg',
+          'g',
+          'path',
+          'rect',
+          'circle',
+          'text', // For Mermaid
         ],
         ALLOWED_ATTR: [
-          'href', 'title', 'class', 'id', 'target', 'rel',
-          'src', 'alt', 'width', 'height',
+          'href',
+          'title',
+          'class',
+          'id',
+          'target',
+          'rel',
+          'src',
+          'alt',
+          'width',
+          'height',
           // Mermaid attributes
-          'viewBox', 'xmlns', 'd', 'fill', 'stroke', 'stroke-width',
-          'x', 'y', 'rx', 'ry', 'cx', 'cy', 'r', 'font-size',
-          'text-anchor', 'dominant-baseline', 'transform'
-        ]
-      });
-      
-      return sanitized;
-    } catch (error) {
-      console.error('Markdown processing error:', error);
-      return `<div class="text-red-600 p-4 border border-red-200 rounded">Error processing markdown: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
+          'viewBox',
+          'xmlns',
+          'd',
+          'fill',
+          'stroke',
+          'stroke-width',
+          'x',
+          'y',
+          'rx',
+          'ry',
+          'cx',
+          'cy',
+          'r',
+          'font-size',
+          'text-anchor',
+          'dominant-baseline',
+          'transform',
+        ],
+      })
+
+      return sanitized
     }
-  }, [markdown, currentProject, converter, linkConfig]);
+    catch (error) {
+      console.error('Markdown processing error:', error)
+      return `<div class="text-red-600 p-4 border border-red-200 rounded">Error processing markdown: ${error instanceof Error ? error.message : 'Unknown error'}</div>`
+    }
+  }, [markdown, currentProject, converter, linkConfig])
 
   // Parse HTML and convert links to React components
   const parserOptions: HTMLReactParserOptions = {
     replace: (domNode) => {
       if (domNode instanceof Element && domNode.name === 'a') {
-        const href = domNode.attribs?.href || '';
+        const href = domNode.attribs?.href || ''
 
-        // Debug: Log the href being processed
-        if (process.env.NODE_ENV === 'development' && href.includes('MDT-')) {
-          console.log('Processing link href:', href);
-          console.log('Current path:', window.location.pathname);
-        }
+        const parsedLink = classifyLink(href, currentProject)
 
-        const parsedLink = classifyLink(href, currentProject);
-
-        // Debug: Log the classification result
-        if (process.env.NODE_ENV === 'development' && href.includes('MDT-')) {
-          console.log('Link classification result:', {
-            type: parsedLink.type,
-            href: parsedLink.href,
-            projectCode: parsedLink.projectCode,
-            ticketKey: parsedLink.ticketKey,
-            isValid: parsedLink.isValid
-          });
-        }
-        
         // Extract text content safely
         const extractText = (node: any): string => {
-          if (!node) return '';
-          if (typeof node === 'string') return node;
-          if (node.type === 'text') return node.data || '';
+          if (!node)
+            return ''
+          if (typeof node === 'string')
+            return node
+          if (node.type === 'text')
+            return node.data || ''
           if (node.children && Array.isArray(node.children)) {
-            return node.children.map(extractText).join('');
+            return node.children.map(extractText).join('')
           }
-          return '';
-        };
-        
-        const linkText = domNode.children ? extractText({ children: domNode.children }) : href;
-        parsedLink.text = linkText || href;
-        
+          return ''
+        }
+
+        const linkText = domNode.children ? extractText({ children: domNode.children }) : href
+        parsedLink.text = linkText || href
+
         return (
-          <SmartLink 
-            link={parsedLink} 
+          <SmartLink
+            link={parsedLink}
             currentProject={currentProject}
             className={domNode.attribs?.class}
           >
             {linkText || href}
           </SmartLink>
-        );
+        )
       }
-    }
-  };
+    },
+  }
 
   // Render Mermaid diagrams and validate links after HTML is ready
   useEffect(() => {
     if (processedContent && containerRef.current) {
       const timeoutId = setTimeout(() => {
-        renderMermaid();
-        
+        renderMermaid()
+
         // Validate link conversion
         if (containerRef.current) {
-          validateAllReferences(containerRef.current);
+          validateAllReferences(containerRef.current)
         }
-        
-        onRenderComplete?.();
-      }, 100);
-      
-      return () => clearTimeout(timeoutId);
+
+        onRenderComplete?.()
+      }, 100)
+
+      return () => clearTimeout(timeoutId)
     }
-  }, [processedContent, onRenderComplete]);
+  }, [processedContent, onRenderComplete])
 
   // Parse HTML and convert to React elements
   const renderContent = () => {
-    if (!processedContent) return null;
-    return parse(processedContent, parserOptions);
-  };
+    if (!processedContent)
+      return null
+    return parse(processedContent, parserOptions)
+  }
 
   return (
     <div ref={containerRef} className={className}>
       {renderContent()}
     </div>
-  );
-};
+  )
+}
 
-const MarkdownContentWithErrorBoundary: React.FC<MarkdownContentProps> = (props) => (
+const MarkdownContentWithErrorBoundary: React.FC<MarkdownContentProps> = props => (
   <MarkdownErrorBoundary>
     <MarkdownContent {...props} />
   </MarkdownErrorBoundary>
-);
+)
 
-export default MarkdownContentWithErrorBoundary;
+export default MarkdownContentWithErrorBoundary

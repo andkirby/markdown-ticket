@@ -1,4 +1,4 @@
-import { ChildProcess } from 'child_process';
+import type { ChildProcess } from 'node:child_process'
 
 /**
  * Closes all streams (stdin, stdout, stderr) and disconnects IPC for a ChildProcess.
@@ -26,22 +26,22 @@ import { ChildProcess } from 'child_process';
 export function closeAllStreams(process: ChildProcess): void {
   // Close stdin if it exists and is not destroyed
   if (process.stdin && !process.stdin.destroyed) {
-    process.stdin.end();
-    process.stdin.destroy();
+    process.stdin.end()
+    process.stdin.destroy()
   }
 
   // Close stdout if it exists and is not destroyed
   if (process.stdout && !process.stdout.destroyed) {
-    process.stdout.destroy();
+    process.stdout.destroy()
   }
 
   // Close stderr if it exists and is not destroyed
   if (process.stderr && !process.stderr.destroyed) {
-    process.stderr.destroy();
+    process.stderr.destroy()
   }
 
   // Disconnect IPC channel if the method exists
   if (typeof process.disconnect === 'function') {
-    process.disconnect();
+    process.disconnect()
   }
 }

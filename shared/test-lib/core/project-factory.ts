@@ -5,74 +5,74 @@
  * This class acts as an orchestrator, coordinating the builders for creating test scenarios.
  */
 
-import { join } from 'path';
-import type { CRType, CRStatus, CRPriority } from '../../models/Types.js';
-import { TestEnvironment } from './test-environment.js';
-import { TestProjectBuilder } from '../ticket/test-project-builder.js';
-import { TestTicketBuilder } from '../ticket/test-ticket-builder.js';
+import type { CRPriority, CRStatus, CRType } from '../../models/Types.js'
+import type { TestEnvironment } from './test-environment.js'
+import { join } from 'node:path'
+import { TestProjectBuilder } from '../ticket/test-project-builder.js'
+import { TestTicketBuilder } from '../ticket/test-ticket-builder.js'
 
 /** Simple CR data structure for testing (legacy compatibility) */
 export interface SimpleCR {
-  code: string;
-  title: string;
-  status: CRStatus;
-  type: CRType;
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  dateCreated: string;
-  content: string;
-  phaseEpic?: string;
-  assignee?: string;
-  impactAreas?: string[];
-  relatedTickets?: string;
-  dependsOn?: string;
-  blocks?: string;
+  code: string
+  title: string
+  status: CRStatus
+  type: CRType
+  priority: 'Low' | 'Medium' | 'High' | 'Critical'
+  dateCreated: string
+  content: string
+  phaseEpic?: string
+  assignee?: string
+  impactAreas?: string[]
+  relatedTickets?: string
+  dependsOn?: string
+  blocks?: string
 }
 
 /** Project configuration for test projects */
 export interface ProjectConfig {
-  repository?: string;
-  name?: string;
-  code?: string;
-  description?: string;
-  ticketsPath?: string;
-  documentPaths?: string[];
-  excludeFolders?: string[];
+  repository?: string
+  name?: string
+  code?: string
+  description?: string
+  ticketsPath?: string
+  documentPaths?: string[]
+  excludeFolders?: string[]
 }
 
 /** Created project data */
 export interface ProjectData {
-  key: string;
-  path: string;
-  config: ProjectConfig;
+  key: string
+  path: string
+  config: ProjectConfig
 }
 
 /** Test CR data structure */
 export interface TestCRData {
-  title: string;
-  type: CRType;
-  status?: CRStatus;
-  priority?: CRPriority;
-  phaseEpic?: string;
-  dependsOn?: string;
-  blocks?: string;
-  assignee?: string;
-  content: string;
+  title: string
+  type: CRType
+  status?: CRStatus
+  priority?: CRPriority
+  phaseEpic?: string
+  dependsOn?: string
+  blocks?: string
+  assignee?: string
+  content: string
 }
 
 /** Test scenario results */
 export interface TestScenario {
-  projectCode: string;
-  projectName: string;
-  projectDir: string;
-  crs: TestCRResult[];
+  projectCode: string
+  projectName: string
+  projectDir: string
+  crs: TestCRResult[]
 }
 
 /** Result of creating a test CR */
 export interface TestCRResult {
-  success: boolean;
-  crCode?: string;
-  filePath?: string;
-  error?: string;
+  success: boolean
+  crCode?: string
+  filePath?: string
+  error?: string
 }
 
 /**
@@ -83,8 +83,8 @@ export class ProjectFactoryError extends Error {
     message: string,
     public readonly cause?: Error,
   ) {
-    super(message);
-    this.name = 'ProjectFactoryError';
+    super(message)
+    this.name = 'ProjectFactoryError'
   }
 }
 
@@ -95,32 +95,32 @@ export class ProjectFactoryError extends Error {
  * the same public API as before, while delegating implementation to the builders.
  */
 export class ProjectFactory {
-  private testEnv: TestEnvironment;
-  private projectsDir: string;
-  private projectBuilder: TestProjectBuilder;
-  private ticketBuilder: TestTicketBuilder;
+  private testEnv: TestEnvironment
+  private projectsDir: string
+  private projectBuilder: TestProjectBuilder
+  private ticketBuilder: TestTicketBuilder
 
   constructor(testEnv: TestEnvironment) {
-    this.testEnv = testEnv;
+    this.testEnv = testEnv
     if (!testEnv.isInitialized()) {
       throw new ProjectFactoryError(
         'TestEnvironment must be initialized before creating ProjectFactory',
-      );
+      )
     }
 
     // Projects will be created in temp directory
-    this.projectsDir = join(testEnv.getTempDirectory(), 'projects');
+    this.projectsDir = join(testEnv.getTempDirectory(), 'projects')
 
     // Initialize builders with the projects directory
-    this.projectBuilder = new TestProjectBuilder(this.projectsDir);
-    this.ticketBuilder = new TestTicketBuilder(this.projectsDir);
+    this.projectBuilder = new TestProjectBuilder(this.projectsDir)
+    this.ticketBuilder = new TestTicketBuilder(this.projectsDir)
   }
 
   /**
    * Get the projects directory path.
    */
   getProjectsDir(): string {
-    return this.projectsDir;
+    return this.projectsDir
   }
 
   /**
@@ -131,15 +131,15 @@ export class ProjectFactory {
     config: ProjectConfig = {},
   ): Promise<ProjectData> {
     // Generate unique code if not provided
-    const projectCode = config.code || this.projectBuilder.generateUniqueProjectCode();
+    const projectCode = config.code || this.projectBuilder.generateUniqueProjectCode()
 
     // Create project using TestProjectBuilder
-    const result = await this.projectBuilder.createProject(projectCode, config);
+    const result = await this.projectBuilder.createProject(projectCode, config)
 
     // Register the project config with the ticket builder
-    this.ticketBuilder.registerProject(result.key, result.config.ticketsPath);
+    this.ticketBuilder.registerProject(result.key, result.config.ticketsPath)
 
-    return result;
+    return result
   }
 
   /**
@@ -149,7 +149,7 @@ export class ProjectFactory {
     projectCode: string,
     crData: TestCRData,
   ): Promise<TestCRResult> {
-    return this.ticketBuilder.createTicket(projectCode, crData);
+    return this.ticketBuilder.createTicket(projectCode, crData)
   }
 
   /**
@@ -162,14 +162,14 @@ export class ProjectFactory {
     projectCode: string,
     crsData: Omit<TestCRData, 'dependsOn' | 'blocks'>[],
   ): Promise<TestCRResult[]> {
-    const results: TestCRResult[] = [];
+    const results: TestCRResult[] = []
 
     for (const crData of crsData) {
-      const result = await this.createTestCR(projectCode, crData);
-      results.push(result);
+      const result = await this.createTestCR(projectCode, crData)
+      results.push(result)
     }
 
-    return results;
+    return results
   }
 
   /**
@@ -183,9 +183,9 @@ export class ProjectFactory {
   ): Promise<TestScenario> {
     const project = await this.createProject('empty', {
       name: `${scenarioType === 'standard-project' ? 'Standard' : 'Complex'} Test Project`,
-    });
+    })
 
-    let crsData: Omit<TestCRData, 'dependsOn' | 'blocks'>[] = [];
+    let crsData: Omit<TestCRData, 'dependsOn' | 'blocks'>[] = []
 
     if (scenarioType === 'standard-project') {
       crsData = [
@@ -207,8 +207,9 @@ export class ProjectFactory {
           priority: 'High',
           content: 'Navigation menu not responding on mobile devices',
         },
-      ];
-    } else {
+      ]
+    }
+    else {
       // Complex project with more CRs
       crsData = [
         {
@@ -253,17 +254,17 @@ export class ProjectFactory {
           priority: 'Low',
           content: 'Document all API endpoints with examples',
         },
-      ];
+      ]
     }
 
-    const crResults = await this.createMultipleCRs(project.key, crsData);
+    const crResults = await this.createMultipleCRs(project.key, crsData)
 
     return {
       projectCode: project.key,
       projectName: project.config.name || project.key,
       projectDir: project.path,
       crs: crResults,
-    };
+    }
   }
 
   /**
