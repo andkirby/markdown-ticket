@@ -14,14 +14,14 @@ export default {
       tsconfig: (filename) => {
         // Use tsconfig.test.json for files in tests/ directory
         if (filename.includes('/tests/')) {
-          return 'tsconfig.test.json';
+          return 'tsconfig.test.json'
         }
-        return 'tsconfig.json';
-      }
-    }]
+        return 'tsconfig.json'
+      },
+    }],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(supertest|@modelcontextprotocol|@mdt/shared))'
+    'node_modules/(?!(supertest|@modelcontextprotocol|@mdt/shared))',
   ],
   moduleNameMapper: {
     // Map local .js imports to .ts files for Jest
@@ -43,9 +43,9 @@ export default {
     '^shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
     // Other @mdt/shared modules to dist (for non-test files)
     '^@mdt/shared/(.*)$': '<rootDir>/../shared/dist/$1',
-    '^shared/(.*)$': '<rootDir>/../shared/dist/$1'
+    '^shared/(.*)$': '<rootDir>/../shared/dist/$1',
   },
   setupFilesAfterEnv: [],
   reporters: ['default'],
-  testTimeout: 30000
-};
+  testTimeout: 30000,
+}

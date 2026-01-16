@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express'
 
 /**
  * Authentication middleware
@@ -6,44 +6,44 @@ import { Request, Response, NextFunction } from 'express';
  */
 export function createAuthMiddleware(expectedToken: string) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers.authorization
 
     if (!authHeader) {
       return res.status(401).json({
         jsonrpc: '2.0',
         error: {
           code: -32600,
-          message: 'Unauthorized: Missing Authorization header. Include "Authorization: Bearer <token>" in your request.'
-        }
-      });
+          message: 'Unauthorized: Missing Authorization header. Include "Authorization: Bearer <token>" in your request.',
+        },
+      })
     }
 
-    const parts = authHeader.split(' ');
+    const parts = authHeader.split(' ')
 
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
       return res.status(401).json({
         jsonrpc: '2.0',
         error: {
           code: -32600,
-          message: 'Unauthorized: Invalid Authorization format. Use "Authorization: Bearer <token>"'
-        }
-      });
+          message: 'Unauthorized: Invalid Authorization format. Use "Authorization: Bearer <token>"',
+        },
+      })
     }
 
-    const token = parts[1];
+    const token = parts[1]
 
     if (token !== expectedToken) {
       return res.status(401).json({
         jsonrpc: '2.0',
         error: {
           code: -32600,
-          message: 'Unauthorized: Invalid token'
-        }
-      });
+          message: 'Unauthorized: Invalid token',
+        },
+      })
     }
 
-    next();
-  };
+    next()
+  }
 }
 
 /**
@@ -52,28 +52,27 @@ export function createAuthMiddleware(expectedToken: string) {
  */
 export function createOriginValidationMiddleware(allowedOrigins: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const origin = req.headers.origin;
+    const origin = req.headers.origin
 
     // Allow requests with no origin (e.g., curl, Postman, server-to-server)
     if (!origin) {
-      return next();
+      return next()
     }
 
     if (!allowedOrigins.includes(origin)) {
-      console.error(`❌ Rejected request from unauthorized origin: ${origin}`);
+      console.error(`❌ Rejected request from unauthorized origin: ${origin}`)
       return res.status(403).json({
         jsonrpc: '2.0',
         error: {
           code: -32600,
-          message: `Forbidden: Origin '${origin}' is not allowed. Allowed origins: ${allowedOrigins.join(', ')}`
-        }
-      });
+          message: `Forbidden: Origin '${origin}' is not allowed. Allowed origins: ${allowedOrigins.join(', ')}`,
+        },
+      })
     }
 
-    next();
-  };
+    next()
+  }
 }
-
 
 /**
  * Session validation middleware
@@ -81,10 +80,10 @@ export function createOriginValidationMiddleware(allowedOrigins: string[]) {
  */
 export function createSessionValidationMiddleware(
   sessionManager: any,
-  requireSession: boolean = false
+  requireSession: boolean = false,
 ) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const sessionId = req.headers['mcp-session-id'] as string;
+    const sessionId = req.headers['mcp-session-id'] as string
 
     if (!sessionId) {
       if (requireSession) {
@@ -92,12 +91,12 @@ export function createSessionValidationMiddleware(
           jsonrpc: '2.0',
           error: {
             code: -32600,
-            message: 'Bad Request: Mcp-Session-Id header is required'
-          }
-        });
+            message: 'Bad Request: Mcp-Session-Id header is required',
+          },
+        })
       }
       // Session not required, continue
-      return next();
+      return next()
     }
 
     // Validate session
@@ -106,13 +105,13 @@ export function createSessionValidationMiddleware(
         jsonrpc: '2.0',
         error: {
           code: -32600,
-          message: 'Session not found or expired. Please initialize a new session.'
-        }
-      });
+          message: 'Session not found or expired. Please initialize a new session.',
+        },
+      })
     }
 
     // Attach session to request
-    (req as any).session = sessionManager.getSession(sessionId);
-    next();
-  };
+    (req as any).session = sessionManager.getSession(sessionId)
+    next()
+  }
 }

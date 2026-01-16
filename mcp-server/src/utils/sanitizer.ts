@@ -8,14 +8,16 @@
  * Enable with MCP_SANITIZATION_ENABLED=true environment variable.
  */
 
-import sanitize, { IOptions } from 'sanitize-html';
+import type { IOptions } from 'sanitize-html'
+import process from 'node:process'
+import sanitize from 'sanitize-html'
 
 /**
  * Check if sanitization is enabled via environment variable
  * This function checks the environment variable at runtime
  */
 function isSanitizationEnabled(): boolean {
-  return process.env.MCP_SANITIZATION_ENABLED === 'true';
+  return process.env.MCP_SANITIZATION_ENABLED === 'true'
 }
 
 /**
@@ -26,15 +28,36 @@ const SANITIZER_CONFIGS = {
   strict: {
     allowedTags: [
       // Text formatting
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'del', 'ins',
-      'sub', 'sup',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'p',
+      'br',
+      'strong',
+      'b',
+      'em',
+      'i',
+      'u',
+      's',
+      'del',
+      'ins',
+      'sub',
+      'sup',
 
       // Lists
-      'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+      'ul',
+      'ol',
+      'li',
+      'dl',
+      'dt',
+      'dd',
 
       // Code blocks
-      'pre', 'code',
+      'pre',
+      'code',
 
       // Blockquotes
       'blockquote',
@@ -43,54 +66,62 @@ const SANITIZER_CONFIGS = {
       'a',
 
       // Tables
-      'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      'table',
+      'thead',
+      'tbody',
+      'tr',
+      'th',
+      'td',
 
       // Other common elements
-      'hr', 'div', 'span'
+      'hr',
+      'div',
+      'span',
     ] as string[],
     allowedAttributes: {
-      'a': ['href', 'title'] as string[],
-      'th': ['align'] as string[],
-      'td': ['align'] as string[],
-      'pre': ['class'] as string[],
-      'code': ['class'] as string[],
-      'div': ['class'] as string[],
-      'span': ['class'] as string[]
+      a: ['href', 'title'] as string[],
+      th: ['align'] as string[],
+      td: ['align'] as string[],
+      pre: ['class'] as string[],
+      code: ['class'] as string[],
+      div: ['class'] as string[],
+      span: ['class'] as string[],
     },
     allowedSchemes: ['http', 'https', 'mailto', 'tel'] as string[],
     allowedSchemesByTag: {
-      'a': ['http', 'https', 'mailto', 'tel'] as string[]
+      a: ['http', 'https', 'mailto', 'tel'] as string[],
     },
     // Remove script tags and event handlers
     allowedScriptHostnames: [],
     allowedScriptDomains: [],
     // Transform functions to handle specific cases
     transformTags: {
-      'a': (tagName: string, attribs: any) => {
+      a: (tagName: string, attribs: any) => {
         // Remove dangerous URLs
-        const href = attribs.href;
-        if (!href) return { tagName: 'a', attribs: {} };
+        const href = attribs.href
+        if (!href)
+          return { tagName: 'a', attribs: {} }
 
         // Check for dangerous protocols
-        if (href.toLowerCase().startsWith('javascript:') ||
-            href.toLowerCase().startsWith('data:') ||
-            href.toLowerCase().startsWith('vbscript:') ||
-            href.toLowerCase().startsWith('file:')) {
-          return { tagName: 'span', attribs: {} };
+        if (href.toLowerCase().startsWith('javascript:')
+          || href.toLowerCase().startsWith('data:')
+          || href.toLowerCase().startsWith('vbscript:')
+          || href.toLowerCase().startsWith('file:')) {
+          return { tagName: 'span', attribs: {} }
         }
 
-        return { tagName, attribs };
-      }
+        return { tagName, attribs }
+      },
     },
     // Remove all style attributes to prevent CSS-based attacks
     allowedStyles: {},
     // Remove all class attributes except for safe ones
     allowedClasses: {
-      'pre': ['language-*', 'hljs'],
-      'code': ['language-*', 'hljs'],
-      'div': ['highlight'],
-      'span': ['hljs-*']
-    }
+      pre: ['language-*', 'hljs'],
+      code: ['language-*', 'hljs'],
+      div: ['highlight'],
+      span: ['hljs-*'],
+    },
   } as IOptions,
 
   // Configuration for plain text (minimal HTML)
@@ -105,10 +136,10 @@ const SANITIZER_CONFIGS = {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#x27;')
-        .replace(/\//g, '&#x2F;');
-    }
-  } as IOptions
-};
+        .replace(/\//g, '&#x2F;')
+    },
+  } as IOptions,
+}
 
 /**
  * Sanitization patterns for direct string replacement
@@ -131,23 +162,23 @@ const MALICIOUS_PATTERNS = [
   /(?<!\()\s*vbscript\s*:[^'"\s)]*/gi,
 
   // File URLs
-  /(?<!\()\s*file\s*:[^'"\s)]*/gi
-];
+  /(?<!\()\s*file\s*:[^'"\s)]*/gi,
+]
 
 /**
  * Safe HTML entities that should be preserved
  */
-const SAFE_ENTITIES = {
+const _SAFE_ENTITIES = {
   '&lt;': '<',
   '&gt;': '>',
   '&amp;': '&',
   '&quot;': '"',
-  '&#x27;': "'",
+  '&#x27;': '\'',
   '&#x2F;': '/',
   '&#60;': '<',
   '&#62;': '>',
-  '&#38;': '&'
-};
+  '&#38;': '&',
+}
 
 /**
  * Output Sanitizer Class
@@ -161,10 +192,10 @@ export class Sanitizer {
    */
   static sanitizeHtml(content: string, config: keyof typeof SANITIZER_CONFIGS = 'strict'): string {
     if (!isSanitizationEnabled()) {
-      return content;
+      return content
     }
-    const sanitized = sanitize(content, SANITIZER_CONFIGS[config]);
-    return sanitized;
+    const sanitized = sanitize(content, SANITIZER_CONFIGS[config])
+    return sanitized
   }
 
   /**
@@ -172,39 +203,39 @@ export class Sanitizer {
    */
   static sanitizeMarkdown(content: string): string {
     if (!isSanitizationEnabled()) {
-      return content;
+      return content
     }
 
     // First remove obvious malicious patterns
-    let sanitized = content;
+    let sanitized = content
 
     for (const pattern of MALICIOUS_PATTERNS) {
-      sanitized = sanitized.replace(pattern, '');
+      sanitized = sanitized.replace(pattern, '')
     }
 
     // Special handling for markdown links - protect them from HTML escaping
-    const linkRegex = /\[([^\]]*)\]\(([^)]+)\)/g;
-    const links: Array<{text: string, url: string, full: string}> = [];
+    const linkRegex = /\[([^\]]*)\]\(([^)]+)\)/g
+    const links: Array<{ text: string, url: string, full: string }> = []
 
     // Extract and protect markdown links
     sanitized = sanitized.replace(linkRegex, (match, text, url) => {
       // Sanitize the URL to remove dangerous protocols
-      const sanitizedUrl = this.sanitizeUrl(url);
-      const linkId = `__MARKDOWN_LINK_${links.length}__`;
-      links.push({text, url: sanitizedUrl, full: match});
-      return linkId;
-    });
+      const sanitizedUrl = this.sanitizeUrl(url)
+      const linkId = `__MARKDOWN_LINK_${links.length}__`
+      links.push({ text, url: sanitizedUrl, full: match })
+      return linkId
+    })
 
     // Escape HTML in markdown but preserve safe entities
-    sanitized = this.escapeHtmlButPreserveSafeEntities(sanitized);
+    sanitized = this.escapeHtmlButPreserveSafeEntities(sanitized)
 
     // Restore markdown links
     links.forEach((link, index) => {
-      const placeholder = `__MARKDOWN_LINK_${index}__`;
-      sanitized = sanitized.replace(placeholder, `[${link.text}](${link.url})`);
-    });
+      const placeholder = `__MARKDOWN_LINK_${index}__`
+      sanitized = sanitized.replace(placeholder, `[${link.text}](${link.url})`)
+    })
 
-    return sanitized;
+    return sanitized
   }
 
   /**
@@ -212,9 +243,9 @@ export class Sanitizer {
    */
   static sanitizeText(content: string): string {
     if (!isSanitizationEnabled()) {
-      return content;
+      return content
     }
-    return sanitize(content, SANITIZER_CONFIGS.text);
+    return sanitize(content, SANITIZER_CONFIGS.text)
   }
 
   /**
@@ -222,18 +253,18 @@ export class Sanitizer {
    */
   static sanitizeUrl(url: string): string {
     if (!isSanitizationEnabled()) {
-      return url;
+      return url
     }
 
     // Allow only safe protocols
-    const allowedProtocols = ['http:', 'https:', 'mailto:', 'tel:'];
-    const protocol = url.toLowerCase().split(':')[0] + ':';
+    const allowedProtocols = ['http:', 'https:', 'mailto:', 'tel:']
+    const protocol = `${url.toLowerCase().split(':')[0]}:`
 
     if (!allowedProtocols.includes(protocol)) {
-      return '#';
+      return '#'
     }
 
-    return url;
+    return url
   }
 
   /**
@@ -241,22 +272,22 @@ export class Sanitizer {
    */
   static sanitizeError(error: Error | string): string {
     if (!isSanitizationEnabled()) {
-      return error instanceof Error ? error.message : error;
+      return error instanceof Error ? error.message : error
     }
 
-    const errorMessage = error instanceof Error ? error.message : error;
+    const errorMessage = error instanceof Error ? error.message : error
 
     // Remove any potential HTML/script tags
-    let sanitized = errorMessage;
+    let sanitized = errorMessage
 
     for (const pattern of MALICIOUS_PATTERNS) {
-      sanitized = sanitized.replace(pattern, '');
+      sanitized = sanitized.replace(pattern, '')
     }
 
     // Escape HTML entities
-    sanitized = this.escapeHtmlButPreserveSafeEntities(sanitized);
+    sanitized = this.escapeHtmlButPreserveSafeEntities(sanitized)
 
-    return sanitized;
+    return sanitized
   }
 
   /**
@@ -264,9 +295,9 @@ export class Sanitizer {
    */
   static sanitizeMetadata(content: string): string {
     if (!isSanitizationEnabled()) {
-      return content;
+      return content
     }
-    return this.sanitizeHtml(content, 'strict');
+    return this.sanitizeHtml(content, 'strict')
   }
 
   /**
@@ -274,24 +305,24 @@ export class Sanitizer {
    */
   static sanitizeCRContent(content: string, mode: 'full' | 'attributes' | 'metadata'): string {
     if (!isSanitizationEnabled()) {
-      return content;
+      return content
     }
 
     switch (mode) {
       case 'full':
         // Full CR content - sanitize as markdown
-        return this.sanitizeMarkdown(content);
+        return this.sanitizeMarkdown(content)
 
       case 'attributes':
         // YAML attributes - escape to prevent injection
-        return this.escapeHtmlButPreserveSafeEntities(content);
+        return this.escapeHtmlButPreserveSafeEntities(content)
 
       case 'metadata':
         // Simple metadata - strict HTML sanitization
-        return this.sanitizeHtml(content, 'text');
+        return this.sanitizeHtml(content, 'text')
 
       default:
-        return this.sanitizeMarkdown(content);
+        return this.sanitizeMarkdown(content)
     }
   }
 
@@ -299,7 +330,7 @@ export class Sanitizer {
    * Escape HTML entities but preserve already-escaped ones
    */
   private static escapeHtmlButPreserveSafeEntities(content: string): string {
-    let result = content;
+    let result = content
 
     // First escape HTML
     result = result
@@ -308,21 +339,21 @@ export class Sanitizer {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#x27;')
-      .replace(/\//g, '&#x2F;');
+      .replace(/\//g, '&#x2F;')
 
     // Now restore already-escaped entities from the original content
     // We need to restore patterns like &amp;lt; back to &lt;
-    result = result.replace(/&amp;lt;/g, '&lt;');
-    result = result.replace(/&amp;gt;/g, '&gt;');
-    result = result.replace(/&amp;amp;/g, '&amp;');
-    result = result.replace(/&amp;quot;/g, '&quot;');
-    result = result.replace(/&amp;#x27;/g, '&#x27;');
-    result = result.replace(/&amp;#x2F;/g, '&#x2F;');
-    result = result.replace(/&amp;#60;/g, '&#60;');
-    result = result.replace(/&amp;#62;/g, '&#62;');
-    result = result.replace(/&amp;#38;/g, '&#38;');
+    result = result.replace(/&amp;lt;/g, '&lt;')
+    result = result.replace(/&amp;gt;/g, '&gt;')
+    result = result.replace(/&amp;amp;/g, '&amp;')
+    result = result.replace(/&amp;quot;/g, '&quot;')
+    result = result.replace(/&amp;#x27;/g, '&#x27;')
+    result = result.replace(/&amp;#x2F;/g, '&#x2F;')
+    result = result.replace(/&amp;#60;/g, '&#60;')
+    result = result.replace(/&amp;#62;/g, '&#62;')
+    result = result.replace(/&amp;#38;/g, '&#38;')
 
-    return result;
+    return result
   }
 
   /**
@@ -330,26 +361,26 @@ export class Sanitizer {
    */
   static sanitize(content: any): string {
     if (!isSanitizationEnabled()) {
-      return typeof content !== 'string' ? String(content) : content;
+      return typeof content !== 'string' ? String(content) : content
     }
 
     if (typeof content !== 'string') {
-      content = String(content);
+      content = String(content)
     }
 
     // Auto-detect content type based on patterns
     if (content.includes('<') && content.includes('>')) {
       // Contains HTML tags
-      return this.sanitizeHtml(content);
+      return this.sanitizeHtml(content)
     }
 
     if (content.includes('```') || content.includes('#') || content.includes('*')) {
       // Likely markdown
-      return this.sanitizeMarkdown(content);
+      return this.sanitizeMarkdown(content)
     }
 
     // Default to text sanitization
-    return this.sanitizeText(content);
+    return this.sanitizeText(content)
   }
 
   /**
@@ -364,10 +395,10 @@ export class Sanitizer {
       /data:\s*(?:text\/html|application\/javascript)/i,
       /vbscript:/i,
       /expression\s*\(/i,
-      /@import/i
-    ];
+      /@import/i,
+    ]
 
-    return suspiciousPatterns.some(pattern => pattern.test(content));
+    return suspiciousPatterns.some(pattern => pattern.test(content))
   }
 
   /**
@@ -375,12 +406,12 @@ export class Sanitizer {
    */
   static stripHtml(content: string): string {
     if (!isSanitizationEnabled()) {
-      return content;
+      return content
     }
     return sanitize(content, {
       allowedTags: [],
       allowedAttributes: {},
-      textFilter: undefined
-    });
+      textFilter: undefined,
+    })
   }
 }

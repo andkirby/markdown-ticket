@@ -9,7 +9,7 @@
  * - CR/Section Tools: All 8 CR and section management tools
  */
 
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 
 // =========================
 // Project Tool Definitions
@@ -18,15 +18,15 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 /**
  * Tools for project management operations
  */
-const PROJECT_TOOLS: Tool[] = [
+export const PROJECT_TOOLS: Tool[] = [
   {
     name: 'list_projects',
     description: 'List all discovered projects',
     inputSchema: {
       type: 'object',
       properties: {},
-      required: []
-    }
+      required: [],
+    },
   },
   {
     name: 'get_project_info',
@@ -36,13 +36,13 @@ const PROJECT_TOOLS: Tool[] = [
       properties: {
         key: {
           type: 'string',
-          description: 'Project key (e.g., MDT, API, WEB)'
-        }
+          description: 'Project key (e.g., MDT, API, WEB)',
+        },
       },
-      required: ['key']
-    }
-  }
-];
+      required: ['key'],
+    },
+  },
+]
 
 // =====================================
 // CR and Section Tool Definitions
@@ -51,15 +51,15 @@ const PROJECT_TOOLS: Tool[] = [
 /**
  * Shared enums for tool schemas
  */
-const CR_STATUS_ENUM = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected'];
-const CR_STATUS_EXTENDED_ENUM = [...CR_STATUS_ENUM, 'On Hold'];
-const CR_TYPE_ENUM = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'];
-const CR_PRIORITY_ENUM = ['Low', 'Medium', 'High', 'Critical'];
+const CR_STATUS_ENUM = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected']
+const CR_STATUS_EXTENDED_ENUM = [...CR_STATUS_ENUM, 'On Hold']
+const CR_TYPE_ENUM = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation']
+const CR_PRIORITY_ENUM = ['Low', 'Medium', 'High', 'Critical']
 
 /**
  * Tools for CR and section management operations
  */
-const CR_SECTION_TOOLS: Tool[] = [
+export const CR_SECTION_TOOLS: Tool[] = [
   // CR Operations
   {
     name: 'list_crs',
@@ -69,7 +69,7 @@ const CR_SECTION_TOOLS: Tool[] = [
       properties: {
         project: {
           type: 'string',
-          description: 'Project key'
+          description: 'Project key',
         },
         filters: {
           type: 'object',
@@ -77,29 +77,29 @@ const CR_SECTION_TOOLS: Tool[] = [
             status: {
               oneOf: [
                 { type: 'string', enum: CR_STATUS_ENUM },
-                { type: 'array', items: { type: 'string', enum: CR_STATUS_ENUM } }
+                { type: 'array', items: { type: 'string', enum: CR_STATUS_ENUM } },
               ],
-              description: 'Filter by status'
+              description: 'Filter by status',
             },
             type: {
               oneOf: [
                 { type: 'string', enum: CR_TYPE_ENUM },
-                { type: 'array', items: { type: 'string', enum: CR_TYPE_ENUM } }
+                { type: 'array', items: { type: 'string', enum: CR_TYPE_ENUM } },
               ],
-              description: 'Filter by type'
+              description: 'Filter by type',
             },
             priority: {
               oneOf: [
                 { type: 'string', enum: CR_PRIORITY_ENUM },
-                { type: 'array', items: { type: 'string', enum: CR_PRIORITY_ENUM } }
+                { type: 'array', items: { type: 'string', enum: CR_PRIORITY_ENUM } },
               ],
-              description: 'Filter by priority'
-            }
-          }
-        }
+              description: 'Filter by priority',
+            },
+          },
+        },
       },
-      required: ['project']
-    }
+      required: ['project'],
+    },
   },
   {
     name: 'create_cr',
@@ -109,49 +109,49 @@ const CR_SECTION_TOOLS: Tool[] = [
       properties: {
         project: {
           type: 'string',
-          description: 'Project key'
+          description: 'Project key',
         },
         type: {
           type: 'string',
           enum: CR_TYPE_ENUM,
-          description: 'CR type'
+          description: 'CR type',
         },
         data: {
           type: 'object',
           properties: {
             title: {
               type: 'string',
-              description: 'CR title/summary'
+              description: 'CR title/summary',
             },
             priority: {
               type: 'string',
               enum: CR_PRIORITY_ENUM,
-              description: 'CR priority (default: Medium)'
+              description: 'CR priority (default: Medium)',
             },
             phaseEpic: {
               type: 'string',
-              description: 'Phase or epic'
+              description: 'Phase or epic',
             },
             impactAreas: {
               type: 'array',
               items: { type: 'string' },
-              description: 'System areas impacted'
+              description: 'System areas impacted',
             },
             relatedTickets: {
               type: 'string',
-              description: 'Related CR codes (comma-separated)'
+              description: 'Related CR codes (comma-separated)',
             },
             dependsOn: {
               type: 'string',
-              description: 'CR dependencies (comma-separated)'
+              description: 'CR dependencies (comma-separated)',
             },
             blocks: {
               type: 'string',
-              description: 'CRs blocked by this (comma-separated)'
+              description: 'CRs blocked by this (comma-separated)',
             },
             assignee: {
               type: 'string',
-              description: 'Implementation assignee'
+              description: 'Implementation assignee',
             },
             content: {
               type: 'string',
@@ -181,14 +181,14 @@ const CR_SECTION_TOOLS: Tool[] = [
   - Measurable conditions for completion
   - Definition of "done"
 
-  Template auto-generated if omitted. When providing content, include ALL sections above.`
-            }
+  Template auto-generated if omitted. When providing content, include ALL sections above.`,
+            },
           },
-          required: ['title']
-        }
+          required: ['title'],
+        },
       },
-      required: ['project', 'type', 'data']
-    }
+      required: ['project', 'type', 'data'],
+    },
   },
   {
     name: 'get_cr',
@@ -198,21 +198,21 @@ const CR_SECTION_TOOLS: Tool[] = [
       properties: {
         project: {
           type: 'string',
-          description: 'Project key'
+          description: 'Project key',
         },
         key: {
           type: 'string',
-          description: 'CR key (e.g., MDT-004, API-123)'
+          description: 'CR key (e.g., MDT-004, API-123)',
         },
         mode: {
           type: 'string',
           enum: ['full', 'attributes', 'metadata'],
           description: 'Return mode: full=CR+markdown, attributes=YAML only, metadata=key info only',
-          default: 'full'
-        }
+          default: 'full',
+        },
       },
-      required: ['project', 'key']
-    }
+      required: ['project', 'key'],
+    },
   },
   {
     name: 'update_cr_status',
@@ -222,20 +222,20 @@ const CR_SECTION_TOOLS: Tool[] = [
       properties: {
         project: {
           type: 'string',
-          description: 'Project key'
+          description: 'Project key',
         },
         key: {
           type: 'string',
-          description: 'CR key'
+          description: 'CR key',
         },
         status: {
           type: 'string',
           enum: CR_STATUS_EXTENDED_ENUM,
-          description: 'New CR status'
-        }
+          description: 'New CR status',
+        },
       },
-      required: ['project', 'key', 'status']
-    }
+      required: ['project', 'key', 'status'],
+    },
   },
   {
     name: 'update_cr_attrs',
@@ -245,11 +245,11 @@ const CR_SECTION_TOOLS: Tool[] = [
       properties: {
         project: {
           type: 'string',
-          description: 'Project key'
+          description: 'Project key',
         },
         key: {
           type: 'string',
-          description: 'CR key'
+          description: 'CR key',
         },
         attributes: {
           type: 'object',
@@ -262,12 +262,12 @@ const CR_SECTION_TOOLS: Tool[] = [
             blocks: { type: 'string', description: 'CRs blocked by this (comma-separated)' },
             assignee: { type: 'string', description: 'Implementation assignee' },
             implementationDate: { type: 'string', description: 'Date when implementation was completed (ISO 8601 format, e.g., "2025-09-20")' },
-            implementationNotes: { type: 'string', description: 'Notes about implementation completion' }
-          }
-        }
+            implementationNotes: { type: 'string', description: 'Notes about implementation completion' },
+          },
+        },
       },
-      required: ['project', 'key', 'attributes']
-    }
+      required: ['project', 'key', 'attributes'],
+    },
   },
   {
     name: 'delete_cr',
@@ -277,15 +277,15 @@ const CR_SECTION_TOOLS: Tool[] = [
       properties: {
         project: {
           type: 'string',
-          description: 'Project key'
+          description: 'Project key',
         },
         key: {
           type: 'string',
-          description: 'CR key'
-        }
+          description: 'CR key',
+        },
       },
-      required: ['project', 'key']
-    }
+      required: ['project', 'key'],
+    },
   },
   {
     name: 'manage_cr_sections',
@@ -295,28 +295,28 @@ const CR_SECTION_TOOLS: Tool[] = [
       properties: {
         project: {
           type: 'string',
-          description: 'Project key (e.g., "MDT", "SEB")'
+          description: 'Project key (e.g., "MDT", "SEB")',
         },
         key: {
           type: 'string',
-          description: 'CR key (e.g., "MDT-001", "SEB-010")'
+          description: 'CR key (e.g., "MDT-001", "SEB-010")',
         },
         operation: {
           type: 'string',
           enum: ['list', 'get', 'replace', 'append', 'prepend'],
-          description: 'Operation: list=all sections with structure, get=read specific section, replace=entire content, append=add to end, prepend=add to beginning'
+          description: 'Operation: list=all sections with structure, get=read specific section, replace=entire content, append=add to end, prepend=add to beginning',
         },
         section: {
           type: 'string',
-          description: 'Section identifier (supports flexible formats: "1. Description", "Description", exact "## 1. Description", or hierarchical "## Parent / ### Child"). Required for get/replace/append/prepend operations.'
+          description: 'Section identifier (supports flexible formats: "1. Description", "Description", exact "## 1. Description", or hierarchical "## Parent / ### Child"). Required for get/replace/append/prepend operations.',
         },
         content: {
           type: 'string',
-          description: 'Content to apply (required for replace/append/prepend operations). To rename/restructure: start with new header at same level. To preserve header: provide only body content.'
-        }
+          description: 'Content to apply (required for replace/append/prepend operations). To rename/restructure: start with new header at same level. To preserve header: provide only body content.',
+        },
       },
-      required: ['project', 'key', 'operation']
-    }
+      required: ['project', 'key', 'operation'],
+    },
   },
   {
     name: 'suggest_cr_improvements',
@@ -326,17 +326,17 @@ const CR_SECTION_TOOLS: Tool[] = [
       properties: {
         project: {
           type: 'string',
-          description: 'Project key (e.g., "MDT", "API")'
+          description: 'Project key (e.g., "MDT", "API")',
         },
         key: {
           type: 'string',
-          description: 'CR key to analyze (e.g., "MDT-001")'
-        }
+          description: 'CR key to analyze (e.g., "MDT-001")',
+        },
       },
-      required: ['project', 'key']
-    }
-  }
-];
+      required: ['project', 'key'],
+    },
+  },
+]
 
 // ==========================
 // Combined Tool Registry
@@ -348,8 +348,8 @@ const CR_SECTION_TOOLS: Tool[] = [
  */
 export const ALL_TOOLS: Tool[] = [
   ...PROJECT_TOOLS,
-  ...CR_SECTION_TOOLS
-];
+  ...CR_SECTION_TOOLS,
+]
 
 // ==========================
 // Tool Categories
@@ -358,10 +358,10 @@ export const ALL_TOOLS: Tool[] = [
 /**
  * Group tools by category for easier access
  */
-const TOOL_CATEGORIES = {
+export const TOOL_CATEGORIES = {
   PROJECT: PROJECT_TOOLS.map(t => t.name),
-  CR_SECTION: CR_SECTION_TOOLS.map(t => t.name)
-} as const;
+  CR_SECTION: CR_SECTION_TOOLS.map(t => t.name),
+} as const
 
 // Tool name constants for type safety
 export const TOOL_NAMES = {
@@ -374,8 +374,8 @@ export const TOOL_NAMES = {
   UPDATE_CR_ATTRS: 'update_cr_attrs',
   DELETE_CR: 'delete_cr',
   MANAGE_CR_SECTIONS: 'manage_cr_sections',
-  SUGGEST_CR_IMPROVEMENTS: 'suggest_cr_improvements'
-} as const;
+  SUGGEST_CR_IMPROVEMENTS: 'suggest_cr_improvements',
+} as const
 
 // Export type for tool names
-type ToolName = typeof TOOL_NAMES[keyof typeof TOOL_NAMES];
+export type ToolName = typeof TOOL_NAMES[keyof typeof TOOL_NAMES]

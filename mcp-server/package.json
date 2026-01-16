@@ -1,8 +1,16 @@
 {
   "name": "mcp-server",
+  "type": "module",
   "version": "1.0.0",
   "description": "MCP Server for Universal CR Management",
-  "type": "module",
+  "author": "",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "cr",
+    "change-request"
+  ],
   "main": "dist/index.js",
   "scripts": {
     "build": "node build-fix-imports.js",
@@ -14,14 +22,6 @@
     "test:e2e:watch": "jest tests/e2e --config jest.e2e.config.mjs --watch",
     "test:e2e:performance": "jest tests/e2e/performance --config jest.e2e.config.mjs"
   },
-  "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "cr",
-    "change-request"
-  ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@mdt/shared": "*",
     "@modelcontextprotocol/sdk": "^1.25.1",

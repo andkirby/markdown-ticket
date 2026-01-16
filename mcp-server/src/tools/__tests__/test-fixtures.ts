@@ -10,100 +10,100 @@
  * Local Project interface matching @mdt/shared/models/Project
  */
 export interface Project {
-  id: string;
+  id: string
   project: {
-    id?: string;
-    name: string;
-    code?: string;
-    path: string;
-    configFile: string;
-    counterFile?: string;
-    startNumber?: number;
-    active: boolean;
-    description: string;
-    repository?: string;
-    ticketsPath?: string;
-  };
+    id?: string
+    name: string
+    code?: string
+    path: string
+    configFile: string
+    counterFile?: string
+    startNumber?: number
+    active: boolean
+    description: string
+    repository?: string
+    ticketsPath?: string
+  }
   metadata: {
-    dateRegistered: string;
-    lastAccessed: string;
-    version: string;
-    globalOnly?: boolean;
-  };
+    dateRegistered: string
+    lastAccessed: string
+    version: string
+    globalOnly?: boolean
+  }
   tickets?: {
-    codePattern?: string;
-  };
+    codePattern?: string
+  }
   document?: {
-    paths?: string[];
-    excludeFolders?: string[];
-    maxDepth?: number;
-  };
-  autoDiscovered?: boolean;
-  configPath?: string;
-  registryFile?: string;
+    paths?: string[]
+    excludeFolders?: string[]
+    maxDepth?: number
+  }
+  autoDiscovered?: boolean
+  configPath?: string
+  registryFile?: string
 }
 
 /**
  * Local Ticket interface matching @mdt/shared/models/Ticket
  */
 export interface Ticket {
-  code: string;
-  title: string;
-  status: string;
-  type: string;
-  priority: string;
-  dateCreated: Date | null;
-  lastModified: Date | null;
-  content: string;
-  filePath: string;
-  phaseEpic?: string;
-  assignee?: string;
-  implementationDate?: Date | null;
-  implementationNotes?: string;
-  relatedTickets: string[];
-  dependsOn: string[];
-  blocks: string[];
+  code: string
+  title: string
+  status: string
+  type: string
+  priority: string
+  dateCreated: Date | null
+  lastModified: Date | null
+  content: string
+  filePath: string
+  phaseEpic?: string
+  assignee?: string
+  implementationDate?: Date | null
+  implementationNotes?: string
+  relatedTickets: string[]
+  dependsOn: string[]
+  blocks: string[]
 }
 
 /**
  * Local TicketData interface matching @mdt/shared/models/Ticket
  */
 export interface TicketData {
-  title: string;
-  type: string;
-  priority?: string;
-  phaseEpic?: string;
-  impactAreas?: string[];
-  relatedTickets?: string;
-  dependsOn?: string;
-  blocks?: string;
-  assignee?: string;
-  content?: string;
+  title: string
+  type: string
+  priority?: string
+  phaseEpic?: string
+  impactAreas?: string[]
+  relatedTickets?: string
+  dependsOn?: string
+  blocks?: string
+  assignee?: string
+  content?: string
 }
 
 /**
  * Local TicketFilters interface matching @mdt/shared/models/Ticket
  */
 export interface TicketFilters {
-  status?: string | string[];
-  type?: string | string[];
-  priority?: string | string[];
+  status?: string | string[]
+  type?: string | string[]
+  priority?: string | string[]
   dateRange?: {
-    start?: Date;
-    end?: Date;
-  };
+    start?: Date
+    end?: Date
+  }
 }
 
 /**
  * Local SectionMatch interface matching @mdt/shared/services/MarkdownSectionService
  */
 export interface SectionMatch {
-  headerText: string;
-  headerLevel: number;
-  startLine: number;
-  endLine: number;
-  content: string;
-  hierarchicalPath: string;
+  headerText: string
+  headerLevel: number
+  startLine: number
+  endLine: number
+  content: string
+  hierarchicalPath: string
 }
 
 /**
@@ -119,15 +119,15 @@ export function createMockProject(overrides?: Partial<Project>): Project {
       configFile: '/test/path/.mdt-config.toml',
       ticketsPath: 'docs/CRs',
       active: true,
-      description: 'Test project for MCP server'
+      description: 'Test project for MCP server',
     },
     metadata: {
       dateRegistered: '2024-01-01T00:00:00.000Z',
       lastAccessed: '2024-01-02T00:00:00.000Z',
-      version: '1.0.0'
+      version: '1.0.0',
     },
-    ...overrides
-  };
+    ...overrides,
+  }
 }
 
 /**
@@ -149,8 +149,8 @@ export function createMockTicket(overrides?: Partial<Ticket>): Ticket {
     relatedTickets: [],
     dependsOn: [],
     blocks: [],
-    ...overrides
-  };
+    ...overrides,
+  }
 }
 
 /**
@@ -166,7 +166,7 @@ phaseEpic: Phase 1
 assignee: developer
 ---
 
-# Test CR Content`;
+# Test CR Content`
 
 /**
  * Mock file content with full CR structure
@@ -207,4 +207,4 @@ Implementation details.
 ## 5. Acceptance Criteria
 
 Criteria here.
-`;
+`

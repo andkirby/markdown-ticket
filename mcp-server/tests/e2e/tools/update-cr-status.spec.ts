@@ -13,40 +13,41 @@
  * - GIVEN project without CRs WHEN updating THEN return error
  */
 
-import { TestEnvironment } from '../helpers/test-environment';
-import { MCPClient, MCPResponse } from '../helpers/mcp-client';
-import { ProjectFactory } from '../helpers/project-factory';
-import { ProjectSetup } from '../helpers/core/project-setup';
+import type { MCPResponse } from '../helpers/mcp-client'
+import { ProjectSetup } from '../helpers/core/project-setup'
+import { MCPClient } from '../helpers/mcp-client'
+import { ProjectFactory } from '../helpers/project-factory'
+import { TestEnvironment } from '../helpers/test-environment'
 
 describe('update_cr_status', () => {
-  let testEnv: TestEnvironment;
-  let mcpClient: MCPClient;
-  let projectFactory: ProjectFactory;
+  let testEnv: TestEnvironment
+  let mcpClient: MCPClient
+  let projectFactory: ProjectFactory
 
   beforeEach(async () => {
-    testEnv = new TestEnvironment();
-    await testEnv.setup();
+    testEnv = new TestEnvironment()
+    await testEnv.setup()
     // Create project structure manually BEFORE starting MCP client
-    const projectSetup = new ProjectSetup({ testEnv });
-    await projectSetup.createProjectStructure('TEST', 'Test Project');
+    const projectSetup = new ProjectSetup({ testEnv })
+    await projectSetup.createProjectStructure('TEST', 'Test Project')
     // NOW start MCP client (server will discover the project from registry)
-    mcpClient = new MCPClient(testEnv, { transport: 'stdio' });
-    await mcpClient.start();
+    mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
+    await mcpClient.start()
     // NOW create ProjectFactory with the running mcpClient
-    projectFactory = new ProjectFactory(testEnv, mcpClient);
-  });
+    projectFactory = new ProjectFactory(testEnv, mcpClient)
+  })
 
   afterEach(async () => {
-    await mcpClient.stop();
-    await testEnv.cleanup();
-  });
+    await mcpClient.stop()
+    await testEnv.cleanup()
+  })
 
   async function callUpdateCRStatus(projectKey: string, crKey: string, newStatus: string) {
     return await mcpClient.callTool('update_cr_status', {
       project: projectKey,
       key: crKey,
-      status: newStatus
-    });
+      status: newStatus,
+    })
   }
 
   /**
@@ -76,7 +77,7 @@ The solution involves testing the status update mechanism for CRs in the system.
 - [ ] CR status can be updated successfully
 - [ ] Status changes are persisted
 - [ ] Error handling works for invalid inputs
-`;
+`
   }
 
   /**
@@ -84,16 +85,16 @@ The solution involves testing the status update mechanism for CRs in the system.
    */
   function extractCRKeyFromResponse(response: MCPResponse): string {
     if (!response.success || !response.data) {
-      throw new Error('Failed to create CR');
+      throw new Error('Failed to create CR')
     }
 
     // The response contains markdown like: "✅ **Created CR TEST-001**: Title"
-    const match = response.data.match(/\*\*Created CR ([A-Z0-9-]+)\*\*:/);
+    const match = response.data.match(/\*\*Created CR ([A-Z0-9-]+)\*\*:/)
     if (!match) {
-      throw new Error('Could not extract CR key from response');
+      throw new Error('Could not extract CR key from response')
     }
 
-    return match[1];
+    return match[1]
   }
 
   /**
@@ -101,116 +102,116 @@ The solution involves testing the status update mechanism for CRs in the system.
    */
   function extractCRStatusFromResponse(response: MCPResponse): string {
     if (!response.success || !response.data) {
-      throw new Error('Failed to create CR');
+      throw new Error('Failed to create CR')
     }
 
     // The response contains "- Status: Proposed"
-    const match = response.data.match(/- Status: (.+)/);
+    const match = response.data.match(/- Status: (.+)/)
     if (!match) {
-      throw new Error('Could not extract CR status from response');
+      throw new Error('Could not extract CR status from response')
     }
 
-    return match[1].trim();
+    return match[1].trim()
   }
 
-  describe('Valid Status Updates', () => {
-    it('GIVEN existing CR WHEN updating status THEN success with new status', async () => {
+  describe('valid Status Updates', () => {
+    it('gIVEN existing CR WHEN updating status THEN success with new status', async () => {
       // Create a CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Status Update Test CR',
         type: 'Feature Enhancement',
         status: 'Proposed',
-        content: createTestCRContent('Status Update Test CR')
-      });
+        content: createTestCRContent('Status Update Test CR'),
+      })
 
-      expect(createdCR.success).toBe(true);
-      const crKey = extractCRKeyFromResponse(createdCR);
-      const crStatus = extractCRStatusFromResponse(createdCR);
-      expect(crStatus).toBe('Proposed');
+      expect(createdCR.success).toBe(true)
+      const crKey = extractCRKeyFromResponse(createdCR)
+      const crStatus = extractCRStatusFromResponse(createdCR)
+      expect(crStatus).toBe('Proposed')
 
       // Update status to Approved
-      const response = await callUpdateCRStatus('TEST', crKey, 'Approved');
+      const response = await callUpdateCRStatus('TEST', crKey, 'Approved')
 
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
-      expect(response.data).toContain('Updated CR');
-      expect(response.data).toContain('Approved');
-      expect(response.data).toContain(crKey);
-    });
+      expect(response.success).toBe(true)
+      expect(response.data).toBeDefined()
+      expect(response.data).toContain('Updated CR')
+      expect(response.data).toContain('Approved')
+      expect(response.data).toContain(crKey)
+    })
 
-    it('GIVEN valid status transitions WHEN updating THEN allow all transitions', async () => {
+    it('gIVEN valid status transitions WHEN updating THEN allow all transitions', async () => {
       // Create a CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Status Transition Test',
         type: 'Bug Fix',
         status: 'Proposed',
-        content: createTestCRContent('Status Transition Test')
-      });
+        content: createTestCRContent('Status Transition Test'),
+      })
 
-      const crKey = extractCRKeyFromResponse(createdCR);
+      const crKey = extractCRKeyFromResponse(createdCR)
       // Test valid status transitions one by one
       // Proposed -> Approved
-      let response = await callUpdateCRStatus('TEST', crKey, 'Approved');
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Updated CR');
-      expect(response.data).toContain('Approved');
+      let response = await callUpdateCRStatus('TEST', crKey, 'Approved')
+      expect(response.success).toBe(true)
+      expect(response.data).toContain('Updated CR')
+      expect(response.data).toContain('Approved')
 
       // Approved -> In Progress
-      response = await callUpdateCRStatus('TEST', crKey, 'In Progress');
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Updated CR');
-      expect(response.data).toContain('In Progress');
+      response = await callUpdateCRStatus('TEST', crKey, 'In Progress')
+      expect(response.success).toBe(true)
+      expect(response.data).toContain('Updated CR')
+      expect(response.data).toContain('In Progress')
 
       // In Progress -> On Hold
-      response = await callUpdateCRStatus('TEST', crKey, 'On Hold');
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Updated CR');
-      expect(response.data).toContain('On Hold');
+      response = await callUpdateCRStatus('TEST', crKey, 'On Hold')
+      expect(response.success).toBe(true)
+      expect(response.data).toContain('Updated CR')
+      expect(response.data).toContain('On Hold')
 
       // On Hold -> In Progress
-      response = await callUpdateCRStatus('TEST', crKey, 'In Progress');
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Updated CR');
-      expect(response.data).toContain('In Progress');
+      response = await callUpdateCRStatus('TEST', crKey, 'In Progress')
+      expect(response.success).toBe(true)
+      expect(response.data).toContain('Updated CR')
+      expect(response.data).toContain('In Progress')
 
       // In Progress -> Implemented
-      response = await callUpdateCRStatus('TEST', crKey, 'Implemented');
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Updated CR');
-      expect(response.data).toContain('Implemented');
-    });
+      response = await callUpdateCRStatus('TEST', crKey, 'Implemented')
+      expect(response.success).toBe(true)
+      expect(response.data).toContain('Updated CR')
+      expect(response.data).toContain('Implemented')
+    })
 
-    it('GIVEN same status WHEN updating THEN still return success', async () => {
+    it('gIVEN same status WHEN updating THEN still return success', async () => {
       // Create a CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Same Status Test',
         type: 'Architecture',
         status: 'Approved',
-        content: createTestCRContent('Same Status Test')
-      });
+        content: createTestCRContent('Same Status Test'),
+      })
 
-      const crKey = extractCRKeyFromResponse(createdCR);
+      const crKey = extractCRKeyFromResponse(createdCR)
 
       // Update to same status (Approved -> Approved)
-      const response = await callUpdateCRStatus('TEST', crKey, 'Approved');
+      const response = await callUpdateCRStatus('TEST', crKey, 'Approved')
 
-      expect(response.success).toBe(true);
-      expect(response.data).toContain('Updated CR');
-      expect(response.data).toContain('Approved');
-    });
-  });
+      expect(response.success).toBe(true)
+      expect(response.data).toContain('Updated CR')
+      expect(response.data).toContain('Approved')
+    })
+  })
 
-  describe('Complete Workflow', () => {
-    it('GIVEN CR lifecycle WHEN updating through all statuses THEN track changes correctly', async () => {
+  describe('complete Workflow', () => {
+    it('gIVEN CR lifecycle WHEN updating through all statuses THEN track changes correctly', async () => {
       // Create CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Lifecycle Test CR',
         type: 'Feature Enhancement',
         status: 'Proposed',
-        content: createTestCRContent('Lifecycle Test CR')
-      });
+        content: createTestCRContent('Lifecycle Test CR'),
+      })
 
-      const crKey = extractCRKeyFromResponse(createdCR);
+      const crKey = extractCRKeyFromResponse(createdCR)
 
       // Simulate typical CR lifecycle
       const lifecycleSteps = [
@@ -218,82 +219,82 @@ The solution involves testing the status update mechanism for CRs in the system.
         { status: 'In Progress', description: 'Development started' },
         { status: 'On Hold', description: 'Blocked by dependency' },
         { status: 'In Progress', description: 'Dependency resolved, continuing' },
-        { status: 'Implemented', description: 'Implementation complete' }
-      ];
+        { status: 'Implemented', description: 'Implementation complete' },
+      ]
 
       for (const step of lifecycleSteps) {
-        const response = await callUpdateCRStatus('TEST', crKey, step.status);
+        const response = await callUpdateCRStatus('TEST', crKey, step.status)
 
-        expect(response.success).toBe(true);
-        expect(response.data).toContain('Updated CR');
-        expect(response.data).toContain(step.status);
-        expect(response.data).toContain(crKey);
+        expect(response.success).toBe(true)
+        expect(response.data).toContain('Updated CR')
+        expect(response.data).toContain(step.status)
+        expect(response.data).toContain(crKey)
       }
-    });
-  });
+    })
+  })
 
-  describe('Multiple CR Updates', () => {
-    it('GIVEN multiple CRs WHEN updating THEN update each independently', async () => {
+  describe('multiple CR Updates', () => {
+    it('gIVEN multiple CRs WHEN updating THEN update each independently', async () => {
       // Create multiple CRs
       const cr1 = await projectFactory.createTestCR('TEST', {
         title: 'First CR',
         type: 'Bug Fix',
         status: 'Proposed',
-        content: createTestCRContent('First CR')
-      });
+        content: createTestCRContent('First CR'),
+      })
 
       const cr2 = await projectFactory.createTestCR('TEST', {
         title: 'Second CR',
         type: 'Feature Enhancement',
         status: 'Proposed',
-        content: createTestCRContent('Second CR')
-      });
+        content: createTestCRContent('Second CR'),
+      })
 
       const cr3 = await projectFactory.createTestCR('TEST', {
         title: 'Third CR',
         type: 'Documentation',
         status: 'Proposed',
-        content: createTestCRContent('Third CR')
-      });
+        content: createTestCRContent('Third CR'),
+      })
 
-      const cr1Key = extractCRKeyFromResponse(cr1);
-      const cr2Key = extractCRKeyFromResponse(cr2);
-      const cr3Key = extractCRKeyFromResponse(cr3);
+      const cr1Key = extractCRKeyFromResponse(cr1)
+      const cr2Key = extractCRKeyFromResponse(cr2)
+      const cr3Key = extractCRKeyFromResponse(cr3)
 
       // Update each to valid statuses from Proposed
-      const response1 = await callUpdateCRStatus('TEST', cr1Key, 'In Progress');
-      const response2 = await callUpdateCRStatus('TEST', cr2Key, 'Approved');
-      const response3 = await callUpdateCRStatus('TEST', cr3Key, 'Rejected');
+      const response1 = await callUpdateCRStatus('TEST', cr1Key, 'In Progress')
+      const response2 = await callUpdateCRStatus('TEST', cr2Key, 'Approved')
+      const response3 = await callUpdateCRStatus('TEST', cr3Key, 'Rejected')
 
       // Verify each update succeeded
-      expect(response1.success).toBe(true);
-      expect(response1.data).toContain('Updated CR');
-      expect(response1.data).toContain('In Progress');
-      expect(response1.data).toContain(cr1Key);
+      expect(response1.success).toBe(true)
+      expect(response1.data).toContain('Updated CR')
+      expect(response1.data).toContain('In Progress')
+      expect(response1.data).toContain(cr1Key)
 
-      expect(response2.success).toBe(true);
-      expect(response2.data).toContain('Updated CR');
-      expect(response2.data).toContain('Approved');
-      expect(response2.data).toContain(cr2Key);
+      expect(response2.success).toBe(true)
+      expect(response2.data).toContain('Updated CR')
+      expect(response2.data).toContain('Approved')
+      expect(response2.data).toContain(cr2Key)
 
-      expect(response3.success).toBe(true);
-      expect(response3.data).toContain('Updated CR');
-      expect(response3.data).toContain('Rejected');
-      expect(response3.data).toContain(cr3Key);
-    });
-  });
+      expect(response3.success).toBe(true)
+      expect(response3.data).toContain('Updated CR')
+      expect(response3.data).toContain('Rejected')
+      expect(response3.data).toContain(cr3Key)
+    })
+  })
 
-  describe('Status Validation', () => {
-    it('GIVEN all valid statuses WHEN updating THEN accept all defined statuses', async () => {
+  describe('status Validation', () => {
+    it('gIVEN all valid statuses WHEN updating THEN accept all defined statuses', async () => {
       // Create a CR
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Status Validation Test',
         type: 'Feature Enhancement',
         status: 'Proposed',
-        content: createTestCRContent('Status Validation Test')
-      });
+        content: createTestCRContent('Status Validation Test'),
+      })
 
-      const crKey = extractCRKeyFromResponse(createdCR);
+      const crKey = extractCRKeyFromResponse(createdCR)
 
       // All valid statuses from shared/models/Types.ts
       const validStatuses = [
@@ -306,184 +307,184 @@ The solution involves testing the status update mechanism for CRs in the system.
         'Superseded',
         'Deprecated',
         'Duplicate',
-        'Partially Implemented'
-      ];
+        'Partially Implemented',
+      ]
 
       // Test each valid status
       for (const status of validStatuses) {
         // Add delay to avoid rate limiting (5 requests per 1s per tool)
         if (validStatuses.indexOf(status) > 0) {
-          await new Promise(resolve => setTimeout(resolve, 300)); // 300ms delay between updates
+          await new Promise(resolve => setTimeout(resolve, 300)) // 300ms delay between updates
         }
 
-        const response = await callUpdateCRStatus('TEST', crKey, status);
+        const response = await callUpdateCRStatus('TEST', crKey, status)
 
-        expect(response.success).toBe(true);
-        expect(response.data).toContain('Updated CR');
-        expect(response.data).toContain(status);
-        expect(response.data).toContain(crKey);
+        expect(response.success).toBe(true)
+        expect(response.data).toContain('Updated CR')
+        expect(response.data).toContain(status)
+        expect(response.data).toContain(crKey)
       }
-    });
-  });
+    })
+  })
 
-  describe('Error Handling', () => {
-    it('GIVEN non-existent CR WHEN updating THEN return tool execution error', async () => {
-      const response = await callUpdateCRStatus('TEST', 'TEST-999', 'Approved');
+  describe('error Handling', () => {
+    it('gIVEN non-existent CR WHEN updating THEN return tool execution error', async () => {
+      const response = await callUpdateCRStatus('TEST', 'TEST-999', 'Approved')
 
       // Business logic errors (CR not found) are tool execution errors
       // They should return success=false with error object according to MCP spec
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32000); // Server error code
-      expect(response.error?.message).toContain('not found');
-    });
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32000) // Server error code
+      expect(response.error?.message).toContain('not found')
+    })
 
-    it('GIVEN non-existent project WHEN updating THEN return protocol error', async () => {
-      const response = await callUpdateCRStatus('NONEXISTENT', 'TEST-001', 'Approved');
+    it('gIVEN non-existent project WHEN updating THEN return protocol error', async () => {
+      const response = await callUpdateCRStatus('NONEXISTENT', 'TEST-001', 'Approved')
 
       // Invalid project key is a parameter validation error
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params error code
-      expect(response.error?.message).toContain('invalid');
-    });
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params error code
+      expect(response.error?.message).toContain('invalid')
+    })
 
-    it('GIVEN invalid status WHEN updating THEN return protocol error', async () => {
+    it('gIVEN invalid status WHEN updating THEN return protocol error', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Invalid Status Test',
         type: 'Bug Fix',
         status: 'Proposed',
-        content: createTestCRContent('Invalid Status Test')
-      });
+        content: createTestCRContent('Invalid Status Test'),
+      })
 
-      const crKey = extractCRKeyFromResponse(createdCR);
-      const response = await callUpdateCRStatus('TEST', crKey, 'Invalid Status');
+      const crKey = extractCRKeyFromResponse(createdCR)
+      const response = await callUpdateCRStatus('TEST', crKey, 'Invalid Status')
 
       // Invalid status is a parameter validation error (protocol error)
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params error code
-      expect(response.error?.message).toContain('Invalid status');
-    });
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params error code
+      expect(response.error?.message).toContain('Invalid status')
+    })
 
-    it('GIVEN missing project parameter WHEN updating THEN return protocol error', async () => {
+    it('gIVEN missing project parameter WHEN updating THEN return protocol error', async () => {
       const response = await mcpClient.callTool('update_cr_status', {
         key: 'TEST-001',
-        status: 'Approved'
-      });
+        status: 'Approved',
+      })
 
       // Missing required parameter is a protocol error
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params error code
-      expect(response.error?.message).toContain('Project');
-    });
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params error code
+      expect(response.error?.message).toContain('Project')
+    })
 
-    it('GIVEN missing key parameter WHEN updating THEN return protocol error', async () => {
+    it('gIVEN missing key parameter WHEN updating THEN return protocol error', async () => {
       const response = await mcpClient.callTool('update_cr_status', {
         project: 'TEST',
-        status: 'Approved'
-      });
+        status: 'Approved',
+      })
 
       // Missing required parameter is a protocol error
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params error for missing key parameter
-    });
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params error for missing key parameter
+    })
 
-    it('GIVEN missing status parameter WHEN updating THEN return protocol error', async () => {
-      const response = await mcpClient.callTool('update_cr_status', {
-        project: 'TEST',
-        key: 'TEST-001'
-      });
-
-      // Missing required parameter is a protocol error
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params error code
-      expect(response.error?.message).toContain('status');
-    });
-
-    it('GIVEN empty status WHEN updating THEN return protocol error', async () => {
+    it('gIVEN missing status parameter WHEN updating THEN return protocol error', async () => {
       const response = await mcpClient.callTool('update_cr_status', {
         project: 'TEST',
         key: 'TEST-001',
-        status: ''
-      });
+      })
+
+      // Missing required parameter is a protocol error
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params error code
+      expect(response.error?.message).toContain('status')
+    })
+
+    it('gIVEN empty status WHEN updating THEN return protocol error', async () => {
+      const response = await mcpClient.callTool('update_cr_status', {
+        project: 'TEST',
+        key: 'TEST-001',
+        status: '',
+      })
 
       // Empty status is a protocol error
-      expect(response.success).toBe(false);
-      expect(response.error).toBeDefined();
-      expect(response.error?.code).toBe(-32602); // Invalid params error code
-      expect(response.error?.message).toContain('status');
-    });
-  });
+      expect(response.success).toBe(false)
+      expect(response.error).toBeDefined()
+      expect(response.error?.code).toBe(-32602) // Invalid params error code
+      expect(response.error?.message).toContain('status')
+    })
+  })
 
-  describe('Status-Specific Behavior', () => {
-    it('GIVEN CR rejected WHEN updating to implemented THEN allow re-evaluation', async () => {
+  describe('status-Specific Behavior', () => {
+    it('gIVEN CR rejected WHEN updating to implemented THEN allow re-evaluation', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Rejected to Implemented Test',
         type: 'Feature Enhancement',
         status: 'Proposed',
-        content: createTestCRContent('Rejected to Implemented Test')
-      });
+        content: createTestCRContent('Rejected to Implemented Test'),
+      })
 
-      const crKey = extractCRKeyFromResponse(createdCR);
+      const crKey = extractCRKeyFromResponse(createdCR)
 
       // First reject the CR
-      const rejectResponse = await callUpdateCRStatus('TEST', crKey, 'Rejected');
-      expect(rejectResponse.success).toBe(true);
-      expect(rejectResponse.data).toContain('Rejected');
+      const rejectResponse = await callUpdateCRStatus('TEST', crKey, 'Rejected')
+      expect(rejectResponse.success).toBe(true)
+      expect(rejectResponse.data).toContain('Rejected')
 
       // Then implement it (e.g., after reconsideration)
-      const implementResponse = await callUpdateCRStatus('TEST', crKey, 'Implemented');
-      expect(implementResponse.success).toBe(true);
-      expect(implementResponse.data).toContain('Implemented');
-    });
+      const implementResponse = await callUpdateCRStatus('TEST', crKey, 'Implemented')
+      expect(implementResponse.success).toBe(true)
+      expect(implementResponse.data).toContain('Implemented')
+    })
 
-    it('GIVEN CR on hold WHEN updating to in progress THEN allow resumption', async () => {
+    it('gIVEN CR on hold WHEN updating to in progress THEN allow resumption', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'On Hold Test',
         type: 'Technical Debt',
         status: 'In Progress',
-        content: createTestCRContent('On Hold Test')
-      });
+        content: createTestCRContent('On Hold Test'),
+      })
 
-      const crKey = extractCRKeyFromResponse(createdCR);
+      const crKey = extractCRKeyFromResponse(createdCR)
 
       // Put CR on hold
-      const holdResponse = await callUpdateCRStatus('TEST', crKey, 'On Hold');
-      expect(holdResponse.success).toBe(true);
-      expect(holdResponse.data).toContain('On Hold');
+      const holdResponse = await callUpdateCRStatus('TEST', crKey, 'On Hold')
+      expect(holdResponse.success).toBe(true)
+      expect(holdResponse.data).toContain('On Hold')
 
       // Resume work
-      const resumeResponse = await callUpdateCRStatus('TEST', crKey, 'In Progress');
-      expect(resumeResponse.success).toBe(true);
-      expect(resumeResponse.data).toContain('In Progress');
-    });
-  });
+      const resumeResponse = await callUpdateCRStatus('TEST', crKey, 'In Progress')
+      expect(resumeResponse.success).toBe(true)
+      expect(resumeResponse.data).toContain('In Progress')
+    })
+  })
 
-  describe('Response Format', () => {
-    it('GIVEN successful update WHEN response THEN include updated CR data', async () => {
+  describe('response Format', () => {
+    it('gIVEN successful update WHEN response THEN include updated CR data', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Response Format Test',
         type: 'Documentation',
         status: 'Proposed',
         priority: 'High',
-        content: createTestCRContent('Response Format Test')
-      });
+        content: createTestCRContent('Response Format Test'),
+      })
 
-      const crKey = extractCRKeyFromResponse(createdCR);
-      const response = await callUpdateCRStatus('TEST', crKey, 'Approved');
+      const crKey = extractCRKeyFromResponse(createdCR)
+      const response = await callUpdateCRStatus('TEST', crKey, 'Approved')
 
-      expect(response.success).toBe(true);
-      expect(response.data).toBeDefined();
+      expect(response.success).toBe(true)
+      expect(response.data).toBeDefined()
 
       // Response should be markdown with CR info
-      expect(response.data).toContain('Updated CR');
-      expect(response.data).toContain(crKey);
-      expect(response.data).toContain('Approved');
-      expect(response.data).toContain('Response Format Test');
-    });
-  });
-});
+      expect(response.data).toContain('Updated CR')
+      expect(response.data).toContain(crKey)
+      expect(response.data).toContain('Approved')
+      expect(response.data).toContain('Response Format Test')
+    })
+  })
+})
