@@ -20,7 +20,7 @@ import * as toml from 'toml'
  * - ScanPaths: Configured directories scanned for *-config.toml files
  */
 
-export interface ServerConfig {
+interface ServerConfig {
   server: {
     port: number
     logLevel: 'debug' | 'info' | 'warn' | 'error'

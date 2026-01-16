@@ -141,11 +141,4 @@ export class SectionRepository {
   clearCache(): void {
     this.fileCache.clear()
   }
-
-  /**
-   * Get cache size (for debugging/monitoring)
-   */
-  getCacheSize(): number {
-    return this.fileCache.size
-  }
 }

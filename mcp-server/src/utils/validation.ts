@@ -69,37 +69,6 @@ export function validateRequired(value: any, name: string): ValidationResult {
 }
 
 /**
- * Validate string parameter with optional min/max length
- */
-export function validateString(
-  value: any,
-  name: string,
-  options?: { min?: number, max?: number },
-): ValidationResult {
-  if (typeof value !== 'string') {
-    return { valid: false, message: `${name} must be a string` }
-  }
-
-  const trimmed = value.trim()
-
-  if (options?.min && trimmed.length < options.min) {
-    return {
-      valid: false,
-      message: `${name} must be at least ${options.min} characters long`,
-    }
-  }
-
-  if (options?.max && trimmed.length > options.max) {
-    return {
-      valid: false,
-      message: `${name} must be no more than ${options.max} characters long`,
-    }
-  }
-
-  return { valid: true, value: trimmed }
-}
-
-/**
  * Validate operation parameter against allowed values
  */
 export function validateOperation(
@@ -119,30 +88,4 @@ export function validateOperation(
   }
 
   return { valid: true, value: operation }
-}
-
-/**
- * Validate and sanitize file path parameter
- */
-function _validatePath(path: string, name: string = 'path'): ValidationResult {
-  const result = validateRequired(path, name)
-  if (!result.valid)
-    return result
-
-  if (typeof path !== 'string') {
-    return { valid: false, message: `${name} must be a string` }
-  }
-
-  // Basic path sanitization
-  const sanitized = path.trim()
-
-  // Prevent path traversal
-  if (sanitized.includes('..') || sanitized.includes('~')) {
-    return {
-      valid: false,
-      message: `${name} contains invalid characters or path traversal`,
-    }
-  }
-
-  return { valid: true, value: sanitized }
 }
