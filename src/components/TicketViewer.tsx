@@ -81,7 +81,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
       <ModalBody>
         <div className="space-y-4">
           {/* Ticket Metadata */}
-          <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+          <div className="p-5 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
             <TicketAttributes ticket={currentTicket} />
           </div>
 

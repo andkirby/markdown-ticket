@@ -34,33 +34,24 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, class
   }
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High':
-        return 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700'
-      case 'Medium':
-        return 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700'
-      case 'Low':
-        return 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700'
-      default:
-        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+    const colors: Record<string, string> = {
+      High: 'bg-gradient-to-r from-rose-50 to-rose-100/80 text-rose-700 border-rose-200/60 shadow-sm',
+      Medium: 'bg-gradient-to-r from-amber-50 to-amber-100/80 text-amber-700 border-amber-200/60 shadow-sm',
+      Low: 'bg-gradient-to-r from-emerald-50 to-emerald-100/80 text-emerald-700 border-emerald-200/60 shadow-sm',
+      Critical: 'bg-gradient-to-r from-red-100 to-rose-200 text-red-900 border-red-300 shadow-md',
     }
+    return colors[priority] || colors.Low
   }
 
   const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'Bug Fix':
-        return 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700'
-      case 'Feature Enhancement':
-        return 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700'
-      case 'Technical Debt':
-        return 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700'
-      case 'Architecture':
-        return 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-700'
-      case 'Documentation':
-        return 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-700'
-      default:
-        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+    const colors: Record<string, string> = {
+      'Feature Enhancement': 'bg-gradient-to-r from-blue-50 to-indigo-100/80 text-blue-700 border-blue-200/60 shadow-sm',
+      'Bug Fix': 'bg-gradient-to-r from-orange-50 to-amber-100/80 text-orange-700 border-orange-200/60 shadow-sm',
+      'Architecture': 'bg-gradient-to-r from-purple-50 to-violet-100/80 text-purple-700 border-purple-200/60 shadow-sm',
+      'Technical Debt': 'bg-gradient-to-r from-slate-50 to-gray-100/80 text-slate-700 border-slate-200/60 shadow-sm',
+      'Documentation': 'bg-gradient-to-r from-cyan-50 to-teal-100/80 text-cyan-700 border-cyan-200/60 shadow-sm',
     }
+    return colors[type] || 'bg-gradient-to-r from-gray-50 to-slate-100/80 text-gray-700 border-gray-200/60 shadow-sm'
   }
 
   const getStatusColor = (status: string) => {
@@ -82,13 +73,13 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, class
 
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
-      <Badge variant="outline" className={getStatusColor(ticket.status)}>
+      <Badge variant="outline" className={`${getStatusColor(ticket.status)} backdrop-blur-sm`}>
         {ticket.status}
       </Badge>
-      <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
+      <Badge variant="outline" className={`${getPriorityColor(ticket.priority)} backdrop-blur-sm`}>
         {ticket.priority}
       </Badge>
-      <Badge variant="outline" className={getTypeColor(ticket.type || 'Unknown')}>
+      <Badge variant="outline" className={`${getTypeColor(ticket.type || 'Unknown')} backdrop-blur-sm`}>
         {ticket.type || 'Unknown'}
       </Badge>
       {ticket.phaseEpic && (
