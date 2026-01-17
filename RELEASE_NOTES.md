@@ -1,5 +1,89 @@
 # Release Notes
 
+## v0.9.0 (2026-01-17)
+
+### 🎉 New Features
+
+**Enhanced UI Styling (MDT-118)**
+- **Modern Gradients**: Column headers and badges now display with beautiful gradient backgrounds
+- **Smooth Animations**: Drag-and-drop interactions feature scale, rotate, and shadow transitions
+- **Skeleton Loading**: Loading states show animated skeleton cards instead of basic spinners
+- **Better Scrollbars**: Project selector now handles overflow with hover-visible horizontal scrollbars
+- **Improved Visual Hierarchy**: Header sizes and spacing optimized for better content organization
+
+**Code Complexity Metrics (MDT-112)**
+- **Metrics Script**: Run `scripts/metrics/run.sh` to analyze code complexity for changed files
+- **LLM-Friendly Output**: JSON format for automated analysis by AI assistants
+- **Industry Standards**: Maintainability Index, Cyclomatic Complexity, and Cognitive Complexity metrics
+- **Threshold Filtering**: Shows only problematic files (yellow/red zones) by default
+- **Customizable Analysis**: Analyze specific files, directories, or all changed files
+
+### 🚀 Improvements
+
+**Comprehensive Testing Coverage (MDT-091, MDT-106)**
+- **MCP Server E2E Tests**: 221 tests covering all 10 MCP tools with positive and negative scenarios
+- **API Endpoint E2E Tests**: 223 tests across 6 test files for server API coverage
+- **Test Isolation**: All tests run in isolated environments using temporary directories
+- **CI/CD Ready**: Tests can run automatically in continuous integration pipelines
+
+**Test Infrastructure Refactoring (MDT-113)**
+- **Reduced Complexity**: Test utilities refactored from RED to YELLOW/GREEN zones
+- **Better Maintainability**: Extracted single-responsibility classes for easier maintenance
+- **Behavior Preservation**: All existing tests pass without modification
+- **Improved Code Quality**: Higher maintainability index across test framework
+
+**Docker Production Enhancements (MDT-055)**
+- **Three-Container Architecture**: Frontend, backend, and MCP services in separate containers
+- **Convenience Wrapper**: `bin/dc` script simplifies Docker Compose commands
+- **Flexible Volume Mounting**: Support for multiple project mounting strategies
+- **Docker-Only Configuration**: Container-specific config system isolated from host
+
+### 🐛 Bug Fixes
+
+**Auto-Discovered Projects (MDT-115)**
+- **Configure Documents Fixed**: Auto-discovered projects can now configure document paths
+- **No More 500 Errors**: `/api/documents/configure` works for all project types
+- **Unified Project Access**: Projects found from both registry and auto-discovery
+
+**Environment Variable Fixes (MDT-091)**
+- **Removed Hardcoded Values**: E2E test scripts now respect environment variables
+- **Docker Compatibility**: Fixed MCP_HTTP_ENABLED hardcoded value that broke Docker deployments
+
+### 🔧 Technical Improvements
+
+**Developer Experience**
+- **TypeScript Path Mapping**: Clean `@shared/*` imports work in both host and Docker
+- **Code Quality Tools**: Automated metrics collection identifies complex code
+- **Test Infrastructure**: Isolated test environments prevent interference with user projects
+- **ESLint Cleanup**: Fixed 278 ESLint errors across server codebase
+
+**Docker Deployment**
+- **Tailwind CSS Fix**: Frontend styling displays correctly in Docker containers
+- **Port Mapping**: Avoids conflicts (5174→5173 for frontend, 3012→3002 for MCP)
+- **Health Checks**: All services include health check endpoints
+- **Network Communication**: Services communicate via Docker network names
+
+**Code Quality**
+- **Dead Code Removal**: Cleaned up unused files, exports, and dependencies
+- **Simplified Validation**: Streamlined PathResolver validation logic
+- **Type Checking**: Enabled for test files in MCP server
+- **Configuration Refactoring**: Simplified TypeScript config structure
+
+### 📚 Documentation
+
+**Internal Improvements**
+- **Dead Code Detection**: Added tools comparison for code quality analysis
+- **Git Hooks**: Pre-commit hooks to block Co-Authored-By and enforce path alias usage
+- **Documentation Restructuring**: Three-tier system for better organization
+- **MCP Integration**: Enhanced documentation for HTTP transport setup
+
+**Development Guides**
+- **E2E Testing**: Comprehensive guides for API and MCP server testing
+- **Docker Deployment**: Updated guides with new wrapper script usage
+- **Code Metrics**: Documentation for complexity analysis tool
+
+---
+
 ## v0.8.0 (2025-12-29)
 
 ### 🎉 New Features
