@@ -33,13 +33,6 @@ describe('rate Limiting (MUST-05)', () => {
     process.env.MCP_RATE_LIMIT_MAX = '5'
     process.env.MCP_RATE_LIMIT_WINDOW_MS = '1000'
 
-    // Debug: Print environment variables
-    console.error('Rate limiting config:', {
-      MCP_SECURITY_RATE_LIMITING: process.env.MCP_SECURITY_RATE_LIMITING,
-      MCP_RATE_LIMIT_MAX: process.env.MCP_RATE_LIMIT_MAX,
-      MCP_RATE_LIMIT_WINDOW_MS: process.env.MCP_RATE_LIMIT_WINDOW_MS,
-    })
-
     // Initialize MCP client with test environment
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
     await mcpClient.start()

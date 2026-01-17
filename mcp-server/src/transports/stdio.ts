@@ -38,9 +38,6 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
     // Check rate limit before processing tool call
     const rateLimitResult = rateLimitManager.checkRateLimit(name)
 
-    // Debug: Log rate limit check
-    console.error(`[RATE LIMIT] Tool '${name}': allowed=${rateLimitResult.allowed}, remaining=${rateLimitResult.remainingRequests}`)
-
     if (!rateLimitResult.allowed) {
       const errorMessage = `Rate limit exceeded for tool '${name}'. Maximum ${rateLimitManager.getStats().config.maxRequests} requests per ${rateLimitManager.getStats().config.windowMs / 1000} seconds.`
 
@@ -48,9 +45,6 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
       const fullMessage = rateLimitResult.retryAfter
         ? `${errorMessage} Retry after ${rateLimitResult.retryAfter} seconds.`
         : errorMessage
-
-      // Debug: Log that we're returning the error
-      console.error(`[STDIO] Returning rate limit error: ${fullMessage}`)
 
       // For stdio transport, we need to throw the McpError which the SDK will convert to a JSON-RPC error
       throw new McpError(ErrorCode.RequestTimeout, fullMessage) // -32001 is appropriate for rate limiting
