@@ -195,24 +195,26 @@ function ProjectRouteHandler() {
   }
 
   return (
-    <div className="App min-h-screen bg-background">
+    <div className="App h-screen flex flex-col bg-background overflow-hidden">
       {/* Navigation Bar */}
-      <nav className="bg-card border-b shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 shadow-sm">
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-8">
+            <div className="flex items-center gap-4 min-w-0 flex-1 overflow-hidden">
               <div className="flex-shrink-0">
-                <img src="/logo.jpeg" alt="Logo" className="w-auto dark:invert" style={{ height: '3.8rem' }} />
+                <img src="/logo.jpeg" alt="Logo" className="h-14 w-auto dark:invert" />
               </div>
               <ViewModeSwitcher viewMode={viewMode} onViewModeChange={handleViewModeChange} />
-              <ProjectSelector
-                projects={projects}
-                selectedProject={selectedProject}
-                onProjectSelect={handleProjectSelect}
-                loading={projectsLoading}
-              />
+              <div className="min-w-0 flex-1">
+                <ProjectSelector
+                  projects={projects}
+                  selectedProject={selectedProject}
+                  onProjectSelect={handleProjectSelect}
+                  loading={projectsLoading}
+                />
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4 flex-shrink-0">
               <button
                 onClick={toggleTheme}
                 className="btn btn-ghost p-2 h-10 w-10"
@@ -231,13 +233,15 @@ function ProjectRouteHandler() {
         </div>
       </nav>
 
-      <ProjectView
-        onTicketClick={handleTicketClick}
-        selectedProject={selectedProject}
-        tickets={tickets}
-        viewMode={viewMode}
-        refreshProjects={refreshProjects}
-      />
+      <div className="flex-1 overflow-hidden">
+        <ProjectView
+          onTicketClick={handleTicketClick}
+          selectedProject={selectedProject}
+          tickets={tickets}
+          viewMode={viewMode}
+          refreshProjects={refreshProjects}
+        />
+      </div>
 
       <TicketViewer
         ticket={selectedTicket}

@@ -2,8 +2,6 @@
  * Cache management utilities for development
  */
 
-/* eslint-disable node/prefer-global/process -- Using import.meta.env for browser compatibility */
-
 export function clearAllCache() {
   if (typeof window !== 'undefined') {
     // Clear ALL localStorage items

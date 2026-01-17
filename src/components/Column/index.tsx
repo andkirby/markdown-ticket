@@ -3,6 +3,7 @@ import * as React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useDrag } from 'react-dnd'
 import { getVisibleColumns } from '../../config'
+import { getColumnGradient } from '../../utils/colorUtils'
 import { sortTickets } from '../../utils/sorting'
 import { ResolutionDialog } from '../ResolutionDialog'
 import TicketCard from '../TicketCard'
@@ -23,6 +24,7 @@ interface ColumnProps {
   onTicketEdit: (ticket: Ticket) => void
   sortAttribute?: string
   sortDirection?: 'asc' | 'desc'
+  isFirstColumn?: boolean
   // Position tracking methods for StatusToggle
   getTicketPosition: (ticketCode: string) => { columnIndex: number, ticketIndex: number, timestamp: number } | undefined
   clearTicketPosition: (ticketCode: string) => void
@@ -53,10 +55,14 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
   return (
     <div
       ref={drag}
-      className={`draggable-ticket ${isDragging ? 'dragging' : ''}`}
+      className={`draggable-ticket transition-all duration-300 ease-out ${
+        isDragging
+          ? 'opacity-40 scale-95 rotate-2 shadow-2xl'
+          : 'hover:scale-[1.02] hover:-translate-y-1'
+      }`}
       style={{
-        opacity: isDragging ? 0.5 : 1,
         cursor: 'move',
+        boxShadow: isDragging ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' : undefined,
       }}
       data-testid="ticket-card"
       data-ticket-key={ticket.code}
@@ -74,6 +80,7 @@ const Column: React.FC<ColumnProps> = ({
   onTicketEdit,
   sortAttribute = 'code',
   sortDirection = 'desc',
+  isFirstColumn = false,
   getTicketPosition,
   clearTicketPosition,
 }) => {
@@ -184,15 +191,17 @@ const Column: React.FC<ColumnProps> = ({
   return (
     <div
       ref={drop}
-      className={`column flex flex-col rounded-lg border-2 transition-colors h-full ${
-        isOver ? 'border-blue-400 bg-blue-50 dark:bg-blue-950/20' : 'border-gray-200 dark:border-gray-700'
+      className={`column flex flex-col transition-all duration-200 ease-out h-full relative ${
+        isOver
+          ? 'bg-blue-50/50 dark:bg-blue-950/30 ring-2 ring-blue-400/30'
+          : ''
       }`}
     >
       {/* Column Header */}
-      <div className={`p-4 rounded-t-lg ${column.color}`}>
+      <div className={`px-3 py-2 border border-black/5 dark:border-white/10 bg-gradient-to-br rounded-t-lg shadow-md z-10 ${getColumnGradient(column.color)}`}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <h3 className="font-semibold text-foreground">{column.label}</h3>
+          <h3 className="font-semibold text-foreground">{column.label}</h3>
+          <div className="flex items-center gap-2">
             {/* Status Toggle */}
             {toggleStatus && (
               <StatusToggle
@@ -208,10 +217,10 @@ const Column: React.FC<ColumnProps> = ({
                 setMergeMode={setMergeMode}
               />
             )}
+            <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full font-mono min-w-[2rem] text-center tabular-nums">
+              {visibleTickets.length}
+            </span>
           </div>
-          <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
-            {visibleTickets.length}
-          </span>
         </div>
       </div>
 
@@ -219,10 +228,10 @@ const Column: React.FC<ColumnProps> = ({
       <ScrollArea
         type="hover"
         scrollHideDelay={600}
-        className="h-full"
-        style={{ height: 'calc(100vh - 220px)' }}
+        className={`h-full border-r border-border ${isFirstColumn ? 'border-l border-border' : ''}`}
+        style={{ height: 'calc(100vh - 165px)' }}
       >
-        <div className="column-drop-zone p-4 space-y-3">
+        <div className="column-drop-zone px-3 py-2 space-y-2">
           {visibleTickets.map(ticket => (
             <DraggableTicketCard
               key={ticket.code}

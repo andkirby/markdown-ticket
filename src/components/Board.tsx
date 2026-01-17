@@ -16,6 +16,7 @@ import { HamburgerMenu } from './HamburgerMenu'
 import { SortControls } from './SortControls'
 import { Alert, AlertDescription, AlertTitle } from './UI/alert'
 import { Button } from './UI/index'
+import { ScrollArea } from './UI/scroll-area'
 
 interface BoardProps {
   onTicketClick: (ticket: Ticket) => void
@@ -331,16 +332,22 @@ const BoardContent: React.FC<BoardProps> = ({
     console.error('DUPLICATE TICKETS DETECTED: This may cause React key conflicts')
   }
 
-  // Show loading state
+  // Show loading state with skeleton loader
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] p-6">
-        <div className="flex items-center space-x-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <div className="text-lg text-muted-foreground">
-            {projects.length === 0 ? 'Loading projects...' : 'Loading tickets...'}
+      <div className="board-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-8">
+        {[1, 2, 3, 4].map(col => (
+          <div key={col} className="space-y-4">
+            <div className="h-12 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-lg animate-pulse" />
+            {[1, 2, 3].map(i => (
+              <div
+                key={i}
+                className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-lg animate-pulse"
+                style={{ animationDelay: `${i * 150}ms` }}
+              />
+            ))}
           </div>
-        </div>
+        ))}
       </div>
     )
   }
@@ -421,45 +428,41 @@ const BoardContent: React.FC<BoardProps> = ({
   }
 
   return (
-    <div className={showHeader ? 'p-6 space-y-6 h-full flex flex-col' : 'p-2 h-full flex flex-col'}>
+    <div className={showHeader ? 'px-2 py-1 h-full min-h-0 flex flex-col gap-1' : 'p-0 h-full min-h-0 flex flex-col'}>
       {showHeader && (
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex-1">
-            <div className="flex items-center space-x-4 mb-2">
-              <h1 className="text-2xl font-bold text-foreground">Change Request Board</h1>
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold text-foreground whitespace-nowrap">Change Request Board</h1>
               {enableProjectSwitching && (
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm font-medium text-muted-foreground">Project:</label>
-                  <div className="flex gap-2">
-                    {projects.map(project => (
-                      <button
-                        key={project.id}
-                        onClick={() => {
-                          setSelectedProject(project)
-                          clearError()
-                        }}
-                        disabled={loading}
-                        className={`h-12 px-3 py-1 border rounded-md text-center transition-colors ${
-                          selectedProject?.id === project.id
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background border-border hover:bg-muted'
-                        } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                      >
-                        <div className="text-sm font-medium">{project.id}</div>
-                        <div className="text-xs text-muted-foreground truncate max-w-20">{project.project.name}</div>
-                      </button>
-                    ))}
-                  </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-muted-foreground">Project:</label>
+                  <ScrollArea className="max-w-[200px]">
+                    <div className="flex gap-1">
+                      {projects.map(project => (
+                        <button
+                          key={project.id}
+                          onClick={() => {
+                            setSelectedProject(project)
+                            clearError()
+                          }}
+                          disabled={loading}
+                          className={`h-9 px-2 py-1 border rounded text-center transition-colors flex-shrink-0 ${
+                            selectedProject?.id === project.id
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-background border-border hover:bg-muted'
+                          } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          <div className="text-xs font-medium leading-tight whitespace-nowrap">{project.id}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 </div>
               )}
             </div>
-            <p className="text-sm text-muted-foreground font-normal">
-              {selectedProject
-                ? `Track and manage change requests for ${selectedProject.project.name}`
-                : 'Select a project to view and manage change requests'}
-            </p>
           </div>
-          <div className="flex space-x-4">
+          <div className="flex items-center gap-2">
             <FilterControls
               searchQuery={filterQuery}
               onSearchChange={setFilterQuery}
@@ -472,12 +475,13 @@ const BoardContent: React.FC<BoardProps> = ({
             <Button
               onClick={handleRefresh}
               variant="secondary"
+              className="h-9 px-3"
             >
               Refresh
             </Button>
             <Button
               onClick={handleTicketCreate}
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary h-9 px-3"
               disabled={!selectedProject}
             >
               Create
@@ -493,11 +497,12 @@ const BoardContent: React.FC<BoardProps> = ({
       )}
 
       {/* Board Grid - render regardless of showHeader */}
-      <div className="board-container flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full overflow-x-auto min-h-0">
-        {visibleColumns.map(column => (
+      <div className="board-container flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full items-stretch p-1 overflow-hidden">
+        {visibleColumns.map((column, index) => (
           <Column
             key={column.label}
             column={column}
+            isFirstColumn={index === 0}
             tickets={ticketsByColumn[column.label]}
             allTickets={tickets}
             sortAttribute={sortPreferences.selectedAttribute}

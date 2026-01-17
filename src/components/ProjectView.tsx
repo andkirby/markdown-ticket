@@ -115,7 +115,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-6 py-3 border-b border-border">
+      <div className="px-4 py-2 border-b border-border">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-foreground">
             {selectedProject?.project.name || 'Board View'}
@@ -134,7 +134,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {viewMode === 'board'
           ? (
               <Board

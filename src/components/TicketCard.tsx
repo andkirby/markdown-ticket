@@ -12,7 +12,7 @@ interface TicketCardProps {
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
   return (
     <div
-      className="ticket-card bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="group ticket-card bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border border-gray-200/50 dark:border-slate-700/50 rounded-xl px-3 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 hover:scale-[1.005] transition-all duration-300 ease-out cursor-pointer backdrop-blur-sm"
       onClick={onEdit}
       data-testid="ticket-card"
       data-ticket-key={ticket.code}
@@ -35,7 +35,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
               e.stopPropagation()
               onEdit()
             }}
-            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="opacity-0 group-hover:opacity-100 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200 ease-out"
             title="Edit ticket"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

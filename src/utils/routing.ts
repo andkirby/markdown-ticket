@@ -7,7 +7,7 @@ export function normalizeTicketKey(key: string): string {
     return ''
 
   // Sanitize: only allow alphanumeric, dash, underscore
-  const sanitized = key.replace(/[^\w-]/gi, '')
+  const sanitized = key.replace(/[^\w-]/g, '')
 
   const match = sanitized.match(/^([A-Z]+)-(\d+)$/)
   if (!match)
