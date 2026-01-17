@@ -181,6 +181,10 @@ git push
 
 ## 📈 What's New
 
+- **v0.9.0** (2026-01-17): Modern UI with gradients and animations, comprehensive E2E testing coverage, code metrics tool, and Docker improvements
+
+- **v0.8.0** (2025-12-29): Interactive API documentation, enhanced status buttons, TOML configuration improvements
+
 - **v0.7.2** (2025-12-03): Enhanced project management UI, consolidated ticket management, and improved validation
 
 - **v0.7.1** (2025-11-14): CLI project management tool, flexible MCP section matching, ticket numbering fixes, and documentation improvements
