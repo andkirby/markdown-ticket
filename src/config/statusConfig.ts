@@ -100,7 +100,7 @@ const BOARD_COLUMNS = {
   // Column 2: Open
   open: {
     label: 'Open',
-    color: 'green',
+    color: 'blue',
     description: 'Work that is ready to start',
     statuses: ['Approved'] as CRStatus[],
     visible: true,
@@ -110,7 +110,7 @@ const BOARD_COLUMNS = {
   // Column 3: In Progress
   inProgress: {
     label: 'In Progress',
-    color: 'blue',
+    color: 'yellow',
     description: 'Work currently being done',
     statuses: ['In Progress', 'On Hold'] as CRStatus[],
     visible: true,
@@ -120,7 +120,7 @@ const BOARD_COLUMNS = {
   // Column 4: Done
   done: {
     label: 'Done',
-    color: 'teal',
+    color: 'green',
     description: 'Completed work',
     statuses: ['Implemented', 'Partially Implemented', 'Rejected'] as CRStatus[],
     visible: true,

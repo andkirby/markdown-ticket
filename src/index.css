@@ -309,6 +309,32 @@
   .gradient-border-content {
     @apply bg-white rounded-md;
   }
+
+  /* Project selector horizontal scrollbar - show on hover only */
+  .project-selector-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .project-selector-scroll:hover {
+    scrollbar-color: #d1d5db transparent;
+  }
+
+  .project-selector-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .project-selector-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .project-selector-scroll::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  .project-selector-scroll:hover::-webkit-scrollbar-thumb {
+    @apply bg-gray-400;
+  }
 }
 
 /* Print styles */

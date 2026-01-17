@@ -1,5 +1,5 @@
 import type { HTMLReactParserOptions } from 'html-react-parser'
-/* eslint-disable node/prefer-global/process -- Using import.meta.env for browser compatibility */
+
 import DOMPurify from 'dompurify'
 import parse, { Element } from 'html-react-parser'
 import * as React from 'react'

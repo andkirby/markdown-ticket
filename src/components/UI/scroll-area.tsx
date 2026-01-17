@@ -27,8 +27,8 @@ ScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName
 
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>
->(({ className, children, type = 'hover', scrollHideDelay = 600, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & { shadowPadding?: boolean }
+>(({ className, children, type = 'hover', scrollHideDelay = 600, shadowPadding = false, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
     ref={ref}
     type={type}
@@ -36,7 +36,7 @@ const ScrollArea = React.forwardRef<
     className={cn('relative overflow-hidden', className)}
     {...props}
   >
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+    <ScrollAreaPrimitive.Viewport className={cn('h-full w-full rounded-[inherit] [&>div]:!min-w-0 [&>div]:!block', shadowPadding && '[&>div]:p-4')}>
       {children}
     </ScrollAreaPrimitive.Viewport>
     <ScrollBar />

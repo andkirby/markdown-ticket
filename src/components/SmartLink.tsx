@@ -1,6 +1,6 @@
 import type { LinkContext, NormalizedLink } from '../utils/linkNormalization'
 import type { ParsedLink } from '../utils/linkProcessor'
-/* eslint-disable node/prefer-global/process -- Using import.meta.env for browser compatibility */
+
 import { ExternalLink, File, FileCode, FileText, Hash } from 'lucide-react'
 import * as React from 'react'
 import { Link } from 'react-router-dom'

@@ -136,8 +136,8 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
 
   // Determine button styling based on active state
   const getButtonStyles = () => {
-    // Use consistent base classes to prevent layout shifts
-    const baseClasses = 'flex items-center justify-between px-3 py-2 text-sm rounded-md border transition-all min-h-[2.5rem] whitespace-nowrap'
+    // Compact styling that doesn't affect header height
+    const baseClasses = 'flex items-center justify-between px-2 py-1 text-xs rounded-md border transition-all whitespace-nowrap h-8'
 
     if (isActive && !mergeMode) {
       // Switch mode is active - use orange theme with orange background
