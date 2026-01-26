@@ -2,6 +2,54 @@
 
 ## Recent Updates
 
+### 2026-01-26 - Minimal Documentation: Ceremony Removal
+
+**Problem**: Architecture and Requirements workflows had become overly prescriptive with extensive tables, mappings, and ceremonial content that duplicated information already present in code. The workflows were producing documentation-heavy outputs that took significant time to generate but provided limited value during implementation.
+
+**Solution**: Streamlined both workflows to focus on essential decisions only — removing redundant tables, exhaustive mappings, and prescriptive templates. The new principle: "Capture decisions that matter. Skip ceremony that duplicates code."
+
+**Changes Made**:
+
+1. **mdt-architecture.md (v8→v9) - Radical simplification**:
+   - **Removed**: Prep vs Feature comparison table (mode now implicit from path)
+   - **Removed**: Complexity scoring criteria (just write, then decide by size)
+   - **Removed**: Extensive quality checklist (distilled to "What Good Architecture Looks Like")
+   - **Removed**: Requirement-to-component mapping tables (code IS the mapping)
+   - **Removed**: Implementation code snippets (they drift from reality)
+   - **Removed**: Bug fix documentation sections (git tracks this)
+   - **Removed**: Exhaustive domain alignment tables (2-3 key concepts max)
+   - **Removed**: Component diagrams when relationships are obvious
+   - **Removed**: Error philosophy sections for trivial failure modes
+   - **Simplified**: Build vs Use evaluation — only for capabilities >50 lines
+   - **Simplified**: Output template focused on overview, pattern, structure, size limits
+   - **New target**: 40-80 lines for most features (was 60-150+)
+   - **Core principle changed**: From "Surface decisions LLM would otherwise make implicitly" to "Capture decisions that matter. Skip ceremony that duplicates code"
+   - **Preserved**: `--prep` mode support (output location, domain-audit.md loading, completion message)
+
+2. **mdt-requirements.md (v2→v3) - Focused behavioral specs**:
+   - **Removed**: Extensive CR-type scope inference logic
+   - **Removed**: Complex template system (4 templates → 1 practical template)
+   - **Removed**: Separation into FR/NFR sections (just Behavioral Requirements + Constraints)
+   - **Removed**: Configuration section (usually trivial)
+   - **Removed**: Current Implementation Context section (code shows this)
+   - **Removed**: "Current Implementation Analysis" step (read CR instead)
+   - **Removed**: Open Questions extraction workflow (CR already has this)
+   - **Simplified**: When-to-use table with clearer quick test (<3 behaviors = skip)
+   - **Simplified**: EARS syntax to 4 essential patterns (Event, State, Error, Always)
+   - **Simplified**: Output template — Overview + Behavioral Requirements + Constraints
+   - **New focus**: "Generate behavioral requirements from CR" (not multi-mode analysis)
+
+**Impact**:
+- Requirements documents focus on WHAT behaviors, not extensive analysis
+- Reduced token usage by ~65% (1369 lines removed from 2 workflows)
+- Implementers get decisions faster without wading through ceremonial tables
+- Code remains the source of truth (not documentation trying to duplicate it)
+- Maintains essential decision capture while removing overhead
+
+**Files Changed**:
+- `prompts/commands/mdt-architecture.md` (v8→v9)
+- `prompts/commands/mdt-requirements.md` (v2→v3)
+
 ### 2026-01-07 - BDD/TDD Separation: Two-Level Test Strategy
 
 **Problem**: The single `/mdt:tests` command conflated two fundamentally different testing activities:
