@@ -2,6 +2,40 @@
 
 ## Recent Updates
 
+### 2026-01-26 - Test Data Mechanisms: Trace What, Not Just Method Signatures
+
+**Problem**: The `/mdt:tests` workflow was generating tests that verified **method signatures exist** but missed testing **what those methods actually do**. For example, when architecture defined `LANGUAGE_DETECTOR="command {text}"` with a `{text}` placeholder, tests were generated for `detect(text)` method but NEVER tested that `{text}` gets substituted with actual input. The tests were form-following (method exists) not substance-following (method works correctly).
+
+**Root cause**: Step 2 extracted only module names and public interfaces. It didn't scan for **data mechanisms** like placeholders, boundaries, formats, and environment variables that define HOW methods work.
+
+**Solution**: Added explicit data mechanism extraction to Step 2 and corresponding test generation. Now the workflow scans architecture for:
+- Placeholders (`{text}`, `{id}`, `{{var}}`) → tests verify substitution
+- Boundaries ("first 20 words") → tests at N, N-1, N+1
+- Format specs ("iso2 code") → valid/invalid format tests
+- Environment vars (`LANGUAGE_DETECTOR`) → set/unset/malformed tests
+
+**Changes Made**:
+
+1. **mdt-tests.md (v5→v6) - Data mechanism extraction**:
+   - Added "CRITICAL: Extract Key Data Patterns" subsection to Step 2
+   - Pattern types: Placeholders, Template strings, Data limits, Format specs, Env vars
+   - Example showing how `{text}` should generate specific substitution tests
+   - Added "Additional Coverage for Data Mechanisms" table to Step 3
+   - Concrete test example for `{text}` placeholder with spy verification
+   - New "Data Mechanism Tests" section in tests.md output template
+   - Updated validation checklist with data mechanism requirements
+
+**Impact**:
+- Tests now verify WHAT methods do, not just THAT they exist
+- Placeholder substitution gets explicit tests (no more `{text}` in executed commands)
+- Boundary conditions get proper limit+1/limit-1 tests
+- Autonomous workflows produce complete, runnable test suites
+
+**Files Changed**:
+- `prompts/commands/mdt-tests.md` (v5→v6)
+
+---
+
 ### 2026-01-26 - Minimal Documentation: Ceremony Removal
 
 **Problem**: Architecture and Requirements workflows had become overly prescriptive with extensive tables, mappings, and ceremonial content that duplicated information already present in code. The workflows were producing documentation-heavy outputs that took significant time to generate but provided limited value during implementation.
