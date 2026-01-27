@@ -2,6 +2,130 @@
 
 ## Recent Updates
 
+### 2026-01-27 - CLAUDE.md Updated: MDT Plugin Documentation
+
+**Context**: The MDT plugin architecture with agentic implementation was completed in commit 2b95991. This update ensures CLAUDE.md accurately reflects the new structure.
+
+**Changes Made**:
+
+1. **CLAUDE.md** - Updated to reference mdt/ plugin structure:
+   - Updated Quick Reference table to show `mdt/commands/` paths
+   - Added `implement-agentic.md` to command reference
+   - Added Agentic Implementation section with agent descriptions
+   - Added Plugin Installation section with install commands
+   - Enhanced Troubleshooting with checkpoint state guidance
+   - Referenced `mdt/README.md` for plugin documentation
+
+2. **.gitignore** - Added checkpoint state exclusion:
+   - Added `**/.checkpoint.json` to root .gitignore to ignore agentic implementation state files
+
+**Impact**:
+- CLAUDE.md now correctly references the plugin structure
+- New contributors can discover agent-based implementation workflow
+- Checkpoint state files won't be committed to git
+
+**Files Changed**:
+- `prompts/CLAUDE.md`
+- `.gitignore` (root)
+
+---
+
+### 2026-01-27 - MDT Plugin: Agentic Implementation and Workflow Reorganization
+
+**Problem**: The procedural `/mdt:implement` workflow had significant limitations:
+1. Monolithic execution - all work in a single conversational turn with no resumption capability
+2. Manual agent invocation - users had to manually invoke subagents for code, test, fix operations
+3. No checkpointed state - failures lost progress and required full restart
+4. Scattered file organization - workflow commands, agents, and configuration were distributed across the prompts directory
+5. No acceptance verification - implementation completion didn't verify BDD scenarios or smoke tests
+
+**Solution**: Introduced MDT plugin architecture with native Claude Code integration, reorganized all workflows into a structured `mdt/` directory, and added agentic implementation with checkpointed state machine and specialized subagents.
+
+**Changes Made**:
+
+1. **mdt/ directory structure** - Complete reorganization into plugin format:
+   - `mdt/.claude-plugin/plugin.json` - Plugin metadata and description
+   - `mdt/README.md` - Plugin installation and usage documentation
+   - `mdt/commands/` - All workflow commands (moved from `commands/`)
+   - `mdt/agents/` - Internal agent prompts (new)
+
+2. **mdt/agents/ (4 new specialized agents)** - JSON-based subagents with scoped responsibilities:
+   - `code.md (v2)` - Implementation specialist: writes minimal code respecting size limits and shared imports
+   - `verify.md (v1)` - Verification specialist: runs tests, checks sizes, parses results into structured verdicts
+   - `fix.md (v2)` - Remediation specialist: applies minimal fixes for verification failures
+   - `test.md (v2)` - Test execution specialist: runs tests and returns structured JSON results
+
+3. **mdt/commands/implement-agentic.md (v1 - NEW)** - State machine orchestrator:
+   - Checkpointed state persisted to `{TICKETS_PATH}/{CR-KEY}/.checkpoint.json`
+   - Resumable execution with `--continue` flag
+   - Part-aware: `--part {X.Y}` for multi-part CRs
+   - Prep mode: `--prep` for refactoring workflows
+   - 4-step state machine: Pre-Verify → Implement → Post-Verify → Fix (max 2 attempts)
+   - JSON-based agent communication with structured verdicts
+   - Behavioral verification: derives smoke_test_command from requirements/BDD
+
+4. **mdt/commands/implement.md (v6→v7)** - Enhanced acceptance verification:
+   - New Step 7: Acceptance Verification (after all parts complete, before final completion)
+   - Runs BDD scenarios from `bdd.md` if exists: `{e2e_command} --grep="{CR-KEY}"`
+   - Falls back to smoke test derived from requirements if bdd.md missing
+   - HALTS if Feature Enhancement lacks both bdd.md and requirements.md (must run `/mdt:bdd`)
+   - Updated completion checklist to include BDD and smoke test verification
+   - Rule #9 updated: "Acceptance verification required"
+
+5. **mdt/commands/tests.md (v6→v7)** - External dependency testing:
+   - Added Category 3: External Dependency Tests
+   - Requires at least one real integration test per dependency (not mocked)
+   - Coverage: env vars (set vs absent), external commands (real execution), APIs/services (real/local endpoint)
+   - New "External Dependency Tests" section in tests.md output template
+   - Updated verification checklist with dependency requirements
+   - New validation rules: mock 100% of dependencies (anti-pattern)
+
+6. **mdt/commands/tasks.md (v7→v8)** - Completion checklist enhancements:
+   - Added "Smoke test passes" to task completion checklist
+   - Added "Fallback/absence paths match requirements" to task completion checklist
+   - Ensures tasks verify behavior with real execution, not just unit tests
+
+7. **README.md** - Updated with agentic implementation documentation:
+   - New "Agentic Implementation" section with agent descriptions
+   - Features: checkpoint-based state, resumable execution, part-aware, prep mode
+   - Link to mdt/README.md for complete plugin documentation
+   - Updated workflow chain to show `/mdt:implement-agentic` option
+
+**Impact**:
+- Implementation can now be resumed after failures without losing progress
+- Specialized agents provide focused expertise with JSON-based communication
+- Plugin architecture enables `claude plugin install` for easy distribution
+- Reorganized structure improves discoverability and maintainability
+- Acceptance verification ensures user-visible behavior actually works before marking CRs complete
+- External dependency tests prevent "mock-induced hallucinations" where mocked tests pass but real integrations fail
+
+**Files Changed**:
+- `prompts/mdt/.claude-plugin/plugin.json` (new)
+- `prompts/mdt/README.md` (new)
+- `prompts/mdt/agents/code.md` (new)
+- `prompts/mdt/agents/verify.md` (new)
+- `prompts/mdt/agents/fix.md` (new)
+- `prompts/mdt/agents/test.md` (new)
+- `prompts/mdt/commands/implement-agentic.md` (new)
+- `prompts/mdt/commands/implement.md` (moved from commands/mdt-implement.md, v6→v7)
+- `prompts/mdt/commands/tests.md` (moved from commands/mdt-tests.md, v6→v7)
+- `prompts/mdt/commands/tasks.md` (moved from commands/mdt-tasks.md, v7→v8)
+- `prompts/mdt/commands/architecture.md` (moved from commands/mdt-architecture.md)
+- `prompts/mdt/commands/assess.md` (moved from commands/mdt-assess.md)
+- `prompts/mdt/commands/bdd.md` (moved from commands/mdt-bdd.md)
+- `prompts/mdt/commands/clarification.md` (moved from commands/mdt-clarification.md)
+- `prompts/mdt/commands/domain-audit.md` (moved from commands/mdt-domain-audit.md)
+- `prompts/mdt/commands/domain-lens.md` (moved from commands/mdt-domain-lens.md)
+- `prompts/mdt/commands/poc.md` (moved from commands/mdt-poc.md)
+- `prompts/mdt/commands/reflection.md` (moved from commands/mdt-reflection.md)
+- `prompts/mdt/commands/requirements.md` (moved from commands/mdt-requirements.md)
+- `prompts/mdt/commands/tech-debt.md` (moved from commands/mdt-tech-debt.md)
+- `prompts/mdt/commands/ticket-creation.md` (moved from commands/mdt-ticket-creation.md)
+- `prompts/.gitignore` (added mdt/.checkpoint.json)
+- `prompts/README.md`
+
+---
+
 ### 2026-01-26 - Test Data Mechanisms: Trace What, Not Just Method Signatures
 
 **Problem**: The `/mdt:tests` workflow was generating tests that verified **method signatures exist** but missed testing **what those methods actually do**. For example, when architecture defined `LANGUAGE_DETECTOR="command {text}"` with a `{text}` placeholder, tests were generated for `detect(text)` method but NEVER tested that `{text}` gets substituted with actual input. The tests were form-following (method exists) not substance-following (method works correctly).

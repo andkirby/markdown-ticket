@@ -25,7 +25,7 @@ Is architecture.md present?
 
 ## Extraction: What to Test
 
-From architecture.md, extract **two categories**:
+From architecture.md, extract **three categories**:
 
 ### 1. Module Interfaces (methods/functions)
 
@@ -45,6 +45,16 @@ Scan architecture for **concrete data rules** that need explicit tests:
 | Format | "UUID", "email", "ISO date" | Valid accepted, invalid rejected |
 | Config | env vars, config files | Present, missing, malformed |
 | State | "when empty", "when full" | Each state transition |
+
+### 3. External Dependency Tests
+
+For each external dependency declared in architecture (env var, CLI tool, API, service), require at least one **real** integration test (not mocked):
+
+| Dependency Type | Required Test |
+|-----------------|--------------|
+| Env var | Behavior when var is set vs absent (real env) |
+| External command | At least one test with a real command (e.g., `echo test`) |
+| API/Service | At least one test against real or local endpoint |
 
 ## Test Template (Minimal)
 
@@ -97,6 +107,12 @@ Write actual executable test files to project's test directory (follow project c
 | "max N" boundary | `Module` | at N-1, N, N+1 |
 | format validation | `Module` | valid, invalid, edge cases |
 
+## External Dependency Tests (if any)
+
+| Dependency | Real Test | Behavior When Absent |
+|------------|-----------|----------------------|
+| `{ENV_VAR}` | {test name} | {expected behavior} |
+
 ## Verify
 
 \`\`\`bash
@@ -109,6 +125,8 @@ Write actual executable test files to project's test directory (follow project c
 
 ❌ **Don't** generate tests only for method signatures
 ✅ **Do** extract data mechanisms from architecture and test them explicitly
+❌ **Don't** mock 100% of external dependencies
+✅ **Do** include at least one real integration test per dependency
 
 ## Checklist
 
@@ -116,6 +134,7 @@ Write actual executable test files to project's test directory (follow project c
 - [ ] Mode detected (feature/prep)
 - [ ] All modules have interface tests
 - [ ] Data mechanisms extracted and tested
+- [ ] External dependencies tested with at least one real integration test
 - [ ] **Test files written** to project test directory
 - [ ] **tests.md written** to CR folder
 - [ ] Expected state verified (RED/GREEN)
