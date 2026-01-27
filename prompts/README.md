@@ -7,6 +7,26 @@ AI-driven workflow management for spec-driven development.
 - Creates and manages Change Requests via MCP
 - Guides: Requirements → BDD → Architecture → Tests → Tasks → Implementation
 - Prevents technical debt through explicit constraints
+- **NEW**: Agentic implementation with checkpointed state and specialized subagents
+
+## Agentic Implementation
+
+The `/mdt:implement-agentic` command executes implementation tasks using a state machine with specialized subagents:
+
+| Agent      | Role                                    |
+|------------|-----------------------------------------|
+| `@mdt:verify` | Run tests, check sizes, parse results   |
+| `@mdt:code`   | Write minimal code for task specs       |
+| `@mdt:fix`    | Apply minimal fixes for failures        |
+
+**Features**:
+- Checkpoint-based state persisted to `.checkpoint.json`
+- Resumable execution: `/mdt:implement-agentic {CR-KEY} --continue`
+- Part-aware: `--part {X.Y}` for multi-part CRs
+- Prep mode: `--prep` for refactoring workflows
+- JSON-based agent communication with structured verdicts
+
+See [mdt/README.md](./mdt/README.md) for complete plugin documentation.
 
 ## Quick Start
 

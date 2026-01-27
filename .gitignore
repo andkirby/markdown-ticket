@@ -86,3 +86,5 @@ counter-api/
 **/.unused
 **/unused.*
 typescript-graph.md
+# MDT agentic implementation checkpoint state
+**/.checkpoint.json

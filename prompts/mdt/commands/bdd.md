@@ -48,6 +48,7 @@ BDD tests written BEFORE architecture ensure:
 - Enhancements that change user experience
 - Before architecture to capture behavioral requirements
 - Before refactoring to lock existing user journeys (`--prep`)
+- **Required for Feature Enhancement CRs** unless there is no user-visible behavior
 
 **Do NOT use:**
 - Pure technical refactoring with no user-visible changes (use `/mdt:tests --prep`)
@@ -63,6 +64,7 @@ BDD tests written BEFORE architecture ensure:
 4. **E2E focus** — test through real interfaces (browser, API, CLI)
 5. **Normal mode = RED** — tests should fail until feature is implemented
 6. **Prep mode = GREEN** — tests must pass against current system (locking behavior)
+7. **Feature acceptance gate** — feature work is not complete until BDD scenarios are GREEN
 
 ## Execution Steps
 

@@ -27,25 +27,48 @@ Context Protocol) server for AI integration. The backend watches CR directories 
 
 ## Quick Reference
 
-### Workflow Prompts
+### MDT Plugin Architecture
 
-All workflow commands are in the `commands/` subdirectory.
+All workflow commands are organized as a Claude Code plugin in the `mdt/` directory:
 
-| File                              | Purpose                        | Output                                    |
-|-----------------------------------|--------------------------------|-------------------------------------------|
-| `commands/mdt-ticket-creation.md` | CR creation (WHAT or WHAT+HOW) | CR in MDT system                          |
-| `commands/mdt-requirements.md`    | EARS requirements              | `{CR-KEY}/requirements.md`                |
-| `commands/mdt-bdd.md`             | BDD acceptance tests (E2E)     | `{CR-KEY}/bdd.md` + E2E test files        |
-| `commands/mdt-assess.md`          | Code fitness evaluation        | Decision: integrate/refactor/split        |
-| `commands/mdt-domain-lens.md`     | DDD constraints                | `{CR-KEY}/domain.md`                      |
-| `commands/mdt-domain-audit.md`    | DDD violations analysis        | `{CR-KEY}/domain-audit.md`                |
-| `commands/mdt-architecture.md`    | Architecture design            | CR section or `{CR-KEY}/architecture.md`  |
-| `commands/mdt-tests.md`           | Module tests (unit/integration)| `{CR-KEY}/[part-*/]tests.md` + test files |
-| `commands/mdt-clarification.md`   | Fill specification gaps        | Updated CR sections                       |
-| `commands/mdt-tasks.md`           | Task breakdown                 | `{CR-KEY}/[part-*/]tasks.md`              |
-| `commands/mdt-implement.md`       | Execute with verification      | Code changes                              |
-| `commands/mdt-tech-debt.md`       | Debt detection                 | `{CR-KEY}/debt.md`                        |
-| `commands/mdt-reflection.md`      | Capture learnings              | Updated CR                                |
+- `mdt/.claude-plugin/plugin.json` - Plugin metadata for `claude plugin install`
+- `mdt/commands/` - User-facing workflow commands
+- `mdt/agents/` - Internal agent prompts (not user-facing)
+
+| File                                  | Purpose                              | Output                                    |
+|---------------------------------------|--------------------------------------|-------------------------------------------|
+| `mdt/commands/ticket-creation.md`     | CR creation (WHAT or WHAT+HOW)       | CR in MDT system                          |
+| `mdt/commands/requirements.md`        | EARS requirements                    | `{CR-KEY}/requirements.md`                |
+| `mdt/commands/bdd.md`                 | BDD acceptance tests (E2E)           | `{CR-KEY}/bdd.md` + E2E test files        |
+| `mdt/commands/assess.md`              | Code fitness evaluation              | Decision: integrate/refactor/split        |
+| `mdt/commands/domain-lens.md`         | DDD constraints                      | `{CR-KEY}/domain.md`                      |
+| `mdt/commands/domain-audit.md`        | DDD violations analysis               | `{CR-KEY}/domain-audit.md`                |
+| `mdt/commands/architecture.md`        | Architecture design                  | CR section or `{CR-KEY}/architecture.md`  |
+| `mdt/commands/tests.md`               | Module tests (unit/integration)      | `{CR-KEY}/[part-*/]tests.md` + test files |
+| `mdt/commands/clarification.md`       | Fill specification gaps              | Updated CR sections                       |
+| `mdt/commands/tasks.md`               | Task breakdown                       | `{CR-KEY}/[part-*/]tasks.md`              |
+| `mdt/commands/implement.md`           | Execute with verification            | Code changes                              |
+| `mdt/commands/implement-agentic.md`   | Execute with agent-based verification| Code changes + checkpoint state           |
+| `mdt/commands/tech-debt.md`           | Debt detection                       | `{CR-KEY}/debt.md`                        |
+| `mdt/commands/reflection.md`          | Capture learnings                    | Updated CR                                |
+
+### Agentic Implementation
+
+The `/mdt:implement-agentic` command uses a state machine with specialized subagents:
+
+| Agent        | Role                                  |
+|--------------|---------------------------------------|
+| `mdt:verify` | Run tests, parse results, check sizes |
+| `mdt:code`   | Write minimal code for task specs     |
+| `mdt:fix`    | Apply minimal fixes for failures      |
+| `mdt:test`   | Execute tests and return JSON         |
+
+**Features**:
+- Checkpoint-based state persisted to `.checkpoint.json`
+- Resumable execution: `/mdt:implement-agentic {CR-KEY} --continue`
+- Part-aware: `--part {X.Y}` for multi-part CRs
+- Prep mode: `--prep` for refactoring workflows
+- JSON-based agent communication with structured verdicts
 
 ### Session Context
 
@@ -74,6 +97,20 @@ All workflows have access to these variables (auto-injected via `~/.claude/hooks
 3. Verify: MCP tool calls, section updates, artifact-focused content, markdown compliance
 4. Check Section 8 records clarifications (if applicable)
 5. Clean up test CRs when done
+
+## Plugin Installation
+
+The MDT workflows can be installed as a Claude Code plugin:
+
+```bash
+# Install from this directory
+claude plugin install /path/to/prompts/mdt
+
+# Or add to Claude Code settings
+claude --plugin-dir /path/to/prompts/mdt
+```
+
+See `mdt/README.md` for complete plugin documentation.
 
 ### Project Context Detection
 
@@ -260,6 +297,13 @@ Before committing prompt changes:
 
 1. Check for missing approval gates
 2. Verify loop exit conditions are reachable
+
+**Agentic implementation failures:**
+
+1. Check checkpoint state in `{TICKETS_PATH}/{CR-KEY}/.checkpoint.json`
+2. Resume with `--continue` flag to skip completed steps
+3. Verify agent JSON responses match expected schema
+4. Check test command and smoke test derivation
 
 ## Git Commit Convention
 

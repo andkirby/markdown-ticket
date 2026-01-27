@@ -38,6 +38,7 @@ Don't pre-calculate complexity scores. Write the architecture, then decide where
 **Include only if needed**:
 - Build vs Use decisions (if evaluated)
 - Component diagram (if >3 components with non-obvious relationships)
+- Runtime prerequisites (if external deps exist)
 - Error philosophy (if non-trivial failure modes)
 
 **Never include**:
@@ -120,6 +121,15 @@ Write the architecture. Keep it minimal.
 
 {Or omit section entirely if no significant decisions}
 
+## Runtime Prerequisites
+
+{Only if feature depends on external configuration, tools, or services}
+
+| Dependency | Type | Required | When Absent |
+|------------|------|----------|-------------|
+| `{ENV_VAR}` | env var | {Yes/No} | {concrete behavior} |
+| `{tool}` | CLI tool | {Yes/No} | {concrete behavior} |
+
 ## Structure
 
 ```
@@ -139,7 +149,9 @@ Write the architecture. Keep it minimal.
 
 {1-3 sentences describing the error handling approach, not a table of every scenario}
 
-Example: "Detection failures return undefined and never block summarization. All error paths are silent — the feature degrades gracefully."
+If specifying silent degradation, state exactly what the user sees in the degraded state. The degraded state must not be worse than pre-feature behavior.
+
+Example: "Detection failures return undefined and do not add a language constraint. Output follows the user's input language as before the feature."
 
 ## Extension Rule
 
@@ -207,6 +219,7 @@ Before saving, verify:
 - [ ] Structure shows concrete paths (not abstract names)
 - [ ] Every module has a size limit
 - [ ] Extension rule includes size constraint
+- [ ] Runtime prerequisites defined (if external deps exist)
 - [ ] Total output is 40-150 lines (not 400+)
 
 ## Completion
