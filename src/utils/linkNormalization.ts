@@ -53,7 +53,7 @@ export interface PathResolutionResult {
  * Core link normalization service
  */
 export class LinkNormalizer {
-  private static readonly DEFAULT_WEB_BASE = '/prj'
+  public static readonly DEFAULT_WEB_BASE = '/prj'
   private static readonly SECURITY_VIOLATIONS = {
     PATH_TRAVERSAL: 'Path traversal attempt detected',
     OUTSIDE_BOUNDS: 'Path resolves outside project boundaries',
