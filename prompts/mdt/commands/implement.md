@@ -440,7 +440,28 @@ At end of part:
 [continue to part 1.2] [stop]
 ```
 
-### Step 7: Full Completion (All Parts)
+### Step 7: Acceptance Verification (Feature mode only)
+
+After all parts are complete, verify user-visible behavior **before** final completion:
+
+**If `{TICKETS_PATH}/{CR-KEY}/bdd.md` exists:**
+```bash
+{e2e_command} --grep="{CR-KEY}"
+# Expected: all GREEN
+```
+
+**If `bdd.md` is missing but `requirements.md` exists:**
+Run a minimal smoke test derived from acceptance criteria or requirements.
+```bash
+{smoke_test_command}
+# Expected: {explicit user-visible outcome}
+```
+
+If BDD or smoke tests fail: STOP. Fix or adjust requirements, then re-run.
+
+If Feature Enhancement and neither `bdd.md` nor `requirements.md` exists: STOP and run `/mdt:bdd` (or document explicitly that there is no user-visible behavior).
+
+### Step 8: Full Completion (All Parts)
 
 When all parts are done:
 
@@ -468,6 +489,8 @@ Implementation Complete: {CR-KEY}
 ### Next Steps
 - [ ] Review flagged files
 - [ ] `{test_command}` — verify all tests GREEN
+- [ ] `{e2e_command}` — verify BDD scenarios GREEN (if bdd.md exists)
+- [ ] Smoke test — verify real execution matches requirements (if applicable)
 - [ ] `/mdt:tech-debt {CR-KEY}`
 - [ ] Commit changes
 - [ ] Update CR status to Implemented
@@ -534,8 +557,9 @@ Implementation Complete: {CR-KEY}
 6. **Duplication is STOP** — import instead
 7. **Part 1 first** — shared utilities before features
 8. **Build + test required** — both must pass
-9. **Regression is STOP** — GREEN→RED halts immediately
-10. **Part completion prompts next** — suggest next part when done
+9. **Acceptance verification required** — BDD and/or smoke test must pass before completion
+10. **Regression is STOP** — GREEN→RED halts immediately
+11. **Part completion prompts next** — suggest next part when done
 
 ---
 

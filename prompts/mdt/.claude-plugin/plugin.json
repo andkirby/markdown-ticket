@@ -1,0 +1,10 @@
+{
+  "name": "mdt",
+  "description": "MDT (Markdown Ticket) workflow commands - CR creation, requirements, BDD, architecture, testing, tasks, implementation with agentic verification, and technical debt detection",
+  "author": {
+    "name": "andkirby"
+  },
+  "keywords": ["tickets", "kanban", "markdown", "workflow", "tdd", "bdd", "requirements"],
+  "commands": "../commands/",
+  "agents": "../agents/"
+}

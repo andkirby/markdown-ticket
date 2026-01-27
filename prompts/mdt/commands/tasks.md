@@ -50,6 +50,8 @@ wc -l {file}                    # ≤ limit
 - [ ] Tests GREEN (were RED)
 - [ ] Size ≤ limit
 - [ ] No duplicated logic
+- [ ] Smoke test passes (feature works with real execution)
+- [ ] Fallback/absence paths match requirements (if applicable)
 ```
 
 ## Critical Rules
@@ -83,6 +85,8 @@ wc -l {file}                    # ≤ limit
 - [ ] No duplication (grep check)
 - [ ] Size compliance (wc -l check)
 - [ ] All tests GREEN
+- [ ] Smoke test passes (feature works with real execution)
+- [ ] Fallback/absence paths match requirements (if applicable)
 ```
 
 ## Common Pitfall
