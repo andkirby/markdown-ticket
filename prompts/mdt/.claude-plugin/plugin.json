@@ -5,6 +5,28 @@
     "name": "andkirby"
   },
   "keywords": ["tickets", "kanban", "markdown", "workflow", "tdd", "bdd", "requirements"],
-  "commands": "../commands/",
-  "agents": "../agents/"
+  "commands": [
+    "./commands/architecture.md",
+    "./commands/assess.md",
+    "./commands/bdd.md",
+    "./commands/clarification.md",
+    "./commands/domain-audit.md",
+    "./commands/domain-lens.md",
+    "./commands/poc.md",
+    "./commands/reflection.md",
+    "./commands/requirements.md",
+    "./commands/tech-debt.md",
+    "./commands/tests.md",
+    "./commands/ticket-creation.md",
+    "./commands/tasks.md",
+    "./commands/implement-agentic.md",
+    "./commands/implement.md"
+  ],
+  "agents": [
+    "./agents/verify.md",
+    "./agents/code.md",
+    "./agents/fix.md",
+    "./agents/test.md",
+    "./agents/verify-complete.md"
+  ]
 }

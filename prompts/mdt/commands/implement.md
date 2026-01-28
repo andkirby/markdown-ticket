@@ -1,4 +1,4 @@
-# MDT Implementation Orchestrator (v7)
+# MDT Implementation Orchestrator (v8)
 
 Execute tasks from a task list with constraint verification after each task.
 
@@ -460,6 +460,45 @@ Run a minimal smoke test derived from acceptance criteria or requirements.
 If BDD or smoke tests fail: STOP. Fix or adjust requirements, then re-run.
 
 If Feature Enhancement and neither `bdd.md` nor `requirements.md` exists: STOP and run `/mdt:bdd` (or document explicitly that there is no user-visible behavior).
+
+### Step 7b: Completion Verification
+
+After acceptance tests pass, run `@mdt:verify-complete` agent to verify requirements traceability and code quality.
+
+**Call with:**
+```yaml
+cr_key: "{CR-KEY}"
+mode: "feature" | "prep" | "bugfix" | "docs"
+project:
+  build_command: "{build_command or null}"
+  test_command: "{test_command or null}"
+  lint_command: "{lint_command or null}"
+  typecheck_command: "{typecheck_command or null}"
+artifacts:
+  cr_content: "{CR markdown}"
+  requirements: "{requirements.md content or null}"
+  tasks: "{tasks.md content}"
+  bdd: "{bdd.md content or null}"
+changed_files: [{all files changed during implementation}]
+verification_round: 0
+```
+
+**Handle verdict:**
+- `pass` → proceed to completion
+- `partial` or `fail` → report issues and STOP
+
+```markdown
+⚠️ Completion Verification Found Issues
+
+| ID | Severity | Title | Location |
+|----|----------|-------|----------|
+| PV-1 | CRITICAL | Rate limiting bypass | src/file.ts:42 |
+| PV-2 | HIGH | Public methods not removed | src/file.ts:60 |
+
+**Action required**: Fix CRITICAL/HIGH issues and re-run `/mdt:implement {CR-KEY} --continue`
+
+For automatic fix loop, use `/mdt:implement-agentic` instead.
+```
 
 ### Step 8: Full Completion (All Parts)
 

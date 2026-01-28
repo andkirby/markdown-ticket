@@ -87,6 +87,11 @@ wc -l {file}                    # ≤ limit
 - [ ] All tests GREEN
 - [ ] Smoke test passes (feature works with real execution)
 - [ ] Fallback/absence paths match requirements (if applicable)
+
+## Post-Verify Fixes (appended by implement-agentic)
+
+- Added only if `/mdt:verify-complete` finds CRITICAL/HIGH issues
+- Each fix references issue evidence and required action
 ```
 
 ## Common Pitfall
