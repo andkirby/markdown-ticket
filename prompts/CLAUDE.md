@@ -56,12 +56,13 @@ All workflow commands are organized as a Claude Code plugin in the `mdt/` direct
 
 The `/mdt:implement-agentic` command uses a state machine with specialized subagents:
 
-| Agent        | Role                                  |
-|--------------|---------------------------------------|
-| `mdt:verify` | Run tests, parse results, check sizes |
-| `mdt:code`   | Write minimal code for task specs     |
-| `mdt:fix`    | Apply minimal fixes for failures      |
-| `mdt:test`   | Execute tests and return JSON         |
+| Agent               | Role                                           |
+|---------------------|------------------------------------------------|
+| `mdt:verify`        | Run tests, parse results, check sizes          |
+| `mdt:verify-complete` | Requirements traceability + full quality checks |
+| `mdt:code`          | Write minimal code for task specs              |
+| `mdt:fix`           | Apply minimal fixes for failures               |
+| `mdt:test`          | Execute tests and return JSON                  |
 
 **Features**:
 - Checkpoint-based state persisted to `.checkpoint.json`

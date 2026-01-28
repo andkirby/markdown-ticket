@@ -90,6 +90,7 @@ What type of work?
         ▼
 /mdt:implement ────────────────── Executes tasks with TDD verification
         │                        RED → GREEN → Refactor cycle
+        │                        (includes completion verification)
         ▼
 /mdt:tech-debt ────────────────── Creates: debt.md
         │                        Post-implementation analysis
@@ -146,6 +147,7 @@ What type of work?
         ▼
 /mdt:implement ────────────────────── Execute with verification
         │                             Behavior tests stay GREEN throughout
+        │                             (includes completion verification)
         ▼
 /mdt:tech-debt ────────────────────── Post-implementation analysis
         │
@@ -265,8 +267,8 @@ Create new CR (e.g., "Fix technical debt from {CR-KEY}")
 /mdt:requirements → /mdt:bdd → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
         │               │              │                │                          │
         ↓               ↓              ↓                ↓                          ↓
-   EARS specs     E2E tests      Defines parts    Module tests              All tests
-                  (RED)                           (RED)                     now GREEN
+   EARS specs     E2E tests      Defines parts    Module tests              All tests GREEN
+                  (RED)                           (RED)                     + verified
 ```
 
 ### Refactoring Flow (GREEN → GREEN)
@@ -275,8 +277,8 @@ Create new CR (e.g., "Fix technical debt from {CR-KEY}")
 /mdt:assess → /mdt:bdd --prep → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
       │            │                    │                │                          │
       ↓            ↓                    ↓                ↓                          ↓
-  Find gaps   Lock E2E            Design fix       Lock modules              Behavior
-             (GREEN)                               (GREEN)                   preserved
+  Find gaps   Lock E2E            Design fix       Lock modules              Behavior preserved
+             (GREEN)                               (GREEN)                   + verified
 ```
 
 ### Why Two Levels?
