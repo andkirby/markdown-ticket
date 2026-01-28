@@ -1,3 +1,9 @@
+---
+name: verify
+description: "MDT verification specialist for pre/post implementation checks.\\n\\n<example>\\nContext: Orchestrator needs to capture baseline before implementing task 1.1.\\n<tool_use>\\n<tool_name>Task</tool_name>\\n<parameters>\\n<agent>verify</agent>\\n<prompt>operation: pre-check\\nmode: feature\\nproject: {test_command: \"npm test -- --testPathPattern=part-1.1\"}\\npart: {id: \"1.1\", test_filter: \"--testPathPattern=part-1.1\"}\\nfiles_to_check: [\"src/types/cr.ts\"]\\nsize_limits: [{file: \"src/types/cr.ts\", default: 150, hard_max: 225}]</prompt>\\n</parameters>\\n</tool_use>\\n</example>\\n\\n<example>\\nContext: Implementation complete, need to verify tests pass and sizes OK.\\n<tool_use>\\n<tool_name>Task</tool_name>\\n<parameters>\\n<agent>verify</agent>\\n<prompt>operation: post-check\\nmode: feature\\nproject: {test_command: \"npm test\"}\\npart: {id: \"1.1\"}\\nfiles_to_check: [\"src/types/cr.ts\", \"src/validators/cr.ts\"]\\nsize_limits: [{file: \"src/types/cr.ts\", default: 150, hard_max: 225}]\\nsmoke_test: {command: \"npm run test:smoke\", expected: \"CRKey validates correctly\"}</prompt>\\n</parameters>\\n</tool_use>\\n</example>\\n\\nReturns JSON verdict: expected/unexpected_green/unexpected_red (pre-check) or all_pass/tests_fail/regression/size_stop/duplication/behavioral_fail (post-check)."
+model: sonnet
+---
+
 # MDT Verify Agent (v1)
 
 You are a **verification specialist**. Your job is to run checks and report results.

@@ -2,6 +2,61 @@
 
 ## Recent Updates
 
+### 2026-01-28 - Completion Verification Agent for Implementation Workflows
+
+**Problem**: Implementation workflows lacked comprehensive verification at completion. Issues like security regressions (rate limiting bypass), unmet requirements (public methods not removed), and dead code were discovered only after manual review, not caught by the automated workflow.
+
+**Solution**: Added `@mdt:verify-complete` agent that performs requirements traceability and quality checks after all tasks complete. The agent maps requirements to implementation evidence, runs quality commands, detects security issues, and classifies findings by severity.
+
+**Changes Made**:
+
+1. **verify-complete.md (new)** - Lean, language-agnostic verification agent:
+   - Extracts requirements from CR, requirements.md, bdd.md, tasks.md
+   - Traces each requirement to implementation evidence (file:line)
+   - Runs mechanical checks (build, test, lint, typecheck) using provided commands
+   - Scans for security issues via code analysis (auth bypass, rate limiting, secrets)
+   - Detects dead code (unused exports, duplicates)
+   - Classifies issues: CRITICAL/HIGH block completion, MEDIUM/LOW defer to tech-debt
+   - Returns structured JSON for orchestrator to process
+
+2. **implement-agentic.md (v2→v3)** - Full completion verification with fix loop:
+   - Added Step 7: Completion Verify (`@mdt:verify-complete` agent)
+   - Added Step 8: Post-Verify Fixes (appends fix tasks to tasks.md)
+   - Updated checkpoint schema v3 with `completion` state tracking
+   - Max 2 verification rounds before recommending follow-up CR
+
+3. **implement.md (v7→v8)** - Simpler completion verification:
+   - Added Step 7b: Completion Verification
+   - Reports issues and STOPs (no automatic fix loop)
+   - Points users to implement-agentic for automatic fixes
+
+4. **tasks.md** - Post-Verify Fixes placeholder:
+   - Documents where fix tasks get appended by implement-agentic
+
+5. **WORKFLOWS.md** - Updated workflow diagrams:
+   - Notes "(includes completion verification)" under implement step
+   - Updated flow diagrams to show "+ verified" at completion
+
+6. **CLAUDE.md** - Agent reference table:
+   - Added `mdt:verify-complete` to agentic implementation agents
+
+**Impact**:
+- Catches requirement violations before marking CR complete
+- Detects security regressions (auth bypass, rate limiting) automatically
+- Finds dead code and duplicates from refactoring
+- Language-agnostic: works with any project that provides build/test/lint commands
+- Clear severity classification guides what must be fixed vs deferred
+
+**Files Changed**:
+- `prompts/mdt/agents/verify-complete.md` (new)
+- `prompts/mdt/commands/implement-agentic.md`
+- `prompts/mdt/commands/implement.md`
+- `prompts/mdt/commands/tasks.md`
+- `prompts/WORKFLOWS.md`
+- `prompts/CLAUDE.md`
+
+---
+
 ### 2026-01-27 - CLAUDE.md Updated: MDT Plugin Documentation
 
 **Context**: The MDT plugin architecture with agentic implementation was completed in commit 2b95991. This update ensures CLAUDE.md accurately reflects the new structure.
