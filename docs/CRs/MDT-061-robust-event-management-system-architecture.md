@@ -275,10 +275,18 @@ Update UI
 ### Next Steps
 
 1. ~~Migrate one component as proof of concept~~ ✅ **DONE**
-2. ~~Gradually migrate remaining components~~ ✅ **DONE**  
+2. ~~Gradually migrate remaining components~~ ✅ **DONE**
 3. ~~Remove old event handling code~~ ✅ **DONE**
 4. Add unit tests for EventBus
 5. Add E2E tests for event flow
+
+### UI Enhancements (2026-01-29)
+
+**Event History Hamburger Menu Toggle:**
+- Added "Show/Hide Event History" menu item in hamburger menu (dev mode only)
+- Menu controls BOTH popup visibility AND floating button
+- localStorage persistence for hidden state (key: `mdt-eventHistory-hidden`)
+- Hook file: `src/components/DevTools/useEventHistoryState.ts`
 
 ### Related Work
 
