@@ -5,7 +5,7 @@ import { ProjectService } from '../services/ProjectService.js'
 import { CONFIG_FILES, DEFAULTS } from '../utils/constants.js'
 import { calculatePathDepth, isPathWithinSearchPaths } from '../utils/path-resolver.js'
 import { CLI_ERROR_CODES, ProjectError } from './project-cli.js'
-import { ProjectValidator } from './ProjectValidator.js'
+import { ProjectValidator } from './ProjectValidator.node.js'
 
 /**
  * Project update input
