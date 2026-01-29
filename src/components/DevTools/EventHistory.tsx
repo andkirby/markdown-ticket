@@ -13,10 +13,21 @@ interface EventItemProps {
   event: Event
 }
 
-export function EventHistory() {
+interface EventHistoryProps {
+  isOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  /** When true, both popup AND floating button are hidden */
+  forceHidden?: boolean
+}
+
+export function EventHistory({ isOpen: controlledIsOpen, onOpenChange, forceHidden = false }: EventHistoryProps = {}) {
   const [events, setEvents] = useState<Event[]>([])
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [filter, setFilter] = useState<string>('')
+
+  // Use controlled state if provided, otherwise use internal state
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen
+  const setIsOpen = onOpenChange || setInternalIsOpen
 
   // Update events periodically
   useEffect(() => {
@@ -32,6 +43,11 @@ export function EventHistory() {
 
   // Don't render in production
   if (import.meta.env.PROD) {
+    return null
+  }
+
+  // When forceHidden is true, hide both popup AND floating button
+  if (forceHidden) {
     return null
   }
 
