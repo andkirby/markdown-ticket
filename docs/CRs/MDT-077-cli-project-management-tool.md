@@ -129,6 +129,8 @@ Performance measurements is out of scope.
 - [ ] Project discovery handles missing configuration files gracefully
 - [ ] Concurrent project operations do not corrupt data
 - [ ] System recovers from interrupted operations
+- [x] Tilde expansion works in interactive mode (~ resolves to home directory)
+- [x] Project codes auto-uppercase for better UX (accepts lowercase input)
 
 ## 5. Verification
 
