@@ -1,9 +1,10 @@
-import { Edit, Hash, Menu, Plus, Trash2 } from 'lucide-react'
+import { Edit, Eye, EyeOff, Hash, Menu, Plus, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useConfig } from '../hooks/useConfig'
 import { nuclearCacheClear } from '../utils/cache'
 import { Button } from './UI/index'
+import { toggleEventHistory, getEventHistoryForceHidden } from './DevTools/useEventHistoryState'
 
 interface HamburgerMenuProps {
   onAddProject: () => void
@@ -20,7 +21,16 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const [eventHistoryForceHidden, setEventHistoryForceHidden] = useState(getEventHistoryForceHidden())
   const { isCounterAPIEnabled } = useConfig()
+
+  // Track EventHistory state changes
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      setEventHistoryForceHidden(getEventHistoryForceHidden())
+    }, 100)
+    return () => clearInterval(checkInterval)
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -52,6 +62,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     console.warn('🔧 Cache clear button clicked')
     setIsOpen(false)
     nuclearCacheClear()
+  }
+
+  const handleToggleEventHistory = () => {
+    setIsOpen(false)
+    toggleEventHistory()
   }
 
   return (
@@ -100,6 +115,25 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               <Trash2 className="h-4 w-4 mr-2" />
               Clear Cache
             </button>
+            {/* Event History Toggle - only in development */}
+            {import.meta.env.DEV && (
+              <button
+                onClick={handleToggleEventHistory}
+                className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                {eventHistoryForceHidden ? (
+                  <>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Show Event History
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="h-4 w-4 mr-2" />
+                    Hide Event History
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       )}

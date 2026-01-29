@@ -3,6 +3,7 @@ import { Moon, Sun } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { EventHistory } from './components/DevTools/EventHistory'
+import { useEventHistoryState } from './components/DevTools/useEventHistoryState'
 import { DirectTicketAccess } from './components/DirectTicketAccess'
 import { getProjectCode, ProjectSelector } from './components/ProjectSelector'
 import ProjectView from './components/ProjectView'
@@ -91,6 +92,7 @@ function ProjectRouteHandler() {
 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [eventHistoryOpen, eventHistoryForceHidden, setEventHistoryState] = useEventHistoryState()
 
   // Determine current view mode from URL
   const getCurrentViewMode = (): 'board' | 'list' | 'documents' => {
@@ -249,7 +251,11 @@ function ProjectRouteHandler() {
         onClose={handleTicketClose}
       />
 
-      <EventHistory />
+      <EventHistory
+        isOpen={eventHistoryOpen}
+        onOpenChange={(open) => setEventHistoryState(open, false)}
+        forceHidden={eventHistoryForceHidden}
+      />
       <Toaster />
     </div>
   )
