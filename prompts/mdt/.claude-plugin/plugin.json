@@ -1,6 +1,6 @@
 {
   "name": "mdt",
-  "description": "MDT (Markdown Ticket) workflow commands - CR creation, requirements, BDD, architecture, testing, tasks, implementation with agentic verification, and technical debt detection",
+  "description": "MDT (Markdown Ticket) workflow commands - CR creation, requirements, BDD, architecture, testing, tasks, implementation with agentic verification, technical debt detection, and workflow suggestions",
   "author": {
     "name": "andkirby"
   },
@@ -15,6 +15,7 @@
     "./commands/poc.md",
     "./commands/reflection.md",
     "./commands/requirements.md",
+    "./commands/suggest.md",
     "./commands/tech-debt.md",
     "./commands/tests.md",
     "./commands/ticket-creation.md",

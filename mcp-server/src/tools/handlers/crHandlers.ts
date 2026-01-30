@@ -185,6 +185,7 @@ export class CRHandlers {
       'Bug Fix',
       'Technical Debt',
       'Documentation',
+      'Research',
     ], 'type')
     if (!typeValidation.valid) {
       throw ToolError.protocol(typeValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)

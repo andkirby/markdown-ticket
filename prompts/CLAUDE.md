@@ -49,6 +49,7 @@ All workflow commands are organized as a Claude Code plugin in the `mdt/` direct
 | `mdt/commands/tasks.md`               | Task breakdown                       | `{CR-KEY}/[part-*/]tasks.md`              |
 | `mdt/commands/implement.md`           | Execute with verification            | Code changes                              |
 | `mdt/commands/implement-agentic.md`   | Execute with agent-based verification| Code changes + checkpoint state           |
+| `mdt/commands/poc.md`                 | Proof-of-concept for research        | `{CR-KEY}/poc.md` + `poc/` folder         |
 | `mdt/commands/tech-debt.md`           | Debt detection                       | `{CR-KEY}/debt.md`                        |
 | `mdt/commands/reflection.md`          | Capture learnings                    | Updated CR                                |
 
@@ -70,6 +71,39 @@ The `/mdt:implement-agentic` command uses a state machine with specialized subag
 - Part-aware: `--part {X.Y}` for multi-part CRs
 - Prep mode: `--prep` for refactoring workflows
 - JSON-based agent communication with structured verdicts
+
+### Research Workflow
+
+For hypothesis-driven validation and investigation work, use the **Research** CR type:
+
+**Workflow Chain:**
+```
+/mdt:ticket-creation (Research type)
+    ↓
+/mdt:poc (creates poc.md + poc/ folder)
+    ↓
+/mdt:reflection (documents findings)
+    ↓
+Decision: Proceed to feature / New research / Expand POC
+```
+
+**Research CR Structure** (from ticket-creation.md):
+- Section 1: Research Objective, Context, Scope
+- Section 2: Research Questions (table with ID, question, success criteria, priority)
+- Section 3: Validation Approach (methods, data sources, decision criteria)
+- Section 4: Acceptance Criteria (completion checkboxes + decision outcomes)
+- Section 5: Dependencies & Next Steps
+
+**Use Research when:**
+- Validating uncertain technical decisions ("will this approach work?")
+- Comparing multiple implementation options
+- Investigating performance or feasibility questions
+- Need concrete evidence before committing to implementation
+
+**POC Command** (`/mdt:poc`):
+- Creates proof-of-concept in `poc/{experiment-name}/`
+- Generates experimental code with testable hypotheses
+- Produces recommendation: proceed/pivot/abandon
 
 ### Session Context
 
@@ -239,6 +273,7 @@ Use `mcp__mdt-all__manage_cr_sections` for surgical updates:
     "content": "..."
   }
 }
+// Types: Architecture, Feature Enhancement, Bug Fix, Technical Debt, Documentation, Research
 ```
 
 **Update Status:**
