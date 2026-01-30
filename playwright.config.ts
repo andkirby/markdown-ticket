@@ -1,24 +1,24 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
 
 // Get test port configuration with environment variable support
 const ports = {
-  frontend: process.env.TEST_FRONTEND_PORT ? parseInt(process.env.TEST_FRONTEND_PORT, 10) : 6173,
-  backend: process.env.TEST_BACKEND_PORT ? parseInt(process.env.TEST_BACKEND_PORT, 10) : 4001,
-  mcp: process.env.TEST_MCP_PORT ? parseInt(process.env.TEST_MCP_PORT, 10) : 4002,
-};
+  frontend: process.env.TEST_FRONTEND_PORT ? Number.parseInt(process.env.TEST_FRONTEND_PORT, 10) : 6173,
+  backend: process.env.TEST_BACKEND_PORT ? Number.parseInt(process.env.TEST_BACKEND_PORT, 10) : 4001,
+  mcp: process.env.TEST_MCP_PORT ? Number.parseInt(process.env.TEST_MCP_PORT, 10) : 4002,
+}
 
 // Validate ports
-Object.values(ports).forEach(port => {
+Object.values(ports).forEach((port) => {
   if (isNaN(port) || port < 1024 || port > 65535) {
-    throw new Error(`Invalid port number: ${port}. Must be between 1024 and 65535.`);
+    throw new Error(`Invalid port number: ${port}. Must be between 1024 and 65535.`)
   }
-});
+})
 
 // Ensure ports are unique
-const portValues = Object.values(ports);
-const uniquePorts = new Set(portValues);
+const portValues = Object.values(ports)
+const uniquePorts = new Set(portValues)
 if (uniquePorts.size !== portValues.length) {
-  throw new Error('All ports must be unique. Found duplicate ports in configuration.');
+  throw new Error('All ports must be unique. Found duplicate ports in configuration.')
 }
 
 /**
@@ -58,7 +58,6 @@ export default defineConfig({
     },
   },
 
-  
   /* Configure projects for major browsers */
   projects: [
     {
@@ -117,4 +116,4 @@ export default defineConfig({
       timeout: 120 * 1000,
     },
   ],
-});
+})

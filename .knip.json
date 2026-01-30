@@ -9,7 +9,8 @@
       "project": ["**/*.ts"]
     },
     "mcp-server": {
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignore": ["src/tools/config/allTools.ts"]
     }
   },
   "ignore": [

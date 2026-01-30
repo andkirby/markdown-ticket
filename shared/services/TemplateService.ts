@@ -1,9 +1,9 @@
 import type { Ticket, TicketData } from '../models/Ticket.js'
 // Direct imports for standard usage
 import type { Suggestion, Template, ValidationResult } from '../models/Types.js'
-import { CR_PRIORITIES, CR_TYPES } from '../models/Types.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { CRPriorities, CRTypes, CRType } from '@mdt/domain-contracts'
 import { getDefaultPaths } from '../utils/constants.js'
 
 export class TemplateService {
@@ -67,8 +67,8 @@ export class TemplateService {
     this.log('Using fallback hardcoded templates')
 
     // Bug Fix Template (fallback)
-    this.templates.set('Bug Fix', {
-      type: 'Bug Fix',
+    this.templates.set(CRType.BUG_FIX, {
+      type: CRType.BUG_FIX,
       requiredFields: ['title', 'description', 'priority'],
       sections: [
         { name: 'Problem Statement', required: true, placeholder: 'Describe the bug with clear reproduction steps' },
@@ -117,8 +117,8 @@ export class TemplateService {
     })
 
     // Feature Enhancement Template
-    this.templates.set('Feature Enhancement', {
-      type: 'Feature Enhancement',
+    this.templates.set(CRType.FEATURE_ENHANCEMENT, {
+      type: CRType.FEATURE_ENHANCEMENT,
       requiredFields: ['title', 'description'],
       sections: [
         { name: 'Problem Statement', required: true },
@@ -185,8 +185,8 @@ export class TemplateService {
     })
 
     // Architecture Template
-    this.templates.set('Architecture', {
-      type: 'Architecture',
+    this.templates.set(CRType.ARCHITECTURE, {
+      type: CRType.ARCHITECTURE,
       requiredFields: ['title', 'description', 'rationale'],
       sections: [
         { name: 'Problem Statement', required: true },
@@ -249,8 +249,8 @@ export class TemplateService {
     })
 
     // Technical Debt Template
-    this.templates.set('Technical Debt', {
-      type: 'Technical Debt',
+    this.templates.set(CRType.TECHNICAL_DEBT, {
+      type: CRType.TECHNICAL_DEBT,
       requiredFields: ['title', 'description'],
       sections: [
         { name: 'Problem Statement', required: true },
@@ -306,8 +306,8 @@ export class TemplateService {
     })
 
     // Documentation Template
-    this.templates.set('Documentation', {
-      type: 'Documentation',
+    this.templates.set(CRType.DOCUMENTATION, {
+      type: CRType.DOCUMENTATION,
       requiredFields: ['title', 'description'],
       sections: [
         { name: 'Documentation Gap', required: true },
@@ -363,8 +363,8 @@ export class TemplateService {
     })
 
     // Research Template
-    this.templates.set('Research', {
-      type: 'Research',
+    this.templates.set(CRType.RESEARCH, {
+      type: CRType.RESEARCH,
       requiredFields: ['title', 'description'],
       sections: [
         { name: 'Research Objective', required: true },
@@ -500,19 +500,19 @@ Based on research outcomes:
       errors.push({ field: 'type', message: 'Type is required' })
     }
     else {
-      if (!CR_TYPES.includes(effectiveType as any)) {
+      if (!CRTypes.includes(effectiveType as any)) {
         errors.push({
           field: 'type',
-          message: `Invalid type '${effectiveType}'. Must be one of: ${CR_TYPES.join(', ')}`,
+          message: `Invalid type '${effectiveType}'. Must be one of: ${CRTypes.join(', ')}`,
         })
       }
     }
 
     if (data.priority) {
-      if (!CR_PRIORITIES.includes(data.priority as any)) {
+      if (!CRPriorities.includes(data.priority as any)) {
         errors.push({
           field: 'priority',
-          message: `Invalid priority '${data.priority}'. Must be one of: ${CR_PRIORITIES.join(', ')}`,
+          message: `Invalid priority '${data.priority}'. Must be one of: ${CRPriorities.join(', ')}`,
         })
       }
     }

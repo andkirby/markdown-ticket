@@ -4,11 +4,11 @@
  */
 
 import {
-  validateTicket,
-  validateCR,
-  safeValidateTicket,
   safeValidateCR,
-} from '../validation.js';
+  safeValidateTicket,
+  validateCR,
+  validateTicket,
+} from '../validation.js'
 
 describe('validateTicket', () => {
   it('returns typed ticket on valid input', () => {
@@ -18,12 +18,12 @@ describe('validateTicket', () => {
       status: 'Proposed',
       type: 'Feature Enhancement',
       priority: 'Medium',
-    });
+    })
 
-    expect(result.code).toBe('MDT-101');
-    expect(result.title).toBe('Test Ticket');
-    expect(typeof result).toBe('object');
-  });
+    expect(result.code).toBe('MDT-101')
+    expect(result.title).toBe('Test Ticket')
+    expect(typeof result).toBe('object')
+  })
 
   it('throws on invalid input', () => {
     expect(() => validateTicket({
@@ -32,9 +32,9 @@ describe('validateTicket', () => {
       status: 'Proposed',
       type: 'Feature Enhancement',
       priority: 'Medium',
-    })).toThrow();
-  });
-});
+    })).toThrow()
+  })
+})
 
 describe('validateCR', () => {
   it('returns typed CR on valid input', () => {
@@ -45,13 +45,13 @@ describe('validateCR', () => {
       type: 'Feature Enhancement',
       priority: 'Medium',
       content: '# Test Content',
-    });
+    })
 
-    expect(result.code).toBe('MDT-101');
-    expect(result.title).toBe('Test CR');
-    expect(result.content).toBe('# Test Content');
-    expect(typeof result).toBe('object');
-  });
+    expect(result.code).toBe('MDT-101')
+    expect(result.title).toBe('Test CR')
+    expect(result.content).toBe('# Test Content')
+    expect(typeof result).toBe('object')
+  })
 
   it('throws on invalid input', () => {
     expect(() => validateCR({
@@ -60,9 +60,9 @@ describe('validateCR', () => {
       status: 'Proposed',
       type: 'Feature Enhancement',
       priority: 'Medium',
-    })).toThrow();
-  });
-});
+    })).toThrow()
+  })
+})
 
 describe('safeValidateTicket', () => {
   it('returns success: true on valid input', () => {
@@ -72,13 +72,13 @@ describe('safeValidateTicket', () => {
       status: 'Proposed',
       type: 'Feature Enhancement',
       priority: 'Medium',
-    });
+    })
 
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.code).toBe('MDT-101');
+      expect(result.data.code).toBe('MDT-101')
     }
-  });
+  })
 
   it('returns success: false on invalid input', () => {
     const result = safeValidateTicket({
@@ -87,13 +87,13 @@ describe('safeValidateTicket', () => {
       status: 'Proposed',
       type: 'Feature Enhancement',
       priority: 'Medium',
-    });
+    })
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues.length).toBeGreaterThan(0);
+      expect(result.error.issues.length).toBeGreaterThan(0)
     }
-  });
+  })
 
   // Test error structure if user-facing
   it('provides helpful error for invalid code', () => {
@@ -103,15 +103,15 @@ describe('safeValidateTicket', () => {
       status: 'Proposed',
       type: 'Feature Enhancement',
       priority: 'Medium',
-    });
+    })
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(false)
     if (!result.success) {
-      const codeError = result.error.issues.find(i => i.path[0] === 'code');
-      expect(codeError?.message).toMatch(/PREFIX-123/);
+      const codeError = result.error.issues.find(i => i.path[0] === 'code')
+      expect(codeError?.message).toMatch(/PREFIX-123/)
     }
-  });
-});
+  })
+})
 
 describe('safeValidateCR', () => {
   it('returns success: true on valid input', () => {
@@ -123,10 +123,10 @@ describe('safeValidateCR', () => {
       priority: 'High',
       assignee: 'user@example.com',
       implementationDate: '2025-12-21',
-    });
+    })
 
-    expect(result.success).toBe(true);
-  });
+    expect(result.success).toBe(true)
+  })
 
   it('returns success: false on invalid input', () => {
     const result = safeValidateCR({
@@ -135,13 +135,13 @@ describe('safeValidateCR', () => {
       status: 'Invalid Status', // invalid enum
       type: 'Feature Enhancement',
       priority: 'Medium',
-    });
+    })
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues.length).toBeGreaterThan(1);
+      expect(result.error.issues.length).toBeGreaterThan(1)
     }
-  });
+  })
 
   it('validates email format when provided', () => {
     const result = safeValidateCR({
@@ -151,14 +151,14 @@ describe('safeValidateCR', () => {
       type: 'Feature Enhancement',
       priority: 'Medium',
       assignee: 'not-an-email', // invalid email
-    });
+    })
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(false)
     if (!result.success) {
-      const emailError = result.error.issues.find(i => i.path[0] === 'assignee');
-      expect(emailError?.message).toMatch(/Invalid email format/);
+      const emailError = result.error.issues.find(i => i.path[0] === 'assignee')
+      expect(emailError?.message).toMatch(/Invalid email format/)
     }
-  });
+  })
 
   it('validates date format when provided', () => {
     const result = safeValidateCR({
@@ -168,12 +168,12 @@ describe('safeValidateCR', () => {
       type: 'Feature Enhancement',
       priority: 'Medium',
       implementationDate: '21-12-2025', // wrong format
-    });
+    })
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(false)
     if (!result.success) {
-      const dateError = result.error.issues.find(i => i.path[0] === 'implementationDate');
-      expect(dateError?.message).toMatch(/YYYY-MM-DD/);
+      const dateError = result.error.issues.find(i => i.path[0] === 'implementationDate')
+      expect(dateError?.message).toMatch(/YYYY-MM-DD/)
     }
-  });
-});
+  })
+})

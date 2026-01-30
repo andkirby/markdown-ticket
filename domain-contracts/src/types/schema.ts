@@ -3,7 +3,7 @@
  * All other modules should import these enums from here.
  */
 
-import { z } from 'zod';
+import { z } from 'zod'
 
 // CR Status enumeration
 export const CRStatus = {
@@ -12,19 +12,19 @@ export const CRStatus = {
   IN_PROGRESS: 'In Progress',
   IMPLEMENTED: 'Implemented',
   REJECTED: 'Rejected',
-} as const;
+} as const
 
-export type CRStatus = typeof CRStatus[keyof typeof CRStatus];
+export type CRStatusValue = typeof CRStatus[keyof typeof CRStatus]
 
-export const AllCRStatuses = [
+export const CRStatuses = [
   CRStatus.PROPOSED,
   CRStatus.APPROVED,
   CRStatus.IN_PROGRESS,
   CRStatus.IMPLEMENTED,
   CRStatus.REJECTED,
-] as const;
+] as const
 
-export const CRStatusSchema = z.enum(AllCRStatuses);
+export const CRStatusSchema = z.enum(CRStatuses)
 
 // CR Type enumeration
 export const CRType = {
@@ -33,19 +33,21 @@ export const CRType = {
   BUG_FIX: 'Bug Fix',
   TECHNICAL_DEBT: 'Technical Debt',
   DOCUMENTATION: 'Documentation',
-} as const;
+  RESEARCH: 'Research',
+} as const
 
-export type CRType = typeof CRType[keyof typeof CRType];
+export type CRTypeValue = typeof CRType[keyof typeof CRType]
 
-export const AllCRTypes = [
+export const CRTypes = [
   CRType.ARCHITECTURE,
   CRType.FEATURE_ENHANCEMENT,
   CRType.BUG_FIX,
   CRType.TECHNICAL_DEBT,
   CRType.DOCUMENTATION,
-] as const;
+  CRType.RESEARCH,
+] as const
 
-export const CRTypeSchema = z.enum(AllCRTypes);
+export const CRTypeSchema = z.enum(CRTypes)
 
 // CR Priority enumeration
 export const CRPriority = {
@@ -53,26 +55,26 @@ export const CRPriority = {
   MEDIUM: 'Medium',
   HIGH: 'High',
   CRITICAL: 'Critical',
-} as const;
+} as const
 
-export type CRPriority = typeof CRPriority[keyof typeof CRPriority];
+export type CRPriorityValue = typeof CRPriority[keyof typeof CRPriority]
 
-export const AllCRPriorities = [
+export const CRPriorities = [
   CRPriority.LOW,
   CRPriority.MEDIUM,
   CRPriority.HIGH,
   CRPriority.CRITICAL,
-] as const;
+] as const
 
-export const CRPrioritySchema = z.enum(AllCRPriorities);
+export const CRPrioritySchema = z.enum(CRPriorities)
 
 /**
  * Inferred TypeScript types from Zod schemas
  * These can be used when you need types that are guaranteed to match the schemas
  */
-export type CRStatusFromSchema = z.infer<typeof CRStatusSchema>;
-export type CRTypeFromSchema = z.infer<typeof CRTypeSchema>;
-export type CRPriorityFromSchema = z.infer<typeof CRPrioritySchema>;
+export type CRStatusFromSchema = z.infer<typeof CRStatusSchema>
+export type CRTypeFromSchema = z.infer<typeof CRTypeSchema>
+export type CRPriorityFromSchema = z.infer<typeof CRPrioritySchema>
 
 /**
  * Export the schemas for use in other domain contracts
@@ -81,4 +83,4 @@ export const CREnumSchemas = {
   status: CRStatusSchema,
   type: CRTypeSchema,
   priority: CRPrioritySchema,
-} as const;
+} as const

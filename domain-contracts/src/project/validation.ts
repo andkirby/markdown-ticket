@@ -4,19 +4,19 @@
  */
 
 import {
-  ProjectSchema,
-  ProjectConfigSchema,
-  DocumentConfigSchema,
   CreateProjectInputSchema,
-  UpdateProjectInputSchema
-} from './schema.js';
+  DocumentConfigSchema,
+  ProjectConfigSchema,
+  ProjectSchema,
+  UpdateProjectInputSchema,
+} from './schema.js'
 
 /**
  * Validate project data using ProjectSchema.parse()
  * Throws ZodError on validation failure
  */
 export function validateProject(data: unknown) {
-  return ProjectSchema.parse(data);
+  return ProjectSchema.parse(data)
 }
 
 /**
@@ -24,7 +24,7 @@ export function validateProject(data: unknown) {
  * Returns result object with success boolean
  */
 export function safeValidateProject(data: unknown) {
-  return ProjectSchema.safeParse(data);
+  return ProjectSchema.safeParse(data)
 }
 
 /**
@@ -32,7 +32,7 @@ export function safeValidateProject(data: unknown) {
  * Throws ZodError on validation failure
  */
 export function validateProjectConfig(data: unknown) {
-  return ProjectConfigSchema.parse(data);
+  return ProjectConfigSchema.parse(data)
 }
 
 /**
@@ -40,7 +40,7 @@ export function validateProjectConfig(data: unknown) {
  * Returns result object with success boolean
  */
 export function safeValidateProjectConfig(data: unknown) {
-  return ProjectConfigSchema.safeParse(data);
+  return ProjectConfigSchema.safeParse(data)
 }
 
 /**
@@ -48,7 +48,7 @@ export function safeValidateProjectConfig(data: unknown) {
  * Throws ZodError on validation failure
  */
 export function validateDocumentConfig(data: unknown) {
-  return DocumentConfigSchema.parse(data);
+  return DocumentConfigSchema.parse(data)
 }
 
 /**
@@ -56,7 +56,7 @@ export function validateDocumentConfig(data: unknown) {
  * Returns result object with success boolean
  */
 export function safeValidateDocumentConfig(data: unknown) {
-  return DocumentConfigSchema.safeParse(data);
+  return DocumentConfigSchema.safeParse(data)
 }
 
 /**
@@ -64,7 +64,7 @@ export function safeValidateDocumentConfig(data: unknown) {
  * Throws ZodError on validation failure
  */
 export function validateCreateProjectInput(data: unknown) {
-  return CreateProjectInputSchema.parse(data);
+  return CreateProjectInputSchema.parse(data)
 }
 
 /**
@@ -72,7 +72,7 @@ export function validateCreateProjectInput(data: unknown) {
  * Returns result object with success boolean
  */
 export function safeValidateCreateProjectInput(data: unknown) {
-  return CreateProjectInputSchema.safeParse(data);
+  return CreateProjectInputSchema.safeParse(data)
 }
 
 /**
@@ -80,7 +80,7 @@ export function safeValidateCreateProjectInput(data: unknown) {
  * Throws ZodError on validation failure
  */
 export function validateUpdateProjectInput(data: unknown) {
-  return UpdateProjectInputSchema.parse(data);
+  return UpdateProjectInputSchema.parse(data)
 }
 
 /**
@@ -88,5 +88,5 @@ export function validateUpdateProjectInput(data: unknown) {
  * Returns result object with success boolean
  */
 export function safeValidateUpdateProjectInput(data: unknown) {
-  return UpdateProjectInputSchema.safeParse(data);
+  return UpdateProjectInputSchema.safeParse(data)
 }

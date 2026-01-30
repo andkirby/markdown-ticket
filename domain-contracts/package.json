@@ -1,20 +1,10 @@
 {
   "name": "@mdt/domain-contracts",
+  "type": "module",
   "version": "1.0.0",
   "description": "Domain contracts and Zod schemas for MDT project",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "clean": "rm -rf dist",
-    "prepublishOnly": "npm run clean && npm run build"
-  },
-  "files": [
-    "dist"
-  ],
+  "author": "",
+  "license": "MIT",
   "keywords": [
     "domain",
     "contracts",
@@ -22,8 +12,28 @@
     "schemas",
     "typescript"
   ],
-  "author": "",
-  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
   "dependencies": {
     "zod": "^3.22.4"
   },

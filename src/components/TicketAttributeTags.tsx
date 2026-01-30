@@ -1,4 +1,5 @@
 import type { Ticket } from '../types'
+import { CRType } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useParams } from 'react-router-dom'
 import { classifyLink } from '../utils/linkProcessor'
@@ -44,12 +45,14 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, class
   }
 
   const getTypeColor = (type: string) => {
+    // UI-specific color mapping derived from domain-contracts CRType values
     const colors: Record<string, string> = {
-      'Feature Enhancement': 'bg-gradient-to-r from-blue-50 to-indigo-100/80 text-blue-700 border-blue-200/60 shadow-sm',
-      'Bug Fix': 'bg-gradient-to-r from-orange-50 to-amber-100/80 text-orange-700 border-orange-200/60 shadow-sm',
-      'Architecture': 'bg-gradient-to-r from-purple-50 to-violet-100/80 text-purple-700 border-purple-200/60 shadow-sm',
-      'Technical Debt': 'bg-gradient-to-r from-slate-50 to-gray-100/80 text-slate-700 border-slate-200/60 shadow-sm',
-      'Documentation': 'bg-gradient-to-r from-cyan-50 to-teal-100/80 text-cyan-700 border-cyan-200/60 shadow-sm',
+      [CRType.FEATURE_ENHANCEMENT]: 'bg-gradient-to-r from-blue-50 to-indigo-100/80 text-blue-700 border-blue-200/60 shadow-sm',
+      [CRType.BUG_FIX]: 'bg-gradient-to-r from-orange-50 to-amber-100/80 text-orange-700 border-orange-200/60 shadow-sm',
+      [CRType.ARCHITECTURE]: 'bg-gradient-to-r from-purple-50 to-violet-100/80 text-purple-700 border-purple-200/60 shadow-sm',
+      [CRType.TECHNICAL_DEBT]: 'bg-gradient-to-r from-slate-50 to-gray-100/80 text-slate-700 border-slate-200/60 shadow-sm',
+      [CRType.DOCUMENTATION]: 'bg-gradient-to-r from-cyan-50 to-teal-100/80 text-cyan-700 border-cyan-200/60 shadow-sm',
+      [CRType.RESEARCH]: 'bg-gradient-to-r from-pink-50 to-rose-100/80 text-pink-700 border-pink-200/60 shadow-sm',
     }
     return colors[type] || 'bg-gradient-to-r from-gray-50 to-slate-100/80 text-gray-700 border-gray-200/60 shadow-sm'
   }

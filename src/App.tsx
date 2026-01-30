@@ -253,7 +253,7 @@ function ProjectRouteHandler() {
 
       <EventHistory
         isOpen={eventHistoryOpen}
-        onOpenChange={(open) => setEventHistoryState(open, false)}
+        onOpenChange={open => setEventHistoryState(open, false)}
         forceHidden={eventHistoryForceHidden}
       />
       <Toaster />

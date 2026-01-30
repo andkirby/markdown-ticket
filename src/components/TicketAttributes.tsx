@@ -1,4 +1,5 @@
 import type { Ticket } from '../types'
+import { CRType } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useParams } from 'react-router-dom'
 import { buildTicketLink } from '../utils/linkBuilder'
@@ -66,20 +67,16 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
   }
 
   const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'Bug Fix':
-        return 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700'
-      case 'Feature Enhancement':
-        return 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700'
-      case 'Technical Debt':
-        return 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700'
-      case 'Architecture':
-        return 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-700'
-      case 'Documentation':
-        return 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-700'
-      default:
-        return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+    // UI-specific color mapping derived from domain-contracts CRType values
+    const colors: Record<string, string> = {
+      [CRType.BUG_FIX]: 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700',
+      [CRType.FEATURE_ENHANCEMENT]: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700',
+      [CRType.TECHNICAL_DEBT]: 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700',
+      [CRType.ARCHITECTURE]: 'bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-700',
+      [CRType.DOCUMENTATION]: 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-700',
+      [CRType.RESEARCH]: 'bg-pink-100 dark:bg-pink-950 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-700',
     }
+    return colors[type] || 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
   }
 
   const getStatusColor = (status: string) => {

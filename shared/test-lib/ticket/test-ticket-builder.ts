@@ -5,7 +5,8 @@
  * with counter management and slug generation.
  */
 
-import type { CRPriority, CRStatus, CRType } from '../../models/Types.js'
+import type { CRStatus } from '../../models/Types.js'
+import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { withRetry } from '../utils/retry-helper.js'
@@ -13,9 +14,9 @@ import { withRetry } from '../utils/retry-helper.js'
 /** Test CR data structure */
 export interface TestCRData {
   title: string
-  type: CRType
+  type: CRTypeValue
   status?: CRStatus
-  priority?: CRPriority
+  priority?: CRPriorityValue
   phaseEpic?: string
   dependsOn?: string
   blocks?: string

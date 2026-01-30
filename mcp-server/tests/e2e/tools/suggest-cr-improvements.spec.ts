@@ -23,7 +23,7 @@ import { TestEnvironment } from '../helpers/test-environment'
  * The response format is:
  * 1. **Title**
  *    Description
- *    *Actionable:* Yes
+ *    Actionable:* Yes
  */
 function parseSuggestionsFromMarkdown(markdown: string) {
   const suggestions: any[] = []

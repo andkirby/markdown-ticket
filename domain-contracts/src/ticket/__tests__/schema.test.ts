@@ -5,12 +5,10 @@
 
 import {
   CRSchema,
-  TicketSchema,
-  CreateTicketInputSchema,
   UpdateTicketInputSchema,
-} from '../schema.js';
+} from '../schema.js'
 
-describe('CRSchema', () => {
+describe('cRSchema', () => {
   // Testing OUR regex rule for code field
   describe('code format', () => {
     // Valid cases - our rule accepts these
@@ -21,8 +19,8 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('accepts MAX boundary (4 letters + 4 digits)', () => {
       expect(() => CRSchema.parse({
@@ -31,8 +29,8 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('accepts middle range (3-4 letters + 3-4 digits)', () => {
       expect(() => CRSchema.parse({
@@ -41,7 +39,7 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).not.toThrow();
+      })).not.toThrow()
 
       expect(() => CRSchema.parse({
         code: 'API1-456',
@@ -49,8 +47,8 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Bug Fix',
         priority: 'High',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     // Invalid cases - our rule rejects these
     it('rejects below MIN (2 letters + 3 digits)', () => {
@@ -60,8 +58,8 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).toThrow(/PREFIX-123/);
-    });
+      })).toThrow(/PREFIX-123/)
+    })
 
     it('rejects above MAX (5+ letters)', () => {
       expect(() => CRSchema.parse({
@@ -70,8 +68,8 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).toThrow();
-    });
+      })).toThrow()
+    })
 
     it('rejects wrong format (lowercase letters)', () => {
       expect(() => CRSchema.parse({
@@ -80,8 +78,8 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).toThrow();
-    });
+      })).toThrow()
+    })
 
     it('rejects wrong format (no dash)', () => {
       expect(() => CRSchema.parse({
@@ -90,8 +88,8 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).toThrow();
-    });
+      })).toThrow()
+    })
 
     it('rejects wrong format (special chars in letters)', () => {
       expect(() => CRSchema.parse({
@@ -100,9 +98,9 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).toThrow();
-    });
-  });
+      })).toThrow()
+    })
+  })
 
   // Testing OUR length rule for title field
   describe('title validation', () => {
@@ -113,30 +111,30 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('accepts MAX boundary (200 chars)', () => {
-      const longTitle = 'A'.repeat(200);
+      const longTitle = 'A'.repeat(200)
       expect(() => CRSchema.parse({
         code: 'MDT-101',
         title: longTitle,
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('rejects above MAX (201+ chars)', () => {
-      const tooLongTitle = 'A'.repeat(201);
+      const tooLongTitle = 'A'.repeat(201)
       expect(() => CRSchema.parse({
         code: 'MDT-101',
         title: tooLongTitle,
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).toThrow(/200 characters/);
-    });
+      })).toThrow(/200 characters/)
+    })
 
     it('trims whitespace from title', () => {
       const result = CRSchema.parse({
@@ -145,9 +143,9 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      });
-      expect(result.title).toBe('Test Title');
-    });
+      })
+      expect(result.title).toBe('Test Title')
+    })
 
     it('rejects empty/whitespace-only title', () => {
       expect(() => CRSchema.parse({
@@ -156,9 +154,9 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      })).toThrow(/cannot be empty/);
-    });
-  });
+      })).toThrow(/cannot be empty/)
+    })
+  })
 
   // Testing OUR design choice for optional fields
   describe('optional fields', () => {
@@ -169,17 +167,17 @@ describe('CRSchema', () => {
         status: 'Proposed',
         type: 'Feature Enhancement',
         priority: 'Medium',
-      });
-      expect(result.phaseEpic).toBeUndefined();
-      expect(result.impactAreas).toBeUndefined();
-      expect(result.relatedTickets).toBeUndefined();
-      expect(result.dependsOn).toBeUndefined();
-      expect(result.blocks).toBeUndefined();
-      expect(result.assignee).toBeUndefined();
-      expect(result.content).toBeUndefined();
-      expect(result.implementationDate).toBeUndefined();
-      expect(result.implementationNotes).toBeUndefined();
-    });
+      })
+      expect(result.phaseEpic).toBeUndefined()
+      expect(result.impactAreas).toBeUndefined()
+      expect(result.relatedTickets).toBeUndefined()
+      expect(result.dependsOn).toBeUndefined()
+      expect(result.blocks).toBeUndefined()
+      expect(result.assignee).toBeUndefined()
+      expect(result.content).toBeUndefined()
+      expect(result.implementationDate).toBeUndefined()
+      expect(result.implementationNotes).toBeUndefined()
+    })
 
     it('accepts all optional fields', () => {
       const result = CRSchema.parse({
@@ -197,18 +195,18 @@ describe('CRSchema', () => {
         content: '# Test Content',
         implementationDate: '2025-12-21',
         implementationNotes: 'Implemented successfully',
-      });
-      expect(result.phaseEpic).toBe('Phase 1');
-      expect(result.impactAreas).toEqual(['UI', 'API']);
-      expect(result.relatedTickets).toBe('MDT-100,MDT-102');
-      expect(result.dependsOn).toBe('MDT-099');
-      expect(result.blocks).toBe('MDT-103');
-      expect(result.assignee).toBe('test@example.com');
-      expect(result.content).toBe('# Test Content');
-      expect(result.implementationDate).toBe('2025-12-21');
-      expect(result.implementationNotes).toBe('Implemented successfully');
-    });
-  });
+      })
+      expect(result.phaseEpic).toBe('Phase 1')
+      expect(result.impactAreas).toEqual(['UI', 'API'])
+      expect(result.relatedTickets).toBe('MDT-100,MDT-102')
+      expect(result.dependsOn).toBe('MDT-099')
+      expect(result.blocks).toBe('MDT-103')
+      expect(result.assignee).toBe('test@example.com')
+      expect(result.content).toBe('# Test Content')
+      expect(result.implementationDate).toBe('2025-12-21')
+      expect(result.implementationNotes).toBe('Implemented successfully')
+    })
+  })
 
   // Testing OUR email validation rule
   describe('assignee email', () => {
@@ -220,8 +218,8 @@ describe('CRSchema', () => {
         type: 'Feature Enhancement',
         priority: 'Medium',
         assignee: 'user@example.com',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('rejects invalid email format', () => {
       expect(() => CRSchema.parse({
@@ -231,9 +229,9 @@ describe('CRSchema', () => {
         type: 'Feature Enhancement',
         priority: 'Medium',
         assignee: 'not-an-email',
-      })).toThrow(/Invalid email format/);
-    });
-  });
+      })).toThrow(/Invalid email format/)
+    })
+  })
 
   // Testing OUR date format validation
   describe('implementationDate format', () => {
@@ -245,8 +243,8 @@ describe('CRSchema', () => {
         type: 'Feature Enhancement',
         priority: 'Medium',
         implementationDate: '2025-12-21',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('rejects invalid date format', () => {
       expect(() => CRSchema.parse({
@@ -256,42 +254,42 @@ describe('CRSchema', () => {
         type: 'Feature Enhancement',
         priority: 'Medium',
         implementationDate: '21/12/2025',
-      })).toThrow(/YYYY-MM-DD/);
-    });
-  });
-});
+      })).toThrow(/YYYY-MM-DD/)
+    })
+  })
+})
 
-describe('UpdateTicketInputSchema', () => {
+describe('updateTicketInputSchema', () => {
   // Testing OUR rule: code is required for identification
   describe('code requirement', () => {
     it('requires code for identification', () => {
       expect(() => UpdateTicketInputSchema.parse({
         title: 'Updated Title',
-      })).toThrow();
-    });
+      })).toThrow()
+    })
 
     it('accepts valid code', () => {
       expect(() => UpdateTicketInputSchema.parse({
         code: 'MDT-101',
         title: 'Test', // Adding a field to update
-      })).not.toThrow();
-    });
-  });
+      })).not.toThrow()
+    })
+  })
 
   // Testing OUR rule: at least one field to update
   describe('update fields requirement', () => {
     it('requires at least one field to update', () => {
       expect(() => UpdateTicketInputSchema.parse({
         code: 'MDT-101',
-      })).toThrow(/At least one field/);
-    });
+      })).toThrow(/At least one field/)
+    })
 
     it('accepts single field update', () => {
       expect(() => UpdateTicketInputSchema.parse({
         code: 'MDT-101',
         title: 'New Title',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('accepts multiple field update', () => {
       expect(() => UpdateTicketInputSchema.parse({
@@ -299,9 +297,9 @@ describe('UpdateTicketInputSchema', () => {
         title: 'New Title',
         status: 'In Progress',
         priority: 'High',
-      })).not.toThrow();
-    });
-  });
+      })).not.toThrow()
+    })
+  })
 
   // Testing that update fields are optional
   describe('optional update fields', () => {
@@ -313,11 +311,11 @@ describe('UpdateTicketInputSchema', () => {
         { code: 'MDT-101', priority: 'Critical' },
         { code: 'MDT-101', assignee: 'new@example.com' },
         { code: 'MDT-101', implementationDate: '2025-12-25' },
-      ];
+      ]
 
-      updates.forEach(update => {
-        expect(() => UpdateTicketInputSchema.parse(update)).not.toThrow();
-      });
-    });
-  });
-});
+      updates.forEach((update) => {
+        expect(() => UpdateTicketInputSchema.parse(update)).not.toThrow()
+      })
+    })
+  })
+})

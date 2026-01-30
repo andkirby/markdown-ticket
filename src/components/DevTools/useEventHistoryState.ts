@@ -15,14 +15,15 @@ import { useEffect, useState } from 'react'
 const STORAGE_KEY = 'mdt-eventHistory-hidden'
 
 // Load initial state from localStorage
-const loadInitialState = (): { isOpen: boolean; forceHidden: boolean } => {
+function loadInitialState(): { isOpen: boolean, forceHidden: boolean } {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved !== null) {
       const forceHidden = saved === 'true'
       return { isOpen: false, forceHidden }
     }
-  } catch {
+  }
+  catch {
     // localStorage not available (e.g., in iframe with restrictions)
   }
   return { isOpen: false, forceHidden: false }
@@ -40,7 +41,8 @@ const listeners = new Set<(open: boolean, forceHidden: boolean) => void>()
 function persistState(forceHidden: boolean) {
   try {
     localStorage.setItem(STORAGE_KEY, String(forceHidden))
-  } catch {
+  }
+  catch {
     // Silently fail if localStorage is not available
   }
 }
@@ -54,7 +56,8 @@ export function toggleEventHistory() {
     // Currently visible (open OR button showing) -> hide everything
     globalIsOpen = false
     globalForceHidden = true
-  } else {
+  }
+  else {
     // Currently hidden -> show button (but don't open popup)
     globalIsOpen = false
     globalForceHidden = false

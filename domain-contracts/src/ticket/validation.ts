@@ -3,20 +3,20 @@
  * Validation wrapper functions using schemas from ./schema.ts
  */
 
+import type { z } from 'zod'
 import {
-  TicketSchema,
-  CRSchema,
   CreateTicketInputSchema,
-  UpdateTicketInputSchema
-} from './schema.js';
-import { z } from 'zod';
+  CRSchema,
+  TicketSchema,
+  UpdateTicketInputSchema,
+} from './schema.js'
 
 /**
  * Validate ticket data using TicketSchema.parse()
  * Throws ZodError on validation failure
  */
 export function validateTicket(data: unknown) {
-  return TicketSchema.parse(data);
+  return TicketSchema.parse(data)
 }
 
 /**
@@ -24,7 +24,7 @@ export function validateTicket(data: unknown) {
  * Returns result object with success boolean
  */
 export function safeValidateTicket(data: unknown): z.SafeParseReturnType<typeof TicketSchema._type, typeof TicketSchema._type> {
-  return TicketSchema.safeParse(data);
+  return TicketSchema.safeParse(data)
 }
 
 /**
@@ -32,7 +32,7 @@ export function safeValidateTicket(data: unknown): z.SafeParseReturnType<typeof 
  * Throws ZodError on validation failure
  */
 export function validateCR(data: unknown) {
-  return CRSchema.parse(data);
+  return CRSchema.parse(data)
 }
 
 /**
@@ -40,7 +40,7 @@ export function validateCR(data: unknown) {
  * Returns result object with success boolean
  */
 export function safeValidateCR(data: unknown): z.SafeParseReturnType<typeof CRSchema._type, typeof CRSchema._type> {
-  return CRSchema.safeParse(data);
+  return CRSchema.safeParse(data)
 }
 
 /**
@@ -48,7 +48,7 @@ export function safeValidateCR(data: unknown): z.SafeParseReturnType<typeof CRSc
  * Throws ZodError on validation failure
  */
 export function validateCreateTicketInput(data: unknown) {
-  return CreateTicketInputSchema.parse(data);
+  return CreateTicketInputSchema.parse(data)
 }
 
 /**
@@ -56,5 +56,5 @@ export function validateCreateTicketInput(data: unknown) {
  * Throws ZodError on validation failure
  */
 export function validateUpdateTicketInput(data: unknown) {
-  return UpdateTicketInputSchema.parse(data);
+  return UpdateTicketInputSchema.parse(data)
 }
