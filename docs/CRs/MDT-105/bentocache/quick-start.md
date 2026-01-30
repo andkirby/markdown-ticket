@@ -23,7 +23,6 @@ yarn add bentocache
 ```
 :::
 
-
 ## Setup
 
 Once installed, you can configure BentoCache in your application as follows:
@@ -36,7 +35,7 @@ import { redisDriver } from 'bentocache/drivers/redis'
 const bento = new BentoCache({
   default: 'myCache',
   stores: {
-    // A first cache store named "myCache" using 
+    // A first cache store named "myCache" using
     // only L1 in-memory cache
     myCache: bentostore()
       .useL1Layer(memoryDriver({ maxSize: '10mb' })),
@@ -63,7 +62,7 @@ See [the documentation on named caches](./named_caches.md) for more information.
 ```ts
 import { BentoCache, bentostore } from 'bentocache'
 import { memoryDriver } from 'bentocache/drivers/memory'
-import { redisDriver, redisBusDriver } from 'bentocache/drivers/redis'
+import { redisBusDriver, redisDriver } from 'bentocache/drivers/redis'
 
 const bento = new BentoCache({
   default: 'cache',
@@ -87,7 +86,7 @@ With this setup, your in-memory cache will serve as the first level ( L1 ) cache
 
 In a multi-instance application, your different in-memory caches will be synchronized using the bus you have configured. This way, if an instance updates an item in the cache, the other instances will be notified and will update their local cache.
 
-If you are running your application on a single instance, you don't need to bother with the bus. 
+If you are running your application on a single instance, you don't need to bother with the bus.
 
 More information on the [multi-tier here](./multi_tier.md)
 
@@ -117,13 +116,13 @@ export default class UsersController {
 }
 ```
 
-Multiple things to note here : 
+Multiple things to note here :
 
 - We are using a namespace. Namespaces are a way to group keys together. In this case, we are grouping all the users in a namespace called `users`. This will allow us to easily invalidate all the users at once later.
 - We are using the `getOrSet` method. This method will first try to fetch the user from the cache. If it is not found, it will execute the *factory* and store the result in the cache for 5 minutes.
 - The Factory here is just retrieving the user from the database.
 
-So first time this endpoint is called, it will fetch the user from the database, then store it in the cache. Next time the endpoint is called, it will retrieve the user from the cache. 
+So first time this endpoint is called, it will fetch the user from the database, then store it in the cache. Next time the endpoint is called, it will retrieve the user from the cache.
 
 ### Invalidating the cache
 
@@ -160,5 +159,5 @@ export default class UsersController {
 }
 ```
 
-As simple as that, we just need to call the `delete` method on the namespace, passing the key we want to delete. 
+As simple as that, we just need to call the `delete` method on the namespace, passing the key we want to delete.
 Note that if you are using a multi-tier setup, the `delete` call will notify the other instances to delete the key from their local cache as well.

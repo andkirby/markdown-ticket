@@ -57,7 +57,7 @@ Establishing H1 as authoritative source provides:
 const extractTitle = (content, filename) => {
   const h1Match = content.match(/^# (.+)$/m);
   if (h1Match) return h1Match[1].trim();
-  
+
   // Fallback: extract from filename
   const titlePart = filename.replace(/^[A-Z]+-\d+-/, '').replace(/\.md$/, '');
   return titlePart.replace(/-/g, ' ');

@@ -8,7 +8,6 @@ priority: Critical
 description: LLMs misuse description field causing YAML overflow. Consolidate CR/CRData interfaces to Ticket, remove description/rationale from YAML frontmatter, move all content to markdown body.
 ---
 
-
 # Consolidate to single Ticket interface and remove description/rationale from YAML
 
 ## 1. Description
@@ -55,26 +54,26 @@ content: {
 ```typescript
 export interface Ticket {
   // Core fields
-  code: string;              // ✅ Use "code" not "key" (matches docs)
-  title: string;
-  status: string;
-  type: string;
-  priority: string;
-  dateCreated: Date | null;
-  lastModified: Date | null;
-  content: string;           // ✅ ALL description/rationale goes here
-  filePath: string;
+  code: string // ✅ Use "code" not "key" (matches docs)
+  title: string
+  status: string
+  type: string
+  priority: string
+  dateCreated: Date | null
+  lastModified: Date | null
+  content: string // ✅ ALL description/rationale goes here
+  filePath: string
 
   // Optional metadata (YAML only - no description/rationale here!)
-  phaseEpic?: string;
-  assignee?: string;
-  implementationDate?: Date | null;
-  implementationNotes?: string;
+  phaseEpic?: string
+  assignee?: string
+  implementationDate?: Date | null
+  implementationNotes?: string
 
   // Relationships
-  relatedTickets: string[];
-  dependsOn: string[];
-  blocks: string[];
+  relatedTickets: string[]
+  dependsOn: string[]
+  blocks: string[]
 }
 ```
 
@@ -341,25 +340,25 @@ export interface CRData { ... }
  */
 export interface Ticket {
   /** Unique ticket identifier (e.g., "MDT-001") */
-  code: string;
+  code: string
 
   /** Brief descriptive title */
-  title: string;
+  title: string
 
   /** Current lifecycle status */
-  status: string;
+  status: string
 
   /** Ticket category/type */
-  type: string;
+  type: string
 
   /** Priority level (Critical/High/Medium/Low) */
-  priority: string;
+  priority: string
 
   /** Creation timestamp */
-  dateCreated: Date | null;
+  dateCreated: Date | null
 
   /** Last modification timestamp (auto-updated) */
-  lastModified: Date | null;
+  lastModified: Date | null
 
   /**
    * Full markdown content including:
@@ -369,10 +368,10 @@ export interface Ticket {
    * - ## Implementation Specification
    * - ## Acceptance Criteria
    */
-  content: string;
+  content: string
 
   /** Absolute file path (system-managed) */
-  filePath: string;
+  filePath: string
 
   // ... rest with JSDoc
 }
@@ -457,7 +456,7 @@ Detailed desired state...
 ## 2. Rationale
 Full rationale goes here with multiple paragraphs explaining why this is needed.`
   }
-});
+})
 // Expected: Success
 // YAML has: code, title, status, type, priority (NO description/rationale)
 // Content has: full markdown with Description and Rationale sections
@@ -472,7 +471,7 @@ await create_cr({
     title: 'Test Bug'
     // No content parameter
   }
-});
+})
 // Expected: Success
 // YAML has: code, title, status, type, priority
 // Content has: Generated template with ## Description, ## Rationale, etc.
@@ -485,9 +484,9 @@ await create_cr({
   type: 'Feature Enhancement',
   data: {
     title: 'Test Feature',
-    description: 'This should not be accepted'  // ❌ Parameter doesn't exist
+    description: 'This should not be accepted' // ❌ Parameter doesn't exist
   }
-});
+})
 // Expected: TypeScript compilation error or MCP tool rejects parameter
 ```
 
@@ -500,7 +499,7 @@ description: This exists in old YAML
 ---
 ```
 ```typescript
-const ticket = await getCR('TEST', 'OLD-001');
+const ticket = await getCR('TEST', 'OLD-001')
 // Expected: Ticket loads successfully
 // description field ignored by backend (not rendered anywhere)
 ```

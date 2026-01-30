@@ -124,17 +124,17 @@ This approach provides the best balance of risk management and logical progressi
 ```typescript
 // Types for file operations
 interface FileOperationResult {
-  success: boolean;
-  data?: any;
-  error?: Error;
+  success: boolean
+  data?: any
+  error?: Error
 }
 
 interface CRFile {
-  path: string;
-  filename: string;
-  content: string;
-  frontmatter: CRFrontmatter;
-  lastModified: Date;
+  path: string
+  filename: string
+  content: string
+  frontmatter: CRFrontmatter
+  lastModified: Date
 }
 ```
 
@@ -142,14 +142,14 @@ interface CRFile {
 ```typescript
 // Express request/response extensions
 interface AuthenticatedRequest extends Request {
-  user?: User;
-  project?: Project;
+  user?: User
+  project?: Project
 }
 
 interface APIResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: APIError;
+  success: boolean
+  data?: T
+  error?: APIError
 }
 ```
 
@@ -157,12 +157,12 @@ interface APIResponse<T = any> {
 ```typescript
 // Frontmatter parsing types
 interface CRFrontmatter {
-  code: string;
-  title: string;
-  status: CRStatus;
-  type: CRType;
-  priority: CRPriority;
-  [key: string]: any; // Allow additional properties
+  code: string
+  title: string
+  status: CRStatus
+  type: CRType
+  priority: CRPriority
+  [key: string]: any // Allow additional properties
 }
 ```
 

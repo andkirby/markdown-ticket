@@ -65,9 +65,9 @@ Efficient content discovery is essential for productivity. Users need to quickly
 ### FilterControls Component
 ```typescript
 interface FilterControlsProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  placeholder?: string;
+  searchQuery: string
+  onSearchChange: (query: string) => void
+  placeholder?: string
 }
 ```
 

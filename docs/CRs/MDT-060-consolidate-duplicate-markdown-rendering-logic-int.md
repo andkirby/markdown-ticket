@@ -74,9 +74,9 @@ Create a shared `MarkdownRenderer` component with the following interface:
 
 ```typescript
 interface MarkdownRendererProps {
-  content: string;
-  className?: string;
-  onRenderComplete?: () => void;
+  content: string
+  className?: string
+  onRenderComplete?: () => void
 }
 ```
 
@@ -106,10 +106,10 @@ The component will:
 The shared `MarkdownRenderer` component should accept:
 ```typescript
 interface MarkdownRendererProps {
-  content: string;
-  className?: string;
-  headerLevelStart?: number;  // Allow customization (default: 1)
-  onRenderComplete?: () => void;
+  content: string
+  className?: string
+  headerLevelStart?: number // Allow customization (default: 1)
+  onRenderComplete?: () => void
 }
 ```
 

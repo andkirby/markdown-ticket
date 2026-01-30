@@ -76,29 +76,30 @@ mcp-server/src/tools/handlers/
 
 **Current**:
 ```typescript
-const operation = options?.operation as 'replace' | 'append' | 'prepend';
+const operation = options?.operation as 'replace' | 'append' | 'prepend'
 ```
 
 **Solution**: Use discriminated union for compile-time safety.
 
 ```typescript
 // domain/models/OperationType.ts
-export type SectionModificationCommand =
-  | { type: 'replace'; section: string; content: string; newSectionName?: string }
-  | { type: 'append'; section: string; content: string }
-  | { type: 'prepend'; section: string; content: string };
+export type SectionModificationCommand
+  = | { type: 'replace', section: string, content: string, newSectionName?: string }
+    | { type: 'append', section: string, content: string }
+    | { type: 'prepend', section: string, content: string }
 
 // Type guard to validate at runtime
 function isValidCommand(cmd: unknown): cmd is SectionModificationCommand {
-  if (typeof cmd !== 'object' || cmd === null) return false;
-  const c = cmd as Record<string, unknown>;
-  const validTypes = ['replace', 'append', 'prepend'];
+  if (typeof cmd !== 'object' || cmd === null)
+    return false
+  const c = cmd as Record<string, unknown>
+  const validTypes = ['replace', 'append', 'prepend']
   return (
-    typeof c.type === 'string' &&
-    validTypes.includes(c.type) &&
-    typeof c.section === 'string' &&
-    typeof c.content === 'string'
-  );
+    typeof c.type === 'string'
+    && validTypes.includes(c.type)
+    && typeof c.section === 'string'
+    && typeof c.content === 'string'
+  )
 }
 
 // Domain logic with exhaustive handling
@@ -106,14 +107,14 @@ export class SectionModifier {
   modify(markdownBody: string, command: SectionModificationCommand): ModifyResult {
     switch (command.type) {
       case 'replace':
-        return this.replaceHandler.handle(markdownBody, command.section, command.content);
+        return this.replaceHandler.handle(markdownBody, command.section, command.content)
       case 'append':
-        return this.appendHandler.handle(markdownBody, command.section, command.content);
+        return this.appendHandler.handle(markdownBody, command.section, command.content)
       case 'prepend':
-        return this.prependHandler.handle(markdownBody, command.section, command.content);
+        return this.prependHandler.handle(markdownBody, command.section, command.content)
       default:
-        const _exhaustive: never = command;
-        throw new Error(`Unknown operation type`);
+        const _exhaustive: never = command
+        throw new Error(`Unknown operation type`)
     }
   }
 }
@@ -144,16 +145,16 @@ this.simpleContentProcessor.processContent(...);
 
 ```typescript
 // domain/services/ModifyRequestValidator.ts
-import { pipe } from 'fp-ts/lib/function.js';
+import { pipe } from 'fp-ts/lib/function.js'
 
 export interface ValidationContext {
-  availableSections: string[];
-  maxContentSize: number;
+  availableSections: string[]
+  maxContentSize: number
 }
 
-export type ValidationResult<T> =
-  | { success: true; value: T }
-  | { success: false; errors: ValidationError[] };
+export type ValidationResult<T>
+  = | { success: true, value: T }
+    | { success: false, errors: ValidationError[] }
 
 export class ModifyRequestValidator {
   constructor(private context: ValidationContext) {}
@@ -165,32 +166,32 @@ export class ModifyRequestValidator {
       this.chain(this.validateContentSize),
       this.chain(this.validatePermissions),
       this.chain(this.validateContentFormat)
-    );
+    )
   }
 
   private validateRequiredFields(req: RawModifyRequest): ValidationResult<ValidModifyRequest> {
-    const errors: ValidationError[] = [];
+    const errors: ValidationError[] = []
 
     if (!req.section?.trim()) {
-      errors.push({ field: 'section', message: 'Section identifier is required' });
+      errors.push({ field: 'section', message: 'Section identifier is required' })
     }
     if (!req.content) {
-      errors.push({ field: 'content', message: 'Content is required' });
+      errors.push({ field: 'content', message: 'Content is required' })
     }
     if (!req.operation || !['replace', 'append', 'prepend'].includes(req.operation)) {
-      errors.push({ field: 'operation', message: 'Must be: replace, append, or prepend' });
+      errors.push({ field: 'operation', message: 'Must be: replace, append, or prepend' })
     }
 
     return errors.length > 0
       ? { success: false, errors }
-      : { success: true, value: req as ValidModifyRequest };
+      : { success: true, value: req as ValidModifyRequest }
   }
 
   private chain<T, U>(
     next: (value: T) => ValidationResult<U>
   ): (prev: ValidationResult<T>) => ValidationResult<U> {
-    return (prev) =>
-      prev.success ? next(prev.value) : prev as ValidationResult<U>;
+    return prev =>
+      prev.success ? next(prev.value) : prev as ValidationResult<U>
   }
 }
 ```
@@ -219,41 +220,42 @@ return this.validationFormatter.formatModifyOutput(
 ```typescript
 // domain/models/ModifyResult.ts
 export interface ModifyResult {
-  readonly crKey: string;
-  readonly section: string;
-  readonly operation: OperationType;
-  readonly bytesModified: number;
-  readonly filePath: string;
-  readonly timestamp: string;
-  readonly warnings: number;
-  readonly previousContent?: string;
-  readonly newContent?: string;
+  readonly crKey: string
+  readonly section: string
+  readonly operation: OperationType
+  readonly bytesModified: number
+  readonly filePath: string
+  readonly timestamp: string
+  readonly warnings: number
+  readonly previousContent?: string
+  readonly newContent?: string
 }
 
 export interface ModifySuccess extends ModifyResult {
-  readonly status: 'success';
+  readonly status: 'success'
 }
 
 export interface ModifyFailure {
-  readonly status: 'error';
-  readonly error: Error;
-  readonly context: { crKey: string; section: string };
+  readonly status: 'error'
+  readonly error: Error
+  readonly context: { crKey: string, section: string }
 }
 
-export type ModifyOutcome = ModifySuccess | ModifyFailure;
+export type ModifyOutcome = ModifySuccess | ModifyFailure
 
 // Use Case returns domain object
 export class ModifySectionUseCase {
   async execute(request: ValidModifyRequest): Promise<ModifyOutcome> {
     try {
-      const result = await this.modifyInternal(request);
-      return { status: 'success', ...result };
-    } catch (error) {
+      const result = await this.modifyInternal(request)
+      return { status: 'success', ...result }
+    }
+    catch (error) {
       return {
         status: 'error',
         error: error as Error,
         context: { crKey: request.crKey, section: request.section }
-      };
+      }
     }
   }
 }
@@ -262,16 +264,16 @@ export class ModifySectionUseCase {
 export class ModifyResultPresenter {
   present(outcome: ModifyOutcome): string {
     if (outcome.status === 'error') {
-      return this.formatError(outcome);
+      return this.formatError(outcome)
     }
-    return this.formatSuccess(outcome);
+    return this.formatSuccess(outcome)
   }
 
   private formatSuccess(result: ModifySuccess): string {
-    return `✅ Modified ${result.crKey}:${result.section} (${result.operation})\n` +
-           `   Bytes: ${result.bytesModified}\n` +
-           `   File: ${result.filePath}\n` +
-           `   Time: ${result.timestamp}`;
+    return `✅ Modified ${result.crKey}:${result.section} (${result.operation})\n`
+      + `   Bytes: ${result.bytesModified}\n`
+      + `   File: ${result.filePath}\n`
+      + `   Time: ${result.timestamp}`
   }
 }
 ```
@@ -291,7 +293,7 @@ export class ModifyResultPresenter {
 **Current**:
 ```typescript
 if (contentProcessingResult.warnings.length > 0) {
-  console.warn(`Content processing warnings for ${key}:`, contentProcessingResult.warnings);
+  console.warn(`Content processing warnings for ${key}:`, contentProcessingResult.warnings)
 }
 ```
 
@@ -300,10 +302,10 @@ if (contentProcessingResult.warnings.length > 0) {
 ```typescript
 // shared/interfaces/Logger.ts
 export interface Logger {
-  debug(message: string, context?: unknown): void;
-  info(message: string, context?: unknown): void;
-  warn(message: string, context?: unknown): void;
-  error(message: string, error?: Error): void;
+  debug: (message: string, context?: unknown) => void
+  info: (message: string, context?: unknown) => void
+  warn: (message: string, context?: unknown) => void
+  error: (message: string, error?: Error) => void
 }
 
 // Null logger for testing
@@ -317,7 +319,7 @@ export class NullLogger implements Logger {
 // Console logger for production
 export class ConsoleLogger implements Logger {
   warn(message: string, context?: unknown): void {
-    console.warn(message, context);
+    console.warn(message, context)
   }
   // ... other methods
 }
@@ -335,10 +337,10 @@ export class SectionModifier {
     // Business logic...
 
     if (warnings.length > 0) {
-      this.logger.warn(`Content processing warnings`, { crKey, warnings });
+      this.logger.warn(`Content processing warnings`, { crKey, warnings })
     }
 
-    return result;
+    return result
   }
 }
 ```
@@ -357,7 +359,7 @@ export class SectionModifier {
 **Current**:
 ```typescript
 // Auto-detects first header at same level as "new section header"
-const firstHeaderMatch = contentProcessingResult.content.match(firstHeaderPattern);
+const firstHeaderMatch = contentProcessingResult.content.match(firstHeaderPattern)
 ```
 
 **Solution**: Make intent explicit with option flag.
@@ -365,25 +367,25 @@ const firstHeaderMatch = contentProcessingResult.content.match(firstHeaderPatter
 ```typescript
 // domain/models/ModifyRequest.ts
 export interface ModifyOptions {
-  readonly operation: 'replace' | 'append' | 'prepend';
-  readonly renameSection?: boolean;        // NEW: Explicit flag
-  readonly newSectionName?: string;        // NEW: Or provide new name directly
-  readonly preserveOriginalHeader?: boolean; // NEW: Explicitly keep old header
+  readonly operation: 'replace' | 'append' | 'prepend'
+  readonly renameSection?: boolean // NEW: Explicit flag
+  readonly newSectionName?: string // NEW: Or provide new name directly
+  readonly preserveOriginalHeader?: boolean // NEW: Explicitly keep old header
 }
 
 // Use in command
 type ReplaceCommand = {
-  type: 'replace';
-  section: string;
-  content: string;
-} & ModifyOptions;
+  type: 'replace'
+  section: string
+  content: string
+} & ModifyOptions
 
 // Validation
 if (command.renameSection && !command.newSectionName) {
   // Only auto-detect from content if flag is set
-  const detected = this.headerRenamer.extract(command.content, sectionLevel);
+  const detected = this.headerRenamer.extract(command.content, sectionLevel)
   if (detected.newHeader) {
-    command.newSectionName = detected.newHeader;
+    command.newSectionName = detected.newHeader
   }
 }
 ```
@@ -405,33 +407,34 @@ if (command.renameSection && !command.newSectionName) {
 // domain/services/TransactionalModifyOperation.ts
 export class TransactionalModifyOperation {
   async execute(request: ValidModifyRequest): Promise<ModifyOutcome> {
-    const backup = await this.createBackup(request.filePath);
+    const backup = await this.createBackup(request.filePath)
 
     try {
-      const result = await this.modifier.modify(request);
-      await this.writeResult(request.filePath, result);
-      await this.cleanupBackup(backup);
-      return { status: 'success', ...result };
-    } catch (error) {
-      await this.restoreBackup(backup);
+      const result = await this.modifier.modify(request)
+      await this.writeResult(request.filePath, result)
+      await this.cleanupBackup(backup)
+      return { status: 'success', ...result }
+    }
+    catch (error) {
+      await this.restoreBackup(backup)
       return {
         status: 'error',
         error: error as Error,
         context: { crKey: request.crKey, section: request.section }
-      };
+      }
     }
   }
 
   private async createBackup(filePath: string): Promise<string> {
-    const backupPath = `${filePath}.backup.${Date.now()}`;
-    await fs.copyFile(filePath, backupPath);
-    return backupPath;
+    const backupPath = `${filePath}.backup.${Date.now()}`
+    await fs.copyFile(filePath, backupPath)
+    return backupPath
   }
 
   private async restoreBackup(backupPath: string): Promise<void> {
-    const originalPath = backupPath.replace(/\.backup\.\d+$/, '');
-    await fs.copyFile(backupPath, originalPath);
-    await fs.unlink(backupPath);
+    const originalPath = backupPath.replace(/\.backup\.\d+$/, '')
+    await fs.copyFile(backupPath, originalPath)
+    await fs.unlink(backupPath)
   }
 }
 ```
@@ -611,9 +614,9 @@ export class ModifyOperationAdapter implements SectionOperation {
     content?: string,
     options?: Record<string, unknown>
   ): Promise<string> {
-    const request: RawModifyRequest = { project, crKey: key, section, content, operation: options?.operation };
-    const outcome = await this.useCase.execute(request);
-    return this.presenter.present(outcome);
+    const request: RawModifyRequest = { project, crKey: key, section, content, operation: options?.operation }
+    const outcome = await this.useCase.execute(request)
+    return this.presenter.present(outcome)
   }
 }
 ```

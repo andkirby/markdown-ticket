@@ -9,7 +9,6 @@ phaseEpic: UI Enhancement
 lastModified: 2025-09-06T16:22:34.783Z
 ---
 
-
 # Sortable Ticket Attributes with Admin Configuration
 
 ## 1. Description
@@ -54,7 +53,7 @@ Users need flexible sorting options to organize and find tickets efficiently. Ad
 - **Protection**: System attributes cannot be removed
 
 ### Default Attributes
-| Attribute | Default Direction | System | 
+| Attribute | Default Direction | System |
 |-----------|------------------|--------|
 | Key | desc (default) | Yes |
 | Title | asc | Yes |
@@ -92,7 +91,7 @@ selected_direction = "desc"
 ### Frontend Changes
 1. Add sort dropdown component to ticket list views
 2. Add direction toggle button with visual state
-3. Update terminology: "code" → "key" 
+3. Update terminology: "code" → "key"
 4. Ensure button labels: "Refresh" and "Create"
 5. Persist user sort preferences
 6. **Add "Update Date" to default sorting attributes**
@@ -106,7 +105,7 @@ selected_direction = "desc"
 - [ ] Button labels present: "Refresh" and "Create"
 - [ ] Frontend uses "key" instead of "code"
 
-### Functionality Requirements  
+### Functionality Requirements
 - [ ] Default sorting by Key (desc) works
 - [ ] All three default attributes sort correctly
 - [ ] User preferences are persisted between sessions

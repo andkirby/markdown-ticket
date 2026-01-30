@@ -1,7 +1,7 @@
 # Architecture: MDT-096
 
 **Source**: [MDT-096](..//MDT-096-refactor-serverfilewatcherservicets-for-git-worktr.md)
-**Generated**: 2025-12-15   
+**Generated**: 2025-12-15
 **Complexity Score**: 11
 
 ## Overview
@@ -169,14 +169,16 @@ server/
 
 **Before:**
 ```typescript
-import FileWatcherService from './fileWatcherService.js';
-const fileWatcher = new FileWatcherService();
+import FileWatcherService from './fileWatcherService.js'
+
+const fileWatcher = new FileWatcherService()
 ```
 
 **After:**
 ```typescript
-import FileWatcherService from './services/fileWatcher/index.js';
-const fileWatcher = new FileWatcherService();
+import FileWatcherService from './services/fileWatcher/index.js'
+
+const fileWatcher = new FileWatcherService()
 ```
 
 ### API Changes
@@ -208,17 +210,18 @@ const fileWatcher = new FileWatcherService();
 ### Example Updated server.ts
 ```typescript
 // Before
-import FileWatcherService from './fileWatcherService.js';
-const fileWatcher = new FileWatcherService();
-fileWatcher.setFileInvoker(documentService.fileInvoker);
-fileWatcher.initFileWatcher(watchPath);
+import FileWatcherService from './fileWatcherService.js'
 
 // After
-import FileWatcherService from './services/fileWatcher/index.js';
+import FileWatcherService from './services/fileWatcher/index.js'
+
+const fileWatcher = new FileWatcherService()
+fileWatcher.setFileInvoker(documentService.fileInvoker)
+fileWatcher.initFileWatcher(watchPath)
 const fileWatcher = new FileWatcherService({
   fileInvoker: documentService.fileInvoker
-});
-fileWatcher.initWatchPaths([{id: 'main', path: watchPath}]);
+})
+fileWatcher.initWatchPaths([{ id: 'main', path: watchPath }])
 ```
 
 ## Extension Rule

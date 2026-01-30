@@ -1,6 +1,6 @@
 ---
 code: MDT-101
-status: Proposed
+status: In Progress
 dateCreated: 2025-12-19T14:39:23.333Z
 type: Architecture
 priority: Medium
@@ -130,4 +130,3 @@ priority: Medium
 
 The scope changed, see details in:
 [architecture.md](MDT-101/architecture.md)
-

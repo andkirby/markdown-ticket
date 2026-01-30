@@ -68,10 +68,10 @@ cacheTimeout = 30000
 
 ```typescript
 // mcp-server/src/index.ts:131
-const port = parseInt(process.env.MCP_HTTP_PORT || '3002');
+const port = Number.parseInt(process.env.MCP_HTTP_PORT || '3002')
 
 // mcp-server/src/utils/rateLimitManager.ts:228
-const maxRequests = parseInt(process.env.MCP_RATE_LIMIT_MAX || '100');
+const maxRequests = Number.parseInt(process.env.MCP_RATE_LIMIT_MAX || '100')
 ```
 
 **Recommendation**: Create a centralized parser utility:
@@ -79,14 +79,15 @@ const maxRequests = parseInt(process.env.MCP_RATE_LIMIT_MAX || '100');
 ```typescript
 // shared/utils/env.ts
 export function parseEnvInt(key: string, defaultValue: number): number {
-  const value = process.env[key];
-  if (value === undefined) return defaultValue;
-  const parsed = parseInt(value, 10);
-  return isNaN(parsed) ? defaultValue : parsed;
+  const value = process.env[key]
+  if (value === undefined)
+    return defaultValue
+  const parsed = Number.parseInt(value, 10)
+  return isNaN(parsed) ? defaultValue : parsed
 }
 
 // Usage
-const port = parseEnvInt('MCP_HTTP_PORT', 3002);
+const port = parseEnvInt('MCP_HTTP_PORT', 3002)
 ```
 
 ---
@@ -101,13 +102,13 @@ const port = parseEnvInt('MCP_HTTP_PORT', 3002);
 
 ```typescript
 // server/server.ts:98
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001
 ```
 
 **Recommendation**: Rename to `BACKEND_PORT`:
 
 ```typescript
-const BACKEND_PORT = parseEnvInt('BACKEND_PORT', 3001);
+const BACKEND_PORT = parseEnvInt('BACKEND_PORT', 3001)
 ```
 
 **Rationale**: Aligns with pattern used for MCP (`MCP_HTTP_PORT`) and test ports (`TEST_FRONTEND_PORT`, etc.).
@@ -132,7 +133,7 @@ Docker usage:
 ```yaml
 # docker-compose.dev.yml - remove DOCKER_BACKEND_URL
 environment:
-  - VITE_BACKEND_URL=http://backend:3001  # Docker container name
+  - VITE_BACKEND_URL=http://backend:3001 # Docker container name
 ```
 
 ### 2.3 Missing `MCP_` Prefix for Security Variables
@@ -178,11 +179,11 @@ interface ImportMetaEnv {
 
 ```typescript
 interface ImportMetaEnv {
-  readonly VITE_BACKEND_URL: string;
-  readonly VITE_DISABLE_EVENTBUS_LOGS?: string;
-  readonly VITE_FRONTEND_LOGGING_AUTOSTART: string;
-  readonly VITE_HMR_HOST: string;
-  readonly VITE_HMR_PORT: string;
+  readonly VITE_BACKEND_URL: string
+  readonly VITE_DISABLE_EVENTBUS_LOGS?: string
+  readonly VITE_FRONTEND_LOGGING_AUTOSTART: string
+  readonly VITE_HMR_HOST: string
+  readonly VITE_HMR_PORT: string
 }
 ```
 
@@ -252,7 +253,7 @@ export const DEFAULT_PORTS = {
   TEST_FRONTEND: 6173,
   TEST_BACKEND: 4001,
   TEST_MCP: 4002,
-} as const;
+} as const
 ```
 
 ---

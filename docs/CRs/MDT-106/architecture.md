@@ -173,11 +173,11 @@ server/tests/api/
 
 ```typescript
 // Export Express app for Supertest testing (does not call listen())
-export { app };
+export { app }
 
 // Start server only when run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  app.listen(PORT, async () => { /* ... */ });
+  app.listen(PORT, async () => { /* ... */ })
 }
 ```
 
@@ -230,12 +230,12 @@ async getDocumentContent(req, res) {
 
 ```typescript
 // ✅ Correct for document content
-expect(response.text).toContain('#');
-expect(typeof response.text).toBe('string');
+expect(response.text).toContain('#')
+expect(typeof response.text).toBe('string')
 
 // ✅ Correct for JSON endpoints
-expect(response.body).toHaveProperty('code');
-expect(Array.isArray(response.body)).toBe(true);
+expect(response.body).toHaveProperty('code')
+expect(Array.isArray(response.body)).toBe(true)
 ```
 
 ### Error Response Format (OpenAPI Compliance)
@@ -267,17 +267,17 @@ Error400: {
 **Controller implementation**:
 ```typescript
 // ✅ Correct
-res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' });
-res.status(404).json({ error: 'Not Found', message: error.message });
-res.status(403).json({ error: 'Forbidden', message: 'Access denied' });
+res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
+res.status(404).json({ error: 'Not Found', message: error.message })
+res.status(403).json({ error: 'Forbidden', message: 'Access denied' })
 ```
 
 **Test assertions**:
 ```typescript
 // helpers/assertions.ts
 export function assertErrorMessage(response: Response, message: string): void {
-  expect(response.body).toHaveProperty('message');  // ← Check message field
-  expect(response.body.message).toContain(message); // ← Not error field
+  expect(response.body).toHaveProperty('message') // ← Check message field
+  expect(response.body.message).toContain(message) // ← Not error field
 }
 ```
 
@@ -338,14 +338,14 @@ DEBUG=true npm test -- tests/api/documents.test.ts
 
 Implementation in `tests/utils/setupTests.ts`:
 ```typescript
-const shouldSuppressConsole = process.env.DEBUG !== 'true';
+const shouldSuppressConsole = process.env.DEBUG !== 'true'
 
 global.console = {
   ...console,
   log: shouldSuppressConsole ? jest.fn() : console.log.bind(console),
   error: shouldSuppressConsole ? jest.fn() : console.error.bind(console),
   // ...
-};
+}
 ```
 
 ## Requirement Coverage
@@ -394,28 +394,28 @@ To add E2E tests for a new endpoint:
 
 Example pattern:
 ```typescript
-import { createTestRequest, assertSuccess, assertNotFound, assertSatisfiesApiSpec } from './helpers/index.js';
-import { setupTestEnvironment, cleanupTestEnvironment } from './setup.js';
+import { assertNotFound, assertSatisfiesApiSpec, assertSuccess, createTestRequest } from './helpers/index.js'
+import { cleanupTestEnvironment, setupTestEnvironment } from './setup.js'
 
 describe('/api/new-endpoint', () => {
-  let testEnv: TestEnvironment;
-  let app: Express;
+  let testEnv: TestEnvironment
+  let app: Express
 
   beforeAll(async () => {
-    ({ testEnv, app } = await setupTestEnvironment());
-  });
+    ({ testEnv, app } = await setupTestEnvironment())
+  })
 
   afterAll(async () => {
-    await cleanupTestEnvironment(testEnv);
-  });
+    await cleanupTestEnvironment(testEnv)
+  })
 
   it('should return data on GET', async () => {
-    const response = await createTestRequest(app).get('/api/new-endpoint');
-    assertSuccess(response);
-    assertSatisfiesApiSpec(response);  // Validates against server/openapi.yaml
-    expect(response.body).toHaveProperty('data');
-  });
-});
+    const response = await createTestRequest(app).get('/api/new-endpoint')
+    assertSuccess(response)
+    assertSatisfiesApiSpec(response) // Validates against server/openapi.yaml
+    expect(response.body).toHaveProperty('data')
+  })
+})
 ```
 
 To add a new test helper:

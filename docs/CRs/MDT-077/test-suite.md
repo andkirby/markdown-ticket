@@ -56,7 +56,7 @@ Create `/tmp/mdt-cli-tests/config/config.toml`:
 ```toml
 [discovery]
 autoDiscover = true
-searchPaths = ["/tmp/mdt-cli-tests/projects"]
+searchPaths = [ "/tmp/mdt-cli-tests/projects" ]
 maxDepth = 2
 ```
 

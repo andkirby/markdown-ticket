@@ -35,7 +35,7 @@ The original problem was based on incorrect assumption about caching. Investigat
 
 ### ✅ COMPLETED (2025-09-09)
 - **Frontend**: HamburgerMenu.tsx updated with refresh button
-- **Backend**: Cache clear endpoint added to server.js  
+- **Backend**: Cache clear endpoint added to server.js
 - **Vite**: Proxy endpoint added to vite.config.ts
 - **UX**: Loading states and auto-reload implemented
 
@@ -64,7 +64,7 @@ The original problem was based on incorrect assumption about caching. Investigat
 ## 4. Final Resolution
 
 **Solution**: Page refresh already provides the required functionality
-**User Workflow**: 
+**User Workflow**:
 1. Modify config files (move/edit projects)
 2. Refresh browser page
 3. Updated project list loads immediately
@@ -82,7 +82,7 @@ The original problem was based on incorrect assumption about caching. Investigat
 - `feat: add cache clear API endpoint with file watcher reinitialization`
 - `feat: add vite proxy for cache clear endpoint`
 
-### Removal Commits  
+### Removal Commits
 - `refactor: remove cache clear button - no caching implemented`
 - `docs: add comments explaining current no-cache architecture`
 - `refactor: remove comments, update ticket with findings`

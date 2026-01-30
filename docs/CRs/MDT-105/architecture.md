@@ -115,42 +115,42 @@ Priority (highest to lowest):
 
 ```typescript
 // Facade API
-import { getCache } from '@mdt/shared/cache';
+import { getCache } from '@mdt/shared/cache'
 
-const cache = getCache();
+const cache = getCache()
 
 // Cache ticket metadata with entity-centric tags
 await cache.getOrSet({
   key: 'ticket:MDT-001:meta',
   factory: () => extractFrontmatter(filePath),
   tags: ['ticket-MDT-001', 'ticket-MDT-001-meta', 'tickets-list']
-});
+})
 
 // Cache ticket content (no list tag — doesn't affect list view)
 await cache.getOrSet({
   key: 'ticket:MDT-001:content',
   factory: () => extractBody(filePath),
   tags: ['ticket-MDT-001', 'ticket-MDT-001-content']
-});
+})
 
 // Cache tickets list
 await cache.getOrSet({
   key: 'tickets:all',
   factory: () => loadAllTickets(),
   tags: ['tickets-list']
-});
+})
 
 // Get cached value
-const meta = await cache.get({ key: 'ticket:MDT-001:meta' });
+const meta = await cache.get({ key: 'ticket:MDT-001:meta' })
 
 // Invalidate single ticket (all aspects)
-await cache.deleteByTag({ tags: ['ticket-MDT-001'] });
+await cache.deleteByTag({ tags: ['ticket-MDT-001'] })
 
 // Invalidate tickets list (e.g., on create/delete)
-await cache.deleteByTag({ tags: ['tickets-list'] });
+await cache.deleteByTag({ tags: ['tickets-list'] })
 
 // Invalidate ticket + list (e.g., on frontmatter change)
-await cache.deleteByTag({ tags: ['ticket-MDT-001', 'tickets-list'] });
+await cache.deleteByTag({ tags: ['ticket-MDT-001', 'tickets-list'] })
 ```
 
 ## Tagging Strategy

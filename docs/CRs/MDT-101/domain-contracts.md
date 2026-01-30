@@ -53,25 +53,25 @@ Contains:
 
 ```typescript
 // Import your preferred validation library
-import { SchemaLibrary } from 'validation-lib';
+import { SchemaLibrary } from 'validation-lib'
 
 // Primary entity schema
 export const EntitySchema = SchemaLibrary.object({
   // Field definitions with validation rules
-});
+})
 
 // Input schemas (examples)
 export const CreateEntityInputSchema = EntitySchema.pick({
   // Selected fields for creation
-});
+})
 
 export const UpdateEntityInputSchema = EntitySchema.partial().required({
   // Required identifier for updates
-});
+})
 
 // Type definitions
-export type Entity = InferType<typeof EntitySchema>;
-export type CreateEntityInput = InferType<typeof CreateEntityInputSchema>;
+export type Entity = InferType<typeof EntitySchema>
+export type CreateEntityInput = InferType<typeof CreateEntityInputSchema>
 ```
 
 ### Validation File (`src/{entity}/validation.ts`)
@@ -82,16 +82,17 @@ Contains:
 - Type-safe return values
 
 ```typescript
-import { EntitySchema, CreateEntityInputSchema, type Entity } from './schema';
+import type { Entity } from './schema'
+import { CreateEntityInputSchema, EntitySchema } from './schema'
 
 // Throwing validation
 export function validateEntity(input: unknown): Entity {
-  return EntitySchema.parse(input);
+  return EntitySchema.parse(input)
 }
 
 // Safe validation (returns result object)
 export function safeValidateEntity(input: unknown) {
-  return EntitySchema.safeParse(input);
+  return EntitySchema.safeParse(input)
 }
 ```
 
@@ -99,14 +100,14 @@ export function safeValidateEntity(input: unknown) {
 
 **Entity exports (`src/{entity}/index.ts`)**:
 ```typescript
-export * from './schema';
-export * from './validation';
+export * from './schema'
+export * from './validation'
 ```
 
 **Main exports (`src/index.ts`)**:
 ```typescript
-export * from './entity1';
-export * from './entity2';
+export * from './entity1'
+export * from './entity2'
 // Add other entities as needed
 // Do NOT export testing utilities from main
 ```
@@ -119,7 +120,7 @@ Contains:
 - Override patterns for test variations
 
 ```typescript
-import { type Entity, type CreateEntityInput } from '../entity';
+import type { CreateEntityInput, Entity } from '../entity'
 
 export function buildEntity(overrides?: Partial<Entity>): Entity {
   return {
@@ -128,7 +129,7 @@ export function buildEntity(overrides?: Partial<Entity>): Entity {
     name: 'Test Entity',
     // ... other required fields
     ...overrides,
-  };
+  }
 }
 
 export function buildCreateEntityInput(
@@ -139,24 +140,24 @@ export function buildCreateEntityInput(
     name: 'Test Entity',
     // ... creation fields
     ...overrides,
-  };
+  }
 }
 ```
 
 **Testing exports (`src/testing/index.ts`)**:
 ```typescript
-export * from './entity.fixtures';
-export * from './otherEntity.fixtures';
+export * from './entity.fixtures'
+export * from './otherEntity.fixtures'
 ```
 
 ## Import Patterns
 
 ```typescript
 // Production code
-import { EntitySchema, Entity, validateCreateEntityInput } from 'domain-contracts';
+import { Entity, EntitySchema, validateCreateEntityInput } from 'domain-contracts'
 
 // Test code (via subpath export)
-import { buildEntity } from 'domain-contracts/testing';
+import { buildEntity } from 'domain-contracts/testing'
 ```
 
 ## Validation Flow
@@ -183,15 +184,15 @@ Raw Input (unknown)
 // At the boundary where external input enters the system
 // (API controllers, CLI commands, MCP tools, etc.)
 
-import { validateCreateEntityInput } from 'domain-contracts';
-import { entityService } from 'business-layer';
+import { entityService } from 'business-layer'
+import { validateCreateEntityInput } from 'domain-contracts'
 
 export async function createEndpoint(requestBody: unknown) {
   // 1. Validate input shape using contracts
-  const input = validateCreateEntityInput(requestBody);
+  const input = validateCreateEntityInput(requestBody)
 
   // 2. Pass validated data to business layer
-  return entityService.create(input);
+  return entityService.create(input)
 }
 ```
 
@@ -201,7 +202,7 @@ export async function createEndpoint(requestBody: unknown) {
 // Business/service layer receives already-validated data
 // TypeScript enforces the contract at compile time
 
-import type { CreateEntityInput, Entity } from 'domain-contracts';
+import type { CreateEntityInput, Entity } from 'domain-contracts'
 
 // Function signature ensures only validated input is accepted
 export function create(input: CreateEntityInput): Entity {
@@ -209,7 +210,7 @@ export function create(input: CreateEntityInput): Entity {
   return {
     ...input,
     // ... additional computed fields
-  };
+  }
 }
 ```
 
@@ -217,18 +218,18 @@ export function create(input: CreateEntityInput): Entity {
 
 ```typescript
 // Tests use fixtures to create valid test data
-import { buildEntity } from 'domain-contracts/testing';
+import { buildEntity } from 'domain-contracts/testing'
 
 describe('entity service', () => {
   it('should create entity with valid input', () => {
-    const testEntity = buildEntity({ name: 'Custom Name' });
+    const testEntity = buildEntity({ name: 'Custom Name' })
 
     // Test implementation
-    const result = entityService.create(testEntity);
+    const result = entityService.create(testEntity)
 
-    expect(result.name).toBe('Custom Name');
-  });
-});
+    expect(result.name).toBe('Custom Name')
+  })
+})
 ```
 
 ## Key Principles

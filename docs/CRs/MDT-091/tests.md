@@ -369,7 +369,7 @@ And content MUST indicate data validation failure
 ```typescript
 // In stdio.ts and http.ts
 if (name === 'manage_cr_sections') {
-  throw new McpError(ErrorCode.ConnectionClosed, errorMessage); // code -32000
+  throw new McpError(ErrorCode.ConnectionClosed, errorMessage) // code -32000
 }
 ```
 

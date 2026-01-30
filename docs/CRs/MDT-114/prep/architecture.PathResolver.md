@@ -146,14 +146,14 @@ mcp-server/src/services/SectionManagement/
 ```typescript
 // validators/types.ts
 export interface ValidationResult {
-  valid: boolean;
-  normalized?: string;
-  errors: string[];
-  suggestions: string[];
+  valid: boolean
+  normalized?: string
+  errors: string[]
+  suggestions: string[]
 }
 
 export interface IPathValidator {
-  validate(path: string, availableSections?: string[]): ValidationResult;
+  validate: (path: string, availableSections?: string[]) => ValidationResult
 }
 ```
 
@@ -176,17 +176,17 @@ export class MatchValidator implements IPathValidator {
   constructor(private suggestionEngine: SuggestionEngine) {}
 
   validate(path: string, sections: string[]): ValidationResult {
-    const exactMatches = this.findExact(sections, path);
+    const exactMatches = this.findExact(sections, path)
 
     if (exactMatches.length === 0) {
-      return this.notFoundResult(path, sections);
+      return this.notFoundResult(path, sections)
     }
 
     if (exactMatches.length > 1) {
-      return this.multipleMatchResult(path, exactMatches);
+      return this.multipleMatchResult(path, exactMatches)
     }
 
-    return { valid: true, normalized: exactMatches[0] };
+    return { valid: true, normalized: exactMatches[0] }
   }
 }
 ```

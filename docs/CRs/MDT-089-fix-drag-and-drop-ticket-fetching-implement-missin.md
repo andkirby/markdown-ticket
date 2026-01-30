@@ -66,7 +66,7 @@ Implement missing ProjectController CRUD methods by delegating to existing Ticke
 | `src/hooks/useToast.ts` | Toast options interface | ToastOptions with description, duration, position |
 ### Integration Points
 | From | To | Interface |
-|------|----|-----------| 
+|------|----|-----------|
 | ProjectController.getCR() | TicketService.getCR() | projectId, crId → Ticket |
 | ProjectController.createCR() | TicketService.createCR() | projectId, crData → CreateCRResult |
 | ProjectController.updateCR() | TicketService.updateCRPartial() | projectId, crId, updates → UpdateCRResult |

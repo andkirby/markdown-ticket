@@ -9,7 +9,6 @@ description: The SEB project (Sentence Breakdown) appears incorrectly as 'SB' in
 rationale: Project codes should display accurately to avoid confusion and maintain consistency with configuration
 ---
 
-
 # SEB project code displays as SB in project selector
 
 ## 1. Description

@@ -209,11 +209,11 @@ utils/section/
 
 ```typescript
 interface ModifyDependencies {
-  file: { reader, writer };
-  section: { resolver, validator, formatter };
-  content: { processor, sanitizer };
-  cr: CRService;
-  markdown: MarkdownSectionService;
+  file: { reader, writer }
+  section: { resolver, validator, formatter }
+  content: { processor, sanitizer }
+  cr: CRService
+  markdown: MarkdownSectionService
 }
 ```
 

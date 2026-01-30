@@ -61,11 +61,12 @@ npm install react-router-dom @types/react-router-dom
 
 ### 3. Key Normalization
 ```typescript
-const normalizeTicketKey = (key: string) => {
-  const match = key.match(/^([A-Z]+)-(\d+)$/);
-  if (!match) return key;
-  return `${match[1]}-${match[2].padStart(3, '0')}`;
-};
+function normalizeTicketKey(key: string) {
+  const match = key.match(/^([A-Z]+)-(\d+)$/)
+  if (!match)
+    return key
+  return `${match[1]}-${match[2].padStart(3, '0')}`
+}
 ```
 
 ## Implementation Summary

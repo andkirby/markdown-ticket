@@ -147,15 +147,15 @@ shared/
 ```typescript
 // Base ticket document response (extended)
 interface TicketWithSubDocuments extends Ticket {
-  subDocuments?: SubDocument[]  // New: List of related documents
+  subDocuments?: SubDocument[] // New: List of related documents
 }
 
 // Sub-document metadata
 interface SubDocument {
-  id: string        // Document filename without extension
-  title: string     // Display title (filename without .md)
-  path: string      // Relative path from project root
-  content?: string  // Optional: pre-fetched content
+  id: string // Document filename without extension
+  title: string // Display title (filename without .md)
+  path: string // Relative path from project root
+  content?: string // Optional: pre-fetched content
 }
 ```
 

@@ -9,11 +9,11 @@ phaseEpic: undefined
 source: undefined
 impact: undefined
 effort: undefined
-relatedTickets: 
-supersedes: 
-dependsOn: 
-blocks: 
-relatedDocuments: 
+relatedTickets:
+supersedes:
+dependsOn:
+blocks:
+relatedDocuments:
 implementationDate: 2025-09-05T08:54:40.084Z
 implementationNotes: Status changed to Implemented on 9/5/2025
 lastModified: 2025-09-05T08:54:40.084Z
@@ -43,7 +43,7 @@ When users drag a ticket from one column to another in the frontend dashboard, t
 
 **Actual Root Cause Discovered**: Backend markdown parser was completely broken
 - Backend `getProjectCRs()` function could not read YAML frontmatter at all
-- Parser was expecting old markdown-style headers like `- **Status**: Value` 
+- Parser was expecting old markdown-style headers like `- **Status**: Value`
 - YAML frontmatter like `status: Approved` was not being parsed correctly
 - All tickets returned "Unknown" status regardless of actual file content
 - This caused incorrect column placement, making drag-drop appear broken

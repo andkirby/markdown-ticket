@@ -49,12 +49,12 @@ C4Container
     title Container Diagram - File Operations Architecture
 
     Person(user, "Developer")
-    
+
     Container_Boundary(frontend, "Frontend") {
         Container(cache_ui, "Cache Utils", "TypeScript", "Frontend cache management")
         Container(ui, "React UI", "TypeScript/React", "User interface components")
     }
-    
+
     Container_Boundary(Storage, "File System") {
         System_Ext(fs, "File System", "Project files and documents")
     }
@@ -141,7 +141,7 @@ sequenceDiagram
     Note over Watcher,FS: File changes
     FS->>Watcher: File modified
     Watcher->>Cache: Invalidate cache
-    
+
     Note over UI,API: Manual cache clear
     UI->>API: POST /api/cache/clear
     API->>Cache: Clear all cache
@@ -180,7 +180,7 @@ sequenceDiagram
 ```toml
 # ~/.config/markdown-ticket/config.toml
 [cache]
-ttl = 7200  # 2 hours cache TTL
+ttl = 7200 # 2 hours cache TTL
 ```
 ## Acceptance Criteria
 

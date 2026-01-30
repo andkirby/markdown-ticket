@@ -8,9 +8,6 @@ priority: Medium
 dependsOn: MDT-006
 ---
 
-
-
-
 # MCP configuration changes
 
 ## 1. Description
@@ -73,7 +70,10 @@ Enable flexible MCP deployment scenarios while maintaining backward compatibilit
 logLevel = "info"
 
 [discovery]
-scanPaths = ["/path/to/projects", "~/work"]
+scanPaths = [
+  "/path/to/projects",
+  "~/work"
+]
 cacheTimeout = 300
 
 [templates]
@@ -101,7 +101,7 @@ customPath = "~/.config/markdown-ticket/templates"
 - Environment variables enable container/deployment flexibility
 - Dual discovery supports both new registry and legacy workflows
 
-**Out of Scope**: 
+**Out of Scope**:
 - `activeMcp` flag postponed - not implemented in current design
 - Per-project MCP activation deferred to future enhancement
 ## 6. References
