@@ -103,7 +103,7 @@ Documents are markdown files outside the CRs directory.
 **Tags for document:**
 ```typescript
 // Use path hash or sanitized path as ID
-const docId = hashPath('/docs/guide.md');
+const docId = hashPath('/docs/guide.md')
 
 await cache.set({
   key: `doc:${docId}:meta`,
@@ -128,34 +128,34 @@ When a file changes, we need to determine **what** changed to invalidate correct
 
 ```typescript
 async function onFileChange(filePath: string, entity: 'ticket' | 'project' | 'doc') {
-  const entityId = extractId(filePath, entity);
+  const entityId = extractId(filePath, entity)
 
   // Read new content
-  const newContent = await readFile(filePath);
-  const { frontmatter: newMeta, body: newBody } = parse(newContent);
+  const newContent = await readFile(filePath)
+  const { frontmatter: newMeta, body: newBody } = parse(newContent)
 
   // Get cached versions
-  const cachedMeta = await cache.get({ key: `${entity}:${entityId}:meta` });
-  const cachedBody = await cache.get({ key: `${entity}:${entityId}:content` });
+  const cachedMeta = await cache.get({ key: `${entity}:${entityId}:meta` })
+  const cachedBody = await cache.get({ key: `${entity}:${entityId}:content` })
 
-  const tagsToInvalidate: string[] = [];
+  const tagsToInvalidate: string[] = []
 
   // Always invalidate entity instance (conservative)
-  tagsToInvalidate.push(`${entity}-${entityId}`);
+  tagsToInvalidate.push(`${entity}-${entityId}`)
 
   // Check what changed
   if (!deepEqual(newMeta, cachedMeta)) {
     // Frontmatter changed → affects list
-    tagsToInvalidate.push(`${entity}-${entityId}-meta`);
-    tagsToInvalidate.push(`${entity}s-list`);
+    tagsToInvalidate.push(`${entity}-${entityId}-meta`)
+    tagsToInvalidate.push(`${entity}s-list`)
   }
 
   if (newBody !== cachedBody) {
     // Body changed → doesn't affect list
-    tagsToInvalidate.push(`${entity}-${entityId}-content`);
+    tagsToInvalidate.push(`${entity}-${entityId}-content`)
   }
 
-  await cache.deleteByTag({ tags: tagsToInvalidate });
+  await cache.deleteByTag({ tags: tagsToInvalidate })
 }
 ```
 
@@ -165,12 +165,12 @@ If change detection is too complex, use conservative invalidation:
 
 ```typescript
 async function onFileChange(filePath: string, entity: 'ticket' | 'project' | 'doc') {
-  const entityId = extractId(filePath, entity);
+  const entityId = extractId(filePath, entity)
 
   // Invalidate everything for this entity + list
   await cache.deleteByTag({
     tags: [`${entity}-${entityId}`, `${entity}s-list`]
-  });
+  })
 }
 ```
 
@@ -237,7 +237,7 @@ If project config change affects how tickets are displayed:
 // Invalidate project AND all its tickets
 await cache.deleteByTag({
   tags: ['project-MDT', 'tickets-list']
-});
+})
 ```
 
 ## Tag Cardinality Guidelines
@@ -252,10 +252,10 @@ Per bentocache docs, avoid too many tags per entry:
 Example (ticket metadata):
 ```typescript
 tags: [
-  'ticket-MDT-001',       // 1. Entity instance
-  'ticket-MDT-001-meta',  // 2. Specific aspect
-  'ticket-meta',          // 3. All metadata (optional)
-  'tickets-list'          // 4. Collection
+  'ticket-MDT-001', // 1. Entity instance
+  'ticket-MDT-001-meta', // 2. Specific aspect
+  'ticket-meta', // 3. All metadata (optional)
+  'tickets-list' // 4. Collection
 ]
 // 4 tags — acceptable
 ```

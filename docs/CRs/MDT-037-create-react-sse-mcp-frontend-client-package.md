@@ -97,16 +97,16 @@ stream_frontend_logs(filter?: string): string // SSE endpoint URL
 
 ### React Hook API
 ```typescript
-const useMCPClient = () => {
-  const [isActive, setIsActive] = useState(false);
-  
+function useMCPClient() {
+  const [isActive, setIsActive] = useState(false)
+
   // Polls session status every 5 seconds
   // Intercepts console only when active
   // Batches logs and sends via POST
   // Auto-cleanup on unmount
-  
-  return { isActive, sessionId };
-};
+
+  return { isActive, sessionId }
+}
 ```
 
 ### Backend Session Management

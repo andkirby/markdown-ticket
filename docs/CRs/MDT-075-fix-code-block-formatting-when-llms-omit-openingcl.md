@@ -7,8 +7,6 @@ type: Bug Fix
 priority: Medium
 ---
 
-
-
 # Fix code block formatting when LLMs omit opening/closing triple backticks
 
 ## 1. Description

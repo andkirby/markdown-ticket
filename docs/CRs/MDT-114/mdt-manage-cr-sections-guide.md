@@ -24,11 +24,11 @@
 
 ```json
 {
-  "project": "TSM",           // Required: Project code
-  "key": "TSM-002",           // Required: CR key (e.g., TSM-002)
-  "operation": "list",        // Required: list|get|replace|append|prepend
-  "section": "## 1. Description",  // Required for get/replace/append/prepend
-  "content": "New content"    // Required for replace/append/prepend
+  "project": "TSM", // Required: Project code
+  "key": "TSM-002", // Required: CR key (e.g., TSM-002)
+  "operation": "list", // Required: list|get|replace|append|prepend
+  "section": "## 1. Description", // Required for get/replace/append/prepend
+  "content": "New content" // Required for replace/append/prepend
 }
 ```
 
@@ -290,7 +290,7 @@ When a subsection has duplicates:
 // Instead of trying to access "### Functional" directly
 {
   "operation": "replace",
-  "section": "## 4. Acceptance Criteria",  // Parent
+  "section": "## 4. Acceptance Criteria", // Parent
   "content": "### Functional\n\n- [ ] Item 1\n\n### Non-Functional\n\n- [ ] Item 2\n"
 }
 ```
@@ -323,12 +323,12 @@ When a subsection has duplicates:
 
 **Step 1**: List sections to find the correct name
 ```json
-{"operation": "list", "project": "TSM", "key": "TSM-002"}
+{ "operation": "list", "project": "TSM", "key": "TSM-002" }
 ```
 
 **Step 2**: Get current content to see where to add
 ```json
-{"operation": "get", "section": "## 4. Acceptance Criteria", "project": "TSM", "key": "TSM-002"}
+{ "operation": "get", "section": "## 4. Acceptance Criteria", "project": "TSM", "key": "TSM-002" }
 ```
 
 **Step 3**: Append the reference
@@ -351,7 +351,7 @@ When a subsection has duplicates:
 **❌ WRONG APPROACH**:
 ```json
 {
-  "section": "### Functional",  // Multiple matches!
+  "section": "### Functional", // Multiple matches!
   "operation": "replace",
   "content": "..."
 }
@@ -361,7 +361,7 @@ When a subsection has duplicates:
 **✅ CORRECT APPROACH**: Target the parent section
 ```json
 {
-  "section": "## 4. Acceptance Criteria",  // Parent (unique)
+  "section": "## 4. Acceptance Criteria", // Parent (unique)
   "operation": "replace",
   "content": "### Functional\n\n- [ ] New item 1\n- [ ] New item 2\n\n### Non-Functional\n\n[existing content]\n\n### Edge Cases\n\n[existing content]\n"
 }
@@ -403,12 +403,12 @@ Multiple sections match "### Functional". Please use a hierarchical path:
 
 1. **Target the parent section instead**:
    ```json
-   {"section": "## 4. Acceptance Criteria", "operation": "replace", "content": "..."}
+   { "section": "## 4. Acceptance Criteria", "operation": "replace", "content": "..." }
    ```
 
 2. **Use `get` with hierarchical path** (if supported):
    ```json
-   {"section": "# CR Title / ## 4. Acceptance Criteria / ### Functional", "operation": "get"}
+   { "section": "# CR Title / ## 4. Acceptance Criteria / ### Functional", "operation": "get" }
    ```
 
 3. **Be more specific in section name** (if possible):
@@ -455,7 +455,7 @@ Suggestions:
 
 1. **Run `list` to see actual structure**:
    ```json
-   {"operation": "list", "project": "TSM", "key": "TSM-002"}
+   { "operation": "list", "project": "TSM", "key": "TSM-002" }
    ```
 
 2. **Check for typos**:
@@ -531,7 +531,7 @@ Suggestions:
 
 **Step 1**: Get current content
 ```json
-{"operation": "get", "section": "### Problem", "project": "TSM", "key": "TSM-002"}
+{ "operation": "get", "section": "### Problem", "project": "TSM", "key": "TSM-002" }
 ```
 
 **Step 2**: Replace with numbered format
@@ -553,7 +553,7 @@ Suggestions:
 
 **Step 1**: Get current content
 ```json
-{"operation": "get", "section": "## 4. Acceptance Criteria", "project": "TSM", "key": "TSM-002"}
+{ "operation": "get", "section": "## 4. Acceptance Criteria", "project": "TSM", "key": "TSM-002" }
 ```
 
 **Step 2**: Replace with reorganized content
@@ -576,7 +576,7 @@ Suggestions:
 **Wrong**:
 ```json
 // Jump straight to replace
-{"operation": "replace", "section": "### Problem", "content": "..."}
+{ "operation": "replace", "section": "### Problem", "content": "..." }
 // ERROR IF section name is wrong
 ```
 
@@ -613,7 +613,7 @@ Suggestions:
 {
   "operation": "append",
   "section": "### Problem",
-  "content": "> **Note**: See requirements.md"  // No newline at start
+  "content": "> **Note**: See requirements.md" // No newline at start
 }
 // Result: > **Note**:... gets appended to last line, not new line
 ```
@@ -623,7 +623,7 @@ Suggestions:
 {
   "operation": "append",
   "section": "### Problem",
-  "content": "\n> **Note**: See requirements.md"  // Leading \n
+  "content": "\n> **Note**: See requirements.md" // Leading \n
 }
 // Result: Note appears on new line at end
 ```
@@ -635,7 +635,7 @@ Suggestions:
 **Wrong**:
 ```json
 // Replace without seeing current content
-{"operation": "replace", "section": "### Problem", "content": "New content"}
+{ "operation": "replace", "section": "### Problem", "content": "New content" }
 // Oops, you just deleted important content!
 ```
 
@@ -679,7 +679,7 @@ Suggestions:
 
 Before any modification, run `list` to see the structure:
 ```json
-{"operation": "list", "project": "XXX", "key": "XXX-000"}
+{ "operation": "list", "project": "XXX", "key": "XXX-000" }
 ```
 
 ### ✅ Use `get` Before `replace`

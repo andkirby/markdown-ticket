@@ -11,8 +11,6 @@ implementationDate: 2025-09-11T18:29:31.027Z
 implementationNotes: Status changed to Implemented on 9/11/2025
 ---
 
-
-
 # Implement MCP partial update functionality for CR field updates
 
 ## Problem Statement
@@ -96,9 +94,9 @@ New MCP tool: `mcp__mdt-tickets__update_cr(projectCode, crCode, updateData)`
 
 Example usage:
 ```typescript
-mcp__mdt-tickets__update_cr("mdt", "MDT-009", {
-  priority: "High",
-  phaseEpic: "Performance Phase"
+mcp__mdt - tickets__update_cr('mdt', 'MDT-009', {
+  priority: 'High',
+  phaseEpic: 'Performance Phase'
 })
 ```
 

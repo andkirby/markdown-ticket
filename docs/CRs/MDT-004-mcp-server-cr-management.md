@@ -109,7 +109,7 @@ A Model Context Protocol (MCP) server that provides universal programmatic acces
 list_projects(): Project[]
 get_project_info(key: string): ProjectInfo
 
-// CR Operations  
+// CR Operations
 list_crs(project: string, filters?: CRFilters): CR[]
 get_cr(project: string, key: string): CR
 create_cr(project: string, type: CRType, data: CRData): CR
@@ -152,10 +152,18 @@ port = 8000
 logLevel = "info"
 
 [discovery]
-scanPaths = ["~/", "~/projects", "~/work"]
-excludePaths = ["node_modules", ".git", "vendor"]
+scanPaths = [
+  "~/",
+  "~/projects",
+  "~/work"
+]
+excludePaths = [
+  "node_modules",
+  ".git",
+  "vendor"
+]
 maxDepth = 4
-cacheTimeout = 300  # seconds
+cacheTimeout = 300 # seconds
 
 [templates]
 customPath = "~/.config/mcp-cr-server/templates"

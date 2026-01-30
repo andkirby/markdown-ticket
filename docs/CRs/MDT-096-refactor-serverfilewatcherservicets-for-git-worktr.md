@@ -55,7 +55,7 @@ This refactoring work depends on MDT-097 (ProjectFactory refactoring). The Proje
 - Components: 5 (PathWatcherService, PathWatcher, SSEBroadcaster, ClientManager, Facade)
 - Key constraint: Each service ≤150 lines, total reduction from 439 to 525 lines (with tests)
 
-**Extension Rule**: 
+**Extension Rule**:
 - Path features: Add to `PathWatcherService` (limit 150 lines)
 - SSE features: Add to `SSEBroadcaster` (limit 125 lines) or `ClientManager` (limit 100 lines)
 ## 3. Open Questions

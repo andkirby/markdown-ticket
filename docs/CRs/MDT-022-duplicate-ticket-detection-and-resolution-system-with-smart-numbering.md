@@ -16,7 +16,7 @@ lastModified: 2025-09-07T00:25:57.000Z
 Users encountered React warnings about duplicate keys (e.g., DEB-016) which indicated multiple tickets with the same code. This causes:
 
 - **UI Issues**: Visual glitches, components appearing/disappearing
-- **Drag & Drop Problems**: Incorrect ticket movement behavior  
+- **Drag & Drop Problems**: Incorrect ticket movement behavior
 - **State Management Issues**: React reconciliation failures
 - **Data Integrity**: Multiple files with same ticket code
 
@@ -78,7 +78,7 @@ Applied smart numbering to all ticket creation points:
 
 ### API Endpoints Added
 - `GET /api/duplicates/:projectId` - Detect duplicate tickets
-- `POST /api/duplicates/resolve` - Rename or delete duplicates  
+- `POST /api/duplicates/resolve` - Rename or delete duplicates
 - `POST /api/duplicates/preview` - Preview rename changes
 
 ### Helper Functions
@@ -94,7 +94,7 @@ Applied smart numbering to all ticket creation points:
 - ❌ Risk of number conflicts from inconsistent logic
 - ❌ No way to resolve duplicates easily
 
-### After  
+### After
 - ✅ **Automatic detection** with clear error modal
 - ✅ **One-click resolution** with preview
 - ✅ **Intelligent numbering** prevents all conflicts

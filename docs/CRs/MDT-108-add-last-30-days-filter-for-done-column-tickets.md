@@ -96,7 +96,7 @@ priority: Medium
 ## 5. Verification
 
 ### How to Verify Success
-- **Manual verification**: 
+- **Manual verification**:
   1. Load board view with tickets in Done column
   2. Verify "30" button appears next to rejected button with orange styling
   3. Verify filter is ON by default (old tickets hidden)
@@ -104,12 +104,12 @@ priority: Medium
   5. Click button to toggle ON, verify only recent Done tickets appear
   6. Check button styling matches rejected button in all states (default, hover, active)
 
-- **Automated verification**: 
+- **Automated verification**:
   - Unit tests for date filtering logic (30-day boundary, edge cases)
   - Component tests for button rendering and toggle behavior
   - Integration tests for filter state management
 
-- **Icon verification**: 
+- **Icon verification**:
   - Confirm `designs/icon_30days.png` converted to .webp
   - Confirm .webp dimensions match existing toolbar icons
   - Confirm icon displays correctly in light and dark themes (if applicable)

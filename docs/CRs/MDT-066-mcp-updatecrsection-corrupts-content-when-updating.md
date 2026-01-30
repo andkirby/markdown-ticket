@@ -7,7 +7,6 @@ type: Bug Fix
 priority: Critical
 ---
 
-
 # MCP update_cr_section Corrupts Content When Updating H1 Headers
 
 **📋 Testing Plan**: [MDT-066-Testing-Plan.md](../../MDT-066-Testing-Plan.md)
@@ -71,28 +70,28 @@ The fix was implemented in `/shared/services/MarkdownSectionService.ts` by enhan
 // Special handling for H1 sections to prevent data loss
 if (section.headerLevel === 1) {
   // Check if this is a header-only replacement (potential data corruption scenario)
-  const isHeaderOnlyReplacement = newContent.trim() === '' ||
-    (newContent.trim().startsWith('#') && newContent.trim().split('\n').length === 1);
+  const isHeaderOnlyReplacement = newContent.trim() === ''
+    || (newContent.trim().startsWith('#') && newContent.trim().split('\n').length === 1)
 
   if (isHeaderOnlyReplacement && section.content.trim()) {
     // WARNING: This operation would cause data loss for H1 sections
-    console.warn(`⚠️  WARNING: Detected potentially destructive operation on H1 section "${section.headerText}"`);
-    console.warn(`   The section contains ${section.content.length} characters of content that would be deleted.`);
-    console.warn(`   Consider using 'append' or 'prepend' operations, or provide content to preserve subsections.`);
+    console.warn(`⚠️  WARNING: Detected potentially destructive operation on H1 section "${section.headerText}"`)
+    console.warn(`   The section contains ${section.content.length} characters of content that would be deleted.`)
+    console.warn(`   Consider using 'append' or 'prepend' operations, or provide content to preserve subsections.`)
 
     // For H1 sections with existing content, preserve subsections when doing header-only replacement
-    const subsections = this.extractSubsections(section.content);
+    const subsections = this.extractSubsections(section.content)
 
     if (subsections.length > 0) {
-      console.warn(`   Preserving ${subsections.length} existing subsection(s) to prevent data loss.`);
-      
+      console.warn(`   Preserving ${subsections.length} existing subsection(s) to prevent data loss.`)
+
       // Build new content that includes preserved subsections
-      const preservedContent = subsections.join('\n\n');
-      const contentLines = newContent.trim() ?
-        [newContent.trim(), '', preservedContent] :
-        [preservedContent];
-      
-      return [...before, ...contentLines, ...after].join('\n');
+      const preservedContent = subsections.join('\n\n')
+      const contentLines = newContent.trim()
+        ? [newContent.trim(), '', preservedContent]
+        : [preservedContent]
+
+      return [...before, ...contentLines, ...after].join('\n')
     }
   }
 }
@@ -148,7 +147,7 @@ private static extractSubsections(content: string): string[] {
 
 The implementation successfully addresses all aspects of MDT-066:
 - ✅ Prevents silent data loss when updating H1 headers
-- ✅ Preserves all existing subsection content automatically  
+- ✅ Preserves all existing subsection content automatically
 - ✅ Provides clear warnings for potentially destructive operations
 - ✅ Maintains full backward compatibility
 - ✅ Tested with comprehensive scenarios including edge cases

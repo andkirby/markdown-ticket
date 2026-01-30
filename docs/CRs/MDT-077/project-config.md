@@ -15,14 +15,14 @@ Current TypeScript interfaces have confusing and incorrect naming that doesn't m
 // BAD - Creates project.project anti-pattern
 interface LocalProjectConfig {
   project: {
-    name: string;
-    code: string;
+    name: string
+    code: string
     // ...
-  };
+  }
   document: {
-    paths: string[];
+    paths: string[]
     // ...
-  };
+  }
 }
 
 // Usage is ugly: config.project.project.name
@@ -33,19 +33,19 @@ interface LocalProjectConfig {
 ```typescript
 // GOOD - Direct mapping to TOML
 interface LocalProjectConfig {
-  name: string;        // Direct access to [project] name
-  code: string;        // Direct access to [project] code
-  id: string;
-  ticketsPath?: string;
-  description?: string;
-  repository?: string;
-  active: boolean;
+  name: string // Direct access to [project] name
+  code: string // Direct access to [project] code
+  id: string
+  ticketsPath?: string
+  description?: string
+  repository?: string
+  active: boolean
 
-  document: {          // Maps to [project.document]
-    paths?: string[];
-    excludeFolders?: string[];
-    maxDepth?: number;
-  };
+  document: { // Maps to [project.document]
+    paths?: string[]
+    excludeFolders?: string[]
+    maxDepth?: number
+  }
 }
 
 // Usage is clean: config.name

@@ -97,14 +97,14 @@ path = "docs/CRs"
 
 # Documents configuration (under [project] section)
 document_paths = [
-    "README.md",           # Single file from root
-    "docs",               # Directory (will scan for .md files)
-    "CHANGELOG.md"        # Another single file
+  "README.md", # Single file from root
+  "docs", # Directory (will scan for .md files)
+  "CHANGELOG.md" # Another single file
 ]
 exclude_folders = [
-    "docs/CRs",           # Exclude tickets folder
-    "node_modules",
-    ".git"
+  "docs/CRs", # Exclude tickets folder
+  "node_modules",
+  ".git"
 ]
 max_depth = 3
 ```

@@ -77,7 +77,7 @@ Implement TypeScript CLI tool with centralized configuration management and envi
 - Environment pattern: CONFIG_DIR support with automatic directory creation
 ## 4. Implementation Specification
 
-### Components 
+### Components
 
 #### Configuration CLI Tool (`shared/tools/config-cli.ts`)
 - Command parser for operations: get, set, show, init

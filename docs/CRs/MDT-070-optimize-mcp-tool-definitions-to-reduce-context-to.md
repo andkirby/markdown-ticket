@@ -9,8 +9,6 @@ implementationDate: 2025-10-18T11:59:30.179Z
 implementationNotes: Status changed to Implemented on 10/18/2025
 ---
 
-
-
 # Optimize MCP tool definitions to reduce context token usage by 40%
 
 ## 1. Description
@@ -81,7 +79,7 @@ The MCP server tools currently consume 14,000 tokens in Claude Code's context wi
 get_cr_full_content(project, key)
 get_cr_attributes(project, key)
 
-// After  
+// After
 get_cr(project, key, mode?: "full" | "attributes" | "metadata")
 // Default: "full" for backward compatibility
 ```
@@ -195,7 +193,7 @@ get_cr_template(type?: string)  // Omit type to list all
 # Before optimization
 node -e "console.log(JSON.stringify(require('./mcp-server/src/index.ts').tools).length)"
 
-# After optimization  
+# After optimization
 # Compare output to verify ≥5k character reduction (roughly proportional to tokens)
 ```
 

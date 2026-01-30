@@ -32,9 +32,9 @@ priority: High
 ### Prep Architecture
 
 > **Prep Required**: Complexity refactoring needed before feature implementation
-> 
+>
 > Detailed preparatory refactoring design: [prep/architecture.md](./MDT-114/prep/architecture.md)
-> 
+>
 > **Summary**: Extract `SectionHandlers` (410 lines, CC: 40, MI: 19.97%) into strategy pattern + utilities to reduce complexity and enable hierarchical path parsing. Refactoring preserves all 23 behavioral tests and reduces CC by 50%.
 ## 2. Decision
 

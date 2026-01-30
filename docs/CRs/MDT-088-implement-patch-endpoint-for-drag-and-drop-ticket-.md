@@ -107,7 +107,7 @@ Implement the missing PATCH endpoint in ProjectController with proper status upd
 - **Error Handling**: Updated `server/controllers/ProjectController.ts` to return appropriate HTTP status codes (400 for validation errors, 403 for permissions, 404 for not found) instead of generic 500 errors
 - **Status Validation**: Clarified that status transition validation occurs in `shared/services/TicketService.ts` via STATUS_CONFIG, not in the controller
 
-#### Edge Case Discoveries  
+#### Edge Case Discoveries
 - **Invalid Status Values**: CR files may contain invalid status values (e.g., "Open" in MDT-084) that don't exist in CRStatus type; these should be validated and corrected
 
 #### Verification Updates
@@ -124,7 +124,7 @@ Implement the missing PATCH endpoint in ProjectController with proper status upd
 - **Finding**: Comprehensive test suite (22 tests) created during MDT-089 validates the PATCH endpoint
 - **Impact**: Automated verification approach added beyond manual testing
 
-#### Dependency Injection Clarification  
+#### Dependency Injection Clarification
 - **Artifact**: `server/server.ts`
 - **Finding**: TicketService dependency was already injected into ProjectController
 - **Impact**: Scope updated to remove incorrect "Missing dependency" item
@@ -147,7 +147,7 @@ Implement the missing PATCH endpoint in ProjectController with proper status upd
 - **Finding**: Comprehensive test suite (22 tests) created during MDT-089 validates the PATCH endpoint
 - **Impact**: Automated verification approach added beyond manual testing
 
-#### Dependency Injection Clarification  
+#### Dependency Injection Clarification
 - **Artifact**: `server/server.ts`
 - **Finding**: TicketService dependency was already injected into ProjectController
 - **Impact**: Scope updated to remove incorrect "Missing dependency" item

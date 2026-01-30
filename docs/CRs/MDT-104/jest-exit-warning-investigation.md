@@ -33,11 +33,11 @@ Refactor backend server to be importable directly:
 
 ```typescript
 // Instead of: spawn('npm', ['run', 'dev:server'])
-import { createServer } from '../../../server/src/app.js';
+import { createServer } from '../../../server/src/app.js'
 
-const server = await createServer({ port, configDir });
+const server = await createServer({ port, configDir })
 // ... tests ...
-await server.close(); // Clean shutdown, same process
+await server.close() // Clean shutdown, same process
 ```
 
 This eliminates process tree management entirely.
@@ -52,11 +52,11 @@ The cleanest solution would be to refactor the backend server, so it can be impo
 
 ```typescript
 // Instead of spawning npm run dev:server
-import { createServer } from '../../../server/src/app.js';
+import { createServer } from '../../../server/src/app.js'
 
-const server = await createServer({ port: 4001, configDir: testEnv.getConfigDirectory() });
+const server = await createServer({ port: 4001, configDir: testEnv.getConfigDirectory() })
 // ... run tests ...
-await server.close(); // Clean shutdown, no orphan processes
+await server.close() // Clean shutdown, no orphan processes
 ```
 
 This eliminates the process tree problem entirely.

@@ -53,8 +53,8 @@ Implement a multi-layered detection approach:
 ```typescript
 // In scanDirectoryForProjects method
 if (this.isGitWorktree(dirPath)) {
-    console.log(`Skipping git worktree: ${dirPath}`);
-    return; // Skip this directory
+  console.log(`Skipping git worktree: ${dirPath}`)
+  // Skip this directory
 }
 ```
 
@@ -62,9 +62,9 @@ if (this.isGitWorktree(dirPath)) {
 ```typescript
 // Use setImmediate to avoid blocking startup
 setImmediate(() => {
-    // Build worktree cache asynchronously
-    this.buildWorktreeCache();
-});
+  // Build worktree cache asynchronously
+  this.buildWorktreeCache()
+})
 ```
 
 ### Error Handling
@@ -83,19 +83,19 @@ The worktree detection logic should be applied to all directory scanning operati
 ```typescript
 // In scanDirectoryForProjects method - apply to ALL directories
 for (const entry of entries) {
-    if (entry.isDirectory() && !entry.name.startsWith('.')) {
-        const subDirPath = path.join(dirPath, entry.name);
-        
-        // Apply worktree exclusion to ALL subdirectories
-        if (this.isGitWorktree(subDirPath)) {
-            console.log(`Skipping git worktree subdirectory: ${subDirPath}`);
-            continue;
-        }
-        
-        // Then continue with normal project detection logic
-        // (checking for .mdt-config.toml, etc.)
-        this.scanDirectoryForProjects(subDirPath, discovered, maxDepth - 1);
+  if (entry.isDirectory() && !entry.name.startsWith('.')) {
+    const subDirPath = path.join(dirPath, entry.name)
+
+    // Apply worktree exclusion to ALL subdirectories
+    if (this.isGitWorktree(subDirPath)) {
+      console.log(`Skipping git worktree subdirectory: ${subDirPath}`)
+      continue
     }
+
+    // Then continue with normal project detection logic
+    // (checking for .mdt-config.toml, etc.)
+    this.scanDirectoryForProjects(subDirPath, discovered, maxDepth - 1)
+  }
 }
 ```
 
@@ -113,7 +113,7 @@ The current project discovery system scans directories for `.mdt-config.toml` fi
 ```
 markdown-ticket (main)
 markdown-ticket-aws-counter (worktree)
-markdown-ticket-smart-link (worktree) 
+markdown-ticket-smart-link (worktree)
 markdown-ticket-clone (separate repo)
 ```
 
@@ -156,7 +156,7 @@ The worktree detection logic should be integrated into:
 - Modify `scanDirectoryForProjects()` to skip worktree directories
 - Implement caching and asynchronous verification
 
-**Server Project Discovery** (`server/projectDiscovery.js`) 
+**Server Project Discovery** (`server/projectDiscovery.js`)
 - Leverage the shared service implementation (already uses shared ProjectService)
 - No additional changes needed if shared service is properly implemented
 
@@ -186,8 +186,8 @@ Implement a multi-layered detection approach:
 ```typescript
 // In scanDirectoryForProjects method
 if (this.isGitWorktree(dirPath)) {
-    console.log(`Skipping git worktree: ${dirPath}`);
-    return; // Skip this directory
+  console.log(`Skipping git worktree: ${dirPath}`)
+  // Skip this directory
 }
 ```
 
@@ -195,9 +195,9 @@ if (this.isGitWorktree(dirPath)) {
 ```typescript
 // Use setImmediate to avoid blocking startup
 setImmediate(() => {
-    // Build worktree cache asynchronously
-    this.buildWorktreeCache();
-});
+  // Build worktree cache asynchronously
+  this.buildWorktreeCache()
+})
 ```
 
 ### Error Handling

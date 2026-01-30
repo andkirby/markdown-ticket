@@ -323,8 +323,8 @@ All error responses follow this format per OpenAPI spec:
 
 ```json
 {
-  "error": "Bad Request",        // HTTP status reason phrase
-  "message": "Project ID is required"  // Specific error details
+  "error": "Bad Request", // HTTP status reason phrase
+  "message": "Project ID is required" // Specific error details
 }
 ```
 
@@ -338,10 +338,10 @@ All error responses follow this format per OpenAPI spec:
 **Test assertions** use the `message` field:
 ```typescript
 // ✅ Correct - check message field for specific error details
-assertErrorMessage(response, 'Project ID is required');
+assertErrorMessage(response, 'Project ID is required')
 
 // ❌ Wrong - error field only contains HTTP status name
-expect(response.body.error).toBe('Bad Request');  // Too generic
+expect(response.body.error).toBe('Bad Request') // Too generic
 ```
 
 ## Verification

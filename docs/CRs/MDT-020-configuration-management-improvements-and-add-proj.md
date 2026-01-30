@@ -8,14 +8,13 @@ priority: Medium
 phaseEpic: Configuration & UX
 ---
 
-
 # Configuration Management Improvements and Add Project UI
 
 ## 1. Description
 
 ### Problem Statement
 Currently configuration management is fragmented across different locations:
-- **MCP Server**: `~/.mcp-server.toml` 
+- **MCP Server**: `~/.mcp-server.toml`
 - **Web Application**: `~/.config/markdown-ticket/projects/*`
 
 This creates inconsistency and confusion. Additionally, there's no user-friendly way to add new projects - users must manually create configuration files.
@@ -53,7 +52,7 @@ Currently configuration is scattered across different locations (~/.mcp-server.t
 
 **Update affected components:**
 - `mcp-server/src/config/index.ts` - update config path resolution
-- `docs/MCP_SERVER_GUIDE.md` - update documentation  
+- `docs/MCP_SERVER_GUIDE.md` - update documentation
 - `README.md` - update setup instructions
 
 ### 2.2 Add Project UI Components
@@ -78,7 +77,7 @@ POST /api/projects/create
 - Creates project config file in ~/.config/markdown-ticket/projects/
 - Returns created project info
 
-GET /api/system/directories  
+GET /api/system/directories
 - Lists available directories for project path selection
 ```
 
@@ -126,12 +125,12 @@ GET /api/system/directories
 // OLD path resolution
 const configPaths = [
   path.join(os.homedir(), '.mcp-server.toml')
-];
+]
 
-// NEW path resolution  
+// NEW path resolution
 const configPaths = [
   path.join(os.homedir(), '.config', 'markdown-ticket', 'mcp-server.toml')
-];
+]
 ```
 
 **React Components Needed:**

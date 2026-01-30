@@ -86,7 +86,7 @@ The domain-contracts package provides schemas that validate the structure of con
 
 **schema.ts (Entity definition)**
 ```typescript
-import { z } from 'zod';
+import { z } from 'zod'
 
 // Project entity schema with field validation ONLY
 export const ProjectSchema = z.object({
@@ -98,20 +98,20 @@ export const ProjectSchema = z.object({
   repository: z.string().optional(),
   active: z.boolean().optional().default(true),
   // NO cross-field validation (e.g., id matching directory name)
-});
+})
 
 // Document configuration schema
 export const DocumentConfigSchema = z.object({
   paths: z.array(z.string()).default([]),
   excludeFolders: z.array(z.string()).default([]),
   maxDepth: z.number().int().min(1).max(10).default(3),
-});
+})
 
 // Complete project configuration schema
 export const ProjectConfigSchema = z.object({
-  project: ProjectSchema,
+  'project': ProjectSchema,
   'project.document': DocumentConfigSchema.optional(),
-});
+})
 
 // Input schemas (derived from entity)
 export const CreateProjectInputSchema = ProjectSchema.pick({
@@ -119,38 +119,38 @@ export const CreateProjectInputSchema = ProjectSchema.pick({
   name: true,
   id: true,
   ticketsPath: true,
-}).partial();
+}).partial()
 
 // TypeScript types (inferred)
-export type Project = z.infer<typeof ProjectSchema>;
-export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
-export type DocumentConfig = z.infer<typeof DocumentConfigSchema>;
-export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>;
+export type Project = z.infer<typeof ProjectSchema>
+export type ProjectConfig = z.infer<typeof ProjectConfigSchema>
+export type DocumentConfig = z.infer<typeof DocumentConfigSchema>
+export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>
 ```
 
 **validation.ts (Wrapper functions only)**
 ```typescript
 import {
-  ProjectSchema,
+  CreateProjectInputSchema,
   ProjectConfigSchema,
-  CreateProjectInputSchema
-} from './schema';
+  ProjectSchema
+} from './schema'
 
 // Simple validation wrappers - NO business logic
 export function validateProject(input: unknown): Project {
-  return ProjectSchema.parse(input);
+  return ProjectSchema.parse(input)
 }
 
 export function validateProjectConfig(input: unknown): ProjectConfig {
-  return ProjectConfigSchema.parse(input);
+  return ProjectConfigSchema.parse(input)
 }
 
 export function safeValidateProject(input: unknown) {
-  return ProjectSchema.safeParse(input);
+  return ProjectSchema.safeParse(input)
 }
 
 export function validateCreateProjectInput(input: unknown): CreateProjectInput {
-  return CreateProjectInputSchema.parse(input);
+  return CreateProjectInputSchema.parse(input)
 }
 ```
 
@@ -161,17 +161,14 @@ export function validateCreateProjectInput(input: unknown): CreateProjectInput {
 // In DocumentConfigSchema
 export const DocumentConfigSchema = z.object({
   paths: z.array(z.string())
-    .refine((paths) => paths.every(p => !p.includes('..')),
-           { message: 'Parent directory references (..) not allowed in paths' })
-    .refine((paths) => paths.every(p => !p.startsWith('/')),
-           { message: 'Absolute paths not allowed, use relative paths only' })
+    .refine(paths => paths.every(p => !p.includes('..')), { message: 'Parent directory references (..) not allowed in paths' })
+    .refine(paths => paths.every(p => !p.startsWith('/')), { message: 'Absolute paths not allowed, use relative paths only' })
     .min(1, 'At least one path required'),
   excludeFolders: z.array(z.string())
-    .refine((folders) => folders.every(f => !f.includes('/')),
-           { message: 'Exclude folders must be folder names, not paths' })
+    .refine(folders => folders.every(f => !f.includes('/')), { message: 'Exclude folders must be folder names, not paths' })
     .min(1, 'At least one folder to exclude'),
   maxDepth: z.number().int().min(1).max(10),
-});
+})
 ```
 
 **What belongs in services (business rules)**:
@@ -182,9 +179,9 @@ export const DocumentConfigSchema = z.object({
 
 Example security validation in service:
 ```typescript
+import { existsSync, lstatSync } from 'node:fs'
 // In shared/services/project-validation.ts
-import { resolve, join } from 'path';
-import { existsSync, lstatSync } from 'fs';
+import { join, resolve } from 'node:path'
 
 export function validateDocumentPaths(
   config: DocumentConfig,
@@ -192,29 +189,29 @@ export function validateDocumentPaths(
 ): ValidationResult {
   for (const path of config.paths) {
     // Resolve path to check for traversal attempts
-    const resolvedPath = resolve(projectRoot, path);
+    const resolvedPath = resolve(projectRoot, path)
 
     // Security check: ensure resolved path is within project root
     if (!resolvedPath.startsWith(resolve(projectRoot))) {
-      throw new Error(`Path traversal detected: ${path}`);
+      throw new Error(`Path traversal detected: ${path}`)
     }
 
     // Check if path exists and is safe
     if (!existsSync(resolvedPath)) {
-      throw new Error(`Path does not exist: ${path}`);
+      throw new Error(`Path does not exist: ${path}`)
     }
 
     // Additional check for symlinks
-    const stats = lstatSync(resolvedPath);
+    const stats = lstatSync(resolvedPath)
     if (stats.isSymbolicLink()) {
-      const linkTarget = resolve(projectRoot, readlinkSync(resolvedPath));
+      const linkTarget = resolve(projectRoot, readlinkSync(resolvedPath))
       if (!linkTarget.startsWith(resolve(projectRoot))) {
-        throw new Error(`Symlink points outside project: ${path}`);
+        throw new Error(`Symlink points outside project: ${path}`)
       }
     }
   }
 
-  return { valid: true };
+  return { valid: true }
 }
 ```
 
@@ -484,14 +481,15 @@ These are implemented in `shared/services` using the contracts.
 describe('ProjectSchema', () => {
   it('should reject invalid key format', () => {
     expect(() => ProjectSchema.parse({ key: 'invalid' }))
-      .toThrow('2-5 uppercase letters');
-  });
+      .toThrow('2-5 uppercase letters')
+  })
 
   it('should accept valid project', () => {
     expect(() => ProjectSchema.parse(validProject))
-      .not.toThrow();
-  });
-});
+      .not
+      .toThrow()
+  })
+})
 ```
 
 ### 6.2 Service Tests (shared package)
@@ -500,9 +498,9 @@ describe('ProjectSchema', () => {
 describe('projectService', () => {
   it('should validate cross-field rules', () => {
     expect(() => projectService.create({ active: false, path: undefined }))
-      .toThrow('Inactive project must have path');
-  });
-});
+      .toThrow('Inactive project must have path')
+  })
+})
 ```
 
 ### 6.3 Integration Tests
@@ -511,14 +509,14 @@ describe('projectService', () => {
 describe('Project Creation Flow', () => {
   it('should validate shape then business rules', async () => {
     // 1. Contract validates shape
-    const validated = validateProject(input);
+    const validated = validateProject(input)
 
     // 2. Service validates business rules
-    const result = await projectService.create(validated);
+    const result = await projectService.create(validated)
 
-    expect(result).toBeDefined();
-  });
-});
+    expect(result).toBeDefined()
+  })
+})
 ```
 
 ## 7. Error Handling Pattern
@@ -560,17 +558,17 @@ describe('Project Creation Flow', () => {
 
 ### 8.2 Consumer Migration
 ```typescript
-// Before
-import type { Project } from '../shared/models';
-import { validate } from '../shared/validation';
-
 // After
-import type { Project, validateProject } from '@mdt/domain-contracts';
-import { projectService } from '@mdt/shared/services';
+import type { Project, validateProject } from '@mdt/domain-contracts'
+// Before
+import type { Project } from '../shared/models'
+
+import { projectService } from '@mdt/shared/services'
+import { validate } from '../shared/validation'
 
 // Usage
-const validated = validateProject(input);  // Shape validation
-const result = projectService.create(validated);  // Business logic
+const validated = validateProject(input) // Shape validation
+const result = projectService.create(validated) // Business logic
 ```
 
 ## 9. Size Limits

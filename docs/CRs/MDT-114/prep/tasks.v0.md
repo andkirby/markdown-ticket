@@ -322,13 +322,13 @@ npm test                              # All 41 tests GREEN
 **Interface Contract**:
 ```typescript
 interface SectionOperation {
-  execute(
+  execute: (
     project: string,
     key: string,
     section: string,
     content?: string,
     options?: Record<string, unknown>
-  ): Promise<SectionOperationResult>;
+  ) => Promise<SectionOperationResult>
 }
 ```
 

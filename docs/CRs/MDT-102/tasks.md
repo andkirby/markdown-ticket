@@ -299,10 +299,10 @@ npm run build:shared
 **Replace**:
 ```typescript
 // Before:
-const filePath = await findTicketFilePath(projectKey, crKey, this.projectsPath);
+const filePath = await findTicketFilePath(projectKey, crKey, this.projectsPath)
 
 // After:
-const filePath = TicketService.getCRPath(project, crKey);
+const filePath = TicketService.getCRPath(project, crKey)
 ```
 
 **Exclude**:
@@ -359,11 +359,11 @@ cd mcp-server && npm test -- src/tools/handlers/__tests__/
 **Replace**:
 ```typescript
 // Before:
-const fs = await import('fs/promises');
-const fileContent = await fs.readFile(filePath, 'utf-8');
+const fs = await import('node:fs/promises')
+const fileContent = await fs.readFile(filePath, 'utf-8')
 
 // After:
-const fileContent = await MarkdownService.readFile(filePath);
+const fileContent = await MarkdownService.readFile(filePath)
 ```
 
 **Note**: Use static method `MarkdownService.readFile()`, NOT `this.markdownService.readFile()`. The handlers have `markdownService` as a type reference only, not an actual instance. MarkdownService uses static methods (see `parseMarkdownFile`, `writeMarkdownFile`).
@@ -420,11 +420,11 @@ cd mcp-server && npm test -- src/tools/handlers/__tests__/
 **Replace**:
 ```typescript
 // Before:
-const fs = await import('fs/promises');
-await fs.writeFile(filePath, updatedContent, 'utf-8');
+const fs = await import('node:fs/promises')
+await fs.writeFile(filePath, updatedContent, 'utf-8')
 
 // After:
-await MarkdownService.writeFile(filePath, updatedContent);
+await MarkdownService.writeFile(filePath, updatedContent)
 ```
 
 **Exclude**:

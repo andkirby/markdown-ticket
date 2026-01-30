@@ -39,7 +39,7 @@ Relationship attributes are essential for ticket dependency tracking and UI disp
 
 **Example Issue**: SEB-002 ticket update attempted to put entire markdown content into `description` frontmatter field instead of ticket body.
 
-**Root Cause**: 
+**Root Cause**:
 - `description` field documented as "Problem statement or description" - should be brief single-line text
 - No validation exists to prevent multi-line content in frontmatter attributes
 - LLMs confuse frontmatter attributes with markdown body content

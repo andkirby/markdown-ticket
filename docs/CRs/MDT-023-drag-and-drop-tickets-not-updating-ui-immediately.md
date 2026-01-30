@@ -7,7 +7,6 @@ type: Bug Fix
 priority: Medium
 ---
 
-
 # Drag and drop tickets not updating UI immediately
 
 ## 1. Description
@@ -55,7 +54,7 @@ Remove redundant prop passing from SingleProjectView to Board:
 ### Code Changes
 **File:** `src/components/SingleProjectView.tsx` (lines 180-188)
 - **Removed:** `tickets={tickets}` prop
-- **Removed:** `selectedProject={selectedProject}` prop  
+- **Removed:** `selectedProject={selectedProject}` prop
 - **Removed:** `loading={loading}` prop
 - **Kept:** UI control props: `showHeader={false}`, `enableProjectSwitching={false}`, `sortPreferences={sortPreferences}`
 
@@ -97,7 +96,7 @@ Remove redundant prop passing from SingleProjectView to Board:
 - **Last known working**: `2c8c094` (confirmed by user testing)
 - **Root cause**: Board.tsx refactoring between `2c8c094` and current HEAD
 
-### Code Changes  
+### Code Changes
 - **Modified**: `src/components/SingleProjectView.tsx` (prop removal)
 - **Architecture**: Restored single-source-of-truth for ticket state management
 

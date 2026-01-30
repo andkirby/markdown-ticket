@@ -19,7 +19,7 @@ phaseEpic: Core Reference Architecture
 
 ### Affected Areas
 - Backend services: Business logic in server/services/
-- Shared code: Utilities in shared/ directory  
+- Shared code: Utilities in shared/ directory
 - Frontend components: UI components in src/components/
 - MCP codebase: Model Context Protocol server implementation
 

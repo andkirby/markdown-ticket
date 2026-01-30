@@ -8,10 +8,6 @@ priority: Medium
 phaseEpic: UI Enhancement
 ---
 
-
-
-
-
 # Table of Contents (ToC) for Markdown Views
 
 ## Description
@@ -52,18 +48,18 @@ Long markdown documents and tickets can be difficult to navigate without a clear
 
 #### ToC Dropdown
 - **Positioning**: Expands upward from button (bottom-full)
-- **Dimensions**: 
+- **Dimensions**:
   - Width: 320px (w-80)
   - Max Height: 65% of viewport height
   - Scrollable when content exceeds max height
-- **Styling**: 
+- **Styling**:
   - Semi-transparent background with backdrop blur
   - Border and shadow for visual separation
   - Hierarchical indentation for heading levels (pl-4, pl-8, etc.)
 
 #### Section Highlighting
 - **Active Detection**: IntersectionObserver with 80% viewport detection area
-- **Visual Feedback**: 
+- **Visual Feedback**:
   - Active sections: Primary color with bold font
   - Inactive sections: Muted foreground color
   - Hover states: Smooth color transitions
@@ -106,7 +102,7 @@ Long markdown documents and tickets can be difficult to navigate without a clear
 
 #### Browser State Persistence
 - **ToC Toggle State**: Remember the ToC button's show/hide state in browser localStorage
-- **Per-View Persistence**: Maintain separate ToC state for different views (document view, ticket view)  
+- **Per-View Persistence**: Maintain separate ToC state for different views (document view, ticket view)
 - **Session Restoration**: Restore ToC visibility state when user returns to the application
 
 **✅ IMPLEMENTED**: Browser State Persistence

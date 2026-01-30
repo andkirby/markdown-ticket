@@ -97,7 +97,7 @@ title: ticket.title || yaml.title || 'Untitled', // Use H1-extracted title first
 
 **MCP Implementation**:
 ```typescript
-const sectionValidation = SimpleSectionValidator.validateSection(section, availableSections);
+const sectionValidation = SimpleSectionValidator.validateSection(section, availableSections)
 ```
 
 **Issues**:
@@ -112,9 +112,9 @@ const sectionValidation = SimpleSectionValidator.validateSection(section, availa
 **MCP Implementation**:
 ```typescript
 const contentProcessingResult = SimpleContentProcessor.processContent(content, {
-  operation: operation,
+  operation,
   maxLength: 1000000
-});
+})
 ```
 
 **Issues**:
@@ -129,7 +129,7 @@ const contentProcessingResult = SimpleContentProcessor.processContent(content, {
 
 **MCP Implementation**:
 ```typescript
-const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
+const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/)
 ```
 
 **Shared Implementation**:
