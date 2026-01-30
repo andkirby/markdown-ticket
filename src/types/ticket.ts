@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { CR_PRIORITIES, CR_STATUSES, CR_TYPES } from '@mdt/shared/models/Types'
 
 // Core Ticket Interface - matches shared DTO
 export interface Ticket {
@@ -79,34 +80,11 @@ const _TicketSchema = z.object({
 
 type _TicketFormData = z.infer<typeof _TicketSchema>
 
-// Status Enum Values
-const _STATUSES = [
-  'Proposed',
-  'Approved',
-  'In Progress',
-  'Implemented',
-  'On Hold',
-  'Rejected',
-  'Superseded',
-  'Deprecated',
-  'Duplicate',
-  'Partially Implemented',
-] as const
+// Status Enum Values - imported from shared types
+export type Status = typeof CR_STATUSES[number]
 
-export type Status = typeof _STATUSES[number]
+// Type Enum Values - imported from shared types
+type _Type = typeof CR_TYPES[number]
 
-// Type Enum Values
-const _TYPES = [
-  'Feature Enhancement',
-  'Bug Fix',
-  'Technical Debt',
-  'Architecture',
-  'Documentation',
-] as const
-
-type _Type = typeof _TYPES[number]
-
-// Priority Enum Values
-const _PRIORITIES = ['Low', 'Medium', 'High', 'Critical'] as const
-
-type _Priority = typeof _PRIORITIES[number]
+// Priority Enum Values - imported from shared types
+type _Priority = typeof CR_PRIORITIES[number]

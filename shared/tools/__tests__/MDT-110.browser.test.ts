@@ -77,15 +77,16 @@ describe('mDT-110: Browser-Safe ProjectValidator', () => {
       })
     })
 
-    it('should reject lowercase codes', () => {
+    it('should auto-uppercase lowercase codes', () => {
       const result = ProjectValidator.validateCode('mdt')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('Project code must be 2-5 characters')
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe('MDT')
     })
 
-    it('should reject mixed case codes', () => {
+    it('should auto-uppercase mixed case codes', () => {
       const result = ProjectValidator.validateCode('Mdt')
-      expect(result.valid).toBe(false)
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe('MDT')
     })
 
     it('should reject codes starting with number', () => {

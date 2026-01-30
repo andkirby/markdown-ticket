@@ -152,7 +152,7 @@ The solution is straightforward as this is test content.
   }
 
   describe('basic Listing', () => {
-    it('gIVEN empty project WHEN listing CRs THEN return empty list', async () => {
+    it('GIVEN empty project WHEN listing CRs THEN return empty list', async () => {
       await projectFactory.createProjectStructure('EMPTY', 'Empty Project')
 
       const response = await callListCRs('EMPTY')
@@ -163,7 +163,7 @@ The solution is straightforward as this is test content.
       expect(response.data).toMatch(/No CRs found( matching filters)? in project EMPTY/)
     })
 
-    it('gIVEN project with CRs WHEN listing THEN show all CRs with details', async () => {
+    it('GIVEN project with CRs WHEN listing THEN show all CRs with details', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       // Create test CRs with required content field
@@ -215,7 +215,7 @@ The solution is straightforward as this is test content.
   })
 
   describe('status Filtering', () => {
-    it('gIVEN project with CRs WHEN listing with status filter THEN return filtered CRs', async () => {
+    it('GIVEN project with CRs WHEN listing with status filter THEN return filtered CRs', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       // Create CRs (all will be created with 'Proposed' status regardless of what's specified)
@@ -264,7 +264,7 @@ The solution is straightforward as this is test content.
       })
     })
 
-    it('gIVEN project with CRs WHEN listing with multiple status filters THEN return filtered CRs', async () => {
+    it('GIVEN project with CRs WHEN listing with multiple status filters THEN return filtered CRs', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       // Create CRs (all will be created with 'Proposed' status regardless of what's specified)
@@ -313,7 +313,7 @@ The solution is straightforward as this is test content.
   })
 
   describe('type Filtering', () => {
-    it('gIVEN project with CRs WHEN listing with type filter THEN return filtered CRs', async () => {
+    it('GIVEN project with CRs WHEN listing with type filter THEN return filtered CRs', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       // Create CRs with different types
@@ -365,7 +365,7 @@ The solution is straightforward as this is test content.
       expect(crTitles).not.toContain('Feature CR')
     })
 
-    it('gIVEN project with CRs WHEN listing with multiple type filters THEN return filtered CRs', async () => {
+    it('GIVEN project with CRs WHEN listing with multiple type filters THEN return filtered CRs', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       // Create CRs with different types
@@ -418,7 +418,7 @@ The solution is straightforward as this is test content.
   })
 
   describe('priority Filtering', () => {
-    it('gIVEN project with CRs WHEN listing with priority filter THEN return filtered CRs', async () => {
+    it('GIVEN project with CRs WHEN listing with priority filter THEN return filtered CRs', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       // Create CRs with different priorities
@@ -471,7 +471,7 @@ The solution is straightforward as this is test content.
   })
 
   describe('combined Filtering', () => {
-    it('gIVEN project with CRs WHEN listing with multiple filters THEN return correctly filtered CRs', async () => {
+    it('GIVEN project with CRs WHEN listing with multiple filters THEN return correctly filtered CRs', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       // Create diverse CRs
@@ -534,7 +534,7 @@ The solution is straightforward as this is test content.
   })
 
   describe('error Handling', () => {
-    it('gIVEN non-existent project WHEN listing THEN return error message', async () => {
+    it('GIVEN non-existent project WHEN listing THEN return error message', async () => {
       const response = await callListCRs('NONEXISTENT')
 
       // Non-existent project results in a protocol error
@@ -543,7 +543,7 @@ The solution is straightforward as this is test content.
       expect(response.error!.message).toContain('invalid')
     })
 
-    it('gIVEN missing project parameter WHEN listing THEN return validation error', async () => {
+    it('GIVEN missing project parameter WHEN listing THEN return validation error', async () => {
       const response = await mcpClient.callTool('list_crs', {})
 
       // Missing required parameter should result in a protocol error
@@ -555,7 +555,7 @@ The solution is straightforward as this is test content.
   })
 
   describe('response Format', () => {
-    it('gIVEN successful listing WHEN response THEN match expected format', async () => {
+    it('GIVEN successful listing WHEN response THEN match expected format', async () => {
       await projectFactory.createProjectStructure('FMT', 'Format Test')
       await projectFactory.createTestCR('FMT', {
         title: 'Format Test CR',

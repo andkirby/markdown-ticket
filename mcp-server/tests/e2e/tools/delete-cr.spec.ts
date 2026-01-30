@@ -92,7 +92,7 @@ describe('delete_cr', () => {
   }
 
   describe('valid Deletions', () => {
-    it('gIVEN implemented bug fix CR WHEN deleting THEN success', async () => {
+    it('GIVEN implemented bug fix CR WHEN deleting THEN success', async () => {
       // Create and implement a bug fix with all required sections
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Implemented Bug Fix',
@@ -148,7 +148,7 @@ The first approach was chosen as it minimizes risk while fixing the immediate is
       expect(deletion.message).toContain('Bug Fix')
     })
 
-    it('gIVEN implemented bug fix with notes WHEN deleting THEN include notes in response', async () => {
+    it('GIVEN implemented bug fix with notes WHEN deleting THEN include notes in response', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Bug Fix with Notes',
         type: 'Bug Fix',
@@ -184,7 +184,7 @@ Critical security issue that could lead to unauthorized access.`,
   })
 
   describe('deletion Restrictions', () => {
-    it('gIVEN non-implemented CR WHEN deleting THEN return error', async () => {
+    it('GIVEN non-implemented CR WHEN deleting THEN return error', async () => {
       const statuses = ['Proposed', 'Approved', 'In Progress', 'On Hold']
 
       for (const status of statuses) {
@@ -211,7 +211,7 @@ This needs to be fixed but is not ready for deletion.`,
       }
     })
 
-    it('gIVEN non-bug fix type WHEN deleting THEN return error', async () => {
+    it('GIVEN non-bug fix type WHEN deleting THEN return error', async () => {
       const types = ['Architecture', 'Feature Enhancement', 'Technical Debt', 'Documentation']
 
       for (const type of types) {
@@ -239,7 +239,7 @@ This is a ${type.toLowerCase()} which should be preserved for documentation.`,
       }
     })
 
-    it('gIVEN CR with dependencies WHEN deleting THEN return error', async () => {
+    it('GIVEN CR with dependencies WHEN deleting THEN return error', async () => {
       // Create dependency
       const dependency = await projectFactory.createTestCR('TEST', {
         title: 'Dependency CR',
@@ -280,7 +280,7 @@ Requires the dependency to be implemented first.`,
       expect(deletion.key).toBe(bugFixKey)
     })
 
-    it('gIVEN CR that blocks others WHEN deleting THEN return error', async () => {
+    it('GIVEN CR that blocks others WHEN deleting THEN return error', async () => {
       // Create bug fix to delete
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Bug Fix that Blocks',
@@ -320,7 +320,7 @@ Requires the bug fix to be implemented first.`,
       expect(deletion.key).toBe(bugFixKey)
     })
 
-    it('gIVEN CR with related tickets WHEN deleting THEN still allow deletion', async () => {
+    it('GIVEN CR with related tickets WHEN deleting THEN still allow deletion', async () => {
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Bug Fix with Related Tickets',
         type: 'Bug Fix',
@@ -345,7 +345,7 @@ This fix is related to external tracking tickets.`,
   })
 
   describe('error Handling', () => {
-    it('gIVEN non-existent CR WHEN deleting THEN return error', async () => {
+    it('GIVEN non-existent CR WHEN deleting THEN return error', async () => {
       const response = await callDeleteCR('TEST', 'TEST-999')
 
       // The tool returns an error response with success=false
@@ -355,7 +355,7 @@ This fix is related to external tracking tickets.`,
       expect(response.error!.message).toContain('not found')
     })
 
-    it('gIVEN non-existent project WHEN deleting THEN return error', async () => {
+    it('GIVEN non-existent project WHEN deleting THEN return error', async () => {
       const response = await callDeleteCR('NONEXISTENT', 'TEST-001')
 
       // The tool returns an error response with success=false
@@ -365,7 +365,7 @@ This fix is related to external tracking tickets.`,
       expect(response.error!.message).toContain('invalid')
     })
 
-    it('gIVEN missing project parameter WHEN deleting THEN return validation error', async () => {
+    it('GIVEN missing project parameter WHEN deleting THEN return validation error', async () => {
       const response = await mcpClient.callTool('delete_cr', {
         key: 'TEST-001',
       })
@@ -376,7 +376,7 @@ This fix is related to external tracking tickets.`,
       expect(response.error!.code).toBe(-32602) // Invalid params error
     })
 
-    it('gIVEN missing key parameter WHEN deleting THEN return validation error', async () => {
+    it('GIVEN missing key parameter WHEN deleting THEN return validation error', async () => {
       const response = await mcpClient.callTool('delete_cr', {
         project: 'TEST',
       })
@@ -387,7 +387,7 @@ This fix is related to external tracking tickets.`,
       expect(response.error!.code).toBe(-32602) // Invalid params error
     })
 
-    it('gIVEN empty key parameter WHEN deleting THEN return validation error', async () => {
+    it('GIVEN empty key parameter WHEN deleting THEN return validation error', async () => {
       const response = await mcpClient.callTool('delete_cr', {
         project: 'TEST',
         key: '',
@@ -401,7 +401,7 @@ This fix is related to external tracking tickets.`,
   })
 
   describe('edge Cases', () => {
-    it('gIVEN recently implemented bug fix WHEN deleting THEN allow deletion', async () => {
+    it('GIVEN recently implemented bug fix WHEN deleting THEN allow deletion', async () => {
       // Create bug fix
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Recent Bug Fix',
@@ -434,7 +434,7 @@ This fix was completed and can now be deleted.`,
       expect(deletion.key).toBe(bugFixKey)
     })
 
-    it('gIVEN implemented bug fix rejected then re-implemented WHEN deleting THEN allow deletion', async () => {
+    it('GIVEN implemented bug fix rejected then re-implemented WHEN deleting THEN allow deletion', async () => {
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Complex Bug Fix Lifecycle',
         type: 'Bug Fix',
@@ -478,7 +478,7 @@ This CR goes through multiple status changes.`,
       expect(deletion.key).toBe(bugFixKey)
     })
 
-    it('gIVEN bug fix with self-dependency WHEN deleting THEN handle gracefully', async () => {
+    it('GIVEN bug fix with self-dependency WHEN deleting THEN handle gracefully', async () => {
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Self-Dependency Bug Fix',
         type: 'Bug Fix',
@@ -514,7 +514,7 @@ Edge case to test self-dependency handling.`,
   })
 
   describe('response Format', () => {
-    it('gIVEN successful deletion WHEN response THEN include deletion confirmation', async () => {
+    it('GIVEN successful deletion WHEN response THEN include deletion confirmation', async () => {
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Response Format Test',
         type: 'Bug Fix',
@@ -543,7 +543,7 @@ Ensures the delete response includes all expected fields.`,
       // Status will be "Proposed" as create_cr defaults to this status
     })
 
-    it('gIVEN deletion with warnings WHEN response THEN include warnings', async () => {
+    it('GIVEN deletion with warnings WHEN response THEN include warnings', async () => {
       const bugFix = await projectFactory.createTestCR('TEST', {
         title: 'Warning Test Bug Fix',
         type: 'Bug Fix',

@@ -25,13 +25,14 @@ const _statusFixtures: Record<CRStatus, string> = {
   'Partially Implemented': tpl('TEST-010', 'Partially Implemented', 'Feature Enhancement', 'Medium'),
 }
 
-// Type fixtures (Feature Enhancement, Bug Fix, Technical Debt, Architecture, Documentation)
+// Type fixtures (Feature Enhancement, Bug Fix, Technical Debt, Architecture, Documentation, Research)
 const _typeFixtures: Record<CRType, string> = {
   'Feature Enhancement': tpl('TEST-006', 'Proposed', 'Feature Enhancement'),
   'Bug Fix': tpl('TEST-007', 'Approved', 'Bug Fix', 'High'),
   'Technical Debt': tpl('TEST-008', 'Proposed', 'Technical Debt'),
   'Architecture': tpl('TEST-009', 'In Progress', 'Architecture', 'Critical'),
   'Documentation': tpl('TEST-010', 'Implemented', 'Documentation', 'Low'),
+  'Research': tpl('TEST-011', 'Proposed', 'Research', 'Medium'),
 }
 
 // Malformed YAML fixtures (R6.3 error testing)

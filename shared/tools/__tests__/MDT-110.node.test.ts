@@ -124,9 +124,10 @@ describe('mDT-110: Node.js ProjectValidator Extension', () => {
       expect(result.normalized).toBe('MDT1')
     })
 
-    it('should reject lowercase codes', () => {
+    it('should auto-uppercase lowercase codes', () => {
       const result = ProjectValidator.validateCode('mdt')
-      expect(result.valid).toBe(false)
+      expect(result.valid).toBe(true)
+      expect(result.normalized).toBe('MDT')
     })
 
     it('should validate descriptions correctly', () => {

@@ -151,7 +151,7 @@ describe('suggest_cr_improvements', () => {
   }
 
   describe('complete CR Analysis', () => {
-    it('gIVEN complete CR WHEN suggesting THEN return minimal suggestions', async () => {
+    it('GIVEN complete CR WHEN suggesting THEN return minimal suggestions', async () => {
       const completeContent = `## 1. Description
 
 This CR implements user authentication improvements to address security vulnerabilities and enhance user experience.
@@ -320,7 +320,7 @@ This change is necessary to:
   })
 
   describe('incomplete CR Analysis', () => {
-    it('gIVEN CR with missing sections WHEN suggesting THEN suggest specific improvements', async () => {
+    it('GIVEN CR with missing sections WHEN suggesting THEN suggest specific improvements', async () => {
       // Create content with minimal required sections but missing others
       const incompleteContent = `## 1. Description
 
@@ -356,7 +356,7 @@ This is blocking user access to the system.`
       expect(response.data.length).toBeGreaterThan(50)
     })
 
-    it('gIVEN CR with one-line sections WHEN suggesting THEN suggest expansion', async () => {
+    it('GIVEN CR with one-line sections WHEN suggesting THEN suggest expansion', async () => {
       const sparseContent = `## 1. Description
 
 Fix stuff.
@@ -402,7 +402,7 @@ It works.`
   })
 
   describe('structural Issues', () => {
-    it('gIVEN CR with poor structure WHEN suggesting THEN suggest structural improvements', async () => {
+    it('GIVEN CR with poor structure WHEN suggesting THEN suggest structural improvements', async () => {
       // Convert to proper structure but keep it minimal
       const poorStructureContent = `## 1. Description
 
@@ -448,7 +448,7 @@ This needs to be fixed because users are complaining.`
       expect(response.data.length).toBeGreaterThan(50)
     })
 
-    it('gIVEN CR with inconsistent formatting WHEN suggesting THEN suggest formatting improvements', async () => {
+    it('GIVEN CR with inconsistent formatting WHEN suggesting THEN suggest formatting improvements', async () => {
       const inconsistentContent = `## 1. Description
 
 This is a description.
@@ -498,7 +498,7 @@ More content here.`
   })
 
   describe('content Quality Issues', () => {
-    it('gIVEN CR with vague acceptance criteria WHEN suggesting THEN suggest specific criteria', async () => {
+    it('GIVEN CR with vague acceptance criteria WHEN suggesting THEN suggest specific criteria', async () => {
       const vagueCriteriaContent = `## 1. Description
 
 Implement search functionality.
@@ -544,7 +544,7 @@ Use search library.
       expect(response.data.length).toBeGreaterThan(50)
     })
 
-    it('gIVEN CR with no solution analysis WHEN suggesting THEN emphasize importance', async () => {
+    it('GIVEN CR with no solution analysis WHEN suggesting THEN emphasize importance', async () => {
       const noAnalysisContent = `## 1. Description
 
 Add new feature.
@@ -586,7 +586,7 @@ Feature works.`
   })
 
   describe('special Cases', () => {
-    it('gIVEN perfect CR WHEN suggesting THEN return praise', async () => {
+    it('GIVEN perfect CR WHEN suggesting THEN return praise', async () => {
       const perfectContent = `## 1. Description
 
 Implement real-time collaborative editing for documents using WebSockets and Operational Transformation (OT) algorithm.
@@ -645,7 +645,7 @@ Real-time collaboration is becoming standard expectation in document editing too
   })
 
   describe('error Handling', () => {
-    it('gIVEN non-existent CR WHEN suggesting THEN return error', async () => {
+    it('GIVEN non-existent CR WHEN suggesting THEN return error', async () => {
       const response = await callSuggestCRImprovements('TEST', 'TEST-999')
 
       expect(response.success).toBe(false)
@@ -654,7 +654,7 @@ Real-time collaboration is becoming standard expectation in document editing too
       expect(response.error?.message).toContain('not found')
     })
 
-    it('gIVEN non-existent project WHEN suggesting THEN return error', async () => {
+    it('GIVEN non-existent project WHEN suggesting THEN return error', async () => {
       const response = await callSuggestCRImprovements('NONEXISTENT', 'TEST-001')
 
       expect(response.success).toBe(false)
@@ -664,7 +664,7 @@ Real-time collaboration is becoming standard expectation in document editing too
       expect(response.error?.message).toContain('invalid')
     })
 
-    it('gIVEN missing project parameter WHEN suggesting THEN return validation error', async () => {
+    it('GIVEN missing project parameter WHEN suggesting THEN return validation error', async () => {
       const response = await mcpClient.callTool('suggest_cr_improvements', {
         key: 'TEST-001',
       })
@@ -676,7 +676,7 @@ Real-time collaboration is becoming standard expectation in document editing too
       expect(response.error?.message).toContain('required')
     })
 
-    it('gIVEN missing key parameter WHEN suggesting THEN return validation error', async () => {
+    it('GIVEN missing key parameter WHEN suggesting THEN return validation error', async () => {
       const response = await mcpClient.callTool('suggest_cr_improvements', {
         project: 'TEST',
       })
@@ -688,7 +688,7 @@ Real-time collaboration is becoming standard expectation in document editing too
   })
 
   describe('response Format', () => {
-    it('gIVEN successful analysis WHEN response THEN include comprehensive suggestions', async () => {
+    it('GIVEN successful analysis WHEN response THEN include comprehensive suggestions', async () => {
       const minimalContent = `## 1. Description
 
 Brief description only.

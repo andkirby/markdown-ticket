@@ -1,6 +1,7 @@
 /**
  * Mock of @mdt/shared/utils/constants for testing
  * Provides minimal implementation for test environment
+ * NOTE: Keep in sync with shared/utils/constants.ts
  */
 
 import * as fs from 'node:fs'
@@ -8,7 +9,7 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
 
-// Ticket Statuses
+// Ticket Statuses - matches shared/models/Types.ts
 export const STATUSES = [
   'Proposed',
   'Approved',
@@ -16,22 +17,27 @@ export const STATUSES = [
   'Implemented',
   'Rejected',
   'On Hold',
+  'Superseded',
+  'Deprecated',
+  'Duplicate',
+  'Partially Implemented',
 ] as const
 
 export type Status = typeof STATUSES[number]
 
-// Ticket Types
+// Ticket Types - matches shared/models/Types.ts (includes Research from MDT-120)
 export const TYPES = [
   'Architecture',
   'Feature Enhancement',
   'Bug Fix',
   'Technical Debt',
   'Documentation',
+  'Research',
 ] as const
 
 export type TicketType = typeof TYPES[number]
 
-// Ticket Priorities
+// Ticket Priorities - matches shared/models/Types.ts
 export const PRIORITIES = [
   'Low',
   'Medium',
