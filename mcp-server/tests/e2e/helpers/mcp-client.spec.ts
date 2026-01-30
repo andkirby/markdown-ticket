@@ -62,7 +62,7 @@ name = "Test Project"
   })
 
   describe('server Lifecycle', () => {
-    it('gIVEN test env WHEN starting client THEN server runs and responds', async () => {
+    it('GIVEN test env WHEN starting client THEN server runs and responds', async () => {
       // This should fail initially (RED)
       // After implementation, client should start and connect to server
 
@@ -78,7 +78,7 @@ name = "Test Project"
       expect(tools.length).toBeGreaterThan(0)
     }, 15000)
 
-    it('gIVEN running client WHEN stopping THEN server shuts down cleanly', async () => {
+    it('GIVEN running client WHEN stopping THEN server shuts down cleanly', async () => {
       // This should fail initially (RED)
       // After implementation, client should stop cleanly
 
@@ -96,7 +96,7 @@ name = "Test Project"
       await mcpClient.start()
     })
 
-    it('gIVEN running client WHEN calling list_tools THEN return available tools', async () => {
+    it('GIVEN running client WHEN calling list_tools THEN return available tools', async () => {
       // This should fail initially (RED)
       const tools = await mcpClient.listTools()
 
@@ -110,7 +110,7 @@ name = "Test Project"
       expect(toolNames).toContain('create_cr')
     }, 10000)
 
-    it('gIVEN running client WHEN calling list_projects THEN return response', async () => {
+    it('GIVEN running client WHEN calling list_projects THEN return response', async () => {
       // This should fail initially (RED)
       const response = await mcpClient.callTool('list_projects', {})
 
@@ -129,7 +129,7 @@ name = "Test Project"
   })
 
   describe('error Handling', () => {
-    it('gIVEN invalid tool WHEN calling THEN should handle error gracefully', async () => {
+    it('GIVEN invalid tool WHEN calling THEN should handle error gracefully', async () => {
       await mcpClient.start()
 
       const response = await mcpClient.callTool('invalid_tool', {})
@@ -140,7 +140,7 @@ name = "Test Project"
       expect(response.error?.message).toMatch(/Unknown tool|not found|invalid/i)
     }, 10000)
 
-    it('gIVEN server down WHEN calling THEN should handle connection error', async () => {
+    it('GIVEN server down WHEN calling THEN should handle connection error', async () => {
       // Don't start client, simulate server down
       const response = await mcpClient.callTool('list_projects', {})
 
@@ -150,7 +150,7 @@ name = "Test Project"
   })
 
   describe('transport Modes', () => {
-    it('gIVEN stdio mode WHEN starting THEN use subprocess transport', async () => {
+    it('GIVEN stdio mode WHEN starting THEN use subprocess transport', async () => {
       const stdioClient = new MCPClient(testEnv, { transport: 'stdio' })
       await stdioClient.start()
 
@@ -163,7 +163,7 @@ name = "Test Project"
       await stdioClient.stop()
     }, 15000)
 
-    it('gIVEN http mode WHEN starting THEN use HTTP transport', async () => {
+    it('GIVEN http mode WHEN starting THEN use HTTP transport', async () => {
       const httpClient = new MCPClient(testEnv, { transport: 'http' })
       await httpClient.start()
 
@@ -208,7 +208,7 @@ name = "Test Project"
       }
     })
 
-    it('gIVEN client WHEN calling get_project_info THEN return project details', async () => {
+    it('GIVEN client WHEN calling get_project_info THEN return project details', async () => {
       const response = await mcpClient.callTool('get_project_info', { key: 'MDT' })
 
       // Check for error response (project might not be discovered)
@@ -222,7 +222,7 @@ name = "Test Project"
       }
     }, 10000)
 
-    it('gIVEN client WHEN calling list_crs THEN return CR list', async () => {
+    it('GIVEN client WHEN calling list_crs THEN return CR list', async () => {
       const response = await mcpClient.callTool('list_crs', { project: 'MDT' })
 
       // If project doesn't exist, the MCP server returns an error formatted as success
@@ -239,7 +239,7 @@ name = "Test Project"
       }
     }, 10000)
 
-    it('gIVEN client WHEN calling get_cr THEN return CR details', async () => {
+    it('GIVEN client WHEN calling get_cr THEN return CR details', async () => {
       // Use the CR created in beforeEach
       const crKey = (mcpClient as any).testCRKey
 
@@ -264,7 +264,7 @@ name = "Test Project"
       }
     }, 10000)
 
-    it('gIVEN client WHEN calling create_cr THEN create new CR', async () => {
+    it('GIVEN client WHEN calling create_cr THEN create new CR', async () => {
       const crData = {
         title: 'Test CR from MCP Client',
         type: 'Feature Enhancement',

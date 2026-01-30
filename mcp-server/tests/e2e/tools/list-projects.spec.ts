@@ -89,7 +89,7 @@ describe('list_projects', () => {
       await localTestEnv.cleanup()
     })
 
-    it('gIVEN no registered projects WHEN listing THEN return empty message', async () => {
+    it('GIVEN no registered projects WHEN listing THEN return empty message', async () => {
       const response = await localMcpClient.callTool('list_projects', {})
 
       // Expected behavior: Should handle empty project list gracefully
@@ -103,7 +103,7 @@ describe('list_projects', () => {
   })
 
   describe('project Discovery', () => {
-    it('gIVEN single project exists (pre-created in beforeEach) WHEN listing THEN show project details', async () => {
+    it('GIVEN single project exists (pre-created in beforeEach) WHEN listing THEN show project details', async () => {
       // TEST project is created in beforeEach before MCP client starts
       const response = await callListProjects()
 
@@ -119,7 +119,7 @@ describe('list_projects', () => {
       expect(response.data).toContain('CRs:')
     })
 
-    it('gIVEN multiple projects exist WHEN listing THEN show all projects', async () => {
+    it('GIVEN multiple projects exist WHEN listing THEN show all projects', async () => {
       // RED: Test behavior for multiple projects
       // TEST is already created in beforeEach, create additional projects
       await projectFactory.createProjectStructure('MDT', 'Markdown Ticket')
@@ -141,7 +141,7 @@ describe('list_projects', () => {
       expect(response.data).toContain('Found 3 projects')
     })
 
-    it('gIVEN project with custom configuration WHEN listing THEN reflect configuration', async () => {
+    it('GIVEN project with custom configuration WHEN listing THEN reflect configuration', async () => {
       // RED: Test behavior for custom project configuration
       const customConfig = {
         repository: 'https://github.com/example/custom-project',
@@ -167,7 +167,7 @@ describe('list_projects', () => {
       expect(response.data).toContain('ID: CUST')
     })
 
-    it('gIVEN project with CRs WHEN listing THEN include CR count', async () => {
+    it('GIVEN project with CRs WHEN listing THEN include CR count', async () => {
       // RED: Test behavior for project with CRs
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
@@ -211,7 +211,7 @@ This fixes a critical bug.`,
   })
 
   describe('error Handling', () => {
-    it('gIVEN MCP server error WHEN listing THEN return error response', async () => {
+    it('GIVEN MCP server error WHEN listing THEN return error response', async () => {
       // RED: Test error handling
       // Simulate error by calling with invalid parameters (if applicable)
       const response = await callListProjects()
@@ -224,7 +224,7 @@ This fixes a critical bug.`,
   })
 
   describe('response Format', () => {
-    it('gIVEN successful listing WHEN response THEN match expected format', async () => {
+    it('GIVEN successful listing WHEN response THEN match expected format', async () => {
       // RED: Test response format consistency
       await projectFactory.createProjectStructure('FMT', 'Format Test')
 

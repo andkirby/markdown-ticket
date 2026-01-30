@@ -124,7 +124,7 @@ describe('behavioral Preservation: Tool Configuration Structure', () => {
 
       // Extract enum values
       const statusEnum = statusProp?.oneOf?.find((item: any) => item.enum)?.enum
-      expect(statusEnum).toEqual(['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected'])
+      expect(statusEnum).toEqual(['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'])
     })
 
     it('should maintain exact enum values for type', () => {
@@ -137,7 +137,7 @@ describe('behavioral Preservation: Tool Configuration Structure', () => {
 
       // Extract enum values
       const typeEnum = typeProp?.oneOf?.find((item: any) => item.enum)?.enum
-      expect(typeEnum).toEqual(['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation'])
+      expect(typeEnum).toEqual(['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation', 'Research'])
     })
 
     it('should maintain exact enum values for priority', () => {

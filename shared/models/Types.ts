@@ -30,6 +30,36 @@ export type CRPriority
     | 'High'
     | 'Critical'
 
+// Runtime validation arrays (must match type definitions above)
+export const CR_STATUSES: readonly CRStatus[] = [
+  'Proposed',
+  'Approved',
+  'In Progress',
+  'Implemented',
+  'Rejected',
+  'On Hold',
+  'Superseded',
+  'Deprecated',
+  'Duplicate',
+  'Partially Implemented',
+] as const
+
+export const CR_TYPES: readonly CRType[] = [
+  'Architecture',
+  'Feature Enhancement',
+  'Bug Fix',
+  'Technical Debt',
+  'Documentation',
+  'Research',
+] as const
+
+export const CR_PRIORITIES: readonly CRPriority[] = [
+  'Low',
+  'Medium',
+  'High',
+  'Critical',
+] as const
+
 // Project Information Interface
 export interface ProjectInfo {
   key: string

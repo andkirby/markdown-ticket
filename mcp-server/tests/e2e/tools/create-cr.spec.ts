@@ -111,7 +111,7 @@ describe('create_cr', () => {
   }
 
   describe('valid Creation', () => {
-    it('gIVEN valid project and data WHEN creating THEN success with proper CR key', async () => {
+    it('GIVEN valid project and data WHEN creating THEN success with proper CR key', async () => {
       const response = await callCreateCR('TEST', 'Feature Enhancement', 'Test Feature CR', {
         priority: 'High',
         phaseEpic: 'Phase 1',
@@ -134,7 +134,7 @@ We need this feature to improve the system.`,
       expect(response.data.key).toMatch(/^TEST-\d{3}$/) // Should start with TEST-
     })
 
-    it('gIVEN valid creation WHEN creating THEN auto-generate CR number', async () => {
+    it('GIVEN valid creation WHEN creating THEN auto-generate CR number', async () => {
       // Create multiple CRs to verify auto-numbering
       const cr1 = await callCreateCR('TEST', 'Feature Enhancement', 'First CR')
       const cr2 = await callCreateCR('TEST', 'Bug Fix', 'Second CR')
@@ -154,7 +154,7 @@ We need this feature to improve the system.`,
       })
     })
 
-    it('gIVEN CR with dependencies WHEN creating THEN create with relationships', async () => {
+    it('GIVEN CR with dependencies WHEN creating THEN create with relationships', async () => {
       // First create some CRs to depend on
       const dep1 = await callCreateCR('TEST', 'Feature Enhancement', 'Dependency 1')
       const dep2 = await callCreateCR('TEST', 'Bug Fix', 'Dependency 2')
@@ -204,7 +204,7 @@ Test CR for ${type} type.`,
   })
 
   describe('required Fields', () => {
-    it('gIVEN missing project WHEN creating THEN return validation error', async () => {
+    it('GIVEN missing project WHEN creating THEN return validation error', async () => {
       const response = await callCreateCR(undefined as any, 'Feature Enhancement', 'Test CR')
 
       // Missing required parameter is a protocol error
@@ -214,7 +214,7 @@ Test CR for ${type} type.`,
       expect(response.error?.message).toContain('Project key is required')
     })
 
-    it('gIVEN missing type WHEN creating THEN return validation error', async () => {
+    it('GIVEN missing type WHEN creating THEN return validation error', async () => {
       const response = await callCreateCR('TEST', undefined as any, 'Test CR')
 
       // Missing required parameter is a protocol error
@@ -224,7 +224,7 @@ Test CR for ${type} type.`,
       expect(response.error?.message).toContain('type is required')
     })
 
-    it('gIVEN missing title WHEN creating THEN return validation error', async () => {
+    it('GIVEN missing title WHEN creating THEN return validation error', async () => {
       const response = await callCreateCR('TEST', 'Feature Enhancement', '' as any)
 
       // Missing title is a validation error
@@ -235,7 +235,7 @@ Test CR for ${type} type.`,
       expect(response.error?.message).toContain('Title is required')
     })
 
-    it('gIVEN empty title WHEN creating THEN return validation error', async () => {
+    it('GIVEN empty title WHEN creating THEN return validation error', async () => {
       const response = await callCreateCR('TEST', 'Feature Enhancement', '')
 
       // Empty title is a validation error
@@ -248,7 +248,7 @@ Test CR for ${type} type.`,
   })
 
   describe('invalid Values', () => {
-    it('gIVEN invalid project WHEN creating THEN return error', async () => {
+    it('GIVEN invalid project WHEN creating THEN return error', async () => {
       const response = await callCreateCR('NONEXISTENT', 'Feature Enhancement', 'Test CR')
 
       // Invalid project is a parameter validation error
@@ -259,7 +259,7 @@ Test CR for ${type} type.`,
       expect(response.error?.message).toContain('Must be 2-5 characters')
     })
 
-    it('gIVEN invalid type WHEN creating THEN return validation error', async () => {
+    it('GIVEN invalid type WHEN creating THEN return validation error', async () => {
       const response = await callCreateCR('TEST', 'Invalid Type', 'Test CR')
 
       // Invalid type is a validation error
@@ -270,7 +270,7 @@ Test CR for ${type} type.`,
       expect(response.error?.message).toContain('Architecture, Feature Enhancement, Bug Fix, Technical Debt, Documentation')
     })
 
-    it('gIVEN invalid priority WHEN creating THEN return validation error', async () => {
+    it('GIVEN invalid priority WHEN creating THEN return validation error', async () => {
       const response = await callCreateCR('TEST', 'Feature Enhancement', 'Test CR', {
         priority: 'Invalid Priority',
       })
@@ -284,7 +284,7 @@ Test CR for ${type} type.`,
   })
 
   describe('optional Fields', () => {
-    it('gIVEN minimal valid data WHEN creating THEN use defaults for optional fields', async () => {
+    it('GIVEN minimal valid data WHEN creating THEN use defaults for optional fields', async () => {
       const response = await callCreateCR('TEST', 'Bug Fix', 'Minimal CR')
 
       expect(response.success).toBe(true)
@@ -302,7 +302,7 @@ Test CR for ${type} type.`,
       expect(response.data.relatedTickets).toBeUndefined()
     })
 
-    it('gIVEN all optional fields WHEN creating THEN preserve all values', async () => {
+    it('GIVEN all optional fields WHEN creating THEN preserve all values', async () => {
       const fullData = {
         priority: 'Critical',
         phaseEpic: 'Phase 2',
@@ -334,7 +334,7 @@ Complete testing of all optional fields.`,
   })
 
   describe('content Handling', () => {
-    it('gIVEN CR without content WHEN creating THEN use template', async () => {
+    it('GIVEN CR without content WHEN creating THEN use template', async () => {
       const response = await callCreateCR('TEST', 'Documentation', 'No Content CR')
 
       expect(response.success).toBe(true)
@@ -345,7 +345,7 @@ Complete testing of all optional fields.`,
       // For now, we just verify the CR was created successfully
     })
 
-    it('gIVEN CR with content WHEN creating THEN preserve content exactly', async () => {
+    it('GIVEN CR with content WHEN creating THEN preserve content exactly', async () => {
       const customContent = `# Custom CR Content
 
 This is completely custom content with no standard sections.
@@ -372,7 +372,7 @@ More details here.`
   })
 
   describe('response Format', () => {
-    it('gIVEN successful creation WHEN response THEN include all CR fields', async () => {
+    it('GIVEN successful creation WHEN response THEN include all CR fields', async () => {
       const response = await callCreateCR('TEST', 'Architecture', 'Response Format Test', {
         priority: 'High',
         phaseEpic: 'Test Phase',

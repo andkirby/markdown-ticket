@@ -2,44 +2,22 @@ import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
+import { CR_PRIORITIES, CR_STATUSES, CR_TYPES } from '../models/Types.js'
 
 /**
  * Shared Constants for Frontend, Backend, and MCP
  * Ensures consistent values across all systems
  */
 
-// Ticket Statuses
-export const STATUSES = [
-  'Proposed',
-  'Approved',
-  'In Progress',
-  'Implemented',
-  'Rejected',
-  'On Hold',
-] as const
+// Re-export from Types.ts for single source of truth
+export const STATUSES = CR_STATUSES
+export type Status = typeof CR_STATUSES[number]
 
-export type Status = typeof STATUSES[number]
+export const TYPES = CR_TYPES
+export type TicketType = typeof CR_TYPES[number]
 
-// Ticket Types
-export const TYPES = [
-  'Architecture',
-  'Feature Enhancement',
-  'Bug Fix',
-  'Technical Debt',
-  'Documentation',
-] as const
-
-export type TicketType = typeof TYPES[number]
-
-// Ticket Priorities
-export const PRIORITIES = [
-  'Low',
-  'Medium',
-  'High',
-  'Critical',
-] as const
-
-export type Priority = typeof PRIORITIES[number]
+export const PRIORITIES = CR_PRIORITIES
+export type Priority = typeof CR_PRIORITIES[number]
 
 // File Extensions
 export const SUPPORTED_EXTENSIONS = ['.md', '.markdown'] as const

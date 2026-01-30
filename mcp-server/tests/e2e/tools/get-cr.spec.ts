@@ -101,7 +101,7 @@ describe('get_cr', () => {
   }
 
   describe('mode: full', () => {
-    it('gIVEN existing CR WHEN getting with mode="full" THEN return complete CR with content', async () => {
+    it('GIVEN existing CR WHEN getting with mode="full" THEN return complete CR with content', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       const crContent = `## 1. Description
@@ -158,7 +158,7 @@ Multiple approaches were considered, and this approach was selected.
   })
 
   describe('mode: attributes', () => {
-    it('gIVEN existing CR WHEN getting with mode="attributes" THEN return only YAML attributes', async () => {
+    it('GIVEN existing CR WHEN getting with mode="attributes" THEN return only YAML attributes', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       const createdCR = await projectFactory.createTestCR('TEST', {
@@ -197,7 +197,7 @@ We need this CR to test attributes mode functionality.`,
   })
 
   describe('mode: metadata', () => {
-    it('gIVEN existing CR WHEN getting with mode="metadata" THEN return minimal metadata', async () => {
+    it('GIVEN existing CR WHEN getting with mode="metadata" THEN return minimal metadata', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       const createdCR = await projectFactory.createTestCR('TEST', {
@@ -237,7 +237,7 @@ We need this CR to test metadata mode functionality.`,
   })
 
   describe('default Behavior', () => {
-    it('gIVEN existing CR WHEN getting without mode THEN default to full mode', async () => {
+    it('GIVEN existing CR WHEN getting without mode THEN default to full mode', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       const createdCR = await projectFactory.createTestCR('TEST', {
@@ -268,7 +268,7 @@ This CR tests default mode behavior.`,
   })
 
   describe('complex CRs', () => {
-    it('gIVEN CR with dependencies WHEN getting THEN include dependency information', async () => {
+    it('GIVEN CR with dependencies WHEN getting THEN include dependency information', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       const createdCR = await projectFactory.createTestCR('TEST', {
@@ -299,7 +299,7 @@ We need to test complex dependency handling.`,
       expect(response.data).toContain('This CR has complex dependencies')
     })
 
-    it('gIVEN CR with complex content WHEN getting THEN preserve formatting', async () => {
+    it('GIVEN CR with complex content WHEN getting THEN preserve formatting', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       const complexContent = `# Complex Test CR
@@ -373,7 +373,7 @@ Even more nested content.
   })
 
   describe('error Handling', () => {
-    it('gIVEN non-existent CR WHEN getting THEN return tool execution error', async () => {
+    it('GIVEN non-existent CR WHEN getting THEN return tool execution error', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       const response = await callGetCR('TEST', 'TEST-999')
@@ -386,7 +386,7 @@ Even more nested content.
       expect(response.error?.message).toContain('not found')
     })
 
-    it('gIVEN non-existent project WHEN getting THEN return protocol error', async () => {
+    it('GIVEN non-existent project WHEN getting THEN return protocol error', async () => {
       const response = await callGetCR('NONEXISTENT', 'TEST-001')
 
       // Invalid project key is a parameter validation error
@@ -396,7 +396,7 @@ Even more nested content.
       expect(response.error?.message).toContain('invalid')
     })
 
-    it('gIVEN missing project parameter WHEN getting THEN return protocol error', async () => {
+    it('GIVEN missing project parameter WHEN getting THEN return protocol error', async () => {
       const response = await mcpClient.callTool('get_cr', {
         key: 'TEST-001',
         mode: 'full',
@@ -409,7 +409,7 @@ Even more nested content.
       expect(response.error?.message).toContain('Project key is required')
     })
 
-    it('gIVEN missing key parameter WHEN getting THEN return protocol error', async () => {
+    it('GIVEN missing key parameter WHEN getting THEN return protocol error', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       const response = await mcpClient.callTool('get_cr', {
@@ -424,7 +424,7 @@ Even more nested content.
       expect(response.error?.message).toContain('CR key is required')
     })
 
-    it('gIVEN invalid mode WHEN getting THEN return protocol error', async () => {
+    it('GIVEN invalid mode WHEN getting THEN return protocol error', async () => {
       await projectFactory.createProjectStructure('TEST', 'Test Project')
 
       const response = await mcpClient.callTool('get_cr', {
@@ -442,7 +442,7 @@ Even more nested content.
   })
 
   describe('response Format Consistency', () => {
-    it('gIVEN successful retrieval WHEN response THEN match expected format for each mode', async () => {
+    it('GIVEN successful retrieval WHEN response THEN match expected format for each mode', async () => {
       await projectFactory.createProjectStructure('FMT', 'Format Test')
       const createdCR = await projectFactory.createTestCR('FMT', {
         title: 'Format Consistency Test',

@@ -98,7 +98,7 @@ Basic implementation steps.
   }
 
   describe('single Attribute Updates', () => {
-    it('gIVEN existing CR WHEN updating priority THEN success with new priority', async () => {
+    it('GIVEN existing CR WHEN updating priority THEN success with new priority', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Priority Update Test',
         type: 'Feature Enhancement',
@@ -129,7 +129,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN existing CR WHEN updating assignee THEN success with new assignee', async () => {
+    it('GIVEN existing CR WHEN updating assignee THEN success with new assignee', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Assignee Update Test',
         type: 'Bug Fix',
@@ -161,7 +161,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN existing CR WHEN updating phaseEpic THEN success with new phase', async () => {
+    it('GIVEN existing CR WHEN updating phaseEpic THEN success with new phase', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Phase Update Test',
         type: 'Architecture',
@@ -193,7 +193,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN existing CR WHEN updating dependencies THEN success with new dependencies', async () => {
+    it('GIVEN existing CR WHEN updating dependencies THEN success with new dependencies', async () => {
       // Create dependency CRs
       const dep1Key = await createTestCRAndGetKey('TEST', {
         title: 'Dependency 1',
@@ -236,7 +236,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN existing CR WHEN updating blocks THEN success with new blocks', async () => {
+    it('GIVEN existing CR WHEN updating blocks THEN success with new blocks', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Blocks Update Test',
         type: 'Technical Debt',
@@ -267,7 +267,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN existing CR WHEN updating relatedTickets THEN success with new tickets', async () => {
+    it('GIVEN existing CR WHEN updating relatedTickets THEN success with new tickets', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Related Tickets Update Test',
         type: 'Documentation',
@@ -298,7 +298,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN implemented CR WHEN updating implementationDate THEN success with date', async () => {
+    it('GIVEN implemented CR WHEN updating implementationDate THEN success with date', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Implementation Date Test',
         type: 'Feature Enhancement',
@@ -331,7 +331,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN implemented CR WHEN updating implementationNotes THEN success with notes', async () => {
+    it('GIVEN implemented CR WHEN updating implementationNotes THEN success with notes', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Implementation Notes Test',
         type: 'Bug Fix',
@@ -366,7 +366,7 @@ Basic implementation steps.
   })
 
   describe('multiple Attribute Updates', () => {
-    it('gIVEN existing CR WHEN updating multiple attributes THEN update all attributes', async () => {
+    it('GIVEN existing CR WHEN updating multiple attributes THEN update all attributes', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Multiple Update Test',
         type: 'Feature Enhancement',
@@ -412,7 +412,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN existing CR WHEN updating all optional attributes THEN handle all fields', async () => {
+    it('GIVEN existing CR WHEN updating all optional attributes THEN handle all fields', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'All Attributes Test',
         type: 'Architecture',
@@ -459,7 +459,7 @@ Basic implementation steps.
   })
 
   describe('clearing Attributes', () => {
-    it('gIVEN CR with assignee WHEN updating to empty THEN clear assignee', async () => {
+    it('GIVEN CR with assignee WHEN updating to empty THEN clear assignee', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Clear Attribute Test',
         type: 'Documentation',
@@ -491,7 +491,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN CR with dependencies WHEN updating to null THEN clear dependencies', async () => {
+    it('GIVEN CR with dependencies WHEN updating to null THEN clear dependencies', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Clear Dependencies Test',
         type: 'Feature Enhancement',
@@ -523,7 +523,7 @@ Basic implementation steps.
   })
 
   describe('error Handling', () => {
-    it('gIVEN non-existent CR WHEN updating THEN handle gracefully', async () => {
+    it('GIVEN non-existent CR WHEN updating THEN handle gracefully', async () => {
       const response = await callUpdateCRAttrs('TEST', 'TEST-999', {
         priority: 'High',
       })
@@ -545,7 +545,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN non-existent project WHEN updating THEN handle gracefully', async () => {
+    it('GIVEN non-existent project WHEN updating THEN handle gracefully', async () => {
       const response = await callUpdateCRAttrs('NONEXISTENT', 'TEST-001', {
         priority: 'High',
       })
@@ -557,7 +557,7 @@ Basic implementation steps.
       expect(response.error!.message).toContain('invalid')
     })
 
-    it('gIVEN invalid priority WHEN updating THEN accept update', async () => {
+    it('GIVEN invalid priority WHEN updating THEN accept update', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Invalid Priority Test',
         type: 'Bug Fix',
@@ -577,7 +577,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN invalid date format WHEN updating implementationDate THEN accept update', async () => {
+    it('GIVEN invalid date format WHEN updating implementationDate THEN accept update', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Invalid Date Test',
         type: 'Feature Enhancement',
@@ -598,7 +598,7 @@ Basic implementation steps.
       }
     })
 
-    it('gIVEN missing project parameter WHEN updating THEN return validation error', async () => {
+    it('GIVEN missing project parameter WHEN updating THEN return validation error', async () => {
       const response = await mcpClient.callTool('update_cr_attrs', {
         key: 'TEST-001',
         attributes: { priority: 'High' },
@@ -610,7 +610,7 @@ Basic implementation steps.
       expect(response.error!.code).toBe(-32602) // Invalid params error
     })
 
-    it('gIVEN missing key parameter WHEN updating THEN return validation error', async () => {
+    it('GIVEN missing key parameter WHEN updating THEN return validation error', async () => {
       const response = await mcpClient.callTool('update_cr_attrs', {
         project: 'TEST',
         attributes: { priority: 'High' },
@@ -622,7 +622,7 @@ Basic implementation steps.
       expect(response.error!.code).toBe(-32602) // Invalid params error
     })
 
-    it('gIVEN missing attributes parameter WHEN updating THEN return validation error', async () => {
+    it('GIVEN missing attributes parameter WHEN updating THEN return validation error', async () => {
       const response = await mcpClient.callTool('update_cr_attrs', {
         project: 'TEST',
         key: 'TEST-001',
@@ -636,7 +636,7 @@ Basic implementation steps.
   })
 
   describe('restricted Attributes', () => {
-    it('gIVEN attempt to update title WHEN updating attributes THEN reject update', async () => {
+    it('GIVEN attempt to update title WHEN updating attributes THEN reject update', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Original Title',
         type: 'Feature Enhancement',
@@ -654,7 +654,7 @@ Basic implementation steps.
       expect(response.error!.message).toContain('Allowed attributes for update_cr_attrs are')
     })
 
-    it('gIVEN attempt to update status WHEN updating attributes THEN reject update', async () => {
+    it('GIVEN attempt to update status WHEN updating attributes THEN reject update', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Status Test',
         type: 'Bug Fix',
@@ -673,7 +673,7 @@ Basic implementation steps.
       expect(response.error!.message).toContain('Allowed attributes for update_cr_attrs are')
     })
 
-    it('gIVEN attempt to update type WHEN updating attributes THEN reject update', async () => {
+    it('GIVEN attempt to update type WHEN updating attributes THEN reject update', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Type Test',
         type: 'Feature Enhancement',
@@ -693,7 +693,7 @@ Basic implementation steps.
   })
 
   describe('response Format', () => {
-    it('gIVEN successful update WHEN response THEN include updated CR with all fields', async () => {
+    it('GIVEN successful update WHEN response THEN include updated CR with all fields', async () => {
       const crKey = await createTestCRAndGetKey('TEST', {
         title: 'Response Format Test',
         type: 'Documentation',

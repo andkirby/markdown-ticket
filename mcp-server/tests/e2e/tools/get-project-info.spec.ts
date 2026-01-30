@@ -53,7 +53,7 @@ describe('get_project_info', () => {
     return info
   }
 
-  it('gIVEN valid project WHEN getting info THEN return full details', async () => {
+  it('GIVEN valid project WHEN getting info THEN return full details', async () => {
     await projectFactory.createProjectStructure('TEST', 'Test Project')
     const response = await mcpClient.callTool('get_project_info', { key: 'TEST' })
     expect(response.success).toBe(true)
@@ -64,7 +64,7 @@ describe('get_project_info', () => {
     expect(projectInfo.path).toContain('TEST')
   })
 
-  it('gIVEN invalid project WHEN getting info THEN handle gracefully', async () => {
+  it('GIVEN invalid project WHEN getting info THEN handle gracefully', async () => {
     const response = await mcpClient.callTool('get_project_info', { key: 'INVALID' })
     // Invalid project returns error, not success
     expect(response.success).toBe(false)
@@ -73,14 +73,14 @@ describe('get_project_info', () => {
     expect(response.error?.message).toContain('is invalid')
   })
 
-  it('gIVEN project with repo WHEN getting info THEN include repo', async () => {
+  it('GIVEN project with repo WHEN getting info THEN include repo', async () => {
     await projectFactory.createProjectStructure('REPO', 'Repo Project', { repository: 'https://github.com/example/test' })
     const response = await mcpClient.callTool('get_project_info', { key: 'REPO' })
     const projectInfo = parseProjectInfoMarkdown(response.data)
     expect(projectInfo.repository).toBe('https://github.com/example/test')
   })
 
-  it('gIVEN project with CRs WHEN getting info THEN show count', async () => {
+  it('GIVEN project with CRs WHEN getting info THEN show count', async () => {
     await projectFactory.createProjectStructure('CRS', 'Project with CRs')
     await projectFactory.createTestCR('CRS', { title: 'Test CR 1', type: 'Feature Enhancement', content: '## 1. Description\nTest\n\n## 2. Rationale\nTest' })
     const response = await mcpClient.callTool('get_project_info', { key: 'CRS' })
@@ -91,42 +91,42 @@ describe('get_project_info', () => {
     expect(typeof projectInfo.crCount).toBe('number')
   })
 
-  it('gIVEN project without repo WHEN getting info THEN omit repo', async () => {
+  it('GIVEN project without repo WHEN getting info THEN omit repo', async () => {
     await projectFactory.createProjectStructure('NOREPO', 'No Repo Project')
     const response = await mcpClient.callTool('get_project_info', { key: 'NOREPO' })
     const projectInfo = parseProjectInfoMarkdown(response.data)
     expect(projectInfo.repository).toBeUndefined()
   })
 
-  it('gIVEN special characters WHEN getting info THEN handle correctly', async () => {
+  it('GIVEN special characters WHEN getting info THEN handle correctly', async () => {
     await projectFactory.createProjectStructure('SPEC', 'Special-Project_Test')
     const response = await mcpClient.callTool('get_project_info', { key: 'SPEC' })
     const projectInfo = parseProjectInfoMarkdown(response.data)
     expect(projectInfo.name).toBe('Special-Project_Test')
   })
 
-  it('gIVEN empty project WHEN getting info THEN handle gracefully', async () => {
+  it('GIVEN empty project WHEN getting info THEN handle gracefully', async () => {
     const response = await mcpClient.callTool('get_project_info', { key: '' })
     expect(response.success).toBe(false)
     expect(response.error?.code).toBe(-32602)
     expect(response.error?.message).toContain('MCP error -32602:')
   })
 
-  it('gIVEN null project WHEN getting info THEN handle gracefully', async () => {
+  it('GIVEN null project WHEN getting info THEN handle gracefully', async () => {
     const response = await mcpClient.callTool('get_project_info', { key: null })
     expect(response.success).toBe(false)
     expect(response.error?.code).toBe(-32602)
     expect(response.error?.message).toContain('MCP error -32602:')
   })
 
-  it('gIVEN successful retrieval WHEN response THEN be markdown', async () => {
+  it('GIVEN successful retrieval WHEN response THEN be markdown', async () => {
     await projectFactory.createProjectStructure('FMT', 'Format Test')
     const response = await mcpClient.callTool('get_project_info', { key: 'FMT' })
     expect(response.data).toContain('📋 Project:')
     expect(response.data).toContain('**FMT**')
   })
 
-  it('gIVEN multiple requests WHEN getting info THEN return consistent', async () => {
+  it('GIVEN multiple requests WHEN getting info THEN return consistent', async () => {
     await projectFactory.createProjectStructure('PERF', 'Performance Test')
     const response1 = await mcpClient.callTool('get_project_info', { key: 'PERF' })
     const response2 = await mcpClient.callTool('get_project_info', { key: 'PERF' })
