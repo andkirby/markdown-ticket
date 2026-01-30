@@ -10,6 +10,7 @@
  */
 
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
+import { CR_PRIORITIES, CR_STATUSES, CR_TYPES } from '@mdt/shared/models/Types.js'
 
 // =========================
 // Project Tool Definitions
@@ -49,12 +50,11 @@ export const PROJECT_TOOLS: Tool[] = [
 // =====================================
 
 /**
- * Shared enums for tool schemas
+ * Shared enums for tool schemas (imported from Types.ts for single source of truth)
  */
-const CR_STATUS_ENUM = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected']
-const CR_STATUS_EXTENDED_ENUM = [...CR_STATUS_ENUM, 'On Hold']
-const CR_TYPE_ENUM = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation']
-const CR_PRIORITY_ENUM = ['Low', 'Medium', 'High', 'Critical']
+const CR_STATUS_ENUM = CR_STATUSES as readonly string[]
+const CR_TYPE_ENUM = CR_TYPES as readonly string[]
+const CR_PRIORITY_ENUM = CR_PRIORITIES as readonly string[]
 
 /**
  * Tools for CR and section management operations
@@ -103,7 +103,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
   },
   {
     name: 'create_cr',
-    description: 'Create a new CR. Available types: Architecture (system design), Feature Enhancement (new functionality), Bug Fix (defect resolution), Technical Debt (code quality), Documentation (project docs)',
+    description: 'Create a new CR. Available types: Architecture (system design), Feature Enhancement (new functionality), Bug Fix (defect resolution), Technical Debt (code quality), Documentation (project docs), Research (technical validation)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -230,7 +230,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
         },
         status: {
           type: 'string',
-          enum: CR_STATUS_EXTENDED_ENUM,
+          enum: CR_STATUS_ENUM,
           description: 'New CR status',
         },
       },

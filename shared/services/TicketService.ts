@@ -21,6 +21,7 @@ import {
 } from '../models/Ticket.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
+import { TemplateService } from './TemplateService.js'
 
 /**
  * Unified Ticket Service for CRUD Operations
@@ -28,9 +29,11 @@ import { ProjectService } from './ProjectService.js'
  */
 export class TicketService {
   private projectService: ProjectService
+  private templateService: TemplateService
 
   constructor(quiet: boolean = false) {
     this.projectService = new ProjectService(quiet)
+    this.templateService = new TemplateService(undefined, quiet)
   }
 
   /**
@@ -434,42 +437,27 @@ export class TicketService {
       }
     }
     else {
-      // Default template with auto-generated H1
-      sections.push(`# ${ticket.title}`)
-      sections.push('')
-      sections.push('## 1. Description')
-      sections.push('')
-      sections.push('### Problem Statement')
-      sections.push('*To be filled*')
-      sections.push('')
-      sections.push('### Current State')
-      sections.push('*To be filled*')
-      sections.push('')
-      sections.push('### Desired State')
-      sections.push('*To be filled*')
-      sections.push('')
-      sections.push('### Rationale')
-      sections.push('*To be filled*')
-      sections.push('')
-      if (data.impactAreas && data.impactAreas.length > 0) {
-        sections.push('### Impact Areas')
-        data.impactAreas.forEach(area => sections.push(`- ${area}`))
-        sections.push('')
+      // Use type-specific template from TemplateService
+      const template = this.templateService.getTemplate(ticket.type)
+
+      // Replace placeholder title in template
+      const templateContent = template.template.replace('[Research Title]', ticket.title)
+        .replace('[Bug Title]', ticket.title)
+        .replace('[Feature Title]', ticket.title)
+        .replace('[Architecture Title]', ticket.title)
+        .replace('[Technical Debt Title]', ticket.title)
+        .replace('[Documentation Title]', ticket.title)
+
+      // If template already has H1, use it as-is
+      if (templateContent.trim().startsWith('# ')) {
+        sections.push(templateContent)
       }
-      sections.push('## 2. Solution Analysis')
-      sections.push('*To be filled during implementation*')
-      sections.push('')
-      sections.push('## 3. Implementation Specification')
-      sections.push('*To be filled during implementation*')
-      sections.push('')
-      sections.push('## 4. Acceptance Criteria')
-      sections.push('*To be filled during implementation*')
-      sections.push('')
-      sections.push('## 5. Implementation Notes')
-      sections.push('*To be filled during/after implementation*')
-      sections.push('')
-      sections.push('## 6. References')
-      sections.push('*To be filled during implementation*')
+      else {
+        // Add H1 if template doesn't have one
+        sections.push(`# ${ticket.title}`)
+        sections.push('')
+        sections.push(templateContent)
+      }
     }
 
     return sections.join('\n')

@@ -140,7 +140,7 @@ describe('manage_cr_sections', () => {
   ]
 
   describe('list Operation', () => {
-    it('gIVEN existing CR WHEN listing sections THEN return all section names', async () => {
+    it('GIVEN existing CR WHEN listing sections THEN return all section names', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Section List Test',
         type: 'Feature Enhancement',
@@ -180,7 +180,7 @@ Initial criteria.`,
       })
     })
 
-    it('gIVEN CR with custom sections WHEN listing THEN return all sections including custom', async () => {
+    it('GIVEN CR with custom sections WHEN listing THEN return all sections including custom', async () => {
       const customContent = `## 1. Description
 
 Standard description.
@@ -224,7 +224,7 @@ Standard implementation.`
   })
 
   describe('get Operation', () => {
-    it('gIVEN existing CR WHEN getting section THEN return specific section content', async () => {
+    it('GIVEN existing CR WHEN getting section THEN return specific section content', async () => {
       const sectionContent = `This is the detailed rationale for the change.
 
 Key points:
@@ -260,7 +260,7 @@ Analysis here.`,
       expect(parsed.content).toContain('Key points')
     })
 
-    it('gIVEN flexible section matching WHEN getting THEN find section with various formats', async () => {
+    it('GIVEN flexible section matching WHEN getting THEN find section with various formats', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Flexible Matching Test',
         type: 'Feature Enhancement',
@@ -295,7 +295,7 @@ Test implementation.`,
       }
     })
 
-    it('gIVEN non-existent section WHEN getting THEN return error', async () => {
+    it('GIVEN non-existent section WHEN getting THEN return error', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Non-existent Section Test',
         type: 'Documentation',
@@ -319,7 +319,7 @@ Basic rationale.`,
   })
 
   describe('replace Operation', () => {
-    it('gIVEN existing CR WHEN replacing section THEN update section completely', async () => {
+    it('GIVEN existing CR WHEN replacing section THEN update section completely', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Replace Section Test',
         type: 'Technical Debt',
@@ -365,7 +365,7 @@ This refactor will address all these concerns by modernizing the architecture.`
       expect(parsed.content).toContain('Old description')
     })
 
-    it('gIVEN section with header WHEN replacing THEN preserve header format', async () => {
+    it('GIVEN section with header WHEN replacing THEN preserve header format', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Header Format Test',
         type: 'Architecture',
@@ -406,7 +406,7 @@ With subsections.`
   })
 
   describe('append Operation', () => {
-    it('gIVEN existing CR WHEN appending section THEN add content to end', async () => {
+    it('GIVEN existing CR WHEN appending section THEN add content to end', async () => {
       const originalContent = `## 1. Description
 
 Initial description.
@@ -443,7 +443,7 @@ More details here.`
       expect(response.data).toContain('Content has been added to the end of the section')
     })
 
-    it('gIVEN appending to existing section WHEN appending THEN add to end of section', async () => {
+    it('GIVEN appending to existing section WHEN appending THEN add to end of section', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Append to Section Test',
         type: 'Bug Fix',
@@ -490,7 +490,7 @@ Implementation details.
   })
 
   describe('prepend Operation', () => {
-    it('gIVEN existing CR WHEN prepending section THEN add content to beginning', async () => {
+    it('GIVEN existing CR WHEN prepending section THEN add content to beginning', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Prepend Section Test',
         type: 'Documentation',
@@ -545,7 +545,7 @@ The motivation for these changes...`
       expect(response.data).toContain('prepend')
     })
 
-    it('gIVEN prepending to existing section WHEN prepending THEN add to beginning of section', async () => {
+    it('GIVEN prepending to existing section WHEN prepending THEN add to beginning of section', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Prepend to Section Test',
         type: 'Architecture',
@@ -595,7 +595,7 @@ Context: The following describes the architectural changes...`
   })
 
   describe('complex Section Operations', () => {
-    it('gIVEN hierarchical sections WHEN managing THEN handle nested structure', async () => {
+    it('GIVEN hierarchical sections WHEN managing THEN handle nested structure', async () => {
       const hierarchicalContent = `## 1. Description
 
 Top-level description.
@@ -667,7 +667,7 @@ Updated historical perspective.`
   })
 
   describe('error Handling', () => {
-    it('gIVEN non-existent CR WHEN managing THEN return error', async () => {
+    it('GIVEN non-existent CR WHEN managing THEN return error', async () => {
       const response = await callManageCRSections('TEST', 'TEST-999', 'list')
 
       expect(response.success).toBe(false)
@@ -676,7 +676,7 @@ Updated historical perspective.`
       expect(response.error?.message).toContain('not found')
     })
 
-    it('gIVEN non-existent project WHEN managing THEN return error', async () => {
+    it('GIVEN non-existent project WHEN managing THEN return error', async () => {
       const response = await callManageCRSections('NONEXISTENT', 'TEST-001', 'list')
 
       expect(response.success).toBe(false)
@@ -686,7 +686,7 @@ Updated historical perspective.`
       expect(response.error?.message).toContain('invalid')
     })
 
-    it('gIVEN invalid operation WHEN managing THEN return validation error', async () => {
+    it('GIVEN invalid operation WHEN managing THEN return validation error', async () => {
       const response = await mcpClient.callTool('manage_cr_sections', {
         project: 'TEST',
         key: 'TEST-001',
@@ -699,7 +699,7 @@ Updated historical perspective.`
       expect(response.error?.message).toContain('operation')
     })
 
-    it('gIVEN missing operation WHEN managing THEN return validation error', async () => {
+    it('GIVEN missing operation WHEN managing THEN return validation error', async () => {
       const response = await mcpClient.callTool('manage_cr_sections', {
         project: 'TEST',
         key: 'TEST-001',
@@ -711,7 +711,7 @@ Updated historical perspective.`
       expect(response.error?.message).toContain('operation')
     })
 
-    it('gIVEN get operation without section WHEN managing THEN return validation error', async () => {
+    it('GIVEN get operation without section WHEN managing THEN return validation error', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Test CR',
         type: 'Documentation',
@@ -739,7 +739,7 @@ Test rationale.`,
   })
 
   describe('response Format', () => {
-    it('gIVEN successful operation WHEN response THEN include appropriate data', async () => {
+    it('GIVEN successful operation WHEN response THEN include appropriate data', async () => {
       const createdCR = await projectFactory.createTestCR('TEST', {
         title: 'Response Format Test',
         type: 'Documentation',

@@ -2,9 +2,10 @@
 code: MDT-120
 status: Implemented
 dateCreated: 2026-01-30T00:51:44.471Z
-implementationDate: 2026-01-30T02:33:13.000Z
+implementationDate: 2026-01-30
 type: Feature Enhancement
 priority: Medium
+implementationNotes: Added Research type to CR_TYPES array, updated tool description, added Research template to TemplateService.ts with proper sections (Research Objective, Research Questions table, Validation Approach, Acceptance Criteria), updated TicketService.ts to use type-specific templates via templateService.getTemplate(). All 8 E2E tests passing including template content verification that reads created file to confirm Research-specific sections are applied.
 ---
 
 # Add Research Ticket Type for Technical Validation Workflows

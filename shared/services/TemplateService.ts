@@ -1,6 +1,7 @@
 import type { Ticket, TicketData } from '../models/Ticket.js'
 // Direct imports for standard usage
 import type { Suggestion, Template, ValidationResult } from '../models/Types.js'
+import { CR_PRIORITIES, CR_TYPES } from '../models/Types.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getDefaultPaths } from '../utils/constants.js'
@@ -360,6 +361,115 @@ export class TemplateService {
 ## 6. References
 *Existing documentation, style guides, examples*`,
     })
+
+    // Research Template
+    this.templates.set('Research', {
+      type: 'Research',
+      requiredFields: ['title', 'description'],
+      sections: [
+        { name: 'Research Objective', required: true },
+        { name: 'Research Context', required: true },
+        { name: 'Scope', required: true },
+      ],
+      template: `# [Research Title]
+
+## 1. Description
+
+### Research Objective
+Clear statement of what hypothesis or question this research validates:
+- Primary hypothesis or research question
+- What decision depends on this research
+- What uncertainty this research resolves
+
+### Research Context
+Write 2-3 bullets providing context:
+- What problem or gap motivates this research
+- What constraints or assumptions exist
+- What prior work or knowledge is relevant
+
+### Scope
+Clearly define research boundaries:
+- **In scope**: What questions this research addresses
+- **Out of scope**: What questions are NOT addressed
+
+## 2. Research Questions
+
+Use table format for all research questions:
+
+| ID | Research Question | Success Criteria | Priority |
+|----|-------------------|------------------|----------|
+| RQ1 | Specific question to answer | Measurable outcome | High/Medium/Low |
+| RQ2 | Specific question to answer | Measurable outcome | High/Medium/Low |
+| RQ3 | Specific question to answer | Measurable outcome | High/Medium/Low |
+
+**Guidelines**:
+- Each RQ must be answerable with evidence
+- Success criteria must be observable/measurable
+- Priority guides resource allocation if time-constrained
+
+## 3. Validation Approach
+
+### Research Method
+Describe how each RQ will be validated:
+- RQ1: Method (e.g., literature review, prototype, experiment, analysis)
+- RQ2: Method with specific data sources or tools
+- RQ3: Method with measurement approach
+
+### Data Sources
+List sources of evidence for each RQ:
+- RQ1: Specific documents, codebases, systems to analyze
+- RQ2: Specific user groups, metrics, or benchmarks
+- RQ3: Specific technologies, frameworks, or patterns to evaluate
+
+### Success Metrics
+Define measurable outcomes:
+- Evidence threshold for answering each RQ
+- Confidence level required for conclusions
+- Decision criteria for proceeding vs. pivoting
+
+## 4. Acceptance Criteria
+
+### Research Completion
+Checkboxes for each RQ (NOT in code blocks):
+- [ ] RQ1 answered with evidence: [summary of findings]
+- [ ] RQ2 answered with evidence: [summary of findings]
+- [ ] RQ3 answered with evidence: [summary of findings]
+
+### Decision Outcomes
+Define possible outcomes and next steps:
+- If hypothesis confirmed: [specific action or CR to create]
+- If hypothesis refuted: [alternative approach or pivot]
+- If inconclusive: [what additional work needed]
+
+### Artifacts Produced
+List deliverables from this research:
+- Research summary document with findings
+- Evidence data (benchmarks, prototypes, analysis)
+- Recommendation: [Create new CR / Modify existing CR / Abandon approach]
+
+## 5. Dependencies & Next Steps
+
+### Prerequisites
+What must exist before research starts:
+- Access to systems, data, or documentation
+- Setup or configuration required
+- Stakeholder input or approval needed
+
+### Blocked By
+List any dependencies:
+- [ ] CR-XXX: Prior research or implementation
+- [ ] System Y: Access to environment or tool
+- [ ] Stakeholder Z: Input or approval
+
+### Next Steps After Research
+Based on research outcomes:
+- **Positive outcome**: Create CR for [specific feature/change]
+- **Negative outcome**: Pivot to [alternative approach]
+- **Inconclusive**: Additional research needed for [specific RQ]
+
+## 6. References
+*Related research, documentation, proof-of-concepts*`,
+    })
   }
 
   getTemplate(type: string): Template {
@@ -390,21 +500,19 @@ export class TemplateService {
       errors.push({ field: 'type', message: 'Type is required' })
     }
     else {
-      const validTypes: string[] = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation']
-      if (!validTypes.includes(effectiveType)) {
+      if (!CR_TYPES.includes(effectiveType as any)) {
         errors.push({
           field: 'type',
-          message: `Invalid type '${effectiveType}'. Must be one of: ${validTypes.join(', ')}`,
+          message: `Invalid type '${effectiveType}'. Must be one of: ${CR_TYPES.join(', ')}`,
         })
       }
     }
 
     if (data.priority) {
-      const validPriorities = ['Low', 'Medium', 'High', 'Critical']
-      if (!validPriorities.includes(data.priority)) {
+      if (!CR_PRIORITIES.includes(data.priority as any)) {
         errors.push({
           field: 'priority',
-          message: `Invalid priority '${data.priority}'. Must be one of: ${validPriorities.join(', ')}`,
+          message: `Invalid priority '${data.priority}'. Must be one of: ${CR_PRIORITIES.join(', ')}`,
         })
       }
     }
