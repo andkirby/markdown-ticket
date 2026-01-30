@@ -22,6 +22,7 @@ export type CRType
     | 'Bug Fix'
     | 'Technical Debt'
     | 'Documentation'
+    | 'Research'
 
 export type CRPriority
   = | 'Low'

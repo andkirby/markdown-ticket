@@ -190,6 +190,32 @@ What type of work?
     ... continue ...
 ```
 
+## Research Workflow
+
+```
+/mdt:ticket-creation (Requirements or Full)
+    │
+    ▼
+/mdt:poc ──────────────────────────── Creates: poc.md + poc/ folder
+    │                                 Validate uncertain technical decisions
+    │                                 Proof-of-concept implementation
+    │                                 ⚠️ Use when "will this work?" needs proof
+    ▼
+/mdt:reflection ────────────────────── Updates: CR with research findings
+    │                                 Documents lessons learned
+    │                                 Records technical insights
+    │                                 Recommends next steps
+    ▼
+    Decision Point:
+    ┌─────────────────────────────────────┐
+    │ Validated?                          │
+    ├─────────────────────────────────────┤
+    │ Yes → Proceed to feature workflow   │
+    │ No → Create new research ticket     │
+    │ Maybe → Expand POC scope            │
+    └─────────────────────────────────────┘
+```
+
 ## Debt Prevention Chain
 
 ```
