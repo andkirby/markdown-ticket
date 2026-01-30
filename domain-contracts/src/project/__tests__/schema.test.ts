@@ -3,15 +3,13 @@
  * Testing OUR rules, not Zod's functionality
  */
 
-import { z } from 'zod';
-
 // Import schemas to be tested
 import {
-  ProjectSchema,
   DocumentConfigSchema,
-} from '../schema.js';
+  ProjectSchema,
+} from '../schema.js'
 
-describe('ProjectSchema', () => {
+describe('projectSchema', () => {
   // Testing OUR regex rule for code field
   describe('code format', () => {
     // Valid cases - our rule accepts these
@@ -21,8 +19,8 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('accepts MAX boundary (5 chars)', () => {
       expect(() => ProjectSchema.parse({
@@ -30,8 +28,8 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('accepts middle range (3-4 chars)', () => {
       expect(() => ProjectSchema.parse({
@@ -39,15 +37,15 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      })).not.toThrow();
+      })).not.toThrow()
 
       expect(() => ProjectSchema.parse({
         code: 'WEB1',
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     // Invalid cases - our rule rejects these
     it('rejects below MIN (1 char)', () => {
@@ -56,8 +54,8 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      })).toThrow(/2-5 chars/);
-    });
+      })).toThrow(/2-5 chars/)
+    })
 
     it('rejects above MAX (6+ chars)', () => {
       expect(() => ProjectSchema.parse({
@@ -65,8 +63,8 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      })).toThrow();
-    });
+      })).toThrow()
+    })
 
     it('rejects wrong format (lowercase)', () => {
       expect(() => ProjectSchema.parse({
@@ -74,8 +72,8 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      })).toThrow(/uppercase/);
-    });
+      })).toThrow(/uppercase/)
+    })
 
     it('rejects wrong format (special chars)', () => {
       expect(() => ProjectSchema.parse({
@@ -83,9 +81,9 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      })).toThrow();
-    });
-  });
+      })).toThrow()
+    })
+  })
 
   // Testing OUR length rule for name field
   describe('name length', () => {
@@ -95,8 +93,8 @@ describe('ProjectSchema', () => {
         name: 'ABC',
         id: 'test',
         ticketsPath: './cr',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('rejects below MIN (2 chars)', () => {
       expect(() => ProjectSchema.parse({
@@ -104,11 +102,11 @@ describe('ProjectSchema', () => {
         name: 'AB',
         id: 'test',
         ticketsPath: './cr',
-      })).toThrow(/at least 3/);
-    });
+      })).toThrow(/at least 3/)
+    })
 
     // Don't test empty string - that's Zod's job
-  });
+  })
 
   // Testing OUR design choice for optional fields
   describe('optional fields', () => {
@@ -118,9 +116,9 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      });
-      expect(result.description).toBeUndefined();
-    });
+      })
+      expect(result.description).toBeUndefined()
+    })
 
     it('accepts missing repository', () => {
       const result = ProjectSchema.parse({
@@ -128,9 +126,9 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      });
-      expect(result.repository).toBeUndefined();
-    });
+      })
+      expect(result.repository).toBeUndefined()
+    })
 
     it('accepts all optional fields', () => {
       const result = ProjectSchema.parse({
@@ -140,11 +138,11 @@ describe('ProjectSchema', () => {
         ticketsPath: './cr',
         description: 'A project',
         repository: 'https://github.com/example/repo',
-      });
-      expect(result.description).toBe('A project');
-      expect(result.repository).toBe('https://github.com/example/repo');
-    });
-  });
+      })
+      expect(result.description).toBe('A project')
+      expect(result.repository).toBe('https://github.com/example/repo')
+    })
+  })
 
   // Testing OUR default value choice
   describe('default values', () => {
@@ -154,37 +152,37 @@ describe('ProjectSchema', () => {
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
-      });
-      expect(result.active).toBe(true);
-    });
-  });
-});
+      })
+      expect(result.active).toBe(true)
+    })
+  })
+})
 
-describe('DocumentConfigSchema', () => {
+describe('documentConfigSchema', () => {
   // Testing OUR path validation rules
   describe('path security rules', () => {
     it('rejects parent directory references', () => {
       expect(() => DocumentConfigSchema.parse({
         paths: ['../../../etc/passwd'],
         excludeFolders: ['node_modules'],
-      })).toThrow(/Parent directory/);
-    });
+      })).toThrow(/Parent directory/)
+    })
 
     it('rejects absolute paths', () => {
       expect(() => DocumentConfigSchema.parse({
         paths: ['/etc/passwd'],
         excludeFolders: ['node_modules'],
-      })).toThrow(/Absolute paths/);
-    });
+      })).toThrow(/Absolute paths/)
+    })
 
     // Valid cases
     it('accepts relative paths', () => {
       expect(() => DocumentConfigSchema.parse({
         paths: ['docs/**/*.md', './cr'],
         excludeFolders: ['node_modules'],
-      })).not.toThrow();
-    });
-  });
+      })).not.toThrow()
+    })
+  })
 
   // Testing OUR folder validation rule
   describe('exclude folders rule', () => {
@@ -192,17 +190,17 @@ describe('DocumentConfigSchema', () => {
       expect(() => DocumentConfigSchema.parse({
         paths: ['docs/**/*.md'],
         excludeFolders: ['path/to/folder'],
-      })).toThrow(/folder names, not paths/);
-    });
+      })).toThrow(/folder names, not paths/)
+    })
 
     // Valid cases
     it('accepts simple folder names', () => {
       expect(() => DocumentConfigSchema.parse({
         paths: ['docs/**/*.md'],
         excludeFolders: ['node_modules', '.git', 'dist'],
-      })).not.toThrow();
-    });
-  });
+      })).not.toThrow()
+    })
+  })
 
   // Testing OUR range rule
   describe('maxDepth range', () => {
@@ -211,31 +209,31 @@ describe('DocumentConfigSchema', () => {
         paths: ['docs/**/*.md'],
         excludeFolders: ['node_modules'],
         maxDepth: 1,
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('accepts MAX boundary (10)', () => {
       expect(() => DocumentConfigSchema.parse({
         paths: ['docs/**/*.md'],
         excludeFolders: ['node_modules'],
         maxDepth: 10,
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('rejects below MIN (0)', () => {
       expect(() => DocumentConfigSchema.parse({
         paths: ['docs/**/*.md'],
         excludeFolders: ['node_modules'],
         maxDepth: 0,
-      })).toThrow();
-    });
+      })).toThrow()
+    })
 
     it('rejects above MAX (11)', () => {
       expect(() => DocumentConfigSchema.parse({
         paths: ['docs/**/*.md'],
         excludeFolders: ['node_modules'],
         maxDepth: 11,
-      })).toThrow();
-    });
-  });
-});
+      })).toThrow()
+    })
+  })
+})

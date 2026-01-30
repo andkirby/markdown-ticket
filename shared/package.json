@@ -50,6 +50,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@mdt/domain-contracts": "file:../domain-contracts",
     "fs-extra": "^11.2.0",
     "smol-toml": "^1.5.2",
     "toml": "^3.0.0",

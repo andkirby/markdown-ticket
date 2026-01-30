@@ -2,7 +2,8 @@ import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
-import { CR_PRIORITIES, CR_STATUSES, CR_TYPES } from '../models/Types.js'
+import { CRPriorities, CRTypes, CRType } from '@mdt/domain-contracts'
+import { CR_STATUSES } from '../models/Types.js'
 
 /**
  * Shared Constants for Frontend, Backend, and MCP
@@ -13,11 +14,11 @@ import { CR_PRIORITIES, CR_STATUSES, CR_TYPES } from '../models/Types.js'
 export const STATUSES = CR_STATUSES
 export type Status = typeof CR_STATUSES[number]
 
-export const TYPES = CR_TYPES
-export type TicketType = typeof CR_TYPES[number]
+export const TYPES = CRTypes
+export type TicketType = typeof CRTypes[number]
 
-export const PRIORITIES = CR_PRIORITIES
-export type Priority = typeof CR_PRIORITIES[number]
+export const PRIORITIES = CRPriorities
+export type Priority = typeof CRPriorities[number]
 
 // File Extensions
 export const SUPPORTED_EXTENSIONS = ['.md', '.markdown'] as const
@@ -123,7 +124,7 @@ export const CONFIG_FILES = {
 // Default Values
 export const DEFAULTS = {
   STATUS: 'Proposed' as Status,
-  TYPE: 'Feature Enhancement' as TicketType,
+  TYPE: CRType.FEATURE_ENHANCEMENT as TicketType,
   PRIORITY: 'Medium' as Priority,
   TICKETS_PATH: 'docs/CRs',
   START_NUMBER: 1,

@@ -9,10 +9,22 @@
  */
 
 // Import from local models for now - will be replaced with @mdt/domain-contracts
-import type { CRPriority, CRStatus, CRType } from '../../../models/Types'
+import type { CRPriorityValue, CRStatus, CRTypeValue } from '../../../models/Types'
+import { CRPriority, CRType } from '../../../models/Types'
 
 // Mock schemas for now - will be replaced with Zod schemas from domain-contracts
-type SafeParseResult<T> = { success: true, data: T } | { success: false, error: { issues: any[] } }
+type SafeParseResult<T> =
+  | { success: true, data: T }
+  | { success: false, error: { issues: any[] } }
+
+// Type guards to discriminate the union
+function isSafeParseSuccess<T>(result: SafeParseResult<T>): result is { success: true, data: T } {
+  return result.success === true
+}
+
+function isSafeParseError<T>(result: SafeParseResult<T>): result is { success: false, error: { issues: any[] } } {
+  return result.success === false
+}
 
 const ProjectSchema = {
   safeParse: (data: any): SafeParseResult<any> => {
@@ -68,7 +80,7 @@ describe('domain Contracts - Schema Validation', () => {
 
       const result = ProjectSchema.safeParse(validProject)
       expect(result.success).toBe(true)
-      if (result.success) {
+      if (isSafeParseSuccess(result)) {
         expect(result.data.id).toBe('test-project')
       }
     })
@@ -84,7 +96,7 @@ describe('domain Contracts - Schema Validation', () => {
 
       const result = ProjectSchema.safeParse(invalidProject)
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (isSafeParseError(result)) {
         expect(result.error.issues.length).toBeGreaterThan(0)
       }
     })
@@ -134,7 +146,7 @@ describe('domain Contracts - Schema Validation', () => {
 
       const result = TicketSchema.safeParse(validTicket)
       expect(result.success).toBe(true)
-      if (result.success) {
+      if (isSafeParseSuccess(result)) {
         expect(result.data.code).toBe('MDT-001')
         expect(Array.isArray(result.data.relatedTickets)).toBe(true)
       }
@@ -181,7 +193,7 @@ describe('domain Contracts - Schema Validation', () => {
       const result = TicketSchema.safeParse(ticketWithStringArrays)
       // Implementation detail: either reject or normalize
       // For now, let's assume it normalizes
-      if (result.success) {
+      if (isSafeParseSuccess(result)) {
         expect(Array.isArray(result.data.relatedTickets)).toBe(true)
         expect(Array.isArray(result.data.dependsOn)).toBe(true)
         expect(Array.isArray(result.data.blocks)).toBe(true)
@@ -215,12 +227,13 @@ describe('domain Contracts - Schema Validation', () => {
     })
 
     it('should validate CRType enum values', () => {
-      const validTypes: CRType[] = [
-        'Architecture',
-        'Feature Enhancement',
-        'Bug Fix',
-        'Technical Debt',
-        'Documentation',
+      const validTypes: CRTypeValue[] = [
+        CRType.ARCHITECTURE,
+        CRType.FEATURE_ENHANCEMENT,
+        CRType.BUG_FIX,
+        CRType.TECHNICAL_DEBT,
+        CRType.DOCUMENTATION,
+        CRType.RESEARCH,
       ]
 
       validTypes.forEach((type) => {
@@ -229,7 +242,12 @@ describe('domain Contracts - Schema Validation', () => {
     })
 
     it('should validate CRPriority enum values', () => {
-      const validPriorities: CRPriority[] = ['Low', 'Medium', 'High', 'Critical']
+      const validPriorities: CRPriorityValue[] = [
+        CRPriority.LOW,
+        CRPriority.MEDIUM,
+        CRPriority.HIGH,
+        CRPriority.CRITICAL,
+      ]
 
       validPriorities.forEach((priority) => {
         expect(priority).toBeDefined()

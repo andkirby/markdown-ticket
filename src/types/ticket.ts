@@ -1,5 +1,6 @@
+import type { CRPriorities, CRTypes } from '@mdt/domain-contracts'
+import type { CR_STATUSES } from '@mdt/shared/models/Types'
 import { z } from 'zod'
-import { CR_PRIORITIES, CR_STATUSES, CR_TYPES } from '@mdt/shared/models/Types'
 
 // Core Ticket Interface - matches shared DTO
 export interface Ticket {
@@ -83,8 +84,8 @@ type _TicketFormData = z.infer<typeof _TicketSchema>
 // Status Enum Values - imported from shared types
 export type Status = typeof CR_STATUSES[number]
 
-// Type Enum Values - imported from shared types
-type _Type = typeof CR_TYPES[number]
+// Type Enum Values - imported from domain-contracts
+type _Type = typeof CRTypes[number]
 
-// Priority Enum Values - imported from shared types
-type _Priority = typeof CR_PRIORITIES[number]
+// Priority Enum Values - imported from domain-contracts
+type _Priority = typeof CRPriorities[number]

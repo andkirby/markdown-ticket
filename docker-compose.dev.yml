@@ -7,7 +7,7 @@
 services:
   frontend:
     ports:
-      - "5174:5173"
+      - '5174:5173'
     volumes:
       # Mount source code for hot reload
       - ./src:/app/src
@@ -53,7 +53,7 @@ services:
       - DOCKER=true
       - CHOKIDAR_USEPOLLING=true
       - PORT=3001
-    command: ["npx", "nodemon", "--exec", "tsx", "server.ts"]
+    command: [npx, nodemon, --exec, tsx, server.ts]
 
   mcp:
     volumes:
@@ -75,7 +75,7 @@ services:
       - MCP_HTTP_PORT=3002
       - MCP_BIND_ADDRESS=0.0.0.0
       - LOG_LEVEL=debug
-    entrypoint: ["npx", "tsx", "watch", "src/index.ts"]
+    entrypoint: [npx, tsx, watch, src/index.ts]
 
 volumes:
   app:

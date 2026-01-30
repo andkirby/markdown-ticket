@@ -3,6 +3,8 @@
  * Ensures consistent data structure across all systems
  */
 
+import { CRType } from '@mdt/domain-contracts'
+
 export interface Ticket {
   // Core required fields
   code: string
@@ -71,7 +73,7 @@ export function normalizeTicket(rawTicket: any): Ticket {
     code: rawTicket.code || rawTicket.key || '',
     title: rawTicket.title || '',
     status: rawTicket.status || 'Proposed',
-    type: rawTicket.type || 'Feature Enhancement',
+    type: rawTicket.type || CRType.FEATURE_ENHANCEMENT,
     priority: rawTicket.priority || 'Medium',
     content: rawTicket.content || '',
     filePath: rawTicket.filePath || rawTicket.path || '',

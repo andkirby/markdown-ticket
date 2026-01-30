@@ -5,14 +5,26 @@
 
 // Project fixtures
 export {
-  buildProject, buildProjectConfig, buildCreateProjectInput, buildUpdateProjectInput,
-  buildMinimalProject, buildProjectWithComplexDocumentConfig, buildProjects,
-  invalidFixtures
-} from './project.fixtures.js';
+  buildCreateProjectInput,
+  buildMinimalProject,
+  buildProject,
+  buildProjectConfig,
+  buildProjects,
+  buildProjectWithComplexDocumentConfig,
+  buildUpdateProjectInput,
+  invalidFixtures,
+} from './project.fixtures.js'
 
 // Ticket fixtures
 export {
-  buildTicket, buildCR, buildCreateTicketInput, buildUpdateTicketInput,
-  buildTicketWithRelationship, buildTicketWithDependencies, buildTicketWithBlocks,
-  buildTicketWithRelations, buildFullTicket, buildTickets
-} from './ticket.fixtures.js';
+  buildCR,
+  buildCreateTicketInput,
+  buildFullTicket,
+  buildTicket,
+  buildTickets,
+  buildTicketWithBlocks,
+  buildTicketWithDependencies,
+  buildTicketWithRelations,
+  buildTicketWithRelationship,
+  buildUpdateTicketInput,
+} from './ticket.fixtures.js'

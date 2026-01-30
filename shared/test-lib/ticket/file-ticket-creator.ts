@@ -6,7 +6,7 @@
  */
 
 import type { TicketData } from '../../models/Ticket.js'
-import type { CRType } from '../../models/Types.js'
+import type { CRTypeValue } from '@mdt/domain-contracts'
 import type { TicketCreationConfig, TicketCreationResult } from './ticket-creator.js'
 import * as fs from 'node:fs'
 import { join as pathJoin } from 'node:path'
@@ -72,7 +72,7 @@ export class FileTicketCreator extends BaseTicketCreator {
       await this.ensureCRsDirectory(ticketsDir, config.projectCode)
 
       // Get or generate content
-      const content = await this.getTemplateContent(data.title, data.type as CRType, data.content)
+      const content = await this.getTemplateContent(data.title, data.type as CRTypeValue, data.content)
 
       // Build ticket using helper
       const filePath = pathJoin(ticketsDir, `${ticketCode}.md`)
@@ -152,7 +152,7 @@ export class FileTicketCreator extends BaseTicketCreator {
 
   private async getTemplateContent(
     title: string,
-    type: CRType,
+    type: CRTypeValue,
     existingContent?: string,
   ): Promise<string | undefined> {
     if (existingContent)
@@ -172,7 +172,7 @@ export class FileTicketCreator extends BaseTicketCreator {
     return this.generateMinimalContent(title, type)
   }
 
-  private generateMinimalContent(title: string, _type: CRType): string {
+  private generateMinimalContent(title: string, _type: CRTypeValue): string {
     const now = new Date().toISOString().split('T')[0]
     return `# ${title}
 

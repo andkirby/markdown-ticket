@@ -102,6 +102,15 @@ Layered architecture: controllers → services → repositories
 - **TypeScript validation**: `npm run validate:ts` (changed files), `npm run validate:ts:all` (all files)
 - Never restart servers unless user explicitly requests
 
+### TypeScript Patterns
+
+**Before writing any TypeScript code, read [docs/PRE_IMPLEMENT.md](docs/PRE_IMPLEMENT.md)** for established patterns:
+- Type-safe enum pattern with named access + array
+- Naming conventions for types, values, and collections
+- Type inference best practices
+
+Following documented patterns prevents duplication and ensures consistency across the codebase.
+
 ## Documentation Priority
 
 **ALWAYS check existing documentation FIRST before answering "how to" questions.**

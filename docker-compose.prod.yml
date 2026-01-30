@@ -7,7 +7,7 @@
 services:
   frontend:
     build:
-      target: production  # Use production stage from Dockerfile
+      target: production # Use production stage from Dockerfile
     environment:
       - NODE_ENV=production
     # Resource limits
@@ -21,18 +21,18 @@ services:
           memory: 256M
     # Production logging
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: 10m
+        max-file: '3'
 
   backend:
     build:
-      target: production  # Use production stage from Dockerfile
+      target: production # Use production stage from Dockerfile
     volumes:
-      # Mount specific projects
-      # - /path/to/projects/project-a:/projects/project-a
-      # - /path/to/projects/project-b:/projects/project-b
+    # Mount specific projects
+    # - /path/to/projects/project-a:/projects/project-a
+    # - /path/to/projects/project-b:/projects/project-b
     environment:
       - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
@@ -48,14 +48,14 @@ services:
           memory: 256M
     # Production logging
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: 10m
+        max-file: '3'
 
   mcp:
     build:
-      target: production  # Use production stage from Dockerfile
+      target: production # Use production stage from Dockerfile
     environment:
       # Core MCP Configuration
       - NODE_ENV=production
@@ -86,10 +86,10 @@ services:
           memory: 256M
     # Production logging
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: 10m
+        max-file: '3'
 
 # Production Tips:
 # 1. Use .env file for production secrets:

@@ -10,7 +10,8 @@
  */
 
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
-import { CR_PRIORITIES, CR_STATUSES, CR_TYPES } from '@mdt/shared/models/Types.js'
+import { CRPriorities, CRTypes } from '@mdt/domain-contracts'
+import { CR_STATUSES } from '@mdt/shared/models/Types.js'
 
 // =========================
 // Project Tool Definitions
@@ -50,11 +51,11 @@ export const PROJECT_TOOLS: Tool[] = [
 // =====================================
 
 /**
- * Shared enums for tool schemas (imported from Types.ts for single source of truth)
+ * Shared enums for tool schemas (imported from domain-contracts for single source of truth)
  */
 const CR_STATUS_ENUM = CR_STATUSES as readonly string[]
-const CR_TYPE_ENUM = CR_TYPES as readonly string[]
-const CR_PRIORITY_ENUM = CR_PRIORITIES as readonly string[]
+const CR_TYPE_ENUM = CRTypes as readonly string[]
+const CR_PRIORITY_ENUM = CRPriorities as readonly string[]
 
 /**
  * Tools for CR and section management operations

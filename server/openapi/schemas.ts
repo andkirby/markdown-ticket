@@ -3,12 +3,12 @@
  * Route JSDoc annotations should use $ref: '#/components/schemas/{Name}'.
  */
 
-import { CR_PRIORITIES, CR_STATUSES, CR_TYPES } from '@mdt/shared/models/Types.js'
+import { CRPriorities, CRStatuses, CRTypes } from '@mdt/domain-contracts'
 
-// Enums - imported from shared types for single source of truth
-const CRStatusEnum = CR_STATUSES
-const CRTypeEnum = CR_TYPES
-const CRPriorityEnum = CR_PRIORITIES
+// Enums - imported from domain-contracts for single source of truth
+const CRStatusEnum = CRStatuses
+const CRTypeEnum = CRTypes
+const CRPriorityEnum = CRPriorities
 
 export const schemas = {
   CRStatus: {

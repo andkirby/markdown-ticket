@@ -1,5 +1,6 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
+import { CRType } from '@mdt/domain-contracts'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTicketPosition } from '../components/Column/useTicketPosition'
 
@@ -121,7 +122,7 @@ export function useTicketOperations(
       code: ticketCode,
       title: '',
       status: 'Proposed',
-      type: 'Feature Enhancement',
+      type: CRType.FEATURE_ENHANCEMENT,
       priority: 'Medium',
       content: '',
       filePath: '',

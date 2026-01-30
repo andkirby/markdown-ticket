@@ -3,8 +3,7 @@
  * Core entity schemas with field-level validation only
  */
 
-import { z } from 'zod';
-import { CREnumSchemas } from '../types/schema.js';
+import { z } from 'zod'
 
 /**
  * Document configuration schema for project
@@ -20,36 +19,36 @@ export const DocumentConfigSchema = z.object({
 }).refine(
   (data) => {
     // Validate paths don't contain parent directory references
-    const hasParentRef = data.paths.some(path => path.includes('..'));
-    return !hasParentRef;
+    const hasParentRef = data.paths.some(path => path.includes('..'))
+    return !hasParentRef
   },
   {
     message: 'Parent directory references (..) are not allowed in paths',
-    path: ['paths']
-  }
+    path: ['paths'],
+  },
 ).refine(
   (data) => {
     // Validate paths are relative (not absolute)
-    const hasAbsolutePath = data.paths.some(path => path.startsWith('/'));
-    return !hasAbsolutePath;
+    const hasAbsolutePath = data.paths.some(path => path.startsWith('/'))
+    return !hasAbsolutePath
   },
   {
     message: 'Absolute paths are not allowed, use relative paths only',
-    path: ['paths']
-  }
+    path: ['paths'],
+  },
 ).refine(
   (data) => {
     // Validate excludeFolders are folder names only (no path separators)
     const hasPathSeparator = data.excludeFolders.some(folder =>
-      folder.includes('/') || folder.includes('\\')
-    );
-    return !hasPathSeparator;
+      folder.includes('/') || folder.includes('\\'),
+    )
+    return !hasPathSeparator
   },
   {
     message: 'excludeFolders should contain folder names, not paths',
-    path: ['excludeFolders']
-  }
-);
+    path: ['excludeFolders'],
+  },
+)
 
 /**
  * Project schema with field validation
@@ -64,14 +63,14 @@ export const ProjectSchema = z.object({
   /** Project name: minimum 3 characters */
   name: z.string()
     .refine(
-      (name) => name.trim().length >= 3,
-      'Project name must have at least 3 characters'
+      name => name.trim().length >= 3,
+      'Project name must have at least 3 characters',
     )
     .refine(
-      (name) => name.trim().length > 0,
-      'Project name cannot be empty or whitespace-only'
+      name => name.trim().length > 0,
+      'Project name cannot be empty or whitespace-only',
     )
-    .transform((name) => name.trim()),
+    .transform(name => name.trim()),
   /** Project identifier: required non-empty string */
   id: z.string()
     .min(1, 'Required'),
@@ -84,7 +83,7 @@ export const ProjectSchema = z.object({
   repository: z.string().optional(),
   /** Whether project is active: defaults to true */
   active: z.boolean().default(true),
-});
+})
 
 /**
  * Complete project configuration schema
@@ -92,10 +91,10 @@ export const ProjectSchema = z.object({
  */
 export const ProjectConfigSchema = z.object({
   /** Core project configuration */
-  project: ProjectSchema,
+  'project': ProjectSchema,
   /** Document discovery configuration */
   'project.document': DocumentConfigSchema.optional().default({}),
-});
+})
 
 /**
  * Input schema for creating projects
@@ -119,7 +118,7 @@ export const CreateProjectInputSchema = z.object({
   description: z.string().optional(),
   /** Optional repository URL */
   repository: z.string().optional(),
-});
+})
 
 /**
  * Input schema for updating projects
@@ -148,20 +147,19 @@ export const UpdateProjectInputSchema = z.object({
 }).refine(
   (data) => {
     // At least one field must be provided for update
-    return Object.keys(data).length > 0;
+    return Object.keys(data).length > 0
   },
   {
     message: 'At least one field must be provided for update',
-  }
-);
+  },
+)
 
 // TypeScript types inferred from schemas
-export type Project = z.infer<typeof ProjectSchema>;
-export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
-export type DocumentConfig = z.infer<typeof DocumentConfigSchema>;
-export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>;
-export type UpdateProjectInput = z.infer<typeof UpdateProjectInputSchema>;
-
+export type Project = z.infer<typeof ProjectSchema>
+export type ProjectConfig = z.infer<typeof ProjectConfigSchema>
+export type DocumentConfig = z.infer<typeof DocumentConfigSchema>
+export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>
+export type UpdateProjectInput = z.infer<typeof UpdateProjectInputSchema>
 
 /**
  * Export all schemas for use in other modules
@@ -172,4 +170,4 @@ export const ProjectSchemas = {
   documentConfig: DocumentConfigSchema,
   createProjectInput: CreateProjectInputSchema,
   updateProjectInput: UpdateProjectInputSchema,
-} as const;
+} as const

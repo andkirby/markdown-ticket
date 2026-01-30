@@ -10,7 +10,8 @@
  * @file shared/test-lib/__tests__/file-creation.test.ts
  */
 
-import type { CRPriority, CRStatus, CRType } from '../../models/Types.js'
+import type { CRStatus } from '../../models/Types.js'
+import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ProjectFactory, TestEnvironment } from '../index.js'
@@ -90,9 +91,9 @@ const testProjectConfig = {
 /** Standard CR data for testing */
 const testCRData = {
   title: 'Test Feature',
-  type: 'Feature Enhancement' as CRType,
+  type: 'Feature Enhancement' as CRTypeValue,
   status: 'Proposed' as CRStatus,
-  priority: 'High' as CRPriority,
+  priority: 'High' as CRPriorityValue,
   content: 'Test description for the feature',
 }
 
@@ -503,11 +504,11 @@ describe('projectFactory - Edge Cases', () => {
 
     // Create multiple CRs with different titles
     const crsData = [
-      { title: 'Feature A', type: 'Feature Enhancement' as CRType, content: 'Content A' },
-      { title: 'Feature B', type: 'Bug Fix' as CRType, content: 'Content B' },
-      { title: 'Feature C', type: 'Architecture' as CRType, content: 'Content C' },
-      { title: 'Feature D', type: 'Technical Debt' as CRType, content: 'Content D' },
-      { title: 'Feature E', type: 'Documentation' as CRType, content: 'Content E' },
+      { title: 'Feature A', type: 'Feature Enhancement' as CRTypeValue, content: 'Content A' },
+      { title: 'Feature B', type: 'Bug Fix' as CRTypeValue, content: 'Content B' },
+      { title: 'Feature C', type: 'Architecture' as CRTypeValue, content: 'Content C' },
+      { title: 'Feature D', type: 'Technical Debt' as CRTypeValue, content: 'Content D' },
+      { title: 'Feature E', type: 'Documentation' as CRTypeValue, content: 'Content E' },
     ]
 
     const results = await factory.createMultipleCRs('TST', crsData)
@@ -627,9 +628,9 @@ const test = 'value';
 
     const minimalCR: {
       title: string
-      type: CRType
+      type: CRTypeValue
       status?: CRStatus
-      priority?: CRPriority
+      priority?: CRPriorityValue
       content: string
     } = {
       title: 'Minimal CR',

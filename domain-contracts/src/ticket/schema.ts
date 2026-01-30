@@ -3,8 +3,8 @@
  * Core entity schemas with field-level validation only
  */
 
-import { z } from 'zod';
-import { CRStatusSchema, CRTypeSchema, CRPrioritySchema } from '../types/schema.js';
+import { z } from 'zod'
+import { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema.js'
 
 /**
  * Base CR schema with field validation
@@ -18,8 +18,8 @@ export const CRSchema = z.object({
   title: z.string()
     .min(1, 'Title is required')
     .max(200, 'Title must be 200 characters or less')
-    .refine((title) => title.trim().length > 0, 'Title cannot be empty or whitespace-only')
-    .transform((title) => title.trim()),
+    .refine(title => title.trim().length > 0, 'Title cannot be empty or whitespace-only')
+    .transform(title => title.trim()),
   /** CR status from predefined enum */
   status: CRStatusSchema,
   /** CR type from predefined enum */
@@ -46,19 +46,19 @@ export const CRSchema = z.object({
     .optional(),
   /** Optional implementation notes */
   implementationNotes: z.string().optional(),
-});
+})
 
 /**
  * Ticket schema (extends CR with additional fields)
  * Currently identical to CR schema but allows for future extension
  */
-export const TicketSchema = CRSchema;
+export const TicketSchema = CRSchema
 
 /**
  * Input schema for creating tickets
  * Only required fields, no default values applied
  */
-export const CreateTicketInputSchema = CRSchema;
+export const CreateTicketInputSchema = CRSchema
 
 /**
  * Input schema for updating tickets
@@ -72,8 +72,8 @@ export const UpdateTicketInputSchema = z.object({
   title: z.string()
     .min(1, 'Title is required')
     .max(200, 'Title must be 200 characters or less')
-    .refine((title) => title.trim().length > 0, 'Title cannot be empty or whitespace-only')
-    .transform((title) => title.trim())
+    .refine(title => title.trim().length > 0, 'Title cannot be empty or whitespace-only')
+    .transform(title => title.trim())
     .optional(),
   /** Optional new status */
   status: CRStatusSchema.optional(),
@@ -104,20 +104,19 @@ export const UpdateTicketInputSchema = z.object({
 }).refine(
   (data) => {
     // At least one field besides code must be provided for update
-    const fieldsToUpdate = Object.keys(data).filter(key => key !== 'code');
-    return fieldsToUpdate.length > 0;
+    const fieldsToUpdate = Object.keys(data).filter(key => key !== 'code')
+    return fieldsToUpdate.length > 0
   },
   {
     message: 'At least one field must be provided for update',
-  }
-);
+  },
+)
 
 // TypeScript types inferred from schemas
-export type CR = z.infer<typeof CRSchema>;
-export type Ticket = z.infer<typeof TicketSchema>;
-export type CreateTicketInput = z.infer<typeof CreateTicketInputSchema>;
-export type UpdateTicketInput = z.infer<typeof UpdateTicketInputSchema>;
-
+export type CR = z.infer<typeof CRSchema>
+export type Ticket = z.infer<typeof TicketSchema>
+export type CreateTicketInput = z.infer<typeof CreateTicketInputSchema>
+export type UpdateTicketInput = z.infer<typeof UpdateTicketInputSchema>
 
 /**
  * Export all schemas for use in other modules
@@ -127,9 +126,9 @@ export const TicketSchemas = {
   cr: CRSchema,
   createTicketInput: CreateTicketInputSchema,
   updateTicketInput: UpdateTicketInputSchema,
-} as const;
+} as const
 
 /**
  * Export individual enum schemas for convenience
  */
-export { CRStatusSchema, CRTypeSchema, CRPrioritySchema } from '../types/schema.js';
+export { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema.js'

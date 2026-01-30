@@ -27,7 +27,9 @@ export default {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    // Map workspace dependencies to their source paths for Jest
+    '^@mdt/domain-contracts$': '<rootDir>/../domain-contracts/src/index.ts'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   transform: {
