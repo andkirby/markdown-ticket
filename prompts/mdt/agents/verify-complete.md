@@ -41,7 +41,7 @@ verification_round: 0 | 1 | 2
     "typecheck": { "status": "pass|fail|skipped" }
   },
   "requirements_matrix": [
-    { "id": "AC-1", "status": "pass|partial|fail", "evidence": ["path:line"], "notes": "" }
+    { "id": "AC-1", "type": "POSITIVE|NEGATIVE|LOCATION", "status": "pass|partial|fail", "evidence": ["path:line"], "notes": "" }
   ],
   "issues": [
     {
@@ -64,9 +64,18 @@ verification_round: 0 | 1 | 2
 
 **Sources** (check in order):
 1. CR Section 5 (Acceptance Criteria) or checkboxes
-2. requirements.md (if provided)
-3. bdd.md scenarios (if provided)
-4. tasks.md Completion Checklist
+2. CR Section 4 "Modified Artifacts" table — **especially "Removed" entries**
+3. requirements.md (if provided)
+4. bdd.md scenarios (if provided)
+5. tasks.md Completion Checklist
+6. make plan with checklist.
+
+**IMPORTANT**: Section 4 "Modified Artifacts" tables often specify exact removals:
+```
+| Artifact | Change Type | Modification |
+| file.ts  | Removed     | Hardcoded 'X' (line N) |
+```
+These are NEGATIVE+LOCATION requirements. Verify the pattern is ABSENT at that location.
 
 **By mode**:
 - `feature`: Must have explicit requirements, fail if none
@@ -74,19 +83,47 @@ verification_round: 0 | 1 | 2
 - `prep`: Implicit requirement = "behavior preserved"
 - `docs`: Document structure expectations
 
-### 2. Requirements Traceability
+### 2. Classify Requirements
+
+Before verification, classify each requirement:
+
+| Type | Keywords | Verification |
+|------|----------|--------------|
+| POSITIVE | "has", "implements", "exports", "calls" | Check code EXISTS |
+| NEGATIVE | "does NOT", "Removed", "no longer", "eliminated" | Check code ABSENT |
+| LOCATION | Contains file:line reference | Check EXACT location |
+
+**CRITICAL**: For NEGATIVE requirements:
+- Extract the exact artifact and location from the CR
+- Search that specific file for the pattern that should NOT exist
+- FAIL if pattern is found, PASS only if pattern is absent
+- Example: "does NOT have hardcoded 'en'" → grep for `'en'` in that file, FAIL if found
+
+### 3. Requirements Traceability
 
 For each requirement, search changed_files for evidence:
+
+**POSITIVE requirements**:
 - Function/class implementing the requirement
 - Test covering the requirement
 - Export if API requirement
 
-**Status**:
-- `pass`: Code exists + test exists
-- `partial`: Code exists, no test OR incomplete
-- `fail`: No evidence
+**NEGATIVE requirements**:
+- Search for the pattern that should be removed
+- Check the specific file/location mentioned in CR
+- Verify pattern is ABSENT (not just commented out)
 
-### 3. Run Quality Checks
+**LOCATION requirements** (CR Section 4 "Modified Artifacts"):
+- Read the exact file:line mentioned
+- Verify the change matches what CR specifies
+- Cross-reference "Removed" entries with actual file
+
+**Status**:
+- `pass`: Evidence confirms requirement (exists for POSITIVE, absent for NEGATIVE)
+- `partial`: Incomplete or ambiguous
+- `fail`: Contradicts requirement (missing for POSITIVE, present for NEGATIVE)
+
+### 4. Run Quality Checks
 
 For each command in project config (if not null):
 
@@ -99,7 +136,7 @@ For each command in project config (if not null):
 
 If command is null: `status: "skipped"`
 
-### 4. Security Scan (code analysis)
+### 5. Security Scan (code analysis)
 
 Scan changed_files for patterns:
 
@@ -111,14 +148,14 @@ Scan changed_files for patterns:
 | Input not validated | HIGH |
 | Error details exposed | MEDIUM |
 
-### 5. Dead Code Check
+### 6. Dead Code Check
 
 In changed_files, flag:
 - Unused exports (no importers)
 - Duplicate files (same content)
 - Methods that should be private per requirements
 
-### 6. Classify & Verdict
+### 7. Classify & Verdict
 
 **Severity**:
 | Level | Criteria |
