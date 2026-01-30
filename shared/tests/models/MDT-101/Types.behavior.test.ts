@@ -12,9 +12,9 @@
  */
 
 import type {
-  CRPriority,
+  CRPriorityValue,
   CRStatus,
-  CRType,
+  CRTypeValue,
   ProjectInfo,
   Suggestion,
   Template,
@@ -23,6 +23,7 @@ import type {
   ValidationResult,
   ValidationWarning,
 } from '../../../models/Types'
+import { CRPriority, CRType } from '../../../models/Types'
 
 describe('types Enum - Behavioral Preservation', () => {
   describe('cRStatus Type', () => {
@@ -59,12 +60,13 @@ describe('types Enum - Behavioral Preservation', () => {
 
   describe('cRType Type', () => {
     it('should include all expected type values', () => {
-      const expectedTypes: CRType[] = [
-        'Architecture',
-        'Feature Enhancement',
-        'Bug Fix',
-        'Technical Debt',
-        'Documentation',
+      const expectedTypes: CRTypeValue[] = [
+        CRType.ARCHITECTURE,
+        CRType.FEATURE_ENHANCEMENT,
+        CRType.BUG_FIX,
+        CRType.TECHNICAL_DEBT,
+        CRType.DOCUMENTATION,
+        CRType.RESEARCH,
       ]
 
       expectedTypes.forEach((type) => {
@@ -75,7 +77,12 @@ describe('types Enum - Behavioral Preservation', () => {
 
   describe('cRPriority Type', () => {
     it('should include all expected priority values', () => {
-      const expectedPriorities: CRPriority[] = ['Low', 'Medium', 'High', 'Critical']
+      const expectedPriorities: CRPriorityValue[] = [
+        CRPriority.LOW,
+        CRPriority.MEDIUM,
+        CRPriority.HIGH,
+        CRPriority.CRITICAL,
+      ]
 
       expectedPriorities.forEach((priority) => {
         expect(priority).toBeDefined()

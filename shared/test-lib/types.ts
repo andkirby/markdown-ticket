@@ -7,7 +7,8 @@
 
 import type { LocalProjectConfig, Project } from '../models/Project.js'
 import type { TicketData } from '../models/Ticket.js'
-import type { CRPriority, CRStatus, CRType } from '../models/Types.js'
+import type { CRStatus } from '../models/Types.js'
+import type { CRPriorityValue as CRPriority, CRTypeValue as CRType } from '@mdt/domain-contracts'
 import type { PortConfig } from './config/ports.js'
 
 /**
@@ -180,11 +181,10 @@ export class TestTimeoutError extends TestFrameworkError {
 
 // Export all types for use in other modules
 export type {
-  CRPriority,
   CRStatus,
-  CRType,
   LocalProjectConfig,
   PortConfig,
   Project,
   TicketData,
 }
+export type { CRPriorityValue as CRPriority, CRTypeValue as CRType } from '@mdt/domain-contracts'

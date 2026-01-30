@@ -25,10 +25,10 @@ export default antfu(
         {
           patterns: [{
             group: ['../shared/**', '../../shared/**', '../../../shared/**', '../../../../shared/**'],
-            message: 'Use "@mdt/shared" path alias instead of relative imports to shared module. This breaks TypeScript project references.'
-          }]
-        }
-      ]
-    }
-  }
+            message: 'Use "@mdt/shared" path alias instead of relative imports to shared module. This breaks TypeScript project references.',
+          }],
+        },
+      ],
+    },
+  },
 )

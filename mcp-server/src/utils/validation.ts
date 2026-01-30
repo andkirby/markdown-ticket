@@ -73,7 +73,7 @@ export function validateRequired(value: any, name: string): ValidationResult {
  */
 export function validateOperation(
   operation: string,
-  allowed: string[],
+  allowed: readonly string[],
   name: string = 'operation',
 ): ValidationResult {
   const result = validateRequired(operation, name)

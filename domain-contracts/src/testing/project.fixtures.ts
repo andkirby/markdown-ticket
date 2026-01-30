@@ -4,12 +4,12 @@
  */
 
 import type {
+  CreateProjectInput,
+  DocumentConfig,
   Project,
   ProjectConfig,
-  DocumentConfig,
-  CreateProjectInput,
   UpdateProjectInput,
-} from '../project/schema.js';
+} from '../project/schema.js'
 
 /**
  * Creates a valid Project with optional overrides
@@ -25,9 +25,9 @@ export function buildProject(overrides: Partial<Project> = {}): Project {
     description: 'AI-powered Kanban board with markdown tickets',
     repository: 'https://github.com/example/markdown-ticket',
     active: true,
-  };
+  }
 
-  return { ...defaults, ...overrides };
+  return { ...defaults, ...overrides }
 }
 
 /**
@@ -38,20 +38,20 @@ export function buildProject(overrides: Partial<Project> = {}): Project {
  */
 export function buildProjectConfig(
   projectOverrides: Partial<Project> = {},
-  documentOverrides: Partial<DocumentConfig> = {}
+  documentOverrides: Partial<DocumentConfig> = {},
 ): ProjectConfig {
-  const project = buildProject(projectOverrides);
+  const project = buildProject(projectOverrides)
 
   const defaultDocumentConfig: DocumentConfig = {
     paths: ['docs/**/*.md', 'README.md'],
     excludeFolders: ['node_modules', '.git', 'dist'],
     maxDepth: 3,
-  };
+  }
 
   return {
     project,
     'project.document': { ...defaultDocumentConfig, ...documentOverrides },
-  };
+  }
 }
 
 /**
@@ -67,9 +67,9 @@ export function buildCreateProjectInput(overrides: Partial<CreateProjectInput> =
     ticketsPath: 'tickets',
     description: 'Main web application project',
     repository: 'https://github.com/example/web-app',
-  };
+  }
 
-  return { ...defaults, ...overrides };
+  return { ...defaults, ...overrides }
 }
 
 /**
@@ -81,9 +81,9 @@ export function buildUpdateProjectInput(overrides: Partial<UpdateProjectInput> =
   // Default to updating name to ensure at least one field is present
   const defaults: UpdateProjectInput = {
     name: 'Updated Project Name',
-  };
+  }
 
-  return { ...defaults, ...overrides };
+  return { ...defaults, ...overrides }
 }
 
 /**
@@ -95,7 +95,7 @@ export function buildMinimalProject(): Project {
     name: 'ABC',
     id: 'a',
     ticketsPath: 't',
-  });
+  })
 }
 
 /**
@@ -108,8 +108,8 @@ export function buildProjectWithComplexDocumentConfig(): ProjectConfig {
       paths: ['docs/**/*.md', 'src/**/*.md', '*.md'],
       excludeFolders: ['node_modules', '.git', 'dist', 'build'],
       maxDepth: 5,
-    }
-  );
+    },
+  )
 }
 
 /**
@@ -138,7 +138,7 @@ export const invalidFixtures = {
     pathInExcludeFolders: { excludeFolders: ['path/with/slash'] },
     maxDepthInvalid: { maxDepth: 0 },
   },
-};
+}
 
 /**
  * Helper function for creating test data variations
@@ -156,6 +156,5 @@ export function buildProjects(count: number, baseCode = 'PRJ'): Project[] {
       code: `${baseCode}${(i + 1).toString().padStart(2, '0')}`,
       id: `${baseCode.toLowerCase()}-${i + 1}`,
       name: `Project ${i + 1}`,
-    })
-  );
+    }))
 }

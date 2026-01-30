@@ -11,10 +11,11 @@
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { TicketData, TicketFilters } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
-import { CR_STATUSES, CR_TYPES } from '@mdt/shared/models/Types.js'
 import type { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
 import type { CRService } from '../../services/crService.js'
+import { CRTypes } from '@mdt/domain-contracts'
+import { CR_STATUSES } from '@mdt/shared/models/Types.js'
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ContentProcessor } from '../../services/SectionManagement/ContentProcessor.js'
 import { Sanitizer } from '../../utils/sanitizer.js'
@@ -180,7 +181,7 @@ export class CRHandlers {
    */
   async handleCreateCR(project: Project, type: string, data: TicketData): Promise<string> {
     // Validate type parameter - this is a protocol error (invalid parameter)
-    const typeValidation = validateOperation(type, CR_TYPES as string[], 'type')
+    const typeValidation = validateOperation(type, CRTypes, 'type')
     if (!typeValidation.valid) {
       throw ToolError.protocol(typeValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
     }

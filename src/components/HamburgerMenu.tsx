@@ -3,8 +3,8 @@ import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useConfig } from '../hooks/useConfig'
 import { nuclearCacheClear } from '../utils/cache'
+import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
 import { Button } from './UI/index'
-import { toggleEventHistory, getEventHistoryForceHidden } from './DevTools/useEventHistoryState'
 
 interface HamburgerMenuProps {
   onAddProject: () => void
@@ -121,17 +121,19 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                 onClick={handleToggleEventHistory}
                 className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
               >
-                {eventHistoryForceHidden ? (
-                  <>
-                    <Eye className="h-4 w-4 mr-2" />
-                    Show Event History
-                  </>
-                ) : (
-                  <>
-                    <EyeOff className="h-4 w-4 mr-2" />
-                    Hide Event History
-                  </>
-                )}
+                {eventHistoryForceHidden
+                  ? (
+                      <>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Show Event History
+                      </>
+                    )
+                  : (
+                      <>
+                        <EyeOff className="h-4 w-4 mr-2" />
+                        Hide Event History
+                      </>
+                    )}
               </button>
             )}
           </div>

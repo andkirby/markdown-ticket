@@ -1,8 +1,8 @@
 {
   "name": "markdown-ticket",
-  "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "version": "0.0.0",
+  "private": true,
   "homepage": "https://github.com/andkirby/markdown-ticket",
   "workspaces": [
     "shared",
@@ -64,8 +64,17 @@
     "project:delete:dev": "tsx shared/tools/project-cli.ts delete",
     "project:enable:dev": "tsx shared/tools/project-cli.ts enable",
     "project:disable:dev": "tsx shared/tools/project-cli.ts disable",
-    "test:domain-contracts": "cd domain-contracts && npm test",
-    "test:domain-contracts:watch": "cd domain-contracts && npm run test:watch",
+    "shared:test": "cd shared && npm test",
+    "shared:test:watch": "cd shared && npm run test:watch",
+    "shared:test:coverage": "cd shared && npm run test:coverage",
+    "server:test": "cd server && npm test",
+    "server:test:watch": "cd server && npm run test:watch",
+    "server:test:coverage": "cd server && npm run test:coverage",
+    "domain:test": "cd domain-contracts && npm test",
+    "domain:test:watch": "cd domain-contracts && npm run test:watch",
+    "fe:test": "jest",
+    "fe:test:watch": "jest --watch",
+    "fe:test:coverage": "jest --coverage",
     "mcp:test": "cd mcp-server && npm test",
     "mcp:test:e2e": "cd mcp-server && npm run test:e2e",
     "validate:ts": "bash scripts/validate-changed-ts.sh",
@@ -79,6 +88,7 @@
     "check-shared": "bash scripts/check-shared-usage.sh"
   },
   "dependencies": {
+    "@mdt/domain-contracts": "*",
     "@mdt/shared": "*",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-tooltip": "^1.2.8",
@@ -104,6 +114,9 @@
     "tailwindcss": "^3.4.17",
     "zod": "^3.22.4"
   },
+  "optionalDependencies": {
+    "minipass": "^7.1.2"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "^7.0.1",
     "@eslint-react/eslint-plugin": "^2.6.4",
@@ -111,7 +124,9 @@
     "@playwright/test": "^1.55.0",
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.19",
+    "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^16.3.1",
+    "@types/jest": "^29.5.8",
     "@types/node": "^24.3.0",
     "@types/prismjs": "^1.26.5",
     "@types/react": "^18.2.43",
@@ -124,14 +139,14 @@
     "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "jest-openapi": "^0.14.1",
     "jiti": "^2.6.1",
     "knip": "^5.80.2",
+    "ts-jest": "^29.1.1",
     "tsx": "^4.21.0",
     "typescript": "^5.2.2",
     "vite": "^7.1.9"
-  },
-  "optionalDependencies": {
-    "minipass": "^7.1.2"
   }
 }

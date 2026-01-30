@@ -22,6 +22,9 @@ export default {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    // Add domain-contracts mapping
+    '^@mdt/domain-contracts$': '<rootDir>/../domain-contracts/src/index.ts',
+    '^@mdt/domain-contracts/(.*)$': '<rootDir>/../domain-contracts/src/$1',
     // Map shared modules to mocks, but exclude test-lib (uses real implementation from TypeScript source)
     '^@mdt/shared/test-lib/(.*)$': '<rootDir>/../shared/test-lib/$1',
     // Map shared modules to mocks, removing .js extension
@@ -37,7 +40,7 @@ export default {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$|@mdt/shared/dist))',
+    'node_modules/(?!(.*\\.mjs$|@mdt/shared/dist|@mdt/domain-contracts/dist))',
   ],
   testTimeout: 10000,
 }

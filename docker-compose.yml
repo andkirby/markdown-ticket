@@ -15,14 +15,14 @@ services:
       target: development
     container_name: mdt-frontend
     ports:
-      - "5174:80"    # Host:Container - map to nginx port 80 (production)
+      - '5174:80' # Host:Container - map to nginx port 80 (production)
     networks:
       - mdt-network
     depends_on:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5173/"]
+      test: [CMD, wget, --quiet, --tries=1, --spider, 'http://localhost:5173/']
       interval: 30s
       timeout: 3s
       start_period: 10s
@@ -45,7 +45,7 @@ services:
       - PORT=3001
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"]
+      test: [CMD, node, -e, "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"]
       interval: 30s
       timeout: 3s
       start_period: 10s
@@ -58,7 +58,7 @@ services:
       target: development
     container_name: mdt-mcp
     ports:
-      - "3012:3002"  # Host:Container - using 3012 to avoid conflict with native MCP server
+      - '3012:3002' # Host:Container - using 3012 to avoid conflict with native MCP server
     networks:
       - mdt-network
     environment:
@@ -78,7 +78,7 @@ services:
       - MCP_SECURITY_AUTH=false
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"]
+      test: [CMD, node, -e, "require('http').get('http://localhost:3002/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"]
       interval: 30s
       timeout: 3s
       start_period: 10s

@@ -4,12 +4,12 @@
  */
 
 import type {
-  Ticket,
   CR,
   CreateTicketInput,
+  Ticket,
   UpdateTicketInput,
-} from '../ticket/schema.js';
-import { CRStatus, CRType, CRPriority } from '../types/schema.js';
+} from '../ticket/schema.js'
+import { CRPriority, CRStatus, CRType } from '../types/schema.js'
 
 /**
  * Creates a valid Ticket with optional overrides
@@ -23,9 +23,9 @@ export function buildTicket(overrides: Partial<Ticket> = {}): Ticket {
     status: CRStatus.PROPOSED,
     type: CRType.FEATURE_ENHANCEMENT,
     priority: CRPriority.MEDIUM,
-  };
+  }
 
-  return { ...defaults, ...overrides };
+  return { ...defaults, ...overrides }
 }
 
 /**
@@ -34,7 +34,7 @@ export function buildTicket(overrides: Partial<Ticket> = {}): Ticket {
  * @returns Valid CR object
  */
 export function buildCR(overrides: Partial<CR> = {}): CR {
-  return buildTicket(overrides);
+  return buildTicket(overrides)
 }
 
 /**
@@ -49,9 +49,9 @@ export function buildCreateTicketInput(overrides: Partial<CreateTicketInput> = {
     status: CRStatus.APPROVED,
     type: CRType.FEATURE_ENHANCEMENT,
     priority: CRPriority.HIGH,
-  };
+  }
 
-  return { ...defaults, ...overrides };
+  return { ...defaults, ...overrides }
 }
 
 /**
@@ -64,9 +64,9 @@ export function buildUpdateTicketInput(overrides: Partial<UpdateTicketInput> = {
   const defaults: UpdateTicketInput = {
     code: 'MDT-101',
     status: CRStatus.IN_PROGRESS,
-  };
+  }
 
-  return { ...defaults, ...overrides };
+  return { ...defaults, ...overrides }
 }
 
 /**
@@ -81,24 +81,27 @@ export function buildTicketWithRelationship(
   ticketCode: string,
   tickets: string[],
   relationshipType: 'dependsOn' | 'blocks' | 'relatedTickets',
-  overrides: Partial<Ticket> = {}
+  overrides: Partial<Ticket> = {},
 ): Ticket {
   return buildTicket({
     code: ticketCode,
     [relationshipType]: tickets.join(', '),
     ...overrides,
-  });
+  })
 }
 
 // Convenience wrappers for specific relationship types
-export const buildTicketWithDependencies = (code: string, deps: string[], overrides = {}) =>
-  buildTicketWithRelationship(code, deps, 'dependsOn', overrides);
+export function buildTicketWithDependencies(code: string, deps: string[], overrides = {}) {
+  return buildTicketWithRelationship(code, deps, 'dependsOn', overrides)
+}
 
-export const buildTicketWithBlocks = (code: string, blocks: string[], overrides = {}) =>
-  buildTicketWithRelationship(code, blocks, 'blocks', overrides);
+export function buildTicketWithBlocks(code: string, blocks: string[], overrides = {}) {
+  return buildTicketWithRelationship(code, blocks, 'blocks', overrides)
+}
 
-export const buildTicketWithRelations = (code: string, related: string[], overrides = {}) =>
-  buildTicketWithRelationship(code, related, 'relatedTickets', overrides);
+export function buildTicketWithRelations(code: string, related: string[], overrides = {}) {
+  return buildTicketWithRelationship(code, related, 'relatedTickets', overrides)
+}
 
 /**
  * Creates a Ticket with all optional fields populated
@@ -122,7 +125,7 @@ export function buildFullTicket(overrides: Partial<Ticket> = {}): Ticket {
     implementationDate: '2025-01-15',
     implementationNotes: 'Pending review from team lead',
     ...overrides,
-  });
+  })
 }
 
 /**
@@ -138,6 +141,5 @@ export function buildTickets(count: number, baseCode = 'TCK', overrides: Partial
       code: `${baseCode}-${(i + 1).toString().padStart(3, '0')}`,
       title: `Ticket ${i + 1}`,
       ...overrides,
-    })
-  );
+    }))
 }

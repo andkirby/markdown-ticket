@@ -3,7 +3,8 @@
  */
 
 import type { TicketData } from '../../models/Ticket.js'
-import type { CRPriority, CRStatus, CRType, ValidationResult } from '../../models/Types.js'
+import type { CRStatus, ValidationResult } from '../../models/Types.js'
+import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 
 /** Configuration for ticket creation */
 export interface TicketCreationConfig {
@@ -32,9 +33,9 @@ export interface ITicketCreator {
 
 /** Abstract base class for ticket creators */
 export abstract class BaseTicketCreator implements ITicketCreator {
-  protected readonly validTypes: CRType[] = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation']
+  protected readonly validTypes: CRTypeValue[] = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation', 'Research']
   protected readonly validStatuses: CRStatus[] = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected']
-  protected readonly validPriorities: CRPriority[] = ['Low', 'Medium', 'High', 'Critical']
+  protected readonly validPriorities: CRPriorityValue[] = ['Low', 'Medium', 'High', 'Critical']
 
   /** Generate next ticket code */
   protected abstract generateTicketCode(projectCode: string, projectPath: string, ticketsPath?: string): string | Promise<string>
@@ -70,7 +71,7 @@ export abstract class BaseTicketCreator implements ITicketCreator {
     if (!data.type.trim()) {
       errors.push({ field: 'type', message: 'Type is required' })
     }
-    else if (!this.validTypes.includes(data.type as CRType)) {
+    else if (!this.validTypes.includes(data.type as CRTypeValue)) {
       errors.push({ field: 'type', message: `Type must be one of: ${this.validTypes.join(', ')}` })
     }
 
@@ -78,7 +79,7 @@ export abstract class BaseTicketCreator implements ITicketCreator {
       errors.push({ field: 'content', message: 'Content is required' })
     }
 
-    if (data.priority && !this.validPriorities.includes(data.priority as CRPriority)) {
+    if (data.priority && !this.validPriorities.includes(data.priority as CRPriorityValue)) {
       errors.push({ field: 'priority', message: `Priority must be one of: ${this.validPriorities.join(', ')}` })
     }
 

@@ -21,11 +21,13 @@ export default {
     }],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(supertest|@modelcontextprotocol|@mdt/shared))',
+    'node_modules/(?!(supertest|@modelcontextprotocol|@mdt/shared|@mdt/domain-contracts))',
   ],
   moduleNameMapper: {
     // Map local .js imports to .ts files for Jest
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    // Map @mdt/domain-contracts to the actual source directory
+    '^@mdt/domain-contracts(.*)$': '<rootDir>/../domain-contracts/src$1',
     // Map @mdt/shared services to a mock implementation
     '^@mdt/shared/services/MarkdownService$': '<rootDir>/src/__mocks__/@mdt/shared/services/MarkdownService.ts',
     '^@mdt/shared/services/MarkdownService.js$': '<rootDir>/src/__mocks__/@mdt/shared/services/MarkdownService.ts',

@@ -10,6 +10,7 @@
 
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project'
 import type { Status, Ticket } from '../types'
+import { CRType } from '@mdt/domain-contracts'
 
 interface CreateTicketData {
   code?: string
@@ -253,7 +254,7 @@ class DataLayer {
       code: item.code || item.key || '',
       title: item.title || '',
       status: item.status || 'Proposed',
-      type: item.type || 'Feature Enhancement',
+      type: item.type || CRType.FEATURE_ENHANCEMENT,
       priority: item.priority || 'Medium',
       content: item.content || '',
       filePath: item.filePath || item.path || '',

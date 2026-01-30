@@ -225,7 +225,9 @@ Test methodology.`,
       expect(createCrTool).toBeDefined()
 
       // Verify tool description includes Research type
+      // @ts-ignore - silly error: TS18048: createCrTool is possibly undefined
       expect(createCrTool.description).toContain('Research')
+      // @ts-ignore - silly error: TS18048: createCrTool is possibly undefined
       expect(createCrTool.description).toContain('technical validation')
     })
   })

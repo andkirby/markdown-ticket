@@ -4,11 +4,11 @@
  */
 
 import {
-  validateProject,
-  validateProjectConfig,
   safeValidateProject,
   safeValidateProjectConfig,
-} from '../validation.js';
+  validateProject,
+  validateProjectConfig,
+} from '../validation.js'
 
 describe('validateProject', () => {
   it('returns typed project on valid input', () => {
@@ -17,12 +17,12 @@ describe('validateProject', () => {
       name: 'Test Project',
       id: 'test-id',
       ticketsPath: './docs/CRs',
-    });
+    })
 
-    expect(result.code).toBe('MDT');
-    expect(result.name).toBe('Test Project');
-    expect(typeof result).toBe('object');
-  });
+    expect(result.code).toBe('MDT')
+    expect(result.name).toBe('Test Project')
+    expect(typeof result).toBe('object')
+  })
 
   it('throws on invalid input', () => {
     expect(() => validateProject({
@@ -30,14 +30,14 @@ describe('validateProject', () => {
       name: 'Test',
       id: 'test',
       ticketsPath: 'path',
-    })).toThrow();
-  });
-});
+    })).toThrow()
+  })
+})
 
 describe('validateProjectConfig', () => {
   it('returns typed config on valid input', () => {
     const result = validateProjectConfig({
-      project: {
+      'project': {
         code: 'MDT',
         name: 'Test Project',
         id: 'test-id',
@@ -48,12 +48,12 @@ describe('validateProjectConfig', () => {
         excludeFolders: ['node_modules'],
         maxDepth: 3,
       },
-    });
+    })
 
-    expect(result.project.code).toBe('MDT');
-    expect(result['project.document']?.paths).toEqual(['docs/**/*.md']);
-    expect(typeof result).toBe('object');
-  });
+    expect(result.project.code).toBe('MDT')
+    expect(result['project.document']?.paths).toEqual(['docs/**/*.md'])
+    expect(typeof result).toBe('object')
+  })
 
   it('throws on invalid input', () => {
     expect(() => validateProjectConfig({
@@ -63,9 +63,9 @@ describe('validateProjectConfig', () => {
         id: 'test',
         ticketsPath: 'path',
       },
-    })).toThrow();
-  });
-});
+    })).toThrow()
+  })
+})
 
 describe('safeValidateProject', () => {
   it('returns success: true on valid input', () => {
@@ -74,13 +74,13 @@ describe('safeValidateProject', () => {
       name: 'Test Project',
       id: 'test-id',
       ticketsPath: './docs/CRs',
-    });
+    })
 
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.code).toBe('MDT');
+      expect(result.data.code).toBe('MDT')
     }
-  });
+  })
 
   it('returns success: false on invalid input', () => {
     const result = safeValidateProject({
@@ -88,13 +88,13 @@ describe('safeValidateProject', () => {
       name: 'Test',
       id: 'test',
       ticketsPath: 'path',
-    });
+    })
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues.length).toBeGreaterThan(0);
+      expect(result.error.issues.length).toBeGreaterThan(0)
     }
-  });
+  })
 
   // Test error structure if user-facing
   it('provides helpful error for invalid code', () => {
@@ -103,20 +103,20 @@ describe('safeValidateProject', () => {
       name: 'Test Project',
       id: 'test-id',
       ticketsPath: './docs/CRs',
-    });
+    })
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(false)
     if (!result.success) {
-      const codeError = result.error.issues.find(i => i.path[0] === 'code');
-      expect(codeError?.message).toMatch(/uppercase|format/);
+      const codeError = result.error.issues.find(i => i.path[0] === 'code')
+      expect(codeError?.message).toMatch(/uppercase|format/)
     }
-  });
-});
+  })
+})
 
 describe('safeValidateProjectConfig', () => {
   it('returns success: true on valid input', () => {
     const result = safeValidateProjectConfig({
-      project: {
+      'project': {
         code: 'MDT',
         name: 'Test Project',
         id: 'test-id',
@@ -127,10 +127,10 @@ describe('safeValidateProjectConfig', () => {
         excludeFolders: ['node_modules'],
         maxDepth: 3,
       },
-    });
+    })
 
-    expect(result.success).toBe(true);
-  });
+    expect(result.success).toBe(true)
+  })
 
   it('returns success: false on invalid input', () => {
     const result = safeValidateProjectConfig({
@@ -140,11 +140,11 @@ describe('safeValidateProjectConfig', () => {
         id: 'test',
         ticketsPath: 'path',
       },
-    });
+    })
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues.length).toBeGreaterThan(0);
+      expect(result.error.issues.length).toBeGreaterThan(0)
     }
-  });
-});
+  })
+})

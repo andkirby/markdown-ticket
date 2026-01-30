@@ -1,9 +1,29 @@
 /**
  * Comprehensive Type Definitions for Markdown Ticket System
  * Unified types for Frontend, Backend, and MCP systems
+ *
+ * MDT-101: Type enums now imported from @mdt/domain-contracts as single source of truth.
+ *
+ * For CR types and priorities, import from @mdt/domain-contracts:
+ * - Values: import { CRType, CRPriority } from '@mdt/domain-contracts'
+ * - Types: import type { CRTypeValue, CRPriorityValue } from '@mdt/domain-contracts'
  */
 
-// Core Status Types
+// Import and re-export enum objects and value types from domain-contracts
+import {
+  CRPriority,
+  CRPriorityValue,
+  CRType,
+  CRTypeValue,
+} from '@mdt/domain-contracts'
+
+// Re-export the enum objects (for accessing values like CRType.ARCHITECTURE)
+export { CRPriority, CRType }
+
+// Re-export the value types (for type annotations like CRTypeValue)
+export type { CRPriorityValue, CRTypeValue }
+
+// Core Status Types - NOTE: Extended values not yet in domain-contracts, keeping local definition
 export type CRStatus
   = | 'Proposed'
     | 'Approved'
@@ -16,21 +36,7 @@ export type CRStatus
     | 'Duplicate'
     | 'Partially Implemented'
 
-export type CRType
-  = | 'Architecture'
-    | 'Feature Enhancement'
-    | 'Bug Fix'
-    | 'Technical Debt'
-    | 'Documentation'
-    | 'Research'
-
-export type CRPriority
-  = | 'Low'
-    | 'Medium'
-    | 'High'
-    | 'Critical'
-
-// Runtime validation arrays (must match type definitions above)
+// Runtime validation array (must match type definition above)
 export const CR_STATUSES: readonly CRStatus[] = [
   'Proposed',
   'Approved',
@@ -42,22 +48,6 @@ export const CR_STATUSES: readonly CRStatus[] = [
   'Deprecated',
   'Duplicate',
   'Partially Implemented',
-] as const
-
-export const CR_TYPES: readonly CRType[] = [
-  'Architecture',
-  'Feature Enhancement',
-  'Bug Fix',
-  'Technical Debt',
-  'Documentation',
-  'Research',
-] as const
-
-export const CR_PRIORITIES: readonly CRPriority[] = [
-  'Low',
-  'Medium',
-  'High',
-  'Critical',
 ] as const
 
 // Project Information Interface
