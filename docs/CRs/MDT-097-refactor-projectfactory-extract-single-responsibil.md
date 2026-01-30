@@ -96,7 +96,7 @@ class ProjectFactory {
   ) {
     // Components injected or created with defaults
   }
-  
+
   // Public API unchanged
   async createProject(type: 'empty' = 'empty', config: ProjectConfig = {}): Promise<ProjectData>
   async createTestCR(projectCode: string, crData: TestCRData): Promise<MCPResponse>
@@ -105,8 +105,8 @@ class ProjectFactory {
 
 // Ticket creation decoupled from MCP
 interface TicketCreator {
-  createTicket(projectCode: string, ticketData: TicketData): Promise<TicketResult>
-  createMultipleTickets(projectCode: string, ticketsData: TicketData[]): Promise<TicketResult[]>
+  createTicket: (projectCode: string, ticketData: TicketData) => Promise<TicketResult>
+  createMultipleTickets: (projectCode: string, ticketsData: TicketData[]) => Promise<TicketResult[]>
 }
 ```
 

@@ -27,18 +27,18 @@ openapi.yaml      # API specification
 
 ```typescript
 // src/app.ts — export app, don't listen
-import express from 'express';
+import express from 'express'
 
-export const app = express();
-app.use(express.json());
-app.get('/health', (req, res) => res.json({ ok: true }));
+export const app = express()
+app.use(express.json())
+app.get('/health', (req, res) => res.json({ ok: true }))
 ```
 
 ```typescript
 // src/server.ts — production entry point
-import { app } from './app';
+import { app } from './app'
 
-app.listen(process.env.PORT || 3000);
+app.listen(process.env.PORT || 3000)
 ```
 
 Supertest manages server lifecycle internally — no pre-startup needed.
@@ -47,8 +47,8 @@ Supertest manages server lifecycle internally — no pre-startup needed.
 
 ```typescript
 // test/setup.ts
-process.env.NODE_ENV = 'test';
-process.env.CONFIG_DIR = './test/config';
+process.env.NODE_ENV = 'test'
+process.env.CONFIG_DIR = './test/config'
 ```
 
 ```typescript
@@ -56,101 +56,101 @@ process.env.CONFIG_DIR = './test/config';
 export default {
   preset: 'ts-jest',
   setupFiles: ['./test/setup.ts'],
-};
+}
 ```
 
 ## Writing Tests
 
 ```typescript
+import jestOpenAPI from 'jest-openapi'
 // test/api/users.test.ts
-import request from 'supertest';
-import jestOpenAPI from 'jest-openapi';
-import { app } from '../../src/app';
-import { db } from '../../src/db';
+import request from 'supertest'
+import { app } from '../../src/app'
+import { db } from '../../src/db'
 
-jestOpenAPI('./openapi.yaml');
+jestOpenAPI('./openapi.yaml')
 
 describe('Users API', () => {
   beforeEach(async () => {
-    await db.migrate.latest();
-  });
+    await db.migrate.latest()
+  })
 
   afterEach(async () => {
-    await db('users').truncate();
-  });
+    await db('users').truncate()
+  })
 
   afterAll(async () => {
-    await db.destroy();
-  });
+    await db.destroy()
+  })
 
   it('POST /users creates user', async () => {
     const res = await request(app)
       .post('/users')
       .send({ name: 'Alice', email: 'alice@example.com' })
-      .expect(201);
+      .expect(201)
 
     expect(res.body).toMatchObject({
       id: expect.any(String),
       name: 'Alice',
-    });
-    expect(res).toSatisfyApiSpec();
-  });
+    })
+    expect(res).toSatisfyApiSpec()
+  })
 
   it('POST /users validates required fields', async () => {
     const res = await request(app)
       .post('/users')
       .send({})
-      .expect(400);
+      .expect(400)
 
-    expect(res).toSatisfyApiSpec();
-  });
-});
+    expect(res).toSatisfyApiSpec()
+  })
+})
 ```
 
 ## Authentication
 
 ```typescript
-const getAuthToken = async () => {
+async function getAuthToken() {
   const res = await request(app)
     .post('/auth/login')
-    .send({ email: 'test@example.com', password: 'password' });
-  return res.body.token;
-};
+    .send({ email: 'test@example.com', password: 'password' })
+  return res.body.token
+}
 
 it('accesses protected route', async () => {
-  const token = await getAuthToken();
+  const token = await getAuthToken()
 
   await request(app)
     .get('/profile')
     .set('Authorization', `Bearer ${token}`)
-    .expect(200);
-});
+    .expect(200)
+})
 ```
 
 ## Mocking External Services
 
 ```typescript
-import nock from 'nock';
+import nock from 'nock'
 
 beforeEach(() => {
   nock('https://api.stripe.com')
     .post('/v1/charges')
-    .reply(200, { id: 'ch_123', status: 'succeeded' });
-});
+    .reply(200, { id: 'ch_123', status: 'succeeded' })
+})
 
-afterEach(() => nock.cleanAll());
+afterEach(() => nock.cleanAll())
 ```
 
 ## Fastify Variant
 
 ```typescript
-import Fastify from 'fastify';
-import request from 'supertest';
+import Fastify from 'fastify'
+import request from 'supertest'
 
-const app = Fastify();
-await app.ready();
+const app = Fastify()
+await app.ready()
 
-await request(app.server).get('/health').expect(200);
+await request(app.server).get('/health').expect(200)
 ```
 
 ## Key Principles

@@ -178,14 +178,14 @@ And the type shape should be identical
 
 **Test**:
 ```typescript
-import { Project as ContractProject } from '@mdt/domain-contracts';
-import { Project as SharedProject } from '../Project';
+import { Project as ContractProject } from '@mdt/domain-contracts'
+import { Project as SharedProject } from '../Project'
 
 describe('Project type migration', () => {
   it('should re-export Project from domain-contracts', () => {
-    expect(SharedProject).toBe(ContractProject);
-  });
-});
+    expect(SharedProject).toBe(ContractProject)
+  })
+})
 ```
 
 ### Feature: Dependency Resolution

@@ -63,7 +63,7 @@ Modify button component to add hover checkbox and dual modes (switch/merge).
 | `src/components/Board/index.tsx` | Integration | Added position tracking methods (getTicketPosition, clearTicketPosition) and updated handleDrop signature |
 ### Integration Points
 | From | To | Interface |
-|------|----|-----------| 
+|------|----|-----------|
 | Column component | StatusToggle | Props: status, onToggle, onDrop, allTickets, getTicketPosition, clearTicketPosition, mergeMode?, setMergeMode? |
 | StatusToggle | useButtonModes | Mode state management (viewMode, toggleViewMode, isHovering, mergeMode) |
 | StatusToggle hover checkbox | useTicketOperations | Merge on hold tickets with position restore |

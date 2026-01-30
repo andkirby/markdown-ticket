@@ -76,7 +76,7 @@ Implement PATCH endpoint with intelligent request type detection in frontend hoo
   - Maintains existing file structure and frontmatter format
 
 ### Frontend Changes
-- **useMultiProjectData Hook**: 
+- **useMultiProjectData Hook**:
   - Smart detection of update type (full vs. partial)
   - Route to PATCH for status-only changes, PUT for full updates
 - **Board.tsx Component**:

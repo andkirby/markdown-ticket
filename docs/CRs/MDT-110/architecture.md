@@ -143,21 +143,21 @@ Both implementations must export identical interface:
 
 ```typescript
 export interface ValidationResult {
-  valid: boolean;
-  error?: string;
-  normalized?: string;
+  valid: boolean
+  error?: string
+  normalized?: string
 }
 
 export class ProjectValidator {
-  static validateName(name: string): ValidationResult;
-  static validateCode(code: string): ValidationResult;
-  static validatePath(inputPath: string, options?: { mustExist?: boolean }): ValidationResult;
-  static validateDescription(description: string): ValidationResult;
-  static validateRepository(repository: string): ValidationResult;
-  static expandTildePath(inputPath: string): string;
-  static isValidUrl(urlString: string): boolean;
-  static generateCodeFromName(name: string): string;
-  static validateTicketsPath(ticketsPath: string): ValidationResult;
+  static validateName(name: string): ValidationResult
+  static validateCode(code: string): ValidationResult
+  static validatePath(inputPath: string, options?: { mustExist?: boolean }): ValidationResult
+  static validateDescription(description: string): ValidationResult
+  static validateRepository(repository: string): ValidationResult
+  static expandTildePath(inputPath: string): string
+  static isValidUrl(urlString: string): boolean
+  static generateCodeFromName(name: string): string
+  static validateTicketsPath(ticketsPath: string): ValidationResult
 }
 ```
 

@@ -8,7 +8,6 @@ priority: Medium
 phaseEpic: Phase C (Developer Experience)
 ---
 
-
 # Auto-generate MCP tool documentation from code
 
 # Auto-generate MCP tool documentation from code
@@ -94,9 +93,9 @@ package.json                    # Add docs:generate script
 ### Script Implementation
 
 ```typescript
+import fs from 'node:fs/promises'
 // scripts/generate-mcp-docs.ts
-import { getTools } from '../mcp-server/src/tools/index.js';
-import fs from 'fs/promises';
+import { getTools } from '../mcp-server/src/tools/index.js'
 
 const HEADER = `# MCP Tools Documentation
 
@@ -112,7 +111,7 @@ The MCP server uses the **shared core architecture** with unified types, service
 - **Templates**: \`shared/templates/\` - File-based templates for all CR types
 - **Configuration**: \`shared/models/Config.ts\` - Unified configuration interfaces
 
-`;
+`
 
 const SECTIONS = {
   'Core Tools': ['list_projects', 'get_project_info', 'list_crs', 'get_cr'],
@@ -120,85 +119,87 @@ const SECTIONS = {
   'Section-Based Content Tools': ['list_cr_sections', 'get_cr_section', 'update_cr_section'],
   'Template Tools': ['list_cr_templates', 'get_cr_template'],
   'Analysis Tools': ['suggest_cr_improvements']
-};
+}
 
 const CUSTOM_NOTES = {
   'Section-Based Content Tools': '**Token Efficiency**: 84-94% savings compared to full document operations\n\n'
-};
+}
 
 function generateToolDoc(tool: any): string {
-  const params = tool.inputSchema.properties || {};
-  const required = tool.inputSchema.required || [];
-  
-  let doc = `### \`${tool.name}\`\n`;
-  doc += `**Description**: ${tool.description}\n\n`;
-  
+  const params = tool.inputSchema.properties || {}
+  const required = tool.inputSchema.required || []
+
+  let doc = `### \`${tool.name}\`\n`
+  doc += `**Description**: ${tool.description}\n\n`
+
   if (Object.keys(params).length > 0) {
-    doc += `**Parameters**:\n`;
+    doc += `**Parameters**:\n`
     for (const [name, schema] of Object.entries(params)) {
-      const req = required.includes(name) ? 'required' : 'optional';
-      const typeInfo = schema.type || 'string';
-      doc += `- \`${name}\` (${typeInfo}, ${req}): ${schema.description}\n`;
-      
+      const req = required.includes(name) ? 'required' : 'optional'
+      const typeInfo = schema.type || 'string'
+      doc += `- \`${name}\` (${typeInfo}, ${req}): ${schema.description}\n`
+
       // Handle nested properties (like filters object)
       if (schema.properties) {
         for (const [subName, subSchema] of Object.entries(schema.properties)) {
-          doc += `  - \`${subName}\`: ${subSchema.description}\n`;
+          doc += `  - \`${subName}\`: ${subSchema.description}\n`
         }
       }
-      
+
       // Handle enum values
       if (schema.enum) {
-        doc += `    - Valid values: ${schema.enum.map(v => `"${v}"`).join(', ')}\n`;
+        doc += `    - Valid values: ${schema.enum.map(v => `"${v}"`).join(', ')}\n`
       }
     }
-  } else {
-    doc += `**Parameters**: None\n`;
   }
-  
-  return doc + '\n';
+  else {
+    doc += `**Parameters**: None\n`
+  }
+
+  return `${doc}\n`
 }
 
 async function generateDocs() {
-  const tools = getTools();
-  const toolMap = new Map(tools.map(t => [t.name, t]));
-  
-  let markdown = HEADER;
-  
+  const tools = getTools()
+  const toolMap = new Map(tools.map(t => [t.name, t]))
+
+  let markdown = HEADER
+
   for (const [section, toolNames] of Object.entries(SECTIONS)) {
-    markdown += `## ${section}\n\n`;
-    
+    markdown += `## ${section}\n\n`
+
     // Add custom notes if defined
     if (CUSTOM_NOTES[section]) {
-      markdown += CUSTOM_NOTES[section];
+      markdown += CUSTOM_NOTES[section]
     }
-    
+
     for (const toolName of toolNames) {
-      const tool = toolMap.get(toolName);
+      const tool = toolMap.get(toolName)
       if (tool) {
-        markdown += generateToolDoc(tool);
-      } else {
-        console.warn(`⚠️  Tool '${toolName}' not found in getTools()`);
+        markdown += generateToolDoc(tool)
+      }
+      else {
+        console.warn(`⚠️  Tool '${toolName}' not found in getTools()`)
       }
     }
   }
-  
+
   // Footer with configuration info
-  markdown += `## Configuration\n\n`;
-  markdown += `The MCP server uses shared configuration from:\n`;
-  markdown += `- **Global Config**: \`~/.config/markdown-ticket/mcp-server.toml\`\n`;
-  markdown += `- **Templates**: \`shared/templates/\` directory\n`;
-  markdown += `- **Shared Services**: Unified project discovery, markdown parsing, and template management\n`;
-  
-  await fs.writeFile('mcp-server/MCP_TOOLS.md', markdown);
-  console.log('✅ Generated MCP_TOOLS.md from tool definitions');
-  console.log(`📊 Generated documentation for ${tools.length} tools`);
+  markdown += `## Configuration\n\n`
+  markdown += `The MCP server uses shared configuration from:\n`
+  markdown += `- **Global Config**: \`~/.config/markdown-ticket/mcp-server.toml\`\n`
+  markdown += `- **Templates**: \`shared/templates/\` directory\n`
+  markdown += `- **Shared Services**: Unified project discovery, markdown parsing, and template management\n`
+
+  await fs.writeFile('mcp-server/MCP_TOOLS.md', markdown)
+  console.log('✅ Generated MCP_TOOLS.md from tool definitions')
+  console.log(`📊 Generated documentation for ${tools.length} tools`)
 }
 
-generateDocs().catch(err => {
-  console.error('❌ Failed to generate documentation:', err);
-  process.exit(1);
-});
+generateDocs().catch((err) => {
+  console.error('❌ Failed to generate documentation:', err)
+  process.exit(1)
+})
 ```
 
 ### Package.json Updates

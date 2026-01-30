@@ -68,7 +68,7 @@ When multiple sections share the same name (e.g., `### Functional` appears in di
 
 1. Attempt to `get` or `replace` a section with a non-unique name:
    ```json
-   {"section": "### Functional"}
+   { "section": "### Functional" }
    ```
 2. Receive error:
    ```
@@ -119,7 +119,7 @@ Different operations (`list`, `get`, `replace`) appear to expect different path 
 
 ```json
 // Had to operate on parent section instead
-{"section": "## 4. Acceptance Criteria"}  // SUCCESS
+{ "section": "## 4. Acceptance Criteria" } // SUCCESS
 ```
 
 ---
@@ -174,12 +174,12 @@ Make all operations accept the same path format. Choose one:
 
 **Option A**: Use hierarchical notation everywhere
 ```json
-{"section": "# Title / ## Section / ### Subsection"}
+{ "section": "# Title / ## Section / ### Subsection" }
 ```
 
 **Option B**: Use simple section names (requires parent to be unique)
 ```json
-{"section": "### Subsection"}  // Error if multiple, show parent options
+{ "section": "### Subsection" } // Error if multiple, show parent options
 ```
 
 **Option C**: Use structured format
@@ -222,7 +222,7 @@ Document expected path formats for each operation:
 Give each section a unique ID that can be used regardless of hierarchy:
 
 ```json
-{"sectionId": "acc-functional"}  // Unique, unambiguous
+{ "sectionId": "acc-functional" } // Unique, unambiguous
 ```
 
 ---

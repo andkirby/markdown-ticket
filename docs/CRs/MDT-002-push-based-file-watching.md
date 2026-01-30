@@ -91,23 +91,23 @@ Real-time file change notifications using Server-Sent Events (SSE) with chokidar
 ```typescript
 // Enhanced server with chokidar integration
 class FileWatcherService {
-  private watcher: chokidar.FSWatcher;
-  private eventQueue: FileChangeEvent[] = [];
-  private clients: Set<Response> = new Set();
+  private watcher: chokidar.FSWatcher
+  private eventQueue: FileChangeEvent[] = []
+  private clients: Set<Response> = new Set()
 
   initFileWatcher(watchPath: string = './sample-tasks/*.md') {
     this.watcher = chokidar.watch(watchPath, {
       ignoreInitial: true,
       persistent: true,
       awaitWriteFinish: { stabilityThreshold: 100 }
-    });
+    })
   }
 }
 ```
 
 #### 2. SSE Endpoint
 - **Route**: `GET /api/events`
-- **Response Headers**: 
+- **Response Headers**:
   - `Content-Type: text/event-stream`
   - `Cache-Control: no-cache`
   - `Connection: keep-alive`
@@ -123,10 +123,10 @@ class FileWatcherService {
 #### 1. SSE Client Implementation
 ```typescript
 class RealtimeFileWatcher {
-  private eventSource: EventSource | null = null;
-  private fallbackWatcher: FileWatcher; // Existing polling watcher
-  private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 5;
+  private eventSource: EventSource | null = null
+  private fallbackWatcher: FileWatcher // Existing polling watcher
+  private reconnectAttempts: number = 0
+  private maxReconnectAttempts: number = 5
 }
 ```
 
@@ -257,7 +257,7 @@ The push-based file watching architecture has been successfully implemented, ach
 
 #### Browser Compatibility
 - ✅ Chrome/Chromium: Full SSE support
-- ✅ Firefox: Full SSE support  
+- ✅ Firefox: Full SSE support
 - ✅ Safari: Full SSE support
 - ✅ Edge: Full SSE support
 - ✅ Mobile browsers: Tested on iOS Safari and Android Chrome
@@ -354,7 +354,7 @@ Potential improvements identified during implementation:
 - **`server/server.js`** (Modified) - Added chokidar dependency import, FileWatcherService integration, SSE endpoint `/api/events`, graceful shutdown handling, and SSE client count in status endpoint
 - **`server/package.json`** (Modified) - Added `chokidar@^3.5.3` dependency
 
-#### Frontend Files  
+#### Frontend Files
 - **`src/services/realtimeFileWatcher.ts`** (New) - Complete RealtimeFileWatcher class with SSE client, automatic reconnection, exponential backoff, polling fallback, and drop-in compatibility with existing FileWatcher
 - **`src/hooks/useTicketData.ts`** (Modified) - Updated to use RealtimeFileWatcher by default, maintains backward compatibility, enables SSE by default with configurable options
 - **`src/services/fileWatcher.ts`** (Modified) - Fixed TypeScript timer type issues for cross-platform compatibility

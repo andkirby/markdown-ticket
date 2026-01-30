@@ -149,7 +149,6 @@ graph TB
 
 **Dependency:** Requires MDT-074 implementation for MCP HTTP transport
 
-
 ## 3. Solution Analysis
 
 ### Main Challenges
@@ -308,8 +307,8 @@ volumes:
 environment:
   # Vite proxy configuration
   - DOCKER_BACKEND_URL=http://backend:3001
-  - VITE_BACKEND_URL=                     # Empty = use frontend proxy
-  
+  - VITE_BACKEND_URL= # Empty = use frontend proxy
+
   # Frontend settings
   - NODE_ENV=development
   - VITE_HMR_HOST=localhost
@@ -318,7 +317,7 @@ environment:
 
 **Frontend URL Resolution**:
 - **API calls**: Use `VITE_BACKEND_URL` or fallback to frontend proxy
-- **SSE connections**: Use `VITE_BACKEND_URL` or fallback to frontend proxy  
+- **SSE connections**: Use `VITE_BACKEND_URL` or fallback to frontend proxy
 - **Native development**: Set `VITE_BACKEND_URL=http://localhost:3001` in `.env`
 - **Docker development**: Leave empty to use proxy
 
@@ -377,12 +376,12 @@ Works identically in host and Docker environments. Custom `fix-paths.js` build s
 
 ```typescript
 // Before: Hardcoded Docker detection
-const defaultHost = process.env.DOCKER === 'true' ? 'localhost:5174' : 'localhost:5173';
-const host = args.frontend_host || process.env.FRONTEND_URL || defaultHost;
+const defaultHost = process.env.DOCKER === 'true' ? 'localhost:5174' : 'localhost:5173'
+const host = args.frontend_host || process.env.FRONTEND_URL || defaultHost
 
 // After: Single source of truth
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-const host = args.frontend_host || FRONTEND_URL;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
+const host = args.frontend_host || FRONTEND_URL
 ```
 
 **Configuration**:
@@ -472,4 +471,3 @@ enableDocumentLinks = false
 - **Nginx reverse proxy**: Single-port SSL termination for production
 - **Observability**: Structured logging, metrics, distributed tracing
 - **CI/CD**: Automated multi-arch builds and vulnerability scanning
-

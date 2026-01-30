@@ -9,7 +9,6 @@ description: Integrate Mermaid.js library to automatically convert Mermaid code 
 rationale: Visual diagrams significantly improve documentation clarity and technical communication. Adding Mermaid support allows users to create flowcharts, sequence diagrams, and other visual elements directly in markdown without external tools.
 ---
 
-
 # Add Mermaid diagram rendering support in ticket and document views
 
 ## 1. Description

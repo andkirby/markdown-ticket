@@ -9,7 +9,6 @@ implementationDate: 2025-10-02T22:45:11.167Z
 implementationNotes: Status changed to Implemented on 10/3/2025
 ---
 
-
 # Backend fails to parse project.code from .mdt-config.toml for specific projects
 
 # Backend fails to parse project.code from .mdt-config.toml for specific projects
@@ -64,7 +63,7 @@ Temporary hotfix in `ProjectSelector.tsx`:
 const hotfixMap: Record<string, string> = {
   'goto_dir': 'GT',
   'sentence-breakdown': 'SEB'
-};
+}
 ```
 
 ## Investigation Needed

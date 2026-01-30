@@ -10,7 +10,6 @@ implementationDate: 2025-11-24T01:20:13.389Z
 implementationNotes: Status changed to Implemented on 11/24/2025
 ---
 
-
 # Remove .mdt-next Counter File Dependency
 
 ## 1. Problem & Scope
@@ -167,21 +166,22 @@ Line 271: const crFiles = await glob('*.md', { cwd: crPath });
 **Code Evidence**:
 ```typescript
 // Duplicate logic found in server/utils/ticketNumbering.ts:126-136
-const counterFile = path.join(projectPath, '.mdt-next');
-let counterNumber = 0;
+const counterFile = path.join(projectPath, '.mdt-next')
+let counterNumber = 0
 try {
-  const content = await fs.readFile(counterFile, 'utf8');
-  counterNumber = parseInt(content.trim()) || 0;
-} catch {
+  const content = await fs.readFile(counterFile, 'utf8')
+  counterNumber = Number.parseInt(content.trim()) || 0
+}
+catch {
   // Counter file doesn't exist
 }
-const nextNumber = Math.max(maxNumber + 1, counterNumber);
+const nextNumber = Math.max(maxNumber + 1, counterNumber)
 ```
 
 ```typescript
 // Duplicate logic found in server/services/TicketService.ts:244-245
-const counterPath = path.join(project.project.path, config.project?.counterFile || '.mdt-next');
-await fs.writeFile(counterPath, String(nextNumber + 1), 'utf8');
+const counterPath = path.join(project.project.path, config.project?.counterFile || '.mdt-next')
+await fs.writeFile(counterPath, String(nextNumber + 1), 'utf8')
 ```
 
 **Next CR Required**: Technical debt migration to consolidate ticket management into `shared/` directory.

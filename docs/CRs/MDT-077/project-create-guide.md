@@ -70,7 +70,11 @@ Auto-discovery must be enabled in global configuration (`~/.config/markdown-tick
 ```toml
 [discovery]
 autoDiscover = true
-searchPaths = ["~/projects", "~/workspace", "~/dev"]
+searchPaths = [
+  "~/projects",
+  "~/workspace",
+  "~/dev"
+]
 ```
 
 **Example**:
@@ -137,8 +141,12 @@ Auto-discovery is controlled by the global configuration file at `~/.config/mark
 
 ```toml
 [discovery]
-autoDiscover = true                    # Enable/disable auto-discovery
-searchPaths = ["~/projects", "~/workspace", "~/dev"]  # Directories to scan
+autoDiscover = true # Enable/disable auto-discovery
+searchPaths = [
+  "~/projects",
+  "~/workspace",
+  "~/dev"
+] # Directories to scan
 ```
 
 ### Configuration Fields
@@ -168,7 +176,10 @@ searchPaths = ["~/projects", "~/workspace", "~/dev"]  # Directories to scan
 ```toml
 [discovery]
 autoDiscover = true
-searchPaths = ["~/projects", "~/workspace"]
+searchPaths = [
+  "~/projects",
+  "~/workspace"
+]
 ```
 
 **Multi-Environment Setup**:
@@ -176,11 +187,11 @@ searchPaths = ["~/projects", "~/workspace"]
 [discovery]
 autoDiscover = true
 searchPaths = [
-    "~/projects",
-    "~/workspace",
-    "/opt/workspaces",
-    "~/dev",
-    "/home/user/development"
+  "~/projects",
+  "~/workspace",
+  "/opt/workspaces",
+  "~/dev",
+  "/home/user/development"
 ]
 ```
 
@@ -195,7 +206,10 @@ searchPaths = []
 ```toml
 [discovery]
 autoDiscover = true
-searchPaths = ["/workspace", "/app/projects"]
+searchPaths = [
+  "/workspace",
+  "/app/projects"
+]
 ```
 
 ### Error Handling

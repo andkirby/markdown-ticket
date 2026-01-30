@@ -146,17 +146,17 @@ To add new metadata fields:
 // tests/api/cr-endpoints.e2e.test.ts
 describe('CR Endpoints E2E', () => {
   describe('GET /api/projects/:id/crs', () => {
-    it('returns metadata-only structure');
-    it('excludes content field');
-    it('includes required metadata fields');
-    it('reduces payload size by >90%');
-  });
+    it('returns metadata-only structure')
+    it('excludes content field')
+    it('includes required metadata fields')
+    it('reduces payload size by >90%')
+  })
 
   describe('GET /api/projects/:id/crs/:crId', () => {
-    it('returns full ticket with content');
-    it('maintains backward compatibility');
-  });
-});
+    it('returns full ticket with content')
+    it('maintains backward compatibility')
+  })
+})
 ```
 
 ### Success Criteria

@@ -45,39 +45,39 @@ Force reload page with ?cache-bust={timestamp}
 
 **Handler** (`src/components/HamburgerMenu.tsx:50-54`):
 ```tsx
-const handleClearCache = () => {
-  console.log('🔧 Cache clear button clicked');
-  setIsOpen(false);
-  nuclearCacheClear();
-};
+function handleClearCache() {
+  console.log('🔧 Cache clear button clicked')
+  setIsOpen(false)
+  nuclearCacheClear()
+}
 ```
 
 **Nuclear Cache Clear Function** (`src/utils/cache.ts:80-103`):
 ```tsx
-export const nuclearCacheClear = async () => {
+export async function nuclearCacheClear() {
   if (typeof window !== 'undefined') {
     // Clear backend cache first
-    await clearBackendCache();
+    await clearBackendCache()
 
     // Clear all frontend storage
-    clearAllCache();
+    clearAllCache()
 
     // Clear browser cache if possible (limited by security)
     if ('caches' in window) {
-      caches.keys().then(names => {
-        names.forEach(name => {
-          caches.delete(name);
-          console.log('🧹 Cleared cache:', name);
-        });
-      });
+      caches.keys().then((names) => {
+        names.forEach((name) => {
+          caches.delete(name)
+          console.log('🧹 Cleared cache:', name)
+        })
+      })
     }
 
     // Force reload with cache bypass
-    const url = new URL(window.location.href);
-    url.searchParams.set('cache-bust', Date.now().toString());
-    window.location.href = url.toString();
+    const url = new URL(window.location.href)
+    url.searchParams.set('cache-bust', Date.now().toString())
+    window.location.href = url.toString()
   }
-};
+}
 ```
 
 ### Backend
@@ -86,18 +86,19 @@ export const nuclearCacheClear = async () => {
 ```tsx
 router.post('/cache/clear', async (req: Request, res: Response) => {
   try {
-    console.log('🗑️  Clearing file operation cache');
-    fileInvoker.clearCache();
+    console.log('🗑️  Clearing file operation cache')
+    fileInvoker.clearCache()
     res.json({
       success: true,
       message: 'Cache cleared successfully',
       timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Error clearing cache:', error);
-    res.status(500).json({ error: 'Failed to clear cache' });
+    })
   }
-});
+  catch (error) {
+    console.error('Error clearing cache:', error)
+    res.status(500).json({ error: 'Failed to clear cache' })
+  }
+})
 ```
 
 **File Operation Invoker** (`server/invokers/FileOperationInvoker.ts:78-86`):
@@ -158,7 +159,7 @@ In development mode, these are exposed globally (`src/utils/cache.ts:104-108`):
 ```tsx
 (window as any).clearCache = clearAllCache;
 (window as any).clearProjectCache = clearProjectCache;
-(window as any).clearBackendCache = clearBackendCache;
+(window as any).clearBackendCache = clearBackendCache
 ```
 
 ## Implications for Cache Unification (MDT-105)

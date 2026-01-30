@@ -18,7 +18,7 @@
 
 **Function Signature**:
 ```json
-{"project": "MDT", "key": "MDT-114", "operation": "list|get|replace|append|prepend", "section": "## Section Name", "content": "New content"}
+{ "project": "MDT", "key": "MDT-114", "operation": "list|get|replace|append|prepend", "section": "## Section Name", "content": "New content" }
 ```
 
 ---
@@ -30,7 +30,7 @@
 **Why**: `list` output may NOT show all subsections. You must see structure before modifying.
 
 ```json
-{"project": "MDT", "key": "MDT-114", "operation": "list"}
+{ "project": "MDT", "key": "MDT-114", "operation": "list" }
 ```
 
 **Sample Output**:
@@ -48,7 +48,7 @@
 **Why**: Avoid losing content when replacing.
 
 ```json
-{"project": "MDT", "key": "MDT-114", "operation": "get", "section": "## 1. Description"}
+{ "project": "MDT", "key": "MDT-114", "operation": "get", "section": "## 1. Description" }
 ```
 
 ---
@@ -58,7 +58,7 @@
 **Behavior**: Replaces all content, preserves header.
 
 ```json
-{"project": "MDT", "key": "MDT-114", "operation": "replace", "section": "### Problem", "content": "### Problem\n\nNew content here\n"}
+{ "project": "MDT", "key": "MDT-114", "operation": "replace", "section": "### Problem", "content": "### Problem\n\nNew content here\n" }
 ```
 
 **append**: Add to end, `prepend`: Add to start (after header).
@@ -117,7 +117,7 @@ Multiple sections match "### Functional". Use hierarchical path:
 ### Correct Approach: Target Parent
 ```json
 {
-  "section": "## 4. Acceptance Criteria",  // Parent (unique)
+  "section": "## 4. Acceptance Criteria", // Parent (unique)
   "operation": "replace",
   "content": "### Functional\n\n- [ ] New item\n\n### Non-Functional\n\n[existing content]\n\n### Edge Cases\n\n[existing content]\n"
 }
@@ -168,7 +168,7 @@ Need to modify CR section?
 ### Workflow: Rename Section
 
 ```json
-{"section": "### Problem", "operation": "replace", "content": "### Issues\n\n[existing content]"}
+{ "section": "### Problem", "operation": "replace", "content": "### Issues\n\n[existing content]" }
 // Include NEW header in content
 ```
 

@@ -9,7 +9,6 @@ description: Optimize project bar space usage by showing only project codes for 
 rationale: Current project bar takes up too much horizontal space. By showing only project codes for inactive projects and expanding the active one, we can improve screen real estate while maintaining usability through hover tooltips
 ---
 
-
 # Shrink project bar with expanded active project display
 
 ## 1. Description

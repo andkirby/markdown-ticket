@@ -191,27 +191,27 @@ export const TEST_PROJECTS = {
     nonExistent: '/tmp/does-not-exist-12345',
     permissionDenied: '/root/forbidden'
   }
-};
+}
 ```
 
 ### Cleanup Utilities
 
 ```typescript
 // Run after each test
-export const cleanupTestProject = async (projectPath: string) => {
+export async function cleanupTestProject(projectPath: string) {
   if (await pathExists(projectPath)) {
-    await remove(projectPath);
+    await remove(projectPath)
   }
-};
+}
 
-export const cleanupGlobalRegistry = async () => {
-  const globalRegistryPath = getGlobalRegistryPath();
+export async function cleanupGlobalRegistry() {
+  const globalRegistryPath = getGlobalRegistryPath()
   if (await pathExists(globalRegistryPath)) {
     // Remove test entries only
-    const config = await readToml(globalRegistryPath);
+    const config = await readToml(globalRegistryPath)
     // ... cleanup logic
   }
-};
+}
 ```
 
 ---

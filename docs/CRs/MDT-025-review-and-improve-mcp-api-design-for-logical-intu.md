@@ -77,7 +77,7 @@ LLMs need clear, consistent feedback to use APIs effectively. When error message
 **Current missing errors**:
 - Invalid status transitions (Implemented → Proposed)
 - File permission issues
-- YAML parsing failures  
+- YAML parsing failures
 - File locked by another process
 **Solution**: Enhanced error handling with specific failure types and messages
 
@@ -99,14 +99,14 @@ LLMs need clear, consistent feedback to use APIs effectively. When error message
    - Update function parameters in `services/crService.ts`
    - Update documentation and examples
 
-2. **Error Message Standardization**  
+2. **Error Message Standardization**
    - Apply error standards from `docs/MCP_API_ERROR_STANDARDS.md`
    - Update `getTemplate()` to list valid types
    - Standardize project not found errors across all functions
 
 ### Phase 2: Medium Priority Enhancements
 3. **Add Template Discovery**
-   - New endpoint: `list_cr_templates()` 
+   - New endpoint: `list_cr_templates()`
    - Returns array of available template types
    - Update API documentation
 
@@ -163,7 +163,7 @@ LLMs need clear, consistent feedback to use APIs effectively. When error message
 
 ### Files Requiring Updates
 - `mcp-server/src/tools/index.ts` - API schemas and error messages
-- `mcp-server/src/services/crService.ts` - Function parameters and error handling  
+- `mcp-server/src/services/crService.ts` - Function parameters and error handling
 - `mcp-server/src/services/templateService.ts` - Error message in getTemplate()
 - Documentation and examples with parameter name changes
 

@@ -195,7 +195,7 @@ To add new endpoint documentation: add `@openapi` JSDoc block above route handle
 
 **Specification Corrections**:
 - swagger-jsdoc configuration requires `requestBodies` component for CR and Project operations
-- swagger-jsdoc configuration requires additional response schemas (CRCreated, CRUpdated, ProjectCreated, ProjectUpdated)  
+- swagger-jsdoc configuration requires additional response schemas (CRCreated, CRUpdated, ProjectCreated, ProjectUpdated)
 - ES modules need `fileURLToPath` and manual `__dirname` setup for swagger-jsdoc glob patterns
 - Added `projectCode` parameter definition for project code-based routes (`/api/projects/{code}/*`)
 - `js-yaml` dependency required for OpenAPI YAML generation script

@@ -75,11 +75,11 @@ Centralized, robust event architecture with:
 1. **Fix Current System** - Patch existing issues
    - Pros: Less work upfront
    - Cons: Fundamental architectural issues remain
-   
+
 2. **Third-Party Library** (Redux, MobX, Zustand)
    - Pros: Battle-tested, community support
    - Cons: Overkill for this use case, learning curve
-   
+
 3. **Custom Event System** - Build lightweight, purpose-built solution ✅ CHOSEN
    - Pros: Exactly what we need, no dependencies, full control
    - Cons: Need to maintain it ourselves
@@ -120,7 +120,7 @@ Custom event management system with three core services:
 // Singleton event bus
 class EventBus {
   on<T>(eventType: EventType, handler: EventListener<T>): UnsubscribeFn
-  emit<T>(eventType: EventType, payload: T, source: 'sse'|'ui'|'api'): void
+  emit<T>(eventType: EventType, payload: T, source: 'sse' | 'ui' | 'api'): void
   getRecentEvents(count?: number): Event[]
   getStats(): EventBusStats
 }
@@ -154,19 +154,19 @@ const dataLayer = {
 ### Event Types
 
 ```typescript
-type EventType =
-  | 'ticket:created'
-  | 'ticket:updated'
-  | 'ticket:deleted'
-  | 'project:created'
-  | 'project:changed'
-  | 'project:deleted'
-  | 'sse:connected'
-  | 'sse:disconnected'
-  | 'sse:error'
-  | 'error:api'
-  | 'error:network'
-  | 'system:refresh'
+type EventType
+  = | 'ticket:created'
+    | 'ticket:updated'
+    | 'ticket:deleted'
+    | 'project:created'
+    | 'project:changed'
+    | 'project:deleted'
+    | 'sse:connected'
+    | 'sse:disconnected'
+    | 'sse:error'
+    | 'error:api'
+    | 'error:network'
+    | 'system:refresh'
 ```
 
 ### Event Flow

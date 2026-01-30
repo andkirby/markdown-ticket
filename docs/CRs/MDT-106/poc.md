@@ -49,16 +49,16 @@ jest-openapi will work seamlessly with:
 
 **Key Code**:
 ```typescript
-import jestOpenAPI from 'jest-openapi';
-import { join } from 'path';
+import { join } from 'node:path'
+import jestOpenAPI from 'jest-openapi'
 
 // Load the OpenAPI specification
-const openApiSpecPath = join(__dirname, '../../../openapi.yaml');
-jestOpenAPI(openApiSpecPath);
+const openApiSpecPath = join(__dirname, '../../../openapi.yaml')
+jestOpenAPI(openApiSpecPath)
 
 // In test:
-const res = await request(app).get('/api/status').expect(200);
-expect(res).toSatisfyApiSpec();
+const res = await request(app).get('/api/status').expect(200)
+expect(res).toSatisfyApiSpec()
 ```
 
 ## Execution Log
@@ -95,16 +95,16 @@ Tests:       3 passed, 3 total
 
 3. **Response Validation**: Validates Supertest Response objects against the spec:
    ```typescript
-   const res = await request(app).get('/api/status').expect(200);
-   expect(res).toSatisfyApiSpec(); // ✓ Works
+   const res = await request(app).get('/api/status').expect(200)
+   expect(res).toSatisfyApiSpec() // ✓ Works
    ```
 
 4. **ESM + ts-jest**: Works with Jest + ts-jest in ESM mode using `.js` extension in imports
 
 5. **Error Detection**: Catches undefined properties and missing required fields:
    ```typescript
-   (res.body as any).undefinedProperty = 'test';
-   expect(res).toSatisfyApiSpec(); // ✗ Throws error
+   (res.body as any).undefinedProperty = 'test'
+   expect(res).toSatisfyApiSpec() // ✗ Throws error
    ```
 
 ### Issues Discovered
@@ -119,13 +119,13 @@ Tests:       3 passed, 3 total
 
 1. **Import Path**: Must use `.js` extension for imports in ESM mode:
    ```typescript
-   import { setupTestEnvironment } from '../setup.js'; // ✓ Works
-   import { setupTestEnvironment } from '../setup';     // ✗ Fails
+   import { setupTestEnvironment } from '../setup' // ✗ Fails
+   import { setupTestEnvironment } from '../setup.js' // ✓ Works
    ```
 
 2. **Spec File Path**: The OpenAPI spec path must be absolute or resolved relative to test file:
    ```typescript
-   const openApiSpecPath = join(__dirname, '../../../openapi.yaml');
+   const openApiSpecPath = join(__dirname, '../../../openapi.yaml')
    ```
 
 3. **Response Object**: jest-openapi requires the full Supertest Response object, not just the body. The matcher reads both `res.status` and `res.body`.
@@ -187,25 +187,25 @@ Tests:       3 passed, 3 total
 ```typescript
 /// <reference types="jest" />
 
-import jestOpenAPI from 'jest-openapi';
-import { join } from 'path';
+import { join } from 'node:path'
+import jestOpenAPI from 'jest-openapi'
 
 // Load OpenAPI spec once at module level
-const openApiSpecPath = join(__dirname, '../../../openapi.yaml');
-jestOpenAPI(openApiSpecPath);
+const openApiSpecPath = join(__dirname, '../../../openapi.yaml')
+jestOpenAPI(openApiSpecPath)
 
 describe('jest-openapi Contract Tests', () => {
   it('should validate response against OpenAPI spec', async () => {
-    const { setupTestEnvironment, cleanupTestEnvironment } = await import('../setup.js');
-    const context = await setupTestEnvironment();
-    const app = context.app;
+    const { setupTestEnvironment, cleanupTestEnvironment } = await import('../setup.js')
+    const context = await setupTestEnvironment()
+    const app = context.app
 
-    const res = await request(app).get('/api/status').expect(200);
-    expect(res).toSatisfyApiSpec(); // ✓ Validates against spec
+    const res = await request(app).get('/api/status').expect(200)
+    expect(res).toSatisfyApiSpec() // ✓ Validates against spec
 
-    await cleanupTestEnvironment(context.tempDir);
-  });
-});
+    await cleanupTestEnvironment(context.tempDir)
+  })
+})
 ```
 
 ## Test Output Examples

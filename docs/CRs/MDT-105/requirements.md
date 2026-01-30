@@ -188,9 +188,9 @@ This specification defines the behavioral requirements for unifying cache implem
 
 ```toml
 [system.cache]
-enable = true      # Enable/disable caching (default: true)
-ttl = 30000        # Global TTL in milliseconds (default: 30 seconds)
-maxEntries = 1000  # Global max entries per cache instance (default: 1000)
+enable = true # Enable/disable caching (default: true)
+ttl = 30000 # Global TTL in milliseconds (default: 30 seconds)
+maxEntries = 1000 # Global max entries per cache instance (default: 1000)
 ```
 
 | Setting | Description | Default | Valid Range | Rationale |

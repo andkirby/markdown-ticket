@@ -10,10 +10,6 @@ implementationDate: 2025-11-29T12:24:12.481Z
 implementationNotes: Status changed to Implemented on 11/29/2025
 ---
 
-
-
-
-
 # MCP HTTP Server Implementation for Docker Performance
 
 ## 1. Description
@@ -296,39 +292,40 @@ mcp-server/
 
 **index.ts - Main entry point:**
 ```typescript
-import { startStdioTransport } from './transports/stdio.js';
-import { startHttpTransport } from './transports/http.js';
-import { logger } from './logger.js';
+import { logger } from './logger.js'
+import { startHttpTransport } from './transports/http.js'
+import { startStdioTransport } from './transports/stdio.js'
 
 async function main() {
   // Stdio transport: ALWAYS ON
-  await startStdioTransport();
-  logger.info('✓ MCP stdio transport: ready');
+  await startStdioTransport()
+  logger.info('✓ MCP stdio transport: ready')
 
   // HTTP transport: OPTIONAL (enabled via env var)
   if (process.env.MCP_HTTP_ENABLED === 'true') {
     try {
-      const port = parseInt(process.env.MCP_HTTP_PORT || '3002');
-      await startHttpTransport({ port });
-      logger.info(`✓ MCP HTTP transport: http://localhost:${port}`);
-    } catch (err) {
-      logger.warn('⚠ HTTP transport failed to start:', err.message);
-      logger.warn('  Stdio transport still available');
+      const port = Number.parseInt(process.env.MCP_HTTP_PORT || '3002')
+      await startHttpTransport({ port })
+      logger.info(`✓ MCP HTTP transport: http://localhost:${port}`)
+    }
+    catch (err) {
+      logger.warn('⚠ HTTP transport failed to start:', err.message)
+      logger.warn('  Stdio transport still available')
     }
   }
 }
 
 main().catch((err) => {
-  logger.error('Failed to start MCP server:', err);
-  process.exit(1);
-});
+  logger.error('Failed to start MCP server:', err)
+  process.exit(1)
+})
 ```
 
 **transports/stdio.ts - Existing stdio transport:**
 ```typescript
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { registerAllTools } from '../tools/index.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { registerAllTools } from '../tools/index.js'
 
 export async function startStdioTransport() {
   const server = new Server({
@@ -336,70 +333,70 @@ export async function startStdioTransport() {
     version: '1.0.0'
   }, {
     capabilities: { tools: {} }
-  });
+  })
 
   // Register tools (shared with HTTP transport)
-  registerAllTools(server);
+  registerAllTools(server)
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  const transport = new StdioServerTransport()
+  await server.connect(transport)
 }
 ```
 
 **transports/http.ts - NEW HTTP transport:**
 ```typescript
-import express from 'express';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { registerAllTools } from '../tools/index.js';
-import { logger } from '../logger.js';
-import { config } from '../config.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import express from 'express'
+import { config } from '../config.js'
+import { logger } from '../logger.js'
+import { registerAllTools } from '../tools/index.js'
 
 export async function startHttpTransport(options: { port: number }) {
-  const app = express();
+  const app = express()
   const server = new Server({
     name: 'markdown-ticket',
     version: '1.0.0'
   }, {
     capabilities: { tools: {} }
-  });
+  })
 
   // Register tools (same as stdio transport)
-  registerAllTools(server);
+  registerAllTools(server)
 
   // Optional security features (Phase 2)
   if (config.security.originValidation) {
     app.use((req, res, next) => {
-      const origin = req.headers.origin;
+      const origin = req.headers.origin
       if (origin && !isAllowedOrigin(origin)) {
-        return res.status(403).json({ error: 'Forbidden origin' });
+        return res.status(403).json({ error: 'Forbidden origin' })
       }
-      next();
-    });
+      next()
+    })
   }
 
   if (config.security.rateLimiting) {
     const limiter = rateLimit({
       windowMs: config.security.rateLimitWindow,
       max: config.security.rateLimitMax
-    });
-    app.use('/mcp', limiter);
+    })
+    app.use('/mcp', limiter)
   }
 
   // MCP endpoint
   app.post('/mcp', async (req, res) => {
     // Handle JSON-RPC messages
     // Implementation using MCP SDK
-  });
+  })
 
   // Bind address (localhost for dev, 0.0.0.0 for Docker)
-  const host = config.bindAddress;
+  const host = config.bindAddress
 
   return new Promise<void>((resolve) => {
     app.listen(options.port, host, () => {
-      logger.info(`HTTP transport bound to ${host}:${options.port}`);
-      resolve();
-    });
-  });
+      logger.info(`HTTP transport bound to ${host}:${options.port}`)
+      resolve()
+    })
+  })
 }
 ```
 
@@ -407,9 +404,9 @@ export async function startHttpTransport(options: { port: number }) {
 
 ```typescript
 // tools/cr-tools.ts
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { MarkdownService } from '../../../shared/services/MarkdownService.js';
-import { z } from 'zod';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { z } from 'zod'
+import { MarkdownService } from '../../../shared/services/MarkdownService.js'
 
 export function registerCRTools(
   server: Server,
@@ -448,15 +445,15 @@ export function registerCRTools(
         }
       ]
     })
-  );
-  
+  )
+
   server.setRequestHandler(
     CallToolRequestSchema,
     async (request) => {
       if (request.params.name === 'list_crs') {
-        const { project, status, limit = 50 } = request.params.arguments;
-        const crs = await markdownService.listCRs(project, { status, limit });
-        
+        const { project, status, limit = 50 } = request.params.arguments
+        const crs = await markdownService.listCRs(project, { status, limit })
+
         return {
           content: [
             {
@@ -464,10 +461,10 @@ export function registerCRTools(
               text: JSON.stringify(crs, null, 2)
             }
           ]
-        };
+        }
       }
     }
-  );
+  )
 }
 ```
 
@@ -477,7 +474,7 @@ export function registerCRTools(
 
 ```typescript
 // logger.ts
-import pino from 'pino';
+import pino from 'pino'
 
 export const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -487,11 +484,11 @@ export const logger = pino({
       colorize: true
     }
   }
-});
+})
 
 // Usage in tools
-logger.info({ tool: 'list_crs', project: 'MDT', duration: 45 }, 'Tool executed');
-logger.error({ tool: 'get_cr', error: err.message }, 'Tool failed');
+logger.info({ tool: 'list_crs', project: 'MDT', duration: 45 }, 'Tool executed')
+logger.error({ tool: 'get_cr', error: err.message }, 'Tool failed')
 ```
 
 **Metrics to log:**
@@ -514,21 +511,21 @@ logger.error({ tool: 'get_cr', error: err.message }, 'Tool failed');
 ```typescript
 // Origin validation (disabled by default)
 if (process.env.MCP_SECURITY_ORIGIN_VALIDATION === 'true') {
-  app.use(originValidationMiddleware);
+  app.use(originValidationMiddleware)
 }
 
 // Rate limiting (disabled by default)
 if (process.env.MCP_SECURITY_RATE_LIMITING === 'true') {
   const limiter = rateLimit({
-    windowMs: parseInt(process.env.MCP_RATE_LIMIT_WINDOW_MS || '1000'),
-    max: parseInt(process.env.MCP_RATE_LIMIT_MAX || '100')
-  });
-  app.use('/mcp', limiter);
+    windowMs: Number.parseInt(process.env.MCP_RATE_LIMIT_WINDOW_MS || '1000'),
+    max: Number.parseInt(process.env.MCP_RATE_LIMIT_MAX || '100')
+  })
+  app.use('/mcp', limiter)
 }
 
 // Authentication (disabled by default)
 if (process.env.MCP_SECURITY_AUTH === 'true') {
-  app.use(authMiddleware);
+  app.use(authMiddleware)
 }
 ```
 
@@ -567,16 +564,16 @@ services:
   mcp:
     build:
       context: .
-      dockerfile: mcp-server/Dockerfile  # Same Dockerfile, updated
+      dockerfile: mcp-server/Dockerfile # Same Dockerfile, updated
     container_name: markdown-ticket-mcp
     ports:
-      - "3002:3002"                      # Expose HTTP port (when enabled)
+      - '3002:3002' # Expose HTTP port (when enabled)
     volumes:
       - ${HOME}/.config/markdown-ticket:/root/.config/markdown-ticket:ro
       - ${HOME}/projects:/projects
     environment:
       - NODE_ENV=production
-      - MCP_HTTP_ENABLED=true            # Enable HTTP transport
+      - MCP_HTTP_ENABLED=true # Enable HTTP transport
       - MCP_HTTP_PORT=3002
       - MCP_BIND_ADDRESS=0.0.0.0
       - LOG_LEVEL=info
@@ -725,7 +722,7 @@ claude mcp add mdt-http \
   --transport http \
   --url http://localhost:3002/mcp
 
-# Amazon Q  
+# Amazon Q
 q mcp add \
   --name mdt-http \
   --transport http \

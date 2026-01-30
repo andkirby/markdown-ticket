@@ -96,7 +96,7 @@ shared/utils/                      → Shared utilities (extract first)
 | `shared/utils/path-resolver.ts` | Utility | 75 | 110 |
 
 ### Extension Rule
-To add a new project-related service: 
+To add a new project-related service:
 1. Create `shared/services/project/{NewService}.ts` (feature module, limit 200 lines)
 2. Implement `IProjectService` interface with methods: `initialize()`, `getProject()`, `validateProject()`
 3. Add service to ProjectService constructor with dependency injection
@@ -110,62 +110,62 @@ graph TB
     classDef service fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef utility fill:#e8f5e8,stroke:#1b5e20,stroke-width:1px
     classDef external fill:#fff3e0,stroke:#e65100,stroke-width:1px
-    
+
     %% Facade Layer
     PS[ProjectService<br/>Facade<br/>< 150 lines]:::facade
-    
+
     %% Service Layer
     PDS[ProjectDiscoveryService<br/>Scanning & Registry<br/>< 300 lines]:::service
     PCS[ProjectConfigService<br/>Config Management<br/>< 300 lines]:::service
     PCHS[ProjectCacheService<br/>Caching & TTL<br/>< 300 lines]:::service
-    
+
     %% Utility Layer
     LOG[logger.ts<br/>Quiet Logging<br/>< 110 lines]:::utility
     TOML[toml.ts<br/>Serialization<br/>< 110 lines]:::utility
     CONF[config-validator.ts<br/>Validation<br/>< 110 lines]:::utility
     FILE[file-utils.ts<br/>File Ops<br/>< 110 lines]:::utility
     PATH[path-resolver.ts<br/>Path Utils<br/>< 110 lines]:::utility
-    
+
     %% External Dependencies
     BACKEND[Backend APIs]:::external
     MCP[MCP Server]:::external
     FRONTEND[Frontend]:::external
-    
+
     %% Connections from Facade to Services
     PS -->|delegates| PDS
     PS -->|delegates| PCS
     PS -->|delegates| PCHS
-    
+
     %% Service to Utility Connections
     PDS --> LOG
     PDS --> FILE
     PDS --> PATH
     PDS --> TOML
-    
+
     PCS --> LOG
     PCS --> TOML
     PCS --> CONF
     PCS --> FILE
     PCS --> PATH
-    
+
     PCHS --> LOG
     PCHS --> FILE
-    
+
     %% External API Connections
     PS -.->|Public API| FRONTEND
     PS -.->|Public API| BACKEND
     PS -.->|Public API| MCP
-    
+
     %% Annotations using click nodes for notes
     NOTE1["Services injected via<br/>constructor dependency injection"]
     NOTE2["Utilities extracted<br/>first, then consumed by services"]
     NOTE1:::note
     NOTE2:::note
-    
+
     %% Position notes
     NOTE1 -.-> PS
     NOTE2 -.-> LOG
-    
+
     %% Metrics Box
     subgraph Metrics["Refactor Metrics"]
         direction TB
@@ -173,14 +173,14 @@ graph TB
         M2[After: 9 files<br/>< 300 lines max]
         M1 -.->|Refactor| M2
     end
-    
+
     %% Define note style
     classDef note fill:#ffeb3b,stroke:#f57c00,stroke-width:1px,font-size:11px
 ```
 
 **Legend:**
 - **Blue (Facade)**: Coordinates and delegates to specialized services
-- **Purple (Services)**: Each handles single responsibility 
+- **Purple (Services)**: Each handles single responsibility
 - **Green (Utilities)**: Shared across all services
 - **Orange (External)**: Consumers of the ProjectService API
 
@@ -228,7 +228,7 @@ graph TB
 | `server/routes/projects.js` | Import changes | Import from shared/ProjectService instead of local wrapper |
 ### Integration Points
 | From | To | Interface |
-|------|----|-----------| 
+|------|----|-----------|
 | ProjectService (facade) | ProjectDiscoveryService | `scanProjects()`, `getProject()`, `isProjectRegistered()`, `registerProject()`, `autoDiscoverProjects()` |
 | ProjectService (facade) | ProjectConfigService | `loadConfig()`, `validateConfig()`, `createOrUpdateLocalConfig()`, `updateProject()` |
 | ProjectService (facade) | ProjectCacheService | `get()`, `set()`, `clear()`, `isValid()` |

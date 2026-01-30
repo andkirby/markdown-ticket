@@ -55,19 +55,19 @@ Reliable project management requires precise tracking of project lifecycle event
 const projectConfigWatcher = chokidar.watch('.mdt-config.toml', {
   persistent: true,
   ignoreInitial: true
-});
+})
 
 projectConfigWatcher.on('unlink', (path) => {
-  const projectId = extractProjectIdFromPath(path);
+  const projectId = extractProjectIdFromPath(path)
   sseService.broadcast({
     type: 'project:deleted',
-    data: { 
-      projectId, 
+    data: {
+      projectId,
       timestamp: Date.now(),
       reason: 'file_removed'
     }
-  });
-});
+  })
+})
 ```
 
 ### SSE Broadcast Service

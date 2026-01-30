@@ -11,7 +11,7 @@ domain-contracts/
       __tests__/
         schema.test.ts           ← Schema business rules
         validation.test.ts       ← Validation function behavior
-    
+
     testing/
       project.fixtures.ts        ← Test builders (not tested themselves)
 ```
@@ -31,7 +31,7 @@ Test **your rules**, not Zod:
 
 ```typescript
 // src/project/__tests__/schema.test.ts
-import { ProjectSchema, CreateProjectInputSchema } from '../schema';
+import { CreateProjectInputSchema, ProjectSchema } from '../schema'
 
 describe('ProjectSchema', () => {
   describe('key', () => {
@@ -40,33 +40,33 @@ describe('ProjectSchema', () => {
         key: 'MDT',
         name: 'Project',
         rootPath: '/path',
-      })).not.toThrow();
-    });
+      })).not.toThrow()
+    })
 
     it('rejects lowercase', () => {
       expect(() => ProjectSchema.parse({
         key: 'mdt',
         name: 'Project',
         rootPath: '/path',
-      })).toThrow(/uppercase/);
-    });
+      })).toThrow(/uppercase/)
+    })
 
     it('rejects too short (1 char)', () => {
       expect(() => ProjectSchema.parse({
         key: 'M',
         name: 'Project',
         rootPath: '/path',
-      })).toThrow();
-    });
+      })).toThrow()
+    })
 
     it('rejects too long (6+ chars)', () => {
       expect(() => ProjectSchema.parse({
         key: 'TOOLONG',
         name: 'Project',
         rootPath: '/path',
-      })).toThrow();
-    });
-  });
+      })).toThrow()
+    })
+  })
 
   describe('name', () => {
     it('rejects empty string', () => {
@@ -74,9 +74,9 @@ describe('ProjectSchema', () => {
         key: 'MDT',
         name: '',
         rootPath: '/path',
-      })).toThrow(/required/);
-    });
-  });
+      })).toThrow(/required/)
+    })
+  })
 
   describe('optional fields', () => {
     it('accepts missing description', () => {
@@ -84,11 +84,11 @@ describe('ProjectSchema', () => {
         key: 'MDT',
         name: 'Project',
         rootPath: '/path',
-      });
-      expect(result.description).toBeUndefined();
-    });
-  });
-});
+      })
+      expect(result.description).toBeUndefined()
+    })
+  })
+})
 ```
 
 ### Validation Functions
@@ -98,10 +98,10 @@ Test behavior, especially safe variants:
 ```typescript
 // src/project/__tests__/validation.test.ts
 import {
-  validateProject,
-  validateCreateProjectInput,
   safeValidateCreateProjectInput,
-} from '../validation';
+  validateCreateProjectInput,
+  validateProject,
+} from '../validation'
 
 describe('validateProject', () => {
   it('returns typed project on valid input', () => {
@@ -109,15 +109,15 @@ describe('validateProject', () => {
       key: 'MDT',
       name: 'Project',
       rootPath: '/path',
-    });
-    
-    expect(result.key).toBe('MDT');
-  });
+    })
+
+    expect(result.key).toBe('MDT')
+  })
 
   it('throws on invalid input', () => {
-    expect(() => validateProject({ key: 'bad' })).toThrow();
-  });
-});
+    expect(() => validateProject({ key: 'bad' })).toThrow()
+  })
+})
 
 describe('safeValidateCreateProjectInput', () => {
   it('returns success: true on valid input', () => {
@@ -125,23 +125,23 @@ describe('safeValidateCreateProjectInput', () => {
       key: 'MDT',
       name: 'Project',
       rootPath: '/path',
-    });
-    
-    expect(result.success).toBe(true);
+    })
+
+    expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.key).toBe('MDT');
+      expect(result.data.key).toBe('MDT')
     }
-  });
+  })
 
   it('returns success: false on invalid input', () => {
-    const result = safeValidateCreateProjectInput({ key: 'bad' });
-    
-    expect(result.success).toBe(false);
+    const result = safeValidateCreateProjectInput({ key: 'bad' })
+
+    expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues.length).toBeGreaterThan(0);
+      expect(result.error.issues.length).toBeGreaterThan(0)
     }
-  });
-});
+  })
+})
 ```
 
 ### Input Schema Derivation
@@ -155,8 +155,8 @@ describe('CreateProjectInputSchema', () => {
       key: 'MDT',
       name: 'Project',
       // missing rootPath
-    })).toThrow();
-  });
+    })).toThrow()
+  })
 
   it('allows optional description', () => {
     const result = CreateProjectInputSchema.parse({
@@ -164,10 +164,10 @@ describe('CreateProjectInputSchema', () => {
       name: 'Project',
       rootPath: '/path',
       description: 'Optional desc',
-    });
-    expect(result.description).toBe('Optional desc');
-  });
-});
+    })
+    expect(result.description).toBe('Optional desc')
+  })
+})
 ```
 
 ## What NOT to Test
@@ -177,13 +177,13 @@ describe('CreateProjectInputSchema', () => {
 ```typescript
 // Don't test that Zod works
 it('rejects missing required field', () => {
-  expect(() => ProjectSchema.parse({})).toThrow();
-});
+  expect(() => ProjectSchema.parse({})).toThrow()
+})
 
 // Don't test basic type checking
 it('rejects number for string field', () => {
-  expect(() => ProjectSchema.parse({ key: 123 })).toThrow();
-});
+  expect(() => ProjectSchema.parse({ key: 123 })).toThrow()
+})
 ```
 
 ### ❌ Fixtures
@@ -193,8 +193,8 @@ Fixtures are test utilities - testing them is circular:
 ```typescript
 // Don't do this
 it('buildProject returns valid project', () => {
-  expect(() => ProjectSchema.parse(buildProject())).not.toThrow();
-});
+  expect(() => ProjectSchema.parse(buildProject())).not.toThrow()
+})
 ```
 
 If fixtures break, other tests will fail.
@@ -211,7 +211,7 @@ describe('key format', () => {
   it('accepts MIN boundary (2 chars)', () => { ... });
   it('accepts MAX boundary (5 chars)', () => { ... });
   it('accepts middle range (3 chars)', () => { ... });
-  
+
   // Invalid cases
   it('rejects below MIN (1 char)', () => { ... });
   it('rejects above MAX (6 chars)', () => { ... });
@@ -225,18 +225,18 @@ If error messages matter to users:
 
 ```typescript
 it('provides helpful error for invalid key', () => {
-  const result = safeValidateCreateProjectInput({ 
+  const result = safeValidateCreateProjectInput({
     key: 'bad',
     name: 'Project',
     rootPath: '/path',
-  });
-  
-  expect(result.success).toBe(false);
+  })
+
+  expect(result.success).toBe(false)
   if (!result.success) {
-    const keyError = result.error.issues.find(i => i.path[0] === 'key');
-    expect(keyError?.message).toContain('uppercase');
+    const keyError = result.error.issues.find(i => i.path[0] === 'key')
+    expect(keyError?.message).toContain('uppercase')
   }
-});
+})
 ```
 
 ## Summary

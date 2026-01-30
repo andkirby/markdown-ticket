@@ -10,7 +10,6 @@ description: The server.js file has grown to over 1,400 lines and violates singl
 rationale: Current monolithic structure creates maintenance bottlenecks, makes testing difficult, and increases risk of bugs. Modular architecture will improve code maintainability, enable better testing, and make future feature development faster. Note: File watching with chokidar is already well-implemented and should be preserved.
 ---
 
-
 # Refactor monolithic server.js into modular architecture
 
 ## 1. Description

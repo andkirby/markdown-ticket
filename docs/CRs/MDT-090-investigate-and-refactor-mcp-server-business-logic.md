@@ -98,7 +98,7 @@ Investigate MCP server business logic and refactor it to be a thin proxy using s
 ### Integration Points
 
 | From | To | Interface |
-|------|----|-----------| 
+|------|----|-----------|
 | MCPTools constructor | Shared services | Dependency injection |
 | Tool handlers | Shared services | Method calls |
 | Integration tests | Both servers | Consistency verification |

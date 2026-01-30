@@ -91,7 +91,7 @@ Modify list endpoint to return only mandatory metadata fields. Frontend will fet
 
 ### API E2E Tests
 - [ ] Test list endpoint returns metadata-only structure
-- [ ] Test detail endpoint returns full ticket structure  
+- [ ] Test detail endpoint returns full ticket structure
 - [ ] Test payload size reduction >80%
 - [ ] Test frontend can display list and detail views properly
 

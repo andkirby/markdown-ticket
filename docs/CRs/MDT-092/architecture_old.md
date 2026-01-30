@@ -139,38 +139,38 @@ shared/test-lib/
 ```typescript
 // config/ports.ts
 export const TEST_PORTS = {
-  FRONTEND: 6173,    // Different from dev:5173
-  BACKEND: 4001,     // Different from dev:3001
-  MCP: 4002         // Different from dev:3002
-} as const;
+  FRONTEND: 6173, // Different from dev:5173
+  BACKEND: 4001, // Different from dev:3001
+  MCP: 4002 // Different from dev:3002
+} as const
 ```
 
 ### Usage Example
 ```typescript
 // In test file
-import { TestEnvironment, TicketFactory } from '@mdt/test-lib';
+import { TestEnvironment, TicketFactory } from '@mdt/test-lib'
 
 // Setup isolated environment
-const testEnv = new TestEnvironment();
-await testEnv.setup();
+const testEnv = new TestEnvironment()
+await testEnv.setup()
 
 // Get project directory (create if needed)
-const projectDir = testEnv.createProjectDir('TEST');
+const projectDir = testEnv.createProjectDir('TEST')
 
 // Create ticket factory
-const ticketFactory = new TicketFactory(projectDir);
+const ticketFactory = new TicketFactory(projectDir)
 
 // Create 4 tickets with different statuses for board testing
 // This creates the same structure as realtime-sync.spec.ts
-await ticketFactory.createTicket('TEST-001', 'Ticket 1', 'Proposed', 'Feature Enhancement');
-await ticketFactory.createTicket('TEST-002', 'Ticket 2', 'In Progress', 'Bug Fix');
-await ticketFactory.createTicket('TEST-003', 'Ticket 3', 'Approved', 'Architecture');
-await ticketFactory.createTicket('TEST-004', 'Ticket 4', 'Implemented', 'Documentation');
+await ticketFactory.createTicket('TEST-001', 'Ticket 1', 'Proposed', 'Feature Enhancement')
+await ticketFactory.createTicket('TEST-002', 'Ticket 2', 'In Progress', 'Bug Fix')
+await ticketFactory.createTicket('TEST-003', 'Ticket 3', 'Approved', 'Architecture')
+await ticketFactory.createTicket('TEST-004', 'Ticket 4', 'Implemented', 'Documentation')
 
 // Test runs here with isolated servers on ports 6173/4001/4002
 
 // Cleanup (automatic cleanup of temp directories)
-await testEnv.cleanup();
+await testEnv.cleanup()
 ```
 
 **Note**: The `TicketFactory` implementation follows the exact pattern from `tests/e2e/realtime-sync.spec.ts`:
@@ -214,9 +214,9 @@ ${desiredState}
 *To be filled during implementation*
 
 ## 4. Acceptance Criteria
-*To be filled during implementation*`;
+*To be filled during implementation*`
 
-writeFileSync(ticketPath, ticketContent);
+writeFileSync(ticketPath, ticketContent)
 ```
 
 Key benefits:

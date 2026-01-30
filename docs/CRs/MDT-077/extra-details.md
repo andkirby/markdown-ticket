@@ -62,7 +62,7 @@ npm run project:list -- --format json
 #### Error Handling Pattern
 ```typescript
 // Exit codes: 0=success, 1=error, 2=validation, 3=not_found, 6=cancelled
-process.exit(CLI_ERROR_CODES[errorType]);
+process.exit(CLI_ERROR_CODES[errorType])
 ```
 
 ### Implementation Status
@@ -104,12 +104,12 @@ describe('CLI Project Management', () => {
   test('create project with flags', async () => {
     const result = await execPromise(
       'npm run project:create -- --name "Test" --code "TST" --path "/tmp/test"'
-    );
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Project created successfully');
+    )
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('Project created successfully')
     // check created files
-  });
-});
+  })
+})
 ```
 
 **Benefits over Bats**:
@@ -125,13 +125,13 @@ describe('CLI Project Management', () => {
 const TEST_PROJECTS = {
   valid: { name: 'Test Project', code: 'TST', path: '/tmp/test' },
   invalid: { name: '', code: '123', path: '/nonexistent' }
-};
+}
 
 // Cleanup utilities
 afterEach(async () => {
-  await cleanupTestProjects();
-  await resetConfiguration();
-});
+  await cleanupTestProjects()
+  await resetConfiguration()
+})
 ```
 
 ### Configuration System Updates (2025-12-14)
