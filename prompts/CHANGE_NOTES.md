@@ -2,6 +2,46 @@
 
 ## Recent Updates
 
+### 2026-01-30 - Smart CR Creation: Inference Over Interrogation
+
+**Problem**: The `/mdt:ticket-creation` workflow (v6) used a rigid 10-question interactive flow that felt like an interrogation. Users were asked questions even when context was obvious from conversation history or codebase. The workflow was also monolithic (921 lines) with document structures embedded, making it hard to maintain and evolve templates.
+
+**Solution**: Completely rewrote the workflow (v9) around smart parameter inference. The new pattern: "Analyze context → Infer all parameters → Confirm/Refine → Execute". All document structures extracted to external template files, reducing the workflow from ~921 lines to ~121 lines (~87% reduction).
+
+**Changes Made**:
+
+1. **ticket-creation.md (v6→v9) - Smart inference workflow**:
+   - Eliminated 10-step questioning flow in favor of context analysis
+   - New Parameter Schema: 7 parameters inferred from context (SPEC_MODE, CR_TYPE, REQUIREMENTS_SCOPE, MOTIVATION, AREAS, VERIFICATION, etc.)
+   - REQUIREMENTS_SCOPE smart defaults by CR_TYPE (Feature→full, Bug→brief, Architecture/Debt→none)
+   - Single confirmation question with table of inferred values + reasoning
+   - Refine mode: user selects which parameters to change, workflow asks only those
+   - Post-confirmation: ask mode-specific questions (Q4-Q8 for Full Specification mode)
+   - Template selection based on CR_TYPE + SPEC_MODE
+   - Next workflow suggestions table (CR_TYPE × REQUIREMENTS_SCOPE → specific workflow chain)
+
+2. **ticket-templates/ (NEW) - Externalized document structures**:
+   - `full-spec.md` (249 lines) - Full Specification mode template (7 sections: Description, Decision, Alternatives, Artifact Specifications, Acceptance Criteria, Verification, Deployment)
+   - `requirements.md` (164 lines) - Requirements mode template (5 sections: Description, Desired Outcome, Open Questions, Acceptance Criteria, Verification)
+   - `research.md` (190 lines) - Research mode template (5 sections: Description, Research Questions, Validation Approach, Acceptance Criteria, Dependencies & Next Steps)
+   - `quality-checks.md` (16 lines) - Critical quality rules for all modes (NO YAML frontmatter, NO prose paragraphs, NO bold headers, ONE H1 only, etc.)
+
+**Impact**:
+- Faster CR creation: context inference eliminates obvious questions
+- Better user experience: one confirmation instead of 10 questions
+- Maintainable templates: document structures now separate files
+- Easier to add new CR types or modes: just add new template
+- Preserves full functionality with 87% less workflow code
+
+**Files Changed**:
+- `prompts/mdt/commands/ticket-creation.md` (v6→v9)
+- `prompts/mdt/references/ticket-templates/full-spec.md` (new)
+- `prompts/mdt/references/ticket-templates/requirements.md` (new)
+- `prompts/mdt/references/ticket-templates/research.md` (new)
+- `prompts/mdt/references/ticket-templates/quality-checks.md` (new)
+
+---
+
 ### 2026-01-28 - Completion Verification Agent for Implementation Workflows
 
 **Problem**: Implementation workflows lacked comprehensive verification at completion. Issues like security regressions (rate limiting bypass), unmet requirements (public methods not removed), and dead code were discovered only after manual review, not caught by the automated workflow.
