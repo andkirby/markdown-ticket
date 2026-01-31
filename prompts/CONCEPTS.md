@@ -12,7 +12,7 @@ Debt prevention is a chain across four workflows that progressively enforce cons
 │ - Pattern (structural approach)                             │
 │ - Shared Patterns (extract FIRST to prevent duplication)    │
 │ - Structure (file paths)                                    │
-│ - Size Guidance (default + hard max per module)             │
+│ - Scope Boundaries (what each module owns)                  │
 │ - Extension Rule                                            │
 └─────────────────────┬───────────────────────────────────────┘
                       ↓
@@ -20,7 +20,7 @@ Debt prevention is a chain across four workflows that progressively enforce cons
 │ /mdt:tasks                                                  │
 │                                                             │
 │ Inherits:                                                   │
-│ - Size limits → Task Limits (flag/STOP thresholds)          │
+│ - Scope boundaries → Task constraints (flag/STOP thresholds)│
 │ - Shared patterns → Part 1 (extract before consumers)       │
 │                                                             │
 │ Adds:                                                       │
@@ -32,7 +32,7 @@ Debt prevention is a chain across four workflows that progressively enforce cons
 │ /mdt:implement                                              │
 │                                                             │
 │ Verifies after each task:                                   │
-│ - Size: OK (≤default) / FLAG (≤1.5x) / STOP (>1.5x)         │
+│ - Scope: OK / FLAG / STOP (boundary breaches)               │
 │ - Structure: correct path                                   │
 │ - No duplication: imports from shared, doesn't copy         │
 └─────────────────────┬───────────────────────────────────────┘
@@ -41,7 +41,7 @@ Debt prevention is a chain across four workflows that progressively enforce cons
 │ /mdt:tech-debt                                              │
 │                                                             │
 │ Catches what slipped through:                               │
-│ - Size violations                                           │
+│ - Scope boundary violations                                 │
 │ - Duplication                                               │
 │ - Missing abstractions                                      │
 │ - Shotgun surgery patterns                                  │
@@ -54,18 +54,18 @@ Debt prevention is a chain across four workflows that progressively enforce cons
 
 1. **Architecture Design** establishes the constraints:
     - Identifies shared patterns appearing in 2+ places
-    - Defines file structure and size limits per module
+    - Defines file structure and module responsibility boundaries
     - Creates extension rule for future modifications
 
 2. **Tasks** inherits and enforces constraints:
-    - Size limits become flag/STOP thresholds
+    - Scope boundaries become flag/STOP thresholds
     - Shared patterns scheduled in Part 1 (before consumers)
     - Adds explicit exclusions and anti-duplication rules
 
 3. **Implement** verifies after each task:
-    - OK: ≤ default lines
-    - FLAG: ≤ 1.5x default (completes with warning)
-    - STOP: > 1.5x default (cannot complete)
+    - OK: Scope and boundaries respected
+    - FLAG: Minor scope spillover or small duplication
+    - STOP: Multiple responsibilities or cross-layer mixing
 
 4. **Tech-Debt** catches violations:
     - Post-implementation analysis detects what slipped through
@@ -102,8 +102,8 @@ Every task includes explicit limits to prevent scope creep:
 
 **Limits**:
 
-- Default: 150 lines
-- Hard Max: 225 lines
+- Scope: Validation only; no formatting or persistence
+- Boundary: Orchestration stays in caller; helpers extracted if reused
 
 **Exclude** (stays in source):
 
@@ -118,7 +118,7 @@ Every task includes explicit limits to prevent scope creep:
 
 **Components**:
 
-1. **Size Limits**: Default + Hard Max based on module role
+1. **Scope Limits**: What this task owns, and what it must not touch
 2. **Exclude Section**: What stays in source (already extracted elsewhere)
 3. **Anti-Duplication**: Import statements required (never copy)
 
@@ -128,27 +128,18 @@ Tasks and orchestrator have explicit escalation for violations:
 
 | Trigger                  | Action                     |
 |--------------------------|----------------------------|
-| File > Hard Max          | STOP, subdivide or justify |
+| Scope boundary breached  | STOP, subdivide or clarify |
 | Duplicating shared logic | STOP, import instead       |
 | Structure mismatch       | STOP, clarify path         |
 | Tests fail (2 retries)   | STOP, report failure       |
-
-**Hard Max by Module Role**:
-
-| Role                              | Default | Hard Max |
-|-----------------------------------|---------|----------|
-| Orchestration (index, main)       | 100     | 150      |
-| Feature module                    | 200     | 300      |
-| Complex logic (parser, algorithm) | 300     | 450      |
-| Utility / helper                  | 75      | 110      |
 
 ## Three Zones
 
 | Zone    | Condition         | Action                        |
 |---------|-------------------|-------------------------------|
-| ✅ OK    | ≤ Default         | Proceed                       |
-| ⚠️ FLAG | Default to 1.5x   | Task completes with warning   |
-| ⛔ STOP  | > 1.5x (Hard Max) | Cannot complete, must resolve |
+| ✅ OK    | Within scope      | Proceed                       |
+| ⚠️ FLAG | Minor spillover   | Task completes with warning   |
+| ⛔ STOP  | Boundary breach   | Cannot complete, must resolve |
 
 **Override Location**: CR Acceptance Criteria or project CLAUDE.md
 
@@ -453,18 +444,18 @@ Unlike feature development (RED → GREEN), prep uses **behavior preservation**:
 
 ### Constraints & Verification
 
-4. **Constraints are explicit** — size limits, exclusions, STOP conditions
-    - Every task has size limits (default + hard max)
+4. **Constraints are explicit** — scope boundaries, exclusions, STOP conditions
+    - Every task has explicit scope and boundary rules
     - Exclude section prevents duplicating shared code
     - STOP conditions block progress on violations
 
 5. **Three-zone verification** — OK, FLAG (warning), STOP (blocked)
-    - OK: ≤ default lines, proceed
-    - FLAG: ≤ 1.5x default, complete with warning
-    - STOP: > 1.5x default, cannot complete
+    - OK: Within scope, proceed
+    - FLAG: Minor spillover, complete with warning
+    - STOP: Boundary breach, cannot complete
 
 6. **Violations block progress** — cannot mark complete if constraints violated
-    - Size > hard max: STOP and subdivide
+    - Scope boundary breached: STOP and subdivide
     - Duplication detected: STOP and import
     - Structure mismatch: STOP and clarify
     - Tests fail (2 retries): STOP and report
@@ -481,10 +472,10 @@ Unlike feature development (RED → GREEN), prep uses **behavior preservation**:
     - Verifies imports, prevents copy-paste
     - Part 1 extracts, Part 2+ imports
 
-9. **Build vs Use evaluation** — evaluate existing libraries before building custom (>50 lines)
+9. **Build vs Use evaluation** — evaluate existing libraries before building custom
     - All criteria must be YES (coverage, maturity, license, footprint, fit)
     - Prevents NIH syndrome and dependency bloat
-    - Triggers assessment at >50 lines of custom code
+    - Triggers assessment when custom build is non-trivial
 
 ### Workflow Organization
 

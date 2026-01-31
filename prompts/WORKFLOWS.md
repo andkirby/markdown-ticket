@@ -67,11 +67,11 @@ What type of work?
         │                        Validate uncertain technical decisions
         │                        ⚠️ Use when "will this work?" needs proof
         ▼
-/mdt:domain-lens (optional) ────── Creates: domain.md (~15-25 lines)
+/mdt:domain-lens (optional) ────── Creates: domain.md (concise)
         │                        DDD constraints for architecture
         │                        ⚠️ Skip for refactoring/tech-debt/CRUD
         ▼
-/mdt:architecture ─────────────── Simple: CR section (~60 lines)
+/mdt:architecture ─────────────── Simple: CR section (concise)
         │                        Complex: architecture.md (extracted)
         │                        Defines: parts, modules, structure
         │                        Consumes: poc.md, domain.md, bdd.md
@@ -226,7 +226,7 @@ What type of work?
 │ - Pattern (structural approach)                             │
 │ - Shared Patterns (extract FIRST to prevent duplication)    │
 │ - Structure (file paths)                                    │
-│ - Size Guidance (default + hard max per module)             │
+│ - Scope Boundaries (what each module owns)                  │
 │ - Extension Rule                                            │
 └─────────────────────┬───────────────────────────────────────┘
                       ↓
@@ -234,8 +234,8 @@ What type of work?
 │ /mdt:tasks                                                  │
 │                                                             │
 │ Inherits:                                                   │
-│ - Size limits → Task Limits (flag/STOP thresholds)          │
-│ - Shared patterns → Part 1 (extract before consumers)      │
+│ - Scope boundaries → Task constraints (flag/STOP thresholds)│
+│ - Shared patterns → Part 1 (extract before consumers)       │
 │                                                             │
 │ Adds:                                                       │
 │ - Exclude section (what NOT to move)                        │
@@ -246,7 +246,7 @@ What type of work?
 │ /mdt:implement                                              │
 │                                                             │
 │ Verifies after each task:                                   │
-│ - Size: OK (≤default) / FLAG (≤1.5x) / STOP (>1.5x)         │
+│ - Scope: OK / FLAG / STOP (boundary breaches)               │
 │ - Structure: correct path                                   │
 │ - No duplication: imports from shared, doesn't copy         │
 └─────────────────────┬───────────────────────────────────────┘
@@ -255,7 +255,7 @@ What type of work?
 │ /mdt:tech-debt                                              │
 │                                                             │
 │ Catches what slipped through:                               │
-│ - Size violations                                           │
+│ - Scope boundary violations                                 │
 │ - Duplication                                               │
 │ - Missing abstractions                                      │
 │ - Shotgun surgery patterns                                  │

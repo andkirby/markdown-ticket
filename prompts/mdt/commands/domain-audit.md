@@ -29,7 +29,7 @@ Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read 
 
 Creates `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` (with CR) or `docs/audits/domain-audit-{timestamp}.md` (standalone)
 
-Target size: 40-60 lines
+Keep the report concise: prioritize high-severity issues and actionable fixes.
 
 ## When to Use
 
@@ -107,7 +107,7 @@ Scan code to identify:
 **Output** (internal, not in report):
 ```
 Entities: Project, User, Order
-Services: ProjectService (497 lines), ProjectValidator (150 lines)
+Services: ProjectService (primary business logic), ProjectValidator (validation)
 Value Objects: (none detected)
 Repositories: (implicit in services)
 Events: (none detected)
@@ -143,20 +143,14 @@ ValidationFormatter.ts
 #### 3.1 Anemic Domain Model
 
 **Detection**:
-```
-entity_lines = sum(lines in entity files)
-service_lines = sum(lines in service files)
-ratio = service_lines / entity_lines
-
-If ratio > 5:1 → High severity
-If ratio > 3:1 → Medium severity
-```
+- Entities are data-only (getters/setters, no behavior)
+- Services own most business rules and validations
+- Aggregates don't encapsulate invariants
 
 **Evidence format**:
 ```
-Entity: Project.ts (50 lines) — getters, setters, no behavior
-Service: ProjectService.ts (497 lines) — all business logic
-Ratio: 10:1 (threshold: 3:1)
+Entity: Project.ts — data-only (getters/setters, no behavior)
+Service: ProjectService.ts — most business logic and validations
 ```
 
 #### 3.2 Aggregate Boundary Leak
@@ -254,17 +248,15 @@ Drift: Moderate — concept exists but naming diverges
 #### 3.9 God Service
 
 **Detection**:
-```
-If service_lines > 400 → Flag for review
-If service has > 15 public methods → High severity
-If service touches > 5 different entities → High severity
-```
+- Service owns multiple distinct responsibilities
+- Service has many public methods
+- Service touches many entities across aggregates
 
 **Evidence format**:
 ```
 Service: ProjectService.ts
-Lines: 497 (threshold: 400)
-Public methods: 23 (threshold: 15)
+Signals: orchestration + validation + persistence + cross-aggregate coordination
+Public methods: 23
 Entities touched: Project, Config, Registry, Cache, Validator
 ```
 
@@ -347,16 +339,16 @@ Fix direction: Consolidate to handlers/sections/
 - Class doing orchestration AND business logic AND formatting
 
 **Signals**:
-- File > 200 lines with distinct "sections" of functionality
+- Distinct "sections" of functionality in the same file
 - Constructor with 5+ dependencies of different types
 - Methods grouped by concern that don't interact
 
 **Evidence format**:
 ```
-File: ModifyOperation.ts (219 lines)
+File: ModifyOperation.ts
 Responsibilities detected:
   1. Orchestration — coordinate read/validate/write flow
-  2. Business logic — header rename detection (lines 95-130)
+  2. Business logic — header rename detection (see file:line)
   3. Content processing — coordinate sanitization
 Count: 3 distinct responsibilities
 Fix direction: Extract HeaderRenamer utility, keep orchestration only
@@ -491,7 +483,7 @@ handlers/sections/
 ### 🟡 Medium Severity
 
 #### Mixed Responsibility
-- **File**: `{path}` ({N} lines)
+- **File**: `{path}`
 - **Responsibilities**: {list}
 - **Fix direction**: Extract {what} to {where}
 
@@ -600,15 +592,15 @@ To fix violations:
 ### 🔴 High Severity
 
 #### God Service
-- **File**: `ModifyOperation.ts` (219 lines)
-- **Methods**: 1 execute() with 140 lines internal
+- **File**: `ModifyOperation.ts`
+- **Methods**: 1 execute() with large internal body
 - **Dependencies**: 9 constructor parameters
 - **Fix direction**: Break into focused components
 
 ### 🟡 Medium Severity
 
 #### Feature Envy
-- **Method**: `ModifyOperation.execute()` lines 95-130
+- **Method**: `ModifyOperation.execute()` (see file:line)
 - **Accesses**: headerLevel, headerText, content from SectionMatch
 - **Fix direction**: Extract HeaderRenamer utility
 
@@ -638,7 +630,7 @@ To fix violations:
 ### 🟡 Medium Severity
 
 #### Mixed Responsibility
-- **File**: `ModifyOperation.ts` (219 lines)
+- **File**: `ModifyOperation.ts`
 - **Responsibilities**:
   1. Orchestration (read → validate → write)
   2. Business logic (header rename detection)
@@ -710,14 +702,12 @@ handlers/sections/
 ### 🔴 High Severity
 
 #### Anemic Domain Model
-- **Entity**: `Project.ts` (50 lines) — data only
-- **Service**: `ProjectService.ts` (497 lines) — all logic
-- **Ratio**: 10:1 (threshold: 3:1)
+- **Entity**: `Project.ts` — data only
+- **Service**: `ProjectService.ts` — most business logic
 - **Fix direction**: Move validation, state transitions into `Project`
 
 #### God Service
 - **Service**: `ProjectService.ts`
-- **Lines**: 497 (threshold: 400)
 - **Methods**: 23 public methods
 - **Fix direction**: Split by aggregate (Project, Registry, Discovery)
 
@@ -834,7 +824,7 @@ No structural issues detected. Code is well-organized by layer.
 - **Evidence-based** — every violation has file:line references
 - **Fix direction, not prescription** — "Move logic into aggregate" not "Create OrderAggregate class with methods X, Y, Z"
 - **Severity guides priority** — High blocks features, Medium is friction, Low is cleanup
-- **Thresholds are guidelines** — use judgment for edge cases
+- **Signals are guidelines** — use judgment for edge cases
 - **Skip if clean** — if no violations found, say so briefly
 - **Both DDD and structural** — always check both categories
 - **Domain concept required** — always synthesize what the code is about
@@ -847,11 +837,11 @@ No structural issues detected. Code is well-organized by layer.
 ❌ **Audit everything**: Scan entire codebase
 ✅ **Focused scope**: CR artifacts or specified paths only
 
-❌ **Verbose report**: 200 lines of analysis
-✅ **Concise findings**: 40-60 lines, actionable
+❌ **Verbose report**: long narrative without decisions
+✅ **Concise findings**: actionable, prioritized issues
 
 ❌ **Opinion-based**: "This code is ugly"
-✅ **Evidence-based**: "Ratio 10:1, threshold 3:1"
+✅ **Evidence-based**: "Entities are data-only; services own the behavior"
 
 ❌ **Perfect DDD or nothing**: Flag everything that's not textbook
 ✅ **Pragmatic assessment**: Focus on violations causing real problems
@@ -868,7 +858,7 @@ Before completing, verify:
 - [ ] All violations have file:line evidence
 - [ ] Severity assigned to each violation
 - [ ] Fix direction is actionable but not prescriptive
-- [ ] Report is 40-60 lines
+- [ ] Report is concise and prioritized
 - [ ] Recommendations prioritized by impact
 - [ ] Both DDD violations AND structural issues checked
 - [ ] Dependency analysis included

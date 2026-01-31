@@ -25,7 +25,7 @@ Use when you need complete traceability and rigorous development process. Ideal 
 - **Complete traceability** from requirements to implementation
 - **Prevents scope creep** with explicit requirement mapping
 - **Catches issues early** through architecture assessment
-- **Ensures quality** with size limits and duplication checks
+- **Ensures quality** with scope boundaries and duplication checks
 - **Documents decisions** for future reference and team onboarding
 
 </details>
@@ -86,7 +86,7 @@ Use when you need complete traceability and rigorous development process. Ideal 
 
 **Quality Assurance:**
 - Requirements coverage validation
-- Size enforcement (OK/FLAG/STOP zones)
+- Scope enforcement (OK/FLAG/STOP zones)
 - Duplication prevention
 - Architecture constraint verification
 - Test and build verification
@@ -113,7 +113,7 @@ Use when you need complete traceability and rigorous development process. Ideal 
 - Map every requirement to a component
 
 ### During Architecture
-- Define size limits for each module type
+- Define scope boundaries for each module type
 - Identify shared patterns early
 - Create clear extension rules
 
@@ -124,7 +124,7 @@ Use when you need complete traceability and rigorous development process. Ideal 
 
 ### During Implementation
 - Use `--all` mode for automated execution
-- Check size warnings immediately
+- Check scope warnings immediately
 - Run tests after each task
 
 </details>
@@ -151,7 +151,7 @@ Use when you need complete traceability and rigorous development process. Ideal 
 # 3. Architecture designed
 # New components: AuthService, LoginForm, SessionMiddleware
 # Shared patterns: Validation utilities, Error handling
-# Size limits: AuthService (150 lines), LoginForm (100 lines)
+# Scope boundaries: AuthService handles auth logic; LoginForm handles UI only
 
 # 4. Tasks created
 # Part 1: Extract validation utilities (shared)
@@ -159,7 +159,7 @@ Use when you need complete traceability and rigorous development process. Ideal 
 # Each task maps to requirements (e.g., Task 2.1 implements R1.1, R1.2)
 
 # 5. Implementation executed
-# All tasks completed with size verification
+# All tasks completed within scope boundaries
 # Requirements marked as satisfied
 # Tests passing, build successful
 
@@ -168,7 +168,7 @@ Use when you need complete traceability and rigorous development process. Ideal 
 # All requirements satisfied
 
 # 7. Reflection captured
-# Actual vs planned: AuthService took 180 lines (flagged but acceptable)
+# Actual vs planned: AuthService scope expanded (flagged but acceptable)
 # Learning: Password hashing complexity underestimated
 ```
 
@@ -285,7 +285,7 @@ Special considerations:
 - Define clear module boundaries
 - Specify exact file paths
 - Include extension rules
-- Set realistic size limits
+- Set realistic scope boundaries
 
 </details>
 
@@ -327,11 +327,11 @@ Add to your project's CLAUDE.md:
 
 ### Tasks
 - ❌ "Implement authentication"
-- ✅ "Create `src/auth/AuthService.validateCredentials()` (max 50 lines)"
+- ✅ "Create `src/auth/AuthService.validateCredentials()` (auth validation only)"
 
 ### Implementation
-- ❌ Ignoring size warnings
-- ✅ Addressing flags immediately, splitting if needed
+- ❌ Ignoring scope warnings
+- ✅ Addressing scope drift immediately, splitting if needed
 
 </details>
 
@@ -348,7 +348,7 @@ A: Yes, all workflows after ticket-creation are optional. Use what you need.
 A: Other workflows adapt - no requirement coverage, tasks reference architecture directly.
 
 **Q: How do I handle STOP conditions?**
-A: Size violations >1.5x limit must be resolved. Split into smaller tasks or refactor.
+A: Scope boundary breaches must be resolved. Split tasks or refactor to isolate responsibilities.
 
 **Q: Can I modify workflows?**
 A: Yes, prompts are in this directory. Follow the development guidelines in CLAUDE.md.

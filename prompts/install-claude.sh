@@ -278,7 +278,7 @@ show_usage() {
     echo "  /mdt:assess             - Evaluate affected code fitness"
     echo "  /mdt:domain-audit       - Analyze code for DDD violations"
     echo "  /mdt:domain-lens        - Surface DDD constraints for architecture"
-    echo "  /mdt:architecture       - Surface decisions, define structure + size limits"
+    echo "  /mdt:architecture       - Surface decisions, define structure + scope boundaries"
     echo "  /mdt:tests              - Generate module tests (unit/integration)"
     echo "  /mdt:clarification      - Fill specification gaps"
     echo "  /mdt:tasks              - Break CR into constrained tasks"

@@ -59,7 +59,7 @@ The `/mdt:implement-agentic` command uses a state machine with specialized subag
 
 | Agent               | Role                                           |
 |---------------------|------------------------------------------------|
-| `mdt:verify`        | Run tests, parse results, check sizes          |
+| `mdt:verify`        | Run tests, parse results, check scope boundaries |
 | `mdt:verify-complete` | Requirements traceability + full quality checks |
 | `mdt:code`          | Write minimal code for task specs              |
 | `mdt:fix`           | Apply minimal fixes for failures               |
@@ -218,25 +218,18 @@ Use `mcp__mdt-all__manage_cr_sections` for surgical updates:
 
 | Workflow     | Prevention Mechanism                               |
 |--------------|----------------------------------------------------|
-| Architecture | Defines size limits, shared patterns, structure    |
-| Tasks        | Inherits limits, Part 1 (shared first), exclusions |
-| Implement    | Verifies size (OK/FLAG/STOP), no duplication       |
-| Tech-Debt    | Catches violations, produces diagnostic for fix CR |
+| Architecture | Defines scope boundaries, shared patterns, structure |
+| Tasks        | Inherits boundaries, Part 1 (shared first), exclusions |
+| Implement    | Verifies scope (OK/FLAG/STOP), no duplication       |
+| Tech-Debt    | Catches violations, produces diagnostic for fix CR  |
 
-### 5. Three-Zone Size Enforcement
+### 5. Three-Zone Scope Enforcement
 
 | Zone | Condition       | Action                        |
 |------|-----------------|-------------------------------|
-| OK   | ≤ Default       | Proceed                       |
-| FLAG | Default to 1.5x | Complete with warning         |
-| STOP | > 1.5x          | Cannot complete, must resolve |
-
-**Defaults by module role:**
-
-- Orchestration: 100 lines (max 150)
-- Feature: 200 lines (max 300)
-- Complex logic: 300 lines (max 450)
-- Utility: 75 lines (max 110)
+| OK   | Within scope    | Proceed                       |
+| FLAG | Minor spillover | Complete with warning         |
+| STOP | Boundary breach | Cannot complete, must resolve |
 
 ## MCP Tool Reference
 

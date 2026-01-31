@@ -2,11 +2,57 @@
 
 ## Recent Updates
 
+### 2026-01-31 - Language-Specific References: Eliminate Project Bias from Commands
+
+**Problem**: MDT commands contained project-specific examples (TypeScript/Playwright selectors, `LanguageDetector` service names, JavaScript closures, Node.js test patterns) that confused users working on Python, Go, Rust, or other projects. The commands weren't truly language-agnostic despite being designed for any project.
+
+**Solution**: Extracted all language/ecosystem-specific patterns into separate reference files (`typescript.md`, `python.md`). Commands load references **on demand** when generating executable code, remaining agnostic to language while providing precise guidance when needed.
+
+**Changes Made**:
+
+1. **mdt/references/ (NEW) - Language-specific pattern library**:
+   - `README.md` - Documentation for the references system
+   - `typescript.md` - TypeScript/Node.js patterns: test frameworks (Vitest, Jest, Playwright, Cypress), file naming conventions, BDD examples, selector patterns, environment variable handling, assertions, filter commands
+   - `python.md` - Python patterns: test frameworks (pytest, pytest-bdd, behave), file naming conventions, BDD examples, selector patterns, environment variable handling, fixtures, filter commands
+
+2. **mdt/commands/requirements.md (v3→v3)** - Removed project-specific examples:
+   - Replaced LanguageDetector/PipelineCoordinator examples with generic FormValidator/RequestHandler
+   - Replaced "closure" bug fix (JavaScript-specific) with language-agnostic "concurrent access"
+   - Added diverse EARS examples independent of any project context
+
+3. **mdt/commands/bdd.md (v1→v1)** - Language-agnostic patterns:
+   - Added language reference loading section (step 4b)
+   - Made anti-patterns pseudo-code instead of TypeScript-specific
+   - Replaced Ruby/Go/Python code snippets with language reference table
+   - Added note pointing to reference file for selector patterns
+
+4. **mdt/commands/tests.md (v7→v7)** - Ecosystem awareness:
+   - Added test file naming table (TypeScript patterns, Python patterns)
+   - Added language reference section
+   - Added rule: match existing project conventions
+
+**Impact**:
+- Commands remain language-agnostic (no hardcoded TypeScript assumptions)
+- References provide precise guidance for each ecosystem when needed
+- Easy to add support for new languages (just add new reference file)
+- Reduces confusion for users on non-Node.js projects
+- Commands can be safely shared across projects without project-specific modifications
+
+**Files Changed**:
+- `prompts/mdt/references/README.md` (new)
+- `prompts/mdt/references/typescript.md` (new)
+- `prompts/mdt/references/python.md` (new)
+- `prompts/mdt/commands/requirements.md` (examples updated)
+- `prompts/mdt/commands/bdd.md` (references added)
+- `prompts/mdt/commands/tests.md` (ecosystem patterns added)
+
+---
+
 ### 2026-01-30 - Smart CR Creation: Inference Over Interrogation
 
-**Problem**: The `/mdt:ticket-creation` workflow (v6) used a rigid 10-question interactive flow that felt like an interrogation. Users were asked questions even when context was obvious from conversation history or codebase. The workflow was also monolithic (921 lines) with document structures embedded, making it hard to maintain and evolve templates.
+**Problem**: The `/mdt:ticket-creation` workflow (v6) used a rigid 10-question interactive flow that felt like an interrogation. Users were asked questions even when context was obvious from conversation history or codebase. The workflow was also monolithic and lengthy with document structures embedded, making it hard to maintain and evolve templates.
 
-**Solution**: Completely rewrote the workflow (v9) around smart parameter inference. The new pattern: "Analyze context → Infer all parameters → Confirm/Refine → Execute". All document structures extracted to external template files, reducing the workflow from ~921 lines to ~121 lines (~87% reduction).
+**Solution**: Completely rewrote the workflow (v9) around smart parameter inference. The new pattern: "Analyze context → Infer all parameters → Confirm/Refine → Execute". All document structures extracted to external template files, significantly reducing workflow length.
 
 **Changes Made**:
 
@@ -21,10 +67,10 @@
    - Next workflow suggestions table (CR_TYPE × REQUIREMENTS_SCOPE → specific workflow chain)
 
 2. **ticket-templates/ (NEW) - Externalized document structures**:
-   - `full-spec.md` (249 lines) - Full Specification mode template (7 sections: Description, Decision, Alternatives, Artifact Specifications, Acceptance Criteria, Verification, Deployment)
-   - `requirements.md` (164 lines) - Requirements mode template (5 sections: Description, Desired Outcome, Open Questions, Acceptance Criteria, Verification)
-   - `research.md` (190 lines) - Research mode template (5 sections: Description, Research Questions, Validation Approach, Acceptance Criteria, Dependencies & Next Steps)
-   - `quality-checks.md` (16 lines) - Critical quality rules for all modes (NO YAML frontmatter, NO prose paragraphs, NO bold headers, ONE H1 only, etc.)
+   - `full-spec.md` - Full Specification mode template (7 sections: Description, Decision, Alternatives, Artifact Specifications, Acceptance Criteria, Verification, Deployment)
+   - `requirements.md` - Requirements mode template (5 sections: Description, Desired Outcome, Open Questions, Acceptance Criteria, Verification)
+   - `research.md` - Research mode template (5 sections: Description, Research Questions, Validation Approach, Acceptance Criteria, Dependencies & Next Steps)
+   - `quality-checks.md` - Critical quality rules for all modes (NO YAML frontmatter, NO prose paragraphs, NO bold headers, ONE H1 only, etc.)
 
 **Impact**:
 - Faster CR creation: context inference eliminates obvious questions
@@ -145,8 +191,8 @@
    - `mdt/agents/` - Internal agent prompts (new)
 
 2. **mdt/agents/ (4 new specialized agents)** - JSON-based subagents with scoped responsibilities:
-   - `code.md (v2)` - Implementation specialist: writes minimal code respecting size limits and shared imports
-   - `verify.md (v1)` - Verification specialist: runs tests, checks sizes, parses results into structured verdicts
+   - `code.md (v2)` - Implementation specialist: writes minimal code respecting scope boundaries and shared imports
+   - `verify.md (v1)` - Verification specialist: runs tests, checks scope boundaries, parses results into structured verdicts
    - `fix.md (v2)` - Remediation specialist: applies minimal fixes for verification failures
    - `test.md (v2)` - Test execution specialist: runs tests and returns structured JSON results
 
@@ -265,7 +311,7 @@
 
 1. **mdt-architecture.md (v8→v9) - Radical simplification**:
    - **Removed**: Prep vs Feature comparison table (mode now implicit from path)
-   - **Removed**: Complexity scoring criteria (just write, then decide by size)
+   - **Removed**: Complexity scoring criteria (just write, then decide by scope)
    - **Removed**: Extensive quality checklist (distilled to "What Good Architecture Looks Like")
    - **Removed**: Requirement-to-component mapping tables (code IS the mapping)
    - **Removed**: Implementation code snippets (they drift from reality)
@@ -273,9 +319,9 @@
    - **Removed**: Exhaustive domain alignment tables (2-3 key concepts max)
    - **Removed**: Component diagrams when relationships are obvious
    - **Removed**: Error philosophy sections for trivial failure modes
-   - **Simplified**: Build vs Use evaluation — only for capabilities >50 lines
-   - **Simplified**: Output template focused on overview, pattern, structure, size limits
-   - **New target**: 40-80 lines for most features (was 60-150+)
+   - **Simplified**: Build vs Use evaluation — only for non-trivial capabilities
+   - **Simplified**: Output template focused on overview, pattern, structure, scope boundaries
+   - **New target**: Concise outputs for most features
    - **Core principle changed**: From "Surface decisions LLM would otherwise make implicitly" to "Capture decisions that matter. Skip ceremony that duplicates code"
    - **Preserved**: `--prep` mode support (output location, domain-audit.md loading, completion message)
 
@@ -294,7 +340,7 @@
 
 **Impact**:
 - Requirements documents focus on WHAT behaviors, not extensive analysis
-- Reduced token usage by ~65% (1369 lines removed from 2 workflows)
+- Reduced token usage significantly (removed large portions of workflow text)
 - Implementers get decisions faster without wading through ceremonial tables
 - Code remains the source of truth (not documentation trying to duplicate it)
 - Maintains essential decision capture while removing overhead
@@ -456,7 +502,7 @@ This caused a chicken-and-egg problem in multi-part CRs: BDD tests don't need ar
      - Orphan utilities (helpers used by single consumer)
    - Step 5: Extract Domain Concept (core domain, operations, natural grouping)
    - Updated output format with separate DDD/Structural sections, dependency analysis, domain concept
-   - Target size increased: 30-50 lines → 40-60 lines
+   - Target output refined for concise, actionable reports
 
 2. **mdt-architecture.md (v6→v7) - Consumes domain audit findings**:
    - Prep mode now loads `domain-audit.md` as PRIMARY input (diagnosis drives design)
@@ -630,7 +676,7 @@ This caused a chicken-and-egg problem in multi-part CRs: BDD tests don't need ar
 
 1. **hooks/mdt-project-vars.sh (new)** - SessionStart hook script that extracts config values
 2. **install-claude.sh** - Installs and registers hook in `~/.claude/settings.json`
-3. **CLAUDE.md** - Streamlined to quick-reference format (247→130 lines)
+3. **CLAUDE.md** - Streamlined to quick-reference format
 4. **README.md** - Added Session Context documentation
 5. **All mdt-*.md workflows** - Replaced `docs/CRs/` with `{TICKETS_PATH}` variable
 
@@ -655,7 +701,7 @@ This caused a chicken-and-egg problem in multi-part CRs: BDD tests don't need ar
    - Added phase discovery that detects phase-specific tasks and tests
    - New command-line options: `--phase {X.Y}` for specific phase execution
    - Co-location of tasks.md with tests.md in phase folders
-   - Phase completion summaries with TDD and size metrics
+   - Phase completion summaries with TDD and scope metrics
    - Support for both phased and non-phased CRs (backward compatibility)
    - Enhanced TDD verification with phase-specific test filtering
    - Automatic detection of multiple phases with user selection prompts
@@ -665,7 +711,7 @@ This caused a chicken-and-egg problem in multi-part CRs: BDD tests don't need ar
    - Output to phase folders: `docs/CRs/{CR-KEY}/phase-{X.Y}/tasks.md`
    - Phase-specific architecture section extraction from architecture.md
    - Co-location strategy: tasks.md created alongside tests.md
-   - Phase-specific size thresholds and shared patterns
+   - Phase-specific scope boundaries and shared patterns
    - Updated task template with phase requirement IDs (P{X.Y}-N format)
    - Enhanced TDD integration with phase-based test filtering
 
@@ -757,7 +803,7 @@ docs/CRs/{CR-KEY}/
 **Changes Made**:
 
 1. **mdt-domain-lens.md (v1) - New DDD constraints workflow**:
-   - Generates `docs/CRs/{CR-KEY}/domain.md` (~15-25 lines)
+   - Generates `docs/CRs/{CR-KEY}/domain.md` (concise)
    - Identifies bounded contexts, aggregates, invariants, and cross-context operations
    - Language alignment check between CR terms and code terms
    - Intentionally minimal - principles only, not prescriptions
@@ -840,7 +886,7 @@ docs/CRs/{CR-KEY}/
 
 1. **mdt-architecture.md (v3→v4)**:
    - Step 4.1: Extract existing CR decisions first (don't re-evaluate)
-   - Step 4.2: Build vs Use evaluation for capabilities >50 lines
+   - Step 4.2: Build vs Use evaluation for non-trivial capabilities
    - Evaluation criteria: Coverage, Maturity, License, Footprint, Fit
    - New "Key Dependencies" section in output documenting package choices
    - Language-agnostic search guidance
@@ -1038,8 +1084,8 @@ docs/CRs/{CR-KEY}/
    - Prevents integration of problematic code
 
 3. **mdt-architecture.md (v2→v3)** - Graduated output:
-   - Simple complexity (≤5): Embed in CR (~60 lines)
-   - Complex (>5): Extract to `architecture.md` with full details
+   - Simple scope: Embed in CR
+   - Complex scope: Extract to `architecture.md` with full details
    - Includes state flows and error scenarios for complex cases
 
 4. **README.md** - Updated workflow chain:

@@ -1,6 +1,6 @@
 # MDT Task Breakdown Workflow (v8)
 
-Generate tasks from architecture + tests. Tasks include **constraints** (limits, exclusions, anti-duplication), not just actions.
+Generate tasks from architecture + tests. Tasks include **constraints** (scope boundaries, exclusions, anti-duplication), not just actions.
 
 ## Decision Tree
 
@@ -30,7 +30,8 @@ Prerequisites exist?
 **Makes GREEN**: *(from tests.md)*
 - `test_file.ts`: `test name`
 
-**Limits**: {N} lines (hard max: {N×1.5})
+**Scope**: {what this task owns}
+**Boundary**: {what it must not touch}
 
 **Create/Move**:
 - {specific item 1}
@@ -42,13 +43,11 @@ Prerequisites exist?
 
 **Verify**:
 ```bash
-wc -l {file}                    # ≤ limit
 {test_command} --filter="..."   # tests GREEN
 ```
 
 **Done when**:
 - [ ] Tests GREEN (were RED)
-- [ ] Size ≤ limit
 - [ ] No duplicated logic
 - [ ] Smoke test passes (feature works with real execution)
 - [ ] Fallback/absence paths match requirements (if applicable)
@@ -56,11 +55,23 @@ wc -l {file}                    # ≤ limit
 
 ## Critical Rules
 
-1. **Limits inherited** from architecture.md size guidance
+1. **Scope boundaries inherited** from architecture.md constraints
 2. **Makes GREEN** populated from tests.md
 3. **Exclude** explicitly states what NOT to move
 4. **Anti-duplication** requires import, never copy
 5. **Order**: Shared utilities before features
+6. **Sequencing**: Add a walking skeleton task before deep module work, unless change is tiny/single-module
+7. **Constraint coverage**: Reference requirement constraint IDs (C1, C2...) in relevant tasks
+
+## Implementation Sequencing
+
+Use this sequencing to keep integration stable:
+
+- Start with a **walking skeleton** task: create files, interfaces, and an end-to-end path.
+- Implement only the simplest happy path first to prove wiring.
+- Keep early logic minimal; avoid optimization or premature abstraction.
+- Expand module-by-module: data rules, edge cases, and failure paths.
+- Skip the skeleton only for tiny, single-module changes or scoped bug fixes.
 
 ## Output: tasks.md
 
@@ -69,11 +80,16 @@ wc -l {file}                    # ≤ limit
 
 **Source**: architecture.md + tests.md
 
-## Size Thresholds
+## Scope Boundaries
 
-| Module | Limit | Hard Max |
-|--------|-------|----------|
-| `file.ts` | 100 | 150 |
+- {Module or area}: {scope + boundary}
+
+## Constraint Coverage
+
+| Constraint ID | Tasks |
+|---------------|-------|
+| C1 | Task 2, Task 4 |
+| C2 | Task 1, Task 7 |
 
 ## Tasks
 
@@ -83,7 +99,7 @@ wc -l {file}                    # ≤ limit
 ## Post-Implementation
 
 - [ ] No duplication (grep check)
-- [ ] Size compliance (wc -l check)
+- [ ] Scope boundaries respected
 - [ ] All tests GREEN
 - [ ] Smoke test passes (feature works with real execution)
 - [ ] Fallback/absence paths match requirements (if applicable)
@@ -97,20 +113,20 @@ wc -l {file}                    # ≤ limit
 ## Common Pitfall
 
 ❌ **Don't** write tasks as just "implement X"
-✅ **Do** include Limits, Exclude, Anti-duplication for every task
+✅ **Do** include Scope/Boundary, Exclude, Anti-duplication for every task
 
 ## Checklist
 
 - [ ] Architecture + tests exist
-- [ ] Size limits from architecture
+- [ ] Scope boundaries from architecture
 - [ ] Makes GREEN from tests.md
-- [ ] Every task has Limits, Exclude, Anti-duplication
+- [ ] Every task has Scope/Boundary, Exclude, Anti-duplication
 - [ ] Shared patterns before features
 
 ## Integration
 
 ```
-/mdt:architecture → structure + size limits
+/mdt:architecture → structure + scope boundaries
         ↓
 /mdt:tests → test specs
         ↓

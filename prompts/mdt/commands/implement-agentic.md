@@ -65,14 +65,14 @@ checkpoint:
   step: "pre_verify" | "implement" | "post_verify" | "fix" | "complete_verify" | "complete_fix"
   baseline:
     tests: {pre-verify result}
-    sizes: {pre-verify size snapshot}
+    scope: {pre-verify scope snapshot}
   implementation:
     files_changed: []
     files_created: []
     notes: ""
   latest_verify:
     tests: {post-verify result}
-    sizes: {post-verify result}
+    scope: {post-verify result}
     behavioral: {post-verify smoke test result}
   fix_attempts: 0
   fix_history: []
@@ -89,7 +89,7 @@ checkpoint:
 
 ## Orchestrator Flow (high level)
 
-1. Load context (tasks/tests, mode/part, size limits, shared imports).
+1. Load context (tasks/tests, mode/part, scope boundaries, shared imports).
 2. Derive `smoke_test_command` from requirements/BDD if available.
 3. Pre-verify - Use Task tool with subagent_type="mdt:verify", operation=pre-check.
 4. Implement - Use Task tool with subagent_type="mdt:code".
@@ -107,7 +107,7 @@ checkpoint:
 - Load `tasks.md` and pick the first incomplete task (or target task).
 - Load `tests.md` to extract:
   - tests for the task
-  - size limits
+  - scope boundaries
   - shared imports / anti-duplication hints
 - Derive `smoke_test_command` from requirements/BDD acceptance criteria.
   - If feature mode and smoke test is missing: warn and require explicit user choice to proceed.
@@ -127,7 +127,7 @@ part:
 project:
   test_command: "{test_command}"
 files_to_check: ["{file}"]
-size_limits: {from tasks/tests}
+scope_boundaries: {from tasks/tests}
 ```
 
 Expected verdicts from agent:
@@ -154,7 +154,7 @@ project:
 part:
   id: "{X.Y}"
   title: "{part_title}"
-size_constraints: {from tasks/tests}
+scope_boundaries: {from tasks/tests}
 shared_imports: {from tasks/tests}
 task_spec:
   number: "{N.N}"
@@ -180,7 +180,7 @@ part:
 project:
   test_command: "{test_command}"
 files_to_check: {files_changed from code-agent}
-size_limits: {from tasks/tests}
+scope_boundaries: {from tasks/tests}
 smoke_test:
   command: "{smoke_test_command|empty}"
   expected: "{expected_behavior|empty}"
@@ -190,15 +190,15 @@ Expected verdicts from agent:
 - `all_pass`
 - `tests_fail`
 - `regression`
-- `size_stop`
+- `scope_breach`
 - `duplication`
 - `behavioral_fail`
 - `skipped` (only if smoke test not provided)
 
 Decision:
-- `all_pass` → COMPLETE (FLAG size is OK with warning)
+- `all_pass` → COMPLETE (scope OK or minor spillover)
 - `tests_fail` or `regression` → FIX (if attempts < 2)
-- `size_stop` → STOP (or refactor out of band)
+- `scope_breach` → STOP (or refactor out of band)
 - `duplication` → STOP
 - `behavioral_fail` → FIX (runtime context)
 - `skipped` → warn and COMPLETE only if user approves

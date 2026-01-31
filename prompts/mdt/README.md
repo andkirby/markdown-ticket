@@ -41,7 +41,7 @@ Internal agents used by workflows (not user-facing):
 
 | Agent        | Purpose                                  |
 |--------------|------------------------------------------|
-| `mdt:verify` | Run tests, parse results, check sizes    |
+| `mdt:verify` | Run tests, parse results, check scope boundaries |
 | `mdt:impl`   | Write code to make tests GREEN           |
 | `mdt:fix`    | Diagnose and fix implementation failures |
 
@@ -73,7 +73,7 @@ The `/mdt:implement-agentic` command uses a state machine with specialized agent
 
 1. **Pre-Verify** - Capture baseline test state
 2. **Implement** - Write code to satisfy tests
-3. **Post-Verify** - Verify tests GREEN, check sizes
+3. **Post-Verify** - Verify tests GREEN, check scope boundaries
 4. **Fix** - Remediate failures (max 2 attempts)
 
 Checkpoint-based resume:
