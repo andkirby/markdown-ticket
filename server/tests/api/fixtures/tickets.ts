@@ -5,8 +5,8 @@
  * For creating CR files, use ProjectFactory from @mdt/shared/test-lib.
  */
 
-import type { CRStatus } from '@mdt/shared'
 import type { CRTypeValue as CRType } from '@mdt/domain-contracts'
+import type { CRStatus } from '@mdt/shared'
 
 function tpl(_code: string, s: CRStatus, _t: CRType, _p = 'Medium', _extra = '', _desc = 'Test description') {
   return `---\ncode: ${_code}\nstatus: ${s}\ntype: ${_t}\npriority: ${_p}${_extra}\n---\n\n## 1. Description\n${_desc}`

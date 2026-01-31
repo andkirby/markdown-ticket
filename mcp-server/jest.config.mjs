@@ -37,9 +37,6 @@ export default {
     '^@mdt/shared/services/TemplateService.js$': '<rootDir>/src/__mocks__/@mdt/shared/services/TemplateService.ts',
     '^@mdt/shared/services/MarkdownSectionService$': '<rootDir>/src/__mocks__/@mdt/shared/services/MarkdownSectionService.ts',
     '^@mdt/shared/services/MarkdownSectionService.js$': '<rootDir>/src/__mocks__/@mdt/shared/services/MarkdownSectionService.ts',
-    // Map @mdt/shared models to a mock implementation
-    '^@mdt/shared/models/Types$': '<rootDir>/src/__mocks__/@mdt/shared/models/Types.ts',
-    '^@mdt/shared/models/Types.js$': '<rootDir>/src/__mocks__/@mdt/shared/models/Types.ts',
     // Map test-lib to the actual test-lib directory
     '^@mdt/shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
     '^shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',

@@ -10,8 +10,8 @@
  * @file shared/test-lib/__tests__/file-creation.test.ts
  */
 
-import type { CRStatus } from '../../models/Types.js'
 import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
+import type { CRStatus } from '../../models/Types.js'
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ProjectFactory, TestEnvironment } from '../index.js'
@@ -659,9 +659,6 @@ const test = 'value';
       'Implemented',
       'Rejected',
       'On Hold',
-      'Superseded',
-      'Deprecated',
-      'Duplicate',
       'Partially Implemented',
     ]
 

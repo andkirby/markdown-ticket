@@ -5,8 +5,8 @@
  * This class acts as an orchestrator, coordinating the builders for creating test scenarios.
  */
 
-import type { CRStatus } from '../../models/Types.js'
 import type { CRPriorityValue as CRPriority, CRTypeValue as CRType } from '@mdt/domain-contracts'
+import type { CRStatus } from '../../models/Types.js'
 import type { TestEnvironment } from './test-environment.js'
 import { join } from 'node:path'
 import { TestProjectBuilder } from '../ticket/test-project-builder.js'

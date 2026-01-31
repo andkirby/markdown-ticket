@@ -1,5 +1,5 @@
 import type { Ticket } from '../types'
-import { CRType } from '@mdt/domain-contracts'
+import { CRStatus, CRType } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useParams } from 'react-router-dom'
 import { classifyLink } from '../utils/linkProcessor'
@@ -59,16 +59,20 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, class
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Proposed':
+      case CRStatus.PROPOSED:
         return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
-      case 'Approved':
+      case CRStatus.APPROVED:
         return 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700'
-      case 'In Progress':
+      case CRStatus.IN_PROGRESS:
         return 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700'
-      case 'Implemented':
+      case CRStatus.IMPLEMENTED:
         return 'bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700'
-      case 'Rejected':
+      case CRStatus.REJECTED:
         return 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700'
+      case CRStatus.ON_HOLD:
+        return 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700'
+      case CRStatus.PARTIALLY_IMPLEMENTED:
+        return 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700'
       default:
         return 'bg-gray-100 dark:bg-gray-950 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
     }

@@ -35,9 +35,6 @@ describe('types Enum - Behavioral Preservation', () => {
         'Implemented',
         'Rejected',
         'On Hold',
-        'Superseded',
-        'Deprecated',
-        'Duplicate',
         'Partially Implemented',
       ]
 

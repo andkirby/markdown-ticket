@@ -5,8 +5,8 @@
  * Reuses existing shared services: MarkdownService, CRService, TemplateService.
  */
 
-import type { TicketData } from '../../models/Ticket.js'
 import type { CRTypeValue } from '@mdt/domain-contracts'
+import type { TicketData } from '../../models/Ticket.js'
 import type { TicketCreationConfig, TicketCreationResult } from './ticket-creator.js'
 import * as fs from 'node:fs'
 import { join as pathJoin } from 'node:path'

@@ -15,11 +15,11 @@
     "noUnusedParameters": false,
     "declaration": false,
     "noEmit": false,
+    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
     "isolatedModules": true,
-    "allowSyntheticDefaultImports": true
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*"

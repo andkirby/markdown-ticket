@@ -296,7 +296,7 @@ The solution involves testing the status update mechanism for CRs in the system.
 
       const crKey = extractCRKeyFromResponse(createdCR)
 
-      // All valid statuses from shared/models/Types.ts
+      // All valid statuses from domain-contracts
       const validStatuses = [
         'Proposed',
         'Approved',
@@ -304,9 +304,6 @@ The solution involves testing the status update mechanism for CRs in the system.
         'Implemented',
         'Rejected',
         'On Hold',
-        'Superseded',
-        'Deprecated',
-        'Duplicate',
         'Partially Implemented',
       ]
 

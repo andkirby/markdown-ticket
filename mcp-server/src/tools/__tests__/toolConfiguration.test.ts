@@ -122,9 +122,9 @@ describe('behavioral Preservation: Tool Configuration Structure', () => {
       const statusProp = (listCRsTool?.inputSchema as any).properties?.filters?.properties?.status
       expect(statusProp?.oneOf).toBeDefined()
 
-      // Extract enum values
+      // Extract enum values (7 documented statuses per docs/create_ticket.md)
       const statusEnum = statusProp?.oneOf?.find((item: any) => item.enum)?.enum
-      expect(statusEnum).toEqual(['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'])
+      expect(statusEnum).toEqual(['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold', 'Partially Implemented'])
     })
 
     it('should maintain exact enum values for type', () => {

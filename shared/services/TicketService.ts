@@ -13,6 +13,7 @@ import type {
 import type { CRStatus } from '../models/Types.js'
 import { readdir, readFile } from 'node:fs/promises'
 import * as path from 'node:path'
+import { CRStatus as CRStatusEnum } from '@mdt/domain-contracts'
 import * as fs from 'fs-extra'
 import { getTicketsPath } from '../models/Project.js'
 import {
@@ -278,19 +279,64 @@ export class TicketService {
       return
     }
 
-    // Define valid status transitions - more permissive for testing
-    // TODO TECH-DEBT - reconsider usage of ticket transition
+    // Define valid status transitions using documented 7 statuses
     const validTransitions: Record<string, string[]> = {
-      'Proposed': ['Approved', 'Rejected', 'In Progress', 'On Hold', 'Implemented', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'], // Allow direct move to In Progress for agile workflow
-      'Approved': ['In Progress', 'Rejected', 'On Hold', 'Implemented', 'Proposed', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
-      'In Progress': ['Implemented', 'Approved', 'On Hold', 'Rejected', 'Proposed', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'], // Can pause work
-      'Implemented': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'On Hold', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'], // Allow reopening if issues found
-      'Rejected': ['Proposed', 'Approved', 'Implemented', 'On Hold', 'In Progress', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'], // Allow re-proposing rejected CRs and direct implementation
-      'On Hold': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'Implemented', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'], // Can resume or go back to approved
-      'Superseded': ['Proposed', 'Approved', 'In Progress', 'Implemented', 'On Hold', 'Rejected', 'Deprecated', 'Duplicate', 'Partially Implemented'], // Allow reopening superseded CRs
-      'Deprecated': ['Proposed', 'Approved', 'In Progress', 'Implemented', 'On Hold', 'Rejected', 'Superseded', 'Duplicate', 'Partially Implemented'], // Allow reopening deprecated CRs
-      'Duplicate': ['Proposed', 'Approved', 'In Progress', 'Implemented', 'On Hold', 'Rejected', 'Superseded', 'Deprecated', 'Partially Implemented'], // Allow reopening duplicate CRs
-      'Partially Implemented': ['Implemented', 'In Progress', 'Approved', 'Rejected', 'Proposed', 'On Hold', 'Superseded', 'Deprecated', 'Duplicate'], // Can be completed or continued
+      [CRStatusEnum.PROPOSED]: [
+        CRStatusEnum.APPROVED,
+        CRStatusEnum.REJECTED,
+        CRStatusEnum.IN_PROGRESS,
+        CRStatusEnum.ON_HOLD,
+        CRStatusEnum.IMPLEMENTED,
+        CRStatusEnum.PARTIALLY_IMPLEMENTED,
+      ],
+      [CRStatusEnum.APPROVED]: [
+        CRStatusEnum.IN_PROGRESS,
+        CRStatusEnum.REJECTED,
+        CRStatusEnum.ON_HOLD,
+        CRStatusEnum.IMPLEMENTED,
+        CRStatusEnum.PROPOSED,
+        CRStatusEnum.PARTIALLY_IMPLEMENTED,
+      ],
+      [CRStatusEnum.IN_PROGRESS]: [
+        CRStatusEnum.IMPLEMENTED,
+        CRStatusEnum.APPROVED,
+        CRStatusEnum.ON_HOLD,
+        CRStatusEnum.REJECTED,
+        CRStatusEnum.PROPOSED,
+        CRStatusEnum.PARTIALLY_IMPLEMENTED,
+      ],
+      [CRStatusEnum.IMPLEMENTED]: [
+        CRStatusEnum.IN_PROGRESS,
+        CRStatusEnum.APPROVED,
+        CRStatusEnum.REJECTED,
+        CRStatusEnum.PROPOSED,
+        CRStatusEnum.ON_HOLD,
+        CRStatusEnum.PARTIALLY_IMPLEMENTED,
+      ],
+      [CRStatusEnum.REJECTED]: [
+        CRStatusEnum.PROPOSED,
+        CRStatusEnum.APPROVED,
+        CRStatusEnum.IMPLEMENTED,
+        CRStatusEnum.ON_HOLD,
+        CRStatusEnum.IN_PROGRESS,
+        CRStatusEnum.PARTIALLY_IMPLEMENTED,
+      ],
+      [CRStatusEnum.ON_HOLD]: [
+        CRStatusEnum.IN_PROGRESS,
+        CRStatusEnum.APPROVED,
+        CRStatusEnum.REJECTED,
+        CRStatusEnum.PROPOSED,
+        CRStatusEnum.IMPLEMENTED,
+        CRStatusEnum.PARTIALLY_IMPLEMENTED,
+      ],
+      [CRStatusEnum.PARTIALLY_IMPLEMENTED]: [
+        CRStatusEnum.IMPLEMENTED,
+        CRStatusEnum.IN_PROGRESS,
+        CRStatusEnum.APPROVED,
+        CRStatusEnum.REJECTED,
+        CRStatusEnum.PROPOSED,
+        CRStatusEnum.ON_HOLD,
+      ],
     }
 
     const allowedTransitions = validTransitions[currentStatus] || []
