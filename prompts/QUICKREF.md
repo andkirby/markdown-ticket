@@ -11,7 +11,7 @@
 | `/mdt:poc`             | Validate uncertain technical decisions                          | `{TICKETS_PATH}/{CR-KEY}/poc.md` + `poc/` folder             |
 | `/mdt:domain-lens`     | Surface DDD constraints (optional)                              | `{TICKETS_PATH}/{CR-KEY}/domain.md`                          |
 | `/mdt:domain-audit`    | Analyze code for DDD + structural issues                        | `{TICKETS_PATH}/{CR-KEY}/domain-audit.md`                    |
-| `/mdt:architecture`    | Surface decisions, define structure + size limits               | CR section or `architecture.md`                              |
+| `/mdt:architecture`    | Surface decisions, define structure + scope boundaries          | CR section or `architecture.md`                              |
 | `/mdt:tests`           | Generate module tests (unit/integration) from architecture      | `{TICKETS_PATH}/{CR-KEY}/[part-{X.Y}/]tests.md` + test files |
 | `/mdt:clarification`   | Fill specification gaps                                         | Updated CR sections                                          |
 | `/mdt:tasks`           | Break CR into constrained tasks                                 | `{TICKETS_PATH}/{CR-KEY}/[part-{X.Y}/]tasks.md`              |
@@ -30,7 +30,7 @@
 | **Validate uncertain technical decisions**          | `/mdt:poc`                          |
 | **Add DDD constraints (business logic)**            | `/mdt:domain-lens`                  |
 | **Diagnose DDD + structural issues**                | `/mdt:domain-audit`                 |
-| **Design architecture with size limits**            | `/mdt:architecture`                 |
+| **Design architecture with scope boundaries**       | `/mdt:architecture`                 |
 | **Generate module tests from architecture**         | `/mdt:tests`                        |
 | **Fill specification gaps**                         | `/mdt:clarification`                |
 | **Break CR into tasks**                             | `/mdt:tasks`                        |
@@ -43,20 +43,10 @@
 | **Generate refactoring tasks**                      | `/mdt:tasks {CR-KEY} --prep`        |
 | **Execute preparatory refactoring**                 | `/mdt:implement {CR-KEY} --prep`    |
 
-## Size Limits
+## Scope Boundaries
 
-| Role                              | Default | Hard Max |
-|-----------------------------------|---------|----------|
-| Orchestration (index, main)       | 100     | 150      |
-| Feature module                    | 200     | 300      |
-| Complex logic (parser, algorithm) | 300     | 450      |
-| Utility / helper                  | 75      | 110      |
-
-**Three Zones:**
-
-- ✅ OK: ≤ Default → Proceed
-- ⚠️ FLAG: Default to 1.5x → Complete with warning
-- ⛔ STOP: > 1.5x → Cannot complete, must resolve
+- Define what each module owns and what it must not touch
+- Flag minor spillover; stop on boundary breaches
 
 ## Decision: Skip `/mdt:requirements`?
 

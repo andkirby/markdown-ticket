@@ -15,7 +15,7 @@ The `/mdt:implement-agentic` command executes implementation tasks using a state
 
 | Agent      | Role                                    |
 |------------|-----------------------------------------|
-| `@mdt:verify` | Run tests, check sizes, parse results   |
+| `@mdt:verify` | Run tests, check scope boundaries, parse results |
 | `@mdt:code`   | Write minimal code for task specs       |
 | `@mdt:fix`    | Apply minimal fixes for failures        |
 

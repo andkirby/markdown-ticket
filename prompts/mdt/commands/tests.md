@@ -48,13 +48,22 @@ Scan architecture for **concrete data rules** that need explicit tests:
 
 ### 3. External Dependency Tests
 
-For each external dependency declared in architecture (env var, CLI tool, API, service), require at least one **real** integration test (not mocked):
+For each external dependency declared in architecture (env var, CLI tool, API, service), require at least one **real** integration test (not mocked). If a real dependency is unavailable in CI, use a local stub or contract test and explicitly note the limitation.
 
 | Dependency Type | Required Test |
 |-----------------|--------------|
 | Env var | Behavior when var is set vs absent (real env) |
 | External command | At least one test with a real command (e.g., `echo test`) |
-| API/Service | At least one test against real or local endpoint |
+| API/Service | At least one test against real or local endpoint (or contract test if gated) |
+
+## Constraint Coverage
+
+If requirements.md includes constraint IDs (C1, C2...), add a constraint coverage section. Constraints are tested here, not in BDD, unless they are user-visible.
+
+| Constraint ID | Test(s) |
+|---------------|---------|
+| C1 | {test name} |
+| C2 | {test name} |
 
 ## Test Template (Minimal)
 
@@ -77,12 +86,19 @@ ModuleName tests:
 
 ### 1. Write Test Files (TDD)
 
-Write actual executable test files to project's test directory (follow project conventions):
+Write actual executable test files to project's test directory. Follow project's existing conventions.
 
-```
-{test_directory}/
-└── {module}_test or test_{module} or {module}.test    ← Follow project pattern
-```
+**Test file naming by ecosystem**:
+| Ecosystem | Patterns |
+|-----------|----------|
+| TypeScript/Node.js | `*.test.ts`, `*.spec.ts` |
+| Python | `test_*.py`, `*_test.py` |
+
+**Language reference** (load for test structure and assertions):
+- TypeScript/Node.js: `mdt/references/typescript.md`
+- Python: `mdt/references/python.md`
+
+**Rule**: Match existing test file naming in the project. If none exists, use the ecosystem default.
 
 **Feature mode**: Tests should be RED (imports fail, modules don't exist yet)
 **Prep mode**: Tests should be GREEN (lock existing behavior)
@@ -113,6 +129,12 @@ Write actual executable test files to project's test directory (follow project c
 |------------|-----------|----------------------|
 | `{ENV_VAR}` | {test name} | {expected behavior} |
 
+## Constraint Coverage (if any)
+
+| Constraint ID | Test File | Tests |
+|---------------|-----------|-------|
+| C1 | `{test_path}` | {test name} |
+
 ## Verify
 
 \`\`\`bash
@@ -135,6 +157,7 @@ Write actual executable test files to project's test directory (follow project c
 - [ ] All modules have interface tests
 - [ ] Data mechanisms extracted and tested
 - [ ] External dependencies tested with at least one real integration test
+- [ ] Constraint IDs from requirements covered (or explicitly N/A)
 - [ ] **Test files written** to project test directory
 - [ ] **tests.md written** to CR folder
 - [ ] Expected state verified (RED/GREEN)

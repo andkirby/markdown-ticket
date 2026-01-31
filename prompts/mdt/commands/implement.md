@@ -2,7 +2,7 @@
 
 Execute tasks from a task list with constraint verification after each task.
 
-**Core Principle**: Verify TDD (RED→GREEN), size (flag/STOP), structure, and no duplication after each task.
+**Core Principle**: Verify TDD (RED→GREEN), scope boundaries (flag/STOP), structure, and no duplication after each task.
 
 ## User Input
 
@@ -126,7 +126,7 @@ tests_file: "{TICKETS_PATH}/{CR-KEY}/tests.md"
 
 Extract from header:
 - **Project Context** (source_dir, test_command, ext)
-- **Size Thresholds** (default, hard max per module)
+- **Scope Boundaries** (what the task owns, what it must not touch)
 - **Shared Patterns** (what should be imported)
 - **Test Coverage** table (test→task mapping)
 
@@ -211,9 +211,9 @@ If tests already pass before implementation → investigate:
 ```
 Confirm these tests are RED.
 
-## Size Constraints
-- Default: {N} lines → aim for this
-- Hard Max: {N×1.5} lines → STOP if exceeded
+## Scope Constraints
+- Scope: {what this task owns}
+- Boundary: {what it must not touch}
 
 ## Anti-Duplication
 Shared utilities (import, don't copy):
@@ -224,7 +224,7 @@ Shared utilities (import, don't copy):
 
 ## After Completion
 1. `{test_command} --testPathPattern="part-{X.Y}"` — task tests GREEN
-2. `wc -l {file}` — report line count
+2. Verify scope boundaries and exclusions
 3. Verify imports from shared modules
 ```
 
@@ -281,21 +281,11 @@ After each task, verify **before** marking complete:
 [stop] — Halt orchestration
 ```
 
-**3b. Size check (three zones):**
+**3b. Scope check (three zones):**
 
-```bash
-lines=$(wc -l < "{file}")
-default={default_limit}
-hard_max={hard_max_limit}
-
-if [ "$lines" -le "$default" ]; then
-  echo "✅ OK: $lines lines (limit: $default)"
-elif [ "$lines" -le "$hard_max" ]; then
-  echo "⚠️ FLAG: $lines lines (exceeds default $default)"
-else
-  echo "⛔ STOP: $lines lines (exceeds hard max $hard_max)"
-fi
-```
+- ✅ OK: Task stays within defined scope and boundaries
+- ⚠️ FLAG: Minor scope spillover or small duplication
+- ⛔ STOP: Boundary breach (cross-layer mixing or multiple responsibilities)
 
 **3c. Structure check:**
 
@@ -312,34 +302,32 @@ grep -l "{shared_pattern}" {new_file}
 
 ### Step 4: Handle Results
 
-**✅ OK (TDD satisfied, under default):**
+**✅ OK (TDD satisfied, within scope):**
 
 ```markdown
 ✓ Task {N.N} complete (Part {X.Y})
   TDD: RED → GREEN ({N} tests)
-  File: {path} ({N} lines)
-  Status: OK
+  File: {path}
+  Scope: OK
 ```
 
-**⚠️ FLAG (over default, under hard max):**
+**⚠️ FLAG (minor scope spillover):**
 
 ```markdown
 ⚠️ Task {N.N} complete with WARNING (Part {X.Y})
   TDD: RED → GREEN ({N} tests)
-  File: {path} ({N} lines)
-  Default: {default}, Hard Max: {hard_max}
-
-  Warning: File exceeds default limit.
+  File: {path}
+  Warning: Scope spillover detected.
 
   [continue] [subdivide] [stop]
 ```
 
-**⛔ STOP (over hard max or TDD failure):**
+**⛔ STOP (boundary breach or TDD failure):**
 
 ```markdown
 ⛔ Task {N.N} BLOCKED (Part {X.Y})
 
-  Issue: {exceeds hard max | TDD failure | duplication}
+  Issue: {boundary breach | TDD failure | duplication}
 
   [subdivide] [justify] [retry] [stop]
 ```
@@ -349,7 +337,7 @@ grep -l "{shared_pattern}" {new_file}
 Only after verification:
 
 1. Update tasks.md: `- [ ]` → `- [x]`
-2. If flagged: `- [x] ⚠️ {N} lines (flagged)`
+2. If flagged: `- [x] ⚠️ Scope spillover (flagged)`
 3. **Update Test Coverage** in tests.md:
    - `🔴 RED` → `✅ GREEN` for completed tests
 4. Report result
@@ -374,11 +362,11 @@ Only after verification:
 
 **Regressions**: 0 ✅
 
-### Size Summary (Refactored Files)
-| File | Before | After | Target | Status |
-|------|--------|-------|--------|---------|
-| god-class.ts | 450 | 120 | 150 | ✅ OK |
-| new-service.ts | — | 95 | 100 | ✅ OK |
+### Scope Summary (Refactored Files)
+| File | Scope Notes | Status |
+|------|-------------|--------|
+| god-class.ts | Split into orchestration + domain logic | ✅ OK |
+| new-service.ts | Focused on validation only | ✅ OK |
 
 ═══════════════════════════════════════════
 
@@ -414,11 +402,11 @@ At end of part:
 **Tests transitioned**: {N} RED → GREEN
 **Regressions**: 0
 
-### Size Summary
-| File | Lines | Default | Status |
-|------|-------|---------|--------|
-| schema.ts | 142 | 150 | ✅ OK |
-| validation.ts | 98 | 100 | ✅ OK |
+### Scope Summary
+| File | Scope | Status |
+|------|-------|--------|
+| schema.ts | Schema shape + parsing only | ✅ OK |
+| validation.ts | Validation only | ✅ OK |
 
 ### Flagged Files
 {list any warnings}
@@ -518,9 +506,9 @@ Implementation Complete: {CR-KEY}
 
 **Total**: 25 tasks, 67 tests GREEN
 
-### Size Compliance
-| Part | Files | Flagged | Over Hard Max |
-|------|-------|---------|---------------|
+### Scope Review
+| Part | Files | Flagged | Boundary Breaches |
+|------|-------|---------|-------------------|
 | 1.1 | 4 | 0 | 0 |
 | 1.2 | 5 | 1 | 0 |
 | 2 | 8 | 0 | 0 |
@@ -559,8 +547,8 @@ Implementation Complete: {CR-KEY}
 **Pre-check**: `{test_command} --testPathPattern="part-{X.Y}"`
 
 ## Constraints
-- Default: {N} lines
-- Hard Max: {N×1.5} lines
+- Scope: {what this task owns}
+- Boundary: {what it must not touch}
 - Shared imports: {list}
 
 ## Task
