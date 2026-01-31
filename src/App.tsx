@@ -5,7 +5,7 @@ import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useS
 import { EventHistory } from './components/DevTools/EventHistory'
 import { useEventHistoryState } from './components/DevTools/useEventHistoryState'
 import { DirectTicketAccess } from './components/DirectTicketAccess'
-import { getProjectCode, ProjectSelector } from './components/ProjectSelector'
+import { ProjectSelector } from './components/ProjectSelector'
 import ProjectView from './components/ProjectView'
 import { RedirectToCurrentProject } from './components/RedirectToCurrentProject'
 import { RouteErrorModal } from './components/RouteErrorModal'
@@ -13,6 +13,7 @@ import TicketViewer from './components/TicketViewer'
 import { Toaster } from './components/UI/sonner'
 import { useProjectManager } from './hooks/useProjectManager'
 import { useTheme } from './hooks/useTheme'
+import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
 import './utils/cache' // Import cache utilities for development
 import './services/sseClient' // Initialize SSE connection

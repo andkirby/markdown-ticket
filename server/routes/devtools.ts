@@ -79,7 +79,7 @@ interface AuthenticatedRequest extends Request {
  * @param level - Log level (info, error, warn).
  * @param args - Log arguments.
  */
-function addToLogBuffer(level: string, ...args: any[]): void {
+function addToLogBuffer(level: string, ...args: unknown[]): void {
   const message = args.map(arg =>
     typeof arg === 'object' ? JSON.stringify(arg) : String(arg),
   ).join(' ')
@@ -100,24 +100,26 @@ function addToLogBuffer(level: string, ...args: any[]): void {
  * Intercept console methods to capture logs.
  */
 export function setupLogInterception(): void {
+  /* eslint-disable no-console */
   const originalLog = console.log
   const originalError = console.error
   const originalWarn = console.warn
 
-  console.log = (...args: any[]) => {
+  console.log = (...args: unknown[]) => {
     addToLogBuffer('info', ...args)
     originalLog(...args)
   }
 
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     addToLogBuffer('error', ...args)
     originalError(...args)
   }
 
-  console.warn = (...args: any[]) => {
+  console.warn = (...args: unknown[]) => {
     addToLogBuffer('warn', ...args)
     originalWarn(...args)
   }
+  /* eslint-enable no-console */
 }
 
 /**
@@ -234,6 +236,7 @@ export function createDevToolsRouter(): Router {
 
     // Handle client disconnect
     req.on('close', () => {
+      // eslint-disable-next-line no-console
       console.log('SSE client disconnected')
     })
 
@@ -299,6 +302,7 @@ export function createDevToolsRouter(): Router {
   router.post('/frontend/logs/start', (req: Request, res: Response) => {
     frontendSessionActive = true
     frontendSessionStart = Date.now()
+    // eslint-disable-next-line no-console
     console.log('🔍 Frontend logging session started')
     res.json({ status: 'started', sessionStart: frontendSessionStart })
   })
@@ -323,6 +327,7 @@ export function createDevToolsRouter(): Router {
   router.post('/frontend/logs/stop', (req: Request, res: Response) => {
     frontendSessionActive = false
     frontendSessionStart = null
+    // eslint-disable-next-line no-console
     console.log('🔍 Frontend logging session stopped')
     res.json({ status: 'stopped' })
   })
@@ -357,6 +362,7 @@ export function createDevToolsRouter(): Router {
       if (frontendLogs.length > MAX_FRONTEND_LOGS) {
         frontendLogs.splice(0, frontendLogs.length - MAX_FRONTEND_LOGS)
       }
+      // eslint-disable-next-line no-console
       console.log(`📝 Received ${logs.length} frontend log entries`)
     }
     res.json({ received: logs?.length || 0 })
@@ -425,6 +431,7 @@ export function createDevToolsRouter(): Router {
     if (devModeActive && devModeStart && (now - devModeStart) > DEV_MODE_TIMEOUT) {
       devModeActive = false
       devModeStart = null
+      // eslint-disable-next-line no-console
       console.log('🔍 DEV mode logging auto-disabled after 1 hour timeout')
     }
 
@@ -484,6 +491,7 @@ export function createDevToolsRouter(): Router {
         devModeLogs.splice(0, devModeLogs.length - MAX_DEV_MODE_LOGS)
       }
 
+      // eslint-disable-next-line no-console
       console.log(`🛠️ DEV: Received ${logs.length} frontend log entries`)
     }
 

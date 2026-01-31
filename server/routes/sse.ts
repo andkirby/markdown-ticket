@@ -4,7 +4,7 @@ import { Router } from 'express'
 
 interface _ResponseLike {
   write: (data: string) => void
-  on: (event: string, callback: (...args: any[]) => void) => void
+  on: (event: string, callback: (...args: unknown[]) => void) => void
   headersSent: boolean
   destroyed?: boolean
   closed?: boolean
@@ -36,6 +36,7 @@ export function createSSERouter(fileWatcher: FileWatcherService): Router {
    *               type: string
    *               description: SSE formatted events
    */
+  // eslint-disable-next-line ts/no-explicit-any
   router.get('/', (req: Request, res: any) => {
     // Set SSE headers
     res.writeHead(200, {
@@ -59,15 +60,18 @@ export function createSSERouter(fileWatcher: FileWatcherService): Router {
       }
     })
 
+    // eslint-disable-next-line no-console
     console.log(`SSE client connected. Total clients: ${fileWatcher.getClientCount()}`)
 
     // Handle client disconnect
     req.on('close', () => {
+      // eslint-disable-next-line no-console
       console.log('SSE client disconnected')
       fileWatcher.removeClient(res)
     })
 
     req.on('aborted', () => {
+      // eslint-disable-next-line no-console
       console.log('SSE client aborted')
       fileWatcher.removeClient(res)
     })

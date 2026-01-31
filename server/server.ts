@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { Express } from 'express'
 import * as path from 'node:path'
 import process from 'node:process'
@@ -128,10 +129,12 @@ const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery)
 /**
  * Type cast for compatibility.
  */
+// eslint-disable-next-line ts/no-explicit-any
 const ticketService = new TicketService(projectDiscovery as any)
 /**
  * Type cast for compatibility.
  */
+// eslint-disable-next-line ts/no-explicit-any
 const documentService = new DocumentService(projectDiscovery as any)
 const fileSystemService = new FileSystemService(TICKETS_DIR)
 
@@ -143,6 +146,7 @@ fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter)
 // =============================================================================
 
 const projectController = new ProjectController(
+  // eslint-disable-next-line ts/no-explicit-any
   projectServiceAdapter as any, // Use the adapter which provides the expected interface
   fileSystemService,
   fileWatcher,
