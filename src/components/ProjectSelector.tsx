@@ -1,6 +1,7 @@
 import type { Project } from '@mdt/shared/models/Project'
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area'
 import { Plus } from 'lucide-react'
+import { getProjectCode } from '../utils/projectUtils'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './UI/tooltip'
 
 interface ProjectSelectorProps {
@@ -9,23 +10,6 @@ interface ProjectSelectorProps {
   onProjectSelect: (project: Project) => void
   onNewProject?: () => void
   loading?: boolean
-}
-
-// Helper function to get project code from project data
-export function getProjectCode(project: Project): string {
-  // Safety check for undefined/null project
-  if (!project || !project.project) {
-    console.warn('getProjectCode called with invalid project object:', project)
-    return 'UNKNOWN'
-  }
-
-  // Use the project.code from config if available
-  if (project.project.code) {
-    return project.project.code
-  }
-
-  // This should not happen with the new validation, but keep as safety fallback
-  return project.id // Return ID as-is, don't modify
 }
 
 export function ProjectSelector({ projects, selectedProject, onProjectSelect, onNewProject, loading = false }: ProjectSelectorProps) {

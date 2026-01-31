@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /// <reference types="jest" />
 
 // Mock TreeService as a proper class mock before importing FileSystemService

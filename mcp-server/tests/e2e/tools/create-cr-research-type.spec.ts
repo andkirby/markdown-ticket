@@ -221,13 +221,13 @@ Test methodology.`,
       expect(tools).toBeDefined()
       expect(Array.isArray(tools)).toBe(true)
 
-      const createCrTool = tools.find((t: any) => t.name === 'create_cr')
+      const createCrTool = tools.find(t => t.name === 'create_cr')
       expect(createCrTool).toBeDefined()
 
       // Verify tool description includes Research type
-      // @ts-ignore - silly error: TS18048: createCrTool is possibly undefined
+      // @ts-expect-error - TS18048: createCrTool is possibly undefined
       expect(createCrTool.description).toContain('Research')
-      // @ts-ignore - silly error: TS18048: createCrTool is possibly undefined
+      // @ts-expect-error - TS18048: createCrTool is possibly undefined
       expect(createCrTool.description).toContain('technical validation')
     })
   })

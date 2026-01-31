@@ -1,3 +1,4 @@
+/* eslint-disable node/prefer-global/process -- Build config, unused-imports/no-unused-vars -- Unused variables in config, unicorn/prefer-number-properties, node/handle-callback-err, style/multiline-ternary -- Config file patterns */
 import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -40,7 +41,7 @@ function frontendLoggingPlugin() {
             || req.ip
             || 'unknown'
           const now = Date.now()
-          const lastRequest = statusRequestTimes.get(clientIP)
+          void statusRequestTimes.get(clientIP) // Retrieved for potential rate limiting (currently disabled)
 
           // Temporarily disable rate limiting for development
           // if (lastRequest && (now - lastRequest) < STATUS_RATE_LIMIT) {
@@ -146,7 +147,7 @@ function frontendLoggingPlugin() {
           const backendUrl = process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
           fetch(`${backendUrl}/api/cache/clear`, { method: 'POST' })
             .then(response => response.json())
-            .then((data) => {
+            .then(() => {
               console.log('🔄 Config cache cleared via frontend')
               res.setHeader('Content-Type', 'application/json')
               res.end(JSON.stringify({
@@ -155,7 +156,7 @@ function frontendLoggingPlugin() {
                 timestamp: new Date().toISOString(),
               }))
             })
-            .catch((error) => {
+            .catch(() => {
               console.log('⚠️ Backend cache clear failed, continuing anyway')
               res.setHeader('Content-Type', 'application/json')
               res.end(JSON.stringify({
@@ -256,7 +257,7 @@ function frontendLoggingPlugin() {
                       url: log.url,
                     })}\n\n`)
                   }
-                  catch (error) {
+                  catch {
                     devStreamClients.delete(client)
                   }
                 })
@@ -333,7 +334,7 @@ function frontendLoggingPlugin() {
                       url: log.url,
                     })}\n\n`)
                   }
-                  catch (error) {
+                  catch {
                   // Remove broken clients
                     streamClients.delete(client)
                   }
@@ -397,7 +398,7 @@ ${scriptTag}
 }
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   // In Docker, use backend service name; otherwise use localhost
   const backendUrl = process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
 

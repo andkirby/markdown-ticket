@@ -1,3 +1,4 @@
+/* eslint-disable node/prefer-global/process -- Config file standard practice */
 import { defineConfig, devices } from '@playwright/test'
 
 // Get test port configuration with environment variable support
@@ -9,7 +10,7 @@ const ports = {
 
 // Validate ports
 Object.values(ports).forEach((port) => {
-  if (isNaN(port) || port < 1024 || port > 65535) {
+  if (Number.isNaN(port) || port < 1024 || port > 65535) {
     throw new Error(`Invalid port number: ${port}. Must be between 1024 and 65535.`)
   }
 })
@@ -100,20 +101,22 @@ export default defineConfig({
    * Uses isolated test ports to avoid conflicts with development servers.
    * Frontend: 6173 (dev uses 5173), Backend: 4001 (dev uses 3001)
    * Override with TEST_FRONTEND_PORT or TEST_BACKEND_PORT environment variables. */
-  webServer: process.env.PWTEST_SKIP_WEB_SERVER ? undefined : [
-    {
-      // Frontend server - use npx vite directly with port override
-      command: `npx vite --port ${ports.frontend}`,
-      url: `http://localhost:${ports.frontend}`,
-      reuseExistingServer: !process.env.CI,
-      timeout: 120 * 1000,
-    },
-    {
-      // Backend server - disable auto-discovery to speed up startup
-      command: `PORT=${ports.backend} MDT_AUTO_SCAN=false npm run dev:server`,
-      url: `http://localhost:${ports.backend}`,
-      reuseExistingServer: !process.env.CI,
-      timeout: 120 * 1000,
-    },
-  ],
+  webServer: process.env.PWTEST_SKIP_WEB_SERVER
+    ? undefined
+    : [
+        {
+          // Frontend server - use npx vite directly with port override
+          command: `npx vite --port ${ports.frontend}`,
+          url: `http://localhost:${ports.frontend}`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120 * 1000,
+        },
+        {
+          // Backend server - disable auto-discovery to speed up startup
+          command: `PORT=${ports.backend} MDT_AUTO_SCAN=false npm run dev:server`,
+          url: `http://localhost:${ports.backend}`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120 * 1000,
+        },
+      ],
 })
