@@ -9,6 +9,12 @@ export default antfu(
       'node_modules',
       'coverage',
       '.gitWT',
+      'tests',
+      '--',
+      'docker-config',
+      'docs/CRs',
+      'docs/archive',
+      '.gitWT',
     ],
   },
   {
