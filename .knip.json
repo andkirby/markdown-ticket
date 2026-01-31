@@ -27,5 +27,6 @@
     "scripts/**",
     ".gitWT/**",
     "docs/**"
-  ]
+  ],
+  "ignoreBinaries": ["jq", "prettier", "rimraf"]
 }
