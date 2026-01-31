@@ -1,4 +1,5 @@
 import type { Status, Ticket } from '../../types'
+import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useRef, useState } from 'react'
 import { getButtonModeClasses } from './buttonModeStyles'
@@ -52,9 +53,9 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
   })
 
   const getIcon = () => {
-    if (status === 'On Hold')
+    if (status === CRStatus.ON_HOLD)
       return '⏸'
-    if (status === 'Rejected')
+    if (status === CRStatus.REJECTED)
       return '✕'
     return ''
   }
@@ -89,7 +90,7 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
     const toggleTickets = allTickets.filter(ticket => ticket.status === status)
 
     // Determine the parent status based on toggle status
-    const parentStatus = status === 'On Hold' ? 'In Progress' : status === 'Rejected' ? 'Done' : null
+    const parentStatus = status === CRStatus.ON_HOLD ? CRStatus.IN_PROGRESS : status === CRStatus.REJECTED ? 'Done' : null
 
     if (!parentStatus || toggleTickets.length === 0) {
       return

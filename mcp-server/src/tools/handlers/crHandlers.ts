@@ -14,8 +14,7 @@ import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
 import type { CRService } from '../../services/crService.js'
-import { CRTypes } from '@mdt/domain-contracts'
-import { CR_STATUSES } from '@mdt/shared/models/Types.js'
+import { CRStatus as CRStatusEnum, CRTypes } from '@mdt/domain-contracts'
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ContentProcessor } from '../../services/SectionManagement/ContentProcessor.js'
 import { Sanitizer } from '../../utils/sanitizer.js'
@@ -274,7 +273,15 @@ export class CRHandlers {
     }
 
     // Validate status parameter
-    const statusValidation = validateOperation(status, CR_STATUSES as string[], 'status')
+    const statusValidation = validateOperation(status, [
+      CRStatusEnum.PROPOSED,
+      CRStatusEnum.APPROVED,
+      CRStatusEnum.IN_PROGRESS,
+      CRStatusEnum.IMPLEMENTED,
+      CRStatusEnum.REJECTED,
+      CRStatusEnum.ON_HOLD,
+      CRStatusEnum.PARTIALLY_IMPLEMENTED,
+    ] as string[], 'status')
     if (!statusValidation.valid) {
       throw ToolError.protocol(statusValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
     }

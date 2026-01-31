@@ -12,6 +12,11 @@ export const CRStatus = {
   IN_PROGRESS: 'In Progress',
   IMPLEMENTED: 'Implemented',
   REJECTED: 'Rejected',
+  ON_HOLD: 'On Hold',
+  SUPERSEDED: 'Superseded',
+  DEPRECATED: 'Deprecated',
+  DUPLICATE: 'Duplicate',
+  PARTIALLY_IMPLEMENTED: 'Partially Implemented',
 } as const
 
 export type CRStatusValue = typeof CRStatus[keyof typeof CRStatus]
@@ -22,6 +27,11 @@ export const CRStatuses = [
   CRStatus.IN_PROGRESS,
   CRStatus.IMPLEMENTED,
   CRStatus.REJECTED,
+  CRStatus.ON_HOLD,
+  CRStatus.SUPERSEDED,
+  CRStatus.DEPRECATED,
+  CRStatus.DUPLICATE,
+  CRStatus.PARTIALLY_IMPLEMENTED,
 ] as const
 
 export const CRStatusSchema = z.enum(CRStatuses)

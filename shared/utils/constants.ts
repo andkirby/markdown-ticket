@@ -2,7 +2,7 @@ import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
-import { CRPriorities, CRTypes, CRType } from '@mdt/domain-contracts'
+import { CRPriorities, CRType, CRTypes } from '@mdt/domain-contracts'
 import { CR_STATUSES } from '../models/Types.js'
 
 /**

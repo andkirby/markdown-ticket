@@ -1,6 +1,6 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
-import { CRType } from '@mdt/domain-contracts'
+import { CRStatus, CRType } from '@mdt/domain-contracts'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTicketPosition } from '../components/Column/useTicketPosition'
 
@@ -42,7 +42,7 @@ export function useTicketOperations(
         body: JSON.stringify({
           title,
           type,
-          status: 'Proposed',
+          status: CRStatus.PROPOSED,
           priority: 'Medium',
         }),
       })
@@ -113,7 +113,7 @@ export function useTicketOperations(
     trackUserUpdate(finalTrackingKey)
 
     // Store position if ticket is being moved to 'On Hold' status
-    if (updates.status === 'On Hold' && currentColumnIndex !== undefined && currentTicketIndex !== undefined) {
+    if (updates.status === CRStatus.ON_HOLD && currentColumnIndex !== undefined && currentTicketIndex !== undefined) {
       storeTicketPosition(ticketCode, currentColumnIndex, currentTicketIndex)
     }
 
@@ -121,7 +121,7 @@ export function useTicketOperations(
     const optimisticTicket: Ticket = {
       code: ticketCode,
       title: '',
-      status: 'Proposed',
+      status: CRStatus.PROPOSED,
       type: CRType.FEATURE_ENHANCEMENT,
       priority: 'Medium',
       content: '',

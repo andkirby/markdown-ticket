@@ -10,45 +10,38 @@
  */
 
 // Import and re-export enum objects and value types from domain-contracts
+import type {
+  CRPriorityValue,
+  CRTypeValue,
+} from '@mdt/domain-contracts'
 import {
   CRPriority,
-  CRPriorityValue,
   CRType,
-  CRTypeValue,
+  CRStatus as DomainCRStatus,
 } from '@mdt/domain-contracts'
 
 // Re-export the enum objects (for accessing values like CRType.ARCHITECTURE)
-export { CRPriority, CRType }
+export { CRPriority, DomainCRStatus as CRStatus, CRType }
 
 // Re-export the value types (for type annotations like CRTypeValue)
 export type { CRPriorityValue, CRTypeValue }
 
-// Core Status Types - NOTE: Extended values not yet in domain-contracts, keeping local definition
-export type CRStatus
-  = | 'Proposed'
-    | 'Approved'
-    | 'In Progress'
-    | 'Implemented'
-    | 'Rejected'
-    | 'On Hold'
-    | 'Superseded'
-    | 'Deprecated'
-    | 'Duplicate'
-    | 'Partially Implemented'
+// Re-export CRStatus type
+export type CRStatus = typeof DomainCRStatus[keyof typeof DomainCRStatus]
 
-// Runtime validation array (must match type definition above)
-export const CR_STATUSES: readonly CRStatus[] = [
-  'Proposed',
-  'Approved',
-  'In Progress',
-  'Implemented',
-  'Rejected',
-  'On Hold',
-  'Superseded',
-  'Deprecated',
-  'Duplicate',
-  'Partially Implemented',
-] as const
+// Runtime validation array (re-exported from domain-contracts)
+export const CR_STATUSES = [
+  DomainCRStatus.PROPOSED,
+  DomainCRStatus.APPROVED,
+  DomainCRStatus.IN_PROGRESS,
+  DomainCRStatus.IMPLEMENTED,
+  DomainCRStatus.REJECTED,
+  DomainCRStatus.ON_HOLD,
+  DomainCRStatus.SUPERSEDED,
+  DomainCRStatus.DEPRECATED,
+  DomainCRStatus.DUPLICATE,
+  DomainCRStatus.PARTIALLY_IMPLEMENTED,
+] as const satisfies readonly CRStatus[]
 
 // Project Information Interface
 export interface ProjectInfo {

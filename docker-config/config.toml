@@ -1,6 +1,6 @@
 [discovery]
 autoDiscover = true
-searchPaths = ["/projects"]
+searchPaths = [ "/projects" ]
 
 [links]
 enableAutoLinking = false

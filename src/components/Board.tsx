@@ -1,6 +1,7 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import type { Status, Ticket } from '../types'
+import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { DndProvider } from 'react-dnd'
@@ -151,8 +152,8 @@ const BoardContent: React.FC<BoardProps> = ({
 
     try {
       // Check if ticket is being moved from 'On Hold' or 'Rejected' back to a regular status
-      const isFromHoldStatus = ticket.status === 'On Hold' || ticket.status === 'Rejected'
-      const isToRegularStatus = status !== 'On Hold' && status !== 'Rejected'
+      const isFromHoldStatus = ticket.status === CRStatus.ON_HOLD || ticket.status === CRStatus.REJECTED
+      const isToRegularStatus = status !== CRStatus.ON_HOLD && status !== CRStatus.REJECTED
 
       if (isFromHoldStatus && isToRegularStatus) {
         // Get the stored position for this ticket

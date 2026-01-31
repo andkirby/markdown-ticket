@@ -1,4 +1,5 @@
 import type { Status, Ticket } from '../../types'
+import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useDrag } from 'react-dnd'
@@ -104,9 +105,9 @@ const Column: React.FC<ColumnProps> = ({
   // Get toggle status for this column
   const getToggleStatus = (): Status | null => {
     if (column.label === 'In Progress')
-      return 'On Hold'
+      return CRStatus.ON_HOLD
     if (column.label === 'Done')
-      return 'Rejected'
+      return CRStatus.REJECTED
     return null
   }
 

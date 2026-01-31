@@ -10,8 +10,7 @@
  */
 
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
-import { CRPriorities, CRTypes } from '@mdt/domain-contracts'
-import { CR_STATUSES } from '@mdt/shared/models/Types.js'
+import { CRPriorities, CRStatus, CRTypes } from '@mdt/domain-contracts'
 
 // =========================
 // Project Tool Definitions
@@ -53,7 +52,15 @@ export const PROJECT_TOOLS: Tool[] = [
 /**
  * Shared enums for tool schemas (imported from domain-contracts for single source of truth)
  */
-const CR_STATUS_ENUM = CR_STATUSES as readonly string[]
+const CR_STATUS_ENUM = [
+  CRStatus.PROPOSED,
+  CRStatus.APPROVED,
+  CRStatus.IN_PROGRESS,
+  CRStatus.IMPLEMENTED,
+  CRStatus.REJECTED,
+  CRStatus.ON_HOLD,
+  CRStatus.PARTIALLY_IMPLEMENTED,
+] as const satisfies readonly string[]
 const CR_TYPE_ENUM = CRTypes as readonly string[]
 const CR_PRIORITY_ENUM = CRPriorities as readonly string[]
 

@@ -13,9 +13,9 @@ import type { CRPriorityValue, CRStatus, CRTypeValue } from '../../../models/Typ
 import { CRPriority, CRType } from '../../../models/Types'
 
 // Mock schemas for now - will be replaced with Zod schemas from domain-contracts
-type SafeParseResult<T> =
-  | { success: true, data: T }
-  | { success: false, error: { issues: any[] } }
+type SafeParseResult<T>
+  = | { success: true, data: T }
+    | { success: false, error: { issues: any[] } }
 
 // Type guards to discriminate the union
 function isSafeParseSuccess<T>(result: SafeParseResult<T>): result is { success: true, data: T } {
@@ -43,7 +43,7 @@ const TicketSchema = {
       return { success: false, error: { issues: [{ path: ['code'] }] } }
     }
     // Validate status against CRStatus enum
-    const validStatuses: CRStatus[] = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented']
+    const validStatuses: CRStatus[] = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold', 'Partially Implemented']
     if (!validStatuses.includes(data.status)) {
       return { success: false, error: { issues: [{ path: ['status'] }] } }
     }
@@ -210,9 +210,6 @@ describe('domain Contracts - Schema Validation', () => {
         'Implemented',
         'Rejected',
         'On Hold',
-        'Superseded',
-        'Deprecated',
-        'Duplicate',
         'Partially Implemented',
       ]
 
