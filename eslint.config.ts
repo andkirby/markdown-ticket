@@ -12,6 +12,7 @@ export default antfu(
     ],
   },
   {
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {
       // Disable storybook rules as @antfu/eslint-config doesn't include them
       // Re-enable if needed via eslint-plugin-storybook

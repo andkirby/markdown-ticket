@@ -5,8 +5,8 @@
  * with counter management and slug generation.
  */
 
-import type { CRStatus } from '../../models/Types.js'
 import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
+import type { CRStatus } from '../../models/Types.js'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { withRetry } from '../utils/retry-helper.js'

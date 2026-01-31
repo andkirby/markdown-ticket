@@ -3,7 +3,7 @@ import type { Ticket, TicketData } from '../models/Ticket.js'
 import type { Suggestion, Template, ValidationResult } from '../models/Types.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { CRPriorities, CRTypes, CRType } from '@mdt/domain-contracts'
+import { CRPriorities, CRStatus, CRType, CRTypes } from '@mdt/domain-contracts'
 import { getDefaultPaths } from '../utils/constants.js'
 
 export class TemplateService {
@@ -608,7 +608,7 @@ Based on research outcomes:
     }
 
     // General improvements
-    if (ticket.status === 'Proposed' && !ticket.content.includes('acceptance criteria')) {
+    if (ticket.status === CRStatus.PROPOSED && !ticket.content.includes('acceptance criteria')) {
       suggestions.push({
         type: 'improvement',
         title: 'Define Acceptance Criteria',
@@ -628,7 +628,7 @@ Based on research outcomes:
       })
     }
 
-    if (!ticket.implementationNotes && ticket.status === 'Implemented') {
+    if (!ticket.implementationNotes && ticket.status === CRStatus.IMPLEMENTED) {
       suggestions.push({
         type: 'improvement',
         title: 'Add Implementation Notes',

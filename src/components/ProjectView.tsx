@@ -1,6 +1,7 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import type { Ticket } from '../types'
+import { CRStatus } from '@mdt/domain-contracts'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getSortPreferences, setSortPreferences } from '../config/sorting'
 import { sortTickets } from '../utils/sorting'
@@ -166,13 +167,13 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                         </div>
                         <div className="flex items-center space-x-3">
                           <span className={`px-2 py-1 text-xs rounded-full ${
-                            ticket.status === 'Proposed'
+                            ticket.status === CRStatus.PROPOSED
                               ? 'bg-blue-100 text-blue-800'
-                              : ticket.status === 'Approved'
+                              : ticket.status === CRStatus.APPROVED
                                 ? 'bg-green-100 text-green-800'
-                                : ticket.status === 'In Progress'
+                                : ticket.status === CRStatus.IN_PROGRESS
                                   ? 'bg-yellow-100 text-yellow-800'
-                                  : ticket.status === 'Implemented'
+                                  : ticket.status === CRStatus.IMPLEMENTED
                                     ? 'bg-purple-100 text-purple-800'
                                     : 'bg-red-100 text-red-800'
                           }`}

@@ -2,9 +2,9 @@
  * Ticket Creator Interface and Base Classes.
  */
 
+import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 import type { TicketData } from '../../models/Ticket.js'
 import type { CRStatus, ValidationResult } from '../../models/Types.js'
-import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 
 /** Configuration for ticket creation */
 export interface TicketCreationConfig {

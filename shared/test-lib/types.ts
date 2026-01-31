@@ -5,10 +5,10 @@
  * server lifecycle, and test execution with custom port configuration.
  */
 
+import type { CRPriorityValue as CRPriority, CRTypeValue as CRType } from '@mdt/domain-contracts'
 import type { LocalProjectConfig, Project } from '../models/Project.js'
 import type { TicketData } from '../models/Ticket.js'
 import type { CRStatus } from '../models/Types.js'
-import type { CRPriorityValue as CRPriority, CRTypeValue as CRType } from '@mdt/domain-contracts'
 import type { PortConfig } from './config/ports.js'
 
 /**
