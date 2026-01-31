@@ -38,4 +38,11 @@ export default antfu(
       ],
     },
   },
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+    rules: {
+      // Allow uppercase for Gherkin-style test patterns (GIVEN/WHEN/THEN)
+      'test/prefer-lowercase-title': 'off',
+    },
+  },
 )
