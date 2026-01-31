@@ -97,7 +97,7 @@
 
 **Overview**:
 
-- **File Analysis**: Size, coupling, test coverage, churn
+- **File Analysis**: Cohesion, coupling, test coverage, churn
 - **Fitness Score**: 0-100% per file
 - **Verdicts**: Healthy, Concerning, Critical
 - **Three Options**: Integrate / Refactor inline / Split CRs
@@ -235,11 +235,11 @@ Detects DDD violations and structural problems that impede maintainability.
 
 - **Consumes**: requirements.md, bdd.md, poc.md, domain.md (if exist)
 - **Build vs Use Evaluation**: Evaluate existing libraries before building custom
-- **Complexity Assessment**: Score determines output location
+- **Scope Assessment**: Decide embed vs extract based on scope
 - **Pattern**: Structural approach
 - **Shared Patterns**: Logic to extract first (prevents duplication)
 - **Structure**: File paths with responsibilities
-- **Size Guidance**: Per-module limits (default + hard max)
+- **Scope Boundaries**: What each module owns and must not touch
 - **Extension Rule**: "To add X, create Y"
 - **Part Definition**: Multi-part CRs get `## Part X.Y:` sections
 
@@ -296,7 +296,7 @@ Detects DDD violations and structural problems that impede maintainability.
 
 ## /mdt:tasks
 
-**Purpose**: Generate implementation task breakdown with size enforcement
+**Purpose**: Generate implementation task breakdown with scope enforcement
 
 **When to use**: After tests, before implementation
 
@@ -313,7 +313,7 @@ Detects DDD violations and structural problems that impede maintainability.
 **Overview**:
 
 - **Project Context**: Detected settings
-- **Size Thresholds**: Flag/STOP zones from architecture
+- **Scope Boundaries**: Flag/STOP zones from architecture
 - **Shared Patterns**: From Architecture Design
 - **Part 1**: Shared utilities (extract first)
 - **Part 2+**: Features (import from Part 1)
@@ -343,7 +343,7 @@ Executes tasks from tasks.md with verification after each task.
 **After each task verifies:**
 
 1. Tests pass (module tests + affected BDD tests)
-2. Size: OK / FLAG / STOP
+2. Scope: OK / FLAG / STOP
 3. Structure: correct path
 4. No duplication
 
@@ -363,7 +363,7 @@ Executes tasks from tasks.md with verification after each task.
 
 **Overview**:
 
-- **Size Compliance**: Per-file pass/fail
+- **Scope Compliance**: Per-file pass/fail
 - **Debt Items**: By severity (High/Medium/Low)
 - **Suggested Fixes**: Direction, not implementation
 - **Metrics**: Before/after comparison

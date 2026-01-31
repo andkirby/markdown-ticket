@@ -9,6 +9,7 @@ $ARGUMENTS
 ```
 
 Use `{TICKETS_PATH}` from `.mdt-config.toml` for file paths.
+`{PROJECT_CODE}` is provided by the hook (mdt-project-vars) and should be available in session context.
 
 ---
 
@@ -107,6 +108,7 @@ Options:
      }
    }
    ```
+   If `{PROJECT_CODE}` is missing, prompt for it or load it from `.mdt-config.toml`.
 
 5. **Report & suggest next workflow**:
    | CR_TYPE | REQUIREMENTS_SCOPE | Next |
@@ -115,7 +117,7 @@ Options:
    | Feature | full | `/mdt:requirements` → `/mdt:bdd` → `/mdt:architecture` |
    | Feature | brief/none | `/mdt:architecture` → `/mdt:tasks` → `/mdt:implement` |
    | Bug Fix | brief | `/mdt:bdd` (RED) → `/mdt:architecture` → `/mdt:implement` |
-   | Architecture | none | `/mdt:architecture` → `/mdt:tasks` |
+| Architecture | none | `/mdt:architecture` → `/mdt:tests` → `/mdt:tasks` |
    | Technical Debt | preservation | `/mdt:assess` → `/mdt:bdd --prep` → `/mdt:implement` |
 
 6. **Offer refinement**: Ask if user wants to adjust any section

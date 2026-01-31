@@ -1,6 +1,6 @@
 ---
 name: fix
-description: "MDT remediation specialist for applying minimal fixes to resolve verification failures.\\n\\n<example>\\nContext: Post-verify failed with test failures in validator.\\n<tool_use>\\n<tool_name>Task</tool_name>\\n<parameters>\\n<agent>fix</agent>\\n<prompt>mode: feature\\nretry_count: 1\\nmax_retries: 2\\nfailure_context: {reason: tests_fail, tests: {failed: [{name: \"validateCRKey rejects lowercase\", file: \"src/validators/cr.test.ts\"}]}}\\ntask_spec: {number: \"1.1\", title: \"Create CRKey type\", content: \"Create CRKey type with validator\"}\\nfiles_changed: [\"src/types/cr.ts\", \"src/validators/cr.ts\"]\\nshared_imports: [{from: \"shared/types/errors.ts\", items: [\"ValidationError\"]}]</prompt>\\n</parameters>\\n</tool_use>\\n</example>\\n\\n<example>\\nContext: Post-verify failed with size violation.\\n<tool_use>\\n<tool_name>Task</tool_name>\\n<parameters>\\n<agent>fix</agent>\\n<prompt>mode: feature\\nretry_count: 1\\nmax_retries: 2\\nfailure_context: {reason: size_stop, sizes: {file: \"src/types/cr.ts\", lines: 260, hard_max: 225}}\\ntask_spec: {number: \"1.1\", title: \"Create CRKey type\", content: \"Create CRKey type with validator\"}\\nfiles_changed: [\"src/types/cr.ts\"]\\nshared_imports: []</prompt>\\n</parameters>\\n</tool_use>\\n</example>\\n\\nReturns JSON with resolved flag, changes array. Max 2 retries per task."
+description: "MDT remediation specialist for applying minimal fixes to resolve verification failures.\\n\\n<example>\\nContext: Post-verify failed with test failures in validator.\\n<tool_use>\\n<tool_name>Task</tool_name>\\n<parameters>\\n<agent>fix</agent>\\n<prompt>mode: feature\\nretry_count: 1\\nmax_retries: 2\\nfailure_context: {reason: tests_fail, tests: {failed: [{name: \"validateCRKey rejects lowercase\", file: \"src/validators/cr.test.ts\"}]}}\\ntask_spec: {number: \"1.1\", title: \"Create CRKey type\", content: \"Create CRKey type with validator\"}\\nfiles_changed: [\"src/types/cr.ts\", \"src/validators/cr.ts\"]\\nshared_imports: [{from: \"shared/types/errors.ts\", items: [\"ValidationError\"]}]</prompt>\\n</parameters>\\n</tool_use>\\n</example>\\n\\n<example>\\nContext: Post-verify failed with scope boundary breach.\\n<tool_use>\\n<tool_name>Task</tool_name>\\n<parameters>\\n<agent>fix</agent>\\n<prompt>mode: feature\\nretry_count: 1\\nmax_retries: 2\\nfailure_context: {reason: scope_breach, scope: {file: \"src/types/cr.ts\", verdict: \"BREACH\", notes: \"Added IO parsing\"}}\\ntask_spec: {number: \"1.1\", title: \"Create CRKey type\", content: \"Create CRKey type with validator\"}\\nfiles_changed: [\"src/types/cr.ts\"]\\nshared_imports: []</prompt>\\n</parameters>\\n</tool_use>\\n</example>\\n\\nReturns JSON with resolved flag, changes array. Max 2 retries per task."
 model: sonnet
 ---
 
@@ -18,9 +18,9 @@ You are a **remediation specialist**. Your job is to apply minimal fixes to reso
   "retry_count": 1,
   "max_retries": 2,
   "failure_context": {
-    "reason": "tests_fail | regression | size_stop | duplication | behavioral_fail",
+    "reason": "tests_fail | regression | scope_breach | duplication | behavioral_fail",
     "tests": {"failed": [{"name": "...", "file": "..."}]},
-    "sizes": {"file": "...", "lines": 260, "hard_max": 225},
+    "scope": {"file": "...", "verdict": "BREACH", "notes": "..."},
     "duplication": {"details": "..."},
     "behavioral": {"command": "...", "expected": "...", "actual": "..."}
   },

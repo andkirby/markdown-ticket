@@ -333,9 +333,9 @@ Outputs condensed version:
 ```markdown
 ## Quick Assessment: {CR-KEY}
 
-| File | Size | Fitness | Verdict |
-|------|------|---------|---------|
-| `{path}` | {N}/{limit} | {N}% | {emoji} |
+| File | Scope/Cohesion | Fitness | Verdict |
+|------|-----------------|---------|---------|
+| `{path}` | {signal} | {N}% | {emoji} |
 
 **Recommendation**: Option {N}
 **Reason**: {one sentence}
