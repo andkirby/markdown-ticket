@@ -43,28 +43,46 @@ Use Task tool with subagent_type:
 
 | Command | Behavior |
 |---------|----------|
-| `/mdt:implement-agentic {CR-KEY}` | Interactive — auto-detect part or prompt |
+| `/mdt:implement-agentic {CR-KEY}` | Interactive — **fast mode by default** (batch 3, scoped-post, reuse-baseline) |
 | `/mdt:implement-agentic {CR-KEY} --prep` | Execute prep (refactoring) tasks |
 | `/mdt:implement-agentic {CR-KEY} --part {X.Y}` | Target specific part |
 | `/mdt:implement-agentic {CR-KEY} --continue` | Resume from last checkpoint |
 | `/mdt:implement-agentic {CR-KEY} --task {N.N}` | Run specific task only |
+| `/mdt:implement-agentic {CR-KEY} --strict` | **Per-task verification** (pre-verify + full post-verify + smoke test) |
+| `/mdt:implement-agentic {CR-KEY} --batch {N}` | Override batch size (default: 3) |
+| `/mdt:implement-agentic {CR-KEY} --no-smoke` | Skip behavioral smoke tests at batch boundaries |
+
+**Default behavior (fast mode):**
+- `--batch 3` — Post-verify after every 3 tasks (not per-task)
+- `--reuse-baseline` — Skip pre-verify if cached baseline matches
+- `--scoped-post` — Only run mapped tests for changed files
+- **Feature mode**: Skip pre-verify entirely (TDD expects red tests)
+- **Prep mode**: Pre-verify required (baseline must be green)
+
+**Strict mode** restores conservative per-task verification for critical implementations.
 
 ---
 
 ## Checkpoint Schema (minimal)
 
-Persist to `{TICKETS_PATH}/{CR-KEY}/.checkpoint.json`:
+Persist to `{TICKETS_PATH}/{CR-KEY}/.checkpoint.yaml`:
 
 ```yaml
 checkpoint:
-  version: 3
+  version: 4
   cr_key: "{CR-KEY}"
   mode: "feature" | "prep"
   part: "{X.Y|null}"
   task_id: "{N.N}"
-  step: "pre_verify" | "implement" | "post_verify" | "fix" | "complete_verify" | "complete_fix"
+  step: "implement" | "post_verify" | "fix" | "complete_verify" | "complete_fix"
+  # Batch tracking (fast mode)
+  batch:
+    size: 3  # configurable via --batch N
+    current_count: 0  # tasks since last verify
+    accumulated_files: []  # files changed in current batch
+    all_clean: true  # false if any batch verify failed
   baseline:
-    tests: {pre-verify result}
+    tests: {pre-verify result or null}  # null in feature mode
     scope: {pre-verify scope snapshot}
   implementation:
     files_changed: []
@@ -82,6 +100,7 @@ checkpoint:
     last_verdict: "pass" | "partial" | "fail" | null
     issues_found: []           # Full issues array from verify-complete
     fix_tasks_generated: []    # IDs of fix tasks appended to tasks.md
+    batch_verifies_clean: true  # enables completion verify optimizations
   updated_at: "{ISO8601}"
 ```
 
@@ -89,15 +108,15 @@ checkpoint:
 
 ## Orchestrator Flow (high level)
 
-1. Load context (tasks/tests, mode/part, scope boundaries, shared imports).
-2. Derive `smoke_test_command` from requirements/BDD if available.
-3. Pre-verify - Use Task tool with subagent_type="mdt:verify", operation=pre-check.
-4. Implement - Use Task tool with subagent_type="mdt:code".
-5. Post-verify - Use Task tool with subagent_type="mdt:verify", operation=post-check.
-6. Fix loop on failure - Use Task tool with subagent_type="mdt:fix" with max 3 attempts.
-7. Mark progress and advance.
-8. Completion verify - Use Task tool with subagent_type="mdt:verify-complete" after all tasks complete.
-9. Post-verify fix loop (if CRITICAL/HIGH issues).
+**Fast mode (default):**
+1. Load context (tasks/tests, mode/part, scope boundaries, shared imports, smoke_test_command).
+2. Pre-verify (prep/strict only; feature mode skips).
+3. Implement task.
+4. Post-verify at batch boundary (every 3 tasks) or per-task if `--strict`.
+5. Fix loop on failure (max 2 attempts).
+6. Mark progress and advance to next task.
+7. Completion verify after all tasks.
+8. Post-verify fixes (if CRITICAL/HIGH issues).
 
 ---
 
@@ -115,6 +134,13 @@ checkpoint:
 ---
 
 ## Step 2: Pre-Verify
+
+**Default behavior:**
+- **Feature mode**: SKIP pre-verify (TDD expects tests to be red initially)
+- **Prep mode**: Required unless `--reuse-baseline` and cached baseline is valid
+- **Strict mode**: Always pre-verify before each task
+
+**When to run** (prep mode or `--strict`):
 
 Use Task tool with subagent_type="mdt:verify" and prompt:
 
@@ -169,6 +195,15 @@ file_targets:
 
 ## Step 4: Post-Verify
 
+**Default behavior (fast mode):**
+- **Batch**: Defer verification until batch boundary (every 3 tasks by default)
+- **Scoped**: Only run mapped tests for changed files (not full suite)
+- **Smoke tests**: Run only at final batch unless `--strict` or `--no-smoke`
+
+**When to run:**
+- At batch boundary (tasks 3, 6, 9, ...) or final task
+- After each task if `--strict` mode
+
 Use Task tool with subagent_type="mdt:verify" and prompt:
 
 ```yaml
@@ -179,10 +214,11 @@ part:
   test_filter: "{filter}"
 project:
   test_command: "{test_command}"
-files_to_check: {files_changed from code-agent}
+files_to_check: {accumulated files_changed from batch}
 scope_boundaries: {from tasks/tests}
+scoped: true  # default: only run mapped tests
 smoke_test:
-  command: "{smoke_test_command|empty}"
+  command: "{smoke_test_command|empty}"  # only at final batch or --strict
   expected: "{expected_behavior|empty}"
 ```
 
@@ -196,7 +232,7 @@ Expected verdicts from agent:
 - `skipped` (only if smoke test not provided)
 
 Decision:
-- `all_pass` → COMPLETE (scope OK or minor spillover)
+- `all_pass` → COMPLETE batch (scope OK or minor spillover)
 - `tests_fail` or `regression` → FIX (if attempts < 2)
 - `scope_breach` → STOP (or refactor out of band)
 - `duplication` → STOP
@@ -207,22 +243,42 @@ Decision:
 
 ## Step 5: Fix Loop
 
-Use Task tool with subagent_type="mdt:fix" and prompt containing failure context and retry count.
-Max 2 attempts per task.
+Use Task tool with subagent_type="mdt:fix" and prompt:
+
+```yaml
+operation: fix
+failure_context:
+  verdict: "tests_fail" | "regression" | "behavioral_fail"
+  failing_tests: ["test name or pattern"]
+  error_output: "{truncated stderr, max 500 chars}"
+  scope_issue: "{description if scope_breach or duplication, else null}"
+task_spec:
+  number: "{N.N}"
+  title: "{task_title}"
+files_changed: ["{paths from implementation}"]
+attempt: 1 | 2
+max_attempts: 2
+```
+
+Max 2 attempts per task. If fix fails twice, STOP and surface to user.
 
 ---
 
 ## Step 6: Mark Progress
 
-- Update `tasks.md`: mark task complete
-- Update `tests.md`: mark tests GREEN
-- Clear checkpoint or advance to next task
+- Update `.checkpoint.yaml`: advance `task_id`, reset `fix_attempts`, update `batch.current_count`
+- Update `tasks.md`: change `[ ]` → `[x]` for completed task
 
 ---
 
 ## Step 7: Completion Verify
 
 Run **after all tasks are complete** for the selected part or full ticket.
+
+**Optimizations:**
+- **Early exit**: If all batch post-verifies passed with `all_pass`, skip `test_command` (already validated)
+- **Prep mode simplification**: Skip requirements traceability (no new requirements); only run mechanical checks
+- **Parallel execution**: Run remaining commands concurrently (build/lint/typecheck)
 
 Use Task tool with subagent_type="mdt:verify-complete" and prompt:
 
@@ -231,21 +287,22 @@ cr_key: "{CR-KEY}"
 mode: "feature" | "prep" | "bugfix" | "docs"
 project:
   build_command: "{build_command or null}"
-  test_command: "{test_command or null}"
+  test_command: "{test_command or null}"  # skip if all batch verifies passed
   lint_command: "{lint_command or null}"
   typecheck_command: "{typecheck_command or null}"
 artifacts:
   cr_content: "{full CR markdown}"
-  requirements: "{TICKETS_PATH}/{CR-KEY}/requirements.md content or null"
+  requirements: "{TICKETS_PATH}/{CR-KEY}/requirements.md content or null"  # null for prep mode
   tasks: "{TICKETS_PATH}/{CR-KEY}/tasks.md content}"
-  bdd: "{TICKETS_PATH}/{CR-KEY}/bdd.md content or null}"
+  bdd: "{TICKETS_PATH}/{CR-KEY}/bdd.md content or null}"  # null for prep mode
 changed_files: [{files_changed across implementation}]
 verification_round: 0 | 1 | 2
+batch_verifies_clean: true | false  # enables early exit optimization
 ```
 
 The agent performs:
-1. **Mechanical checks**: Run provided commands (build, test, lint, typecheck)
-2. **Semantic analysis**: Read requirements → search changed_files → verify implementation matches spec
+1. **Mechanical checks**: Run provided commands (build, test, lint, typecheck) — **in parallel**
+2. **Semantic analysis** (feature/bugfix only): Read requirements → search changed_files → verify implementation matches spec
 
 Expected verdicts from agent:
 - `pass`
@@ -288,7 +345,7 @@ MEDIUM/LOW issues:
 1. Orchestrator owns decisions; agents only report.
 2. All agent responses must be JSON.
 3. Always checkpoint after each step.
-4. Feature mode requires behavioral verification unless user explicitly skips.
+4. **Fast mode is default**: batch 3, scoped-post, reuse-baseline.
 5. Prep mode never proceeds on unexpected RED baseline.
 6. Max 2 fix attempts per task.
 7. Completion verification is mandatory before declaring implementation complete.

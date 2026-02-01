@@ -24,6 +24,7 @@
     "./commands/implement.md"
   ],
   "agents": [
+    "./agents/cmd-agent.md",
     "./agents/verify.md",
     "./agents/code.md",
     "./agents/fix.md",
