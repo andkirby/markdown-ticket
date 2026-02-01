@@ -63,10 +63,9 @@ The `/mdt:implement-agentic` command uses a state machine with specialized subag
 | `mdt:verify-complete` | Requirements traceability + full quality checks |
 | `mdt:code`          | Write minimal code for task specs              |
 | `mdt:fix`           | Apply minimal fixes for failures               |
-| `mdt:test`          | Execute tests and return JSON                  |
 
 **Features**:
-- Checkpoint-based state persisted to `.checkpoint.json`
+- Checkpoint-based state persisted to `.checkpoint.yaml`
 - Resumable execution: `/mdt:implement-agentic {CR-KEY} --continue`
 - Part-aware: `--part {X.Y}` for multi-part CRs
 - Prep mode: `--prep` for refactoring workflows
