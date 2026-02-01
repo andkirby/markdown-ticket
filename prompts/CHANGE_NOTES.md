@@ -2,6 +2,62 @@
 
 ## Recent Updates
 
+### 2026-02-02 - Agentic Implementation v3: Flow Alignment and Agent Optimization
+
+**Problem**: The agentic implementation workflow had several inconsistencies: flow steps (10) didn't match detailed sections (8), agent prompts used JSON input while orchestrator sent YAML, frontmatter descriptions were bloated with verbose XML examples, the `mdt:test` agent was redundant (absorbed into `mdt:verify`), and the fix agent lacked a proper YAML schema.
+
+**Solution**: Aligned flow with step sections, switched all agent inputs to YAML format, simplified frontmatter, deleted redundant test agent, and added proper schemas for all agents.
+
+**Changes Made**:
+
+1. **implement-agentic.md (v3) - Flow and schema fixes**:
+   - Reduced Orchestrator Flow from 10 steps to 8 (matches Step 1-8 sections)
+   - Step 5 (Fix Loop): Added YAML prompt schema with `failure_context`, `attempt`, `max_attempts`
+   - Step 6 (Mark Progress): Simplified to checkpoint + tasks.md `[x]` markers
+   - Checkpoint file: `.checkpoint.json` → `.checkpoint.yaml` (LLM-friendlier format)
+
+2. **agents/test.md - DELETED**:
+   - Functionality absorbed into `mdt:verify` agent
+   - Removed stale reference from CLAUDE.md
+
+3. **agents/verify.md - Simplified**:
+   - Frontmatter: ~1200 chars → ~60 chars (removed XML examples)
+   - Input format: JSON → YAML (matches orchestrator prompts)
+
+4. **agents/code.md - Simplified**:
+   - Frontmatter: ~1400 chars → ~70 chars
+   - Input format: JSON → YAML
+
+5. **agents/fix.md - Simplified**:
+   - Frontmatter: ~1100 chars → ~80 chars
+   - Input format: JSON → YAML (aligned with Step 5 schema)
+
+6. **agents/cmd-agent.md - Clarified purpose**:
+   - Frontmatter: ~400 chars → ~60 chars
+   - Added explanation: namespace isolation prevents skill resolution conflicts when mdt commands invoked from other projects
+
+7. **CLAUDE.md - Updated agent table**:
+   - Removed `mdt:test` row (deleted agent)
+   - Updated checkpoint reference: `.checkpoint.json` → `.checkpoint.yaml`
+
+**Impact**:
+- Orchestrator flow now clearly maps to detailed step sections (1:1)
+- All agents use consistent YAML input format (no JSON/YAML mismatch)
+- Smaller frontmatter reduces plugin.json size and improves readability
+- Fix agent has proper schema for structured failure context
+- YAML checkpoint format is more forgiving of LLM formatting issues
+
+**Files Changed**:
+- `prompts/mdt/commands/implement-agentic.md`
+- `prompts/mdt/agents/test.md` (deleted)
+- `prompts/mdt/agents/verify.md`
+- `prompts/mdt/agents/code.md`
+- `prompts/mdt/agents/fix.md`
+- `prompts/mdt/agents/cmd-agent.md`
+- `prompts/CLAUDE.md`
+
+---
+
 ### 2026-01-31 - Language-Specific References: Eliminate Project Bias from Commands
 
 **Problem**: MDT commands contained project-specific examples (TypeScript/Playwright selectors, `LanguageDetector` service names, JavaScript closures, Node.js test patterns) that confused users working on Python, Go, Rust, or other projects. The commands weren't truly language-agnostic despite being designed for any project.
