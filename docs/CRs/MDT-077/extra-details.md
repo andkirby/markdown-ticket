@@ -70,7 +70,7 @@ process.exit(CLI_ERROR_CODES[errorType])
 **Completed Changes**:
 - ✅ Global registry supports both minimal reference and complete configuration based on strategy
 - ✅ Project-First mode: Global registry stores minimal reference (`path`, `active`, `dateRegistered`)
-- ✅ Global-Only mode: Global registry stores complete project configuration[ui_improvement.txt](..%2F..%2F..%2F..%2F..%2Fui_improvement.txt)
+- ✅ Global-Only mode: Global registry stores complete project configuration
 - ✅ Local config contains complete project definition without legacy fields
 - ✅ Removed deprecated fields: `startNumber`, `counterFile`, `lastAccessed`, `version`
 - ✅ Ticket numbering now handled by file system scanning, not counter files
