@@ -102,7 +102,7 @@ await testEnv.cleanup()
 - Unique temp directory: `/tmp/mdt-test-{uuid}/`
 - Isolated ports to avoid conflicts
 - Auto-cleanup on process termination (SIGINT, SIGTERM, etc.)
-- Sets `process.env.CONFIG_DIR` for MCP server use
+- Automatically sets `process.env.CONFIG_DIR` for MCP server and CLI testing
 
 ### ProjectFactory
 
@@ -371,16 +371,16 @@ test('should create CRs with dependencies', async () => {
 
 ## Best Practices
 
-### 1. Always Clean Up
+### 1. Always Clean Up (in correct order)
 
 ```typescript
 test.afterAll(async () => {
   if (testServer)
-    await testServer.stopAll()
+    await testServer.stopAll()        // Stop servers first
   if (projectFactory)
-    await projectFactory.cleanup()
+    await projectFactory.cleanup()    // Then cleanup factory
   if (testEnv && testEnv.isInitialized())
-    await testEnv.cleanup()
+    await testEnv.cleanup()           // Finally cleanup environment
 })
 ```
 
@@ -453,12 +453,12 @@ TEST_MCP_PORT=8002
 
 ## Environment Variables
 
-| Variable             | Description           | Default                |
-| -------------------- | --------------------- | ---------------------- |
-| `TEST_FRONTEND_PORT` | Frontend test port    | `6173`                 |
-| `TEST_BACKEND_PORT`  | Backend test port     | `4001`                 |
-| `TEST_MCP_PORT`      | MCP test port         | `4002`                 |
-| `CONFIG_DIR`         | Config directory path | Set by TestEnvironment |
+| Variable             | Description                              | Default                       |
+| -------------------- | ---------------------------------------- | ----------------------------- |
+| `TEST_FRONTEND_PORT` | Frontend test port                       | `6173`                        |
+| `TEST_BACKEND_PORT`  | Backend test port                        | `4001`                        |
+| `TEST_MCP_PORT`      | MCP test port                            | `4002`                        |
+| `CONFIG_DIR`         | Config directory path (auto-set by setup) | Set by TestEnvironment.setup() |
 
 ## Troubleshooting
 
@@ -511,13 +511,13 @@ const cr = await projectFactory.createTestCR(project.key, { ... });  // Use proj
 
 **Error:** Temp directories not removed
 
-**Solution:** Cleanup runs on SIGINT/SIGTERM, but ensure explicit cleanup:
+**Solution:** Cleanup runs on SIGINT/SIGTERM, but ensure explicit cleanup in correct order:
 
 ```typescript
 test.afterAll(async () => {
-  await testServer.stopAll() // Stop servers first
-  await projectFactory.cleanup()
-  await testEnv.cleanup() // Then cleanup environment
+  await testServer.stopAll()     // 1. Stop servers first
+  await projectFactory.cleanup() // 2. Then cleanup factory
+  await testEnv.cleanup()        // 3. Finally cleanup environment
 })
 ```
 
@@ -536,16 +536,16 @@ See `tests/e2e/test-lib-e2e.spec.ts` for comprehensive examples covering:
 
 ### TestEnvironment
 
-| Method                            | Returns         | Description                                  |
-| --------------------------------- | --------------- | -------------------------------------------- |
-| `setup()`                         | `Promise<void>` | Initialize environment with temp directories |
-| `cleanup()`                       | `Promise<void>` | Remove all temporary files                   |
-| `getTempDirectory()`              | `string`        | Get temporary directory path                 |
-| `getConfigDirectory()`            | `string`        | Get config directory path                    |
-| `getPortConfig()`                 | `PortConfig`    | Get port configuration                       |
-| `getId()`                         | `string`        | Get unique test session ID                   |
-| `isInitialized()`                 | `boolean`       | Check if environment is initialized          |
-| `registerCleanupHandler(handler)` | `void`          | Register custom cleanup handler              |
+| Method                            | Returns         | Description                                     |
+| --------------------------------- | --------------- | ----------------------------------------------- |
+| `setup()`                         | `Promise<void>` | Initialize environment with temp directories    |
+| `cleanup()`                       | `Promise<void>` | Remove all temporary files                     |
+| `getTempDirectory()`              | `string`        | Get temporary directory path                   |
+| `getConfigDirectory()`            | `string`        | Get config directory path (sets CONFIG_DIR env) |
+| `getPortConfig()`                 | `PortConfig`    | Get port configuration                          |
+| `getId()`                         | `string`        | Get unique test session ID                      |
+| `isInitialized()`                 | `boolean`       | Check if environment is initialized             |
+| `registerCleanupHandler(handler)` | `void`          | Register custom cleanup handler                |
 
 ### ProjectFactory
 
@@ -555,7 +555,7 @@ See `tests/e2e/test-lib-e2e.spec.ts` for comprehensive examples covering:
 | `createTestCR(projectCode, crData)`       | `Promise<TestCRResult>`   | Create single CR               |
 | `createMultipleCRs(projectCode, crsData)` | `Promise<TestCRResult[]>` | Create multiple CRs            |
 | `createTestScenario(scenarioType?)`       | `Promise<TestScenario>`   | Create pre-configured scenario |
-| `cleanup()`                               | `Promise<void>`           | Clean up resources             |
+| `cleanup()`                               | `Promise<void>`           | Clean up factory resources     |
 
 ### TestServer
 
