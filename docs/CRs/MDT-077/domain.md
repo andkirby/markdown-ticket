@@ -1,84 +1,54 @@
 # Domain Constraints: MDT-077
 
-**Context**: Project Management → touches: Configuration Storage, CLI Interface, Document Discovery
-
-## Domain Visualization
-
-```mermaid
-graph TB
-    subgraph "Project Management Context"
-        Project[Project<br/>Aggregate Root]
-
-        subgraph "Internal Entities"
-            Config[ProjectConfig<br/>Internal Entity]
-            Validator[ProjectValidator<br/>Value Object]
-        end
-
-        subgraph "Three Strategy Pattern"
-            GlobalOnly[Global-Only Mode]
-            ProjectFirst[Project-First Mode<br/>Default]
-            AutoDiscovery[Auto-Discovery Mode]
-        end
-
-        subgraph "External Contexts"
-            ConfigStorage[Configuration Storage]
-            CLI[CLI Interface]
-            DocDiscovery[Document Discovery]
-        end
-    end
-
-    %% Primary relationships
-    Project --> Config
-    Project --> Validator
-    Project --> GlobalOnly
-    Project --> ProjectFirst
-    Project --> AutoDiscovery
-
-    %% Cross-context interactions
-    Project -.-> ConfigStorage
-    Project -.-> CLI
-    Project -.-> DocDiscovery
-
-    %% Styling
-    classDef aggregate fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#333
-    classDef internal fill:#f3e5f5,stroke:#4a148c,color:#333
-    classDef strategy fill:#e8f5e8,stroke:#1b5e20,color:#333
-    classDef external fill:#fff3e0,stroke:#e65100,color:#333
-
-    class Project aggregate
-    class Config,Validator internal
-    class GlobalOnly,ProjectFirst,AutoDiscovery strategy
-    class ConfigStorage,CLI,DocDiscovery external
-```
+**Context**: Project Management → touches: Configuration Storage, CLI Interface
 
 ## Aggregates
 
 | Concept | Role | Contains | Grounded |
 |---------|------|----------|----------|
-| `Project` | Root | Config, Registry, Documents | ✅ `Project` class |
-| `ProjectConfig` | Internal | — | ✅ `ProjectConfig` interface |
+| `Project` | Root | Config, Registry | ✅ `Project` interface |
+| `LocalProjectConfig` | Internal | — | ✅ `LocalProjectConfig` interface |
 | `ProjectValidator` | Value | — | ✅ `ProjectValidator` class |
-| `Three-Strategy Config` | Value | — | (new) |
+| `ProjectService` | Application | Operations | ✅ `ProjectService` class |
+| Configuration Strategy | Value | — | (new) - Three deployment modes |
 
 ## Invariants
 
 | Rule | Scope | Enforce |
 |------|-------|---------|
-| Project code must be 2-5 uppercase letters | `Project` | In aggregate |
-| Project identifier must match directory name | `Project` | At boundary |
-| Global registry path must exist and be accessible | `Project` | At boundary |
-| Local config location defines project root | `ProjectConfig` | In aggregate |
+| Project code must be 2-5 uppercase letters (BR-2.1) | `Project` | In aggregate |
+| Project identifier must equal directory name exactly (BR-2.2) | `Project` | At boundary |
+| Project code must be unique across all projects (BR-2.1) | `Project` | At boundary |
+| Project name must be non-empty string (BR-2.6) | `Project` | In aggregate |
+| Project path must exist and be accessible (BR-2.7) | `Project` | At boundary |
+| Tickets path automatically excluded from document discovery (BR-2.4) | `Project` | In aggregate |
+| Only `LocalProjectConfig` - `ProjectConfig` deprecated (C2) | `Project` | In aggregate |
+| Configuration writes must go through repository class (C4) | `Project` | At boundary |
 
 ## Language
 
-| CR Term | Code Term | Status |
-|---------|-----------|--------|
+| CR/Requirements Term | Code Term | Status |
+|---------------------|-----------|--------|
+| Project | `Project` interface | ✅ Aligned |
+| Local Project Config | `LocalProjectConfig` interface | ✅ Aligned |
+| Project Config (Legacy) | `ProjectConfig` interface | ⚠️ Deprecated - must delete (C2) |
+| Project Validator | `ProjectValidator` class | ✅ Aligned |
+| Project Service | `ProjectService` class | ✅ Aligned |
 | Three-Strategy Configuration | (new) | No implementation yet |
-| Project | `Project` class | ✅ Aligned |
-| Project Manager | `ProjectManager` class | ✅ Aligned |
-| Global Registry | Global registry storage | ✅ Aligned |
-| Local Config | `ProjectConfig` interface | ✅ Aligned |
-| Document Discovery | Document discovery service | ✅ Aligned |
+| Global-Only Mode | (new) | Strategy 1 - complete definition in global registry |
+| Project-First Mode | (new) | Strategy 2 (default) - minimal global, complete local |
+| Auto-Discovery Mode | (new) | Strategy 3 - local config only, no global entry |
+| ConfigurationRepository | (new) | Must create for all .toml writes (C4) |
+
+## Cross-Context
+
+| Operation | From | To | Pattern |
+|-----------|------|----|---------|
+| Create project via CLI | CLI Interface | Project Management | Service |
+| Read project via Web UI | Web UI | Project Management | Service |
+| Read project via MCP | MCP | Project Management | Service |
+| Discover projects | Configuration Storage | Project Management | Event (file system watch) |
+| Validate configuration | All interfaces | Project Management | Service (shared validation) |
 
 ---
 *Generated by /mdt:domain-lens — constraints for /mdt:architecture*
