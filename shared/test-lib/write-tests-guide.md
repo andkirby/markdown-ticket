@@ -1,6 +1,6 @@
 # Layered Manual: Using shared/test-lib
 
-A concise guide for using the MDT-092 isolated test environment library with 3 progressive levels.
+A concise guide for using the MDT isolated test environment library with 3 progressive levels.
 
 ## Quick Overview
 
@@ -24,6 +24,8 @@ test.describe('Level 1: Isolation', () => {
     await testEnv.setup()
 
     console.log('Temp dir:', testEnv.getTempDirectory())
+    console.log('Config dir:', testEnv.getConfigDirectory())
+    console.log('Session ID:', testEnv.getId())
     console.log('Ports:', testEnv.getPortConfig())
   })
 
@@ -38,6 +40,9 @@ test.describe('Level 1: Isolation', () => {
     expect(ports.frontend).toBe(6173) // Test ports
     expect(ports.backend).toBe(4001) // Not dev ports
     expect(ports.mcp).toBe(4002)
+
+    // Check if initialized
+    expect(testEnv.isInitialized()).toBe(true)
   })
 })
 ```
@@ -46,11 +51,14 @@ test.describe('Level 1: Isolation', () => {
 
 ```typescript
 class TestEnvironment {
-  async setup(): Promise<void> // Initialize environment
-  async cleanup(): Promise<void> // Remove all temp files
-  getTempDirectory(): string // Unique temp directory path
-  getPortConfig(): PortConfig // Test port configuration
-  createSubdir(name: string): string // Create subdirectory
+  async setup(): Promise<void>              // Initialize environment
+  async cleanup(): Promise<void>            // Remove all temp files
+  getTempDirectory(): string                // Unique temp directory path
+  getConfigDirectory(): string              // Config directory path (sets CONFIG_DIR env var)
+  getPortConfig(): PortConfig               // Test port configuration
+  getId(): string                           // Unique test session ID
+  isInitialized(): boolean                  // Check if environment is ready
+  registerCleanupHandler(handler): void    // Register custom cleanup callback
 }
 ```
 
@@ -59,11 +67,12 @@ class TestEnvironment {
 - **Unique temp directory**: `/tmp/mdt-test-{uuid}/`
 - **Port isolation**: 6173 (frontend), 4001 (backend), 4002 (mcp)
 - **Auto cleanup**: Removes all files on cleanup
-- **Process safety**: Cleanup runs even if tests crash
+- **Process safety**: Cleanup runs even if tests crash (SIGINT, SIGTERM, etc.)
+- **Auto CONFIG_DIR**: Sets `process.env.CONFIG_DIR` to isolated config directory
 
 ### Custom Global Configuration
 
-TestEnvironment creates an empty config directory for MCP server use. You can add custom global config:
+TestEnvironment creates an empty config directory. The `CONFIG_DIR` environment variable is automatically set for MCP server use. You can add custom global config:
 
 ```typescript
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -73,7 +82,7 @@ test.beforeAll(async () => {
   testEnv = new TestEnvironment()
   await testEnv.setup()
 
-  const configDir = testEnv.getConfigDirectory()
+  const configDir = testEnv.getConfigDirectory()  // Already created by setup()
 
   // Create projects subdirectory
   mkdirSync(join(configDir, 'projects'), { recursive: true })
@@ -100,7 +109,7 @@ code = "TEST"
 })
 ```
 
-**Note**: TestEnvironment only creates the config directory structure. Global config files are not created automatically - you must create them manually if needed for specific test scenarios.
+**Note**: TestEnvironment only creates the empty config directory structure. Global config files must be created manually if needed for specific test scenarios.
 
 ---
 
@@ -123,7 +132,8 @@ test.describe('Level 2: Projects', () => {
   })
 
   test.afterAll(async () => {
-    await testEnv.cleanup()
+    await projectFactory.cleanup()  // Clean up factory resources
+    await testEnv.cleanup()         // Then clean up environment
   })
 
   test('should create empty project', async () => {
@@ -159,6 +169,9 @@ class ProjectFactory {
 
   // Create with pre-configured CRs
   async createTestScenario(type?: 'standard-project' | 'complex-project'): Promise<TestScenario>
+
+  // Clean up factory resources
+  async cleanup(): Promise<void>
 }
 ```
 
@@ -166,13 +179,13 @@ class ProjectFactory {
 
 ```typescript
 interface ProjectConfig {
-  name?: string // Project display name
-  code?: string // Project code (auto-generated if omitted)
+  name?: string         // Project display name
+  code?: string         // Project code (auto-generated if omitted)
   description?: string
-  ticketsPath?: string // Path for CRs (default: 'docs/CRs')
+  ticketsPath?: string  // Path for CRs (default: 'docs/CRs')
   repository?: string
-  documentPaths?: string[] // Document scan paths (default: ['docs'])
-  excludeFolders?: string[] // Excluded folders (default: ['node_modules', '.git'])
+  documentPaths?: string[]       // Document scan paths (default: ['docs'])
+  excludeFolders?: string[]      // Excluded folders (default: ['node_modules', '.git'])
 }
 ```
 
@@ -206,6 +219,7 @@ test.describe('Level 3: Complete Scenario', () => {
   })
 
   test.afterAll(async () => {
+    await projectFactory.cleanup()
     await testEnv.cleanup()
   })
 
@@ -271,21 +285,21 @@ async createMultipleCRs(projectCode: string, crsData: TestCRData[]): Promise<Tes
 
 ```typescript
 interface TestCRData {
-  title: string // Required
-  type: CRType // Required: 'Feature Enhancement', 'Bug Fix', etc.
-  status?: CRStatus // Optional: Defaults to 'Proposed'
-  priority?: CRPriority // Optional: Defaults to 'Medium'
+  title: string              // Required
+  type: CRType               // Required: 'Feature Enhancement', 'Bug Fix', etc.
+  status?: CRStatus          // Optional: Defaults to 'Proposed'
+  priority?: CRPriority      // Optional: Defaults to 'Medium'
   phaseEpic?: string
   assignee?: string
-  dependsOn?: string // CR code this depends on
-  blocks?: string // CR code this blocks
-  content: string // Required: CR description
+  dependsOn?: string         // CR code this depends on
+  blocks?: string            // CR code this blocks
+  content: string            // Required: CR description
 }
 
 interface TestCRResult {
   success: boolean
-  crCode?: string // e.g., 'FULL-001'
-  filePath?: string // Full path to CR file
+  crCode?: string            // e.g., 'FULL-001'
+  filePath?: string          // Full path to CR file
   error?: string
 }
 ```
@@ -321,21 +335,25 @@ To be filled...
 
 ## Best Practices
 
-1. **Always cleanup** - Use `test.afterAll` to call `testEnv.cleanup()`
+1. **Always cleanup** - Use `test.afterAll` to call both `projectFactory.cleanup()` and `testEnv.cleanup()`
 2. **Use unique codes** - Let system generate project codes or add timestamps
 3. **Check results** - Verify `success` property of CR creation results
 4. **Port isolation** - Tests use 6173/4001/4002, development uses 5173/3001/3002
+5. **Cleanup order** - Stop servers, then cleanup factory, then cleanup environment
 
 ## Quick Reference
 
 ```typescript
-import type { PortConfig, ProjectConfig, TestCRData, TestCRResult } from '@mdt/shared/test-lib'
-// All imports
+import type {
+  PortConfig,
+  ProjectConfig,
+  TestCRData,
+  TestCRResult,
+} from '@mdt/shared/test-lib'
+
 import {
-
   ProjectFactory,
-
-  TestEnvironment
+  TestEnvironment,
 } from '@mdt/shared/test-lib'
 
 // Environment variables (optional)
@@ -354,3 +372,25 @@ shared/test-lib/
 ├── types.ts                   # All type definitions
 └── index.ts                   # Main exports
 ```
+
+## CLI Testing Pattern (Alternative)
+
+For CLI integration tests, you can also use the pattern from `shared/tools/__tests__/project-management/`:
+
+```typescript
+import { TestEnvironment } from '@mdt/shared/test-lib'
+
+describe('CLI Tests', () => {
+  let testEnv: TestEnvironment
+
+  beforeAll(async () => {
+    testEnv = new TestEnvironment()
+    await testEnv.setup()
+  })
+
+  // Use testEnv.getConfigDirectory() to set CONFIG_DIR env var
+  // This isolates CLI commands from your actual project config
+})
+```
+
+The `CONFIG_DIR` environment variable is automatically set by `TestEnvironment.setup()`, ensuring your CLI commands use the isolated test configuration instead of your actual project configuration.
