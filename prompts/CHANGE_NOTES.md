@@ -2,6 +2,54 @@
 
 ## Recent Updates
 
+### 2026-02-05 - Plugin Marketplace Installation System
+
+**Problem**: The old `install-claude.sh` script used a manual file-copying approach to install MDT commands. This was fragile, didn't integrate with Claude Code's plugin system, and couldn't properly bundle the MCP server with the plugin. Additionally, the MCP server needed different configurations for local development vs Docker environments.
+
+**Solution**: Migrated to Claude Code's official marketplace plugin system with a smart installer that generates environment-appropriate MCP configuration.
+
+**Changes Made**:
+
+1. **install-plugin.sh (new)** - Smart marketplace installer:
+   - Replaces `install-claude.sh` with marketplace-based installation
+   - `--local` flag: Generates `.mcp.json` for local Node.js MCP server at `$PROJECT_ROOT/mcp-server/dist/index.js`
+   - `--docker` flag: Generates `.mcp.json` for Docker HTTP MCP server at `http://localhost:3012/mcp`
+   - Auto-detects project root from script location (portable across environments)
+   - Validates MCP server exists before generating config
+   - Removes existing marketplace before reinstalling
+   - Can be run from any directory (uses absolute paths)
+   - MCP server name: `"all"` (matches the mdt-all MCP scope)
+
+2. **.claude-plugin/marketplace.json (new)** - Marketplace configuration:
+   - Marketplace name: `"markdown-ticket"`
+   - Plugin name: `"mdt"`
+   - Source: `./mdt` (plugin directory)
+   - Keywords: tickets, kanban, markdown, workflow, tdd, bdd, requirements
+
+3. **install-claude.sh - DELETED**:
+   - Removed old manual installation script in favor of marketplace system
+
+**Impact**:
+- Official Claude Code plugin marketplace integration
+- Portable MCP configuration across different environments (local/Docker)
+- Automatic plugin discovery and management via Claude Code CLI
+- Cleaner installation/uninstallation via `claude plugin marketplace`
+- Proper MCP server bundling with the plugin
+
+**Files Changed**:
+- `prompts/install-plugin.sh` (new)
+- `prompts/.claude-plugin/marketplace.json` (new)
+- `prompts/install-claude.sh` (deleted)
+
+**Usage**:
+```bash
+# From any directory
+/path/to/markdown-ticket/prompts/install-plugin.sh --local   # Local Node.js MCP
+/path/to/markdown-ticket/prompts/install-plugin.sh --docker  # Docker HTTP MCP
+```
+
+---
+
 ### 2026-02-05 - Smart Project Area Detection in CR Creation
 
 **Problem**: The `/mdt:ticket-creation` workflow used generic area names like "Frontend", "Backend", "API" when inferring affected areas. These generic terms often didn't match actual project structures, leading to CRs that didn't reflect the real codebase organization and caused confusion during implementation.
