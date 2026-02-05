@@ -23,7 +23,7 @@ Infer ALL parameters from context before asking user:
 | `CR_TYPE` | `Feature Enhancement`, `Bug Fix`, `Architecture`, `Technical Debt`, `Documentation`, `Research` | Infer from keywords (fix→Bug, add→Feature, refactor→Debt, investigate→Research) |
 | `REQUIREMENTS_SCOPE` | `full`, `brief`, `preservation`, `none` | See defaults table below |
 | `MOTIVATION` | `User requirement`, `Technical limitation`, `Bug/defect`, `Performance issue`, `Maintenance burden`, `Architectural gap` | Infer from context |
-| `AREAS` | `Frontend`, `Backend`, `API`, `Database`, `Config`, `Shared`, `Tests` | Infer from mentioned paths/keywords |
+| `AREAS` | Infer from project structure (e.g., `src/`, `lib/`, `tests/`, `api/`) | Scan top-level dirs + mentioned paths |
 | `VERIFICATION` | `Files exist`, `Tests pass`, `Endpoints work`, `Performance met`, `Manual`, `Docs updated` | Based on CR_TYPE |
 
 **REQUIREMENTS_SCOPE defaults**:
@@ -41,28 +41,24 @@ Infer ALL parameters from context before asking user:
 
 Analyze user input, conversation history, and codebase context. Infer values for ALL parameters above.
 
-### 2. Present for Confirmation
+For `AREAS`: List top-level directories in the project (e.g., `ls -d */`) and use actual folder names. Do NOT use generic terms like "Frontend/Backend/Shared" unless those folders exist.
 
-Use `AskUserQuestion` with inferred values in the question text:
+### 2. Confirm Settings
 
-```
-Question: Based on "{summary}", I suggest:
+Call `AskUserQuestion` with inferred values as a compact list (NOT a table):
 
-| Parameter | Value | Reason |
-|-----------|-------|--------|
-| Mode | {SPEC_MODE} | {why} |
-| Type | {CR_TYPE} | {why} |
-| Scope | {REQUIREMENTS_SCOPE} | {why} |
-| Motivation | {MOTIVATION} | {why} |
-| Areas | {AREAS} | {why} |
-| Verification | {VERIFICATION} | {why} |
-
-Confirm or refine?
-
-Header: Confirm
-Options:
-- Confirm: Proceed with these settings (Recommended)
-- Refine: Adjust specific values
+```json
+{
+  "questions": [{
+    "question": "Create {CR_TYPE} CR for \"{summary}\"?\n\n• Mode: {SPEC_MODE} — {why}\n• Scope: {REQUIREMENTS_SCOPE}\n• Areas: {AREAS}\n• Verify: {VERIFICATION}",
+    "header": "Confirm",
+    "options": [
+      {"label": "Confirm", "description": "Create CR with these settings (Recommended)"},
+      {"label": "Refine", "description": "Adjust parameters"}
+    ],
+    "multiSelect": false
+  }]
+}
 ```
 
 ### 3. Handle Response
@@ -77,7 +73,7 @@ Options:
 | `CR_TYPE` | "Type: Feature / Bug Fix / Architecture / Tech Debt / Docs / Research?" |
 | `REQUIREMENTS_SCOPE` | "Scope: full / brief / preservation / none?" |
 | `MOTIVATION` | "Trigger: User need / Tech limitation / Bug / Performance / Maintenance / Arch gap?" |
-| `AREAS` | "Areas involved? (multi-select: Frontend, Backend, API, DB, Config, Shared, Tests)" |
+| `AREAS` | "Areas involved? (multi-select from project's actual directories)" |
 | `VERIFICATION` | "Verify by? (multi-select: Files exist, Tests, Endpoints, Perf, Manual, Docs)" |
 
 ### 4. Execute
