@@ -1,0 +1,15 @@
+{
+  "name": "markdown-ticket",
+  "owner": {
+    "name": "andkirby"
+  },
+  "plugins": [
+    {
+      "name": "mdt",
+      "source": "./mdt",
+      "description": "MDT (Markdown Ticket) workflow commands - CR creation, requirements, BDD, architecture, testing, tasks, implementation with agentic verification, technical debt detection, and workflow suggestions",
+      "version": "1.0.0",
+      "keywords": ["tickets", "kanban", "markdown", "workflow", "tdd", "bdd", "requirements"]
+    }
+  ]
+}
