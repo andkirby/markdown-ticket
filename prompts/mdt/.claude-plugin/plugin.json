@@ -28,7 +28,6 @@
     "./agents/verify.md",
     "./agents/code.md",
     "./agents/fix.md",
-    "./agents/test.md",
     "./agents/verify-complete.md"
   ]
 }

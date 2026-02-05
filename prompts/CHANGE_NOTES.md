@@ -2,6 +2,37 @@
 
 ## Recent Updates
 
+### 2026-02-05 - Smart Project Area Detection in CR Creation
+
+**Problem**: The `/mdt:ticket-creation` workflow used generic area names like "Frontend", "Backend", "API" when inferring affected areas. These generic terms often didn't match actual project structures, leading to CRs that didn't reflect the real codebase organization and caused confusion during implementation.
+
+**Solution**: Enhanced the area inference logic to scan actual project directories and use real folder names instead of generic terms.
+
+**Changes Made**:
+
+1. **ticket-creation.md (v9 - minor update)** - Project-aware area inference:
+   - Updated `AREAS` parameter inference to scan top-level directories (`ls -d */`)
+   - Changed from generic "Frontend/Backend/Shared" to actual folder names like `src/`, `lib/`, `tests/`, `api/`
+   - Added explicit instruction: "List top-level directories in the project...use actual folder names. Do NOT use generic terms"
+   - Updated confirmation display to use compact bullet list instead of verbose table
+   - Updated refine mode questions to reference actual directories
+
+2. **plugin.json** - Cleanup:
+   - Removed stale reference to `./agents/test.md` (already deleted in v3 update)
+   - Agent list now accurately reflects current state
+
+**Impact**:
+- CRs now accurately reflect actual project structure (e.g., `src/`, `lib/` instead of "Frontend")
+- Reduces confusion when implementing CRs across different project layouts
+- Works seamlessly with both monorepo and single-project structures
+- More accurate impact area detection for architecture and test planning
+
+**Files Changed**:
+- `prompts/mdt/commands/ticket-creation.md` (v9)
+- `prompts/mdt/.claude-plugin/plugin.json`
+
+---
+
 ### 2026-02-02 - Agentic Implementation v3: Flow Alignment and Agent Optimization
 
 **Problem**: The agentic implementation workflow had several inconsistencies: flow steps (10) didn't match detailed sections (8), agent prompts used JSON input while orchestrator sent YAML, frontmatter descriptions were bloated with verbose XML examples, the `mdt:test` agent was redundant (absorbed into `mdt:verify`), and the fix agent lacked a proper YAML schema.
