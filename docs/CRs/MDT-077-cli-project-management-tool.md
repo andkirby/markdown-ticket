@@ -94,17 +94,6 @@ Performance measurements is out of scope.
 - Task breakdown for implementation
 - Testing implementation details
 
-## Architecture Design
-
-> **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
-
-**Summary**:
-- Pattern: Domain-Driven Design (DDD) with Factory Strategy Pattern
-- Components: 7 major components across CLI, Application, Domain, and Infrastructure layers
-- Key constraint: Centralized validation with shared ProjectValidator, three-strategy configuration factory
-
-**Extension Rule**: To add new CLI command, create file in `cli/src/commands/project/` (limit 75 lines) and use `ProjectApplicationService` for business logic
-
 ## 4. Acceptance Criteria
 
 ### Functional (Outcome-focused)
@@ -132,21 +121,8 @@ Performance measurements is out of scope.
 - [x] Tilde expansion works in interactive mode (~ resolves to home directory)
 - [x] Project codes auto-uppercase for better UX (accepts lowercase input)
 
-## 5. Verification
-
-### How to Verify Success
-
-- Manual verification: All CLI commands execute successfully with valid inputs
-- Automated verification: CLI test suite validates all operations and edge cases
-- Performance verification: Measure operation timing against baseline
-- Integration verification: Confirm consistent behavior across all interfaces
-- Web and MCP: Confirm consistent behavior related to changes in this ticket
-
 ## 6. References
 
 > **Implementation Details**: See [extra-details.md](./MDT-077/extra-details.md) for extracted architectural patterns and implementation specifics
 
-> **Related Documents**:
-> - [requirements.md](./MDT-077/requirements.md) — EARS-formatted behavioral requirements
-> - [architecture.md](./MDT-077/architecture.md) — Detailed architectural decisions
 > - [CONFIG_SPECIFICATION.md](./../CONFIG_SPECIFICATION.md) — Detailed architectural decisions
