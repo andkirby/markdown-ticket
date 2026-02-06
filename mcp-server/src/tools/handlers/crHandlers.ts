@@ -20,7 +20,7 @@ import { ContentProcessor } from '../../services/SectionManagement/ContentProces
 import { normalizeKey } from '../../utils/keyNormalizer.js'
 import { Sanitizer } from '../../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../../utils/toolError.js'
-import { validateCRKey, validateOperation, validateRequired } from '../../utils/validation.js'
+import { validateOperation, validateRequired } from '../../utils/validation.js'
 
 /**
  * CR Handlers Class
