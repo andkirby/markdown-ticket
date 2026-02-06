@@ -13,8 +13,7 @@
  * This utility handles string normalization only - no file system or MCP logic.
  */
 
-import { ToolError } from './toolError.js'
-import { JsonRpcErrorCode } from './toolError.js'
+import { JsonRpcErrorCode, ToolError } from './toolError.js'
 
 /**
  * Normalize a CR key to the standard format {PROJECTCODE}-{NUMBER}
@@ -45,7 +44,7 @@ export function normalizeKey(key: string, projectCode: string): string {
 
   // Pattern 2: Full format with project prefix (e.g., "abc-12", "MDT-005", "XYZ-123")
   // Uppercase the prefix and pad the number to 3 digits (matching ticket format)
-  const fullFormatPattern = /^([a-zA-Z]+)-(\d+)$/
+  const fullFormatPattern = /^([a-z]+)-(\d+)$/i
   const match = trimmed.match(fullFormatPattern)
 
   if (match) {
@@ -58,9 +57,9 @@ export function normalizeKey(key: string, projectCode: string): string {
 
   // Invalid format - provide helpful error message
   throw ToolError.protocol(
-    `Invalid key format '${trimmed}'. Expected:\n` +
-    `  • Numeric shorthand: "5" or "005" (resolves to ${projectCode}-005)\n` +
-    `  • Full format: "ABC-012" or "abc-12" (normalizes to ABC-012)`,
+    `Invalid key format '${trimmed}'. Expected:\n`
+    + `  • Numeric shorthand: "5" or "005" (resolves to ${projectCode}-005)\n`
+    + `  • Full format: "ABC-012" or "abc-12" (normalizes to ABC-012)`,
     JsonRpcErrorCode.InvalidParams,
   )
 }
