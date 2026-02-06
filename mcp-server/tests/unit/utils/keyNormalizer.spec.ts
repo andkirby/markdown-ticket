@@ -2,10 +2,12 @@
  * Unit Tests for keyNormalizer utility (MDT-121)
  *
  * Tests the normalizeKey function which handles:
- * - Pure numeric shorthand: "5" -> "{PROJECTCODE}-5"
- * - Numeric with leading zeros: "005" -> "{PROJECTCODE}-5"
- * - Full format with prefix: "abc-12" -> "ABC-12"
+ * - Pure numeric shorthand: "5" -> "{PROJECTCODE}-005" (pads to 3 digits)
+ * - Numeric with leading zeros: "005" -> "{PROJECTCODE}-005" (preserves format)
+ * - Full format with prefix: "abc-12" -> "ABC-012" (uppercase, pads to 3 digits)
  * - Invalid format error handling
+ *
+ * Tickets are stored with 3-digit zero-padded numbers (MDT-001, MDT-002, etc.)
  */
 
 import { ToolError } from '../../../../src/utils/toolError'
@@ -13,9 +15,9 @@ import { normalizeKey } from '../../../../src/utils/keyNormalizer'
 
 describe('keyNormalizer', () => {
   describe('valid Input - Numeric Shorthand', () => {
-    it('Given numeric key "5" WHEN normalizing with project "MDT" THEN returns "MDT-5"', () => {
+    it('Given numeric key "5" WHEN normalizing with project "MDT" THEN returns "MDT-005"', () => {
       const result = normalizeKey('5', 'MDT')
-      expect(result).toBe('MDT-5')
+      expect(result).toBe('MDT-005')
     })
 
     it('Given numeric key "123" WHEN normalizing with project "API" THEN returns "API-123"', () => {
@@ -23,9 +25,9 @@ describe('keyNormalizer', () => {
       expect(result).toBe('API-123')
     })
 
-    it('Given numeric key with leading zeros "005" WHEN normalizing THEN strips zeros and adds prefix', () => {
+    it('Given numeric key with leading zeros "005" WHEN normalizing THEN preserves format', () => {
       const result = normalizeKey('005', 'MDT')
-      expect(result).toBe('MDT-5')
+      expect(result).toBe('MDT-005')
     })
 
     it('Given numeric key with many leading zeros "000123" WHEN normalizing THEN returns "MDT-123"', () => {
@@ -33,9 +35,9 @@ describe('keyNormalizer', () => {
       expect(result).toBe('MDT-123')
     })
 
-    it('Given zero "0" WHEN normalizing THEN returns "MDT-0"', () => {
+    it('Given zero "0" WHEN normalizing THEN returns "MDT-000"', () => {
       const result = normalizeKey('0', 'MDT')
-      expect(result).toBe('MDT-0')
+      expect(result).toBe('MDT-000')
     })
 
     it('Given large number "999999" WHEN normalizing THEN returns "MDT-999999"', () => {
@@ -45,29 +47,29 @@ describe('keyNormalizer', () => {
   })
 
   describe('valid Input - Full Format', () => {
-    it('Given full uppercase key "MDT-5" WHEN normalizing THEN returns "MDT-5"', () => {
-      const result = normalizeKey('MDT-5', 'ANY')
-      expect(result).toBe('MDT-5')
-    })
-
-    it('Given full lowercase key "mdt-5" WHEN normalizing THEN returns "MDT-5"', () => {
-      const result = normalizeKey('mdt-5', 'ANY')
-      expect(result).toBe('MDT-5')
-    })
-
-    it('Given mixed case key "MdT-5" WHEN normalizing THEN returns "MDT-5"', () => {
-      const result = normalizeKey('MdT-5', 'ANY')
-      expect(result).toBe('MDT-5')
-    })
-
-    it('Given full format with leading zeros "MDT-005" WHEN normalizing THEN returns "MDT-5"', () => {
+    it('Given full uppercase key "MDT-005" WHEN normalizing THEN returns "MDT-005"', () => {
       const result = normalizeKey('MDT-005', 'ANY')
-      expect(result).toBe('MDT-5')
+      expect(result).toBe('MDT-005')
     })
 
-    it('Given full format lowercase with zeros "mdt-005" WHEN normalizing THEN returns "MDT-5"', () => {
+    it('Given full lowercase key "mdt-5" WHEN normalizing THEN returns "MDT-005"', () => {
+      const result = normalizeKey('mdt-5', 'ANY')
+      expect(result).toBe('MDT-005')
+    })
+
+    it('Given mixed case key "MdT-5" WHEN normalizing THEN returns "MDT-005"', () => {
+      const result = normalizeKey('MdT-5', 'ANY')
+      expect(result).toBe('MDT-005')
+    })
+
+    it('Given full format with leading zeros "MDT-005" WHEN normalizing THEN returns "MDT-005"', () => {
+      const result = normalizeKey('MDT-005', 'ANY')
+      expect(result).toBe('MDT-005')
+    })
+
+    it('Given full format lowercase with zeros "mdt-005" WHEN normalizing THEN returns "MDT-005"', () => {
       const result = normalizeKey('mdt-005', 'ANY')
-      expect(result).toBe('MDT-5')
+      expect(result).toBe('MDT-005')
     })
 
     it('Given different project code "API-123" WHEN normalizing THEN returns "API-123"', () => {
@@ -168,22 +170,22 @@ describe('keyNormalizer', () => {
   describe('edge Cases', () => {
     it('Given key with leading/trailing whitespace "  5  " WHEN normalizing THEN trims and normalizes', () => {
       const result = normalizeKey('  5  ', 'MDT')
-      expect(result).toBe('MDT-5')
+      expect(result).toBe('MDT-005')
     })
 
     it('Given full format with whitespace "  MDT-5  " WHEN normalizing THEN trims and normalizes', () => {
       const result = normalizeKey('  MDT-5  ', 'ANY')
-      expect(result).toBe('MDT-5')
+      expect(result).toBe('MDT-005')
     })
 
-    it('Given single character prefix "A-5" WHEN normalizing THEN returns "A-5"', () => {
+    it('Given single character prefix "A-5" WHEN normalizing THEN returns "A-005"', () => {
       const result = normalizeKey('A-5', 'ANY')
-      expect(result).toBe('A-5')
+      expect(result).toBe('A-005')
     })
 
-    it('Given long prefix "ABCDE-5" WHEN normalizing THEN returns "ABCDE-5"', () => {
+    it('Given long prefix "ABCDE-5" WHEN normalizing THEN returns "ABCDE-005"', () => {
       const result = normalizeKey('ABCDE-5', 'ANY')
-      expect(result).toBe('ABCDE-5')
+      expect(result).toBe('ABCDE-005')
     })
   })
 })
