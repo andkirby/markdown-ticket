@@ -34,6 +34,7 @@ export class MCPTools {
   private projectHandlers: ProjectHandlers
   private crHandlers: CRHandlers
   private sectionHandlers: SectionHandlers
+  private detectedProject: string | null
 
   constructor(
     projectService: ProjectService,
@@ -41,6 +42,7 @@ export class MCPTools {
     templateService: TemplateService,
     markdownService: MarkdownService,
     titleExtractionService: TitleExtractionService,
+    detectedProject: string | null = null,
   ) {
     // Initialize handlers with injected services
     this.projectHandlers = new ProjectHandlers(projectService)
@@ -51,6 +53,7 @@ export class MCPTools {
       templateService,
     )
     this.sectionHandlers = new SectionHandlers(crService, MarkdownSectionService)
+    this.detectedProject = detectedProject
   }
 
   /**
@@ -82,7 +85,7 @@ export class MCPTools {
         TOOL_NAMES.DELETE_CR,
         TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS,
       ].includes(name as any)) {
-        const project = await this.projectHandlers.validateProject(args.project)
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject)
 
         switch (name) {
           case TOOL_NAMES.LIST_CRS:
@@ -110,7 +113,7 @@ export class MCPTools {
 
       // Route to section handlers
       if (name === TOOL_NAMES.MANAGE_CR_SECTIONS) {
-        const project = await this.projectHandlers.validateProject(args.project)
+        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject)
         return await this.sectionHandlers.handleManageCRSections(
           project,
           args.key,
