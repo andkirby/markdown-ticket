@@ -36,8 +36,13 @@ jest.mock('@mdt/shared/services/MarkdownSectionService.js', () => ({
   },
 }))
 
-// Cast the mocked service to jest.Mocked<any>
-const MockMarkdownSectionService = MarkdownSectionService as any
+// Cast the mocked service to proper type
+const MockMarkdownSectionService = MarkdownSectionService as {
+  findSection: jest.Mock
+  replaceSection: jest.Mock
+  appendToSection: jest.Mock
+  prependToSection: jest.Mock
+}
 
 describe('sectionHandlers - Behavioral Preservation Tests', () => {
   let sectionHandlers: SectionHandlers
@@ -66,12 +71,12 @@ describe('sectionHandlers - Behavioral Preservation Tests', () => {
       updateCRAttrs: jest.fn(),
       deleteCR: jest.fn(),
       getNextCRNumber: jest.fn(),
-    } as any
+    } as unknown as jest.Mocked<CRService>
 
     // Create handlers with mocked dependencies
     sectionHandlers = new SectionHandlers(
       mockCrServiceInstance,
-      MarkdownSectionService as any,
+      MarkdownSectionService as unknown,
     );
 
     // MDT-102: Mock MarkdownService static methods

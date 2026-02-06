@@ -16,12 +16,12 @@ import { HttpTransport } from './mcp-transports'
 export interface MCPTool {
   name: string
   description?: string
-  inputSchema?: any
+  inputSchema?: Record<string, unknown>
 }
 
 export interface MCPResponse {
   success: boolean
-  data?: any
+  data?: unknown
   error?: {
     code: number
     message: string
@@ -30,8 +30,8 @@ export interface MCPResponse {
 
 interface JSONRPCResponse {
   result?: {
-    tools?: any[]
-    content?: any
+    tools?: MCPTool[]
+    content?: unknown
   }
   error?: {
     code?: number
@@ -253,7 +253,7 @@ export class MCPClient {
   /**
    * Call a specific MCP tool
    */
-  async callTool(toolName: string, params: any): Promise<MCPResponse> {
+  async callTool(toolName: string, params: Record<string, unknown>): Promise<MCPResponse> {
     const maxRetries = this.options.retries || 3
     const retryDelay = 1000 // 1 second between retries
 
@@ -291,15 +291,15 @@ export class MCPClient {
         this.logger.info('Tool call successful', { toolName, attempt })
         return response
       }
-      catch (error: any) {
+      catch (error: unknown) {
         this.logger.warn('Tool call threw exception', {
           toolName,
           attempt,
-          error: error.message || String(error),
+          error: error instanceof Error ? error.message : String(error),
         })
 
         // Parse MCP error
-        const errorCode = error.code || -1
+        const errorCode = (error instanceof Error && 'code' in error) ? (error as { code: number }).code : -1
         const isRetryable = this.isRetryableError(errorCode)
 
         // If this is the last attempt or error is not retryable, return it
@@ -308,7 +308,7 @@ export class MCPClient {
             success: false,
             error: {
               code: errorCode,
-              message: error.message || 'Unknown error',
+              message: error instanceof Error ? error.message : 'Unknown error',
             },
           }
           this.logger.error('Tool call failed', error instanceof Error ? error : new Error(String(error)), {
@@ -378,7 +378,7 @@ export class MCPClient {
   /**
    * Call tool using HTTP transport
    */
-  private async callToolHttp(toolName: string, params: any): Promise<MCPResponse> {
+  private async callToolHttp(toolName: string, params: Record<string, unknown>): Promise<MCPResponse> {
     const baseUrl = (this.transportWrapper as HttpTransport).getBaseUrl()
 
     try {
@@ -425,12 +425,12 @@ export class MCPClient {
         data: result.result?.content,
       }
     }
-    catch (error: any) {
+    catch (error: unknown) {
       return {
         success: false,
         error: {
           code: -1,
-          message: error.message || 'HTTP request failed',
+          message: error instanceof Error ? error.message : 'HTTP request failed',
         },
       }
     }

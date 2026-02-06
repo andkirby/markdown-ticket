@@ -9,7 +9,7 @@ describe('mcpTicketCreator', () => {
   beforeEach(() => {
     mockMcpClient = {
       callTool: jest.fn(),
-    } as any
+    } as jest.Mocked<MCPClient>
 
     creator = new McpTicketCreator(mockMcpClient)
   })

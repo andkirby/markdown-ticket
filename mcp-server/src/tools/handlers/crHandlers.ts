@@ -114,7 +114,23 @@ export class CRHandlers {
           }
 
           // Build attributes object from parsed ticket
-          const attributes: any = {
+          interface CRAttributes {
+            code: string
+            title: string
+            status: string
+            type: string
+            priority: string
+            phaseEpic?: string
+            assignee?: string
+            dependsOn?: string[]
+            blocks?: string[]
+            relatedTickets?: string
+            impactAreas?: string[]
+            implementationDate?: string
+            implementationNotes?: string
+          }
+
+          const attributes: CRAttributes = {
             code: parsedTicket.code || normalizedKey,
             title: Sanitizer.sanitizeText(ticket.title || parsedTicket.title || 'Untitled'),
             status: parsedTicket.status || 'Unknown',
@@ -123,7 +139,7 @@ export class CRHandlers {
           }
 
           // Add optional fields if present, sanitizing string values
-          const optionalFields = [
+          const optionalFields: (keyof CRAttributes)[] = [
             'phaseEpic',
             'assignee',
             'dependsOn',
@@ -135,7 +151,7 @@ export class CRHandlers {
           ]
 
           for (const field of optionalFields) {
-            const value = (parsedTicket as any)[field]
+            const value = (parsedTicket as Record<string, unknown>)[field as string]
             if (value !== undefined) {
               attributes[field] = typeof value === 'string' ? Sanitizer.sanitizeText(value) : value
             }
@@ -192,7 +208,11 @@ export class CRHandlers {
 
     // Process content if provided
     const processedData = { ...data }
-    let contentProcessingResult: any = null
+    interface ContentProcessingResult {
+      content: string
+      warnings: string[]
+    }
+    let contentProcessingResult: ContentProcessingResult | null = null
 
     if (data.content) {
       contentProcessingResult = ContentProcessor.processContent(data.content, {
@@ -317,7 +337,7 @@ export class CRHandlers {
   /**
    * Handler for update_cr_attrs tool
    */
-  async handleUpdateCRAttrs(project: Project, key: string, attributes: any): Promise<string> {
+  async handleUpdateCRAttrs(project: Project, key: string, attributes: Record<string, unknown>): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
     const normalizedKey = normalizeKey(key, project.project.code)
 

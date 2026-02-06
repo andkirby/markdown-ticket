@@ -72,12 +72,32 @@ No actual implementation needed.
   created: new Date(),
 }
 
+interface MockService {
+  getAllProjects: jest.Mock
+  getProjectConfig: jest.Mock
+  projectDiscovery: {
+    getAllProjects: jest.Mock
+  }
+}
+
+interface MockTicketService {
+  getCR: jest.Mock
+  createCR: jest.Mock
+  updateCRPartial: jest.Mock
+  deleteCR: jest.Mock
+  getProjectCRs: jest.Mock
+}
+
+interface MockFileSystemService {
+  buildProjectFileSystemTree: jest.Mock
+}
+
 describe('mCP-Backend Consistency Integration Tests', () => {
   let mcpTools: MCPTools
   let backendApp: Application
-  let backendRequest: any
-  let mockProjectService: any
-  let mockTicketService: any
+  let backendRequest: request.SuperTest<request.Test>
+  let mockProjectService: MockService
+  let mockTicketService: MockTicketService
   let mockProjectController: ProjectController
 
   beforeAll(async () => {
@@ -117,19 +137,19 @@ describe('mCP-Backend Consistency Integration Tests', () => {
       getProjectCRs: jest.fn(),
     }
 
-    const mockFileSystemService = {
+    const mockFileSystemService: MockFileSystemService = {
       buildProjectFileSystemTree: jest.fn(),
     }
 
     mockProjectController = new ProjectController(
       mockProjectService,
       mockFileSystemService,
-      {} as any,
+      {} as Record<string, unknown>,
       undefined,
       mockTicketService,
     )
 
-    backendApp.use('/api/projects', createProjectRouter(mockProjectController) as any)
+    backendApp.use('/api/projects', createProjectRouter(mockProjectController) as unknown as express.Router)
 
     backendRequest = request(backendApp)
   })

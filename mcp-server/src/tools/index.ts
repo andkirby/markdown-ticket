@@ -68,15 +68,16 @@ export class MCPTools {
    * Route tool calls to appropriate handlers
    * Delegates all business logic to specialized handlers
    */
-  async handleToolCall(name: string, args: any): Promise<string> {
+  async handleToolCall(name: string, args: Record<string, unknown>): Promise<string> {
     try {
       // Route to project handlers
-      if ([TOOL_NAMES.LIST_PROJECTS, TOOL_NAMES.GET_PROJECT_INFO].includes(name as any)) {
+      const projectTools = [TOOL_NAMES.LIST_PROJECTS, TOOL_NAMES.GET_PROJECT_INFO] as const
+      if (projectTools.includes(name as typeof projectTools[number])) {
         return await this.projectHandlers.handleToolCall(name, args)
       }
 
       // Route to CR handlers
-      if ([
+      const crTools = [
         TOOL_NAMES.LIST_CRS,
         TOOL_NAMES.GET_CR,
         TOOL_NAMES.CREATE_CR,
@@ -84,7 +85,8 @@ export class MCPTools {
         TOOL_NAMES.UPDATE_CR_ATTRS,
         TOOL_NAMES.DELETE_CR,
         TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS,
-      ].includes(name as any)) {
+      ] as const
+      if (crTools.includes(name as typeof crTools[number])) {
         const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject)
 
         switch (name) {

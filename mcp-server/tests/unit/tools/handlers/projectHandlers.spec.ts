@@ -55,7 +55,7 @@ describe('ProjectHandlers - resolveProject', () => {
     // Create mock ProjectService
     mockProjectService = {
       getAllProjects: jest.fn().mockResolvedValue(mockProjects),
-    } as any
+    } as unknown as jest.Mocked<ProjectService>
 
     projectHandlers = new ProjectHandlers(mockProjectService)
   })
@@ -119,27 +119,29 @@ describe('ProjectHandlers - resolveProject', () => {
     })
 
     it('Given null explicit parameter and null detected WHEN resolving THEN throws context error', async () => {
-      await expect(projectHandlers.resolveProject(null as any, null)).rejects.toThrow('No project context available')
+      await expect(projectHandlers.resolveProject(null as unknown as string, null)).rejects.toThrow('No project context available')
     })
   })
 
   describe('project Not Found', () => {
     it('Given explicit project that does not exist WHEN resolving THEN throws not found error', async () => {
-      await expect(projectHandlers.resolveProject('NONEXISTENT', null)).rejects.toThrow("Project 'NONEXISTENT' not found")
+      await expect(projectHandlers.resolveProject('NONEXISTENT', null)).rejects.toThrow('Project \'NONEXISTENT\' not found')
     })
 
     it('Given detected project that does not exist WHEN resolving THEN throws not found error', async () => {
-      await expect(projectHandlers.resolveProject(undefined, 'NONEXISTENT')).rejects.toThrow("Project 'NONEXISTENT' not found")
+      await expect(projectHandlers.resolveProject(undefined, 'NONEXISTENT')).rejects.toThrow('Project \'NONEXISTENT\' not found')
     })
 
     it('Given project not found WHEN throwing THEN error includes available projects', async () => {
       try {
         await projectHandlers.resolveProject('NONEXISTENT', null)
       }
-      catch (error: any) {
-        expect(error.message).toContain('NONEXISTENT')
-        expect(error.message).toContain('TEST')
-        expect(error.message).toContain('API')
+      catch (error: unknown) {
+        expect(error).toBeInstanceOf(Error)
+        const err = error as Error
+        expect(err.message).toContain('NONEXISTENT')
+        expect(err.message).toContain('TEST')
+        expect(err.message).toContain('API')
       }
     })
   })

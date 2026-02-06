@@ -104,7 +104,7 @@ export class SessionManager {
   /**
    * Emit an event to a specific session (for SSE)
    */
-  emitToSession(sessionId: string, event: string, data: any): boolean {
+  emitToSession(sessionId: string, event: string, data: unknown): boolean {
     const session = this.sessions.get(sessionId)
 
     if (session) {

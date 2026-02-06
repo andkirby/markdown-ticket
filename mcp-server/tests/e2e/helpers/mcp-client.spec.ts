@@ -10,6 +10,11 @@ import * as path from 'node:path'
 import { MCPClient } from './mcp-client'
 import { TestEnvironment } from './test-environment'
 
+// Test helper interface to access test-specific properties
+interface TestMCPClient extends MCPClient {
+  testCRKey?: string
+}
+
 describe('mCP Client', () => {
   let testEnv: TestEnvironment
   let mcpClient: MCPClient
@@ -203,7 +208,7 @@ name = "Test Project"
       if (createResponse.success && typeof createResponse.data === 'string') {
         const match = createResponse.data.match(/\*\*Created CR ([A-Z]{2,5}-\d+)\*\*/)
         if (match) {
-          (mcpClient as any).testCRKey = match[1] // Use the full CR key (e.g., "MDT-001")
+          (mcpClient as TestMCPClient).testCRKey = match[1] // Use the full CR key (e.g., "MDT-001")
         }
       }
     })
@@ -241,7 +246,7 @@ name = "Test Project"
 
     it('GIVEN client WHEN calling get_cr THEN return CR details', async () => {
       // Use the CR created in beforeEach
-      const crKey = (mcpClient as any).testCRKey
+      const crKey = (mcpClient as TestMCPClient).testCRKey
 
       // If no CR was created (due to project not found), we can still test the tool
       const testKey = crKey || 'MDT-001'

@@ -30,14 +30,23 @@ jest.mock('glob')
 jest.mock('../../../services/crService.js')
 
 // Create local mock instances with jest.fn()
+interface MockTitleExtractionService {
+  extractTitle: jest.Mock
+}
+
+interface MockTemplateService {
+  validateTicketData: jest.Mock
+  suggestImprovements: jest.Mock
+}
+
 const mockTitleExtractionService = {
   extractTitle: jest.fn(),
-} as any
+} as MockTitleExtractionService
 
 const mockTemplateService = {
   validateTicketData: jest.fn(),
   suggestImprovements: jest.fn(),
-} as any
+} as MockTemplateService
 
 describe('cRHandlers - Behavioral Preservation Tests', () => {
   let crHandlers: CRHandlers
@@ -66,14 +75,14 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
       updateCRAttrs: jest.fn(),
       deleteCR: jest.fn(),
       getNextCRNumber: jest.fn(),
-    } as any
+    } as unknown as jest.Mocked<CRService>
 
     // Create handlers with mocked dependencies
     crHandlers = new CRHandlers(
       mockCrServiceInstance,
-      MarkdownService as any,
-      mockTitleExtractionService as any,
-      mockTemplateService as any,
+      MarkdownService as unknown as typeof MarkdownService,
+      mockTitleExtractionService as unknown,
+      mockTemplateService as unknown,
     );
 
     // Mock glob to return test file path
@@ -334,7 +343,7 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
         warnings: [],
       })
 
-      const invalidData = { title: '', type: 'Feature Enhancement' } as any
+      const invalidData = { title: '', type: 'Feature Enhancement' } as unknown as TicketData
 
       await expect(crHandlers.handleCreateCR(mockProject, 'Feature Enhancement', invalidData))
         .rejects
@@ -400,7 +409,7 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
     })
 
     it('should throw protocol error for invalid status', async () => {
-      await expect(crHandlers.handleUpdateCRStatus(mockProject, 'MDT-001', 'InvalidStatus' as any))
+      await expect(crHandlers.handleUpdateCRStatus(mockProject, 'MDT-001', 'InvalidStatus' as CRStatus))
         .rejects
         .toThrow(ToolError)
     })

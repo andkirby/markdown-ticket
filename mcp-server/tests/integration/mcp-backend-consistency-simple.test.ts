@@ -53,9 +53,29 @@ const testCR = {
 
 describe('mCP-Backend Consistency Integration Tests (Simplified)', () => {
   let backendApp: ExpressApplication
-  let mockProjectService: jest.Mocked<any>
-  let mockTicketService: jest.Mocked<any>
-  let _mockProjectController: jest.Mocked<any>
+  let mockProjectService: jest.Mocked<{
+    getAllProjects: jest.Mock
+    getProjectConfig: jest.Mock
+    projectDiscovery: {
+      getAllProjects: jest.Mock
+    }
+  }>
+  let mockTicketService: jest.Mocked<{
+    getCR: jest.Mock
+    createCR: jest.Mock
+    updateCRPartial: jest.Mock
+    deleteCR: jest.Mock
+    getProjectCRs: jest.Mock
+  }>
+  let _mockProjectController: jest.Mocked<{
+    getAllProjects: jest.Mock
+    getProjectConfig: jest.Mock
+    getProjectCRs: jest.Mock
+    getCR: jest.Mock
+    createCR: jest.Mock
+    updateCRPartial: jest.Mock
+    deleteCR: jest.Mock
+  }>
 
   beforeAll(() => {
     // Set up backend Express app
@@ -91,7 +111,15 @@ describe('mCP-Backend Consistency Integration Tests (Simplified)', () => {
       createCR: jest.fn(),
       updateCRPartial: jest.fn(),
       deleteCR: jest.fn(),
-    } as any
+    } as jest.Mocked<{
+      getAllProjects: jest.Mock
+      getProjectConfig: jest.Mock
+      getProjectCRs: jest.Mock
+      getCR: jest.Mock
+      createCR: jest.Mock
+      updateCRPartial: jest.Mock
+      deleteCR: jest.Mock
+    }>
 
     // Mock createProjectRouter to return a router that calls our controller
     const mockRouter = {
@@ -101,7 +129,14 @@ describe('mCP-Backend Consistency Integration Tests (Simplified)', () => {
       put: jest.fn(),
       delete: jest.fn(),
       use: jest.fn(),
-    } as any
+    } as jest.Mocked<{
+      get: jest.Mock
+      post: jest.Mock
+      patch: jest.Mock
+      put: jest.Mock
+      delete: jest.Mock
+      use: jest.Mock
+    }>
     mockCreateProjectRouter.mockReturnValue(mockRouter)
 
     // Set up route handlers manually
@@ -148,7 +183,12 @@ describe('mCP-Backend Consistency Integration Tests (Simplified)', () => {
       try {
         const crs = await mockTicketService.getProjectCRs(req.params.projectId, req.query)
         // Convert dates to strings for JSON serialization
-        const serializedCRs = crs.map((cr: any) => ({
+        interface CRWithDates {
+          created: Date | string
+          modified: Date | string
+          [key: string]: unknown
+        }
+        const serializedCRs = crs.map((cr: CRWithDates) => ({
           ...cr,
           created: cr.created instanceof Date ? cr.created.toISOString() : cr.created,
           modified: cr.modified instanceof Date ? cr.modified.toISOString() : cr.modified,

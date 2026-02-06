@@ -46,13 +46,13 @@ export enum JsonRpcErrorCode {
 export class ToolError extends Error {
   public readonly type: ErrorType
   public readonly code?: JsonRpcErrorCode
-  public readonly data?: any
+  public readonly data?: unknown
 
   constructor(
     message: string,
     type: ErrorType = ErrorType.TOOL_EXECUTION,
     code?: JsonRpcErrorCode,
-    data?: any,
+    data?: unknown,
   ) {
     super(message)
     this.name = 'ToolError'
@@ -70,7 +70,7 @@ export class ToolError extends Error {
    * Create a protocol error (unknown tool, invalid params)
    * These will be converted to JSON-RPC error responses
    */
-  static protocol(message: string, code: JsonRpcErrorCode, data?: any): ToolError {
+  static protocol(message: string, code: JsonRpcErrorCode, data?: unknown): ToolError {
     return new ToolError(message, ErrorType.PROTOCOL, code, data)
   }
 
@@ -78,7 +78,7 @@ export class ToolError extends Error {
    * Create a tool execution error (business logic failure)
    * These will be converted to { result: { content: [...], isError: true } }
    */
-  static toolExecution(message: string, data?: any): ToolError {
+  static toolExecution(message: string, data?: unknown): ToolError {
     return new ToolError(message, ErrorType.TOOL_EXECUTION, undefined, data)
   }
 
@@ -100,7 +100,7 @@ export class ToolError extends Error {
    * Convert to JSON-RPC error response format
    * Only used for protocol errors
    */
-  toJsonRpcError(): { code: number, message: string, data?: any } {
+  toJsonRpcError(): { code: number, message: string, data?: unknown } {
     if (!this.isProtocolError()) {
       throw new Error('Cannot convert tool execution error to JSON-RPC error')
     }
