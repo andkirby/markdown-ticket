@@ -2,10 +2,13 @@
  * Key Normalization Utility for MCP Server (MDT-121)
  *
  * Normalizes CR keys in various formats:
- * - Pure numeric: "5" → "{PROJECTCODE}-5"
- * - Numeric with leading zeros: "005" → "{PROJECTCODE}-5"
- * - Full format with prefix: "abc-12" → "ABC-12" (uppercase)
- * - Full format preserved: "ABC-12" → "ABC-12"
+ * - Pure numeric: "5" → "{PROJECTCODE}-005" (pads to 3 digits)
+ * - Numeric with leading zeros: "005" → "{PROJECTCODE}-005" (preserves format)
+ * - Full format with prefix: "abc-12" → "ABC-012" (uppercase, pads to 3 digits)
+ * - Full format preserved: "ABC-012" → "ABC-012" (already correct)
+ *
+ * Tickets are stored with 3-digit zero-padded numbers (MDT-001, MDT-002, etc.)
+ * This utility matches the ticket format used throughout the system.
  *
  * This utility handles string normalization only - no file system or MCP logic.
  */
@@ -32,32 +35,32 @@ export function normalizeKey(key: string, projectCode: string): string {
   const trimmed = key.trim()
 
   // Pattern 1: Pure numeric (e.g., "5", "005", "123")
-  // Add project prefix and strip leading zeros
+  // Add project prefix and pad to 3 digits (matching ticket format)
   const numericPattern = /^\d+$/
   if (numericPattern.test(trimmed)) {
-    // Strip leading zeros and add project prefix
-    const number = String(Number.parseInt(trimmed, 10))
+    // Pad to 3 digits and add project prefix
+    const number = String(Number.parseInt(trimmed, 10)).padStart(3, '0')
     return `${projectCode}-${number}`
   }
 
   // Pattern 2: Full format with project prefix (e.g., "abc-12", "MDT-005", "XYZ-123")
-  // Uppercase the prefix and strip leading zeros from the number
+  // Uppercase the prefix and pad the number to 3 digits (matching ticket format)
   const fullFormatPattern = /^([a-zA-Z]+)-(\d+)$/
   const match = trimmed.match(fullFormatPattern)
 
   if (match) {
     const [, prefix, numberStr] = match
     const uppercasedPrefix = prefix.toUpperCase()
-    // Strip leading zeros from the number
-    const number = String(Number.parseInt(numberStr, 10))
+    // Pad to 3 digits (matching ticket storage format)
+    const number = String(Number.parseInt(numberStr, 10)).padStart(3, '0')
     return `${uppercasedPrefix}-${number}`
   }
 
   // Invalid format - provide helpful error message
   throw ToolError.protocol(
     `Invalid key format '${trimmed}'. Expected:\n` +
-    `  • Numeric shorthand: "5" or "005" (resolves to ${projectCode}-5)\n` +
-    `  • Full format: "ABC-12" or "abc-12" (normalizes to ABC-12)`,
+    `  • Numeric shorthand: "5" or "005" (resolves to ${projectCode}-005)\n` +
+    `  • Full format: "ABC-012" or "abc-12" (normalizes to ABC-012)`,
     JsonRpcErrorCode.InvalidParams,
   )
 }
