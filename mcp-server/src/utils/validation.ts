@@ -3,10 +3,10 @@
  * Consolidates validation patterns to prevent duplication
  */
 
-export interface ValidationResult {
+export interface ValidationResult<T = string> {
   valid: boolean
   message?: string
-  value?: any
+  value?: T
 }
 
 /**
@@ -56,7 +56,7 @@ export function validateCRKey(key: string): ValidationResult {
 /**
  * Validate required parameter exists and is non-empty
  */
-export function validateRequired(value: any, name: string): ValidationResult {
+export function validateRequired(value: unknown, name: string): ValidationResult {
   if (value === null || value === undefined) {
     return { valid: false, message: `${name} is required` }
   }

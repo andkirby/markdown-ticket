@@ -119,11 +119,12 @@ describe('behavioral Preservation: Tool Configuration Structure', () => {
       expect(listCRsTool).toBeDefined()
 
       // Check status filter enum
-      const statusProp = (listCRsTool?.inputSchema as any).properties?.filters?.properties?.status
+      const inputSchema = listCRsTool?.inputSchema as { properties?: { filters?: { properties?: { status?: { oneOf?: unknown[] } } } } }
+      const statusProp = inputSchema?.properties?.filters?.properties?.status
       expect(statusProp?.oneOf).toBeDefined()
 
       // Extract enum values (7 documented statuses per docs/create_ticket.md)
-      const statusEnum = statusProp?.oneOf?.find((item: any) => item.enum)?.enum
+      const statusEnum = statusProp?.oneOf?.find((item: unknown): item is { enum?: string[] } => typeof item === 'object' && item !== null && 'enum' in item)?.enum
       expect(statusEnum).toEqual(['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold', 'Partially Implemented'])
     })
 
@@ -132,11 +133,12 @@ describe('behavioral Preservation: Tool Configuration Structure', () => {
       expect(listCRsTool).toBeDefined()
 
       // Check type filter enum
-      const typeProp = (listCRsTool?.inputSchema as any).properties?.filters?.properties?.type
+      const inputSchema = listCRsTool?.inputSchema as { properties?: { filters?: { properties?: { type?: { oneOf?: unknown[] } } } } }
+      const typeProp = inputSchema?.properties?.filters?.properties?.type
       expect(typeProp?.oneOf).toBeDefined()
 
       // Extract enum values
-      const typeEnum = typeProp?.oneOf?.find((item: any) => item.enum)?.enum
+      const typeEnum = typeProp?.oneOf?.find((item: unknown): item is { enum?: string[] } => typeof item === 'object' && item !== null && 'enum' in item)?.enum
       expect(typeEnum).toEqual(['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation', 'Research'])
     })
 
@@ -145,11 +147,12 @@ describe('behavioral Preservation: Tool Configuration Structure', () => {
       expect(listCRsTool).toBeDefined()
 
       // Check priority filter enum
-      const priorityProp = (listCRsTool?.inputSchema as any).properties?.filters?.properties?.priority
+      const inputSchema = listCRsTool?.inputSchema as { properties?: { filters?: { properties?: { priority?: { oneOf?: unknown[] } } } } }
+      const priorityProp = inputSchema?.properties?.filters?.properties?.priority
       expect(priorityProp?.oneOf).toBeDefined()
 
       // Extract enum values
-      const priorityEnum = priorityProp?.oneOf?.find((item: any) => item.enum)?.enum
+      const priorityEnum = priorityProp?.oneOf?.find((item: unknown): item is { enum?: string[] } => typeof item === 'object' && item !== null && 'enum' in item)?.enum
       expect(priorityEnum).toEqual(['Low', 'Medium', 'High', 'Critical'])
     })
   })

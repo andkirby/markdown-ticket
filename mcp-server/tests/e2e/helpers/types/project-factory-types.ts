@@ -44,7 +44,7 @@ export interface TestScenario {
 
 export interface MCPResponse {
   success: boolean
-  data?: any
+  data?: string | Record<string, unknown>
   error?: string
   key?: string
 }
@@ -81,7 +81,7 @@ export interface TicketData {
   phaseEpic?: string
 
   // Extended attributes
-  attributes?: Record<string, any>
+  attributes?: Record<string, unknown>
 
   // Creation metadata
   metadata?: {
@@ -98,7 +98,7 @@ export interface TicketResult {
   error?: {
     code: string
     message: string
-    details?: any
+    details?: unknown
   }
   metadata: {
     creator: string
@@ -118,7 +118,7 @@ export interface ValidationError {
   code: string
   message: string
   field?: string
-  value?: any
+  value?: unknown
 }
 
 export interface ValidationWarning {

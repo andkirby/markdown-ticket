@@ -12,9 +12,9 @@
  */
 
 import type { MCPResponse } from '../helpers/mcp-client'
+import { ProjectSetup } from '../helpers/core/project-setup'
 import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
-import { ProjectSetup } from '../helpers/core/project-setup'
 import { TestEnvironment } from '../helpers/test-environment'
 
 describe('MDT-121: Numeric Key Shorthand Support', () => {

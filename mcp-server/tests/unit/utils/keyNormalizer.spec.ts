@@ -10,8 +10,8 @@
  * Tickets are stored with 3-digit zero-padded numbers (MDT-001, MDT-002, etc.)
  */
 
-import { ToolError } from '../../../../src/utils/toolError'
 import { normalizeKey } from '../../../../src/utils/keyNormalizer'
+import { ToolError } from '../../../../src/utils/toolError'
 
 describe('keyNormalizer', () => {
   describe('valid Input - Numeric Shorthand', () => {
@@ -93,15 +93,15 @@ describe('keyNormalizer', () => {
     })
 
     it('Given null WHEN normalizing THEN throws ToolError', () => {
-      expect(() => normalizeKey(null as any, 'MDT')).toThrow(ToolError)
+      expect(() => normalizeKey(null as unknown as string, 'MDT')).toThrow(ToolError)
     })
 
     it('Given undefined WHEN normalizing THEN throws ToolError', () => {
-      expect(() => normalizeKey(undefined as any, 'MDT')).toThrow(ToolError)
+      expect(() => normalizeKey(undefined as unknown as string, 'MDT')).toThrow(ToolError)
     })
 
     it('Given non-string type WHEN normalizing THEN throws ToolError', () => {
-      expect(() => normalizeKey(123 as any, 'MDT')).toThrow(ToolError)
+      expect(() => normalizeKey(123 as unknown as string, 'MDT')).toThrow(ToolError)
     })
   })
 

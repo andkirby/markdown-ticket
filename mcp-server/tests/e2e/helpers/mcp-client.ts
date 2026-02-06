@@ -13,12 +13,12 @@ import { HttpTransport, StdioTransport } from './mcp-transports'
 export interface MCPTool {
   name: string
   description?: string
-  inputSchema?: any
+  inputSchema?: Record<string, unknown>
 }
 
 export interface MCPResponse {
   success: boolean
-  data?: any
+  data?: unknown
   key?: string // For CR creation responses
   error?: {
     code: number
@@ -138,16 +138,17 @@ export class MCPClient {
   /**
    * Handle incoming messages from the MCP server
    */
-  private handleServerMessage(message: any): void {
+  private handleServerMessage(message: Record<string, unknown>): void {
     // Handle JSON-RPC response
-    if (message.id && this.pendingRequests.has(message.id)) {
-      const { resolve, reject } = this.pendingRequests.get(message.id)!
-      this.pendingRequests.delete(message.id)
+    if (message.id && this.pendingRequests.has(message.id as number)) {
+      const { resolve, reject } = this.pendingRequests.get(message.id as number)!
+      this.pendingRequests.delete(message.id as number)
 
       if (message.error) {
         // Create a custom error that preserves the error code
-        const error = new Error(message.error.message || 'RPC error') as any
-        error.code = message.error.code
+        const errorObj = message.error as { message?: string, code?: number }
+        const error = new Error(errorObj.message || 'RPC error') as Error & { code?: number }
+        error.code = errorObj.code
         reject(error)
       }
       else {
@@ -208,7 +209,7 @@ export class MCPClient {
   /**
    * Call a specific MCP tool with retry logic
    */
-  async callTool(toolName: string, params: any): Promise<MCPResponse> {
+  async callTool(toolName: string, params: Record<string, unknown>): Promise<MCPResponse> {
     const maxRetries = this.options.retries || 3
     const retryDelay = 1000 // 1 second between retries
 
@@ -243,7 +244,7 @@ export class MCPClient {
         }
 
         // Send request and get response based on transport
-        let response: any
+        let response: Record<string, unknown>
         if (this.options.transport === 'stdio') {
           response = await this.callToolStdio(request)
         }
@@ -253,25 +254,26 @@ export class MCPClient {
 
         // Parse response
         if (response.error) {
+          const errorObj = response.error as { code?: number, message?: string }
           const mcpResponse = {
             success: false,
             error: {
-              code: response.error.code || -32000,
-              message: response.error.message || 'RPC error',
+              code: errorObj.code || -32000,
+              message: errorObj.message || 'RPC error',
             },
           }
 
           // Special handling for rate limit errors - throw them for test compatibility
-          if (response.error.message
-            && (response.error.message.toLowerCase().includes('rate limit')
-              || response.error.message.includes('Rate limit'))) {
+          if (errorObj.message
+            && (errorObj.message.toLowerCase().includes('rate limit')
+              || errorObj.message.includes('Rate limit'))) {
             this.logger.warn('Rate limit error encountered', {
               toolName,
               error: mcpResponse.error,
             })
             // Create a proper Error object for the test
-            const rateLimitError = new Error(response.error.message);
-            (rateLimitError as any).code = response.error.code
+            const rateLimitError = new Error(errorObj.message) as Error & { code?: number }
+            rateLimitError.code = errorObj.code
             throw rateLimitError
           }
 
@@ -298,14 +300,14 @@ export class MCPClient {
         const content = this.parseResultContent(response.result)
 
         // Check if the response indicates an error according to MCP spec
-        if (response.result && response.result.isError === true) {
+        if (response.result && (response.result as { isError?: boolean }).isError === true) {
           // According to MCP spec, this is a tool execution error
           // The error message should be in the content array
           let errorMessage = 'Tool execution error'
-          if (response.result.content && Array.isArray(response.result.content)) {
-            const textContent = response.result.content.find((c: any) => c.type === 'text')
-            if (textContent && textContent.text) {
-              errorMessage = textContent.text
+          if ((response.result as { content?: unknown[] }).content && Array.isArray((response.result as { content?: unknown[] }).content)) {
+            const textContent = (response.result as { content: unknown[] }).content.find((c: unknown) => typeof c === 'object' && c !== null && (c as { type?: string }).type === 'text')
+            if (textContent && (textContent as { text?: string }).text) {
+              errorMessage = (textContent as { text: string }).text
             }
           }
 
@@ -374,11 +376,11 @@ export class MCPClient {
         this.logger.info('Tool call successful', { toolName, attempt })
         return mcpResponse
       }
-      catch (error: any) {
+      catch (error: unknown) {
         this.logger.warn('Tool call threw exception', {
           toolName,
           attempt,
-          error: error.message || String(error),
+          error: error instanceof Error ? error.message : String(error),
         })
 
         // If this is the last attempt, return the error
@@ -386,13 +388,13 @@ export class MCPClient {
           // Preserve the error code from the server
           // Protocol errors should maintain their original codes (-32601, -32602, etc.)
           // Tool execution errors will have code -32000 by default
-          const errorCode = error.code || -1
+          const errorCode = (error instanceof Error && 'code' in error) ? (error as Error & { code?: number }).code : -1
 
           const response = {
             success: false,
             error: {
               code: errorCode,
-              message: error.message || 'Unknown error',
+              message: error instanceof Error ? error.message : 'Unknown error',
             },
           }
           this.logger.error('Tool call failed after all retries with exception', error instanceof Error ? error : new Error(String(error)), { toolName, maxRetries, errorCode },
@@ -420,7 +422,7 @@ export class MCPClient {
   /**
    * Call tool via stdio transport with proper MCP protocol
    */
-  private async callToolStdio(request: any): Promise<any> {
+  private async callToolStdio(request: Record<string, unknown>): Promise<Record<string, unknown>> {
     if (!this.serverProcess) {
       throw new Error('Server process not available')
     }
@@ -434,11 +436,11 @@ export class MCPClient {
 
       // Store the promise callbacks for response handling
       this.pendingRequests.set(requestId, {
-        resolve: (response: any) => {
+        resolve: (response: unknown) => {
           clearTimeout(timeout)
           resolve(response)
         },
-        reject: (error: any) => {
+        reject: (error: unknown) => {
           clearTimeout(timeout)
           reject(error)
         },
@@ -460,7 +462,7 @@ export class MCPClient {
   /**
    * Call tool via HTTP transport
    */
-  private async callToolHttp(request: any): Promise<any> {
+  private async callToolHttp(request: Record<string, unknown>): Promise<Record<string, unknown>> {
     const baseUrl = (this.transport as HttpTransport).getBaseUrl()
 
     const response = await fetch(`${baseUrl}/mcp`, {
@@ -481,15 +483,15 @@ export class MCPClient {
   /**
    * Parse result content from MCP response
    */
-  private parseResultContent(result: any): any {
+  private parseResultContent(result: Record<string, unknown> | null): unknown {
     if (!result)
       return null
 
     // Handle MCP content array format: {content: [{text: "...", type: "text"}]}
     if (result.content && Array.isArray(result.content)) {
       const textItems = result.content
-        .filter((item: any) => item.type === 'text')
-        .map((item: any) => item.text)
+        .filter((item: unknown) => typeof item === 'object' && item !== null && (item as { type?: string }).type === 'text')
+        .map((item: unknown) => (item as { text?: string }).text)
 
       const text = textItems.length === 1 ? textItems[0] : textItems.join('\n')
 

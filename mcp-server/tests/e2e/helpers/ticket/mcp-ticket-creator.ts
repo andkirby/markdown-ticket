@@ -62,7 +62,7 @@ export class McpTicketCreator implements TicketCreator {
     return 'mcp'
   }
 
-  private extractTicketId(response: any): string | undefined {
+  private extractTicketId(response: { success: boolean, data?: string }): string | undefined {
     if (!response.success || !response.data)
       return undefined
     const titleMatch = response.data.match(/✅ \*\*Created CR (.+?)\*\*:/)

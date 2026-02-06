@@ -35,7 +35,7 @@ process.env.MCP_HTTP_ENABLED = 'true'
 
 // Mock process.exit to prevent test suite from terminating
 const mockExit = jest.fn()
-process.exit = mockExit as any
+process.exit = mockExit as unknown as (code?: number) => never
 
 // Mock shared services that might cause issues
 jest.mock('@mdt/shared/services/ProjectService', () => ({

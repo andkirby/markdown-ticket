@@ -96,7 +96,7 @@ const SANITIZER_CONFIGS = {
     allowedScriptDomains: [],
     // Transform functions to handle specific cases
     transformTags: {
-      a: (tagName: string, attribs: any) => {
+      a: (tagName: string, attribs: Record<string, string>) => {
         // Remove dangerous URLs
         const href = attribs.href
         if (!href)
@@ -359,7 +359,7 @@ export class Sanitizer {
   /**
    * Sanitize any content by auto-detecting its type
    */
-  static sanitize(content: any): string {
+  static sanitize(content: unknown): string {
     if (!isSanitizationEnabled()) {
       return typeof content !== 'string' ? String(content) : content
     }
