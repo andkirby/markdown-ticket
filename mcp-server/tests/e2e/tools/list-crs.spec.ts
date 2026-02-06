@@ -41,18 +41,28 @@ describe('list_crs', () => {
     await testEnv.cleanup()
   })
 
-  async function callListCRs(projectKey: string, filters?: any) {
-    const params: any = { project: projectKey }
+  async function callListCRs(projectKey: string, filters?: Record<string, unknown>) {
+    const params: Record<string, unknown> = { project: projectKey }
     if (filters && Object.keys(filters).length > 0) {
       params.filters = filters
     }
     return await mcpClient.callTool('list_crs', params)
   }
 
-  function parseMarkdownResponse(markdown: string): Array<{ code: string, title: string, status: string, type: string, priority: string, phaseEpic?: string }> {
-    const crs: Array<any> = []
+  interface CRListItem {
+    code: string
+    title: string
+    status?: string
+    type?: string
+    priority?: string
+    phaseEpic?: string
+    created?: string
+  }
+
+  function parseMarkdownResponse(markdown: string): CRListItem[] {
+    const crs: CRListItem[] = []
     const lines = markdown.split('\n')
-    let currentCR: any = {}
+    let currentCR: Partial<CRListItem> = {}
 
     for (const line of lines) {
       const trimmedLine = line.trim()
@@ -61,7 +71,7 @@ describe('list_crs', () => {
       const codeTitleMatch = trimmedLine.match(/^\*\*([A-Z]+-\d+)\*\* - (.+)$/)
       if (codeTitleMatch) {
         if (Object.keys(currentCR).length > 0) {
-          crs.push(currentCR)
+          crs.push(currentCR as CRListItem)
         }
         currentCR = {
           code: codeTitleMatch[1],
@@ -95,20 +105,20 @@ describe('list_crs', () => {
 
       // Empty line indicates end of CR block
       if (trimmedLine === '' && Object.keys(currentCR).length > 0) {
-        crs.push(currentCR)
+        crs.push(currentCR as CRListItem)
         currentCR = {}
       }
     }
 
     // Push the last CR if there is one
     if (Object.keys(currentCR).length > 0) {
-      crs.push(currentCR)
+      crs.push(currentCR as CRListItem)
     }
 
     return crs
   }
 
-  function expectCRStructure(cr: any) {
+  function expectCRStructure(cr: CRListItem) {
     expect(cr.code).toBeDefined()
     expect(typeof cr.code).toBe('string')
     expect(cr.title).toBeDefined()
@@ -202,12 +212,12 @@ The solution is straightforward as this is test content.
       expect(crs.length).toBeGreaterThanOrEqual(3)
 
       // Verify CR structure
-      crs.forEach((cr: any) => {
+      crs.forEach((cr: CRListItem) => {
         expectCRStructure(cr)
       })
 
       // Verify specific CRs exist
-      const crTitles = crs.map((cr: any) => cr.title)
+      const crTitles = crs.map((cr: CRListItem) => cr.title)
       expect(crTitles).toContain('Feature Enhancement CR')
       expect(crTitles).toContain('Bug Fix CR')
       expect(crTitles).toContain('Architecture CR')
@@ -259,7 +269,7 @@ The solution is straightforward as this is test content.
 
       // All 4 CRs should be returned since they all have 'Proposed' status
       expect(crs.length).toBe(4)
-      crs.forEach((cr: any) => {
+      crs.forEach((cr: CRListItem) => {
         expect(cr.status).toBe('Proposed')
       })
     })
@@ -306,7 +316,7 @@ The solution is straightforward as this is test content.
 
       // All 4 CRs should be returned since they all have 'Proposed' status
       expect(crs.length).toBe(4)
-      crs.forEach((cr: any) => {
+      crs.forEach((cr: CRListItem) => {
         expect(cr.status).toBe('Proposed')
       })
     })
@@ -356,11 +366,11 @@ The solution is straightforward as this is test content.
       const crs = parseMarkdownResponse(response.data)
       // Array handled by parseMarkdownResponse
 
-      crs.forEach((cr: any) => {
+      crs.forEach((cr: CRListItem) => {
         expect(cr.type).toBe('Architecture')
       })
 
-      const crTitles = crs.map((cr: any) => cr.title)
+      const crTitles = crs.map((cr: CRListItem) => cr.title)
       expect(crTitles).toContain('Architecture CR')
       expect(crTitles).not.toContain('Feature CR')
     })
@@ -409,7 +419,7 @@ The solution is straightforward as this is test content.
       const crs = parseMarkdownResponse(response.data)
       // Array handled by parseMarkdownResponse
 
-      crs.forEach((cr: any) => {
+      crs.forEach((cr: CRListItem) => {
         expect(['Feature Enhancement', 'Bug Fix']).toContain(cr.type)
       })
 
@@ -462,7 +472,7 @@ The solution is straightforward as this is test content.
       const crs = parseMarkdownResponse(response.data)
       // Array handled by parseMarkdownResponse
 
-      crs.forEach((cr: any) => {
+      crs.forEach((cr: CRListItem) => {
         expect(['High', 'Critical']).toContain(cr.priority)
       })
 
@@ -521,13 +531,13 @@ The solution is straightforward as this is test content.
       const crs = parseMarkdownResponse(response.data)
       // Array handled by parseMarkdownResponse
 
-      crs.forEach((cr: any) => {
+      crs.forEach((cr: CRListItem) => {
         expect(cr.type).toBe('Feature Enhancement')
         expect(cr.status).toBe('Proposed')
       })
 
       expect(crs.length).toBe(2) // High Priority Feature and Low Priority Feature
-      const crTitles = crs.map((cr: any) => cr.title)
+      const crTitles = crs.map((cr: CRListItem) => cr.title)
       expect(crTitles).toContain('High Priority Feature')
       expect(crTitles).toContain('Low Priority Feature')
     })

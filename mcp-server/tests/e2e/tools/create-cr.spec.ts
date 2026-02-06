@@ -42,7 +42,7 @@ describe('create_cr', () => {
     await testEnv.cleanup()
   })
 
-  async function callCreateCR(projectKey: string, type: string, title: string, data: any = {}) {
+  async function callCreateCR(projectKey: string, type: string, title: string, data: Record<string, unknown> = {}) {
     const response = await mcpClient.callTool('create_cr', {
       project: projectKey,
       type,
@@ -60,8 +60,22 @@ describe('create_cr', () => {
     return response
   }
 
-  function parseCreateCRResponse(markdown: string): any {
-    const cr: any = {}
+  function parseCreateCRResponse(markdown: string): {
+    key?: string
+    title?: string
+    status?: string
+    type?: string
+    priority?: string
+    phaseEpic?: string
+  } {
+    const cr: {
+      key?: string
+      title?: string
+      status?: string
+      type?: string
+      priority?: string
+      phaseEpic?: string
+    } = {}
 
     // Extract CR key from first line (format: ✅ **Created CR TEST-001**: Title)
     const keyMatch = markdown.match(/✅ \*\*Created CR ([A-Z]+-\d+)\*\*:/)
@@ -99,7 +113,14 @@ describe('create_cr', () => {
     return cr
   }
 
-  function expectCreatedCRStructure(cr: any, expectedTitle: string, expectedType: string) {
+  function expectCreatedCRStructure(cr: {
+    key?: string
+    title?: string
+    status?: string
+    type?: string
+    priority?: string
+    phaseEpic?: string
+  }, expectedTitle: string, expectedType: string) {
     expect(cr.key).toBeDefined()
     expect(typeof cr.key).toBe('string')
     expect(cr.key).toMatch(/^[A-Z]+-\d{3}$/) // Format: PROJECT-123
@@ -205,7 +226,7 @@ Test CR for ${type} type.`,
 
   describe('required Fields', () => {
     it('GIVEN missing project WHEN creating THEN return validation error', async () => {
-      const response = await callCreateCR(undefined as any, 'Feature Enhancement', 'Test CR')
+      const response = await callCreateCR(undefined as unknown as string, 'Feature Enhancement', 'Test CR')
 
       // Missing required parameter is a protocol error
       expect(response.success).toBe(false)
@@ -215,7 +236,7 @@ Test CR for ${type} type.`,
     })
 
     it('GIVEN missing type WHEN creating THEN return validation error', async () => {
-      const response = await callCreateCR('TEST', undefined as any, 'Test CR')
+      const response = await callCreateCR('TEST', undefined as unknown as string, 'Test CR')
 
       // Missing required parameter is a protocol error
       expect(response.success).toBe(false)
@@ -225,7 +246,7 @@ Test CR for ${type} type.`,
     })
 
     it('GIVEN missing title WHEN creating THEN return validation error', async () => {
-      const response = await callCreateCR('TEST', 'Feature Enhancement', '' as any)
+      const response = await callCreateCR('TEST', 'Feature Enhancement', '' as unknown as string)
 
       // Missing title is a validation error
       expect(response.success).toBe(false)

@@ -12,9 +12,9 @@
  */
 
 import type { MCPResponse } from '../helpers/mcp-client'
+import { ProjectSetup } from '../helpers/core/project-setup'
 import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
-import { ProjectSetup } from '../helpers/core/project-setup'
 import { TestEnvironment } from '../helpers/test-environment'
 
 describe('MDT-121: Single-Project Mode Auto-Detection', () => {
@@ -99,12 +99,12 @@ describe('MDT-121: Single-Project Mode Auto-Detection', () => {
 
     it('GIVEN subdirectory of project WHEN starting THEN detect from parent config', async () => {
       // BR-1.1, BR-1.4
-      const projectDir = await projectSetup.createProjectStructure('MDT', 'Markdown Ticket Test')
+      await projectSetup.createProjectStructure('MDT', 'Markdown Ticket Test')
 
       // Create a subdirectory (simulating starting from mcp-server/src/)
       const subdir = testEnv.createProjectStructure('MDT', {
-        'subdirectory': {
-          'nested': true,
+        subdirectory: {
+          nested: true,
         },
       })
 

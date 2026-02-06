@@ -407,7 +407,7 @@ export async function startHttpTransport(
 
     // Listen for events from session (if session exists)
     const eventHandler = session
-      ? (data: any) => {
+      ? (data: unknown) => {
           res.write(`data: ${JSON.stringify(data)}\n\n`)
         }
       : null
@@ -566,11 +566,15 @@ export async function startHttpTransport(
 /**
  * Check if the message is a notification or response (no reply needed)
  */
-function _isNotificationOrResponse(body: any): boolean {
+function _isNotificationOrResponse(body: unknown): boolean {
   if (Array.isArray(body)) {
-    return body.every(item => !item.id || item.result !== undefined || item.error !== undefined)
+    return body.every((item) => {
+      const record = item as Record<string, unknown>
+      return !record.id || record.result !== undefined || record.error !== undefined
+    })
   }
-  return !body.id || body.result !== undefined || body.error !== undefined
+  const record = body as Record<string, unknown>
+  return !record.id || record.result !== undefined || record.error !== undefined
 }
 
 /**
@@ -579,7 +583,7 @@ function _isNotificationOrResponse(body: any): boolean {
  */
 async function _handleJsonRpcRequest(
   mcpTools: MCPTools,
-  request: any,
+  request: Record<string, unknown>,
   _sessionManager: SessionManager,
 ): Promise<JSONRPCResponse | JSONRPCError> {
   console.error(`🔧 _handleJsonRpcRequest called with:`, `${JSON.stringify(request).substring(0, 100)}...`)

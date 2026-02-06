@@ -41,7 +41,18 @@ describe('update_cr_attrs', () => {
     await testEnv.cleanup()
   })
 
-  async function callUpdateCRAttrs(projectKey: string, crKey: string, attributes: any) {
+  interface CRAttributes {
+    priority?: 'Low' | 'Medium' | 'High' | 'Critical'
+    phaseEpic?: string
+    assignee?: string
+    relatedTickets?: string
+    dependsOn?: string
+    blocks?: string
+    implementationDate?: string
+    implementationNotes?: string
+  }
+
+  async function callUpdateCRAttrs(projectKey: string, crKey: string, attributes: CRAttributes) {
     return await mcpClient.callTool('update_cr_attrs', {
       project: projectKey,
       key: crKey,
@@ -72,7 +83,17 @@ Basic implementation steps.
 - Functionality works as expected`
   }
 
-  async function createTestCRAndGetKey(projectCode: string, crData: any): Promise<string> {
+  interface CreateCRData {
+    title: string
+    type: string
+    priority?: string
+    assignee?: string
+    phaseEpic?: string
+    dependsOn?: string
+    status?: string
+  }
+
+  async function createTestCRAndGetKey(projectCode: string, crData: CreateCRData): Promise<string> {
     const createdCR = await projectFactory.createTestCR(projectCode, {
       ...crData,
       content: createTestContent(crData.title),

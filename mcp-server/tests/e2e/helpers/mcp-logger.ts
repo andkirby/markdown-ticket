@@ -17,7 +17,7 @@ export interface LogEntry {
   level: LogLevel
   message: string
   timestamp: Date
-  context?: any
+  context?: Record<string, unknown>
   error?: Error
 }
 
@@ -39,23 +39,23 @@ export class MCPLogger {
     return MCPLogger.instance
   }
 
-  debug(message: string, context?: any): void {
+  debug(message: string, context?: Record<string, unknown>): void {
     this.log(LogLevel.DEBUG, message, context)
   }
 
-  info(message: string, context?: any): void {
+  info(message: string, context?: Record<string, unknown>): void {
     this.log(LogLevel.INFO, message, context)
   }
 
-  warn(message: string, context?: any): void {
+  warn(message: string, context?: Record<string, unknown>): void {
     this.log(LogLevel.WARN, message, context)
   }
 
-  error(message: string, error?: Error, context?: any): void {
+  error(message: string, error?: Error, context?: Record<string, unknown>): void {
     this.log(LogLevel.ERROR, message, context, error)
   }
 
-  private log(level: LogLevel, message: string, context?: any, error?: Error): void {
+  private log(level: LogLevel, message: string, context?: Record<string, unknown>, error?: Error): void {
     const entry: LogEntry = {
       level,
       message,

@@ -25,8 +25,16 @@ import { TestEnvironment } from '../helpers/test-environment'
  *    Description
  *    Actionable:* Yes
  */
+interface Suggestion {
+  title: string
+  description: string
+  category: string
+  severity: 'info' | 'minor' | 'major' | 'critical'
+  actionable: boolean
+}
+
 function parseSuggestionsFromMarkdown(markdown: string) {
-  const suggestions: any[] = []
+  const suggestions: Suggestion[] = []
 
   // Extract summary from the beginning
   const summaryMatch = markdown.match(/\*\*Current CR:\*\* (.+)$/m)
@@ -135,13 +143,18 @@ describe('suggest_cr_improvements', () => {
     })
   }
 
-  function expectSuggestionStructure(data: any) {
+  interface ParsedSuggestionsData {
+    summary?: string
+    suggestions?: Suggestion[]
+  }
+
+  function expectSuggestionStructure(data: ParsedSuggestionsData) {
     expect(data).toBeDefined()
     expect(typeof data.summary).toBe('string')
 
     if (data.suggestions) {
       expect(Array.isArray(data.suggestions)).toBe(true)
-      data.suggestions.forEach((suggestion: any) => {
+      data.suggestions.forEach((suggestion: Suggestion) => {
         expect(suggestion.category).toBeDefined()
         expect(suggestion.description).toBeDefined()
         expect(suggestion.severity).toBeDefined()
@@ -300,7 +313,7 @@ This change is necessary to:
         content: completeContent,
       })
 
-      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key)
+      const response = await callSuggestCRImprovements('TEST', (createdCR as { key: string }).key)
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
@@ -312,7 +325,7 @@ This change is necessary to:
       // Should have minimal or no suggestions for a complete CR
       if (parsedData.suggestions) {
         expect(parsedData.suggestions.length).toBeLessThan(3)
-        parsedData.suggestions.forEach((s: any) => {
+        parsedData.suggestions.forEach((s: Suggestion) => {
           expect(['info', 'minor']).toContain(s.severity)
         })
       }
@@ -337,7 +350,7 @@ This is blocking user access to the system.`
         content: incompleteContent,
       })
 
-      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key)
+      const response = await callSuggestCRImprovements('TEST', (createdCR as { key: string }).key)
 
       expect(response.success).toBe(true)
 
@@ -383,7 +396,7 @@ It works.`
         content: sparseContent,
       })
 
-      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key)
+      const response = await callSuggestCRImprovements('TEST', (createdCR as { key: string }).key)
 
       expect(response.success).toBe(true)
 
@@ -431,7 +444,7 @@ This needs to be fixed because users are complaining.`
         content: poorStructureContent,
       })
 
-      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key)
+      const response = await callSuggestCRImprovements('TEST', (createdCR as { key: string }).key)
 
       expect(response.success).toBe(true)
 
@@ -479,7 +492,7 @@ More content here.`
         content: inconsistentContent,
       })
 
-      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key)
+      const response = await callSuggestCRImprovements('TEST', (createdCR as { key: string }).key)
 
       expect(response.success).toBe(true)
 
@@ -527,7 +540,7 @@ Use search library.
         content: vagueCriteriaContent,
       })
 
-      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key)
+      const response = await callSuggestCRImprovements('TEST', (createdCR as { key: string }).key)
 
       expect(response.success).toBe(true)
 
@@ -567,7 +580,7 @@ Feature works.`
         content: noAnalysisContent,
       })
 
-      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key)
+      const response = await callSuggestCRImprovements('TEST', (createdCR as { key: string }).key)
 
       expect(response.success).toBe(true)
 
@@ -626,7 +639,7 @@ Real-time collaboration is becoming standard expectation in document editing too
         content: perfectContent,
       })
 
-      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key)
+      const response = await callSuggestCRImprovements('TEST', (createdCR as { key: string }).key)
 
       expect(response.success).toBe(true)
 
@@ -637,7 +650,7 @@ Real-time collaboration is becoming standard expectation in document editing too
       // Should have minimal suggestions for good content
       if (parsedData.suggestions.length > 0) {
         expect(parsedData.suggestions.length).toBeLessThan(5)
-        parsedData.suggestions.forEach((s: any) => {
+        parsedData.suggestions.forEach((s: Suggestion) => {
           expect(['info', 'minor']).toContain(s.severity)
         })
       }
@@ -703,7 +716,7 @@ Need to document something.`
         content: minimalContent,
       })
 
-      const response = await callSuggestCRImprovements('TEST', (createdCR as any).key)
+      const response = await callSuggestCRImprovements('TEST', (createdCR as { key: string }).key)
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()

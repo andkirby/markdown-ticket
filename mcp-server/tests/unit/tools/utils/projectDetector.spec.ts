@@ -26,9 +26,10 @@ describe('projectDetector', () => {
 
     // Mock process.cwd to return a predictable path
     const mockCwd = jest.fn(() => '/test/project/src/nested')
-    process.cwd = mockCwd as any
+    process.cwd = mockCwd as unknown as () => string
 
     // Import after mocks are set up
+    // eslint-disable-next-line ts/no-require-imports
     const projectDetector = require('../../../../src/tools/utils/projectDetector')
     find = projectDetector.find
   })
@@ -146,7 +147,7 @@ describe('projectDetector', () => {
     })
 
     it('Given depth 10 WHEN finding THEN stops at filesystem root', () => {
-      (existsSync as jest.Mock).mockImplementation((filePath: string) => {
+      (existsSync as jest.Mock).mockImplementation((_filePath: string) => {
         // Simulate hitting filesystem root after a few levels
         return false
       })

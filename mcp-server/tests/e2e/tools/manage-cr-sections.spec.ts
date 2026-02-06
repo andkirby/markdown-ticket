@@ -48,7 +48,7 @@ describe('manage_cr_sections', () => {
     section?: string,
     content?: string,
   ) {
-    const params: any = {
+    const params: Record<string, string> = {
       project: projectKey,
       key: crKey,
       operation,
@@ -113,7 +113,7 @@ describe('manage_cr_sections', () => {
     // For replace/append/prepend operations, the response contains success info
     // Look for a success message and extract the section info
     const lines = markdown.split('\n')
-    const result: any = {}
+    const result: { section?: string, content?: string } = {}
 
     // Find the section being operated on
     for (const line of lines) {

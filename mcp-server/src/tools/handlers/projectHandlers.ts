@@ -18,7 +18,7 @@ export class ProjectHandlers {
   /**
    * Handle project-related tool calls
    */
-  async handleToolCall(name: string, args: any): Promise<string> {
+  async handleToolCall(name: string, args: Record<string, unknown>): Promise<string> {
     try {
       switch (name) {
         case 'list_projects':
@@ -147,7 +147,7 @@ export class ProjectHandlers {
     const project = await this.validateProject(key)
 
     // Get CR count from project CRs - use path from extended Project interface
-    const projectPath = (project.project as any).path || project.project.ticketsPath || '.'
+    const projectPath = (project.project as { path?: string }).path || project.project.ticketsPath || '.'
     const crs = await this.projectService.getProjectCRs(projectPath)
     const crCount = crs.length
 

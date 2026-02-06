@@ -48,12 +48,13 @@ describe('rate Limiting (MUST-05)', () => {
   })
 
   // Helper method to make rapid tool calls
-  async function makeRapidCalls(toolName: string, params: any, count: number): Promise<any[]> {
-    const results = []
+  interface ToolCallResult { success: boolean, result?: unknown, error?: Error, index: number }
+  async function makeRapidCalls(toolName: string, params: Record<string, unknown>, count: number): Promise<ToolCallResult[]> {
+    const results: ToolCallResult[] = []
     console.warn(`Making ${count} rapid requests to ${toolName}...`)
 
     // Make all requests in parallel to truly stress test
-    const promises = []
+    const promises: Promise<ToolCallResult>[] = []
     for (let i = 0; i < count; i++) {
       const promise = mcpClient.callTool(toolName, params)
         .then((result) => {

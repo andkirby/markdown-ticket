@@ -61,7 +61,7 @@ describe('get_cr', () => {
     return match[1]
   }
 
-  function expectFullCRStructure(response: any) {
+  function expectFullCRStructure(response: string) {
     // In full mode, response is markdown content (string)
     expect(typeof response).toBe('string')
     // Should contain markdown sections
@@ -69,11 +69,11 @@ describe('get_cr', () => {
     expect(response).toContain('## 2. Rationale')
   }
 
-  function expectAttributesStructure(response: any) {
+  function expectAttributesStructure(response: string) {
     // In attributes mode, response is JSON string
     expect(typeof response).toBe('string')
     // Should be valid JSON
-    const parsed = JSON.parse(response)
+    const parsed = JSON.parse(response) as { code?: string, title?: string, status?: string, type?: string, priority?: string, content?: string }
     // Should have YAML attributes
     expect(parsed.code).toBeDefined()
     expect(parsed.title).toBeDefined()
@@ -84,11 +84,11 @@ describe('get_cr', () => {
     expect(parsed.content).toBeUndefined()
   }
 
-  function expectMetadataStructure(response: any) {
+  function expectMetadataStructure(response: string) {
     // In metadata mode, response is JSON string
     expect(typeof response).toBe('string')
     // Should be valid JSON
-    const parsed = JSON.parse(response)
+    const parsed = JSON.parse(response) as { code?: string, title?: string, status?: string, type?: string, priority?: string, content?: string }
     // Should have minimal metadata only
     expect(parsed.code).toBeDefined()
     expect(parsed.title).toBeDefined()

@@ -26,7 +26,7 @@ describe('get_project_info', () => {
   })
 
   function parseProjectInfoMarkdown(markdown: string) {
-    const info: any = {}
+    const info: { key?: string, name?: string, code?: string, description?: string, path?: string, crCount?: number, repository?: string } = {}
     if (!markdown)
       return info
 
