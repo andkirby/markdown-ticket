@@ -30,6 +30,7 @@ interface ServerConfig {
     scanPaths: string[] // Additional scan paths
     excludePaths: string[]
     maxDepth: number // For directory scanning
+    mdtConfigSearchDepth: number // For project .mdt-config.toml detection
     cacheTimeout: number
   }
   templates: {
@@ -60,6 +61,7 @@ const DEFAULT_CONFIG: ServerConfig = {
       'temp',
     ],
     maxDepth: 4,
+    mdtConfigSearchDepth: 3, // Default depth for .mdt-config.toml parent directory search
     cacheTimeout: Number.parseInt(process.env.MCP_CACHE_TIMEOUT || '300', 10), // 5 minutes default
   },
   templates: {
@@ -119,6 +121,9 @@ export class ConfigService {
           if (typeof fileConfig.discovery.maxDepth === 'number') {
             this.config.discovery.maxDepth = fileConfig.discovery.maxDepth
           }
+          if (typeof fileConfig.discovery.mdtConfigSearchDepth === 'number') {
+            this.config.discovery.mdtConfigSearchDepth = fileConfig.discovery.mdtConfigSearchDepth
+          }
           if (typeof fileConfig.discovery.cacheTimeout === 'number' && !process.env.MCP_CACHE_TIMEOUT) {
             // Environment variable takes precedence
             this.config.discovery.cacheTimeout = fileConfig.discovery.cacheTimeout
@@ -149,6 +154,16 @@ export class ConfigService {
 
   getConfig(): ServerConfig {
     return this.config
+  }
+
+  /**
+   * Get the search depth for .mdt-config.toml parent directory search.
+   * Used by project detector to limit how many parent directories to search.
+   *
+   * @returns Search depth (default: 3)
+   */
+  getSearchDepth(): number {
+    return this.config.discovery.mdtConfigSearchDepth
   }
 
   async validateConfig(): Promise<{ valid: boolean, errors: string[], warnings: string[] }> {

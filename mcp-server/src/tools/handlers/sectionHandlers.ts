@@ -3,8 +3,9 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js'
 import type { CRService } from '../../services/crService.js'
 import { SectionService } from '../../services/SectionManagement/SectionService.js'
+import { normalizeKey } from '../../utils/keyNormalizer.js'
 import { JsonRpcErrorCode, ToolError } from '../../utils/toolError.js'
-import { validateCRKey, validateOperation, validateRequired } from '../../utils/validation.js'
+import { validateOperation, validateRequired } from '../../utils/validation.js'
 
 export class SectionHandlers {
   private sectionService: SectionService
@@ -24,17 +25,16 @@ export class SectionHandlers {
     section?: string,
     content?: string,
   ): Promise<string> {
-    const keyValidation = validateCRKey(key)
-    if (!keyValidation.valid) {
-      throw ToolError.protocol(keyValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
-    }
+    // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
+    const normalizedKey = normalizeKey(key, project.project.code)
+
     // Backward compatibility: map legacy 'update' to 'replace'
     const op = operation === 'update' ? 'replace' : operation
     const operationValidation = validateOperation(op, ['list', 'get', 'replace', 'append', 'prepend'])
     if (!operationValidation.valid) {
       throw ToolError.protocol(operationValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
     }
-    const validKey = keyValidation.value
+    const validKey = normalizedKey
     const validOp = operationValidation.value as 'list' | 'get' | 'replace' | 'append' | 'prepend'
     switch (validOp) {
       case 'list':

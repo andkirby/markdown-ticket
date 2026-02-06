@@ -17,6 +17,7 @@ import type { CRService } from '../../services/crService.js'
 import { CRStatus as CRStatusEnum, CRTypes } from '@mdt/domain-contracts'
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ContentProcessor } from '../../services/SectionManagement/ContentProcessor.js'
+import { normalizeKey } from '../../utils/keyNormalizer.js'
 import { Sanitizer } from '../../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../../utils/toolError.js'
 import { validateCRKey, validateOperation, validateRequired } from '../../utils/validation.js'
@@ -72,11 +73,8 @@ export class CRHandlers {
    * Handler for get_cr tool
    */
   async handleGetCR(project: Project, key: string, mode: string = 'full'): Promise<string> {
-    // Validate CR key format - this is a protocol error (invalid parameter)
-    const keyValidation = validateCRKey(key)
-    if (!keyValidation.valid) {
-      throw ToolError.protocol(keyValidation.message || 'Invalid CR key format', JsonRpcErrorCode.InvalidParams)
-    }
+    // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
+    const normalizedKey = normalizeKey(key, project.project.code)
 
     // Validate mode parameter - this is a protocol error (invalid parameter)
     const modeValidation = validateOperation(mode, ['full', 'attributes', 'metadata'], 'mode')
@@ -84,10 +82,10 @@ export class CRHandlers {
       throw ToolError.protocol(modeValidation.message || 'Invalid mode parameter', JsonRpcErrorCode.InvalidParams)
     }
 
-    const ticket = await this.crService.getCR(project, keyValidation.value)
+    const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
       // CR not found is a business logic failure (tool execution error)
-      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`)
+      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
     }
 
     switch (modeValidation.value) {
@@ -104,7 +102,7 @@ export class CRHandlers {
           const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/)
           if (!frontmatterMatch) {
             // Invalid file format is a business logic error (tool execution error)
-            throw ToolError.toolExecution(`Invalid CR file format for ${key}: No YAML frontmatter found`)
+            throw ToolError.toolExecution(`Invalid CR file format for ${normalizedKey}: No YAML frontmatter found`)
           }
 
           const _yamlContent = frontmatterMatch[1]
@@ -112,12 +110,12 @@ export class CRHandlers {
           // Use MarkdownService to parse YAML (anti-duplication)
           const parsedTicket = await MarkdownService.parseMarkdownContent(fileContent)
           if (!parsedTicket) {
-            throw ToolError.toolExecution(`Failed to parse CR file for ${key}`)
+            throw ToolError.toolExecution(`Failed to parse CR file for ${normalizedKey}`)
           }
 
           // Build attributes object from parsed ticket
           const attributes: any = {
-            code: parsedTicket.code || key,
+            code: parsedTicket.code || normalizedKey,
             title: Sanitizer.sanitizeText(ticket.title || parsedTicket.title || 'Untitled'),
             status: parsedTicket.status || 'Unknown',
             type: parsedTicket.type || 'Unknown',
@@ -147,7 +145,7 @@ export class CRHandlers {
           return Sanitizer.sanitizeText(JSON.stringify(attributes, null, 2))
         }
         catch (fileError) {
-          throw ToolError.toolExecution(`Failed to read CR file for ${key}: ${(fileError as Error).message}`)
+          throw ToolError.toolExecution(`Failed to read CR file for ${normalizedKey}: ${(fileError as Error).message}`)
         }
       }
 
@@ -167,7 +165,7 @@ export class CRHandlers {
           return Sanitizer.sanitizeText(JSON.stringify(metadata, null, 2))
         }
         catch (fileError) {
-          throw ToolError.toolExecution(`Failed to get metadata for ${key}: ${(fileError as Error).message}`)
+          throw ToolError.toolExecution(`Failed to get metadata for ${normalizedKey}: ${(fileError as Error).message}`)
         }
 
       default:
@@ -266,11 +264,8 @@ export class CRHandlers {
    * Handler for update_cr_status tool
    */
   async handleUpdateCRStatus(project: Project, key: string, status: CRStatus): Promise<string> {
-    // Validate CR key format
-    const keyValidation = validateCRKey(key)
-    if (!keyValidation.valid) {
-      throw ToolError.protocol(keyValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
-    }
+    // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
+    const normalizedKey = normalizeKey(key, project.project.code)
 
     // Validate status parameter
     const statusValidation = validateOperation(status, [
@@ -287,18 +282,18 @@ export class CRHandlers {
     }
 
     // Get current CR to show old status
-    const ticket = await this.crService.getCR(project, keyValidation.value)
+    const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
-      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`)
+      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
     }
 
     const oldStatus = ticket.status
 
     // The service now throws specific errors instead of returning false
-    await this.crService.updateCRStatus(project, keyValidation.value, statusValidation.value)
+    await this.crService.updateCRStatus(project, normalizedKey, statusValidation.value)
 
     const lines = [
-      `✅ **Updated CR ${keyValidation.value}** status`,
+      `✅ **Updated CR ${normalizedKey}** status`,
       '',
       `**Change:** ${oldStatus} → ${statusValidation.value}`,
       `- Title: ${ticket.title}`,
@@ -323,11 +318,8 @@ export class CRHandlers {
    * Handler for update_cr_attrs tool
    */
   async handleUpdateCRAttrs(project: Project, key: string, attributes: any): Promise<string> {
-    // Validate CR key format
-    const keyValidation = validateCRKey(key)
-    if (!keyValidation.valid) {
-      throw ToolError.protocol(keyValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
-    }
+    // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
+    const normalizedKey = normalizeKey(key, project.project.code)
 
     // Validate attributes parameter
     const attrsValidation = validateRequired(attributes, 'attributes')
@@ -336,18 +328,18 @@ export class CRHandlers {
     }
 
     // Get current CR info
-    const ticket = await this.crService.getCR(project, keyValidation.value)
+    const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
-      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`)
+      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
     }
 
-    const success = await this.crService.updateCRAttrs(project, keyValidation.value, attributes)
+    const success = await this.crService.updateCRAttrs(project, normalizedKey, attributes)
     if (!success) {
-      throw ToolError.toolExecution(`Failed to update CR '${keyValidation.value}' attributes`)
+      throw ToolError.toolExecution(`Failed to update CR '${normalizedKey}' attributes`)
     }
 
     const lines = [
-      `✅ **Updated CR ${keyValidation.value} Attributes**`,
+      `✅ **Updated CR ${normalizedKey} Attributes**`,
       '',
       `- Title: ${ticket.title}`,
       `- Status: ${ticket.status}`,
@@ -368,25 +360,22 @@ export class CRHandlers {
    * Handler for delete_cr tool
    */
   async handleDeleteCR(project: Project, key: string): Promise<string> {
-    // Validate CR key format
-    const keyValidation = validateCRKey(key)
-    if (!keyValidation.valid) {
-      throw ToolError.protocol(keyValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
-    }
+    // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
+    const normalizedKey = normalizeKey(key, project.project.code)
 
     // Get CR info before deletion
-    const ticket = await this.crService.getCR(project, keyValidation.value)
+    const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
-      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`)
+      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
     }
 
-    const success = await this.crService.deleteCR(project, keyValidation.value)
+    const success = await this.crService.deleteCR(project, normalizedKey)
     if (!success) {
-      throw ToolError.toolExecution(`Failed to delete CR '${keyValidation.value}'`)
+      throw ToolError.toolExecution(`Failed to delete CR '${normalizedKey}'`)
     }
 
     const lines = [
-      `🗑️ **Deleted CR ${keyValidation.value}**`,
+      `🗑️ **Deleted CR ${normalizedKey}**`,
       '',
       `- Title: ${ticket.title}`,
       `- Type: ${ticket.type}`,
@@ -404,21 +393,18 @@ export class CRHandlers {
    * Handler for suggest_cr_improvements tool
    */
   async handleSuggestCRImprovements(project: Project, key: string): Promise<string> {
-    // Validate CR key format
-    const keyValidation = validateCRKey(key)
-    if (!keyValidation.valid) {
-      throw ToolError.protocol(keyValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
-    }
+    // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
+    const normalizedKey = normalizeKey(key, project.project.code)
 
-    const ticket = await this.crService.getCR(project, keyValidation.value)
+    const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
-      throw ToolError.toolExecution(`CR '${keyValidation.value}' not found in project '${project.project.code || project.id}'`)
+      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
     }
 
     const suggestions = this.templateService.suggestImprovements(ticket)
 
     return [
-      `💡 **CR Improvement Suggestions for ${keyValidation.value}**`,
+      `💡 **CR Improvement Suggestions for ${normalizedKey}**`,
       '',
       `**Current CR:** ${ticket.title}`,
       '',

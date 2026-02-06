@@ -106,7 +106,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
           },
         },
       },
-      required: ['project'],
+      required: [],
     },
   },
   {
@@ -195,7 +195,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
           required: ['title'],
         },
       },
-      required: ['project', 'type', 'data'],
+      required: ['type', 'data'],
     },
   },
   {
@@ -219,7 +219,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
           default: 'full',
         },
       },
-      required: ['project', 'key'],
+      required: ['key'],
     },
   },
   {
@@ -242,7 +242,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
           description: 'New CR status',
         },
       },
-      required: ['project', 'key', 'status'],
+      required: ['key', 'status'],
     },
   },
   {
@@ -274,7 +274,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
           },
         },
       },
-      required: ['project', 'key', 'attributes'],
+      required: ['key', 'attributes'],
     },
   },
   {
@@ -292,7 +292,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
           description: 'CR key',
         },
       },
-      required: ['project', 'key'],
+      required: ['key'],
     },
   },
   {
@@ -323,7 +323,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
           description: 'Content to apply (required for replace/append/prepend operations). To rename/restructure: start with new header at same level. To preserve header: provide only body content.',
         },
       },
-      required: ['project', 'key', 'operation'],
+      required: ['key', 'operation'],
     },
   },
   {
@@ -341,7 +341,7 @@ export const CR_SECTION_TOOLS: Tool[] = [
           description: 'CR key to analyze (e.g., "MDT-001")',
         },
       },
-      required: ['project', 'key'],
+      required: ['key'],
     },
   },
 ]
