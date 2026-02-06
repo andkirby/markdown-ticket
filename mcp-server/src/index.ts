@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import process from 'node:process'
 import { readFileSync } from 'node:fs'
+import process from 'node:process'
 
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
@@ -9,8 +9,8 @@ import { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
 import { ConfigService } from './config/index.js'
 import { CRService } from './services/crService.js'
-import { find } from './tools/utils/projectDetector.js'
 import { MCPTools } from './tools/index.js'
+import { find } from './tools/utils/projectDetector.js'
 import { startHttpTransport } from './transports/http.js'
 import { startStdioTransport } from './transports/stdio.js'
 
