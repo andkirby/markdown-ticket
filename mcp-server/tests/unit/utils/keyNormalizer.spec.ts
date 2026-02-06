@@ -10,8 +10,8 @@
  * Tickets are stored with 3-digit zero-padded numbers (MDT-001, MDT-002, etc.)
  */
 
-import { normalizeKey } from '../../../../src/utils/keyNormalizer'
-import { ToolError } from '../../../../src/utils/toolError'
+import { normalizeKey } from '../../../src/utils/keyNormalizer'
+import { ToolError } from '../../../src/utils/toolError'
 
 describe('keyNormalizer', () => {
   describe('valid Input - Numeric Shorthand', () => {
