@@ -88,3 +88,4 @@ counter-api/
 typescript-graph.md
 # MDT agentic implementation checkpoint state
 **/.checkpoint.json
+**/.checkpoint.yaml
