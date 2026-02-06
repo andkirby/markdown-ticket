@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import process from 'node:process'
+import { readFileSync } from 'node:fs'
 
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
@@ -8,6 +9,7 @@ import { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
 import { ConfigService } from './config/index.js'
 import { CRService } from './services/crService.js'
+import { find } from './tools/utils/projectDetector.js'
 import { MCPTools } from './tools/index.js'
 import { startHttpTransport } from './transports/http.js'
 import { startStdioTransport } from './transports/stdio.js'
@@ -19,8 +21,9 @@ class MCPCRServer {
   private templateService!: TemplateService
   private markdownService!: MarkdownService
   private titleExtractionService!: TitleExtractionService
-  private mcpTools!: MCPTools
+  private mcpTools: MCPTools | undefined
   private quiet: boolean
+  private detectedProject: string | null = null
 
   constructor(quiet: boolean = false) {
     this.quiet = quiet
@@ -72,19 +75,78 @@ class MCPCRServer {
     this.templateService = new TemplateService(undefined, this.quiet)
     this.markdownService = new MarkdownService()
     this.titleExtractionService = new TitleExtractionService()
+
+    this.log('✅ Services initialized')
+  }
+
+  /**
+   * Initialize MCP tools with detected project context
+   * Called after project detection to set up tools with proper context
+   */
+  private initializeMCPTools(): void {
     this.mcpTools = new MCPTools(
       this.projectService,
       this.crService,
       this.templateService,
       this.markdownService,
       this.titleExtractionService,
+      this.detectedProject,
     )
+  }
 
-    this.log('✅ Services initialized')
+  /**
+   * Detect default project from current working directory
+   * Called at startup to enable single-project mode
+   */
+  private startupProjectDetection(): void {
+    this.log('🔍 Detecting project configuration...')
+
+    // Get search depth from global config
+    const searchDepth = this.configService.getSearchDepth()
+    const result = find(searchDepth)
+
+    if (result.configPath) {
+      // Parse project code from config file
+      const projectCode = this.parseProjectCode(result.configPath)
+      if (projectCode) {
+        this.detectedProject = projectCode
+        this.log(`✅ Single-project mode: ${projectCode} (search depth: ${searchDepth})`)
+      }
+      else {
+        this.log('ℹ️  Config found but no project code - Multi-project mode')
+      }
+    }
+    else {
+      this.log('ℹ️  Multi-project mode')
+    }
+  }
+
+  /**
+   * Parse project code from .mdt-config.toml file
+   * Minimal TOML parsing: find code line
+   *
+   * @param configPath - Path to the config file
+   * @returns Project code or null if not found
+   */
+  private parseProjectCode(configPath: string): string | null {
+    try {
+      const content = readFileSync(configPath, 'utf-8')
+      const match = content.match(/code\s*=\s*["']([^"']+)["']/)
+      return match?.[1] || null
+    }
+    catch {
+      return null
+    }
   }
 
   async start(): Promise<void> {
     try {
+      // Detect project from cwd (before starting transports)
+      this.startupProjectDetection()
+
+      // Initialize MCP tools with detected project context
+      this.initializeMCPTools()
+
       // Validate configuration
       this.log('🔍 Validating configuration...')
       const validation = await this.configService.validateConfig()
@@ -110,10 +172,10 @@ class MCPCRServer {
       const httpPort = Number.parseInt(process.env.MCP_HTTP_PORT || process.env.HTTP_PORT || '3002', 10)
 
       if (httpEnabled) {
-        await startHttpTransport(this.mcpTools, { port: httpPort })
+        await startHttpTransport(this.mcpTools!, { port: httpPort })
       }
       else {
-        await startStdioTransport(this.mcpTools)
+        await startStdioTransport(this.mcpTools!)
       }
     }
     catch (error) {

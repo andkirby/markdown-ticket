@@ -46,6 +46,31 @@ export class ProjectHandlers {
   }
 
   /**
+   * Resolve project from explicit parameter or detected default.
+   * Priority: explicit project -> detected project -> throw error
+   *
+   * @param explicitProject - Project parameter from tool call (optional)
+   * @param detectedProject - Project detected from cwd at startup (optional)
+   * @returns Resolved project
+   */
+  async resolveProject(explicitProject: string | undefined, detectedProject: string | null): Promise<Project> {
+    // Use explicit project if provided
+    if (explicitProject) {
+      return this.validateProject(explicitProject)
+    }
+
+    // Fall back to detected project
+    if (detectedProject) {
+      return this.validateProject(detectedProject)
+    }
+
+    // No project context available
+    throw ToolError.toolExecution(
+      'No project context available. Either start MCP server from a project directory with `.mdt-config.toml`, or provide the `project` parameter explicitly.',
+    )
+  }
+
+  /**
    * Validate project key exists and return project info
    */
   async validateProject(projectKey: string): Promise<Project> {
