@@ -3,6 +3,7 @@
  * Behavioral tests for configuration validation and consistency
  */
 
+import type { Buffer } from 'node:buffer'
 import { execSync } from 'node:child_process'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
