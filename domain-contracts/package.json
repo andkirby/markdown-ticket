@@ -29,6 +29,8 @@
   ],
   "scripts": {
     "build": "tsc --build",
+    "lint": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "clean": "rm -rf dist",

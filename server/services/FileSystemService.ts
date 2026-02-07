@@ -1,3 +1,4 @@
+import type { TreeNode } from '../types/tree.js'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { TreeService } from './TreeService.js'
@@ -20,13 +21,6 @@ interface Project {
     path: string
     active: boolean
   }
-}
-
-interface FileSystemTree {
-  name: string
-  path: string
-  type: 'file' | 'folder'
-  children?: FileSystemTree[]
 }
 
 /**
@@ -110,7 +104,7 @@ export class FileSystemService {
   /**
    * Build file system tree for path selection.
    */
-  async buildProjectFileSystemTree(projectId: string, projectDiscovery: ProjectDiscovery): Promise<FileSystemTree[]> {
+  async buildProjectFileSystemTree(projectId: string, projectDiscovery: ProjectDiscovery): Promise<TreeNode[]> {
     const projects = await projectDiscovery.getAllProjects()
     const project = projects.find(p => p.id === projectId)
 

@@ -14,7 +14,7 @@ export interface TicketPosition {
  */
 export function useTicketPosition() {
   // Position tracking for ticket restoration
-  const [ticketPositions, setTicketPositions] = useState<Map<string, TicketPosition>>(new Map())
+  const [ticketPositions, setTicketPositions] = useState<Map<string, TicketPosition>>(() => new Map())
 
   // Use ref to always get current ticket positions (prevents stale closure)
   const ticketPositionsRef = useRef<Map<string, TicketPosition>>(ticketPositions)

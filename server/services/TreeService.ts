@@ -1,3 +1,5 @@
+import type { FileMetadata } from '../commands/ExtractMetadataCommand.js'
+import type { ProjectConfig, TreeNode as StrategyTreeNode } from '../strategies/TreeBuildingStrategy.js'
 import { TreeBuilder } from '../builders/TreeBuilder.js'
 import { TreeStrategyFactory } from '../factories/TreeStrategyFactory.js'
 import { ConfigRepository } from '../repositories/ConfigRepository.js'
@@ -19,14 +21,11 @@ interface _Config {
   ticketsPath?: string | null | undefined
 }
 
-interface TreeNode {
-  name: string
-  path: string
-  type: 'file' | 'folder'
-  children?: TreeNode[]
+// Re-export TreeNode with metadata support
+interface TreeNode extends StrategyTreeNode {
   size?: number
   lastModified?: Date
-  metadata?: Record<string, any>
+  metadata?: FileMetadata
 }
 
 interface ProjectDiscovery {
@@ -52,7 +51,7 @@ export class TreeService {
     const project = await this._getProject(projectId)
     const config = await this.configRepository.getConfig(project.project.path)
 
-    const docPaths = (config as any).documentPaths
+    const docPaths = config.documentPaths
 
     if (!docPaths || docPaths.length === 0) {
       throw new Error('No document configuration found')
@@ -60,7 +59,13 @@ export class TreeService {
 
     const strategy = TreeStrategyFactory.createDocumentNavigationStrategy()
     const builder = new TreeBuilder(strategy)
-    const allFiles = await builder.build(project.project.path, config as any) as any
+    const projectConfig: ProjectConfig = {
+      document: {
+        paths: docPaths,
+        excludeFolders: [],
+      },
+    }
+    const allFiles = await builder.build(project.project.path, projectConfig) as TreeNode[]
 
     return this._filterByDocumentPaths(allFiles, docPaths)
   }
@@ -74,8 +79,14 @@ export class TreeService {
 
     const strategy = TreeStrategyFactory.createPathSelectionStrategy()
     const builder = new TreeBuilder(strategy)
+    const projectConfig: ProjectConfig = {
+      document: {
+        paths: config.documentPaths,
+        excludeFolders: [],
+      },
+    }
 
-    return await builder.build(project.project.path, config as any) as any
+    return await builder.build(project.project.path, projectConfig) as TreeNode[]
   }
 
   private async _getProject(projectId: string): Promise<Project> {

@@ -9,11 +9,20 @@ import { AddProjectModal } from './AddProjectModal'
 import { Alert, AlertDescription, AlertTitle } from './UI/alert'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './UI/tooltip'
 
+interface ConfigInfo {
+  configDir: string
+  discovery: {
+    autoDiscover: boolean
+    searchPaths: string[]
+    maxDepth: number
+  }
+}
+
 export function RedirectToCurrentProject() {
   const navigate = useNavigate()
   const { projects, loading, refreshProjects, isBackendDown } = useProjectManager({ autoSelectFirst: false })
   const { theme, toggleTheme } = useTheme()
-  const [configInfo, setConfigInfo] = useState<any>(null)
+  const [configInfo, setConfigInfo] = useState<ConfigInfo | null>(null)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
 
   // Fetch configuration info when no projects are found

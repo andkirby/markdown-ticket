@@ -5,7 +5,7 @@ import { TreeBuildingStrategy } from './TreeBuildingStrategy.js'
 interface FolderNode {
   name: string
   path: string
-  type: 'directory' | 'folder'
+  type: 'folder'
   children: Record<string, FolderNode | FileNode | TreeNode>
 }
 

@@ -1,5 +1,34 @@
 import mermaid from 'mermaid'
 
+// Vendor-prefixed Fullscreen API extensions
+interface HTMLElementWithFullscreen extends HTMLElement {
+  webkitRequestFullscreen?: () => Promise<void>
+  msRequestFullscreen?: () => Promise<void>
+}
+
+interface DocumentWithFullscreen extends Document {
+  webkitExitFullscreen?: () => Promise<void>
+  msExitFullscreen?: () => Promise<void>
+  webkitFullscreenElement?: Element | null
+  msFullscreenElement?: Element | null
+}
+
+// Zoom handlers interface for cleanup
+interface ZoomHandlers {
+  wheel: (e: WheelEvent) => void
+  mouseDown: (e: MouseEvent) => void
+  mouseMove: (e: MouseEvent) => void
+  mouseUp: () => void
+  touchStart: (e: TouchEvent) => void
+  touchMove: (e: TouchEvent) => void
+  touchEnd: () => void
+  doubleClick: () => void
+}
+
+interface HTMLElementWithZoomHandlers extends HTMLElement {
+  _zoomHandlers?: ZoomHandlers
+}
+
 let initialized = false
 
 function initMermaid() {
@@ -103,26 +132,28 @@ async function toggleMermaidFullscreen(container: HTMLElement) {
 }
 
 async function enterFullscreen(element: HTMLElement) {
+  const elementWithFullscreen = element as HTMLElementWithFullscreen
   if (element.requestFullscreen) {
     await element.requestFullscreen()
   }
-  else if ((element as any).webkitRequestFullscreen) {
-    await (element as any).webkitRequestFullscreen()
+  else if (elementWithFullscreen.webkitRequestFullscreen) {
+    await elementWithFullscreen.webkitRequestFullscreen()
   }
-  else if ((element as any).msRequestFullscreen) {
-    await (element as any).msRequestFullscreen()
+  else if (elementWithFullscreen.msRequestFullscreen) {
+    await elementWithFullscreen.msRequestFullscreen()
   }
 }
 
 async function exitFullscreen() {
+  const doc = document as DocumentWithFullscreen
   if (document.exitFullscreen) {
     await document.exitFullscreen()
   }
-  else if ((document as any).webkitExitFullscreen) {
-    await (document as any).webkitExitFullscreen()
+  else if (doc.webkitExitFullscreen) {
+    await doc.webkitExitFullscreen()
   }
-  else if ((document as any).msExitFullscreen) {
-    await (document as any).msExitFullscreen()
+  else if (doc.msExitFullscreen) {
+    await doc.msExitFullscreen()
   }
 }
 
@@ -133,9 +164,10 @@ document.addEventListener('msfullscreenchange', updateFullscreenButtons)
 
 function updateFullscreenButtons() {
   const mermaidContainers = document.querySelectorAll('.mermaid-container')
+  const doc = document as DocumentWithFullscreen
   const fullscreenElement = document.fullscreenElement
-    || (document as any).webkitFullscreenElement
-    || (document as any).msFullscreenElement
+    || doc.webkitFullscreenElement
+    || doc.msFullscreenElement
 
   mermaidContainers.forEach((container) => {
     const button = container.querySelector('.mermaid-fullscreen-btn') as HTMLButtonElement
@@ -418,8 +450,9 @@ function enableZoom(container: HTMLElement) {
   diagram.addEventListener('dblclick', handleDoubleClick)
 
   // Store event handlers for cleanup
-  container.setAttribute('data-zoom-enabled', 'true');
-  (container as any)._zoomHandlers = {
+  const containerWithHandlers = container as HTMLElementWithZoomHandlers
+  container.setAttribute('data-zoom-enabled', 'true')
+  containerWithHandlers._zoomHandlers = {
     wheel: handleWheel,
     mouseDown: handleMouseDown,
     mouseMove: handleMouseMove,
@@ -446,7 +479,8 @@ function disableZoom(container: HTMLElement) {
   diagram.style.cursor = ''
 
   // Remove event listeners
-  const handlers = (container as any)._zoomHandlers
+  const containerWithHandlers = container as HTMLElementWithZoomHandlers
+  const handlers = containerWithHandlers._zoomHandlers
   if (handlers) {
     container.removeEventListener('wheel', handlers.wheel)
     diagram.removeEventListener('mousedown', handlers.mouseDown)
@@ -459,7 +493,7 @@ function disableZoom(container: HTMLElement) {
   }
 
   container.setAttribute('data-zoom-enabled', 'false')
-  delete (container as any)._zoomHandlers
+  delete containerWithHandlers._zoomHandlers
 }
 
 // Debug function to analyze mermaid diagram sizing (for development use)

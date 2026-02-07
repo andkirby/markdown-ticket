@@ -1,8 +1,12 @@
+import type { Project, ProjectConfig } from '@mdt/shared/models/Project.js'
+import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { Request, Response } from 'express'
-import type { TicketService } from '../services/TicketService.js'
+import type { CRData, TicketService } from '../services/TicketService.js'
+import type { TreeNode } from '../types/tree.js'
+
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 
-interface Ticket {
+export interface Ticket {
   code: string
   filePath: string
 }
@@ -17,14 +21,7 @@ interface DirectoryListing {
   }[]
 }
 
-interface FileSystemTree {
-  name: string
-  path: string
-  type: 'file' | 'folder'
-  children?: FileSystemTree[]
-}
-
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   params: {
     projectId?: string
     code?: string
@@ -35,22 +32,30 @@ interface AuthenticatedRequest extends Request {
     path?: string
     bypassCache?: string
   }
-  body: any
+  body: unknown
 }
 
 // Extended interfaces for methods not in shared ProjectService
 // These methods are now provided by ProjectManager
-interface ProjectServiceExtension {
-  getAllProjects: (bypassCache?: boolean) => Promise<any[]>
-  getProjectConfig: (path: string) => any
+export interface ProjectServiceExtension {
+  getAllProjects: (bypassCache?: boolean) => Promise<Project[]>
+  getProjectConfig: (path: string) => ProjectConfig | null
   getProjectCRs: (path: string) => Promise<Ticket[]>
   getSystemDirectories: (path?: string) => Promise<DirectoryListing>
-  configureDocuments: (projectId: string, documentPaths: string[]) => Promise<any>
-  projectDiscovery: any
+  configureDocuments: (projectId: string, documentPaths: string[]) => Promise<void>
+  projectDiscovery: {
+    getAllProjects: (bypassCache?: boolean) => Promise<Project[]>
+    autoDiscoverProjects: (searchPaths: string[]) => Project[]
+    getRegisteredProjects: () => Project[]
+    registerProject: (project: Project, documentDiscoverySettings?: {
+      paths?: string[]
+      maxDepth?: number
+    }) => void
+  }
 }
 
-interface FileSystemService {
-  buildProjectFileSystemTree: (projectId: string, projectDiscovery: any) => Promise<FileSystemTree[]>
+export interface FileSystemService {
+  buildProjectFileSystemTree: (projectId: string, projectDiscovery: ProjectServiceExtension['projectDiscovery']) => Promise<TreeNode[]>
 }
 
 interface FileWatcher {
@@ -68,7 +73,13 @@ export class ProjectController {
   /**
    * Optional TicketController for delegation.
    */
-  private ticketController?: any
+  private ticketController?: {
+    ticketService?: {
+      getCR: (projectId: string, crId: string) => Promise<unknown>
+      updateCRPartial: (projectId: string, crId: string, updates: Record<string, unknown>) => Promise<unknown>
+    }
+  }
+
   /**
    * Optional TicketService for CR operations.
    */
@@ -78,7 +89,12 @@ export class ProjectController {
     projectService: ProjectServiceExtension,
     fileSystemService: FileSystemService,
     fileWatcher: FileWatcher,
-    ticketController?: any, // Optional TicketController for CR operations
+    ticketController?: {
+      ticketService?: {
+        getCR: (projectId: string, crId: string) => Promise<unknown>
+        updateCRPartial: (projectId: string, crId: string, updates: Record<string, unknown>) => Promise<unknown>
+      }
+    }, // Optional TicketController for CR operations
     ticketService?: TicketService, // Optional TicketService for CR operations
   ) {
     this.projectService = projectService
@@ -141,7 +157,7 @@ export class ProjectController {
 
       res.json(result)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error getting project config:', error)
       res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get project configuration' })
     }
@@ -152,26 +168,21 @@ export class ProjectController {
    */
   async createProject(req: Request, res: Response): Promise<void> {
     try {
-      const result = await this.projectManager.createProject(req.body)
+      const result = await this.projectManager.createProject(req.body as ProjectCreateInput)
 
       // File watcher will automatically detect the new .toml file
       // and emit the 'project-created' event - no manual emission needed
 
       res.json(result)
     }
-    catch (error: any) {
-      console.error('Error creating project:', {
-        message: error.message,
-        stack: error.stack,
-        code: error.code,
-        errno: error.errno,
-        path: error.path,
-      })
-      if (error.message.includes('required') || error.message.includes('already exists')) {
-        res.status(400).json({ error: error.message })
+    catch (error: unknown) {
+      console.error('Error creating project:', error)
+      const err = error as Error & { code?: string, errno?: number, path?: string }
+      if (err.message.includes('required') || err.message.includes('already exists')) {
+        res.status(400).json({ error: err.message })
       }
       else {
-        res.status(500).json({ error: 'Failed to create project', details: error.message })
+        res.status(500).json({ error: 'Failed to create project', details: err.message })
       }
     }
   }
@@ -189,14 +200,16 @@ export class ProjectController {
         return
       }
 
-      const result = await this.projectManager.updateProject(code, req.body)
+      const updates = req.body as ProjectUpdateInput
+      const result = await this.projectManager.updateProject(code, updates)
 
       res.json(result)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error updating project:', error)
-      if (error.message === 'Project not found') {
-        res.status(404).json({ error: 'Not Found', message: error.message })
+      const err = error as Error
+      if (err.message === 'Project not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
       }
       else {
         res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update project' })
@@ -221,10 +234,11 @@ export class ProjectController {
 
       res.json(result)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error enabling project:', error)
-      if (error.message === 'Project not found') {
-        res.status(404).json({ error: 'Not Found', message: error.message })
+      const err = error as Error
+      if (err.message === 'Project not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
       }
       else {
         res.status(500).json({ error: 'Internal Server Error', message: 'Failed to enable project' })
@@ -249,10 +263,11 @@ export class ProjectController {
 
       res.json(result)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error disabling project:', error)
-      if (error.message === 'Project not found') {
-        res.status(404).json({ error: error.message })
+      const err = error as Error
+      if (err.message === 'Project not found') {
+        res.status(404).json({ error: err.message })
       }
       else {
         res.status(500).json({ error: 'Failed to disable project' })
@@ -270,13 +285,14 @@ export class ProjectController {
 
       res.json(result)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error listing directories:', error)
-      if (error.message.includes('Access denied')) {
-        res.status(403).json({ error: error.message })
+      const err = error as Error
+      if (err.message.includes('Access denied')) {
+        res.status(403).json({ error: err.message })
       }
-      else if (error.message.includes('not found') || error.message.includes('not accessible')) {
-        res.status(404).json({ error: error.message })
+      else if (err.message.includes('not found') || err.message.includes('not accessible')) {
+        res.status(404).json({ error: err.message })
       }
       else {
         res.status(500).json({ error: 'Failed to list directories' })
@@ -299,15 +315,16 @@ export class ProjectController {
 
       const items = await this.fileSystemService.buildProjectFileSystemTree(
         projectId,
-        this.projectService,
+        this.projectService.projectDiscovery,
       )
 
       res.json(items)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error loading file system:', error)
-      if (error.message === 'Project not found' || error.message === 'Path not found') {
-        res.status(404).json({ error: error.message })
+      const err = error as Error
+      if (err.message === 'Project not found' || err.message === 'Path not found') {
+        res.status(404).json({ error: err.message })
       }
       else {
         res.status(500).json({ error: 'Failed to load file system' })
@@ -331,13 +348,14 @@ export class ProjectController {
       await this.projectService.configureDocuments(projectId, documentPaths)
       res.json({ success: true })
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error configuring documents:', error)
-      if (error.message === 'Project not found') {
-        res.status(404).json({ error: error.message })
+      const err = error as Error
+      if (err.message === 'Project not found') {
+        res.status(404).json({ error: err.message })
       }
-      else if (error.message.includes('must be an array')) {
-        res.status(400).json({ error: error.message })
+      else if (err.message.includes('must be an array')) {
+        res.status(400).json({ error: err.message })
       }
       else {
         res.status(500).json({ error: 'Failed to configure documents' })
@@ -373,7 +391,7 @@ export class ProjectController {
 
       res.json(crs)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error getting project CRs:', error)
       res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get project CRs' })
     }
@@ -409,23 +427,24 @@ export class ProjectController {
 
       res.status(501).json({ error: 'Ticket service not available for fetching CR' })
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error getting CR:', error)
+      const err = error as Error
 
-      if (error.message === 'Project not found' || error.message === 'CR not found') {
-        res.status(404).json({ error: 'Not Found', message: error.message })
+      if (err.message === 'Project not found' || err.message === 'CR not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
 
         return
       }
 
-      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get CR', details: error.message })
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get CR', details: err.message })
     }
   }
 
   async createCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { projectId } = req.params
-      const crData = req.body
+      const crData = req.body as CRData
 
       if (!projectId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
@@ -435,7 +454,7 @@ export class ProjectController {
 
       // Use TicketService if available
       if (this.ticketService) {
-        const result = await this.ticketService.createCR(projectId, crData)
+        const result = await this.ticketService.createCR(projectId, crData as CRData)
 
         res.status(201).json(result)
 
@@ -444,29 +463,30 @@ export class ProjectController {
 
       res.status(501).json({ error: 'Ticket service not available for creating CR' })
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error creating CR:', error)
+      const err = error as Error
 
-      if (error.message === 'Project not found') {
-        res.status(404).json({ error: 'Not Found', message: error.message })
-
-        return
-      }
-
-      if (error.message.includes('required')) {
-        res.status(400).json({ error: 'Bad Request', message: error.message })
+      if (err.message === 'Project not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
 
         return
       }
 
-      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to create CR', details: error.message })
+      if (err.message.includes('required')) {
+        res.status(400).json({ error: 'Bad Request', message: err.message })
+
+        return
+      }
+
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to create CR', details: err.message })
     }
   }
 
   async patchCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { projectId, crId } = req.params
-      const updates = req.body
+      const updates = req.body as Record<string, unknown>
 
       if (!projectId || !crId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
@@ -500,43 +520,44 @@ export class ProjectController {
 
       res.status(501).json({ error: 'Ticket service not available for CR updates' })
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error updating CR:', error)
+      const err = error as Error
 
       // Handle validation errors with appropriate status codes
-      if (error.message.includes('Invalid status transition')) {
-        res.status(400).json({ error: 'Bad Request', message: error.message })
+      if (err.message.includes('Invalid status transition')) {
+        res.status(400).json({ error: 'Bad Request', message: err.message })
 
         return
       }
 
-      if (error.message === 'Project not found' || error.message === 'CR not found' || error.message.includes('not found')) {
-        res.status(404).json({ error: 'Not Found', message: error.message })
+      if (err.message === 'Project not found' || err.message === 'CR not found' || err.message.includes('not found')) {
+        res.status(404).json({ error: 'Not Found', message: err.message })
 
         return
       }
 
-      if (error.message.includes('No fields provided') || error.message.includes('required') || error.message.includes('Invalid')) {
-        res.status(400).json({ error: 'Bad Request', message: error.message })
+      if (err.message.includes('No fields provided') || err.message.includes('required') || err.message.includes('Invalid')) {
+        res.status(400).json({ error: 'Bad Request', message: err.message })
 
         return
       }
 
-      if (error.message.includes('Permission denied')) {
-        res.status(403).json({ error: 'Forbidden', message: error.message })
+      if (err.message.includes('Permission denied')) {
+        res.status(403).json({ error: 'Forbidden', message: err.message })
 
         return
       }
 
       // Generic errors
-      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update CR', details: error.message })
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update CR', details: err.message })
     }
   }
 
   async updateCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { projectId, crId } = req.params
-      const crData = req.body
+      const crData = req.body as Record<string, unknown>
 
       if (!projectId || !crId) {
         res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
@@ -546,7 +567,7 @@ export class ProjectController {
 
       // Use TicketService if available
       if (this.ticketService) {
-        const result = await this.ticketService.updateCRPartial(projectId, crId, crData)
+        const result = await this.ticketService.updateCRPartial(projectId, crId, crData as Record<string, unknown>)
 
         res.json(result)
 
@@ -555,16 +576,17 @@ export class ProjectController {
 
       res.status(501).json({ error: 'Ticket service not available for updating CR' })
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error updating CR:', error)
+      const err = error as Error
 
-      if (error.message === 'Project not found' || error.message === 'CR not found') {
-        res.status(404).json({ error: 'Not Found', message: error.message })
+      if (err.message === 'Project not found' || err.message === 'CR not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
 
         return
       }
 
-      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update CR', details: error.message })
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update CR', details: err.message })
     }
   }
 
@@ -589,16 +611,17 @@ export class ProjectController {
 
       res.status(501).json({ error: 'Ticket service not available for deleting CR' })
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error deleting CR:', error)
+      const err = error as Error
 
-      if (error.message === 'Project not found' || error.message === 'CR not found') {
-        res.status(404).json({ error: 'Not Found', message: error.message })
+      if (err.message === 'Project not found' || err.message === 'CR not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
 
         return
       }
 
-      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to delete CR', details: error.message })
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to delete CR', details: err.message })
     }
   }
 }

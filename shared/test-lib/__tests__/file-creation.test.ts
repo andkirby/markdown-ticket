@@ -27,12 +27,12 @@ jest.setTimeout(30000)
  * Parse YAML frontmatter from markdown content (simple key-value parser)
  * Extracts metadata between --- delimiters in markdown files
  */
-function parseFrontmatter(content: string): Record<string, any> {
+function parseFrontmatter(content: string): Record<string, string> {
   const match = content.match(/^---\n([\s\S]+?)\n---/)
   if (!match)
     return {}
 
-  const frontmatter: Record<string, any> = {}
+  const frontmatter: Record<string, string> = {}
   const lines = match[1].split('\n')
 
   for (const line of lines) {

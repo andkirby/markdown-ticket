@@ -18,6 +18,14 @@ import path from 'node:path'
 import { ProjectValidator as BrowserValidator } from '../ProjectValidator'
 import { ProjectValidator as NodeValidator } from '../ProjectValidator.node'
 
+interface PackageJsonExports {
+  [key: string]: unknown
+}
+
+interface PackageJsonShape {
+  exports?: PackageJsonExports
+}
+
 describe('mDT-110: Conditional Exports Configuration', () => {
   // Helper to read package.json
   const getPackageJson = () => {
@@ -27,7 +35,7 @@ describe('mDT-110: Conditional Exports Configuration', () => {
 
   // P3-1: Verify package.json exports structure
   describe('package.json exports field', () => {
-    let packageJson: any
+    let packageJson: PackageJsonShape
 
     beforeEach(() => {
       packageJson = getPackageJson()

@@ -1,3 +1,4 @@
+import type { ProjectConfig } from '@mdt/shared/models/Project.js'
 import type { LinkContext, NormalizedLink } from './linkNormalization'
 import { createLinkContext, LinkNormalizer } from './linkNormalization'
 
@@ -191,7 +192,7 @@ export function classifyAndNormalizeLink(
 /**
  * Extract document paths from project configuration
  */
-function extractDocumentPaths(projectConfig: any): string[] {
+function extractDocumentPaths(projectConfig: ProjectConfig | undefined): string[] {
   if (!projectConfig)
     return []
 
@@ -213,7 +214,7 @@ function extractDocumentPaths(projectConfig: any): string[] {
 export function createLinkContextFromProject(
   currentProject: string,
   sourcePath: string,
-  projectConfig?: any,
+  projectConfig?: ProjectConfig,
 ): LinkContext {
   return createLinkContext({
     currentProject,

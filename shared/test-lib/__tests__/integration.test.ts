@@ -13,11 +13,24 @@ import http from 'node:http'
 import { join } from 'node:path'
 import { findProjectRoot, ProjectFactory, TestEnvironment, TestServer } from '../index.js'
 
+interface ProjectListItem {
+  id?: string
+  key?: string
+  name?: string
+  project?: {
+    name?: string
+  }
+}
+
+function asProjectList(value: unknown): ProjectListItem[] {
+  return Array.isArray(value) ? value as ProjectListItem[] : []
+}
+
 /**
  * HTTP GET helper using Node's http module (no keep-alive, prevents Jest hanging).
  * The global fetch() uses keep-alive connections that block Jest from exiting.
  */
-function httpGet(url: string): Promise<{ ok: boolean, statusCode: number, json: () => Promise<any> }> {
+function httpGet(url: string): Promise<{ ok: boolean, statusCode: number, json: () => Promise<unknown> }> {
   return new Promise((resolve, reject) => {
     const req = http.get(url, { headers: { Connection: 'close' } }, (res) => {
       let data = ''
@@ -108,10 +121,10 @@ describe('shared/test-lib - Integration', () => {
       try {
         const response = await httpGet(`http://localhost:${port}/api/projects?bypassCache=true`)
         if (response.ok) {
-          const projects = await response.json()
+          const projects = asProjectList(await response.json())
 
           // Check if our TEST project is discovered
-          const testProject = projects.find((p: any) => p.id === 'TEST' || p.key === 'TEST')
+          const testProject = projects.find(p => p.id === 'TEST' || p.key === 'TEST')
           if (testProject) {
             break
           }
@@ -148,10 +161,10 @@ describe('shared/test-lib - Integration', () => {
 
     expect(response.ok).toBe(true)
 
-    const projects = await response.json()
+    const projects = asProjectList(await response.json())
 
     // Should find our TEST project
-    const testProject = projects.find((p: any) => p.id === 'TEST' || p.key === 'TEST')
+    const testProject = projects.find(p => p.id === 'TEST' || p.key === 'TEST')
     expect(testProject).toBeDefined()
     expect(testProject.project?.name || testProject.name).toBe('Integration Test Project')
   })

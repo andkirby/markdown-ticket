@@ -6,6 +6,7 @@
  * health checking component.
  */
 
+import type { IncomingMessage } from 'node:http'
 import type { ServerConfig } from '../types.js'
 import http from 'node:http'
 import { TestFrameworkError } from '../types.js'
@@ -76,7 +77,7 @@ export class HealthCheckManager {
           method: 'GET',
           timeout: this.options.requestTimeout,
         },
-        (res: any) => {
+        (res: IncomingMessage) => {
           // Consume and destroy the response to ensure the socket is closed
           res.on('data', () => {})
           res.on('end', () => {

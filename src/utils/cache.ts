@@ -108,7 +108,7 @@ export async function nuclearCacheClear() {
 }
 
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  (window as any).clearCache = clearAllCache;
-  (window as any).clearProjectCache = clearProjectCache;
-  (window as any).clearBackendCache = clearBackendCache
+  (window as unknown as Record<string, unknown>).clearCache = clearAllCache;
+  (window as unknown as Record<string, unknown>).clearProjectCache = clearProjectCache;
+  (window as unknown as Record<string, unknown>).clearBackendCache = clearBackendCache
 }

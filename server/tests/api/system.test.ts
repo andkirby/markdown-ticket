@@ -46,7 +46,7 @@ describe('system Endpoint Tests (MDT-106)', () => {
     it('should satisfy OpenAPI spec', async () => {
       const response = await createGetRequest(app, '/api/status')
 
-      expect(response as any).toSatisfyApiSpec()
+      expect(response).toSatisfyApiSpec()
     })
   })
 
@@ -106,7 +106,7 @@ describe('system Endpoint Tests (MDT-106)', () => {
     it('should satisfy OpenAPI spec', async () => {
       const response = await createPostRequest(app, '/api/filesystem/exists', { path: tempDir })
 
-      expect(response as any).toSatisfyApiSpec()
+      expect(response).toSatisfyApiSpec()
     })
   })
 
@@ -124,7 +124,7 @@ describe('system Endpoint Tests (MDT-106)', () => {
     it('should satisfy OpenAPI spec', async () => {
       const response = await createGetRequest(app, '/api/config')
 
-      expect(response as any).toSatisfyApiSpec()
+      expect(response).toSatisfyApiSpec()
     })
   })
 
@@ -140,7 +140,7 @@ describe('system Endpoint Tests (MDT-106)', () => {
     it('should satisfy OpenAPI spec', async () => {
       const response = await createGetRequest(app, '/api/config/global')
 
-      expect(response as any).toSatisfyApiSpec()
+      expect(response).toSatisfyApiSpec()
     })
   })
 
@@ -156,7 +156,7 @@ describe('system Endpoint Tests (MDT-106)', () => {
     it('should satisfy OpenAPI spec', async () => {
       const response = await createPostRequest(app, '/api/cache/clear', {})
 
-      expect(response as any).toSatisfyApiSpec()
+      expect(response).toSatisfyApiSpec()
     })
   })
 
@@ -172,7 +172,7 @@ describe('system Endpoint Tests (MDT-106)', () => {
     it('should satisfy OpenAPI spec', async () => {
       const response = await createPostRequest(app, '/api/config/clear', {})
 
-      expect(response as any).toSatisfyApiSpec()
+      expect(response).toSatisfyApiSpec()
     })
   })
 

@@ -3,6 +3,7 @@
  * Behavioral tests for project creation and validation
  */
 
+import type { Buffer } from 'node:buffer'
 import { execSync } from 'node:child_process'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -14,6 +15,20 @@ import {
 
 // Global test environment instance
 let testEnv: TestEnvironment
+
+interface ExecSyncErrorShape {
+  stdout?: Buffer | string
+  stderr?: Buffer | string
+  message?: string
+  status?: number
+}
+
+interface RegistryProjectPathEntry {
+  project: {
+    path?: string
+    [key: string]: string | undefined
+  }
+}
 
 /**
  * Helper to run CLI command with TestEnvironment isolation
@@ -74,11 +89,12 @@ function runIsolatedCommand(command: string): { stdout: string, stderr: string, 
       exitCode: 0,
     }
   }
-  catch (error: any) {
+  catch (error: unknown) {
+    const err = error as ExecSyncErrorShape
     return {
-      stdout: error.stdout?.toString() || '',
-      stderr: error.stderr?.toString() || error.message,
-      exitCode: error.status || 1,
+      stdout: err.stdout?.toString() || '',
+      stderr: err.stderr?.toString() || err.message || '',
+      exitCode: err.status || 1,
     }
   }
 }
@@ -87,7 +103,7 @@ describe('project:create', () => {
   let projectsDir: string
 
   // Helper to read global registry from test environment
-  const readGlobalRegistryEntry = (projectPath: string): any => {
+  const readGlobalRegistryEntry = (projectPath: string): RegistryProjectPathEntry | null => {
     const configDir = testEnv.getConfigDirectory()
     const projectsDir = path.join(configDir, 'projects')
 
@@ -104,7 +120,7 @@ describe('project:create', () => {
 
       const configFile = path.join(projectsDir, tomlFile)
       const content = fs.readFileSync(configFile, 'utf-8')
-      const result: any = { project: {} }
+      const result: RegistryProjectPathEntry = { project: {} }
       const lines = content.split('\n')
       for (const line of lines) {
         const match = line.match(/^(\w+)\s*=\s*"(.+)"$/)

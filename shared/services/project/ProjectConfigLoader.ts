@@ -1,3 +1,4 @@
+import type { ProjectConfig } from '../../models/Project.js'
 import { isLegacyConfig, validateProjectConfig } from '../../models/Project.js'
 import { CONFIG_FILES } from '../../utils/constants.js'
 import { fileExists, readFile, writeFile } from '../../utils/file-utils.js'
@@ -20,7 +21,7 @@ export class ProjectConfigLoader {
    * Get project configuration from local .mdt-config.toml
    * Automatically migrates legacy configurations on read
    */
-  getProjectConfig(projectPath: string): any {
+  getProjectConfig(projectPath: string): ProjectConfig | null {
     try {
       const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
 
@@ -54,7 +55,7 @@ export class ProjectConfigLoader {
    * Enhanced migration method that properly cleans up legacy configurations
    * Moves project.path (tickets) to project.ticketsPath and sets project.path to "."
    */
-  private migrateLegacyConfigWithCleanup(config: any, configPath: string): any {
+  private migrateLegacyConfigWithCleanup(config: ProjectConfig, configPath: string): ProjectConfig {
     if (!isLegacyConfig(config)) {
       return config
     }

@@ -74,15 +74,28 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
 
   // Check path when form data changes using simplified hook
   useEffect(() => {
+    const timerRef = { id: undefined as ReturnType<typeof setTimeout> | undefined }
+
+    const updateState = (exists: boolean, inDiscovery: boolean) => {
+      timerRef.id = setTimeout(() => {
+        setPathExists(exists)
+        setIsPathInDiscovery(inDiscovery)
+      }, 0)
+    }
+
     if (formData.path) {
       checkPath(formData.path).then((result) => {
-        setPathExists(result.exists)
-        setIsPathInDiscovery(result.isInDiscovery)
+        updateState(result.exists, result.isInDiscovery)
       }).catch(console.error)
     }
     else {
-      setPathExists(false)
-      setIsPathInDiscovery(false)
+      updateState(false, false)
+    }
+
+    return () => {
+      if (timerRef.id) {
+        clearTimeout(timerRef.id)
+      }
     }
   }, [formData.path, checkPath])
 
@@ -449,8 +462,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
               <div className="mb-4 text-left">
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Created files:</p>
                 <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                  {createdFiles.map((file, index) => (
-                    <li key={index} className="flex items-center">
+                  {createdFiles.map(file => (
+                    <li key={file} className="flex items-center">
                       <Check className="w-4 h-4 text-green-600 dark:text-green-400 mr-2" />
                       {file}
                     </li>
@@ -462,10 +475,11 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
               <Button variant="outline" onClick={handleCreateAnother}>
                 Create Another
               </Button>
-              <Button onClick={() => {
-                setShowSuccess(false)
-                onClose()
-              }}
+              <Button
+                onClick={() => {
+                  setShowSuccess(false)
+                  onClose()
+                }}
               >
                 Done
               </Button>

@@ -12,11 +12,52 @@ function getConfigDir(): string {
   return process.env.CONFIG_DIR || path.join(process.env.HOME || '', '.config', 'markdown-ticket')
 }
 
+interface ProjectRegistryEntry {
+  name: string
+  code: string
+  ticketsPath: string
+  path: string
+  projectDir: string
+  active: boolean
+}
+
+interface ProjectListEntry {
+  id: string
+  project: {
+    name: string
+    path: string
+    active: boolean
+  }
+  configPath: string
+}
+
+interface ProjectConfigEntry {
+  name: string
+  code: string
+  ticketsPath: string
+  path: string
+}
+
+interface ProjectCR {
+  code: string
+  title: string
+  status: string
+  type: string
+  priority: string
+  filename: string
+  path: string
+}
+
+interface ConfigureDocumentsResult {
+  success: boolean
+  message: string
+}
+
 // Shared registry across all ProjectService instances
-const sharedProjectsRegistry: Map<string, any> = new Map()
+const sharedProjectsRegistry: Map<string, ProjectRegistryEntry> = new Map()
 
 export class ProjectService {
-  private projectsRegistry: Map<string, any>
+  private projectsRegistry: Map<string, ProjectRegistryEntry>
   private configDir: string
 
   constructor(_quiet: boolean = false) {
@@ -111,7 +152,7 @@ export class ProjectService {
    * Accepts bypassCache parameter for compatibility with controller expectations
    * Always refreshes registry to pick up projects created dynamically
    */
-  async getAllProjects(_bypassCache?: boolean): Promise<any[]> {
+  async getAllProjects(_bypassCache?: boolean): Promise<ProjectListEntry[]> {
     // Always refresh to pick up projects created by ProjectFactory
     this.loadProjectsRegistry()
 
@@ -130,7 +171,7 @@ export class ProjectService {
   /**
    * Get project configuration by path
    */
-  getProjectConfig(projectPath: string): any {
+  getProjectConfig(projectPath: string): ProjectConfigEntry | null {
     for (const [key, project] of this.projectsRegistry.entries()) {
       if (project.path === projectPath || key === projectPath || project.projectDir === projectPath || project.code === projectPath) {
         return {
@@ -147,7 +188,7 @@ export class ProjectService {
   /**
    * Get all CRs for a project
    */
-  async getProjectCRs(projectPath: string): Promise<any[]> {
+  async getProjectCRs(projectPath: string): Promise<ProjectCR[]> {
     const config = this.getProjectConfig(projectPath)
     if (!config) {
       return []
@@ -159,7 +200,7 @@ export class ProjectService {
       return []
     }
 
-    const crs: any[] = []
+    const crs: ProjectCR[] = []
     const entries = fs.readdirSync(ticketsDir, { withFileTypes: true })
 
     for (const entry of entries) {
@@ -226,7 +267,7 @@ export class ProjectService {
    * Configure documents for a project
    * Persists the document paths to the project's TOML config file
    */
-  async configureDocuments(projectId: string, documentPaths: string[]): Promise<any> {
+  async configureDocuments(projectId: string, documentPaths: string[]): Promise<ConfigureDocumentsResult> {
     // Refresh registry to pick up any newly created projects
     this.loadProjectsRegistry()
 

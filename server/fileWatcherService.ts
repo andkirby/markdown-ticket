@@ -14,7 +14,7 @@ interface ProjectPath {
 
 interface SSEEvent {
   type: string
-  data: any
+  data: unknown
 }
 
 interface TicketData {
@@ -53,7 +53,7 @@ interface FileInvoker {
 
 interface ResponseLike {
   write: (data: string) => void
-  on: (event: string, callback: (...args: any[]) => void) => void
+  on: (event: string, callback: (...args: unknown[]) => void) => void
   headersSent: boolean
   destroyed?: boolean
   closed?: boolean
@@ -296,8 +296,9 @@ class FileWatcherService extends EventEmitter {
           }
         }
       }
-      catch (error: any) {
-        console.warn('Failed to parse ticket data for SSE:', error.message)
+      catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        console.warn('Failed to parse ticket data for SSE:', message)
       }
     }
 
