@@ -6,8 +6,8 @@ export function sortTickets(
   direction: 'asc' | 'desc',
 ): Ticket[] {
   return [...tickets].sort((a, b) => {
-    let aValue: any
-    let bValue: any
+    let aValue: unknown
+    let bValue: unknown
 
     // Get values based on attribute
     switch (attribute) {
@@ -29,8 +29,8 @@ export function sortTickets(
         break
       default:
         // For custom attributes, try to access them directly
-        aValue = (a as any)[attribute]
-        bValue = (b as any)[attribute]
+        aValue = (a as Record<string, unknown>)[attribute]
+        bValue = (b as Record<string, unknown>)[attribute]
     }
 
     // Handle null/undefined values

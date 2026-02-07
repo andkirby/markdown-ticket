@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ScrollArea } from '@/components/UI/scroll-area'
 
 interface PathItem {
@@ -18,10 +18,10 @@ interface PathSelectorProps {
 
 export default function PathSelector({ projectId, onPathsSelected, onCancel }: PathSelectorProps) {
   const [items, setItems] = useState<PathItem[]>([])
-  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set())
+  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(() => new Set())
   const [loading, setLoading] = useState(true)
 
-  const loadFileSystem = async () => {
+  const loadFileSystem = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/filesystem?projectId=${encodeURIComponent(projectId)}`)
@@ -36,9 +36,9 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
     finally {
       setLoading(false)
     }
-  }
+  }, [projectId])
 
-  const loadCurrentDocumentPaths = async () => {
+  const loadCurrentDocumentPaths = useCallback(async () => {
     try {
       // Get the actual configured paths from the config file
       const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/config`)
@@ -55,12 +55,12 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
     catch {
       console.warn('No existing document configuration found')
     }
-  }
+  }, [projectId])
 
   useEffect(() => {
     loadFileSystem()
     loadCurrentDocumentPaths()
-  }, [projectId])
+  }, [loadFileSystem, loadCurrentDocumentPaths])
 
   const toggleSelection = (path: string, _isFolder: boolean, _item?: PathItem) => {
     const newSelected = new Set(selectedPaths)

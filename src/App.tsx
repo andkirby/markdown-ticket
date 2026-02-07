@@ -1,6 +1,7 @@
+import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from './types'
 import { Moon, Sun } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { EventHistory } from './components/DevTools/EventHistory'
 import { useEventHistoryState } from './components/DevTools/useEventHistoryState'
@@ -95,6 +96,17 @@ function ProjectRouteHandler() {
   const [error, setError] = useState<string | null>(null)
   const [eventHistoryOpen, eventHistoryForceHidden, setEventHistoryState] = useEventHistoryState()
 
+  // Store state setters in refs to avoid direct setState in useEffect
+  const errorRef = useRef(error)
+  errorRef.current = error
+  const setErrorRef = useRef(setError)
+  setErrorRef.current = setError
+
+  const selectedTicketRef = useRef(selectedTicket)
+  selectedTicketRef.current = selectedTicket
+  const setSelectedTicketRef = useRef(setSelectedTicket)
+  setSelectedTicketRef.current = setSelectedTicket
+
   // Determine current view mode from URL
   const getCurrentViewMode = (): 'board' | 'list' | 'documents' => {
     if (location.pathname.includes('/list'))
@@ -109,7 +121,7 @@ function ProjectRouteHandler() {
   // Handle project selection and validation
   useEffect(() => {
     if (projectsLoading) {
-      setError(null) // Clear errors when loading
+      setErrorRef.current(null) // Clear errors when loading
       return
     }
 
@@ -118,13 +130,13 @@ function ProjectRouteHandler() {
 
     // Validate project code format
     if (!validateProjectCode(projectCode)) {
-      setError(`Invalid project code format: '${projectCode}'`)
+      setErrorRef.current(`Invalid project code format: '${projectCode}'`)
       return
     }
 
     const project = projects.find(p => getProjectCode(p) === projectCode)
     if (!project) {
-      setError(`Project '${projectCode}' not found`)
+      setErrorRef.current(`Project '${projectCode}' not found`)
       return
     }
 
@@ -132,7 +144,7 @@ function ProjectRouteHandler() {
       setSelectedProject(project)
       setCurrentProject(projectCode)
     }
-    setError(null)
+    setErrorRef.current(null)
   }, [projectCode, projects, projectsLoading, selectedProject, setSelectedProject])
 
   // Handle ticket modal from URL
@@ -142,17 +154,17 @@ function ProjectRouteHandler() {
       const ticketKey = normalizeTicketKey(ticketMatch[1])
       const ticket = tickets.find(t => t.code === ticketKey)
       if (ticket) {
-        setSelectedTicket(ticket)
-        setError(null) // Clear any previous error
+        setSelectedTicketRef.current(ticket)
+        setErrorRef.current(null) // Clear any previous error
       }
       else if (!projectsLoading && selectedProject) {
         // Only set error if projects are loaded and we have a selected project with loaded tickets
         // This prevents false errors during initial loading
-        setError(`Ticket '${ticketMatch[1]}' not found`)
+        setErrorRef.current(`Ticket '${ticketMatch[1]}' not found`)
       }
     }
     else {
-      setSelectedTicket(null)
+      setSelectedTicketRef.current(null)
     }
   }, [location.pathname, tickets, projectsLoading, selectedProject])
 
@@ -164,7 +176,7 @@ function ProjectRouteHandler() {
     navigate(newPath)
   }
 
-  const handleProjectSelect = (project: any) => {
+  const handleProjectSelect = (project: Project) => {
     // Preserve current view mode when switching projects
     const lastViewMode = localStorage.getItem('lastViewMode') || 'board'
     const projectCode = getProjectCode(project)

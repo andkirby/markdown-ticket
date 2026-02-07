@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface CounterAPIConfig {
   enabled: boolean
@@ -24,7 +24,7 @@ export function useCounterAPI() {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected')
   const [loading, setLoading] = useState(false)
 
-  const testConnection = async () => {
+  const testConnection = useCallback(async () => {
     if (!config.api_key || !config.endpoint)
       return
 
@@ -42,9 +42,9 @@ export function useCounterAPI() {
       setConnectionStatus('disconnected')
       return false
     }
-  }
+  }, [config.api_key, config.endpoint])
 
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     try {
       const response = await fetch('/api/counter/config')
       if (response.ok) {
@@ -57,18 +57,29 @@ export function useCounterAPI() {
         }
         setConfig(mappedConfig)
         if (data.api_key_set) {
-          await testConnection()
+          // Test connection with the loaded config
+          setConnectionStatus('testing')
+          try {
+            const testResponse = await fetch('/api/counter/test-connection', {
+              method: 'POST',
+            })
+            const testResult = await testResponse.json()
+            setConnectionStatus(testResult.success ? 'connected' : 'disconnected')
+          }
+          catch {
+            setConnectionStatus('disconnected')
+          }
         }
       }
     }
     catch (error) {
       console.error('Failed to load config:', error)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadConfig()
-  }, [])
+  }, [loadConfig])
 
   const saveApiKey = async (apiKey: string, endpoint?: string) => {
     setLoading(true)

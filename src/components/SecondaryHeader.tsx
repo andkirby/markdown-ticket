@@ -1,3 +1,4 @@
+import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import * as React from 'react'
 import { HamburgerMenu } from './HamburgerMenu'
@@ -12,7 +13,7 @@ interface SecondaryHeaderProps {
   onAddProject?: () => void
   onEditProject?: () => void
   onCounterAPI?: () => void
-  selectedProject?: any
+  selectedProject?: Project | null
 }
 
 export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({

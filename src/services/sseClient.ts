@@ -26,17 +26,34 @@ interface SSEMessageData {
       priority: string
       lastModified: string
     } | null
-    [key: string]: any
+    eventId?: string
+    source?: string
+    [key: string]: unknown
   }
 }
 
 // Type guards for SSE message validation
-function isValidSSEMessage(data: any): data is SSEMessageData {
-  return data && typeof data.type === 'string' && data.data && typeof data.data === 'object'
+function isValidSSEMessage(data: unknown): data is SSEMessageData {
+  return (
+    data !== null
+    && typeof data === 'object'
+    && 'type' in data
+    && typeof data.type === 'string'
+    && 'data' in data
+    && data.data !== null
+    && typeof data.data === 'object'
+  )
 }
 
-function _isValidFileChangeData(data: any): boolean {
-  return data.eventType && data.filename && typeof data.eventType === 'string' && typeof data.filename === 'string'
+function _isValidFileChangeData(data: unknown): boolean {
+  return (
+    data !== null
+    && typeof data === 'object'
+    && 'eventType' in data
+    && 'filename' in data
+    && typeof data.eventType === 'string'
+    && typeof data.filename === 'string'
+  )
 }
 
 class SSEClient {
