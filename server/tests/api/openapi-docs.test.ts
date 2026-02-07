@@ -16,14 +16,28 @@ import request from 'supertest'
 const SPEC_PATH = join(__dirname, '../../openapi.yaml')
 const REDOC_HTML = `<!DOCTYPE html><html><head><title>Markdown Ticket API</title><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}redoc{display:block}</style></head><body><redoc spec-url="/api-docs/json"></redoc><script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script></body></html>`
 
+interface OpenApiInfo {
+  title: string
+  version?: string
+  [key: string]: unknown
+}
+
+interface OpenApiSpec {
+  openapi: string
+  info: OpenApiInfo
+  paths?: Record<string, unknown>
+  components?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 describe('openAPI Docs Endpoint Tests (MDT-106)', () => {
   let app: Express
-  let swaggerSpec: any
+  let swaggerSpec: OpenApiSpec
 
   beforeAll(() => {
     jestOpenAPI(SPEC_PATH)
 
-    swaggerSpec = yaml.load(readFileSync(SPEC_PATH, 'utf-8'))
+    swaggerSpec = yaml.load(readFileSync(SPEC_PATH, 'utf-8')) as OpenApiSpec
 
     app = express()
     app.get('/api-docs/json', (_req: Request, res: Response) => res.json(swaggerSpec))
@@ -100,14 +114,14 @@ describe('openAPI Docs Endpoint Tests (MDT-106)', () => {
 
     it('should match OpenAPI spec file on disk (R10.1)', async () => {
       const r = await request(app).get('/api-docs/json')
-      const fileSpec = yaml.load(readFileSync(SPEC_PATH, 'utf-8')) as any
+      const fileSpec = yaml.load(readFileSync(SPEC_PATH, 'utf-8')) as OpenApiSpec
 
       expect(r.body.openapi).toBe(fileSpec.openapi)
       expect(r.body.info).toMatchObject(fileSpec.info)
     })
 
     it('should satisfy OpenAPI spec contract (R10.1)', async () => {
-      expect(await request(app).get('/api-docs/json') as any).toSatisfyApiSpec()
+      expect(await request(app).get('/api-docs/json')).toSatisfyApiSpec()
     })
   })
 

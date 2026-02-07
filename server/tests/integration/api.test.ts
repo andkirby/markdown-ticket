@@ -27,21 +27,18 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
   let crCode: string
 
   beforeAll(async () => {
-    // eslint-disable-next-line no-console
     console.log('[TEST] Starting beforeAll hook...')
 
     try {
       // Setup isolated test environment with temporary directory
       const context = await setupTestEnvironment()
 
-      // eslint-disable-next-line no-console
       console.log('[TEST] Setup complete, tempDir:', context.tempDir)
 
       tempDir = context.tempDir
       projectFactory = context.projectFactory
       app = context.app
 
-      // eslint-disable-next-line no-console
       console.log('[TEST] Creating test project and CR...')
       // Create test project with CR for testing
       const testData = await createTestProjectWithCR(projectFactory, {
@@ -51,7 +48,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
       projectCode = testData.projectCode
       crCode = testData.crCode
-      // eslint-disable-next-line no-console
+
       console.log('[TEST] Project created:', projectCode, 'CR created:', crCode)
     }
     catch (error) {

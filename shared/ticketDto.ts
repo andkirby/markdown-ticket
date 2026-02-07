@@ -34,63 +34,72 @@ export interface TicketDTO {
 /**
  * Normalize ticket data to ensure consistent structure
  */
-export function normalizeTicket(rawTicket: any): TicketDTO {
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
+}
+
+function getString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback
+}
+
+export function normalizeTicket(rawTicket: unknown): TicketDTO {
+  const ticket = asRecord(rawTicket)
   return {
     // Map core fields
-    code: rawTicket.code || rawTicket.key || '',
-    title: rawTicket.title || '',
-    status: rawTicket.status || 'Proposed',
-    type: rawTicket.type || CRType.FEATURE_ENHANCEMENT,
-    priority: rawTicket.priority || 'Medium',
-    content: rawTicket.content || '',
-    filePath: rawTicket.filePath || rawTicket.path || '',
+    code: getString(ticket.code) || getString(ticket.key),
+    title: getString(ticket.title),
+    status: getString(ticket.status, 'Proposed'),
+    type: getString(ticket.type, CRType.FEATURE_ENHANCEMENT),
+    priority: getString(ticket.priority, 'Medium'),
+    content: getString(ticket.content),
+    filePath: getString(ticket.filePath) || getString(ticket.path),
 
     // Handle dates
-    dateCreated: parseDate(rawTicket.dateCreated),
-    lastModified: parseDate(rawTicket.lastModified),
-    implementationDate: parseDate(rawTicket.implementationDate),
+    dateCreated: parseDate(ticket.dateCreated),
+    lastModified: parseDate(ticket.lastModified),
+    implementationDate: parseDate(ticket.implementationDate),
 
     // Map optional fields
-    phaseEpic: rawTicket.phaseEpic || '',
-    description: rawTicket.description || '',
-    rationale: rawTicket.rationale || '',
-    assignee: rawTicket.assignee || '',
-    implementationNotes: rawTicket.implementationNotes || '',
+    phaseEpic: getString(ticket.phaseEpic),
+    description: getString(ticket.description),
+    rationale: getString(ticket.rationale),
+    assignee: getString(ticket.assignee),
+    implementationNotes: getString(ticket.implementationNotes),
 
     // Normalize relationship fields to arrays (never undefined)
-    relatedTickets: normalizeArray(rawTicket.relatedTickets),
-    dependsOn: normalizeArray(rawTicket.dependsOn),
-    blocks: normalizeArray(rawTicket.blocks),
+    relatedTickets: normalizeArray(ticket.relatedTickets),
+    dependsOn: normalizeArray(ticket.dependsOn),
+    blocks: normalizeArray(ticket.blocks),
   }
 }
 
 /**
  * Convert various formats to array
  */
-function normalizeArray(value: any): string[] {
+function normalizeArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     // Handle array elements that might be JSON strings
-    const flattened = value.flatMap((item) => {
+    const flattened = value.flatMap((item): unknown[] => {
       if (typeof item === 'string' && item.trim().startsWith('[')) {
         try {
-          const parsed = JSON.parse(item)
+          const parsed: unknown = JSON.parse(item)
           return Array.isArray(parsed) ? parsed : [item]
         }
         catch {
           return [item]
         }
       }
-      return item
+      return [item]
     })
-    return flattened.filter(Boolean)
+    return flattened.filter((item): item is string => typeof item === 'string' && item.length > 0)
   }
   if (typeof value === 'string' && value.trim()) {
     // Try to parse as JSON first
     if (value.trim().startsWith('[')) {
       try {
-        const parsed = JSON.parse(value)
+        const parsed: unknown = JSON.parse(value)
         if (Array.isArray(parsed)) {
-          return parsed.filter(Boolean)
+          return parsed.filter((item): item is string => typeof item === 'string' && item.length > 0)
         }
       }
       catch {
@@ -105,7 +114,7 @@ function normalizeArray(value: any): string[] {
 /**
  * Parse date from various formats
  */
-function parseDate(dateValue: any): Date | null {
+function parseDate(dateValue: unknown): Date | null {
   if (!dateValue)
     return null
   if (dateValue instanceof Date)

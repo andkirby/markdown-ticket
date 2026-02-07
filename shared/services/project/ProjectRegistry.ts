@@ -1,4 +1,5 @@
 import type { Project } from '../../models/Project.js'
+import type { RegistryData } from './types.js'
 import { getDefaultPaths } from '../../utils/constants.js'
 import {
   createDirectory,
@@ -30,12 +31,25 @@ export class ProjectRegistry {
     return getDefaultPaths().PROJECTS_REGISTRY
   }
 
+  private static isRegistryData(value: unknown): value is RegistryData {
+    if (typeof value !== 'object' || value === null) {
+      return false
+    }
+    const record = value as Record<string, unknown>
+    const project = record.project
+    if (typeof project !== 'object' || project === null) {
+      return false
+    }
+    const projectRecord = project as Record<string, unknown>
+    return typeof projectRecord.path === 'string'
+  }
+
   /**
    * Get all registered projects from the global registry
    * Returns minimal metadata for each registered project
    */
-  getRegisteredProjects(): Array<{ file: string, data: any }> {
-    const registered: Array<{ file: string, data: any }> = []
+  getRegisteredProjects(): Array<{ file: string, data: RegistryData }> {
+    const registered: Array<{ file: string, data: RegistryData }> = []
 
     try {
       if (!directoryExists(this.projectsDir)) {
@@ -51,7 +65,7 @@ export class ProjectRegistry {
           const registryData = this.parseRegistryContent(content)
 
           // Validate that the registry entry has the required project path
-          if (registryData?.project?.path) {
+          if (ProjectRegistry.isRegistryData(registryData)) {
             registered.push({ file, data: registryData })
           }
           else {
@@ -92,7 +106,7 @@ export class ProjectRegistry {
       // Global-only projects have no configFile (empty string)
       const isGlobalOnly = project.project.configFile === ''
 
-      let projectData: any
+      let projectData: RegistryData
 
       if (isGlobalOnly) {
         // Strategy 1: Global-Only - Store complete project definition in global registry
@@ -164,7 +178,7 @@ export class ProjectRegistry {
   /**
    * Parse TOML content from registry file
    */
-  private parseRegistryContent(content: string): any {
+  private parseRegistryContent(content: string): unknown {
     return parseToml(content)
   }
 }

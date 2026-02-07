@@ -1,6 +1,6 @@
+import type { TreeNode } from '../types/tree.js'
 import * as path from 'node:path'
 import { FileOperationInvoker } from '../invokers/FileOperationInvoker.js'
-import type { TreeNode } from '../types/tree.js'
 import { TreeService } from './TreeService.js'
 
 // Type definitions

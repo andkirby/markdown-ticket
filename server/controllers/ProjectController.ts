@@ -1,7 +1,6 @@
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project.js'
+import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { Request, Response } from 'express'
-import type { ProjectCreateInput } from '@mdt/shared/tools/ProjectManager.js'
-import type { ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { CRData, TicketService } from '../services/TicketService.js'
 import type { TreeNode } from '../types/tree.js'
 

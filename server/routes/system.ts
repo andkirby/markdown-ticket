@@ -271,7 +271,6 @@ export function createSystemRouter(
         expandedPath,
       }
 
-      // eslint-disable-next-line no-console
       console.log(`🔍 Enhanced path check for "${inputPath}": expanded="${expandedPath}", exists=${result.exists}, inDiscovery=${result.isInDiscovery}`)
       res.json(result)
     }
@@ -307,7 +306,6 @@ export function createSystemRouter(
    */
   router.post('/cache/clear', async (req: Request, res: Response) => {
     try {
-      // eslint-disable-next-line no-console
       console.log('🗑️  Clearing file operation cache')
       fileInvoker.clearCache()
       res.json({
@@ -350,7 +348,6 @@ export function createSystemRouter(
       const configDir = getConfigDir()
       const configPath = path.join(configDir, 'config.toml')
 
-      // eslint-disable-next-line no-console
       console.log(`Reading config from: ${configPath}`)
 
       try {
@@ -419,7 +416,6 @@ export function createSystemRouter(
       const configDir = getConfigDir()
       const configPath = path.join(configDir, 'config.toml')
 
-      // eslint-disable-next-line no-console
       console.log(`Reading global config from: ${configPath}`)
 
       try {
@@ -494,7 +490,6 @@ export function createSystemRouter(
         projectDiscovery.clearCache()
       }
 
-      // eslint-disable-next-line no-console
       console.log('🔄 Config cache cleared')
       res.json({
         success: true,

@@ -23,13 +23,14 @@ const mockNodeProcess = {
 }
 
 const originalProcess = globalThis.process
+const mutableGlobal = globalThis as typeof globalThis & { process?: typeof process }
 
 describe('mDT-110: Node.js ProjectValidator Extension', () => {
   let tempDir: string
 
   beforeEach(() => {
     // Simulate Node.js environment
-    (globalThis as any).process = mockNodeProcess
+    mutableGlobal.process = mockNodeProcess as typeof process
 
     // Create temporary directory for filesystem tests
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mdt-test-'))
@@ -42,7 +43,7 @@ describe('mDT-110: Node.js ProjectValidator Extension', () => {
     }
 
     // Restore original process
-    (globalThis as any).process = originalProcess
+    mutableGlobal.process = originalProcess
   })
 
   // P2-1, P2-2: Node validatePath with filesystem

@@ -9,6 +9,7 @@ import type {
   Ticket,
   TicketData,
   TicketFilters,
+  TicketUpdateAttrs,
 } from '../models/Ticket.js'
 import type { CRStatus } from '../models/Types.js'
 import { readdir, readFile } from 'node:fs/promises'
@@ -223,7 +224,7 @@ export class TicketService {
 
       // Validate that only allowed attributes are being updated
       const invalidAttributes = Object.keys(attributes).filter(
-        field => !TICKET_UPDATE_ALLOWED_ATTRS.has(field as any),
+        field => !TICKET_UPDATE_ALLOWED_ATTRS.has(field as keyof TicketUpdateAttrs),
       )
 
       if (invalidAttributes.length > 0) {

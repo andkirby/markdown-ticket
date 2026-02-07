@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type { Express } from 'express'
 import * as path from 'node:path'
 import process from 'node:process'

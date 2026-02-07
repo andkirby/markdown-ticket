@@ -1,6 +1,6 @@
+import type { TreeNode } from '../types/tree.js'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
-import type { TreeNode } from '../types/tree.js'
 import { TreeService } from './TreeService.js'
 
 // Type definitions

@@ -55,7 +55,7 @@ export class ProjectService implements IProjectService {
     return this.config.createOrUpdateLocalConfig(projectId, projectPath, name, code, description, repository, globalOnly, ticketsPath)
   }
 
-  updateProject(id: string, u: any) {
+  updateProject(id: string, u: Parameters<IProjectConfigService['updateProject']>[1]) {
     this.config.updateProject(id, u)
     this.clearCache()
   }

@@ -26,8 +26,8 @@
     "test": "jest",
     "test:watch": "jest --watchAll",
     "test:coverage": "jest --coverage",
-    "lint": "eslint . --ext .ts,.js",
-    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "lint": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --fix",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "openapi:validate": "npx @apidevtools/swagger-cli validate openapi.yaml"
   },

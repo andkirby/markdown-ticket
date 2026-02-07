@@ -60,18 +60,15 @@ export function createSSERouter(fileWatcher: FileWatcherService): Router {
       }
     })
 
-    // eslint-disable-next-line no-console
     console.log(`SSE client connected. Total clients: ${fileWatcher.getClientCount()}`)
 
     // Handle client disconnect
     req.on('close', () => {
-      // eslint-disable-next-line no-console
       console.log('SSE client disconnected')
       fileWatcher.removeClient(res)
     })
 
     req.on('aborted', () => {
-      // eslint-disable-next-line no-console
       console.log('SSE client aborted')
       fileWatcher.removeClient(res)
     })

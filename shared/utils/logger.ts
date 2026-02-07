@@ -9,7 +9,7 @@
  * @param message - Message to log
  * @param args - Additional arguments to log
  */
-export function logQuiet(quiet: boolean, message: string, ...args: any[]): void {
+export function logQuiet(quiet: boolean, message: string, ...args: unknown[]): void {
   if (!quiet) {
     console.error(message, ...args)
   }
@@ -20,8 +20,8 @@ export function logQuiet(quiet: boolean, message: string, ...args: any[]): void 
  * @param quiet - Whether quiet mode is enabled
  * @returns A logging function that respects the quiet state
  */
-export function createQuietLogger(quiet: boolean = false): (message: string, ...args: any[]) => void {
-  return (message: string, ...args: any[]): void => {
+export function createQuietLogger(quiet: boolean = false): (message: string, ...args: unknown[]) => void {
+  return (message: string, ...args: unknown[]): void => {
     logQuiet(quiet, message, ...args)
   }
 }

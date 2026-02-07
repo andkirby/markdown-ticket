@@ -11,6 +11,24 @@ import { parse as parseToml } from 'toml'
 
 const execAsync = promisify(exec)
 
+interface ExecErrorShape {
+  stdout?: string
+  stderr?: string
+  message?: string
+  code?: number
+}
+
+interface ProjectConfigShape {
+  project?: {
+    name?: string
+    code?: string
+    id?: string
+    ticketsPath?: string
+    [key: string]: unknown
+  }
+  [key: string]: unknown
+}
+
 // Test fixtures
 export const TEST_PROJECTS = {
   valid: {
@@ -98,12 +116,13 @@ export async function runProjectCreate(flags: Record<string, string>): Promise<C
       exitCode: 0,
     }
   }
-  catch (error: any) {
+  catch (error: unknown) {
+    const err = error as ExecErrorShape
     return {
       success: false,
-      stdout: error.stdout || '',
-      stderr: error.stderr || error.message,
-      exitCode: error.code || 1,
+      stdout: err.stdout || '',
+      stderr: err.stderr || err.message || '',
+      exitCode: err.code || 1,
     }
   }
 }
@@ -127,43 +146,47 @@ export async function runProjectList(): Promise<CLIRunnerResult> {
       exitCode: 0,
     }
   }
-  catch (error: any) {
+  catch (error: unknown) {
+    const err = error as ExecErrorShape
     return {
       success: false,
-      stdout: error.stdout || '',
-      stderr: error.stderr || error.message,
-      exitCode: error.code || 1,
+      stdout: err.stdout || '',
+      stderr: err.stderr || err.message || '',
+      exitCode: err.code || 1,
     }
   }
 }
 
 // Configuration file helpers
-export function readLocalConfig(projectPath: string): any {
+export function readLocalConfig(projectPath: string): ProjectConfigShape | null {
   const configFile = join(projectPath, '.mdt-config.toml')
   if (!existsSync(configFile)) {
     return null
   }
 
   const content = readFileSync(configFile, 'utf-8')
-  return parseToml(content)
+  return parseToml(content) as ProjectConfigShape
 }
 
-export function readGlobalRegistryEntry(projectId: string): any {
+export function readGlobalRegistryEntry(projectId: string): ProjectConfigShape | null {
   const configFile = join(getGlobalRegistryPath(), `${projectId}.toml`)
   if (!existsSync(configFile)) {
     return null
   }
 
   const content = readFileSync(configFile, 'utf-8')
-  return parseToml(content)
+  return parseToml(content) as ProjectConfigShape
 }
 
-export function configHasRequiredFields(config: any): boolean {
-  if (!config || !config.project) {
+export function configHasRequiredFields(config: unknown): boolean {
+  if (typeof config !== 'object' || config === null || !('project' in config)) {
     return false
   }
 
-  const { project } = config
+  const project = (config as ProjectConfigShape).project
+  if (!project) {
+    return false
+  }
   return !!(
     typeof project.name === 'string'
     && typeof project.code === 'string'

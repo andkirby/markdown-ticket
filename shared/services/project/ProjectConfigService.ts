@@ -147,7 +147,7 @@ export class ProjectConfigService implements IProjectConfigService {
   }
 
   /** Helper to load existing config or create new with migration */
-  private loadOrMigrateConfig(configPath: string, projectId: string): any {
+  private loadOrMigrateConfig(configPath: string, projectId: string): ProjectConfig {
     if (fileExists(configPath)) {
       const content = readFile(configPath)
       const config = parseToml(content)
@@ -156,10 +156,25 @@ export class ProjectConfigService implements IProjectConfigService {
         logQuiet(this.quiet, `Migrating legacy configuration format for ${projectId}...`)
         return migrateLegacyConfig(config)
       }
-      return config
+      if (validateProjectConfig(config)) {
+        return config
+      }
     }
 
-    return { project: { ticketsPath: DEFAULTS.TICKETS_PATH } }
+    return {
+      project: {
+        name: '',
+        code: '',
+        path: '.',
+        startNumber: 1,
+        counterFile: CONFIG_FILES.COUNTER_FILE,
+        active: true,
+        description: '',
+        repository: '',
+        ticketsPath: DEFAULTS.TICKETS_PATH,
+      },
+      document: {},
+    }
   }
 
   /** Ensure tickets directory exists */

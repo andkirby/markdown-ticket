@@ -33,8 +33,15 @@ export interface TicketFilters {
   assignee?: string
 }
 
+interface ServiceProject {
+  id: string
+  project: {
+    path: string
+  }
+}
+
 export class TicketService {
-  private projectService: any
+  private projectService: ProjectService
 
   constructor(quiet: boolean = false) {
     this.projectService = new ProjectService(quiet)
@@ -43,7 +50,7 @@ export class TicketService {
   /**
    * Get the correct CR path for a project with backward compatibility
    */
-  public async getCRPath(project: any): Promise<string> {
+  public async getCRPath(project: ServiceProject): Promise<string> {
     // project.project.path might be a short name like "API" or a full path
     // Try to get the full path from projectService
     const config = this.projectService.getProjectConfig(project.project.path)
@@ -58,8 +65,8 @@ export class TicketService {
   /**
    * List all CRs for a project
    */
-  async listCRs(project: any, filters?: TicketFilters): Promise<Ticket[]> {
-    const crs = await this.projectService.getProjectCRs(project.project.path)
+  async listCRs(project: ServiceProject, filters?: TicketFilters): Promise<Ticket[]> {
+    const crs: Ticket[] = await this.projectService.getProjectCRs(project.project.path)
 
     if (!filters) {
       return crs
@@ -89,7 +96,7 @@ export class TicketService {
   /**
    * Get a specific CR by ID
    */
-  async getCR(project: any, crId: string): Promise<Ticket> {
+  async getCR(project: ServiceProject, crId: string): Promise<Ticket> {
     const crPath = await this.getCRPath(project)
     const crDir = path.join(crPath, crId)
 
@@ -144,7 +151,7 @@ export class TicketService {
   /**
    * Create a new CR
    */
-  async createCR(project: any, type: string, data: Partial<Ticket>): Promise<Ticket> {
+  async createCR(project: ServiceProject, type: string, data: Partial<Ticket>): Promise<Ticket> {
     const crPath = await this.getCRPath(project)
 
     // Get next CR number
@@ -240,7 +247,7 @@ export class TicketService {
   /**
    * Update CR status
    */
-  async updateCRStatus(project: any, crId: string, status: string): Promise<void> {
+  async updateCRStatus(project: ServiceProject, crId: string, status: string): Promise<void> {
     const cr = await this.getCR(project, crId)
     if (!cr.filePath) {
       throw new Error('CR file not found')
@@ -257,7 +264,7 @@ export class TicketService {
   /**
    * Update CR attributes
    */
-  async updateCRAttrs(project: any, crId: string, updates: Partial<Ticket>): Promise<void> {
+  async updateCRAttrs(project: ServiceProject, crId: string, updates: Partial<Ticket>): Promise<void> {
     const cr = await this.getCR(project, crId)
     if (!cr.filePath) {
       throw new Error('CR file not found')
@@ -305,7 +312,7 @@ export class TicketService {
   /**
    * Delete a CR
    */
-  async deleteCR(project: any, crId: string): Promise<void> {
+  async deleteCR(project: ServiceProject, crId: string): Promise<void> {
     const crPath = await this.getCRPath(project)
     const crDir = path.join(crPath, crId)
 

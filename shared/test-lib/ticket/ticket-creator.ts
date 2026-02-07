@@ -18,7 +18,7 @@ export interface TicketCreationConfig {
 export interface TicketCreationResult {
   success: boolean
   ticketCode?: string
-  ticket?: any
+  ticket?: unknown
   filePath?: string
   error?: string
 }
