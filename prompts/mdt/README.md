@@ -12,17 +12,26 @@ Markdown Ticket (MDT) workflow commands for Claude Code.
 
 # Docker MCP server
 ./install-plugin.sh --docker
+
+# With predefined scope (skips interactive prompt)
+./install-plugin.sh --local --scope user   # Global scope
+./install-plugin.sh --docker --scope local # Project scope
+
+# Show help
+./install-plugin.sh --help
 ```
 
-Then enable the plugin:
+**Options:**
 
-```bash
-# For this project only
-claude plugin enable mdt@markdown-ticket --scope local
+| Option          | Description                                    |
+|-----------------|------------------------------------------------|
+| `--local`       | Use local Node.js MCP server                   |
+| `--docker`      | Use Docker MCP server via HTTP                 |
+| `--scope user`  | Install in user scope (available to all projects) |
+| `--scope local` | Install in local scope (available only to this project) |
+| `--help`, `-h`  | Show help message                              |
 
-# Or globally
-claude plugin enable mdt@markdown-ticket --scope user
-```
+The script will prompt for scope interactively unless `--scope` is provided.
 
 ### Manual Install
 
