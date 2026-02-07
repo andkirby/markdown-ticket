@@ -168,3 +168,11 @@ export function setLevel(level: keyof typeof LOG_LEVELS) {
 4. **Logging behavior preserved**: All original messages still appear, with level prefixes (`[INFO]`, `[DEBUG]`, etc.)
 5. **No new dependencies**: Solution uses existing `console.error()` which ESLint allows
 6. **Optional level filtering**: `logger.setLevel()` function works for reducing noise
+
+## Architecture Design
+
+See [architecture.md](./MDT-122/architecture.md)
+
+- **Pattern**: Level-based logger (debug, info, warn, error)
+- **Key constraint**: Uses `console.error()` which ESLint already allows
+- **Extension**: Import `logger` in any module, migrate to Winston/Pino later by swapping implementation
