@@ -1,10 +1,24 @@
-import type { Ticket, TicketData } from '../models/Ticket.js'
 // Direct imports for standard usage
+import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
+import type { Ticket, TicketData } from '../models/Ticket.js'
 import type { Suggestion, Template, ValidationResult } from '../models/Types.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { CRPriorities, CRStatus, CRType, CRTypes } from '@mdt/domain-contracts'
 import { getDefaultPaths } from '../utils/constants.js'
+
+/**
+ * Interface for template configuration from templates.json
+ */
+interface TemplateConfig {
+  file: string
+  requiredFields: string[]
+  sections: Array<{
+    name: string
+    required: boolean
+    placeholder?: string
+  }>
+}
 
 export class TemplateService {
   private templates: Map<string, Template> = new Map()
@@ -38,15 +52,16 @@ export class TemplateService {
       const templatesConfig = JSON.parse(configContent)
 
       for (const [type, config] of Object.entries(templatesConfig)) {
-        const templatePath = join(this.templatesPath, (config as any).file)
+        const templateConfig = config as TemplateConfig
+        const templatePath = join(this.templatesPath, templateConfig.file)
 
         if (existsSync(templatePath)) {
           const templateContent = readFileSync(templatePath, 'utf-8')
 
           this.templates.set(type, {
-            type: type as any,
-            requiredFields: (config as any).requiredFields,
-            sections: (config as any).sections,
+            type,
+            requiredFields: templateConfig.requiredFields,
+            sections: templateConfig.sections,
             template: templateContent,
           })
         }
@@ -500,7 +515,7 @@ Based on research outcomes:
       errors.push({ field: 'type', message: 'Type is required' })
     }
     else {
-      if (!CRTypes.includes(effectiveType as any)) {
+      if (!CRTypes.includes(effectiveType as CRTypeValue)) {
         errors.push({
           field: 'type',
           message: `Invalid type '${effectiveType}'. Must be one of: ${CRTypes.join(', ')}`,
@@ -509,7 +524,7 @@ Based on research outcomes:
     }
 
     if (data.priority) {
-      if (!CRPriorities.includes(data.priority as any)) {
+      if (!CRPriorities.includes(data.priority as CRPriorityValue)) {
         errors.push({
           field: 'priority',
           message: `Invalid priority '${data.priority}'. Must be one of: ${CRPriorities.join(', ')}`,
