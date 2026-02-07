@@ -24,7 +24,7 @@
     "server": "cd server && npm start",
     "server:dev": "cd server && npm run dev",
     "build": "tsc --project tsconfig.shared.json && tsc && vite build",
-    "lint": "eslint \"**/*.{ts,tsx}\" --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --report-unused-disable-directives --max-warnings 0",
     "lint:all": "npm run lint && npm run lint:server && npm run lint:mcp && npm run lint:domain && npm run lint:shared",
     "lint:server": "cd server && npm run lint",
     "lint:mcp": "cd mcp-server && npm run lint",
@@ -93,7 +93,8 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
     "clean": "rimraf dist shared/dist server/dist mcp-server/dist domain-contracts/dist",
     "clean:all": "npm run clean && rimraf node_modules */node_modules",
-    "check": "npm run validate:ts && npm run lint:all && npm run knip"
+    "check": "npm run validate:ts && npm run lint:all && npm run knip",
+    "prepare": "husky"
   },
   "dependencies": {
     "@mdt/domain-contracts": "*",
@@ -147,6 +148,7 @@
     "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "jest-openapi": "^0.14.1",
