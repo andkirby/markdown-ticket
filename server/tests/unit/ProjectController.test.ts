@@ -1,5 +1,8 @@
 /// <reference types="jest" />
 
+import type { Response } from 'express'
+import type { AuthenticatedRequest, FileSystemService, ProjectServiceExtension } from '../../controllers/ProjectController.js'
+import type { CreateCRResult, DeleteResult, TicketService, UpdateCRResult } from '../../services/TicketService.js'
 import { ProjectController } from '../../controllers/ProjectController.js'
 import {
   createMockFileSystemService,
@@ -10,27 +13,38 @@ import {
   mockProject,
 } from '../utils/setupTests.js'
 
+// Type assertions for mock objects
+interface MockTicketService {
+  getCR: jest.MockedFunction<(projectId: string, crId: string) => Promise<typeof mockCR>>
+  createCR: jest.MockedFunction<(projectId: string, crData: unknown) => Promise<CreateCRResult>>
+  updateCRPartial: jest.MockedFunction<
+    (projectId: string, crId: string, updates: unknown) => Promise<UpdateCRResult>
+  >
+  deleteCR: jest.MockedFunction<(projectId: string, crId: string) => Promise<DeleteResult>>
+  getProjectCRs: jest.MockedFunction<(projectId: string) => Promise<unknown[]>>
+}
+
 describe('projectController - CRUD Operations', () => {
   let projectController: ProjectController
-  let mockProjectService: any
-  let mockTicketService: any
-  let mockFileSystemService: any
+  let mockProjectService: ProjectServiceExtension
+  let mockTicketService: MockTicketService
+  let mockFileSystemService: FileSystemService
 
   beforeEach(() => {
-    mockProjectService = createMockProjectService()
-    mockTicketService = createMockTicketService()
-    mockFileSystemService = createMockFileSystemService()
+    mockProjectService = createMockProjectService() as unknown as ProjectServiceExtension
+    mockTicketService = createMockTicketService() as MockTicketService
+    mockFileSystemService = createMockFileSystemService() as unknown as FileSystemService
 
     projectController = new ProjectController(
       mockProjectService,
       mockFileSystemService,
-      {} as any, // fileWatcher
+      {}, // fileWatcher - empty object for tests
       undefined, // ticketController
-      mockTicketService,
+      mockTicketService as unknown as TicketService,
     )
 
     // Mock successful project lookup
-    mockProjectService.getAllProjects.mockResolvedValue([mockProject])
+    void (mockProjectService.getAllProjects as jest.MockedFunction<typeof mockProjectService.getAllProjects>).mockResolvedValue([mockProject] as never)
   })
 
   afterEach(() => {
@@ -45,7 +59,7 @@ describe('projectController - CRUD Operations', () => {
 
       mockTicketService.getCR.mockResolvedValue(mockCR)
 
-      await projectController.getCR(req as any, res as any)
+      await projectController.getCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.json).toHaveBeenCalledWith(mockCR)
       expect(mockTicketService.getCR).toHaveBeenCalledWith('test-project', 'TEST-001')
@@ -56,7 +70,7 @@ describe('projectController - CRUD Operations', () => {
 
       req.params = { crId: 'TEST-001' }
 
-      await projectController.getCR(req as any, res as any)
+      await projectController.getCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
       expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
@@ -67,7 +81,7 @@ describe('projectController - CRUD Operations', () => {
 
       req.params = { projectId: 'test-project' }
 
-      await projectController.getCR(req as any, res as any)
+      await projectController.getCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
       expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
@@ -80,7 +94,7 @@ describe('projectController - CRUD Operations', () => {
 
       mockTicketService.getCR.mockRejectedValue(new Error('CR not found'))
 
-      await projectController.getCR(req as any, res as any)
+      await projectController.getCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(404)
       expect(res.json).toHaveBeenCalledWith({ error: 'Not Found', message: 'CR not found' })
@@ -91,13 +105,16 @@ describe('projectController - CRUD Operations', () => {
 
       req.params = { projectId: 'test-project', crId: 'TEST-001' }
 
+      // FileWatcher interface from ProjectController - empty object is sufficient for test
+      const mockFileWatcher = {}
+
       const controllerWithoutService = new ProjectController(
         mockProjectService,
         mockFileSystemService,
-        {} as any,
+        mockFileWatcher,
       )
 
-      await controllerWithoutService.getCR(req as any, res as any)
+      await controllerWithoutService.getCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(501)
       expect(res.json).toHaveBeenCalledWith({ error: 'Ticket service not available for fetching CR' })
@@ -125,7 +142,7 @@ describe('projectController - CRUD Operations', () => {
 
       mockTicketService.createCR.mockResolvedValue(createResult)
 
-      await projectController.createCR(req as any, res as any)
+      await projectController.createCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(201)
       expect(res.json).toHaveBeenCalledWith(createResult)
@@ -137,7 +154,7 @@ describe('projectController - CRUD Operations', () => {
 
       req.body = { title: 'New CR' }
 
-      await projectController.createCR(req as any, res as any)
+      await projectController.createCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
       expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID is required' })
@@ -161,7 +178,7 @@ describe('projectController - CRUD Operations', () => {
 
       mockTicketService.updateCRPartial.mockResolvedValue(updateResult)
 
-      await projectController.updateCR(req as any, res as any)
+      await projectController.updateCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.json).toHaveBeenCalledWith(updateResult)
       expect(mockTicketService.updateCRPartial).toHaveBeenCalledWith(
@@ -177,7 +194,7 @@ describe('projectController - CRUD Operations', () => {
       req.params = { crId: 'TEST-001' }
       req.body = { status: 'In Progress' }
 
-      await projectController.updateCR(req as any, res as any)
+      await projectController.updateCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
       expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
@@ -198,7 +215,7 @@ describe('projectController - CRUD Operations', () => {
 
       mockTicketService.deleteCR.mockResolvedValue(deleteResult)
 
-      await projectController.deleteCR(req as any, res as any)
+      await projectController.deleteCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.json).toHaveBeenCalledWith(deleteResult)
       expect(mockTicketService.deleteCR).toHaveBeenCalledWith('test-project', 'TEST-001')
@@ -209,7 +226,7 @@ describe('projectController - CRUD Operations', () => {
 
       req.params = { projectId: 'test-project' }
 
-      await projectController.deleteCR(req as any, res as any)
+      await projectController.deleteCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(400)
       expect(res.json).toHaveBeenCalledWith({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
@@ -222,7 +239,7 @@ describe('projectController - CRUD Operations', () => {
 
       mockTicketService.deleteCR.mockRejectedValue(new Error('File system error'))
 
-      await projectController.deleteCR(req as any, res as any)
+      await projectController.deleteCR(req as AuthenticatedRequest, res as Response)
 
       expect(res.status).toHaveBeenCalledWith(500)
       expect(res.json).toHaveBeenCalledWith({
