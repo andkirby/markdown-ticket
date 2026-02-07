@@ -44,6 +44,8 @@
     "build": "tsc --project tsconfig.json",
     "build:tools": "tsc --project tsconfig.json",
     "clean": "rm -rf dist",
+    "lint": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --fix",
     "pretest": "npm run build",
     "test": "jest",
     "test:watch": "jest --watch",

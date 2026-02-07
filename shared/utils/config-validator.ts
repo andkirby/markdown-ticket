@@ -8,33 +8,41 @@ const defaultConfig = {
   system: { logLevel: 'info' as const, cacheTimeout: 30000 },
 }
 
-function getBool(value: any, fallback: boolean): boolean {
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
+}
+
+function getBool(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback
 }
 
-function getNumber(value: any, fallback: number): number {
+function getNumber(value: unknown, fallback: number): number {
   return typeof value === 'number' ? value : fallback
 }
 
-function getArray(value: any, fallback: string[]): string[] {
-  return Array.isArray(value) ? value : fallback
+function getArray(value: unknown, fallback: string[]): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : fallback
 }
 
-function getEnum<T extends string>(value: any, allowed: T[], fallback: T): T {
+function getEnum<T extends string>(value: unknown, allowed: T[], fallback: T): T {
   return allowed.includes(value) ? value : fallback
 }
 
-export function migrateConfig(oldConfig: any, quiet = false): GlobalConfig {
+export function migrateConfig(oldConfig: unknown, quiet = false): GlobalConfig {
+  const config = asRecord(oldConfig)
+  const discovery = asRecord(config.discovery)
+  const dashboard = asRecord(config.dashboard)
+
   logQuiet(quiet, 'Migrating old configuration structure...')
 
   return {
     discovery: {
-      autoDiscover: oldConfig.discovery?.autoDiscover ?? defaultConfig.discovery.autoDiscover,
-      searchPaths: oldConfig.discovery?.searchPaths ?? defaultConfig.discovery.searchPaths,
+      autoDiscover: getBool(discovery.autoDiscover, defaultConfig.discovery.autoDiscover),
+      searchPaths: getArray(discovery.searchPaths, defaultConfig.discovery.searchPaths),
       maxDepth: defaultConfig.discovery.maxDepth,
     },
     links: {
-      enableAutoLinking: oldConfig.dashboard?.autoRefresh ?? defaultConfig.links.enableAutoLinking,
+      enableAutoLinking: getBool(dashboard.autoRefresh, defaultConfig.links.enableAutoLinking),
       enableTicketLinks: defaultConfig.links.enableTicketLinks,
       enableDocumentLinks: defaultConfig.links.enableDocumentLinks,
       enableHoverPreviews: defaultConfig.links.enableHoverPreviews,
@@ -42,17 +50,21 @@ export function migrateConfig(oldConfig: any, quiet = false): GlobalConfig {
     },
     ui: {
       theme: defaultConfig.ui.theme,
-      autoRefresh: oldConfig.dashboard?.autoRefresh ?? defaultConfig.ui.autoRefresh,
-      refreshInterval: oldConfig.dashboard?.refreshInterval ?? defaultConfig.ui.refreshInterval,
+      autoRefresh: getBool(dashboard.autoRefresh, defaultConfig.ui.autoRefresh),
+      refreshInterval: getNumber(dashboard.refreshInterval, defaultConfig.ui.refreshInterval),
     },
     system: defaultConfig.system,
   }
 }
 
-export function validateConfig(config: any, quiet = false): GlobalConfig {
+export function validateConfig(config: unknown, quiet = false): GlobalConfig {
   logQuiet(quiet, 'Validating global configuration...')
 
-  const { discovery, links, ui, system } = config || {}
+  const root = asRecord(config)
+  const discovery = asRecord(root.discovery)
+  const links = asRecord(root.links)
+  const ui = asRecord(root.ui)
+  const system = asRecord(root.system)
 
   const result: GlobalConfig = {
     discovery: {
@@ -70,7 +82,7 @@ export function validateConfig(config: any, quiet = false): GlobalConfig {
   }
 
   // Add optional properties if they exist or have defaults
-  if (ui !== undefined || config.ui !== undefined) {
+  if (root.ui !== undefined) {
     result.ui = {
       theme: getEnum(ui?.theme, ['light', 'dark', 'auto'], defaultConfig.ui.theme) as 'auto' | 'light' | 'dark',
       autoRefresh: getBool(ui?.autoRefresh, defaultConfig.ui.autoRefresh),
@@ -78,7 +90,7 @@ export function validateConfig(config: any, quiet = false): GlobalConfig {
     }
   }
 
-  if (system !== undefined || config.system !== undefined) {
+  if (root.system !== undefined) {
     result.system = {
       logLevel: getEnum(system?.logLevel, ['error', 'warn', 'info', 'debug'], defaultConfig.system.logLevel) as 'error' | 'warn' | 'info' | 'debug',
       cacheTimeout: getNumber(system?.cacheTimeout, defaultConfig.system.cacheTimeout),
@@ -88,8 +100,9 @@ export function validateConfig(config: any, quiet = false): GlobalConfig {
   return result
 }
 
-export function processConfig(config: any, quiet = false): GlobalConfig {
-  return config.dashboard ? migrateConfig(config, quiet) : validateConfig(config, quiet)
+export function processConfig(config: unknown, quiet = false): GlobalConfig {
+  const root = asRecord(config)
+  return root.dashboard !== undefined ? migrateConfig(root, quiet) : validateConfig(root, quiet)
 }
 
 export function getDefaultConfig(): GlobalConfig {

@@ -24,7 +24,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
 
   // Update internal state when prop changes
   useEffect(() => {
-    setCurrentTicket(ticket)
+    const timeoutId = setTimeout(() => setCurrentTicket(ticket), 0)
+    return () => clearTimeout(timeoutId)
   }, [ticket])
 
   // Listen for real-time updates to this specific ticket

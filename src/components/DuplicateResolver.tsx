@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface Duplicate {
   code: string
@@ -32,7 +32,7 @@ export const DuplicateResolver: React.FC<DuplicateResolverProps> = ({ projectId,
     preview?: PreviewInfo
   } | null>(null)
 
-  const loadDuplicates = async () => {
+  const loadDuplicates = useCallback(async () => {
     try {
       const response = await fetch(`/api/duplicates/${projectId}`)
       const data = await response.json()
@@ -44,11 +44,11 @@ export const DuplicateResolver: React.FC<DuplicateResolverProps> = ({ projectId,
     finally {
       setLoading(false)
     }
-  }
+  }, [projectId])
 
   useEffect(() => {
     loadDuplicates()
-  }, [projectId])
+  }, [loadDuplicates])
 
   const getPreviewInfo = async (filepath: string): Promise<PreviewInfo | null> => {
     try {

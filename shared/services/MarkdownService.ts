@@ -160,9 +160,9 @@ export class MarkdownService {
   /**
    * Simple YAML frontmatter parser
    */
-  private static parseYamlFrontmatter(yamlContent: string): Record<string, any> | null {
+  private static parseYamlFrontmatter(yamlContent: string): Record<string, unknown> | null {
     try {
-      const result: Record<string, any> = {}
+      const result: Record<string, unknown> = {}
       const lines = yamlContent.split('\n')
 
       for (const line of lines) {

@@ -1,5 +1,6 @@
 import type { Request } from 'express'
 import type FileWatcherService from '../fileWatcherService.js'
+import { logger } from '@mdt/shared/utils/server-logger.js'
 import { Router } from 'express'
 
 interface _ResponseLike {
@@ -60,19 +61,16 @@ export function createSSERouter(fileWatcher: FileWatcherService): Router {
       }
     })
 
-    // eslint-disable-next-line no-console
-    console.log(`SSE client connected. Total clients: ${fileWatcher.getClientCount()}`)
+    logger.info(`SSE client connected. Total clients: ${fileWatcher.getClientCount()}`)
 
     // Handle client disconnect
     req.on('close', () => {
-      // eslint-disable-next-line no-console
-      console.log('SSE client disconnected')
+      logger.info('SSE client disconnected')
       fileWatcher.removeClient(res)
     })
 
     req.on('aborted', () => {
-      // eslint-disable-next-line no-console
-      console.log('SSE client aborted')
+      logger.info('SSE client aborted')
       fileWatcher.removeClient(res)
     })
   })

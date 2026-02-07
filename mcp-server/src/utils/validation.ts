@@ -32,28 +32,6 @@ export function validateProjectKey(key: string): ValidationResult {
 }
 
 /**
- * Validate CR key format (e.g., "MDT-001", "GLO1-123")
- * Pattern: Project code + dash + 3+ digits
- */
-export function validateCRKey(key: string): ValidationResult {
-  if (!key || typeof key !== 'string') {
-    return { valid: false, message: 'CR key is required and must be a string' }
-  }
-
-  const trimmed = key.trim()
-  const pattern = /^[A-Z0-9]{2,5}-\d{3,}$/
-
-  if (!pattern.test(trimmed)) {
-    return {
-      valid: false,
-      message: `CR key '${key}' is invalid. Must be format: PROJECTCODE-### (e.g., MDT-001, API-123, GLO1-456)`,
-    }
-  }
-
-  return { valid: true, value: trimmed }
-}
-
-/**
  * Validate required parameter exists and is non-empty
  */
 export function validateRequired(value: unknown, name: string): ValidationResult {

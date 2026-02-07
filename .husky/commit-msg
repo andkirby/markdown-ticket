@@ -1,0 +1,14 @@
+#!/bin/sh
+# Commit message validation hook
+#
+# Checks:
+#   1. Block Co-Authored-By (no AI attribution)
+
+set -e
+
+HOOK_DIR="$(dirname "$0")"
+. "$HOOK_DIR/lib/block-co-authored-by.sh"
+
+block_co_authored_by "$1"
+
+exit 0

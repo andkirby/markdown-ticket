@@ -1,6 +1,8 @@
-/* eslint-disable no-console */
 /// <reference types="jest" />
 
+import type { Response } from 'express'
+
+import type { AuthenticatedRequest } from '../../controllers/ProjectController.js'
 // Mock TreeService as a proper class mock before importing FileSystemService
 // Use requireActual to get the real implementation for integration tests
 import process from 'node:process'
@@ -72,14 +74,17 @@ export function createMockFileSystemService() {
 /**
  * Helper to create mock Express request/response.
  */
-export function createMockReqRes() {
-  const req = {
+export function createMockReqRes(): {
+  req: Partial<AuthenticatedRequest>
+  res: Partial<Response>
+} {
+  const req: Partial<AuthenticatedRequest> = {
     params: {},
     query: {},
     body: {},
   }
 
-  const res = {
+  const res: Partial<Response> = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn().mockReturnThis(),
     send: jest.fn().mockReturnThis(),

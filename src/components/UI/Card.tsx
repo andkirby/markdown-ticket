@@ -62,7 +62,11 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
   }, ref) => {
     const handleClick = () => {
       if (clickable) {
-        props.onClick?.(new Event('click') as any)
+        // Create a mock event with the necessary properties
+        const mockEvent = new MouseEvent('click', { bubbles: true, cancelable: true })
+        Object.defineProperty(mockEvent, 'target', { value: null, writable: false })
+        Object.defineProperty(mockEvent, 'currentTarget', { value: null, writable: false })
+        props.onClick?.(mockEvent as unknown as React.MouseEvent<HTMLDivElement>)
       }
     }
 
