@@ -1,18 +1,9 @@
 import * as path from 'node:path'
 import { FileOperationInvoker } from '../invokers/FileOperationInvoker.js'
+import type { TreeNode } from '../types/tree.js'
 import { TreeService } from './TreeService.js'
 
 // Type definitions
-interface TreeNode {
-  name: string
-  path: string
-  type: 'file' | 'folder'
-  children?: TreeNode[]
-  size?: number
-  lastModified?: Date
-  metadata?: Record<string, any>
-}
-
 interface Project {
   id: string
   project: {

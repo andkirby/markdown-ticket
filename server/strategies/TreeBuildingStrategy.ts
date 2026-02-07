@@ -1,15 +1,11 @@
+import type { TreeNode } from '../types/tree.js'
 import * as path from 'node:path'
 
 /**
  * Base strategy for tree building operations.
  */
 
-export interface TreeNode {
-  name: string
-  path: string
-  type: 'file' | 'directory' | 'folder'
-  children?: TreeNode[]
-}
+export type { TreeNode } from '../types/tree.js'
 
 export interface ProjectConfig {
   document?: {
