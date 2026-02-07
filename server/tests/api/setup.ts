@@ -8,6 +8,7 @@
  * to ensure services use the test configuration directory.
  */
 
+import type { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
 import type { Express } from 'express'
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -32,11 +33,11 @@ export interface TestContext {
   /**
    * TestEnvironment from shared/test-lib.
    */
-  testEnv: any
+  testEnv: TestEnvironment
   /**
    * ProjectFactory from shared/test-lib.
    */
-  projectFactory: any
+  projectFactory: ProjectFactory
 }
 
 // Global cache (shared across all test runs)
@@ -89,7 +90,7 @@ export async function cleanupTestEnvironment(tempDir: string): Promise<void> {
 
 /** Create a test project with a CR for API testing */
 export async function createTestProjectWithCR(
-  projectFactory: any,
+  projectFactory: ProjectFactory,
   projectConfig?: { name?: string, code?: string, documentPaths?: string[] },
 ): Promise<{ projectCode: string, crCode: string }> {
   const project = await projectFactory.createProject('empty', projectConfig)

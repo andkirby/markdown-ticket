@@ -3,19 +3,26 @@ import { ProjectDiscoveryService } from '../ProjectDiscoveryService'
 
 describe('projectDiscoveryService', () => {
   let service: ProjectDiscoveryService
-  let mockRegistry: any
-  let mockLoader: any
-  let mockScanner: any
+  let mockRegistry: {
+    getRegisteredProjects: jest.Mock
+    registerProject: jest.Mock
+  }
+  let mockLoader: {
+    getProjectConfig: jest.Mock
+  }
+  let mockScanner: {
+    autoDiscoverProjects: jest.Mock
+  }
 
   beforeEach(() => {
     mockRegistry = { getRegisteredProjects: jest.fn(), registerProject: jest.fn() }
     mockLoader = { getProjectConfig: jest.fn() }
     mockScanner = { autoDiscoverProjects: jest.fn() }
 
-    service = new ProjectDiscoveryService(true);
-    (service as any).registry = mockRegistry;
-    (service as any).configLoader = mockLoader;
-    (service as any).scanner = mockScanner
+    service = new ProjectDiscoveryService(true)
+    ;(service as unknown as { registry: typeof mockRegistry }).registry = mockRegistry
+    ;(service as unknown as { configLoader: typeof mockLoader }).configLoader = mockLoader
+    ;(service as unknown as { scanner: typeof mockScanner }).scanner = mockScanner
   })
 
   describe('getRegisteredProjects', () => {

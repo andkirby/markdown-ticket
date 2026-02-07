@@ -18,6 +18,11 @@ import { createTestDocument, createTestDocumentSet, documentFixtures, documentPa
 import { assertBadRequest, assertErrorMessage, assertIsArray, assertNotFound, assertSuccess } from './helpers'
 import { cleanupTestEnvironment, createTestProjectWithCR, setupTestEnvironment } from './setup'
 
+interface DocumentNode {
+  type: string
+  children?: DocumentNode[]
+}
+
 describe('documents API Tests (MDT-106)', () => {
   let tempDir: string
   let projectFactory: Awaited<ReturnType<typeof setupTestEnvironment>>['projectFactory']
@@ -93,7 +98,7 @@ describe('documents API Tests (MDT-106)', () => {
       assertIsArray(response)
 
       // Check for nested structure (folders with children)
-      const folders = response.body.filter((d: any) => d.type === 'folder')
+      const folders = (response.body as DocumentNode[]).filter(d => d.type === 'folder')
 
       if (folders.length > 0) {
         expect(folders[0]).toHaveProperty('children')

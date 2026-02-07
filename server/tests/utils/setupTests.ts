@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /// <reference types="jest" />
 
 import type { Response } from 'express'

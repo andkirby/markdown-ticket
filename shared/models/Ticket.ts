@@ -40,7 +40,15 @@ export interface Ticket {
 /**
  * Helper function to safely parse date values
  */
-function parseDate(dateValue: any): Date | null {
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
+}
+
+function getString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback
+}
+
+function parseDate(dateValue: unknown): Date | null {
   if (!dateValue)
     return null
   if (dateValue instanceof Date)
@@ -55,9 +63,9 @@ function parseDate(dateValue: any): Date | null {
 /**
  * Helper function to normalize array fields
  */
-function normalizeArray(value: any): string[] {
+function normalizeArray(value: unknown): string[] {
   if (Array.isArray(value))
-    return value.filter(Boolean)
+    return value.filter((item): item is string => typeof item === 'string' && item.length > 0)
   if (typeof value === 'string' && value.trim()) {
     return value.split(',').map(s => s.trim()).filter(Boolean)
   }
@@ -67,31 +75,32 @@ function normalizeArray(value: any): string[] {
 /**
  * Normalize ticket data to ensure consistent structure
  */
-export function normalizeTicket(rawTicket: any): Ticket {
+export function normalizeTicket(rawTicket: unknown): Ticket {
+  const ticket = asRecord(rawTicket)
   return {
     // Map core fields
-    code: rawTicket.code || rawTicket.key || '',
-    title: rawTicket.title || '',
-    status: rawTicket.status || 'Proposed',
-    type: rawTicket.type || CRType.FEATURE_ENHANCEMENT,
-    priority: rawTicket.priority || 'Medium',
-    content: rawTicket.content || '',
-    filePath: rawTicket.filePath || rawTicket.path || '',
+    code: getString(ticket.code) || getString(ticket.key),
+    title: getString(ticket.title),
+    status: getString(ticket.status, 'Proposed'),
+    type: getString(ticket.type, CRType.FEATURE_ENHANCEMENT),
+    priority: getString(ticket.priority, 'Medium'),
+    content: getString(ticket.content),
+    filePath: getString(ticket.filePath) || getString(ticket.path),
 
     // Handle dates
-    dateCreated: parseDate(rawTicket.dateCreated),
-    lastModified: parseDate(rawTicket.lastModified),
-    implementationDate: parseDate(rawTicket.implementationDate),
+    dateCreated: parseDate(ticket.dateCreated),
+    lastModified: parseDate(ticket.lastModified),
+    implementationDate: parseDate(ticket.implementationDate),
 
     // Map optional fields
-    phaseEpic: rawTicket.phaseEpic || '',
-    assignee: rawTicket.assignee || '',
-    implementationNotes: rawTicket.implementationNotes || '',
+    phaseEpic: getString(ticket.phaseEpic),
+    assignee: getString(ticket.assignee),
+    implementationNotes: getString(ticket.implementationNotes),
 
     // Normalize relationship fields to arrays
-    relatedTickets: normalizeArray(rawTicket.relatedTickets),
-    dependsOn: normalizeArray(rawTicket.dependsOn),
-    blocks: normalizeArray(rawTicket.blocks),
+    relatedTickets: normalizeArray(ticket.relatedTickets),
+    dependsOn: normalizeArray(ticket.dependsOn),
+    blocks: normalizeArray(ticket.blocks),
   }
 }
 

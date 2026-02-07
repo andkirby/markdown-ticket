@@ -15,6 +15,7 @@
 
 /// <reference types="jest" />
 
+import type { ProjectFactory } from '@mdt/shared/test-lib'
 import type { Express } from 'express'
 import request from 'supertest'
 import { generateTestProjectCode } from './fixtures/projects'
@@ -28,10 +29,19 @@ import {
 } from './helpers'
 import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
 
+interface ProjectListItem {
+  id: string
+  project: {
+    active: boolean
+    path: string
+  }
+  configPath: string
+}
+
 describe('projects API - GET /api/projects', () => {
   let tempDir: string
   let app: Express
-  let projectFactory: any
+  let projectFactory: ProjectFactory
 
   beforeAll(async () => {
     const context = await setupTestEnvironment()
@@ -99,7 +109,7 @@ describe('projects API - GET /api/projects', () => {
 
     assertSuccess(res, 200)
     assertIsArray(res)
-    res.body.forEach((project: any) => {
+    ;(res.body as ProjectListItem[]).forEach((project) => {
       expect(project.project.active).toBe(true)
     })
   })
@@ -120,7 +130,7 @@ describe('projects API - GET /api/projects', () => {
 describe('projects API - GET /api/projects/:id/config', () => {
   let tempDir: string
   let app: Express
-  let projectFactory: any
+  let projectFactory: ProjectFactory
   let testProjectId: string
 
   beforeAll(async () => {
@@ -277,7 +287,7 @@ describe('projects API - Error Cases', () => {
 describe('projects API - OpenAPI Contract Validation', () => {
   let tempDir: string
   let app: Express
-  let projectFactory: any
+  let projectFactory: ProjectFactory
 
   beforeAll(async () => {
     const context = await setupTestEnvironment()
@@ -343,7 +353,7 @@ describe('projects API - OpenAPI Contract Validation', () => {
 describe('projects API - Integration Scenarios', () => {
   let tempDir: string
   let app: Express
-  let projectFactory: any
+  let projectFactory: ProjectFactory
 
   beforeEach(async () => {
     const context = await setupTestEnvironment()
@@ -362,7 +372,7 @@ describe('projects API - Integration Scenarios', () => {
     const res = await request(app).get('/api/projects')
 
     assertSuccess(res, 200)
-    expect(res.body.find((p: any) => p.id === projectCode)).toBeDefined()
+    expect((res.body as ProjectListItem[]).find(p => p.id === projectCode)).toBeDefined()
   })
   it('should create project and get its config', async () => {
     const project = await projectFactory.createProject('empty', {
@@ -388,14 +398,14 @@ describe('projects API - Integration Scenarios', () => {
 
     assertSuccess(res, 200)
     codes.forEach((code) => {
-      expect(res.body.find((p: any) => p.id === code)).toBeDefined()
+      expect((res.body as ProjectListItem[]).find(p => p.id === code)).toBeDefined()
     })
   })
   it('should maintain consistency between list and config endpoints', async () => {
     const project = await projectFactory.createProject('empty', { name: 'Consistency', code: 'CON' })
     const listRes = await request(app).get('/api/projects')
     const configRes = await request(app).get(`/api/projects/${project.key}/config`)
-    const listed = listRes.body.find((p: any) => p.id === project.key)
+    const listed = (listRes.body as ProjectListItem[]).find(p => p.id === project.key)
 
     expect(listed.id).toBe(configRes.body.project.id)
   })

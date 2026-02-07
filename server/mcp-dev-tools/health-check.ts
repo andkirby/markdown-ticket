@@ -80,14 +80,13 @@ function healthCheck(): Promise<HealthCheckResult> {
 }
 
 async function main(): Promise<void> {
-  // eslint-disable-next-line no-console
   console.log('🔍 Running mdt-logging MCP health check...')
 
   try {
     const result = await healthCheck()
-    // eslint-disable-next-line no-console
+
     console.log('✅ Health check passed')
-    // eslint-disable-next-line no-console
+
     console.log(`Status: ${result.status}`)
     process.exit(0)
   }
