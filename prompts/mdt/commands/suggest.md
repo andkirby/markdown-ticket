@@ -52,7 +52,7 @@ ticket-creation → requirements → bdd → assess → poc → domain-lens → 
 
 **Refactoring Workflow Path:**
 ```
-ticket-creation → assess → domain-audit → bdd --prep → architecture → tests → tasks → implement → tech-debt → reflection
+ticket-creation → assess → domain-audit → bdd --prep → architecture --prep → tests --prep → tasks --prep → implement --prep → tech-debt → reflection
 ```
 
 **Bug Fix Workflow Path:**

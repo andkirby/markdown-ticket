@@ -123,6 +123,30 @@ Use this sequencing to keep integration stable:
 - [ ] Every task has Scope/Boundary, Exclude, Anti-duplication
 - [ ] Shared patterns before features
 
+## Completion
+
+**Prep mode**:
+```markdown
+## Task Breakdown Complete
+
+**CR**: {CR-KEY}
+**Output**: prep/tasks.md
+**Tasks**: {N} tasks
+
+**Next**: `/mdt:implement {CR-KEY} --prep` or `/mdt:implement-agentic {CR-KEY} --prep`
+```
+
+**Feature mode**:
+```markdown
+## Task Breakdown Complete
+
+**CR**: {CR-KEY}
+**Output**: [part-X.Y/]tasks.md
+**Tasks**: {N} tasks
+
+**Next**: `/mdt:implement {CR-KEY}` or `/mdt:implement-agentic {CR-KEY}`
+```
+
 ## Integration
 
 ```
