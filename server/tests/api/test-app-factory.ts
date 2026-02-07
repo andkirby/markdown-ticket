@@ -11,13 +11,14 @@
  */
 
 import type { Express } from 'express'
+import type { ProjectServiceExtension } from '../../controllers/ProjectController'
 import process from 'node:process'
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService'
+
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager'
-
 import cors from 'cors'
-import express from 'express'
 
+import express from 'express'
 import { DocumentController } from '../../controllers/DocumentController'
 import { ProjectController } from '../../controllers/ProjectController'
 import { TicketController } from '../../controllers/TicketController'
@@ -36,13 +37,21 @@ import { TicketService } from '../../services/TicketService'
 // import { createDocsRouter } from '../../routes/docs';
 
 // Adapter to make SharedProjectService compatible with server's ProjectController expectations
-class ProjectServiceAdapter {
-  private projectService: any
-  private projectManager: any
+interface SharedProjectServiceLike {
+  refreshRegistry?: () => void
+  getAllProjects: () => Promise<unknown[]>
+  getProjectConfig: (path: string) => unknown
+  getProjectCRs: (path: string) => Promise<unknown[]>
+  getSystemDirectories: (path?: string) => Promise<unknown>
+  configureDocuments: (projectId: string, documentPaths: string[]) => Promise<unknown>
+  checkDirectoryExists: (dirPath: string) => Promise<boolean>
+}
 
-  constructor(projectService: any) {
+class ProjectServiceAdapter {
+  private projectService: SharedProjectServiceLike
+
+  constructor(projectService: SharedProjectServiceLike) {
     this.projectService = projectService
-    this.projectManager = new ProjectManager(true) // Quiet mode
   }
 
   /**
@@ -130,7 +139,7 @@ export function createTestApp(): Express {
 
   // Initialize Controllers
   const projectController = new ProjectController(
-    projectServiceAdapter as any,
+    projectServiceAdapter as unknown as ProjectServiceExtension,
     fileSystemService,
     fileWatcher,
     undefined, // ticketController (not needed)

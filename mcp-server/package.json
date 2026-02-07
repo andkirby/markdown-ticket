@@ -16,6 +16,8 @@
     "build": "node build-fix-imports.js",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
+    "lint": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "jest tests/e2e --config jest.e2e.config.mjs",

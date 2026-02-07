@@ -25,6 +25,17 @@ import {
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001'
 
+interface LogEntry {
+  timestamp: string | number | Date
+  message: string
+}
+
+interface FrontendToolArgs {
+  frontend_host?: string
+  filter?: string
+  lines?: number
+}
+
 const server = new Server(
   {
     name: 'mdt-dev-tools',
@@ -110,7 +121,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           content: [
             {
               type: 'text',
-              text: `📋 **Recent Logs** (${logs.length} entries)\n\n${logs.map((log: any) =>
+              text: `📋 **Recent Logs** (${logs.length} entries)\n\n${logs.map((log: LogEntry) =>
                 `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.message}`,
               ).join('\n')}`,
             },
@@ -149,25 +160,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     // Frontend session tools
     case 'stop_frontend_logging': {
-      const result = await handleStopFrontendLogging(args as any)
+      const result = await handleStopFrontendLogging(args as FrontendToolArgs)
 
       return { content: [{ type: 'text', text: result }] }
     }
 
     case 'get_frontend_session_status': {
-      const result = await handleGetFrontendSessionStatus(args as any)
+      const result = await handleGetFrontendSessionStatus(args as FrontendToolArgs)
 
       return { content: [{ type: 'text', text: result }] }
     }
 
     case 'get_frontend_logs': {
-      const result = await handleGetFrontendLogs(args as any)
+      const result = await handleGetFrontendLogs(args as FrontendToolArgs)
 
       return { content: [{ type: 'text', text: result }] }
     }
 
     case 'stream_frontend_url': {
-      const result = await handleStreamFrontendUrl(args as any)
+      const result = await handleStreamFrontendUrl(args as FrontendToolArgs)
 
       return { content: [{ type: 'text', text: result }] }
     }

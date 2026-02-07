@@ -14,16 +14,17 @@ import { ProjectValidator } from '../ProjectValidator'
 // Mock browser environment (no process.versions.node)
 const mockBrowserProcess = undefined
 const originalProcess = globalThis.process
+const mutableGlobal = globalThis as typeof globalThis & { process?: typeof process }
 
 describe('mDT-110: Browser-Safe ProjectValidator', () => {
   beforeEach(() => {
     // Simulate browser environment
-    (globalThis as any).process = mockBrowserProcess
+    mutableGlobal.process = mockBrowserProcess
   })
 
   afterEach(() => {
     // Restore original process
-    (globalThis as any).process = originalProcess
+    mutableGlobal.process = originalProcess
   })
 
   // P1-1: Browser validateName

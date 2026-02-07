@@ -12,6 +12,32 @@ import { TestEnvironment } from '../../../test-lib/index'
 // Global test environment instance
 let testEnv: TestEnvironment
 
+interface ExecSyncErrorShape {
+  stdout?: Buffer | string
+  stderr?: Buffer | string
+  message?: string
+  status?: number
+}
+
+interface RegistryProjectPathEntry {
+  project: {
+    path?: string
+    [key: string]: string | undefined
+  }
+}
+
+interface LocalConfigEntry {
+  project: {
+    name?: string
+    code?: string
+    id?: string
+    ticketsPath?: string
+    [key: string]: unknown
+  }
+  document?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 /**
  * Helper to run CLI command with TestEnvironment isolation
  */
@@ -68,11 +94,12 @@ function runIsolatedCommand(command: string): { stdout: string, stderr: string, 
       success: true,
     }
   }
-  catch (error: any) {
+  catch (error: unknown) {
+    const err = error as ExecSyncErrorShape
     return {
-      stdout: error.stdout?.toString() || '',
-      stderr: error.stderr?.toString() || error.message,
-      exitCode: error.status || 1,
+      stdout: err.stdout?.toString() || '',
+      stderr: err.stderr?.toString() || err.message || '',
+      exitCode: err.status || 1,
       success: false,
     }
   }
@@ -81,19 +108,19 @@ function runIsolatedCommand(command: string): { stdout: string, stderr: string, 
 /**
  * Helper to read local config from project path
  */
-function readLocalConfig(projectPath: string): any {
+function readLocalConfig(projectPath: string): LocalConfigEntry | null {
   const configFile = path.join(projectPath, '.mdt-config.toml')
   if (!fs.existsSync(configFile)) {
     return null
   }
   const content = fs.readFileSync(configFile, 'utf-8')
-  return parseToml(content)
+  return parseToml(content) as LocalConfigEntry
 }
 
 /**
  * Helper to read global registry entry
  */
-function readGlobalRegistryEntry(projectPath: string): any {
+function readGlobalRegistryEntry(projectPath: string): RegistryProjectPathEntry | null {
   const configDir = testEnv.getConfigDirectory()
   const projectsDir = path.join(configDir, 'projects')
 
@@ -108,7 +135,7 @@ function readGlobalRegistryEntry(projectPath: string): any {
 
     const configFile = path.join(projectsDir, tomlFile)
     const content = fs.readFileSync(configFile, 'utf-8')
-    const result: any = { project: {} }
+    const result: RegistryProjectPathEntry = { project: {} }
     const lines = content.split('\n')
     for (const line of lines) {
       const match = line.match(/^(\w+)\s*=\s*"(.+)"$/)
@@ -124,16 +151,20 @@ function readGlobalRegistryEntry(projectPath: string): any {
   return null
 }
 
-function configHasRequiredFields(config: any): boolean {
-  if (!config || !config.project) {
+function configHasRequiredFields(config: unknown): boolean {
+  if (typeof config !== 'object' || config === null || !('project' in config)) {
     return false
   }
-  const { project } = config
+  const project = (config as { project?: unknown }).project
+  if (typeof project !== 'object' || project === null) {
+    return false
+  }
+  const projectRecord = project as Record<string, unknown>
   return !!(
-    typeof project.name === 'string'
-    && typeof project.code === 'string'
-    && typeof project.id === 'string'
-    && typeof project.ticketsPath === 'string'
+    typeof projectRecord.name === 'string'
+    && typeof projectRecord.code === 'string'
+    && typeof projectRecord.id === 'string'
+    && typeof projectRecord.ticketsPath === 'string'
   )
 }
 

@@ -39,6 +39,17 @@ export interface DeleteResult {
   filename: string
 }
 
+interface CRPartialUpdates {
+  status?: string
+  priority?: string
+  phaseEpic?: string
+  assignee?: string
+  relatedTickets?: string
+  dependsOn?: string
+  blocks?: string
+  [key: string]: unknown
+}
+
 interface ProjectDiscovery {
   getAllProjects: () => Promise<Project[]>
 }
@@ -128,7 +139,7 @@ export class TicketService {
   /**
    * Update CR partially (specific fields).
    */
-  async updateCRPartial(projectId: string, crId: string, updates: Record<string, any>): Promise<UpdateCRResult> {
+  async updateCRPartial(projectId: string, crId: string, updates: CRPartialUpdates): Promise<UpdateCRResult> {
     if (!updates || Object.keys(updates).length === 0) {
       throw new Error('No fields provided for update')
     }
