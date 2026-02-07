@@ -2,7 +2,11 @@
 # Block Co-Authored-By in commit messages (no AI attribution)
 
 block_co_authored_by() {
-  commit_msg_file=$(git rev-parse --git-dir)/COMMIT_EDITMSG
+  commit_msg_file="$1"
+
+  if [ -z "$commit_msg_file" ]; then
+    commit_msg_file=$(git rev-parse --git-dir)/COMMIT_EDITMSG
+  fi
 
   if [ ! -f "$commit_msg_file" ]; then
     return 0
