@@ -7,6 +7,7 @@ import { getTicketsPath } from '@mdt/shared/models/Project.js'
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
+import { logger } from '@mdt/shared/utils/server-logger.js'
 import cors from 'cors'
 import express from 'express'
 // Controllers
@@ -162,11 +163,11 @@ const documentController = new DocumentController(documentService)
 
 async function initializeMultiProjectWatchers(): Promise<void> {
   try {
-    console.log('🔍 Discovering projects for file watching...')
+    logger.info('🔍 Discovering projects for file watching...')
 
     const projects = await projectDiscovery.getAllProjects()
 
-    console.log(`Found ${projects.length} projects for file watching`)
+    logger.info(`Found ${projects.length} projects for file watching`)
 
     const projectPaths: { id: string, path: string }[] = []
 
@@ -176,7 +177,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
         const serverProject = project as ServerProject
 
         if (!serverProject.project.active) {
-          console.log(`Skipping inactive project: ${serverProject.project.name}`)
+          logger.info(`Skipping inactive project: ${serverProject.project.name}`)
           continue
         }
 
@@ -192,7 +193,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
         const config = projectDiscovery.getProjectConfig(configPath)
 
         if (!config?.project) {
-          console.log(`No config found for project: ${serverProject.project.name}`)
+          logger.warn(`No config found for project: ${serverProject.project.name}`)
           continue
         }
 
@@ -210,10 +211,10 @@ async function initializeMultiProjectWatchers(): Promise<void> {
             id: serverProject.id,
             path: watchPath,
           })
-          console.log(`✅ Will watch project ${serverProject.project.name} at: ${watchPath}`)
+          logger.info(`✅ Will watch project ${serverProject.project.name} at: ${watchPath}`)
         }
         catch {
-          console.log(`⚠️  CR directory not found for project ${serverProject.project.name}: ${fullCRPath}`)
+          logger.warn(`⚠️  CR directory not found for project ${serverProject.project.name}: ${fullCRPath}`)
         }
       }
       catch (error) {
@@ -222,18 +223,18 @@ async function initializeMultiProjectWatchers(): Promise<void> {
     }
 
     if (projectPaths.length === 0) {
-      console.log('⚠️  No valid project paths found, falling back to single watcher')
+      logger.warn('⚠️  No valid project paths found, falling back to single watcher')
       const watchPath: string = path.join(TICKETS_DIR, '*.md')
 
       fileWatcher.initFileWatcher(watchPath)
-      console.log(`📡 Single file watcher initialized for: ${watchPath}`)
+      logger.info(`📡 Single file watcher initialized for: ${watchPath}`)
     }
     else {
       fileWatcher.initMultiProjectWatcher(projectPaths)
-      console.log(`📡 Multi-project file watchers initialized for ${projectPaths.length} directories`)
+      logger.info(`📡 Multi-project file watchers initialized for ${projectPaths.length} directories`)
 
       projectPaths.forEach((project) => {
-        console.log(`   📂 ${project.id}: ${project.path}`)
+        logger.info(`   📂 ${project.id}: ${project.path}`)
       })
     }
 
@@ -245,7 +246,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
     const watchPath: string = path.join(TICKETS_DIR, '*.md')
 
     fileWatcher.initFileWatcher(watchPath)
-    console.log(`📡 Fallback file watcher initialized for: ${watchPath}`)
+    logger.info(`📡 Fallback file watcher initialized for: ${watchPath}`)
   }
 }
 
@@ -303,7 +304,7 @@ async function initializeServer(): Promise<void> {
     const files = await fs.readdir(TICKETS_DIR)
 
     if (files.length === 0) {
-      console.log('Creating sample tickets...')
+      logger.info('Creating sample tickets...')
       // Sample tickets creation moved to a separate function if needed
     }
   }
@@ -315,21 +316,21 @@ async function initializeServer(): Promise<void> {
 // Start server only when run directly (not when imported for testing)
 if (import.meta.url === `file://${process.argv[1]}`) {
   app.listen(PORT, async () => {
-    console.log(`🚀 Ticket board server running on port ${PORT}`)
-    console.log(`📁 Tasks directory: ${TICKETS_DIR}`)
-    console.log(`🌐 API endpoints:`)
-    console.log(`   GET  /api/tasks - List all task files`)
-    console.log(`   GET  /api/tasks/:filename - Get specific task`)
-    console.log(`   POST /api/tasks/save - Save task file`)
-    console.log(`   DELETE /api/tasks/:filename - Delete task file`)
-    console.log(`   GET  /api/events - Server-Sent Events for real-time updates`)
-    console.log(`   GET  /api/status - Server status`)
-    console.log(`   GET  /api/projects - List all registered projects`)
-    console.log(`   GET  /api/projects/:id/crs - List CRs for project`)
-    console.log(`   PATCH /api/projects/:id/crs/:crId - Partial update CR`)
-    console.log(`   POST /api/projects/create - Create new project`)
-    console.log(`   GET  /api/documents - Discover project documents`)
-    console.log(`   GET  /api-docs - API Documentation (Redoc UI)`)
+    logger.info(`🚀 Ticket board server running on port ${PORT}`)
+    logger.info(`📁 Tasks directory: ${TICKETS_DIR}`)
+    logger.info(`🌐 API endpoints:`)
+    logger.info(`   GET  /api/tasks - List all task files`)
+    logger.info(`   GET  /api/tasks/:filename - Get specific task`)
+    logger.info(`   POST /api/tasks/save - Save task file`)
+    logger.info(`   DELETE /api/tasks/:filename - Delete task file`)
+    logger.info(`   GET  /api/events - Server-Sent Events for real-time updates`)
+    logger.info(`   GET  /api/status - Server status`)
+    logger.info(`   GET  /api/projects - List all registered projects`)
+    logger.info(`   GET  /api/projects/:id/crs - List CRs for project`)
+    logger.info(`   PATCH /api/projects/:id/crs/:crId - Partial update CR`)
+    logger.info(`   POST /api/projects/create - Create new project`)
+    logger.info(`   GET  /api/documents - Discover project documents`)
+    logger.info(`   GET  /api-docs - API Documentation (Redoc UI)`)
 
     // Initialize the server
     await initializeServer()
@@ -340,13 +341,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('Received SIGTERM, shutting down gracefully...')
+  logger.info('Received SIGTERM, shutting down gracefully...')
   fileWatcher.stop()
   process.exit(0)
 })
 
 process.on('SIGINT', () => {
-  console.log('Received SIGINT, shutting down gracefully...')
+  logger.info('Received SIGINT, shutting down gracefully...')
   fileWatcher.stop()
   process.exit(0)
 })

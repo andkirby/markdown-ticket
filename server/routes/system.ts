@@ -6,6 +6,7 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
 import { getConfigDir } from '@mdt/shared/utils/constants.js'
+import { logger } from '@mdt/shared/utils/server-logger.js'
 import { Router } from 'express'
 import * as toml from 'toml'
 
@@ -271,7 +272,7 @@ export function createSystemRouter(
         expandedPath,
       }
 
-      console.log(`🔍 Enhanced path check for "${inputPath}": expanded="${expandedPath}", exists=${result.exists}, inDiscovery=${result.isInDiscovery}`)
+      logger.debug(`🔍 Enhanced path check for "${inputPath}": expanded="${expandedPath}", exists=${result.exists}, inDiscovery=${result.isInDiscovery}`)
       res.json(result)
     }
     catch (error) {
@@ -306,7 +307,7 @@ export function createSystemRouter(
    */
   router.post('/cache/clear', async (req: Request, res: Response) => {
     try {
-      console.log('🗑️  Clearing file operation cache')
+      logger.info('🗑️  Clearing file operation cache')
       fileInvoker.clearCache()
       res.json({
         success: true,
@@ -348,7 +349,7 @@ export function createSystemRouter(
       const configDir = getConfigDir()
       const configPath = path.join(configDir, 'config.toml')
 
-      console.log(`Reading config from: ${configPath}`)
+      logger.debug(`Reading config from: ${configPath}`)
 
       try {
         const configContent = await fs.readFile(configPath, 'utf8')
@@ -416,7 +417,7 @@ export function createSystemRouter(
       const configDir = getConfigDir()
       const configPath = path.join(configDir, 'config.toml')
 
-      console.log(`Reading global config from: ${configPath}`)
+      logger.debug(`Reading global config from: ${configPath}`)
 
       try {
         const configContent = await fs.readFile(configPath, 'utf8')
@@ -490,7 +491,7 @@ export function createSystemRouter(
         projectDiscovery.clearCache()
       }
 
-      console.log('🔄 Config cache cleared')
+      logger.info('🔄 Config cache cleared')
       res.json({
         success: true,
         message: 'Config cache cleared successfully',
