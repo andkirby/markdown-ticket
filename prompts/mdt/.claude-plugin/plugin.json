@@ -1,11 +1,19 @@
 {
-  "version": "0.10.0",
+  "version": "0.10.1",
   "name": "mdt",
   "description": "MDT (Markdown Ticket) workflow commands - CR creation, requirements, BDD, architecture, testing, tasks, implementation with agentic verification, technical debt detection, and workflow suggestions",
   "author": {
     "name": "andkirby"
   },
-  "keywords": ["tickets", "kanban", "markdown", "workflow", "tdd", "bdd", "requirements"],
+  "keywords": [
+    "tickets",
+    "kanban",
+    "markdown",
+    "workflow",
+    "tdd",
+    "bdd",
+    "requirements"
+  ],
   "commands": [
     "./commands/architecture.md",
     "./commands/assess.md",

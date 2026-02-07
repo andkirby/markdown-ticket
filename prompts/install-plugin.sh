@@ -5,7 +5,7 @@ set -euo pipefail
 # ====================
 # Installs the MDT (Markdown Ticket) workflow plugin for Claude Code.
 #
-# Usage: ./install-plugin.sh --local|--docker
+# Usage: ./install-plugin.sh --local|--docker [--scope {user|local}] [--help]
 #
 # Flow:
 # 1. Generate .mcp.json config for local Node.js or Docker MCP server
@@ -13,7 +13,7 @@ set -euo pipefail
 # 3. Show installation summary table
 # 4. Confirm if plugin already enabled
 # 5. Update/install marketplace (source of plugins)
-# 6. Prompt for installation scope (user/local)
+# 6. Prompt for installation scope (user/local) unless --scope provided
 # 7. Handle scope change if needed
 # 8. Install/update plugin in selected scope
 # 9. Enable plugin (if not already enabled)
@@ -169,33 +169,56 @@ get_marketplace_status() {
   fi
 }
 
+# Show help message
+show_help() {
+  print_highlight "MDT Plugin Installer v${PLUGIN_VERSION}"
+  echo ""
+  echo "Usage: $0 --local|--docker [--scope {user|local}]"
+  echo ""
+  echo "Options:"
+  echo "  --local       Use local Node.js MCP server at: \$PROJECT_ROOT/mcp-server/dist/index.js"
+  echo "  --docker      Use Docker MCP server via HTTP at: $MCP_SERVER_DOCKER_URL"
+  echo "  --scope user  Install in user scope (available to all projects)"
+  echo "  --scope local Install in local scope (available only to this project)"
+  echo "  --help, -h    Show this help message"
+  exit 0
+}
+
 # Show error and usage
 show_error() {
   print_error "Error: $1"
   echo ""
-  echo "Usage: $0 --local|--docker"
+  echo "Usage: $0 --local|--docker [--scope {user|local}]"
   echo ""
   echo "Options:"
-  echo "  --local    Use local Node.js MCP server at: \$PROJECT_ROOT/mcp-server/dist/index.js"
-  echo "  --docker   Use Docker MCP server via HTTP at: $MCP_SERVER_DOCKER_URL"
+  echo "  --local       Use local Node.js MCP server at: \$PROJECT_ROOT/mcp-server/dist/index.js"
+  echo "  --docker      Use Docker MCP server via HTTP at: $MCP_SERVER_DOCKER_URL"
+  echo "  --scope user  Install in user scope (available to all projects)"
+  echo "  --scope local Install in local scope (available only to this project)"
+  echo "  --help, -h    Show this help message"
   exit 1
 }
 
 # Parse arguments
-if [[ $# -ne 1 ]]; then
+if [[ $# -lt 1 ]]; then
   show_error "Missing required argument. Specify --local or --docker."
 fi
 
 MODE=""
-case "$1" in
-  --local)
-    MODE="local"
-    if [[ ! -f "$MCP_SERVER_LOCAL" ]]; then
-      show_error "MCP server not found at: $MCP_SERVER_LOCAL
+SCOPE=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help|-h)
+      show_help
+      ;;
+    --local)
+      MODE="local"
+      if [[ ! -f "$MCP_SERVER_LOCAL" ]]; then
+        show_error "MCP server not found at: $MCP_SERVER_LOCAL
 
 Run 'npm run build' in the mcp-server directory first."
-    fi
-    cat > "$MCP_JSON_FILE" <<EOF
+      fi
+      cat > "$MCP_JSON_FILE" <<EOF
 {
   "mcpServers": {
     "all": {
@@ -205,10 +228,11 @@ Run 'npm run build' in the mcp-server directory first."
   }
 }
 EOF
-    ;;
-  --docker)
-    MODE="docker"
-    cat > "$MCP_JSON_FILE" <<EOF
+      shift
+      ;;
+    --docker)
+      MODE="docker"
+      cat > "$MCP_JSON_FILE" <<EOF
 {
   "mcpServers": {
     "all": {
@@ -218,13 +242,35 @@ EOF
   }
 }
 EOF
-    ;;
-  *)
-    show_error "Invalid option: $1
+      shift
+      ;;
+    --scope)
+      if [[ -z "${2:-}" || "${2:-}" == "" ]]; then
+        show_error "--scope requires a value (user or local)"
+      fi
+      case "$2" in
+        user|local)
+          SCOPE="$2"
+          ;;
+        *)
+          show_error "Invalid scope: $2
 
-Valid options are: --local, --docker"
-    ;;
-esac
+Valid scopes are: user, local"
+          ;;
+      esac
+      shift 2
+      ;;
+    *)
+      show_error "Invalid option: $1
+
+Valid options are: --local, --docker, --scope"
+      ;;
+  esac
+done
+
+if [[ -z "$MODE" ]]; then
+  show_error "Missing required argument. Specify --local or --docker."
+fi
 
 # Check for required commands
 for cmd in claude jq; do
@@ -373,43 +419,45 @@ else
 fi
 echo ""
 
-# Prompt for scope selection
-echo ""
-print_highlight "Installation Scope"
-echo ""
+# Prompt for scope selection (skip if --scope was provided)
+if [[ -z "$SCOPE" ]]; then
+  echo ""
+  print_highlight "Installation Scope"
+  echo ""
 
-# Determine default scope and highlight current
-if [[ -n "$CURRENT_STATUS" ]]; then
-  DEFAULT_SCOPE="$CURRENT_SCOPE"
-  DEFAULT_NUM="1"
-  [[ "$DEFAULT_SCOPE" = "local" ]] && DEFAULT_NUM="2"
+  # Determine default scope and highlight current
+  if [[ -n "$CURRENT_STATUS" ]]; then
+    DEFAULT_SCOPE="$CURRENT_SCOPE"
+    DEFAULT_NUM="1"
+    [[ "$DEFAULT_SCOPE" = "local" ]] && DEFAULT_NUM="2"
 
-  # Highlight current scope with green checkmark
-  if [[ "$DEFAULT_SCOPE" = "local" ]]; then
-    echo -e "  [1] user   - Available to all projects (recommended)"
-    echo -e "  [2] ${GREEN}✓${NC} local  - Available only to this project ${GRAY}(current)${NC}"
+    # Highlight current scope with green checkmark
+    if [[ "$DEFAULT_SCOPE" = "local" ]]; then
+      echo -e "  [1] user   - Available to all projects (recommended)"
+      echo -e "  [2] ${GREEN}✓${NC} local  - Available only to this project ${GRAY}(current)${NC}"
+    else
+      echo -e "  [1] ${GREEN}✓${NC} user   - Available to all projects (recommended) ${GRAY}(current)${NC}"
+      echo -e "  [2] local  - Available only to this project"
+    fi
   else
-    echo -e "  [1] ${GREEN}✓${NC} user   - Available to all projects (recommended) ${GRAY}(current)${NC}"
+    DEFAULT_SCOPE="user"
+    echo -e "  [1] user   - Available to all projects (recommended)"
     echo -e "  [2] local  - Available only to this project"
   fi
-else
-  DEFAULT_SCOPE="user"
-  echo -e "  [1] user   - Available to all projects (recommended)"
-  echo -e "  [2] local  - Available only to this project"
+  echo ""
+
+  read -p "Enter scope [1/2] (default: ${DEFAULT_NUM} - ${DEFAULT_SCOPE}): " -r SCOPE_CHOICE
+  echo ""
+
+  case "$SCOPE_CHOICE" in
+    2|local)
+      SCOPE="local"
+      ;;
+    *)
+      SCOPE="user"
+      ;;
+  esac
 fi
-echo ""
-
-read -p "Enter scope [1/2] (default: ${DEFAULT_NUM} - ${DEFAULT_SCOPE}): " -r SCOPE_CHOICE
-echo ""
-
-case "$SCOPE_CHOICE" in
-  2|local)
-    SCOPE="local"
-    ;;
-  *)
-    SCOPE="user"
-    ;;
-esac
 
 # Track if scope changed
 SCOPE_CHANGED=false
