@@ -245,7 +245,7 @@ Before saving, verify:
 **Pattern**: {name}
 **Key constraint**: {most important}
 
-**Next**: `/mdt:tasks {CR-KEY}`
+**Next**: `/mdt:tests {CR-KEY}`
 ```
 
 Context: $ARGUMENTS

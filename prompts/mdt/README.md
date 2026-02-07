@@ -4,6 +4,28 @@ Markdown Ticket (MDT) workflow commands for Claude Code.
 
 ## Installation
 
+### Quick Install (via install script)
+
+```bash
+# Local MCP server (requires built mcp-server)
+./install-plugin.sh --local
+
+# Docker MCP server
+./install-plugin.sh --docker
+```
+
+Then enable the plugin:
+
+```bash
+# For this project only
+claude plugin enable mdt@markdown-ticket --scope local
+
+# Or globally
+claude plugin enable mdt@markdown-ticket --scope user
+```
+
+### Manual Install
+
 ```bash
 claude --plugin-dir /path/to/prompts/mdt
 ```

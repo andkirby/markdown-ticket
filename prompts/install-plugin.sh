@@ -79,4 +79,8 @@ claude plugin marketplace remove markdown-ticket 2>/dev/null || true
 
 # Run the marketplace add command
 echo "Installing plugin from marketplace..."
-claude plugin marketplace add "$SCRIPT_DIR/mdt"
+claude plugin marketplace add "$SCRIPT_DIR"
+
+# Print enable instruction
+echo ""
+echo -e "\033[1;97mclaude plugin enable mdt@markdown-ticket --scope local|user\033[0m"

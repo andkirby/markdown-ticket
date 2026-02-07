@@ -231,6 +231,15 @@ What type of work?
 └─────────────────────┬───────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────────────┐
+│ /mdt:tests                                                  │
+│                                                             │
+│ Creates:                                                    │
+│ - Module tests from architecture (unit/integration)         │
+│ - Test→task mapping for TDD verification                    │
+│ - Part-aware test files (part-X.Y/tests.md)                 │
+└─────────────────────┬───────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────────┐
 │ /mdt:tasks                                                  │
 │                                                             │
 │ Inherits:                                                   │
@@ -273,6 +282,8 @@ Create new CR (e.g., "Fix technical debt from {CR-KEY}")
     ↓
 /mdt:architecture {NEW-CR-KEY}
     ↓
+/mdt:tests {NEW-CR-KEY}
+    ↓
 /mdt:tasks {NEW-CR-KEY}
     ↓
 /mdt:implement {NEW-CR-KEY}
@@ -300,11 +311,11 @@ Create new CR (e.g., "Fix technical debt from {CR-KEY}")
 ### Refactoring Flow (GREEN → GREEN)
 
 ```
-/mdt:assess → /mdt:bdd --prep → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
-      │            │                    │                │                          │
-      ↓            ↓                    ↓                ↓                          ↓
-  Find gaps   Lock E2E            Design fix       Lock modules              Behavior preserved
-             (GREEN)                               (GREEN)                   + verified
+/mdt:assess → /mdt:bdd --prep → /mdt:architecture --prep → /mdt:tests --prep → /mdt:tasks --prep → /mdt:implement --prep
+      │            │                    │                       │                          │
+      ↓            ↓                    ↓                       ↓                          ↓
+  Find gaps   Lock E2E            Design fix              Lock modules              Behavior preserved
+             (GREEN)                                      (GREEN)                   + verified
 ```
 
 ### Why Two Levels?
