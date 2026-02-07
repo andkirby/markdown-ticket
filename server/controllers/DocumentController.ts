@@ -1,16 +1,7 @@
 import type { Request, Response } from 'express'
+import type { TreeNode } from '../types/tree.js'
 
 // Type definitions
-interface TreeNode {
-  name: string
-  path: string
-  type: 'file' | 'folder'
-  children?: TreeNode[]
-  size?: number
-  lastModified?: Date
-  metadata?: Record<string, any>
-}
-
 interface DocumentService {
   discoverDocuments: (projectId: string) => Promise<TreeNode[]>
   getDocumentContent: (projectId: string, filePath: string) => Promise<string>
@@ -50,13 +41,13 @@ export class DocumentController {
 
       res.json(documents)
     }
-    catch (error: any) {
-      console.error('Error discovering documents:', error.message)
+    catch (error: unknown) {
+      console.error('Error discovering documents:', error)
 
-      if (error.message === 'Project not found') {
+      if (error instanceof Error && error.message === 'Project not found') {
         res.status(404).json({ error: 'Not Found', message: error.message })
       }
-      else if (error.message === 'No document configuration found') {
+      else if (error instanceof Error && error.message === 'No document configuration found') {
         res.status(404).json({ error: 'Not Found', message: error.message })
       }
       else {
@@ -82,8 +73,14 @@ export class DocumentController {
 
       res.send(content)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error reading document:', error)
+
+      if (!(error instanceof Error)) {
+        res.status(500).json({ error: 'Internal Server Error', message: 'Failed to read document' })
+
+        return
+      }
 
       switch (error.message) {
         case 'Project not found': {
