@@ -162,6 +162,30 @@ Write actual executable test files to project's test directory. Follow project's
 - [ ] **tests.md written** to CR folder
 - [ ] Expected state verified (RED/GREEN)
 
+## Completion
+
+**Prep mode**:
+```markdown
+## Test Specification Complete
+
+**CR**: {CR-KEY}
+**Output**: prep/tests.md + test files
+**Status**: 🟢 GREEN (locking existing behavior)
+
+**Next**: `/mdt:tasks {CR-KEY} --prep`
+```
+
+**Feature mode**:
+```markdown
+## Test Specification Complete
+
+**CR**: {CR-KEY}
+**Output**: [part-X.Y/]tests.md + test files
+**Status**: 🔴 RED (awaiting implementation)
+
+**Next**: `/mdt:tasks {CR-KEY}`
+```
+
 ## Integration
 
 ```
