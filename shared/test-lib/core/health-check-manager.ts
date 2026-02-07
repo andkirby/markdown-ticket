@@ -6,8 +6,8 @@
  * health checking component.
  */
 
-import type { ServerConfig } from '../types.js'
 import type { IncomingMessage } from 'node:http'
+import type { ServerConfig } from '../types.js'
 import http from 'node:http'
 import { TestFrameworkError } from '../types.js'
 import { RetryHelper } from '../utils/retry-helper.js'
