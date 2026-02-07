@@ -340,6 +340,38 @@ MEDIUM/LOW issues:
 
 ---
 
+## Step 9: Final Completion
+
+After all tasks pass and completion verification succeeds:
+
+```markdown
+═══════════════════════════════════════════
+Implementation Complete: {CR-KEY}
+═══════════════════════════════════════════
+
+**Mode**: {feature | prep}
+
+### Summary
+| Part | Tasks | Tests | Status |
+|------|-------|-------|--------|
+| {part} | {done}/{total} | {N} GREEN | ✅ |
+
+**Total**: {N} tasks, {N} tests GREEN
+
+### Verification
+- Batch verifies: {N} passed
+- Completion verify: pass
+- Fix rounds: {N}
+
+### Next Steps
+- [ ] Review flagged files
+- [ ] `/mdt:tech-debt {CR-KEY}`
+- [ ] Commit changes
+- [ ] Update CR status to Implemented
+```
+
+---
+
 ## Behavioral Rules
 
 1. Orchestrator owns decisions; agents only report.
@@ -350,6 +382,19 @@ MEDIUM/LOW issues:
 6. Max 2 fix attempts per task.
 7. Completion verification is mandatory before declaring implementation complete.
 8. Orchestrator MUST NOT edit code directly - all work done by agents.
+
+---
+
+## Integration
+
+**Workflow position**:
+```
+Feature:     requirements → bdd → architecture → tests → tasks → implement-agentic
+Refactoring: assess → bdd --prep → architecture --prep → tests --prep → tasks --prep → implement-agentic --prep
+```
+
+**Before**: `/mdt:tasks` creates tasks.md
+**After**: `/mdt:tech-debt` catches remaining issues
 
 ---
 

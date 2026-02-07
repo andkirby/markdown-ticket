@@ -2,3 +2,6 @@ drafts
 **/*draft*
 **/*backup*
 **/*.bak
+.DS_Store
+.claude
+.mcp.json

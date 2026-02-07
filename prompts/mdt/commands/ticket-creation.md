@@ -111,9 +111,9 @@ Call `AskUserQuestion` with inferred values as a compact list (NOT a table):
    |---------|-------------------|------|
    | Research | any | `/mdt:poc` → `/mdt:reflection` |
    | Feature | full | `/mdt:requirements` → `/mdt:bdd` → `/mdt:architecture` |
-   | Feature | brief/none | `/mdt:architecture` → `/mdt:tasks` → `/mdt:implement` |
-   | Bug Fix | brief | `/mdt:bdd` (RED) → `/mdt:architecture` → `/mdt:implement` |
-| Architecture | none | `/mdt:architecture` → `/mdt:tests` → `/mdt:tasks` |
-   | Technical Debt | preservation | `/mdt:assess` → `/mdt:bdd --prep` → `/mdt:implement` |
+   | Feature | brief/none | `/mdt:architecture` → `/mdt:tests` → `/mdt:tasks` → `/mdt:implement` |
+   | Bug Fix | brief | `/mdt:bdd` (RED) → `/mdt:architecture` → `/mdt:tests` → `/mdt:tasks` → `/mdt:implement` |
+   | Architecture | none | `/mdt:architecture` → `/mdt:tests` → `/mdt:tasks` |
+   | Technical Debt | preservation | `/mdt:assess` → `/mdt:bdd --prep` → `/mdt:architecture --prep` → `/mdt:tests --prep` → `/mdt:tasks --prep` → `/mdt:implement --prep` |
 
 6. **Offer refinement**: Ask if user wants to adjust any section
