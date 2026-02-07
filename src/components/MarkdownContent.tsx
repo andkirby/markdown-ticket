@@ -164,7 +164,7 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
         const parsedLink = classifyLink(href, currentProject)
 
         // Extract text content safely
-        const extractText = (node: any): string => {
+        const extractText = (node: { type?: string, data?: string, children?: unknown[] } | string): string => {
           if (!node)
             return ''
           if (typeof node === 'string')

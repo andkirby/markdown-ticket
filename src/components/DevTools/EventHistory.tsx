@@ -6,7 +6,7 @@
  */
 
 import type { Event } from '../../services/eventBus'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { eventBus } from '../../services/eventBus'
 
 interface EventItemProps {
@@ -24,6 +24,7 @@ export function EventHistory({ isOpen: controlledIsOpen, onOpenChange, forceHidd
   const [events, setEvents] = useState<Event[]>([])
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [filter, setFilter] = useState<string>('')
+  const isMountedRef = useRef(true)
 
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen
@@ -31,14 +32,23 @@ export function EventHistory({ isOpen: controlledIsOpen, onOpenChange, forceHidd
 
   // Update events periodically
   useEffect(() => {
+    isMountedRef.current = true
+
     const updateEvents = () => {
-      setEvents(eventBus.getRecentEvents(50))
+      requestAnimationFrame(() => {
+        if (isMountedRef.current) {
+          setEvents(eventBus.getRecentEvents(50))
+        }
+      })
     }
 
     updateEvents() // Initial load
     const interval = setInterval(updateEvents, 1000) // Update every second
 
-    return () => clearInterval(interval)
+    return () => {
+      isMountedRef.current = false
+      clearInterval(interval)
+    }
   }, [])
 
   // Don't render in production
@@ -237,7 +247,7 @@ function EventItem({ event }: EventItemProps) {
           {listeners.length > 0 && (
             <div className="ml-4 space-y-1">
               {listeners.map((listener, idx) => (
-                <div key={idx} className="text-gray-400 text-[10px]">
+                <div key={listener.registeredAt} className="text-gray-400 text-[10px]">
                   <div
                     className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 rounded px-1 py-0.5"
                     onClick={(e) => {

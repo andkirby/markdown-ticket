@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Pencil, Search } from 'lucide-react'
 import * as React from 'react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Modal } from '@/components/UI/Modal'
 import { ScrollArea } from '@/components/UI/scroll-area'
@@ -26,7 +26,6 @@ interface DocumentsLayoutProps {
 export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const [searchParams] = useSearchParams()
   const [files, setFiles] = useState<DocumentFile[]>([])
-  const [filteredFiles, setFilteredFiles] = useState<DocumentFile[]>([])
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showPathSelector, setShowPathSelector] = useState(false)
@@ -37,6 +36,22 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const savedPreferences = getDocumentSortPreferences(projectId)
   const [sortBy, setSortBy] = useState<'name' | 'title' | 'created' | 'modified'>(savedPreferences.sortBy)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(savedPreferences.sortDirection)
+
+  // Refs to store timeout IDs for cleanup
+  const sortByTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sortDirectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const selectedFileTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      sortByTimeoutRef.current && clearTimeout(sortByTimeoutRef.current)
+      sortDirectionTimeoutRef.current && clearTimeout(sortDirectionTimeoutRef.current)
+      selectedFileTimeoutRef.current && clearTimeout(selectedFileTimeoutRef.current)
+      errorTimeoutRef.current && clearTimeout(errorTimeoutRef.current)
+    }
+  }, [])
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
@@ -66,13 +81,15 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     return decoded.replace(/\/+/g, '/')
   }
 
-  // File paths are now always relative - no conversion needed
-
   // Reset and load sort preferences when project changes
   useEffect(() => {
     const preferences = getDocumentSortPreferences(projectId)
-    setSortBy(preferences.sortBy)
-    setSortDirection(preferences.sortDirection)
+    sortByTimeoutRef.current = setTimeout(() => {
+      setSortBy(preferences.sortBy)
+    }, 0)
+    sortDirectionTimeoutRef.current = setTimeout(() => {
+      setSortDirection(preferences.sortDirection)
+    }, 0)
   }, [projectId])
 
   // Persist sort preferences to localStorage when they change
@@ -86,19 +103,27 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     if (fileParam) {
       const sanitized = sanitizePath(fileParam)
       if (sanitized) {
-        setSelectedFile(sanitized)
+        selectedFileTimeoutRef.current = setTimeout(() => {
+          setSelectedFile(sanitized)
+        }, 0)
       }
       else {
-        setSelectedFile(null)
-        setError('Invalid file path')
+        selectedFileTimeoutRef.current = setTimeout(() => {
+          setSelectedFile(null)
+        }, 0)
+        errorTimeoutRef.current = setTimeout(() => {
+          setError('Invalid file path')
+        }, 0)
       }
     }
     else {
-      setSelectedFile(null)
+      selectedFileTimeoutRef.current = setTimeout(() => {
+        setSelectedFile(null)
+      }, 0)
     }
   }, [searchParams])
 
-  const loadDocuments = async () => {
+  const loadDocuments = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -108,12 +133,10 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
         // No documents configured, show path selector
         setShowPathSelector(true)
         setFiles([])
-        setFilteredFiles([])
       }
       else if (response.ok) {
         const data = await response.json()
         setFiles(data)
-        setFilteredFiles(data)
         setShowPathSelector(false)
       }
       else {
@@ -127,14 +150,14 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     finally {
       setLoading(false)
     }
-  }
+  }, [projectId])
 
   useEffect(() => {
     loadDocuments()
-  }, [projectId])
+  }, [loadDocuments])
 
-  // Filter and sort files
-  useEffect(() => {
+  // Memoized filtered and sorted files
+  const filteredFiles = useMemo(() => {
     let processedFiles = files
 
     // Apply filtering
@@ -217,7 +240,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       })
     }
 
-    setFilteredFiles(sortFiles(processedFiles))
+    return sortFiles(processedFiles)
   }, [files, searchQuery, sortBy, sortDirection])
 
   // Helper function to find file by path in nested structure
