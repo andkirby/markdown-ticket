@@ -199,6 +199,7 @@ Revert commits for:
 - **Research CR**: [MDT-121](./MDT-121-single-project-mode-for-mcp-server-simplified-tool.md)
 - **Architecture**: [MDT-121/architecture.md](./MDT-121/architecture.md)
 - **PoC**: `docs/CRs/MDT-121/poc/project-auto-detection/` and `docs/CRs/MDT-121/poc/key-normalization/`
+- **HTTP Research**: [MDT-121/http-transport-project-context-research.md](./MDT-121/http-transport-project-context-research.md)
 - **Related**: MDT-070 (MCP Tool Optimization)
 
 ## 9. Smoke Testing
