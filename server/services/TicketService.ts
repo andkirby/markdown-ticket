@@ -9,7 +9,7 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
 
-interface CRData {
+export interface CRData {
   code?: string
   title: string
   type: string
@@ -17,7 +17,7 @@ interface CRData {
   description?: string
 }
 
-interface CreateCRResult {
+export interface CreateCRResult {
   success: boolean
   message: string
   crCode: string
@@ -25,7 +25,7 @@ interface CreateCRResult {
   path: string
 }
 
-interface UpdateCRResult {
+export interface UpdateCRResult {
   success: boolean
   message: string
   updatedFields: string[]
@@ -33,10 +33,21 @@ interface UpdateCRResult {
   crId: string
 }
 
-interface DeleteResult {
+export interface DeleteResult {
   success: boolean
   message: string
   filename: string
+}
+
+interface CRPartialUpdates {
+  status?: string
+  priority?: string
+  phaseEpic?: string
+  assignee?: string
+  relatedTickets?: string
+  dependsOn?: string
+  blocks?: string
+  [key: string]: unknown
 }
 
 interface ProjectDiscovery {
@@ -128,7 +139,7 @@ export class TicketService {
   /**
    * Update CR partially (specific fields).
    */
-  async updateCRPartial(projectId: string, crId: string, updates: Record<string, any>): Promise<UpdateCRResult> {
+  async updateCRPartial(projectId: string, crId: string, updates: CRPartialUpdates): Promise<UpdateCRResult> {
     if (!updates || Object.keys(updates).length === 0) {
       throw new Error('No fields provided for update')
     }

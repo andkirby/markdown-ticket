@@ -296,17 +296,17 @@ describe('LinkNormalizer', () => {
 
   describe('Error Handling', () => {
     it('should handle malformed input gracefully', () => {
-      const malformedInputs = [
+      const malformedInputs: unknown[] = [
         '',
         '   ',
-        null as any,
-        undefined as any,
-        123 as any,
+        null,
+        undefined,
+        123,
       ]
 
       malformedInputs.forEach((input) => {
         expect(() => {
-          const result = LinkNormalizer.normalizeLink(input, basicContext)
+          const result = LinkNormalizer.normalizeLink(input as string, basicContext)
           expect(result.type).toBe('broken')
           expect(result.isValid).toBe(false)
         }).not.toThrow()

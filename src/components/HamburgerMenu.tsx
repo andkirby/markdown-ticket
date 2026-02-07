@@ -21,7 +21,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const [eventHistoryForceHidden, setEventHistoryForceHidden] = useState(getEventHistoryForceHidden())
+  const [eventHistoryForceHidden, setEventHistoryForceHidden] = useState(() => getEventHistoryForceHidden())
   const { isCounterAPIEnabled } = useConfig()
 
   // Track EventHistory state changes

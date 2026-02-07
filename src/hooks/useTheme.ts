@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const COOKIE_NAME = 'theme'
 const COOKIE_EXPIRES_DAYS = 365
@@ -20,14 +20,15 @@ export function useTheme() {
     return prefersDark ? 'dark' : 'light'
   })
 
-  const [mounted, setMounted] = useState(false)
+  // Track mount status using a ref
+  const mountedRef = useRef(false)
 
   useEffect(() => {
-    setMounted(true)
+    mountedRef.current = true
   }, [])
 
   useEffect(() => {
-    if (!mounted)
+    if (!mountedRef.current)
       return
 
     const root = window.document.documentElement
@@ -36,7 +37,7 @@ export function useTheme() {
 
     // Save to cookie
     setCookie(COOKIE_NAME, theme, COOKIE_EXPIRES_DAYS)
-  }, [theme, mounted])
+  }, [theme])
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light')
@@ -46,7 +47,7 @@ export function useTheme() {
     theme,
     toggleTheme,
     setTheme,
-    mounted,
+    mounted: mountedRef.current,
   }
 }
 

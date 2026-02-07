@@ -5,7 +5,7 @@ import { parse as parseTomlContent, stringify } from 'smol-toml'
  * @param content - TOML content as string
  * @returns Parsed JavaScript object
  */
-export function parseToml(content: string): any {
+export function parseToml(content: string): unknown {
   return parseTomlContent(content)
 }
 

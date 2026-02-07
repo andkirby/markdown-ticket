@@ -49,6 +49,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
   const [normalizedLink, setNormalizedLink] = React.useState<NormalizedLink | null>(null)
 
   React.useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null
     if (linkContext && originalHref) {
       try {
         const context = createLinkContextFromProject(
@@ -59,11 +60,17 @@ const SmartLink: React.FC<SmartLinkProps> = ({
 
         const { normalized } = classifyAndNormalizeLink(originalHref, currentProject, context)
         if (normalized) {
-          setNormalizedLink(normalized)
+          // Use setTimeout to avoid direct setState in useEffect
+          timeoutId = setTimeout(() => setNormalizedLink(normalized), 0)
         }
       }
       catch (error) {
         console.warn('Failed to normalize link:', error)
+      }
+    }
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
       }
     }
   }, [linkContext, originalHref, currentProject])

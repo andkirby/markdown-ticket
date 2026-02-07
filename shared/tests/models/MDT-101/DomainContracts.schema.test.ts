@@ -15,21 +15,24 @@ import { CRPriority, CRType } from '../../../models/Types'
 // Mock schemas for now - will be replaced with Zod schemas from domain-contracts
 type SafeParseResult<T>
   = | { success: true, data: T }
-    | { success: false, error: { issues: any[] } }
+    | { success: false, error: { issues: unknown[] } }
 
 // Type guards to discriminate the union
 function isSafeParseSuccess<T>(result: SafeParseResult<T>): result is { success: true, data: T } {
   return result.success === true
 }
 
-function isSafeParseError<T>(result: SafeParseResult<T>): result is { success: false, error: { issues: any[] } } {
+function isSafeParseError<T>(result: SafeParseResult<T>): result is { success: false, error: { issues: unknown[] } } {
   return result.success === false
 }
 
 const ProjectSchema = {
-  safeParse: (data: any): SafeParseResult<any> => {
+  safeParse: (data: Record<string, unknown>): SafeParseResult<Record<string, unknown>> => {
     // Simple validation: check for required fields
-    if (!data.id || !data.project?.name) {
+    const project = data.project
+    const hasProjectName = typeof project === 'object' && project !== null
+      && typeof (project as Record<string, unknown>).name === 'string'
+    if (!data.id || !hasProjectName) {
       return { success: false, error: { issues: [{ path: ['id'] }] } }
     }
     return { success: true, data }
@@ -37,14 +40,14 @@ const ProjectSchema = {
 }
 
 const TicketSchema = {
-  safeParse: (data: any): SafeParseResult<any> => {
+  safeParse: (data: Record<string, unknown>): SafeParseResult<Record<string, unknown>> => {
     // Simple validation: check for required fields
     if (!data.code || !data.status) {
       return { success: false, error: { issues: [{ path: ['code'] }] } }
     }
     // Validate status against CRStatus enum
     const validStatuses: CRStatus[] = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold', 'Partially Implemented']
-    if (!validStatuses.includes(data.status)) {
+    if (typeof data.status !== 'string' || !validStatuses.includes(data.status)) {
       return { success: false, error: { issues: [{ path: ['status'] }] } }
     }
     // Normalize array fields from strings

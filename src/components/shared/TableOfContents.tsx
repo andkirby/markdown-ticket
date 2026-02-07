@@ -11,7 +11,7 @@ interface TableOfContentsProps {
 
 export default function TableOfContents({ items, view }: TableOfContentsProps) {
   const [isExpanded, setIsExpanded] = useState(() => getTocState(view).isExpanded)
-  const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set())
+  const [visibleIds, setVisibleIds] = useState<Set<string>>(() => new Set())
   const navRef = useRef<HTMLDivElement>(null)
 
   // Persist ToC state changes
@@ -99,9 +99,9 @@ export default function TableOfContents({ items, view }: TableOfContentsProps) {
               >
                 Top
               </button>
-              {items.map((item, index) => (
+              {items.map(item => (
                 <button
-                  key={index}
+                  key={item.id}
                   data-id={item.id}
                   onClick={() => scrollToHeading(item.id)}
                   className={`block w-full text-left text-sm transition-colors ${

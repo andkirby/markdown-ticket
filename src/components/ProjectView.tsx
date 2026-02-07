@@ -95,7 +95,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
 
         // Create an error object with response data for proper error handling
         const error = new Error(errorMessage);
-        (error as any).response = {
+        (error as Error & { response?: { status: number, data: unknown } }).response = {
           status: response.status,
           data: errorData,
         }

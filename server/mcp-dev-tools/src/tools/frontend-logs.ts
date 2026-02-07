@@ -3,6 +3,17 @@ import process from 'node:process'
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
+interface FrontendLogEntry {
+  timestamp: string | number | Date
+  level: string
+  message: string
+  url?: string
+}
+
+interface FrontendLogsResponse {
+  logs?: FrontendLogEntry[]
+}
+
 export const getFrontendLogs: Tool = {
   name: 'get_frontend_logs',
   description: 'Get recent frontend console logs with optional filtering',
@@ -87,7 +98,7 @@ export async function handleGetFrontendLogs(args: { lines?: number, filter?: str
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    const data = await response.json()
+    const data = await response.json() as FrontendLogsResponse
 
     if (!data.logs || data.logs.length === 0) {
       return `📋 **Frontend Logs** (0 entries)\n\n${filter ? `No logs found matching filter: "${filter}"` : 'No frontend logs captured yet.'}\n\n💡 **Session auto-started** - try generating logs:\n- \`console.error("test error")\`\n- \`console.log("debug info")\`\n- \`console.warn("warning message")\`\n\n**Frontend URL:** ${frontendUrl}`
@@ -95,7 +106,7 @@ export async function handleGetFrontendLogs(args: { lines?: number, filter?: str
 
     let output = `📋 **Frontend Logs** (${data.logs.length} entries${filter ? `, filtered by "${filter}"` : ''})\n\n`
 
-    data.logs.forEach((log: any) => {
+    data.logs.forEach((log: FrontendLogEntry) => {
       const timestamp = new Date(log.timestamp).toLocaleTimeString()
       const level = log.level.toUpperCase().padEnd(5)
       const url = log.url ? ` [${new URL(log.url).pathname}]` : ''

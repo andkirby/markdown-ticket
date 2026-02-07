@@ -70,9 +70,9 @@ export class TicketController {
 
       res.send(content)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error loading task:', error)
-      if (error.message === 'Task not found') {
+      if (error instanceof Error && error.message === 'Task not found') {
         res.status(404).json({ error: 'Not Found', message: error.message })
       }
       else {
@@ -99,9 +99,9 @@ export class TicketController {
       console.warn(`Saved ticket: ${result.filename}`)
       res.json(result)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error saving task:', error)
-      if (error.message.includes('required')) {
+      if (error instanceof Error && error.message.includes('required')) {
         res.status(400).json({ error: 'Bad Request', message: error.message })
       }
       else {
@@ -128,9 +128,9 @@ export class TicketController {
       console.warn(`Deleted ticket: ${filename}`)
       res.json(result)
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error('Error deleting task:', error)
-      if (error.message === 'Task not found') {
+      if (error instanceof Error && error.message === 'Task not found') {
         res.status(404).json({ error: 'Not Found', message: error.message })
       }
       else {

@@ -127,6 +127,14 @@ export function isLegacyConfig(config: ProjectConfig | null): boolean {
 }
 
 /**
+ * Legacy configuration format with snake_case document paths
+ */
+interface LegacyProjectConfig extends ProjectConfig {
+  document_paths?: string[]
+  exclude_folders?: string[]
+}
+
+/**
  * Migrate legacy configuration to new format
  * Moves project.path (tickets) to project.ticketsPath and sets project.path to "."
  */
@@ -152,52 +160,70 @@ export function migrateLegacyConfig(config: ProjectConfig): ProjectConfig {
     },
     // Add document section for legacy configs that don't have it
     document: config.document || {
-      paths: Array.isArray((config as any).document_paths) ? (config as any).document_paths : [],
-      excludeFolders: Array.isArray((config as any).exclude_folders) ? (config as any).exclude_folders : [],
+      paths: Array.isArray((config as LegacyProjectConfig).document_paths) ? (config as LegacyProjectConfig).document_paths : [],
+      excludeFolders: Array.isArray((config as LegacyProjectConfig).exclude_folders) ? (config as LegacyProjectConfig).exclude_folders : [],
     },
   }
 }
 
 /**
+ * Unknown configuration type for validation
+ */
+type UnknownConfig = unknown
+
+/**
  * Validate local project configuration (LocalProjectConfig or legacy ProjectConfig)
  * Accepts all properly formed project configurations regardless of creation method
  */
-export function validateProjectConfig(config: any): config is ProjectConfig {
-  if (!config || !config.project) {
+export function validateProjectConfig(config: UnknownConfig): config is ProjectConfig {
+  if (!config || typeof config !== 'object' || !('project' in config)) {
     return false
   }
 
-  const project = config.project
+  const project = (config as Record<string, unknown>).project
+
+  if (!project || typeof project !== 'object') {
+    return false
+  }
+
+  const projectRecord = project as Record<string, unknown>
 
   // Required fields for all configurations
-  const hasValidName = typeof project.name === 'string' && project.name.trim().length > 0
-  const hasValidCode = typeof project.code === 'string' && project.code.trim().length > 0
+  const projectName = projectRecord.name
+  const projectCode = projectRecord.code
+  const projectPath = projectRecord.path
+  const hasValidName = typeof projectName === 'string' && projectName.trim().length > 0
+  const hasValidCode = typeof projectCode === 'string' && projectCode.trim().length > 0
   // path is optional in new configs since config file location determines project root
-  const hasValidPath = project.path === undefined
-    || (typeof project.path === 'string' && project.path.trim().length > 0)
+  const hasValidPath = projectPath === undefined
+    || (typeof projectPath === 'string' && projectPath.trim().length > 0)
 
   // Optional fields with defaults if missing
-  const hasValidStartNumber = project.startNumber === undefined
-    || typeof project.startNumber === 'number'
-    || (typeof project.startNumber === 'string' && !Number.isNaN(Number(project.startNumber)))
+  const startNumber = projectRecord.startNumber
+  const hasValidStartNumber = startNumber === undefined
+    || typeof startNumber === 'number'
+    || (typeof startNumber === 'string' && !Number.isNaN(Number(startNumber)))
 
-  const hasValidCounterFile = project.counterFile === undefined
-    || typeof project.counterFile === 'string'
+  const hasValidCounterFile = projectRecord.counterFile === undefined
+    || typeof projectRecord.counterFile === 'string'
 
-  const hasValidDescription = project.description === undefined
-    || typeof project.description === 'string'
+  const hasValidDescription = projectRecord.description === undefined
+    || typeof projectRecord.description === 'string'
 
-  const hasValidRepository = project.repository === undefined
-    || typeof project.repository === 'string'
+  const hasValidRepository = projectRecord.repository === undefined
+    || typeof projectRecord.repository === 'string'
 
   // Optional fields for LocalProjectConfig - handle both array and object formats
-  const hasValidDocumentPaths = config.document?.paths === undefined
-    || (Array.isArray(config.document?.paths) && config.document.paths.every((p: any) => typeof p === 'string'))
-    || (config.document && config.document.paths && Array.isArray(config.document.paths) && config.document.paths.every((p: any) => typeof p === 'string'))
+  const document = (config as Record<string, unknown>).document
+  const hasValidDocumentPaths = document === undefined
+    || (typeof document === 'object' && document !== null && 'paths' in document
+      && Array.isArray((document as Record<string, unknown>).paths)
+      && ((document as Record<string, unknown>).paths as unknown[]).every((p: unknown) => typeof p === 'string'))
 
-  const hasValidExcludeFolders = config.document?.excludeFolders === undefined
-    || (Array.isArray(config.document?.excludeFolders) && config.document.excludeFolders.every((f: any) => typeof f === 'string'))
-    || (config.document && config.document.excludeFolders && Array.isArray(config.document.excludeFolders) && config.document.excludeFolders.every((f: any) => typeof f === 'string'))
+  const hasValidExcludeFolders = document === undefined
+    || (typeof document === 'object' && document !== null && 'excludeFolders' in document
+      && Array.isArray((document as Record<string, unknown>).excludeFolders)
+      && ((document as Record<string, unknown>).excludeFolders as unknown[]).every((f: unknown) => typeof f === 'string'))
 
   return hasValidName && hasValidCode && hasValidPath && hasValidStartNumber
     && hasValidCounterFile && hasValidDescription && hasValidRepository

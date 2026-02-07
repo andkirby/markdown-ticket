@@ -8,6 +8,42 @@ import toml from 'toml'
 import { getDefaultPaths } from '../utils/constants.js'
 
 /**
+ * Unknown object type for dynamic property access
+ */
+type UnknownObject = Record<string, unknown>
+
+/**
+ * Configuration value types supported in TOML
+ */
+type ConfigValue = string | number | boolean | string[] | null | undefined
+
+/**
+ * Old configuration structure (pre-migration)
+ */
+interface OldConfigStructure {
+  dashboard?: {
+    autoRefresh?: boolean
+    refreshInterval?: number
+  }
+  discovery?: {
+    autoDiscover?: boolean
+    searchPaths?: string[]
+  }
+  [key: string]: unknown
+}
+
+/**
+ * Raw parsed TOML configuration
+ */
+interface RawParsedConfig extends UnknownObject {
+  discovery?: UnknownObject
+  links?: UnknownObject
+  ui?: UnknownObject
+  system?: UnknownObject
+  dashboard?: UnknownObject
+}
+
+/**
  * Configuration error class
  */
 class ConfigError extends Error {
@@ -36,8 +72,8 @@ class DotNotationParser {
    * @param path - Path array from dot notation
    * @param value - Value to set
    */
-  static setNested(obj: any, path: string[], value: any): void {
-    let current = obj
+  static setNested(obj: GlobalConfig, path: string[], value: unknown): void {
+    let current: UnknownObject = obj as unknown as UnknownObject
 
     // Navigate to the parent of the target property
     for (let i = 0; i < path.length - 1; i++) {
@@ -45,7 +81,7 @@ class DotNotationParser {
       if (!(segment in current) || typeof current[segment] !== 'object' || current[segment] === null) {
         current[segment] = {}
       }
-      current = current[segment]
+      current = current[segment] as UnknownObject
     }
 
     // Set the final property
@@ -59,14 +95,14 @@ class DotNotationParser {
    * @param path - Path array from dot notation
    * @returns Property value or undefined if not found
    */
-  static getNested(obj: any, path: string[]): any {
-    let current = obj
+  static getNested(obj: GlobalConfig, path: string[]): unknown {
+    let current: UnknownObject = obj as unknown as UnknownObject
 
     for (const segment of path) {
       if (current === null || typeof current !== 'object' || !(segment in current)) {
         return undefined
       }
-      current = current[segment]
+      current = current[segment] as UnknownObject
     }
 
     return current
@@ -143,10 +179,10 @@ class ConfigManager {
   /**
    * Get configuration value using dot notation
    */
-  async get(key: string): Promise<any> {
+  async get(key: string): Promise<ConfigValue> {
     const config = await this.readConfig()
     const path = DotNotationParser.parse(key)
-    return DotNotationParser.getNested(config, path)
+    return DotNotationParser.getNested(config, path) as ConfigValue
   }
 
   /**
@@ -166,7 +202,7 @@ class ConfigManager {
   /**
    * Parse string value based on expected configuration type
    */
-  private parseValue(value: string, path: string[], config: GlobalConfig): any {
+  private parseValue(value: string, path: string[], config: GlobalConfig): ConfigValue {
     const currentValue = DotNotationParser.getNested(config, path)
 
     // If current value is a boolean, parse as boolean
@@ -195,7 +231,7 @@ class ConfigManager {
   /**
    * Get default configuration
    */
-  private getDefaultConfig(): GlobalConfig {
+  getDefaultConfig(): GlobalConfig {
     return {
       discovery: {
         autoDiscover: true,
@@ -224,7 +260,7 @@ class ConfigManager {
   /**
    * Migrate old configuration to new structure
    */
-  private migrateConfig(oldConfig: any): GlobalConfig {
+  private migrateConfig(oldConfig: OldConfigStructure): GlobalConfig {
     const defaultConfig = this.getDefaultConfig()
 
     return {
@@ -252,7 +288,7 @@ class ConfigManager {
   /**
    * Validate configuration against GlobalConfig interface
    */
-  private validateConfig(config: any): GlobalConfig {
+  private validateConfig(config: RawParsedConfig): GlobalConfig {
     const defaultConfig = this.getDefaultConfig()
 
     return {
@@ -261,7 +297,7 @@ class ConfigManager {
           ? config.discovery.autoDiscover
           : defaultConfig.discovery.autoDiscover,
         searchPaths: Array.isArray(config.discovery?.searchPaths)
-          ? config.discovery.searchPaths
+          ? (config.discovery.searchPaths as string[])
           : defaultConfig.discovery.searchPaths,
         maxDepth: typeof config.discovery?.maxDepth === 'number'
           ? config.discovery.maxDepth
@@ -285,8 +321,8 @@ class ConfigManager {
           : defaultConfig.links.linkValidation,
       },
       ui: {
-        theme: ['light', 'dark', 'auto'].includes(config.ui?.theme)
-          ? config.ui?.theme
+        theme: ['light', 'dark', 'auto'].includes(config.ui?.theme as string)
+          ? (config.ui?.theme as 'light' | 'dark' | 'auto')
           : defaultConfig.ui?.theme,
         autoRefresh: typeof config.ui?.autoRefresh === 'boolean'
           ? config.ui?.autoRefresh
@@ -296,8 +332,8 @@ class ConfigManager {
           : defaultConfig.ui?.refreshInterval,
       },
       system: {
-        logLevel: ['error', 'warn', 'info', 'debug'].includes(config.system?.logLevel)
-          ? config.system?.logLevel
+        logLevel: ['error', 'warn', 'info', 'debug'].includes(config.system?.logLevel as string)
+          ? (config.system?.logLevel as 'error' | 'warn' | 'info' | 'debug')
           : defaultConfig.system?.logLevel,
         cacheTimeout: typeof config.system?.cacheTimeout === 'number'
           ? config.system?.cacheTimeout
@@ -309,12 +345,15 @@ class ConfigManager {
   /**
    * Simple TOML serializer for configuration data
    */
-  private objectToToml(obj: any): string {
+  objectToToml(obj: GlobalConfig): string {
     let toml = ''
 
     for (const [section, data] of Object.entries(obj)) {
+      if (!data)
+        continue
       toml += `[${section}]\n`
-      for (const [key, value] of Object.entries(data as any)) {
+      const dataRecord = data as Record<string, ConfigValue>
+      for (const [key, value] of Object.entries(dataRecord)) {
         if (typeof value === 'string') {
           toml += `${key} = "${value}"\n`
         }
@@ -402,9 +441,9 @@ class ConfigCommands {
       console.error(`# Path: ${this.configManager.getConfigPath()}`)
       console.error('')
 
-      // Use a temporary instance to access private method for serialization
+      // Use a temporary instance to access method for serialization
       const tempManager = new ConfigManager()
-      console.error((tempManager as any).objectToToml(config))
+      console.error(tempManager.objectToToml(config))
     }
     catch (error) {
       console.error('Error reading configuration:', error instanceof Error ? error.message : String(error))
@@ -422,9 +461,9 @@ class ConfigCommands {
         return
       }
 
-      // Use a temporary instance to access private method for default config
+      // Use a temporary instance to access method for default config
       const tempManager = new ConfigManager()
-      await this.configManager.writeConfig((tempManager as any).getDefaultConfig())
+      await this.configManager.writeConfig(tempManager.getDefaultConfig())
       console.error('✅ Configuration file created successfully')
       console.error(`   File: ${this.configManager.getConfigPath()}`)
     }

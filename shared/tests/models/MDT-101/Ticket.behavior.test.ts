@@ -200,9 +200,9 @@ describe('ticket Model - Behavioral Preservation', () => {
     })
 
     it('should handle non-array inputs', () => {
-      expect(arrayToString(null as any)).toBe('')
-      expect(arrayToString(undefined as any)).toBe('')
-      expect(arrayToString('string' as any)).toBe('')
+      expect(arrayToString(null as unknown as string[])).toBe('')
+      expect(arrayToString(undefined as unknown as string[])).toBe('')
+      expect(arrayToString('string' as unknown as string[])).toBe('')
     })
   })
 
@@ -261,7 +261,7 @@ describe('ticket Model - Behavioral Preservation', () => {
       ]
 
       expectedAttrs.forEach((attr) => {
-        expect(TICKET_UPDATE_ALLOWED_ATTRS.has(attr as any)).toBe(true)
+        expect(TICKET_UPDATE_ALLOWED_ATTRS.has(attr as keyof TicketUpdateAttrs)).toBe(true)
       })
     })
 
@@ -269,7 +269,7 @@ describe('ticket Model - Behavioral Preservation', () => {
       const immutableAttrs = ['code', 'title', 'type', 'status', 'content', 'dateCreated', 'lastModified']
 
       immutableAttrs.forEach((attr) => {
-        expect(TICKET_UPDATE_ALLOWED_ATTRS.has(attr as any)).toBe(false)
+        expect(TICKET_UPDATE_ALLOWED_ATTRS.has(attr as keyof TicketUpdateAttrs)).toBe(false)
       })
     })
   })

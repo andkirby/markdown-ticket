@@ -1,0 +1,22 @@
+#!/bin/sh
+# Pre-commit hook: Security + quality checks
+#
+# Checks:
+#   1. Block .env files (secrets)
+#   2. Block ../shared/ imports (enforce @mdt/shared alias)
+#   3. Run knip on .ts files
+
+set -e
+
+# Source check functions
+HOOK_DIR="$(dirname "$0")"
+. "$HOOK_DIR/lib/block-env-files.sh"
+. "$HOOK_DIR/lib/block-shared-imports.sh"
+. "$HOOK_DIR/lib/run-knip.sh"
+
+# Run checks
+block_env_files
+block_shared_imports
+run_knip
+
+exit 0

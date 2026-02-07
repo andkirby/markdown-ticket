@@ -17,7 +17,7 @@ import {
   Zap,
 } from 'lucide-react'
 import * as React from 'react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useCounterAPI } from '../hooks/useCounterAPI'
 import { Badge } from './UI/badge'
 import { Button } from './UI/Button'
@@ -26,6 +26,39 @@ import { Input } from './UI/Input'
 
 type ViewState = 'loading' | 'setup' | 'dashboard' | 'projects' | 'users' | 'settings'
 type UserRole = 'admin' | 'client' | 'guest'
+
+interface Ticket {
+  ticketId: string
+  nextNumber: number
+}
+
+interface Project {
+  id: string
+  name?: string
+  enabled: boolean
+  count?: number
+}
+
+interface Config {
+  endpoint: string
+  api_key: string
+  api_key_set: boolean
+  enabled: boolean
+}
+
+interface CreateProjectData {
+  id: string
+  name?: string
+}
+
+interface UpdateProjectData {
+  enabled?: boolean
+}
+
+interface CounterConfigResponse {
+  enabled: boolean
+  api_key_set: boolean
+}
 
 // Setup Flow - First Time Configuration
 const SetupFlow: React.FC<{
@@ -162,19 +195,19 @@ const SetupFlow: React.FC<{
 const Dashboard: React.FC<{
   userRole: UserRole
   onNavigate: (view: ViewState) => void
-  onGenerateTicket: (projectId: string) => Promise<any>
-  getProjects: () => Promise<any>
+  onGenerateTicket: (projectId: string) => Promise<Ticket>
+  getProjects: () => Promise<Project[]>
 }> = ({ userRole, onNavigate, onGenerateTicket, getProjects }) => {
   const [projectId, setProjectId] = useState('WEB')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<Ticket | null>(null)
   const [projectCount, setProjectCount] = useState(0)
 
-  const loadProjectCount = async () => {
+  const loadProjectCount = useCallback(async () => {
     try {
       // Check if counter API is configured first
       const configResponse = await fetch('/api/counter/config')
-      const config = await configResponse.json()
+      const config = (await configResponse.json()) as CounterConfigResponse
 
       if (!config.enabled || !config.api_key_set) {
         console.warn('Counter API not configured, skipping project count load')
@@ -192,12 +225,12 @@ const Dashboard: React.FC<{
         console.warn('Invalid API key - please configure a valid client API key')
       }
     }
-  }
+  }, [getProjects])
 
   // Load project count on mount
   useEffect(() => {
     loadProjectCount()
-  }, [])
+  }, [loadProjectCount])
 
   const handleGenerate = async () => {
     setLoading(true)
@@ -348,17 +381,17 @@ const Dashboard: React.FC<{
 const ProjectManagement: React.FC<{
   onBack: () => void
   userRole: UserRole
-  getProjects: () => Promise<any>
-  createProject: (data: { id: string, name?: string }) => Promise<any>
-  updateProject: (id: string, updates: { enabled?: boolean }) => Promise<any>
-  deleteProject: (id: string) => Promise<any>
+  getProjects: () => Promise<Project[]>
+  createProject: (data: CreateProjectData) => Promise<Project>
+  updateProject: (id: string, updates: UpdateProjectData) => Promise<void>
+  deleteProject: (id: string) => Promise<void>
 }> = ({ onBack, userRole, getProjects, createProject, updateProject, deleteProject }) => {
-  const [projects, setProjects] = useState<any[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
   const [newProjectId, setNewProjectId] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingProjects, setLoadingProjects] = useState(true)
 
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async () => {
     try {
       setLoadingProjects(true)
       const data = await getProjects()
@@ -370,12 +403,12 @@ const ProjectManagement: React.FC<{
     finally {
       setLoadingProjects(false)
     }
-  }
+  }, [getProjects])
 
   // Load projects on mount
   useEffect(() => {
     loadProjects()
-  }, [])
+  }, [loadProjects])
 
   const handleCreateProject = async () => {
     if (!newProjectId.trim())
@@ -525,17 +558,17 @@ const ProjectManagement: React.FC<{
 const UserManagement: React.FC<{
   onBack: () => void
   inviteGuest: (email: string, projects: string[]) => Promise<void>
-  getProjects: () => Promise<any>
+  getProjects: () => Promise<Project[]>
 }> = ({ onBack, inviteGuest, getProjects }) => {
   const [guestEmail, setGuestEmail] = useState('')
   const [selectedProjects, setSelectedProjects] = useState(['WEB'])
   const [loading, setLoading] = useState(false)
   const [availableProjects, setAvailableProjects] = useState<string[]>([])
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const projectsData = await getProjects()
-      setAvailableProjects(projectsData.map((p: any) => p.id))
+      setAvailableProjects(projectsData.map((p: Project) => p.id))
       // Note: Counter API doesn't provide user listing endpoint
       // Users are managed on the Lambda side
     }
@@ -544,11 +577,11 @@ const UserManagement: React.FC<{
       // Fallback data
       setAvailableProjects(['WEB', 'API', 'MOBILE', 'DOCS'])
     }
-  }
+  }, [getProjects])
 
   useEffect(() => {
     loadData()
-  }, [])
+  }, [loadData])
 
   const handleInviteGuest = async () => {
     if (!guestEmail.trim())
@@ -648,7 +681,7 @@ const UserManagement: React.FC<{
 // Settings
 const Settings: React.FC<{
   onBack: () => void
-  config: any
+  config: Config
   onSave: (key: string) => void
   onReset: (email: string) => void
 }> = ({ onBack, config, onSave, onReset }) => {
@@ -761,12 +794,13 @@ export const CounterAPI: React.FC = () => {
     if (loading)
       return
 
-    if (!config.api_key_set) {
-      setView('setup')
-    }
-    else {
-      setView('dashboard')
-    }
+    const nextView = !config.api_key_set ? 'setup' : 'dashboard'
+    // Use setTimeout to avoid setting state directly during render
+    const timer = setTimeout(() => {
+      setView(nextView)
+    }, 0)
+
+    return () => clearTimeout(timer)
   }, [config.api_key_set, loading])
 
   const handleSaveKey = async (key: string) => {
