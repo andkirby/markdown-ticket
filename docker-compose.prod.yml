@@ -29,8 +29,8 @@ services:
   backend:
     build:
       target: production # Use production stage from Dockerfile
-    volumes:
-    # Mount specific projects
+    volumes: []
+    # Mount specific projects (add to array above)
     # - /path/to/projects/project-a:/projects/project-a
     # - /path/to/projects/project-b:/projects/project-b
     environment:
