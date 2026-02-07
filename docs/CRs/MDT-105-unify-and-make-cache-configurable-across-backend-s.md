@@ -1,6 +1,6 @@
 ---
 code: MDT-105
-status: Approved
+status: Proposed
 dateCreated: 2025-12-26T12:48:55.218Z
 type: Technical Debt
 priority: Medium
