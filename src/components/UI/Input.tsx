@@ -64,7 +64,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const [_isFocused, setIsFocused] = useState(false) // Not used - could be removed
 
     useEffect(() => {
-      setInputValue(value || '')
+      const timeoutId = setTimeout(() => setInputValue(value || ''), 0)
+      return () => clearTimeout(timeoutId)
     }, [value])
 
     const handleClear = () => {

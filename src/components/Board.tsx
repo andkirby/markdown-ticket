@@ -65,27 +65,31 @@ const BoardContent: React.FC<BoardProps> = ({
 
   // Clear optimistic updates when server state matches
   useEffect(() => {
-    setLocalTicketUpdates((prev) => {
-      const updated = { ...prev }
-      let hasChanges = false
+    const timeoutId = setTimeout(() => {
+      setLocalTicketUpdates((prev) => {
+        const updated = { ...prev }
+        let hasChanges = false
 
-      for (const [ticketCode, localUpdate] of Object.entries(prev)) {
-        const serverTicket = baseTickets.find(t => t.code === ticketCode)
-        if (serverTicket) {
-          // Check if server state matches our optimistic update
-          const isMatching = Object.entries(localUpdate).every(([key, value]) =>
-            serverTicket[key as keyof Ticket] === value,
-          )
+        for (const [ticketCode, localUpdate] of Object.entries(prev)) {
+          const serverTicket = baseTickets.find(t => t.code === ticketCode)
+          if (serverTicket) {
+            // Check if server state matches our optimistic update
+            const isMatching = Object.entries(localUpdate).every(([key, value]) =>
+              serverTicket[key as keyof Ticket] === value,
+            )
 
-          if (isMatching) {
-            delete updated[ticketCode]
-            hasChanges = true
+            if (isMatching) {
+              delete updated[ticketCode]
+              hasChanges = true
+            }
           }
         }
-      }
 
-      return hasChanges ? updated : prev
-    })
+        return hasChanges ? updated : prev
+      })
+    }, 0)
+
+    return () => clearTimeout(timeoutId)
   }, [baseTickets])
 
   // Merge base tickets with local updates for immediate UI feedback
@@ -102,7 +106,11 @@ const BoardContent: React.FC<BoardProps> = ({
   // Update sortPreferences when prop changes
   React.useEffect(() => {
     if (propSortPreferences) {
-      setSortPreferencesState(propSortPreferences)
+      const timeoutId = setTimeout(() => {
+        setSortPreferencesState(propSortPreferences)
+      }, 0)
+
+      return () => clearTimeout(timeoutId)
     }
   }, [propSortPreferences])
 

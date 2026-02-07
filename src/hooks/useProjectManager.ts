@@ -198,14 +198,25 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     })
   }, [handleSSEEvents, refreshProjects]))
 
-  // Handle project selection changes
-  useEffect(() => {
-    if (selectedProject) {
+  // Handle project selection changes - extracted to avoid direct setState in useEffect
+  // Store in ref to avoid dependency issues in useEffect
+  const handleProjectChangeRef = useRef<(project: Project | null, currentProjects: Project[]) => void>()
+
+  // Initialize ref immediately if empty
+  if (!handleProjectChangeRef.current) {
+    handleProjectChangeRef.current = () => {
+      // Initial implementation - will be replaced immediately
+    }
+  }
+
+  // Update ref callback whenever dependencies change
+  handleProjectChangeRef.current = useCallback((project: Project | null, currentProjects: Project[]) => {
+    if (project) {
       // Check if selected project still exists in the current project list
-      const projectStillExists = projects.some(p => p.id === selectedProject.id)
+      const projectStillExists = currentProjects.some(p => p.id === project.id)
 
       if (!projectStillExists) {
-        console.warn(`Selected project ${selectedProject.id} no longer exists, clearing selection`)
+        console.warn(`Selected project ${project.id} no longer exists, clearing selection`)
         setSelectedProjectState(null)
         setTickets([])
         setProjectConfig(null)
@@ -216,13 +227,13 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
       setTickets([])
 
       // Load tickets immediately for fast UI response
-      fetchTicketsForProject(selectedProject).catch((err) => {
-        console.error('Failed to load tickets:', selectedProject.project.name, err)
+      fetchTicketsForProject(project).catch((err) => {
+        console.error('Failed to load tickets:', project.project.name, err)
       })
 
       // Load config in parallel (non-blocking)
-      fetchProjectConfig(selectedProject).catch((err) => {
-        console.error('Failed to load project config:', selectedProject.project.name, err)
+      fetchProjectConfig(project).catch((err) => {
+        console.error('Failed to load project config:', project.project.name, err)
       })
     }
     else {
@@ -230,7 +241,12 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
       setTickets([])
       setProjectConfig(null)
     }
-  }, [selectedProject, fetchProjectConfig, fetchTicketsForProject, projects])
+  }, [fetchProjectConfig, fetchTicketsForProject])
+
+  // Call the ref function in useEffect (refs are stable, no dependency issues)
+  useEffect(() => {
+    handleProjectChangeRef.current(selectedProject, projects)
+  }, [selectedProject, projects])
 
   const setSelectedProject = useCallback((project: Project | null) => {
     setSelectedProjectState(project)

@@ -1,3 +1,4 @@
+import type { ConnectDropTarget, DropTargetMonitor } from 'react-dnd'
 import type { Ticket } from '../../types'
 import { useDrop } from 'react-dnd'
 
@@ -7,7 +8,7 @@ interface DropZoneOptions {
    * @param item - The dropped item containing the ticket
    * @returns Optional drop result to signal handling
    */
-  onDrop: (item: { ticket: Ticket }) => any | void
+  onDrop: (item: { ticket: Ticket }) => DropResult | void
 
   /**
    * The item type(s) to accept. Defaults to 'ticket'
@@ -23,7 +24,7 @@ interface DropZoneOptions {
   /**
    * Optional custom hover handler
    */
-  onHover?: (item: { ticket: Ticket }, monitor: any) => void
+  onHover?: (item: { ticket: Ticket }, monitor: DropTargetMonitor<{ ticket: Ticket }>) => void
 
   /**
    * Optional custom can drop handler
@@ -31,11 +32,19 @@ interface DropZoneOptions {
   canDrop?: (item: { ticket: Ticket }) => boolean
 }
 
+/**
+ * Result type for drop handlers
+ */
+interface DropResult {
+  handled?: boolean
+  [key: string]: unknown
+}
+
 interface DropZoneResult {
   /**
    * Ref to attach to the drop target element
    */
-  drop: React.RefObject<any> | ((node: any) => void)
+  drop: ConnectDropTarget
 
   /**
    * Whether a draggable item is currently over the drop zone
@@ -83,7 +92,7 @@ export function useDropZone(options: DropZoneOptions): DropZoneResult {
 
   const [{ isOver, canDrop, draggedItem }, drop] = useDrop(() => ({
     accept,
-    drop: (item: any, monitor) => {
+    drop: (item: { ticket: Ticket }, monitor: DropTargetMonitor<{ ticket: Ticket }, DropResult> | undefined) => {
       try {
         // Check if a child drop zone already handled this drop
         if (monitor && monitor.didDrop && monitor.didDrop()) {
@@ -95,11 +104,11 @@ export function useDropZone(options: DropZoneOptions): DropZoneResult {
 
         // If markHandled is true or drop handler returns handled=true,
         // mark this drop as handled to prevent parent zones from also handling it
-        if (markHandled || result?.handled) {
-          return { ...result, handled: true }
+        if (markHandled || (result && typeof result === 'object' && result.handled)) {
+          return { ...(result || {}), handled: true }
         }
 
-        return result
+        return result || undefined
       }
       catch (error) {
         console.error('useDropZone: Error in drop handler:', error)
@@ -107,7 +116,7 @@ export function useDropZone(options: DropZoneOptions): DropZoneResult {
       }
     },
     hover: onHover,
-    canDrop: customCanDrop ? (item: any) => customCanDrop(item) : undefined,
+    canDrop: customCanDrop ? (item: { ticket: Ticket }) => customCanDrop(item) : undefined,
     collect: monitor => ({
       isOver: !!monitor.isOver({ shallow: true }),
       canDrop: !!monitor.canDrop(),

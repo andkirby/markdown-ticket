@@ -74,11 +74,11 @@ interface _SSEEventPayload {
 interface _ErrorEventPayload {
   message: string
   error?: Error
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 }
 
 // Generic event structure
-export interface Event<T = any> {
+export interface Event<T = unknown> {
   type: EventType
   payload: T
   timestamp: number
@@ -87,7 +87,7 @@ export interface Event<T = any> {
 }
 
 // Event listener type
-export type EventListener<T = any> = (event: Event<T>) => void
+export type EventListener<T = unknown> = (event: Event<T>) => void
 
 // Unsubscribe function type
 type UnsubscribeFn = () => void
@@ -118,6 +118,7 @@ class EventBus {
    * @param eventType - Type of event to listen for
    * @param handler - Function to call when event occurs
    * @param metadata - Optional metadata for debugging (source component name)
+   * @param metadata.source - Source component name for debugging
    * @returns Unsubscribe function
    *
    * @example
@@ -130,7 +131,7 @@ class EventBus {
    * unsubscribe();
    * ```
    */
-  on<T = any>(
+  on<T = unknown>(
     eventType: EventType,
     handler: EventListener<T>,
     metadata?: { source?: string },
@@ -195,7 +196,7 @@ class EventBus {
    * }, 'ui');
    * ```
    */
-  emit<T = any>(
+  emit<T = unknown>(
     eventType: EventType,
     payload: T,
     source: Event['source'] = 'system',
@@ -388,10 +389,10 @@ export const eventBus = new EventBus()
 
 // Export class for testing
 
-export function useEventBus<T = any>(
+export function useEventBus<T = unknown>(
   eventType: EventType,
   handler: EventListener<T>,
-  dependencies: any[] = [],
+  dependencies: unknown[] = [],
   source?: string,
 ): void {
   useEffect(() => {

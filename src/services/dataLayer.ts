@@ -18,7 +18,34 @@ interface CreateTicketData {
   type: string
   status?: Status
   priority?: string
-  [key: string]: any
+  [key: string]: string | string[] | Date | undefined
+}
+
+/**
+ * API response format for tickets (camelCase fields)
+ */
+interface ApiTicketItem {
+  code?: string
+  key?: string
+  title?: string
+  status?: string
+  type?: string
+  priority?: string
+  content?: string
+  filePath?: string
+  path?: string
+  dateCreated?: string | Date | null
+  lastModified?: string | Date | null
+  implementationDate?: string | Date | null
+  phaseEpic?: string
+  description?: string
+  rationale?: string
+  assignee?: string
+  implementationNotes?: string
+  relatedTickets?: string | string[]
+  dependsOn?: string | string[]
+  blocks?: string | string[]
+  [key: string]: unknown
 }
 
 /**
@@ -166,7 +193,7 @@ class DataLayer {
   ): Promise<void> {
     try {
       // Prepare update data (convert dates to ISO strings)
-      const updateData: Record<string, any> = {}
+      const updateData: Record<string, string | string[] | Date> = {}
       for (const [key, value] of Object.entries(updates)) {
         if (value instanceof Date) {
           updateData[key] = value.toISOString()
@@ -218,16 +245,16 @@ class DataLayer {
   /**
    * Normalize tickets from API response
    */
-  private normalizeTickets(data: any[]): Ticket[] {
+  private normalizeTickets(data: ApiTicketItem[]): Ticket[] {
     return data.map(item => this.normalizeTicket(item))
   }
 
   /**
    * Normalize a single ticket from API response
    */
-  private normalizeTicket(item: any): Ticket {
+  private normalizeTicket(item: ApiTicketItem): Ticket {
     // Helper to normalize arrays
-    const normalizeArray = (value: any): string[] => {
+    const normalizeArray = (value: string | string[] | undefined): string[] => {
       if (Array.isArray(value))
         return value.filter(Boolean)
       if (typeof value === 'string' && value.trim()) {
@@ -237,7 +264,7 @@ class DataLayer {
     }
 
     // Helper to parse dates
-    const parseDate = (dateValue: any): Date | null => {
+    const parseDate = (dateValue: string | Date | null | undefined): Date | null => {
       if (!dateValue)
         return null
       if (dateValue instanceof Date)

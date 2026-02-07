@@ -4,9 +4,9 @@ import { useCallback, useRef } from 'react'
 import { useEventBus } from '../services/eventBus'
 
 // Simple debounce utility
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
+function debounce<T extends (...args: unknown[]) => unknown>(func: T, wait: number): T {
   let timeout: NodeJS.Timeout
-  return ((...args: any[]) => {
+  return ((...args: unknown[]) => {
     clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
   }) as T
@@ -21,6 +21,7 @@ export function useSSEEvents(
   const userInitiatedUpdates = useRef(new Set<string>())
 
   // Debounce refresh to avoid multiple rapid refreshes
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce handles memoization correctly
   const debouncedRefresh = useCallback(
     debounce((project: Project) => {
       fetchTicketsForProject(project).catch((err) => {
