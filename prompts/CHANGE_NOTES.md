@@ -2,6 +2,59 @@
 
 ## Recent Updates
 
+### 2026-02-07 - Version Management and Tooling Improvements
+
+**Problem**: Plugin version management was manual and error-prone. The `/update-notes` workflow lacked version increment automation, and the sync script had poor documentation and error messages.
+
+**Solution**: Added automated version increment script with smart beta/release handling. Enhanced `/update-notes` workflow with version increment step. Improved `.sync` script documentation and error messages.
+
+**Changes Made**:
+
+1. **scripts/mdt-version-increment.sh (new) - Semantic version automation**:
+   - `beta` action: Smart beta increment (stable→beta, beta→beta.1, beta.1→beta.2)
+   - `release` action: Strip pre-release suffix (0.11.0-beta.22 → 0.11.0)
+   - `minor` action: Increment minor version on stable (0.10.0 → 0.11.0)
+   - `patch` action: Increment patch version on stable (0.10.0 → 0.10.1)
+   - `--dry-run` flag for preview mode
+   - Parses semver with optional suffixes (beta, rc, etc.)
+   - Validates version state before applying changes
+
+2. **update-notes.md (v4→v5) - Version increment workflow added**:
+   - New Step 8: Version Increment with action selection
+   - Decision table for increment type based on change analysis
+   - Smart beta increment guidance with examples
+   - `--skip-version` flag to bypass version step
+   - Integration with `mdt-version-increment.sh` script
+
+3. **.sync (v3→v4) - Documentation and error handling**:
+   - Added comprehensive header docstring
+   - Improved usage message with clear "Modes" and "Options" sections
+   - Better error message for unknown mode
+   - Consistent formatting across all help text
+
+4. **plugin.json - Format normalization**:
+   - Keywords array pretty-printed (multi-line vs single-line)
+   - No functional changes (json formatting only)
+
+5. **..sync-down-commit.sh (new) - Quick sync helper**:
+   - One-command sync down + commit workflow
+   - Shortcut for `.sync down && git add -u && git commit -m 'update'`
+
+**Impact**:
+- Automated version management prevents manual errors
+- Consistent semver practices across releases
+- Better sync script documentation reduces confusion
+- Quick sync-commit shortcut for common workflow
+
+**Files Changed**:
+- `prompts/scripts/mdt-version-increment.sh` (new)
+- `prompts/.claude/commands/update-notes.md` (v4→v5)
+- `prompts/.sync` (v3→v4)
+- `prompts/mdt/.claude-plugin/plugin.json` (format only)
+- `prompts/..sync-down-commit.sh` (new)
+
+---
+
 ### 2026-02-07 - Workflow Consistency and Completion Messaging
 
 **Problem**: Implementation workflows had inconsistent verbosity and completion messaging. `implement.md` was overly detailed with extensive bash code examples and verbose completion templates, while `implement-agentic.md` lacked a final completion step. Other workflows (`tests.md`, `tasks.md`) had no completion messaging at all. The workflow ordering was also incorrect (architecture→tasks instead of architecture→tests→tasks).
