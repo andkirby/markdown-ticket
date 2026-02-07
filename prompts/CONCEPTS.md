@@ -201,19 +201,19 @@ Requirements → BDD Tests (E2E) → Architecture → TDD Tests (Unit) → Imple
 ### Refactoring Flow (GREEN → GREEN)
 
 ```
-/mdt:assess → /mdt:bdd --prep → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
-      │            │                    │                │                        │
-      ↓            ↓                    ↓                ↓                        ↓
-  Find gaps   Lock E2E            Design fix       Lock modules            Behavior
-              (GREEN)                               (GREEN)                preserved
+/mdt:assess → /mdt:bdd --prep → /mdt:architecture --prep → /mdt:tests --prep → /mdt:tasks --prep → /mdt:implement --prep
+      │            │                    │                       │                          │
+      ↓            ↓                    ↓                       ↓                          ↓
+  Find gaps   Lock E2E            Design fix              Lock modules              Behavior
+              (GREEN)                                      (GREEN)                  preserved
 ```
 
 **Process**:
 
 1. `/mdt:bdd --prep` locks existing user journeys (tests must be GREEN now)
-2. `/mdt:architecture` designs the refactoring
+2. `/mdt:architecture --prep` designs the refactoring
 3. `/mdt:tests --prep` locks existing module behavior (tests must be GREEN now)
-4. `/mdt:implement` refactors while keeping ALL tests GREEN
+4. `/mdt:implement --prep` refactors while keeping ALL tests GREEN
 
 ### TDD Verification in `/mdt:implement`
 

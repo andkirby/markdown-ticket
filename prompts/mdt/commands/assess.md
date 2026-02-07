@@ -273,10 +273,11 @@ Next: `/mdt:bdd {CR-KEY} --prep`
 
 Workflow:
 1. `/mdt:bdd {TEST-CR-KEY} --prep` — lock E2E user journeys (GREEN)
-2. `/mdt:architecture {TEST-CR-KEY}` — design test structure
+2. `/mdt:architecture {TEST-CR-KEY} --prep` — design test structure
 3. `/mdt:tests {TEST-CR-KEY} --prep` — lock module behavior (GREEN)
-4. `/mdt:implement {TEST-CR-KEY}` — write tests (should pass against current code)
-5. Then return to {CR-KEY} (now safe to refactor)
+4. `/mdt:tasks {TEST-CR-KEY} --prep` — plan test tasks
+5. `/mdt:implement {TEST-CR-KEY} --prep` — write tests (should pass against current code)
+6. Then return to {CR-KEY} (now safe to refactor)
 
 Next: `/mdt:bdd {TEST-CR-KEY} --prep`
 ```
@@ -291,10 +292,10 @@ Next: `/mdt:bdd {TEST-CR-KEY} --prep`
 
 Workflow:
 1. `/mdt:bdd {NEW-CR-KEY} --prep` — lock E2E behavior (GREEN)
-2. `/mdt:architecture {NEW-CR-KEY}` — design refactoring
+2. `/mdt:architecture {NEW-CR-KEY} --prep` — design refactoring
 3. `/mdt:tests {NEW-CR-KEY} --prep` — lock module behavior (GREEN)
-4. `/mdt:tasks {NEW-CR-KEY}` — plan refactoring
-5. `/mdt:implement {NEW-CR-KEY}` — execute refactoring (tests stay GREEN)
+4. `/mdt:tasks {NEW-CR-KEY} --prep` — plan refactoring
+5. `/mdt:implement {NEW-CR-KEY} --prep` — execute refactoring (tests stay GREEN)
 6. Then return to {CR-KEY}
 
 Next: `/mdt:bdd {NEW-CR-KEY} --prep`
@@ -311,8 +312,8 @@ Next: `/mdt:bdd {NEW-CR-KEY} --prep`
 ✓ Updated {CR-KEY} (depends on {REFACTOR-CR-KEY})
 
 Workflow:
-1. `/mdt:bdd {TEST-CR-KEY} --prep` → lock E2E → implement → tests GREEN
-2. `/mdt:bdd {REFACTOR-CR-KEY} --prep` → architecture → tests --prep → implement (tests stay GREEN)
+1. `/mdt:bdd {TEST-CR-KEY} --prep` → architecture → tests --prep → tasks → implement → tests GREEN
+2. `/mdt:bdd {REFACTOR-CR-KEY} --prep` → architecture → tests --prep → tasks → implement (tests stay GREEN)
 3. Return to {CR-KEY}
 
 Next: `/mdt:bdd {TEST-CR-KEY} --prep`

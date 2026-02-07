@@ -231,6 +231,6 @@ Create `{TICKETS_PATH}/{CR-KEY}/debt.md`:
 **Before**: Implementation complete
 **After**: 
 - Simple fixes: address inline
-- Complex fixes: create Technical Debt CR → `/mdt:architecture` → `/mdt:tasks`
+- Complex fixes: create Technical Debt CR → `/mdt:architecture` → `/mdt:tests` → `/mdt:tasks`
 
 Context: $ARGUMENTS

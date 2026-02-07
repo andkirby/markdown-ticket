@@ -2,6 +2,73 @@
 
 ## Recent Updates
 
+### 2026-02-07 - Workflow Consistency and Completion Messaging
+
+**Problem**: Implementation workflows had inconsistent verbosity and completion messaging. `implement.md` was overly detailed with extensive bash code examples and verbose completion templates, while `implement-agentic.md` lacked a final completion step. Other workflows (`tests.md`, `tasks.md`) had no completion messaging at all. The workflow ordering was also incorrect (architecture→tasks instead of architecture→tests→tasks).
+
+**Solution**: Standardized all workflows with concise, focused guidance and consistent completion messaging. Simplified verbose prose into compact decision tables. Added completion templates to all workflows. Fixed workflow ordering to match TDD practice (tests before tasks).
+
+**Changes Made**:
+
+1. **implement.md (v8→v9) - Radical simplification and consistency**:
+   - Replaced verbose bash code with concise decision tables
+   - Step 1: Collapsed 8 subsections (1a-1h) into 5 focused steps (1a-1e)
+   - Removed verbose sub-agent context template (was redundant with Step 2c)
+   - Removed verbose error handling section (logic covered in behavioral rules)
+   - Simplified completion templates (prep, part, full completion)
+   - Streamlined "Next Steps" to single actionable command instead of multi-step lists
+   - Step 7: Acceptance verification simplified to decision table
+   - Step 7b: Completion verification streamlined verdict handling
+   - Behavioral rules: 11→9 rules (consolidated redundancy)
+
+2. **implement-agentic.md (v3→v3) - Final completion step added**:
+   - Added Step 9: Final Completion with summary template
+   - Template shows: mode, summary table, verification counts, next steps
+   - Matches implement.md completion messaging style
+   - Added Integration section with workflow position and before/after
+
+3. **tasks.md (v8→v8) - Completion messaging added**:
+   - New "Completion" section with prep/feature mode templates
+   - Shows: CR key, output location, task count, next command
+   - Matches completion style of other workflows
+
+4. **tests.md (v7→v7) - Completion messaging added**:
+   - New "Completion" section with prep/feature mode templates
+   - Shows: CR key, output location, status emoji (GREEN/RED), next command
+   - Matches completion style of other workflows
+
+5. **architecture.md (v9→v9) - Workflow ordering fixed**:
+   - Next step changed from `/mdt:tasks` to `/mdt:tests`
+   - Aligns with TDD workflow: tests before tasks (RED state before implementation)
+
+6. **mdt/README.md - Quick install instructions added**:
+   - New "Quick Install (via install script)" section
+   - Shows `--local` and `--docker` usage
+   - Added `claude plugin enable` command with scope options
+   - Preserved "Manual Install" section for alternative installation
+
+7. **install-plugin.sh - Enable instruction added**:
+   - Prints plugin enable command after installation
+   - Shows both local and user scope options
+
+**Impact**:
+- Consistent completion messaging across all workflows
+- Reduced verbosity improves readability and token efficiency
+- TDD workflow ordering corrected (tests→tasks, not tasks→tests)
+- Users get clear "what next" guidance after each workflow step
+- Plugin enable instruction shown after installation (prevents confusion)
+
+**Files Changed**:
+- `prompts/mdt/commands/implement.md` (v8→v9)
+- `prompts/mdt/commands/implement-agentic.md` (v3→v3)
+- `prompts/mdt/commands/tasks.md` (v8→v8)
+- `prompts/mdt/commands/tests.md` (v7→v7)
+- `prompts/mdt/commands/architecture.md` (v9→v9)
+- `prompts/mdt/README.md`
+- `prompts/install-plugin.sh`
+
+---
+
 ### 2026-02-05 - Plugin Marketplace Installation System
 
 **Problem**: The old `install-claude.sh` script used a manual file-copying approach to install MDT commands. This was fragile, didn't integrate with Claude Code's plugin system, and couldn't properly bundle the MCP server with the plugin. Additionally, the MCP server needed different configurations for local development vs Docker environments.
