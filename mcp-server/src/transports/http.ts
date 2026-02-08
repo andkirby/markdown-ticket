@@ -228,7 +228,7 @@ export async function startHttpTransport(
                 error: {
                   code: jsonRpcError.code,
                   message: jsonRpcError.message,
-                  ...(jsonRpcError.data && { data: jsonRpcError.data }),
+                  ...(jsonRpcError.data && typeof jsonRpcError.data === 'object' ? { data: jsonRpcError.data } : {}),
                 },
               }
               console.error(`📤 Sending protocol error response for ${tool_name} with code ${jsonRpcError.code}`)
@@ -594,23 +594,23 @@ async function _handleJsonRpcRequest(
       console.error(`❌ Invalid jsonrpc version: ${request.jsonrpc}`)
       return {
         jsonrpc: '2.0',
-        id: request.id || null,
+        id: ((request.id as string | number | undefined) || null) as string | number | undefined,
         error: {
           code: -32600,
           message: 'Invalid Request: jsonrpc must be "2.0"',
         },
-      }
+      } as JSONRPCError
     }
 
     if (!request.method) {
       return {
         jsonrpc: '2.0',
-        id: request.id || null,
+        id: ((request.id as string | number | undefined) || null) as string | number | undefined,
         error: {
           code: -32600,
           message: 'Invalid Request: method is required',
         },
-      }
+      } as JSONRPCError
     }
 
     // Route to appropriate handler based on method
@@ -619,23 +619,24 @@ async function _handleJsonRpcRequest(
         const tools = mcpTools.getTools()
         return {
           jsonrpc: '2.0',
-          id: request.id,
+          id: request.id as string | number,
           result: { tools },
         }
       }
 
       case 'tools/call': {
-        const { name, arguments: args } = request.params
+        const params = request.params as Record<string, unknown> | undefined
+        const { name, arguments: args } = (params || {}) as { name?: string, arguments?: Record<string, unknown> }
 
         try {
-          const result = await mcpTools.handleToolCall(name, args || {})
+          const result = await mcpTools.handleToolCall(name || '', args || {})
 
           // Sanitize the result content if sanitization is enabled
           const sanitizedResult = Sanitizer.sanitize(result)
 
           return {
             jsonrpc: '2.0',
-            id: request.id,
+            id: request.id as string | number,
             result: {
               content: [
                 {
@@ -654,11 +655,11 @@ async function _handleJsonRpcRequest(
               const jsonRpcError = error.toJsonRpcError()
               return {
                 jsonrpc: '2.0',
-                id: request.id,
+                id: request.id as string | number,
                 error: {
                   code: jsonRpcError.code,
                   message: jsonRpcError.message,
-                  ...(jsonRpcError.data && { data: jsonRpcError.data }),
+                  ...(jsonRpcError.data && typeof jsonRpcError.data === 'object' ? { data: jsonRpcError.data } : {}),
                 },
               }
             }
@@ -667,7 +668,7 @@ async function _handleJsonRpcRequest(
               const toolErrorResult = error.toToolErrorResult()
               return {
                 jsonrpc: '2.0',
-                id: request.id,
+                id: request.id as string | number,
                 result: toolErrorResult,
               }
             }
@@ -698,7 +699,7 @@ async function _handleJsonRpcRequest(
 
           return {
             jsonrpc: '2.0',
-            id: request.id,
+            id: request.id as string | number,
             error: {
               code: errorCode,
               message: errorMessage,
@@ -711,7 +712,7 @@ async function _handleJsonRpcRequest(
         // Return server capabilities
         return {
           jsonrpc: '2.0',
-          id: request.id,
+          id: request.id as string | number,
           result: {
             protocolVersion: MCP_PROTOCOL_VERSION,
             capabilities: {
@@ -728,12 +729,13 @@ async function _handleJsonRpcRequest(
 
       case 'logging/setLevel': {
         // Handle logging level setting like Python server
-        const level = request.params?.level || 'info'
+        const params = request.params as Record<string, unknown> | undefined
+        const level = (params?.level as string) || 'info'
         console.error(`🔧 Logging level set to: ${level}`)
         // In a real implementation, you would set the logging level here
         return {
           jsonrpc: '2.0',
-          id: request.id,
+          id: request.id as string | number,
           result: {},
         }
       }
@@ -741,23 +743,23 @@ async function _handleJsonRpcRequest(
       default:
         return {
           jsonrpc: '2.0',
-          id: request.id || null,
+          id: ((request.id as string | number | undefined) || null) as string | number | undefined,
           error: {
             code: -32601,
-            message: `Method not found: ${request.method}`,
+            message: `Method not found: ${String(request.method)}`,
           },
-        }
+        } as JSONRPCError
     }
   }
   catch (error) {
     return {
       jsonrpc: '2.0',
-      id: request.id || null,
+      id: ((request.id as string | number | undefined) || null) as string | number | undefined,
       error: {
         code: -32603,
         message: 'Internal error',
         data: (error as Error).message,
       },
-    }
+    } as JSONRPCError
   }
 }

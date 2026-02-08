@@ -9,6 +9,7 @@ export default antfu(
       'node_modules',
       'coverage',
       '**/*.md',
+      '**/*.d.ts',
     ],
   },
   {

@@ -2,6 +2,7 @@ import type { Project } from '../../models/Project.js'
 import type { IProjectDiscoveryService } from './types.js'
 import { ProjectValidator } from '../../tools/ProjectValidator.js'
 import { CONFIG_FILES, DEFAULTS, getDefaultPaths } from '../../utils/constants.js'
+import { directoryExists } from '../../utils/file-utils.js'
 import { logQuiet } from '../../utils/logger.js'
 import {
   buildConfigFilePath,
@@ -47,9 +48,24 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
         const projectPath = registryData.project.path
         const registryPath = joinPaths(getDefaultPaths().PROJECTS_REGISTRY, file)
 
+        // Validate that the project path still exists
+        // This filters out stale registry entries for deleted/moved projects
+        if (!directoryExists(projectPath)) {
+          logQuiet(this.quiet, `Skipping non-existent project from registry: ${projectPath}`)
+          continue
+        }
+
         // Check if this is a global-only project (full data in registry) or project-first (minimal data)
         const isGlobalOnly = registryData.metadata?.globalOnly === true
           || registryData.project.name !== undefined
+
+        // Validate that project.id matches directory name (if ID is explicitly set in registry)
+        // This prevents worktrees and misconfigured projects from being loaded from registry
+        const directoryName = getBaseName(projectPath)
+        if (registryData.project.id && registryData.project.id !== directoryName) {
+          logQuiet(this.quiet, `Skipping registered project at ${directoryName}: project.id "${registryData.project.id}" does not match directory name`)
+          continue // Skip this registry entry - ID must match directory
+        }
 
         if (isGlobalOnly) {
           // Strategy 1: Global-Only - Full project details stored in global registry
@@ -58,7 +74,7 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
             id: projectId,
             project: {
               id: projectId,
-              name: registryData.project.name,
+              name: registryData.project.name || projectId, // Fallback to projectId if name is undefined
               code: registryData.project.code,
               path: projectPath,
               configFile: '', // No local config file for global-only
@@ -92,6 +108,12 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
 
           // Project-First Strategy: Local config is primary source, global provides metadata only
           const projectId = getBaseName(projectPath)
+
+          // Additional validation: if local config has explicit ID, it must match directory name
+          if (localConfig?.project?.id && localConfig.project.id !== directoryName) {
+            logQuiet(this.quiet, `Skipping registered project at ${directoryName}: local config project.id "${localConfig.project.id}" does not match directory name`)
+            continue // Skip this registry entry - ID must match directory
+          }
           const project: Project = {
             id: projectId,
             project: {

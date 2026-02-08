@@ -25,7 +25,7 @@ export class ProjectHandlers {
           return await this.handleListProjects()
 
         case 'get_project_info':
-          return await this.handleGetProjectInfo(args.key)
+          return await this.handleGetProjectInfo(args.key as string)
 
         default:
           throw ToolError.protocol(
