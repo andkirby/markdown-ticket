@@ -364,23 +364,26 @@ export class Sanitizer {
       return typeof content !== 'string' ? String(content) : content
     }
 
+    let strContent: string
     if (typeof content !== 'string') {
-      content = String(content)
+      strContent = String(content)
+    } else {
+      strContent = content
     }
 
     // Auto-detect content type based on patterns
-    if (content.includes('<') && content.includes('>')) {
+    if (strContent.includes('<') && strContent.includes('>')) {
       // Contains HTML tags
-      return this.sanitizeHtml(content)
+      return this.sanitizeHtml(strContent)
     }
 
-    if (content.includes('```') || content.includes('#') || content.includes('*')) {
+    if (strContent.includes('```') || strContent.includes('#') || strContent.includes('*')) {
       // Likely markdown
-      return this.sanitizeMarkdown(content)
+      return this.sanitizeMarkdown(strContent)
     }
 
     // Default to text sanitization
-    return this.sanitizeText(content)
+    return this.sanitizeText(strContent)
   }
 
   /**

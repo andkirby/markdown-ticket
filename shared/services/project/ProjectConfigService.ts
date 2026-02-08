@@ -116,13 +116,9 @@ export class ProjectConfigService implements IProjectConfigService {
         ticketsPath: finalTicketsPath,
       }
 
-      // Preserve existing document and exclude configurations
+      // Initialize document configuration if not present
       if (!config.document)
         config.document = {}
-      if (config.document_paths)
-        config.document.paths = config.document_paths
-      if (config.exclude_folders)
-        config.document.excludeFolders = config.exclude_folders
 
       // Auto-add custom tickets path to excludeFolders if it's not the default
       // This prevents tickets from being included in document discovery
@@ -200,7 +196,7 @@ export class ProjectConfigService implements IProjectConfigService {
       }
 
       const content = readFile(projectFile)
-      const registryData: RegistryData = parseToml(content)
+      const registryData = parseToml(content) as RegistryData
 
       if (!registryData.project?.path) {
         throw new Error(`Project ${projectId} registry entry missing project path`)
@@ -226,7 +222,7 @@ export class ProjectConfigService implements IProjectConfigService {
         // Update local config
         const configPath = buildConfigFilePath(registryData.project.path, CONFIG_FILES.PROJECT_CONFIG)
         if (fileExists(configPath)) {
-          const localConfig = parseToml(readFile(configPath))
+          const localConfig = parseToml(readFile(configPath)) as ProjectConfig
           Object.assign(localConfig.project, updates)
           writeFile(configPath, stringify(localConfig))
           logQuiet(this.quiet, `Updated project ${projectId} in local config`)
@@ -250,7 +246,7 @@ export class ProjectConfigService implements IProjectConfigService {
         throw new Error('Project not found in registry')
       }
 
-      const registryData = parseToml(readFile(projectFile))
+      const registryData = parseToml(readFile(projectFile)) as RegistryData
       if (!registryData.project?.path) {
         throw new Error('Project registry entry missing project path')
       }
@@ -268,11 +264,11 @@ export class ProjectConfigService implements IProjectConfigService {
     try {
       const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
       if (fileExists(configPath)) {
-        const localConfig = parseToml(readFile(configPath))
-        if (!localConfig.project)
-          localConfig.project = {}
-        if (!localConfig.document)
+        // Use Partial since parsed data might be incomplete
+        const localConfig = parseToml(readFile(configPath)) as Partial<ProjectConfig>
+        if (!localConfig.document) {
           localConfig.document = {}
+        }
         localConfig.document.paths = documentPaths
         writeFile(configPath, stringify(localConfig))
         logQuiet(this.quiet, `Updated document paths for project ${projectId}: [${documentPaths.join(', ')}]`)

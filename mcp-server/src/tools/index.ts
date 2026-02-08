@@ -12,6 +12,8 @@ import type { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import type { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
 import type { CRService } from '../services/crService.js'
+import type { TicketData } from '@mdt/shared/models/Ticket.js'
+import type { CRStatus } from '@mdt/shared/models/Types.js'
 import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js'
 import { Sanitizer } from '../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../utils/toolError.js'
@@ -87,41 +89,41 @@ export class MCPTools {
         TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS,
       ] as const
       if (crTools.includes(name as typeof crTools[number])) {
-        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject)
+        const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject)
 
         switch (name) {
           case TOOL_NAMES.LIST_CRS:
-            return await this.crHandlers.handleListCRs(project, args.filters)
+            return await this.crHandlers.handleListCRs(project, args.filters as Record<string, unknown> | undefined)
 
           case TOOL_NAMES.GET_CR:
-            return await this.crHandlers.handleGetCR(project, args.key, args.mode)
+            return await this.crHandlers.handleGetCR(project, args.key as string, args.mode as string | undefined)
 
           case TOOL_NAMES.CREATE_CR:
-            return await this.crHandlers.handleCreateCR(project, args.type, args.data)
+            return await this.crHandlers.handleCreateCR(project, args.type as string, args.data as TicketData)
 
           case TOOL_NAMES.UPDATE_CR_STATUS:
-            return await this.crHandlers.handleUpdateCRStatus(project, args.key, args.status)
+            return await this.crHandlers.handleUpdateCRStatus(project, args.key as string, args.status as CRStatus)
 
           case TOOL_NAMES.UPDATE_CR_ATTRS:
-            return await this.crHandlers.handleUpdateCRAttrs(project, args.key, args.attributes)
+            return await this.crHandlers.handleUpdateCRAttrs(project, args.key as string, args.attributes as Record<string, unknown>)
 
           case TOOL_NAMES.DELETE_CR:
-            return await this.crHandlers.handleDeleteCR(project, args.key)
+            return await this.crHandlers.handleDeleteCR(project, args.key as string)
 
           case TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS:
-            return await this.crHandlers.handleSuggestCRImprovements(project, args.key)
+            return await this.crHandlers.handleSuggestCRImprovements(project, args.key as string)
         }
       }
 
       // Route to section handlers
       if (name === TOOL_NAMES.MANAGE_CR_SECTIONS) {
-        const project = await this.projectHandlers.resolveProject(args.project, this.detectedProject)
+        const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject)
         return await this.sectionHandlers.handleManageCRSections(
           project,
-          args.key,
-          args.operation,
-          args.section,
-          args.content,
+          args.key as string,
+          args.operation as string,
+          args.section as string | undefined,
+          args.content as string | undefined,
         )
       }
 
