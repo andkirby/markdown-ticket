@@ -407,7 +407,8 @@ describe('projects API - Integration Scenarios', () => {
     const configRes = await request(app).get(`/api/projects/${project.key}/config`)
     const listed = (listRes.body as ProjectListItem[]).find(p => p.id === project.key)
 
-    expect(listed.id).toBe(configRes.body.project.id)
+    expect(listed).toBeDefined()
+    expect(listed!.id).toBe(configRes.body.project.id)
   })
 })
 describe('projects API - Edge Cases and Boundary Conditions', () => {

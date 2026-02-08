@@ -15,12 +15,12 @@
 
 import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
+import { ProjectSetup } from '../helpers/core/project-setup'
 import { TestEnvironment } from '../helpers/test-environment'
 
 describe('rate Limiting (MUST-05)', () => {
   let testEnv: TestEnvironment
   let mcpClient: MCPClient
-  let projectFactory: ProjectFactory
 
   // Test setup following RED phase
   beforeEach(async () => {
@@ -33,12 +33,19 @@ describe('rate Limiting (MUST-05)', () => {
     process.env.MCP_RATE_LIMIT_MAX = '5'
     process.env.MCP_RATE_LIMIT_WINDOW_MS = '1000'
 
-    // Initialize MCP client with test environment
+    // Create test projects BEFORE starting MCP client
+    // Server discovers projects at startup from the registry
+    const projectSetup = new ProjectSetup({ testEnv })
+    await projectSetup.createProjectStructure('TEST', 'Test Project')
+    await projectSetup.createProjectStructure('MDT', 'Markdown Ticket')
+
+    // NOW start MCP client (server will discover the project from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
     await mcpClient.start()
 
-    // Initialize project factory for creating test data
-    projectFactory = new ProjectFactory(testEnv, mcpClient)
+    // NOW create ProjectFactory with the running mcpClient
+    // Note: ProjectFactory is available but not used directly in these tests
+    new ProjectFactory(testEnv, mcpClient)
   })
 
   // Test cleanup
@@ -88,7 +95,7 @@ describe('rate Limiting (MUST-05)', () => {
 
       // And: No rate limit errors should be present
       const rateLimitErrors = results.filter(r =>
-        !r.success && r.error.message && r.error.message.includes('rate limit'),
+        !r.success && r.error?.message && r.error.message.includes('rate limit'),
       )
       expect(rateLimitErrors.length).toBe(0)
     })
@@ -119,12 +126,6 @@ describe('rate Limiting (MUST-05)', () => {
   })
 
   describe('per-Tool Rate Limiting', () => {
-    beforeEach(async () => {
-      // Create test projects for get_project_info calls
-      await projectFactory.createProjectStructure('TEST', 'Test Project')
-      await projectFactory.createProjectStructure('MDT', 'Markdown Ticket')
-    })
-
     it('should apply rate limits independently per tool', async () => {
       // Given: Multiple tools available
       // When: Exhausting rate limit on one tool

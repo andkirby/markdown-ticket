@@ -27,10 +27,18 @@ describe('update_cr_status', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment()
     await testEnv.setup()
-    // Create project structure manually BEFORE starting MCP client
+    // Create ALL project structures BEFORE starting MCP client
+    // Server discovers projects at startup from the registry
     const projectSetup = new ProjectSetup({ testEnv })
     await projectSetup.createProjectStructure('TEST', 'Test Project')
-    // NOW start MCP client (server will discover the project from registry)
+    await projectSetup.createProjectStructure('EMPTY', 'Empty Project')
+    await projectSetup.createProjectStructure('REPO', 'Repo Project', { repository: 'https://github.com/example/test' })
+    await projectSetup.createProjectStructure('CRS', 'Project with CRs')
+    await projectSetup.createProjectStructure('NOREPO', 'No Repo Project')
+    await projectSetup.createProjectStructure('SPEC', 'Special-Project_Test')
+    await projectSetup.createProjectStructure('FMT', 'Format Test')
+    await projectSetup.createProjectStructure('PERF', 'Performance Test')
+    // NOW start MCP client (server will discover all projects from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
     await mcpClient.start()
     // NOW create ProjectFactory with the running mcpClient
@@ -89,7 +97,7 @@ The solution involves testing the status update mechanism for CRs in the system.
     }
 
     // The response contains markdown like: "✅ **Created CR TEST-001**: Title"
-    const match = response.data.match(/\*\*Created CR ([A-Z0-9-]+)\*\*:/)
+    const match = (response.data as string).match(/\*\*Created CR ([A-Z0-9-]+)\*\*:/)
     if (!match) {
       throw new Error('Could not extract CR key from response')
     }
@@ -106,7 +114,7 @@ The solution involves testing the status update mechanism for CRs in the system.
     }
 
     // The response contains "- Status: Proposed"
-    const match = response.data.match(/- Status: (.+)/)
+    const match = (response.data as string).match(/- Status: (.+)/)
     if (!match) {
       throw new Error('Could not extract CR status from response')
     }

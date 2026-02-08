@@ -26,10 +26,18 @@ describe('list_crs', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment()
     await testEnv.setup()
-    // Create project structure manually BEFORE starting MCP client
+    // Create ALL project structures BEFORE starting MCP client
+    // Server discovers projects at startup from the registry
     const projectSetup = new ProjectSetup({ testEnv })
     await projectSetup.createProjectStructure('TEST', 'Test Project')
-    // NOW start MCP client (server will discover the project from registry)
+    await projectSetup.createProjectStructure('EMPTY', 'Empty Project')
+    await projectSetup.createProjectStructure('REPO', 'Repo Project', { repository: 'https://github.com/example/test' })
+    await projectSetup.createProjectStructure('CRS', 'Project with CRs')
+    await projectSetup.createProjectStructure('NOREPO', 'No Repo Project')
+    await projectSetup.createProjectStructure('SPEC', 'Special-Project_Test')
+    await projectSetup.createProjectStructure('FMT', 'Format Test')
+    await projectSetup.createProjectStructure('PERF', 'Performance Test')
+    // NOW start MCP client (server will discover all projects from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
     await mcpClient.start()
     // NOW create ProjectFactory with the running mcpClient
@@ -163,8 +171,6 @@ The solution is straightforward as this is test content.
 
   describe('basic Listing', () => {
     it('GIVEN empty project WHEN listing CRs THEN return empty list', async () => {
-      await projectFactory.createProjectStructure('EMPTY', 'Empty Project')
-
       const response = await callListCRs('EMPTY')
 
       expect(response.success).toBe(true)
@@ -208,7 +214,7 @@ The solution is straightforward as this is test content.
       expect(typeof response.data).toBe('string')
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data)
+      const crs = parseMarkdownResponse(response.data as string)
       expect(crs.length).toBeGreaterThanOrEqual(3)
 
       // Verify CR structure
@@ -265,7 +271,7 @@ The solution is straightforward as this is test content.
       expect(typeof response.data).toBe('string')
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data)
+      const crs = parseMarkdownResponse(response.data as string)
 
       // All 4 CRs should be returned since they all have 'Proposed' status
       expect(crs.length).toBe(4)
@@ -312,7 +318,7 @@ The solution is straightforward as this is test content.
       expect(typeof response.data).toBe('string')
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data)
+      const crs = parseMarkdownResponse(response.data as string)
 
       // All 4 CRs should be returned since they all have 'Proposed' status
       expect(crs.length).toBe(4)
@@ -363,7 +369,7 @@ The solution is straightforward as this is test content.
       expect(typeof response.data).toBe('string')
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data)
+      const crs = parseMarkdownResponse(response.data as string)
       // Array handled by parseMarkdownResponse
 
       crs.forEach((cr: CRListItem) => {
@@ -416,7 +422,7 @@ The solution is straightforward as this is test content.
       expect(typeof response.data).toBe('string')
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data)
+      const crs = parseMarkdownResponse(response.data as string)
       // Array handled by parseMarkdownResponse
 
       crs.forEach((cr: CRListItem) => {
@@ -469,7 +475,7 @@ The solution is straightforward as this is test content.
       expect(typeof response.data).toBe('string')
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data)
+      const crs = parseMarkdownResponse(response.data as string)
       // Array handled by parseMarkdownResponse
 
       crs.forEach((cr: CRListItem) => {
@@ -528,7 +534,7 @@ The solution is straightforward as this is test content.
       expect(typeof response.data).toBe('string')
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data)
+      const crs = parseMarkdownResponse(response.data as string)
       // Array handled by parseMarkdownResponse
 
       crs.forEach((cr: CRListItem) => {
@@ -566,7 +572,6 @@ The solution is straightforward as this is test content.
 
   describe('response Format', () => {
     it('GIVEN successful listing WHEN response THEN match expected format', async () => {
-      await projectFactory.createProjectStructure('FMT', 'Format Test')
       await projectFactory.createTestCR('FMT', {
         title: 'Format Test CR',
         type: 'Documentation',
@@ -582,7 +587,7 @@ The solution is straightforward as this is test content.
       expect(typeof response.data).toBe('string')
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data)
+      const crs = parseMarkdownResponse(response.data as string)
 
       if (crs.length > 0) {
         const cr = crs[0]

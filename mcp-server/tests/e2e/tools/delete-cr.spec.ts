@@ -27,10 +27,18 @@ describe('delete_cr', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment()
     await testEnv.setup()
-    // Create project structure manually BEFORE starting MCP client
+    // Create ALL project structures BEFORE starting MCP client
+    // Server discovers projects at startup from the registry
     const projectSetup = new ProjectSetup({ testEnv })
     await projectSetup.createProjectStructure('TEST', 'Test Project')
-    // NOW start MCP client (server will discover the project from registry)
+    await projectSetup.createProjectStructure('EMPTY', 'Empty Project')
+    await projectSetup.createProjectStructure('REPO', 'Repo Project', { repository: 'https://github.com/example/test' })
+    await projectSetup.createProjectStructure('CRS', 'Project with CRs')
+    await projectSetup.createProjectStructure('NOREPO', 'No Repo Project')
+    await projectSetup.createProjectStructure('SPEC', 'Special-Project_Test')
+    await projectSetup.createProjectStructure('FMT', 'Format Test')
+    await projectSetup.createProjectStructure('PERF', 'Performance Test')
+    // NOW start MCP client (server will discover all projects from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
     await mcpClient.start()
     // NOW create ProjectFactory with the running mcpClient
@@ -58,7 +66,7 @@ describe('delete_cr', () => {
     }
 
     // Response should contain markdown with CR key
-    const markdown = response.data
+    const markdown = response.data as string
     // Format: "✅ **Created CR TEST-001**: Title"
     const match = markdown.match(/\*\*Created CR (\w+-\d+)\*\*/)
     if (!match) {
@@ -81,7 +89,7 @@ describe('delete_cr', () => {
     }
 
     // Response should contain markdown with deletion confirmation
-    const markdown = response.data
+    const markdown = response.data as string
     const deletedMatch = markdown.match(/🗑️ \*\*Deleted CR (\w+-\d+)\*\*/)
 
     return {
@@ -298,7 +306,7 @@ Critical fix needed for other features to work.`,
       const bugFixKey = parseCRKeyFromCreateResponse(bugFix)
 
       // Create another CR that depends on the bug fix
-      const _dependentCR = await projectFactory.createTestCR('TEST', {
+      await projectFactory.createTestCR('TEST', {
         title: 'Dependent CR',
         type: 'Feature Enhancement',
         dependsOn: bugFixKey,
