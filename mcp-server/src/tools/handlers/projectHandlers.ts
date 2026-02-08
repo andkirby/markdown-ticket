@@ -64,9 +64,10 @@ export class ProjectHandlers {
       return this.validateProject(detectedProject)
     }
 
-    // No project context available
-    throw ToolError.toolExecution(
-      'No project context available. Either start MCP server from a project directory with `.mdt-config.toml`, or provide the `project` parameter explicitly.',
+    // No project context available - this is a protocol error (missing required parameter)
+    throw ToolError.protocol(
+      'Project key is required. Either start MCP server from a project directory with `.mdt-config.toml`, or provide the `project` parameter explicitly.',
+      JsonRpcErrorCode.InvalidParams,
     )
   }
 
