@@ -335,3 +335,28 @@ class MockEventStream extends Readable {
 3. Check if test data creates the expected project structure
 4. Verify the behavioral preservation matcher expectations
 5. May need to update test data OR fix the matcher to handle undefined
+
+### Frontend TypeScript Build Fixes (COMPLETED ✅)
+
+**Status:** Resolved 25 TypeScript build errors across frontend codebase (2026-02-09)
+
+**Files Modified:**
+- `src/components/` - CounterAPI.tsx (deleted), Board.tsx, HamburgerMenu.tsx, MarkdownContent.tsx, ProjectView.tsx, SecondaryHeader.tsx, TicketViewer.tsx
+- `src/hooks/` - useCounterAPI.ts (deleted), useConfig.ts, useProjectManager.ts, useSSEEvents.ts
+- `src/services/` - dataLayer.ts, eventBus.ts
+- `src/utils/` - linkProcessor.ts, sorting.ts
+- `vite.config.ts` - Increased chunkSizeWarningLimit to 1500KB
+
+**Key Changes:**
+1. **CounterAPI removal** - Deleted unused component and hook (875 lines removed)
+2. **EventBus typing** - Added typed payload mapping (EventPayloadMap) for type-safe events
+3. **Type fixes:**
+   - TicketViewer: Extract optional ticket to local variable for type narrowing
+   - useSSEEvents: Fixed debounce type preservation, added type guard for partial tickets
+   - MarkdownContent: Type assertion for array.map() callback
+   - useProjectManager: Optional chaining for ref invocation
+   - dataLayer: Added null check before assigning values
+   - linkProcessor: Fixed ProjectConfig property path
+   - sorting: Cast via `unknown` for type conversion
+
+**Commit:** `92ff1f5 refactor(MDT-125): Fix TypeScript build errors and add typed EventBus`
