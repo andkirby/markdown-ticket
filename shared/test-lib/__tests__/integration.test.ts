@@ -166,7 +166,7 @@ describe('shared/test-lib - Integration', () => {
     // Should find our TEST project
     const testProject = projects.find(p => p.id === 'TEST' || p.key === 'TEST')
     expect(testProject).toBeDefined()
-    expect(testProject.project?.name || testProject.name).toBe('Integration Test Project')
+    expect(testProject!.project?.name || testProject!.name).toBe('Integration Test Project')
   })
 
   it('backend server discovers test-lib created CRs', async () => {
@@ -175,7 +175,7 @@ describe('shared/test-lib - Integration', () => {
 
     expect(response.ok).toBe(true)
 
-    const crs = await response.json()
+    const crs = await response.json() as Array<{ code: string, title: string }>
 
     // Should find our TEST-001 CR
     expect(crs).toHaveLength(1)
@@ -187,7 +187,7 @@ describe('shared/test-lib - Integration', () => {
     const port = testEnv.getPortConfig().backend
     const response = await httpGet(`http://localhost:${port}/api/projects/TEST/crs`)
 
-    const crs = await response.json()
+    const crs = await response.json() as Array<{ filePath: string }>
 
     // Filename should be: specs/tickets/TEST-001-test-server-discovery.md
     // (title slug: "Test Server Discovery" → "test-server-discovery")

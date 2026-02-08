@@ -145,7 +145,7 @@ function readGlobalRegistryEntry(projectPath: string): RegistryProjectPathEntry 
       }
     }
 
-    if (result.project.path === projectPath) {
+    if (result.project?.path === projectPath) {
       return result
     }
   }
@@ -218,7 +218,7 @@ describe('configuration validation', () => {
       expect(configHasRequiredFields(localConfig)).toBe(true)
 
       // Verify specific field types and values
-      const { project } = localConfig
+      const { project } = localConfig!
       expect(typeof project.name).toBe('string')
       expect(typeof project.code).toBe('string')
       expect(typeof project.id).toBe('string')
@@ -227,7 +227,7 @@ describe('configuration validation', () => {
       expect(project.code).toBe(testProject.code)
 
       // Verify document configuration (top-level section)
-      expect(localConfig.document).toBeDefined()
+      expect(localConfig!.document).toBeDefined()
     })
   })
 
@@ -266,7 +266,7 @@ describe('configuration validation', () => {
         // Verify the code was stored correctly
         const config = readLocalConfig(testPath)
         expect(config).not.toBeNull()
-        expect(config.project.code).toBe(code)
+        expect(config!.project!.code).toBe(code)
       }
     })
   })
@@ -304,10 +304,10 @@ describe('configuration validation', () => {
       const config = readLocalConfig(testProject.path)
       const globalEntry = readGlobalRegistryEntry(testProject.path)
 
-      expect(config.project.name).toBe(testProject.name)
-      expect(config.project.code).toBe(testProject.code)
+      expect(config!.project!.name).toBe(testProject.name)
+      expect(config!.project!.code).toBe(testProject.code)
       expect(globalEntry).not.toBeNull()
-      expect(globalEntry.project.path).toBe(testProject.path)
+      expect(globalEntry!.project!.path).toBe(testProject.path)
     })
   })
 })

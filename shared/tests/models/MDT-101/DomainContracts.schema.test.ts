@@ -47,14 +47,14 @@ const TicketSchema = {
     }
     // Validate status against CRStatus enum
     const validStatuses: CRStatus[] = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected', 'On Hold', 'Partially Implemented']
-    if (typeof data.status !== 'string' || !validStatuses.includes(data.status)) {
+    if (typeof data.status !== 'string' || !validStatuses.includes(data.status as CRStatus)) {
       return { success: false, error: { issues: [{ path: ['status'] }] } }
     }
     // Normalize array fields from strings
     const normalized = {
       ...data,
-      relatedTickets: Array.isArray(data.relatedTickets) ? data.relatedTickets : (data.relatedTickets || '').split(',').filter(Boolean),
-      dependsOn: Array.isArray(data.dependsOn) ? data.dependsOn : (data.dependsOn || '').split(',').filter(Boolean),
+      relatedTickets: Array.isArray(data.relatedTickets) ? data.relatedTickets : String(data.relatedTickets || '').split(',').filter(Boolean),
+      dependsOn: Array.isArray(data.dependsOn) ? data.dependsOn : String(data.dependsOn || '').split(',').filter(Boolean),
       blocks: Array.isArray(data.blocks) ? data.blocks : (data.blocks ? String(data.blocks).split(',').filter(Boolean) : []),
     }
     return { success: true, data: normalized }

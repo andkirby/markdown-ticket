@@ -1,5 +1,9 @@
 import type { Project } from '../../../models/Project'
 import { ProjectDiscoveryService } from '../ProjectDiscoveryService'
+import { directoryExists } from '../../../utils/file-utils'
+
+// Mock the filesystem utilities to avoid real filesystem access
+jest.mock('../../../utils/file-utils')
 
 describe('projectDiscoveryService', () => {
   let service: ProjectDiscoveryService
@@ -15,6 +19,9 @@ describe('projectDiscoveryService', () => {
   }
 
   beforeEach(() => {
+    // Mock directoryExists to return true for test paths
+    ;(directoryExists as jest.Mock).mockReturnValue(true)
+
     mockRegistry = { getRegisteredProjects: jest.fn(), registerProject: jest.fn() }
     mockLoader = { getProjectConfig: jest.fn() }
     mockScanner = { autoDiscoverProjects: jest.fn() }
