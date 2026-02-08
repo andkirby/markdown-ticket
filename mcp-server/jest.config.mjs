@@ -44,7 +44,8 @@ export default {
     '^@mdt/shared/(.*)$': '<rootDir>/../shared/dist/$1',
     '^shared/(.*)$': '<rootDir>/../shared/dist/$1',
   },
-  setupFilesAfterEnv: [],
+  setupFiles: ['<rootDir>/tests/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   reporters: ['default'],
   testTimeout: 30000,
 }
