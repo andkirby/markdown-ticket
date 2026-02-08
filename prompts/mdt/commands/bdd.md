@@ -383,19 +383,22 @@ Then {outcome}
 
 ## Requirement Coverage
 
-| Req ID | Description | Scenarios | Covered? |
-|--------|-------------|-----------|----------|
-| BR-1 | {brief} | 2 | ✅ |
-| BR-2 | {brief} | 1 | ✅ |
-| BR-3 | {brief} | 0 | ❌ Gap |
+Track at sub-requirement level (BR-X.Y). A BR group is only ✅ when every sub-requirement has a scenario or is explicitly routed elsewhere.
+
+| Req ID | Scenarios | Covered? |
+|--------|-----------|----------|
+| BR-1.1 | scenario_a, scenario_b | ✅ |
+| BR-1.2 | scenario_c | ✅ |
+| BR-2.1 | scenario_d | ✅ |
+| BR-2.2 | — | ❌ Gap |
 
 {If gaps exist}
 ### Coverage Gaps
 
 | Requirement | Reason | Action |
 |-------------|--------|--------|
-| BR-3 | Not user-visible | Cover in `/mdt:tests` |
-| BR-4 | Need clarification | Flag for `/mdt:clarification` |
+| BR-2.2 | Not user-visible | Cover in `/mdt:tests` |
+| BR-3.1 | Need clarification | Flag for `/mdt:clarification` |
 
 ## Verification
 
@@ -642,6 +645,9 @@ Before completing `/mdt:bdd`:
 - [ ] Scenarios written from user perspective (no tech details)
 - [ ] Gherkin format correct (Given/When/Then)
 - [ ] Requirement traceability complete
+- [ ] Coverage verified at sub-requirement level (BR-X.Y) — no BR group marked ✅ with uncovered sub-requirements
+- [ ] Every scenario in journey tables has a Gherkin spec in Scenario Specifications
+- [ ] File paths in Scenario Specifications match Generated Test Files table
 - [ ] Test files generated
 - [ ] Expected state verified (RED for normal, GREEN for prep)
 - [ ] bdd.md saved to correct location
