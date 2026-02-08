@@ -19,7 +19,7 @@ const mutableGlobal = globalThis as typeof globalThis & { process?: typeof proce
 describe('mDT-110: Browser-Safe ProjectValidator', () => {
   beforeEach(() => {
     // Simulate browser environment
-    mutableGlobal.process = mockBrowserProcess
+    mutableGlobal.process = mockBrowserProcess as unknown as typeof process
   })
 
   afterEach(() => {
