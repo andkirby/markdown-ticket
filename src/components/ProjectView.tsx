@@ -8,7 +8,6 @@ import { getProjectCode } from '../utils/projectUtils'
 import { sortTickets } from '../utils/sorting'
 import { AddProjectModal } from './AddProjectModal'
 import Board from './Board'
-import { CounterAPI } from './CounterAPI'
 import { DocumentsLayout } from './DocumentsView'
 import { SecondaryHeader } from './SecondaryHeader'
 import { TicketCode } from './TicketCode'
@@ -43,7 +42,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
   const [showEditProjectModal, setShowEditProjectModal] = useState(false)
   const [loading, _setLoading] = useState(false)
-  const [showCounterAPIModal, setShowCounterAPIModal] = useState(false)
 
   // Use ref to prevent stale closure bug when switching projects
   const selectedProjectRef = useRef<Project | null>(selectedProject)
@@ -128,7 +126,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
               onSortPreferencesChange={(viewMode === 'board' || viewMode === 'list') ? handleSortPreferencesChange : undefined}
               onAddProject={() => setShowAddProjectModal(true)}
               onEditProject={() => setShowEditProjectModal(true)}
-              onCounterAPI={() => setShowCounterAPIModal(true)}
               selectedProject={selectedProject}
             />
           </div>
@@ -203,26 +200,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 )
               : null}
       </div>
-
-      {/* Counter API Modal */}
-      {showCounterAPIModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background border border-border rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto m-4">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-semibold">Counter API</h2>
-              <button
-                onClick={() => setShowCounterAPIModal(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-4">
-              <CounterAPI />
-            </div>
-          </div>
-        </div>
-      )}
 
       <AddProjectModal
         isOpen={showAddProjectModal}
