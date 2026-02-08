@@ -66,6 +66,13 @@ export class ProjectScanner {
           // Determine project ID: use config.id if available, otherwise use directory name
           const projectId = config.project.id || directoryName
 
+          // Validate that project ID matches directory name (if ID is explicitly set)
+          // This prevents worktrees and misconfigured projects from being added
+          if (config.project.id && config.project.id !== directoryName) {
+            logQuiet(this.quiet, `Skipping project at ${directoryName}: project.id "${config.project.id}" does not match directory name`)
+            return // Skip this project - ID must match directory
+          }
+
           // Track projects by code to handle duplicates without proper IDs
           if (!config.project.id && config.project.code) {
             // Check if we already found a project with this code but no ID

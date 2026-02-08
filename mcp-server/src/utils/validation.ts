@@ -34,7 +34,7 @@ export function validateProjectKey(key: string): ValidationResult {
 /**
  * Validate required parameter exists and is non-empty
  */
-export function validateRequired(value: unknown, name: string): ValidationResult {
+export function validateRequired(value: unknown, name: string): ValidationResult<string> {
   if (value === null || value === undefined) {
     return { valid: false, message: `${name} is required` }
   }
@@ -43,7 +43,7 @@ export function validateRequired(value: unknown, name: string): ValidationResult
     return { valid: false, message: `${name} cannot be empty` }
   }
 
-  return { valid: true, value }
+  return { valid: true, value: value as string }
 }
 
 /**

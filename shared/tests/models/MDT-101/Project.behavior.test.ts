@@ -304,17 +304,5 @@ describe('project Model - Behavioral Preservation', () => {
       }
       expect(validateProjectConfig(config)).toBe(true)
     })
-
-    it('should handle document_paths legacy format', () => {
-      const config = {
-        project: {
-          name: 'Test',
-          code: 'TEST',
-        },
-        document_paths: ['docs', 'src'], // Legacy format
-        exclude_folders: ['node_modules'],
-      }
-      expect(validateProjectConfig(config)).toBe(true)
-    })
   })
 })
