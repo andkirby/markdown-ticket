@@ -198,7 +198,7 @@ class DataLayer {
         if (value instanceof Date) {
           updateData[key] = value.toISOString()
         }
-        else if (value !== undefined) {
+        else if (value !== undefined && value !== null) {
           updateData[key] = value
         }
       }

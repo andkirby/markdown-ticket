@@ -245,7 +245,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
   // Call the ref function in useEffect (refs are stable, no dependency issues)
   useEffect(() => {
-    handleProjectChangeRef.current(selectedProject, projects)
+    handleProjectChangeRef.current?.(selectedProject, projects)
   }, [selectedProject, projects])
 
   const setSelectedProject = useCallback((project: Project | null) => {

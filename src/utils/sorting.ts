@@ -29,8 +29,8 @@ export function sortTickets(
         break
       default:
         // For custom attributes, try to access them directly
-        aValue = (a as Record<string, unknown>)[attribute]
-        bValue = (b as Record<string, unknown>)[attribute]
+        aValue = (a as unknown as Record<string, unknown>)[attribute]
+        bValue = (b as unknown as Record<string, unknown>)[attribute]
     }
 
     // Handle null/undefined values

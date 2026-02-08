@@ -498,7 +498,6 @@ const BoardContent: React.FC<BoardProps> = ({
             <HamburgerMenu
               onAddProject={() => console.warn('Add Project clicked from Board')}
               onEditProject={() => console.warn('Edit Project clicked from Board')}
-              onCounterAPI={() => console.warn('Counter API clicked from Board')}
               hasActiveProject={true}
             />
           </div>

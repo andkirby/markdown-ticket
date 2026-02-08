@@ -12,7 +12,6 @@ interface SecondaryHeaderProps {
   onSortPreferencesChange?: (preferences: SortPreferences) => void
   onAddProject?: () => void
   onEditProject?: () => void
-  onCounterAPI?: () => void
   selectedProject?: Project | null
 }
 
@@ -22,7 +21,6 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   onSortPreferencesChange,
   onAddProject,
   onEditProject,
-  onCounterAPI,
   selectedProject,
 }) => {
   return (
@@ -40,7 +38,6 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
         <HamburgerMenu
           onAddProject={onAddProject}
           onEditProject={onEditProject}
-          onCounterAPI={onCounterAPI}
           hasActiveProject={!!selectedProject}
         />
       )}

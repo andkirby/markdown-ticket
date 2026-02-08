@@ -3,13 +3,13 @@ import type { Ticket } from '../types'
 import { useCallback, useRef } from 'react'
 import { useEventBus } from '../services/eventBus'
 
-// Simple debounce utility
-function debounce<T extends (...args: unknown[]) => unknown>(func: T, wait: number): T {
+// Simple debounce utility that preserves function parameter types
+function debounce<T extends (...args: never[]) => unknown>(func: T, wait: number): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout
-  return ((...args: unknown[]) => {
+  return (...args: Parameters<T>) => {
     clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
-  }) as T
+  }
 }
 
 export function useSSEEvents(
@@ -60,10 +60,10 @@ export function useSSEEvents(
         return
       }
 
-      // If we have ticket data, update directly without full refresh
-      if (event.payload.ticket) {
+      // If we have complete ticket data, update directly without full refresh
+      if (event.payload.ticket && typeof event.payload.ticket === 'object' && 'code' in event.payload.ticket && event.payload.ticket.code) {
         console.warn('Updating ticket directly from SSE data:', ticketKey)
-        updateTicketInState(event.payload.ticket)
+        updateTicketInState(event.payload.ticket as Ticket)
       }
       else {
         console.warn('Ticket updated in current project, refreshing...')
