@@ -5,6 +5,7 @@
 
 import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
+import { ProjectSetup } from '../helpers/core/project-setup'
 import { TestEnvironment } from '../helpers/test-environment'
 
 describe('get_project_info', () => {
@@ -15,8 +16,33 @@ describe('get_project_info', () => {
   beforeEach(async () => {
     testEnv = new TestEnvironment()
     await testEnv.setup()
+    // Create ALL project structures BEFORE starting MCP client
+    // Server discovers projects at startup from the registry
+    const projectSetup = new ProjectSetup({ testEnv })
+    await projectSetup.createProjectStructure('TEST', 'Test Project')
+    await projectSetup.createProjectStructure('EMPTY', 'Empty Project')
+    await projectSetup.createProjectStructure('REPO', 'Repo Project', { repository: 'https://github.com/example/test' })
+    await projectSetup.createProjectStructure('CRS', 'Project with CRs')
+    await projectSetup.createProjectStructure('NOREPO', 'No Repo Project')
+    await projectSetup.createProjectStructure('SPEC', 'Special-Project_Test')
+    await projectSetup.createProjectStructure('FMT', 'Format Test')
+    await projectSetup.createProjectStructure('PERF', 'Performance Test')
+
+    // Debug: Check if registry files exist
+    const { execSync } = require('child_process')
+    try {
+      const registryFiles = execSync(`ls -la ${testEnv.getConfigDir()}/projects/`, { encoding: 'utf8' })
+      console.log('Registry files:', registryFiles)
+    } catch (e) {
+      console.log('No registry files found')
+    }
+
+    // NOW start MCP client (server will discover all projects from registry)
     mcpClient = new MCPClient(testEnv, { transport: 'stdio' })
     await mcpClient.start()
+    // Add small delay to ensure server has fully initialized project registry
+    await new Promise(resolve => setTimeout(resolve, 500))
+    // NOW create ProjectFactory with the running mcpClient
     projectFactory = new ProjectFactory(testEnv, mcpClient)
   })
 
@@ -54,11 +80,10 @@ describe('get_project_info', () => {
   }
 
   it('GIVEN valid project WHEN getting info THEN return full details', async () => {
-    await projectFactory.createProjectStructure('TEST', 'Test Project')
     const response = await mcpClient.callTool('get_project_info', { key: 'TEST' })
     expect(response.success).toBe(true)
     expect(typeof response.data).toBe('string')
-    const projectInfo = parseProjectInfoMarkdown(response.data)
+    const projectInfo = parseProjectInfoMarkdown(response.data as string)
     expect(projectInfo.key || projectInfo.code).toBe('TEST')
     expect(projectInfo.name).toBe('Test Project')
     expect(projectInfo.path).toContain('TEST')
@@ -74,17 +99,15 @@ describe('get_project_info', () => {
   })
 
   it('GIVEN project with repo WHEN getting info THEN include repo', async () => {
-    await projectFactory.createProjectStructure('REPO', 'Repo Project', { repository: 'https://github.com/example/test' })
     const response = await mcpClient.callTool('get_project_info', { key: 'REPO' })
-    const projectInfo = parseProjectInfoMarkdown(response.data)
+    const projectInfo = parseProjectInfoMarkdown(response.data as string)
     expect(projectInfo.repository).toBe('https://github.com/example/test')
   })
 
   it('GIVEN project with CRs WHEN getting info THEN show count', async () => {
-    await projectFactory.createProjectStructure('CRS', 'Project with CRs')
     await projectFactory.createTestCR('CRS', { title: 'Test CR 1', type: 'Feature Enhancement', content: '## 1. Description\nTest\n\n## 2. Rationale\nTest' })
     const response = await mcpClient.callTool('get_project_info', { key: 'CRS' })
-    const projectInfo = parseProjectInfoMarkdown(response.data)
+    const projectInfo = parseProjectInfoMarkdown(response.data as string)
     // Verify the CR exists and count is correct
     expect(projectInfo.key || projectInfo.code).toBe('CRS')
     // CR count might be 0 in test environment, just verify the parser works
@@ -92,16 +115,14 @@ describe('get_project_info', () => {
   })
 
   it('GIVEN project without repo WHEN getting info THEN omit repo', async () => {
-    await projectFactory.createProjectStructure('NOREPO', 'No Repo Project')
     const response = await mcpClient.callTool('get_project_info', { key: 'NOREPO' })
-    const projectInfo = parseProjectInfoMarkdown(response.data)
+    const projectInfo = parseProjectInfoMarkdown(response.data as string)
     expect(projectInfo.repository).toBeUndefined()
   })
 
   it('GIVEN special characters WHEN getting info THEN handle correctly', async () => {
-    await projectFactory.createProjectStructure('SPEC', 'Special-Project_Test')
     const response = await mcpClient.callTool('get_project_info', { key: 'SPEC' })
-    const projectInfo = parseProjectInfoMarkdown(response.data)
+    const projectInfo = parseProjectInfoMarkdown(response.data as string)
     expect(projectInfo.name).toBe('Special-Project_Test')
   })
 
@@ -120,14 +141,12 @@ describe('get_project_info', () => {
   })
 
   it('GIVEN successful retrieval WHEN response THEN be markdown', async () => {
-    await projectFactory.createProjectStructure('FMT', 'Format Test')
     const response = await mcpClient.callTool('get_project_info', { key: 'FMT' })
     expect(response.data).toContain('📋 Project:')
     expect(response.data).toContain('**FMT**')
   })
 
   it('GIVEN multiple requests WHEN getting info THEN return consistent', async () => {
-    await projectFactory.createProjectStructure('PERF', 'Performance Test')
     const response1 = await mcpClient.callTool('get_project_info', { key: 'PERF' })
     const response2 = await mcpClient.callTool('get_project_info', { key: 'PERF' })
     expect(response1.data).toBe(response2.data)
