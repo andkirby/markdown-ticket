@@ -1,7 +1,6 @@
-import { Edit, Eye, EyeOff, Hash, Menu, Plus, Trash2 } from 'lucide-react'
+import { Edit, Eye, EyeOff, Menu, Plus, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { useConfig } from '../hooks/useConfig'
 import { nuclearCacheClear } from '../utils/cache'
 import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
 import { Button } from './UI/index'
@@ -9,20 +8,17 @@ import { Button } from './UI/index'
 interface HamburgerMenuProps {
   onAddProject: () => void
   onEditProject?: () => void
-  onCounterAPI?: () => void
   hasActiveProject?: boolean
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onAddProject,
   onEditProject,
-  onCounterAPI,
   hasActiveProject = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const [eventHistoryForceHidden, setEventHistoryForceHidden] = useState(() => getEventHistoryForceHidden())
-  const { isCounterAPIEnabled } = useConfig()
 
   // Track EventHistory state changes
   useEffect(() => {
@@ -51,11 +47,6 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   const handleEditProject = () => {
     setIsOpen(false)
     onEditProject?.()
-  }
-
-  const handleCounterAPI = () => {
-    setIsOpen(false)
-    onCounterAPI?.()
   }
 
   const handleClearCache = () => {
@@ -97,15 +88,6 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Project
-              </button>
-            )}
-            {isCounterAPIEnabled() && onCounterAPI && (
-              <button
-                onClick={handleCounterAPI}
-                className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-              >
-                <Hash className="h-4 w-4 mr-2" />
-                Counter API
               </button>
             )}
             <button

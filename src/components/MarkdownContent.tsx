@@ -172,7 +172,7 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
           if (node.type === 'text')
             return node.data || ''
           if (node.children && Array.isArray(node.children)) {
-            return node.children.map(extractText).join('')
+            return node.children.map((child: unknown) => extractText(child as { type?: string, data?: string, children?: unknown[] } | string)).join('')
           }
           return ''
         }
