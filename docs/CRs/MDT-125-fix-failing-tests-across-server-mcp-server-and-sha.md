@@ -1,9 +1,10 @@
 ---
 code: MDT-125
-status: Proposed
+status: Partially Implemented
 dateCreated: 2026-02-08T21:38:44.771Z
 type: Bug Fix
 priority: Medium
+implementationDate: 2026-02-09
 ---
 
 # Fix failing tests across server, MCP server, and shared code
@@ -65,11 +66,11 @@ priority: Medium
 ## 4. Acceptance Criteria
 
 ### Functional (Outcome-focused)
-- [ ] npm run server:test passes with 0 failures
-- [ ] npm run mcp:test passes with 0 failures
-- [ ] npm run shared:test passes with 0 failures
-- [ ] All TypeScript compilation errors resolved
-- [ ] All test timeouts eliminated
+- [x] npm run server:test passes with 0 failures (203/203 passing ✅)
+- [ ] npm run mcp:test passes with 0 failures (188/381 passing - requires MDT-126)
+- [x] npm run shared:test passes with 0 failures (227/227 passing ✅)
+- [x] All TypeScript compilation errors resolved ✅
+- [x] All test timeouts eliminated (original timeout issue fixed) ✅
 
 ### Non-Functional
 - [ ] Test execution time < 5 minutes total
@@ -360,3 +361,44 @@ class MockEventStream extends Readable {
    - sorting: Cast via `unknown` for type conversion
 
 **Commit:** `92ff1f5 refactor(MDT-125): Fix TypeScript build errors and add typed EventBus`
+
+### Implementation Summary (2026-02-09)
+
+**Status: PARTIALLY IMPLEMENTED** - Server and Shared tests complete; MCP tests require architectural follow-up
+
+#### Completed ✅
+
+**Server Tests (203/203 PASSING):**
+- Fixed 53 silent runtime failures by creating `server/tests/mocks/shared/utils/server-logger.ts`
+- Fixed 4 TypeScript compilation errors (api.test.ts, projects.test.ts, sse.test.ts)
+- Added CRStatus import in TicketService.ts
+
+**Shared Tests (227/227 PASSING):**
+- Fixed 2 git worktree matcher failures by mocking `directoryExists()` in ProjectDiscoveryService tests
+
+**MCP Server Infrastructure:**
+- Fixed validation error codes to use `-32602` (InvalidParams) instead of `-32000` (InternalError)
+- Added `responseData` field to TicketResult for actual MCP response verification
+- Fixed 17+ TypeScript type assertions across test files
+- Fixed test-data-factory to return real MCP responses
+
+#### Remaining Issues ⚠️
+
+**MCP Tests (188/381 passing, 49%):**
+- Project discovery not working in test environment
+- CR creation failing due to missing projects
+- Test data generation missing required sections (e.g., "## 2. Rationale")
+- Requires architectural changes beyond original MDT-125 scope
+
+**Root Cause:** MCP server project discovery at startup doesn't integrate with test environment's temporary directories.
+
+#### Commits
+
+1. `df3d7a7` - fix(MDT-125): Fix TypeScript compilation errors in shared package tests
+2. `86c53dc` - fix(MDT-125): Fix failing tests across server and MCP server
+
+#### Next Steps
+
+- Create MDT-126 for MCP test infrastructure refactoring
+- Consider adding MCP project rediscovery endpoint for testing
+- Evaluate test environment pattern for isolated MCP server testing
