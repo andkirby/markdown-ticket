@@ -2,49 +2,6 @@
 
 Markdown Ticket (MDT) workflow commands for Claude Code.
 
-## Installation
-
-### Quick Install (via install script)
-
-```bash
-# Local MCP server (requires built mcp-server)
-./install-plugin.sh --local
-
-# Docker MCP server
-./install-plugin.sh --docker
-
-# With predefined scope (skips interactive prompt)
-./install-plugin.sh --local --scope user   # Global scope
-./install-plugin.sh --docker --scope local # Project scope
-
-# Show help
-./install-plugin.sh --help
-```
-
-**Options:**
-
-| Option          | Description                                    |
-|-----------------|------------------------------------------------|
-| `--local`       | Use local Node.js MCP server                   |
-| `--docker`      | Use Docker MCP server via HTTP                 |
-| `--scope user`  | Install in user scope (available to all projects) |
-| `--scope local` | Install in local scope (available only to this project) |
-| `--help`, `-h`  | Show help message                              |
-
-The script will prompt for scope interactively unless `--scope` is provided.
-
-### Manual Install
-
-```bash
-claude --plugin-dir /path/to/prompts/mdt
-```
-
-Or install globally:
-
-```bash
-claude plugin install /path/to/prompts/mdt
-```
-
 ## Commands
 
 All commands are invoked with the `/mdt:` prefix:
@@ -73,7 +30,7 @@ Internal agents used by workflows (not user-facing):
 | Agent        | Purpose                                  |
 |--------------|------------------------------------------|
 | `mdt:verify` | Run tests, parse results, check scope boundaries |
-| `mdt:impl`   | Write code to make tests GREEN           |
+| `mdt:code`   | Write code to make tests GREEN           |
 | `mdt:fix`    | Diagnose and fix implementation failures |
 
 ## Workflow Example
@@ -137,4 +94,4 @@ Auto-injected variables:
 ## See Also
 
 - [CLAUDE.md](../CLAUDE.md) - Prompt development guidance
-- [README.md](../README.md) - Complete workflow documentation
+- [README.md](../README.md) - Complete framework documentation and installation

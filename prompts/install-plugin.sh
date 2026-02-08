@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # MDT Plugin Installer
 # ====================
 # Installs the MDT (Markdown Ticket) workflow plugin for Claude Code.
 #
-# Usage: ./install-plugin.sh --local|--docker [--scope {user|local}] [--help]
+# Usage: ./install-plugin.sh --local|--docker|--update|-u [-y] [--scope {user|local}] [--help]
 #
 # Flow:
 # 1. Generate .mcp.json config for local Node.js or Docker MCP server
@@ -13,7 +13,7 @@ set -euo pipefail
 # 3. Show installation summary table
 # 4. Confirm if plugin already enabled
 # 5. Update/install marketplace (source of plugins)
-# 6. Prompt for installation scope (user/local) unless --scope provided
+# 6. Prompt for installation scope (user/local) unless --scope provided or --update mode
 # 7. Handle scope change if needed
 # 8. Install/update plugin in selected scope
 # 9. Enable plugin (if not already enabled)
@@ -173,11 +173,14 @@ get_marketplace_status() {
 show_help() {
   print_highlight "MDT Plugin Installer v${PLUGIN_VERSION}"
   echo ""
-  echo "Usage: $0 --local|--docker [--scope {user|local}]"
+  echo "Usage: $0 --local|--docker|--update|-u [-y] [--scope {user|local}]"
   echo ""
   echo "Options:"
   echo "  --local       Use local Node.js MCP server at: \$PROJECT_ROOT/mcp-server/dist/index.js"
   echo "  --docker      Use Docker MCP server via HTTP at: $MCP_SERVER_DOCKER_URL"
+  echo "  --update, -u  Update mode: detect current installation and update it"
+  echo "  -y            Auto-confirm all prompts (use with --update for unattended updates)"
+  echo "                Short flags can be combined: -uy is same as -u -y"
   echo "  --scope user  Install in user scope (available to all projects)"
   echo "  --scope local Install in local scope (available only to this project)"
   echo "  --help, -h    Show this help message"
@@ -188,11 +191,14 @@ show_help() {
 show_error() {
   print_error "Error: $1"
   echo ""
-  echo "Usage: $0 --local|--docker [--scope {user|local}]"
+  echo "Usage: $0 --local|--docker|--update|-u [-y] [--scope {user|local}]"
   echo ""
   echo "Options:"
   echo "  --local       Use local Node.js MCP server at: \$PROJECT_ROOT/mcp-server/dist/index.js"
   echo "  --docker      Use Docker MCP server via HTTP at: $MCP_SERVER_DOCKER_URL"
+  echo "  --update, -u  Update mode: detect current installation and update it"
+  echo "  -y            Auto-confirm all prompts (use with --update for unattended updates)"
+  echo "                Short flags can be combined: -uy is same as -u -y"
   echo "  --scope user  Install in user scope (available to all projects)"
   echo "  --scope local Install in local scope (available only to this project)"
   echo "  --help, -h    Show this help message"
@@ -201,15 +207,42 @@ show_error() {
 
 # Parse arguments
 if [[ $# -lt 1 ]]; then
-  show_error "Missing required argument. Specify --local or --docker."
+  show_error "Missing required argument. Specify --local, --docker, or --update."
 fi
+
+# Expand combined short flags (e.g., -uy -> -u -y)
+# Done inline to avoid mapfile compatibility issues (bash 3.2 vs 4+)
+set -- $(for arg in "$@"; do
+  if [[ "$arg" =~ ^-[a-zA-Z]+$ && ! "$arg" =~ ^--[a-zA-Z] ]]; then
+    # This is a combined short flag (like -uy), not a long option (like --update)
+    # Split into individual flags
+    flags="${arg#-}"  # Remove leading dash
+    i=0
+    while [[ $i -lt ${#flags} ]]; do
+      echo "-${flags:$i:1}"
+      ((i++))
+    done
+  else
+    echo "$arg"
+  fi
+done)
 
 MODE=""
 SCOPE=""
+UPDATE_MODE=false
+AUTO_YES=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --help|-h)
       show_help
+      ;;
+    --update|-u)
+      UPDATE_MODE=true
+      shift
+      ;;
+    -y)
+      AUTO_YES=true
+      shift
       ;;
     --local)
       MODE="local"
@@ -263,13 +296,74 @@ Valid scopes are: user, local"
     *)
       show_error "Invalid option: $1
 
-Valid options are: --local, --docker, --scope"
+Valid options are: --local, --docker, --update, -y, --scope"
       ;;
   esac
 done
 
-if [[ -z "$MODE" ]]; then
-  show_error "Missing required argument. Specify --local or --docker."
+# In update mode, MODE will be detected from current installation
+if [[ "$UPDATE_MODE" = true ]]; then
+  # Check for required commands first (needed for status check)
+  for cmd in claude jq; do
+    if ! command -v "$cmd" &>/dev/null; then
+      print_error "Required command not found: $cmd"
+      echo ""
+      print_log "Please install Claude Code CLI and jq."
+      exit 1
+    fi
+  done
+
+  # Check if plugin is already installed
+  CURRENT_STATUS_CHECK=$(get_plugin_status)
+  if [[ -z "$CURRENT_STATUS_CHECK" ]]; then
+    print_error "Plugin is not installed. Use --local or --docker to install first."
+    echo ""
+    echo "Run: $0 --local"
+    exit 1
+  fi
+
+  # Detect mode from current MCP type
+  CURRENT_MCP_TYPE_CHECK=$(echo "$CURRENT_STATUS_CHECK" | jq -r '.mcpType')
+  case "$CURRENT_MCP_TYPE_CHECK" in
+    stdio)
+      MODE="local"
+      if [[ ! -f "$MCP_SERVER_LOCAL" ]]; then
+        show_error "MCP server not found at: $MCP_SERVER_LOCAL
+
+Run 'npm run build' in the mcp-server directory first."
+      fi
+      cat > "$MCP_JSON_FILE" <<EOF
+{
+  "mcpServers": {
+    "all": {
+      "command": "node",
+      "args": ["$MCP_SERVER_LOCAL"]
+    }
+  }
+}
+EOF
+      ;;
+    http)
+      MODE="docker"
+      cat > "$MCP_JSON_FILE" <<EOF
+{
+  "mcpServers": {
+    "all": {
+      "type": "http",
+      "url": "$MCP_SERVER_DOCKER_URL"
+    }
+  }
+}
+EOF
+      ;;
+    *)
+      print_error "Could not detect current MCP server type."
+      echo "Please specify --local or --docker explicitly."
+      exit 1
+      ;;
+  esac
+elif [[ -z "$MODE" ]]; then
+  show_error "Missing required argument. Specify --local, --docker, or --update."
 fi
 
 # Check for required commands
@@ -283,7 +377,11 @@ for cmd in claude jq; do
 done
 
 print_highlight "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-print_highlight "MDT Plugin Installer v${PLUGIN_VERSION}"
+if [[ "$UPDATE_MODE" = true ]]; then
+  print_highlight "MDT Plugin Updater v${PLUGIN_VERSION} (Update Mode)"
+else
+  print_highlight "MDT Plugin Installer v${PLUGIN_VERSION}"
+fi
 print_highlight "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -292,7 +390,6 @@ echo -n "Checking current installation... "
 MARKETPLACE_STATUS=$(get_marketplace_status)
 CURRENT_STATUS=$(get_plugin_status)
 echo -e "${GREEN}✓${NC}"
-echo ""
 
 # Parse marketplace path
 if [[ -n "$MARKETPLACE_STATUS" ]]; then
@@ -314,8 +411,8 @@ case "$MODE" in
 esac
 
 # Show comparison table
-print_highlight "Installation Summary"
 echo ""
+print_highlight "Installation Summary"
 
 if [[ -n "$CURRENT_STATUS" ]]; then
   CURRENT_SCOPE=$(echo "$CURRENT_STATUS" | jq -r '.scope')
@@ -349,7 +446,6 @@ if [[ -n "$CURRENT_STATUS" ]]; then
   else
     echo -e "    Status:     ${RED}Disabled${NC}"
   fi
-  echo ""
 
   # Show warnings for other differences (marketplace path)
   if [[ -n "$MARKETPLACE_PATH" && "$MARKETPLACE_PATH" != "$SCRIPT_DIR" ]]; then
@@ -357,7 +453,6 @@ if [[ -n "$CURRENT_STATUS" ]]; then
     echo -e "    ${YELLOW}Marketplace path mismatch:${NC}"
     echo -e "      Current:  ${GRAY}${MARKETPLACE_PATH}${NC}"
     echo -e "      Target:   ${GRAY}${SCRIPT_DIR}${NC}"
-    echo ""
   fi
 else
   echo -e "  ${WHITE_BOLD}New Installation:${NC}"
@@ -367,31 +462,47 @@ else
   echo -e "    Plugin:     ${CYAN}${plugin_name}${NC}${GRAY}@${NC}${CYAN}${plugin_market}${NC}"
   echo -e "    Version:    ${WHITE_BOLD}${PLUGIN_VERSION}${NC}"
   echo -e "    MCP:        ${CYAN}${TARGET_MCP_TYPE}${NC} ${GRAY}${MODE_LABEL}${NC}"
-  echo ""
 
   if [[ -n "$MARKETPLACE_PATH" && "$MARKETPLACE_PATH" != "$SCRIPT_DIR" ]]; then
     echo -e "  ${YELLOW}⚠ WARNING: Marketplace path mismatch:${NC}"
     echo -e "    Current:  ${GRAY}${MARKETPLACE_PATH}${NC}"
     echo -e "    Target:   ${GRAY}${SCRIPT_DIR}${NC}"
-    echo ""
+  fi
+fi
+
+# In update mode, show additional summary
+if [[ "$UPDATE_MODE" = true ]]; then
+  echo ""
+  print_highlight "Update Summary"
+  echo -e "  ${WHITE_BOLD}Mode:${NC}        ${CYAN}update${NC}"
+  echo -e "  ${WHITE_BOLD}Scope:${NC}       ${CYAN}${SCOPE}${NC}"
+  echo -e "  ${WHITE_BOLD}MCP Server:${NC}  ${CYAN}${MODE}${NC}"
+  echo -e "  ${WHITE_BOLD}Actions:${NC}"
+  echo -e "    ${GRAY}•${NC} Update marketplace"
+  echo -e "    ${GRAY}•${NC} Reinstall plugin in ${CYAN}${SCOPE}${NC} scope"
+  if [[ "$CURRENT_ENABLED" != "true" ]]; then
+    echo -e "    ${GRAY}•${NC} Enable plugin"
   fi
 fi
 
 # Confirm if plugin is already enabled
 if [[ -n "$CURRENT_STATUS" && "$CURRENT_ENABLED" = "true" ]]; then
-  echo -n -e "${YELLOW}Proceed with update? [y/N]${NC} "
-  read -n 1 -r
-  echo ""
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Installation cancelled."
-    exit 0
+  if [[ "$AUTO_YES" = true ]]; then
+    echo -e "${GRAY}Auto-confirming update...${NC}"
+  else
+    echo -n -e "${YELLOW}Proceed with update? [y/N]${NC} "
+    read -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Installation cancelled."
+      exit 0
+    fi
   fi
 fi
 
 # Step 1: Update/install marketplace first (plugin source)
 echo ""
 print_highlight "Marketplace Setup"
-echo ""
 
 if [[ -n "$MARKETPLACE_STATUS" ]]; then
   echo -n "Updating marketplace... "
@@ -417,46 +528,47 @@ else
     exit 1
   fi
 fi
-echo ""
 
-# Prompt for scope selection (skip if --scope was provided)
+# Prompt for scope selection (skip if --scope was provided or in update mode)
 if [[ -z "$SCOPE" ]]; then
-  echo ""
-  print_highlight "Installation Scope"
-  echo ""
+  # In update mode, use current scope automatically
+  if [[ "$UPDATE_MODE" = true && -n "$CURRENT_STATUS" ]]; then
+    SCOPE="$CURRENT_SCOPE"
+  else
+    echo ""
+    print_highlight "Installation Scope"
 
-  # Determine default scope and highlight current
-  if [[ -n "$CURRENT_STATUS" ]]; then
-    DEFAULT_SCOPE="$CURRENT_SCOPE"
-    DEFAULT_NUM="1"
-    [[ "$DEFAULT_SCOPE" = "local" ]] && DEFAULT_NUM="2"
+    # Determine default scope and highlight current
+    if [[ -n "$CURRENT_STATUS" ]]; then
+      DEFAULT_SCOPE="$CURRENT_SCOPE"
+      DEFAULT_NUM="1"
+      [[ "$DEFAULT_SCOPE" = "local" ]] && DEFAULT_NUM="2"
 
-    # Highlight current scope with green checkmark
-    if [[ "$DEFAULT_SCOPE" = "local" ]]; then
-      echo -e "  [1] user   - Available to all projects (recommended)"
-      echo -e "  [2] ${GREEN}✓${NC} local  - Available only to this project ${GRAY}(current)${NC}"
+      # Highlight current scope with green checkmark
+      if [[ "$DEFAULT_SCOPE" = "local" ]]; then
+        echo -e "  [1] user   - Available to all projects (recommended)"
+        echo -e "  [2] ${GREEN}✓${NC} local  - Available only to this project ${GRAY}(current)${NC}"
+      else
+        echo -e "  [1] ${GREEN}✓${NC} user   - Available to all projects (recommended) ${GRAY}(current)${NC}"
+        echo -e "  [2] local  - Available only to this project"
+      fi
     else
-      echo -e "  [1] ${GREEN}✓${NC} user   - Available to all projects (recommended) ${GRAY}(current)${NC}"
+      DEFAULT_SCOPE="user"
+      echo -e "  [1] user   - Available to all projects (recommended)"
       echo -e "  [2] local  - Available only to this project"
     fi
-  else
-    DEFAULT_SCOPE="user"
-    echo -e "  [1] user   - Available to all projects (recommended)"
-    echo -e "  [2] local  - Available only to this project"
+
+    read -p "Enter scope [1/2] (default: ${DEFAULT_NUM} - ${DEFAULT_SCOPE}): " -r SCOPE_CHOICE
+
+    case "$SCOPE_CHOICE" in
+      2|local)
+        SCOPE="local"
+        ;;
+      *)
+        SCOPE="user"
+        ;;
+    esac
   fi
-  echo ""
-
-  read -p "Enter scope [1/2] (default: ${DEFAULT_NUM} - ${DEFAULT_SCOPE}): " -r SCOPE_CHOICE
-  echo ""
-
-  case "$SCOPE_CHOICE" in
-    2|local)
-      SCOPE="local"
-      ;;
-    *)
-      SCOPE="user"
-      ;;
-  esac
 fi
 
 # Track if scope changed
@@ -474,7 +586,6 @@ if [[ "$SCOPE_CHANGED" = true ]]; then
   else
     echo -e "${YELLOW}!${NC} (may not have been installed)"
   fi
-  echo ""
 fi
 
 # Check if plugin is already installed in the selected scope
@@ -512,18 +623,21 @@ fi
 if [[ -z "$CURRENT_STATUS" || "$CURRENT_ENABLED" != "true" || "$SCOPE_CHANGED" = true ]]; then
   echo ""
   print_highlight "Enable Plugin"
-  echo ""
 
-  echo -n -e "${YELLOW}Enable plugin now? [Y/n]${NC} "
-  read -n 1 -r
-  echo ""
-
-  if [[ $REPLY =~ ^[Nn]$ ]]; then
-    echo "Plugin installed but not enabled."
+  if [[ "$AUTO_YES" = true ]]; then
+    echo -e "${GRAY}Auto-enabling plugin...${NC}"
+  else
+    echo -n -e "${YELLOW}Enable plugin now? [Y/n]${NC} "
+    read -n 1 -r
     echo ""
-    echo "To enable later, run:"
-    echo -e "  ${WHITE_BOLD}claude plugin enable $PLUGIN_ID --scope $SCOPE${NC}"
-    exit 0
+
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+      echo "Plugin installed but not enabled."
+      echo ""
+      echo "To enable later, run:"
+      echo -e "  ${WHITE_BOLD}claude plugin enable $PLUGIN_ID --scope $SCOPE${NC}"
+      exit 0
+    fi
   fi
 
   echo -n "Enabling plugin... "
@@ -539,7 +653,6 @@ fi
 # Final status summary
 echo ""
 print_success "Installation complete!"
-echo ""
 
 FINAL_STATUS=$(get_plugin_status)
 if [[ -n "$FINAL_STATUS" ]]; then
@@ -555,7 +668,6 @@ if [[ -n "$FINAL_STATUS" ]]; then
   else
     echo -e "  ${GRAY}○${NC} ${CYAN}${plugin_name}${NC}${GRAY}@${NC}${CYAN}${plugin_market}${NC} ${WHITE_BOLD}v${PLUGIN_VERSION}${NC} installed in ${CYAN}${FINAL_SCOPE}${NC} scope (not enabled)"
   fi
-  echo ""
 else
   echo "  Could not verify final status. Please check with:"
   echo -e "  ${CYAN}claude plugin list${NC}"
@@ -563,13 +675,16 @@ else
 fi
 
 # Show available commands (dynamically from files)
+echo ""
 list_commands
-echo ""
-
 echo "Management commands:"
-echo -e "  ${WHITE_BOLD}claude plugin list${NC}                              - Show all plugins"
-echo -e "  ${WHITE_BOLD}claude plugin list --json | jq '.[] | select(.id == \"$PLUGIN_ID\")'${NC} - Show plugin details"
-echo -e "  ${WHITE_BOLD}claude plugin marketplace list --json | jq '.[] | select(.name == \"$MARKETPLACE_NAME\")'${NC} - Show marketplace info"
-echo -e "  ${WHITE_BOLD}claude plugin disable $PLUGIN_ID --scope $SCOPE${NC}  - Disable plugin"
-echo -e "  ${WHITE_BOLD}claude plugin uninstall $PLUGIN_ID --scope $SCOPE${NC} - Remove plugin"
-echo ""
+echo -e "  ${GRAY}# Show all plugins${NC}"
+echo -e "  ${WHITE_BOLD}claude plugin list${NC}"
+echo -e "  ${GRAY}# Show plugin details${NC}"
+echo -e "  ${WHITE_BOLD}claude plugin list --json | jq '.[] | select(.id == \"$PLUGIN_ID\")'${NC}"
+echo -e "  ${GRAY}# Show marketplace info${NC}"
+echo -e "  ${WHITE_BOLD}claude plugin marketplace list --json | jq '.[] | select(.name == \"$MARKETPLACE_NAME\")'${NC}"
+echo -e "  ${GRAY}# Disable plugin${NC}"
+echo -e "  ${WHITE_BOLD}claude plugin disable $PLUGIN_ID --scope $SCOPE${NC}"
+echo -e "  ${GRAY}# Remove plugin${NC}"
+echo -e "  ${WHITE_BOLD}claude plugin uninstall $PLUGIN_ID --scope $SCOPE${NC}"
