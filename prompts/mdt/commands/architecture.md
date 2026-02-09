@@ -60,8 +60,9 @@ Check for `--prep` flag in `$ARGUMENTS`. If present, mode is `prep`.
    - `{TICKETS_PATH}/{CR-KEY}/domain.md` — respect aggregate boundaries
    - `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` — **PRIMARY for prep mode** (structural diagnosis)
 3. If requirements.md exists, extract constraint IDs (C1, C2...) and carry them into architecture sections
-3. Extract from CR: problem, affected files, new files, scope
-4. Check project CLAUDE.md for conventions
+4. Extract from CR: problem, affected files, new files, scope
+5. Check project CLAUDE.md for conventions
+6. If `{TICKETS_PATH}/{CR-KEY}/architecture.md` already exists, read it as context — but the output **replaces it entirely**. Never append to or merge with an existing architecture document.
 
 ### Step 2: Identify Decisions
 
@@ -90,7 +91,7 @@ Present max 5 questions with recommendations.
 
 ### Step 3: Generate Architecture
 
-Write the architecture. Keep it minimal.
+Write the architecture as a **complete, self-contained document** using the output template. Only include sections defined in the template — do not invent additional sections. Each `##` heading appears exactly once.
 
 ---
 
@@ -218,8 +219,12 @@ See [architecture.md](./{CR-KEY}/architecture.md)
 ## Quality Check
 
 Before saving, verify:
+- [ ] Each `##` heading appears exactly once — no duplicate sections
+- [ ] Only sections from the template are present — no invented sections
 - [ ] Overview is 2-3 sentences (not a paragraph)
-- [ ] Structure shows concrete paths (not abstract names)
+- [ ] Structure shows concrete paths (not abstract names), 5-15 entries
+- [ ] Error Philosophy is prose (not a table of every scenario)
+- [ ] No code snippets anywhere (describe intent, not implementation)
 - [ ] Runtime prerequisites defined (if external deps exist)
 - [ ] Constraint IDs from requirements are carried into sections (or explicitly N/A)
 

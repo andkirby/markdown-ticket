@@ -1,59 +1,59 @@
 # Spec-Driven Development (SDD) Framework for MDT
 
-AI-driven workflow management for spec-driven development.
+AI-driven workflow management for spec-driven development using Markdown Tickets (MDT).
 
-## What It Does
+## Installation
 
-- Creates and manages Change Requests via MCP
-- Guides: Requirements → BDD → Architecture → Tests → Tasks → Implementation
-- Prevents technical debt through explicit constraints
-- **NEW**: Agentic implementation with checkpointed state and specialized subagents
+```bash
+# Local MCP server (requires built mcp-server)
+./install-plugin.sh --local
 
-## Agentic Implementation
+# Docker MCP server
+./install-plugin.sh --docker
 
-The `/mdt:implement-agentic` command executes implementation tasks using a state machine with specialized subagents:
+# Recommended: user scope (available to all projects)
+./install-plugin.sh --local --scope user
 
-| Agent      | Role                                    |
-|------------|-----------------------------------------|
-| `@mdt:verify` | Run tests, check scope boundaries, parse results |
-| `@mdt:code`   | Write minimal code for task specs       |
-| `@mdt:fix`    | Apply minimal fixes for failures        |
+# Update existing installation
+./install-plugin.sh --update    # Interactive
+./install-plugin.sh -uy         # Fully automated
 
-**Features**:
-- Checkpoint-based state persisted to `.checkpoint.json`
-- Resumable execution: `/mdt:implement-agentic {CR-KEY} --continue`
-- Part-aware: `--part {X.Y}` for multi-part CRs
-- Prep mode: `--prep` for refactoring workflows
-- JSON-based agent communication with structured verdicts
+# All options
+./install-plugin.sh --help
+```
 
-See [mdt/README.md](./mdt/README.md) for complete plugin documentation.
+**Options:**
 
-## Quick Start
+| Option            | Description                                    |
+|-------------------|------------------------------------------------|
+| `--local`         | Use local Node.js MCP server                   |
+| `--docker`        | Use Docker MCP server via HTTP                 |
+| `--update`, `-u`  | Update mode: detect current installation and update it |
+| `-y`              | Auto-confirm all prompts                       |
+| `--scope user`    | Install in user scope (available to all projects) |
+| `--scope local`   | Install in local scope (available only to this project) |
+| `--help`, `-h`    | Show help message                              |
 
-1. Install [MDT project](../README.md)
-2. Install commands for Claude Code: `bash prompts/install-claude.sh`
-3. Create a first ticket: `/mdt:ticket-creation`
-4. Learn workflows: [WORKFLOWS.md](./WORKFLOWS.md)
-5. See all commands: [QUICKREF.md](./QUICKREF.md)
+Short flags can be combined (e.g., `-uy` = `--update -y`).
 
-## Documentation
+## Quick Links
 
-| Doc                            | Use When                              |
-|--------------------------------|---------------------------------------|
+| Link                            | Purpose                               |
+|---------------------------------|---------------------------------------|
+| [mdt/README.md](./mdt/README.md)| Plugin commands and agents            |
 | [QUICKREF.md](./QUICKREF.md)   | Need command syntax or decision table |
 | [WORKFLOWS.md](./WORKFLOWS.md) | Planning which commands to run        |
 | [COMMANDS.md](./COMMANDS.md)   | Understanding a specific command      |
 | [CONCEPTS.md](./CONCEPTS.md)   | Understanding TDD, phases, prep, debt |
 
-## Session Context
+## Configuration
 
-Variables `PROJECT_CODE` and `TICKETS_PATH` has to added from CLAUDE.md.
+The plugin reads from `.mdt-config.toml`:
 
-Example:
+```toml
+[code]
+name = "MDT"
 
-```markdown
-- **PROJECT_CODE**: `ABC`
-- **TICKETS_PATH**: `docs/CRs/`
-- **`CR-KEY` (Ticket key) format**: `{PROJECT_CODE}-###`
-- **Ticket docs**: Create ticket related documentation in `docs/CRs/ABC-000/` (where 000 = current ticket number)
+[tickets]
+path = "docs/CRs"
 ```

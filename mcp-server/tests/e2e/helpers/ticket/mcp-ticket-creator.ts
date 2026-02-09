@@ -27,8 +27,10 @@ export class McpTicketCreator implements TicketCreator {
 
       return {
         success: response.success,
-        ticketId: this.extractTicketId(response),
+        ticketId: response.success && response.data ? this.extractTicketId({ success: true, data: response.data as string }) : undefined,
         ticket: response.success ? data : undefined,
+        // Include the actual MCP response data for test verification
+        responseData: (response.data as string) || undefined,
         error: response.error ? { code: `MCP_${response.error.code}`, message: response.error.message } : undefined,
         metadata: { creator: 'mcp', duration: Date.now() - startTime, attempts, warnings: response.success ? [] : ['MCP creation failed'] },
       }

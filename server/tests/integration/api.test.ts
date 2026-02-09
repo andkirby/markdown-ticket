@@ -286,7 +286,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
 
     it('should return empty array for project with no CRs', async () => {
       // Create a new project without any CRs
-      const emptyProject = await projectFactory.createProject({
+      const emptyProject = await projectFactory.createProject('empty', {
         name: 'Empty Test Project',
         code: 'EMPTY',
       })

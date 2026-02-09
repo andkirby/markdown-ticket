@@ -49,18 +49,10 @@ export function useConfig() {
     loadConfig()
   }, [])
 
-  const isCounterAPIEnabled = () => {
-    return Boolean(
-      config.counter_api?.enabled
-      && config.counter_api?.endpoint,
-    )
-  }
-
   return {
     config,
     loading,
     error,
     loadConfig,
-    isCounterAPIEnabled,
   }
 }

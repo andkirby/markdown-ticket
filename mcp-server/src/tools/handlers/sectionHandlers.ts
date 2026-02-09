@@ -26,7 +26,8 @@ export class SectionHandlers {
     content?: string,
   ): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
-    const normalizedKey = normalizeKey(key, project.project.code)
+    const projectCode = project.project.code || project.id
+    const normalizedKey = normalizeKey(key, projectCode)
 
     // Backward compatibility: map legacy 'update' to 'replace'
     const op = operation === 'update' ? 'replace' : operation
@@ -44,7 +45,7 @@ export class SectionHandlers {
         if (!sectionValidation.valid) {
           throw ToolError.protocol(sectionValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
         }
-        return await this.sectionService.getSection(project, validKey, sectionValidation.value)
+        return await this.sectionService.getSection(project, validKey, sectionValidation.value as string)
       }
       case 'replace':
       case 'append':
@@ -60,8 +61,8 @@ export class SectionHandlers {
         return await this.sectionService.modifySection(
           project,
           validKey,
-          sectionValidation.value,
-          contentValidation.value,
+          sectionValidation.value as string,
+          contentValidation.value as string,
           validOp,
         )
       }

@@ -95,6 +95,7 @@ export interface TicketResult {
   success: boolean
   ticketId?: string
   ticket?: TicketData
+  responseData?: string  // Actual MCP response data for test verification
   error?: {
     code: string
     message: string

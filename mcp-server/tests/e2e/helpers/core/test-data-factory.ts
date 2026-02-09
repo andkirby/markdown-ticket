@@ -50,7 +50,8 @@ export class TestDataFactory {
 
       return {
         success: result.success,
-        data: result.success ? this.formatResponseData(result.ticket!, result.ticketId!) : undefined,
+        // Use the actual MCP response data instead of custom formatting
+        data: result.responseData,
         key: result.ticketId,
         error: result.error?.message,
       }
@@ -124,23 +125,6 @@ export class TestDataFactory {
 
   validateBatch(crsData: TestCRData[]): ValidationResult[] {
     return crsData.map(crData => this.validateCRData(crData))
-  }
-
-  private formatResponseData(ticket: TicketData, ticketId: string): string {
-    const lines = [
-      `✅ **Created CR ${ticketId}**: ${ticket.title}`,
-      `- Type: ${ticket.type}`,
-      `- Status: ${ticket.status || 'Proposed'}`,
-      `- Priority: ${ticket.priority || 'Medium'}`,
-    ]
-
-    if (ticket.phaseEpic)
-      lines.push(`- Phase/Epic: ${ticket.phaseEpic}`)
-    if (ticket.assignee)
-      lines.push(`- Assignee: ${ticket.assignee}`)
-
-    lines.push(`\n${ticket.content}`)
-    return lines.join('\n')
   }
 
   private generateContent(title: string = 'Test CR'): string {

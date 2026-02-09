@@ -7,6 +7,7 @@
 
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
+import type { CRStatus } from '@mdt/shared/models/Types.js'
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
 
 export interface CRData {
@@ -149,7 +150,7 @@ export class TicketService {
 
     // Handle status update separately using the dedicated method
     if (updates.status !== undefined) {
-      await this.sharedTicketService.updateCRStatus(project, crId, updates.status)
+      await this.sharedTicketService.updateCRStatus(project, crId, updates.status as CRStatus)
       updatedFields.push('status')
     }
 

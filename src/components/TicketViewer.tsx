@@ -30,22 +30,25 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
 
   // Listen for real-time updates to this specific ticket
   useEventBus('ticket:updated', useCallback(async (event) => {
-    if (event.payload.ticket) {
-      setCurrentTicket((prev) => {
-        if (prev && prev.code === event.payload.ticket.code) {
-          // Fetch complete ticket data including content
-          dataLayer.fetchTicket(event.payload.projectId, event.payload.ticket.code)
-            .then((fullTicket) => {
-              if (fullTicket) {
-                setCurrentTicket(fullTicket)
-              }
-            })
-            .catch(err => console.error('Failed to fetch updated ticket:', err))
-          return prev // Keep current ticket while fetching
-        }
-        return prev
-      })
+    const updatedTicket = event.payload.ticket
+    if (!updatedTicket) {
+      return
     }
+
+    setCurrentTicket((prev) => {
+      if (prev && prev.code === updatedTicket.code) {
+        // Fetch complete ticket data including content
+        dataLayer.fetchTicket(event.payload.projectId, updatedTicket.code)
+          .then((fullTicket) => {
+            if (fullTicket) {
+              setCurrentTicket(fullTicket)
+            }
+          })
+          .catch(err => console.error('Failed to fetch updated ticket:', err))
+        return prev // Keep current ticket while fetching
+      }
+      return prev
+    })
   }, []))
 
   // MDT-064: Process content to hide H1 headers and extract title

@@ -51,19 +51,19 @@ describe('mDT-110: Conditional Exports Configuration', () => {
     })
 
     it('should have browser condition pointing to .js file', () => {
-      const validatorExport = packageJson.exports['./tools/ProjectValidator'] as Record<string, unknown>
+      const validatorExport = packageJson.exports!['./tools/ProjectValidator'] as Record<string, unknown>
       expect(validatorExport).toHaveProperty('browser')
       expect(validatorExport.browser).toBe('./dist/tools/ProjectValidator.js')
     })
 
     it('should have node condition pointing to .node.js file', () => {
-      const validatorExport = packageJson.exports['./tools/ProjectValidator'] as Record<string, unknown>
+      const validatorExport = packageJson.exports!['./tools/ProjectValidator'] as Record<string, unknown>
       expect(validatorExport).toHaveProperty('node')
       expect(validatorExport.node).toBe('./dist/tools/ProjectValidator.node.js')
     })
 
     it('should have default condition pointing to .node.js file', () => {
-      const validatorExport = packageJson.exports['./tools/ProjectValidator'] as Record<string, unknown>
+      const validatorExport = packageJson.exports!['./tools/ProjectValidator'] as Record<string, unknown>
       expect(validatorExport).toHaveProperty('default')
       expect(validatorExport.default).toBe('./dist/tools/ProjectValidator.node.js')
     })
