@@ -28,7 +28,7 @@ export class ConfigurationGenerator {
     return `[project]
 name = "${projectName}"
 code = "${projectCode}"
-id = "${projectCode.toLowerCase()}"
+id = "${projectCode}"
 ticketsPath = "${finalConfig.crPath}"
 startNumber = 1
 counterFile = ".mdt-next"
@@ -77,8 +77,13 @@ This project is used by the E2E test suite to verify:
   generateProjectRegistration(data: ProjectRegistrationData): string {
     return `[project]
 path = "${data.projectPath}"
-registered = "${data.registered}"
+code = "${data.projectCode}"
 active = ${data.active !== false ? 'true' : 'false'}
+
+[metadata]
+dateRegistered = "${data.registered}"
+lastAccessed = "${new Date().toISOString().split('T')[0]}"
+version = "1.0.0"
 `
   }
 

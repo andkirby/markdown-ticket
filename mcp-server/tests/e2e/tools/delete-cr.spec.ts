@@ -373,15 +373,17 @@ This fix is related to external tracking tickets.`,
       expect(response.error!.message).toContain('invalid')
     })
 
-    it('GIVEN missing project parameter WHEN deleting THEN return validation error', async () => {
+    it('GIVEN missing project parameter WHEN deleting THEN use project extracted from key', async () => {
       const response = await mcpClient.callTool('delete_cr', {
         key: 'TEST-001',
       })
 
-      // Parameter validation errors return success=false
+      // Server extracts project from key (MDT-121)
+      // CR doesn't exist, so we get a tool execution error
       expect(response.success).toBe(false)
       expect(response.error).toBeDefined()
-      expect(response.error!.code).toBe(-32602) // Invalid params error
+      expect(response.error!.code).toBe(-32000) // Server error for tool execution
+      expect(response.error!.message).toContain('not found')
     })
 
     it('GIVEN missing key parameter WHEN deleting THEN return validation error', async () => {

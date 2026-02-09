@@ -677,16 +677,23 @@ Real-time collaboration is becoming standard expectation in document editing too
       expect(response.error?.message).toContain('invalid')
     })
 
-    it('GIVEN missing project parameter WHEN suggesting THEN return validation error', async () => {
+    it('GIVEN missing project parameter WHEN suggesting THEN handle gracefully', async () => {
       const response = await mcpClient.callTool('suggest_cr_improvements', {
-        key: 'TEST-001',
+        key: 'TEST-001', // Full-format key includes project prefix
       })
 
-      expect(response.success).toBe(false)
-      expect(response.error).toBeDefined()
-      // Missing required parameter is InvalidParams
-      expect(response.error?.code).toBe(-32602) // Invalid params for missing project parameter
-      expect(response.error?.message).toContain('required')
+      // The server extracts project from the key prefix (MDT-121 feature)
+      // So this should succeed if the CR exists, or fail with CR not found error
+      if (response.success === false) {
+        // If it fails, it should be because the CR doesn't exist, not because of missing project
+        expect(response.error).toBeDefined()
+        // The error should be about the CR not found, not about missing project
+        expect(response.error?.message).toMatch(/not found/i)
+      }
+      else {
+        // If it succeeds, the server correctly extracted the project from the key prefix
+        expect(response.success).toBe(true)
+      }
     })
 
     it('GIVEN missing key parameter WHEN suggesting THEN return validation error', async () => {
@@ -697,6 +704,8 @@ Real-time collaboration is becoming standard expectation in document editing too
       expect(response.success).toBe(false)
       expect(response.error).toBeDefined()
       expect(response.error?.code).toBe(-32602) // Invalid params for missing key parameter
+      // Use partial matching for error message - server returns "Key is required and must be a string"
+      expect(response.error?.message).toMatch(/Key is required|required/i)
     })
   })
 
