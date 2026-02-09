@@ -66,20 +66,50 @@ export async function startStdioTransport(mcpTools: MCPTools): Promise<void> {
       }
     }
     catch (error) {
-      // Handle ToolError instances
-      if (error instanceof ToolError) {
-        if (error.isProtocolError()) {
+      // Handle ToolError instances (check both instanceof and duck typing for robustness)
+      const isToolError = error instanceof ToolError
+        || (error instanceof Error && 'type' in error && 'code' in error)
+
+      if (isToolError) {
+        const toolError = error as ToolError
+        // Check if it's a protocol error (has code property indicating JSON-RPC error)
+        const isProtocolError = toolError.isProtocolError?.()
+          || (toolError.code !== undefined && toolError.code !== null)
+
+        if (isProtocolError) {
           // Protocol errors should return JSON-RPC error responses
-          const jsonRpcError = error.toJsonRpcError()
+          const jsonRpcError = toolError.toJsonRpcError?.()
+            || { code: toolError.code || -32000, message: toolError.message }
+
+          // Map JSON-RPC error codes to MCP SDK ErrorCode
+          let mcpErrorCode: ErrorCode
+          switch (jsonRpcError.code) {
+            case -32602:
+              mcpErrorCode = ErrorCode.InvalidParams
+              break
+            case -32601:
+              mcpErrorCode = ErrorCode.MethodNotFound
+              break
+            case -32600:
+              mcpErrorCode = ErrorCode.InvalidRequest
+              break
+            default:
+              mcpErrorCode = ErrorCode.InternalError
+              break
+          }
           throw new McpError(
-            jsonRpcError.code as ErrorCode,
+            mcpErrorCode,
             jsonRpcError.message,
             jsonRpcError.data,
           )
         }
         else {
           // Tool execution errors should return { result: { content: [...], isError: true } }
-          const toolErrorResult = error.toToolErrorResult()
+          const toolErrorResult = toolError.toToolErrorResult?.()
+            || {
+              content: [{ type: 'text', text: toolError.message }],
+              isError: true,
+            }
           return toolErrorResult
         }
       }

@@ -130,7 +130,7 @@ describe('project:create', () => {
       }
 
       // Return the entry that matches our path
-      if (result.project.path === projectPath) {
+      if (result.project?.path === projectPath) {
         return result
       }
     }
@@ -196,8 +196,8 @@ describe('project:create', () => {
       // Verify local config was created
       const config = readLocalConfig(testProject.path)
       expect(config).not.toBeNull()
-      expect(config.project.name).toBe(testProject.name)
-      expect(config.project.code).toBe(testProject.code)
+      expect(config!.project!.name).toBe(testProject.name)
+      expect(config!.project!.code).toBe(testProject.code)
 
       // Verify project directory was created
       expect(projectExists(testProject.path)).toBe(true)
@@ -215,11 +215,11 @@ describe('project:create', () => {
       // Verify global registry entry
       const globalEntry = readGlobalRegistryEntry(testProject.path)
       expect(globalEntry).not.toBeNull()
-      expect(globalEntry.project.path).toBe(testProject.path)
+      expect(globalEntry!.project!.path).toBe(testProject.path)
 
       // Global entry should have minimal fields (not full project details)
-      expect(globalEntry.project.name).toBeUndefined()
-      expect(globalEntry.project.code).toBeUndefined()
+      expect(globalEntry!.project!.name).toBeUndefined()
+      expect(globalEntry!.project!.code).toBeUndefined()
     })
   })
 

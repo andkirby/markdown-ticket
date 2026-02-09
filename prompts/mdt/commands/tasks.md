@@ -110,6 +110,29 @@ Use this sequencing to keep integration stable:
 - Each fix references issue evidence and required action
 ```
 
+## Output: .tasks-status.yaml
+
+After writing tasks.md, also write a machine-readable tracker to `{TICKETS_PATH}/{CR-KEY}/.tasks-status.yaml`:
+
+```yaml
+cr_key: "{CR-KEY}"
+total: {number of tasks}
+tasks:
+  - id: 1
+    title: "{Task 1 title from ### Task 1: ...}"
+    status: pending
+  - id: 2
+    title: "{Task 2 title}"
+    status: pending
+  ...
+```
+
+Rules:
+- One entry per `### Task N:` in tasks.md
+- All statuses start as `pending`
+- Title is the text after `### Task N: `
+- `total` matches the number of task entries
+
 ## Common Pitfall
 
 ❌ **Don't** write tasks as just "implement X"
@@ -130,8 +153,9 @@ Use this sequencing to keep integration stable:
 ## Task Breakdown Complete
 
 **CR**: {CR-KEY}
-**Output**: prep/tasks.md
+**Output**: prep/tasks.md + prep/.tasks-status.yaml
 **Tasks**: {N} tasks
+**Tracker**: {N} tasks, all pending
 
 **Next**: `/mdt:implement {CR-KEY} --prep` or `/mdt:implement-agentic {CR-KEY} --prep`
 ```
@@ -141,8 +165,9 @@ Use this sequencing to keep integration stable:
 ## Task Breakdown Complete
 
 **CR**: {CR-KEY}
-**Output**: [part-X.Y/]tasks.md
+**Output**: [part-X.Y/]tasks.md + [part-X.Y/].tasks-status.yaml
 **Tasks**: {N} tasks
+**Tracker**: {N} tasks, all pending
 
 **Next**: `/mdt:implement {CR-KEY}` or `/mdt:implement-agentic {CR-KEY}`
 ```

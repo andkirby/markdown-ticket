@@ -16,7 +16,7 @@
  */
 import type { Express } from 'express'
 import type { Buffer } from 'node:buffer'
-import type { Response as SuperagentResponse } from 'superagent'
+import type { Response as SupertestResponse } from 'supertest'
 import { Readable } from 'node:stream'
 import request from 'supertest'
 import {
@@ -48,7 +48,7 @@ describe('sSE Endpoint - /api/events', () => {
     it('should establish SSE connection with correct headers', (done) => {
       const req = request(app).get('/api/events')
 
-      req.on('response', (res: SuperagentResponse) => {
+      req.on('response', (res: SupertestResponse) => {
         assertSSEConnection(res)
         expect(res.status).toBe(200)
         expect(res.headers['access-control-allow-origin']).toBe('*')
@@ -76,7 +76,7 @@ describe('sSE Endpoint - /api/events', () => {
       const req = request(app).get('/api/events')
       let receivedData = false
 
-      req.on('response', (res: SuperagentResponse) => {
+      req.on('response', (res: SupertestResponse) => {
         expect(res.status).toBe(200)
 
         // Set up data listener immediately
@@ -122,7 +122,7 @@ describe('sSE Endpoint - /api/events', () => {
         }
 
         res.on('data', onData)
-        res.resume()
+        ;(res as unknown as NodeJS.ReadableStream).resume()
 
         // Set up a timeout to fail the test if no data received
         setTimeout(() => {
@@ -146,7 +146,7 @@ describe('sSE Endpoint - /api/events', () => {
       const req = request(app).get('/api/events')
       let receivedData = false
 
-      req.on('response', (res: SuperagentResponse) => {
+      req.on('response', (res: SupertestResponse) => {
         let data = ''
         const onData = (chunk: Buffer) => {
           if (receivedData) {
@@ -185,7 +185,7 @@ describe('sSE Endpoint - /api/events', () => {
         }
 
         res.on('data', onData)
-        res.resume()
+        ;(res as unknown as NodeJS.ReadableStream).resume()
         setTimeout(() => {
           if (!receivedData) {
             receivedData = true
@@ -205,7 +205,7 @@ describe('sSE Endpoint - /api/events', () => {
       const req = request(app).get('/api/events')
       let receivedData = false
 
-      req.on('response', (res: SuperagentResponse) => {
+      req.on('response', (res: SupertestResponse) => {
         let data = ''
         const onData = (chunk: Buffer) => {
           if (receivedData) {
@@ -247,7 +247,7 @@ describe('sSE Endpoint - /api/events', () => {
         }
 
         res.on('data', onData)
-        res.resume()
+        ;(res as unknown as NodeJS.ReadableStream).resume()
         setTimeout(() => {
           if (!receivedData) {
             receivedData = true
@@ -267,7 +267,7 @@ describe('sSE Endpoint - /api/events', () => {
       const req1 = request(app).get('/api/events')
       const req2 = request(app).get('/api/events')
       let responses = 0
-      const checkResponse = (res: SuperagentResponse) => {
+      const checkResponse = (res: SupertestResponse) => {
         assertSSEConnection(res)
         expect(res.status).toBe(200)
         responses++
@@ -303,7 +303,7 @@ describe('sSE Endpoint - /api/events', () => {
     it('should maintain connection with keep-alive header', (done) => {
       const req = request(app).get('/api/events')
 
-      req.on('response', (res: SuperagentResponse) => {
+      req.on('response', (res: SupertestResponse) => {
         expect(res.headers.connection).toMatch(/keep-alive/i)
         expect(res.headers['cache-control']).toContain('no-cache')
         setTimeout(() => {
@@ -329,7 +329,7 @@ describe('sSE Endpoint - /api/events', () => {
     it('should include proper content-type for event stream', (done) => {
       const req = request(app).get('/api/events')
 
-      req.on('response', (res: SuperagentResponse) => {
+      req.on('response', (res: SupertestResponse) => {
         expect(res.headers['content-type']).toContain('text/event-stream')
         setTimeout(() => {
           try {
@@ -461,7 +461,7 @@ describe('sSE Endpoint - /api/events', () => {
     it('should satisfy OpenAPI spec for GET /api/events', (done) => {
       const req = request(app).get('/api/events')
 
-      req.on('response', (res: SuperagentResponse) => {
+      req.on('response', (res: SupertestResponse) => {
         expect(res.status).toBe(200)
         expect(res).toSatisfyApiSpec()
         setTimeout(() => {
@@ -487,7 +487,7 @@ describe('sSE Endpoint - /api/events', () => {
     it('should validate response headers match OpenAPI spec', (done) => {
       const req = request(app).get('/api/events')
 
-      req.on('response', (res: SuperagentResponse) => {
+      req.on('response', (res: SupertestResponse) => {
         expect(res.headers['content-type']).toContain('text/event-stream')
         expect(res).toSatisfyApiSpec()
         setTimeout(() => {
@@ -514,7 +514,7 @@ describe('sSE Endpoint - /api/events', () => {
       const req = request(app).get('/api/events')
       let receivedData = false
 
-      req.on('response', (res: SuperagentResponse) => {
+      req.on('response', (res: SupertestResponse) => {
         expect(res.status).toBe(200)
         let data = ''
         const onData = (chunk: Buffer) => {
@@ -559,7 +559,7 @@ describe('sSE Endpoint - /api/events', () => {
         }
 
         res.on('data', onData)
-        res.resume()
+        ;(res as unknown as NodeJS.ReadableStream).resume()
         setTimeout(() => {
           if (!receivedData) {
             receivedData = true
@@ -604,19 +604,11 @@ class MockEventStream extends Readable {
     this.emit('close')
   }
 
-  destroy(_error?: Error): this {
+  override destroy(_error?: Error): this {
     this.destroyed = true
     this.isClosed = true
     this.emit('close')
 
     return this
-  }
-
-  on(event: string, listener: (...args: unknown[]) => void): this {
-    return super.on(event, listener)
-  }
-
-  emit(event: string, ...args: unknown[]): boolean {
-    return super.emit(event, ...args)
   }
 }

@@ -196,13 +196,9 @@ function extractDocumentPaths(projectConfig: ProjectConfig | undefined): string[
   if (!projectConfig)
     return []
 
-  // Handle different configuration formats
+  // Handle nested document.paths structure
   if (projectConfig.document?.paths) {
     return projectConfig.document.paths
-  }
-
-  if (projectConfig.documentPaths) {
-    return projectConfig.documentPaths
   }
 
   return []

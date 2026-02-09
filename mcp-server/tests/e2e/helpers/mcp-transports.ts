@@ -34,28 +34,33 @@ export class StdioTransport implements MCPTransport {
 
   async start(): Promise<void> {
     // Use built server for tests to avoid module caching issues
-    const serverScript = 'dist/index.js'
+    // Use absolute path to server script since we're changing cwd
+    const serverScript = `${this.testEnv.getProjectRoot()}/dist/index.js`
+
+    // Use temp directory as working directory to prevent project auto-detection
+    const tempDir = this.testEnv.getTempDir()
+    const configDir = this.testEnv.getConfigDir()
 
     this.process = spawn('node', [serverScript], {
-      cwd: this.testEnv.getProjectRoot(),
+      cwd: tempDir,
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,
         MCP_HTTP_ENABLED: 'false', // Ensure only stdio is enabled
         NODE_ENV: 'test',
         // Pass the test config directory to MCP server
-        CONFIG_DIR: this.testEnv.getConfigDir(),
-        // Enable rate limiting for tests
+        CONFIG_DIR: configDir,
+        // Enable rate limiting for tests with explicit defaults
         MCP_SECURITY_RATE_LIMITING: process.env.MCP_SECURITY_RATE_LIMITING || 'true',
-        MCP_RATE_LIMIT_MAX: process.env.MCP_RATE_LIMIT_MAX,
-        MCP_RATE_LIMIT_WINDOW_MS: process.env.MCP_RATE_LIMIT_WINDOW_MS,
+        MCP_RATE_LIMIT_MAX: process.env.MCP_RATE_LIMIT_MAX || '5',
+        MCP_RATE_LIMIT_WINDOW_MS: process.env.MCP_RATE_LIMIT_WINDOW_MS || '1000',
       },
     })
 
     // Capture stderr for debugging
-    // this.process.stderr?.on('data', (data) => {
-    //   console.error('[SERVER STDERR]:', data.toString());
-    // });
+    this.process.stderr?.on('data', (data) => {
+      console.error('[SERVER STDERR]:', data.toString());
+    });
 
     await this.waitForStart()
     this.connected = true
@@ -107,10 +112,12 @@ export class HttpTransport implements MCPTransport {
 
   async start(): Promise<void> {
     // Use built server for tests to avoid module caching issues
-    const serverScript = 'dist/index.js'
+    // Use absolute path to server script since we're changing cwd
+    const serverScript = `${this.testEnv.getProjectRoot()}/dist/index.js`
 
     this.process = spawn('node', [serverScript], {
-      cwd: this.testEnv.getProjectRoot(),
+      // Use temp directory as working directory to prevent project auto-detection
+      cwd: this.testEnv.getTempDir(),
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,

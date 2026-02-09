@@ -148,6 +148,7 @@ export class TicketService {
 
       // Generate markdown content
       const markdownContent = this.formatCRAsMarkdown(ticket, data)
+      ticket.content = markdownContent
 
       // Write file (fs-extra uses outputFile for creating files with directory creation)
       await fs.outputFile(filePath, markdownContent, 'utf-8')
