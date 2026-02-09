@@ -372,17 +372,18 @@ The solution involves testing the status update mechanism for CRs in the system.
       expect(response.error?.message).toContain('Invalid status')
     })
 
-    it('GIVEN missing project parameter WHEN updating THEN return protocol error', async () => {
+    it('GIVEN missing project parameter WHEN updating THEN use project extracted from key', async () => {
       const response = await mcpClient.callTool('update_cr_status', {
         key: 'TEST-001',
         status: 'Approved',
       })
 
-      // Missing required parameter is a protocol error
+      // Server extracts project from key (MDT-121)
+      // CR doesn't exist, so we get a tool execution error
       expect(response.success).toBe(false)
       expect(response.error).toBeDefined()
-      expect(response.error?.code).toBe(-32602) // Invalid params error code
-      expect(response.error?.message).toContain('Project')
+      expect(response.error!.code).toBe(-32000) // Server error for tool execution
+      expect(response.error!.message).toContain('not found')
     })
 
     it('GIVEN missing key parameter WHEN updating THEN return protocol error', async () => {

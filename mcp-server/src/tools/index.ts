@@ -89,35 +89,39 @@ export class MCPTools {
         TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS,
       ] as const
       if (crTools.includes(name as typeof crTools[number])) {
-        const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject)
+        // Extract key for project resolution (MDT-121: supports full-format keys with project prefix)
+        const key = args.key as string | undefined
+        const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject, key)
 
         switch (name) {
           case TOOL_NAMES.LIST_CRS:
             return await this.crHandlers.handleListCRs(project, args.filters as Record<string, unknown> | undefined)
 
           case TOOL_NAMES.GET_CR:
-            return await this.crHandlers.handleGetCR(project, args.key as string, args.mode as string | undefined)
+            return await this.crHandlers.handleGetCR(project, key || '', args.mode as string | undefined)
 
           case TOOL_NAMES.CREATE_CR:
             return await this.crHandlers.handleCreateCR(project, args.type as string, args.data as TicketData)
 
           case TOOL_NAMES.UPDATE_CR_STATUS:
-            return await this.crHandlers.handleUpdateCRStatus(project, args.key as string, args.status as CRStatus)
+            return await this.crHandlers.handleUpdateCRStatus(project, key || '', args.status as CRStatus)
 
           case TOOL_NAMES.UPDATE_CR_ATTRS:
-            return await this.crHandlers.handleUpdateCRAttrs(project, args.key as string, args.attributes as Record<string, unknown>)
+            return await this.crHandlers.handleUpdateCRAttrs(project, key || '', args.attributes as Record<string, unknown>)
 
           case TOOL_NAMES.DELETE_CR:
-            return await this.crHandlers.handleDeleteCR(project, args.key as string)
+            return await this.crHandlers.handleDeleteCR(project, key || '')
 
           case TOOL_NAMES.SUGGEST_CR_IMPROVEMENTS:
-            return await this.crHandlers.handleSuggestCRImprovements(project, args.key as string)
+            return await this.crHandlers.handleSuggestCRImprovements(project, key || '')
         }
       }
 
       // Route to section handlers
       if (name === TOOL_NAMES.MANAGE_CR_SECTIONS) {
-        const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject)
+        // Extract key for project resolution (MDT-121: supports full-format keys with project prefix)
+        const key = args.key as string | undefined
+        const project = await this.projectHandlers.resolveProject(args.project as string | undefined, this.detectedProject, key)
         return await this.sectionHandlers.handleManageCRSections(
           project,
           args.key as string,

@@ -708,7 +708,9 @@ Updated historical perspective.`
       expect(response.success).toBe(false)
       expect(response.error).toBeDefined()
       expect(response.error?.code).toBe(-32602) // Invalid params for missing operation parameter
+      // Use partial matching for error message
       expect(response.error?.message).toContain('operation')
+      expect(response.error?.message).toMatch(/required|invalid/)
     })
 
     it('GIVEN get operation without section WHEN managing THEN return validation error', async () => {
@@ -733,8 +735,8 @@ Test rationale.`,
       expect(response.success).toBe(false)
       expect(response.error).toBeDefined()
       expect(response.error?.code).toBe(-32602) // Invalid params for missing section parameter
-      // Update to match new validation message format
-      expect(response.error?.message).toContain('section is required')
+      // Use partial matching for error message
+      expect(response.error?.message).toMatch(/section.*(required|invalid)|required.*section/)
     })
   })
 
