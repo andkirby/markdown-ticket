@@ -14,7 +14,7 @@
  */
 
 import { ProjectSetup } from '../helpers/core/project-setup'
-import { MCPClient } from '../helpers/mcp-client'
+import { MCPClient, type MCPResponse } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
 import { TestEnvironment } from '../helpers/test-environment'
 
@@ -22,6 +22,26 @@ describe('create_cr', () => {
   let testEnv: TestEnvironment
   let mcpClient: MCPClient
   let _projectFactory: ProjectFactory
+
+  // Type for parsed CR response
+  type ParsedCRResponse = {
+    key?: string
+    title?: string
+    status?: string
+    type?: string
+    priority?: string
+    phaseEpic?: string
+    // These are not in the markdown response but tests check they are undefined
+    assignee?: string
+    dependsOn?: string
+    blocks?: string
+    relatedTickets?: string
+  }
+
+  // Extended MCPResponse type for create_cr results
+  type CreateCRMCPResponse = MCPResponse & {
+    data?: ParsedCRResponse
+  }
 
   beforeEach(async () => {
     testEnv = new TestEnvironment()
@@ -42,7 +62,7 @@ describe('create_cr', () => {
     await testEnv.cleanup()
   })
 
-  async function callCreateCR(projectKey: string, type: string, title: string, data: Record<string, unknown> = {}) {
+  async function callCreateCR(projectKey: string, type: string, title: string, data: Record<string, unknown> = {}): Promise<CreateCRMCPResponse> {
     const response = await mcpClient.callTool('create_cr', {
       project: projectKey,
       type,
@@ -54,28 +74,14 @@ describe('create_cr', () => {
 
     // For successful responses, parse the markdown to extract CR information
     if (response.success && response.data) {
-      response.data = parseCreateCRResponse(response.data)
+      response.data = parseCreateCRResponse(response.data as string)
     }
 
-    return response
+    return response as CreateCRMCPResponse
   }
 
-  function parseCreateCRResponse(markdown: string): {
-    key?: string
-    title?: string
-    status?: string
-    type?: string
-    priority?: string
-    phaseEpic?: string
-  } {
-    const cr: {
-      key?: string
-      title?: string
-      status?: string
-      type?: string
-      priority?: string
-      phaseEpic?: string
-    } = {}
+  function parseCreateCRResponse(markdown: string): ParsedCRResponse {
+    const cr: ParsedCRResponse = {}
 
     // Extract CR key from first line (format: ✅ **Created CR TEST-001**: Title)
     const keyMatch = markdown.match(/✅ \*\*Created CR ([A-Z]+-\d+)\*\*:/)
@@ -113,14 +119,7 @@ describe('create_cr', () => {
     return cr
   }
 
-  function expectCreatedCRStructure(cr: {
-    key?: string
-    title?: string
-    status?: string
-    type?: string
-    priority?: string
-    phaseEpic?: string
-  }, expectedTitle: string, expectedType: string) {
+  function expectCreatedCRStructure(cr: ParsedCRResponse, expectedTitle: string, expectedType: string) {
     expect(cr.key).toBeDefined()
     expect(typeof cr.key).toBe('string')
     expect(cr.key).toMatch(/^[A-Z]+-\d{3}$/) // Format: PROJECT-123
@@ -166,7 +165,7 @@ We need this feature to improve the system.`,
       expect(cr3.success).toBe(true)
 
       // Verify all have unique keys
-      const keys = [cr1.data.key, cr2.data.key, cr3.data.key]
+      const keys = [cr1.data?.key, cr2.data?.key, cr3.data?.key]
       expect(new Set(keys).size).toBe(3)
 
       // Verify key format
@@ -185,7 +184,7 @@ We need this feature to improve the system.`,
 
       // Now create a CR that depends on them
       const response = await callCreateCR('TEST', 'Feature Enhancement', 'CR with Dependencies', {
-        dependsOn: `${dep1.data.key}, ${dep2.data.key}`,
+        dependsOn: `${dep1.data?.key ?? ''}, ${dep2.data?.key ?? ''}`,
         blocks: 'TEST-999', // Future CR
         relatedTickets: 'MDT-001, MDT-002',
         assignee: 'developer@example.com',
@@ -225,14 +224,21 @@ Test CR for ${type} type.`,
   })
 
   describe('required Fields', () => {
-    it('GIVEN missing project WHEN creating THEN return validation error', async () => {
-      const response = await callCreateCR(undefined as unknown as string, 'Feature Enhancement', 'Test CR')
+    it('GIVEN missing project WHEN creating in single-project mode THEN use default project', async () => {
+      // MDT-121: In single-project mode (only one project in registry), project parameter is optional
+      const response = await callCreateCR(undefined as unknown as string, 'Feature Enhancement', 'Test CR for Single Project Mode')
 
-      // Missing required parameter is a protocol error
-      expect(response.success).toBe(false)
-      expect(response.error).toBeDefined()
-      expect(response.error?.code).toBe(-32602) // Invalid params error code
-      expect(response.error?.message).toContain('Project key is required')
+      // Should succeed using the default project from registry
+      expect(response.success).toBe(true)
+      expect(response.data).toBeDefined()
+      // The response should contain a CR key (e.g., TEST-001)
+      // Handle both string and object response formats
+      if (typeof response.data === 'string') {
+        expect(response.data).toMatch(/TEST-\d{3}/)
+      } else {
+        expect(response.data).toHaveProperty('key')
+        expect((response.data as { key?: string }).key).toMatch(/TEST-\d{3}/)
+      }
     })
 
     it('GIVEN missing type WHEN creating THEN return validation error', async () => {

@@ -77,9 +77,17 @@ describe('keyNormalizer', () => {
       expect(result).toBe('API-123')
     })
 
-    it('Given numeric project code "GLO1-456" WHEN normalizing THEN returns "GLO1-456"', () => {
-      const result = normalizeKey('GLO1-456', 'ANY')
-      expect(result).toBe('GLO1-456')
+    it('Given numeric project code "GLO1-456" WHEN normalizing THEN throws ToolError', () => {
+      // Project codes must be alphabetic only (no digits in prefix)
+      expect(() => normalizeKey('GLO1-456', 'ANY')).toThrow(ToolError)
+      try {
+        normalizeKey('GLO1-456', 'ANY')
+      }
+      catch (error) {
+        expect(error).toBeInstanceOf(ToolError)
+        const toolError = error as ToolError
+        expect(toolError.message).toMatch(/Invalid key format/i)
+      }
     })
   })
 
@@ -135,18 +143,31 @@ describe('keyNormalizer', () => {
     })
 
     it('Given key with non-alphabetic prefix "123-5" WHEN normalizing THEN throws ToolError', () => {
-      // Note: "123-5" matches numeric pattern first, so it becomes "{PROJECT}-5"
-      // This is actually valid behavior - numeric-only gets prefixed
-      const result = normalizeKey('123-5', 'MDT')
-      // "123-5" is treated as full format with numeric prefix "123"
-      expect(result).toBe('123-5')
+      // Full format prefix must be alphabetic only (a-z), not numeric
+      // "123-5" doesn't match numeric pattern (contains dash) or full format (prefix not alphabetic)
+      expect(() => normalizeKey('123-5', 'MDT')).toThrow(ToolError)
+      try {
+        normalizeKey('123-5', 'MDT')
+      }
+      catch (error) {
+        expect(error).toBeInstanceOf(ToolError)
+        const toolError = error as ToolError
+        expect(toolError.message).toMatch(/Invalid key format/i)
+      }
     })
 
     it('Given key with symbols "$$$-5" WHEN normalizing THEN throws ToolError', () => {
-      // "$$$" uppercase is still "$$$", which is valid for the prefix pattern
-      // This test verifies that any alphabetic characters work (uppercase)
-      const result = normalizeKey('$$$-5', 'MDT')
-      expect(result).toBe('$$$-5')
+      // Full format prefix must be alphabetic only (a-z), not symbols
+      // "$$$" is not alphabetic, so it doesn't match the full format pattern
+      expect(() => normalizeKey('$$$-5', 'MDT')).toThrow(ToolError)
+      try {
+        normalizeKey('$$$-5', 'MDT')
+      }
+      catch (error) {
+        expect(error).toBeInstanceOf(ToolError)
+        const toolError = error as ToolError
+        expect(toolError.message).toMatch(/Invalid key format/i)
+      }
     })
   })
 

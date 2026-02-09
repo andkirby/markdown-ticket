@@ -25,7 +25,7 @@ export class ProjectHandlers {
           return await this.handleListProjects()
 
         case 'get_project_info':
-          return await this.handleGetProjectInfo(args.key)
+          return await this.handleGetProjectInfo(args.key as string)
 
         default:
           throw ToolError.protocol(
@@ -46,17 +46,48 @@ export class ProjectHandlers {
   }
 
   /**
-   * Resolve project from explicit parameter or detected default.
-   * Priority: explicit project -> detected project -> throw error
+   * Extract project code from a full-format key (e.g., "MDT-123" -> "MDT")
+   * Returns null if key is not in full format
+   *
+   * @param key - CR key that may contain project prefix
+   * @returns Project code or null
+   */
+  private extractProjectFromKey(key: string | undefined): string | null {
+    if (!key || typeof key !== 'string') {
+      return null
+    }
+
+    const trimmed = key.trim()
+    // Check for full format: letters-digits (e.g., "MDT-123", "abc-12")
+    const fullFormatPattern = /^([a-z]+)-\d+$/i
+    const match = trimmed.match(fullFormatPattern)
+
+    if (match) {
+      return match[1].toUpperCase()
+    }
+
+    return null
+  }
+
+  /**
+   * Resolve project from explicit parameter, key prefix, detected default, or single-project registry.
+   * Priority: explicit project -> project from key -> detected project -> single project in registry -> throw error
    *
    * @param explicitProject - Project parameter from tool call (optional)
    * @param detectedProject - Project detected from cwd at startup (optional)
+   * @param key - CR key that may contain project prefix (optional)
    * @returns Resolved project
    */
-  async resolveProject(explicitProject: string | undefined, detectedProject: string | null): Promise<Project> {
-    // Use explicit project if provided
+  async resolveProject(explicitProject: string | undefined, detectedProject: string | null, key?: string): Promise<Project> {
+    // Use explicit project if provided (highest priority)
     if (explicitProject) {
       return this.validateProject(explicitProject)
+    }
+
+    // Try to extract project from full-format key (e.g., "MDT-123" -> "MDT")
+    const projectFromKey = this.extractProjectFromKey(key)
+    if (projectFromKey) {
+      return this.validateProject(projectFromKey)
     }
 
     // Fall back to detected project
@@ -64,9 +95,17 @@ export class ProjectHandlers {
       return this.validateProject(detectedProject)
     }
 
-    // No project context available
-    throw ToolError.toolExecution(
-      'No project context available. Either start MCP server from a project directory with `.mdt-config.toml`, or provide the `project` parameter explicitly.',
+    // Fallback: if there's only one project in the registry, use it as default
+    // This enables single-project mode when the server starts from a non-project directory
+    const projects = await this.projectService.getAllProjects()
+    if (projects.length === 1) {
+      return projects[0]
+    }
+
+    // No project context available - this is a protocol error (missing required parameter)
+    throw ToolError.protocol(
+      'Project key is required. Either start MCP server from a project directory with `.mdt-config.toml`, or provide the `project` parameter explicitly.',
+      JsonRpcErrorCode.InvalidParams,
     )
   }
 

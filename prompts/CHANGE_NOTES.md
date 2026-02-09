@@ -2,6 +2,59 @@
 
 ## Recent Updates
 
+### 2026-02-08 - Install Script Update Mode and Documentation Improvements
+
+**Problem**: The plugin installation script lacked an update workflow, forcing users to manually re-run the full installation process. Documentation was also inconsistent across different entry points (root README vs prompts README), creating confusion about installation options and workflow chains.
+
+**Solution**: Added `--update` mode to install-plugin.sh that auto-detects current installation and applies updates. Consolidated and clarified documentation to eliminate inconsistencies and provide clear installation instructions.
+
+**Changes Made**:
+
+1. **install-plugin.sh (v2) - Update mode with auto-detection**:
+   - `--update`, `-u` flag: Detects current MCP type (stdio/http) and mode automatically
+   - `-y` flag: Auto-confirm all prompts (combine with `-uy` for unattended updates)
+   - Short flag expansion: Combined flags like `-uy` expand to `-u -y`
+   - Update mode preserves current scope automatically, skips scope prompts
+   - Auto-confirm support for both update prompt and enable prompt
+   - Enhanced help output with all new options documented
+   - Improved error messages for "plugin not installed" in update mode
+   - Update Summary section shows mode, scope, MCP server, and planned actions
+
+2. **prompts/README.md - Installation-focused rewrite**:
+   - Removed verbose "What It Does" and "Agentic Implementation" sections (moved to mdt/README.md)
+   - Added comprehensive "Installation" section with all options and use cases
+   - Options table: --local, --docker, --update, -y, --scope user/local
+   - Quick Links table: mdt/README.md (plugin docs), QUICKREF.md, WORKFLOWS.md
+   - Simplified "Configuration" section showing .mdt-config.toml example
+   - Removed redundant documentation (detailed workflow guidance in mdt/README.md)
+
+3. **mdt/README.md - Quick install instructions added**:
+   - New "Quick Install (via install script)" section at top
+   - Shows `--local` and `--docker` usage with MCP server notes
+   - Documents scope options with recommendation for user scope
+   - Preserved existing documentation structure below installation section
+
+4. **Workflow commands - Version updates only** (no functional changes):
+   - `architecture.md` (v9): Version increment only
+   - `bdd.md` (v1): Version increment only
+   - `tasks.md` (v8): Version increment only
+
+**Impact**:
+- Users can now update plugin with single command: `./install-plugin.sh --update`
+- Automated updates possible with `-uy` flags for CI/CD or scripts
+- Clearer documentation reduces confusion about installation options
+- Consistent entry points: root README for project overview, prompts/README for installation, mdt/README for plugin details
+
+**Files Changed**:
+- `prompts/install-plugin.sh` (v1→v2)
+- `prompts/README.md` (documentation restructure)
+- `prompts/mdt/README.md` (installation section added)
+- `prompts/mdt/commands/architecture.md` (v9)
+- `prompts/mdt/commands/bdd.md` (v1)
+- `prompts/mdt/commands/tasks.md` (v8)
+
+---
+
 ### 2026-02-07 - Version Management and Tooling Improvements
 
 **Problem**: Plugin version management was manual and error-prone. The `/update-notes` workflow lacked version increment automation, and the sync script had poor documentation and error messages.

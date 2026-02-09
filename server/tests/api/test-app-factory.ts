@@ -129,7 +129,7 @@ export function createTestApp(): Express {
   const _projectManager = new ProjectManager(true)
 
   // Business logic services
-  const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery)
+  const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery as unknown as SharedProjectServiceLike)
   const ticketService = new TicketService(projectDiscovery)
   const documentService = new DocumentService(projectDiscovery)
   const fileSystemService = new FileSystemService(process.cwd())

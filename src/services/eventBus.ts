@@ -12,26 +12,6 @@
 
 import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
-
-/**
- * React hook for using event bus in components
- *
- * @param eventType - Type of event to listen for
- * @param handler - Event handler function
- * @param dependencies - Dependencies for useEffect
- * @param source - Optional source component name for debugging (auto-inferred if not provided)
- *
- * @example
- * ```typescript
- * function MyComponent() {
- *   useEventBus('ticket:created', (event) => {
- *     console.log('New ticket:', event.payload);
- *   }, [], 'MyComponent'); // source is optional
- *
- *   return <div>...</div>;
- * }
- * ```
- */
 import { useEffect } from 'react'
 
 export type EventType
@@ -53,29 +33,94 @@ export type EventType
     | 'error:network'
     | 'system:refresh'
 
-// Event payload types
-interface _TicketEventPayload {
+/**
+ * Typed event payload interfaces
+ * Exported for use in components and hooks
+ */
+
+export interface TicketEventPayload {
   ticketCode: string
   projectId: string
-  ticket?: Ticket // Use proper Ticket type
+  ticket?: Ticket | Partial<Ticket> | {
+    code: string
+    title: string
+    status: string
+    type: string
+    priority: string
+    lastModified: string
+  } | null
 }
 
-interface _ProjectEventPayload {
+export interface ProjectEventPayload {
   projectId: string
-  project?: Project // Use proper Project type
+  project?: Project | Record<string, unknown>
+  timestamp?: number
 }
 
-interface _SSEEventPayload {
+export interface SSEEventPayload {
   url?: string
   error?: Error | unknown
   status?: string
+  reason?: string
+  timestamp?: number
+  message?: string
 }
 
-interface _ErrorEventPayload {
+export interface ErrorEventPayload {
   message: string
   error?: Error
   context?: Record<string, unknown>
 }
+
+/**
+ * EventPayloadMap - Maps each EventType to its specific payload type
+ *
+ * This provides type safety for event handlers. When you subscribe to an event,
+ * TypeScript will infer the correct payload type.
+ *
+ * @example
+ * ```typescript
+ * useEventBus('ticket:created', (event) => {
+ *   // event.payload is automatically typed as TicketEventPayload
+ *   console.log(event.payload.ticketCode); // ✅ Type-safe
+ *   console.log(event.payload.projectId); // ✅ Type-safe
+ *   console.log(event.payload.nonExistent); // ❌ TypeScript error
+ * });
+ * ```
+ */
+export interface EventPayloadMap {
+  // Ticket events
+  'ticket:created': TicketEventPayload
+  'ticket:updated': TicketEventPayload
+  'ticket:deleted': Pick<TicketEventPayload, 'ticketCode' | 'projectId'>
+
+  // Project events
+  'project:created': ProjectEventPayload
+  'project:changed': ProjectEventPayload
+  'project:deleted': ProjectEventPayload
+
+  // SSE connection events
+  'sse:connected': SSEEventPayload
+  'sse:disconnected': SSEEventPayload
+  'sse:reconnected': SSEEventPayload
+  'sse:error': SSEEventPayload
+
+  // System events
+  'error:api': ErrorEventPayload
+  'error:network': ErrorEventPayload
+  'system:refresh': void
+}
+
+/**
+ * Helper type to infer payload type from event type
+ *
+ * @example
+ * ```typescript
+ * type TicketCreatedPayload = EventPayload<'ticket:created'>; // TicketEventPayload
+ * type SSEConnectedPayload = EventPayload<'sse:connected'>; // SSEEventPayload
+ * ```
+ */
+export type EventPayload<T extends EventType> = EventPayloadMap[T]
 
 // Generic event structure
 export interface Event<T = unknown> {
@@ -85,6 +130,22 @@ export interface Event<T = unknown> {
   source: 'sse' | 'ui' | 'api' | 'system'
   id: string // Unique event ID for tracking
 }
+
+/**
+ * Typed event interface that infers payload from event type
+ *
+ * @example
+ * ```typescript
+ * const event: TypedEvent<'ticket:created'> = {
+ *   type: 'ticket:created',
+ *   payload: { ticketCode: 'MDT-001', projectId: 'mdt' },
+ *   timestamp: Date.now(),
+ *   source: 'sse',
+ *   id: 'evt_1'
+ * };
+ * ```
+ */
+export type TypedEvent<T extends EventType> = Event<EventPayloadMap[T]>
 
 // Event listener type
 export type EventListener<T = unknown> = (event: Event<T>) => void
@@ -103,6 +164,7 @@ interface ListenerMetadata {
  * EventBus class - singleton pattern
  */
 class EventBus {
+  // Private properties
   private listeners = new Map<EventType, Set<EventListener>>()
   private listenerMetadata = new Map<EventType, Map<EventListener, ListenerMetadata>>() // Track metadata for dev tools
   private eventQueue: Event[] = []
@@ -113,23 +175,23 @@ class EventBus {
   private enableLogging = import.meta.env.DEV && !import.meta.env.VITE_DISABLE_EVENTBUS_LOGS
 
   /**
-   * Subscribe to events of a specific type
-   *
-   * @param eventType - Type of event to listen for
-   * @param handler - Function to call when event occurs
-   * @param metadata - Optional metadata for debugging (source component name)
-   * @param metadata.source - Source component name for debugging
-   * @returns Unsubscribe function
-   *
+   * Type-safe overload for subscribing to specific event types
    * @example
    * ```typescript
-   * const unsubscribe = eventBus.on('ticket:created', (event) => {
-   *   console.log('New ticket:', event.payload.ticketCode);
-   * }, { source: 'MyComponent' });
-   *
-   * // Later, when component unmounts:
-   * unsubscribe();
+   * eventBus.on('ticket:created', (event) => {
+   *   // event.payload is typed as TicketEventPayload
+   *   console.log(event.payload.ticketCode);
+   * });
    * ```
+   */
+  on<T extends EventType>(
+    eventType: T,
+    handler: (event: TypedEvent<T>) => void,
+    metadata?: { source?: string },
+  ): UnsubscribeFn
+
+  /**
+   * Generic subscribe method (backwards compatible)
    */
   on<T = unknown>(
     eventType: EventType,
@@ -182,19 +244,24 @@ class EventBus {
   }
 
   /**
-   * Emit an event to all subscribers
-   *
-   * @param eventType - Type of event to emit
-   * @param payload - Event data
-   * @param source - Source of the event (sse, ui, api, system)
-   *
+   * Type-safe overload for emitting specific event types
    * @example
    * ```typescript
    * eventBus.emit('ticket:created', {
    *   ticketCode: 'MDT-001',
-   *   projectId: 'markdown-ticket'
+   *   projectId: 'markdown-ticket',
+   *   ticket: myTicket
    * }, 'ui');
    * ```
+   */
+  emit<T extends EventType>(
+    eventType: T,
+    payload: EventPayloadMap[T],
+    source?: Event['source'],
+  ): void
+
+  /**
+   * Generic emit method (backwards compatible)
    */
   emit<T = unknown>(
     eventType: EventType,
@@ -388,10 +455,40 @@ class EventBus {
 export const eventBus = new EventBus()
 
 // Export class for testing
+export { EventBus }
 
-export function useEventBus<T = unknown>(
-  eventType: EventType,
-  handler: EventListener<T>,
+/**
+ * React hook for using event bus in components
+ *
+ * Provides type-safe event handling - the handler's payload type is automatically
+ * inferred from the eventType parameter.
+ *
+ * @param eventType - Type of event to listen for
+ * @param handler - Event handler function (payload type is inferred from eventType)
+ * @param dependencies - Dependencies for useEffect
+ * @param source - Optional source component name for debugging (auto-inferred if not provided)
+ *
+ * @example
+ * ```typescript
+ * function MyComponent() {
+ *   // Payload type is automatically inferred as TicketEventPayload
+ *   useEventBus('ticket:created', (event) => {
+ *     console.log('New ticket:', event.payload.ticketCode);
+ *     console.log('Project:', event.payload.projectId);
+ *   }, [], 'MyComponent');
+ *
+ *   // Payload type is automatically inferred as void
+ *   useEventBus('sse:reconnected', (event) => {
+ *     console.log('Reconnected!');
+ *   });
+ *
+ *   return <div>...</div>;
+ * }
+ * ```
+ */
+export function useEventBus<T extends EventType>(
+  eventType: T,
+  handler: (event: TypedEvent<T>) => void,
   dependencies: unknown[] = [],
   source?: string,
 ): void {
@@ -415,7 +512,7 @@ export function useEventBus<T = unknown>(
 
     const unsubscribe = eventBus.on(
       eventType,
-      handler,
+      handler as EventListener,
       componentSource ? { source: componentSource } : undefined,
     )
     return unsubscribe

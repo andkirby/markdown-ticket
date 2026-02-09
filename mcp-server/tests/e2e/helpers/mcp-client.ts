@@ -133,6 +133,13 @@ export class MCPClient {
         }
       })
     })
+
+    // Handle transport-level process errors once and fail all pending requests.
+    this.serverProcess.on('error', (error) => {
+      const pending = Array.from(this.pendingRequests.values())
+      this.pendingRequests.clear()
+      pending.forEach(({ reject }) => reject(error))
+    })
   }
 
   /**
@@ -278,7 +285,7 @@ export class MCPClient {
           }
 
           // Check if error is retryable
-          if (!this.isRetryableError(mcpResponse.error.code) || attempt === maxRetries) {
+          if (!this.isRetryableError(mcpResponse.error.code, mcpResponse.error.message) || attempt === maxRetries) {
             this.logger.warn('Tool call failed with non-retryable error', {
               toolName,
               error: mcpResponse.error,
@@ -450,12 +457,6 @@ export class MCPClient {
       const message = `${JSON.stringify(request)}\n`
       this.serverProcess?.stdin?.write(message)
 
-      // Set up error handling
-      this.serverProcess?.on('error', (error) => {
-        clearTimeout(timeout)
-        this.pendingRequests.delete(requestId)
-        reject(error)
-      })
     })
   }
 
@@ -477,7 +478,7 @@ export class MCPClient {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    return await response.json()
+    return (await response.json()) as Record<string, unknown>
   }
 
   /**
@@ -518,13 +519,17 @@ export class MCPClient {
   /**
    * Check if an error code is retryable
    */
-  private isRetryableError(errorCode?: number): boolean {
+  private isRetryableError(errorCode?: number, errorMessage?: string): boolean {
     if (!errorCode)
       return false
 
-    // Retry on connection errors and timeouts
-    // Note: Rate limit errors (-32001) should NOT be retried as they are intentional
-    return errorCode === -1 || errorCode === -32000
+    // Never retry intentional throttling responses.
+    if (errorMessage && /rate limit/i.test(errorMessage)) {
+      return false
+    }
+
+    // Retry only transport/connectivity failures.
+    return errorCode === -1
   }
 
   /**

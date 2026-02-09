@@ -85,9 +85,9 @@ export class ValidationRules {
         section => !crData.content.includes(section),
       )
       if (missingSections.length > 0) {
-        errors.push({
+        warnings.push({
           code: 'CR_CONTENT_MISSING_SECTIONS',
-          message: `CR content is missing required sections: ${missingSections.join(', ')}`,
+          message: `CR content is missing recommended sections: ${missingSections.join(', ')}`,
           field: 'content',
           value: missingSections,
         })

@@ -404,6 +404,9 @@ export default defineConfig(() => {
 
   return {
     plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],
+    build: {
+      chunkSizeWarningLimit: 1500,
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

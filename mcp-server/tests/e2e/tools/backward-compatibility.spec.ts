@@ -72,14 +72,14 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
       const mdtCR = await projectFactory.createTestCR('MDT', {
         title: 'MDT Backward Compatibility Test',
         type: 'Feature Enhancement',
-        content: '## 1. Description\nMDT content',
+        content: '## 1. Description\nMDT backward compatibility test content',
       })
       const mdtCRKey = extractCRKey(mdtCR)
 
       const sumlCR = await projectFactory.createTestCR('SUML', {
         title: 'SUML Backward Compatibility Test',
         type: 'Feature Enhancement',
-        content: '## 1. Description\nSUML content',
+        content: '## 1. Description\nSUML backward compatibility test content',
       })
       const sumlCRKey = extractCRKey(sumlCR)
 
@@ -89,7 +89,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
         project: 'MDT',
       })
       expect(mdtResponse.success).toBe(true)
-      expect(mdtResponse.data).toContain('MDT Backward Compatibility Test')
+      expect(mdtResponse.data).toContain('MDT backward compatibility test content')
 
       // Get SUML CR with explicit project (overrides default)
       const sumlResponse = await mcpClient.callTool('get_cr', {
@@ -97,7 +97,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
         project: 'SUML',
       })
       expect(sumlResponse.success).toBe(true)
-      expect(sumlResponse.data).toContain('SUML Backward Compatibility Test')
+      expect(sumlResponse.data).toContain('SUML backward compatibility test content')
     })
 
     it('GIVEN single-project mode WHEN using full format with explicit project THEN work', async () => {
@@ -110,7 +110,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
       const sumlCR = await projectFactory.createTestCR('SUML', {
         title: 'Full Format Explicit Test',
         type: 'Feature Enhancement',
-        content: '## 1. Description\nTest',
+        content: '## 1. Description\nFull format explicit test content',
       })
       const sumlCRKey = extractCRKey(sumlCR)
 
@@ -121,7 +121,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
       })
 
       expect(response.success).toBe(true)
-      expect(response.data).toContain('Full Format Explicit Test')
+      expect(response.data).toContain('Full format explicit test content')
     })
   })
 
@@ -134,14 +134,14 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
       const mdtCR = await projectFactory.createTestCR('MDT', {
         title: 'MDT Multi-Project Test',
         type: 'Feature Enhancement',
-        content: '## 1. Description\nMDT content',
+        content: '## 1. Description\nMDT multi-project test content',
       })
       const mdtCRKey = extractCRKey(mdtCR)
 
       const sumlCR = await projectFactory.createTestCR('SUML', {
         title: 'SUML Multi-Project Test',
         type: 'Feature Enhancement',
-        content: '## 1. Description\nSUML content',
+        content: '## 1. Description\nSUML multi-project test content',
       })
       const sumlCRKey = extractCRKey(sumlCR)
 
@@ -151,7 +151,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
         project: 'MDT',
       })
       expect(mdtResponse.success).toBe(true)
-      expect(mdtResponse.data).toContain('MDT Multi-Project Test')
+      expect(mdtResponse.data).toContain('MDT multi-project test content')
 
       // Get SUML CR with explicit project
       const sumlResponse = await mcpClient.callTool('get_cr', {
@@ -159,7 +159,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
         project: 'SUML',
       })
       expect(sumlResponse.success).toBe(true)
-      expect(sumlResponse.data).toContain('SUML Multi-Project Test')
+      expect(sumlResponse.data).toContain('SUML multi-project test content')
     })
 
     it('GIVEN multi-project mode WHEN using numeric key with explicit project THEN work', async () => {
@@ -169,7 +169,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
       const sumlCR = await projectFactory.createTestCR('SUML', {
         title: 'Numeric Key Multi-Project Test',
         type: 'Feature Enhancement',
-        content: '## 1. Description\nTest',
+        content: '## 1. Description\nNumeric key multi-project test content',
       })
       const sumlCRKey = extractCRKey(sumlCR)
 
@@ -180,7 +180,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
       })
 
       expect(response.success).toBe(true)
-      expect(response.data).toContain('Numeric Key Multi-Project Test')
+      expect(response.data).toContain('Numeric key multi-project test content')
     })
 
     it('GIVEN multi-project mode WHEN using full format key THEN work', async () => {
@@ -190,7 +190,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
       const sumlCR = await projectFactory.createTestCR('SUML', {
         title: 'Full Format Multi-Project Test',
         type: 'Feature Enhancement',
-        content: '## 1. Description\nTest',
+        content: '## 1. Description\nFull format multi-project test content',
       })
       const sumlCRKey = extractCRKey(sumlCR)
 
@@ -201,7 +201,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
       })
 
       expect(response.success).toBe(true)
-      expect(response.data).toContain('Full Format Multi-Project Test')
+      expect(response.data).toContain('Full format multi-project test content')
     })
   })
 
@@ -216,7 +216,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
         type: 'Feature Enhancement',
         status: 'Proposed',
         priority: 'High',
-        content: '## 1. Description\nComprehensive test',
+        content: '## 1. Description\nComprehensive backward compatibility test content',
       })
       const crKey = extractCRKey(testCR)
 
@@ -231,7 +231,7 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
       for (const pattern of patterns) {
         const response = await mcpClient.callTool('get_cr', pattern)
         expect(response.success).toBe(true)
-        expect(response.data).toContain('Backward Compatibility Comprehensive Test')
+        expect(response.data).toContain('Comprehensive backward compatibility test content')
       }
     })
   })

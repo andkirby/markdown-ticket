@@ -74,7 +74,8 @@ export class CRHandlers {
    */
   async handleGetCR(project: Project, key: string, mode: string = 'full'): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
-    const normalizedKey = normalizeKey(key, project.project.code)
+    const projectCode = project.project.code || project.id
+    const normalizedKey = normalizeKey(key, projectCode)
 
     // Validate mode parameter - this is a protocol error (invalid parameter)
     const modeValidation = validateOperation(mode, ['full', 'attributes', 'metadata'], 'mode')
@@ -151,9 +152,16 @@ export class CRHandlers {
           ]
 
           for (const field of optionalFields) {
-            const value = (parsedTicket as Record<string, unknown>)[field as string]
-            if (value !== undefined) {
-              attributes[field] = typeof value === 'string' ? Sanitizer.sanitizeText(value) : value
+            const value = (parsedTicket as unknown as Record<string, unknown>)[field as string]
+            if (value !== undefined && value !== null) {
+              // Type-safe assignment based on the expected type
+              if (typeof value === 'string') {
+                (attributes as unknown as Record<string, unknown>)[field] = Sanitizer.sanitizeText(value)
+              } else if (Array.isArray(value)) {
+                (attributes as unknown as Record<string, unknown>)[field] = value as string[]
+              } else {
+                (attributes as unknown as Record<string, unknown>)[field] = value
+              }
             }
           }
 
@@ -232,7 +240,7 @@ export class CRHandlers {
       processedData.content = contentProcessingResult.content
     }
 
-    const ticket = await this.crService.createCR(project, typeValidation.value, processedData)
+    const ticket = await this.crService.createCR(project, typeValidation.value as string, processedData)
 
     const lines = [
       `✅ **Created CR ${ticket.code}**: ${ticket.title}`,
@@ -255,7 +263,7 @@ export class CRHandlers {
     }
 
     // Add processing information if content was provided and processed
-    if (data.content && processedData.content !== data.content) {
+    if (data.content && processedData.content !== data.content && contentProcessingResult) {
       lines.push('')
       lines.push('**Content Processing:**')
       lines.push('- Applied content sanitization and formatting')
@@ -285,7 +293,8 @@ export class CRHandlers {
    */
   async handleUpdateCRStatus(project: Project, key: string, status: CRStatus): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
-    const normalizedKey = normalizeKey(key, project.project.code)
+    const projectCode = project.project.code || project.id
+    const normalizedKey = normalizeKey(key, projectCode)
 
     // Validate status parameter
     const statusValidation = validateOperation(status, [
@@ -310,7 +319,7 @@ export class CRHandlers {
     const oldStatus = ticket.status
 
     // The service now throws specific errors instead of returning false
-    await this.crService.updateCRStatus(project, normalizedKey, statusValidation.value)
+    await this.crService.updateCRStatus(project, normalizedKey, statusValidation.value as CRStatus)
 
     const lines = [
       `✅ **Updated CR ${normalizedKey}** status`,
@@ -339,7 +348,8 @@ export class CRHandlers {
    */
   async handleUpdateCRAttrs(project: Project, key: string, attributes: Record<string, unknown>): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
-    const normalizedKey = normalizeKey(key, project.project.code)
+    const projectCode = project.project.code || project.id
+    const normalizedKey = normalizeKey(key, projectCode)
 
     // Validate attributes parameter
     const attrsValidation = validateRequired(attributes, 'attributes')
@@ -381,7 +391,8 @@ export class CRHandlers {
    */
   async handleDeleteCR(project: Project, key: string): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
-    const normalizedKey = normalizeKey(key, project.project.code)
+    const projectCode = project.project.code || project.id
+    const normalizedKey = normalizeKey(key, projectCode)
 
     // Get CR info before deletion
     const ticket = await this.crService.getCR(project, normalizedKey)
@@ -414,7 +425,8 @@ export class CRHandlers {
    */
   async handleSuggestCRImprovements(project: Project, key: string): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
-    const normalizedKey = normalizeKey(key, project.project.code)
+    const projectCode = project.project.code || project.id
+    const normalizedKey = normalizeKey(key, projectCode)
 
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {

@@ -24,8 +24,8 @@ function getArray(value: unknown, fallback: string[]): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : fallback
 }
 
-function getEnum<T extends string>(value: unknown, allowed: T[], fallback: T): T {
-  return allowed.includes(value) ? value : fallback
+function getEnum<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(value as T) ? value as T : fallback
 }
 
 export function migrateConfig(oldConfig: unknown, quiet = false): GlobalConfig {
