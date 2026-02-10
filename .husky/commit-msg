@@ -3,12 +3,15 @@
 #
 # Checks:
 #   1. Block Co-Authored-By (no AI attribution)
+#   2. Block absolute home paths in commit messages
 
 set -e
 
 HOOK_DIR="$(dirname "$0")"
 . "$HOOK_DIR/lib/block-co-authored-by.sh"
+. "$HOOK_DIR/lib/block-home-paths-commit-msg.sh"
 
 block_co_authored_by "$1"
+block_home_paths_commit_msg "$1"
 
 exit 0
