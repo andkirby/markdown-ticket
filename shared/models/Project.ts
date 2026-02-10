@@ -215,17 +215,24 @@ export function validateProjectConfig(config: UnknownConfig): config is ProjectC
 
   // Optional fields for LocalProjectConfig - handle both array and object formats
   const document = (config as Record<string, unknown>).document
-  const hasValidDocumentPaths = document === undefined
-    || (typeof document === 'object' && document !== null && 'paths' in document
-      && Array.isArray((document as Record<string, unknown>).paths)
-      && ((document as Record<string, unknown>).paths as unknown[]).every((p: unknown) => typeof p === 'string'))
+  const hasValidDocument = document === undefined
+    || (typeof document === 'object' && document !== null)
 
-  const hasValidExcludeFolders = document === undefined
-    || (typeof document === 'object' && document !== null && 'excludeFolders' in document
-      && Array.isArray((document as Record<string, unknown>).excludeFolders)
-      && ((document as Record<string, unknown>).excludeFolders as unknown[]).every((f: unknown) => typeof f === 'string'))
+  // If paths is present, it must be an array of strings
+  const paths = document !== undefined && typeof document === 'object' && document !== null
+    ? (document as Record<string, unknown>).paths
+    : undefined
+  const hasValidDocumentPaths = paths === undefined
+    || (Array.isArray(paths) && paths.every((p: unknown) => typeof p === 'string'))
+
+  // If excludeFolders is present, it must be an array of strings
+  const excludeFolders = document !== undefined && typeof document === 'object' && document !== null
+    ? (document as Record<string, unknown>).excludeFolders
+    : undefined
+  const hasValidExcludeFolders = excludeFolders === undefined
+    || (Array.isArray(excludeFolders) && excludeFolders.every((f: unknown) => typeof f === 'string'))
 
   return hasValidName && hasValidCode && hasValidPath && hasValidStartNumber
     && hasValidCounterFile && hasValidDescription && hasValidRepository
-    && hasValidDocumentPaths && hasValidExcludeFolders
+    && hasValidDocument && hasValidDocumentPaths && hasValidExcludeFolders
 }

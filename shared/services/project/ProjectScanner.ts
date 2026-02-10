@@ -1,6 +1,6 @@
 import type { Project } from '../../models/Project.js'
 import { CONFIG_FILES } from '../../utils/constants.js'
-import { fileExists, readDirectory } from '../../utils/file-utils.js'
+import { directoryExists, fileExists, readDirectory } from '../../utils/file-utils.js'
 import { logQuiet } from '../../utils/logger.js'
 import {
   buildConfigFilePath,
@@ -33,8 +33,8 @@ export class ProjectScanner {
 
     for (const searchPath of pathsToSearch) {
       try {
-        logQuiet(this.quiet, `🔍 Checking path: ${searchPath}, exists: ${fileExists(searchPath)}`)
-        if (fileExists(searchPath)) {
+        logQuiet(this.quiet, `🔍 Checking path: ${searchPath}, exists: ${directoryExists(searchPath)}`)
+        if (directoryExists(searchPath)) {
           logQuiet(this.quiet, `🔍 Scanning ${searchPath} for projects...`)
           this.scanDirectoryForProjects(searchPath, discovered, 3) // Max depth 3
         }
