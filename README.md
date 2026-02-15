@@ -181,6 +181,8 @@ git push
 
 ## 📈 What's New
 
+- **v0.10.0** (2026-02-15): Single-project mode for MCP server, Research ticket type, event history dev tool, test suite fixes, macOS case-insensitivity fix
+
 - **v0.9.0** (2026-01-17): Modern UI with gradients and animations, comprehensive E2E testing coverage, code metrics tool, and Docker improvements
 
 - **v0.8.0** (2025-12-29): Interactive API documentation, enhanced status buttons, TOML configuration improvements
