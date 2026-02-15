@@ -71,18 +71,18 @@ What type of work?
         │                        DDD constraints for architecture
         │                        ⚠️ Skip for refactoring/tech-debt/CRUD
         ▼
+/mdt:clarification (as needed) ─── Resolve spec gaps before design/tests
+        │                        ⚠️ If behavior changes, update requirements/bdd
+        ▼
 /mdt:architecture ─────────────── Simple: CR section (concise)
         │                        Complex: architecture.md (extracted)
         │                        Defines: parts, modules, structure
-        │                        Consumes: poc.md, domain.md, bdd.md
+        │                        Consumes: requirements.md, bdd.md, poc.md, domain.md
         ▼
 /mdt:tests ────────────────────── Creates: tests.md + unit/integration files
         │                        Module-level tests from architecture
         │                        Part-aware (part-X.Y/tests.md)
         │                        Tests written BEFORE implementation (RED)
-        ▼
-/mdt:clarification (as needed)
-        │
         ▼
 /mdt:tasks ────────────────────── Creates: tasks.md
         │                        Constrained task list
@@ -113,34 +113,43 @@ What type of work?
         ↓
 /mdt:domain-lens (optional) → DDD constraints
         ↓
-/mdt:architecture → determines HOW, defines parts (consumes poc.md, domain.md, bdd.md)
+/mdt:clarification (as needed) → resolve spec gaps before design/tests
+        ↓
+/mdt:architecture → determines HOW, defines parts (consumes requirements.md, bdd.md, poc.md, domain.md)
         ↓
 /mdt:tests → module-level tests (part-aware)
         ↓
-/mdt:tasks → /mdt:implement
+/mdt:tasks → /mdt:implement → /mdt:tech-debt → /mdt:reflection
 ```
 
 ## Refactoring Workflow
 
 ```
+Default rule: Use normal commands for inline refactoring.
+Use `--prep` only when `/mdt:assess` signals "⚠️ Prep Required" or for foundational restructuring.
+
 /mdt:ticket-creation (Full Specification)
         │
         ▼
 /mdt:assess (recommended) ─────────── Decision point + test coverage gaps
+        │                             Prep required?
+        ├─► Yes ───────────────────── See Prep Workflow (`--prep` chain)
         │
-        ▼
+        └─► No (inline refactor path)
+            │
+            ▼
 /mdt:domain-audit ─────────────────── Diagnose DDD + structural issues
         │                             Extracts domain concept + natural grouping
         ▼
-/mdt:bdd --prep (optional) ────────── Lock existing E2E user journeys
-        │                             Tests must be GREEN
+/mdt:bdd (optional) ───────────────── Lock existing E2E user journeys
+        │                             Tests should stay GREEN
         ▼
-/mdt:architecture ─────────────────── Design fix based on audit findings
+/mdt:architecture (inline) ────────── Design fix based on audit findings
         │
         ▼
-/mdt:tests ────────────────────────── Behavior preservation tests
+/mdt:tests (inline) ───────────────── Behavior preservation tests
         │                             Lock current behavior before changes
-        │                             Tests must be GREEN before refactoring
+        │                             Tests should stay GREEN during refactoring
         ▼
 /mdt:tasks ────────────────────────── Constrained task list
         │
@@ -156,6 +165,8 @@ What type of work?
 ```
 
 ## Prep Workflow
+
+Use this workflow only when `/mdt:assess` signals "⚠️ Prep Required" or when doing foundational restructuring.
 
 ```
 /mdt:assess
@@ -308,7 +319,7 @@ Create new CR (e.g., "Fix technical debt from {CR-KEY}")
                   (RED)                           (RED)                     + verified
 ```
 
-### Refactoring Flow (GREEN → GREEN)
+### Prep Refactoring Flow (GREEN → GREEN)
 
 ```
 /mdt:assess → /mdt:bdd --prep → /mdt:architecture --prep → /mdt:tests --prep → /mdt:tasks --prep → /mdt:implement --prep

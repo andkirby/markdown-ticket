@@ -193,27 +193,31 @@ Requirements → BDD Tests (E2E) → Architecture → TDD Tests (Unit) → Imple
 
 1. `/mdt:bdd` reads requirements.md, generates E2E tests (Playwright/Cypress)
 2. E2E tests are RED (feature doesn't exist yet)
-3. `/mdt:architecture` defines module structure and parts
-4. `/mdt:tests` reads architecture.md, generates module tests
-5. Module tests are RED (modules don't exist yet)
-6. `/mdt:implement` writes code to make all tests GREEN
+3. Run `/mdt:assess`, `/mdt:poc`, `/mdt:domain-lens`, and `/mdt:clarification` as needed before design
+4. `/mdt:architecture` defines module structure and parts (consumes requirements.md, bdd.md, poc.md, domain.md)
+5. `/mdt:tests` reads architecture.md, generates module tests
+6. Module tests are RED (modules don't exist yet)
+7. `/mdt:implement` writes code to make all tests GREEN
 
-### Refactoring Flow (GREEN → GREEN)
+### Refactoring Decision (Inline vs Prep)
 
 ```
-/mdt:assess → /mdt:bdd --prep → /mdt:architecture --prep → /mdt:tests --prep → /mdt:tasks --prep → /mdt:implement --prep
-      │            │                    │                       │                          │
-      ↓            ↓                    ↓                       ↓                          ↓
-  Find gaps   Lock E2E            Design fix              Lock modules              Behavior
-              (GREEN)                                      (GREEN)                  preserved
+/mdt:assess
+      │
+      ├─► Prep required? YES
+      │   /mdt:bdd --prep (optional) → /mdt:architecture --prep → /mdt:tests --prep → /mdt:tasks --prep → /mdt:implement --prep
+      │
+      └─► Prep required? NO (inline refactor)
+          /mdt:domain-audit → /mdt:bdd (optional) → /mdt:architecture → /mdt:tests → /mdt:tasks → /mdt:implement
 ```
 
 **Process**:
 
-1. `/mdt:bdd --prep` locks existing user journeys (tests must be GREEN now)
-2. `/mdt:architecture --prep` designs the refactoring
-3. `/mdt:tests --prep` locks existing module behavior (tests must be GREEN now)
-4. `/mdt:implement --prep` refactors while keeping ALL tests GREEN
+1. Default to inline refactoring with normal commands
+2. Use `--prep` only when `/mdt:assess` signals "⚠️ Prep Required" or when doing foundational restructuring
+3. Optional `/mdt:bdd --prep` locks existing user journeys (GREEN)
+4. `/mdt:tests --prep` (or inline `/mdt:tests`) locks module behavior before risky changes
+5. Refactoring is complete only when behavior-preservation tests remain GREEN
 
 ### TDD Verification in `/mdt:implement`
 
@@ -332,9 +336,9 @@ If no `## Part X.Y:` headers exist in architecture.md, prompts default to root-l
 > **Quick summary**: When refactoring fundamentally changes the code landscape, use prep workflow to refactor first,
 > then design the feature against the new structure.
 
-When `/mdt:assess` identifies that **refactoring fundamentally changes the code landscape** (e.g., breaking up a God
-class, introducing new services), the feature architecture depends on the refactored structure. Use the **prep workflow
-** to design and execute refactoring first.
+Default refactoring uses normal commands. Use prep mode only when `/mdt:assess` identifies that **refactoring
+fundamentally changes the code landscape** (e.g., breaking up a God class, introducing new services), and feature
+architecture depends on that restructured code.
 
 ### When to Use Prep
 
@@ -379,6 +383,9 @@ Prep is a **different design problem** than the feature — it gets its own arch
     └─► "⚠️ Prep Required" signal
         │
         ▼
+/mdt:bdd {CR-KEY} --prep (optional)── Creates: prep/bdd.md
+        │                            Lock existing E2E behavior (GREEN)
+        ▼
 /mdt:architecture {CR-KEY} --prep ─── Creates: prep/architecture.md
         │                            Refactoring design
         ▼
@@ -407,6 +414,7 @@ Prep is a **different design problem** than the feature — it gets its own arch
 
 | Command                         | Behavior                                    |
 |---------------------------------|---------------------------------------------|
+| `/mdt:bdd {CR} --prep`          | Lock existing E2E behavior (GREEN)          |
 | `/mdt:architecture {CR} --prep` | Design refactoring → `prep/architecture.md` |
 | `/mdt:tests {CR} --prep`        | Lock behavior (tests should be GREEN)       |
 | `/mdt:tasks {CR} --prep`        | Generate refactoring tasks                  |
@@ -508,6 +516,6 @@ Unlike feature development (RED → GREEN), prep uses **behavior preservation**:
     - Validates "will this work?" before committing to approach
 
 15. **Prep before feature** — when refactoring changes the code landscape, design and execute refactoring first
-    - Prep workflow: assess → architecture (prep) → tests (GREEN) → tasks → implement
+    - Prep workflow: assess → bdd (optional, prep) → architecture (prep) → tests (GREEN) → tasks → implement
     - Feature designs against NEW code structure
     - GREEN→GREEN verification preserves behavior

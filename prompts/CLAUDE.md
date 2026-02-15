@@ -34,6 +34,8 @@ All workflow commands are organized as a Claude Code plugin in the `mdt/` direct
 - `mdt/.claude-plugin/plugin.json` - Plugin metadata for `claude plugin install`
 - `mdt/commands/` - User-facing workflow commands
 - `mdt/agents/` - Internal agent prompts (not user-facing)
+- `mdt/hooks/hooks.json` - Plugin hook registration (Stop hook)
+- `mdt/scripts/enforce-tasks.sh` - Stop hook: blocks completion if `.tasks-status.yaml` has pending tasks
 
 | File                                  | Purpose                              | Output                                    |
 |---------------------------------------|--------------------------------------|-------------------------------------------|
@@ -46,7 +48,7 @@ All workflow commands are organized as a Claude Code plugin in the `mdt/` direct
 | `mdt/commands/architecture.md`        | Architecture design                  | CR section or `{CR-KEY}/architecture.md`  |
 | `mdt/commands/tests.md`               | Module tests (unit/integration)      | `{CR-KEY}/[part-*/]tests.md` + test files |
 | `mdt/commands/clarification.md`       | Fill specification gaps              | Updated CR sections                       |
-| `mdt/commands/tasks.md`               | Task breakdown                       | `{CR-KEY}/[part-*/]tasks.md`              |
+| `mdt/commands/tasks.md`               | Task breakdown                       | `{CR-KEY}/[part-*/]tasks.md` + `.tasks-status.yaml` |
 | `mdt/commands/implement.md`           | Execute with verification            | Code changes                              |
 | `mdt/commands/implement-agentic.md`   | Execute with agent-based verification| Code changes + checkpoint state           |
 | `mdt/commands/poc.md`                 | Proof-of-concept for research        | `{CR-KEY}/poc.md` + `poc/` folder         |
@@ -145,6 +147,24 @@ claude --plugin-dir /path/to/prompts/mdt
 ```
 
 See `mdt/README.md` for complete plugin documentation.
+
+### Plugin Sync (Development → Production)
+
+This directory (`~/home/mdt-prompts/`) is the **development** source. The production install lives at `~/home/markdown-ticket/prompts/`. Changes here are NOT live until synced.
+
+**After modifying any file under `mdt/`:**
+
+1. **Check what needs syncing**: `./.sync up --dry-run`
+2. **Sync with user permission**: `./.sync up` (never run without user approval)
+3. **Verify plugin in target projects**: New hooks, commands, or scripts may require `claude plugin install` in consumer projects
+
+**Direction awareness:**
+- `./.sync diff` — shows differences between dev and production (start here)
+- `./.sync up` — pushes from this dev dir → production
+- `./.sync down` — pulls from production → this dev dir
+- Always run `.sync diff` first to understand what changed and in which direction
+
+**Common miss:** New files (scripts, hooks) are especially easy to forget. If a hook or script isn't firing in a target project, check sync status first.
 
 ### Project Context Detection
 

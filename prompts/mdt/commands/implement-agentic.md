@@ -1,3 +1,13 @@
+---
+name: implement-agentic
+description: Execute with agent-based verification
+argument-hint: "{CR-KEY} [--prep] [--part X.Y] [--continue] [--task N.N] [--strict] [--batch N]"
+allowed-tools:
+  - Bash(${CLAUDE_PLUGIN_ROOT}/scripts/gen-tasks-status.sh:*)
+  - Bash(${CLAUDE_PLUGIN_ROOT}/scripts/update-task-status.sh:*)
+  - Bash(${CLAUDE_PLUGIN_ROOT}/scripts/enforce-tasks.sh:*)
+---
+
 # MDT Agentic Implementation Orchestrator (v3)
 
 Coordinate implementation tasks using specialized agents and checkpointed state.
@@ -9,7 +19,7 @@ Coordinate implementation tasks using specialized agents and checkpointed state.
 You are a flow orchestrator. Your ONLY job is to launch subagents using the Task tool and relay their results.
 
 **FORBIDDEN:**
-- ❌ NEVER use Edit/Write/Bash tools directly
+- ❌ NEVER use Edit/Write tools directly for code changes
 - ❌ NEVER use Task tool with general-purpose or other subagent types
 - ❌ NEVER implement code yourself
 
@@ -18,6 +28,11 @@ You are a flow orchestrator. Your ONLY job is to launch subagents using the Task
 - ✅ Use Task tool with subagent_type="mdt:code" for implementation
 - ✅ Use Task tool with subagent_type="mdt:fix" for fixing failures
 - ✅ Use Task tool with subagent_type="mdt:verify-complete" for completion verification
+
+**ALLOWED Bash (state management scripts only):**
+- ✅ `${CLAUDE_PLUGIN_ROOT}/scripts/gen-tasks-status.sh` — generate tracker if missing
+- ✅ `${CLAUDE_PLUGIN_ROOT}/scripts/update-task-status.sh` — update task status by ID
+- ✅ `${CLAUDE_PLUGIN_ROOT}/scripts/enforce-tasks.sh` — self-check before completion
 
 ## User Input
 
@@ -124,6 +139,16 @@ checkpoint:
 
 - Resolve mode and part.
 - Load `tasks.md` and pick the first incomplete task (or target task).
+- **Auto-generate `.tasks-status.yaml`** if missing: run `${CLAUDE_PLUGIN_ROOT}/scripts/gen-tasks-status.sh` with the path to `tasks.md`. This parses task headers and creates the tracker with all tasks as `pending`. No-op if the file already exists.
+- **Create Claude Code task list** from tasks.md:
+  - Read `{TICKETS_PATH}/{CR-KEY}/tasks.md`
+  - Parse all `### Task N: {title}` headers (e.g., `### Task 1: Create user service`)
+  - Extract the full task content from each header to the next `### Task` or end of file
+  - For each task, use `TaskCreate` with:
+    - `subject`: Task {N}: {title}
+    - `description`: Full task content including Structure, Makes GREEN, Scope, Boundary, Create/Move, Exclude, Anti-duplication, Verify, Done when
+    - `activeForm`: Working on Task {N}
+  - This provides visibility into the implementation workflow
 - Load `tests.md` to extract:
   - tests for the task
   - scope boundaries
@@ -169,6 +194,10 @@ Decision:
 ---
 
 ## Step 3: Implement
+
+Before launching the code agent:
+- Check `.tasks-status.yaml` — if the current task's status is `blocked`, **skip it** and advance to the next task.
+- Run: `${CLAUDE_PLUGIN_ROOT}/scripts/update-task-status.sh {TRACKER_PATH} {TASK_ID} in_progress`
 
 Use Task tool with subagent_type="mdt:code" and prompt:
 
@@ -260,14 +289,27 @@ attempt: 1 | 2
 max_attempts: 2
 ```
 
-Max 2 attempts per task. If fix fails twice, STOP and surface to user.
+Max 2 attempts per task. If fix fails twice:
+1. Run: `${CLAUDE_PLUGIN_ROOT}/scripts/update-task-status.sh {TRACKER_PATH} {TASK_ID} blocked`
+2. STOP and surface the failure to the user
+
+Similarly, if Step 4 returns `scope_breach` or `duplication`:
+1. Run: `${CLAUDE_PLUGIN_ROOT}/scripts/update-task-status.sh {TRACKER_PATH} {TASK_ID} blocked`
+2. STOP — do not attempt fixes for scope violations
+
+When all remaining tasks are `blocked`, the Stop hook allows clean exit. Report all blocked tasks with their failure reasons.
 
 ---
 
 ## Step 6: Mark Progress
 
-- Update `.checkpoint.yaml`: advance `task_id`, reset `fix_attempts`, update `batch.current_count`
-- Update `tasks.md`: change `[ ]` → `[x]` for completed task
+After a task passes verification, update **all three** tracking files:
+
+1. **`.checkpoint.yaml`**: advance `task_id`, reset `fix_attempts`, update `batch.current_count`
+2. **`.tasks-status.yaml`**: Run `${CLAUDE_PLUGIN_ROOT}/scripts/update-task-status.sh {TRACKER_PATH} {TASK_ID} done`
+3. **`tasks.md`**: change `[ ]` → `[x]` for all checkboxes under the completed task's `**Done when**:` section
+
+All three updates are mandatory before advancing to the next task.
 
 ---
 
@@ -342,6 +384,12 @@ MEDIUM/LOW issues:
 
 ## Step 9: Final Completion
 
+Before declaring completion, run the self-check:
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/enforce-tasks.sh <<< '{"stop_hook_active": false, "cwd": "'"$(pwd)"'"}'
+```
+If it exits non-zero, tasks remain incomplete — do not proceed.
+
 After all tasks pass and completion verification succeeds:
 
 ```markdown
@@ -369,6 +417,14 @@ Implementation Complete: {CR-KEY}
 - [ ] Commit changes
 - [ ] Update CR status to Implemented
 ```
+
+After displaying the summary, clean up ephemeral state files:
+```bash
+rm -f {TICKETS_PATH}/{CR-KEY}/.tasks-status.yaml
+rm -f {TICKETS_PATH}/{CR-KEY}/.checkpoint.yaml
+```
+
+These are implementation-time artifacts. Once complete, they serve no purpose. The `--continue` flag only works during an active implementation — after Step 9, there's nothing to resume.
 
 ---
 
