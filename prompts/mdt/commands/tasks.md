@@ -1,4 +1,4 @@
-# MDT Task Breakdown Workflow (v8)
+# MDT Task Breakdown Workflow (v9)
 
 Generate tasks from architecture + tests. Tasks include **constraints** (scope boundaries, exclusions, anti-duplication), not just actions.
 
@@ -62,6 +62,7 @@ Prerequisites exist?
 5. **Order**: Shared utilities before features
 6. **Sequencing**: Add a walking skeleton task before deep module work, unless change is tiny/single-module
 7. **Constraint coverage**: Reference requirement constraint IDs (C1, C2...) in relevant tasks
+8. **Architecture structure coverage**: Walk the architecture.md Structure section. Every listed file must appear in at least one task's Create/Modify list. If a file has no task, add one.
 
 ## Implementation Sequencing
 
@@ -145,6 +146,7 @@ Rules:
 - [ ] Makes GREEN from tests.md
 - [ ] Every task has Scope/Boundary, Exclude, Anti-duplication
 - [ ] Shared patterns before features
+- [ ] Every file in architecture.md Structure section covered by a task
 
 ## Completion
 

@@ -1,4 +1,4 @@
-# MDT Architecture Design Workflow (v9)
+# MDT Architecture Design Workflow (v10)
 
 Surface architectural decisions before implementation. Output is minimal but complete.
 
@@ -61,8 +61,9 @@ Check for `--prep` flag in `$ARGUMENTS`. If present, mode is `prep`.
    - `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` — **PRIMARY for prep mode** (structural diagnosis)
 3. If requirements.md exists, extract constraint IDs (C1, C2...) and carry them into architecture sections
 4. Extract from CR: problem, affected files, new files, scope
-5. Check project CLAUDE.md for conventions
-6. If `{TICKETS_PATH}/{CR-KEY}/architecture.md` already exists, read it as context — but the output **replaces it entirely**. Never append to or merge with an existing architecture document.
+5. If the CR has a References section, read those docs for authoritative context (API specs, interface definitions, roadmaps). These may specify scope details (endpoints, methods, contracts) not captured in the CR description.
+6. Check project CLAUDE.md for conventions
+7. If `{TICKETS_PATH}/{CR-KEY}/architecture.md` already exists, read it as context — but the output **replaces it entirely**. Never append to or merge with an existing architecture document.
 
 ### Step 2: Identify Decisions
 
@@ -223,6 +224,7 @@ Before saving, verify:
 - [ ] Only sections from the template are present — no invented sections
 - [ ] Overview is 2-3 sentences (not a paragraph)
 - [ ] Structure shows concrete paths (not abstract names), 5-15 entries
+- [ ] Structure comments enumerate the public interface (endpoints, methods, exports) — not vague labels
 - [ ] Error Philosophy is prose (not a table of every scenario)
 - [ ] No code snippets anywhere (describe intent, not implementation)
 - [ ] Runtime prerequisites defined (if external deps exist)
