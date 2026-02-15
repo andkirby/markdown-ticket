@@ -1,5 +1,43 @@
 # Release Notes
 
+## v0.10.0 (2026-02-15)
+
+### 🎉 New Features
+
+**Single-Project Mode for MCP Server (MDT-121)**
+- **Auto-detection**: Start MCP server from any project directory - no need to specify `project` parameter
+- **Numeric Shorthand**: Use `5` instead of `MDT-005` for quicker ticket references
+- **Configurable Depth**: Adjust how far up the directory tree to search for project config
+- **Backward Compatible**: All existing workflows continue to work unchanged
+
+**Research Ticket Type (MDT-120)**
+- **New CR Type**: "Research" for hypothesis-driven technical validation work
+- **Dedicated Template**: Research Objective, Research Questions table, Validation Approach sections
+- **Workflow Routing**: `/mdt:suggest` now correctly routes research tickets through appropriate workflows
+- **Use Cases**: POC investigations, feasibility studies, technical experiments
+
+### 🚀 Improvements
+
+**Event History Developer Tool (MDT-061)**
+- **Debug Menu**: Event History toggle added to hamburger menu
+- **Real-time Tracking**: Monitor SSE events and listener management
+- **Development Aid**: Helps diagnose event flow issues during development
+
+### 🐛 Bug Fixes
+
+**macOS Case-Insensitivity (MDT-126)**
+- **Fixed Project Discovery**: Projects now correctly detected regardless of directory case variations
+- **Example**: `~/home/MArkdown-TIcket` now matches config `project.id = "markdown-ticket"`
+- **No User Impact**: Fix is transparent - projects work regardless of how you navigate to them
+
+**Test Suite Fixes (MDT-125)**
+- **Server Tests**: Fixed 53 failures across API test suites (TypeScript compilation + runtime)
+- **MCP Tests**: Resolved ~15 E2E test timeouts for projects created after server startup
+- **Shared Tests**: Fixed git worktree matcher failures expecting undefined values
+- **CI/CD Restored**: All test suites now pass reliably for continuous integration
+
+---
+
 ## v0.9.0 (2026-01-17)
 
 ### 🎉 New Features
