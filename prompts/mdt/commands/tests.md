@@ -1,4 +1,4 @@
-# MDT Test Specification Workflow (v7)
+# MDT Test Specification Workflow (v8)
 
 Generate unit/integration tests from architecture design. Tests written AFTER architecture, BEFORE implementation.
 
@@ -55,6 +55,10 @@ For each external dependency declared in architecture (env var, CLI tool, API, s
 | Env var | Behavior when var is set vs absent (real env) |
 | External command | At least one test with a real command (e.g., `echo test`) |
 | API/Service | At least one test against real or local endpoint (or contract test if gated) |
+
+### 4. Architecture Structure Coverage
+
+Walk the architecture.md Structure section (file tree). Every listed source file must have a corresponding test. If a file has no test, add one. This prevents entire layers (e.g., HTTP routes, adapters) from being silently skipped.
 
 ## Constraint Coverage
 
@@ -155,6 +159,7 @@ Write actual executable test files to project's test directory. Follow project's
 - [ ] Architecture exists
 - [ ] Mode detected (feature/prep)
 - [ ] All modules have interface tests
+- [ ] Every source file in architecture.md Structure section has a corresponding test
 - [ ] Data mechanisms extracted and tested
 - [ ] External dependencies tested with at least one real integration test
 - [ ] Constraint IDs from requirements covered (or explicitly N/A)

@@ -24,6 +24,7 @@ artifacts:
   requirements: "{requirements.md or null}"
   tasks: "{tasks.md}"
   bdd: "{bdd.md or null}"
+  architecture: "{architecture.md or null}"
 changed_files: ["{path}", ...]
 verification_round: 0 | 1 | 2
 ```
@@ -38,7 +39,8 @@ verification_round: 0 | 1 | 2
     "build": { "status": "pass|fail|skipped" },
     "tests": { "status": "pass|fail|skipped", "passed": 0, "failed": 0 },
     "lint": { "status": "pass|fail|skipped" },
-    "typecheck": { "status": "pass|fail|skipped" }
+    "typecheck": { "status": "pass|fail|skipped" },
+    "architecture_coverage": { "status": "pass|partial|skipped", "present": 0, "total": 0 }
   },
   "requirements_matrix": [
     { "id": "AC-1", "type": "POSITIVE|NEGATIVE|LOCATION", "status": "pass|partial|fail", "evidence": ["path:line"], "notes": "" }
@@ -136,7 +138,16 @@ For each command in project config (if not null):
 
 If command is null: `status: "skipped"`
 
-### 5. Security Scan (code analysis)
+### 5. Architecture Structure Coverage
+
+If architecture is provided, extract all file paths from the Structure section (code block with directory tree). For each path, verify the file exists on disk. Report missing files as HIGH severity issues with category `requirements`.
+
+- Parse the Structure code block for leaf file entries (lines with a file extension)
+- Check each file exists relative to the project root
+- Status: `pass` if all files exist, `partial` if any missing
+- Missing files → HIGH issue: `"Architecture specifies {path} but file does not exist"`
+
+### 6. Security Scan (code analysis)
 
 Scan changed_files for patterns:
 
@@ -148,14 +159,14 @@ Scan changed_files for patterns:
 | Input not validated | HIGH |
 | Error details exposed | MEDIUM |
 
-### 6. Dead Code Check
+### 7. Dead Code Check
 
 In changed_files, flag:
 - Unused exports (no importers)
 - Duplicate files (same content)
 - Methods that should be private per requirements
 
-### 7. Classify & Verdict
+### 8. Classify & Verdict
 
 **Severity**:
 | Level | Criteria |

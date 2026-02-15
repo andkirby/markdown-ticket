@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(${CLAUDE_PLUGIN_ROOT}/scripts/enforce-tasks.sh:*)
 ---
 
-# MDT Agentic Implementation Orchestrator (v3)
+# MDT Agentic Implementation Orchestrator (v5)
 
 Coordinate implementation tasks using specialized agents and checkpointed state.
 
@@ -139,6 +139,7 @@ checkpoint:
 
 - Resolve mode and part.
 - Load `tasks.md` and pick the first incomplete task (or target task).
+- **Set CR status to In Progress**: `mcp__mdt-all__update_cr_status(project=PROJECT_CODE, key=CR-KEY, status="In Progress")`
 - **Auto-generate `.tasks-status.yaml`** if missing: run `${CLAUDE_PLUGIN_ROOT}/scripts/gen-tasks-status.sh` with the path to `tasks.md`. This parses task headers and creates the tracker with all tasks as `pending`. No-op if the file already exists.
 - **Create Claude Code task list** from tasks.md:
   - Read `{TICKETS_PATH}/{CR-KEY}/tasks.md`
@@ -337,6 +338,7 @@ artifacts:
   requirements: "{TICKETS_PATH}/{CR-KEY}/requirements.md content or null"  # null for prep mode
   tasks: "{TICKETS_PATH}/{CR-KEY}/tasks.md content}"
   bdd: "{TICKETS_PATH}/{CR-KEY}/bdd.md content or null}"  # null for prep mode
+  architecture: "{TICKETS_PATH}/{CR-KEY}/architecture.md content or null}"
 changed_files: [{files_changed across implementation}]
 verification_round: 0 | 1 | 2
 batch_verifies_clean: true | false  # enables early exit optimization
@@ -415,10 +417,19 @@ Implementation Complete: {CR-KEY}
 - [ ] Review flagged files
 - [ ] `/mdt:tech-debt {CR-KEY}`
 - [ ] Commit changes
-- [ ] Update CR status to Implemented
 ```
 
-After displaying the summary, clean up ephemeral state files:
+After displaying the summary, ask user for confirmation before finalizing status:
+
+```
+AskUserQuestion: "Mark {CR-KEY} as Implemented?"
+Options: [Yes (Recommended)] [No, keep In Progress]
+```
+
+If approved: `mcp__mdt-all__update_cr_status(project=PROJECT_CODE, key=CR-KEY, status="Implemented")`
+If declined: leave status as "In Progress".
+
+Then clean up ephemeral state files:
 ```bash
 rm -f {TICKETS_PATH}/{CR-KEY}/.tasks-status.yaml
 rm -f {TICKETS_PATH}/{CR-KEY}/.checkpoint.yaml

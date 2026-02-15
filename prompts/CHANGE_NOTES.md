@@ -2,6 +2,81 @@
 
 ## Recent Updates
 
+### 2026-02-15 - Architecture Structure Coverage and CR Status Management
+
+**Problem**: The implementation workflow had two gaps: (1) architecture.md Structure sections could list files that were never implemented, and (2) CR status was never updated to reflect implementation progress, leaving tickets stuck in "Approved" state even after completion.
+
+**Solution**: Added architecture structure coverage verification at both task generation and completion verification stages. Added CR status lifecycle management: sets to "In Progress" at start, asks for confirmation before marking "Implemented" at end.
+
+**Changes Made**:
+
+1. **tasks.md (v8→v9) - Architecture structure coverage required**:
+   - Added Critical Rule #8: "Architecture structure coverage" — every file in architecture.md Structure section must appear in at least one task's Create/Modify list
+   - Tasks generation now walks the Structure code block and cross-references against task file lists
+   - Missing files trigger new task creation to ensure complete implementation
+   - Added to completion checklist: "Every file in architecture.md Structure section covered by a task"
+
+2. **tests.md (v7→v8) - Architecture structure coverage required**:
+   - Added new section "Architecture Structure Coverage" — every source file in architecture.md Structure section must have a corresponding test
+   - Prevents entire layers (e.g., HTTP routes, adapters) from being silently skipped
+   - Added to completion checklist: "Every source file in architecture.md Structure section has a corresponding test"
+
+3. **verify-complete.md (v1→v2) - Architecture coverage verification**:
+   - Added `architecture` to artifacts YAML frontmatter (receives architecture.md content)
+   - Added `architecture_coverage` to mechanical checks (pass/partial/skipped, present/total counts)
+   - New Step 5: Architecture Structure Coverage — parses Structure section code block for file paths, verifies each exists on disk
+   - Missing files flagged as HIGH severity with category `requirements`: "Architecture specifies {path} but file does not exist"
+   - Steps 5-7 renumbered to 6-8 (Security Scan, Dead Code Check, Classify & Verdict)
+
+4. **implement-agentic.md (v4→v5) - CR status lifecycle with confirmation**:
+   - Added Step 1a: Set CR status to "In Progress" via `mcp__mdt-all__update_cr_status`
+   - Passes `architecture` artifact to verify-complete agent for coverage verification
+   - Modified Step 9: Final Completion now asks user confirmation before marking as "Implemented"
+   - User prompt: "Mark {CR-KEY} as Implemented?" with options [Yes (Recommended)] [No, keep In Progress]
+   - Only updates status to "Implemented" after explicit user approval
+
+5. **implement.md (v9→v10) - CR status lifecycle with confirmation**:
+   - Renumbered steps 1b-1e to 1c-1f to insert new Step 1b
+   - New Step 1b: Set CR status to "In Progress" via `mcp__mdt-all__update_cr_status`
+   - Added Step 9: Update CR Status with user confirmation prompt
+   - Same confirmation flow as implement-agentic: asks before marking "Implemented"
+
+6. **plugin.json (0.10.3-beta → 0.10.4-beta) - Version bump**
+
+7. **architecture.md (v9→v10) - CR References loading and Structure enumeration**:
+   - Added Step 1.5: Load CR References section for authoritative context (API specs, interface definitions, roadmaps)
+   - References may specify scope details not captured in CR description (endpoints, methods, contracts)
+   - Added to quality checklist: "Structure comments enumerate the public interface (endpoints, methods, exports) — not vague labels"
+
+8. **requirements.md (v3→v4) - CR References loading and validation improvements**:
+   - Added Step 1.5: Load CR References for scope context
+   - Extract discovered operations from reference docs even if CR uses shorthand (e.g., "CRUD" → create, list-all, get-by-id, update, delete)
+   - Enhanced Step 4: Validate with scope coverage checklist (endpoints, error codes, user-input fields)
+   - Added security constraint requirement for user content acceptance
+   - Added term definition requirement from Step 2.5
+
+**Impact**:
+- Architecture specifications are now fully enforced — listed files must be implemented
+- Missing architecture files caught at both task generation (tasks.md) and completion (verify-complete)
+- CR status now accurately reflects implementation state (Approved → In Progress → Implemented)
+- Users retain control over final "Implemented" status through explicit confirmation
+- Prevents tickets from appearing complete when architecture files are missing
+- CR References section now properly loaded for authoritative scope context (API specs, contracts, roadmaps)
+- Structure comments must enumerate public interfaces, preventing vague labels
+- Requirements validation now includes scope coverage checklist (endpoints, error codes, user-input fields)
+
+**Files Changed**:
+- `prompts/mdt/commands/tasks.md` (v8→v9)
+- `prompts/mdt/commands/tests.md` (v7→v8)
+- `prompts/mdt/agents/verify-complete.md` (v1→v2)
+- `prompts/mdt/commands/implement-agentic.md` (v4→v5)
+- `prompts/mdt/commands/implement.md` (v9→v10)
+- `prompts/mdt/commands/architecture.md` (v9→v10)
+- `prompts/mdt/commands/requirements.md` (v3→v4)
+- `prompts/mdt/.claude-plugin/plugin.json` (0.10.3-beta → 0.10.4-beta)
+
+---
+
 ### 2026-02-15 - Task Tracking System and Hooks Infrastructure
 
 **Problem**: The agentic implementation workflow lacked robust task state tracking. Tasks could be silently skipped, scope violations weren't recorded, and there was no centralized view of implementation progress. Additionally, the hooks infrastructure wasn't formally registered in the plugin structure.
