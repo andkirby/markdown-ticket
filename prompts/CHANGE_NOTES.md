@@ -2,6 +2,63 @@
 
 ## Recent Updates
 
+### 2026-02-15 - Task Tracking System and Hooks Infrastructure
+
+**Problem**: The agentic implementation workflow lacked robust task state tracking. Tasks could be silently skipped, scope violations weren't recorded, and there was no centralized view of implementation progress. Additionally, the hooks infrastructure wasn't formally registered in the plugin structure.
+
+**Solution**: Added comprehensive task state tracking with `.tasks-status.yaml`, three-way sync across tracking files, blocked task handling, and hooks infrastructure registration.
+
+**Changes Made**:
+
+1. **implement-agentic.md (v3→v4) - Task state management**:
+   - Added YAML frontmatter with allowed-tools for state management scripts
+   - Auto-generates `.tasks-status.yaml` if missing (via `gen-tasks-status.sh`)
+   - Creates Claude Code task list from tasks.md for visibility
+   - Blocked task handling: skip blocked tasks, mark scope violations as blocked
+   - Three-way sync on completion: checkpoint + tasks-status + tasks.md `[x]` markers
+   - Completion self-check via `enforce-tasks.sh` before declaring done
+   - Cleanup of ephemeral state files (`.tasks-status.yaml`, `.checkpoint.yaml`) on completion
+
+2. **mdt/hooks/hooks.json (new)** - Hooks infrastructure:
+   - Plugin hook registration file (currently empty, infrastructure ready)
+   - Enables future hooks like Stop hook for task enforcement
+
+3. **install-plugin.sh (v2→v3) - Flexible deployment options**:
+   - `--mdt PATH` option: Override markdown-ticket directory (default: ../markdown-ticket)
+   - `--mcp-env KEY=VAL` option: Set MCP server environment variables (repeatable)
+   - Improved JSON generation with proper escaping for env values
+   - Better error messages for invalid arguments
+
+4. **CLAUDE.md - Documentation updates**:
+   - Added hooks registration info (hooks.json + enforce-tasks.sh)
+   - Added Plugin Sync section with dev→production workflow
+   - Updated tasks.md output to include `.tasks-status.yaml`
+
+5. **CONCEPTS.md & WORKFLOWS.md - Workflow clarification**:
+   - Clarification moved before architecture in feature flow
+   - Refactoring workflow clarified: default to inline, use `--prep` only when assess signals
+   - Added optional `/mdt:bdd --prep` to prep workflow chain
+
+6. **.gitignore - Added `dev` folder exclusion**
+
+**Impact**:
+- Task state visible in Claude Code task list during implementation
+- Blocked tasks are tracked and reported, not silently skipped
+- Three-way sync ensures all tracking files stay consistent
+- Hooks infrastructure ready for future enforcement features
+- Install script supports custom paths and MCP environment configuration
+
+**Files Changed**:
+- `prompts/mdt/commands/implement-agentic.md` (v3→v4)
+- `prompts/mdt/hooks/hooks.json` (new)
+- `prompts/install-plugin.sh` (v2→v3)
+- `prompts/CLAUDE.md`
+- `prompts/CONCEPTS.md`
+- `prompts/WORKFLOWS.md`
+- `prompts/.gitignore`
+
+---
+
 ### 2026-02-08 - Install Script Update Mode and Documentation Improvements
 
 **Problem**: The plugin installation script lacked an update workflow, forcing users to manually re-run the full installation process. Documentation was also inconsistent across different entry points (root README vs prompts README), creating confusion about installation options and workflow chains.
