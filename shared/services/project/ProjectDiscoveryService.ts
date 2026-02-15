@@ -61,8 +61,9 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
 
         // Validate that project.id matches directory name (if ID is explicitly set in registry)
         // This prevents worktrees and misconfigured projects from being loaded from registry
+        // Case-insensitive comparison for case-insensitive filesystems like macOS
         const directoryName = getBaseName(projectPath)
-        if (registryData.project.id && registryData.project.id !== directoryName) {
+        if (registryData.project.id && registryData.project.id.toLowerCase() !== directoryName.toLowerCase()) {
           logQuiet(this.quiet, `Skipping registered project at ${directoryName}: project.id "${registryData.project.id}" does not match directory name`)
           continue // Skip this registry entry - ID must match directory
         }
@@ -110,7 +111,8 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
           const projectId = getBaseName(projectPath)
 
           // Additional validation: if local config has explicit ID, it must match directory name
-          if (localConfig?.project?.id && localConfig.project.id !== directoryName) {
+          // Case-insensitive comparison for case-insensitive filesystems like macOS
+          if (localConfig?.project?.id && localConfig.project.id.toLowerCase() !== directoryName.toLowerCase()) {
             logQuiet(this.quiet, `Skipping registered project at ${directoryName}: local config project.id "${localConfig.project.id}" does not match directory name`)
             continue // Skip this registry entry - ID must match directory
           }
