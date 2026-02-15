@@ -5,7 +5,7 @@ set -euo pipefail
 # ====================
 # Installs the MDT (Markdown Ticket) workflow plugin for Claude Code.
 #
-# Usage: ./install-plugin.sh --local|--docker|--update|-u [-y] [--scope {user|local}] [--help]
+# Usage: ./install-plugin.sh --local|--docker|--update|-u [-y] [--scope {user|local}] [--mdt PATH] [--help]
 #
 # Flow:
 # 1. Generate .mcp.json config for local Node.js or Docker MCP server
@@ -32,6 +32,7 @@ readonly NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Project root is one level up from the script (prompts/ -> markdown-ticket/)
+# Can be overridden with --mdt option
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Read marketplace and plugin names from config files
@@ -42,8 +43,13 @@ PLUGIN_ID="${PLUGIN_NAME_BASE}@${MARKETPLACE_NAME}"
 
 MCP_JSON_FILE="$SCRIPT_DIR/mdt/.mcp.json"
 
-MCP_SERVER_LOCAL="$PROJECT_ROOT/mcp-server/dist/index.js"
+# MDT_ROOT defaults to ../markdown-ticket but can be overridden with --mdt option
+MDT_ROOT="$PROJECT_ROOT"
+MCP_SERVER_LOCAL="$MDT_ROOT/mcp-server/dist/index.js"
 MCP_SERVER_DOCKER_URL="http://localhost:3012/mcp"
+
+# Array to collect MCP environment variables (from --mcp-env options)
+declare -a MCP_ENV_VARS=()
 
 # Print action log (gray - for "checking...", "creating...", "updating...")
 print_log() {
@@ -173,16 +179,18 @@ get_marketplace_status() {
 show_help() {
   print_highlight "MDT Plugin Installer v${PLUGIN_VERSION}"
   echo ""
-  echo "Usage: $0 --local|--docker|--update|-u [-y] [--scope {user|local}]"
+  echo "Usage: $0 --local|--docker|--update|-u [-y] [--scope {user|local}] [--mdt PATH] [--mcp-env KEY=VAL] [--help]"
   echo ""
   echo "Options:"
-  echo "  --local       Use local Node.js MCP server at: \$PROJECT_ROOT/mcp-server/dist/index.js"
+  echo "  --local       Use local Node.js MCP server at: \$MDT_ROOT/mcp-server/dist/index.js"
   echo "  --docker      Use Docker MCP server via HTTP at: $MCP_SERVER_DOCKER_URL"
   echo "  --update, -u  Update mode: detect current installation and update it"
   echo "  -y            Auto-confirm all prompts (use with --update for unattended updates)"
   echo "                Short flags can be combined: -uy is same as -u -y"
   echo "  --scope user  Install in user scope (available to all projects)"
   echo "  --scope local Install in local scope (available only to this project)"
+  echo "  --mdt PATH    Path to markdown-ticket directory (default: ../markdown-ticket)"
+  echo "  --mcp-env KEY=VAL  Set environment variable for MCP server (repeatable)"
   echo "  --help, -h    Show this help message"
   exit 0
 }
@@ -191,16 +199,18 @@ show_help() {
 show_error() {
   print_error "Error: $1"
   echo ""
-  echo "Usage: $0 --local|--docker|--update|-u [-y] [--scope {user|local}]"
+  echo "Usage: $0 --local|--docker|--update|-u [-y] [--scope {user|local}] [--mdt PATH] [--mcp-env KEY=VAL]"
   echo ""
   echo "Options:"
-  echo "  --local       Use local Node.js MCP server at: \$PROJECT_ROOT/mcp-server/dist/index.js"
+  echo "  --local       Use local Node.js MCP server at: \$MDT_ROOT/mcp-server/dist/index.js"
   echo "  --docker      Use Docker MCP server via HTTP at: $MCP_SERVER_DOCKER_URL"
   echo "  --update, -u  Update mode: detect current installation and update it"
   echo "  -y            Auto-confirm all prompts (use with --update for unattended updates)"
   echo "                Short flags can be combined: -uy is same as -u -y"
   echo "  --scope user  Install in user scope (available to all projects)"
   echo "  --scope local Install in local scope (available only to this project)"
+  echo "  --mdt PATH    Path to markdown-ticket directory (default: ../markdown-ticket)"
+  echo "  --mcp-env KEY=VAL  Set environment variable for MCP server (repeatable)"
   echo "  --help, -h    Show this help message"
   exit 1
 }
@@ -246,36 +256,20 @@ while [[ $# -gt 0 ]]; do
       ;;
     --local)
       MODE="local"
-      if [[ ! -f "$MCP_SERVER_LOCAL" ]]; then
-        show_error "MCP server not found at: $MCP_SERVER_LOCAL
-
-Run 'npm run build' in the mcp-server directory first."
-      fi
-      cat > "$MCP_JSON_FILE" <<EOF
-{
-  "mcpServers": {
-    "all": {
-      "command": "node",
-      "args": ["$MCP_SERVER_LOCAL"]
-    }
-  }
-}
-EOF
       shift
       ;;
     --docker)
       MODE="docker"
-      cat > "$MCP_JSON_FILE" <<EOF
-{
-  "mcpServers": {
-    "all": {
-      "type": "http",
-      "url": "$MCP_SERVER_DOCKER_URL"
-    }
-  }
-}
-EOF
       shift
+      ;;
+    --mdt)
+      if [[ -z "${2:-}" || "${2:-}" == "" ]]; then
+        show_error "--mdt requires a path (e.g., --mdt ~/home/markdown-ticket)"
+      fi
+      # Expand ~ to $HOME and resolve path
+      MDT_ROOT="$(eval echo "$2")"
+      MCP_SERVER_LOCAL="$MDT_ROOT/mcp-server/dist/index.js"
+      shift 2
       ;;
     --scope)
       if [[ -z "${2:-}" || "${2:-}" == "" ]]; then
@@ -293,13 +287,92 @@ Valid scopes are: user, local"
       esac
       shift 2
       ;;
+    --mcp-env)
+      if [[ -z "${2:-}" || "${2:-}" == "" ]]; then
+        show_error "--mcp-env requires a KEY=VALUE pair"
+      fi
+      # Validate: KEY starts with letter/underscore, contains alphanumeric/underscore, then = and at least one value char
+      if [[ ! "$2" =~ ^[A-Za-z_][A-Za-z0-9_]*=.+$ ]]; then
+        show_error "Invalid --mcp-env format: $2
+
+Expected: KEY=VALUE (e.g., --mcp-env LOG_LEVEL=debug or CONFIG_DIR=~/path/to/config)"
+      fi
+      MCP_ENV_VARS+=("$2")
+      shift 2
+      ;;
     *)
       show_error "Invalid option: $1
 
-Valid options are: --local, --docker, --update, -y, --scope"
+Valid options are: --local, --docker, --update, -y, --scope, --mdt, --mcp-env"
       ;;
   esac
 done
+
+# Generate .mcp.json config after all arguments parsed (so --mdt can update MDT_ROOT first)
+if [[ "$MODE" = "local" ]]; then
+  if [[ ! -f "$MCP_SERVER_LOCAL" ]]; then
+    show_error "MCP server not found at: $MCP_SERVER_LOCAL
+
+Run 'npm run build' in the mcp-server directory first."
+  fi
+
+  # Build JSON with optional env vars using heredoc (handles escapes properly)
+  if [[ ${#MCP_ENV_VARS[@]} -gt 0 ]]; then
+    # Build env entries line by line with commas between
+    env_lines=""
+    count=0
+    total=${#MCP_ENV_VARS[@]}
+    for pair in "${MCP_ENV_VARS[@]}"; do
+      key="${pair%%=*}"
+      value="${pair#*=}"
+      # Escape backslashes and double quotes in value
+      value_escaped="${value//\\/\\\\}"
+      value_escaped="${value_escaped//\"/\\\"}"
+      env_lines+="      \"$key\": \"$value_escaped\""
+      count=$((count + 1))
+      if [[ $count -lt $total ]]; then
+        env_lines+=","
+      fi
+      env_lines+=$'\n'
+    done
+
+    cat > "$MCP_JSON_FILE" <<EOF
+{
+  "mcpServers": {
+    "all": {
+      "command": "node",
+      "args": ["$MCP_SERVER_LOCAL"],
+      "env": {
+${env_lines}
+      }
+    }
+  }
+}
+EOF
+  else
+    cat > "$MCP_JSON_FILE" <<EOF
+{
+  "mcpServers": {
+    "all": {
+      "command": "node",
+      "args": ["$MCP_SERVER_LOCAL"]
+    }
+  }
+}
+EOF
+  fi
+elif [[ "$MODE" = "docker" ]]; then
+  cat > "$MCP_JSON_FILE" <<EOF
+{
+  "mcpServers": {
+    "all": {
+      "type": "http",
+      "url": "$MCP_SERVER_DOCKER_URL"
+    }
+  }
+}
+EOF
+fi
 
 # In update mode, MODE will be detected from current installation
 if [[ "$UPDATE_MODE" = true ]]; then
@@ -332,7 +405,40 @@ if [[ "$UPDATE_MODE" = true ]]; then
 
 Run 'npm run build' in the mcp-server directory first."
       fi
-      cat > "$MCP_JSON_FILE" <<EOF
+
+      # Build JSON with optional env vars using heredoc (handles escapes properly)
+      if [[ ${#MCP_ENV_VARS[@]} -gt 0 ]]; then
+        env_lines=""
+        count=0
+        total=${#MCP_ENV_VARS[@]}
+        for pair in "${MCP_ENV_VARS[@]}"; do
+          key="${pair%%=*}"
+          value="${pair#*=}"
+          value_escaped="${value//\\/\\\\}"
+          value_escaped="${value_escaped//\"/\\\"}"
+          env_lines+="      \"$key\": \"$value_escaped\""
+          ((count++))
+          if [[ $count -lt $total ]]; then
+            env_lines+=","
+          fi
+          env_lines+=$(printf '\n')
+        done
+
+        cat > "$MCP_JSON_FILE" <<EOF
+{
+  "mcpServers": {
+    "all": {
+      "command": "node",
+      "args": ["$MCP_SERVER_LOCAL"],
+      "env": {
+${env_lines}
+      }
+    }
+  }
+}
+EOF
+      else
+        cat > "$MCP_JSON_FILE" <<EOF
 {
   "mcpServers": {
     "all": {
@@ -342,6 +448,7 @@ Run 'npm run build' in the mcp-server directory first."
   }
 }
 EOF
+      fi
       ;;
     http)
       MODE="docker"
@@ -391,7 +498,8 @@ MARKETPLACE_STATUS=$(get_marketplace_status)
 CURRENT_STATUS=$(get_plugin_status)
 echo -e "${GREEN}✓${NC}"
 
-# Parse marketplace path
+# Parse marketplace path (initialize to empty for nounset safety)
+MARKETPLACE_PATH=""
 if [[ -n "$MARKETPLACE_STATUS" ]]; then
   MARKETPLACE_PATH=$(echo "$MARKETPLACE_STATUS" | jq -r '.installLocation // empty')
 fi
