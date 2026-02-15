@@ -1,4 +1,4 @@
-# MDT Requirements Specification Workflow (v3)
+# MDT Requirements Specification Workflow (v4)
 
 Generate behavioral requirements from CR. Output: `{TICKETS_PATH}/{CR-KEY}/requirements.md`
 
@@ -59,9 +59,18 @@ Use `{TICKETS_PATH}` from `.mdt-config.toml`.
 4. If not specified, infer from CR type (see table above)
 5. If scope = `none`, exit with recommendation for `/mdt:architecture`
 
+### Step 1.5: Load CR References for Scope Context
+
+If the CR has a References section, read listed docs for operations that the CR description may abbreviate. Look for:
+- API endpoint specifications (HTTP methods and paths)
+- Port/repository interface contracts (method signatures)
+- Roadmap deliverables for the target milestone
+
+Extract discovered operations into Step 2 even if the CR uses shorthand like "CRUD." Example: CR says "CRUD endpoints" but reference doc specifies create, list-all, get-by-id, update, delete — generate a BR for each.
+
 ### Step 2: Extract Behavioral Needs
 
-Scan CR for statements to transform:
+Scan CR and reference docs for statements to transform:
 
 | Found In | Signal | Becomes |
 |----------|--------|---------|
@@ -165,12 +174,21 @@ List each constraint ID and where it must appear later:
 
 ### Step 4: Validate
 
-Before saving:
+Before saving, produce a validation summary with evidence for each item:
+
+**Scope coverage** (list and count):
+- [ ] Endpoints in CR References: {list found} → each has a BR? {missing list}
+- [ ] Error codes in Error table: {list} → each has a triggering BR? {missing list}
+- [ ] User-input fields: {list} → each has input constraints in a BR or constraint? {missing list}
+
+**Quality** (verify each):
 - [ ] Each requirement has one SHALL
 - [ ] Outcomes are measurable (not "properly", "correctly")
 - [ ] No component names in feature requirements
-- [ ] Constraints have concrete targets
+- [ ] Constraints have concrete, measurable targets (not "never", "always" without conditions)
 - [ ] Constraint IDs exist and are referenced in Constraint Carryover
+- [ ] Terms from Step 2.5 are defined or flagged for clarification
+- [ ] Security constraint exists if user content is accepted (per workflow security rule)
 
 ### Step 5: Save and Update CR
 

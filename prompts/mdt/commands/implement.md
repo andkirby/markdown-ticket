@@ -1,4 +1,4 @@
-# MDT Implementation Orchestrator (v9)
+# MDT Implementation Orchestrator (v10)
 
 Execute tasks from a task list with constraint verification after each task.
 
@@ -44,13 +44,19 @@ All paths relative to `{TICKETS_PATH}/{CR-KEY}/`.
 
 If both prep (incomplete) and part tasks exist, prompt user: `[Continue prep (recommended)] [Proceed to feature]`.
 
-**1b. Load tasks.md** — extract: scope boundaries, shared patterns/imports, test coverage mapping.
+**1b. Set CR status to In Progress:**
 
-**1c. Load tests.md** (if exists) — extract: test file locations, requirement→test mapping. Enables TDD verification.
+```
+mcp__mdt-all__update_cr_status(project=PROJECT_CODE, key=CR-KEY, status="In Progress")
+```
 
-**1d. Load CR** via `mdt-all:get_cr mode="full"`. For multi-part, extract relevant part section only.
+**1c. Load tasks.md** — extract: scope boundaries, shared patterns/imports, test coverage mapping.
 
-**1e. Find first incomplete task** — first unchecked `- [ ]` in tasks_file.
+**1d. Load tests.md** (if exists) — extract: test file locations, requirement→test mapping. Enables TDD verification.
+
+**1e. Load CR** via `mdt-all:get_cr mode="full"`. For multi-part, extract relevant part section only.
+
+**1f. Find first incomplete task** — first unchecked `- [ ]` in tasks_file.
 
 ### Step 2: Execute Task
 
@@ -271,8 +277,23 @@ Implementation Complete: {CR-KEY}
 - [ ] Review flagged files
 - [ ] `/mdt:tech-debt {CR-KEY}`
 - [ ] Commit changes
-- [ ] Update CR status to Implemented
 ```
+
+### Step 9: Update CR Status
+
+Ask user for confirmation before finalizing:
+
+```
+AskUserQuestion: "Mark {CR-KEY} as Implemented?"
+Options: [Yes (Recommended)] [No, keep In Progress]
+```
+
+If approved:
+```
+mcp__mdt-all__update_cr_status(project=PROJECT_CODE, key=CR-KEY, status="Implemented")
+```
+
+If declined, leave status as "In Progress".
 
 ---
 
