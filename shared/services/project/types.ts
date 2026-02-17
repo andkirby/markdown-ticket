@@ -149,3 +149,13 @@ export interface ProjectExport {
   exportedAt: string
   version: string
 }
+
+/**
+ * Discovery configuration result from project scanning
+ * Contains the raw data needed to construct a Project without building it
+ */
+export interface DiscoveryConfig {
+  config: ProjectConfig
+  projectPath: string
+  configPath: string
+}

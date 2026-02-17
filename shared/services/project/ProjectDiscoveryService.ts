@@ -1,15 +1,15 @@
 import type { Project } from '../../models/Project.js'
 import type { IProjectDiscoveryService } from './types.js'
-import { ProjectValidator } from '../../tools/ProjectValidator.js'
-import { CONFIG_FILES, DEFAULTS, getDefaultPaths } from '../../utils/constants.js'
+import { getDefaultPaths } from '../../utils/constants.js'
 import { directoryExists } from '../../utils/file-utils.js'
 import { logQuiet } from '../../utils/logger.js'
 import {
-  buildConfigFilePath,
   getBaseName,
   joinPaths,
 } from '../../utils/path-resolver.js'
+import { validateProjectIdMatchesDirectory } from '../../utils/project-validation-helpers.js'
 import { ProjectConfigLoader } from './ProjectConfigLoader.js'
+import { ProjectFactory } from './ProjectFactory.js'
 import { ProjectRegistry } from './ProjectRegistry.js'
 import { ProjectScanner } from './ProjectScanner.js'
 
@@ -24,12 +24,14 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
   private configLoader: ProjectConfigLoader
   private scanner: ProjectScanner
   private registry: ProjectRegistry
+  private factory: ProjectFactory
 
   constructor(quiet: boolean = false) {
     this.quiet = quiet
     this.configLoader = new ProjectConfigLoader(quiet)
     this.scanner = new ProjectScanner(quiet)
     this.registry = new ProjectRegistry(quiet)
+    this.factory = new ProjectFactory()
   }
 
   /**
@@ -61,40 +63,15 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
 
         // Validate that project.id matches directory name (if ID is explicitly set in registry)
         // This prevents worktrees and misconfigured projects from being loaded from registry
-        // Case-insensitive comparison for case-insensitive filesystems like macOS
         const directoryName = getBaseName(projectPath)
-        if (registryData.project.id && registryData.project.id.toLowerCase() !== directoryName.toLowerCase()) {
+        if (!validateProjectIdMatchesDirectory(registryData.project.id, directoryName)) {
           logQuiet(this.quiet, `Skipping registered project at ${directoryName}: project.id "${registryData.project.id}" does not match directory name`)
           continue // Skip this registry entry - ID must match directory
         }
 
         if (isGlobalOnly) {
           // Strategy 1: Global-Only - Full project details stored in global registry
-          const projectId = registryData.project.id || getBaseName(projectPath)
-          const project: Project = {
-            id: projectId,
-            project: {
-              id: projectId,
-              name: registryData.project.name || projectId, // Fallback to projectId if name is undefined
-              code: registryData.project.code,
-              path: projectPath,
-              configFile: '', // No local config file for global-only
-              startNumber: registryData.project.startNumber || 1,
-              counterFile: registryData.project.counterFile || CONFIG_FILES.COUNTER_FILE,
-              active: registryData.project.active !== false,
-              description: registryData.project.description || '',
-              repository: registryData.project.repository || '',
-              ticketsPath: registryData.project.ticketsPath,
-            },
-            metadata: {
-              dateRegistered: registryData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
-              lastAccessed: registryData.metadata?.lastAccessed || new Date().toISOString().split('T')[0],
-              version: registryData.metadata?.version || '1.0.0',
-              globalOnly: true,
-            },
-            document: registryData.project.document,
-            registryFile: registryPath,
-          }
+          const project = this.factory.createFromRegistry(registryData, projectPath, registryPath)
           projects.push(project)
         }
         else {
@@ -103,58 +80,26 @@ export class ProjectDiscoveryService implements IProjectDiscoveryService {
 
           // Validate local config exists and is valid
           if (!localConfig) {
-            logQuiet(this.quiet, `Warning: Project ${getBaseName(projectPath)} has global registry but no valid local config at ${projectPath}`)
-            // Still include project but with minimal data for recovery scenarios
+            logQuiet(this.quiet, `Skipping project ${getBaseName(projectPath)}: global registry exists but no valid local config at ${projectPath}`)
+            continue // Graceful handling - skip projects without local config
           }
 
-          // Project-First Strategy: Local config is primary source, global provides metadata only
-          const projectId = getBaseName(projectPath)
-
           // Additional validation: if local config has explicit ID, it must match directory name
-          // Case-insensitive comparison for case-insensitive filesystems like macOS
-          if (localConfig?.project?.id && localConfig.project.id.toLowerCase() !== directoryName.toLowerCase()) {
+          if (!validateProjectIdMatchesDirectory(localConfig.project.id, directoryName)) {
             logQuiet(this.quiet, `Skipping registered project at ${directoryName}: local config project.id "${localConfig.project.id}" does not match directory name`)
             continue // Skip this registry entry - ID must match directory
           }
-          const project: Project = {
-            id: projectId,
-            project: {
-              id: projectId,
-              name: localConfig?.project?.name || projectId, // Local priority, fallback to directory name
-              code: localConfig?.project?.code || (() => {
-                // Generate valid code from project name (local config) or projectId using proper validation
-                const nameForCode = localConfig?.project?.name || projectId
-                const generatedCode = ProjectValidator.generateCodeFromName(nameForCode)
-                const validationResult = ProjectValidator.validateCode(generatedCode)
-                if (validationResult.valid) {
-                  return validationResult.normalized!
-                }
-                else {
-                  // Fallback to first 5 chars of uppercase projectId
-                  let fallbackCode = projectId.toUpperCase().replace(/[^A-Z]/g, '').substring(0, 5)
-                  // Ensure minimum 2 chars
-                  if (fallbackCode.length < 2) {
-                    fallbackCode = projectId.toUpperCase().substring(0, 5)
-                  }
-                  return fallbackCode
-                }
-              })(), // Local priority, fallback to validated code
-              path: projectPath, // From global registry
-              configFile: buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG),
-              startNumber: localConfig?.project?.startNumber || 1, // Local priority
-              counterFile: localConfig?.project?.counterFile || CONFIG_FILES.COUNTER_FILE, // Local priority
-              active: localConfig?.project?.active !== false, // Local priority, default true
-              description: localConfig?.project?.description || '', // Local priority
-              repository: localConfig?.project?.repository || '', // Local priority
-              ticketsPath: localConfig?.project?.ticketsPath || DEFAULTS.TICKETS_PATH, // Local priority
-            },
-            metadata: {
-              dateRegistered: registryData.metadata?.dateRegistered || new Date().toISOString().split('T')[0],
-              lastAccessed: registryData.metadata?.lastAccessed || new Date().toISOString().split('T')[0],
-              version: registryData.metadata?.version || '1.0.0',
-            },
-            registryFile: registryPath, // Store exact registry file path for CLI operations
+
+          // Use factory to construct project from local config
+          const project = this.factory.createFromConfig(localConfig, projectPath, registryPath)
+
+          // Merge registry metadata (registry takes precedence over defaults)
+          project.metadata = {
+            dateRegistered: registryData.metadata.dateRegistered || project.metadata.dateRegistered,
+            lastAccessed: registryData.metadata.lastAccessed || project.metadata.lastAccessed,
+            version: registryData.metadata.version || project.metadata.version,
           }
+
           projects.push(project)
         }
       }
