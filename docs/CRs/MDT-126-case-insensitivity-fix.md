@@ -83,7 +83,21 @@ Case-insensitive filesystems like macOS require case-insensitive comparisons for
 - No regression in existing project discovery functionality
 - Error messages remain accurate (if any validation failures occur)
 
-**Related CRs**: None
+## 6. Technical Debt Note
+
+**⚠️ Quick Fix Applied - Refactoring Required**
+
+This fix was applied as a targeted bug fix to resolve the immediate issue. However, the implementation revealed deeper architectural concerns:
+
+- **Duplicate Validation Logic**: The case-insensitive comparison logic exists in both `ProjectScanner.ts` (line 71-75) and `ProjectDiscoveryService.ts` (lines 65-69, 115-118)
+- **Mixed Responsibilities**: Both classes perform project construction with similar but slightly different logic
+- **No Central Validation**: Project-related validation rules are scattered across multiple files
+
+**See**: [MDT-127](docs/CRs/MDT-127-project-discovery-refactoring.md) for the refactoring ticket that addresses these architectural issues.
+
+**See also**: [refactor.md](docs/CRs/MDT-126/refactor.md) for detailed analysis and options.
+
+**Related CRs**: MDT-127
 
 **Blocking**: None
 
