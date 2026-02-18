@@ -57,8 +57,8 @@ Performance measurements is out of scope.
 
 - Must integrate with existing shared services architecture
 - Cannot require external services beyond current dependencies
-- MUST NOT maintain backward compatibility for existing valid configurations
-- MUST rid of usage ProjectConfig and use LocalProjectConfig instead (delete ProjectConfig)
+- MUST NOT maintain backward compatibility for legacy configuration formats (pre-spec configurations with deprecated fields like `startNumber`, `counterFile`, `lastAccessed`)
+- MUST delete ProjectConfig class and use LocalProjectConfig only
 - Other code places which works with project config generation code shall use API from shared code base (example: `ConfigurationGenerator.generateMdtConfig`, find other places and refactor code)
 
 ### Non-Goals as for CLI implementation
@@ -85,7 +85,8 @@ Performance measurements is out of scope.
 - Must eliminate server-side duplication (~300 lines)
 - Must support all existing CLI commands
 - Must preserve all functional requirements
-- Must not break existing project configurations
+- Must not break configurations that comply with the new specification (CONFIG_SPECIFICATION.md)
+- Must reject or provide clear migration guidance for configurations using legacy formats
 
 ### Decisions Deferred
 
