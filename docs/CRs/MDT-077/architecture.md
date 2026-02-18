@@ -1,7 +1,7 @@
 # Architecture: MDT-077
 
-**Source**: [MDT-077](../../../docs/CRs/MDT-077-cli-project-management-tool.md)
-**Generated**: 2026-02-02
+**Source**: [MDT-077](../MDT-077.md)
+**Generated**: 2026-02-08
 
 ## Overview
 
@@ -19,6 +19,7 @@ Consistent project management across CLI, Web UI, and MCP interfaces using Domai
 | C6 (Test Coverage) | CLI test suite targets >90% coverage |
 | C7 (Concurrency) | `ConfigurationRepository` uses file locking/version checks |
 | C8 (Interface Consistency) | All interfaces route through `ProjectApplicationService` |
+| C9 (Path Security) | `ProjectApplicationService` validates paths before filesystem operations |
 
 ## Pattern
 
@@ -30,9 +31,22 @@ The three-strategy configuration uses a factory that creates strategy objects ba
 
 | Capability | Decision | Rationale |
 |------------|----------|-----------|
+| Schema validation | Zod (domain-contracts) | Type-safe runtime validation for Project shapes |
+| Business validation | Custom (ProjectValidator) | Uniqueness checks, filesystem access, code generation |
 | TOML parsing | `toml` npm package | Established in codebase via `shared/utils/toml.ts` |
 | CLI parsing | Commander.js | Existing CLI standard in project |
-| Validation | Zod schemas | Already used in domain contracts |
+
+## Runtime Prerequisites
+
+| Dependency | Type | Required | When Absent |
+|------------|------|----------|-------------|
+| `PROJECT_CODE` | config value | Yes | Project code generation fails, CLI exits with validation error |
+| `TICKETS_PATH` | config value | Yes | Ticket path resolution fails, project creation rejected |
+| `~/.config/markdown-ticket/projects/` | directory | Yes | Global registry unavailable, global-only mode fails |
+| `.mdt-config.toml` | file | Yes* | Local config required for project-first/auto-discovery modes |
+| Node.js fs module | runtime | Yes | All file operations fail with error 1 |
+
+*Not required for global-only mode.
 
 ## Error Philosophy
 
@@ -84,7 +98,7 @@ shared/
 
 domain/
 ├── Project.ts                        → Project aggregate root
-├── ProjectConfig.ts                  → Configuration value objects
+├── LocalProjectConfig.ts             → Configuration value objects
 ├── strategies/
 │   ├── IConfigurationStrategy.ts     → Strategy interface
 │   ├── GlobalOnlyStrategy.ts         → Global-only implementation
