@@ -48,28 +48,93 @@ relatedTickets: MDT-067
 - Not modifying Git repository structure
 - Not changing core ticket file format
 - Not handling multiple worktrees for the same ticket code (edge case)
-## 3. Open Questions
-| Area | Question | Constraints |
-|------|----------|-------------|
-| Implementation | How to efficiently detect and cache worktree mappings? | Must support dynamic worktree creation/deletion |
-| File Watching | How to extend chokidar to monitor worktree paths? | Must prevent performance degradation |
-| UI/UX | What visual indicators distinguish worktree tickets? | Must be clear but not distracting |
-| MCP Integration | How should worktree-aware tools expose path information? | Must maintain backward compatibility |
-| Configuration | Where to store worktree configuration settings? | Must support both global and project-level config |
+## 3. Decisions
+### Decision Summary
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Worktree matching strategy | **Branch name based** | Extract ticket code from branch name (e.g., `MDT-095` from `refs/heads/feature/MDT-095`), allowing arbitrary worktree paths |
+| Conflict resolution | **Worktree wins** | If valid worktree exists with ticket file, use it; fallback to main repo if worktree path invalid or ticket file missing |
+| Abandoned worktree handling | **User responsibility** | System shows warning badge when ticket exists in both locations; cleanup via `git worktree remove` is user's responsibility |
+| Caching strategy | **TTL-based (30s)** | In-memory Map per ProjectService, refresh periodically |
+| File watching | **Add chokidar per worktree** | Monitor each worktree path independently |
+| UI badge | **"🌿 Worktree"** | In TicketCard.tsx and TicketRow.tsx |
+| MCP tools | **Absolute path in response** | All tools resolve worktree paths, return absolute path |
+| Configuration | **`worktree.enabled`** | In .mdt-config.toml, default: true |
+| **Service integration** | **ProjectService** | `getProjectCRs()` is single point of ticket discovery; TicketService delegates to it; MCP tools use TicketService |
+### Deferred to Implementation
+- None - all major decisions resolved
+### Worktree Detection Algorithm
 
-### Known Constraints
-- Must use existing Git worktree metadata (`git worktree list`)
-- Must integrate with existing ProjectService and file watcher
-- Must support both global config (~/.config/markdown-ticket/config.toml) and project-level config (.mdt-config.toml)
-- Assume at most one worktree per ticket code (edge case not in scope)
+```
+1. Run `git worktree list --porcelain` from main repo
+2. For each worktree:
+   - Extract branch name from `branch refs/heads/...`
+   - Apply regex pattern: (PROJECT_CODE-\d+)
+   - Map: ticketCode → worktreePath
+3. Cache result with 30s TTL
+```
 
-### Decisions Deferred
-- Implementation approach for worktree detection (service vs. middleware)
-- Caching strategy for worktree mappings
-- Specific UI components for worktree indication
-- MCP tool API modifications
-- Configuration schema for worktree settings
+### Path Resolution Logic
+
+```
+For ticket ABC-123:
+1. Check cache for worktree mapping
+2. If worktree exists AND docs/CRs/ABC-123.md exists in worktree:
+   → Use worktree path
+3. Else:
+   → Use main project path
+```
 ## 4. Acceptance Criteria
+### New Artifacts
+| File | Type | Purpose |
+|------|------|---------|
+| `shared/services/WorktreeService.ts` | Service | Detect worktrees via `git worktree list`, extract ticket codes from branch names, provide path resolution with caching (30s TTL) |
+### Modified Artifacts
+| File | Changes |
+|------|---------|
+| `shared/services/WorktreeService.ts` | **NEW** - Detect worktrees, extract ticket codes from branches, provide path resolution |
+| `shared/ProjectService.ts` | Integrate WorktreeService for path resolution, in-memory cache with 30s TTL |
+| `server/src/services/ProjectService.ts` | Add chokidar watchers for worktree paths |
+| `src/components/TicketCard.tsx` | Add "🌿 Worktree" badge when ticket in worktree |
+| `src/components/TicketRow.tsx` | Add "🌿 Worktree" badge when ticket in worktree |
+
+### MCP Tool Changes (Critical)
+
+All MCP tools must resolve worktree paths before file operations:
+
+| Tool | Change |
+|------|--------|
+| `get_cr` | Return file from worktree path if ticket exists there |
+| `create_cr` | Create ticket file in worktree path if branch matches |
+| `update_cr_status` | Update status in worktree ticket file |
+| `update_cr_attrs` | Update attributes in worktree ticket file |
+| `manage_cr_sections` | Read/write sections in worktree ticket file |
+| `delete_cr` | Delete ticket from worktree path |
+| `list_crs` | Include `inWorktree: boolean` flag per ticket |
+
+**Path Resolution Flow for MCP:**
+```
+1. Receive ticket key (e.g., MDT-095)
+2. Call WorktreeService.resolvePath(projectPath, ticketKey)
+3. If worktree exists for ticket → return worktree path
+4. Else → return main project path
+5. All file operations use resolved path
+```
+### Configuration Schema
+
+```toml
+# .mdt-config.toml
+[worktree]
+enabled = true  # default: true
+```
+
+### API Changes
+
+| Endpoint | Change |
+|----------|--------|
+| `GET /api/projects/:id/crs/:key` | Add `inWorktree: boolean` and `worktreePath?: string` to response |
+| Ticket list responses | Include worktree status per ticket |
+
 ### Functional
 - [ ] System detects Git worktrees whose names match ticket codes (e.g., worktree "ABC-123" for ticket ABC-123)
 - [ ] File operations for ticket ABC-123 route to worktree path when it exists
@@ -99,3 +164,17 @@ relatedTickets: MDT-067
 
 ### Related Work
 MDT-067 explores related file path management issues that may inform implementation approach.
+
+### Session 2026-02-18
+
+- Q: Worktree service location? → A: `shared/services/WorktreeService.ts`
+- Q: Worktree service integration? → A: Defer to architect/implementation planning
+- Q: Configuration key for worktree support? → A: `worktree.enabled` (default: true)
+- Q: API endpoint approach? → A: Ticket-focused, add `inWorktree` field to ticket responses
+- Q: How should MCP tools expose path? → A: Return absolute path in existing response
+- Q: Frontend component for worktree badge? → A: Modify `TicketCard.tsx` and `TicketRow.tsx`
+- Q: Caching mechanism? → A: In-memory Map per ProjectService with 30s TTL
+- Q: UI badge style? → A: "🌿 Worktree"
+- Q: File watching approach? → A: Add chokidar watchers for each worktree path
+- Q: Worktree matching strategy? → A: Branch name based (extract ticket code from branch)
+- Q: Conflict resolution? → A: Worktree wins if valid, fallback to main repo
