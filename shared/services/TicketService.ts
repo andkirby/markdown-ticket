@@ -76,7 +76,7 @@ export class TicketService {
   private async resolveTicketPath(
     project: Project,
     ticketCode: string,
-  ): Promise<{ path: string; isInWorktree: boolean }> {
+  ): Promise<{ path: string, isInWorktree: boolean }> {
     const config = this.projectService.getProjectConfig(project.project.path)
     if (!config?.project) {
       return { path: project.project.path, isInWorktree: false }
@@ -174,7 +174,7 @@ export class TicketService {
     try {
       // Resolve path for this specific ticket
       const { path: resolvedPath, isInWorktree } = await this.resolveTicketPath(project, key)
-      const resolvedProject = this.createResolvedProject(project, resolvedPath)
+      this.createResolvedProject(project, resolvedPath)
 
       // Get config and scan only resolved directory
       const config = this.projectService.getProjectConfig(project.project.path)
