@@ -13,9 +13,9 @@
  * - GIVEN concurrent requests WHEN rate limited THEN handle gracefully
  */
 
+import { ProjectSetup } from '../helpers/core/project-setup'
 import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
-import { ProjectSetup } from '../helpers/core/project-setup'
 import { TestEnvironment } from '../helpers/test-environment'
 
 describe('rate Limiting (MUST-05)', () => {
@@ -50,7 +50,7 @@ describe('rate Limiting (MUST-05)', () => {
 
     // NOW create ProjectFactory with the running mcpClient
     // Note: ProjectFactory is available but not used directly in these tests
-    new ProjectFactory(testEnv, mcpClient)
+    void new ProjectFactory(testEnv, mcpClient)
   })
 
   // Test cleanup
@@ -123,9 +123,9 @@ describe('rate Limiting (MUST-05)', () => {
 
       // And: No rate limit errors should be present
       const rateLimitErrors = results.filter(r =>
-        !r.success && r.result && typeof r.result === 'object' && 'error' in r.result &&
-        typeof r.result.error === 'object' && r.result.error && 'message' in r.result.error &&
-        typeof r.result.error.message === 'string' && r.result.error.message.includes('rate limit'),
+        !r.success && r.result && typeof r.result === 'object' && 'error' in r.result
+        && typeof r.result.error === 'object' && r.result.error && 'message' in r.result.error
+        && typeof r.result.error.message === 'string' && r.result.error.message.includes('rate limit'),
       )
       expect(rateLimitErrors.length).toBe(0)
     })
@@ -149,13 +149,17 @@ describe('rate Limiting (MUST-05)', () => {
 
       // Then: At least some requests should fail with rate limit error
       // Simply check if result has error property with rate limit message
-      const rateLimitErrors = results.filter(r => {
-        if (r.success) return false
-        if (!r.result || typeof r.result !== 'object') return false
+      const rateLimitErrors = results.filter((r) => {
+        if (r.success)
+          return false
+        if (!r.result || typeof r.result !== 'object')
+          return false
         const resultError = (r.result as { error?: { message?: string } }).error
-        if (!resultError || typeof resultError !== 'object') return false
+        if (!resultError || typeof resultError !== 'object')
+          return false
         const errorMessage = resultError.message
-        if (typeof errorMessage !== 'string') return false
+        if (typeof errorMessage !== 'string')
+          return false
         return errorMessage.toLowerCase().includes('rate limit')
       })
 
@@ -175,7 +179,8 @@ describe('rate Limiting (MUST-05)', () => {
       if (response.error) {
         expect(response.error.message).toMatch(/rate limit/i)
         expect(response.error.message).toMatch(/Retry after \d+ seconds/i)
-      } else {
+      }
+      else {
         fail('Expected rate limit error')
       }
     })
@@ -235,7 +240,7 @@ describe('rate Limiting (MUST-05)', () => {
     it.skip('should use sliding window for rate limiting', async () => {
       // Given: Sliding window rate limiting (1 second window, 5 requests max)
       // When: Making requests spread over time
-      const batch1 = await makeSequentialCalls('list_projects', {}, 5, 100)
+      await makeSequentialCalls('list_projects', {}, 5, 100)
       // First batch should use up the quota
 
       // Wait 500ms - less than full window, but some requests should be allowed
@@ -269,7 +274,8 @@ describe('rate Limiting (MUST-05)', () => {
       if (results[5].result && typeof results[5].result === 'object' && 'error' in results[5].result) {
         const error = results[5].result.error as { message?: string }
         expect(error.message).toMatch(/rate limit/i)
-      } else {
+      }
+      else {
         fail('Expected rate limit error on 6th request')
       }
     })
@@ -310,9 +316,9 @@ describe('rate Limiting (MUST-05)', () => {
 
       // And we should see at least some rate limit errors
       const rateLimitErrors = rejected.filter(r =>
-        r.result && typeof r.result === 'object' && 'error' in r.result &&
-        typeof r.result.error === 'object' && r.result.error && 'message' in r.result.error &&
-        typeof r.result.error.message === 'string' && r.result.error.message.includes('rate limit'),
+        r.result && typeof r.result === 'object' && 'error' in r.result
+        && typeof r.result.error === 'object' && r.result.error && 'message' in r.result.error
+        && typeof r.result.error.message === 'string' && r.result.error.message.includes('rate limit'),
       )
       expect(rateLimitErrors.length).toBeGreaterThan(0)
     })
@@ -340,9 +346,9 @@ describe('rate Limiting (MUST-05)', () => {
       // Then: Rate limiting should apply
       const successes = results.filter(r => r.success)
       const rateLimitErrors = results.filter(r =>
-        !r.success && r.result && typeof r.result === 'object' && 'error' in r.result &&
-        typeof r.result.error === 'object' && r.result.error && 'message' in r.result.error &&
-        typeof r.result.error.message === 'string' && r.result.error.message.includes('rate limit'),
+        !r.success && r.result && typeof r.result === 'object' && 'error' in r.result
+        && typeof r.result.error === 'object' && r.result.error && 'message' in r.result.error
+        && typeof r.result.error.message === 'string' && r.result.error.message.includes('rate limit'),
       )
 
       // First 5 should succeed, rest should be rate limited
@@ -362,9 +368,9 @@ describe('rate Limiting (MUST-05)', () => {
 
       // Then: Some requests should fail due to rate limiting
       const rateLimitErrors = results.filter(r =>
-        !r.success && r.result && typeof r.result === 'object' && 'error' in r.result &&
-        typeof r.result.error === 'object' && r.result.error && 'message' in r.result.error &&
-        typeof r.result.error.message === 'string' && r.result.error.message.includes('rate limit'),
+        !r.success && r.result && typeof r.result === 'object' && 'error' in r.result
+        && typeof r.result.error === 'object' && r.result.error && 'message' in r.result.error
+        && typeof r.result.error.message === 'string' && r.result.error.message.includes('rate limit'),
       )
 
       // Verify that rate limiting is being enforced

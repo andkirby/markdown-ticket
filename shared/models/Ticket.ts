@@ -35,6 +35,10 @@ export interface Ticket {
   relatedTickets: string[]
   dependsOn: string[]
   blocks: string[]
+
+  // MDT-095: Worktree fields (API response only)
+  inWorktree?: boolean
+  worktreePath?: string
 }
 
 /**
@@ -77,7 +81,7 @@ function normalizeArray(value: unknown): string[] {
  */
 export function normalizeTicket(rawTicket: unknown): Ticket {
   const ticket = asRecord(rawTicket)
-  return {
+  const normalizedTicket: Ticket = {
     // Map core fields
     code: getString(ticket.code) || getString(ticket.key),
     title: getString(ticket.title),
@@ -102,6 +106,16 @@ export function normalizeTicket(rawTicket: unknown): Ticket {
     dependsOn: normalizeArray(ticket.dependsOn),
     blocks: normalizeArray(ticket.blocks),
   }
+
+  // MDT-095: Preserve worktree fields if present
+  if (typeof ticket.inWorktree === 'boolean') {
+    normalizedTicket.inWorktree = ticket.inWorktree
+  }
+  if (typeof ticket.worktreePath === 'string') {
+    normalizedTicket.worktreePath = ticket.worktreePath
+  }
+
+  return normalizedTicket
 }
 
 /**

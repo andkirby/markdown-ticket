@@ -3,9 +3,11 @@
  * Testing the get_project_info MCP tool functionality
  */
 
+import { execSync } from 'node:child_process'
+
+import { ProjectSetup } from '../helpers/core/project-setup'
 import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
-import { ProjectSetup } from '../helpers/core/project-setup'
 import { TestEnvironment } from '../helpers/test-environment'
 
 describe('get_project_info', () => {
@@ -29,12 +31,12 @@ describe('get_project_info', () => {
     await projectSetup.createProjectStructure('PERF', 'Performance Test')
 
     // Debug: Check if registry files exist
-    const { execSync } = require('child_process')
     try {
       const registryFiles = execSync(`ls -la ${testEnv.getConfigDir()}/projects/`, { encoding: 'utf8' })
-      console.log('Registry files:', registryFiles)
-    } catch (e) {
-      console.log('No registry files found')
+      console.warn('Registry files:', registryFiles)
+    }
+    catch {
+      console.warn('No registry files found')
     }
 
     // NOW start MCP client (server will discover all projects from registry)

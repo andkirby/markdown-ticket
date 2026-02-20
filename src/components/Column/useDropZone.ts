@@ -6,6 +6,7 @@ interface DropZoneOptions {
   /**
    * Function called when an item is dropped on the zone
    * @param item - The dropped item containing the ticket
+   * @param item.ticket - The ticket being dropped
    * @returns Optional drop result to signal handling
    */
   onDrop: (item: { ticket: Ticket }) => DropResult | void
@@ -23,11 +24,16 @@ interface DropZoneOptions {
 
   /**
    * Optional custom hover handler
+   * @param item - The dragged item
+   * @param item.ticket - The ticket being dragged
+   * @param monitor - The drop target monitor
    */
   onHover?: (item: { ticket: Ticket }, monitor: DropTargetMonitor<{ ticket: Ticket }>) => void
 
   /**
    * Optional custom can drop handler
+   * @param item - The dragged item
+   * @param item.ticket - The ticket being dragged
    */
   canDrop?: (item: { ticket: Ticket }) => boolean
 }

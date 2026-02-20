@@ -11,19 +11,21 @@ import process from 'node:process'
 import { CONFIG_FILES, DEFAULTS } from '../utils/constants.js'
 import { deleteFile, directoryExists, fileExists } from '../utils/file-utils.js'
 import { logQuiet } from '../utils/logger.js'
-import { buildConfigFilePath, buildProjectPath, resolvePath } from '../utils/path-resolver.js'
+import { buildConfigFilePath, buildProjectPath, joinPaths, resolvePath } from '../utils/path-resolver.js'
 import { ProjectCacheService } from './project/ProjectCacheService.js'
 import { ProjectConfigService } from './project/ProjectConfigService.js'
 import { ProjectDiscoveryService } from './project/ProjectDiscoveryService.js'
+import { WorktreeService } from './WorktreeService.js'
 
 export class ProjectService implements IProjectService {
   private discovery: IProjectDiscoveryService
   private config: IProjectConfigService
   private cache: IProjectCacheService
   private fs: IProjectFileSystemService
+  private worktree: WorktreeService
   private quiet: boolean
 
-  constructor(quietOrDiscovery?: IProjectDiscoveryService | boolean, c?: IProjectConfigService, ca?: IProjectCacheService, f?: IProjectFileSystemService, quiet?: boolean) {
+  constructor(quietOrDiscovery?: IProjectDiscoveryService | boolean, c?: IProjectConfigService, ca?: IProjectCacheService, f?: IProjectFileSystemService, w?: WorktreeService, quiet?: boolean) {
     // Handle legacy signature: new ProjectService(quiet: boolean)
     if (typeof quietOrDiscovery === 'boolean') {
       this.quiet = quietOrDiscovery
@@ -31,6 +33,7 @@ export class ProjectService implements IProjectService {
       this.config = new ProjectConfigService(quietOrDiscovery)
       this.cache = new ProjectCacheService(quietOrDiscovery, 30000)
       this.fs = new ProjectFileSystemService(quietOrDiscovery)
+      this.worktree = w || new WorktreeService()
     }
     else {
       // New signature with dependency injection
@@ -39,6 +42,7 @@ export class ProjectService implements IProjectService {
       this.config = c || new ProjectConfigService(this.quiet)
       this.cache = ca || new ProjectCacheService(this.quiet, 30000)
       this.fs = f || new ProjectFileSystemService(this.quiet)
+      this.worktree = w || new WorktreeService()
     }
   }
 
@@ -155,11 +159,62 @@ export class ProjectService implements IProjectService {
       if (!config?.project)
         return []
       const ticketsPath = config.project.ticketsPath || DEFAULTS.TICKETS_PATH
+      const projectCode = config.project.code
       const fullCRPath = resolvePath(path, ticketsPath)
       if (!directoryExists(fullCRPath))
         return []
       const { MarkdownService } = await import('./MarkdownService.js')
-      return await MarkdownService.scanMarkdownFiles(fullCRPath, path)
+      const tickets = await MarkdownService.scanMarkdownFiles(fullCRPath, path)
+
+      // MDT-095: Resolve worktree paths for each ticket
+      // Check if worktree support is enabled (default: true)
+      const worktreeEnabled = config.worktree?.enabled !== false // C5 backward compatibility
+      if (worktreeEnabled && projectCode) {
+        const resolvedTickets = await Promise.all(
+          tickets.map(async (ticket) => {
+            const resolvedWorktreePath = await this.worktree.resolvePath(
+              path,
+              ticket.code,
+              ticketsPath,
+              projectCode,
+            )
+            const isInWorktree = resolvedWorktreePath !== path
+
+            // If worktree path differs from main path, re-read ticket from worktree
+            if (isInWorktree) {
+              // Preserve original filename, just update directory path
+              const originalFileName = ticket.filePath?.split('/').pop() || `${ticket.code}.md`
+              const worktreeFilePath = joinPaths(resolvedWorktreePath, ticketsPath, originalFileName)
+
+              // Re-read ticket content from worktree to get correct status/content
+              const worktreeTicket = await MarkdownService.parseMarkdownFile(worktreeFilePath, resolvedWorktreePath)
+              if (worktreeTicket) {
+                return {
+                  ...worktreeTicket,
+                  filePath: worktreeFilePath,
+                  inWorktree: true,
+                  worktreePath: resolvedWorktreePath,
+                }
+              }
+              // Fallback to original ticket if worktree read fails
+              return {
+                ...ticket,
+                filePath: worktreeFilePath,
+                inWorktree: true,
+                worktreePath: resolvedWorktreePath,
+              }
+            }
+            return {
+              ...ticket,
+              inWorktree: false,
+            }
+          }),
+        )
+        return resolvedTickets
+      }
+
+      // Worktree disabled - return tickets without worktree fields
+      return tickets
     }
     catch (e) {
       logQuiet(this.quiet, `Error getting CRs for project ${path}:`, e)

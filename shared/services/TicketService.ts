@@ -24,18 +24,25 @@ import {
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
 import { TemplateService } from './TemplateService.js'
+import { WorktreeService } from './WorktreeService.js'
 
 /**
  * Unified Ticket Service for CRUD Operations
  * Provides ticket management functionality for both MCP and web servers
+ *
+ * MDT-095: Enhanced with worktree support - TicketService is now the single
+ * source of truth for worktree path resolution, replacing the workaround in
+ * mcp-server/src/tools/handlers/crHandlers.ts
  */
 export class TicketService {
   private projectService: ProjectService
   private templateService: TemplateService
+  private readonly worktreeService: WorktreeService
 
   constructor(quiet: boolean = false) {
     this.projectService = new ProjectService(quiet)
     this.templateService = new TemplateService(undefined, quiet)
+    this.worktreeService = new WorktreeService()
   }
 
   /**
@@ -55,6 +62,68 @@ export class TicketService {
     catch (error) {
       console.warn(`Failed to get CR path config for project ${project.id}, using default:`, error)
       return path.resolve(project.project.path, 'docs/CRs')
+    }
+  }
+
+  /**
+   * MDT-095: Resolves the project path for a specific ticket, considering worktree mappings.
+   *
+   * @param project - Project configuration
+   * @param ticketCode - Ticket code (e.g., 'MDT-095')
+   * @returns Object with resolved path and whether it's in a worktree
+   * @private
+   */
+  private async resolveTicketPath(
+    project: Project,
+    ticketCode: string,
+  ): Promise<{ path: string; isInWorktree: boolean }> {
+    const config = this.projectService.getProjectConfig(project.project.path)
+    if (!config?.project) {
+      return { path: project.project.path, isInWorktree: false }
+    }
+
+    const ticketsPath = config.project.ticketsPath || 'docs/CRs'
+    const projectCode = config.project.code
+
+    // Check if worktree disabled
+    const worktreeEnabled = config.worktree?.enabled !== false
+    if (!worktreeEnabled || !projectCode) {
+      return { path: project.project.path, isInWorktree: false }
+    }
+
+    // Resolve using WorktreeService
+    const resolvedPath = await this.worktreeService.resolvePath(
+      project.project.path,
+      ticketCode,
+      ticketsPath,
+      projectCode,
+    )
+
+    const isInWorktree = resolvedPath !== project.project.path
+    return { path: resolvedPath, isInWorktree }
+  }
+
+  /**
+   * MDT-095: Creates a resolved project object with correct path for ticket.
+   *
+   * @param project - Original project
+   * @param resolvedPath - Path resolved for worktree
+   * @returns Project with updated path (if different)
+   * @private
+   */
+  private createResolvedProject(
+    project: Project,
+    resolvedPath: string,
+  ): Project {
+    if (resolvedPath === project.project.path) {
+      return project
+    }
+    return {
+      ...project,
+      project: {
+        ...project.project,
+        path: resolvedPath,
+      },
     }
   }
 
@@ -99,23 +168,46 @@ export class TicketService {
 
   /**
    * Get a specific CR by key
+   * MDT-095: Enhanced with worktree support - resolves path for specific ticket
    */
   async getCR(project: Project, key: string): Promise<Ticket | null> {
     try {
-      // Use shared ProjectService to get all CRs with correct path resolution
-      const crs = await this.projectService.getProjectCRs(project.project.path)
+      // Resolve path for this specific ticket
+      const { path: resolvedPath, isInWorktree } = await this.resolveTicketPath(project, key)
+      const resolvedProject = this.createResolvedProject(project, resolvedPath)
 
-      // Find the CR matching the key (case-insensitive)
-      const targetCR = crs.find(cr =>
+      // Get config and scan only resolved directory
+      const config = this.projectService.getProjectConfig(project.project.path)
+      const ticketsPath = config?.project?.ticketsPath || 'docs/CRs'
+      const fullCRPath = path.join(resolvedPath, ticketsPath)
+
+      // Check if directory exists
+      try {
+        await readdir(fullCRPath)
+      }
+      catch {
+        return null
+      }
+
+      // Use MarkdownService to scan only the resolved directory
+      const { MarkdownService } = await import('./MarkdownService.js')
+      const tickets = await MarkdownService.scanMarkdownFiles(fullCRPath, resolvedPath)
+
+      const targetCR = tickets.find(cr =>
         cr.code.toUpperCase() === key.toUpperCase(),
       )
 
       if (!targetCR) {
-        console.warn(`CR ${key} not found among ${crs.length} CRs in project ${project.id}`)
+        console.warn(`CR ${key} not found in project ${project.id}`)
         return null
       }
 
-      return targetCR
+      // Add worktree metadata
+      return {
+        ...targetCR,
+        inWorktree: isInWorktree,
+        worktreePath: isInWorktree ? resolvedPath : undefined,
+      }
     }
     catch (error) {
       console.error(`Failed to get CR ${key} for project ${project.id}:`, error)
@@ -125,36 +217,35 @@ export class TicketService {
 
   /**
    * Create a new CR in a project
+   * MDT-095: Enhanced with worktree support - creates in worktree if branch exists
    */
   async createCR(project: Project, crType: string, data: TicketData): Promise<Ticket> {
     try {
-      // Generate next CR number
       const nextNumber = await this.getNextCRNumber(project)
       const crKey = `${project.project.code}-${String(nextNumber).padStart(3, '0')}`
 
-      // Get the correct CR path from config
-      const crPath = await this.getCRPath(project)
+      // Resolve path for this ticket code
+      const { path: resolvedPath, isInWorktree } = await this.resolveTicketPath(project, crKey)
 
-      // Create filename slug from title
+      const config = this.projectService.getProjectConfig(project.project.path)
+      const ticketsPath = config?.project?.ticketsPath || 'docs/CRs'
+      const crPath = path.join(resolvedPath, ticketsPath)
+
       const titleSlug = this.createSlug(data.title)
       const filename = `${crKey}-${titleSlug}.md`
       const filePath = path.join(crPath, filename)
 
-      // Ensure CR directory exists
       await fs.ensureDir(crPath)
-
-      // Create ticket object using shared service
       const ticket = SharedCRService.createTicket(data, crKey, crType, filePath)
-
-      // Generate markdown content
       const markdownContent = this.formatCRAsMarkdown(ticket, data)
       ticket.content = markdownContent
-
-      // Write file (fs-extra uses outputFile for creating files with directory creation)
       await fs.outputFile(filePath, markdownContent, 'utf-8')
 
-      console.error(`✅ Created CR ${crKey}: ${data.title}`)
-      return ticket
+      return {
+        ...ticket,
+        inWorktree: isInWorktree,
+        worktreePath: isInWorktree ? resolvedPath : undefined,
+      }
     }
     catch (error) {
       console.error(`Failed to create CR for project ${project.id}:`, error)

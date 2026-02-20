@@ -28,6 +28,5 @@
     ".gitWT/**",
     "docs/**"
   ],
-  "ignoreBinaries": ["jq", "prettier", "rimraf", "rg"],
-  "ignoreDependencies": ["jest-environment-jsdom", "ts-jest"]
+  "ignoreBinaries": ["jq", "prettier", "rimraf", "rg"]
 }

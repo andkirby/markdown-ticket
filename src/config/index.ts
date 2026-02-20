@@ -11,3 +11,9 @@ export {
   getVisibleColumns,
 
 } from './statusConfig'
+
+// UI Configuration
+export {
+  UI_LABELS,
+  WORKTREE_ICON,
+} from './uiConfig'

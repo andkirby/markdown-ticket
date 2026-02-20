@@ -22,7 +22,9 @@ const shouldSuppressConsole = process.env.DEBUG !== 'true'
 globalThis.console = {
   ...console,
   log: shouldSuppressConsole ? jest.fn() : console.log.bind(console),
+
   error: shouldSuppressConsole ? jest.fn() : console.error.bind(console),
+
   warn: shouldSuppressConsole ? jest.fn() : console.warn.bind(console),
   info: shouldSuppressConsole ? jest.fn() : console.info.bind(console),
   debug: shouldSuppressConsole ? jest.fn() : console.debug.bind(console),
