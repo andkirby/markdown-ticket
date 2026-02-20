@@ -60,6 +60,7 @@ export class CRHandlers {
       lines.push(`- Status: ${ticket.status}`)
       lines.push(`- Type: ${ticket.type}`)
       lines.push(`- Priority: ${ticket.priority}`)
+      lines.push(`- In Worktree: ${ticket.inWorktree ?? false}`)
       if (safePhase) {
         lines.push(`- Phase: ${safePhase}`)
       }
@@ -83,6 +84,7 @@ export class CRHandlers {
       throw ToolError.protocol(modeValidation.message || 'Invalid mode parameter', JsonRpcErrorCode.InvalidParams)
     }
 
+    // TicketService now handles worktree resolution internally (MDT-095)
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
       // CR not found is a business logic failure (tool execution error)
@@ -157,9 +159,11 @@ export class CRHandlers {
               // Type-safe assignment based on the expected type
               if (typeof value === 'string') {
                 (attributes as unknown as Record<string, unknown>)[field] = Sanitizer.sanitizeText(value)
-              } else if (Array.isArray(value)) {
+              }
+              else if (Array.isArray(value)) {
                 (attributes as unknown as Record<string, unknown>)[field] = value as string[]
-              } else {
+              }
+              else {
                 (attributes as unknown as Record<string, unknown>)[field] = value
               }
             }
@@ -310,7 +314,7 @@ export class CRHandlers {
       throw ToolError.protocol(statusValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
     }
 
-    // Get current CR to show old status
+    // TicketService now handles worktree resolution internally (MDT-095)
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
       throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
@@ -357,7 +361,7 @@ export class CRHandlers {
       throw ToolError.protocol(attrsValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
     }
 
-    // Get current CR info
+    // TicketService now handles worktree resolution internally (MDT-095)
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
       throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
@@ -394,7 +398,7 @@ export class CRHandlers {
     const projectCode = project.project.code || project.id
     const normalizedKey = normalizeKey(key, projectCode)
 
-    // Get CR info before deletion
+    // TicketService now handles worktree resolution internally (MDT-095)
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
       throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
@@ -428,6 +432,7 @@ export class CRHandlers {
     const projectCode = project.project.code || project.id
     const normalizedKey = normalizeKey(key, projectCode)
 
+    // TicketService now handles worktree resolution internally (MDT-095)
     const ticket = await this.crService.getCR(project, normalizedKey)
     if (!ticket) {
       throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)

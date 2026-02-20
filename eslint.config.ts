@@ -25,6 +25,9 @@ export default antfu(
       // Re-enable if needed via eslint-plugin-storybook
       '@typescript-eslint/no-explicit-any': 'warn',
 
+      // Disable react/no-implicit-key as it requires full type info that isn't available
+      'react/no-implicit-key': 'off',
+
       // Block relative imports to shared module - use @mdt/shared path alias instead
       // This is required because TypeScript project references expect imports from
       // built output (../shared/dist/*), not source files (../shared/*)

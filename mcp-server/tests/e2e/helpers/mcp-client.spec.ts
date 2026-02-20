@@ -294,7 +294,7 @@ name = "Test Project"
         expect(typeof response.data).toBe('string')
 
         // Either successful creation or project not found error is acceptable
-        if (response.data.includes('Created CR')) {
+        if (typeof response.data === 'string' && response.data.includes('Created CR')) {
           expect(response.data).toContain(crData.title)
         }
         else {

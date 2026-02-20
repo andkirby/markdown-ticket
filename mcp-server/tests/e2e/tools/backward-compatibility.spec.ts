@@ -53,7 +53,10 @@ describe('MDT-121: Backward Compatibility for Multi-Project Mode', () => {
   }
 
   function extractCRKey(createResponse: MCPResponse): string {
-    const match = createResponse.data?.match(/\*\*Created CR ([A-Z]+-\d+)\*\*:/)
+    if (typeof createResponse.data !== 'string') {
+      throw new TypeError(`Expected string response, got ${typeof createResponse.data}`)
+    }
+    const match = createResponse.data.match(/\*\*Created CR ([A-Z]+-\d+)\*\*:/)
     if (!match) {
       throw new Error(`Could not extract CR key from response: ${createResponse.data}`)
     }

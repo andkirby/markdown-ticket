@@ -97,6 +97,11 @@ describe('list_projects', () => {
       expect(response.data).toBeDefined()
       expect(typeof response.data).toBe('string')
 
+      // Type guard for string data
+      if (typeof response.data !== 'string') {
+        throw new TypeError('Expected response.data to be a string')
+      }
+
       // Should contain no projects message
       expectNoProjectsInMarkdown(response.data)
     })
@@ -111,6 +116,11 @@ describe('list_projects', () => {
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
       expect(typeof response.data).toBe('string')
+
+      // Type guard for string data
+      if (typeof response.data !== 'string') {
+        throw new TypeError('Expected response.data to be a string')
+      }
 
       // Should contain project information in markdown format
       expectProjectInMarkdown(response.data, 'TEST', 'Test Project')
@@ -131,6 +141,11 @@ describe('list_projects', () => {
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
       expect(typeof response.data).toBe('string')
+
+      // Type guard for string data
+      if (typeof response.data !== 'string') {
+        throw new TypeError('Expected response.data to be a string')
+      }
 
       // Should contain all created projects
       expectProjectInMarkdown(response.data, 'TEST', 'Test Project')
@@ -157,6 +172,11 @@ describe('list_projects', () => {
       // Expected behavior: Should show project with custom configuration
       expect(response.success).toBe(true)
       expect(typeof response.data).toBe('string')
+
+      // Type guard for string data
+      if (typeof response.data !== 'string') {
+        throw new TypeError('Expected response.data to be a string')
+      }
 
       // Should contain project information
       expectProjectInMarkdown(response.data, 'CUST', 'Custom Project')
@@ -202,6 +222,11 @@ This fixes a critical bug.`,
       expect(response.success).toBe(true)
       expect(typeof response.data).toBe('string')
 
+      // Type guard for string data
+      if (typeof response.data !== 'string') {
+        throw new TypeError('Expected response.data to be a string')
+      }
+
       // Should contain project information
       expectProjectInMarkdown(response.data, 'TEST', 'Test Project')
 
@@ -234,6 +259,11 @@ This fixes a critical bug.`,
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
       expect(typeof response.data).toBe('string')
+
+      // Type guard for string data
+      if (typeof response.data !== 'string') {
+        throw new TypeError('Expected response.data to be a string')
+      }
 
       // Should be markdown format with headers
       expect(response.data).toContain('📁')

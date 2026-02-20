@@ -75,7 +75,7 @@ function parseSuggestionsFromMarkdown(markdown: string) {
       // Determine category and severity
       const text = (`${match[2]} ${description}`).toLowerCase()
       let category = 'General'
-      let severity = 'info'
+      let severity: 'info' | 'minor' | 'major' | 'critical' = 'info'
 
       if (text.includes('expand') || text.includes('minimal') || text.includes('short')
         || text.includes('reproduction') || text.includes('root cause')) {
@@ -319,7 +319,10 @@ This change is necessary to:
       expect(response.data).toBeDefined()
 
       // Parse markdown response to structured data
-      const parsedData = parseSuggestionsFromMarkdown(response.data)
+      // Type guard: response.data should be a string from the MCP tool
+      const responseData = response.data
+      expect(typeof responseData).toBe('string')
+      const parsedData = parseSuggestionsFromMarkdown(responseData as string)
       expectSuggestionStructure(parsedData)
 
       // Should have minimal or no suggestions for a complete CR
@@ -355,18 +358,21 @@ This is blocking user access to the system.`
       expect(response.success).toBe(true)
 
       // Parse markdown response to structured data
-      const parsedData = parseSuggestionsFromMarkdown(response.data)
+      // Type guard: response.data should be a string from the MCP tool
+      const responseData = response.data
+      expect(typeof responseData).toBe('string')
+      const parsedData = parseSuggestionsFromMarkdown(responseData as string)
       expectSuggestionStructure(parsedData)
 
       // The suggest_cr_improvements tool returns a markdown-formatted response
       // Let's verify it has expected structure for suggestions
-      expect(response.data).toContain('CR Improvement Suggestions')
-      expect(response.data).toContain('Current CR:')
+      expect(responseData).toContain('CR Improvement Suggestions')
+      expect(responseData).toContain('Current CR:')
 
       // For minimal content, should have suggestions
       // The actual content depends on TemplateService logic
       // Just verify the response is well-formed
-      expect(response.data.length).toBeGreaterThan(50)
+      expect((responseData as string).length).toBeGreaterThan(50)
     })
 
     it('GIVEN CR with one-line sections WHEN suggesting THEN suggest expansion', async () => {
@@ -401,16 +407,19 @@ It works.`
       expect(response.success).toBe(true)
 
       // Parse markdown response to structured data
-      const parsedData = parseSuggestionsFromMarkdown(response.data)
+      // Type guard: response.data should be a string from the MCP tool
+      const responseData = response.data
+      expect(typeof responseData).toBe('string')
+      const parsedData = parseSuggestionsFromMarkdown(responseData as string)
       expectSuggestionStructure(parsedData)
 
       // The suggest_cr_improvements tool returns a markdown-formatted response
       // Let's verify it has expected structure
-      expect(response.data).toContain('CR Improvement Suggestions')
-      expect(response.data).toContain('Current CR:')
+      expect(responseData).toContain('CR Improvement Suggestions')
+      expect(responseData).toContain('Current CR:')
 
       // Verify the response is well-formed
-      expect(response.data.length).toBeGreaterThan(50)
+      expect((responseData as string).length).toBeGreaterThan(50)
     })
   })
 
@@ -449,16 +458,19 @@ This needs to be fixed because users are complaining.`
       expect(response.success).toBe(true)
 
       // Parse markdown response to structured data
-      const parsedData = parseSuggestionsFromMarkdown(response.data)
+      // Type guard: response.data should be a string from the MCP tool
+      const responseData = response.data
+      expect(typeof responseData).toBe('string')
+      const parsedData = parseSuggestionsFromMarkdown(responseData as string)
       expectSuggestionStructure(parsedData)
 
       // The suggest_cr_improvements tool returns a markdown-formatted response
       // Let's verify it has expected structure
-      expect(response.data).toContain('CR Improvement Suggestions')
-      expect(response.data).toContain('Current CR:')
+      expect(responseData).toContain('CR Improvement Suggestions')
+      expect(responseData).toContain('Current CR:')
 
       // Verify the response is well-formed
-      expect(response.data.length).toBeGreaterThan(50)
+      expect((responseData as string).length).toBeGreaterThan(50)
     })
 
     it('GIVEN CR with inconsistent formatting WHEN suggesting THEN suggest formatting improvements', async () => {
@@ -497,16 +509,19 @@ More content here.`
       expect(response.success).toBe(true)
 
       // Parse markdown response to structured data
-      const parsedData = parseSuggestionsFromMarkdown(response.data)
+      // Type guard: response.data should be a string from the MCP tool
+      const responseData = response.data
+      expect(typeof responseData).toBe('string')
+      const parsedData = parseSuggestionsFromMarkdown(responseData as string)
       expectSuggestionStructure(parsedData)
 
       // The suggest_cr_improvements tool returns a markdown-formatted response
       // Let's verify it has expected structure
-      expect(response.data).toContain('CR Improvement Suggestions')
-      expect(response.data).toContain('Current CR:')
+      expect(responseData).toContain('CR Improvement Suggestions')
+      expect(responseData).toContain('Current CR:')
 
       // Verify the response is well-formed
-      expect(response.data.length).toBeGreaterThan(50)
+      expect((responseData as string).length).toBeGreaterThan(50)
     })
   })
 
@@ -545,16 +560,19 @@ Use search library.
       expect(response.success).toBe(true)
 
       // Parse markdown response to structured data
-      const parsedData = parseSuggestionsFromMarkdown(response.data)
+      // Type guard: response.data should be a string from the MCP tool
+      const responseData = response.data
+      expect(typeof responseData).toBe('string')
+      const parsedData = parseSuggestionsFromMarkdown(responseData as string)
       expectSuggestionStructure(parsedData)
 
       // The suggest_cr_improvements tool returns a markdown-formatted response
       // Let's verify it has expected structure
-      expect(response.data).toContain('CR Improvement Suggestions')
-      expect(response.data).toContain('Current CR:')
+      expect(responseData).toContain('CR Improvement Suggestions')
+      expect(responseData).toContain('Current CR:')
 
       // Verify the response is well-formed
-      expect(response.data.length).toBeGreaterThan(50)
+      expect((responseData as string).length).toBeGreaterThan(50)
     })
 
     it('GIVEN CR with no solution analysis WHEN suggesting THEN emphasize importance', async () => {
@@ -585,16 +603,19 @@ Feature works.`
       expect(response.success).toBe(true)
 
       // Parse markdown response to structured data
-      const parsedData = parseSuggestionsFromMarkdown(response.data)
+      // Type guard: response.data should be a string from the MCP tool
+      const responseData = response.data
+      expect(typeof responseData).toBe('string')
+      const parsedData = parseSuggestionsFromMarkdown(responseData as string)
       expectSuggestionStructure(parsedData)
 
       // The suggest_cr_improvements tool returns a markdown-formatted response
       // Let's verify it has expected structure
-      expect(response.data).toContain('CR Improvement Suggestions')
-      expect(response.data).toContain('Current CR:')
+      expect(responseData).toContain('CR Improvement Suggestions')
+      expect(responseData).toContain('Current CR:')
 
       // Verify the response is well-formed
-      expect(response.data.length).toBeGreaterThan(50)
+      expect((responseData as string).length).toBeGreaterThan(50)
     })
   })
 
@@ -644,7 +665,10 @@ Real-time collaboration is becoming standard expectation in document editing too
       expect(response.success).toBe(true)
 
       // Parse markdown response to structured data
-      const parsedData = parseSuggestionsFromMarkdown(response.data)
+      // Type guard: response.data should be a string from the MCP tool
+      const responseData = response.data
+      expect(typeof responseData).toBe('string')
+      const parsedData = parseSuggestionsFromMarkdown(responseData as string)
       expectSuggestionStructure(parsedData)
 
       // Should have minimal suggestions for good content
@@ -731,7 +755,10 @@ Need to document something.`
       expect(response.data).toBeDefined()
 
       // Parse markdown response to structured data
-      const parsedData = parseSuggestionsFromMarkdown(response.data)
+      // Type guard: response.data should be a string from the MCP tool
+      const responseData = response.data
+      expect(typeof responseData).toBe('string')
+      const parsedData = parseSuggestionsFromMarkdown(responseData as string)
 
       // Required fields
       expect(parsedData.summary).toBeDefined()

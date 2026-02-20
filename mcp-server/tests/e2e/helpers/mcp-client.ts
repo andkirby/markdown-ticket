@@ -39,7 +39,10 @@ export class MCPClient {
   private logger = MCPLogger.getInstance()
   private requestId = 0
   private serverProcess?: ChildProcess
-  private pendingRequests: Map<number, { resolve: (...args: unknown[]) => unknown, reject: (...args: unknown[]) => unknown }> = new Map()
+  private pendingRequests: Map<number, {
+    resolve: (value: Record<string, unknown>) => void
+    reject: (reason: Error) => void
+  }> = new Map()
 
   constructor(testEnv: TestEnvironment, options: MCPClientOptions = {}) {
     this.testEnv = testEnv
@@ -159,7 +162,7 @@ export class MCPClient {
         reject(error)
       }
       else {
-        resolve(message)
+        resolve(message as Record<string, unknown>)
       }
     }
   }
@@ -206,8 +209,12 @@ export class MCPClient {
       return response.data
     }
 
-    if (response.data.tools && Array.isArray(response.data.tools)) {
-      return response.data.tools
+    // Type guard for object with tools property
+    if (typeof response.data === 'object' && response.data !== null && 'tools' in response.data) {
+      const dataWithTools = response.data as { tools?: unknown }
+      if (Array.isArray(dataWithTools.tools)) {
+        return dataWithTools.tools
+      }
     }
 
     return []
@@ -304,7 +311,11 @@ export class MCPClient {
         }
 
         // Parse the result content first
-        const content = this.parseResultContent(response.result)
+        const content = this.parseResultContent(
+          typeof response.result === 'object' && response.result !== null
+            ? (response.result as Record<string, unknown>)
+            : null,
+        )
 
         // Check if the response indicates an error according to MCP spec
         if (response.result && (response.result as { isError?: boolean }).isError === true) {
@@ -395,9 +406,11 @@ export class MCPClient {
           // Preserve the error code from the server
           // Protocol errors should maintain their original codes (-32601, -32602, etc.)
           // Tool execution errors will have code -32000 by default
-          const errorCode = (error instanceof Error && 'code' in error) ? (error as Error & { code?: number }).code : -1
+          const errorCode = (error instanceof Error && 'code' in error)
+            ? ((error as Error & { code?: number }).code ?? -1)
+            : -1
 
-          const response = {
+          const response: MCPResponse = {
             success: false,
             error: {
               code: errorCode,
@@ -434,29 +447,42 @@ export class MCPClient {
       throw new Error('Server process not available')
     }
 
-    return new Promise((resolve, reject) => {
-      const requestId = request.id
+    // Ensure request.id is a number
+    const requestId = typeof request.id === 'number' ? request.id : Date.now()
+    const methodName = typeof request.method === 'string' ? request.method : 'unknown'
+
+    return new Promise<Record<string, unknown>>((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.pendingRequests.delete(requestId)
-        reject(new Error(`Tool call timeout: ${request.method}`))
+        reject(new Error(`Tool call timeout: ${methodName}`))
       }, this.options.timeout)
 
       // Store the promise callbacks for response handling
       this.pendingRequests.set(requestId, {
         resolve: (response: unknown) => {
           clearTimeout(timeout)
-          resolve(response)
+          // Ensure response is Record<string, unknown>
+          if (typeof response === 'object' && response !== null) {
+            resolve(response as Record<string, unknown>)
+          }
+          else {
+            reject(new Error('Invalid response type from server'))
+          }
         },
         reject: (error: unknown) => {
           clearTimeout(timeout)
-          reject(error)
+          if (error instanceof Error) {
+            reject(error)
+          }
+          else {
+            reject(new Error(String(error)))
+          }
         },
       })
 
       // Send the request as a JSON-RPC message
       const message = `${JSON.stringify(request)}\n`
       this.serverProcess?.stdin?.write(message)
-
     })
   }
 

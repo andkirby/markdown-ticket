@@ -57,12 +57,23 @@ describe('list_crs', () => {
     return await mcpClient.callTool('list_crs', params)
   }
 
+  /**
+   * Type guard to safely extract string data from MCP response
+   * Throws an error if the data is not a string
+   */
+  function assertStringData(data: unknown): asserts data is string {
+    if (data !== undefined && typeof data !== 'string') {
+      throw new Error(`Expected string response data, got ${typeof data}`)
+    }
+  }
+
   interface CRListItem {
     code: string
     title: string
     status?: string
     type?: string
     priority?: string
+    inWorktree?: boolean
     phaseEpic?: string
     created?: string
   }
@@ -89,7 +100,7 @@ describe('list_crs', () => {
       }
 
       // Match properties: - Status: Proposed
-      const propMatch = trimmedLine.match(/^- (Status|Type|Priority|Phase|Created): (\S.*)$/)
+      const propMatch = trimmedLine.match(/^- (Status|Type|Priority|In Worktree|Phase|Created): (\S.*)$/)
       if (propMatch && currentCR) {
         const [, key, value] = propMatch
         switch (key) {
@@ -101,6 +112,9 @@ describe('list_crs', () => {
             break
           case 'Priority':
             currentCR.priority = value
+            break
+          case 'In Worktree':
+            currentCR.inWorktree = value === 'true'
             break
           case 'Phase':
             currentCR.phaseEpic = value
@@ -175,7 +189,7 @@ The solution is straightforward as this is test content.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(typeof response.data).toBe('string')
+      assertStringData(response.data)
       expect(response.data).toMatch(/No CRs found( matching filters)? in project EMPTY/)
     })
 
@@ -211,10 +225,10 @@ The solution is straightforward as this is test content.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(typeof response.data).toBe('string')
+      assertStringData(response.data)
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data as string)
+      const crs = parseMarkdownResponse(response.data)
       expect(crs.length).toBeGreaterThanOrEqual(3)
 
       // Verify CR structure
@@ -268,10 +282,10 @@ The solution is straightforward as this is test content.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(typeof response.data).toBe('string')
+      assertStringData(response.data)
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data as string)
+      const crs = parseMarkdownResponse(response.data)
 
       // All 4 CRs should be returned since they all have 'Proposed' status
       expect(crs.length).toBe(4)
@@ -315,10 +329,10 @@ The solution is straightforward as this is test content.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(typeof response.data).toBe('string')
+      assertStringData(response.data)
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data as string)
+      const crs = parseMarkdownResponse(response.data)
 
       // All 4 CRs should be returned since they all have 'Proposed' status
       expect(crs.length).toBe(4)
@@ -366,10 +380,10 @@ The solution is straightforward as this is test content.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(typeof response.data).toBe('string')
+      assertStringData(response.data)
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data as string)
+      const crs = parseMarkdownResponse(response.data)
       // Array handled by parseMarkdownResponse
 
       crs.forEach((cr: CRListItem) => {
@@ -419,10 +433,10 @@ The solution is straightforward as this is test content.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(typeof response.data).toBe('string')
+      assertStringData(response.data)
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data as string)
+      const crs = parseMarkdownResponse(response.data)
       // Array handled by parseMarkdownResponse
 
       crs.forEach((cr: CRListItem) => {
@@ -472,10 +486,10 @@ The solution is straightforward as this is test content.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(typeof response.data).toBe('string')
+      assertStringData(response.data)
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data as string)
+      const crs = parseMarkdownResponse(response.data)
       // Array handled by parseMarkdownResponse
 
       crs.forEach((cr: CRListItem) => {
@@ -531,10 +545,10 @@ The solution is straightforward as this is test content.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(typeof response.data).toBe('string')
+      assertStringData(response.data)
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data as string)
+      const crs = parseMarkdownResponse(response.data)
       // Array handled by parseMarkdownResponse
 
       crs.forEach((cr: CRListItem) => {
@@ -584,10 +598,10 @@ The solution is straightforward as this is test content.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(typeof response.data).toBe('string')
+      assertStringData(response.data)
 
       // Parse markdown response
-      const crs = parseMarkdownResponse(response.data as string)
+      const crs = parseMarkdownResponse(response.data)
 
       if (crs.length > 0) {
         const cr = crs[0]

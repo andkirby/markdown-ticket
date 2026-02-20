@@ -4,6 +4,8 @@
  * is imported (which happens at module load time).
  */
 
+/* eslint-disable node/prefer-global/process -- process is a legitimate global in Jest setup files */
+
 import * as os from 'node:os'
 import * as path from 'node:path'
 

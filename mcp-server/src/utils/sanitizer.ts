@@ -154,7 +154,7 @@ const MALICIOUS_PATTERNS = [
   /\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi,
 
   // Dangerous URL protocols - combined pattern
-  /(?<![\(])\s*(?:javascript|data\s*:\s*(?:text\/html|application\/javascript)|vbscript|file)\s*:[^'"\s)]*/gi,
+  /(?<!\()\s*(?:javascript|data\s*:\s*(?:text\/html|application\/javascript)|vbscript|file)\s*:[^'"\s)]*/gi,
 ]
 
 /**
@@ -345,7 +345,7 @@ export class Sanitizer {
           return '&gt;'
         case '"':
           return '&quot;'
-        case "'":
+        case '\'':
           return '&#x27;'
         case '/':
           return '&#x2F;'
@@ -373,7 +373,8 @@ export class Sanitizer {
     let strContent: string
     if (typeof content !== 'string') {
       strContent = String(content)
-    } else {
+    }
+    else {
       strContent = content
     }
 

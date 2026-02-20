@@ -12,6 +12,7 @@
  * 4. JSON output structure for attributes/metadata modes
  */
 
+import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { CRService } from '../../../services/crService.js'
 // Use local test fixtures instead of @mdt/shared imports
 import type { Project, Ticket, TicketData, TicketFilters } from '../../__tests__/test-fixtures.js'
@@ -22,6 +23,7 @@ import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { glob } from 'glob'
 import { JsonRpcErrorCode, ToolError } from '../../../utils/toolError.js'
 import { createMockProject, createMockTicket, mockFileContent } from '../../__tests__/test-fixtures.js'
+
 // Now import the handlers
 import { CRHandlers } from '../crHandlers.js'
 
@@ -78,11 +80,16 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
     } as unknown as jest.Mocked<CRService>
 
     // Create handlers with mocked dependencies
+    // Note: WorktreeService is no longer passed to CRHandlers (MDT-095)
+    // Worktree resolution now happens in the shared TicketService layer
     crHandlers = new CRHandlers(
       mockCrServiceInstance,
-      MarkdownService as unknown as typeof MarkdownService,
-      mockTitleExtractionService as unknown,
-      mockTemplateService as unknown,
+      // eslint-disable-next-line ts/no-explicit-any -- Test mock: MarkdownService requires any type for constructor compatibility
+      MarkdownService as unknown as any,
+      // eslint-disable-next-line ts/no-explicit-any -- Test mock: TitleExtractionService mock
+      mockTitleExtractionService as unknown as any,
+      // eslint-disable-next-line ts/no-explicit-any -- Test mock: TemplateService mock
+      mockTemplateService as unknown as any,
     );
 
     // Mock glob to return test file path

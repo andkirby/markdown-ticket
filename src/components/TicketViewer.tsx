@@ -74,7 +74,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
       <ModalHeader
         title={(
           <span>
-            <TicketCode code={currentTicket.code} />
+            <TicketCode code={currentTicket.code} ticket={currentTicket} />
             {' '}
             •
             {currentTicket.title}

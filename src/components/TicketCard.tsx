@@ -5,11 +5,13 @@ import { TicketCode } from './TicketCode'
 
 interface TicketCardProps {
   ticket: Ticket
-  onMove: (newStatus: string) => void
+  onMove?: (newStatus: string) => void // Used by DraggableTicketCard wrapper
+  onClick?: () => void // Used for testing
+  onDragStart?: (e: React.DragEvent) => void // Used for testing
   onEdit: () => void
 }
 
-const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
+const TicketCard: React.FC<TicketCardProps> = ({ ticket, _onMove, _onClick, _onDragStart, onEdit }) => {
   return (
     <div
       className="group ticket-card bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border border-gray-200/50 dark:border-slate-700/50 rounded-xl px-3 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 hover:scale-[1.005] transition-all duration-300 ease-out cursor-pointer backdrop-blur-sm"
@@ -19,17 +21,19 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
     >
       <div className="flex items-start justify-between mb-2">
         <h4 className="ticket-title font-semibold text-gray-900 dark:text-white text-sm">
-          <TicketCode code={ticket.code} />
+          <TicketCode code={ticket.code} ticket={ticket} />
           {' '}
           •
           {ticket.title}
         </h4>
       </div>
 
-      <div className="flex items-center justify-between">
-        <TicketAttributeTags ticket={ticket} />
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1">
+          <TicketAttributeTags ticket={ticket} />
+        </div>
 
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1 shrink-0">
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -50,3 +54,4 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onEdit }) => {
 }
 
 export default TicketCard
+export { TicketCard }

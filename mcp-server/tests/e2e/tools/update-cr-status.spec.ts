@@ -142,9 +142,10 @@ The solution involves testing the status update mechanism for CRs in the system.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expect(response.data).toContain('Updated CR')
-      expect(response.data).toContain('Approved')
-      expect(response.data).toContain(crKey)
+      const data = response.data as string
+      expect(data).toContain('Updated CR')
+      expect(data).toContain('Approved')
+      expect(data).toContain(crKey)
     })
 
     it('GIVEN valid status transitions WHEN updating THEN allow all transitions', async () => {
@@ -161,32 +162,37 @@ The solution involves testing the status update mechanism for CRs in the system.
       // Proposed -> Approved
       let response = await callUpdateCRStatus('TEST', crKey, 'Approved')
       expect(response.success).toBe(true)
-      expect(response.data).toContain('Updated CR')
-      expect(response.data).toContain('Approved')
+      const approvedData = response.data as string
+      expect(approvedData).toContain('Updated CR')
+      expect(approvedData).toContain('Approved')
 
       // Approved -> In Progress
       response = await callUpdateCRStatus('TEST', crKey, 'In Progress')
       expect(response.success).toBe(true)
-      expect(response.data).toContain('Updated CR')
-      expect(response.data).toContain('In Progress')
+      const inProgressData1 = response.data as string
+      expect(inProgressData1).toContain('Updated CR')
+      expect(inProgressData1).toContain('In Progress')
 
       // In Progress -> On Hold
       response = await callUpdateCRStatus('TEST', crKey, 'On Hold')
       expect(response.success).toBe(true)
-      expect(response.data).toContain('Updated CR')
-      expect(response.data).toContain('On Hold')
+      const onHoldData = response.data as string
+      expect(onHoldData).toContain('Updated CR')
+      expect(onHoldData).toContain('On Hold')
 
       // On Hold -> In Progress
       response = await callUpdateCRStatus('TEST', crKey, 'In Progress')
       expect(response.success).toBe(true)
-      expect(response.data).toContain('Updated CR')
-      expect(response.data).toContain('In Progress')
+      const inProgressData2 = response.data as string
+      expect(inProgressData2).toContain('Updated CR')
+      expect(inProgressData2).toContain('In Progress')
 
       // In Progress -> Implemented
       response = await callUpdateCRStatus('TEST', crKey, 'Implemented')
       expect(response.success).toBe(true)
-      expect(response.data).toContain('Updated CR')
-      expect(response.data).toContain('Implemented')
+      const implementedData = response.data as string
+      expect(implementedData).toContain('Updated CR')
+      expect(implementedData).toContain('Implemented')
     })
 
     it('GIVEN same status WHEN updating THEN still return success', async () => {
@@ -204,8 +210,9 @@ The solution involves testing the status update mechanism for CRs in the system.
       const response = await callUpdateCRStatus('TEST', crKey, 'Approved')
 
       expect(response.success).toBe(true)
-      expect(response.data).toContain('Updated CR')
-      expect(response.data).toContain('Approved')
+      const sameStatusData = response.data as string
+      expect(sameStatusData).toContain('Updated CR')
+      expect(sameStatusData).toContain('Approved')
     })
   })
 
@@ -234,9 +241,10 @@ The solution involves testing the status update mechanism for CRs in the system.
         const response = await callUpdateCRStatus('TEST', crKey, step.status)
 
         expect(response.success).toBe(true)
-        expect(response.data).toContain('Updated CR')
-        expect(response.data).toContain(step.status)
-        expect(response.data).toContain(crKey)
+        const lifecycleData = response.data as string
+        expect(lifecycleData).toContain('Updated CR')
+        expect(lifecycleData).toContain(step.status)
+        expect(lifecycleData).toContain(crKey)
       }
     })
   })
@@ -276,19 +284,22 @@ The solution involves testing the status update mechanism for CRs in the system.
 
       // Verify each update succeeded
       expect(response1.success).toBe(true)
-      expect(response1.data).toContain('Updated CR')
-      expect(response1.data).toContain('In Progress')
-      expect(response1.data).toContain(cr1Key)
+      const data1 = response1.data as string
+      expect(data1).toContain('Updated CR')
+      expect(data1).toContain('In Progress')
+      expect(data1).toContain(cr1Key)
 
       expect(response2.success).toBe(true)
-      expect(response2.data).toContain('Updated CR')
-      expect(response2.data).toContain('Approved')
-      expect(response2.data).toContain(cr2Key)
+      const data2 = response2.data as string
+      expect(data2).toContain('Updated CR')
+      expect(data2).toContain('Approved')
+      expect(data2).toContain(cr2Key)
 
       expect(response3.success).toBe(true)
-      expect(response3.data).toContain('Updated CR')
-      expect(response3.data).toContain('Rejected')
-      expect(response3.data).toContain(cr3Key)
+      const data3 = response3.data as string
+      expect(data3).toContain('Updated CR')
+      expect(data3).toContain('Rejected')
+      expect(data3).toContain(cr3Key)
     })
   })
 
@@ -325,9 +336,10 @@ The solution involves testing the status update mechanism for CRs in the system.
         const response = await callUpdateCRStatus('TEST', crKey, status)
 
         expect(response.success).toBe(true)
-        expect(response.data).toContain('Updated CR')
-        expect(response.data).toContain(status)
-        expect(response.data).toContain(crKey)
+        const validationData = response.data as string
+        expect(validationData).toContain('Updated CR')
+        expect(validationData).toContain(status)
+        expect(validationData).toContain(crKey)
       }
     })
   })
@@ -440,12 +452,14 @@ The solution involves testing the status update mechanism for CRs in the system.
       // First reject the CR
       const rejectResponse = await callUpdateCRStatus('TEST', crKey, 'Rejected')
       expect(rejectResponse.success).toBe(true)
-      expect(rejectResponse.data).toContain('Rejected')
+      const rejectData = rejectResponse.data as string
+      expect(rejectData).toContain('Rejected')
 
       // Then implement it (e.g., after reconsideration)
       const implementResponse = await callUpdateCRStatus('TEST', crKey, 'Implemented')
       expect(implementResponse.success).toBe(true)
-      expect(implementResponse.data).toContain('Implemented')
+      const implementData = implementResponse.data as string
+      expect(implementData).toContain('Implemented')
     })
 
     it('GIVEN CR on hold WHEN updating to in progress THEN allow resumption', async () => {
@@ -461,12 +475,14 @@ The solution involves testing the status update mechanism for CRs in the system.
       // Put CR on hold
       const holdResponse = await callUpdateCRStatus('TEST', crKey, 'On Hold')
       expect(holdResponse.success).toBe(true)
-      expect(holdResponse.data).toContain('On Hold')
+      const holdData = holdResponse.data as string
+      expect(holdData).toContain('On Hold')
 
       // Resume work
       const resumeResponse = await callUpdateCRStatus('TEST', crKey, 'In Progress')
       expect(resumeResponse.success).toBe(true)
-      expect(resumeResponse.data).toContain('In Progress')
+      const resumeData = resumeResponse.data as string
+      expect(resumeData).toContain('In Progress')
     })
   })
 
@@ -487,10 +503,11 @@ The solution involves testing the status update mechanism for CRs in the system.
       expect(response.data).toBeDefined()
 
       // Response should be markdown with CR info
-      expect(response.data).toContain('Updated CR')
-      expect(response.data).toContain(crKey)
-      expect(response.data).toContain('Approved')
-      expect(response.data).toContain('Response Format Test')
+      const formatData = response.data as string
+      expect(formatData).toContain('Updated CR')
+      expect(formatData).toContain(crKey)
+      expect(formatData).toContain('Approved')
+      expect(formatData).toContain('Response Format Test')
     })
   })
 })

@@ -13,8 +13,9 @@
  * - GIVEN CR with dependencies WHEN creating THEN create with relationships
  */
 
+import type { MCPResponse } from '../helpers/mcp-client'
 import { ProjectSetup } from '../helpers/core/project-setup'
-import { MCPClient, type MCPResponse } from '../helpers/mcp-client'
+import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
 import { TestEnvironment } from '../helpers/test-environment'
 
@@ -24,7 +25,7 @@ describe('create_cr', () => {
   let _projectFactory: ProjectFactory
 
   // Type for parsed CR response
-  type ParsedCRResponse = {
+  interface ParsedCRResponse {
     key?: string
     title?: string
     status?: string
@@ -119,7 +120,11 @@ describe('create_cr', () => {
     return cr
   }
 
-  function expectCreatedCRStructure(cr: ParsedCRResponse, expectedTitle: string, expectedType: string) {
+  function expectCreatedCRStructure(cr: ParsedCRResponse | undefined, expectedTitle: string, expectedType: string) {
+    expect(cr).toBeDefined()
+    if (!cr) {
+      throw new Error('CR response is undefined')
+    }
     expect(cr.key).toBeDefined()
     expect(typeof cr.key).toBe('string')
     expect(cr.key).toMatch(/^[A-Z]+-\d{3}$/) // Format: PROJECT-123
@@ -127,7 +132,9 @@ describe('create_cr', () => {
     expect(cr.type).toBe(expectedType)
     expect(cr.status).toBe('Proposed') // Default status
     expect(cr.priority).toBeDefined()
-    expect(['Low', 'Medium', 'High', 'Critical']).toContain(cr.priority)
+    if (cr.priority) {
+      expect(['Low', 'Medium', 'High', 'Critical']).toContain(cr.priority)
+    }
   }
 
   describe('valid Creation', () => {
@@ -148,7 +155,10 @@ We need this feature to improve the system.`,
       expect(response.data).toBeDefined()
       expectCreatedCRStructure(response.data, 'Test Feature CR', 'Feature Enhancement')
 
-      // Verify assigned values
+      // Verify assigned values with proper null checks
+      if (!response.data) {
+        throw new Error('Response data is undefined')
+      }
       expect(response.data.priority).toBe('High')
       expect(response.data.phaseEpic).toBe('Phase 1')
       expect(response.data.key).toMatch(/^TEST-\d{3}$/) // Should start with TEST-
@@ -182,9 +192,13 @@ We need this feature to improve the system.`,
       expect(dep1.success).toBe(true)
       expect(dep2.success).toBe(true)
 
+      // Get dependency keys with proper null handling
+      const dep1Key = dep1.data?.key ?? ''
+      const dep2Key = dep2.data?.key ?? ''
+
       // Now create a CR that depends on them
       const response = await callCreateCR('TEST', 'Feature Enhancement', 'CR with Dependencies', {
-        dependsOn: `${dep1.data?.key ?? ''}, ${dep2.data?.key ?? ''}`,
+        dependsOn: `${dep1Key}, ${dep2Key}`,
         blocks: 'TEST-999', // Future CR
         relatedTickets: 'MDT-001, MDT-002',
         assignee: 'developer@example.com',
@@ -235,7 +249,8 @@ Test CR for ${type} type.`,
       // Handle both string and object response formats
       if (typeof response.data === 'string') {
         expect(response.data).toMatch(/TEST-\d{3}/)
-      } else {
+      }
+      else {
         expect(response.data).toHaveProperty('key')
         expect((response.data as { key?: string }).key).toMatch(/TEST-\d{3}/)
       }
@@ -317,11 +332,16 @@ Test CR for ${type} type.`,
       expect(response.success).toBe(true)
       expectCreatedCRStructure(response.data, 'Minimal CR', 'Bug Fix')
 
-      // Verify defaults
+      // Verify defaults with proper null checks
+      if (!response.data) {
+        throw new Error('Response data is undefined')
+      }
       expect(response.data.status).toBe('Proposed')
       // Check what the implementation actually returns for priority - don't assume 'Medium'
       expect(response.data.priority).toBeDefined()
-      expect(['Low', 'Medium', 'High', 'Critical']).toContain(response.data.priority)
+      if (response.data.priority) {
+        expect(['Low', 'Medium', 'High', 'Critical']).toContain(response.data.priority)
+      }
       expect(response.data.phaseEpic).toBeUndefined()
       expect(response.data.assignee).toBeUndefined()
       expect(response.data.dependsOn).toBeUndefined()
@@ -352,7 +372,10 @@ Complete testing of all optional fields.`,
       expect(response.success).toBe(true)
       expectCreatedCRStructure(response.data, 'Full Fields CR', 'Feature Enhancement')
 
-      // Verify only the fields returned in the markdown response
+      // Verify only the fields returned in the markdown response with null checks
+      if (!response.data) {
+        throw new Error('Response data is undefined')
+      }
       expect(response.data.priority).toBe('Critical')
       expect(response.data.phaseEpic).toBe('Phase 2')
       // Note: dependsOn, blocks, relatedTickets, assignee, impactAreas, and content
@@ -408,7 +431,10 @@ More details here.`
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
 
-      // Verify response has expected structure
+      // Verify response has expected structure with proper null checks
+      if (!response.data) {
+        throw new Error('Response data is undefined')
+      }
       expect(response.data.key).toBeDefined()
       expect(response.data.title).toBeDefined()
       expect(response.data.type).toBeDefined()

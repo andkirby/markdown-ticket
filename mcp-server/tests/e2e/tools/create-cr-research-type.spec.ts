@@ -29,7 +29,10 @@ describe('create_cr', () => {
   })
 
   function extractCRKey(createResponse: MCPResponse): string {
-    const match = createResponse.data?.match(/\*\*Created CR ([A-Z]+-\d+)\*\*:/)
+    if (typeof createResponse.data !== 'string') {
+      throw new TypeError(`Expected string response, got ${typeof createResponse.data}`)
+    }
+    const match = createResponse.data.match(/\*\*Created CR ([A-Z]+-\d+)\*\*:/)
     if (!match) {
       throw new Error(`Could not extract CR key from response: ${createResponse.data}`)
     }
@@ -225,10 +228,10 @@ Test methodology.`,
       expect(createCrTool).toBeDefined()
 
       // Verify tool description includes Research type
-      // @ts-expect-error - TS18048: createCrTool is possibly undefined
-      expect(createCrTool.description).toContain('Research')
-      // @ts-expect-error - TS18048: createCrTool is possibly undefined
-      expect(createCrTool.description).toContain('technical validation')
+      if (createCrTool) {
+        expect(createCrTool.description).toContain('Research')
+        expect(createCrTool.description).toContain('technical validation')
+      }
     })
   })
 })
