@@ -17,15 +17,14 @@
  * - GIVEN markdown with malicious links WHEN rendering THEN sanitize links
  */
 
+import { ProjectSetup } from '../helpers/core/project-setup'
 import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
-import { ProjectSetup } from '../helpers/core/project-setup'
 import { TestEnvironment } from '../helpers/test-environment'
 
 describe('output Sanitization (MUST-06)', () => {
   let testEnv: TestEnvironment
   let mcpClient: MCPClient
-  let projectFactory: ProjectFactory
   let projectCode: string
 
   // Test setup following RED phase
@@ -51,9 +50,6 @@ describe('output Sanitization (MUST-06)', () => {
     await mcpClient.start()
     // Add small delay to ensure server has fully initialized project registry
     await new Promise(resolve => setTimeout(resolve, 500))
-
-    // NOW create ProjectFactory with the running mcpClient
-    projectFactory = new ProjectFactory(testEnv, mcpClient)
   })
 
   // Test cleanup
@@ -65,7 +61,7 @@ describe('output Sanitization (MUST-06)', () => {
   // Helper to create CR with malicious content
   async function createCRWithMaliciousContent(projectKey: string, maliciousContent: string): Promise<string> {
     // Use the pre-created project code if no project key provided
-    const targetProject = projectKey || projectCode
+    const _targetProject = projectKey || projectCode
     const crData = {
       title: 'Test CR with Malicious Content',
       type: 'Feature Enhancement',
@@ -502,6 +498,7 @@ console.log('safe code');
 
       try {
         // Given: A project exists (created above)
+        // eslint-disable-next-line no-new
         new ProjectFactory(testEnvDisabled, mcpClientDisabled)
 
         // When: Creating CR with script tags while sanitization is disabled

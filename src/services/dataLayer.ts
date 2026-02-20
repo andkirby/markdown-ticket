@@ -192,11 +192,14 @@ class DataLayer {
     updates: Partial<Ticket>,
   ): Promise<void> {
     try {
-      // Prepare update data (convert dates to ISO strings)
-      const updateData: Record<string, string | string[] | Date> = {}
+      // Prepare update data (convert dates to ISO strings, handle all Ticket field types)
+      const updateData: Record<string, string | string[] | Date | boolean> = {}
       for (const [key, value] of Object.entries(updates)) {
         if (value instanceof Date) {
           updateData[key] = value.toISOString()
+        }
+        else if (typeof value === 'boolean') {
+          updateData[key] = value
         }
         else if (value !== undefined && value !== null) {
           updateData[key] = value
@@ -302,6 +305,10 @@ class DataLayer {
       relatedTickets: normalizeArray(item.relatedTickets),
       dependsOn: normalizeArray(item.dependsOn),
       blocks: normalizeArray(item.blocks),
+
+      // Worktree fields (MDT-095)
+      inWorktree: typeof item.inWorktree === 'boolean' ? item.inWorktree : false,
+      worktreePath: typeof item.worktreePath === 'string' ? item.worktreePath : undefined,
     }
   }
 }

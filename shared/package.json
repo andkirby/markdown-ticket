@@ -52,11 +52,13 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@antfu/eslint-config": "^7.4.3",
     "@mdt/domain-contracts": "file:../domain-contracts",
     "fs-extra": "^11.2.0",
     "smol-toml": "^1.5.2",
     "toml": "^3.0.0",
-    "tree-kill": "^1.2.2"
+    "tree-kill": "^1.2.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

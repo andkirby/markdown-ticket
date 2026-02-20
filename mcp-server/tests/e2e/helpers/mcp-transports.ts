@@ -59,8 +59,8 @@ export class StdioTransport implements MCPTransport {
 
     // Capture stderr for debugging
     this.process.stderr?.on('data', (data) => {
-      console.error('[SERVER STDERR]:', data.toString());
-    });
+      console.error('[SERVER STDERR]:', data.toString())
+    })
 
     await this.waitForStart()
     this.connected = true

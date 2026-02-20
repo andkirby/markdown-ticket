@@ -15,6 +15,7 @@ export interface ProjectConfig {
   ticketsPath?: string
   documentPaths?: string[]
   excludeFolders?: string[]
+  worktreeEnabled?: boolean
 }
 
 export interface ProjectData {
@@ -95,7 +96,7 @@ export interface TicketResult {
   success: boolean
   ticketId?: string
   ticket?: TicketData
-  responseData?: string  // Actual MCP response data for test verification
+  responseData?: string // Actual MCP response data for test verification
   error?: {
     code: string
     message: string

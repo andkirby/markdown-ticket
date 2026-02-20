@@ -54,11 +54,25 @@ describe('get_cr', () => {
   function extractCRKey(createResponse: MCPResponse): string {
     // Extract CR key from create response message
     // Format: "✅ **Created CR MDT-001**: Title"
-    const match = createResponse.data?.match(/\*\*Created CR ([A-Z]+-\d+)\*\*:/)
+    const data = createResponse.data as string
+    const match = data.match(/\*\*Created CR ([A-Z]+-\d+)\*\*:/)
     if (!match) {
-      throw new Error(`Could not extract CR key from response: ${createResponse.data}`)
+      throw new Error(`Could not extract CR key from response: ${data}`)
     }
     return match[1]
+  }
+
+  // Type guard to check if response.data is a string
+  function isStringResponse(response: MCPResponse): response is MCPResponse & { data: string } {
+    return typeof response.data === 'string'
+  }
+
+  // Helper to assert and get string data from response
+  function getStringData(response: MCPResponse): string {
+    if (!isStringResponse(response)) {
+      throw new Error(`Expected string response data, got: ${typeof response.data}`)
+    }
+    return response.data
   }
 
   function expectFullCRStructure(response: string) {
@@ -145,15 +159,16 @@ Multiple approaches were considered, and this approach was selected.
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expectFullCRStructure(response.data)
+      const data = getStringData(response)
+      expectFullCRStructure(data)
 
       // In full mode, response.data is the markdown content
-      expect(response.data).toContain('## 1. Description')
-      expect(response.data).toContain('This is a comprehensive test CR')
-      expect(response.data).toContain('## 2. Rationale')
-      expect(response.data).toContain('## 3. Solution Analysis')
-      expect(response.data).toContain('## 4. Implementation Specification')
-      expect(response.data).toContain('## 5. Acceptance Criteria')
+      expect(data).toContain('## 1. Description')
+      expect(data).toContain('This is a comprehensive test CR')
+      expect(data).toContain('## 2. Rationale')
+      expect(data).toContain('## 3. Solution Analysis')
+      expect(data).toContain('## 4. Implementation Specification')
+      expect(data).toContain('## 5. Acceptance Criteria')
     })
   })
 
@@ -181,10 +196,11 @@ We need this CR to test attributes mode functionality.`,
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expectAttributesStructure(response.data)
+      const attrData = getStringData(response)
+      expectAttributesStructure(attrData)
 
       // Parse the JSON response to verify specific values
-      const parsed = JSON.parse(response.data)
+      const parsed = JSON.parse(attrData)
       expect(parsed.title).toBe('Attributes Test CR')
       expect(parsed.type).toBe('Bug Fix')
       // Note: Status defaults to "Proposed" if not explicitly set in YAML
@@ -222,10 +238,11 @@ We need this CR to test metadata mode functionality.`,
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expectMetadataStructure(response.data)
+      const metaData = getStringData(response)
+      expectMetadataStructure(metaData)
 
       // Parse the JSON response to verify metadata
-      const parsed = JSON.parse(response.data)
+      const parsed = JSON.parse(metaData)
       expect(parsed.title).toBe('Metadata Test CR')
       expect(parsed.type).toBe('Architecture')
       expect(parsed.status).toBe('Proposed')
@@ -259,11 +276,12 @@ This CR tests default mode behavior.`,
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
-      expectFullCRStructure(response.data)
+      const defaultData = getStringData(response)
+      expectFullCRStructure(defaultData)
 
       // Should behave like full mode (returns markdown content)
-      expect(response.data).toContain('## 1. Description')
-      expect(response.data).toContain('Test content for default mode')
+      expect(defaultData).toContain('## 1. Description')
+      expect(defaultData).toContain('Test content for default mode')
     })
   })
 
@@ -291,12 +309,13 @@ We need to test complex dependency handling.`,
       const response = await callGetCR('TEST', crKey, 'full')
 
       expect(response.success).toBe(true)
-      expectFullCRStructure(response.data)
+      const complexData = getStringData(response)
+      expectFullCRStructure(complexData)
 
       // In full mode, we get markdown content, so we can't directly verify dependencies
       // Just verify we have content
-      expect(response.data).toContain('## 1. Description')
-      expect(response.data).toContain('This CR has complex dependencies')
+      expect(complexData).toContain('## 1. Description')
+      expect(complexData).toContain('This CR has complex dependencies')
     })
 
     it('GIVEN CR with complex content WHEN getting THEN preserve formatting', async () => {
@@ -362,13 +381,14 @@ Even more nested content.
       const response = await callGetCR('TEST', crKey, 'full')
 
       expect(response.success).toBe(true)
-      expectFullCRStructure(response.data)
+      const complexContentData = getStringData(response)
+      expectFullCRStructure(complexContentData)
 
       // In full mode, response.data is the content (may be processed/stripped)
       // Note: H1 title might be stripped by processing
-      expect(response.data).toContain('### Subsection 2.1')
-      expect(response.data).toContain('| Option | Pros | Cons |')
-      expect(response.data).toContain('- [x] Already completed')
+      expect(complexContentData).toContain('### Subsection 2.1')
+      expect(complexContentData).toContain('| Option | Pros | Cons |')
+      expect(complexContentData).toContain('- [x] Already completed')
     })
   })
 
@@ -471,17 +491,17 @@ We need to verify format consistency across modes.`,
       // Test full mode format
       const fullResponse = await callGetCR('FMT', crKey, 'full')
       expect(fullResponse.success).toBe(true)
-      expectFullCRStructure(fullResponse.data)
+      expectFullCRStructure(getStringData(fullResponse))
 
       // Test attributes mode format
       const attrResponse = await callGetCR('FMT', crKey, 'attributes')
       expect(attrResponse.success).toBe(true)
-      expectAttributesStructure(attrResponse.data)
+      expectAttributesStructure(getStringData(attrResponse))
 
       // Test metadata mode format
       const metaResponse = await callGetCR('FMT', crKey, 'metadata')
       expect(metaResponse.success).toBe(true)
-      expectMetadataStructure(metaResponse.data)
+      expectMetadataStructure(getStringData(metaResponse))
     })
   })
 })

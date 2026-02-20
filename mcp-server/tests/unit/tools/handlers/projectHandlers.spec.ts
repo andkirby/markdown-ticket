@@ -30,11 +30,14 @@ describe('ProjectHandlers - resolveProject', () => {
           name: 'Test Project 1',
           code: 'TEST',
           path: '/test/path1',
+          configFile: '/test/path1/.mdt-config.toml',
           active: true,
+          description: 'A test project',
         },
         metadata: {
           lastAccessed: '2025-01-01T00:00:00Z',
-          dateAdded: '2025-01-01T00:00:00Z',
+          dateRegistered: '2025-01-01T00:00:00Z',
+          version: '1.0.0',
         },
       },
       {
@@ -43,11 +46,14 @@ describe('ProjectHandlers - resolveProject', () => {
           name: 'Test Project 2',
           code: 'API',
           path: '/test/path2',
+          configFile: '/test/path2/.mdt-config.toml',
           active: true,
+          description: 'An API test project',
         },
         metadata: {
           lastAccessed: '2025-01-01T00:00:00Z',
-          dateAdded: '2025-01-01T00:00:00Z',
+          dateRegistered: '2025-01-01T00:00:00Z',
+          version: '1.0.0',
         },
       },
     ]

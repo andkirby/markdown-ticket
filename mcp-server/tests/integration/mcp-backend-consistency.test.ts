@@ -5,6 +5,7 @@ import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
+import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import express from 'express'
 import request from 'supertest'
 import { ProjectController } from '../../../server/controllers/ProjectController'
@@ -13,6 +14,9 @@ import { CRService } from '../../src/services/crService'
 import { MCPTools } from '../../src/tools/index'
 
 declare const global: typeof globalThis
+
+// Type alias for SuperTest to avoid type issues
+type SuperTestAgent = ReturnType<typeof request>
 
 // Mock console methods to reduce noise in tests
 global.console = {
@@ -75,8 +79,14 @@ No actual implementation needed.
 interface MockService {
   getAllProjects: jest.Mock
   getProjectConfig: jest.Mock
+  getProjectCRs: jest.Mock
+  getSystemDirectories: jest.Mock
+  configureDocuments: jest.Mock
   projectDiscovery: {
     getAllProjects: jest.Mock
+    autoDiscoverProjects: jest.Mock
+    getRegisteredProjects: jest.Mock
+    registerProject: jest.Mock
   }
 }
 
@@ -86,6 +96,18 @@ interface MockTicketService {
   updateCRPartial: jest.Mock
   deleteCR: jest.Mock
   getProjectCRs: jest.Mock
+  projectDiscovery: {
+    getAllProjects: jest.Mock
+  }
+  sharedTicketService: {
+    listCRs: jest.Mock
+    getCR: jest.Mock
+    createCR: jest.Mock
+    updateCRStatus: jest.Mock
+    updateCRAttrs: jest.Mock
+    deleteCR: jest.Mock
+  }
+  getProject: jest.Mock
 }
 
 interface MockFileSystemService {
@@ -95,7 +117,7 @@ interface MockFileSystemService {
 describe('mCP-Backend Consistency Integration Tests', () => {
   let mcpTools: MCPTools
   let backendApp: Application
-  let backendRequest: request.SuperTest<request.Test>
+  let backendRequest: SuperTestAgent
   let mockProjectService: MockService
   let mockTicketService: MockTicketService
   let mockProjectController: ProjectController
@@ -107,6 +129,7 @@ describe('mCP-Backend Consistency Integration Tests', () => {
     const templateService = new TemplateService()
     const markdownService = new MarkdownService()
     const titleExtractionService = new TitleExtractionService()
+    const worktreeService = new WorktreeService()
 
     mcpTools = new MCPTools(
       projectService,
@@ -114,6 +137,7 @@ describe('mCP-Backend Consistency Integration Tests', () => {
       templateService,
       markdownService,
       titleExtractionService,
+      worktreeService,
     )
 
     // Set up backend Express app
@@ -124,8 +148,14 @@ describe('mCP-Backend Consistency Integration Tests', () => {
     mockProjectService = {
       getAllProjects: jest.fn(),
       getProjectConfig: jest.fn(),
+      getProjectCRs: jest.fn(),
+      getSystemDirectories: jest.fn(),
+      configureDocuments: jest.fn(),
       projectDiscovery: {
         getAllProjects: jest.fn(),
+        autoDiscoverProjects: jest.fn(),
+        getRegisteredProjects: jest.fn(),
+        registerProject: jest.fn(),
       },
     }
 
@@ -135,6 +165,18 @@ describe('mCP-Backend Consistency Integration Tests', () => {
       updateCRPartial: jest.fn(),
       deleteCR: jest.fn(),
       getProjectCRs: jest.fn(),
+      projectDiscovery: {
+        getAllProjects: jest.fn(),
+      },
+      sharedTicketService: {
+        listCRs: jest.fn(),
+        getCR: jest.fn(),
+        createCR: jest.fn(),
+        updateCRStatus: jest.fn(),
+        updateCRAttrs: jest.fn(),
+        deleteCR: jest.fn(),
+      },
+      getProject: jest.fn(),
     }
 
     const mockFileSystemService: MockFileSystemService = {
@@ -146,7 +188,7 @@ describe('mCP-Backend Consistency Integration Tests', () => {
       mockFileSystemService,
       {} as Record<string, unknown>,
       undefined,
-      mockTicketService,
+      mockTicketService as unknown as import('../../../server/services/TicketService.js').TicketService,
     )
 
     backendApp.use('/api/projects', createProjectRouter(mockProjectController) as unknown as express.Router)

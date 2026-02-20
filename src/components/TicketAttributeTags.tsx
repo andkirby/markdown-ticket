@@ -2,6 +2,7 @@ import type { Ticket } from '../types'
 import { CRStatus, CRType } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useParams } from 'react-router-dom'
+import { UI_LABELS } from '../config'
 import { classifyLink } from '../utils/linkProcessor'
 import SmartLink from './SmartLink'
 import { Badge } from './UI/badge'
@@ -113,6 +114,17 @@ const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, class
           ➡️
           {' '}
           {renderTicketLinks(ticket.blocks)}
+        </Badge>
+      )}
+      {/* MDT-095: Worktree Badge */}
+      {ticket.inWorktree === true && (
+        <Badge
+          variant="outline"
+          className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 backdrop-blur-sm"
+          title={ticket.worktreePath ? `Worktree: ${ticket.worktreePath}` : 'Ticket in git worktree'}
+          data-testid="worktree-badge"
+        >
+          {UI_LABELS.WORKTREE_BADGE}
         </Badge>
       )}
     </div>

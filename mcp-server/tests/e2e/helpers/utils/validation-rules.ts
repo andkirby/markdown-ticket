@@ -89,7 +89,6 @@ export class ValidationRules {
           code: 'CR_CONTENT_MISSING_SECTIONS',
           message: `CR content is missing recommended sections: ${missingSections.join(', ')}`,
           field: 'content',
-          value: missingSections,
         })
       }
       const codeBlockCount = (crData.content.match(/```/g) || []).length

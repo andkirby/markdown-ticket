@@ -13,10 +13,20 @@
  * - GIVEN non-existent CR WHEN managing THEN return error
  */
 
+import type { MCPResponse } from '../helpers/mcp-client'
 import { ProjectSetup } from '../helpers/core/project-setup'
 import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
 import { TestEnvironment } from '../helpers/test-environment'
+
+/**
+ * Type guard to check if response data is a string
+ */
+function assertResponseDataIsString(response: MCPResponse): asserts response is MCPResponse & { data: string } {
+  if (typeof response.data !== 'string') {
+    throw new TypeError(`Expected response.data to be a string, got ${typeof response.data}`)
+  }
+}
 
 describe('manage_cr_sections', () => {
   let testEnv: TestEnvironment
@@ -171,6 +181,7 @@ Initial criteria.`,
       expect(response.data).toBeDefined()
 
       // Parse sections from markdown response
+      assertResponseDataIsString(response)
       const sections = parseSectionListFromMarkdown(response.data)
       expect(sections.length).toBeGreaterThan(0)
 
@@ -211,6 +222,7 @@ Standard implementation.`
 
       expect(response.success).toBe(true)
 
+      assertResponseDataIsString(response)
       const sections = parseSectionListFromMarkdown(response.data)
       expect(sections.length).toBeGreaterThanOrEqual(5)
 
@@ -253,6 +265,7 @@ Analysis here.`,
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
 
+      assertResponseDataIsString(response)
       const parsed = parseSectionContentFromMarkdown(response.data)
       expect(parsed.section).toContain('Rationale')
       expect(parsed.content).toContain('This is the detailed rationale')
@@ -290,6 +303,7 @@ Test implementation.`,
       for (const test of tests) {
         const response = await callManageCRSections('TEST', createdCR.key!, 'get', test.section)
         expect(response.success).toBe(true)
+        assertResponseDataIsString(response)
         const parsed = parseSectionContentFromMarkdown(response.data)
         expect(parsed.content).toContain(test.shouldContain)
       }
@@ -313,6 +327,7 @@ Basic rationale.`,
       // The tool returns a section even for non-existent sections
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
+      assertResponseDataIsString(response)
       const parsed = parseSectionContentFromMarkdown(response.data)
       expect(parsed.section).toContain('Non-existent Section Test')
     })
@@ -355,12 +370,14 @@ This refactor will address all these concerns by modernizing the architecture.`
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
+      assertResponseDataIsString(response)
       expect(response.data).toContain('✅')
       expect(response.data).toContain('Updated Section')
       expect(response.data).toContain('The section content has been completely replaced')
 
       // Verify other sections remain unchanged
       const getDescriptionResponse = await callManageCRSections('TEST', createdCR.key!, 'get', 'Description')
+      assertResponseDataIsString(getDescriptionResponse)
       const parsed = parseSectionContentFromMarkdown(getDescriptionResponse.data)
       expect(parsed.content).toContain('Old description')
     })
@@ -399,6 +416,7 @@ With subsections.`
       )
 
       expect(response.success).toBe(true)
+      assertResponseDataIsString(response)
       expect(response.data).toContain('✅')
       expect(response.data).toContain('Updated Section')
       expect(response.data).toContain('The section content has been completely replaced')
@@ -439,6 +457,7 @@ More details here.`
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
+      assertResponseDataIsString(response)
       expect(response.data).toContain('✅')
       expect(response.data).toContain('Content has been added to the end of the section')
     })
@@ -482,6 +501,7 @@ Implementation details.
       )
 
       expect(response.success).toBe(true)
+      assertResponseDataIsString(response)
       expect(response.data).toContain('✅')
       expect(response.data).toContain('Updated Section')
       expect(response.data).toContain('append')
@@ -540,6 +560,7 @@ The motivation for these changes...`
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
+      assertResponseDataIsString(response)
       expect(response.data).toContain('✅')
       expect(response.data).toContain('Updated Section')
       expect(response.data).toContain('prepend')
@@ -588,6 +609,7 @@ Context: The following describes the architectural changes...`
       )
 
       expect(response.success).toBe(true)
+      assertResponseDataIsString(response)
       expect(response.data).toContain('✅')
       expect(response.data).toContain('Updated Section')
       expect(response.data).toContain('prepend')
@@ -638,6 +660,7 @@ Implementation details.
       // Test getting hierarchical section
       const response = await callManageCRSections('TEST', createdCR.key!, 'get', '1.1 Background')
       expect(response.success).toBe(true)
+      assertResponseDataIsString(response)
       const parsed = parseSectionContentFromMarkdown(response.data)
       expect(parsed.content).toContain('Background information')
       expect(parsed.content).toContain('Historical Context')
@@ -660,6 +683,7 @@ Updated historical perspective.`
       )
 
       expect(replaceResponse.success).toBe(true)
+      assertResponseDataIsString(replaceResponse)
       expect(replaceResponse.data).toContain('✅')
       expect(replaceResponse.data).toContain('Updated Section')
       expect(replaceResponse.data).toContain('The section content has been completely replaced')
@@ -771,6 +795,7 @@ Implementation details.
       const listResponse = await callManageCRSections('TEST', createdCR.key!, 'list')
       expect(listResponse.success).toBe(true)
       expect(listResponse.data).toBeDefined()
+      assertResponseDataIsString(listResponse)
       expect(listResponse.data).toContain('📑')
       expect(listResponse.data).toContain('Sections in CR')
 
@@ -782,6 +807,7 @@ Implementation details.
       const getResponse = await callManageCRSections('TEST', createdCR.key!, 'get', 'Description')
       expect(getResponse.success).toBe(true)
       expect(getResponse.data).toBeDefined()
+      assertResponseDataIsString(getResponse)
       expect(getResponse.data).toContain('📖')
       expect(getResponse.data).toContain('Section Content from CR')
 
@@ -799,6 +825,7 @@ Implementation details.
       )
       expect(replaceResponse.success).toBe(true)
       expect(replaceResponse.data).toBeDefined()
+      assertResponseDataIsString(replaceResponse)
       expect(replaceResponse.data).toContain('✅')
       expect(replaceResponse.data).toContain('Updated Section')
 

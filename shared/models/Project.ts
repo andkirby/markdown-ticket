@@ -28,6 +28,9 @@ export interface LocalProjectConfig {
     excludeFolders?: string[]
     maxDepth?: number
   }
+  worktree?: {
+    enabled?: boolean // Enable or disable worktree support (default: true)
+  }
 }
 
 /**
@@ -89,6 +92,9 @@ export interface ProjectConfig {
     paths?: string[]
     excludeFolders?: string[]
     maxDepth?: number
+  }
+  worktree?: {
+    enabled?: boolean // Enable or disable worktree support (default: true)
   }
 }
 

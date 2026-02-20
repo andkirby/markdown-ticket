@@ -13,6 +13,7 @@
  * - GIVEN invalid attributes WHEN updating THEN return validation error
  */
 
+import type { TestCRData } from '../helpers/types/project-factory-types'
 import { ProjectSetup } from '../helpers/core/project-setup'
 import { MCPClient } from '../helpers/mcp-client'
 import { ProjectFactory } from '../helpers/project-factory'
@@ -46,10 +47,20 @@ describe('update_cr_attrs', () => {
     phaseEpic?: string
     assignee?: string
     relatedTickets?: string
-    dependsOn?: string
+    dependsOn?: string | null
     blocks?: string
     implementationDate?: string
     implementationNotes?: string
+  }
+
+  // Type guard to check if response data is a string
+  function isStringData(data: unknown): data is string {
+    return typeof data === 'string'
+  }
+
+  // Type guard to check if response data is an object with key property
+  function isObjectData(data: unknown): data is Record<string, unknown> {
+    return typeof data === 'object' && data !== null && !Array.isArray(data)
   }
 
   async function callUpdateCRAttrs(projectKey: string, crKey: string, attributes: CRAttributes) {
@@ -97,7 +108,7 @@ Basic implementation steps.
     const createdCR = await projectFactory.createTestCR(projectCode, {
       ...crData,
       content: createTestContent(crData.title),
-    })
+    } as TestCRData)
 
     // Check if CR creation failed
     if (!createdCR.success) {
@@ -106,6 +117,9 @@ Basic implementation steps.
 
     // Extract the CR key from the markdown response
     // New format: "✅ **Created CR TEST-001**: Title"
+    if (!isStringData(createdCR.data)) {
+      throw new Error(`Expected string response but got: ${typeof createdCR.data}`)
+    }
     const match = createdCR.data.match(/\*\*Created CR (.+?)\*\*:/)
     if (!match) {
       // Fallback to old format if needed
@@ -133,7 +147,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -143,7 +157,7 @@ Basic implementation steps.
         // Check title is preserved
         expect(response.data).toContain('Priority Update Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.priority).toBe('Critical')
@@ -165,7 +179,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -175,7 +189,7 @@ Basic implementation steps.
         // Check title is preserved
         expect(response.data).toContain('Assignee Update Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.assignee).toBe('new@example.com')
@@ -197,7 +211,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -207,7 +221,7 @@ Basic implementation steps.
         // Check title is preserved
         expect(response.data).toContain('Phase Update Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.phaseEpic).toBe('Phase 2 - Enhancement')
@@ -240,7 +254,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -250,7 +264,7 @@ Basic implementation steps.
         // Check title is preserved
         expect(response.data).toContain('Dependencies Update Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.dependsOn).toBe(`${dep1Key}, ${dep2Key}`)
@@ -271,7 +285,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -281,7 +295,7 @@ Basic implementation steps.
         // Check title is preserved
         expect(response.data).toContain('Blocks Update Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.blocks).toBe('TEST-999, TEST-1000')
@@ -302,7 +316,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -312,7 +326,7 @@ Basic implementation steps.
         // Check title is preserved
         expect(response.data).toContain('Related Tickets Update Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.relatedTickets).toBe('MDT-001, MDT-002, MDT-003')
@@ -335,7 +349,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -345,7 +359,7 @@ Basic implementation steps.
         // Check title is preserved
         expect(response.data).toContain('Implementation Date Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.implementationDate).toBe(implementationDate)
@@ -368,7 +382,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -378,7 +392,7 @@ Basic implementation steps.
         // Check title is preserved
         expect(response.data).toContain('Implementation Notes Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.implementationNotes).toBe(notes)
@@ -406,7 +420,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -420,7 +434,7 @@ Basic implementation steps.
         expect(response.data).toContain('Multiple Update Test')
         // Type is not shown in markdown response - only updated fields
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.priority).toBe('High')
@@ -439,7 +453,7 @@ Basic implementation steps.
         type: 'Architecture',
       })
 
-      const allAttributes = {
+      const allAttributes: CRAttributes = {
         priority: 'Critical',
         phaseEpic: 'Phase 3 - Refactor',
         assignee: 'lead@example.com',
@@ -456,7 +470,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -469,11 +483,12 @@ Basic implementation steps.
         expect(response.data).toContain('All Attributes Test')
         // Type is not shown in markdown response - only updated fields
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
-        expect(response.data.key).toBe(crKey)
+        const responseData = response.data // Local variable for type narrowing
+        expect(responseData.key).toBe(crKey)
         Object.entries(allAttributes).forEach(([key, value]) => {
-          expect(response.data[key]).toBe(value)
+          expect(responseData[key as keyof typeof responseData]).toBe(value)
         })
       }
     })
@@ -495,7 +510,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -505,7 +520,7 @@ Basic implementation steps.
         // Check title is preserved
         expect(response.data).toContain('Clear Attribute Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.assignee).toBe('')
@@ -519,15 +534,16 @@ Basic implementation steps.
         dependsOn: 'TEST-001',
       })
 
+      // Cast to Record to allow null value for testing server behavior
       const response = await callUpdateCRAttrs('TEST', crKey, {
         dependsOn: null,
-      })
+      } as unknown as CRAttributes)
 
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
 
       // Check if response is markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // Check that it mentions the updated CR
         expect(response.data).toContain(`Updated CR ${crKey}`)
 
@@ -535,7 +551,7 @@ Basic implementation steps.
         // So we just check the CR exists and title is preserved
         expect(response.data).toContain('Clear Dependencies Test')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check the fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.dependsOn).toBeNull()
@@ -558,7 +574,7 @@ Basic implementation steps.
       else {
         // If it reports success, check the response contains error information
         expect(response.data).toBeDefined()
-        if (typeof response.data === 'string' && response.data.includes('Error')) {
+        if (isStringData(response.data) && response.data.includes('Error')) {
           // Error is returned in the data field
           expect(response.data).toContain('Error')
           expect(response.data).toContain('not found')
@@ -584,15 +600,16 @@ Basic implementation steps.
         type: 'Bug Fix',
       })
 
+      // Cast to Record to allow invalid priority value for testing server behavior
       const response = await callUpdateCRAttrs('TEST', crKey, {
         priority: 'Invalid Priority',
-      })
+      } as unknown as CRAttributes)
 
       // The tool appears to accept any priority value without validation
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
 
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         expect(response.data).toContain(`Updated CR ${crKey}`)
         expect(response.data).toContain('priority: Invalid Priority')
       }
@@ -613,7 +630,7 @@ Basic implementation steps.
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
 
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         expect(response.data).toContain(`Updated CR ${crKey}`)
         expect(response.data).toContain('implementationDate: 2025/01/15')
       }
@@ -675,9 +692,10 @@ Basic implementation steps.
         type: 'Feature Enhancement',
       })
 
+      // Cast to Record to test restricted attribute rejection
       const response = await callUpdateCRAttrs('TEST', crKey, {
         title: 'New Title', // This should be rejected
-      })
+      } as unknown as CRAttributes)
 
       // The tool rejects restricted attributes with error response
       expect(response.success).toBe(false)
@@ -694,9 +712,10 @@ Basic implementation steps.
         status: 'Proposed',
       })
 
+      // Cast to Record to test restricted attribute rejection
       const response = await callUpdateCRAttrs('TEST', crKey, {
         status: 'Implemented', // This should be rejected
-      })
+      } as unknown as CRAttributes)
 
       // The tool rejects restricted attributes with error response
       expect(response.success).toBe(false)
@@ -712,9 +731,10 @@ Basic implementation steps.
         type: 'Feature Enhancement',
       })
 
+      // Cast to Record to test restricted attribute rejection
       const response = await callUpdateCRAttrs('TEST', crKey, {
         type: 'Bug Fix', // This should be rejected
-      })
+      } as unknown as CRAttributes)
 
       // The tool rejects restricted attributes with error response
       expect(response.success).toBe(false)
@@ -743,7 +763,7 @@ Basic implementation steps.
       expect(response.data).toBeDefined()
 
       // Check if response is Markdown format and extract the key
-      if (typeof response.data === 'string') {
+      if (isStringData(response.data)) {
         // The markdown response shows title and status but only updated fields
         expect(response.data).toContain(`Updated CR ${crKey}`)
         expect(response.data).toContain('Response Format Test') // Title is shown
@@ -755,7 +775,7 @@ Basic implementation steps.
         // Status is shown but not type (these are original values)
         expect(response.data).toContain('Status:')
       }
-      else {
+      else if (isObjectData(response.data)) {
         // If it's JSON, check all fields directly
         expect(response.data.key).toBe(crKey)
         expect(response.data.title).toBe('Response Format Test')

@@ -44,9 +44,13 @@ describe('MDT-121: Numeric Key Shorthand Support', () => {
   }
 
   function extractCRKey(createResponse: MCPResponse): string {
-    const match = createResponse.data?.match(/\*\*Created CR ([A-Z]+-\d+)\*\*:/)
+    const data = createResponse.data
+    if (typeof data !== 'string') {
+      throw new TypeError(`Expected string response data, got: ${typeof data}`)
+    }
+    const match = data.match(/\*\*Created CR ([A-Z]+-\d+)\*\*:/)
     if (!match) {
-      throw new Error(`Could not extract CR key from response: ${createResponse.data}`)
+      throw new Error(`Could not extract CR key from response: ${data}`)
     }
     return match[1]
   }

@@ -188,7 +188,7 @@ export class MCPClient {
         await this.mcpTransport.close()
       }
       catch (error) {
-        this.logger.warn('Error closing MCP transport', error instanceof Error ? error : new Error(String(error)))
+        this.logger.error('Error closing MCP transport', error instanceof Error ? error : new Error(String(error)))
       }
       this.mcpTransport = undefined
     }
@@ -198,7 +198,7 @@ export class MCPClient {
         await this.client.close()
       }
       catch (error) {
-        this.logger.warn('Error closing MCP client', error instanceof Error ? error : new Error(String(error)))
+        this.logger.error('Error closing MCP client', error instanceof Error ? error : new Error(String(error)))
       }
       this.client = undefined
     }
@@ -208,7 +208,7 @@ export class MCPClient {
         await this.transportWrapper.stop()
       }
       catch (error) {
-        this.logger.warn('Error stopping transport wrapper', error instanceof Error ? error : new Error(String(error)))
+        this.logger.error('Error stopping transport wrapper', error instanceof Error ? error : new Error(String(error)))
       }
       this.transportWrapper = undefined
     }

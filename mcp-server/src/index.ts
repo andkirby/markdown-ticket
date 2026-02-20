@@ -7,6 +7,7 @@ import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
+import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { ConfigService } from './config/index.js'
 import { CRService } from './services/crService.js'
 import { MCPTools } from './tools/index.js'
@@ -21,6 +22,7 @@ class MCPCRServer {
   private templateService!: TemplateService
   private markdownService!: MarkdownService
   private titleExtractionService!: TitleExtractionService
+  private worktreeService!: WorktreeService
   private mcpTools: MCPTools | undefined
   private quiet: boolean
   private detectedProject: string | null = null
@@ -75,6 +77,7 @@ class MCPCRServer {
     this.templateService = new TemplateService(undefined, this.quiet)
     this.markdownService = new MarkdownService()
     this.titleExtractionService = new TitleExtractionService()
+    this.worktreeService = new WorktreeService()
 
     this.log('✅ Services initialized')
   }
@@ -90,6 +93,7 @@ class MCPCRServer {
       this.templateService,
       this.markdownService,
       this.titleExtractionService,
+      this.worktreeService,
       this.detectedProject,
     )
   }

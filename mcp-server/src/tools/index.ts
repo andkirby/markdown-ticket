@@ -7,13 +7,14 @@
  * and delegating all business logic to specialized handlers.
  */
 
+import type { TicketData } from '@mdt/shared/models/Ticket.js'
+import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import type { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import type { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
+import type { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import type { CRService } from '../services/crService.js'
-import type { TicketData } from '@mdt/shared/models/Ticket.js'
-import type { CRStatus } from '@mdt/shared/models/Types.js'
 import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js'
 import { Sanitizer } from '../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../utils/toolError.js'
@@ -44,6 +45,7 @@ export class MCPTools {
     templateService: TemplateService,
     markdownService: MarkdownService,
     titleExtractionService: TitleExtractionService,
+    worktreeService: WorktreeService, // Still injected but not passed to CRHandlers (MDT-095)
     detectedProject: string | null = null,
   ) {
     // Initialize handlers with injected services
