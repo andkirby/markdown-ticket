@@ -47,7 +47,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   const { autoSelectFirst = true, handleSSEEvents = false } = options
 
   const [projects, setProjects] = useState<Project[]>([])
-  const [selectedProject, setSelectedProjectState] = useState<Project | null>(null)
+  const [selectedProjectValue, setSelectedProjectValue] = useState<Project | null>(null)
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
@@ -111,7 +111,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
       // Auto-select first project if none selected and autoSelectFirst is enabled
       if (autoSelectFirst && allProjects.length > 0 && !selectedProjectRef.current) {
-        setSelectedProjectState(allProjects[0])
+        setSelectedProjectValue(allProjects[0])
       }
     }
     catch (error) {
@@ -145,7 +145,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
   // Set up ticket operations
   const ticketOps = useTicketOperations(
-    selectedProject,
+    selectedProjectValue,
     tickets,
     setTickets,
     fetchTicketsForProject,
@@ -154,9 +154,9 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
   // Update refs when selectedProject changes
   useEffect(() => {
-    selectedProjectRef.current = selectedProject
-    sseEvents.selectedProjectRef.current = selectedProject
-  }, [selectedProject, sseEvents])
+    selectedProjectRef.current = selectedProjectValue
+    sseEvents.selectedProjectRef.current = selectedProjectValue
+  }, [selectedProjectValue, sseEvents])
 
   // Fetch project configuration
   const fetchProjectConfig = useCallback(async (project: Project): Promise<void> => {
@@ -217,7 +217,7 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
       if (!projectStillExists) {
         console.warn(`Selected project ${project.id} no longer exists, clearing selection`)
-        setSelectedProjectState(null)
+        setSelectedProjectValue(null)
         setTickets([])
         setProjectConfig(null)
         return
@@ -245,22 +245,27 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
   // Call the ref function in useEffect (refs are stable, no dependency issues)
   useEffect(() => {
-    handleProjectChangeRef.current?.(selectedProject, projects)
-  }, [selectedProject, projects])
+    handleProjectChangeRef.current?.(selectedProjectValue, projects)
+  }, [selectedProjectValue, projects])
 
   const setSelectedProject = useCallback((project: Project | null) => {
-    setSelectedProjectState(project)
+    setSelectedProjectValue(project)
   }, [])
 
   const refreshTickets = useCallback(async () => {
-    if (selectedProject) {
-      await fetchTicketsForProject(selectedProject)
+    if (selectedProjectValue) {
+      await fetchTicketsForProject(selectedProjectValue)
     }
-  }, [selectedProject, fetchTicketsForProject])
+  }, [selectedProjectValue, fetchTicketsForProject])
+
+  // Sync ref when state changes
+  useEffect(() => {
+    selectedProjectRef.current = selectedProjectValue
+  }, [selectedProjectValue])
 
   return {
     projects,
-    selectedProject,
+    selectedProject: selectedProjectValue,
     setSelectedProject,
     refreshProjects,
     tickets,

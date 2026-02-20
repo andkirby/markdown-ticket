@@ -11,7 +11,7 @@ interface TicketCardProps {
   onEdit: () => void
 }
 
-const TicketCard: React.FC<TicketCardProps> = ({ ticket, _onMove, _onClick, _onDragStart, onEdit }) => {
+const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClick: _onClick, onDragStart: _onDragStart, onEdit }) => {
   return (
     <div
       className="group ticket-card bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border border-gray-200/50 dark:border-slate-700/50 rounded-xl px-3 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 hover:scale-[1.005] transition-all duration-300 ease-out cursor-pointer backdrop-blur-sm"

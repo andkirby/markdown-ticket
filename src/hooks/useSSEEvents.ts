@@ -17,8 +17,8 @@ export function useSSEEvents(
   updateTicketInState: (ticket: Ticket) => void,
   refreshProjects?: () => Promise<void>,
 ) {
-  const selectedProjectRef = useRef<Project | null>(null)
-  const userInitiatedUpdates = useRef(new Set<string>())
+  const currentProjectRef = useRef<Project | null>(null)
+  const userInitiatedUpdatesRef = useRef(new Set<string>())
 
   // Debounce refresh to avoid multiple rapid refreshes
   // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce handles memoization correctly
@@ -33,7 +33,7 @@ export function useSSEEvents(
 
   // Set up event listeners for real-time updates
   useEventBus('ticket:created', useCallback((event) => {
-    const currentProject = selectedProjectRef.current
+    const currentProject = currentProjectRef.current
     if (!currentProject)
       return
 
@@ -46,7 +46,7 @@ export function useSSEEvents(
   }, [debouncedRefresh]))
 
   useEventBus('ticket:updated', useCallback((event) => {
-    const currentProject = selectedProjectRef.current
+    const currentProject = currentProjectRef.current
     if (!currentProject)
       return
 
@@ -55,8 +55,8 @@ export function useSSEEvents(
       || (projectCode && (projectCode === event.payload.projectId || projectCode.toUpperCase() === event.payload.projectId.toUpperCase()))) {
       // Check if this was a user-initiated update (optimistic)
       const ticketKey = event.payload.ticketCode
-      if (userInitiatedUpdates.current.has(ticketKey)) {
-        userInitiatedUpdates.current.delete(ticketKey)
+      if (userInitiatedUpdatesRef.current.has(ticketKey)) {
+        userInitiatedUpdatesRef.current.delete(ticketKey)
         return
       }
 
@@ -73,7 +73,7 @@ export function useSSEEvents(
   }, [debouncedRefresh, updateTicketInState]))
 
   useEventBus('ticket:deleted', useCallback((event) => {
-    const currentProject = selectedProjectRef.current
+    const currentProject = currentProjectRef.current
     if (!currentProject)
       return
 
@@ -120,18 +120,18 @@ export function useSSEEvents(
   }, []))
 
   const trackUserUpdate = useCallback((trackingKey: string) => {
-    userInitiatedUpdates.current.add(trackingKey)
+    userInitiatedUpdatesRef.current.add(trackingKey)
 
     // Set a timeout to clean up tracking in case SSE event doesn't arrive
     setTimeout(() => {
-      if (userInitiatedUpdates.current.has(trackingKey)) {
-        userInitiatedUpdates.current.delete(trackingKey)
+      if (userInitiatedUpdatesRef.current.has(trackingKey)) {
+        userInitiatedUpdatesRef.current.delete(trackingKey)
       }
     }, 5000) // 5 second cleanup
   }, [])
 
   return {
-    selectedProjectRef,
+    selectedProjectRef: currentProjectRef,
     trackUserUpdate,
   }
 }

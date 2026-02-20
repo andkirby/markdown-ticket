@@ -42,7 +42,7 @@ const BoardContent: React.FC<BoardProps> = ({
   loading: propLoading,
   sortPreferences: propSortPreferences,
 }) => {
-  const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(
+  const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(
     propSortPreferences || getSortPreferences,
   )
   const [filterQuery, setFilterQuery] = useState('')
@@ -103,11 +103,14 @@ const BoardContent: React.FC<BoardProps> = ({
   // IMPORTANT: Always use hookData functions for state management operations
   // This ensures drag-and-drop operations work correctly even when using prop data
 
+  // Use the local state or prop based on availability
+  const sortPreferences = localSortPreferences
+
   // Update sortPreferences when prop changes
   React.useEffect(() => {
     if (propSortPreferences) {
       const timeoutId = setTimeout(() => {
-        setSortPreferencesState(propSortPreferences)
+        setLocalSortPreferences(propSortPreferences)
       }, 0)
 
       return () => clearTimeout(timeoutId)
@@ -129,10 +132,10 @@ const BoardContent: React.FC<BoardProps> = ({
   const isBackendDown = hookData.isBackendDown
 
   // Save preferences when they change
-  const handleSortPreferencesChange = (newPreferences: SortPreferences) => {
-    setSortPreferencesState(newPreferences)
+  const handleSortPreferencesChange = useCallback((newPreferences: SortPreferences) => {
+    setLocalSortPreferences(newPreferences)
     setSortPreferences(newPreferences)
-  }
+  }, [])
 
   const handleDrop = useCallback(async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
     // Skip if ticket is already in the correct status
@@ -318,8 +321,8 @@ const BoardContent: React.FC<BoardProps> = ({
   Object.keys(ticketsByColumn).forEach((columnLabel) => {
     ticketsByColumn[columnLabel] = sortTickets(
       ticketsByColumn[columnLabel],
-      sortPreferences.selectedAttribute,
-      sortPreferences.selectedDirection,
+      localSortPreferences.selectedAttribute,
+      localSortPreferences.selectedDirection,
     )
   })
 
@@ -513,8 +516,8 @@ const BoardContent: React.FC<BoardProps> = ({
             isFirstColumn={index === 0}
             tickets={ticketsByColumn[column.label]}
             allTickets={tickets}
-            sortAttribute={sortPreferences.selectedAttribute}
-            sortDirection={sortPreferences.selectedDirection}
+            sortAttribute={localSortPreferences.selectedAttribute}
+            sortDirection={localSortPreferences.selectedDirection}
             onDrop={async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
               console.warn('Board: Column onDrop called with:', { status, ticketKey: ticket.code, currentColumnIndex, currentTicketIndex })
               await handleDrop(status, ticket, currentColumnIndex, currentTicketIndex)

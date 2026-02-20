@@ -38,10 +38,10 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
 
   const viewMode = externalViewMode || internalViewMode
 
-  const [sortPreferences, setSortPreferencesState] = useState<SortPreferences>(getSortPreferences)
+  const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(getSortPreferences)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
   const [showEditProjectModal, setShowEditProjectModal] = useState(false)
-  const [loading, _setLoading] = useState(false)
+  const loading = false // Loading is controlled by parent component
 
   // Use ref to prevent stale closure bug when switching projects
   const selectedProjectRef = useRef<Project | null>(selectedProject)
@@ -56,7 +56,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   }
 
   const handleSortPreferencesChange = useCallback((newPreferences: SortPreferences) => {
-    setSortPreferencesState(newPreferences)
+    setLocalSortPreferences(newPreferences)
     setSortPreferences(newPreferences)
   }, [])
 
@@ -122,7 +122,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
           <div className="flex items-center space-x-4">
             <SecondaryHeader
               viewMode={viewMode}
-              sortPreferences={(viewMode === 'board' || viewMode === 'list') ? sortPreferences : undefined}
+              sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
               onSortPreferencesChange={(viewMode === 'board' || viewMode === 'list') ? handleSortPreferencesChange : undefined}
               onAddProject={() => setShowAddProjectModal(true)}
               onEditProject={() => setShowEditProjectModal(true)}
@@ -143,14 +143,14 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 selectedProject={selectedProject}
                 tickets={propTickets || []}
                 loading={loading}
-                sortPreferences={sortPreferences}
+                sortPreferences={localSortPreferences}
               />
             )
           : viewMode === 'list'
             ? (
                 <div className="h-full overflow-auto p-6">
                   <div className="space-y-2">
-                    {sortTickets(propTickets || [], sortPreferences.selectedAttribute, sortPreferences.selectedDirection).map(ticket => (
+                    {sortTickets(propTickets || [], localSortPreferences.selectedAttribute, localSortPreferences.selectedDirection).map(ticket => (
                       <div
                         key={ticket.code}
                         onClick={() => onTicketClick(ticket)}

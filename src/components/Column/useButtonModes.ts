@@ -59,7 +59,7 @@ type useButtonModesReturn = ButtonState & HoverState & ButtonModeActions
 export function useButtonModes(): useButtonModesReturn {
   // State management for button modes
   const [viewMode, setViewMode] = useState<boolean>(false)
-  const [mergeMode, setMergeModeState] = useState<boolean>(false)
+  const [mergeModeValue, setMergeModeValue] = useState<boolean>(false)
 
   // State management for hover interactions
   const [isHovering, setIsHovering] = useState<boolean>(false)
@@ -71,21 +71,21 @@ export function useButtonModes(): useButtonModesReturn {
     isHoveringRef.current = isHovering
   }, [isHovering])
 
-  // Derive activeState from viewMode and mergeMode
+  // Derive activeState from viewMode and mergeModeValue
   const getActiveState = useCallback((): ButtonMode => {
-    if (mergeMode) {
+    if (mergeModeValue) {
       return 'merge'
     }
     if (viewMode) {
       return 'switch'
     }
     return 'normal'
-  }, [viewMode, mergeMode])
+  }, [viewMode, mergeModeValue])
 
   const activeState = getActiveState()
 
   // Derive whether checkbox should be shown
-  const showCheckbox = isHovering || mergeMode
+  const showCheckbox = isHovering || mergeModeValue
 
   /**
    * Toggle between normal and switch mode
@@ -98,7 +98,7 @@ export function useButtonModes(): useButtonModesReturn {
    * Set merge mode state
    */
   const setMergeMode = useCallback((enabled: boolean) => {
-    setMergeModeState(enabled)
+    setMergeModeValue(enabled)
   }, [])
 
   /**
@@ -106,7 +106,7 @@ export function useButtonModes(): useButtonModesReturn {
    */
   const resetModes = useCallback(() => {
     setViewMode(false)
-    setMergeModeState(false)
+    setMergeModeValue(false)
     setIsHovering(false)
   }, [])
 
@@ -127,7 +127,7 @@ export function useButtonModes(): useButtonModesReturn {
   /**
    * Get CSS classes based on current button state
    */
-  const getButtonClasses = useCallback((isActive?: boolean, isOver?: boolean): string => {
+  const getButtonClasses = useCallback((_isActive?: boolean, isOver?: boolean): string => {
     const baseClasses = 'flex items-center justify-between px-3 py-2 text-sm rounded-md border transition-all'
 
     // Determine background and border colors based on mode
@@ -135,7 +135,7 @@ export function useButtonModes(): useButtonModesReturn {
     if (viewMode) {
       modeClasses = 'bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-900/20 dark:border-orange-700 dark:text-orange-300'
     }
-    else if (mergeMode) {
+    else if (mergeModeValue) {
       modeClasses = 'border-orange-300 text-gray-600 dark:border-orange-700 dark:text-gray-400'
     }
     else {
@@ -149,19 +149,19 @@ export function useButtonModes(): useButtonModesReturn {
     const hoverClass = 'hover:bg-opacity-80'
 
     return [baseClasses, modeClasses, dropZoneClass, hoverClass].filter(Boolean).join(' ')
-  }, [viewMode, mergeMode])
+  }, [viewMode, mergeModeValue])
 
   /**
    * Determine if checkbox should be shown based on ticket count and state
    */
   const shouldShowCheckbox = useCallback((ticketCount: number): boolean => {
-    return ticketCount > 0 && (isHoveringRef.current || mergeMode)
-  }, [mergeMode])
+    return ticketCount > 0 && (isHoveringRef.current || mergeModeValue)
+  }, [mergeModeValue])
 
   return {
     // State
     viewMode,
-    mergeMode,
+    mergeMode: mergeModeValue,
     activeState,
     isHovering,
     showCheckbox,
