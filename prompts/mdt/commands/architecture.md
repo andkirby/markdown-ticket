@@ -1,4 +1,4 @@
-# MDT Architecture Design Workflow (v10)
+# MDT Architecture Design Workflow (v11)
 
 Surface architectural decisions before implementation. Output is minimal but complete.
 
@@ -29,8 +29,12 @@ Don't pre-calculate complexity scores. Write the architecture, then decide where
 **Must have**:
 - Overview (2-3 sentences)
 - Pattern name + why
+- One canonical runtime flow per critical behavior
+- One owner module per critical behavior (no duplicates)
 - Structure (file tree)
 - Scope boundaries per module
+- Runtime vs test scaffolding separation
+- Architecture invariants
 - Extension rule
 
 **Include only if needed**:
@@ -57,6 +61,7 @@ Check for `--prep` flag in `$ARGUMENTS`. If present, mode is `prep`.
 2. Load optional context if exists:
    - `{TICKETS_PATH}/{CR-KEY}/poc.md` — use validated decisions directly
    - `{TICKETS_PATH}/{CR-KEY}/requirements.md` — understand scope (don't map exhaustively)
+   - `{TICKETS_PATH}/{CR-KEY}/bdd.md` — if it reports `framework: "none"` for UI/API behavior, decide E2E approach in Key Dependencies or mark as Decision Needed
    - `{TICKETS_PATH}/{CR-KEY}/domain.md` — respect aggregate boundaries
    - `{TICKETS_PATH}/{CR-KEY}/domain-audit.md` — **PRIMARY for prep mode** (structural diagnosis)
 3. If requirements.md exists, extract constraint IDs (C1, C2...) and carry them into architecture sections
@@ -80,6 +85,8 @@ Read CR Section 2 (Decision) and Section 3 (Alternatives). Don't re-evaluate the
 Only evaluate capabilities that are:
 - Common solved problems (CLI parsing, HTTP, validation, dates)
 - Would require non-trivial custom implementation
+- Test infrastructure needs (E2E frameworks, mocking libraries, test runners) not already in the project
+- Gaps surfaced by bdd.md test-strategy context (for example, `framework: "none"` on user-visible UI/API flows)
 
 **2.3 Structural decisions**
 
@@ -89,6 +96,14 @@ Surface implicit choices:
 - How to extend later?
 
 Present max 5 questions with recommendations.
+
+**2.4 Canonical flow + ownership decisions (required)**
+
+For each critical behavior:
+- Define exactly one canonical runtime flow (single processing path).
+- Assign exactly one owner module responsible for behavior logic.
+- If multiple modules currently own the same behavior, choose one owner and mark merge/refactor as required.
+- Identify any test-only helpers currently in runtime paths and plan extraction to test-only locations.
 
 ### Step 3: Generate Architecture
 
@@ -121,17 +136,28 @@ Write the architecture as a **complete, self-contained document** using the outp
 
 **{Pattern name}** — {why it fits}
 
+## Canonical Runtime Flows
+
+| Critical Behavior | Canonical Runtime Flow (single path) | Owner Module |
+|-------------------|--------------------------------------|--------------|
+| {behavior} | {entry -> orchestration -> state transition -> output} | `{path}` |
+
+Rules:
+- One behavior = one canonical flow
+- One behavior = one owner module
+- No duplicate owners
+
 ## Alternatives (if proposing simplifications)
 
 Use this section only when suggesting a simpler implementation that would change a requirement. Mark as **Decision Needed** and list tradeoffs. Do not change requirements without explicit approval.
 
 ## Key Dependencies
 
-{Only if Build vs Use decisions were made}
+{Only if Build vs Use decisions were made. Include runtime + dev dependencies (for example E2E frameworks and test tooling)}
 
-| Capability | Decision | Rationale |
-|------------|----------|-----------|
-| {capability} | {package or "Build custom"} | {one line why} |
+| Capability | Decision | Scope | Rationale |
+|------------|----------|-------|-----------|
+| {capability} | {package or "Build custom"} | {runtime/dev} | {one line why} |
 
 {Or omit section entirely if no significant decisions}
 
@@ -143,6 +169,12 @@ Use this section only when suggesting a simpler implementation that would change
 |------------|------|----------|-------------|
 | `{ENV_VAR}` | env var | {Yes/No} | {concrete behavior} |
 | `{tool}` | CLI tool | {Yes/No} | {concrete behavior} |
+
+## Test vs Runtime Separation
+
+| Runtime Module | Test Scaffolding | Separation Rule |
+|----------------|------------------|-----------------|
+| `{src/path}` | `{test/path}` | {what must stay out of runtime} |
 
 ## Structure
 
@@ -156,6 +188,12 @@ Use this section only when suggesting a simpler implementation that would change
 | Module | Owns | Must Not |
 |--------|------|----------|
 | `{path}` | {responsibility} | {out of scope} |
+
+## Architecture Invariants
+
+- `one transition authority`: exactly one module decides state transitions for each critical behavior.
+- `one processing orchestration path`: each critical behavior has exactly one runtime orchestration path.
+- `no test-only logic in runtime files`: test scaffolding, fixtures, and test adapters stay outside runtime modules.
 
 ## Error Philosophy
 
@@ -223,12 +261,18 @@ Before saving, verify:
 - [ ] Each `##` heading appears exactly once — no duplicate sections
 - [ ] Only sections from the template are present — no invented sections
 - [ ] Overview is 2-3 sentences (not a paragraph)
+- [ ] Canonical Runtime Flows exists and each critical behavior has exactly one flow
+- [ ] Each critical behavior has exactly one owner module (no duplicate owners)
 - [ ] Structure shows concrete paths (not abstract names), 5-15 entries
 - [ ] Structure comments enumerate the public interface (endpoints, methods, exports) — not vague labels
 - [ ] Error Philosophy is prose (not a table of every scenario)
 - [ ] No code snippets anywhere (describe intent, not implementation)
 - [ ] Runtime prerequisites defined (if external deps exist)
+- [ ] Test vs Runtime Separation explicitly lists runtime modules and test scaffolding boundaries
+- [ ] Architecture Invariants section is present and concrete
 - [ ] Constraint IDs from requirements are carried into sections (or explicitly N/A)
+- [ ] If bdd.md reports `framework: "none"` for user-visible UI/API behavior, architecture includes an explicit E2E decision (Key Dependencies or Alternatives as Decision Needed)
+- [ ] Examples and wording are framework-agnostic unless CR scope explicitly requires a specific stack
 
 ## Completion
 

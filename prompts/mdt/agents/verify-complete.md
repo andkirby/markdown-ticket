@@ -27,6 +27,13 @@ artifacts:
   architecture: "{architecture.md or null}"
 changed_files: ["{path}", ...]
 verification_round: 0 | 1 | 2
+batch_verifies_clean: true | false
+architecture_invariants:
+  transition_authority: "{owner or null}"
+  orchestration_path: "{path or null}"
+  no_test_logic_in_runtime: true | false
+behavior_owner_ledger:
+  "behavior-name": "src/module/path.ts"
 ```
 
 ## Output
@@ -40,7 +47,10 @@ verification_round: 0 | 1 | 2
     "tests": { "status": "pass|fail|skipped", "passed": 0, "failed": 0 },
     "lint": { "status": "pass|fail|skipped" },
     "typecheck": { "status": "pass|fail|skipped" },
-    "architecture_coverage": { "status": "pass|partial|skipped", "present": 0, "total": 0 }
+    "architecture_coverage": { "status": "pass|partial|skipped", "present": 0, "total": 0 },
+    "invariant_compliance": { "status": "pass|fail|skipped", "details": [] },
+    "duplicate_path_check": { "status": "pass|fail|skipped", "details": [] },
+    "test_runtime_separation": { "status": "pass|fail|skipped", "details": [] }
   },
   "requirements_matrix": [
     { "id": "AC-1", "type": "POSITIVE|NEGATIVE|LOCATION", "status": "pass|partial|fail", "evidence": ["path:line"], "notes": "" }
@@ -49,7 +59,7 @@ verification_round: 0 | 1 | 2
     {
       "id": "PV-1",
       "severity": "CRITICAL|HIGH|MEDIUM|LOW",
-      "category": "requirements|security|quality|tests|behavior",
+      "category": "requirements|security|quality|tests|behavior|architecture",
       "title": "Short title",
       "location": ["path:line"],
       "action": "Specific fix"
@@ -147,7 +157,21 @@ If architecture is provided, extract all file paths from the Structure section (
 - Status: `pass` if all files exist, `partial` if any missing
 - Missing files → HIGH issue: `"Architecture specifies {path} but file does not exist"`
 
-### 6. Security Scan (code analysis)
+### 6. Invariant + Ownership Checks
+
+If `architecture_invariants` and `behavior_owner_ledger` are provided:
+- Verify changed runtime files do not introduce a second owner for existing behaviors.
+- Verify changed runtime files do not introduce parallel orchestration paths for the same behavior.
+- Verify test-only helpers/fixtures are not introduced into runtime modules.
+
+Report failures in summary fields:
+- `invariant_compliance.status = fail` for transition/orchestration violations
+- `duplicate_path_check.status = fail` for parallel runtime paths
+- `test_runtime_separation.status = fail` for test/runtime mixing
+
+Each failure must add a HIGH issue with category `architecture` and file:line evidence.
+
+### 7. Security Scan (code analysis)
 
 Scan changed_files for patterns:
 
@@ -159,14 +183,14 @@ Scan changed_files for patterns:
 | Input not validated | HIGH |
 | Error details exposed | MEDIUM |
 
-### 7. Dead Code Check
+### 8. Dead Code Check
 
 In changed_files, flag:
 - Unused exports (no importers)
 - Duplicate files (same content)
 - Methods that should be private per requirements
 
-### 8. Classify & Verdict
+### 9. Classify & Verdict
 
 **Severity**:
 | Level | Criteria |
@@ -180,6 +204,7 @@ In changed_files, flag:
 ```
 CRITICAL exists       → fail
 HIGH exists           → partial
+Invariant summary fail → partial
 All requirements pass → pass
 Otherwise             → partial
 ```
