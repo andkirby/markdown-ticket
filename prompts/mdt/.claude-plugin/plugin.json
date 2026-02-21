@@ -1,5 +1,5 @@
 {
-  "version": "0.10.4-beta",
+  "version": "0.10.5-beta",
   "name": "mdt",
   "description": "MDT (Markdown Ticket) workflow commands - CR creation, requirements, BDD, architecture, testing, tasks, implementation with agentic verification, technical debt detection, and workflow suggestions",
   "author": {
