@@ -1,5 +1,45 @@
 # Release Notes
 
+## v0.11.0 (2026-02-22)
+
+### 🎉 New Features
+
+**Git Worktree Support (MDT-095)**
+- **Isolated Development**: Work on tickets in separate Git worktrees without conflicts
+- **Auto-Detection**: System detects when a ticket exists in a worktree and routes operations there
+- **UI Indication**: "🌿 Worktree" badge shows when viewing a ticket in a worktree
+- **MCP Path Awareness**: Tools return correct worktree paths for ticket files
+- **Configurable**: Enable/disable at global or project level via `.mdt-config.toml`
+
+**Universal AI Assistant Support**
+- **Cursor, Copilot, Gemini CLI, and more**: SDD workflow commands now work with popular AI assistants
+- **Easy Installation**: `./prompts/install-agents-skill.sh` sets up everything
+- **Global or Per-Project**: Install once globally or configure per project
+- **Full Command Access**: All `/mdt:*` commands available in your preferred AI tool
+
+**README Refresh**
+- **SDD-First Positioning**: Spec-Driven Development framework is now the primary value proposition
+- **Streamlined Quick Start**: Install SDD commands is now Step 1
+- **Visual Workflow Diagrams**: See how Spec→Code and RED→GREEN flows work
+- **Better Resource Links**: Direct links to QUICKREF, WORKFLOWS, CONCEPTS docs
+
+### 🚀 SDD Workflow Enhancements
+
+**Architecture & Planning**
+- **Architecture Invariants**: Single owner per behavior, canonical flows, test/runtime separation
+- **Milestone Planning**: BDD-driven vertical slices with checkpoint commands
+- **Coverage Enforcement**: Numeric gap table blocks if architecture files are orphaned
+- **Requirements Ambiguity Controls**: Semantic conflict resolution before output
+
+### 🐛 Bug Fixes
+
+**Project Discovery (MDT-127)**
+- Refactored validation logic to eliminate duplication
+- Centralized Project construction in dedicated Factory
+- Clearer separation of concerns between Scanner and Discovery Service
+
+---
+
 ## v0.10.0 (2026-02-15)
 
 ### 🎉 New Features
