@@ -2,6 +2,114 @@
 
 ## Recent Updates
 
+### 2026-02-22 - Architecture Invariants, Milestone Planning, and Universal Agent Support
+
+**Problem**: The workflow lacked guardrails for architectural drift: (1) multiple modules could claim ownership of the same behavior, (2) tasks weren't aligned with BDD acceptance tests, (3) requirements left semantic conflicts unresolved, and (4) the MDT system only worked with Claude Code.
+
+**Solution**: Added architecture invariants enforcement (single owner per behavior), milestone planning from BDD scenarios, ambiguity resolution in requirements, and universal agent skill installation for Cursor, Copilot, and other AI assistants.
+
+**Changes Made**:
+
+1. **architecture.md (v10→v11) - Canonical flows and ownership**:
+   - Added "Canonical Runtime Flows" section: one behavior = one flow = one owner module
+   - Added "Test vs Runtime Separation" section: explicit boundaries for test scaffolding
+   - Added "Architecture Invariants" section: transition authority, orchestration path, test/runtime separation
+   - Added Step 2.4: Canonical flow + ownership decisions (required)
+   - Quality checklist now verifies single owner per behavior, explicit test/runtime boundaries
+   - If bdd.md reports `framework: "none"` for UI/API behavior, must decide E2E approach
+
+2. **tasks.md (v9→v11) - Milestone planning and coverage enforcement**:
+   - Added "Milestone Planning" section: group tasks by BDD scenarios into vertical slices
+   - Each milestone has BDD checkpoint command; tasks deliver vertical slices (data + logic + UI)
+   - Added Architecture Coverage Check (Rule 8) as BLOCKING step with numeric gap table
+   - Task template now includes: Milestone, Makes GREEN (unit), Makes GREEN (BDD), Creates, Modifies, Must Not Touch, Duplication Guard
+   - Added "Ownership Guardrails" table: behavior → owner → merge/refactor task if overlap
+   - Task 0 auto-generated from Key Dependencies for package installation
+   - Verify command must run exact tests from Makes GREEN (no placeholders)
+
+3. **implement-agentic.md (v5→v6) - Invariant enforcement**:
+   - Loads architecture invariants and behavior_owner_ledger from architecture.md
+   - Code agent receives `architecture.invariants` and `task_tests` (makes_green + verify_commands)
+   - Drift gate after code: blocks on second_owner_detected, duplicate_runtime_path, test_runtime_mixing
+   - Verify agent runs risk-first (invariants, failure modes) then breadth
+   - Milestone boundary: runs BDD checkpoint when last task in milestone completes
+   - Acceptance gate: if bdd.md exists, E2E must be GREEN before completion
+   - New verdicts: invariant_violation, duplicate_runtime_path, test_runtime_mixing
+
+4. **requirements.md (v4→v5) - Ambiguity controls**:
+   - Added "Ambiguity Controls" section: resolve semantic conflicts before output
+   - Delivery Timing: each requirement declares Now or In This Ticket
+   - Step 2.6: Resolve Semantic Conflicts (retry behavior, state transitions, idempotency)
+   - "Non-Ambiguity Table" for full scope: concept → chosen truth → rejected → why
+   - "Semantic Decisions" for brief scope: simplified conflict resolution
+   - Quality checklist: verify no TBD semantics, each BR has delivery timing
+
+5. **bdd.md - E2E framework detection and sub-level requirements**:
+   - Clarified E2E classification: only browser/API automation qualifies (not unit runners)
+   - Unit runners (Jest, Vitest, Bun Test) classified as `framework: "none"`
+   - Requirement IDs at sub-level: `@requirement:BR-1.3` not just `@requirement:BR-1`
+   - If `framework: "none"` for UI behavior, downstream architecture must add E2E to Key Dependencies
+
+6. **verify.md (v1→v2) - Invariant checks**:
+   - Added architecture_invariants and behavior_owner_ledger to input schema
+   - Pre-check verdicts now include invariant_violation
+   - Post-check verdicts include invariant_violation, duplicate_runtime_path, test_runtime_mixing
+   - Verdict precedence: scope_breach > invariant_violation > duplicate_runtime_path > test_runtime_mixing > regression > tests_fail
+
+7. **verify-complete.md (v2→v3) - Invariant compliance**:
+   - Added invariant_compliance, duplicate_path_check, test_runtime_separation to summary
+   - Step 6: Invariant + Ownership Checks using behavior_owner_ledger
+   - Failures add HIGH issues with category `architecture`
+
+8. **code.md (v2→v3) - Drift reporting**:
+   - Added task_tests (makes_green, verify_commands) and architecture.invariants to input
+   - Output includes drift_report: second_owner_detected, duplicate_runtime_path, test_runtime_mixing
+   - Returns INVARIANT_CONFLICT error if task requires second owner
+
+9. **INSTALL.md (new) - Universal installation guide**:
+   - Claude Code: install-plugin.sh (--local for Node.js, --docker for HTTP)
+   - Universal: install-agents-skill.sh (Cursor, Copilot, Gemini CLI, etc.)
+   - MCP Server setup: JSON config for tools that need it
+
+10. **install-agents-skill.sh (new) - Universal agent installer**:
+    - Symlink or copy to ~/.agents/skills/mdt (global) or .agents/skills/mdt (local)
+    - Supports: Amp, Codex, Cursor, Gemini CLI, GitHub Copilot, Kimi Code CLI, OpenCode
+    - Detects MCP server path, generates JSON config snippet
+
+11. **mdt/SKILL.md (new) - Universal skill definition**:
+    - Skill frontmatter for AI agent discovery
+    - Reference map: commands/*.md, agents/*.md, references/README.md
+    - Runtime compatibility notes (spawn_agent, MCP tools)
+
+12. **README.md - Updated with universal installation**
+
+13. **plugin.json (0.10.4-beta → 0.10.5-beta)**
+
+**Impact**:
+- Architecture invariants prevent multiple modules from owning the same behavior
+- Milestones ensure tasks deliver vertical slices aligned with BDD acceptance tests
+- Requirements now resolve semantic ambiguities upfront (no TBD conflicts)
+- MDT workflows available to Cursor, Copilot, and other AI assistants
+- Duplicate runtime paths and test/runtime mixing blocked at implementation time
+- Gap tracking is numeric and blocking — no architecture files left orphaned
+
+**Files Changed**:
+- `prompts/INSTALL.md` (new)
+- `prompts/install-agents-skill.sh` (new)
+- `prompts/mdt/SKILL.md` (new)
+- `prompts/README.md`
+- `prompts/mdt/commands/architecture.md` (v10→v11)
+- `prompts/mdt/commands/tasks.md` (v9→v11)
+- `prompts/mdt/commands/implement-agentic.md` (v5→v6)
+- `prompts/mdt/commands/requirements.md` (v4→v5)
+- `prompts/mdt/commands/bdd.md`
+- `prompts/mdt/agents/verify.md` (v1→v2)
+- `prompts/mdt/agents/verify-complete.md` (v2→v3)
+- `prompts/mdt/agents/code.md` (v2→v3)
+- `prompts/mdt/.claude-plugin/plugin.json` (0.10.4-beta → 0.10.5-beta)
+
+---
+
 ### 2026-02-15 - Architecture Structure Coverage and CR Status Management
 
 **Problem**: The implementation workflow had two gaps: (1) architecture.md Structure sections could list files that were never implemented, and (2) CR status was never updated to reflect implementation progress, leaving tickets stuck in "Approved" state even after completion.

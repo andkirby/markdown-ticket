@@ -1,4 +1,4 @@
-# MDT Requirements Specification Workflow (v4)
+# MDT Requirements Specification Workflow (v5)
 
 Generate behavioral requirements from CR. Output: `{TICKETS_PATH}/{CR-KEY}/requirements.md`
 
@@ -49,6 +49,13 @@ Use `{TICKETS_PATH}` from `.mdt-config.toml`.
 - Measurable outcomes (timing, counts, states)
 - If external dependencies exist, include an Absence requirement for each
 
+## Ambiguity Controls
+
+- Resolve semantic conflicts before writing output (for example: retry-count, idempotency, transition rules).
+- For each requirement, declare delivery timing as exactly one of `Now` or `In This Ticket` (no defer wording).
+- Define one behavioral truth per concept. If two candidate semantics exist, choose one and record it.
+- Include a short `Non-Ambiguity Table` that captures final chosen semantics.
+
 ## Execution Steps
 
 ### Step 1: Load CR and Check Scope
@@ -85,6 +92,16 @@ Scan CR and reference docs for statements to transform:
 From CR + requirements text, extract constraints and edge cases. Assign each a stable ID (C1, C2...) and record in the Constraints table. These IDs must be referenced later in architecture and tasks.
 If the behavior depends on terms like "word", "record", "item", or "request", ensure the requirement defines the unit (e.g., "word = whitespace-delimited token") or flag as a clarification.
 
+### Step 2.6: Resolve Semantic Conflicts
+
+Before generating `requirements.md`, resolve conflicting semantics and lock one final definition per concept:
+- Retry/attempt behavior (where counted, who increments, when reset)
+- State transitions (allowed from/to transitions + guard conditions)
+- Idempotency behavior (dedupe key, replay outcome)
+- Any CR term with multiple plausible meanings
+
+Record each choice in `Non-Ambiguity Table` (full scope) or `Semantic Decisions` (brief scope).
+
 ### Step 3: Generate Requirements Document
 
 **For Features** (scope = full):
@@ -104,6 +121,7 @@ If the behavior depends on terms like "word", "record", "item", or "request", en
 ### BR-1: {Feature/Behavior Name}
 
 **Goal**: {One sentence user goal}
+**Delivery Timing**: {Now | In This Ticket}
 
 1. WHEN {trigger}, the system shall {action}.
 2. WHILE {state}, the system shall {behavior}.
@@ -112,6 +130,7 @@ If the behavior depends on terms like "word", "record", "item", or "request", en
 ### BR-2: {Feature/Behavior Name}
 
 **Goal**: {One sentence user goal}
+**Delivery Timing**: {Now | In This Ticket}
 
 1. {EARS requirement}
 2. {EARS requirement}
@@ -133,6 +152,14 @@ List each constraint ID and where it must appear later:
 | C1 | architecture.md (Runtime Prereqs / Error Philosophy), tasks.md (Verify) |
 | C2 | architecture.md (Module Boundaries), tasks.md (Scope/Verify) |
 | C3 | architecture.md (Error Philosophy), tests.md (negative tests) |
+
+## Non-Ambiguity Table
+
+| Concept | Final Semantic (chosen truth) | Rejected Semantic | Why |
+|---------|-------------------------------|-------------------|-----|
+| Retry attempt count | {e.g., Increment on failed processing attempt only} | {e.g., Increment on enqueue} | {why chosen} |
+| State transition rule | {allowed transitions + guards} | {rejected transition rule} | {why chosen} |
+| Idempotency | {dedupe key + replay behavior} | {rejected behavior} | {why chosen} |
 
 ## Configuration
 
@@ -163,6 +190,16 @@ List each constraint ID and where it must appear later:
 1. {EARS requirement - code refs allowed}
 2. {EARS requirement - code refs allowed}
 
+## Delivery Timing
+
+- R1: {Now | In This Ticket}
+- R2: {Now | In This Ticket}
+
+## Semantic Decisions
+
+- {concept}: {chosen semantic} (rejected: {rejected semantic})
+- {concept}: {chosen semantic} (rejected: {rejected semantic})
+
 ## Verification
 
 - [ ] {How to verify fix}
@@ -185,10 +222,15 @@ Before saving, produce a validation summary with evidence for each item:
 - [ ] Each requirement has one SHALL
 - [ ] Outcomes are measurable (not "properly", "correctly")
 - [ ] No component names in feature requirements
+- [ ] Each feature BR has `Delivery Timing` set to `Now` or `In This Ticket`
+- [ ] Bug-fix requirements include a `Delivery Timing` mapping (R1/R2...)
 - [ ] Constraints have concrete, measurable targets (not "never", "always" without conditions)
 - [ ] Constraint IDs exist and are referenced in Constraint Carryover
 - [ ] Terms from Step 2.5 are defined or flagged for clarification
 - [ ] Security constraint exists if user content is accepted (per workflow security rule)
+- [ ] Semantic conflicts were resolved before output (none left as "TBD")
+- [ ] Full scope: Non-Ambiguity Table exists and each concept has one final semantic truth
+- [ ] Brief scope: Semantic Decisions exists for each ambiguous concept
 
 ### Step 5: Save and Update CR
 

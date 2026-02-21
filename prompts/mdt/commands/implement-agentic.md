@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(${CLAUDE_PLUGIN_ROOT}/scripts/enforce-tasks.sh:*)
 ---
 
-# MDT Agentic Implementation Orchestrator (v5)
+# MDT Agentic Implementation Orchestrator (v6)
 
 Coordinate implementation tasks using specialized agents and checkpointed state.
 
@@ -44,6 +44,7 @@ $ARGUMENTS
 
 - `{TICKETS_PATH}/{CR-KEY}/tasks.md`
 - `{TICKETS_PATH}/{CR-KEY}/tests.md`
+- `{TICKETS_PATH}/{CR-KEY}/architecture.md` (or `prep/architecture.md` in prep mode)
 - Optional: `{TICKETS_PATH}/{CR-KEY}/requirements.md`, `{TICKETS_PATH}/{CR-KEY}/bdd.md`
 
 ## Agent Call Paths
@@ -147,13 +148,28 @@ checkpoint:
   - Extract the full task content from each header to the next `### Task` or end of file
   - For each task, use `TaskCreate` with:
     - `subject`: Task {N}: {title}
-    - `description`: Full task content including Structure, Makes GREEN, Scope, Boundary, Create/Move, Exclude, Anti-duplication, Verify, Done when
+    - `description`: Full task content including Structure, Makes GREEN, Scope, Boundary, Creates, Modifies, Must Not Touch, Create/Move, Exclude, Anti-duplication, Duplication Guard, Verify, Done when
     - `activeForm`: Working on Task {N}
   - This provides visibility into the implementation workflow
 - Load `tests.md` to extract:
   - tests for the task
   - scope boundaries
   - shared imports / anti-duplication hints
+- Parse each task's **Makes GREEN (unit)**, **Makes GREEN (BDD)**, and **Verify** sections:
+  - `task_tests.makes_green_unit`: list of unit/integration tests from **Makes GREEN (unit)**
+  - `task_tests.makes_green_bdd`: list of BDD scenarios from **Makes GREEN (BDD)** (milestone checkpoint tasks only)
+  - `task_tests.verify_commands`: list of commands in the **Verify** block (code fence)
+  - If a task has **Makes GREEN** entries but **Verify** is missing or empty, **STOP** and require tasks.md update before implementation.
+- Load architecture invariants from architecture.md:
+  - `one transition authority`
+  - `one processing orchestration path`
+  - `no test-only logic in runtime files`
+  - canonical runtime flow + owner module for each critical behavior
+- Build `behavior_owner_ledger` from architecture.md (`behavior -> owner module`).
+  - If architecture.md lacks explicit owners or canonical flows for critical behaviors, **STOP** and require `/mdt:architecture` update before implementation.
+- Parse **Milestones** table from tasks.md (if present):
+  - `milestones`: list of `{id, name, bdd_scenarios, tasks, checkpoint_command}`
+  - Track current milestone — when its last task completes, run the milestone checkpoint
 - Derive `smoke_test_command` from requirements/BDD acceptance criteria.
   - If feature mode and smoke test is missing: warn and require explicit user choice to proceed.
 
@@ -180,17 +196,24 @@ project:
   test_command: "{test_command}"
 files_to_check: ["{file}"]
 scope_boundaries: {from tasks/tests}
+architecture_invariants:
+  transition_authority: "{owner}"
+  orchestration_path: "{path}"
+  no_test_logic_in_runtime: true
+behavior_owner_ledger: {behavior -> owner module}
 ```
 
 Expected verdicts from agent:
 - `expected`
 - `unexpected_green`
 - `unexpected_red`
+- `invariant_violation`
 
 Decision:
 - `expected` → implement
 - `unexpected_green` → prompt user to skip/investigate
 - `unexpected_red` → STOP (prep baseline broken)
+- `invariant_violation` → STOP (architecture drift before coding)
 
 ---
 
@@ -199,6 +222,8 @@ Decision:
 Before launching the code agent:
 - Check `.tasks-status.yaml` — if the current task's status is `blocked`, **skip it** and advance to the next task.
 - Run: `${CLAUDE_PLUGIN_ROOT}/scripts/update-task-status.sh {TRACKER_PATH} {TASK_ID} in_progress`
+- Enforce owner guard from `behavior_owner_ledger`:
+  - If task scope overlaps a behavior owned by another module, require an explicit merge/refactor task before proceeding.
 
 Use Task tool with subagent_type="mdt:code" and prompt:
 
@@ -216,10 +241,30 @@ task_spec:
   number: "{N.N}"
   title: "{task_title}"
   content: "{task_body}"
+task_tests:
+  makes_green: {from task's **Makes GREEN** section}
+  verify_commands: {from task's **Verify** block}
+architecture:
+  invariants:
+    - one transition authority
+    - one processing orchestration path
+    - no test-only logic in runtime files
+  behavior_owners: {behavior_owner_ledger}
 file_targets:
   - path: "{path}"
     exports: ["{export}"]
 ```
+
+Code agent response must include `drift_report`:
+- `second_owner_detected`: boolean
+- `duplicate_runtime_path`: boolean
+- `test_runtime_mixing`: boolean
+- `evidence`: list of `{behavior, path, note}`
+
+After code agent response, run a drift gate using `drift_report`:
+- If `second_owner_detected=true`, mark task `blocked` and **STOP**.
+- If `duplicate_runtime_path=true`, mark task `blocked` and **STOP**.
+- If `test_runtime_mixing=true`, mark task `blocked` and **STOP**.
 
 ---
 
@@ -233,6 +278,7 @@ file_targets:
 **When to run:**
 - At batch boundary (tasks 3, 6, 9, ...) or final task
 - After each task if `--strict` mode
+- **At milestone boundary**: when the current task is the last task in a milestone (from Milestones table), run the milestone's BDD checkpoint command in addition to unit test verification. If the BDD checkpoint fails, enter the fix loop for the milestone's BDD scenarios.
 
 Use Task tool with subagent_type="mdt:verify" and prompt:
 
@@ -247,6 +293,16 @@ project:
 files_to_check: {accumulated files_changed from batch}
 scope_boundaries: {from tasks/tests}
 scoped: true  # default: only run mapped tests
+required_commands: {verify commands from tasks in this batch}
+verification_strategy:
+  order:
+    - "risk-first: invariant tests + failure-mode tests"
+    - "then breadth: mapped suite/full suite per mode"
+architecture_invariants:
+  transition_authority: "{owner}"
+  orchestration_path: "{path}"
+  no_test_logic_in_runtime: true
+behavior_owner_ledger: {behavior_owner_ledger}
 smoke_test:
   command: "{smoke_test_command|empty}"  # only at final batch or --strict
   expected: "{expected_behavior|empty}"
@@ -260,6 +316,9 @@ Expected verdicts from agent:
 - `duplication`
 - `behavioral_fail`
 - `skipped` (only if smoke test not provided)
+- `invariant_violation`
+- `duplicate_runtime_path`
+- `test_runtime_mixing`
 
 Decision:
 - `all_pass` → COMPLETE batch (scope OK or minor spillover)
@@ -268,6 +327,8 @@ Decision:
 - `duplication` → STOP
 - `behavioral_fail` → FIX (runtime context)
 - `skipped` → warn and COMPLETE only if user approves
+- `invariant_violation` or `duplicate_runtime_path` → STOP
+- `test_runtime_mixing` → STOP (separate runtime from test scaffolding)
 
 ---
 
@@ -319,9 +380,14 @@ All three updates are mandatory before advancing to the next task.
 Run **after all tasks are complete** for the selected part or full ticket.
 
 **Optimizations:**
-- **Early exit**: If all batch post-verifies passed with `all_pass`, skip `test_command` (already validated)
+- **Early exit**: If all batch post-verifies passed with `all_pass` **and** no `bdd.md` exists, you may skip `test_command` (already validated)
 - **Prep mode simplification**: Skip requirements traceability (no new requirements); only run mechanical checks
 - **Parallel execution**: Run remaining commands concurrently (build/lint/typecheck)
+
+**Acceptance gate (feature mode)**:
+- If `bdd.md` exists: run the E2E command from bdd.md and require all scenarios GREEN.
+- If no E2E command is defined in bdd.md: **STOP** and ask the user to supply it or regenerate `/mdt:bdd`.
+- If acceptance tests fail: **STOP**, fix, re-run.
 
 Use Task tool with subagent_type="mdt:verify-complete" and prompt:
 
@@ -342,11 +408,17 @@ artifacts:
 changed_files: [{files_changed across implementation}]
 verification_round: 0 | 1 | 2
 batch_verifies_clean: true | false  # enables early exit optimization
+architecture_invariants:
+  transition_authority: "{owner}"
+  orchestration_path: "{path}"
+  no_test_logic_in_runtime: true
+behavior_owner_ledger: {behavior_owner_ledger}
 ```
 
 The agent performs:
-1. **Mechanical checks**: Run provided commands (build, test, lint, typecheck) — **in parallel**
-2. **Semantic analysis** (feature/bugfix only): Read requirements → search changed_files → verify implementation matches spec
+1. **Risk-based checks first**: invariant-related and failure-mode checks from tasks/tests
+2. **Mechanical checks**: Run provided commands (build, test, lint, typecheck) — **in parallel**
+3. **Semantic analysis** (feature/bugfix only): Read requirements → search changed_files → verify implementation matches spec and invariant compliance
 
 Expected verdicts from agent:
 - `pass`
@@ -412,6 +484,9 @@ Implementation Complete: {CR-KEY}
 - Batch verifies: {N} passed
 - Completion verify: pass
 - Fix rounds: {N}
+- Invariant compliance: {pass|fail} (transition authority + orchestration path)
+- Duplicate-path check: {pass|fail}
+- Test/runtime separation check: {pass|fail}
 
 ### Next Steps
 - [ ] Review flagged files
@@ -449,6 +524,9 @@ These are implementation-time artifacts. Once complete, they serve no purpose. T
 6. Max 2 fix attempts per task.
 7. Completion verification is mandatory before declaring implementation complete.
 8. Orchestrator MUST NOT edit code directly - all work done by agents.
+9. Validate architecture invariants before coding; do not proceed on drift.
+10. If a second logic owner appears for a behavior, STOP and block task.
+11. Verification order is risk-first (invariants/failure modes), then breadth.
 
 ---
 

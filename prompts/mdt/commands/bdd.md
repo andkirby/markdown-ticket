@@ -66,7 +66,7 @@ BDD tests written BEFORE architecture ensure:
 6. **Prep mode = GREEN** — tests must pass against current system (locking behavior)
 7. **Feature acceptance gate** — feature work is not complete until BDD scenarios are GREEN
 8. **Constraint boundary** — configuration and internal constraints belong in `/mdt:tests`, not BDD scenarios unless explicitly user-visible
-9. **Requirement IDs** — map scenarios to requirement sections (e.g., "BR-1", "BR-2") or explicit IDs in requirements.md
+9. **Requirement IDs at sub-level** — tag each scenario with specific sub-requirement IDs (e.g., `@requirement:BR-1.3`, not just `@requirement:BR-1`). This enables downstream milestone planning in `/mdt:tasks`. If requirements.md uses numbered items under a BR heading, those are BR-X.1, BR-X.2, etc.
 10. **Coverage honesty** — do not mark a requirement/constraint as covered unless a scenario explicitly validates it
 11. **No invented behaviors** — if a scenario depends on behavior not in requirements, stop and recommend updating requirements or running `/mdt:clarification`
 
@@ -134,10 +134,26 @@ if mode == "prep":
 
 **1e. Detect E2E test framework:**
 
-Identify an existing E2E/acceptance framework from the repo (if any), and record:
+**Classification** — only browser/API automation frameworks qualify as E2E:
+
+| Category | Examples | Qualifies? |
+|----------|----------|------------|
+| Browser E2E | Playwright, Cypress, Puppeteer, Selenium, WebdriverIO, TestCafe | **Yes** |
+| API E2E | Supertest+app, Hurl, Bruno, k6 | **Yes** |
+| BDD runners | Cucumber.js, behave (with E2E step defs) | **Yes** |
+| Unit/integration runners | Jest, Vitest, Bun Test, Mocha, pytest, go test, cargo test | **No** |
+
+Detection steps:
+1. Check dependency manifests for E2E framework packages (e.g., `package.json`, `Pipfile`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `Gemfile`, `pom.xml`)
+2. Look for E2E config files: `playwright.config.*`, `cypress.config.*`, `wdio.conf.*`, `pytest.ini`, `conftest.py` (with selenium/playwright imports)
+3. Look for E2E directories: `e2e/`, `tests/e2e/`, `cypress/`, `test/acceptance/`, `features/`
+
+**If only a unit runner is found** (Jest, Vitest, Bun Test, etc.), classify as `framework: "none"`. Unit runners cannot exercise UI components through browser interaction.
+
+Record:
 ```yaml
 e2e:
-  framework: {existing framework name or "none"}
+  framework: {E2E framework name or "none"}
   directory: {path if known}
   pattern: {file pattern if known}
   command: {run command if known}
@@ -146,11 +162,11 @@ e2e:
 
 If no E2E framework detected:
 ```markdown
-⚠️ No E2E test framework detected.
+⚠️ No E2E test framework detected (unit runners like Bun Test do not qualify).
 
 **Options**:
-1. Generate Gherkin specs only (no executable tests)
-2. Ask for preferred framework or test runner
+1. Generate Gherkin specs only (no executable tests) — downstream `/mdt:architecture` should add E2E framework to Key Dependencies
+2. Ask user for preferred E2E framework
 3. Use existing integration test harness (if any)
 ```
 
@@ -207,14 +223,14 @@ Feature: {Feature name from requirement group}
   Background:
     Given {common setup - e.g., "I am on the login page"}
 
-  @requirement:{REQ-ID} @priority:{high|medium|low}
+  @requirement:{REQ-ID.sub} @priority:{high|medium|low}
   Scenario: {descriptive_scenario_name}
     Given {initial context from user perspective}
     When {user action}
     Then {expected outcome visible to user}
     And {additional assertions}
 
-  @requirement:{REQ-ID}
+  @requirement:{REQ-ID.sub}
   Scenario Outline: {parameterized_scenario_name}
     Given {context with <placeholder>}
     When {action with <placeholder>}

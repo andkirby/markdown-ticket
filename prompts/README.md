@@ -4,37 +4,41 @@ AI-driven workflow management for spec-driven development using Markdown Tickets
 
 ## Installation
 
+Choose your AI assistant:
+
+| Assistant | Installer | Scope |
+|-----------|-----------|-------|
+| **Claude Code** | `install-plugin.sh` | Plugin system |
+| **Others** | `install-agents-skill.sh` | `.agents/skills/` |
+
+### Claude Code
+
 ```bash
-# Local MCP server (requires built mcp-server)
+# First time
 ./install-plugin.sh --local
 
-# Docker MCP server
-./install-plugin.sh --docker
-
-# Recommended: user scope (available to all projects)
-./install-plugin.sh --local --scope user
-
-# Update existing installation
-./install-plugin.sh --update    # Interactive
-./install-plugin.sh -uy         # Fully automated
-
-# All options
-./install-plugin.sh --help
+# Update
+./install-plugin.sh -uy
 ```
 
-**Options:**
+**Options:** `--local` | `--docker` | `-u` (update) | `-y` (auto-confirm)
 
-| Option            | Description                                    |
-|-------------------|------------------------------------------------|
-| `--local`         | Use local Node.js MCP server                   |
-| `--docker`        | Use Docker MCP server via HTTP                 |
-| `--update`, `-u`  | Update mode: detect current installation and update it |
-| `-y`              | Auto-confirm all prompts                       |
-| `--scope user`    | Install in user scope (available to all projects) |
-| `--scope local`   | Install in local scope (available only to this project) |
-| `--help`, `-h`    | Show help message                              |
+### Universal (Cursor, Copilot, etc.)
 
-Short flags can be combined (e.g., `-uy` = `--update -y`).
+**Supported:** Amp, Codex, Cursor, Gemini CLI, GitHub Copilot, Kimi Code CLI, OpenCode
+
+```bash
+# Global (recommended)
+./install-agents-skill.sh
+
+# Per-project
+cd /path/to/my-project
+bash /path/to/install-agents-skill.sh --scope local
+```
+
+**Options:** `--copy` | `-y` | `--scope user/local`
+
+**MCP Setup:** See [INSTALL.md](./INSTALL.md) for MCP server configuration.
 
 ## Quick Links
 
