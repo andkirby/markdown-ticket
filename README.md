@@ -221,6 +221,7 @@ markdown-ticket/
 
 ## What's New
 
+- **v0.11.0** (2026-02-22): Git worktree support, universal AI assistant support, SDD-first README
 - **v0.10.0** (2026-02-15): Single-project MCP mode, Research ticket type
 - **v0.9.0** (2026-01-17): Modern UI, E2E testing, code metrics
 - **v0.8.0** (2025-12-29): API documentation, status buttons
