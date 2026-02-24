@@ -1,3 +1,14 @@
 {
-  "hooks": {}
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-tasks.sh"
+          }
+        ]
+      }
+    ]
+  }
 }

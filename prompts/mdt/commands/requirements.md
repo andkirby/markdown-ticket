@@ -4,6 +4,10 @@ Generate behavioral requirements from CR. Output: `{TICKETS_PATH}/{CR-KEY}/requi
 
 **Core Principle**: Requirements describe WHAT the system does. Architecture decides WHERE and HOW.
 
+## Skill Discovery
+
+Check `AGENTS.md` for skills matching this workflow. If found, invoke via Skill tool before proceeding.
+
 ## User Input
 
 ```text

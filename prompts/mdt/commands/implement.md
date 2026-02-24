@@ -50,13 +50,26 @@ If both prep (incomplete) and part tasks exist, prompt user: `[Continue prep (re
 mcp__mdt-all__update_cr_status(project=PROJECT_CODE, key=CR-KEY, status="In Progress")
 ```
 
-**1c. Load tasks.md** — extract: scope boundaries, shared patterns/imports, test coverage mapping.
+**1c. Load `{tasks_file}`** — extract: scope boundaries, shared patterns/imports, test coverage mapping.
 
-**1d. Load tests.md** (if exists) — extract: test file locations, requirement→test mapping. Enables TDD verification.
+**1d. Load `{tests_file}`** (if exists) — extract: test file locations, requirement→test mapping. Enables TDD verification.
 
-**1e. Load CR** via `mdt-all:get_cr mode="full"`. For multi-part, extract relevant part section only.
+**1e. Resolve `architecture_file`** from mode:
+- prep: `prep/architecture.md`
+- feature/bugfix/docs: `architecture.md`
 
-**1f. Find first incomplete task** — first unchecked `- [ ]` in tasks_file.
+**1f. Load CR** via `mdt-all:get_cr mode="full"`. For multi-part, extract relevant part section only.
+
+**1g. Find first incomplete task** — first unchecked `- [ ]` in tasks_file.
+
+**1h. Runtime Probe (BLOCKING)**: Before implementing any task, verify that the project runtime is actually executable, not just that binaries exist.
+- Extract Verify commands from `{tasks_file}` (prefer Task 0 when present, then include one representative command per command family used by other tasks).
+- Run each selected command as written.
+- Classify failures:
+  - **Infrastructure failure (BLOCKING)**: command cannot start due to missing runtime/dependencies/config (examples: command not found, module/package not found, missing config/manifest, missing script, ENOENT, no such file).
+  - **Behavioral/test failure (NON-BLOCKING for this step)**: command runs but tests/assertions fail.
+- If ANY infrastructure failure is found → **STOP** with: "Runtime infrastructure is not functional for `{command}`: `{error}`. Fix infrastructure before implementation."
+- If commands execute but tests fail, continue (feature mode expects RED before implementation; prep baseline handling remains enforced by TDD checks).
 
 ### Step 2: Execute Task
 
@@ -245,8 +258,9 @@ project:
 artifacts:
   cr_content: "{CR markdown}"
   requirements: "{requirements.md or null}"
-  tasks: "{tasks.md content}"
+  tasks: "{tasks_file content}"
   bdd: "{bdd.md or null}"
+  architecture: "{architecture_file content or null}"
 changed_files: [{all files changed}]
 verification_round: 0
 ```

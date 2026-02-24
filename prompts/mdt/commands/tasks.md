@@ -22,10 +22,23 @@ Prerequisites exist?
         └─ Output: [part-X.Y/]tasks.md
 ```
 
+## Skill Discovery (MANDATORY)
+
+Before generating tasks, discover project-required skills:
+
+1. **Find all AGENTS.md files** in the project (root + subdirectories, exclude `.git/`).
+2. **Parse skill requirements**: look for "Required Skills" tables, "MUST use skill" directives, or "load skill:" instructions.
+3. **Map skills to directories**: each skill applies to a package or directory scope (e.g., `svelte5-best-practices` → `packages/frontend/`).
+4. **Assign skills to tasks**: when a task's `Creates`/`Modifies` files fall within a skill's directory scope, add that skill to the task's `**Skills**` field.
+
+If no AGENTS.md files exist, skip this step — no `**Skills**` field is written.
+
 ## Task Template (Essential)
 
 ```markdown
 ### Task {N}: {Brief description}
+
+**Skills**: {skill-1}, {skill-2}  ← omit if no skills required for this task
 
 **Milestone**: M{X} — {milestone name} (BR-X.Y)  ← omit if no bdd.md
 
@@ -86,9 +99,15 @@ Prerequisites exist?
 - `Creates`/`Modifies`: canonical file ownership list used for planning and coverage checks.
 - `Create/Move`: optional atomic action list; do not restate full `Creates`/`Modifies` entries verbatim.
 
-## Task 0: Install Dependencies
+## Task 0: Dependencies + Missing Infrastructure
 
-If architecture.md lists external packages in Key Dependencies, generate **Task 0** to install them before other tasks. Use the project's package manager with appropriate dev/runtime scope.
+Generate **Task 0** that covers:
+
+1. **Dependencies**: If architecture.md lists external packages in Key Dependencies, install them using the project's package manager with appropriate dev/runtime scope.
+2. **Missing files**: If Step A.5 found architecture files that don't exist on disk, Task 0 `Creates` them. Group by layer (configs first, then entry points, then stubs).
+3. **Verify**: Task 0's Verify block must run the project's test command (from project detection) and confirm it exits without "command not found" or "module not found" errors. If bdd.md exists, also verify the E2E runner is functional.
+
+Skip if all dependencies are installed and all architecture files exist.
 
 ## Critical Rules
 
@@ -100,7 +119,7 @@ If architecture.md lists external packages in Key Dependencies, generate **Task 
 6. **Sequencing**: Build one vertical path first (walking skeleton + first user-visible slice), then expand
 7. **Constraint coverage**: Reference requirement constraint IDs (C1, C2...) in relevant tasks
 8. **Architecture structure coverage (ENFORCED)**: After drafting all tasks, run the Architecture Coverage Check below. This is a required step, not a passive checklist item.
-9. **Dependency installation**: Generate Task 0 from architecture Key Dependencies (see above)
+9. **Infrastructure + dependencies**: Generate Task 0 from architecture Structure (missing infra files) + Key Dependencies (see above). Task 0 Verify must prove runners work.
 10. **Verify ↔ Makes GREEN alignment**: Each task's **Verify** command(s) must directly run the tests or BDD scenarios listed in **Makes GREEN**. If **Makes GREEN** includes BDD scenarios or E2E test files, **Verify** must run the corresponding E2E command (no placeholders).
 11. **BDD milestone alignment**: When bdd.md exists, group tasks into milestones where each milestone delivers one or more BDD scenarios GREEN. Tasks are sequenced to complete vertical slices, not horizontal layers.
 12. **Task ownership fields required**: Every task must include `Creates`, `Modifies`, and `Must Not Touch`.
@@ -174,7 +193,7 @@ After drafting tasks, this check is **mandatory** and **blocks completion if fai
 
 ### Step A: Extract and Tally
 
-1. Parse architecture.md Structure section, extract every **leaf source file path**
+1. Parse architecture.md Structure section, extract every **leaf file path** required by the design (runtime source + bootstrap/config artifacts)
 2. Build a **unique set** of file paths referenced in each task's `Structure`, `Creates`, `Modifies`, and `Create/Move` fields
 3. For each layer, count unique architecture files vs unique matched task files
 4. Build coverage table with **numeric values only**:
@@ -202,6 +221,17 @@ If any row has `Gap > 0`, include exact orphan paths:
 - `app/ui/sidebar/view-file.ext`
 - `app/routes/feature/resource/view-file.ext`
 ```
+
+### Step A.5: File Existence Check (BLOCKING)
+
+After extracting architecture file paths in Step A:
+
+1. For EVERY leaf file path from architecture.md Structure, check if it **exists on disk** (use Glob or Read).
+2. Partition into: `existing` (already on disk) and `missing` (not on disk).
+3. For each `missing` file: check if ANY task in the current draft lists it in `Creates`.
+4. If a missing file has NO task creating it → **Gap**. Add it to the orphan list for Step B resolution.
+
+This catches greenfield gaps where architecture lists files that don't exist and no task creates them — regardless of framework or language.
 
 ### Step B: Resolve Gaps (BLOCKING)
 
@@ -279,7 +309,10 @@ If ANY row has `Gap > 0`:
 
 ## Output: .tasks-status.yaml
 
-After writing tasks.md, also write a machine-readable tracker to `{TICKETS_PATH}/{CR-KEY}/.tasks-status.yaml`:
+After writing tasks.md, also write a machine-readable tracker in the **same directory as the generated `tasks.md`**:
+- `prep` mode: `{TICKETS_PATH}/{CR-KEY}/prep/.tasks-status.yaml`
+- `part` mode: `{TICKETS_PATH}/{CR-KEY}/part-{X.Y}/.tasks-status.yaml`
+- `single` mode: `{TICKETS_PATH}/{CR-KEY}/.tasks-status.yaml`
 
 ```yaml
 cr_key: "{CR-KEY}"
@@ -288,6 +321,8 @@ tasks:
   - id: 1
     title: "{Task 1 title from ### Task 1: ...}"
     status: pending
+    skills:             # only if task has **Skills**: field
+      - frontend-design
   - id: 2
     title: "{Task 2 title}"
     status: pending
@@ -295,10 +330,11 @@ tasks:
 ```
 
 Rules:
-- One entry per `### Task N:` in tasks.md
+- One entry per `### Task N:` or `### Task N.N:` in tasks.md
 - All statuses start as `pending`
 - Title is the text after `### Task N: `
 - `total` matches the number of task entries
+- If a task has a `**Skills**:` line, include `skills:` as a YAML list; omit if no skills
 
 ## Common Pitfall
 
@@ -312,6 +348,7 @@ Before finalizing tasks.md, ask:
 - Did I map every architecture **leaf file path** to at least one task `Structure`, `Creates`, `Modifies`, or `Create/Move` entry?
 - If any row has `Gap > 0`, did I stop, add orphan-file tasks, and re-run coverage?
 - Did I avoid directory-only references as coverage evidence?
+- Did I scan for AGENTS.md files and assign skills to tasks whose files fall in skill-scoped directories?
 - Did I keep examples and wording framework-agnostic unless the CR explicitly requires a specific stack?
 - Where tests.md is missing coverage but bdd.md has it, did `Makes GREEN` cite the exact BDD scenario?
 - Does every task's **Verify** command actually run the tests/scenarios listed in **Makes GREEN**?
@@ -322,6 +359,7 @@ Before finalizing tasks.md, ask:
 
 ## Checklist
 
+- [ ] AGENTS.md scanned, skills mapped to tasks (if AGENTS.md exists)
 - [ ] Architecture + tests exist
 - [ ] Scope boundaries from architecture
 - [ ] Makes GREEN (unit) from tests.md, Makes GREEN (BDD) from bdd.md

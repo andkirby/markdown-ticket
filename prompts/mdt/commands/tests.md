@@ -2,6 +2,10 @@
 
 Generate unit/integration tests from architecture design. Tests written AFTER architecture, BEFORE implementation.
 
+## Skill Discovery
+
+Check `AGENTS.md` for skills matching this workflow. If found, invoke via Skill tool before proceeding.
+
 ## Decision Tree
 
 ```
@@ -58,7 +62,11 @@ For each external dependency declared in architecture (env var, CLI tool, API, s
 
 ### 4. Architecture Structure Coverage
 
-Walk the architecture.md Structure section (file tree). Every listed source file must have a corresponding test. If a file has no test, add one. This prevents entire layers (e.g., HTTP routes, adapters) from being silently skipped.
+Walk the architecture.md Structure section (file tree) and classify entries:
+- **Runtime source files** (feature logic, runtime modules, handlers/adapters/routes/components): must have corresponding tests.
+- **Bootstrap/config artifacts** (manifest, toolchain config, entry wiring): do not require direct unit tests, but must be covered by an execution/runner viability check.
+
+If a runtime source file has no test, add one. This prevents entire runtime layers from being silently skipped.
 
 ## Constraint Coverage
 
@@ -159,7 +167,7 @@ Write actual executable test files to project's test directory. Follow project's
 - [ ] Architecture exists
 - [ ] Mode detected (feature/prep)
 - [ ] All modules have interface tests
-- [ ] Every source file in architecture.md Structure section has a corresponding test
+- [ ] Every runtime source file in architecture.md Structure section has a corresponding test
 - [ ] Data mechanisms extracted and tested
 - [ ] External dependencies tested with at least one real integration test
 - [ ] Constraint IDs from requirements covered (or explicitly N/A)
