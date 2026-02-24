@@ -642,6 +642,9 @@ if [[ -z "$SCOPE" ]]; then
   # In update mode, use current scope automatically
   if [[ "$UPDATE_MODE" = true && -n "$CURRENT_STATUS" ]]; then
     SCOPE="$CURRENT_SCOPE"
+  # In skip-prompts mode with no current installation, default to user scope
+  elif [[ "$SKIP_PROMPTS" = true ]]; then
+    SCOPE="${CURRENT_SCOPE:-user}"
   else
     echo ""
     print_highlight "Installation Scope"
@@ -662,6 +665,7 @@ if [[ -z "$SCOPE" ]]; then
       fi
     else
       DEFAULT_SCOPE="user"
+      DEFAULT_NUM="1"
       echo -e "  [1] user   - Available to all projects (recommended)"
       echo -e "  [2] local  - Available only to this project"
     fi

@@ -152,7 +152,7 @@ If command is null: `status: "skipped"`
 
 If architecture is provided, extract all file paths from the Structure section (code block with directory tree). For each path, verify the file exists on disk. Report missing files as HIGH severity issues with category `requirements`.
 
-- Parse the Structure code block for leaf file entries (lines with a file extension)
+- Parse the Structure code block for leaf file entries (any non-directory leaf path; do not restrict to file extensions)
 - Check each file exists relative to the project root
 - Status: `pass` if all files exist, `partial` if any missing
 - Missing files → HIGH issue: `"Architecture specifies {path} but file does not exist"`

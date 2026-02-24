@@ -4,6 +4,10 @@ Surface architectural decisions before implementation. Output is minimal but com
 
 **Core Principle**: Capture decisions that matter. Skip ceremony that duplicates code.
 
+## Skill Discovery
+
+Check `AGENTS.md` for skills matching this workflow. If found, invoke via Skill tool before proceeding.
+
 ## User Input
 
 ```text
@@ -105,6 +109,15 @@ For each critical behavior:
 - If multiple modules currently own the same behavior, choose one owner and mark merge/refactor as required.
 - Identify any test-only helpers currently in runtime paths and plan extraction to test-only locations.
 
+**2.5 Runtime bootstrap viability (required)**
+
+Before finalizing Structure, verify the design includes what is required to execute the feature in this project context:
+- Project/runtime manifest or equivalent dependency declaration
+- Runtime/tooling configuration required by the chosen stack
+- At least one concrete runtime entry path (for example: app entrypoint, route entrypoint, service entrypoint, or command entrypoint)
+
+If any required bootstrap artifact is missing, include it explicitly in **Structure** and (when relevant) **Runtime Prerequisites**.
+
 ### Step 3: Generate Architecture
 
 Write the architecture as a **complete, self-contained document** using the output template. Only include sections defined in the template — do not invent additional sections. Each `##` heading appears exactly once.
@@ -179,8 +192,10 @@ Use this section only when suggesting a simpler implementation that would change
 ## Structure
 
 ```
-{source_dir}/
-  ├── {file tree, 5-15 entries}
+{project_root}/
+  ├── {runtime/bootstrap artifacts: manifest, config, entrypoints}
+  └── {source_dir}/
+      ├── {runtime source tree, 5-15 entries total across both levels}
 ```
 
 ## Module Boundaries
@@ -265,6 +280,7 @@ Before saving, verify:
 - [ ] Each critical behavior has exactly one owner module (no duplicate owners)
 - [ ] Structure shows concrete paths (not abstract names), 5-15 entries
 - [ ] Structure comments enumerate the public interface (endpoints, methods, exports) — not vague labels
+- [ ] Structure includes required runtime/bootstrap artifacts (manifest/config/entrypoints) when the feature must be executable
 - [ ] Error Philosophy is prose (not a table of every scenario)
 - [ ] No code snippets anywhere (describe intent, not implementation)
 - [ ] Runtime prerequisites defined (if external deps exist)
