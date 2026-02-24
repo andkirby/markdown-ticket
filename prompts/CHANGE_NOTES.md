@@ -2,111 +2,120 @@
 
 ## Recent Updates
 
-### 2026-02-22 - Architecture Invariants, Milestone Planning, and Universal Agent Support
+### 2026-02-24 - Skill Discovery, Self-Verifying Agents, and Spec-Only BDD
 
-**Problem**: The workflow lacked guardrails for architectural drift: (1) multiple modules could claim ownership of the same behavior, (2) tasks weren't aligned with BDD acceptance tests, (3) requirements left semantic conflicts unresolved, and (4) the MDT system only worked with Claude Code.
+**Problem**: Three major gaps existed in the MDT workflow: (1) Commands ignored project-specific skill requirements from AGENTS.md, causing inconsistent code patterns; (2) The code agent wrote code but never ran tests, creating an "implement-then-hope" pattern; (3) BDD workflow required an E2E framework, blocking projects without one from generating acceptance specs.
 
-**Solution**: Added architecture invariants enforcement (single owner per behavior), milestone planning from BDD scenarios, ambiguity resolution in requirements, and universal agent skill installation for Cursor, Copilot, and other AI assistants.
+**Solution**: Added skill discovery across all commands, transformed the code agent into a self-verifying developer that runs tests after writing code, and introduced Spec-Only mode for BDD that generates Gherkin specs without executable tests.
 
 **Changes Made**:
 
-1. **architecture.md (v10→v11) - Canonical flows and ownership**:
-   - Added "Canonical Runtime Flows" section: one behavior = one flow = one owner module
-   - Added "Test vs Runtime Separation" section: explicit boundaries for test scaffolding
-   - Added "Architecture Invariants" section: transition authority, orchestration path, test/runtime separation
-   - Added Step 2.4: Canonical flow + ownership decisions (required)
-   - Quality checklist now verifies single owner per behavior, explicit test/runtime boundaries
-   - If bdd.md reports `framework: "none"` for UI/API behavior, must decide E2E approach
+1. **code.md (v3→v4) - Self-verifying implementation agent**:
+   - Agent now writes code AND runs verify commands (up to 3 attempts)
+   - Added Phase 0: Skill loading gate — loads required skills via Skill tool before any code
+   - Added Phase 2: Verify — executes `verify_commands` from input, reports actual exit codes
+   - Added Phase 3: Fix and retry loop with max 3 attempts
+   - Output schema includes `skills_loaded` and `verify_result` with command-level details
+   - Returns `TESTS_RED` on persistent failures, `SKILL_LOAD_FAILED` on skill errors
 
-2. **tasks.md (v9→v11) - Milestone planning and coverage enforcement**:
-   - Added "Milestone Planning" section: group tasks by BDD scenarios into vertical slices
-   - Each milestone has BDD checkpoint command; tasks deliver vertical slices (data + logic + UI)
-   - Added Architecture Coverage Check (Rule 8) as BLOCKING step with numeric gap table
-   - Task template now includes: Milestone, Makes GREEN (unit), Makes GREEN (BDD), Creates, Modifies, Must Not Touch, Duplication Guard
-   - Added "Ownership Guardrails" table: behavior → owner → merge/refactor task if overlap
-   - Task 0 auto-generated from Key Dependencies for package installation
-   - Verify command must run exact tests from Makes GREEN (no placeholders)
+2. **verify.md (v2→v3) - Regression + scope checker**:
+   - Clarified role: individual task tests are code agent's responsibility
+   - Focus shifted to batch-level regression detection and scope boundary enforcement
+   - Removed `required_commands` and per-task test counts (now handled by code agent)
+   - Simplified output schema focusing on full suite results and scope verdicts
 
-3. **implement-agentic.md (v5→v6) - Invariant enforcement**:
-   - Loads architecture invariants and behavior_owner_ledger from architecture.md
-   - Code agent receives `architecture.invariants` and `task_tests` (makes_green + verify_commands)
-   - Drift gate after code: blocks on second_owner_detected, duplicate_runtime_path, test_runtime_mixing
-   - Verify agent runs risk-first (invariants, failure modes) then breadth
-   - Milestone boundary: runs BDD checkpoint when last task in milestone completes
-   - Acceptance gate: if bdd.md exists, E2E must be GREEN before completion
-   - New verdicts: invariant_violation, duplicate_runtime_path, test_runtime_mixing
+3. **fix.md (v2→v3) - Cross-task remediation**:
+   - Added "When You're Called" section clarifying scenarios A (code agent exhaustion) and B (batch regressions)
+   - Added `verify_commands` field for explicit re-run commands
+   - Added `code_agent_verify_result` to receive actual error output from failed attempts
+   - Output includes `verify_result` showing post-fix command results
 
-4. **requirements.md (v4→v5) - Ambiguity controls**:
-   - Added "Ambiguity Controls" section: resolve semantic conflicts before output
-   - Delivery Timing: each requirement declares Now or In This Ticket
-   - Step 2.6: Resolve Semantic Conflicts (retry behavior, state transitions, idempotency)
-   - "Non-Ambiguity Table" for full scope: concept → chosen truth → rejected → why
-   - "Semantic Decisions" for brief scope: simplified conflict resolution
-   - Quality checklist: verify no TBD semantics, each BR has delivery timing
+4. **implement-agentic.md (v5→v6) - Team lead orchestrator model**:
+   - Role changed from "flow orchestrator" to "team lead" that validates deliverables
+   - Added allowed-tools for test commands (jest, vitest, playwright, bun test)
+   - Added Runtime Probe (Step 1h): validates runtime is executable before any task
+   - Added mandatory validation of code agent output (`skills_loaded`, `verify_result`, `success`)
+   - Fix loop now only triggers if code agent exhausted 3 attempts OR batch verify finds regression
+   - Progress gate: can only mark task done after verified GREEN
+   - Path resolution centralized: `tasks_file`, `tests_file`, `architecture_file`, `tracker_path`, `checkpoint_path`
 
-5. **bdd.md - E2E framework detection and sub-level requirements**:
-   - Clarified E2E classification: only browser/API automation qualifies (not unit runners)
-   - Unit runners (Jest, Vitest, Bun Test) classified as `framework: "none"`
-   - Requirement IDs at sub-level: `@requirement:BR-1.3` not just `@requirement:BR-1`
-   - If `framework: "none"` for UI behavior, downstream architecture must add E2E to Key Dependencies
+5. **bdd.md (v1→v2) - Spec-Only mode and scenario budgeting**:
+   - Added Skill Discovery section for AGENTS.md integration
+   - Added Spec-Only mode: when `framework: "none"`, generates Gherkin specs only (no executable files)
+   - Added scenario budgeting: normal mode (12 total/3 per journey), prep mode (8/2)
+   - Added acceptance-gating waiver state tracking (`executable_required`, `waiver.granted`)
+   - Status indicators expanded: 🔴 RED, 🟢 GREEN, 🟡 Spec-Only
+   - Significantly condensed: removed verbose examples, consolidated rules
 
-6. **verify.md (v1→v2) - Invariant checks**:
-   - Added architecture_invariants and behavior_owner_ledger to input schema
-   - Pre-check verdicts now include invariant_violation
-   - Post-check verdicts include invariant_violation, duplicate_runtime_path, test_runtime_mixing
-   - Verdict precedence: scope_breach > invariant_violation > duplicate_runtime_path > test_runtime_mixing > regression > tests_fail
+6. **tasks.md (v9→v10) - Skill discovery and enhanced Task 0**:
+   - Added Skill Discovery section: scans AGENTS.md files, maps skills to task directories
+   - Task template now includes optional `**Skills**:` field
+   - Task 0 expanded to "Dependencies + Missing Infrastructure"
+   - Added Step A.5: File Existence Check (blocking) — verifies architecture files exist on disk
+   - `.tasks-status.yaml` now includes per-task `skills:` list
+   - Tracker path derived from mode (prep/part/single)
 
-7. **verify-complete.md (v2→v3) - Invariant compliance**:
-   - Added invariant_compliance, duplicate_path_check, test_runtime_separation to summary
-   - Step 6: Invariant + Ownership Checks using behavior_owner_ledger
-   - Failures add HIGH issues with category `architecture`
+7. **architecture.md (v10→v11) - Runtime bootstrap viability**:
+   - Added Skill Discovery section
+   - Added Step 2.5: Runtime bootstrap viability (required) — verify design includes manifest/config/entrypoints
+   - Structure template now includes `{runtime/bootstrap artifacts}` at root level
+   - Quality checklist includes runtime/bootstrap artifacts verification
 
-8. **code.md (v2→v3) - Drift reporting**:
-   - Added task_tests (makes_green, verify_commands) and architecture.invariants to input
-   - Output includes drift_report: second_owner_detected, duplicate_runtime_path, test_runtime_mixing
-   - Returns INVARIANT_CONFLICT error if task requires second owner
+8. **tests.md (v8→v9) - Bootstrap vs runtime coverage**:
+   - Added Skill Discovery section
+   - Architecture structure coverage now classifies: runtime source (tests required) vs bootstrap/config (execution check only)
+   - Checklist updated to "Every runtime source file"
 
-9. **INSTALL.md (new) - Universal installation guide**:
-   - Claude Code: install-plugin.sh (--local for Node.js, --docker for HTTP)
-   - Universal: install-agents-skill.sh (Cursor, Copilot, Gemini CLI, etc.)
-   - MCP Server setup: JSON config for tools that need it
+9. **requirements.md (v4→v5) - Skill discovery**:
+   - Added Skill Discovery section
 
-10. **install-agents-skill.sh (new) - Universal agent installer**:
-    - Symlink or copy to ~/.agents/skills/mdt (global) or .agents/skills/mdt (local)
-    - Supports: Amp, Codex, Cursor, Gemini CLI, GitHub Copilot, Kimi Code CLI, OpenCode
-    - Detects MCP server path, generates JSON config snippet
+10. **implement.md (v10→v11) - Runtime probe and path resolution**:
+    - Added Step 1h: Runtime Probe (blocking) — same as implement-agentic
+    - Path resolution: `{tasks_file}`, `{tests_file}`, `architecture_file` derived from mode
+    - verify-complete receives `architecture` artifact
 
-11. **mdt/SKILL.md (new) - Universal skill definition**:
-    - Skill frontmatter for AI agent discovery
-    - Reference map: commands/*.md, agents/*.md, references/README.md
-    - Runtime compatibility notes (spawn_agent, MCP tools)
+11. **verify-complete.md (v2→v3) - Structure parsing**:
+    - Changed from "file extension" to "any non-directory leaf path" for architecture coverage
+    - Supports config files without extensions
 
-12. **README.md - Updated with universal installation**
+12. **hooks.json - Stop hook registration**:
+    - Added `Stop` hook invoking `enforce-tasks.sh`
+    - Enables task completion enforcement when session ends
 
-13. **plugin.json (0.10.4-beta → 0.10.5-beta)**
+13. **install-plugin.sh - Skip-prompts scope default**:
+    - In skip-prompts mode with no current installation, defaults to user scope
+    - Added `DEFAULT_NUM="1"` for proper menu handling
+
+14. **AGENTS.md - Repository identity rewrite**:
+    - Clarified SDD (Spec-Driven Development) framework identity
+    - Updated core workflow model with complete command chain
 
 **Impact**:
-- Architecture invariants prevent multiple modules from owning the same behavior
-- Milestones ensure tasks deliver vertical slices aligned with BDD acceptance tests
-- Requirements now resolve semantic ambiguities upfront (no TBD conflicts)
-- MDT workflows available to Cursor, Copilot, and other AI assistants
-- Duplicate runtime paths and test/runtime mixing blocked at implementation time
-- Gap tracking is numeric and blocking — no architecture files left orphaned
+- Code agent proves its work by running actual tests — no more "implement-then-hope"
+- Skills from AGENTS.md are automatically loaded when tasks fall in scoped directories
+- BDD workflow works for projects without E2E frameworks via Spec-Only mode
+- Scenario budgets prevent runaway BDD generation (12 max for features, 8 for prep)
+- Runtime infrastructure validated before any implementation begins
+- Missing architecture files detected at task generation time, not during implementation
+- Clear separation: code agent handles unit tests, verify agent handles batch regressions
+- Team lead model ensures orchestrator validates rather than implements
 
 **Files Changed**:
-- `prompts/INSTALL.md` (new)
-- `prompts/install-agents-skill.sh` (new)
-- `prompts/mdt/SKILL.md` (new)
-- `prompts/README.md`
-- `prompts/mdt/commands/architecture.md` (v10→v11)
-- `prompts/mdt/commands/tasks.md` (v9→v11)
-- `prompts/mdt/commands/implement-agentic.md` (v5→v6)
-- `prompts/mdt/commands/requirements.md` (v4→v5)
-- `prompts/mdt/commands/bdd.md`
-- `prompts/mdt/agents/verify.md` (v1→v2)
+- `prompts/mdt/agents/code.md` (v3→v4)
+- `prompts/mdt/agents/verify.md` (v2→v3)
+- `prompts/mdt/agents/fix.md` (v2→v3)
 - `prompts/mdt/agents/verify-complete.md` (v2→v3)
-- `prompts/mdt/agents/code.md` (v2→v3)
-- `prompts/mdt/.claude-plugin/plugin.json` (0.10.4-beta → 0.10.5-beta)
+- `prompts/mdt/commands/implement-agentic.md` (v5→v6)
+- `prompts/mdt/commands/implement.md` (v10→v11)
+- `prompts/mdt/commands/bdd.md` (v1→v2)
+- `prompts/mdt/commands/tasks.md` (v9→v10)
+- `prompts/mdt/commands/architecture.md` (v10→v11)
+- `prompts/mdt/commands/tests.md` (v8→v9)
+- `prompts/mdt/commands/requirements.md` (v4→v5)
+- `prompts/mdt/hooks/hooks.json` (Stop hook added)
+- `prompts/install-plugin.sh` (scope default fix)
+- `prompts/AGENTS.md` (identity rewrite)
+- `prompts/mdt/.claude-plugin/plugin.json` (0.10.5-beta → 0.11.0-beta)
 
 ---
 

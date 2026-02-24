@@ -1,8 +1,12 @@
-# MDT BDD Specification Workflow (v1)
+# MDT BDD Specification Workflow (v2)
 
-Generate BDD acceptance tests from requirements. Produces user-visible behavior tests that validate the system from the outside.
+Generate BDD acceptance tests from requirements. Produce user-visible behavior tests that validate the system from the outside.
 
-**Core Principle**: BDD tests specify WHAT the system does from user perspective, independent of internal architecture. They are written BEFORE architecture decisions.
+**Core Principle**: BDD tests specify WHAT the system does from the user perspective, independent of internal architecture. They are written before architecture decisions.
+
+## Skill Discovery
+
+Check `AGENTS.md` for skills matching this workflow. If found, invoke via Skill tool before proceeding.
 
 ## User Input
 
@@ -12,226 +16,218 @@ $ARGUMENTS
 
 ## Session Context
 
-Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
+Use `{TICKETS_PATH}` in all file path templates below (if it is not defined, read `ticketsPath` from `.mdt-config.toml`).
 
 ## Output Location
 
 | Mode | Output |
 |------|--------|
-| Normal | `{TICKETS_PATH}/{CR-KEY}/bdd.md` + E2E test files |
-| Prep (`--prep`) | `{TICKETS_PATH}/{CR-KEY}/prep/bdd.md` + E2E test files |
+| Normal | `{TICKETS_PATH}/{CR-KEY}/bdd.md` + E2E test files (when executable framework exists) |
+| Prep (`--prep`) | `{TICKETS_PATH}/{CR-KEY}/prep/bdd.md` + E2E test files (when executable framework exists) |
 
 ## Mode Detection
 
 | Mode | Flag | Input Source | Test State | Purpose |
 |------|------|--------------|------------|---------|
-| **Normal** | (none) | requirements.md | RED | Specify new behavior |
-| **Prep** | `--prep` | existing system | GREEN | Lock existing behavior before refactoring |
+| Normal | (none) | requirements.md | RED (when executable) | Specify new behavior |
+| Prep | `--prep` | existing system | GREEN (when executable) | Lock behavior before refactoring |
 
-## Problem This Solves
+## Usage Guardrails
 
-Without explicit acceptance tests:
-- Implementation may satisfy unit tests but miss user-visible behavior
-- Refactoring may break user journeys that weren't explicitly tested
-- Architecture decisions aren't validated against actual user needs
-- "Done" is ambiguous — no clear acceptance criteria
+Use `/mdt:bdd` for:
+- New or changed user-visible behavior
+- Feature enhancements before architecture
+- Prep behavior locking (`--prep`) before major refactoring
 
-BDD tests written BEFORE architecture ensure:
-- User needs drive design, not implementation convenience
-- Refactoring has safety net at user-visible level
-- Clear definition of "done" exists before coding starts
+Do not use `/mdt:bdd` for:
+- Pure technical refactoring with no user-visible behavior (use `/mdt:tests --prep`)
+- Documentation-only work
+- Internal-only changes with no user-visible impact
 
-## When to Use
-
-**Use `/mdt:bdd`:**
-- New features with user-facing behavior
-- Enhancements that change user experience
-- Before architecture to capture behavioral requirements
-- Before refactoring to lock existing user journeys (`--prep`)
-- **Required for Feature Enhancement CRs** unless there is no user-visible behavior
-
-**Do NOT use:**
-- Pure technical refactoring with no user-visible changes (use `/mdt:tests --prep`)
-- Documentation-only changes
-- Internal API changes with no UI/UX impact
-- When requirements.md doesn't exist and no existing behavior to lock
+If this is a Feature Enhancement with user-visible behavior, BDD is required unless the user explicitly waives executable acceptance gating.
 
 ## Critical Rules
 
-1. **Tests from user perspective** — describe what user sees/does, not internal mechanics
-2. **No architecture assumptions** — BDD tests don't reference components, services, or files
-3. **Gherkin format** — Given/When/Then for clarity and tool compatibility
-4. **E2E focus** — test through real interfaces (browser, API, CLI)
-5. **Normal mode = RED** — tests should fail until feature is implemented
-6. **Prep mode = GREEN** — tests must pass against current system (locking behavior)
-7. **Feature acceptance gate** — feature work is not complete until BDD scenarios are GREEN
-8. **Constraint boundary** — configuration and internal constraints belong in `/mdt:tests`, not BDD scenarios unless explicitly user-visible
-9. **Requirement IDs at sub-level** — tag each scenario with specific sub-requirement IDs (e.g., `@requirement:BR-1.3`, not just `@requirement:BR-1`). This enables downstream milestone planning in `/mdt:tasks`. If requirements.md uses numbered items under a BR heading, those are BR-X.1, BR-X.2, etc.
-10. **Coverage honesty** — do not mark a requirement/constraint as covered unless a scenario explicitly validates it
-11. **No invented behaviors** — if a scenario depends on behavior not in requirements, stop and recommend updating requirements or running `/mdt:clarification`
+1. Write tests from user perspective only (no internal mechanics).
+2. Do not assume architecture (no components/services/file-level details in scenarios).
+3. Use Gherkin (`Given/When/Then`) syntax.
+4. Keep focus on end-to-end interfaces (browser/API/CLI).
+5. Enforce scenario budget:
+   - normal: max 12 total, max 3 per journey
+   - prep: max 8 total, max 2 per journey
+6. Deduplicate aggressively; use `Scenario Outline` for mirrored variants.
+7. If `framework: "none"`, generate spec-only output (no executable placeholders).
+8. RED/GREEN execution state is required only when executable E2E framework exists.
+9. Feature acceptance gate: executable BDD scenarios must be GREEN before completion (unless user waiver for spec-only mode).
+10. Internal constraints belong in `/mdt:tests`, unless explicitly user-visible.
+11. Tag scenarios with sub-requirement IDs (`BR-X.Y`), not only parent IDs.
+12. Coverage honesty: do not claim coverage unless a scenario explicitly validates it.
+13. No invented behaviors: if needed behavior is absent from requirements, stop and route to `/mdt:requirements` or `/mdt:clarification`.
+14. Non-functional thresholds in BDD are opt-in: include only when requirements define measurable thresholds and acceptance method.
 
 ## Execution Steps
 
 ### Step 1: Detect Mode and Load Context
 
-**1a. Check for prep mode:**
+**1a. Detect mode**
 
 ```yaml
-# If --prep flag in arguments
 if "--prep" in ARGUMENTS:
   mode: "prep"
   output_dir: "{TICKETS_PATH}/{CR-KEY}/prep/"
   bdd_file: "{TICKETS_PATH}/{CR-KEY}/prep/bdd.md"
-  test_expectation: "GREEN"  # Must pass against current system
+  scenario_budget:
+    total_max: 8
+    per_journey_max: 2
+  test_expectation: "GREEN"  # executable tests must pass
 else:
   mode: "normal"
   output_dir: "{TICKETS_PATH}/{CR-KEY}/"
   bdd_file: "{TICKETS_PATH}/{CR-KEY}/bdd.md"
-  test_expectation: "RED"  # Should fail until implemented
+  scenario_budget:
+    total_max: 12
+    per_journey_max: 3
+  test_expectation: "RED"  # executable tests should fail until implemented
 ```
 
-**1b. Load CR:**
+**1b. Load CR**
 
-```
+```text
 mdt-all:get_cr mode="full"
 ```
 
 Extract:
 - CR title and type
-- Problem statement (user needs)
-- Scope (what changes)
-- Acceptance criteria (existing conditions)
+- problem statement (user needs)
+- scope (what changes)
+- acceptance criteria
 
-**1c. Load requirements (normal mode):**
+**1c. Normal mode input (requirements.md)**
 
 ```yaml
-# Normal mode: requirements.md is primary input
 if mode == "normal":
   requirements_file: "{TICKETS_PATH}/{CR-KEY}/requirements.md"
   if not exists(requirements_file):
-    # Can proceed with CR acceptance criteria, but warn
     warn: "No requirements.md found. Generating BDD from CR acceptance criteria."
     source: "CR"
   else:
     source: "requirements.md"
-
-If requirements.md is missing and this is a Feature Enhancement with user-visible behavior, recommend running `/mdt:requirements` first unless the user explicitly waives it.
 ```
 
-**1d. Identify existing behavior (prep mode):**
+If requirements.md is missing and this is a Feature Enhancement with user-visible behavior, recommend `/mdt:requirements` first unless user explicitly waives.
 
-```yaml
-# Prep mode: analyze current system behavior
-if mode == "prep":
-  # Identify user-facing entry points from CR scope
-  # These are the behaviors we need to lock
-  analyze:
-    - UI flows mentioned in CR
-    - API endpoints affected
-    - CLI commands impacted
-    - User journeys that touch affected code
-```
+**1d. Prep mode input (existing behavior)**
 
-**1e. Detect E2E test framework:**
+In prep mode, identify current user-visible behavior to preserve:
+- UI flows in CR scope
+- affected API endpoints
+- impacted CLI commands
+- user journeys touching changed code
 
-**Classification** — only browser/API automation frameworks qualify as E2E:
+**1e. Detect E2E framework**
+
+Only browser/API automation frameworks qualify as E2E:
 
 | Category | Examples | Qualifies? |
 |----------|----------|------------|
-| Browser E2E | Playwright, Cypress, Puppeteer, Selenium, WebdriverIO, TestCafe | **Yes** |
-| API E2E | Supertest+app, Hurl, Bruno, k6 | **Yes** |
-| BDD runners | Cucumber.js, behave (with E2E step defs) | **Yes** |
-| Unit/integration runners | Jest, Vitest, Bun Test, Mocha, pytest, go test, cargo test | **No** |
+| Browser E2E | Playwright, Cypress, Puppeteer, Selenium, WebdriverIO, TestCafe | Yes |
+| API E2E | Supertest+app, Hurl, Bruno, k6 | Yes |
+| BDD runners | Cucumber.js, behave (with E2E step defs) | Yes |
+| Unit/integration runners | Jest, Vitest, Bun Test, Mocha, pytest, go test, cargo test | No |
 
 Detection steps:
-1. Check dependency manifests for E2E framework packages (e.g., `package.json`, `Pipfile`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `Gemfile`, `pom.xml`)
-2. Look for E2E config files: `playwright.config.*`, `cypress.config.*`, `wdio.conf.*`, `pytest.ini`, `conftest.py` (with selenium/playwright imports)
-3. Look for E2E directories: `e2e/`, `tests/e2e/`, `cypress/`, `test/acceptance/`, `features/`
+1. Check dependency manifests (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, etc.).
+2. Check E2E config files (`playwright.config.*`, `cypress.config.*`, `wdio.conf.*`, etc.).
+3. Check E2E directories (`e2e/`, `tests/e2e/`, `cypress/`, `features/`, etc.).
 
-**If only a unit runner is found** (Jest, Vitest, Bun Test, etc.), classify as `framework: "none"`. Unit runners cannot exercise UI components through browser interaction.
+If only a unit runner exists, set `framework: "none"`.
 
 Record:
+
 ```yaml
 e2e:
-  framework: {E2E framework name or "none"}
+  framework: {framework name or "none"}
   directory: {path if known}
   pattern: {file pattern if known}
   command: {run command if known}
-  filter: {optional filter expression to scope to CR-KEY, or "n/a"}
+  filter: {optional CR-scoped filter, or "n/a"}
 ```
 
-If no E2E framework detected:
-```markdown
-⚠️ No E2E test framework detected (unit runners like Bun Test do not qualify).
+If no E2E framework is detected:
+- Generate Gherkin specs only (Spec-Only mode)
+- Set:
+  - `framework: "none"`
+  - `command: "n/a"`
+  - `filter: "n/a"`
+- Mark scenario status as `🟡 Spec-Only`
+- Add follow-up note: `/mdt:architecture` should decide whether to add an E2E framework
+- Do not invent framework-specific commands
 
-**Options**:
-1. Generate Gherkin specs only (no executable tests) — downstream `/mdt:architecture` should add E2E framework to Key Dependencies
-2. Ask user for preferred E2E framework
-3. Use existing integration test harness (if any)
+**1f. Capture acceptance-gating waiver state**
+
+Record a structured waiver flag in workflow state:
+
+```yaml
+acceptance_gating:
+  executable_required: {true|false}
+  waiver:
+    granted: {true|false}
+    reason: {text or "n/a"}
 ```
+
+Rules:
+- If executable framework exists, `executable_required: true` and waiver is normally `granted: false`.
+- If `framework: "none"`, set `executable_required: false`.
+- If user explicitly waives executable gating, set `waiver.granted: true` with reason.
 
 ### Step 2: Extract User Behaviors
 
-**For Normal Mode (from requirements.md):**
+**Normal mode (requirements-driven)**
 
-Parse EARS specifications and transform to user perspective. Track section IDs:
+Transform EARS requirements to user-visible behavior. Preserve existing requirement IDs; if absent, use section-based IDs (`BR-1`, `BR-2`, etc.).
 
-- Use headings as IDs: `BR-1`, `BR-2`, etc.
-- If requirements.md already has explicit IDs, preserve them.
-
-| EARS Statement | BDD Transformation |
-|----------------|-------------------|
+| EARS statement | BDD transformation |
+|----------------|--------------------|
 | WHEN user clicks X, system shall Y | When I click X, Then I should see Y |
 | IF validation fails, system shall show error | When I submit invalid data, Then I see error message |
 | WHILE session active, system shall refresh | Given I am logged in, Then my session stays active |
 
-**Group by user journey:**
-- Authentication (login, logout, session)
-- Core feature workflows
-- Error handling from user perspective
-- Edge cases visible to user
+Group scenarios by journeys:
+- authentication/session
+- core workflows
+- user-visible errors
+- visible edge cases
 
-**For Prep Mode (from existing system):**
+**Prep mode (current behavior)**
 
-Identify user-visible behaviors to preserve:
-
-1. **UI Flows**: What can user currently do?
-2. **Expected Outcomes**: What does user see after actions?
-3. **Error States**: What errors can user encounter?
-4. **Edge Cases**: What happens at boundaries?
-
-```markdown
-## Discovered User Behaviors (Prep Mode)
-
-| User Action | Current Outcome | Preserve? |
-|-------------|-----------------|-----------|
-| Click "Login" with valid creds | Redirect to dashboard | ✅ Yes |
-| Click "Login" with invalid creds | Error message shown | ✅ Yes |
-| Session timeout | Redirect to login | ✅ Yes |
-```
+List the behavior to preserve:
+1. user actions
+2. current outcomes
+3. error states
+4. boundary behavior
 
 ### Step 3: Generate Gherkin Scenarios
 
-**Feature File Structure:**
+Use this structure:
 
 ```gherkin
-Feature: {Feature name from requirement group}
+Feature: {Feature name from journey}
   As a {user role}
   I want to {goal}
   So that {benefit}
 
   Background:
-    Given {common setup - e.g., "I am on the login page"}
+    Given {common setup}
 
-  @requirement:{REQ-ID.sub} @priority:{high|medium|low}
-  Scenario: {descriptive_scenario_name}
-    Given {initial context from user perspective}
+  @requirement:{BR-X.Y} @priority:{high|medium|low}
+  Scenario: {descriptive_name}
+    Given {user-visible context}
     When {user action}
-    Then {expected outcome visible to user}
-    And {additional assertions}
+    Then {visible outcome}
+    And {additional visible assertion}
 
-  @requirement:{REQ-ID.sub}
-  Scenario Outline: {parameterized_scenario_name}
+  @requirement:{BR-X.Y}
+  Scenario Outline: {parameterized_name}
     Given {context with <placeholder>}
     When {action with <placeholder>}
     Then {outcome with <placeholder>}
@@ -242,88 +238,94 @@ Feature: {Feature name from requirement group}
       | value2      | result2  |
 ```
 
-**Gherkin Best Practices:**
+Scenario authoring rules:
+- Keep steps user-visible; avoid implementation details.
+- Keep internal constraints/performance internals in `/mdt:tests`.
+- Use `Scenario Outline` when cases differ only by data permutations.
+- Prefer one representative happy path per journey plus targeted error/edge coverage.
 
-| Do | Don't |
-|-----|-------|
-| `When I click the "Submit" button` | `When the onClick handler fires` |
-| `Then I see "Welcome, John"` | `Then the DOM contains welcome div` |
-| `Given I am logged in as admin` | `Given JWT token is valid` |
-| `Then the error message appears` | `Then setState is called with error` |
+Coverage minimums:
 
-**Constraint Handling:**
-- If a constraint is user-visible (e.g., "system must display warning"), it may be a BDD scenario.
-- Internal constraints (e.g., config parsing, input truncation, command substitution) belong in `/mdt:tests`.
-
-**Coverage Requirements:**
-
-| Requirement Type | Minimum Scenarios |
+| Requirement type | Minimum scenarios |
 |------------------|-------------------|
 | Happy path | 1 primary + 1 variation |
 | Error handling | 1 per user-visible error |
 | Edge cases | 1 per boundary condition |
 | Permissions | 1 per role (if applicable) |
 
+Budget gate (blocking):
+- If scenarios exceed `scenario_budget.total_max`, merge with outlines or route lower-level checks to `/mdt:tests`.
+- If any journey exceeds `scenario_budget.per_journey_max`, collapse redundant variants before proceeding.
+
 ### Step 4: Generate Executable Test Files
 
-**4a. Determine test file structure:**
+If executable framework exists, generate test files in the project E2E structure.
 
-```
+Typical layout:
+
+```text
 {e2e_directory}/
-└── {CR-KEY}/                    # or feature-based organization
+└── {CR-KEY}/
     ├── {feature-a}.spec.{ext}
     └── {feature-b}.spec.{ext}
 ```
 
-For prep mode, consider separate folder:
-```
+Prep mode may use preservation folder:
+
+```text
 {e2e_directory}/
 └── preservation/
     └── {CR-KEY}/
         └── {feature}.spec.{ext}
 ```
 
-**4b. Generate test code (framework-specific):**
+If `e2e.framework == "none"`:
+- Do not generate executable `.spec` implementation files.
+- Keep planned file targets in `Generated Test Files` with `🟡 Spec-Only` status.
+- Do not add runnable verification commands.
 
-Use the project's existing acceptance/E2E framework. If none exists, generate Gherkin specs only and skip executable code.
-
-**Language reference** (load if generating executable tests):
+Language references (only when generating executable tests):
 - TypeScript/Node.js: `mdt/references/typescript.md`
 - Python: `mdt/references/python.md`
 
-Follow patterns from the appropriate reference file for test structure, assertions, and selectors.
-
 ### Step 5: Verify Test State
 
-**For Normal Mode (expect RED):**
+Branch by framework availability.
+
+If `e2e.framework == "none"` (Spec-Only):
+- Skip command execution.
+- Set verification status to `🟡 Spec-Only`.
+- Record verification command as `n/a`.
+- Note acceptance gating is deferred until E2E framework exists (or user waives executable gating).
+- Ensure `acceptance_gating` metadata is populated in output.
+
+Normal mode with executable framework (expect RED):
 
 ```bash
 {e2e_command} {filter}
 ```
 
-Expected: All tests fail (feature not implemented yet)
+Expected: generated tests fail until implementation.
 
-If any tests pass → investigate:
-- Is there existing code that satisfies this?
-- Is the test too loose?
-- Is this duplicate functionality?
+If tests unexpectedly pass, investigate:
+- behavior already implemented
+- test too loose
+- duplicate behavior
 
-If tests are generated as TODO or skipped, mark status as **Spec-Only** and do not treat as acceptance gating. Prefer executable failing tests for Normal mode.
-
-**For Prep Mode (expect GREEN):**
+Prep mode with executable framework (expect GREEN):
 
 ```bash
 {e2e_command} {filter}
 ```
 
-Expected: All tests pass (locking existing behavior)
+Expected: generated tests pass against current system.
 
-If any tests fail → investigate:
-- Is the test incorrect?
-- Is there a bug in current system?
-- Is this behavior actually broken?
+If tests fail, investigate:
+- incorrect test
+- existing defect
+- misunderstood baseline behavior
 
-### Step 6: Generate bdd.md
+### Step 6: Generate `bdd.md`
 
 ```markdown
 # BDD Acceptance Tests: {CR-KEY}
@@ -331,7 +333,7 @@ If any tests fail → investigate:
 **Mode**: {Normal | Prep (Behavior Lock)}
 **Source**: {requirements.md | existing system analysis}
 **Generated**: {timestamp}
-**Status**: {🔴 RED (implementation pending) | 🟢 GREEN (behavior locked)}
+**Status**: {🔴 RED (implementation pending) | 🟢 GREEN (behavior locked) | 🟡 Spec-Only (framework unavailable)}
 
 ## Test Configuration
 
@@ -339,45 +341,30 @@ If any tests fail → investigate:
 |---------|-------|
 | Framework | {framework name or "none"} |
 | Directory | `{path}` |
-| Command | `{command}` |
-| Filter | `{filter command or "n/a"}` |
+| Command | `{command or "n/a"}` |
+| Filter | `{filter or "n/a"}` |
 
 ## User Journeys
 
 ### Journey 1: {Journey Name}
 
-**User Goal**: {what user wants to achieve}
-**Entry Point**: {where user starts}
-
-```gherkin
-Feature: {Feature name}
-  As a {user role}
-  I want to {goal}
-  So that {benefit}
-```
+**User Goal**: {goal}
+**Entry Point**: {entry point}
 
 #### Scenarios
 
 | Scenario | Type | Requirement | Status |
 |----------|------|-------------|--------|
-| {scenario_name} | Happy path | R1.1 | 🔴 |
-| {error_scenario} | Error | R1.2 | 🔴 |
-| {edge_case} | Edge case | R1.3 | 🔴 |
-
-### Journey 2: {Journey Name}
-
-{Continue for all journeys...}
-
----
+| {scenario_name} | Happy path | BR-1.1 | {🔴|🟢|🟡} |
+| {error_scenario} | Error | BR-1.2 | {🔴|🟢|🟡} |
+| {edge_case} | Edge case | BR-1.3 | {🔴|🟢|🟡} |
 
 ## Scenario Specifications
 
 ### Feature: {Feature Name}
 
 **File**: `{e2e_directory}/{feature}.spec.{ext}`
-**Covers**: R1.1, R1.2
-
-#### Scenario: {scenario_name}
+**Covers**: BR-1.1, BR-1.2
 
 ```gherkin
 Given {context}
@@ -385,31 +372,24 @@ When {action}
 Then {outcome}
 ```
 
-**Test**: `describe('{Feature}') > it('{scenario}')`
-**Requirement**: R1.1
-
----
-
 ## Generated Test Files
 
 | File | Scenarios | Status |
 |------|-----------|--------|
-| `{path/to/feature.spec.{ext}}` | {N} | {🔴 RED / 🟢 GREEN} |
-| `{path/to/feature2.spec.{ext}}` | {N} | {🔴 RED / 🟢 GREEN} |
+| `{path/to/feature.spec.{ext}}` | {N} | {🔴 RED / 🟢 GREEN / 🟡 Spec-Only} |
 
 ## Requirement Coverage
 
-Track at sub-requirement level (BR-X.Y). A BR group is only ✅ when every sub-requirement has a scenario or is explicitly routed elsewhere.
+Track at sub-requirement level (`BR-X.Y`).
 
-| Req ID | Scenarios | Covered? |
-|--------|-----------|----------|
-| BR-1.1 | scenario_a, scenario_b | ✅ |
-| BR-1.2 | scenario_c | ✅ |
-| BR-2.1 | scenario_d | ✅ |
-| BR-2.2 | — | ❌ Gap |
+| Req ID | Scenarios | Routed To | Covered? |
+|--------|-----------|-----------|----------|
+| BR-1.1 | scenario_a, scenario_b | bdd | ✅ |
+| BR-1.2 | scenario_c | bdd | ✅ |
+| C2 | - | tests | ✅ Routed |
+| BR-2.2 | - | clarification | ❌ Gap |
 
-{If gaps exist}
-### Coverage Gaps
+### Coverage Gaps (if any)
 
 | Requirement | Reason | Action |
 |-------------|--------|--------|
@@ -418,50 +398,53 @@ Track at sub-requirement level (BR-X.Y). A BR group is only ✅ when every sub-r
 
 ## Verification
 
-Run BDD tests:
+If executable framework exists:
+
 ```bash
 {e2e_command} {filter}
 ```
 
-**Expected Result**: 
-{Normal mode}: `{N} failed, 0 passed` (RED until implemented)
-{Prep mode}: `{N} passed, 0 failed` (GREEN, behavior locked)
+**Expected Result**:
+- Normal mode: `{N} failed, 0 passed` (RED until implemented)
+- Prep mode: `{N} passed, 0 failed` (GREEN baseline)
 
----
+If `framework: "none"`:
+- Omit runnable verification command block entirely.
+- Include: `Verification: n/a (Spec-Only)`.
 
-## Integration Notes
+## Acceptance Gating
 
-### For `/mdt:architecture`
+| Field | Value |
+|-------|-------|
+| Executable Required | `{true|false}` |
+| Waiver Granted | `{true|false}` |
+| Waiver Reason | `{reason or "n/a"}` |
 
-These user journeys inform component boundaries:
-- {Journey 1} suggests {component need}
-- {Journey 2} requires {capability}
+## Implementation Handoff
 
-### For `/mdt:implement`
-
-After each implementation task:
-1. Run unit/integration tests (from `/mdt:tests`)
-2. Run BDD tests for affected scenarios
+For `/mdt:implement`:
+1. Run unit/integration tests from `/mdt:tests`
+2. Run BDD scenarios for affected journeys (if executable)
 3. Scenarios should progressively turn GREEN
+4. If spec-only, treat BDD as acceptance contract until E2E framework is added
 
----
-*Generated by /mdt:bdd v1*
+*Generated by /mdt:bdd v2*
 ```
 
 ### Step 7: Save and Report
 
-**7a. Create output directory:**
+1. Create output directory:
+
 ```bash
 mkdir -p "{output_dir}"
 ```
 
-**7b. Save test files** to E2E test directory
+2. Save executable E2E files when framework exists; otherwise keep spec-only entries in `bdd.md`.
+3. Save `bdd.md`:
+- normal: `{TICKETS_PATH}/{CR-KEY}/bdd.md`
+- prep: `{TICKETS_PATH}/{CR-KEY}/prep/bdd.md`
 
-**7c. Save bdd.md** to appropriate path:
-- Normal: `{TICKETS_PATH}/{CR-KEY}/bdd.md`
-- Prep: `{TICKETS_PATH}/{CR-KEY}/prep/bdd.md`
-
-**7d. Report:**
+4. Report summary:
 
 ```markdown
 ## BDD Tests Generated: {CR-KEY}
@@ -473,7 +456,10 @@ mkdir -p "{output_dir}"
 | User Journeys | {N} |
 | Scenarios | {N} |
 | Test Files | {N} |
-| Expected State | {🔴 RED / 🟢 GREEN} |
+| Expected State | {🔴 RED / 🟢 GREEN / 🟡 Spec-Only} |
+| Executable Required | {true / false} |
+| Waiver Granted | {true / false} |
+| Waiver Reason | {reason or "n/a"} |
 
 **Output**: `{bdd_file}`
 
@@ -481,231 +467,46 @@ mkdir -p "{output_dir}"
 - `{path/to/test1.spec.ext}`
 - `{path/to/test2.spec.ext}`
 
-**Verify**:
+**Verify** (only when executable framework exists):
 ```bash
 {e2e_command} {filter}
-# Expected: {N} {failed|passed}
 ```
+If Spec-Only: `n/a`
 
-**Next Steps**:
-{Normal mode}:
-- Review scenarios for completeness
-- Run `/mdt:architecture {CR-KEY}` — user journeys inform design
-
-{Prep mode}:
-- Verify all tests pass (behavior locked)
-- Run `/mdt:architecture {CR-KEY} --prep` — design refactoring
-```
-
----
-
-## Examples
-
-### Example 1: Normal Mode (New Feature)
-
-**Input**: `/mdt:bdd MDT-101`
-
-**requirements.md contains**:
-```markdown
-### Requirement 1: User Authentication
-
-WHEN user submits login form with valid credentials,
-the system shall authenticate and redirect to dashboard.
-
-IF credentials are invalid,
-THEN the system shall display error message.
-```
-
-**Output bdd.md**:
-```markdown
-# BDD Acceptance Tests: MDT-101
-
-**Mode**: Normal
-**Status**: 🔴 RED (implementation pending)
-
-## User Journeys
-
-### Journey 1: User Login
-
-**User Goal**: Access my account
-**Entry Point**: /login
-
-#### Scenarios
-
-| Scenario | Type | Requirement | Status |
-|----------|------|-------------|--------|
-| successful_login | Happy path | R1.1 | 🔴 |
-| invalid_credentials | Error | R1.2 | 🔴 |
-| empty_form_submission | Edge case | R1.2 | 🔴 |
-```
-
-### Example 2: Prep Mode (Lock Before Refactoring)
-
-**Input**: `/mdt:bdd MDT-102 --prep`
-
-**CR describes**: Refactoring authentication service
-
-**Output bdd.md**:
-```markdown
-# BDD Acceptance Tests: MDT-102
-
-**Mode**: Prep (Behavior Lock)
-**Status**: 🟢 GREEN (behavior locked)
-
-## User Journeys
-
-### Journey 1: Existing Login Flow
-
-**User Goal**: Verify current login still works after refactoring
-**Entry Point**: /login
-
-#### Scenarios (Must Stay GREEN)
-
-| Scenario | Type | Current Behavior | Status |
-|----------|------|------------------|--------|
-| successful_login | Happy path | Redirects to /dashboard | 🟢 |
-| invalid_credentials | Error | Shows "Invalid credentials" | 🟢 |
-| session_timeout | Edge case | Redirects to /login after 30min | 🟢 |
-
-⚠️ **These tests must remain GREEN throughout refactoring.**
-If any fail, refactoring has broken user-visible behavior.
-```
-
-### Example 3: Language-Specific Implementation
-
-For executable test code, load the appropriate language reference:
-
-| Language | Reference File |
-|----------|---------------|
-| TypeScript/Node.js | `mdt/references/typescript.md` |
-| Python | `mdt/references/python.md` |
-
-These references contain:
-- Test file naming conventions
-- Framework-specific test structure
-- Selector patterns (stable vs brittle)
-- Assertion patterns
-- Filter commands for running specific tests
-
----
-
-## Behavioral Rules
-
-1. **User perspective only** — no technical implementation details in scenarios
-2. **One scenario = one user goal** — don't combine multiple outcomes
-3. **Gherkin keywords** — Given, When, Then, And, But (capitalize)
-4. **Requirement traceability** — every scenario links to requirement
-5. **Normal = RED, Prep = GREEN** — verify expected state after generation
-6. **No architecture assumptions** — BDD tests don't know about services, components, files
-7. **Stable selectors** — when UI testing, use stable selectors (e.g., data-testid) instead of CSS classes or DOM structure
-8. **No invented behaviors** — if a scenario depends on behavior not in requirements, stop and route to requirements/clarification
-
-## Anti-Patterns to Avoid
-
-❌ **Implementation details in scenarios**:
-```gherkin
-When the AuthService validates the JWT token
-When the database query returns results
-```
-✅ **User perspective**:
-```gherkin
-When I submit my login credentials
-When I search for "keyword"
-```
-
-❌ **Testing internal state**:
-```gherkin
-Then the session store contains user object
-Then the cache is populated
-```
-✅ **Testing visible outcome**:
-```gherkin
-Then I see my username in the header
-Then search results appear within 2 seconds
-```
-
-❌ **Brittle selectors** (any language):
-```
-# Avoid CSS classes or DOM structure
-click('.btn.btn-primary.submit-form')
-find('div > form > button')
-```
-✅ **Stable selectors**:
-```
-# Use semantic identifiers
-click(testId='submit')
-find(role='button', name='Submit')
-```
-
-See `mdt/references/{language}.md` for language-specific selector patterns.
-
-❌ **Combined scenarios**:
-```gherkin
-Scenario: Login and update profile and logout
-```
-✅ **Focused scenarios**:
-```gherkin
-Scenario: Successful login
-Scenario: Update profile name
-Scenario: Logout from dashboard
+**Next**:
+- Normal: `/mdt:architecture {CR-KEY}`
+- Prep: `/mdt:architecture {CR-KEY} --prep`
 ```
 
 ## Validation Checklist
 
 Before completing `/mdt:bdd`:
 
-- [ ] Mode correctly detected (normal vs prep)
-- [ ] Source loaded (requirements.md or existing system)
-- [ ] E2E framework detected (or alternative chosen)
-- [ ] All user journeys identified
-- [ ] Scenarios written from user perspective (no tech details)
-- [ ] Gherkin format correct (Given/When/Then)
-- [ ] Requirement traceability complete
-- [ ] Coverage verified at sub-requirement level (BR-X.Y) — no BR group marked ✅ with uncovered sub-requirements
-- [ ] Every scenario in journey tables has a Gherkin spec in Scenario Specifications
-- [ ] File paths in Scenario Specifications match Generated Test Files table
-- [ ] Test files generated
-- [ ] Expected state verified (RED for normal, GREEN for prep)
-- [ ] bdd.md saved to correct location
+- [ ] Mode detected correctly (normal vs prep)
+- [ ] Source loaded (`requirements.md` or existing system)
+- [ ] E2E framework detected (or `framework: "none"` set)
+- [ ] Scenario count within budget (total + per-journey)
+- [ ] Mirrored variants collapsed into `Scenario Outline` where possible
+- [ ] Scenarios use user perspective only
+- [ ] Non-functional checks included only when explicitly required and user-visible
+- [ ] Gherkin format valid (`Given/When/Then`)
+- [ ] Requirement traceability complete at `BR-X.Y` level
+- [ ] Coverage routing includes `bdd`/`tests`/`clarification` where relevant
+- [ ] Every journey table scenario has a matching Gherkin spec
+- [ ] Scenario-spec file paths match `Generated Test Files` table
+- [ ] Executable test files generated when framework exists (or skipped correctly in Spec-Only)
+- [ ] Expected state verified (RED normal, GREEN prep, Spec-Only when no framework)
+- [ ] `bdd.md` saved to correct location
 
 ## Integration
 
-**Input**: 
-- Normal mode: `requirements.md` (from `/mdt:requirements`)
-- Prep mode: CR scope + existing system analysis
+**Input**:
+- normal: `requirements.md` (or CR acceptance criteria fallback)
+- prep: CR scope + existing system behavior
 
 **Output consumed by**:
-- `/mdt:architecture` — user journeys inform component boundaries
-- `/mdt:implement` — scenarios turn GREEN as features complete
-
-**Workflow position**:
-```
-/mdt:requirements
-        ↓
-/mdt:bdd ←────────── User-visible behavior (before architecture)
-        ↓
-/mdt:architecture
-        ↓
-/mdt:tests ←──────── Part-specific tests (after architecture)
-        ↓
-/mdt:tasks
-        ↓
-/mdt:implement
-```
-
-**Prep workflow position**:
-```
-/mdt:assess
-        ↓
-/mdt:bdd --prep ←─── Lock existing E2E behavior (optional)
-        ↓
-/mdt:architecture --prep
-        ↓
-/mdt:tests --prep ←─ Lock existing unit/integration
-        ↓
-/mdt:tasks --prep
-        ↓
-/mdt:implement --prep
-```
+- `/mdt:architecture` (acceptance scope + E2E strategy context)
+- `/mdt:tasks` (milestones from BR-X.Y scenarios)
+- `/mdt:implement` and `/mdt:implement-agentic` (acceptance gating)
 
 Context: $ARGUMENTS

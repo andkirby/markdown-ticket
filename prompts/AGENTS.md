@@ -1,45 +1,75 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
+## Project Identity
 
-This repository contains the prompt and documentation assets for the MDT (Markdown Ticket) workflow plugin.
+This repository defines an SDD (Spec-Driven Development) framework for software delivery using Markdown Tickets (MDT).
 
-- `mdt/` houses the Claude plugin: `mdt/commands/` for user-facing workflows, `mdt/agents/` for internal agent prompts, and `.claude-plugin/plugin.json` for plugin metadata.
-- Top-level Markdown files (`README.md`, `GUIDE.md`, `COMMANDS.md`, `WORKFLOWS.md`, `QUICKREF.md`, `CONCEPTS.md`) are the primary docs.
-- `hooks/` contains shell helpers (e.g., `hooks/mdt-project-vars.sh`) for injecting project context.
-- `drafts/` is for in-progress notes and experiments.
+- The framework is technology-agnostic.
+- Work is driven by specifications and explicit artifacts.
+- Commands guide the full lifecycle from ticket definition to reflection.
 
-## Build, Test, and Development Commands
+## Core Workflow Model
 
-There is no build system or runtime in this directory; changes are validated by running MDT workflows.
+- Work starts from a CR and progresses through defined `/mdt:*` workflows.
+- Each workflow writes or updates concrete artifacts under `{TICKETS_PATH}/{CR-KEY}/`.
+- Typical flow:
+  - `/mdt:ticket-creation`
+  - `/mdt:requirements` (when needed)
+  - `/mdt:bdd`
+  - `/mdt:assess` (optional)
+  - `/mdt:poc` (optional)
+  - `/mdt:domain-lens` (optional)
+  - `/mdt:clarification` (as needed)
+  - `/mdt:architecture`
+  - `/mdt:tests`
+  - `/mdt:tasks`
+  - `/mdt:implement` or `/mdt:implement-agentic`
+  - `/mdt:tech-debt`
+  - `/mdt:reflection`
 
-- Install the plugin locally: `claude plugin install /path/to/prompts/mdt`
-- Use the workflows directly: `/mdt:ticket-creation {CR-KEY}`, `/mdt:requirements {CR-KEY}`, `/mdt:architecture {CR-KEY}`, `/mdt:tests {CR-KEY}`
-- Install helper commands for Claude Code: `bash install-claude.sh`
+## Repository Structure
 
-## Coding Style & Naming Conventions
+- `mdt/`: main workflow package
+  - `mdt/commands/`: user-facing `/mdt:*` command prompts
+  - `mdt/agents/`: internal agent contracts
+  - `mdt/scripts/`: workflow helper scripts
+  - `mdt/hooks/`: workflow hook registration
+  - `mdt/.claude-plugin/plugin.json`: plugin manifest
+- `mdt-report/`: incident and reporting workflow assets
+- `hooks/`: local context/helper scripts
+- `scripts/`: repository utility scripts
+- Top-level docs: `README.md`, `INSTALL.md`, `WORKFLOWS.md`, `COMMANDS.md`, `QUICKREF.md`, `CONCEPTS.md`, `CHANGE_NOTES.md`
+- Working material: `drafts/`, `dev/`, `test/`, `incidents/`
 
-- Markdown is the primary format; prefer clear headings and short, directive sentences.
-- Keep prompts artifact-focused (concrete files, components, endpoints) and avoid vague behavioral prose.
-- Follow existing file naming patterns (`mdt/commands/<command>.md`, `mdt/agents/<agent>.md`).
+## Development and Validation
 
-## Testing Guidelines
+There is no traditional build process in this repository. Validate changes by running workflows and checking generated artifacts.
 
-There are no automated tests in this repo. Validate changes by:
+- Install/update plugin locally: `./install-plugin.sh --local` or `./install-plugin.sh -uy`
+- Install skill package for broader assistant environments: `./install-agents-skill.sh`
+- Run relevant `/mdt:*` commands against a test CR and confirm:
+  - expected output paths,
+  - required sections,
+  - clean handoff to downstream workflows.
 
-- Creating a test CR with `mcp__mdt-all__create_cr`.
-- Running the relevant `/mdt:*` command and checking generated artifacts (e.g., `{TICKETS_PATH}/{CR-KEY}/requirements.md`).
+## Authoring Standards
 
-## Commit & Pull Request Guidelines
+- Write concise, directive Markdown.
+- Keep prompts artifact-focused and implementation-agnostic.
+- Avoid vague behavioral prose; require explicit files, boundaries, and acceptance criteria.
+- Follow established naming patterns:
+  - `mdt/commands/<command>.md`
+  - `mdt/agents/<agent>.md`
 
-Recent history follows Conventional Commits (e.g., `feat(prompts): …`, `refactor(prompts): …`, `fix(…): …`). Use that style for new commits.
+## Contribution Guidelines
 
-For PRs, include:
+- Use Conventional Commit style (`feat(...)`, `fix(...)`, `refactor(...)`, `docs(...)`).
+- In PRs, include:
+  - summary of workflow/prompt changes,
+  - related CR references,
+  - validation notes (commands executed and artifacts produced).
 
-- A concise summary of the workflow or prompt changes.
-- Links or references to any CRs or documentation updates.
-- Notes on how you validated the change (commands run, artifacts generated).
+## Source of Truth
 
-## Agent-Specific Instructions
-
-See `CLAUDE.md` for prompt development rules, workflow testing steps, and the agentic implementation model. When in doubt, update the command docs and examples alongside any prompt logic changes.
+`AGENTS.md` is the primary repository guidance file.  
+`CLAUDE.md` should only reference `@AGENTS.md` to prevent drift.
