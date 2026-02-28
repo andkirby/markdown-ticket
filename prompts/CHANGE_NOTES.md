@@ -2,6 +2,37 @@
 
 ## Recent Updates
 
+### 2026-02-28 - Reflection Workflow: Document-Aware Updates
+
+**Problem**: The reflection workflow only updated the CR ticket, leaving workflow documents (requirements.md, architecture.md, tests.md, debt.md) to drift from actual implementation. Learnings that should have updated source specifications were only recorded as CR notes.
+
+**Solution**: Added document selection to reflection — user chooses which workflow documents to review, agent recommends which should be updated based on actual changes, and approved updates flow to the correct source documents.
+
+**Changes Made**:
+
+1. **reflection.md (v2→v4) - Document-aware reflection**:
+   - Added Step 2: Select Documents to Review — detects available workflow documents, asks user which to read
+   - Added Source Ownership routing table mapping change types to update targets
+   - Simplified execution from verbose 8 steps to clean 9-step flow
+   - Added interaction rule: ask which documents to read, recommend updates based on changes
+   - New output: documents reviewed, documents updated, learning summary
+   - Supports `CR only` mode for reflection without document changes
+
+2. **COMMANDS.md - Updated /mdt:reflection description**:
+   - Purpose now mentions updating CR and approved workflow documents
+   - Learnings expanded to include artifact/behavior/architecture/verification/debt categories
+   - Added interaction rule documentation
+
+**Impact**:
+- Prevents specification drift between workflow documents and implementation
+- Routes learnings to the correct source document instead of only CR notes
+- User controls which documents are reviewed and updated
+
+**Files Changed**:
+- `prompts/mdt/commands/reflection.md` (v2→v4)
+- `prompts/COMMANDS.md`
+- `prompts/mdt/.claude-plugin/plugin.json` (0.11.0-alpha.1 → 0.11.1-beta)
+
 ### 2026-02-24 - Skill Discovery, Self-Verifying Agents, and Spec-Only BDD
 
 **Problem**: Three major gaps existed in the MDT workflow: (1) Commands ignored project-specific skill requirements from AGENTS.md, causing inconsistent code patterns; (2) The code agent wrote code but never ran tests, creating an "implement-then-hope" pattern; (3) BDD workflow required an E2E framework, blocking projects without one from generating acceptance specs.
