@@ -387,7 +387,7 @@ or missing technical details. Answers are recorded in **Section 8 (Clarification
 
 ## /mdt:reflection
 
-**Purpose**: Capture learnings and update CR with post-implementation insights
+**Purpose**: Capture artifact-level learnings, then update the CR and any approved workflow documents with post-implementation insights
 
 **When to use**: After implementation completion, before closing CR
 
@@ -399,12 +399,18 @@ or missing technical details. Answers are recorded in **Section 8 (Clarification
 
 **Overview**:
 
-Captures lessons learned during implementation and updates the CR with insights that improve future development cycles.
+Reviews the implementation conversation plus user-selected workflow documents, recommends which documents should be updated based on the changes that were actually made, and records an approved reflection summary in Section 8 (Clarifications) of the CR.
 
 **What "learnings" include**:
 
-- **Unexpected discoveries**: Assumptions that proved wrong, hidden complexities
-- **Process improvements**: Workflow changes that would have helped
-- **Technical insights**: Patterns that worked well, anti-patterns to avoid
-- **Testing insights**: Edge cases missed, test coverage gaps
-- **Architecture feedback**: Design decisions that need revision
+- **Artifact discoveries**: Files, components, endpoints, or integrations discovered during implementation
+- **Behavior changes**: Implemented behavior or constraints that should update `requirements.md`
+- **Architecture changes**: Structure, ownership, or integration changes that should update `architecture.md`
+- **Verification changes**: Test intent or coverage changes that should update `tests.md`
+- **Debt follow-ups**: Unresolved issues or compromises that should update `debt.md`
+
+**Interaction rule**:
+
+- Ask the user which workflow documents should be read
+- Recommend which of those documents should be updated based on the made changes
+- Keep Section 8 (Clarifications) as the CR reflection log
