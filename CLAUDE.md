@@ -10,6 +10,11 @@ Guidance for Claude Code working with this repository.
 - Live execution mechanisms
 - Test execution evidence
 
+## Skill usage
+
+Load the skills accordingly:
+@docs/SKILLS.md
+
 ## Development Commands
 
 ### Frontend
