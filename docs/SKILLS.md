@@ -24,6 +24,8 @@ Load this skill when mdt:architecture used.
 | `playwright-skill` | E2E testing, Playwright patterns | Writing E2E tests, browser automation |
 | `webapp-testing` | Manual browser testing/debugging | Live browser interaction, screenshots |
 
+**Project E2E Docs:** See [tests/AGENTS.md](../tests/AGENTS.md) and [tests/e2e/AGENTS.md](../tests/e2e/AGENTS.md) for project-specific conventions.
+
 ## Code Quality
 
 | Skill | Purpose | When to Use |
