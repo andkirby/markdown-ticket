@@ -46,6 +46,8 @@ Load the skills accordingly:
 - `npm run test:e2e` - Playwright E2E
 - `PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/file.spec.ts --project=chromium` - Run specific test without server restart
 
+**See [tests/AGENTS.md](tests/AGENTS.md)** for E2E testing ports, isolation, and conventions.
+
 ### Code Quality Metrics
 - `scripts/metrics/run.sh` - Analyze code complexity for changed TypeScript files (shows yellow/red zones)
 - `scripts/metrics/run.sh --all` - Show all changed files regardless of thresholds
@@ -137,6 +139,7 @@ When users ask "how to" questions, search and read the relevant documentation be
 | "How do I run this?" | `README.md` (Quick Start section) |
 | "How do I use Docker?" | `docs/DOCKER_GUIDE.md`, `README.docker.md`, `docs/CRs/MDT-055*.md` (Docker architecture) |
 | "How do I configure projects?" | `docs/CONFIG_SPECIFICATION.md`, `docs/CONFIG_GLOBAL_SPECIFICATION.md` |
+| "How do I test/E2E?" | `tests/AGENTS.md`, `tests/e2e/AGENTS.md` |
 | "How does [feature] work?" | `docs/ARCHITECTURE.md`, `server/docs/ARCHITECTURE.md`, `docs/CRs/` (feature tickets) |
 | "How do I develop locally?" | `docs/DEVELOPMENT_GUIDE.md` |
 | "How do I use MCP?" | `docs/MCP_SERVER_GUIDE.md`, `docs/CRs/MDT-074*.md` (MCP HTTP), `docs/CRs/MDT-004*.md` (MCP server) |
