@@ -11,7 +11,6 @@
 import { execFile } from 'node:child_process'
 import { rm } from 'node:fs/promises'
 import path from 'node:path'
-import { promisify } from 'node:util'
 
 import { WorktreeService } from '../WorktreeService'
 
@@ -19,6 +18,8 @@ import { WorktreeService } from '../WorktreeService'
 // promisify(execFile) returns execFile itself (3-arg Promise-returning fn),
 // making mockResolvedValueOnce work correctly without adding a callback arg.
 jest.mock('node:child_process', () => {
+  // Use jest.requireActual to avoid hoisting issue with promisify import
+  const { promisify } = jest.requireActual('node:util')
   const execFileMock = jest.fn()
   execFileMock[promisify.custom] = execFileMock
   return { execFile: execFileMock }
