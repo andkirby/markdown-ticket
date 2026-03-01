@@ -399,8 +399,8 @@ ${scriptTag}
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
-  // In Docker, use backend service name; otherwise use localhost
-  const backendUrl = process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
+  // In Docker, use backend service name; for E2E tests use VITE_BACKEND_URL; otherwise use localhost
+  const backendUrl = process.env.VITE_BACKEND_URL || process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
 
   return {
     plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],
