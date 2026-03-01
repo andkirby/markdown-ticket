@@ -2,6 +2,14 @@
 
 Guidance for Claude Code working with this repository.
 
+## Operational Debugging
+
+**See [DEBUG.md](DEBUG.md)** for verified runtime procedures including:
+- Start/stop/restart commands for all runtimes
+- Observation channels (logs, output)
+- Live execution mechanisms
+- Test execution evidence
+
 ## Development Commands
 
 ### Frontend
@@ -157,3 +165,11 @@ When users ask "how to" questions, search and read the relevant documentation be
 - Respects the effort put into documentation
 - Saves user time by directing them to authoritative sources
 - Documentation may contain important context, warnings, or edge cases not obvious from code alone
+
+## Skills Reference
+
+**See [docs/SKILLS.md](docs/SKILLS.md)** for recommended skills:
+- `frontend-react-component` - React component design
+- `architecture-patterns` - Backend architecture
+- `playwright-skill` - E2E testing
+- `premium-ux-designer` - UI polish
