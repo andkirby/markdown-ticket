@@ -77,17 +77,21 @@ describe('keyNormalizer', () => {
       expect(result).toBe('API-123')
     })
 
-    it('Given numeric project code "GLO1-456" WHEN normalizing THEN throws ToolError', () => {
-      // Project codes must be alphabetic only (no digits in prefix)
-      expect(() => normalizeKey('GLO1-456', 'ANY')).toThrow(ToolError)
-      try {
-        normalizeKey('GLO1-456', 'ANY')
-      }
-      catch (error) {
-        expect(error).toBeInstanceOf(ToolError)
-        const toolError = error as ToolError
-        expect(toolError.message).toMatch(/Invalid key format/i)
-      }
+    it('Given alphanumeric project code "GLO1-456" WHEN normalizing THEN returns "GLO1-456"', () => {
+      // MDT-090: Project codes can contain numbers (matching PATTERNS.PROJECT_CODE)
+      const result = normalizeKey('GLO1-456', 'ANY')
+      expect(result).toBe('GLO1-456')
+    })
+
+    it('Given alphanumeric project code "TP0-002" WHEN normalizing THEN returns "TP0-002"', () => {
+      // MDT-090: Regression test for the original bug report
+      const result = normalizeKey('TP0-002', 'ANY')
+      expect(result).toBe('TP0-002')
+    })
+
+    it('Given lowercase alphanumeric "web2-5" WHEN normalizing THEN returns "WEB2-005"', () => {
+      const result = normalizeKey('web2-5', 'ANY')
+      expect(result).toBe('WEB2-005')
     })
   })
 
@@ -142,9 +146,9 @@ describe('keyNormalizer', () => {
       expect(() => normalizeKey('-5', 'MDT')).toThrow(ToolError)
     })
 
-    it('Given key with non-alphabetic prefix "123-5" WHEN normalizing THEN throws ToolError', () => {
-      // Full format prefix must be alphabetic only (a-z), not numeric
-      // "123-5" doesn't match numeric pattern (contains dash) or full format (prefix not alphabetic)
+    it('Given key with numeric-only prefix "123-5" WHEN normalizing THEN throws ToolError', () => {
+      // Prefix must start with a letter (even though it can contain numbers after)
+      // "123-5" doesn't match because prefix doesn't start with a letter
       expect(() => normalizeKey('123-5', 'MDT')).toThrow(ToolError)
       try {
         normalizeKey('123-5', 'MDT')
@@ -157,8 +161,8 @@ describe('keyNormalizer', () => {
     })
 
     it('Given key with symbols "$$$-5" WHEN normalizing THEN throws ToolError', () => {
-      // Full format prefix must be alphabetic only (a-z), not symbols
-      // "$$$" is not alphabetic, so it doesn't match the full format pattern
+      // Prefix must start with a letter and contain only alphanumeric chars
+      // "$$$" doesn't match because it contains symbols
       expect(() => normalizeKey('$$$-5', 'MDT')).toThrow(ToolError)
       try {
         normalizeKey('$$$-5', 'MDT')
@@ -188,6 +192,34 @@ describe('keyNormalizer', () => {
     })
   })
 
+  describe('invalid Input - Project Code Length', () => {
+    it('Given single character project code "A-5" WHEN normalizing THEN throws ToolError (too short)', () => {
+      // PATTERNS.PROJECT_CODE requires 2-5 characters
+      expect(() => normalizeKey('A-5', 'ANY')).toThrow(ToolError)
+      try {
+        normalizeKey('A-5', 'ANY')
+      }
+      catch (error) {
+        expect(error).toBeInstanceOf(ToolError)
+        const toolError = error as ToolError
+        expect(toolError.message).toMatch(/Invalid project code.*2-5/i)
+      }
+    })
+
+    it('Given 6-character project code "ABCDEF-5" WHEN normalizing THEN throws ToolError (too long)', () => {
+      // PATTERNS.PROJECT_CODE requires 2-5 characters
+      expect(() => normalizeKey('ABCDEF-5', 'ANY')).toThrow(ToolError)
+      try {
+        normalizeKey('ABCDEF-5', 'ANY')
+      }
+      catch (error) {
+        expect(error).toBeInstanceOf(ToolError)
+        const toolError = error as ToolError
+        expect(toolError.message).toMatch(/Invalid project code.*2-5/i)
+      }
+    })
+  })
+
   describe('edge Cases', () => {
     it('Given key with leading/trailing whitespace "  5  " WHEN normalizing THEN trims and normalizes', () => {
       const result = normalizeKey('  5  ', 'MDT')
@@ -199,12 +231,12 @@ describe('keyNormalizer', () => {
       expect(result).toBe('MDT-005')
     })
 
-    it('Given single character prefix "A-5" WHEN normalizing THEN returns "A-005"', () => {
-      const result = normalizeKey('A-5', 'ANY')
-      expect(result).toBe('A-005')
+    it('Given 2-character prefix "AB-5" WHEN normalizing THEN returns "AB-005"', () => {
+      const result = normalizeKey('AB-5', 'ANY')
+      expect(result).toBe('AB-005')
     })
 
-    it('Given long prefix "ABCDE-5" WHEN normalizing THEN returns "ABCDE-005"', () => {
+    it('Given 5-character prefix "ABCDE-5" WHEN normalizing THEN returns "ABCDE-005"', () => {
       const result = normalizeKey('ABCDE-5', 'ANY')
       expect(result).toBe('ABCDE-005')
     })

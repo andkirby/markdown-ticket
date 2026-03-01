@@ -39,6 +39,9 @@ export default {
     '^@mdt/shared/services/MarkdownSectionService.js$': '<rootDir>/src/__mocks__/@mdt/shared/services/MarkdownSectionService.ts',
     '^@mdt/shared/services/WorktreeService$': '<rootDir>/src/__mocks__/@mdt/shared/services/WorktreeService.ts',
     '^@mdt/shared/services/WorktreeService.js$': '<rootDir>/src/__mocks__/@mdt/shared/services/WorktreeService.ts',
+    // Map keyNormalizer to source (for proper ES module transformation)
+    '^@mdt/shared/utils/keyNormalizer$': '<rootDir>/../shared/utils/keyNormalizer.ts',
+    '^@mdt/shared/utils/keyNormalizer.js$': '<rootDir>/../shared/utils/keyNormalizer.ts',
     // Map test-lib to the actual test-lib directory
     '^@mdt/shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
     '^shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
