@@ -12,6 +12,9 @@ interface ProjectSelectorProps {
   loading?: boolean
 }
 
+/**
+ * @testid project-option-{CODE} — button for each project (active and inactive); CODE = project code e.g. TWDZ
+ */
 export function ProjectSelector({ projects, selectedProject, onProjectSelect, onNewProject, loading = false }: ProjectSelectorProps) {
   if (projects.length === 0) {
     return null
@@ -52,6 +55,7 @@ export function ProjectSelector({ projects, selectedProject, onProjectSelect, on
                 return (
                   <button
                     key={project.id}
+                    data-testid={`project-option-${getProjectCode(project)}`}
                     onClick={() => {
                       console.warn('ProjectSelector: Selecting project:', { id: project.id, name: project.project.name })
                       onProjectSelect(project)
@@ -76,6 +80,7 @@ export function ProjectSelector({ projects, selectedProject, onProjectSelect, on
                 <Tooltip key={project.id}>
                   <TooltipTrigger asChild>
                     <button
+                      data-testid={`project-option-${getProjectCode(project)}`}
                       onClick={() => {
                         console.warn('ProjectSelector: Selecting project:', { id: project.id, name: project.project.name })
                         onProjectSelect(project)
