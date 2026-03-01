@@ -70,9 +70,20 @@ class TestEnvironment {
 - **Process safety**: Cleanup runs even if tests crash (SIGINT, SIGTERM, etc.)
 - **Auto CONFIG_DIR**: Sets `process.env.CONFIG_DIR` to isolated config directory
 
+### CONFIG_DIR Scope
+
+The `CONFIG_DIR` environment variable is automatically set by `setup()` and passed to:
+
+| Component | Uses CONFIG_DIR? | Purpose |
+|-----------|------------------|---------|
+| Frontend server | No | Static files only |
+| Backend server | Yes | Project discovery |
+| MCP server | Yes | Project discovery |
+| CLI tools | Yes | Project discovery |
+
 ### Custom Global Configuration
 
-TestEnvironment creates an empty config directory. The `CONFIG_DIR` environment variable is automatically set for MCP server use. You can add custom global config:
+TestEnvironment creates an empty config directory. You can add custom global config:
 
 ```typescript
 import { mkdirSync, writeFileSync } from 'node:fs'

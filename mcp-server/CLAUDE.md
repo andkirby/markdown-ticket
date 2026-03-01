@@ -114,6 +114,8 @@ The server discovers projects by scanning:
 
 ## Testing in Isolated Environments
 
+**Test-lib docs**: `../shared/test-lib/README.md` (API) | `write-tests-guide.md` (quick start)
+
 ### Test Isolation Strategy
 
 All tests use **temporary isolated directories** that are created during setup and destroyed during cleanup. This ensures tests don't interfere with each other or the real project files.

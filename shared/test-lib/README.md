@@ -102,7 +102,7 @@ await testEnv.cleanup()
 - Unique temp directory: `/tmp/mdt-test-{uuid}/`
 - Isolated ports to avoid conflicts
 - Auto-cleanup on process termination (SIGINT, SIGTERM, etc.)
-- Automatically sets `process.env.CONFIG_DIR` for MCP server and CLI testing
+- Sets `process.env.CONFIG_DIR` for backend, MCP server, and CLI (see [write-tests-guide.md](./write-tests-guide.md) for scope)
 
 ### ProjectFactory
 
