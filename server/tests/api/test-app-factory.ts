@@ -15,7 +15,6 @@ import type { ProjectServiceExtension } from '../../controllers/ProjectControlle
 import process from 'node:process'
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
 
-import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 import cors from 'cors'
 
 import express from 'express'
@@ -58,20 +57,10 @@ class ProjectServiceAdapter {
    * Methods from SharedProjectService.
    */
   async getAllProjects(_bypassCache?: boolean) {
-    // Always refresh registry to pick up projects created dynamically
-    if (this.projectService.refreshRegistry) {
-      this.projectService.refreshRegistry()
-    }
-
     return this.projectService.getAllProjects()
   }
 
   getProjectConfig(path: string) {
-    // Refresh before lookup
-    if (this.projectService.refreshRegistry) {
-      this.projectService.refreshRegistry()
-    }
-
     return this.projectService.getProjectConfig(path)
   }
 
@@ -126,9 +115,8 @@ export function createTestApp(): Express {
   // Initialize FRESH service instances (not singletons)
   const fileWatcher = new FileWatcherService()
   const projectDiscovery = new SharedProjectService(true)
-  // Disable caching so dynamically created test projects are always visible
+  // Disable cache so projects created mid-test are immediately visible to API calls
   projectDiscovery.setCacheTTL(0)
-  const _projectManager = new ProjectManager(true)
 
   // Business logic services
   const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery as unknown as SharedProjectServiceLike)
@@ -169,11 +157,5 @@ export function createTestApp(): Express {
   return app
 }
 
-/**
- * Reset the cached app (useful between test suites if needed).
- */
-function _resetTestAppCache(): void {
-  // With ES6 imports, module caching is handled differently
-  // This function is kept for API compatibility but no longer clears cache
-  // as ES6 modules are cached differently than CommonJS require()
-}
+// Note: With ES6 imports, module caching is handled differently than CommonJS require()
+// Each createTestApp() call creates fresh service instances, so no cache reset is needed

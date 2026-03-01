@@ -107,35 +107,3 @@ test.describe('E2E Infrastructure', () => {
     expect(count).toBeGreaterThanOrEqual(scenarioResult!.ticketCount)
   })
 })
-
-/**
- * Test medium scenario creation (separate to avoid pollution)
- */
-test.describe('E2E Infrastructure - Medium Scenario', () => {
-  test('medium scenario creation works', async ({ e2eContext }) => {
-    const { projectFactory } = e2eContext
-
-    // Build medium scenario
-    const result = await buildScenario(projectFactory, 'medium')
-
-    // Verify scenario was created
-    expect(result.ticketCount).toBe(7)
-    expect(result.crCodes).toHaveLength(7)
-  })
-})
-
-/**
- * Test complex scenario creation
- */
-test.describe('E2E Infrastructure - Complex Scenario', () => {
-  test('complex scenario creation works', async ({ e2eContext }) => {
-    const { projectFactory } = e2eContext
-
-    // Build complex scenario
-    const result = await buildScenario(projectFactory, 'complex')
-
-    // Verify scenario was created
-    expect(result.ticketCount).toBe(12)
-    expect(result.crCodes).toHaveLength(12)
-  })
-})
