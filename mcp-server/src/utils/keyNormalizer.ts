@@ -5,7 +5,7 @@
  * The actual normalization logic is in shared/utils/keyNormalizer.ts.
  */
 
-import { normalizeKey as sharedNormalizeKey, KeyNormalizationError } from '@mdt/shared/utils/keyNormalizer.js'
+import { KeyNormalizationError, normalizeKey as sharedNormalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { JsonRpcErrorCode, ToolError } from './toolError.js'
 
 /**
