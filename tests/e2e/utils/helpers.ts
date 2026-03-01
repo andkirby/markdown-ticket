@@ -1,0 +1,175 @@
+/**
+ * Test Helpers
+ *
+ * Utility functions for E2E tests.
+ */
+
+import type { Page } from '@playwright/test'
+import { expect } from '@playwright/test'
+import { boardSelectors, commonSelectors, ticketSelectors } from './selectors.js'
+
+/** Default timeout for board ready state */
+const BOARD_READY_TIMEOUT = 10000
+
+/** Default timeout for API responses */
+const API_TIMEOUT = 5000
+
+/**
+ * Wait for the board to be ready (loading complete)
+ */
+export async function waitForBoardReady(page: Page, timeout = BOARD_READY_TIMEOUT): Promise<void> {
+  // Wait for loading to disappear
+  await page.waitForSelector(commonSelectors.loading, { state: 'hidden', timeout })
+
+  // Wait for board to appear
+  await page.waitForSelector(boardSelectors.board, { state: 'visible', timeout })
+}
+
+/**
+ * Get the current ticket count displayed on the board
+ */
+export async function getTicketCount(page: Page): Promise<number> {
+  const cards = await page.$$(boardSelectors.ticketCard)
+  return cards.length
+}
+
+/**
+ * Open ticket detail by clicking on a ticket card
+ */
+export async function openTicketDetail(page: Page, ticketCode: string): Promise<void> {
+  const ticketSelector = boardSelectors.ticketByCode(ticketCode)
+  await page.click(ticketSelector)
+
+  // Wait for detail panel to open
+  await page.waitForSelector(ticketSelectors.detailPanel, { state: 'visible' })
+}
+
+/**
+ * Close ticket detail panel
+ */
+export async function closeTicketDetail(page: Page): Promise<void> {
+  await page.click(ticketSelectors.closeDetail)
+
+  // Wait for detail panel to close
+  await page.waitForSelector(ticketSelectors.detailPanel, { state: 'hidden' })
+}
+
+/**
+ * Get ticket status from the board
+ */
+export async function getTicketStatus(page: Page, ticketCode: string): Promise<string | null> {
+  const ticketSelector = boardSelectors.ticketByCode(ticketCode)
+
+  // Find the column containing this ticket
+  const ticket = await page.$(ticketSelector)
+  if (!ticket) return null
+
+  // Walk up to find the column
+  const column = await ticket.evaluateHandle((el) => {
+    let parent = el.parentElement
+    while (parent && !parent.dataset.testid?.startsWith('column-')) {
+      parent = parent.parentElement
+    }
+    return parent
+  })
+
+  const columnId = await column.evaluate((el) => el?.dataset.testid || null)
+  return columnId ? columnId.replace('column-', '') : null
+}
+
+/**
+ * Navigate to board view
+ */
+export async function navigateToBoard(page: Page): Promise<void> {
+  await page.click('[data-testid="nav-board"]')
+  await waitForBoardReady(page)
+}
+
+/**
+ * Navigate to list view
+ */
+export async function navigateToList(page: Page): Promise<void> {
+  await page.click('[data-testid="nav-list"]')
+  // Wait for list to load
+  await page.waitForSelector('[data-testid="ticket-list"]', { state: 'visible' })
+}
+
+/**
+ * Navigate to documents view
+ */
+export async function navigateToDocuments(page: Page): Promise<void> {
+  await page.click('[data-testid="nav-documents"]')
+  // Wait for document tree to load
+  await page.waitForSelector('[data-testid="document-tree"]', { state: 'visible' })
+}
+
+/**
+ * Select a project from the project selector
+ */
+export async function selectProject(page: Page, projectName: string): Promise<void> {
+  await page.click('[data-testid="project-selector"]')
+
+  // Wait for dropdown and click project
+  await page.click(`[data-testid="project-option-${projectName}"]`)
+
+  // Wait for board to reload
+  await waitForBoardReady(page)
+}
+
+/**
+ * Verify API is responding
+ */
+export async function verifyApiHealth(backendUrl: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${backendUrl}/api/projects`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(API_TIMEOUT),
+    })
+    return response.ok
+  }
+  catch {
+    return false
+  }
+}
+
+/**
+ * Assert that a ticket exists on the board
+ */
+export async function assertTicketExists(page: Page, ticketCode: string): Promise<void> {
+  const selector = boardSelectors.ticketByCode(ticketCode)
+  await expect(page.locator(selector)).toBeVisible()
+}
+
+/**
+ * Assert ticket count in a specific column
+ */
+export async function assertColumnTicketCount(
+  page: Page,
+  status: string,
+  expectedCount: number,
+): Promise<void> {
+  const columnSelector = boardSelectors.columnByStatus(status)
+  const column = page.locator(columnSelector)
+  const tickets = column.locator(boardSelectors.ticketCard)
+  await expect(tickets).toHaveCount(expectedCount)
+}
+
+/**
+ * Drag and drop a ticket to a new status column
+ */
+export async function dragTicketToColumn(
+  page: Page,
+  ticketCode: string,
+  targetStatus: string,
+): Promise<void> {
+  const ticketSelector = boardSelectors.ticketByCode(ticketCode)
+  const targetColumnSelector = boardSelectors.columnByStatus(targetStatus)
+
+  const ticket = page.locator(ticketSelector)
+  const targetColumn = page.locator(targetColumnSelector)
+
+  await ticket.dragTo(targetColumn)
+
+  // Wait for drop to complete
+  await page.waitForTimeout(500)
+}

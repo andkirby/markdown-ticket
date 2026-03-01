@@ -13,9 +13,9 @@
 import type { Express } from 'express'
 import type { ProjectServiceExtension } from '../../controllers/ProjectController'
 import process from 'node:process'
-import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService'
+import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
 
-import { ProjectManager } from '@mdt/shared/tools/ProjectManager'
+import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 import cors from 'cors'
 
 import express from 'express'
@@ -126,6 +126,8 @@ export function createTestApp(): Express {
   // Initialize FRESH service instances (not singletons)
   const fileWatcher = new FileWatcherService()
   const projectDiscovery = new SharedProjectService(true)
+  // Disable caching so dynamically created test projects are always visible
+  projectDiscovery.setCacheTTL(0)
   const _projectManager = new ProjectManager(true)
 
   // Business logic services

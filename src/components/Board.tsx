@@ -508,7 +508,7 @@ const BoardContent: React.FC<BoardProps> = ({
       )}
 
       {/* Board Grid - render regardless of showHeader */}
-      <div className="board-container flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full items-stretch p-1 overflow-hidden">
+      <div data-testid="kanban-board" className="board-container flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full items-stretch p-1 overflow-hidden">
         {visibleColumns.map((column, index) => (
           <Column
             key={column.label}
@@ -532,6 +532,9 @@ const BoardContent: React.FC<BoardProps> = ({
   )
 }
 
+/**
+ * @testid kanban-board — board grid container (visible when a project is selected)
+ */
 const Board: React.FC<BoardProps> = (props) => {
   return (
     <DndProvider backend={HTML5Backend}>
