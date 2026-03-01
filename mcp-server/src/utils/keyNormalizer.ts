@@ -1,18 +1,11 @@
 /**
- * Key Normalization Utility for MCP Server (MDT-121)
+ * Key Normalization Utility - MCP Server Wrapper (MDT-121, MDT-090)
  *
- * Normalizes CR keys in various formats:
- * - Pure numeric: "5" → "{PROJECTCODE}-005" (pads to 3 digits)
- * - Numeric with leading zeros: "005" → "{PROJECTCODE}-005" (preserves format)
- * - Full format with prefix: "abc-12" → "ABC-012" (uppercase, pads to 3 digits)
- * - Full format preserved: "ABC-012" → "ABC-012" (already correct)
- *
- * Tickets are stored with 3-digit zero-padded numbers (MDT-001, MDT-002, etc.)
- * This utility matches the ticket format used throughout the system.
- *
- * This utility handles string normalization only - no file system or MCP logic.
+ * Wraps the shared normalizeKey function with MCP-specific error handling.
+ * The actual normalization logic is in shared/utils/keyNormalizer.ts.
  */
 
+import { normalizeKey as sharedNormalizeKey, KeyNormalizationError } from '@mdt/shared/utils/keyNormalizer.js'
 import { JsonRpcErrorCode, ToolError } from './toolError.js'
 
 /**
@@ -24,42 +17,17 @@ import { JsonRpcErrorCode, ToolError } from './toolError.js'
  * @throws ToolError if key format is invalid
  */
 export function normalizeKey(key: string, projectCode: string): string {
-  if (!key || typeof key !== 'string') {
-    throw ToolError.protocol(
-      'Key is required and must be a string',
-      JsonRpcErrorCode.InvalidParams,
-    )
+  try {
+    return sharedNormalizeKey(key, projectCode)
   }
-
-  const trimmed = key.trim()
-
-  // Pattern 1: Pure numeric (e.g., "5", "005", "123")
-  // Add project prefix and pad to 3 digits (matching ticket format)
-  const numericPattern = /^\d+$/
-  if (numericPattern.test(trimmed)) {
-    // Pad to 3 digits and add project prefix
-    const number = String(Number.parseInt(trimmed, 10)).padStart(3, '0')
-    return `${projectCode}-${number}`
+  catch (error) {
+    if (error instanceof KeyNormalizationError) {
+      // Convert to MCP-specific ToolError for JSON-RPC protocol
+      throw ToolError.protocol(error.message, JsonRpcErrorCode.InvalidParams)
+    }
+    throw error
   }
-
-  // Pattern 2: Full format with project prefix (e.g., "abc-12", "MDT-005", "XYZ-123")
-  // Uppercase the prefix and pad the number to 3 digits (matching ticket format)
-  const fullFormatPattern = /^([a-z]+)-(\d+)$/i
-  const match = trimmed.match(fullFormatPattern)
-
-  if (match) {
-    const [, prefix, numberStr] = match
-    const uppercasedPrefix = prefix.toUpperCase()
-    // Pad to 3 digits (matching ticket storage format)
-    const number = String(Number.parseInt(numberStr, 10)).padStart(3, '0')
-    return `${uppercasedPrefix}-${number}`
-  }
-
-  // Invalid format - provide helpful error message
-  throw ToolError.protocol(
-    `Invalid key format '${trimmed}'. Expected:\n`
-    + `  • Numeric shorthand: "5" or "005" (resolves to ${projectCode}-005)\n`
-    + `  • Full format: "ABC-012" or "abc-12" (normalizes to ABC-012)`,
-    JsonRpcErrorCode.InvalidParams,
-  )
 }
+
+// Re-export for convenience
+export { KeyNormalizationError }
