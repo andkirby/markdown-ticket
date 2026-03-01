@@ -42,11 +42,11 @@
 #
 # MI_YELLOW_MAX: Files at or below this value are flagged as yellow
 # Microsoft yellow zone: 21-40 (moderate maintainability concerns)
-MI_YELLOW_MAX=40
+MI_YELLOW_MAX=25
 
 # MI_RED_MAX: Files at or below this value are flagged as red
 # Microsoft red zone: 0-20 (significant maintainability issues)
-MI_RED_MAX=20
+MI_RED_MAX=13
 
 # ============================================================================
 # Cyclomatic Complexity (CC) Thresholds
@@ -56,11 +56,11 @@ MI_RED_MAX=20
 #
 # CC_YELLOW_MIN: Files at or above this value are flagged as yellow
 # Microsoft yellow zone: 11-20 (moderately complex)
-CC_YELLOW_MIN=11
+CC_YELLOW_MIN=30
 
 # CC_RED_MIN: Files at or above this value are flagged as red
 # Microsoft red zone: 21+ (highly complex, needs refactoring)
-CC_RED_MIN=21
+CC_RED_MIN=50
 
 # ============================================================================
 # Cognitive Complexity (CoC) Thresholds
@@ -70,8 +70,8 @@ CC_RED_MIN=21
 #
 # COC_YELLOW_MIN: Files at or above this value are flagged as yellow
 # Microsoft yellow zone: 11-20 (moderate cognitive effort)
-COC_YELLOW_MIN=11
+COC_YELLOW_MIN=30
 
 # COC_RED_MIN: Files at or above this value are flagged as red
 # Microsoft red zone: 21+ (difficult to understand, simplify logic)
-COC_RED_MIN=21
+COC_RED_MIN=50
