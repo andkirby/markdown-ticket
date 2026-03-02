@@ -16,6 +16,11 @@ const API_TIMEOUT = 5000
 
 /**
  * Wait for the board to be ready (loading complete)
+ *
+ * Waits for:
+ * 1. Loading to disappear
+ * 2. Board to be visible
+ * 3. At least one ticket card to appear (if tickets exist)
  */
 export async function waitForBoardReady(page: Page, timeout = BOARD_READY_TIMEOUT): Promise<void> {
   // Wait for loading to disappear
@@ -23,6 +28,13 @@ export async function waitForBoardReady(page: Page, timeout = BOARD_READY_TIMEOU
 
   // Wait for board to appear
   await page.waitForSelector(boardSelectors.board, { state: 'visible', timeout })
+
+  // Wait for ticket cards to appear (with short timeout since some tests may have 0 tickets)
+  try {
+    await page.waitForSelector(boardSelectors.ticketCard, { state: 'attached', timeout: 3000 })
+  } catch {
+    // Some tests/views may legitimately have 0 tickets, continue
+  }
 }
 
 /**

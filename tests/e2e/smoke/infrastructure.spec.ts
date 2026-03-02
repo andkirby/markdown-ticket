@@ -10,7 +10,7 @@
 
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario, type ScenarioResult } from '../setup/index.js'
-import { commonSelectors } from '../utils/selectors.js'
+import { boardSelectors, commonSelectors } from '../utils/selectors.js'
 import { verifyApiHealth, waitForBoardReady } from '../utils/helpers.js'
 
 /**
@@ -100,7 +100,7 @@ test.describe('E2E Infrastructure', () => {
     await expect(projectOption).toBeVisible()
 
     // Verify tickets appear on board (auto-selected project loads its tickets)
-    const ticketCards = page.locator('[data-testid="ticket-card"]')
+    const ticketCards = page.locator(boardSelectors.ticketCard)
     const count = await ticketCards.count()
 
     // Should have at least the tickets we created

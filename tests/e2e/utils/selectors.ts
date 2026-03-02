@@ -29,14 +29,18 @@ export const boardSelectors = {
   board: '[data-testid="kanban-board"]',
   /** Status column by status name */
   columnByStatus: (status: string) => `[data-testid="column-${status}"]`,
-  /** Ticket card in board */
-  ticketCard: '[data-testid="ticket-card"]',
-  /** Ticket card by code */
-  ticketByCode: (code: string) => `[data-testid="ticket-${code}"]`,
+  /** Ticket card in board (note: space-separated with ticket-{code}) */
+  ticketCard: '[data-testid~="ticket-card"]',
+  /** Ticket card by code (note: space-separated with ticket-card) */
+  ticketByCode: (code: string) => `[data-testid~="ticket-${code}"]`,
   /** Drag handle on ticket */
   dragHandle: '[data-testid="drag-handle"]',
   /** Drop zone indicator */
   dropZone: '[data-testid="drop-zone"]',
+  /** Filter controls container */
+  filterControls: '[data-testid="filter-controls"]',
+  /** Search input field */
+  searchInput: '[data-testid="search-input"]',
 } as const
 
 /**
@@ -91,6 +95,26 @@ export const projectSelectors = {
   projectCode: '[data-testid="project-code"]',
   /** Ticket count badge */
   ticketCount: '[data-testid="ticket-count"]',
+} as const
+
+/**
+ * List view selectors
+ */
+export const listSelectors = {
+  /** Ticket list container */
+  ticketList: '[data-testid="ticket-list"]',
+  /** Ticket row in list (note: space-separated with ticket-row-{code}) */
+  ticketRow: '[data-testid~="ticket-row"]',
+  /** Ticket row by code (note: space-separated with ticket-row) */
+  rowByCode: (code: string) => `[data-testid~="ticket-row-${code}"]`,
+  /** Sort controls container */
+  sortControls: '[data-testid="sort-controls"]',
+  /** Sort button for column */
+  sortButton: (column: string) => `[data-testid="sort-${column}"]`,
+  /** Table header */
+  tableHeader: '[data-testid="table-header"]',
+  /** Sort indicator */
+  sortIndicator: '[data-testid="sort-indicator"]',
 } as const
 
 /**
