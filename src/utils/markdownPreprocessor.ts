@@ -59,6 +59,29 @@ function protectInlineCode(markdown: string, state: PreprocessorState): string {
 }
 
 /**
+ * Normalizes two-space nested list indentation to four spaces so Showdown
+ * preserves nested list structure in rendered HTML.
+ */
+function normalizeNestedListIndentation(markdown: string): string {
+  return markdown
+    .split('\n')
+    .map((line) => {
+      const match = line.match(/^(\s+)([*+-]|\d+\.)\s+/)
+      if (!match) {
+        return line
+      }
+
+      const indentation = match[1]
+      if (indentation.length < 2 || indentation.length % 4 !== 2) {
+        return line
+      }
+
+      return `${' '.repeat(indentation.length + 2)}${line.slice(indentation.length)}`
+    })
+    .join('\n')
+}
+
+/**
  * Protects existing markdown links from processing
  */
 function protectExistingLinks(markdown: string, state: PreprocessorState): string {
@@ -149,6 +172,7 @@ export function preprocessMarkdown(
     processed = protectExistingLinks(processed, state)
     processed = protectCodeBlocks(processed, state)
     processed = protectInlineCode(processed, state)
+    processed = normalizeNestedListIndentation(processed)
 
     // Step 2: Convert references to links
     if (linkConfig.enableTicketLinks) {
