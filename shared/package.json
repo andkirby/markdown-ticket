@@ -46,7 +46,7 @@
     "clean": "rm -rf dist",
     "lint": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --fix",
-    "pretest": "npm run build",
+    "pretest": "bun run build",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Validate TypeScript files using project tsconfig
-# Usage: npm run validate:ts:all
-#        npm run validate:ts:all mcp-server/src
-#        npm run validate:ts:all server shared
+# Usage: bun run validate:ts:all
+#        bun run validate:ts:all mcp-server/src
+#        bun run validate:ts:all server shared
 
 set -o pipefail
 
@@ -62,13 +62,13 @@ validate_project() {
 
     echo -ne "  Validating... "
 
-    if npx tsc --project "$tsconfig" --noEmit 2>/dev/null; then
+    if bunx tsc --project "$tsconfig" --noEmit 2>/dev/null; then
         echo -e "${GREEN}✓${NC}"
         return 0
     else
         echo -e "${RED}✗${NC}"
         echo ""
-        npx tsc --project "$tsconfig" --noEmit 2>&1 | sed 's/^/    /'
+        bunx tsc --project "$tsconfig" --noEmit 2>&1 | sed 's/^/    /'
         return 1
     fi
 }
