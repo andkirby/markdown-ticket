@@ -18,18 +18,18 @@
   },
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "tsx server.ts",
-    "dev:watch": "tsx watch server.ts",
+    "dev": "bunx tsx server.ts",
+    "dev:watch": "bunx tsx watch server.ts",
     "build": "tsc --build tsconfig.build.json && tsc-alias",
     "build:watch": "tsc --watch",
-    "create-samples": "tsx createSampleTickets.ts",
+    "create-samples": "bunx tsx createSampleTickets.ts",
     "test": "jest",
     "test:watch": "jest --watchAll",
     "test:coverage": "jest --coverage",
     "lint": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint \"**/*.{ts,tsx}\" --config eslint.config.ts --fix",
-    "openapi:generate": "tsx scripts/generate-openapi.ts",
-    "openapi:validate": "npx @apidevtools/swagger-cli validate openapi.yaml"
+    "openapi:generate": "bunx tsx scripts/generate-openapi.ts",
+    "openapi:validate": "bunx @apidevtools/swagger-cli validate openapi.yaml"
   },
   "dependencies": {
     "@antfu/eslint-config": "7.4.3",

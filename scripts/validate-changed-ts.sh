@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Validate TypeScript files that have been modified
-# Usage: npm run validate:ts
+# Usage: bun run validate:ts
 # Or with specific files: bash scripts/validate-changed-ts.sh file1.ts file2.ts
 
 # Colors
@@ -122,7 +122,7 @@ for project in "${!PROJECT_FILES[@]}"; do
         if [ "$project" == "root" ]; then
             # For root-level files, use project tsconfig if it exists
             if [ -f "tsconfig.json" ]; then
-                if npx tsc --noEmit -p tsconfig.json 2>/dev/null; then
+                if bunx tsc --noEmit -p tsconfig.json 2>/dev/null; then
                     project_status="PASS"
                 else
                     project_status="FAIL"
@@ -130,7 +130,7 @@ for project in "${!PROJECT_FILES[@]}"; do
             else
                 # Fallback to individual file validation with ES settings
                 local first_file="${files[0]}"
-                if npx tsc --skipLibCheck --noEmit --module ESNext --target ES2020 --esModuleInterop "$first_file" 2>/dev/null; then
+                if bunx tsc --skipLibCheck --noEmit --module ESNext --target ES2020 --esModuleInterop "$first_file" 2>/dev/null; then
                     project_status="PASS"
                 else
                     project_status="FAIL"
@@ -138,7 +138,7 @@ for project in "${!PROJECT_FILES[@]}"; do
             fi
         else
             # Validate using project tsconfig
-            if npx tsc --project "$project/tsconfig.json" --noEmit 2>/dev/null; then
+            if bunx tsc --project "$project/tsconfig.json" --noEmit 2>/dev/null; then
                 project_status="PASS"
             else
                 project_status="FAIL"
@@ -157,12 +157,12 @@ for project in "${!PROJECT_FILES[@]}"; do
         # Show errors
         if [ "$project" == "root" ]; then
             if [ -f "tsconfig.json" ]; then
-                npx tsc --noEmit -p tsconfig.json 2>&1 | sed 's/^/    /' | head -10
+                bunx tsc --noEmit -p tsconfig.json 2>&1 | sed 's/^/    /' | head -10
             else
-                npx tsc --skipLibCheck --noEmit --module ESNext --target ES2020 --esModuleInterop "${files[0]}" 2>&1 | sed 's/^/    /' | head -10
+                bunx tsc --skipLibCheck --noEmit --module ESNext --target ES2020 --esModuleInterop "${files[0]}" 2>&1 | sed 's/^/    /' | head -10
             fi
         else
-            npx tsc --project "$project/tsconfig.json" --noEmit 2>&1 | sed 's/^/    /' | head -10
+            bunx tsc --project "$project/tsconfig.json" --noEmit 2>&1 | sed 's/^/    /' | head -10
         fi
     fi
     echo ""
