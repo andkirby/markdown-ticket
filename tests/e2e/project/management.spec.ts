@@ -12,6 +12,7 @@
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario } from '../setup/index.js'
 import { boardSelectors } from '../utils/selectors.js'
+import { projectSelectors } from '../utils/selectors.js'
 import { waitForBoardReady } from '../utils/helpers.js'
 
 /**
@@ -26,10 +27,13 @@ test.describe('Project Management', () => {
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    // Click the add project button (selector may not exist yet)
+    // Click hamburger menu to reveal add project button
+    await page.click('[data-testid="hamburger-menu"]')
+
+    // Then click add project button
     await page.click('[data-testid="add-project-button"]')
 
-    // Verify the add project modal appears (selector may not exist yet)
+    // Verify the add project modal appears
     const modal = page.locator('[data-testid="add-project-modal"]')
     await expect(modal).toBeVisible()
 
@@ -40,6 +44,25 @@ test.describe('Project Management', () => {
     await expect(page.locator('[data-testid="project-cancel-button"]')).toBeVisible()
   })
 
+  test('project path folder browser loads directories', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    await page.click('[data-testid="hamburger-menu"]')
+    await page.click('[data-testid="add-project-button"]')
+
+    await expect(page.locator(projectSelectors.addProjectModal)).toBeVisible()
+
+    await page.click(projectSelectors.projectPathBrowseButton)
+
+    await expect(page.locator(projectSelectors.folderBrowserModal)).toBeVisible()
+    await expect(page.locator(projectSelectors.folderBrowserCurrentPath)).not.toHaveText('Loading...', { timeout: 5000 })
+    await expect(page.locator(projectSelectors.folderBrowserItem).first()).toBeVisible()
+    await expect(page.locator(projectSelectors.folderBrowserSelectButton)).toBeEnabled()
+  })
+
   test('create new project', async ({ page, e2eContext }) => {
     // Create a scenario so we have a project to navigate from
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
@@ -48,7 +71,10 @@ test.describe('Project Management', () => {
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    // Click the add project button
+    // Click hamburger menu to reveal add project button
+    await page.click('[data-testid="hamburger-menu"]')
+
+    // Then click add project button
     await page.click('[data-testid="add-project-button"]')
 
     // Wait for modal to appear
@@ -58,12 +84,30 @@ test.describe('Project Management', () => {
     // Fill in the form
     const newProjectName = 'My New Project'
     const newProjectCode = 'NEW'
+    const newProjectPath = '~/test-projects/my-new-project'
 
     await page.fill('[data-testid="project-name-input"]', newProjectName)
     await page.fill('[data-testid="project-code-input"]', newProjectCode)
+    await page.fill('[data-testid="project-path-input"]', newProjectPath)
+
+    // Wait for submit button to be enabled
+    await expect(page.locator('[data-testid="project-submit-button"]')).toBeEnabled()
 
     // Submit the form
     await page.click('[data-testid="project-submit-button"]')
+
+    // Wait for confirmation dialog to appear and be ready
+    await expect(page.locator('text=Confirm Project Creation')).toBeVisible({ timeout: 5000 })
+    await page.waitForTimeout(200) // Allow animation to complete
+
+    // Click the confirm button (second Create Project button, in confirmation dialog)
+    await page.locator('button').filter({ hasText: 'Create Project' }).nth(1).click()
+
+    // Wait for success dialog
+    await expect(page.locator('text=Project Created Successfully')).toBeVisible({ timeout: 10000 })
+
+    // Click Done to close success dialog
+    await page.locator('button:has-text("Done")').click()
 
     // Verify modal closes
     await expect(modal).toBeHidden()

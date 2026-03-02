@@ -42,12 +42,15 @@ test.describe('Ticket Detail Modal', () => {
     const firstTicketCode = scenario.crCodes[0]
     await openTicketDetail(page, firstTicketCode)
 
-    // Verify all ticket attributes are visible
-    await expect(page.locator(ticketSelectors.title)).toBeVisible()
-    await expect(page.locator(ticketSelectors.code)).toBeVisible()
-    await expect(page.locator(ticketSelectors.statusBadge)).toBeVisible()
-    await expect(page.locator(ticketSelectors.typeBadge)).toBeVisible()
-    await expect(page.locator(ticketSelectors.priorityBadge)).toBeVisible()
+    // Scope selectors to detail panel to avoid strict mode violations
+    const detailPanel = page.locator(ticketSelectors.detailPanel)
+
+    // Verify all ticket attributes are visible within detail panel
+    await expect(detailPanel.locator(ticketSelectors.title)).toBeVisible()
+    await expect(detailPanel.locator(ticketSelectors.code)).toBeVisible()
+    await expect(detailPanel.locator(ticketSelectors.statusBadge)).toBeVisible()
+    await expect(detailPanel.locator(ticketSelectors.typeBadge)).toBeVisible()
+    await expect(detailPanel.locator(ticketSelectors.priorityBadge)).toBeVisible()
   })
 
   test('markdown content renders', async ({ page, e2eContext }) => {

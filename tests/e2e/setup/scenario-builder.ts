@@ -7,6 +7,9 @@
  * - Complex: 12 tickets (full project simulation)
  */
 
+import { promises as fs } from 'node:fs'
+import { join as pathJoin } from 'node:path'
+
 import type { TestCRData } from '@mdt/shared/test-lib'
 import type { ProjectFactory } from '@mdt/shared/test-lib'
 
@@ -211,11 +214,15 @@ const SCENARIOS: Record<ScenarioType, ScenarioConfig> = {
  *
  * @param projectFactory - Factory for creating projects and CRs
  * @param type - Scenario type (simple, medium, complex)
+ * @param fileWatcher - Optional file watcher service to initialize for test projects
  * @returns Scenario result with project and ticket info
  */
 export async function buildScenario(
   projectFactory: ProjectFactory,
   type: ScenarioType = 'simple',
+  fileWatcher?: {
+    initMultiProjectWatcher: (projectPaths: Array<{ id: string; path: string }>) => void
+  },
 ): Promise<ScenarioResult> {
   const scenario = SCENARIOS[type]
 
@@ -234,6 +241,30 @@ export async function buildScenario(
   const crCodes = results
     .filter(r => r.success && r.crCode)
     .map(r => r.crCode!)
+
+  // Create test documents folder structure for documents view tests
+  const docsPath = pathJoin(project.path, 'docs')
+  await fs.mkdir(docsPath, { recursive: true })
+
+  // Create test markdown files
+  await fs.writeFile(
+    pathJoin(docsPath, 'README.md'),
+    '# Test Project\n\nThis is a test document.',
+  )
+  await fs.writeFile(
+    pathJoin(docsPath, 'architecture.md'),
+    '# Architecture\n\nSystem design docs.',
+  )
+  // Create CRs folder (for tickets)
+  await fs.mkdir(pathJoin(docsPath, 'CRs'), { recursive: true })
+
+  // Initialize file watcher for this project (if provided)
+  // This ensures SSE events are broadcast when tickets are updated
+  if (fileWatcher) {
+    fileWatcher.initMultiProjectWatcher([
+      { id: project.key, path: `${project.path}/docs/CRs/*.md` },
+    ])
+  }
 
   return {
     projectCode: project.key,

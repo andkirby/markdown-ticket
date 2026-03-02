@@ -51,22 +51,39 @@ export function useSSEEvents(
       return
 
     const projectCode = currentProject.project?.code
-    if (currentProject.id === event.payload.projectId
-      || (projectCode && (projectCode === event.payload.projectId || projectCode.toUpperCase() === event.payload.projectId.toUpperCase()))) {
+    const matchesProject = currentProject.id === event.payload.projectId
+      || (projectCode && (projectCode === event.payload.projectId || projectCode.toUpperCase() === event.payload.projectId.toUpperCase()))
+
+    if (matchesProject) {
+      const ticketPayload = event.payload.ticket
+      const hasTicketData = !!ticketPayload
+      const ticketStatus = ticketPayload && typeof ticketPayload === 'object' && 'status' in ticketPayload
+        ? String(ticketPayload.status ?? 'unknown')
+        : 'no-ticket-data'
+      const hasCompleteTicketData = !!(ticketPayload
+        && typeof ticketPayload === 'object'
+        && 'code' in ticketPayload
+        && ticketPayload.code)
+
       // Check if this was a user-initiated update (optimistic)
       const ticketKey = event.payload.ticketCode
+
+      // Log for debugging
+      console.warn('[SSE] ticket:updated', { ticketKey, projectId: event.payload.projectId, hasTicketData, trackingSet: Array.from(userInitiatedUpdatesRef.current) })
+
       if (userInitiatedUpdatesRef.current.has(ticketKey)) {
         userInitiatedUpdatesRef.current.delete(ticketKey)
+        console.warn('[SSE] Skipping user-initiated update:', ticketKey)
         return
       }
 
       // If we have complete ticket data, update directly without full refresh
-      if (event.payload.ticket && typeof event.payload.ticket === 'object' && 'code' in event.payload.ticket && event.payload.ticket.code) {
-        console.warn('Updating ticket directly from SSE data:', ticketKey)
-        updateTicketInState(event.payload.ticket as Ticket)
+      if (hasCompleteTicketData) {
+        console.warn('[SSE] Updating ticket directly from SSE data:', ticketKey, 'status:', ticketStatus)
+        updateTicketInState(ticketPayload as Ticket)
       }
       else {
-        console.warn('Ticket updated in current project, refreshing...')
+        console.warn('[SSE] Ticket updated in current project, refreshing...')
         debouncedRefresh(currentProject)
       }
     }

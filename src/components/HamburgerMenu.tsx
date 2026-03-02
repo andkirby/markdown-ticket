@@ -62,7 +62,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
   return (
     <div className="relative" ref={menuRef}>
+      {/**
+       * @testid hamburger-menu — Button to open hamburger menu
+       */}
       <Button
+        data-testid="hamburger-menu"
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}

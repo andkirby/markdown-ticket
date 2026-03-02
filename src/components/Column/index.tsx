@@ -159,34 +159,27 @@ const Column: React.FC<ColumnProps> = ({
 
   const handleDrop = (ticket: Ticket) => {
     // Find ticket index in all tickets array
-    const ticketIndex = allTickets.findIndex(t => t.code === ticket.code)
-
-    // If this is the "Done" column with multiple statuses, show resolution dialog
     if (column.label === 'Done' && column.statuses.length > 1) {
-      // Show resolution dialog for Done column
       setResolutionDialog({
         isOpen: true,
         ticket,
       })
+      return
     }
-    else {
-      // For other columns, use the first (and usually only) status
-      // Direct drop to first status
-      onDrop(column.statuses[0], ticket, columnIndex, ticketIndex)
-    }
+
+    const ticketIndex = allTickets.findIndex(t => t.code === ticket.code)
+    onDrop(column.statuses[0], ticket, columnIndex, ticketIndex)
   }
 
   const handleResolutionChoice = (status: Status) => {
     if (resolutionDialog.ticket) {
-      // Resolution chosen
-      const ticketIndex = allTickets.findIndex(t => t.code === resolutionDialog.ticket!.code)
+      const ticketIndex = allTickets.findIndex(t => t.code === resolutionDialog.ticket?.code)
       onDrop(status, resolutionDialog.ticket, columnIndex, ticketIndex)
     }
     setResolutionDialog({ isOpen: false, ticket: null })
   }
 
   const handleResolutionCancel = () => {
-    // Resolution dialog cancelled
     setResolutionDialog({ isOpen: false, ticket: null })
   }
 
@@ -260,7 +253,6 @@ const Column: React.FC<ColumnProps> = ({
         </div>
       </ScrollArea>
 
-      {/* Resolution Dialog for Done column */}
       {resolutionDialog.ticket && (
         <ResolutionDialog
           isOpen={resolutionDialog.isOpen}
