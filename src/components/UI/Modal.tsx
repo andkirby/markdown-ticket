@@ -130,6 +130,7 @@ interface ModalHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 't
   description?: React.ReactNode
   onClose?: () => void
   showCloseButton?: boolean
+  closeTestId?: string
 }
 
 const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
@@ -139,6 +140,7 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
     description,
     onClose,
     showCloseButton = true,
+    closeTestId,
     children,
     ...props
   }, ref) => {
@@ -166,6 +168,7 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
             type="button"
             className="ml-4 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
             onClick={onClose}
+            {...(closeTestId && { 'data-testid': closeTestId })}
           >
             <svg
               className="h-6 w-6"

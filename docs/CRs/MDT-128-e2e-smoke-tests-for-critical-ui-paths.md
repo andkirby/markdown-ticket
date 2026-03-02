@@ -1,29 +1,36 @@
 ---
 code: MDT-128
-status: Proposed
+status: In Progress
 dateCreated: 2026-03-01T22:00:35.008Z
-type: Feature Enhancement
+type: Technical Debt
 priority: High
+relatedTickets: MDT-092
 ---
 
 # E2E Smoke Tests for Critical UI Paths
 
 ## 1. Description
-
 ### Problem Statement
-Currently, the E2E test suite only covers infrastructure verification (backend health, frontend loading, scenario creation). There is no coverage for the core user-facing features and critical UI paths. This means regressions in key functionality could go undetected until manual testing.
+The E2E test suite has accumulated **technical debt** with minimal coverage of critical user paths. Only infrastructure verification exists (backend health, frontend loading). Core features like drag-and-drop, SSE real-time updates, and navigation have no automated regression tests, creating significant risk of undetected regressions.
 
-### Current State
-- `tests/e2e/smoke/infrastructure.spec.ts` verifies backend health and basic frontend loading
-- No tests for board view rendering, drag-and-drop (core interaction)
-- No tests for list view sorting/filtering
-- No tests for documents view navigation
-- No tests for ticket detail modal
-- No tests for SSE real-time updates (key differentiator)
-- No tests for navigation flow or project switching
+### Current State (Debt Assessment)
+- `tests/e2e/smoke/infrastructure.spec.ts` — Only existing test file
+- **Missing coverage** (high-risk debt):
+  - Board view rendering and drag-and-drop (core interaction)
+  - SSE real-time updates (key differentiator, complex implementation)
+  - List view sorting/filtering
+  - Documents view navigation
+  - Ticket detail modal
+  - Navigation flow and project switching
 
-### Desired State
-Comprehensive E2E smoke tests covering all critical user paths:
+### Debt Impact
+- **Regressions go undetected** until manual testing discovers them
+- **Refactoring is risky** without automated safety net
+- **Core features unverified** — DnD and SSE are complex, high-regression-risk
+- **Deployment confidence is low** — no automated verification of user-facing functionality
+
+### Remediation Goal
+Pay down test debt by implementing comprehensive E2E smoke tests for all critical user paths:
 - **Board View**: Rendering, drag-and-drop, filtering, sorting
 - **List View**: Table display, sorting, click-to-view
 - **Documents View**: File tree navigation, content viewing
@@ -31,120 +38,56 @@ Comprehensive E2E smoke tests covering all critical user paths:
 - **SSE Real-time Updates**: External changes reflect immediately
 - **Navigation**: Routing, redirects, view switching, project switching
 
-### Rationale
-- **Regression Prevention**: Catch UI/UX regressions before they reach production
-- **Confidence in Deployments**: Automated verification that core functionality works
-- **Documentation**: Tests serve as executable documentation of expected behavior
-- **Refactoring Safety**: Enable confident refactoring with automated safety net
-- **SSE Coverage**: Real-time updates are a key product differentiator
-### Desired State
-Critical path E2E tests covering:
-- **Drag-and-Drop**: Tickets move between columns, status persists
-- **SSE Real-time Updates**: External file changes reflect immediately on board
-- **Navigation Flow**: Basic routing and modal interactions work
-
-### Rationale
-- **High-Risk Areas**: DnD and SSE are complex, high-regression-risk features
-- **Key Differentiator**: Real-time SSE updates are a core product feature
-- **User Happiness**: Broken DnD or SSE immediately impacts user experience
-- **Quick Feedback**: Focused tests run faster, provide faster regression detection
-### Desired State
-Comprehensive E2E smoke tests covering all critical user paths:
-- Navigation and routing work correctly
-- Board view renders and allows ticket movement
-- List view displays and sorts tickets
-- Documents view browses file tree
-- Ticket details open and display correctly
-- Project switching functions properly
-
-### Rationale
-- **Regression Prevention**: Catch UI/UX regressions before they reach production
-- **Confidence in Deployments**: Automated verification that core functionality works
-- **Documentation**: Tests serve as executable documentation of expected behavior
-- **Refactoring Safety**: Enable confident refactoring with automated safety net
-
 ### Impact Areas
-- `tests/e2e/` - New test files for each feature area
-- `tests/e2e/smoke/` - Navigation and UI tests
-- `tests/e2e/board/` - Rendering and drag-drop tests
-- `tests/e2e/list/` - List view tests
-- `tests/e2e/documents/` - Documents view tests
-- `tests/e2e/ticket/` - Ticket detail tests
-- `tests/e2e/sse/` - Real-time update tests
-- `tests/e2e/project/` - Project management tests
-- `tests/e2e/navigation/` - URL routing tests
-- `tests/e2e/utils/selectors.ts` - May need new selectors
-- `src/components/` - May require additional `data-testid` attributes
-## 2. Solution Analysis
+- `tests/e2e/` — New test files for each feature area
+- `tests/e2e/smoke/` — Navigation and UI tests
+- `tests/e2e/board/` — Rendering and drag-drop tests
+- `tests/e2e/sse/` — Real-time update tests
+- `src/components/` — May require additional `data-testid` attributes
+## 2. Rationale
+### Why Address This Debt Now
+- **E2E infrastructure is now stable** (MDT-092) — foundation exists for expansion
+- **Feature velocity is increasing** — more changes mean higher regression risk
+- **SSE is a key differentiator** — untested = vulnerable to silent breakage
+- **DnD is high-complexity** — most regression-prone feature needs coverage
 
-### Approaches Considered
+### Debt Payoff Value
+| Metric | Before | After |
+|--------|--------|-------|
+| Critical path coverage | ~5% | ~90% |
+| Regression detection | Manual only | Automated |
+| Refactoring confidence | Low | High |
+| Deployment verification | None | Automated |
 
-**Feature-Based Test Organization**:
-- Group tests by UI feature (board, list, documents, ticket, navigation)
-- Each feature gets its own spec file
-- Tests are independent and can run in parallel
-
-**User Journey-Based Organization**:
-- Group tests by complete user workflows
-- Tests cover end-to-end journeys across multiple features
-- More realistic but harder to isolate failures
-
-**Layered Testing**:
-- Unit tests for components
-- Integration tests for API endpoints
-- E2E tests only for critical paths
-- More comprehensive but higher maintenance
-
-### Trade-offs Analysis
-| Approach | Pros | Cons |
-|----------|------|------|
-| Feature-Based | Easy to find failing tests, parallel execution | May miss journey-level bugs |
-| Journey-Based | Realistic coverage | Harder to debug, slower |
-| Layered | Comprehensive coverage | High maintenance burden |
-
-### Decision Factors
-- **Maintainability**: Feature-based tests are easier to update when UI changes
-- **Execution Speed**: Smaller, focused tests run faster
-- **Debugging**: Feature-based tests pinpoint the failing component
-- **Parallelization**: Independent tests can run concurrently
+## 3. Solution Analysis
 
 ### Chosen Approach
-**Feature-Based Test Organization** with comprehensive coverage:
+**Feature-Based Test Organization** — proven pattern from MDT-092 infrastructure:
 
 ```
 tests/e2e/
 ├── smoke/
-│   ├── infrastructure.spec.ts    (existing - backend health, frontend loading)
-│   ├── navigation.spec.ts        (new - routing, redirects, view switching)
-│   └── ui.spec.ts                (new - theme, responsive)
+│   ├── infrastructure.spec.ts    (existing)
+│   └── navigation.spec.ts        (new)
 ├── board/
-│   ├── rendering.spec.ts         (new - columns, tickets, filters)
-│   └── drag-drop.spec.ts         (new - DnD + SSE confirmation)
+│   ├── rendering.spec.ts         (new)
+│   └── drag-drop.spec.ts         (new — priority)
 ├── list/
-│   └── view.spec.ts              (new - table rendering, sorting)
+│   └── view.spec.ts              (new)
 ├── documents/
-│   └── view.spec.ts              (new - file tree, content viewer)
+│   └── view.spec.ts              (new)
 ├── ticket/
-│   └── detail.spec.ts            (new - modal, attributes, markdown)
+│   └── detail.spec.ts            (new)
 ├── sse/
-│   └── updates.spec.ts           (new - real-time update scenarios)
-├── project/
-│   └── management.spec.ts        (new - add, edit, switch projects)
-└── navigation/
-    └── routing.spec.ts           (new - URL patterns, deep links)
+│   └── updates.spec.ts           (new — priority)
+└── project/
+    └── management.spec.ts        (new)
 ```
 
-**Out of Scope**:
-- ~~`ticket/crud.spec.ts`~~ — No editing UI implemented (OOS)
-
-**Priority Focus** (run first, catch regressions fastest):
-1. **board/drag-drop.spec.ts** — Core interaction, high regression risk
-2. **sse/updates.spec.ts** — Real-time updates are key differentiator
-3. **smoke/navigation.spec.ts** — Basic app flow must work
-### Rejected Alternatives
-- **Journey-Based**: Too complex for initial smoke test coverage
-- **Layered**: Existing unit and integration tests exist; E2E should focus on UI paths
-
+### Priority Order (highest debt first)
+1. `board/drag-drop.spec.ts` — Core interaction, highest regression risk
+2. `sse/updates.spec.ts` — Key differentiator, complex SSE logic
+3. `smoke/navigation.spec.ts` — Basic app flow must work
 ## 3. Implementation Specification
 ### Technical Requirements
 

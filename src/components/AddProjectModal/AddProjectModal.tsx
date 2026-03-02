@@ -177,7 +177,11 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        {/**
+         * @testid add-project-modal — Add/Edit Project modal container
+         */}
         <div
+          data-testid={editMode ? "edit-project-modal" : "add-project-modal"}
           className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[calc(100vh-100px)] flex flex-col"
           onClick={handleOverlayClick}
         >
@@ -212,6 +216,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           >
             <div className="p-6 space-y-6">
               {/* Project Name */}
+              {/**
+               * @testid project-name-input — Input for project name
+               */}
               <FormField
                 label="Project Name"
                 value={formData.name}
@@ -220,9 +227,13 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 error={errors.name}
                 required
                 readOnly={editMode}
+                testId="project-name-input"
               />
 
               {/* Project Code */}
+              {/**
+               * @testid project-code-input — Input for project code
+               */}
               <FormField
                 label="Project Code"
                 value={formData.code}
@@ -231,6 +242,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 error={errors.code}
                 required
                 readOnly={editMode}
+                testId="project-code-input"
               />
 
               {/* Project Path with Discovery Indicator */}
@@ -356,6 +368,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           {/* Footer */}
           <div className="border-t border-gray-200 dark:border-gray-700 p-6 flex-shrink-0">
             <div className="flex justify-end space-x-3">
+              {/**
+               * @testid project-cancel-button — Cancel button in project modal
+               */}
               <Button
                 variant="outline"
                 onClick={() => {
@@ -366,12 +381,17 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                     onClose()
                   }
                 }}
+                data-testid="project-cancel-button"
               >
                 Cancel
               </Button>
+              {/**
+               * @testid project-submit-button — Submit button in project modal
+               */}
               <Button
                 onClick={handleConfirmCreate}
                 disabled={isSubmitting || !formData.name || !formData.code || !formData.path}
+                data-testid="project-submit-button"
               >
                 {isSubmitting ? 'Creating...' : (editMode ? 'Update Project' : 'Create Project')}
               </Button>

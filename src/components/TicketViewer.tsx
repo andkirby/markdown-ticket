@@ -69,11 +69,13 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
     return null
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    /* @testid ticket-detail — Ticket detail modal container */
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" data-testid="ticket-detail">
       <TableOfContents items={tocItems} view="ticket" />
       <ModalHeader
         title={(
-          <span>
+          /* @testid ticket-title — Ticket title display */
+          <span data-testid="ticket-title">
             <TicketCode code={currentTicket.code} ticket={currentTicket} />
             {' '}
             •
@@ -81,6 +83,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
           </span>
         )}
         onClose={onClose}
+        /* @testid close-detail — Close button for ticket modal */
+        closeTestId="close-detail"
       />
       <ModalBody>
         <div className="space-y-4">
@@ -91,11 +95,14 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
 
           {/* Rendered Markdown Content */}
           {isOpen && processedContent && projectCode && (
-            <MarkdownContent
-              markdown={processedContent}
-              currentProject={projectCode}
-              headerLevelStart={3}
-            />
+            /* @testid ticket-content — Markdown content area */
+            <div data-testid="ticket-content">
+              <MarkdownContent
+                markdown={processedContent}
+                currentProject={projectCode}
+                headerLevelStart={3}
+              />
+            </div>
           )}
         </div>
       </ModalBody>
