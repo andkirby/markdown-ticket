@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Validate TypeScript files that have been modified
 # Usage: npm run validate:ts
 # Or with specific files: bash scripts/validate-changed-ts.sh file1.ts file2.ts
