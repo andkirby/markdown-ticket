@@ -16,63 +16,48 @@ priority: Medium
 - Missing UI component for tabbed content display in ticket view
 - Backend API lacks endpoint to fetch sub-document structure
 
-### Affected Artifacts
-- `src/components/TicketView.tsx` (main ticket display component)
-- `src/services/fileService.ts` (file fetching service)
-- `server/controllers/crController.js` (CR endpoint controller)
-- `server/services/CrService.js` (CR business logic)
-- `.mdt-config.toml` (configuration file for custom subdocument order)
-- `openapi.yaml` (OpenAPI specification - must be updated with new endpoints)
-- `/api/projects/:id/crs/:crId` (modified to include subdocuments array)
-- `/api/projects/:id/crs/:crId/:subdocument` (new RESTful endpoint for sub-document content)
+### User Value
+- Users can discover related ticket documents without leaving the ticket view
+- Users can move between main ticket content and supporting documents without losing reading context
+- Users can keep navigation available while scrolling long documents
+- Users can share and reopen direct links to specific sub-documents
+- Users can see ticket-related documents update in place as they are added or removed
+
+### Affected Areas
+- Ticket detail view
+- CR and document retrieval APIs
+- Project configuration for sub-document ordering
+- Realtime update flow for ticket document changes
+- OpenAPI and feature documentation
 ### Scope
-- **Changes**: Add sub-document parsing, create tabs UI component, implement sticky positioning, add backend API endpoint
+- **Changes**: Add sub-document discovery, ticket-view navigation, sticky document navigation, backend support for sub-document retrieval, and deep-linking support for sub-documents
 - **Unchanged**: Existing CR file format, current ticket CRUD operations, markdown rendering for single documents
 
+### Technical Constraints
+- Sub-documents must be discovered from ticket-related files and directories, not created synthetically in the UI.
+- Sub-document ordering must come from backend discovery and project configuration, not client-side resorting.
+- Tab navigation must use `shadcn` Tabs.
+- URL hash deep linking is part of the feature contract and must remain stable across reloads.
+- Real-time updates must keep the visible sub-document list aligned with underlying file changes.
+- Existing markdown rendering remains the content rendering pipeline for sub-documents.
+- API and OpenAPI documentation must be updated because this feature changes the API surface.
+
 ## Architecture Design
-> **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
+> Implementation structure and technical design are extracted to [architecture.md](./architecture.md).
 
-**Summary**:
-- Pattern: Component composition with render props
-- Components: 7 (TicketViewer, TicketTabs, TabLoading, useSubDocuments, useSubDocumentSSE, CrService, fileService)
-- Key constraint: Follows React component guidelines with colocation
-
-**Shared Patterns**:
-- API error handling: Add wrapper to fileService.ts
-- Markdown rendering: Reuse existing MarkdownContent component
-
-**SSE Architecture**:
-- Domain-specific SSE hooks (useSubDocumentSSE) - NOT extending global useSSEEvents
-- Prevents god files: Each SSE hook stays under 50 lines and is colocated with its feature
-- Clean separation: Global SSE for app-wide events, domain SSE for feature-specific events
-
-**React Guidelines Applied**:
-- Colocation: useSubDocuments and useSubDocumentSSE hooks in TicketViewer/ folder (used only by this feature)
-- Folder promotion: TicketViewer becomes folder when gaining TicketTabs sub-component
-- File-to-Folder Rule: Move TicketViewer.tsx to TicketViewer/index.tsx (never have both)
-- Flat structure: Max 2 levels deep
-- Component ownership: All tab-related files in TicketViewer/ folder
-
-**Size Limits**:
-| Module | Limit | Hard Max |
-|--------|-------|----------|
-| TicketTabs.tsx | 200 | 300 |
-| useSubDocuments.ts | 150 | 225 |
-| useSubDocumentSSE.ts | 50 | 75 |
-| TabLoading.tsx | 50 | 75 |
-| TicketViewer/index.tsx modifications | 100 | 150 |
-
-**Extension Rule**: To add new sub-document parsing patterns, extend MarkdownService.ts (limit 100 lines) and update CrService.js discovery logic.
+This CR focuses on the product behavior and user-visible contract.
 ## 2. Decision
 
 ### Chosen Approach
-Add sub-document parsing with shadcn tabs component and sticky positioning
+Add sub-document navigation to ticket view so users can move between the main ticket and related documents without leaving the current context.
 
 ### Rationale
 - Sub-document structure allows logical grouping of related content within tickets
 - Sticky tabs provide persistent navigation while scrolling through long documents
-- shadcn tabs component ensures consistent UI design with existing components
+- Folder-backed tabs allow grouped document sets such as `prep/`, `poc/`, and `part-*` to stay navigable without overloading the primary tab row
 - Backend API enables efficient sub-document discovery and fetching
+- Deep linking makes sub-documents shareable and reload-safe
+- Realtime updates keep the displayed document structure aligned with the underlying files
 ## 3. Alternatives Considered
 
 | Approach | Key Difference | Why Rejected |
@@ -83,55 +68,41 @@ Add sub-document parsing with shadcn tabs component and sticky positioning
 | Client-side only parsing | Parse sub-documents entirely on frontend | Inefficient for large documents |
 
 ## 4. Artifact Specifications
-### New Artifacts
-| Artifact | Type | Purpose |
-|----------|------|---------|
-| `src/components/TicketTabs.tsx` | Component | Tabbed navigation for sub-documents |
-| `src/hooks/useSubDocuments.ts` | Hook | Sub-document fetching and management |
-| `/api/projects/:id/crs/:crId/:subdocument` | Endpoint | Fetch individual sub-document content (RESTful) |
-| `shared/models/SubDocument.ts` | Type | Sub-document metadata type definitions |
-| `server/services/CrService.js` (extended) | Service | Sub-document sorting and discovery logic |
-### Modified Artifacts
-| Artifact | Change Type | Modification |
-|----------|-------------|--------------|
-| `src/components/TicketView.tsx` | Component updated | Integrate TicketTabs component |
-| `src/services/fileService.ts` | Method added | `fetchSubDocument(subdocumentName)` |
-| `server/controllers/crController.js` | Route added | GET /crs/:crId/:subdocument |
-| `server/services/CrService.js` | Method added | `getSubDocument(crPath, subdocumentName)` and `loadSubdocumentOrder()` |
-| `shared/models/Types.ts` | Interface extended | Add subdocuments array to Ticket interface |
-### Integration Points
-| From | To | Interface |
-|------|----|-----------|
-| TicketView | TicketTabs | subdocuments array from main ticket API response |
-| useSubDocuments | fileService | `fetchSubDocument(subdocumentName)` |
-| CrService | File System | Sub-document discovery and sorting |
-| Frontend | API | GET /crs/:crId/:subdocument for sub-document content |
-| SSE Events | Frontend | Updated subdocuments array triggers re-render |
-### Key Patterns
+### Feature Contract
 - Document discovery: Find sub-document directories named after ticket key (e.g., `{ticketsPath}/AAA-123/`)
-- Default subdocument order: requirements, architecture, tests, tasks, debt
+- Default top-level subdocument order: requirements, domain, architecture, poc, tests, tasks, debt
 - Configuration: Order can be customized in `.mdt-config.toml` under `project.ticketSubdocuments` setting
-- Main ticket API: GET `/api/projects/{projectId}/crs/{crId}` returns ticket with sorted subdocuments array
-- Sub-document API: GET `/api/projects/{projectId}/crs/{crId}/tasks` returns `{code, content, dateCreated, lastModified}`
-- Frontend rendering: Tabs render "main" + backend-provided order without client-side sorting
-- Tab labeling: First tab labeled "main" for ticket document, subsequent tabs use sub-document filenames without .md extension
+- Main ticket API returns ticket data with a sorted `subdocuments` array
+- Sub-document retrieval API returns sub-document content and metadata
+- Frontend rendering presents "main" plus backend-provided top-level order without client-side resorting
+- Top-level markdown files appear as primary tabs
+- Top-level folders may appear as primary tabs
+- Selecting a folder tab reveals a second tab row containing that folder's children
+- Nested folders repeat the same pattern, adding another tab row for the next level
+- Folder tabs such as `prep/`, `poc/`, and `part-*` are presented as grouped navigation entries rather than flattened tab names
+- Tab labeling: First tab labeled "main" for ticket document; file tabs use filenames without `.md`; folder tabs use folder names
 - Conditional tabs: Only show tab interface when subdocuments array is not empty
-- Client-side rendering: Use existing markdown processing for content
-- Lazy loading: Load sub-document content on tab selection via RESTful API
+- Client-side rendering uses the existing markdown processing pipeline for content
+- Lazy loading: Load sub-document content when the user selects a sub-document
 - URL routing: Update URL with hash for deep linking (#subdocument-name)
 - Real-time updates: React to SSE events for updated subdocuments list
 - Re-render optimization: Only re-render tabs when subdocuments array changes
 - Hash fallback: If URL hash references non-existent sub-document, show "main" tab
 ## 5. Acceptance Criteria
 ### Functional
-- [ ] GET `/api/projects/{projectId}/crs/{crId}` returns ticket data with `"subdocuments": ["requirements", "architecture", "tests", "tasks", "debt"]` array
-- [ ] Backend reads `.mdt-config.toml` for custom `project.ticketSubdocuments` order if specified
-- [ ] GET `/api/projects/{projectId}/crs/{crId}/tasks` returns `{code, content, dateCreated, lastModified}`
+- [ ] The ticket detail API returns ticket data with a `subdocuments` array.
+- [ ] When no custom order is configured, the top-level `subdocuments` array follows the default order: `requirements`, `domain`, `architecture`, `poc`, `tests`, `tasks`, `debt`.
+- [ ] When `.mdt-config.toml` specifies `project.ticketSubdocuments`, the returned `subdocuments` array follows the configured order.
+- [ ] The sub-document retrieval API returns `{code, content, dateCreated, lastModified}` for an individual sub-document.
 - [ ] API changes shall be compatible with MDT-085 OpenAPI specification
-- [ ] `TicketTabs.tsx` renders shadcn tabs with "main" tab first, then sub-documents in backend-provided order
+- [ ] The ticket view uses `shadcn` Tabs for sub-document navigation.
+- [ ] The ticket view renders tabbed navigation with "main" first, then top-level files and folders in backend-provided order.
+- [ ] When a folder tab is selected, the UI shows a second tab row for that folder's children.
+- [ ] When nested folders are selected, the UI adds additional tab rows for deeper levels.
+- [ ] Folder-backed groups such as `prep/`, `poc/`, and `part-*` are presented as grouped tabs rather than flattened names.
 - [ ] Tabs only appear when subdocuments array is not empty; single tickets show no tabs
 - [ ] Tabs container remains visible when scrolling (sticky positioning)
-- [ ] Clicking tab triggers RESTful API call to `/api/projects/{projectId}/crs/{crId}/{subdocument}`
+- [ ] Selecting a sub-document tab loads the corresponding sub-document content.
 - [ ] URL updates with hash fragment for current sub-document (e.g., #tasks)
 - [ ] Page reload maintains selected tab based on URL hash
 - [ ] If URL hash references deleted sub-document, "main" tab is shown
@@ -144,13 +115,14 @@ Add sub-document parsing with shadcn tabs component and sticky positioning
 - [ ] Component follows existing shadcn theme patterns
 - [ ] No layout shift when tabs become sticky
 - [ ] Frontend re-renders tabs only when subdocuments array changes
+- [ ] Additional tab rows for nested folders remain readable and usable without flattening the hierarchy into a single overcrowded row.
 
 ### Testing
 - Unit: Test backend sorting of sub-documents in correct order
 - Unit: Test configuration loading from `.mdt-config.toml` `project.ticketSubdocuments`
 - Unit: Test sub-document API response format (code, content, dateCreated, lastModified)
 - Unit: Test `useSubDocuments` hook for proper list comparison and re-rendering
-- Integration: Test `TicketView` integration with `TicketTabs` component
+- Integration: Test ticket-view integration with sub-document navigation
 - E2E: Test tab navigation and sticky behavior on mobile and desktop
 - E2E: Test SSE-driven tab updates for add/remove scenarios
 
@@ -163,7 +135,7 @@ Add sub-document parsing with shadcn tabs component and sticky positioning
 ## 6. Verification
 
 ### By CR Type
-- **Feature**: `TicketTabs.tsx` component exists and renders tabs, API endpoint returns sub-document structure
+- **Feature**: Ticket view exposes sub-document navigation and the API returns sub-document structure
 
 ### Metrics
 - Tab switching time < 100ms
@@ -172,7 +144,6 @@ Add sub-document parsing with shadcn tabs component and sticky positioning
 ## 7. Deployment
 
 ### Prerequisites
-- Run `npx shadcn@latest add tabs` to install tabs component
 - Update shared types with `npm run build:shared`
 
 ### Deployment Steps

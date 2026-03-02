@@ -1,141 +1,122 @@
 # Requirements: MDT-093
 
-**Source**: [MDT-093](../../../docs/CRs/MDT-093-add-sub-document-support-with-sticky-tabs-in-ticke.md)
-**Generated**: 2025-12-11
-**CR Type**: Feature Enhancement
+**Source**: [MDT-093](../MDT-093-add-sub-document-support-with-sticky-tabs-in-ticke.md)
+**Generated**: 2026-03-02
 
-## Introduction
+## Overview
 
-The system currently displays single markdown documents without sub-document support or navigation within long ticket documents. This feature will add a tabbed navigation UI that remains visible while scrolling, allowing users to easily switch between related documents within a ticket.
+This feature adds sub-document navigation to ticket view so users can move between the main ticket and related documents without leaving the current reading context. The system must support ordered top-level documents, grouped folder-backed entries such as `prep/`, `poc/`, and `part-*`, nested tab rows, sticky navigation, deep linking, and realtime synchronization with file changes.
 
-## Requirements
+## Behavioral Requirements
 
-### Requirement 1: Tab Discovery and Display
+### BR-1: Sub-Document Discovery and Top-Level Ordering
 
-**Objective**: As a user, I want to see all available sub-documents as tabs, so that I can discover and navigate to related content.
+**Goal**: Users can discover the main ticket and its related top-level documents in a predictable order.
+**Delivery Timing**: Now
 
-#### Acceptance Criteria
+1. WHEN a ticket has related sub-document files or folders, the system shall expose `main` plus discovered top-level entries for navigation.
+2. WHEN no custom order is configured, the system shall order recognized top-level entries as `requirements`, `domain`, `architecture`, `poc`, `tests`, `tasks`, `debt`.
+3. WHEN `.mdt-config.toml` defines `project.ticketSubdocuments`, the system shall order matching top-level entries according to that configuration.
+4. WHEN discovered top-level entries are not named in the configured or default order, the system shall append them after ordered entries using natural ascending name order.
+5. WHILE a ticket has no related sub-document entries, the system shall omit sub-document navigation and display only the main ticket document.
 
-1. WHEN viewing a ticket with a sub-document directory structure,
-   the system shall display tabs with "main" for the ticket document plus names of sub-documents (excluding file extensions).
+### BR-2: Hierarchical Folder Navigation
 
-2. WHEN tabs are displayed,
-   they shall appear in the default order: main | requirements | architecture | tests | tasks | debt,
-   OR in the custom order specified in `.mdt-config.toml` under `project.ticketSubdocuments`.
+**Goal**: Users can navigate grouped and nested document sets without flattening the hierarchy into one overcrowded row.
+**Delivery Timing**: Now
 
-3. WHEN viewing a ticket with only the main document and no sub-document directory,
-   the system shall not display any tabs.
+1. WHEN sub-document navigation is shown, the system shall present top-level files and folders in the primary tab row.
+2. WHEN a folder entry is selected, the system shall reveal that folder's children in the next tab row.
+3. WHEN a nested folder entry is selected, the system shall reveal another tab row for the next folder level.
+4. WHEN grouped folders such as `prep/`, `poc/`, or `part-*` are present, the system shall present them as grouped navigation entries rather than flattened descendant names.
+5. WHILE a folder entry is selected, the system shall preserve the currently displayed document content until a descendant file entry is selected.
 
-4. WHILE viewing the ticket,
-   the tabs shall remain visible and accessible at all times.
+### BR-3: Document Selection and Content Rendering
 
-### Requirement 2: Sticky Tab Navigation
+**Goal**: Users can switch between ticket-related documents while keeping content readable and navigation visible.
+**Delivery Timing**: Now
 
-**Objective**: As a user, I want the tab bar to stay visible while scrolling, so that I can switch documents without returning to the top of the page.
+1. WHEN a user selects `main` or a file entry, the system shall load and display the corresponding markdown document.
+2. WHILE selected document content is loading, the system shall display loading feedback in the content area.
+3. WHILE the user scrolls ticket content, the system shall keep sub-document navigation visible.
+4. WHILE sticky navigation is active, the system shall avoid layout shift that disrupts reading or navigation.
 
-#### Acceptance Criteria
+### BR-4: Deep Linking and Reload Behavior
 
-1. WHEN user scrolls through a long document,
-   the tab bar shall remain fixed at the top of the viewport.
+**Goal**: Users can share and reopen direct links to specific sub-documents, including nested ones.
+**Delivery Timing**: Now
 
-2. WHILE the tab bar is sticky,
-   it shall not obscure important content or create layout shifts.
+1. WHEN a user selects a non-main document, the system shall update the URL hash to the selected relative document path.
+2. WHEN a user selects a nested document, the system shall encode the nested path in the URL hash using slash-separated folder segments.
+3. WHEN a page loads with a valid sub-document hash, the system shall reopen the required folder levels and display the targeted document.
+4. IF the URL hash references a document path that no longer exists, THEN the system shall fall back to `main`.
 
-3. WHEN the tab bar is sticky,
-   it shall maintain proper spacing from viewport edges and other UI elements.
+### BR-5: Realtime Synchronization and Failure Recovery
 
-### Requirement 3: Tab Interaction and Content Switching
+**Goal**: Users see sub-document navigation stay aligned with filesystem changes without losing basic navigation.
+**Delivery Timing**: Now
 
-**Objective**: As a user, I want to click tabs to instantly switch between documents, so that I can navigate efficiently without losing context.
+1. WHEN the underlying sub-document structure changes, the system shall update the visible navigation to match the current files and folders.
+2. IF the active document is removed by a realtime update, THEN the system shall switch the visible document to `main`.
+3. IF a selected document fails to load, THEN the system shall display an error in the content area without removing available navigation.
+4. WHILE realtime update delivery is unavailable, the system shall continue to allow manual navigation using the last successfully loaded structure.
 
-#### Acceptance Criteria
+### BR-6: API and Documentation Contract
 
-1. WHEN user clicks on a tab,
-   the system shall display the corresponding document content immediately.
+**Goal**: The feature exposes enough structured data for hierarchical navigation and keeps the public API documented.
+**Delivery Timing**: Now
 
-2. WHILE switching between tabs,
-   the system shall show a loading indicator for documents that take time to load.
+1. WHEN the ticket detail API returns sub-document metadata, the system shall represent files and folders in a hierarchical structure sufficient to render ordered multi-row navigation.
+2. WHEN the individual sub-document retrieval API returns a document, the system shall include `code`, `content`, `dateCreated`, and `lastModified`.
+3. WHEN sub-document API changes are delivered, the system shall publish matching OpenAPI documentation for those changes.
 
-3. WHEN a tab is selected,
-   it shall be visually distinct from unselected tabs.
+## Constraints
 
-### Requirement 4: Deep Linking and State Persistence
+| Concern | Requirement |
+|---------|-------------|
+| C1: Discovery Source | Sub-documents are discovered from ticket-related files and directories, not created synthetically in the UI |
+| C2: Ordering Authority | Ordering comes from backend discovery plus project configuration, not client-side resorting |
+| C3: UI Primitive | Sub-document navigation uses `shadcn` Tabs |
+| C4: Hash Stability | Deep links use stable relative document paths in the URL hash |
+| C5: Realtime Fallback | Realtime delivery failure does not block manual navigation |
+| C6: Rendering Pipeline | Existing markdown rendering remains the content rendering pipeline for sub-documents |
+| C7: Performance | Tab switching begins content loading within 100ms |
+| C8: Payload Size | Sub-document parsing supports markdown files up to 1MB |
+| C9: Visual Stability | Sticky navigation does not create disruptive layout shift |
+| C10: API Documentation | OpenAPI documentation is updated for sub-document API changes |
 
-**Objective**: As a user, I want to share links to specific sub-documents, so that others can view the exact content I'm referring to.
+## Constraint Carryover
 
-#### Acceptance Criteria
+| Constraint ID | Must Appear In |
+|---------------|----------------|
+| C1 | architecture.md (Data Model / Discovery), tasks.md (Implementation) |
+| C2 | architecture.md (Selection Logic / API Contract), tasks.md (Ordering) |
+| C3 | architecture.md (UI Composition), tasks.md (UI implementation) |
+| C4 | architecture.md (Routing / State), tests.md (deep-link scenarios) |
+| C5 | architecture.md (Error Philosophy), tests.md (absence and failure cases) |
+| C6 | architecture.md (Rendering Path), tasks.md (integration scope) |
+| C7 | architecture.md (Runtime Prereqs / Error Philosophy), tests.md (performance checks) |
+| C8 | architecture.md (Runtime Limits), tests.md (large-file coverage) |
+| C9 | architecture.md (UI Layout), tests.md (sticky behavior) |
+| C10 | architecture.md (API Surface), tasks.md (docs updates) |
 
-1. WHEN user selects a tab other than "main",
-   the URL shall update to include a hash fragment with the sub-document name.
+## Non-Ambiguity Table
 
-2. WHEN a user visits a URL with a sub-document hash fragment,
-   the system shall automatically select and display that sub-document if it exists.
+| Concept | Final Semantic (chosen truth) | Rejected Semantic | Why |
+|---------|-------------------------------|-------------------|-----|
+| Default ordered set | `requirements`, `domain`, `architecture`, `poc`, `tests`, `tasks`, `debt` | Older order without `domain` or `poc` | Matches current ticket scope |
+| API structure | Hierarchical metadata for files and folders | Flat string array only | Required for folder-backed and nested tab rows |
+| Folder tab behavior | Selecting a folder reveals the next row and keeps current content until a descendant file is selected | Selecting a folder auto-loads synthetic folder content | Folders act as grouped navigation containers |
+| Nested deep-link format | URL hash stores slash-separated relative document path | Flat hash with only leaf filename | Needed to reopen nested folder rows deterministically |
+| Grouped folders | `prep/`, `poc/`, and `part-*` remain grouped top-level entries | Flatten descendants into one primary row | Preserves hierarchy and keeps the primary row readable |
+| Missing document target | Fall back to `main` | Leave stale/empty selection active | Gives a stable recovery path |
+| Unordered extra entries | Append after configured/default entries using natural ascending name order | Arbitrary filesystem order | Makes ordering predictable |
 
-3. WHEN a user visits a URL with a sub-document hash fragment but the sub-document no longer exists,
-   the system shall display the "main" tab instead.
+## Configuration
 
-4. WHILE navigating between tabs,
-   the browser's back/forward buttons shall work correctly to navigate document history.
-
-### Requirement 5: Real-time Updates via Server Events
-
-**Objective**: As a user, I want the tab interface to update automatically when documents are added or removed, so that I always see the current state without manual refresh.
-
-#### Acceptance Criteria
-
-1. WHEN backend sends an event that new sub-documents were added to the current ticket,
-   the system shall automatically display the new tabs without user action.
-
-2. WHEN backend sends an event that all sub-documents were deleted from the current ticket,
-   the system shall remove the tab interface and show only the main document.
-
-3. WHEN backend sends an event that a specific sub-document was deleted,
-   IF that sub-document was currently selected,
-   the system shall switch to the "main" tab and remove the deleted tab from the interface.
-
-4. IF a document fails to load,
-   the system shall display an error message within the content area.
-
-5. IF a document is not found,
-   the system shall offer options to refresh or navigate to available documents.
-
----
-
-## User Experience Flows
-
-| Flow | Description | Key Interactions |
-|------|-------------|------------------|
-| Initial Load - With Sub-docs | User opens ticket with sub-documents | GET `/api/projects/{projectId}/crs/{crId}` returns with `"subdocuments": ["requirements", "architecture", "tests", "tasks", "debt"]` |
-| Initial Load - No Sub-docs | User opens ticket with only main document | GET `/api/projects/{projectId}/crs/{crId}` returns empty subdocuments array |
-| Tab Navigation | User clicks on `tasks` tab | GET `/api/projects/{projectId}/crs/{crId}/tasks` returns tasks.md content |
-| Document Response Format | Backend returns sub-document | Response includes: code, content, dateCreated, lastModified |
-| Real-time Addition | Backend adds new sub-document while viewing | SSE event with updated subdocuments list triggers tab re-render |
-| Real-time Removal | Backend deletes all sub-documents | SSE event with empty subdocuments array removes tab interface |
-| Real-time Active Deletion | Backend deletes currently open sub-document | SSE event updates subdocuments list, system switches to "main" |
-
-## Traceability
-
-| Req ID | CR Section | Focus Area |
-|--------|------------|------------|
-| R1.1-R1.4 | Section 1 Description | Tab discovery, labeling, and conditional display |
-| R2.1-R2.3 | Section 1 Description | Sticky positioning behavior |
-| R3.1-R3.3 | Section 1 Description | Tab interaction patterns |
-| R4.1-R4.4 | Section 1 Description | URL state management and fallback behavior |
-| R5.1-R5.5 | Section 1 Description | Real-time updates and error handling UX |
-
-## Non-Functional Requirements
-
-### Performance
-- WHEN user switches tabs, the new content shall begin loading within 100ms.
-- WHEN content is loading, visual feedback shall appear within 50ms of user action.
-
-### Visual Design
-- WHILE tabs are displayed, they shall follow the existing design system and theme.
-- WHILE tabs are sticky, they shall maintain consistent visual hierarchy with other UI elements.
-
-### Accessibility
-- WHEN using keyboard navigation, tabs shall be focusable and operable without a mouse.
-- WHILE tabbing through the interface, focus shall remain visible and logical order shall be maintained.
+| Setting | Description | Default | When Absent |
+|---------|-------------|---------|-------------|
+| `project.ticketSubdocuments` | Ordered list of top-level sub-document names to prioritize | `requirements`, `domain`, `architecture`, `poc`, `tests`, `tasks`, `debt` | Use the default ordered list, then append remaining entries in natural ascending name order |
 
 ---
-*Generated from MDT-093 by /mdt:requirements*
+*Generated by /mdt:requirements*
