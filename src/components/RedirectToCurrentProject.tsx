@@ -57,7 +57,8 @@ export function RedirectToCurrentProject() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div data-testid="loading" className="min-h-screen bg-background flex items-center justify-center">
+        {/* @testid loading — Loading spinner/state */}
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading projects...</p>
@@ -83,7 +84,11 @@ export function RedirectToCurrentProject() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
+                  {/**
+                   * @testid theme-toggle — Theme toggle button
+                   */}
                   <button
+                    data-testid="theme-toggle"
                     onClick={toggleTheme}
                     className="btn btn-ghost p-2 h-10 w-10"
                     aria-label="Toggle theme"
@@ -300,7 +305,8 @@ services:
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div data-testid="loading" className="min-h-screen bg-background flex items-center justify-center">
+      {/* @testid loading — Loading spinner/state */}
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
   )

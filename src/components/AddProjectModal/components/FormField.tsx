@@ -24,6 +24,8 @@ interface FormFieldProps {
   containerClassName?: string
   pathExists?: boolean
   showPathStatus?: boolean
+  /** Test ID for E2E testing */
+  testId?: string
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -45,6 +47,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   containerClassName = '',
   pathExists = false,
   showPathStatus = false,
+  testId,
 }) => {
   const inputId = label ? label.toLowerCase().replace(/\s+/g, '-') : `field-${Math.random().toString(36).substr(2, 9)}`
   const [showFolderModal, setShowFolderModal] = useState(false)
@@ -87,6 +90,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       return (
         <textarea
           id={inputId}
+          data-testid={testId}
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
@@ -101,6 +105,7 @@ export const FormField: React.FC<FormFieldProps> = ({
     return (
       <input
         id={inputId}
+        data-testid={testId}
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}

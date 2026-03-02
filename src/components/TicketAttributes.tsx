@@ -101,13 +101,16 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
     <div className={`space-y-3 ${className}`}>
       {/* Key Attributes as Badges */}
       <div className="flex flex-wrap gap-2">
-        <Badge variant="outline" className={getStatusColor(ticket.status)}>
+        {/* @testid ticket-status — Status badge */}
+        <Badge variant="outline" className={getStatusColor(ticket.status)} data-testid="ticket-status">
           {ticket.status}
         </Badge>
-        <Badge variant="outline" className={getTypeColor(ticket.type)}>
+        {/* @testid ticket-type — Type badge */}
+        <Badge variant="outline" className={getTypeColor(ticket.type)} data-testid="ticket-type">
           {ticket.type}
         </Badge>
-        <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
+        {/* @testid ticket-priority — Priority badge */}
+        <Badge variant="outline" className={getPriorityColor(ticket.priority)} data-testid="ticket-priority">
           {ticket.priority}
         </Badge>
         {ticket.phaseEpic && (
@@ -116,7 +119,8 @@ const TicketAttributes: React.FC<TicketAttributesProps> = ({ ticket, className =
           </Badge>
         )}
         {ticket.assignee && (
-          <Badge variant="outline" className="bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700">
+          /* @testid ticket-assignee — Assignee display */
+          <Badge variant="outline" className="bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700" data-testid="ticket-assignee">
             👤
             {' '}
             {ticket.assignee}

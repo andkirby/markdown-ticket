@@ -28,6 +28,7 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
   return (
     <div className="flex space-x-1">
       <button
+        data-testid="nav-board"
         onClick={() => onViewModeChange('board')}
         className={`h-12 w-12 rounded-md transition-all ${
           viewMode === 'board'
@@ -43,6 +44,7 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
         />
       </button>
       <button
+        data-testid="nav-list"
         onClick={() => onViewModeChange('list')}
         className={`h-12 w-12 rounded-md transition-all ${
           viewMode === 'list'
@@ -58,6 +60,7 @@ function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps)
         />
       </button>
       <button
+        data-testid="nav-documents"
         onClick={() => onViewModeChange('documents')}
         className={`h-12 w-12 rounded-md transition-all ${
           viewMode === 'documents'
@@ -199,7 +202,7 @@ function ProjectRouteHandler() {
 
   if (projectsLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div data-testid="loading" className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     )
@@ -212,7 +215,10 @@ function ProjectRouteHandler() {
   return (
     <div className="App h-screen flex flex-col bg-background overflow-hidden">
       {/* Navigation Bar */}
-      <nav className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 shadow-sm">
+      <nav
+        data-testid="main-nav"
+        className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 shadow-sm"
+      >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-4 min-w-0 flex-1 overflow-hidden">
@@ -231,6 +237,7 @@ function ProjectRouteHandler() {
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
               <button
+                data-testid="theme-toggle"
                 onClick={toggleTheme}
                 className="btn btn-ghost p-2 h-10 w-10"
                 aria-label="Toggle theme"
@@ -255,6 +262,7 @@ function ProjectRouteHandler() {
           tickets={tickets}
           viewMode={viewMode}
           refreshProjects={refreshProjects}
+          loading={projectsLoading}
         />
       </div>
 

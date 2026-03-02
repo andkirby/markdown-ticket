@@ -24,9 +24,10 @@ interface ProjectViewProps {
   onAddProject?: () => void
   viewMode?: ViewMode
   refreshProjects?: () => Promise<void>
+  loading?: boolean
 }
 
-export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, onAddProject: _onAddProject, viewMode: externalViewMode, refreshProjects }: ProjectViewProps) {
+export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, onAddProject: _onAddProject, viewMode: externalViewMode, refreshProjects, loading: propLoading }: ProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
   const [internalViewMode, setInternalViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY)
@@ -41,7 +42,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(getSortPreferences)
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
   const [showEditProjectModal, setShowEditProjectModal] = useState(false)
-  const loading = false // Loading is controlled by parent component
+  const loading = propLoading || false
 
   // Use ref to prevent stale closure bug when switching projects
   const selectedProjectRef = useRef<Project | null>(selectedProject)
@@ -116,7 +117,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
     <div className="h-full flex flex-col">
       <div className="px-4 py-2 border-b border-border">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 data-testid="project-name" className="text-2xl font-bold text-foreground">
             {selectedProject?.project.name || 'Board View'}
           </h1>
           <div className="flex items-center space-x-4">
@@ -149,12 +150,13 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
           : viewMode === 'list'
             ? (
                 <div className="h-full overflow-auto p-6">
-                  <div className="space-y-2">
+                  <div data-testid="ticket-list" className="space-y-2">
                     {sortTickets(propTickets || [], localSortPreferences.selectedAttribute, localSortPreferences.selectedDirection).map(ticket => (
                       <div
                         key={ticket.code}
                         onClick={() => onTicketClick(ticket)}
                         className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                        data-testid={`ticket-row ticket-row-${ticket.code}`}
                       >
                         <div className="flex-1">
                           <div className="flex items-center space-x-3">

@@ -509,24 +509,30 @@ const BoardContent: React.FC<BoardProps> = ({
 
       {/* Board Grid - render regardless of showHeader */}
       <div data-testid="kanban-board" className="board-container flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full items-stretch p-1 overflow-hidden">
-        {visibleColumns.map((column, index) => (
-          <Column
-            key={column.label}
-            column={column}
-            isFirstColumn={index === 0}
-            tickets={ticketsByColumn[column.label]}
-            allTickets={tickets}
-            sortAttribute={localSortPreferences.selectedAttribute}
-            sortDirection={localSortPreferences.selectedDirection}
-            onDrop={async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
-              console.warn('Board: Column onDrop called with:', { status, ticketKey: ticket.code, currentColumnIndex, currentTicketIndex })
-              await handleDrop(status, ticket, currentColumnIndex, currentTicketIndex)
-            }}
-            onTicketEdit={handleTicketEdit}
-            getTicketPosition={getTicketPosition}
-            clearTicketPosition={clearTicketPosition}
-          />
-        ))}
+        {visibleColumns.map((column, index) => {
+          // Get the primary status for this column (for testid)
+          // Each column has at least one status in its statuses array
+          const primaryStatus = column.statuses[0]
+          return (
+            <Column
+              key={column.label}
+              column={column}
+              isFirstColumn={index === 0}
+              tickets={ticketsByColumn[column.label]}
+              allTickets={tickets}
+              sortAttribute={localSortPreferences.selectedAttribute}
+              sortDirection={localSortPreferences.selectedDirection}
+              onDrop={async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
+                console.warn('Board: Column onDrop called with:', { status, ticketKey: ticket.code, currentColumnIndex, currentTicketIndex })
+                await handleDrop(status, ticket, currentColumnIndex, currentTicketIndex)
+              }}
+              onTicketEdit={handleTicketEdit}
+              getTicketPosition={getTicketPosition}
+              clearTicketPosition={clearTicketPosition}
+              status={primaryStatus}
+            />
+          )
+        })}
       </div>
     </div>
   )

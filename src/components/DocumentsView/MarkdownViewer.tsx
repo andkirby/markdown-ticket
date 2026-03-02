@@ -95,7 +95,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
   }
 
   return (
-    <div className="h-full flex flex-col relative">
+    <div data-testid="file-viewer" className="h-full flex flex-col relative">
       <TableOfContents items={tocItems} view="document" />
       <ScrollArea className="h-[calc(100vh-100px)]">
         <div className="p-6">

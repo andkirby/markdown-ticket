@@ -7,6 +7,10 @@ interface FilterControlsProps {
   placeholder?: string
 }
 
+/**
+ * @testid filter-controls — Filter controls container
+ * @testid search-input — Search input field
+ */
 export const FilterControls: React.FC<FilterControlsProps> = ({
   searchQuery,
   onSearchChange,
@@ -17,7 +21,7 @@ export const FilterControls: React.FC<FilterControlsProps> = ({
   }
 
   return (
-    <div className="relative">
+    <div data-testid="filter-controls" className="relative">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <input
         type="text"
@@ -25,6 +29,7 @@ export const FilterControls: React.FC<FilterControlsProps> = ({
         value={searchQuery}
         onChange={e => onSearchChange(e.target.value)}
         className="pl-10 pr-10 py-1 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-w-[200px]"
+        data-testid="search-input"
       />
       {searchQuery && (
         <button

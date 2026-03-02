@@ -56,6 +56,7 @@ export function ProjectSelector({ projects, selectedProject, onProjectSelect, on
                   <button
                     key={project.id}
                     data-testid={`project-option-${getProjectCode(project)}`}
+                    data-active={isActive ? 'true' : 'false'}
                     onClick={() => {
                       console.warn('ProjectSelector: Selecting project:', { id: project.id, name: project.project.name })
                       onProjectSelect(project)
@@ -81,6 +82,7 @@ export function ProjectSelector({ projects, selectedProject, onProjectSelect, on
                   <TooltipTrigger asChild>
                     <button
                       data-testid={`project-option-${getProjectCode(project)}`}
+                      data-active={isActive ? 'true' : 'false'}
                       onClick={() => {
                         console.warn('ProjectSelector: Selecting project:', { id: project.id, name: project.project.name })
                         onProjectSelect(project)
