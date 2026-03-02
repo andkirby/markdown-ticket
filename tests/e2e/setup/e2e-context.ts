@@ -10,12 +10,13 @@
 import type { Express } from 'express'
 import type { Server } from 'node:http'
 import type { PortConfig, ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
+import type FileWatcherService from '../../../server/fileWatcherService.js'
 import { createServer } from 'node:http'
 
 // Lazy-loaded to ensure CONFIG_DIR is set before import
-let _createTestApp: (() => Express) | null = null
+let _createTestApp: (() => { app: Express; fileWatcher: FileWatcherService }) | null = null
 
-async function loadCreateTestApp(): Promise<() => Express> {
+async function loadCreateTestApp(): Promise<() => { app: Express; fileWatcher: FileWatcherService }> {
   if (!_createTestApp) {
     const module = await import('../../../server/tests/api/test-app-factory.js')
     _createTestApp = module.createTestApp
@@ -41,6 +42,8 @@ export interface E2EContext {
   backendUrl: string
   /** Frontend URL for browser tests */
   frontendUrl: string
+  /** File watcher service for SSE events */
+  fileWatcher: FileWatcherService
 }
 
 /** Singleton E2E context */
@@ -72,7 +75,7 @@ export async function getE2EContext(): Promise<E2EContext> {
 
   // 3. Create in-process backend
   const createTestApp = await loadCreateTestApp()
-  const app = createTestApp()
+  const { app, fileWatcher } = createTestApp()
   const server = createServer(app)
 
   // Start backend server
@@ -91,6 +94,7 @@ export async function getE2EContext(): Promise<E2EContext> {
     ports,
     backendUrl: `http://localhost:${ports.backend}`,
     frontendUrl: `http://localhost:${ports.frontend}`,
+    fileWatcher,
   }
 
   return _e2eContext

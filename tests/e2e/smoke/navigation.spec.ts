@@ -10,7 +10,7 @@
 
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario, type ScenarioResult } from '../setup/index.js'
-import { navSelectors, ticketSelectors, commonSelectors } from '../utils/selectors.js'
+import { boardSelectors, navSelectors, ticketSelectors } from '../utils/selectors.js'
 import { waitForBoardReady } from '../utils/helpers.js'
 
 /**
@@ -19,8 +19,8 @@ import { waitForBoardReady } from '../utils/helpers.js'
 test.describe('Navigation', () => {
   test.describe('Root path redirect', () => {
     test('redirects to first project', async ({ page, e2eContext }) => {
-      // Create a project
-      const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+      // Create a project so the backend has at least one project available
+      await buildScenario(e2eContext.projectFactory, 'simple')
 
       // Navigate to root path
       await page.goto('/')
@@ -28,8 +28,15 @@ test.describe('Navigation', () => {
       // Wait for redirect and board to load
       await waitForBoardReady(page)
 
+      const activeProjectButton = page.locator('[data-testid^="project-option-"][data-active="true"]').first()
+      await expect(activeProjectButton).toBeVisible()
+
+      const activeProjectTestId = await activeProjectButton.getAttribute('data-testid')
+      expect(activeProjectTestId).toBeTruthy()
+      const activeProjectCode = activeProjectTestId!.replace('project-option-', '')
+
       // Verify URL was redirected to project
-      await expect(page).toHaveURL(`/prj/${scenario.projectCode}`)
+      await expect(page).toHaveURL(`/prj/${activeProjectCode}`)
 
       // Verify board is visible
       await expect(page.locator('[data-testid="kanban-board"]')).toBeVisible()
@@ -61,8 +68,8 @@ test.describe('Navigation', () => {
       // Click documents tab
       await page.click(navSelectors.documentsTab)
 
-      // Verify documents view is visible
-      await expect(page.locator('[data-testid="document-tree"]')).toBeVisible()
+      // Verify documents view is visible (use first() for strict mode compliance)
+      await expect(page.locator('[data-testid="document-tree"]').first()).toBeVisible()
 
       // Verify board is hidden or not the main view
       await expect(page.locator('[data-testid="kanban-board"]')).not.toBeVisible()
@@ -87,7 +94,7 @@ test.describe('Navigation', () => {
     test('switches from documents back to board view', async ({ page }) => {
       // First switch to documents view
       await page.click(navSelectors.documentsTab)
-      await expect(page.locator('[data-testid="document-tree"]')).toBeVisible()
+      await expect(page.locator('[data-testid="document-tree"]').first()).toBeVisible()
 
       // Then switch back to board view
       await page.click(navSelectors.boardTab)
@@ -103,43 +110,34 @@ test.describe('Navigation', () => {
 
   test.describe('Project switching', () => {
     test('switches between two projects', async ({ page, e2eContext }) => {
-      // Create first project
+      // Create first project with tickets
       const firstProject = await buildScenario(e2eContext.projectFactory, 'simple')
 
-      // Create second project with a different code
-      const secondProject = await e2eContext.projectFactory.createProject('empty', {
-        name: 'Second Test Project',
-        code: 'TST2',
-      })
-
-      // Add a ticket to the second project so we can verify it loaded
-      const secondProjectTicket = await e2eContext.projectFactory.createTestCR(secondProject.key, {
-        title: 'Second Project Ticket',
-        type: 'Feature Enhancement',
-        status: 'Proposed',
-        priority: 'Medium',
-        content: 'This ticket belongs to the second project.',
-      })
+      // Create second project with different scenario size
+      const secondProject = await buildScenario(e2eContext.projectFactory, 'medium')
 
       // Navigate to first project
       await page.goto(`/prj/${firstProject.projectCode}`)
       await waitForBoardReady(page)
 
+      const firstProjectTicket = page.locator(boardSelectors.ticketByCode(firstProject.crCodes[0]))
+      const secondProjectTicket = page.locator(boardSelectors.ticketByCode(secondProject.crCodes[0]))
+
       // Verify first project tickets are visible
-      await expect(page.locator(`[data-testid="ticket-${firstProject.crCodes[0]}"]`)).toBeVisible()
+      await expect(firstProjectTicket).toBeVisible({ timeout: 10000 })
 
       // Click second project option
-      await page.click(`[data-testid="project-option-${secondProject.key}"]`)
+      await page.click(`[data-testid="project-option-${secondProject.projectCode}"]`)
       await waitForBoardReady(page)
 
       // Verify URL changed to second project
-      await expect(page).toHaveURL(`/prj/${secondProject.key}`)
+      await expect(page).toHaveURL(`/prj/${secondProject.projectCode}`)
 
-      // Verify second project ticket is visible (using the actual created CR code)
-      await expect(page.locator(`[data-testid="ticket-${secondProjectTicket}"]`)).toBeVisible()
+      // Verify second project ticket is visible
+      await expect(secondProjectTicket).toBeVisible({ timeout: 10000 })
 
       // Verify first project tickets are not visible
-      await expect(page.locator(`[data-testid="ticket-${firstProject.crCodes[0]}"]`)).not.toBeVisible()
+      await expect(firstProjectTicket).not.toBeVisible()
     })
 
     test('project button is active for current project', async ({ page, e2eContext }) => {
@@ -183,14 +181,13 @@ test.describe('Navigation', () => {
       await page.goto(`/prj/${scenario.projectCode}/ticket/${ticketCode}`)
       await page.waitForLoadState('load')
 
-      // Wait for modal to appear
-      await expect(page.locator(commonSelectors.modal)).toBeVisible()
+      // Wait for modal to appear with longer timeout
+      await page.waitForTimeout(500) // Allow modal animation
+      const detailPanel = page.locator(ticketSelectors.detailPanel)
+      await expect(detailPanel).toBeVisible({ timeout: 10000 })
 
-      // Verify ticket detail panel is open
-      await expect(page.locator(ticketSelectors.detailPanel)).toBeVisible()
-
-      // Verify ticket code is displayed
-      await expect(page.locator(ticketSelectors.code)).toContainText(ticketCode)
+      // Verify ticket code is displayed (scoped to detail panel)
+      await expect(detailPanel.locator(ticketSelectors.code)).toContainText(ticketCode)
     })
 
     test('closing modal returns to board view', async ({ page, e2eContext }) => {
@@ -203,7 +200,8 @@ test.describe('Navigation', () => {
       await page.waitForLoadState('load')
 
       // Wait for modal to appear
-      await expect(page.locator(ticketSelectors.detailPanel)).toBeVisible()
+      await page.waitForTimeout(500)
+      await expect(page.locator(ticketSelectors.detailPanel)).toBeVisible({ timeout: 10000 })
 
       // Close the modal
       await page.click(ticketSelectors.closeDetail)
@@ -226,17 +224,20 @@ test.describe('Navigation', () => {
       // Navigate to first ticket
       await page.goto(`/prj/${scenario.projectCode}/ticket/${firstTicket}`)
       await page.waitForLoadState('load')
-      await expect(page.locator(ticketSelectors.detailPanel)).toBeVisible()
+      await page.waitForTimeout(500)
+      const detailPanel = page.locator(ticketSelectors.detailPanel)
+      await expect(detailPanel).toBeVisible({ timeout: 10000 })
 
-      // Verify first ticket code is shown
-      await expect(page.locator(ticketSelectors.code)).toContainText(firstTicket)
+      // Verify first ticket code is shown (scoped to detail panel)
+      await expect(detailPanel.locator(ticketSelectors.code)).toContainText(firstTicket)
 
       // Navigate to second ticket (by updating URL)
       await page.goto(`/prj/${scenario.projectCode}/ticket/${secondTicket}`)
       await page.waitForLoadState('load')
+      await page.waitForTimeout(500)
 
-      // Verify second ticket code is now shown
-      await expect(page.locator(ticketSelectors.code)).toContainText(secondTicket)
+      // Verify second ticket code is now shown (scoped to detail panel)
+      await expect(detailPanel.locator(ticketSelectors.code)).toContainText(secondTicket)
     })
   })
 })

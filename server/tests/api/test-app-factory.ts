@@ -101,7 +101,12 @@ interface FileInvokerAdapter {
  * IMPORTANT: Call this AFTER setting process.env.CONFIG_DIR to ensure
  * services use the test configuration directory.
  */
-export function createTestApp(): Express {
+export interface TestAppResult {
+  app: Express
+  fileWatcher: FileWatcherService
+}
+
+export function createTestApp(): TestAppResult {
   // Create Express app
   const app: Express = express()
 
@@ -154,7 +159,7 @@ export function createTestApp(): Express {
   app.use(notFoundHandler)
   app.use(errorHandler)
 
-  return app
+  return { app, fileWatcher }
 }
 
 // Note: With ES6 imports, module caching is handled differently than CommonJS require()

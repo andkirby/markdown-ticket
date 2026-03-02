@@ -317,6 +317,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                   showPathStatus={true}
                   pathExists={pathExists}
                   containerClassName="w-full"
+                  testId="project-path-input"
+                  folderBrowseTestId="project-path-browse-button"
                 />
               </div>
 

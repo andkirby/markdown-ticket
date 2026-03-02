@@ -1,6 +1,6 @@
 import { ChevronRight, Folder } from 'lucide-react'
 import * as React from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/UI/index'
 import { ScrollArea } from '@/components/UI/scroll-area'
 import { usePathResolution } from '@/hooks/usePathResolution'
@@ -36,7 +36,7 @@ export default function FolderBrowserModal({
   isOpen,
   onClose,
   onFolderSelected,
-  initialPath: _initialPath = '',
+  initialPath = '',
   title = 'Select Folder',
 }: FolderBrowserModalProps) {
   const [directoryListing, setDirectoryListing] = useState<DirectoryListing | null>(null)
@@ -47,6 +47,19 @@ export default function FolderBrowserModal({
 
   // 🔐 Simplified path resolution hook - uses enhanced API
   const { checkPath } = usePathResolution()
+
+  useEffect(() => {
+    if (!isOpen) {
+      setDirectoryListing(null)
+      setSelectedPath('')
+      setLoading(true)
+      setCurrentPath('')
+      setClickState({})
+      return
+    }
+
+    void loadFileSystem(initialPath.trim())
+  }, [checkPath, initialPath, isOpen])
 
   const loadFileSystem = async (path: string = '') => {
     try {
@@ -61,7 +74,7 @@ export default function FolderBrowserModal({
       if (response.ok) {
         const data: DirectoryListing = await response.json()
         setDirectoryListing(data)
-        if (!selectedPath && data.currentPath) {
+        if (data.currentPath) {
           setSelectedPath(data.currentPath)
         }
       }
@@ -73,7 +86,9 @@ export default function FolderBrowserModal({
         if (fallbackResponse.ok) {
           const fallbackData: DirectoryListing = await fallbackResponse.json()
           setDirectoryListing(fallbackData)
-          setSelectedPath(fallbackData.currentPath)
+          if (fallbackData.currentPath) {
+            setSelectedPath(fallbackData.currentPath)
+          }
         }
         else {
           console.error('Failed to load home directory as fallback')
@@ -141,7 +156,10 @@ export default function FolderBrowserModal({
     return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      data-testid="folder-browser-modal"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
@@ -150,7 +168,10 @@ export default function FolderBrowserModal({
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
               Current:
               {' '}
-              <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">
+              <code
+                data-testid="folder-browser-current-path"
+                className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs"
+              >
                 {directoryListing?.currentPath || 'Loading...'}
               </code>
             </p>
@@ -221,6 +242,7 @@ export default function FolderBrowserModal({
                             return (
                               <div
                                 key={item.path}
+                                data-testid="folder-browser-item"
                                 className={`flex items-center py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer group ${
                                   isSelected ? 'bg-primary/10 dark:bg-primary/20 border-l-2 border-primary' : ''
                                 }`}
@@ -266,6 +288,7 @@ export default function FolderBrowserModal({
               <Button
                 onClick={handleSelect}
                 disabled={!selectedPath}
+                data-testid="folder-browser-select-button"
               >
                 Select Folder
               </Button>

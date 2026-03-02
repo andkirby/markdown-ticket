@@ -175,12 +175,20 @@ export async function dragTicketToColumn(
   targetStatus: string,
 ): Promise<void> {
   const ticketSelector = boardSelectors.ticketByCode(ticketCode)
-  const targetColumnSelector = boardSelectors.columnByStatus(targetStatus)
+  const targetColumnStatus = ['Implemented', 'Partially Implemented', 'Rejected'].includes(targetStatus)
+    ? 'Implemented'
+    : targetStatus
+  const targetColumnSelector = boardSelectors.columnByStatus(targetColumnStatus)
 
   const ticket = page.locator(ticketSelector)
   const targetColumn = page.locator(targetColumnSelector)
 
   await ticket.dragTo(targetColumn)
+
+  const resolutionDialog = page.locator(boardSelectors.resolutionDialog)
+  if (await resolutionDialog.isVisible().catch(() => false)) {
+    await page.click(boardSelectors.resolutionOption(targetStatus))
+  }
 
   // Wait for drop to complete
   await page.waitForTimeout(500)

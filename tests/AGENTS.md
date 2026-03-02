@@ -22,8 +22,8 @@ The Vite proxy routes all `/api` calls to the test backend via `VITE_BACKEND_URL
 # Run all E2E tests
 npm run test:e2e
 
-# Run a specific file (headless, no server restart)
-PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium
+# Run a specific file (headless)
+npx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium
 
 # Visible browser
 npx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium --headed

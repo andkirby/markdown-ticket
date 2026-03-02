@@ -76,23 +76,13 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     // Use ref to avoid stale closure issues
     const currentProject = selectedProjectRef.current
     if (currentProject) {
-      try {
-        console.warn(`[ProjectManager] Fetching complete ticket: ${ticketData.code}`)
-        const fullTicket = await dataLayer.fetchTicket(currentProject.id, ticketData.code)
-        if (fullTicket) {
-          console.warn(`[ProjectManager] ✅ Updated ticket in main array: ${ticketData.code}`)
-          setTickets(prev => prev.map(ticket =>
-            ticket.code === ticketData.code ? fullTicket : ticket,
-          ))
-        }
-      }
-      catch (error) {
-        console.error('Failed to fetch complete ticket:', error)
-        // Fallback to partial update
-        setTickets(prev => prev.map(ticket =>
-          ticket.code === ticketData.code ? { ...ticket, ...ticketData } : ticket,
-        ))
-      }
+      // Update immediately with SSE data for instant UI feedback
+      // This avoids timing issues where backend fetch might return stale data
+      setTickets(prev => prev.map(ticket =>
+        ticket.code === ticketData.code
+          ? { ...ticket, ...ticketData, lastModified: ticketData.lastModified || new Date() }
+          : ticket,
+      ))
     }
   }, []) // No dependencies - uses ref instead
 

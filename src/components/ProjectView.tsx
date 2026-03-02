@@ -206,9 +206,11 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
       <AddProjectModal
         isOpen={showAddProjectModal}
         onClose={() => setShowAddProjectModal(false)}
-        onProjectCreated={() => {
+        onProjectCreated={async () => {
           setShowAddProjectModal(false)
-          // Optionally refresh projects or show success message
+          if (refreshProjects) {
+            await refreshProjects()
+          }
         }}
       />
 

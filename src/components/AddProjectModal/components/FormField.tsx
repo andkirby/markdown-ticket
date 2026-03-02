@@ -26,6 +26,8 @@ interface FormFieldProps {
   showPathStatus?: boolean
   /** Test ID for E2E testing */
   testId?: string
+  /** Test ID for the folder browse button */
+  folderBrowseTestId?: string
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -48,6 +50,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   pathExists = false,
   showPathStatus = false,
   testId,
+  folderBrowseTestId,
 }) => {
   const inputId = label ? label.toLowerCase().replace(/\s+/g, '-') : `field-${Math.random().toString(36).substr(2, 9)}`
   const [showFolderModal, setShowFolderModal] = useState(false)
@@ -179,6 +182,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                         variant="outline"
                         onClick={handleFolderBrowse}
                         disabled={disabled}
+                        data-testid={folderBrowseTestId}
                         className="flex items-center gap-1 whitespace-nowrap"
                       >
                         <Folder className="h-4 w-4" />

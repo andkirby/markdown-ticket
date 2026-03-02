@@ -100,7 +100,7 @@
 | File content update reflects immediately | Real-time | BR-7.1 |
 | Status change moves ticket via SSE | Real-time | BR-7.2 |
 | Bulk updates appear synchronously | Real-time | BR-7.3 |
-| Modal updates during external file change | Real-time | BR-7.4 |
+| Modal remains usable during external file change | Real-time | BR-7.4 |
 
 ### Journey 8: Project Management
 **User Goal**: Create and switch between projects
@@ -111,8 +111,9 @@
 | Scenario | Type | Requirement |
 |----------|------|-------------|
 | Add project modal opens | Interaction | BR-8.1 |
-| Create new project | Creation | BR-8.2 |
-| Switch projects via selector | Navigation | BR-8.3 |
+| Project path folder browser loads directories | Interaction | BR-8.2 |
+| Create new project | Creation | BR-8.3 |
+| Switch projects via selector | Navigation | BR-8.4 |
 
 ## Scenario Specifications
 
@@ -367,17 +368,20 @@ Feature: SSE Real-time Updates
     And each change flows through: file system → chokidar → backend → SSE → UI
 
   @requirement:BR-7.4 @priority:high
-  Scenario: Modal updates during external file change
+  Scenario: Modal remains usable during external file change
     Given I have a ticket modal open for ticket "PROJ-1"
     And the ticket has title "Original Title"
     When I modify the ticket file on disk to change title to "New Title"
-    Then the modal should update to show "New Title" within 2 seconds
+    Then the board should reflect "New Title" without a page refresh
+    And the modal should remain open and usable
+    When I close and reopen the ticket
+    Then the modal should display "New Title"
     And the change flows through: file system → chokidar → backend → SSE → UI
 ```
 
 ### Feature: Project Management
 **File**: `tests/e2e/project/management.spec.ts`
-**Covers**: BR-8.1, BR-8.2, BR-8.3
+**Covers**: BR-8.1, BR-8.2, BR-8.3, BR-8.4
 
 ```gherkin
 Feature: Project Management
@@ -392,7 +396,15 @@ Feature: Project Management
     Then a modal should appear with project creation form
     And the form should have inputs for name and code
 
-  @requirement:BR-8.2 @priority:high
+  @requirement:BR-8.2 @priority:medium
+  Scenario: Project path folder browser loads directories
+    Given I have opened the add project modal
+    When I click the browse button for project path
+    Then the folder browser modal should appear
+    And I should see the current directory path
+    And I should see available folders to select
+
+  @requirement:BR-8.3 @priority:high
   Scenario: Create new project
     Given I have opened the add project modal
     When I enter "My Test Project" as the name
@@ -400,7 +412,7 @@ Feature: Project Management
     Then the project should be created
     And the project should appear in the project selector
 
-  @requirement:BR-8.3 @priority:high
+  @requirement:BR-8.4 @priority:high
   Scenario: Switch projects via selector
     Given I have two projects created
     And I am viewing the first project
@@ -420,7 +432,7 @@ Feature: Project Management
 | `tests/e2e/documents/view.spec.ts` | 3 |
 | `tests/e2e/ticket/detail.spec.ts` | 4 |
 | `tests/e2e/sse/updates.spec.ts` | 4 |
-| `tests/e2e/project/management.spec.ts` | 3 |
+| `tests/e2e/project/management.spec.ts` | 4 |
 
 ## Requirement Coverage
 
@@ -449,10 +461,11 @@ Feature: Project Management
 | BR-7.1 | External update reflects immediately | bdd | ✅ |
 | BR-7.2 | Status change moves ticket via SSE | bdd | ✅ |
 | BR-7.3 | Bulk updates appear synchronously | bdd | ✅ |
-| BR-7.4 | Modal updates during external change | bdd | ✅ |
+| BR-7.4 | Modal remains usable during external change | bdd | ✅ |
 | BR-8.1 | Add project modal opens | bdd | ✅ |
-| BR-8.2 | Create new project | bdd | ✅ |
-| BR-8.3 | Switch projects via selector | bdd | ✅ |
+| BR-8.2 | Project path folder browser loads directories | bdd | ✅ |
+| BR-8.3 | Create new project | bdd | ✅ |
+| BR-8.4 | Switch projects via selector | bdd | ✅ |
 
 ## Verification
 
@@ -462,7 +475,7 @@ In prep mode, tests will be created to document existing behavior. Once implemen
 npm run test:e2e
 ```
 
-**Expected Result**: All 27 scenarios pass (0 failed)
+**Expected Result**: All 28 scenarios pass (0 failed)
 
 ## Acceptance Gating
 

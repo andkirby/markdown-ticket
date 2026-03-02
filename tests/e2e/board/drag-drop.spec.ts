@@ -14,6 +14,7 @@ import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario } from '../setup/index.js'
 import { boardSelectors } from '../utils/selectors.js'
 import { dragTicketToColumn, getTicketStatus, waitForBoardReady } from '../utils/helpers.js'
+import { waitForSSEEvent } from '../utils/sse-helpers.js'
 
 test.describe('Board Drag-Drop', () => {
   test.describe.configure({ mode: 'serial' })
@@ -72,31 +73,45 @@ test.describe('Board Drag-Drop', () => {
   test('ticket move persists after page refresh', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
-    // Use the Proposed ticket
-    const proposedTicketCode = scenario.crCodes[2] // "Fix Navigation Bug" - Proposed status
-    const targetStatus = 'Implemented'
+    // Use the In Progress ticket so moving into Done exercises the resolution dialog.
+    const inProgressTicketCode = scenario.crCodes[1] // "Add User Authentication" - In Progress status
+    const targetStatus = 'Partially Implemented'
 
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
     // Verify initial status
-    const initialStatus = await getTicketStatus(page, proposedTicketCode)
-    expect(initialStatus).toBe('Proposed')
+    const initialStatus = await getTicketStatus(page, inProgressTicketCode)
+    expect(initialStatus).toBe('In Progress')
 
-    // Drag ticket to Implemented column
-    await dragTicketToColumn(page, proposedTicketCode, targetStatus)
+    // Drag ticket to Done and choose a specific resolution status.
+    const ticket = page.locator(boardSelectors.ticketByCode(inProgressTicketCode))
+    const doneColumn = page.locator(boardSelectors.columnByStatus('Implemented'))
+    await ticket.dragTo(doneColumn)
 
-    // Verify ticket moved in UI
-    const statusAfterDrag = await getTicketStatus(page, proposedTicketCode)
-    expect(statusAfterDrag).toBe(targetStatus)
+    const resolutionDialog = page.locator(boardSelectors.resolutionDialog)
+    await expect(resolutionDialog).toBeVisible()
+    await page.click(boardSelectors.resolutionOption(targetStatus))
+
+    // Verify ticket moved into Done and now shows the chosen resolution.
+    const statusAfterDrag = await getTicketStatus(page, inProgressTicketCode)
+    expect(statusAfterDrag).toBe('Implemented')
+    await expect(page.locator(boardSelectors.ticketByCode(inProgressTicketCode))).toContainText(targetStatus)
+
+    // Wait for SSE update to persist to backend
+    await page.waitForTimeout(1500)
 
     // Refresh the page
     await page.reload()
     await waitForBoardReady(page)
 
-    // Verify ticket is still in the new column after refresh
-    const statusAfterRefresh = await getTicketStatus(page, proposedTicketCode)
-    expect(statusAfterRefresh).toBe(targetStatus)
+    // Additional wait for data to load after refresh
+    await page.waitForTimeout(500)
+
+    // Verify ticket is still in Done after refresh and the chosen resolution persisted.
+    const statusAfterRefresh = await getTicketStatus(page, inProgressTicketCode)
+    expect(statusAfterRefresh).toBe('Implemented')
+    await expect(page.locator(boardSelectors.ticketByCode(inProgressTicketCode))).toContainText(targetStatus)
   })
 
   /**
@@ -112,6 +127,12 @@ test.describe('Board Drag-Drop', () => {
    */
   test('SSE event syncs ticket move across browser contexts', async ({ page, context, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    // Initialize file watcher for the test project's CRs folder
+    const crsPath = `${scenario.projectDir}/docs/CRs/*.md`
+    e2eContext.fileWatcher.initMultiProjectWatcher([
+      { id: scenario.projectCode, path: crsPath },
+    ])
 
     const proposedTicketCode = scenario.crCodes[2] // "Fix Navigation Bug" - Proposed status
     const targetStatus = 'In Progress'
@@ -139,12 +160,14 @@ test.describe('Board Drag-Drop', () => {
       expect(firstPageInitialStatus).toBe('Proposed')
       expect(secondPageInitialStatus).toBe('Proposed')
 
-      // Drag ticket in first page
-      await dragTicketToColumn(page, proposedTicketCode, targetStatus)
+      // Arm the SSE listener before the drag so the second page can't miss the broadcast.
+      await Promise.all([
+        waitForSSEEvent(secondPage, 'file-change', { 'ticketData.code': proposedTicketCode }),
+        dragTicketToColumn(page, proposedTicketCode, targetStatus),
+      ])
 
-      // Wait for SSE event to propagate and second page to update
-      // The timeout accounts for network latency and UI rendering
-      await page.waitForTimeout(1000)
+      // Give the second page time to process the event and update UI
+      await secondPage.waitForTimeout(500)
 
       // Verify second page shows the updated status via SSE
       const secondPageUpdatedStatus = await getTicketStatus(secondPage, proposedTicketCode)
