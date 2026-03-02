@@ -90,3 +90,6 @@ typescript-graph.md
 **/.checkpoint.json
 **/.checkpoint.yaml
 .*/
+
+# Task status tracking
+*.tasks-status.yaml
