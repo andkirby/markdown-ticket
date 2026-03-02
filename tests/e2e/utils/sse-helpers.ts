@@ -8,10 +8,23 @@
  * @see docs/CRs/MDT-106*.md for SSE architecture
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
 import { promises as fs } from 'fs'
 import { join as pathJoin } from 'path'
+
+// Add TypeScript declarations for window properties
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  interface Window {
+    __sseEvents?: any[]
+    __sseListenerActive?: boolean
+    __sseEventSource?: EventSource
+  }
+}
 
 export interface TicketModification {
   title?: string
@@ -46,7 +59,17 @@ export async function modifyTicketFile(
   ticketCode: string,
   modifications: TicketModification,
 ): Promise<void> {
-  const ticketsPath = pathJoin(projectDir, 'docs', 'CRs', `${ticketCode}.md`)
+  // Find the ticket file - files are named with slug suffix (e.g., TNXP-001-setup-project.md)
+  const crsDir = pathJoin(projectDir, 'docs', 'CRs')
+  const files = await fs.readdir(crsDir)
+
+  // Find file that starts with ticket code (handles slug suffix)
+  const targetFile = files.find(f => f.startsWith(`${ticketCode}-`) || f === `${ticketCode}.md`)
+  if (!targetFile) {
+    throw new Error(`Ticket file not found for code ${ticketCode} in ${crsDir}. Files: ${files.join(', ')}`)
+  }
+
+  const ticketsPath = pathJoin(crsDir, targetFile)
 
   // Read existing file
   const content = await fs.readFile(ticketsPath, 'utf-8')
@@ -85,7 +108,11 @@ export async function modifyTicketFile(
     : bodyContent
 
   // Reconstruct file with modified frontmatter
-  const updatedContent = `---\n${updatedFrontmatter}\n---\n\n${updatedBody}`
+  const updatedContent = `---
+${updatedFrontmatter}
+---
+
+${updatedBody}`
 
   // Write back to disk (this triggers the file watcher)
   await fs.writeFile(ticketsPath, updatedContent, 'utf-8')
@@ -164,7 +191,7 @@ async function setupSSECapture(page: Page): Promise<void> {
  *
  * @param page - Playwright page instance
  * @param eventType - Expected event type (e.g., 'file-change')
- * @param matcher - Optional matcher for event data
+ * @param matcher - Optional matcher for event data (supports dot notation for nested paths)
  * @returns Promise that resolves when matching event is received
  */
 export async function waitForSSEEvent(
@@ -193,11 +220,26 @@ export async function waitForSSEEvent(
 
           // Check if all matcher criteria match
           const data = event.data as Record<string, unknown>
-          const matches = Object.entries(match).every(([key, value]) => {
-            return data[key] === value
+
+          // All matcher entries must match
+          const allMatch = Object.entries(match).every(([key, value]) => {
+            // For nested paths like 'ticketData.code', use dot notation
+            let actualValue: unknown = data
+            const keys = key.split('.')
+            for (const k of keys) {
+              if (actualValue && typeof actualValue === 'object' && k in actualValue) {
+                actualValue = (actualValue as Record<string, unknown>)[k]
+              }
+              else {
+                actualValue = undefined
+                break
+              }
+            }
+
+            return actualValue === value
           })
 
-          if (matches) {
+          if (allMatch) {
             return true
           }
         }
@@ -257,7 +299,25 @@ export async function assertSSEReceived(
 
     // Check if all matcher criteria match
     return Object.entries(matcher).every(([key, value]) => {
-      return event.data[key] === value
+      // For nested paths, handle dot notation
+      let actualValue: unknown = event.data
+      if (key.includes('.')) {
+        const keys = key.split('.')
+        for (const k of keys) {
+          if (actualValue && typeof actualValue === 'object' && k in actualValue) {
+            actualValue = (actualValue as Record<string, unknown>)[k]
+          }
+          else {
+            actualValue = undefined
+            break
+          }
+        }
+      }
+      else {
+        actualValue = (event.data as Record<string, unknown>)[key]
+      }
+
+      return actualValue === value
     })
   })
 

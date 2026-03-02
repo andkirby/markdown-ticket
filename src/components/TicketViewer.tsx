@@ -24,32 +24,41 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
 
   // Update internal state when prop changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => setCurrentTicket(ticket), 0)
-    return () => clearTimeout(timeoutId)
+    setCurrentTicket(ticket)
   }, [ticket])
 
   // Listen for real-time updates to this specific ticket
-  useEventBus('ticket:updated', useCallback(async (event) => {
+  useEventBus('ticket:updated', useCallback((event) => {
     const updatedTicket = event.payload.ticket
-    if (!updatedTicket) {
+    if (!updatedTicket || typeof updatedTicket !== 'object' || !('code' in updatedTicket)) {
       return
     }
 
     setCurrentTicket((prev) => {
-      if (prev && prev.code === updatedTicket.code) {
-        // Fetch complete ticket data including content
-        dataLayer.fetchTicket(event.payload.projectId, updatedTicket.code)
-          .then((fullTicket) => {
-            if (fullTicket) {
-              setCurrentTicket(fullTicket)
-            }
-          })
-          .catch(err => console.error('Failed to fetch updated ticket:', err))
-        return prev // Keep current ticket while fetching
+      const openTicket = prev ?? ticket
+
+      if (!openTicket || openTicket.code !== updatedTicket.code) {
+        return prev
       }
-      return prev
+
+      // Fetch complete ticket data including content
+      dataLayer.fetchTicket(event.payload.projectId, updatedTicket.code)
+        .then((fullTicket) => {
+          if (fullTicket) {
+            setCurrentTicket((current) => {
+              if (!current || current.code !== fullTicket.code) {
+                return current
+              }
+
+              return { ...current, ...fullTicket }
+            })
+          }
+        })
+        .catch(err => console.error('Failed to fetch updated ticket:', err))
+
+      return { ...openTicket, ...updatedTicket }
     })
-  }, []))
+  }, [ticket]))
 
   // MDT-064: Process content to hide H1 headers and extract title
   const processedContent = useMemo(() => {

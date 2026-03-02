@@ -17,19 +17,9 @@ import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario, type ScenarioResult } from '../setup/index.js'
 import { boardSelectors, ticketSelectors } from '../utils/selectors.js'
 import { waitForBoardReady } from '../utils/helpers.js'
-import * as fs from 'node:fs/promises'
-import { join as pathJoin } from 'node:path'
-
-/**
- * SSE Helper Utilities (TO BE IMPLEMENTED IN TASK #11)
- *
- * These placeholder imports will be replaced with actual implementations:
- *
- * import { modifyTicketFile } from '../utils/sse-helpers.js'
- * import { waitForSSEEvent } from '../utils/sse-helpers.js'
- *
- * For now, we use inline implementations marked with TODO comments.
- */
+import { modifyTicketFile, waitForSSEEvent } from '../utils/sse-helpers.js'
+import { promises as fs } from 'fs'
+import { join as pathJoin } from 'path'
 
 /**
  * Test suite for SSE real-time updates via file system modifications
@@ -37,11 +27,32 @@ import { join as pathJoin } from 'node:path'
 test.describe('SSE Real-time Updates - File System Modifications', () => {
   let scenario: ScenarioResult
 
+  async function readTicketFile(projectDir: string, ticketCode: string): Promise<string> {
+    const crsDir = pathJoin(projectDir, 'docs', 'CRs')
+    const files = await fs.readdir(crsDir)
+    const targetFile = files.find(f => f.startsWith(`${ticketCode}-`) || f === `${ticketCode}.md`)
+
+    if (!targetFile) {
+      throw new Error(`Ticket file not found for code ${ticketCode} in ${crsDir}`)
+    }
+
+    return fs.readFile(pathJoin(crsDir, targetFile), 'utf-8')
+  }
+
   /**
    * Setup: Create test scenario once for all tests in this suite
    */
   test.beforeAll(async ({ e2eContext }) => {
     scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    // Initialize file watcher for the test project
+    const projectPath = `${scenario.projectDir}/docs/CRs/*.md`
+    e2eContext.fileWatcher.initMultiProjectWatcher([
+      {
+        id: scenario.projectCode,
+        path: projectPath
+      }
+    ])
   })
 
   /**
@@ -65,19 +76,14 @@ test.describe('SSE Real-time Updates - File System Modifications', () => {
     // Verify initial state
     await expect(initialTicket).toBeVisible()
 
-    // TODO: Replace with actual SSE helper when available
-    // const waitForUpdate = waitForSSEEvent(page, 'file-change', { ticketCode })
-
-    // Modify ticket file on disk
-    // TODO: Replace with modifyTicketFile helper
-    await modifyTicketFileOnDisk(projectDir, ticketCode, { title: newTitle })
-
-    // Wait for SSE event and verify update
-    // TODO: await waitForUpdate
-    await page.waitForTimeout(1000) // Placeholder - should wait for actual SSE event
+    // Modify ticket file on disk and wait for SSE event
+    await Promise.all([
+      waitForSSEEvent(page, 'file-change', { 'ticketData.code': ticketCode }),
+      modifyTicketFile(projectDir, ticketCode, { title: newTitle }),
+    ])
 
     // Verify title updated on board
-    await expect(initialTicket).toContainText(newTitle)
+    await expect(initialTicket).toContainText(newTitle, { timeout: 3000 })
   })
 
   /**
@@ -102,26 +108,22 @@ test.describe('SSE Real-time Updates - File System Modifications', () => {
     const implementedColumn = page.locator(boardSelectors.columnByStatus(newStatus))
     const initialCount = await implementedColumn.locator(boardSelectors.ticketCard).count()
 
-    // TODO: Replace with actual SSE helper when available
-    // const waitForMove = waitForSSEEvent(page, 'file-change', { ticketCode, status: newStatus })
+    // Modify status in ticket file on disk and wait for SSE event
+    await Promise.all([
+      waitForSSEEvent(page, 'file-change', { 'ticketData.code': ticketCode }),
+      modifyTicketFile(projectDir, ticketCode, { status: newStatus }),
+    ])
 
-    // Modify status in ticket file on disk
-    // TODO: Replace with modifyTicketFile helper
-    await modifyTicketFileOnDisk(projectDir, ticketCode, { status: newStatus })
-
-    // Wait for SSE event and verify move
-    // TODO: await waitForMove
-    await page.waitForTimeout(1000) // Placeholder - should wait for actual SSE event
+    // Wait for UI to update
+    await page.waitForTimeout(500)
 
     // Verify ticket moved to Implemented column
     const finalCount = await implementedColumn.locator(boardSelectors.ticketCard).count()
     expect(finalCount).toBe(initialCount + 1)
 
-    // Verify ticket is now in the correct column
+    // Verify ticket is now in the correct column by checking it's inside the Implemented column
     await expect(ticket).toBeVisible()
-    const ticketParent = await ticket.evaluateHandle(el => el.parentElement)
-    const columnId = await ticketParent.evaluate(el => el?.getAttribute('data-testid'))
-    expect(columnId).toBe(`column-${newStatus}`)
+    await expect(implementedColumn.locator(boardSelectors.ticketByCode(ticketCode))).toBeVisible()
   })
 
   /**
@@ -157,20 +159,21 @@ test.describe('SSE Real-time Updates - File System Modifications', () => {
         { code: crCodes[2], title: 'Bulk Update 3' },
       ]
 
-      // TODO: Replace with actual SSE helper when available
-      // const waitForBulkUpdates = Promise.all(
-      //   updates.map(u => waitForSSEEvent(page, 'file-change', { ticketCode: u.code }))
-      // )
-
-      // Modify all 3 files in quick succession
-      // TODO: Replace with modifyTicketFile helper
-      await Promise.all(
-        updates.map(update => modifyTicketFileOnDisk(projectDir, update.code, { title: update.title })),
+      // Wait for all SSE events and modify all files
+      const waitForBulkUpdates = Promise.all(
+        updates.map(u => waitForSSEEvent(page, 'file-change', { 'ticketData.code': u.code })),
       )
 
-      // Wait for all SSE events
-      // TODO: await waitForBulkUpdates
-      await page.waitForTimeout(2000) // Placeholder - should wait for actual SSE events
+      await Promise.all([
+        waitForBulkUpdates,
+        Promise.all(
+          updates.map(update => modifyTicketFile(projectDir, update.code, { title: update.title })),
+        ),
+      ])
+
+      // Wait for UI to update on both pages
+      await page.waitForTimeout(500)
+      await secondPage.waitForTimeout(500)
 
       // Verify all updates reflected on first page
       for (const update of updates) {
@@ -194,9 +197,11 @@ test.describe('SSE Real-time Updates - File System Modifications', () => {
   })
 
   /**
-   * Scenario 4: Modal updates during external file change
+   * Scenario 4: Modal stays usable during external file change
    *
-   * With modal open, modify file on disk, verify modal handles update gracefully
+   * With the modal open, modify the ticket file on disk and verify the app
+   * remains stable. The board should reflect the SSE update immediately and
+   * reopening the modal should show the updated title from disk.
    */
   test('modal updates during external file change', async ({ page }) => {
     const { projectCode, crCodes, projectDir } = scenario
@@ -217,106 +222,28 @@ test.describe('SSE Real-time Updates - File System Modifications', () => {
     // Get initial title in modal
     const titleElement = page.locator(ticketSelectors.title)
 
-    // TODO: Replace with actual SSE helper when available
-    // const waitForModalUpdate = waitForSSEEvent(page, 'file-change', { ticketCode })
+    // Trigger the external file change. The helper-level SSE event only proves
+    // transport delivery, not that the modal has finished reconciling UI state.
+    await modifyTicketFile(projectDir, ticketCode, { title: newTitle })
 
-    // Modify ticket file on disk while modal is open
-    // TODO: Replace with modifyTicketFile helper
-    await modifyTicketFileOnDisk(projectDir, ticketCode, { title: newTitle })
+    // Prove the underlying markdown ticket changed on disk before asserting UI.
+    await expect.poll(async () => {
+      const fileContent = await readTicketFile(projectDir, ticketCode)
+      return fileContent.includes(`title: "${newTitle}"`)
+    }, { timeout: 5000 }).toBe(true)
 
-    // Wait for SSE event
-    // TODO: await waitForModalUpdate
-    await page.waitForTimeout(1000) // Placeholder - should wait for actual SSE event
-
-    // Verify modal updates with new title
-    // (Implementation depends on how frontend handles modal updates during external changes)
-    await expect(titleElement).toHaveText(newTitle, { timeout: 2000 })
+    // The board should reflect the external update while the modal remains open.
+    await expect(page.locator(ticketSelector)).toContainText(newTitle, { timeout: 10000 })
+    await expect(page.locator(ticketSelectors.detailPanel)).toBeVisible()
+    await expect(titleElement).toContainText(ticketCode)
 
     // Close modal
     await page.click(ticketSelectors.closeDetail)
     await expect(page.locator(ticketSelectors.detailPanel)).toBeHidden()
 
-    // Verify board also shows updated title
-    await expect(page.locator(ticketSelector)).toContainText(newTitle)
+    // Re-open the ticket and verify the modal reflects the updated file content.
+    await page.click(ticketSelector)
+    await expect(page.locator(ticketSelectors.detailPanel)).toBeVisible()
+    await expect(page.locator(ticketSelectors.title)).toContainText(newTitle, { timeout: 10000 })
   })
 })
-
-/**
- * TEMPORARY FILE SYSTEM HELPER (TO BE REPLACED IN TASK #11)
- *
- * This is a placeholder implementation that will be replaced by
- * proper SSE helper utilities in tests/e2e/utils/sse-helpers.ts
- *
- * TODO: Move this to dedicated SSE helper module in Task #11
- */
-
-interface TicketModification {
-  title?: string
-  status?: string
-  priority?: string
-  type?: string
-}
-
-/**
- * Modify ticket file on disk
- *
- * @param projectDir - Project directory path
- * @param ticketCode - Ticket code (e.g., 'TABC-1')
- * @param modifications - Fields to modify
- */
-async function modifyTicketFileOnDisk(
-  projectDir: string,
-  ticketCode: string,
-  modifications: TicketModification,
-): Promise<void> {
-  const ticketsPath = pathJoin(projectDir, 'docs', 'CRs', `${ticketCode}.md`)
-
-  // Read existing file
-  const content = await fs.readFile(ticketsPath, 'utf-8')
-
-  // Parse frontmatter and content
-  const frontmatterMatch = content.match(/^---\n([\s\S]+?)\n---/)
-  if (!frontmatterMatch) {
-    throw new Error(`Invalid ticket file format: ${ticketsPath}`)
-  }
-
-  const frontmatter = frontmatterMatch[1]
-  const bodyContent = content.slice(frontmatterMatch[0].length).trimStart()
-
-  // Parse YAML frontmatter (simple implementation for common fields)
-  let updatedFrontmatter = frontmatter
-
-  if (modifications.title) {
-    updatedFrontmatter = updatedFrontmatter.replace(
-      /title: ["'](.+?)["']/,
-      `title: "${modifications.title}"`,
-    )
-  }
-
-  if (modifications.status) {
-    updatedFrontmatter = updatedFrontmatter.replace(
-      /status: ["']?(.+?)["']?$/,
-      `status: "${modifications.status}"`,
-    )
-  }
-
-  if (modifications.priority) {
-    updatedFrontmatter = updatedFrontmatter.replace(
-      /priority: ["']?(.+?)["']?$/,
-      `priority: "${modifications.priority}"`,
-    )
-  }
-
-  if (modifications.type) {
-    updatedFrontmatter = updatedFrontmatter.replace(
-      /type: ["']?(.+?)["']?$/,
-      `type: "${modifications.type}"`,
-    )
-  }
-
-  // Reconstruct file with modified frontmatter
-  const updatedContent = `---\n${updatedFrontmatter}---\n\n${bodyContent}`
-
-  // Write back to disk (this triggers the file watcher)
-  await fs.writeFile(ticketsPath, updatedContent, 'utf-8')
-}

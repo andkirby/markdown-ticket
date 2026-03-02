@@ -13,6 +13,10 @@ interface ResolutionDialogProps {
   onCancel: () => void
 }
 
+function getResolutionOptionTestId(status: Status): string {
+  return `resolution-option-${status.toLowerCase().replace(/ /g, '-')}`
+}
+
 export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
   isOpen,
   ticketCode,
@@ -21,14 +25,11 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
   onResolve,
   onCancel,
 }) => {
-  const handleStatusClick = (status: Status) => {
-    onResolve(status)
-  }
-
   return (
     <Modal
       isOpen={isOpen}
       onClose={onCancel}
+      data-testid="resolution-dialog"
     >
       <ModalHeader
         title="Choose Resolution Status"
@@ -41,6 +42,7 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
             <p>
               <strong className="text-gray-900 dark:text-white">{ticketCode}</strong>
               :
+              {' '}
               {ticketTitle}
             </p>
             <p className="mt-2 text-gray-700 dark:text-gray-200">
@@ -52,22 +54,25 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
             {availableStatuses.map(status => (
               <button
                 key={status}
-                onClick={() => handleStatusClick(status)}
-                className={`
-                  w-full p-4 rounded-lg border-2 text-left transition-all
-                  hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20
+                type="button"
+                onClick={() => onResolve(status)}
+                data-testid={getResolutionOptionTestId(status)}
+                className="
+                  w-full rounded-lg border-2 border-gray-200 bg-white p-4 text-left transition-all
+                  hover:border-blue-500 hover:bg-blue-50
                   focus:outline-none focus:ring-2 focus:ring-blue-500
-                  bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600
-                `}
+                  dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-blue-900/20
+                "
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
                       <div
                         className={`
-                          w-4 h-4 rounded-full
+                          h-4 w-4 rounded-full
                           ${getStatusColor(status) === 'teal' ? 'bg-teal-500' : ''}
                           ${getStatusColor(status) === 'indigo' ? 'bg-indigo-500' : ''}
+                          ${getStatusColor(status) === 'red' ? 'bg-red-500' : ''}
                         `}
                       />
                       <span className="font-medium text-gray-900 dark:text-white">
@@ -80,7 +85,7 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
                   </div>
                   <div className="ml-4">
                     <svg
-                      className="w-5 h-5 text-gray-400"
+                      className="h-5 w-5 text-gray-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -104,6 +109,7 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
         <Button
           variant="secondary"
           onClick={onCancel}
+          data-testid="resolution-cancel"
         >
           Cancel
         </Button>

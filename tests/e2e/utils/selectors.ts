@@ -37,6 +37,12 @@ export const boardSelectors = {
   dragHandle: '[data-testid="drag-handle"]',
   /** Drop zone indicator */
   dropZone: '[data-testid="drop-zone"]',
+  /** Resolution dialog shown when dropping into Done */
+  resolutionDialog: '[data-testid="resolution-dialog"]',
+  /** Resolution option button by status */
+  resolutionOption: (status: string) => `[data-testid="resolution-option-${status.toLowerCase().replace(/ /g, '-')}"]`,
+  /** Cancel button for resolution dialog */
+  resolutionCancel: '[data-testid="resolution-cancel"]',
   /** Filter controls container */
   filterControls: '[data-testid="filter-controls"]',
   /** Search input field */
@@ -95,6 +101,18 @@ export const projectSelectors = {
   projectCode: '[data-testid="project-code"]',
   /** Ticket count badge */
   ticketCount: '[data-testid="ticket-count"]',
+  /** Add project modal */
+  addProjectModal: '[data-testid="add-project-modal"]',
+  /** Browse button for project path */
+  projectPathBrowseButton: '[data-testid="project-path-browse-button"]',
+  /** Folder browser modal */
+  folderBrowserModal: '[data-testid="folder-browser-modal"]',
+  /** Current path shown in folder browser */
+  folderBrowserCurrentPath: '[data-testid="folder-browser-current-path"]',
+  /** Folder browser directory items */
+  folderBrowserItem: '[data-testid="folder-browser-item"]',
+  /** Folder browser confirm button */
+  folderBrowserSelectButton: '[data-testid="folder-browser-select-button"]',
 } as const
 
 /**

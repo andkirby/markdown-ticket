@@ -438,7 +438,19 @@ class FileWatcherService extends EventEmitter {
   }
 
   getProjectPath(projectId: string): string {
-    // This should match your project path resolution logic
+    // First, check if path was registered via initMultiProjectWatcher
+    const registeredPath = this.watchPaths.get(projectId)
+    if (registeredPath) {
+      // The watch path includes the glob pattern (e.g., /path/to/docs/CRs/*.md)
+      // We need to return the directory part (remove the glob)
+      const globIndex = registeredPath.indexOf('*')
+      if (globIndex !== -1) {
+        return registeredPath.substring(0, globIndex)
+      }
+      return registeredPath
+    }
+
+    // Fallback for hardcoded project paths (legacy support)
     // For debug project, it's in debug-tasks folder relative to project root
     if (projectId === 'debug') {
       return path.join(process.cwd(), '..', 'debug-tasks')
