@@ -157,6 +157,10 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
   return (
     <div className="relative inline-block">
       <button
+        /**
+         * @testid status-dropdown — Status toggle button for changing ticket status
+         */
+        data-testid="status-dropdown"
         ref={drop}
         onClick={handleButtonClick}
         onMouseEnter={handleMouseEnter}
