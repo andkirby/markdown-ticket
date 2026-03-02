@@ -67,7 +67,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     cachedApp = null
     const { createTestApp: createApp } = await import('./test-app-factory')
 
-    app = createApp()
+    app = createApp().app
     cachedApp = app
     cachedConfigDir = configDir
   }

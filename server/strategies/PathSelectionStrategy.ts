@@ -98,9 +98,7 @@ export class PathSelectionStrategy extends TreeBuildingStrategy {
         }
       }
       else {
-        const fileItem = item as FileNode
-
-        items.push({ name: fileItem.name, path: fileItem.path, type: fileItem.type })
+        items.push(item as TreeNode)
       }
     }
 
