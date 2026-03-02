@@ -148,3 +148,21 @@ export const documentSelectors = {
   /** File content viewer */
   fileViewer: '[data-testid="file-viewer"]',
 } as const
+
+/**
+ * Markdown rendering selectors
+ */
+export const markdownSelectors = {
+  /** Nested list item rendered under a parent list item */
+  nestedListItem: 'ul > li > ul > li',
+  /** Mermaid diagram container */
+  mermaidContainer: '.mermaid-container',
+  /** Mermaid fullscreen control added after rendering */
+  mermaidFullscreenButton: '.mermaid-container .mermaid-fullscreen-btn',
+  /** Rendered markdown table */
+  table: 'table',
+  /** Rendered blockquote */
+  blockquote: 'blockquote',
+  /** Rendered fenced code block */
+  codeBlock: 'pre code',
+} as const
