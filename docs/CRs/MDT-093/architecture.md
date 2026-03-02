@@ -1,159 +1,119 @@
 # Architecture: MDT-093
 
-**Source**: [MDT-093](../../../docs/CRs/MDT-093-add-sub-document-support-with-sticky-tabs-in-ticke.md)
-**Generated**: 2025-12-11
-**Complexity Score**: 21
+**Source**: [MDT-093](../MDT-093-add-sub-document-support-with-sticky-tabs-in-ticke.md)
+**Generated**: 2026-03-02
 
 ## Overview
 
-This architecture adds sub-document navigation to tickets using a tabbed interface with sticky positioning. The design follows a component composition pattern with clear separation between data fetching, state management, and UI rendering. It integrates seamlessly with existing SSE patterns and maintains consistency with current file handling conventions.
+This architecture adds hierarchical sub-document navigation to ticket view without changing the underlying CR file format or markdown rendering pipeline. The design keeps one backend authority for discovery and ordering, one frontend authority for selected path and hash state, and uses grouped `shadcn` tab rows to expose files, folders, and nested folders without flattening the hierarchy.
 
-**React Component Guidelines Applied:**
-- **Colocation**: `useSubDocuments` and `useSubDocumentSSE` hooks are colocated in `TicketViewer/` folder as they're only used by this feature
-- **Folder Promotion**: `TicketViewer` becomes a folder when it gains the `TicketTabs` sub-component
-- **File-to-Folder Rule**: Move `TicketViewer.tsx` to `TicketViewer/index.tsx` (never have both)
-- **Flat Structure**: Keep folder structure flat (max 2 levels deep)
-- **Import Consistency**: Using `index.tsx` ensures `import { TicketViewer } from '@/components/TicketViewer'` continues to work
+## Constraint Carryover
 
-**SSE Architecture Decision**:
-- **Problem**: Adding events to global `useSSEEvents` creates a 500+ line god file that's impossible to maintain
-- **Solution**: Domain-specific SSE hooks (`useSubDocumentSSE`) that stay under 50 lines and are colocated with features that use them
-- **Benefit**: Each feature owns its SSE logic, enabling isolated testing and preventing monolithic SSE handlers
+| Constraint ID | Enforcement |
+|---------------|-------------|
+| C1 | Canonical Runtime Flows / Module Boundaries: discovery comes only from filesystem-backed ticket artifacts |
+| C2 | Canonical Runtime Flows / Module Boundaries: ordering is computed on the server and consumed as delivered |
+| C3 | Key Dependencies / Module Boundaries: navigation rows render with `shadcn` Tabs |
+| C4 | Canonical Runtime Flows / Runtime Prerequisites: selected relative document path is mirrored in the URL hash |
+| C5 | Runtime Prerequisites / Error Philosophy: SSE absence degrades to manual navigation with last loaded structure |
+| C6 | Key Dependencies / Module Boundaries: content rendering continues through `MarkdownContent` and shared markdown services |
+| C7 | Runtime Prerequisites / Error Philosophy: selection keeps load-start latency within the required window |
+| C8 | Runtime Prerequisites / Error Philosophy: discovery and retrieval support markdown files up to 1MB |
+| C9 | Module Boundaries / Error Philosophy: sticky rows remain visible without disruptive layout shift |
+| C10 | Structure / Module Boundaries: API additions are documented in `server/openapi.yaml` |
 
 ## Pattern
 
-**Component Composition with Render Props** — Each component has a single responsibility: data fetching (useSubDocuments), navigation (TicketTabs), and content rendering (MarkdownContent). This pattern ensures testability and reusability while maintaining clear data flow from hooks to components.
+**Hierarchical Navigation with Server-Owned Discovery** — The server returns a hierarchical document tree and ordered metadata, while the frontend renders one `Tabs` row per active folder level and resolves the selected file path. This fits because ordering, grouping, and missing-path fallback must stay deterministic across reloads, deep links, and realtime updates.
 
-## Component Boundaries
+## Canonical Runtime Flows
 
-```mermaid
-graph TB
-    subgraph "UI Layer"
-        TV[TicketViewer]
-        TT[TicketTabs]
-        TL[TabLoading]
-        MD[MarkdownContent]
-    end
-    subgraph "State Management (Colocated)"
-        USD[useSubDocuments]
-        SSE[useSubDocumentSSE]
-    end
-    subgraph "Data Layer"
-        FS[dataLayer]
-        API[Backend API]
-        CS[CrService]
-    end
-    subgraph "File System"
-        CR[CR Files]
-        SUB[Sub-documents]
-    end
+| Critical Behavior | Canonical Runtime Flow (single path) | Owner Module |
+|-------------------|--------------------------------------|--------------|
+| Discover ordered document tree | `Project routes -> ProjectController.getCR -> TicketService.getCR -> shared ticket lookup + sub-document discovery -> CR response includes hierarchical subdocuments` | `server/services/TicketService.ts` |
+| Select folder and reveal next row | `TicketDocumentTabs -> useTicketDocumentNavigation.selectFolder(relativePath) -> active folder stack recalculated -> next Tabs row rendered while current document stays visible` | `src/components/TicketViewer/useTicketDocumentNavigation.ts` |
+| Select file and render content | `TicketDocumentTabs -> useTicketDocumentContent.selectFile(relativePath) -> dataLayer fetches CR sub-document endpoint -> response normalized -> MarkdownContent renders selected document -> hash updated` | `src/components/TicketViewer/useTicketDocumentContent.ts` |
+| Apply realtime structure changes | `/api/events -> useSSEEvents -> useTicketDocumentRealtime -> dataLayer refetches CR tree -> navigation state reconciled -> missing active path falls back to main` | `src/components/TicketViewer/useTicketDocumentRealtime.ts` |
+| Render sticky multi-row tab UI | `TicketViewer/index.tsx -> TicketDocumentTabs renders primary and nested tab rows with shadcn Tabs -> sticky container remains visible during scroll` | `src/components/TicketViewer/TicketDocumentTabs.tsx` |
 
-    TV --> TT
-    TV --> MD
-    TT --> TL
-    TT -.-> USD
-    USD -.-> SSE
-    USD --> FS
-    SSE -.-> USD
-    FS --> API
-    API --> CS
-    CS --> CR
-    CS --> SUB
-```
+Rules:
+- One behavior = one canonical flow
+- One behavior = one owner module
+- No duplicate owners
 
-| Component | Responsibility | Owns | Depends On |
-|-----------|----------------|------|------------|
-| `TicketViewer` | Orchestrates ticket display with tabs | Modal state, content rendering | `TicketTabs`, existing `MarkdownContent` |
-| `TicketTabs` | Renders tab navigation, manages sticky positioning | UI state, active tab | Colocated `useSubDocuments` hook |
-| `useSubDocuments` | Fetches/subscribes to sub-documents, syncs URL | Sub-document list, loading/error states | `dataLayer`, `useSubDocumentSSE` |
-| `useSubDocumentSSE` | Handles sub-document specific SSE events | Event subscription, state updates | Backend SSE endpoint only |
-| `TabLoading` | Loading indicator for tab content | Animation state | None (UI only) |
-| `dataLayer` | HTTP client for ticket and sub-document CRUD | Fetch cache, error handling | Backend API endpoints |
-| `CrService` | Backend discovery and sorting of sub-documents | File system scanning, config parsing | File system, `.mdt-config.toml` |
+## Key Dependencies
 
-## Shared Patterns
+| Capability | Decision | Scope | Rationale |
+|------------|----------|-------|-----------|
+| Hierarchical tab primitive | Use existing `shadcn` Tabs | runtime | Required by C3 and supports one row per active folder level without inventing custom focus behavior |
+| Markdown rendering | Use existing `src/components/MarkdownContent.tsx` with shared markdown services | runtime | Preserves the current rendering pipeline required by C6 |
+| Realtime transport | Use existing `/api/events` SSE stream and `useSSEEvents` integration | runtime | Reuses current file-change delivery instead of adding a feature-specific transport |
 
-| Pattern | Occurrences | Extract To |
-|---------|-------------|------------|
-| API error handling with try/catch | dataLayer, useSubDocuments | `dataLayer` (add error wrapper) |
-| Markdown content parsing | TicketViewer, MarkdownContent | Existing `markdownParser.ts` |
+## Runtime Prerequisites
 
-> Phase 1 extracts these BEFORE features that use them.
+| Dependency | Type | Required | When Absent |
+|------------|------|----------|-------------|
+| `.mdt-config.toml` `project.ticketSubdocuments` | project config | No | Server uses the default ordered set, then appends remaining entries in natural ascending name order |
+| Ticket-related sub-document files and directories | filesystem convention | No | Ticket view shows only `main` and behaves as before the feature |
+| `/api/events` | SSE endpoint | No | Navigation remains usable with the last loaded structure but does not auto-refresh |
+| CR sub-document retrieval endpoint | API endpoint | Yes | File selection cannot load non-main documents |
 
-**SSE Pattern Note**: Domain-specific SSE hooks (like `useSubDocumentSSE`) should NOT be extracted globally. They stay with their feature to prevent god files.
+## Test vs Runtime Separation
+
+| Runtime Module | Test Scaffolding | Separation Rule |
+|----------------|------------------|-----------------|
+| `src/components/TicketViewer/index.tsx` | `tests/e2e/subdocument-tabs.spec.ts` | E2E covers user-visible hierarchy and deep-link flows; no test-only branching in the viewer |
+| `src/components/TicketViewer/useTicketDocumentNavigation.ts` | `src/components/TicketViewer/useTicketDocumentNavigation.test.ts` | Hash parsing and folder-stack reconciliation stay pure and testable outside runtime wiring |
+| `src/components/TicketViewer/useTicketDocumentRealtime.ts` | `src/components/TicketViewer/useTicketDocumentRealtime.test.ts` | SSE reconciliation logic is isolated; transport mocks stay in tests only |
+| `server/services/TicketService.ts` | `server/tests/api/ticket-subdocuments.test.ts` | Discovery and ordering logic stay in the service; fixtures and filesystem mocks stay in tests |
 
 ## Structure
 
-```
-src/
-├── components/
-│   └── TicketViewer/
-│       ├── index.tsx           → MOVED from TicketViewer.tsx, modified
-│       ├── TicketTabs.tsx      → NEW: tab navigation UI
-│       ├── useSubDocuments.ts  → NEW: tab-specific hook (colocated)
-│       ├── useSubDocumentSSE.ts→ NEW: domain-specific SSE hook (colocated)
-│       └── TabLoading.tsx      → NEW: loading indicator (sub-component)
-├── hooks/
-│   └── useSSEEvents.ts         → UNCHANGED: keep for global events only
-├── services/
-│   └── dataLayer.ts             → EXTENDED: add fetchSubDocument
-└── types/
-    └── SubDocument.ts          → NEW: sub-document types (shared)
-
-server/
-├── controllers/
-│   └── crController.js         → EXTENDED: add sub-doc route
-├── services/
-│   └── CrService.js            → EXTENDED: add sub-doc discovery
-└── routes/
-    └── crRoutes.js             → EXTENDED: add sub-doc endpoint
-
-shared/
-├── models/
-│   ├── Types.ts                → EXTENDED: add subdocuments to Ticket
-│   └── SubDocument.ts          → NEW: shared sub-document types
-└── services/
-    └── MarkdownService.ts      → EXTENDED: add sub-doc parsing
+```text
+/Users/kirby/home/markdown-ticket/
+├── src/App.tsx                                    # runtime entry that mounts TicketViewer for the selected CR
+├── src/components/TicketViewer/                   # ticket document navigation runtime package
+│   ├── index.tsx                                  # composes tab rows, content area, and sticky container
+│   ├── TicketDocumentTabs.tsx                     # renders one shadcn Tabs row per active hierarchy level
+│   ├── useTicketDocumentNavigation.ts             # owns selected relative path, folder stack, and hash sync
+│   ├── useTicketDocumentContent.ts                # loads individual sub-documents and exposes loading/error state
+│   └── useTicketDocumentRealtime.ts               # reconciles SSE updates against the current navigation state
+├── src/components/MarkdownContent.tsx             # existing markdown renderer for main and sub-document content
+├── src/services/dataLayer.ts                      # GET /api/projects/:projectId/crs/:crId and GET /api/projects/:projectId/crs/:crId/documents/*documentPath
+├── server/routes/projects.ts                      # project/CR routes including hierarchical sub-document retrieval
+├── server/controllers/ProjectController.ts        # HTTP translation for CR tree and document content responses
+├── server/services/TicketService.ts               # server authority for discovery, ordering, and sub-document reads
+├── shared/models/SubDocument.ts                   # hierarchical file/folder metadata contract shared by client and server
+└── server/openapi.yaml                            # public API schema for CR tree and sub-document retrieval
 ```
 
-## Size Guidance
+## Module Boundaries
 
-| Module | Role | Limit | Hard Max |
-|--------|------|-------|----------|
-| `TicketTabs.tsx` | Feature | 200 | 300 |
-| `useSubDocuments.ts` | Hook (colocated) | 150 | 225 |
-| `useSubDocumentSSE.ts` | Domain SSE Hook | 50 | 75 |
-| `TabLoading.tsx` | UI Component | 50 | 75 |
-| `TicketViewer/index.tsx` modifications | Feature | 100 | 150 |
-| `SubDocument.ts` | Types | 50 | 75 |
-| `CrService.js` additions | Service | 100 | 150 |
-| `dataLayer.ts` additions | Service | 50 | 75 |
+| Module | Owns | Must Not |
+|--------|------|----------|
+| `src/components/TicketViewer/index.tsx` | Composition of navigation rows, content panel, and sticky layout | Discovery logic, ordering rules, or raw fetch orchestration |
+| `src/components/TicketViewer/TicketDocumentTabs.tsx` | Rendering primary and nested tab rows with `shadcn` Tabs | URL hash parsing, content fetching, or filesystem semantics |
+| `src/components/TicketViewer/useTicketDocumentNavigation.ts` | Selected relative path, active folder stack, and hash synchronization | HTTP I/O or SSE subscription setup |
+| `src/components/TicketViewer/useTicketDocumentContent.ts` | Loading selected file content and surfacing loading/error state | Ordering decisions or sticky layout behavior |
+| `src/components/TicketViewer/useTicketDocumentRealtime.ts` | Reconciling live tree updates with current selection | Initial tree discovery or content rendering |
+| `src/services/dataLayer.ts` | Frontend HTTP calls and response normalization for CR tree and document content | UI state decisions or folder-stack reconciliation |
+| `server/services/TicketService.ts` | Filesystem discovery, default/configured ordering, hierarchical metadata, and sub-document reads | HTTP response formatting or frontend state semantics |
+| `server/controllers/ProjectController.ts` | Mapping CR/tree service results into API responses | Discovery rules or frontend navigation logic |
+| `shared/models/SubDocument.ts` | Shared hierarchical metadata shape for files and folders | Rendering policy or transport behavior |
 
-## Error Scenarios
+## Architecture Invariants
 
-| Scenario | Detection | Response | Recovery |
-|----------|-----------|----------|----------|
-| Sub-document not found | HTTP 404 from API | Show error in content area | Offer refresh or navigate to available tabs |
-| Sub-document load failed | Network error/timeout | Show error message with retry button | Retry fetch up to 3 times, then show persistent error |
-| Invalid URL hash | Hash doesn't match any sub-document | Default to "main" tab | Update URL to remove invalid hash |
-| SSE updates remove active tab | SSE event with updated subdocuments array | Switch to "main" tab | Update active tab state, clear URL hash |
-| Configuration parsing failed | Error reading `.mdt-config.toml` | Fall back to default order | Log warning, continue with default ordering |
+- `one transition authority`: `useTicketDocumentNavigation.ts` is the only frontend module that decides selected path and folder-stack transitions.
+- `one processing orchestration path`: all discovery and ordering logic flows through `server/services/TicketService.ts` before the frontend renders navigation.
+- `no test-only logic in runtime files`: mocks, fixture trees, and SSE simulation stay in test files only.
 
-## Requirement Coverage
+## Error Philosophy
 
-| Requirement | Component | Notes |
-|-------------|-----------|-------|
-| R1.1-R1.4 | TicketTabs + CrService | Tab discovery, labeling, conditional display |
-| R2.1-R2.3 | TicketTabs | Sticky positioning with CSS |
-| R3.1-R3.3 | TicketTabs + useSubDocuments | Tab interaction, loading states |
-| R4.1-R4.4 | useSubDocuments | URL hash sync, fallback behavior |
-| R5.1-R5.5 | useSubDocuments + SSE | Real-time updates, error handling |
-
-**Coverage**: 17/17 requirements mapped (100%)
+The degraded state must never be worse than the current pre-feature ticket view. If sub-document discovery yields nothing, config is absent, or SSE delivery is unavailable, the viewer still renders `main` content and manual navigation continues from the last successfully loaded tree. Invalid hashes, missing active documents, and removed nodes recover to `main`, while document-load failures stay localized to the content area so the navigation structure remains available.
 
 ## Extension Rule
 
-To add new sub-document parsing patterns:
-1. Extend `MarkdownService.ts` with new parser (limit 100 lines)
-2. Update `CrService.js` discovery logic (limit 50 lines addition)
-3. Add new tab type to `TicketTabs.tsx` rendering (limit 25 lines addition)
+To add another ordered top-level document family or grouped folder convention: extend `shared/models/SubDocument.ts` only if the metadata shape changes, update `server/services/TicketService.ts` to classify and order the new entries, and keep `TicketDocumentTabs.tsx` rendering generic so it can display any additional hierarchy level without new special-case UI branches.
+
+---
+*Generated by /mdt:architecture*
