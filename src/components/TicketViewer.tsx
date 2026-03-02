@@ -56,7 +56,12 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
         })
         .catch(err => console.error('Failed to fetch updated ticket:', err))
 
-      return { ...openTicket, ...updatedTicket }
+      const lastModified = updatedTicket.lastModified instanceof Date
+        ? updatedTicket.lastModified
+        : typeof updatedTicket.lastModified === 'string'
+          ? new Date(updatedTicket.lastModified)
+          : openTicket.lastModified
+      return { ...openTicket, ...updatedTicket, lastModified }
     })
   }, [ticket]))
 
