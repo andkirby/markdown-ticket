@@ -29,6 +29,8 @@ interface ColumnProps {
   // Position tracking methods for StatusToggle
   getTicketPosition: (ticketCode: string) => { columnIndex: number, ticketIndex: number, timestamp: number } | undefined
   clearTicketPosition: (ticketCode: string) => void
+  /** Primary status for this column (for testid) */
+  status?: Status
 }
 
 interface DraggableTicketCardProps {
@@ -37,6 +39,9 @@ interface DraggableTicketCardProps {
   onEdit: () => void
 }
 
+/**
+ * @testid drag-handle — Drag handle for ticket card
+ */
 const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMove, onEdit }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'ticket',
@@ -65,14 +70,16 @@ const DraggableTicketCard: React.FC<DraggableTicketCardProps> = ({ ticket, onMov
         cursor: 'move',
         boxShadow: isDragging ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' : undefined,
       }}
-      data-testid="ticket-card"
-      data-ticket-key={ticket.code}
+      data-testid="drag-handle"
     >
       <TicketCard ticket={ticket} onMove={onMove} onEdit={onEdit} />
     </div>
   )
 }
 
+/**
+ * @testid column-{status} — Board column with tickets
+ */
 const Column: React.FC<ColumnProps> = ({
   column,
   tickets,
@@ -84,6 +91,7 @@ const Column: React.FC<ColumnProps> = ({
   isFirstColumn = false,
   getTicketPosition,
   clearTicketPosition,
+  status,
 }) => {
   const [resolutionDialog, setResolutionDialog] = useState<{
     isOpen: boolean
@@ -192,6 +200,7 @@ const Column: React.FC<ColumnProps> = ({
   return (
     <div
       ref={drop}
+      data-testid={status ? `column-${status}` : undefined}
       className={`column flex flex-col transition-all duration-200 ease-out h-full relative ${
         isOver
           ? 'bg-blue-50/50 dark:bg-blue-950/30 ring-2 ring-blue-400/30'
@@ -232,7 +241,8 @@ const Column: React.FC<ColumnProps> = ({
         className={`h-full border-r border-border ${isFirstColumn ? 'border-l border-border' : ''}`}
         style={{ height: 'calc(100vh - 165px)' }}
       >
-        <div className="column-drop-zone px-3 py-2 space-y-2">
+        {/* @testid drop-zone — Column drop area for drag-and-drop */}
+        <div data-testid="drop-zone" className="column-drop-zone px-3 py-2 space-y-2">
           {visibleTickets.map(ticket => (
             <DraggableTicketCard
               key={ticket.code}

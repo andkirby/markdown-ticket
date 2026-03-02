@@ -8,6 +8,9 @@ interface SortControlsProps {
   onPreferencesChange: (preferences: SortPreferences) => void
 }
 
+/**
+ * @testid sort-controls — Sort controls container
+ */
 export const SortControls: React.FC<SortControlsProps> = ({
   preferences,
   onPreferencesChange,
@@ -34,7 +37,7 @@ export const SortControls: React.FC<SortControlsProps> = ({
   )
 
   return (
-    <div className="flex items-center space-x-2">
+    <div data-testid="sort-controls" className="flex items-center space-x-2">
       <select
         value={preferences.selectedAttribute}
         onChange={e => handleAttributeChange(e.target.value)}

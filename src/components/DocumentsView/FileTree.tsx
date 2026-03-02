@@ -52,7 +52,7 @@ export default function FileTree({ files, onFileSelect, selectedFile, level = 0 
   }
 
   return (
-    <div className="space-y-1">
+    <div data-testid="document-tree" className="space-y-1">
       {files.map(file => (
         <div key={file.path}>
           <div
@@ -61,6 +61,7 @@ export default function FileTree({ files, onFileSelect, selectedFile, level = 0 
             }`}
             style={{ paddingLeft: `${level * 16 + 8}px` }}
             onClick={() => handleFileClick(file)}
+            data-testid={file.type === 'folder' ? 'folder-item' : 'document-item'}
           >
             {file.type === 'folder'
               ? (

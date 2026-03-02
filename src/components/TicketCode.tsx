@@ -11,7 +11,7 @@ interface TicketCodeProps {
 export const TicketCode: React.FC<TicketCodeProps> = ({ code, className = '', ticket }) => {
   const inWorktree = ticket?.inWorktree === true
   return (
-    <span className={`font-medium text-primary dark:text-blue-400 ${className}`}>
+    <span className={`font-medium text-primary dark:text-blue-400 ${className}`} data-testid="ticket-code">
       {code}
       {inWorktree && ` ${WORKTREE_ICON}`}
     </span>

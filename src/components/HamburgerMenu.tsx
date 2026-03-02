@@ -74,7 +74,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
       {isOpen && (
         <div className="absolute right-0 top-full mt-1 w-48 bg-background border border-border rounded-md shadow-lg z-50">
           <div className="py-1">
+            {/**
+             * @testid add-project-button — Button to open add project modal
+             */}
             <button
+              data-testid="add-project-button"
               onClick={handleAddProject}
               className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
             >
