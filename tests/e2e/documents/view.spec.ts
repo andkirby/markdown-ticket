@@ -85,4 +85,18 @@ test.describe('Documents View', () => {
 
     expect(hasMarkdownElements).toBe(true)
   })
+
+  test('direct document URL shows created and updated metadata', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    await page.goto(`/prj/${scenario.projectCode}/documents?file=docs/README.md`)
+
+    const fileViewer = page.locator(documentSelectors.fileViewer)
+    await expect(fileViewer).toBeVisible()
+    await expect(fileViewer).toContainText('Test Project')
+    await expect(fileViewer).toContainText('Created:')
+    await expect(fileViewer).toContainText('Updated:')
+    await expect(fileViewer).not.toContainText('Created: Unknown')
+    await expect(fileViewer).not.toContainText('Updated: Unknown')
+  })
 })

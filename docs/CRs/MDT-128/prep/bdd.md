@@ -75,6 +75,7 @@
 | File tree renders | Happy path | BR-5.1 |
 | Folder expansion works | Interaction | BR-5.2 |
 | File content displays | Happy path | BR-5.3 |
+| Document metadata displays for direct document links | Rendering | BR-5.4 |
 
 ### Journey 6: Ticket Detail Modal
 **User Goal**: View full ticket details
@@ -259,7 +260,7 @@ Feature: List View
 
 ### Feature: Documents View
 **File**: `tests/e2e/documents/view.spec.ts`
-**Covers**: BR-5.1, BR-5.2, BR-5.3
+**Covers**: BR-5.1, BR-5.2, BR-5.3, BR-5.4
 
 ```gherkin
 Feature: Documents View
@@ -287,6 +288,15 @@ Feature: Documents View
     When I click on a markdown file
     Then the file content should appear in a content viewer
     And markdown should be rendered correctly
+
+  @requirement:BR-5.4 @priority:high
+  Scenario: Document metadata displays for direct document links
+    Given I have a project with documents
+    When I navigate directly to a document in the documents view
+    Then I should see the document content
+    And I should see created metadata for the selected document
+    And I should see updated metadata for the selected document
+    And neither metadata value should be "Unknown"
 ```
 
 ### Feature: Ticket Detail Modal
@@ -429,7 +439,7 @@ Feature: Project Management
 | `tests/e2e/board/drag-drop.spec.ts` | 3 |
 | `tests/e2e/smoke/navigation.spec.ts` | 4 |
 | `tests/e2e/list/view.spec.ts` | 3 |
-| `tests/e2e/documents/view.spec.ts` | 3 |
+| `tests/e2e/documents/view.spec.ts` | 4 |
 | `tests/e2e/ticket/detail.spec.ts` | 4 |
 | `tests/e2e/sse/updates.spec.ts` | 4 |
 | `tests/e2e/project/management.spec.ts` | 4 |
@@ -454,6 +464,7 @@ Feature: Project Management
 | BR-5.1 | File tree renders | bdd | ✅ |
 | BR-5.2 | Folder expansion works | bdd | ✅ |
 | BR-5.3 | File content displays | bdd | ✅ |
+| BR-5.4 | Document metadata displays for direct document links | bdd | ✅ |
 | BR-6.1 | Click card opens modal | bdd | ✅ |
 | BR-6.2 | All attributes display | bdd | ✅ |
 | BR-6.3 | Markdown content renders | bdd | ✅ |
@@ -475,7 +486,7 @@ In prep mode, tests will be created to document existing behavior. Once implemen
 npm run test:e2e
 ```
 
-**Expected Result**: All 28 scenarios pass (0 failed)
+**Expected Result**: All 29 scenarios pass (0 failed)
 
 ## Acceptance Gating
 
