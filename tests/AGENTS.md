@@ -1,5 +1,11 @@
 # AGENTS.md — Running E2E Tests
 
+## Testing Strategy
+
+Frontend testing uses **Playwright E2E exclusively**. No unit tests, integration
+tests, or other E2E frameworks (Cypress, Selenium, Jest, Vitest, etc.) are
+supported or should be introduced.
+
 ## Ports
 
 | Service | Test | Dev |
