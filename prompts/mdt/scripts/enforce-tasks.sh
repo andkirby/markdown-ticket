@@ -36,7 +36,7 @@ if [ -z "$TRACKER" ]; then
 
   while IFS= read -r CANDIDATE; do
     [ -z "$CANDIDATE" ] && continue
-    CANDIDATE_ACTIONABLE=$(grep -c 'status:.*\(pending\|in_progress\)' "$CANDIDATE" 2>/dev/null || true)
+    CANDIDATE_ACTIONABLE=$(grep -cE 'status:.*(pending|in_progress)' "$CANDIDATE" 2>/dev/null || true)
     if [ "$CANDIDATE_ACTIONABLE" -gt 0 ]; then
       ACTIONABLE_TRACKER_COUNT=$((ACTIONABLE_TRACKER_COUNT + 1))
       LAST_ACTIONABLE_TRACKER="$CANDIDATE"
@@ -63,7 +63,7 @@ fi
 # Count actionable tasks: pending or in_progress (grep-based, no YAML parser needed)
 # Tasks with status "done" or "blocked" are terminal — they allow stop.
 if [ -z "${ACTIONABLE:-}" ]; then
-  ACTIONABLE=$(grep -c 'status:.*\(pending\|in_progress\)' "$TRACKER" 2>/dev/null || true)
+  ACTIONABLE=$(grep -cE 'status:.*(pending|in_progress)' "$TRACKER" 2>/dev/null || true)
 fi
 # grep -c outputs "0" and exits 1 on no match; || true prevents set -e from killing us
 
