@@ -91,6 +91,28 @@ describe('documents API Tests (MDT-106)', () => {
       }
     })
 
+    it('should include metadata for nested document files', async () => {
+      await createTestDocumentSet(projectFactory, projectCode)
+
+      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+
+      assertSuccess(response, 200)
+      assertIsArray(response)
+
+      const walk = (nodes: Array<Record<string, unknown>>): Array<Record<string, unknown>> =>
+        nodes.flatMap(node => [node, ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : [])])
+
+      const guideDoc = walk(response.body as Array<Record<string, unknown>>)
+        .find(node => node.path === documentPaths.guide)
+
+      expect(guideDoc).toBeDefined()
+      expect(guideDoc).toHaveProperty('title')
+      expect(guideDoc).toHaveProperty('dateCreated')
+      expect(guideDoc).toHaveProperty('lastModified')
+      expect(guideDoc?.dateCreated).not.toBeNull()
+      expect(guideDoc?.lastModified).not.toBeNull()
+    })
+
     it('should include nested documents in tree structure', async () => {
       const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
 
