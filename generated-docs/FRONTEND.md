@@ -237,26 +237,26 @@ class FileWatcherService {
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Start development server
-npm run dev
+bun run dev
 
 # Run with backend
-npm run dev:full
+bun run dev:full
 ```
 
 ### Build Process
 
 ```bash
 # Production build
-npm run build
+bun run build
 
 # Preview production build
-npm run preview
+bun run preview
 
 # Deploy to GitHub Pages
-npm run deploy
+bun run deploy
 ```
 
 ### Build Configuration
@@ -309,13 +309,13 @@ export default defineConfig({
 
 ```bash
 # Run E2E tests
-npm run test:e2e
+bun run test:e2e
 
 # Run tests with UI
-npm run test:e2e:ui
+bun run test:e2e:ui
 
 # Run tests in headed mode
-npm run test:e2e:headed
+bun run test:e2e:headed
 ```
 
 **Test Coverage**:
@@ -337,11 +337,11 @@ npm run test:e2e:headed
 
 #### GitHub Pages
 ```bash
-npm run deploy
+bun run deploy
 ```
 
 #### Static Hosting (Netlify, Vercel)
-- Build command: `npm run build`
+- Build command: `bun run build`
 - Publish directory: `dist`
 - Environment variables: Configure API endpoints
 

@@ -19,15 +19,15 @@ Complete guide for developing and contributing to the Markdown Ticket Board proj
 ```bash
 git clone <repository-url>
 cd markdown-ticket
-npm install
+bun install
 ```
 
 ### Development Workflow
 **See [PRE_IMPLEMENT.md](PRE_IMPLEMENT.md#build--development-workflow) for:**
-- `npm run dev:full` - Start all dev servers (recommended)
-- `npm run validate:ts` - Quick TypeScript validation
-- `npm run build:all` - Build all projects
-- `npm run lint` / `npm run knip` - Code quality tools
+- `bun run dev:full` - Start all dev servers (recommended)
+- `bun run validate:ts` - Quick TypeScript validation
+- `bun run build:all` - Build all projects
+- `bun run lint` / `bun run knip` - Code quality tools
 - Testing commands
 
 ---
@@ -124,7 +124,7 @@ server/
 - `services/TemplateService.ts` - CR template management
 - `templates/` - File-based templates for each CR type
 
-**Build Required:** Run `npm run build:shared` to compile TypeScript (auto-done by `dev:full`)
+**Build Required:** Run `bun run build:shared` to compile TypeScript (auto-done by `dev:full`)
 
 ### MCP Server (mcp-server/)
 
@@ -148,8 +148,8 @@ The project includes an MCP server for development log access and monitoring dur
 ```bash
 # Build MCP development tools
 cd server/mcp-dev-tools
-npm install
-npm run build
+bun install
+bun run build
 
 # Start MCP server (for AI assistant integration)
 npm start
@@ -263,15 +263,15 @@ shared/
 3. Check browser console for errors
 
 #### MCP Server Issues
-1. Ensure server is built: `cd mcp-server && npm run build`
+1. Ensure server is built: `cd mcp-server && bun run build`
 2. Check Node.js version compatibility
 3. Verify configuration files exist
 4. Try reconnecting: run `/mcp` in Claude Code
 
 #### Build/Type Errors
-1. Run `npm run validate:ts` to identify issues
-2. Check `domain-contracts` is built: `cd domain-contracts && npm run build`
-3. Rebuild dependents after domain-contracts changes: `npm run build:all`
+1. Run `bun run validate:ts` to identify issues
+2. Check `domain-contracts` is built: `cd domain-contracts && bun run build`
+3. Rebuild dependents after domain-contracts changes: `bun run build:all`
 
 #### Template Issues
 1. Check template files exist in `shared/templates/`

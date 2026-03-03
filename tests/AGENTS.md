@@ -20,16 +20,16 @@ The Vite proxy routes all `/api` calls to the test backend via `VITE_BACKEND_URL
 
 ```bash
 # Run all E2E tests
-npm run test:e2e
+bun run test:e2e
 
 # Run a specific file (headless)
-npx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium
+bunx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium
 
 # Visible browser
-npx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium --headed
+bunx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium --headed
 
 # Interactive UI mode (timeline, selector picker, speed slider)
-npx playwright test --ui
+bunx playwright test --ui
 ```
 
 ## Isolation

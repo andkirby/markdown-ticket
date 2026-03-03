@@ -373,7 +373,7 @@ Old: `document_paths`, `exclude_folders`, `max_depth` → New: `[project.documen
 **Start Script Improvements**
 - **Portable Shebang**: All scripts use `#!/usr/bin/env bash` for cross-platform support
 - **Better Package Detection**: Improved patterns for detecting package.json files
-- **Production Fixes**: Corrected frontend startup to use `npm run preview`
+- **Production Fixes**: Corrected frontend startup to use `bun run preview`
 
 **Section Validation**
 - **Flexible Matching**: SimpleSectionValidator now includes `normalizeForMatching()` function

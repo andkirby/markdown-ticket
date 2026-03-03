@@ -128,9 +128,9 @@ Model Context Protocol server for AI assistant integration:
 
 2. **Install dependencies**:
    ```bash
-   npm install
-   cd server && npm install
-   cd ../mcp-server && npm install && npm run build
+   bun install
+   cd server && bun install
+   cd ../mcp-server && bun install && bun run build
    ```
 
 3. **Start the development environment**:
@@ -139,7 +139,7 @@ Model Context Protocol server for AI assistant integration:
    cd server && npm start
    
    # Terminal 2: Start frontend development server
-   npm run dev
+   bun run dev
    ```
 
 4. **Access the application**:
@@ -219,7 +219,7 @@ Since this application runs locally, cleanup involves:
 - Ensure proper file permissions in project directories
 
 **MCP server connection issues**:
-- Verify MCP server is built (`npm run build` in mcp-server/)
+- Verify MCP server is built (`bun run build` in mcp-server/)
 - Check MCP configuration in AI assistant settings
 - Review MCP server logs for connection errors
 
