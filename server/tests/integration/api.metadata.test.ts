@@ -178,7 +178,14 @@ describe('API Metadata Tests - MDT-094', () => {
 
   describe('Performance', () => {
     it('should reduce payload size by >80% for list endpoint', async () => {
-      // Create 10 CRs with substantial content
+      // Create a CR with substantial content first (to use for detail comparison)
+      const largeCRResult = await projectFactory.createTestCR(projectCode, {
+        title: 'Performance Test CR with Large Content',
+        type: 'Feature Enhancement',
+        content: `# Detailed Content\n\n${'Lorem ipsum dolor sit amet. '.repeat(100)}`,
+      })
+
+      // Create additional CRs with substantial content
       for (let i = 1; i <= 10; i++) {
         await projectFactory.createTestCR(projectCode, {
           title: `Performance Test CR ${i}`,
@@ -191,8 +198,8 @@ describe('API Metadata Tests - MDT-094', () => {
       const listResponse = await projectApi.listCRs(app, projectCode)
       const listSize = JSON.stringify(listResponse.body).length
 
-      // Get single detail to estimate full size
-      const detailResponse = await projectApi.getCR(app, projectCode, crCode)
+      // Get single detail to estimate full size (use CR with large content)
+      const detailResponse = await projectApi.getCR(app, projectCode, largeCRResult.crCode!)
       const singleDetailSize = JSON.stringify(detailResponse.body).length
 
       // Estimate what full tickets would cost
