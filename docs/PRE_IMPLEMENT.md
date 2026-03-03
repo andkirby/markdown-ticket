@@ -228,35 +228,6 @@ export function unusedHelper() { ... }
 - Remove truly unused code
 - Or mark as `@deprecated` if kept for backward compatibility
 
-### Code Metrics (`scripts/metrics/run.sh`)
-
-**Purpose:** Analyzes code complexity for changed TypeScript files.
-
-**What it measures:**
-- Maintainability Index (MI)
-- Cyclomatic Complexity (CC)
-- Cognitive Complexity (CoC)
-
-**Color zones:**
-- 🟢 Green: Healthy (MI > 20, CC < 10)
-- 🟡 Yellow: Warning (MI 20-40, CC 10-20)
-- 🔴 Red: Critical (MI < 20, CC > 20)
-
-**Usage:**
-```bash
-# Analyze changed files
-scripts/metrics/run.sh
-
-# Analyze specific file
-scripts/metrics/run.sh src/components/TicketAttributes.tsx
-
-# Analyze directory
-scripts/metrics/run.sh src/components/
-
-# JSON output for LLM consumption
-scripts/metrics/run.sh --json
-```
-
 ---
 
 ## Testing Strategy
