@@ -115,7 +115,7 @@ const options = CRTypes.map(type => ({ value: type, label: type }))
 ### Tool Hierarchy
 
 ```
-Development Phase → npm run validate:ts → Build Phase → npm run build:all → Testing
+Development Phase → bun run validate:ts → Build Phase → bun run build:all → Testing
                        ↓                        ↓
                   Quick TypeScript         Full compilation
                   (changed files only)      (all projects)
@@ -125,11 +125,11 @@ Development Phase → npm run validate:ts → Build Phase → npm run build:all 
 
 | Tool | Command | When to Run | What It Checks |
 |------|--------|------------|---------------|
-| **TypeScript validation** | `npm run validate:ts` | After editing .ts files | Type errors, missing imports, wrong types |
-| **Build all** | `npm run build:all` | Before committing | Full compilation across all projects |
-| **Lint** | `npm run lint` | Before committing | Code style, formatting, best practices |
-| **Knip** | `npm run knip` | Before committing | Unused code, unused dependencies |
-| **Tests** | `npm run test:e2e` | Before merging | Functionality, integration |
+| **TypeScript validation** | `bun run validate:ts` | After editing .ts files | Type errors, missing imports, wrong types |
+| **Build all** | `bun run build:all` | Before committing | Full compilation across all projects |
+| **Lint** | `bun run lint` | Before committing | Code style, formatting, best practices |
+| **Knip** | `bun run knip` | Before committing | Unused code, unused dependencies |
+| **Tests** | `bun run test:e2e` | Before merging | Functionality, integration |
 
 ### Validation Workflow
 
@@ -138,16 +138,16 @@ Development Phase → npm run validate:ts → Build Phase → npm run build:all 
 vim src/components/MyComponent.tsx
 
 # 2. Quick validation (only changed files) - FAST
-npm run validate:ts
+bun run validate:ts
 
 # 3. If validation passes, build everything
-npm run build:all
+bun run build:all
 
 # 4. Run lint (optional but recommended)
-npm run lint
+bun run lint
 
 # 5. Run tests if relevant changes were made
-npm run test:e2e
+bun run test:e2e
 ```
 
 ### Error Resolution Priority
@@ -185,7 +185,7 @@ Passed: 3  |  Failed: 0  |  Skipped: 0
 
 ## Code Quality Tools
 
-### ESLint (`npm run lint`)
+### ESLint (`bun run lint`)
 
 **Purpose:** Catches code style issues, potential bugs, and anti-patterns.
 
@@ -198,13 +198,13 @@ Passed: 3  |  Failed: 0  |  Skipped: 0
 **Common fixes:**
 ```bash
 # Auto-fix most issues
-npm run lint --fix
+bun run lint --fix
 
 # Fix specific file
-npx eslint src/components/MyComponent.tsx --fix
+bunx eslint src/components/MyComponent.tsx --fix
 ```
 
-### Knip (`npm run knip`)
+### Knip (`bun run knip`)
 
 **Purpose:** Detects unused code, exports, and dependencies. Reduces bundle size.
 
@@ -241,18 +241,18 @@ E2E Tests (Playwright)
 └── Location: tests/e2e/
 
 Unit Tests (Jest)
-├── Server: cd server && npm test
-├── MCP Server: cd mcp-server && npm test
-└── Domain Contracts: cd domain-contracts && npm test
+├── Server: cd server && bun test
+├── MCP Server: cd mcp-server && bun test
+└── Domain Contracts: cd domain-contracts && bun test
 ```
 
 ### When to Run Tests
 
 | Scenario | Command | Notes |
 |----------|--------|-------|
-| **After UI changes** | `npm run test:e2e` | Validates visual and interaction |
-| **After backend changes** | `cd server && npm test` | Unit tests for services |
-| **After MCP changes** | `cd mcp-server && npm test` | Tool behavior validation |
+| **After UI changes** | `bun run test:e2e` | Validates visual and interaction |
+| **After backend changes** | `cd server && bun test` | Unit tests for services |
+| **After MCP changes** | `cd mcp-server && bun test` | Tool behavior validation |
 | **Before committing** | All applicable | Ensure nothing is broken |
 
 ### Fast Iteration Mode
@@ -260,7 +260,7 @@ Unit Tests (Jest)
 When debugging a single test, skip server startup:
 
 ```bash
-PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/my-test.spec.ts --project=chromium
+PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/my-test.spec.ts --project=chromium
 ```
 
 ### Test Output Interpretation
@@ -292,25 +292,25 @@ PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/my-test.spec.ts --project
 
 | Command | Purpose | When to Run |
 |---------|---------|-------------|
-| `npm run dev:full` | Start dev servers | Active development |
-| `npm run build` | Frontend production build | Before deploying frontend |
-| `npm run build:all` | Build ALL projects | Before committing |
-| `npm run build:shared` | Build shared code | After shared/ changes |
-| `cd mcp-server && npm run build` | Build MCP server | After mcp-server/ changes |
-| `cd domain-contracts && npm run build` | Build domain contracts | After domain-contracts/ changes |
+| `bun run dev:full` | Start dev servers | Active development |
+| `bun run build` | Frontend production build | Before deploying frontend |
+| `bun run build:all` | Build ALL projects | Before committing |
+| `bun run build:shared` | Build shared code | After shared/ changes |
+| `cd mcp-server && bun run build` | Build MCP server | After mcp-server/ changes |
+| `cd domain-contracts && bun run build` | Build domain contracts | After domain-contracts/ changes |
 
 ### Development Workflow
 
 ```
 1. Edit files
    ↓
-2. npm run validate:ts  (quick check, changed files only)
+2. bun run validate:ts  (quick check, changed files only)
    ↓
-3. npm run build:all (full compilation)
+3. bun run build:all (full compilation)
    ↓
-4. npm run lint --fix (code style)
+4. bun run lint --fix (code style)
    ↓
-5. npm run test:e2e (if applicable)
+5. bun run test:e2e (if applicable)
    ↓
 6. Commit changes
 ```
@@ -373,10 +373,10 @@ export const CRTypes = [
 
 ```bash
 # Fast (~1s) - only checks changed files
-npm run validate:ts
+bun run validate:ts
 
 # Slow (~30s) - compiles everything
-npm run build:all
+bun run build:all
 ```
 
 **Why:** Faster iteration. Don't wait for full build to catch type errors.
@@ -400,24 +400,24 @@ npm run build:all
 
 ```bash
 # Validation
-npm run validate:ts              # Changed files only
-npm run validate:ts:all          # All TypeScript files
+bun run validate:ts              # Changed files only
+bun run validate:ts:all          # All TypeScript files
 
 # Build
-npm run build:all                # All projects
-npm run build:shared            # Shared code only
-npm run build                    # Frontend only
+bun run build:all                # All projects
+bun run build:shared            # Shared code only
+bun run build                    # Frontend only
 
 # Code Quality
-npm run lint                    # Check style
-npm run lint --fix              # Auto-fix issues
-npm run knip                    # Find unused code
+bun run lint                    # Check style
+bun run lint --fix              # Auto-fix issues
+bun run knip                    # Find unused code
 scripts/metrics/run.sh           # Code complexity
 
 # Testing
-npm run test:e2e                 # E2E tests
-cd server && npm test           # Backend unit tests
-cd mcp-server && npm test       # MCP server tests
+bun run test:e2e                 # E2E tests
+cd server && bun test           # Backend unit tests
+cd mcp-server && bun test       # MCP server tests
 ```
 
 ### File Locations

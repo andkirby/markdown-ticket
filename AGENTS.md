@@ -18,33 +18,33 @@ Load the skills accordingly:
 ## Development Commands
 
 ### Frontend
-- `npm run dev` - Dev server (localhost:5173)
-- `npm run build` - Production build
-- `npm run lint` - ESLint
+- `bun run dev` - Dev server (localhost:5173)
+- `bun run build` - Production build
+- `bun run lint` - ESLint
 
 ### Backend
-- `npm run dev:server` - Dev server with nodemon (localhost:3001)
-- `npm run server` - Production mode
-- `cd server && npm test` - Jest tests
+- `bun run dev:server` - Dev server with nodemon (localhost:3001)
+- `bun run server` - Production mode
+- `cd server && bun test` - Jest tests
 
 ### MCP Server
-- `cd mcp-server && npm run build` - Build (required after code changes)
-- `cd mcp-server && npm run dev` - Dev mode (stdio, uses tsx)
-- `MCP_HTTP_ENABLED=true npm run dev` - Stdio + HTTP transports
-- `cd mcp-server && npm test` - Jest tests
+- `cd mcp-server && bun run build` - Build (required after code changes)
+- `cd mcp-server && bun run dev` - Dev mode (stdio, uses tsx)
+- `MCP_HTTP_ENABLED=true bun run dev` - Stdio + HTTP transports
+- `cd mcp-server && bun test` - Jest tests
 
 **HTTP Transport:**
 - Enable: `MCP_HTTP_ENABLED=true`
 - Port: `MCP_HTTP_PORT=3002` (default)
-- Test: `npx @modelcontextprotocol/inspector --transport streamable-http --server-url http://localhost:3002/mcp`
+- Test: `bunx @modelcontextprotocol/inspector --transport streamable-http --server-url http://localhost:3002/mcp`
 - Optional Phase 2: Session management, SSE streaming, rate limiting, auth, origin validation
 
 ### Full Stack
-- `npm run dev:full` - **Recommended** - Builds shared code, starts frontend + backend
+- `bun run dev:full` - **Recommended** - Builds shared code, starts frontend + backend
 
 ### Testing
-- `npm run test:e2e` - Playwright E2E
-- `PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/file.spec.ts --project=chromium` - Run specific test without server restart
+- `bun run test:e2e` - Playwright E2E
+- `PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/file.spec.ts --project=chromium` - Run specific test without server restart
 
 **See [tests/AGENTS.md](tests/AGENTS.md)** for E2E testing ports, isolation, and conventions.
 
@@ -76,7 +76,7 @@ Layered architecture: controllers → services → repositories
 - Routes: `/api/projects`, `/api/projects/:id/crs`, `/api/documents`, `/api/filesystem`, `/api/events` (SSE)
 
 ### Shared (shared/)
-- **Build Required**: Run `npm run build:shared` before dev servers (auto-done by `dev:full`)
+- **Build Required**: Run `bun run build:shared` before dev servers (auto-done by `dev:full`)
 - Types: `CR`, `Project`, `ProjectConfig`
 - Services: `ProjectService`, `MarkdownService`, `TemplateService`
 
@@ -107,7 +107,7 @@ Layered architecture: controllers → services → repositories
 - **No AI attribution** in git commits (no "Co-Authored-By:")
 - **Use relative paths** in backend APIs
 - **Use MCP tools** before manual file operations
-- **TypeScript validation**: `npm run validate:ts` (changed files), `npm run validate:ts:all` (all files)
+- **TypeScript validation**: `bun run validate:ts` (changed files), `bun run validate:ts:all` (all files)
 - Never restart servers unless user explicitly requests
 
 ### TypeScript Patterns

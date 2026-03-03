@@ -208,7 +208,7 @@ templateSource = "~/.config/dev-docs/templates/CRs_manual.md"
 ## 7. Clear Next Steps for Implementation
 
 ### Immediate Actions (Week 1)
-1. **Install Dependencies**: `npm install chokidar@^3.5.3`
+1. **Install Dependencies**: `bun install chokidar@^3.5.3`
 2. **Project Structure**: Move `server/tasks/` → `server/sample-tasks/`
 3. **Configuration Setup**: Create project issue tracking system
 4. **Issue Creation**: Convert existing requirement to MDT-001

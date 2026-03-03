@@ -97,14 +97,14 @@ This MCP server integrates with the main application via API endpoints rather th
 ### Build the MCP Server
 ```bash
 cd server/mcp-dev-tools
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 ### Health Check
 ```bash
 # Run health check via npm
-npm run health-check
+bun run health-check
 
 # Or use the shell wrapper
 ./health-check.sh
@@ -122,7 +122,7 @@ cd server
 node server.js
 
 # Terminal 2: Start frontend
-npm run dev
+bun run dev
 
 # Terminal 3: Test MCP server
 cd server/mcp-dev-tools
@@ -193,7 +193,7 @@ server/mcp-dev-tools/
 ## Troubleshooting
 
 ### MCP Server Not Starting
-1. Ensure the server is built: `npm run build`
+1. Ensure the server is built: `bun run build`
 2. Check Node.js version compatibility
 3. Verify backend server is running on expected port
 

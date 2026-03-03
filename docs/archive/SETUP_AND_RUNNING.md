@@ -37,7 +37,7 @@ cd md-ticket-board
 
 ```bash
 # Install frontend dependencies
-npm install
+bun install
 ```
 
 ### 3. Install Backend Dependencies
@@ -47,7 +47,7 @@ npm install
 cd server
 
 # Install server dependencies
-npm install
+bun install
 
 # Navigate back to root directory
 cd ..
@@ -71,7 +71,7 @@ cd server && npm list && cd ..
 
 ```bash
 # Start backend server in development mode
-npm run server:dev
+bun run server:dev
 ```
 
 #### Start Frontend Application
@@ -90,7 +90,7 @@ npm start
 cd server
 
 # Start server in development mode (with auto-restart)
-npm run dev
+bun run dev
 
 # Or start in production mode
 npm start
@@ -107,10 +107,10 @@ npm start
 
 ```bash
 # Install concurrently if not already installed
-npm install --save-dev concurrently
+bun install --save-dev concurrently
 
 # Start both frontend and backend simultaneously
-npm run dev
+bun run dev
 ```
 
 ## Directory Structure
@@ -209,7 +209,7 @@ const TICKETS_DIR = path.join(__dirname, 'tasks');  // Tasks directory
 lsof -ti:3001 | xargs kill -9
 
 # Or use a different port
-PORT=3002 npm run server:dev
+PORT=3002 bun run server:dev
 ```
 
 #### 2. Node Version Issues
@@ -234,10 +234,10 @@ nvm use 18
 ```bash
 # Clear node_modules and reinstall
 rm -rf node_modules package-lock.json
-npm install
+bun install
 
 # For server dependencies
-cd server && rm -rf node_modules package-lock.json && npm install && cd ..
+cd server && rm -rf node_modules package-lock.json && bun install && cd ..
 ```
 
 #### 4. CORS Issues
@@ -263,7 +263,7 @@ Enable debug logging by setting the environment variable:
 
 ```bash
 # For backend
-DEBUG=* npm run server:dev
+DEBUG=* bun run server:dev
 
 # For frontend
 npm start -- --debug
@@ -293,11 +293,11 @@ Expected response:
 
 ```bash
 # Install all dependencies
-npm install
-cd server && npm install && cd ..
+bun install
+cd server && bun install && cd ..
 
 # Start both frontend and backend
-npm run dev
+bun run dev
 ```
 
 ### 2. Making Changes
@@ -322,10 +322,10 @@ npm run dev
 
 ```bash
 # Run frontend tests
-npm test
+bun test
 
 # Run tests with coverage
-npm run test:coverage
+bun run test:coverage
 ```
 
 #### Backend Testing
@@ -335,10 +335,10 @@ npm run test:coverage
 cd server
 
 # Run server tests
-npm test
+bun test
 
 # Run tests with coverage
-npm run test:coverage
+bun run test:coverage
 ```
 
 ### 4. Building for Production
@@ -347,7 +347,7 @@ npm run test:coverage
 
 ```bash
 # Build frontend for production
-npm run build
+bun run build
 
 # The build output will be in the build/ directory
 ```
@@ -359,7 +359,7 @@ npm run build
 cd server
 
 # Install production dependencies
-npm install --production
+bun install --production
 
 # The server is ready for production deployment
 ```
@@ -371,7 +371,7 @@ npm install --production
 #### 1. Build Frontend
 
 ```bash
-npm run build
+bun run build
 ```
 
 #### 2. Configure Server for Production
@@ -381,7 +381,7 @@ npm run build
 export NODE_ENV=production
 
 # Use process manager (PM2 recommended)
-npm install -g pm2
+bun install -g pm2
 pm2 start server.js --name "ticket-board"
 ```
 
@@ -434,7 +434,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build
+RUN bun run build
 
 FROM nginx:alpine
 COPY --from=builder /app/build /usr/share/nginx/html
@@ -467,7 +467,7 @@ REACT_APP_API_URL=https://your-domain.com
 ### Frontend Optimization
 
 1. **Code Splitting**: React.lazy and Suspense
-2. **Bundle Analysis**: Use `npm run analyze` to see bundle size
+2. **Bundle Analysis**: Use `bun run analyze` to see bundle size
 3. **Caching**: Service worker for offline support
 4. **Image Optimization**: Optimize images and use WebP format
 

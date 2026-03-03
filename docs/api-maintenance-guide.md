@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
 
 4. **Generate Documentation**:
 ```bash
-cd server && npm run openapi:generate
+cd server && bun run openapi:generate
 ```
 
 ### Modifying Existing Endpoints
@@ -99,16 +99,16 @@ cd server && npm run openapi:generate
 cd server
 
 # 1. Generate YAML specification
-npm run openapi:generate
+bun run openapi:generate
 
 # 2. Validate the generated spec
-npm run openapi:validate
+bun run openapi:validate
 
 # 3. Generate static HTML documentation
-npx @redocly/cli build-docs openapi.yaml -o api-docs.html
+bunx @redocly/cli build-docs openapi.yaml -o api-docs.html
 
 # 4. Serve interactive documentation (development)
-npm run dev
+bun run dev
 # Then visit: http://localhost:3001/api-docs
 ```
 
@@ -160,7 +160,7 @@ npm run dev
    - Descriptive names: `CreateChangeRequestInput`
 
 3. **Validation**:
-   - Run `npm run openapi:validate` after changes
+   - Run `bun run openapi:validate` after changes
    - Fix all validation errors
 
 ### Version Control
@@ -190,14 +190,14 @@ npm run dev
    - Ensure all `$ref` paths exist
 
 2. **Validation Errors**:
-   - Run `npm run openapi:validate`
+   - Run `bun run openapi:validate`
    - Check for duplicate schema names
    - Verify required fields
 
 3. **Documentation Not Updating**:
    - Ensure JSDoc comments are properly formatted
    - Check file paths in `swaggerOptions.apis`
-   - Regenerate with `npm run openapi:generate`
+   - Regenerate with `bun run openapi:generate`
 
 ## Automation
 
@@ -207,13 +207,13 @@ Consider adding to CI/CD:
   run: |
     cd server
     # Generate OpenAPI specification
-    npm run openapi:generate
+    bun run openapi:generate
 
     # Validate the specification
-    npm run openapi:validate
+    bun run openapi:validate
 
     # Generate static HTML docs
-    npx @redocly/cli build-docs openapi.yaml -o api-docs.html
+    bunx @redocly/cli build-docs openapi.yaml -o api-docs.html
 
     # Optionally deploy docs to GitHub Pages or other hosting
     # mv api-docs.html ../docs/api.html
@@ -227,16 +227,16 @@ Consider adding to CI/CD:
 # All documentation generation commands (run in server/ directory)
 
 # 1. Generate YAML spec from JSDoc comments
-npm run openapi:generate
+bun run openapi:generate
 
 # 2. Validate the generated spec
-npm run openapi:validate
+bun run openapi:validate
 
 # 3. Generate static HTML file
-npx @redocly/cli build-docs openapi.yaml -o api-docs.html
+bunx @redocly/cli build-docs openapi.yaml -o api-docs.html
 
 # 4. Start dev server with interactive docs
-npm run dev  # Visit http://localhost:3001/api-docs
+bun run dev  # Visit http://localhost:3001/api-docs
 ```
 
 ### Prerequisites

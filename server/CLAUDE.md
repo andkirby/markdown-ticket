@@ -8,10 +8,10 @@ Guidance for Claude Code working with the `server` workspace.
 
 ## Development Commands
 
-- `npm run dev` - Dev server with nodemon (localhost:3001)
-- `npm run server` - Production mode
-- `npm test` - Run Jest tests
-- `npm run lint` - ESLint
+- `bun run dev` - Dev server with nodemon (localhost:3001)
+- `bun run server` - Production mode
+- `bun test` - Run Jest tests
+- `bun run lint` - ESLint
 
 ## Testing
 

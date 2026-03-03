@@ -38,7 +38,7 @@ see [DOCKER_GUIDE.md](DOCKER_GUIDE.md).
 
 - Runtime: Nginx alpine
 - Port: 80 (container) → 80 (host)
-- Build: Optimized static files from `npm run build`
+- Build: Optimized static files from `bun run build`
 - Proxy: `/api/*` → backend:3001
 - User: Non-root `nginx` user
 
@@ -322,7 +322,7 @@ If you need to revert to native Node.js:
 ./bin/dc down
 
 # Use native development
-npm run dev:full
+bun run dev:full
 ```
 
 All projects and configuration remain unchanged (they're in mounted volumes).
@@ -331,7 +331,7 @@ All projects and configuration remain unchanged (they're in mounted volumes).
 
 | Aspect            | Docker                    | Native                    |
 |-------------------|---------------------------|---------------------------|
-| **Startup**       | `./bin/dc up`             | `npm run dev:full`        |
+| **Startup**       | `./bin/dc up`             | `bun run dev:full`        |
 | **Ports**         | Frontend: 5174, MCP: 3012 | Frontend: 5173, MCP: 3002 |
 | **File watching** | Polling mode (slower)     | Native events (faster)    |
 | **Isolation**     | Containerized             | Shared system             |
@@ -425,7 +425,7 @@ docker network inspect mdt_default  # Check network
 
 ### Build Failures
 
-**Symptom:** `npm install` fails during build
+**Symptom:** `bun install` fails during build
 
 **Diagnosis:**
 

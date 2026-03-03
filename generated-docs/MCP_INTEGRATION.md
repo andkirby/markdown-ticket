@@ -37,8 +37,8 @@ The Markdown Ticket Board project includes multiple MCP servers that enable AI a
 #### Prerequisites
 ```bash
 cd mcp-server
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 #### Amazon Q CLI Integration
@@ -147,8 +147,8 @@ Provides real-time logging and debugging capabilities during development.
 ### Setup
 ```bash
 cd server/mcp-dev-tools
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 ### Integration
@@ -275,7 +275,7 @@ Each template includes:
 ### MCP Integration
 1. **Scope Selection**: Use project-specific scope for focused work
 2. **Environment Variables**: Set `MCP_PROJECT_FILTER` for single-project workflows
-3. **Regular Updates**: Keep MCP servers updated with `npm run build`
+3. **Regular Updates**: Keep MCP servers updated with `bun run build`
 
 ### AI Assistant Workflows
 1. **Start with Discovery**: Use `list_projects` to understand available projects
@@ -290,7 +290,7 @@ Each template includes:
 **MCP Server Not Found**:
 ```bash
 # Verify build
-cd mcp-server && npm run build
+cd mcp-server && bun run build
 
 # Check file exists
 ls -la $HOME/markdown-ticket/mcp-server/dist/index.js
