@@ -48,13 +48,6 @@ Load the skills accordingly:
 
 **See [tests/AGENTS.md](tests/AGENTS.md)** for E2E testing ports, isolation, and conventions.
 
-### Code Quality Metrics
-- `scripts/metrics/run.sh` - Analyze code complexity for changed TypeScript files (shows yellow/red zones)
-- `scripts/metrics/run.sh --all` - Show all changed files regardless of thresholds
-- `scripts/metrics/run.sh path/to/dir-or-file.ts` - Analyze specific directory or file
-- `scripts/metrics/run.sh --json` - Output LLM-friendly JSON format
-- See `scripts/metrics/README.md` for full documentation and configuration options
-
 ### Code Analysis Tools
 - `scip-finder <symbol>` - Search for symbols in SCIP code intelligence indexes (more accurate than grep)
   - `--scip <path>` - Path to SCIP index file (auto-discovers if not provided), you should use the one from root: `index.scip`
