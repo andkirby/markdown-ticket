@@ -22,10 +22,22 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
   const { projectCode } = useParams<{ projectCode: string }>()
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(ticket)
 
-  // Update internal state when prop changes
+  // MDT-094: Update internal state when prop changes.
+  // When a ticket is selected, fetch full ticket content if not already present.
   useEffect(() => {
     setCurrentTicket(ticket)
-  }, [ticket])
+
+    // If ticket is opened but has no content, fetch the full ticket
+    if (ticket && isOpen && !ticket.content && projectCode) {
+      dataLayer.fetchTicket(projectCode, ticket.code)
+        .then((fullTicket) => {
+          if (fullTicket) {
+            setCurrentTicket(fullTicket)
+          }
+        })
+        .catch(err => console.error('Failed to fetch ticket content:', err))
+    }
+  }, [ticket, isOpen, projectCode])
 
   // Listen for real-time updates to this specific ticket
   useEventBus('ticket:updated', useCallback((event) => {

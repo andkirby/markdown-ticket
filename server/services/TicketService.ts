@@ -70,10 +70,11 @@ export class TicketService {
 
   /**
    * Convert projectId to Project object.
+   * Supports lookup by both project.id and project.project.code.
    */
   private async getProject(projectId: string): Promise<Project> {
     const projects = await this.projectDiscovery.getAllProjects()
-    const project = projects.find(p => p.id === projectId)
+    const project = projects.find(p => p.id === projectId || p.project.code === projectId)
 
     if (!project) {
       throw new Error('Project not found')

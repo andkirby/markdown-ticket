@@ -1,4 +1,5 @@
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project.js'
+import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
 import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
 import type { Request, Response } from 'express'
 import type { CRData, TicketService } from '../services/TicketService.js'
@@ -41,6 +42,7 @@ export interface ProjectServiceExtension {
   getAllProjects: (bypassCache?: boolean) => Promise<Project[]>
   getProjectConfig: (path: string) => ProjectConfig | null
   getProjectCRs: (path: string) => Promise<Ticket[]>
+  getProjectCRsMetadata: (path: string) => Promise<TicketMetadata[]>
   getSystemDirectories: (path?: string) => Promise<DirectoryListing>
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<void>
   projectDiscovery: {
@@ -137,7 +139,7 @@ export class ProjectController {
     try {
       // Get project by ID first, then get config using project path
       const projects = await this.projectService.getAllProjects()
-      const project = projects.find(p => p.id === projectId)
+      const project = projects.find(p => p.id === projectId || p.project.code === projectId)
 
       if (!project) {
         res.status(404).json({ error: 'Not Found', message: 'Project not found' })
@@ -379,7 +381,7 @@ export class ProjectController {
       // Get project by ID first, supporting bypassCache query param
       const bypassCache = req.query.bypassCache === 'true'
       const projects = await this.projectService.getAllProjects(bypassCache)
-      const project = projects.find(p => p.id === projectId)
+      const project = projects.find(p => p.id === projectId || p.project.code === projectId)
 
       if (!project) {
         res.status(404).json({ error: 'Not Found', message: 'Project not found' })
@@ -387,7 +389,8 @@ export class ProjectController {
         return
       }
 
-      const crs = await this.projectService.getProjectCRs(project.project.path)
+      // MDT-094: Return metadata-only for list endpoint (reduces payload)
+      const crs = await this.projectService.getProjectCRsMetadata(project.project.path)
 
       res.json(crs)
     }

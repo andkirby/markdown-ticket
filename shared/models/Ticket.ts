@@ -198,3 +198,60 @@ export interface TicketFilters {
     end?: Date
   }
 }
+
+/**
+ * MDT-094: TicketMetadata - metadata-only type for list operations.
+ *
+ * Excludes `content` field to reduce payload size for list views.
+ * Used by:
+ * - GET /api/projects/:id/crs (list endpoint)
+ * - dataLayer.fetchTicketsMetadata() (frontend)
+ *
+ * The detail endpoint (GET /api/projects/:id/crs/:code) returns full Ticket with content.
+ */
+export type TicketMetadata = Omit<Ticket, 'content'>
+
+/**
+ * MDT-094: Normalize unknown input to TicketMetadata.
+ *
+ * Same as normalizeTicket() but excludes content field.
+ * Reuses helper functions from normalizeTicket() for consistency.
+ */
+export function normalizeTicketMetadata(rawTicket: unknown): TicketMetadata {
+  const ticket = asRecord(rawTicket)
+  const normalizedMetadata: TicketMetadata = {
+    // Map core fields (same as normalizeTicket)
+    code: getString(ticket.code) || getString(ticket.key),
+    title: getString(ticket.title),
+    status: getString(ticket.status, 'Proposed'),
+    type: getString(ticket.type, CRType.FEATURE_ENHANCEMENT),
+    priority: getString(ticket.priority, 'Medium'),
+    // content is intentionally excluded
+    filePath: getString(ticket.filePath) || getString(ticket.path),
+
+    // Handle dates
+    dateCreated: parseDate(ticket.dateCreated),
+    lastModified: parseDate(ticket.lastModified),
+    implementationDate: parseDate(ticket.implementationDate),
+
+    // Map optional fields
+    phaseEpic: getString(ticket.phaseEpic),
+    assignee: getString(ticket.assignee),
+    implementationNotes: getString(ticket.implementationNotes),
+
+    // Normalize relationship fields to arrays
+    relatedTickets: normalizeArray(ticket.relatedTickets),
+    dependsOn: normalizeArray(ticket.dependsOn),
+    blocks: normalizeArray(ticket.blocks),
+  }
+
+  // MDT-095: Preserve worktree fields if present
+  if (typeof ticket.inWorktree === 'boolean') {
+    normalizedMetadata.inWorktree = ticket.inWorktree
+  }
+  if (typeof ticket.worktreePath === 'string') {
+    normalizedMetadata.worktreePath = ticket.worktreePath
+  }
+
+  return normalizedMetadata
+}

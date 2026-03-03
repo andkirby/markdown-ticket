@@ -18,6 +18,7 @@ interface Project {
   id: string
   project: {
     name: string
+    code?: string
     path: string
     active: boolean
   }
@@ -106,7 +107,7 @@ export class FileSystemService {
    */
   async buildProjectFileSystemTree(projectId: string, projectDiscovery: ProjectDiscovery): Promise<TreeNode[]> {
     const projects = await projectDiscovery.getAllProjects()
-    const project = projects.find(p => p.id === projectId)
+    const project = projects.find(p => p.id === projectId || p.project.code === projectId)
 
     if (!project) {
       throw new Error('Project not found')

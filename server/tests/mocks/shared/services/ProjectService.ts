@@ -46,6 +46,17 @@ interface ProjectCR {
   priority: string
   filename: string
   path: string
+  // MDT-094: Additional metadata fields
+  filePath: string
+  dateCreated: Date | null
+  lastModified: Date | null
+  relatedTickets: string[]
+  dependsOn: string[]
+  blocks: string[]
+  phaseEpic?: string
+  assignee?: string
+  implementationDate?: Date | null
+  implementationNotes?: string
 }
 
 interface ConfigureDocumentsResult {
@@ -187,6 +198,7 @@ export class ProjectService {
 
   /**
    * Get all CRs for a project
+   * MDT-094: Updated to match real implementation (scans .md files directly)
    */
   async getProjectCRs(projectPath: string): Promise<ProjectCR[]> {
     const config = this.getProjectConfig(projectPath)
@@ -201,39 +213,50 @@ export class ProjectService {
     }
 
     const crs: ProjectCR[] = []
+
+    // Scan for .md files directly in tickets directory (matches real implementation)
     const entries = fs.readdirSync(ticketsDir, { withFileTypes: true })
 
     for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const markdownFiles = fs.readdirSync(path.join(ticketsDir, entry.name))
-          .filter(f => f.endsWith('.md'))
+      if (entry.isFile() && entry.name.endsWith('.md')) {
+        const mdPath = path.join(ticketsDir, entry.name)
+        try {
+          const content = fs.readFileSync(mdPath, 'utf-8')
+          const yamlMatch = content.match(/^---\n([\s\S]*?)\n---/)
+          if (yamlMatch) {
+            const yaml = yamlMatch[1]
+            const codeMatch = yaml.match(/code:\s*["']?([^"'\n]+)["']?/)
+            const titleMatch = yaml.match(/title:\s*["']?([^"'\n]+)["']?/)
+            const statusMatch = yaml.match(/status:\s*["']?([^"'\n]+)["']?/)
+            const typeMatch = yaml.match(/type:\s*["']?([^"'\n]+)["']?/)
+            const priorityMatch = yaml.match(/priority:\s*["']?([^"'\n]+)["']?/)
 
-        for (const mdFile of markdownFiles) {
-          const mdPath = path.join(ticketsDir, entry.name, mdFile)
-          try {
-            const content = fs.readFileSync(mdPath, 'utf-8')
-            const yamlMatch = content.match(/^---\n([\s\S]*?)\n---/)
-            if (yamlMatch) {
-              const yaml = yamlMatch[1]
-              const titleMatch = yaml.match(/title:\s*["']?([^"'\n]+)["']?/)
-              const statusMatch = yaml.match(/status:\s*["']?([^"'\n]+)["']?/)
-              const typeMatch = yaml.match(/type:\s*["']?([^"'\n]+)["']?/)
-              const priorityMatch = yaml.match(/priority:\s*["']?([^"'\n]+)["']?/)
+            // Extract code from filename or YAML
+            const code = codeMatch ? codeMatch[1].trim() : entry.name.replace('.md', '')
 
-              crs.push({
-                code: entry.name,
-                title: titleMatch ? titleMatch[1].trim() : entry.name,
-                status: statusMatch ? statusMatch[1].trim() : 'Proposed',
-                type: typeMatch ? typeMatch[1].trim() : 'Feature Enhancement',
-                priority: priorityMatch ? priorityMatch[1].trim() : 'Medium',
-                filename: mdFile,
-                path: mdPath,
-              })
-            }
+            // Get file stats for dates
+            const stats = fs.statSync(mdPath)
+
+            crs.push({
+              code,
+              title: titleMatch ? titleMatch[1].trim() : code,
+              status: statusMatch ? statusMatch[1].trim() : 'Proposed',
+              type: typeMatch ? typeMatch[1].trim() : 'Feature Enhancement',
+              priority: priorityMatch ? priorityMatch[1].trim() : 'Medium',
+              filename: entry.name,
+              path: mdPath,
+              // MDT-094: Additional metadata fields
+              filePath: mdPath,
+              dateCreated: stats.birthtime || stats.ctime,
+              lastModified: stats.mtime,
+              relatedTickets: [],
+              dependsOn: [],
+              blocks: [],
+            })
           }
-          catch {
-            // Skip invalid files
-          }
+        }
+        catch {
+          // Skip invalid files
         }
       }
     }
@@ -320,6 +343,23 @@ export class ProjectService {
    */
   async checkDirectoryExists(dirPath: string): Promise<boolean> {
     return fs.existsSync(dirPath)
+  }
+
+  /**
+   * MDT-094: Get CR metadata only (without content)
+   * Returns same data as getProjectCRs but without content field
+   */
+  async getProjectCRsMetadata(projectPath: string): Promise<Omit<ProjectCR, 'content'>[]> {
+    // For the mock, we return the same data as getProjectCRs
+    // since our mock doesn't include content anyway
+    return this.getProjectCRs(projectPath)
+  }
+
+  /**
+   * Set cache TTL (no-op for mock)
+   */
+  setCacheTTL(_ttl: number): void {
+    // No-op for mock
   }
 
   get projectDiscovery() {
