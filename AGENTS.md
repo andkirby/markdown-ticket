@@ -15,6 +15,11 @@ Guidance for Claude Code working with this repository.
 Load the skills accordingly:
 @docs/SKILLS.md
 
+## Toolchain
+
+- **Runtime**: `bun` (package manager, test runner, dev servers)
+- **Test Frameworks**: Jest (server unit tests), Playwright (E2E)
+
 ## Development Commands
 
 ### Frontend

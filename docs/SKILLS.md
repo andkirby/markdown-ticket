@@ -32,4 +32,5 @@ Load this skill when mdt:architecture used.
 |-------|---------|-------------|
 | `unified-code-reviewer` | Review code before commit | PRs, feature completion |
 | `ts-validate-fix` | Fix TypeScript errors | Type errors, compilation issues |
+| `test-orchestrator` | Run, investigate, and fix tests across all packages | "fix all broken tests", post-refactor health check, CI failures |
 
