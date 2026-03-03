@@ -731,13 +731,13 @@ const client = new MCPClient(testEnv, {
 ### Run Single Test
 
 ```bash
-bun test -- --testNamePattern="should do something"
+jest -- --testNamePattern="should do something"
 ```
 
 ### Run with Debug Output
 
 ```bash
-bun test -- --verbose --no-cache
+jest -- --verbose --no-cache
 ```
 
 ### Inspect Server Output
@@ -754,16 +754,16 @@ this.process.stderr?.on('data', (data) => {
 
 ```bash
 # Run all E2E tests
-bun test -- tests/e2e/
+jest -- tests/e2e/
 
 # Run specific test file
-bun test -- tests/e2e/tools/create-cr.spec.ts
+jest -- tests/e2e/tools/create-cr.spec.ts
 
 # Run with coverage
-bun test -- tests/e2e/ --coverage
+jest -- tests/e2e/ --coverage
 
 # Run with verbose output
-bun test -- tests/e2e/ --verbose
+jest -- tests/e2e/ --verbose
 ```
 
 ---
@@ -845,19 +845,19 @@ expect(response.data).toContain('Success')
 
 ```bash
 # Run all E2E tests
-cd mcp-server && bun test
+cd mcp-server && jest
 
 # Run specific test file
-bun test -- tests/e2e/tools/create-cr.spec.ts
+jest -- tests/e2e/tools/create-cr.spec.ts
 
 # Run tests matching a pattern
-bun test -- --testNamePattern="valid Creation"
+jest -- --testNamePattern="valid Creation"
 
 # Run with coverage
-bun test -- --coverage
+jest -- --coverage
 
 # Run in watch mode
-bun test -- --watch
+jest -- --watch
 ```
 
 ---
