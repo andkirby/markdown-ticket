@@ -241,9 +241,9 @@ E2E Tests (Playwright)
 └── Location: tests/e2e/
 
 Unit Tests (Jest)
-├── Server: cd server && bun test
-├── MCP Server: cd mcp-server && bun test
-└── Domain Contracts: cd domain-contracts && bun test
+├── Server: cd server && jest
+├── MCP Server: cd mcp-server && jest
+└── Domain Contracts: cd domain-contracts && jest
 ```
 
 ### When to Run Tests
@@ -251,8 +251,8 @@ Unit Tests (Jest)
 | Scenario | Command | Notes |
 |----------|--------|-------|
 | **After UI changes** | `bun run test:e2e` | Validates visual and interaction |
-| **After backend changes** | `cd server && bun test` | Unit tests for services |
-| **After MCP changes** | `cd mcp-server && bun test` | Tool behavior validation |
+| **After backend changes** | `cd server && jest` | Unit tests for services |
+| **After MCP changes** | `cd mcp-server && jest` | Tool behavior validation |
 | **Before committing** | All applicable | Ensure nothing is broken |
 
 ### Fast Iteration Mode
@@ -416,8 +416,8 @@ scripts/metrics/run.sh           # Code complexity
 
 # Testing
 bun run test:e2e                 # E2E tests
-cd server && bun test           # Backend unit tests
-cd mcp-server && bun test       # MCP server tests
+cd server && jest           # Backend unit tests
+cd mcp-server && jest       # MCP server tests
 ```
 
 ### File Locations
