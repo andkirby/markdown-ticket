@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
 
 4. **Generate Documentation**:
 ```bash
-cd server && bun run openapi:generate
+bun run --cwd server openapi:generate
 ```
 
 ### Modifying Existing Endpoints

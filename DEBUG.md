@@ -51,9 +51,9 @@ All procedures have been verified with evidence.
 | owner | root |
 | port | 3001 |
 | observe | Console output with `[INFO]` prefix, API logs |
-| control | `bun run dev:server` or `cd server && bun run dev` |
+| control | `bun run dev:server` or `bun run --cwd server dev` |
 | inject | tsx watch mode (`bun run dev:watch`), Node.js debugger |
-| rollout | `cd server && bun run build && npm start` |
+| rollout | `bun run --cwd server build && npm start` |
 | test | `bun run server:test` |
 
 ### Runtime: `mcp-server`
@@ -66,9 +66,9 @@ All procedures have been verified with evidence.
 | owner | root |
 | port | 3002 (HTTP transport with `MCP_HTTP_ENABLED=true`) |
 | observe | Stdio output with emoji markers (🚀, ✅, ⚠️), HTTP logs |
-| control | `cd mcp-server && bun run dev` or `bunx tsx mcp-server/src/index.ts` |
+| control | `bun run --cwd mcp-server dev` or `bunx tsx mcp-server/src/index.ts` |
 | inject | MCP Inspector, tsx direct execution |
-| rollout | `cd mcp-server && bun run build && npm start` |
+| rollout | `bun run --cwd mcp-server build && npm start` |
 | test | `bun run mcp:test` |
 
 ### Runtime: `shared-lib`
@@ -210,7 +210,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `backend-express` / ROLLOUT / VERIFIED
 
-- **Action**: `cd server && bun run build && npm start`
+- **Action**: `bun run --cwd server build && npm start`
 - **Signal**: Server restarts with new code from `dist/`
 - **Constraints**: Requires TypeScript build before production start
 
@@ -227,7 +227,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `backend-express` / INJECT / VERIFIED
 
-- **Action**: `cd server && bun run dev:watch` for watch mode, or attach Node.js debugger
+- **Action**: `bun run --cwd server dev:watch` for watch mode, or attach Node.js debugger
 - **Signal**: tsx watch automatically restarts on file changes
 - **Constraints**: None
 
@@ -269,13 +269,13 @@ All procedures have been verified with evidence.
 
 ### Runtime `mcp-server` / CONTROL / VERIFIED
 
-- **Action**: `cd mcp-server && bun run dev` or `bunx tsx mcp-server/src/index.ts`
+- **Action**: `bun run --cwd mcp-server dev` or `bunx tsx mcp-server/src/index.ts`
 - **Signal**: Server starts in stdio mode, ready for JSON-RPC messages
 - **Constraints**: HTTP mode requires `MCP_HTTP_ENABLED=true`
 
 ### Runtime `mcp-server` / ROLLOUT / VERIFIED
 
-- **Action**: `cd mcp-server && bun run build && npm start`
+- **Action**: `bun run --cwd mcp-server build && npm start`
 - **Signal**: Server runs from `dist/` directory
 - **Constraints**: Must rebuild after code changes for production mode
 
@@ -300,7 +300,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `shared-lib` / ROLLOUT / VERIFIED
 
-- **Action**: `bun run build:shared` or `cd shared && bun run build`
+- **Action**: `bun run build:shared` or `bun run --cwd shared build`
 - **Signal**: TypeScript compiles to `shared/dist/`
 - **Constraints**: Required before server or frontend can run
 
@@ -389,9 +389,9 @@ This builds shared code and starts both frontend (5173) and backend (3001).
 | Runtime | Start | Stop | Test |
 |---------|-------|------|------|
 | frontend-vite | `bun run dev` | `Ctrl+C` | `bun run fe:test` |
-| backend-express | `bun run dev:server` | `Ctrl+C` | `cd server && jest` |
-| mcp-server | `cd mcp-server && bun run dev` | `Ctrl+C` | `cd mcp-server && jest` |
-| shared-lib | `bun run build:shared` | N/A | `cd shared && jest` |
+| backend-express | `bun run dev:server` | `Ctrl+C` | `bun run --cwd server jest` |
+| mcp-server | `bun run --cwd mcp-server dev` | `Ctrl+C` | `bun run --cwd mcp-server jest` |
+| shared-lib | `bun run build:shared` | N/A | `bun run --cwd shared jest` |
 | domain-contracts | `bun run build:domain-contracts` | N/A | `cd domain-contracts && jest` |
 | e2e-playwright | `bun run test:e2e` | `Ctrl+C` | `bun run test:e2e` |
 
@@ -399,10 +399,10 @@ This builds shared code and starts both frontend (5173) and backend (3001).
 
 ```bash
 # Stdio mode (default)
-cd mcp-server && bun run dev
+bun run --cwd mcp-server dev
 
 # HTTP mode (port 3002)
-MCP_HTTP_ENABLED=true cd mcp-server && bun run dev
+MCP_HTTP_ENABLED=true bun run --cwd mcp-server dev
 
 # With MCP Inspector
 bunx @modelcontextprotocol/inspector --transport stdio --server "bunx tsx mcp-server/src/index.ts"
