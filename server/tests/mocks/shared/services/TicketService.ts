@@ -17,12 +17,14 @@ export interface Ticket {
   filePath?: string // Changed from 'path' to 'filePath' to match real service
   content?: string
   description?: string
+  dateCreated?: Date | null
+  lastModified?: Date | null
   phaseEpic?: string
   assignee?: string
   relatedTickets?: string[]
   dependsOn?: string[]
   blocks?: string[]
-  implementationDate?: string
+  implementationDate?: Date | null
   implementationNotes?: string
 }
 
@@ -121,6 +123,7 @@ export class TicketService {
     }
 
     const content = fs.readFileSync(mdPath, 'utf-8')
+    const stats = fs.statSync(mdPath)
 
     // Parse YAML frontmatter
     const yamlMatch = content.match(/^---\n([\s\S]*?)\n---/)
@@ -134,6 +137,9 @@ export class TicketService {
     const typeMatch = yaml.match(/type:\s*["']?([^"'\n]+)["']?/)
     const priorityMatch = yaml.match(/priority:\s*["']?([^"'\n]+)["']?/)
     const descriptionMatch = yaml.match(/description:\s*(.+)/)
+    const relatedTicketsMatch = yaml.match(/relatedTickets:\s*(.+)/)
+    const dependsOnMatch = yaml.match(/dependsOn:\s*(.+)/)
+    const blocksMatch = yaml.match(/blocks:\s*(.+)/)
 
     return {
       code: crId,
@@ -145,6 +151,11 @@ export class TicketService {
       filename: files[0],
       filePath: mdPath, // Changed from 'path' to 'filePath' to match real service
       content,
+      dateCreated: stats.birthtime || stats.ctime,
+      lastModified: stats.mtime,
+      relatedTickets: relatedTicketsMatch ? relatedTicketsMatch[1].trim().split(',').filter(Boolean) : [],
+      dependsOn: dependsOnMatch ? dependsOnMatch[1].trim().split(',').filter(Boolean) : [],
+      blocks: blocksMatch ? blocksMatch[1].trim().split(',').filter(Boolean) : [],
     }
   }
 
@@ -190,7 +201,7 @@ export class TicketService {
       data.blocks ? `blocks: ${data.blocks}` : '',
       '---',
       '',
-      data.description || '',
+      data.content || data.description || '',
     ].filter(Boolean).join('\n')
 
     fs.writeFileSync(mdPath, yaml, 'utf-8')
