@@ -10,7 +10,7 @@ Guidance for Claude Code working with the `server` workspace.
 
 - `bun run dev` - Dev server with nodemon (localhost:3001)
 - `bun run server` - Production mode
-- `bun test` - Run Jest tests
+- `jest` - Run Jest tests
 - `bun run lint` - ESLint
 
 ## Testing

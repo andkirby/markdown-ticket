@@ -25,13 +25,13 @@ Load the skills accordingly:
 ### Backend
 - `bun run dev:server` - Dev server with nodemon (localhost:3001)
 - `bun run server` - Production mode
-- `cd server && bun test` - Jest tests
+- `cd server && jest` - Jest tests
 
 ### MCP Server
 - `cd mcp-server && bun run build` - Build (required after code changes)
 - `cd mcp-server && bun run dev` - Dev mode (stdio, uses tsx)
 - `MCP_HTTP_ENABLED=true bun run dev` - Stdio + HTTP transports
-- `cd mcp-server && bun test` - Jest tests
+- `cd mcp-server && jest` - Jest tests
 
 **HTTP Transport:**
 - Enable: `MCP_HTTP_ENABLED=true`
