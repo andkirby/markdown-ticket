@@ -63,6 +63,9 @@ export interface Ticket {
   relatedTickets: string[]
   dependsOn: string[]
   blocks: string[]
+  // MDT-095: Worktree fields (API response only)
+  inWorktree?: boolean
+  worktreePath?: string
 }
 
 /**

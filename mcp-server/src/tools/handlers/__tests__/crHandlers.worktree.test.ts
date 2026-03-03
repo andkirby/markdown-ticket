@@ -125,6 +125,7 @@ describe('CRHandlers - Worktree Integration (MDT-095)', () => {
 
       const result = await crHandlers.handleCreateCR(mockProject, 'Feature Enhancement', {
         title: 'New CR',
+        type: 'Feature Enhancement',
         priority: 'Medium',
       })
 
