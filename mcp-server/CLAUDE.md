@@ -13,16 +13,16 @@ bun run dev              # Stdio transport (uses tsx for direct TS execution)
 MCP_HTTP_ENABLED=true bun run dev  # Stdio + HTTP transports (port 3002)
 
 # Testing
-bun test                # All tests (unit + integration + e2e)
-bun test -- tests/e2e/  # E2E tests only
-bun test -- tests/integration/  # Integration tests only
-bun test -- tests/unit/  # Unit tests only
+jest                # All tests (unit + integration + e2e)
+jest -- tests/e2e/  # E2E tests only
+jest -- tests/integration/  # Integration tests only
+jest -- tests/unit/  # Unit tests only
 
 # Run specific test file
-bun test -- tests/e2e/tools/create-cr.spec.ts
+jest -- tests/e2e/tools/create-cr.spec.ts
 
 # Watch mode
-bun test -- --watch
+jest -- --watch
 
 # Linting
 bun run lint            # ESLint check

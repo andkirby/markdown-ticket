@@ -322,7 +322,7 @@ bun run dev
 
 ```bash
 # Run frontend tests
-bun test
+jest
 
 # Run tests with coverage
 bun run test:coverage
@@ -335,7 +335,7 @@ bun run test:coverage
 cd server
 
 # Run server tests
-bun test
+jest
 
 # Run tests with coverage
 bun run test:coverage

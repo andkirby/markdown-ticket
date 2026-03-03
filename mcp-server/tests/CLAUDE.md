@@ -142,25 +142,25 @@ const client = new MCPClient(testEnv, { transport: 'http' })
 
 ```bash
 # All tests
-bun test
+jest
 
 # E2E tests only
-bun test -- tests/e2e/
+jest -- tests/e2e/
 
 # Integration tests only
-bun test -- tests/integration/
+jest -- tests/integration/
 
 # Unit tests only
-bun test -- tests/unit/
+jest -- tests/unit/
 
 # Specific test file
-bun test -- tests/e2e/tools/create-cr.spec.ts
+jest -- tests/e2e/tools/create-cr.spec.ts
 
 # With coverage
-bun test -- --coverage
+jest -- --coverage
 
 # Watch mode
-bun test -- --watch
+jest -- --watch
 ```
 
 ## Test Helpers
@@ -289,13 +289,13 @@ describe('list_crs', () => {
 
 ```bash
 # Run single test
-bun test -- --testNamePattern="should do something"
+jest -- --testNamePattern="should do something"
 
 # Verbose output
-bun test -- --verbose
+jest -- --verbose
 
 # No cache
-bun test -- --no-cache
+jest -- --no-cache
 
 # Debug mode
 node --inspect-brk node_modules/.bin/jest --runInBand
