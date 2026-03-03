@@ -129,7 +129,7 @@ Model Context Protocol server for AI assistant integration:
 2. **Install dependencies**:
    ```bash
    bun install
-   cd server && bun install
+   bun install --cwd server
    cd ../mcp-server && bun install && bun run build
    ```
 

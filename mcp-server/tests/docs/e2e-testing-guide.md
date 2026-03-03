@@ -85,7 +85,7 @@ expect(result.data.key).toBe('TEST-001')  // Will fail
 
 ### Prerequisites
 
-1. Build the MCP server: `cd mcp-server && bun run build`
+1. Build the MCP server: `bun run --cwd mcp-server build`
 2. Ensure test dependencies are installed: `bun install`
 
 ### Create a New Test File

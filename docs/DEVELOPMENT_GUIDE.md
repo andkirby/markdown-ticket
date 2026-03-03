@@ -263,14 +263,14 @@ shared/
 3. Check browser console for errors
 
 #### MCP Server Issues
-1. Ensure server is built: `cd mcp-server && bun run build`
+1. Ensure server is built: `bun run --cwd mcp-server build`
 2. Check Node.js version compatibility
 3. Verify configuration files exist
 4. Try reconnecting: run `/mcp` in Claude Code
 
 #### Build/Type Errors
 1. Run `bun run validate:ts` to identify issues
-2. Check `domain-contracts` is built: `cd domain-contracts && bun run build`
+2. Check `domain-contracts` is built: `bun run --cwd domain-contracts build`
 3. Rebuild dependents after domain-contracts changes: `bun run build:all`
 
 #### Template Issues
