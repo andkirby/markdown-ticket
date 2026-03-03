@@ -376,6 +376,15 @@ All procedures have been verified with evidence.
 
 ## Quick Reference Commands
 
+### Test Failure Report
+
+```bash
+./scripts/tests-report.sh               # FAIL files only (shared, server, mcp-server)
+./scripts/tests-report.sh --verbose     # + full describe tree with ✕ cases
+./scripts/tests-report.sh server        # scope to one package
+./scripts/tests-report.sh -h            # help
+```
+
 ### Start All Services (Recommended Development)
 
 ```bash
