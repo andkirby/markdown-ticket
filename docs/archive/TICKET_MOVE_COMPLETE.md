@@ -80,10 +80,10 @@ User Drag → Column Drop → Board Processing → Backend Update → File Save 
 ### Quick Start
 ```bash
 # 1. Install dependencies
-npm install
+bun install
 
 # 2. Start both frontend and backend
-npm run dev:full
+bun run dev:full
 
 # 3. Open browser
 # Frontend: http://localhost:5173

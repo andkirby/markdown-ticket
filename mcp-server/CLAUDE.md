@@ -6,27 +6,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Build (required after code changes - transpiles TypeScript to dist/)
-npm run build
+bun run build
 
 # Development
-npm run dev              # Stdio transport (uses tsx for direct TS execution)
-MCP_HTTP_ENABLED=true npm run dev  # Stdio + HTTP transports (port 3002)
+bun run dev              # Stdio transport (uses tsx for direct TS execution)
+MCP_HTTP_ENABLED=true bun run dev  # Stdio + HTTP transports (port 3002)
 
 # Testing
-npm test                # All tests (unit + integration + e2e)
-npm test -- tests/e2e/  # E2E tests only
-npm test -- tests/integration/  # Integration tests only
-npm test -- tests/unit/  # Unit tests only
+bun test                # All tests (unit + integration + e2e)
+bun test -- tests/e2e/  # E2E tests only
+bun test -- tests/integration/  # Integration tests only
+bun test -- tests/unit/  # Unit tests only
 
 # Run specific test file
-npm test -- tests/e2e/tools/create-cr.spec.ts
+bun test -- tests/e2e/tools/create-cr.spec.ts
 
 # Watch mode
-npm test -- --watch
+bun test -- --watch
 
 # Linting
-npm run lint            # ESLint check
-npm run lint:fix        # ESLint auto-fix
+bun run lint            # ESLint check
+bun run lint:fix        # ESLint auto-fix
 ```
 
 ## MCP Server Architecture
@@ -199,7 +199,7 @@ afterEach(async () => {
 
 ## Conventions
 
-- **Build before running**: Run `npm run build` after code changes
+- **Build before running**: Run `bun run build` after code changes
 - **No AI attribution in commits**: No "Co-Authored-By:" tags
 - **Path aliases**: `@mdt/shared/*` → `../shared/dist/*`
 - **Mock location**: `src/__mocks__/@mdt/shared/services/`
@@ -214,7 +214,7 @@ afterEach(async () => {
 
 ## Common Issues
 
-- **Module not found**: Run `npm run build` to transpile TypeScript
+- **Module not found**: Run `bun run build` to transpile TypeScript
 - **Tests fail sporadically**: Check temp dir cleanup in `afterEach`
 - **Server doesn't discover projects**: Ensure project created before `mcpClient.start()`
 - **E2E tests timeout**: Server may not be starting - check `waitForStart()` in transports

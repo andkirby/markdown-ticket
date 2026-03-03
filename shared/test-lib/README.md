@@ -469,7 +469,7 @@ TEST_MCP_PORT=8002
 **Solution:** Ensure `testEnv.cleanup()` is called in `test.afterAll` or use unique ports:
 
 ```bash
-TEST_BACKEND_PORT=5001 npm run test:e2e
+TEST_BACKEND_PORT=5001 bun run test:e2e
 ```
 
 ### Temp Directory Not Created
@@ -502,7 +502,7 @@ const cr = await projectFactory.createTestCR(project.key, { ... });  // Use proj
 
 **Solutions:**
 
-1. Ensure `npm run build:shared` has been run
+1. Ensure `bun run build:shared` has been run
 2. Check server logs: `child.stdout?.on('data', console.log)`
 3. Increase health check timeout in TestServer configuration
 4. Verify project root path: `testEnv.getTempDirectory()`

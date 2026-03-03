@@ -57,5 +57,5 @@ import { ProjectFactory } from '../../../test-lib/index'
 ## Build
 
 Required before use in other workspaces:
-- `npm run build:shared` - Explicit
-- `npm run dev:full` - Auto-builds + starts servers
+- `bun run build:shared` - Explicit
+- `bun run dev:full` - Auto-builds + starts servers

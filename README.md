@@ -31,7 +31,7 @@ See **[prompts/README.md](prompts/README.md)** for detailed installation options
 bin/dc up -d
 
 # Local development
-npm run build:all && ./start.sh
+bun run build:all && ./start.sh
 ```
 
 ### 3. Connect MCP (Required for AI)
@@ -190,10 +190,10 @@ See **[docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md)** for configuration.
 ## Development
 
 ```bash
-npm install                # Install dependencies
-npm run dev:full           # Start dev servers (frontend + backend)
-npm run test:e2e           # Run Playwright tests
-npm run lint               # Code quality
+bun install                # Install dependencies
+bun run dev:full           # Start dev servers (frontend + backend)
+bun run test:e2e           # Run Playwright tests
+bun run lint               # Code quality
 ```
 
 ### Architecture

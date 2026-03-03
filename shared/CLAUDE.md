@@ -8,12 +8,12 @@ Guidance for Claude Code working with the `@mdt/shared` workspace package.
 
 ## Development Commands
 
-- `npm run build` - Build the package (required before using in other workspaces)
-- `npm run test` - Run Jest tests
-- `npm run test:watch` - Watch mode
-- `npm run lint` - ESLint
+- `bun run build` - Build the package (required before using in other workspaces)
+- `bun run test` - Run Jest tests
+- `bun run test:watch` - Watch mode
+- `bun run lint` - ESLint
 
-**Note**: Root `npm run dev:full` auto-builds shared code.
+**Note**: Root `bun run dev:full` auto-builds shared code.
 
 ## Testing
 

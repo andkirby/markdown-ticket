@@ -107,27 +107,27 @@ md-ticket-board/
 ```bash
 # Clone and install dependencies
 cd md-ticket-board
-npm install
+bun install
 
 # Start development servers
-npm run dev:full    # Both frontend and backend
-npm run server:dev  # Backend only
-npm run dev         # Frontend only
+bun run dev:full    # Both frontend and backend
+bun run server:dev  # Backend only
+bun run dev         # Frontend only
 
 # Run tests
-npm run test        # Unit and component tests
-npm run test:e2e    # End-to-end tests
+bun run test        # Unit and component tests
+bun run test:e2e    # End-to-end tests
 ```
 
 ### Available Scripts
-- `npm run dev`: Start frontend development server
-- `npm run server:dev`: Start backend server
-- `npm run dev:full`: Start both servers
-- `npm run build`: Build for production
-- `npm run test`: Run unit and component tests
-- `npm run test:e2e`: Run end-to-end tests
-- `npm run lint`: Run ESLint
-- `npm run preview`: Preview production build
+- `bun run dev`: Start frontend development server
+- `bun run server:dev`: Start backend server
+- `bun run dev:full`: Start both servers
+- `bun run build`: Build for production
+- `bun run test`: Run unit and component tests
+- `bun run test:e2e`: Run end-to-end tests
+- `bun run lint`: Run ESLint
+- `bun run preview`: Preview production build
 
 ## Testing Strategy
 

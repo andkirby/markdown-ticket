@@ -19,13 +19,13 @@ Set the environment variable `MCP_SANITIZATION_ENABLED=true`:
 
 ```bash
 # For stdio transport
-MCP_SANITIZATION_ENABLED=true npm run dev
+MCP_SANITIZATION_ENABLED=true bun run dev
 
 # For HTTP transport
-MCP_SANITIZATION_ENABLED=true MCP_HTTP_ENABLED=true npm run dev
+MCP_SANITIZATION_ENABLED=true MCP_HTTP_ENABLED=true bun run dev
 
 # For both transports
-MCP_SANITIZATION_ENABLED=true MCP_HTTP_ENABLED=true MCP_HTTP_PORT=3002 npm run dev
+MCP_SANITIZATION_ENABLED=true MCP_HTTP_ENABLED=true MCP_HTTP_PORT=3002 bun run dev
 ```
 
 ## Sanitization Rules

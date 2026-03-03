@@ -306,8 +306,8 @@ Add to your project's CLAUDE.md:
 ```markdown
 ## Project Settings
 - source_dir: src/
-- test_command: npm test
-- build_command: npm run build
+- test_command: bun test
+- build_command: bun run build
 - file_extension: .ts
 ```
 
@@ -368,10 +368,10 @@ A: Check MCP connection first, then verify tool parameters in mcp-server/MCP_TOO
 /mcp
 
 # Verify server built
-cd mcp-server && npm run build
+cd mcp-server && bun run build
 
 # Test with HTTP transport
-MCP_HTTP_ENABLED=true npm run dev
+MCP_HTTP_ENABLED=true bun run dev
 ```
 
 ### File Permission Errors

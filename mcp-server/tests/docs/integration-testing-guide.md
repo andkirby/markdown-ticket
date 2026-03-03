@@ -663,25 +663,25 @@ describe('MCP-Backend Simplified Consistency', () => {
 
 ```bash
 cd mcp-server
-npm test -- tests/integration/
+bun test -- tests/integration/
 ```
 
 ### Run Specific Test File
 
 ```bash
-npm test -- tests/integration/service-delegation.test.ts
+bun test -- tests/integration/service-delegation.test.ts
 ```
 
 ### Run with Coverage
 
 ```bash
-npm test -- tests/integration/ --coverage
+bun test -- tests/integration/ --coverage
 ```
 
 ### Run with Verbose Output
 
 ```bash
-npm test -- tests/integration/ --verbose
+bun test -- tests/integration/ --verbose
 ```
 
 ### Debug Mode

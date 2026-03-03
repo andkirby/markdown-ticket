@@ -36,10 +36,10 @@ All procedures have been verified with evidence.
 | owner | root |
 | port | 5173 (configurable via `PORT` env) |
 | observe | Console output, `/api/frontend/logs/*` endpoints |
-| control | `npm run dev`, `npm run dev:full` |
+| control | `bun run dev`, `bun run dev:full` |
 | inject | Vite HMR, browser DevTools console |
 | rollout | Vite HMR (hot reload) or server restart |
-| test | `npm run fe:test` (Jest) |
+| test | `bun run fe:test` (Jest) |
 
 ### Runtime: `backend-express`
 
@@ -51,10 +51,10 @@ All procedures have been verified with evidence.
 | owner | root |
 | port | 3001 |
 | observe | Console output with `[INFO]` prefix, API logs |
-| control | `npm run dev:server` or `cd server && npm run dev` |
-| inject | tsx watch mode (`npm run dev:watch`), Node.js debugger |
-| rollout | `cd server && npm run build && npm start` |
-| test | `npm run server:test` |
+| control | `bun run dev:server` or `cd server && bun run dev` |
+| inject | tsx watch mode (`bun run dev:watch`), Node.js debugger |
+| rollout | `cd server && bun run build && npm start` |
+| test | `bun run server:test` |
 
 ### Runtime: `mcp-server`
 
@@ -66,10 +66,10 @@ All procedures have been verified with evidence.
 | owner | root |
 | port | 3002 (HTTP transport with `MCP_HTTP_ENABLED=true`) |
 | observe | Stdio output with emoji markers (🚀, ✅, ⚠️), HTTP logs |
-| control | `cd mcp-server && npm run dev` or `npx tsx mcp-server/src/index.ts` |
+| control | `cd mcp-server && bun run dev` or `bunx tsx mcp-server/src/index.ts` |
 | inject | MCP Inspector, tsx direct execution |
-| rollout | `cd mcp-server && npm run build && npm start` |
-| test | `npm run mcp:test` |
+| rollout | `cd mcp-server && bun run build && npm start` |
+| test | `bun run mcp:test` |
 
 ### Runtime: `shared-lib`
 
@@ -80,10 +80,10 @@ All procedures have been verified with evidence.
 | entry | N/A (build-time only) |
 | owner | root |
 | observe | Build output, test results |
-| control | `npm run build:shared` |
+| control | `bun run build:shared` |
 | inject | N/A |
-| rollout | `npm run build:shared` |
-| test | `npm run shared:test` |
+| rollout | `bun run build:shared` |
+| test | `bun run shared:test` |
 
 ### Runtime: `domain-contracts`
 
@@ -94,10 +94,10 @@ All procedures have been verified with evidence.
 | entry | N/A (build-time only) |
 | owner | root |
 | observe | Build output, test results |
-| control | `npm run build:domain-contracts` |
+| control | `bun run build:domain-contracts` |
 | inject | N/A |
-| rollout | `npm run build:domain-contracts` |
-| test | `npm run domain:test` |
+| rollout | `bun run build:domain-contracts` |
+| test | `bun run domain:test` |
 
 ### Runtime: `e2e-playwright`
 
@@ -109,10 +109,10 @@ All procedures have been verified with evidence.
 | owner | root |
 | ports | Frontend: 6173, Backend: 4001 (isolated from dev) |
 | observe | HTML reporter, console output, trace files |
-| control | `npm run test:e2e`, `npx playwright test` |
+| control | `bun run test:e2e`, `bunx playwright test` |
 | inject | Playwright UI mode (`--ui`), headed mode (`--headed`) |
 | rollout | Auto-starts dev servers via `webServer` config |
-| test | `npm run test:e2e` |
+| test | `bun run test:e2e` |
 | state | `shared/test-lib` TestEnvironment + ProjectFactory |
 
 ---
@@ -153,7 +153,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `frontend-vite` / OBSERVE / VERIFIED
 
-- **Action**: `npm run dev`
+- **Action**: `bun run dev`
 - **Signal**:
   ```
   VITE v7.3.1  ready in 213 ms
@@ -164,7 +164,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `frontend-vite` / CONTROL / VERIFIED
 
-- **Action**: `npm run dev` starts server, `Ctrl+C` stops it
+- **Action**: `bun run dev` starts server, `Ctrl+C` stops it
 - **Signal**: Server starts on port 5173, graceful shutdown on SIGINT
 - **Constraints**: Port configurable via `PORT` environment variable
 
@@ -176,7 +176,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `frontend-vite` / TEST / VERIFIED
 
-- **Action**: `npm run fe:test`
+- **Action**: `bun run fe:test`
 - **Signal**:
   ```
   Test Suites: 1 passed, 1 total
@@ -204,19 +204,19 @@ All procedures have been verified with evidence.
 
 ### Runtime `backend-express` / CONTROL / VERIFIED
 
-- **Action**: `npm run dev:server` to start, `Ctrl+C` or SIGTERM to stop
+- **Action**: `bun run dev:server` to start, `Ctrl+C` or SIGTERM to stop
 - **Signal**: Server starts on port 3001, graceful shutdown stops all file watchers
 - **Constraints**: Graceful shutdown stops all file watchers
 
 ### Runtime `backend-express` / ROLLOUT / VERIFIED
 
-- **Action**: `cd server && npm run build && npm start`
+- **Action**: `cd server && bun run build && npm start`
 - **Signal**: Server restarts with new code from `dist/`
 - **Constraints**: Requires TypeScript build before production start
 
 ### Runtime `backend-express` / TEST / VERIFIED
 
-- **Action**: `cd server && npm test`
+- **Action**: `cd server && bun test`
 - **Signal**:
   ```
   Test Suites: 9 passed, 9 total
@@ -227,7 +227,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `backend-express` / INJECT / VERIFIED
 
-- **Action**: `cd server && npm run dev:watch` for watch mode, or attach Node.js debugger
+- **Action**: `cd server && bun run dev:watch` for watch mode, or attach Node.js debugger
 - **Signal**: tsx watch automatically restarts on file changes
 - **Constraints**: None
 
@@ -254,7 +254,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `mcp-server` / OBSERVE / VERIFIED
 
-- **Action**: `npx tsx mcp-server/src/index.ts`
+- **Action**: `bunx tsx mcp-server/src/index.ts`
 - **Signal**:
   ```
   🚀 Initializing MCP CR Server...
@@ -269,19 +269,19 @@ All procedures have been verified with evidence.
 
 ### Runtime `mcp-server` / CONTROL / VERIFIED
 
-- **Action**: `cd mcp-server && npm run dev` or `npx tsx mcp-server/src/index.ts`
+- **Action**: `cd mcp-server && bun run dev` or `bunx tsx mcp-server/src/index.ts`
 - **Signal**: Server starts in stdio mode, ready for JSON-RPC messages
 - **Constraints**: HTTP mode requires `MCP_HTTP_ENABLED=true`
 
 ### Runtime `mcp-server` / ROLLOUT / VERIFIED
 
-- **Action**: `cd mcp-server && npm run build && npm start`
+- **Action**: `cd mcp-server && bun run build && npm start`
 - **Signal**: Server runs from `dist/` directory
 - **Constraints**: Must rebuild after code changes for production mode
 
 ### Runtime `mcp-server` / TEST / VERIFIED
 
-- **Action**: `npm run mcp:test`
+- **Action**: `bun run mcp:test`
 - **Signal**:
   ```
   Test Suites: 31 passed, 31 total
@@ -292,7 +292,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `mcp-server` / INJECT / VERIFIED
 
-- **Action**: MCP Inspector: `npx @modelcontextprotocol/inspector --transport stdio --server "npx tsx mcp-server/src/index.ts"`
+- **Action**: MCP Inspector: `bunx @modelcontextprotocol/inspector --transport stdio --server "bunx tsx mcp-server/src/index.ts"`
 - **Signal**: Interactive tool testing via web UI
 - **Constraints**: Requires MCP Inspector package
 
@@ -300,13 +300,13 @@ All procedures have been verified with evidence.
 
 ### Runtime `shared-lib` / ROLLOUT / VERIFIED
 
-- **Action**: `npm run build:shared` or `cd shared && npm run build`
+- **Action**: `bun run build:shared` or `cd shared && bun run build`
 - **Signal**: TypeScript compiles to `shared/dist/`
 - **Constraints**: Required before server or frontend can run
 
 ### Runtime `shared-lib` / TEST / VERIFIED
 
-- **Action**: `npm run shared:test`
+- **Action**: `bun run shared:test`
 - **Signal**:
   ```
   Test Suites: 29 passed, 29 total
@@ -319,13 +319,13 @@ All procedures have been verified with evidence.
 
 ### Runtime `domain-contracts` / ROLLOUT / VERIFIED
 
-- **Action**: `npm run build:domain-contracts`
+- **Action**: `bun run build:domain-contracts`
 - **Signal**: `tsc --build` completes without errors
 - **Constraints**: Required for projects using Zod schemas from this package
 
 ### Runtime `domain-contracts` / TEST / VERIFIED
 
-- **Action**: `npm run domain:test`
+- **Action**: `bun run domain:test`
 - **Signal**:
   ```
   Test Suites: 6 passed, 6 total
@@ -338,25 +338,25 @@ All procedures have been verified with evidence.
 
 ### Runtime `e2e-playwright` / OBSERVE / VERIFIED
 
-- **Action**: `npm run test:e2e`
+- **Action**: `bun run test:e2e`
 - **Signal**: HTML reporter at `playwright-report/index.html`, console output with test progress
 - **Constraints**: Uses isolated ports (6173/4001) to avoid dev server conflicts
 
 ### Runtime `e2e-playwright` / CONTROL / VERIFIED
 
-- **Action**: `npm run test:e2e` to run all, `npx playwright test <file>` for specific tests
+- **Action**: `bun run test:e2e` to run all, `bunx playwright test <file>` for specific tests
 - **Signal**: Tests execute with pass/fail status
 - **Constraints**: Sequential execution (`workers: 1`) for shared environment isolation
 
 ### Runtime `e2e-playwright` / ROLLOUT / VERIFIED
 
 - **Action**: Playwright auto-starts dev servers via `webServer` config
-- **Signal**: `VITE_BACKEND_URL=http://localhost:4001 npm run dev -- --port 6173 --strictPort`
+- **Signal**: `VITE_BACKEND_URL=http://localhost:4001 bun run dev -- --port 6173 --strictPort`
 - **Constraints**: Servers start on-demand; reuse existing if `reuseExistingServer: true`
 
 ### Runtime `e2e-playwright` / TEST / VERIFIED
 
-- **Action**: `npm run test:e2e`
+- **Action**: `bun run test:e2e`
 - **Signal**: Infrastructure smoke tests verify backend API, frontend load, scenario creation
 - **Test categories**:
   - `tests/e2e/smoke/` - Infrastructure verification
@@ -379,7 +379,7 @@ All procedures have been verified with evidence.
 ### Start All Services (Recommended Development)
 
 ```bash
-npm run dev:full
+bun run dev:full
 ```
 
 This builds shared code and starts both frontend (5173) and backend (3001).
@@ -388,40 +388,40 @@ This builds shared code and starts both frontend (5173) and backend (3001).
 
 | Runtime | Start | Stop | Test |
 |---------|-------|------|------|
-| frontend-vite | `npm run dev` | `Ctrl+C` | `npm run fe:test` |
-| backend-express | `npm run dev:server` | `Ctrl+C` | `cd server && npm test` |
-| mcp-server | `cd mcp-server && npm run dev` | `Ctrl+C` | `cd mcp-server && npm test` |
-| shared-lib | `npm run build:shared` | N/A | `cd shared && npm test` |
-| domain-contracts | `npm run build:domain-contracts` | N/A | `cd domain-contracts && npm test` |
-| e2e-playwright | `npm run test:e2e` | `Ctrl+C` | `npm run test:e2e` |
+| frontend-vite | `bun run dev` | `Ctrl+C` | `bun run fe:test` |
+| backend-express | `bun run dev:server` | `Ctrl+C` | `cd server && bun test` |
+| mcp-server | `cd mcp-server && bun run dev` | `Ctrl+C` | `cd mcp-server && bun test` |
+| shared-lib | `bun run build:shared` | N/A | `cd shared && bun test` |
+| domain-contracts | `bun run build:domain-contracts` | N/A | `cd domain-contracts && bun test` |
+| e2e-playwright | `bun run test:e2e` | `Ctrl+C` | `bun run test:e2e` |
 
 ### MCP Server Modes
 
 ```bash
 # Stdio mode (default)
-cd mcp-server && npm run dev
+cd mcp-server && bun run dev
 
 # HTTP mode (port 3002)
-MCP_HTTP_ENABLED=true cd mcp-server && npm run dev
+MCP_HTTP_ENABLED=true cd mcp-server && bun run dev
 
 # With MCP Inspector
-npx @modelcontextprotocol/inspector --transport stdio --server "npx tsx mcp-server/src/index.ts"
+bunx @modelcontextprotocol/inspector --transport stdio --server "bunx tsx mcp-server/src/index.ts"
 ```
 
 ### E2E Testing Commands
 
 ```bash
 # Run all E2E tests
-npm run test:e2e
+bun run test:e2e
 
 # Run specific test file (skip server restart)
-PWTEST_SKIP_WEB_SERVER=1 npx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium
+PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium
 
 # Visible browser mode
-npx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium --headed
+bunx playwright test tests/e2e/smoke/infrastructure.spec.ts --project=chromium --headed
 
 # Interactive UI mode
-npm run test:e2e:ui
+bun run test:e2e:ui
 ```
 
 ---

@@ -7,8 +7,8 @@ Essential guide for using the MCP Server that enables any MCP-compatible LLM to 
 ### 1. Build the Server
 ```bash
 cd ~/markdown-ticket/mcp-server
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 ### 2. Add to Your AI Assistant
@@ -93,10 +93,10 @@ curl http://localhost:3002/health
 ```bash
 # Start HTTP server
 cd mcp-server
-npm run dev
+bun run dev
 
 # Test with MCP Inspector (browser UI)
-npx @modelcontextprotocol/inspector --transport streamable-http --server-url http://localhost:3002/mcp
+bunx @modelcontextprotocol/inspector --transport streamable-http --server-url http://localhost:3002/mcp
 ```
 
 ## Essential Tools
@@ -134,11 +134,11 @@ The MCP server provides **10 consolidated tools** for complete CR management:
 #### Custom HTTP Port
 ```bash
 # Use custom HTTP port
-MCP_HTTP_PORT=8080 npm run dev
+MCP_HTTP_PORT=8080 bun run dev
 
 # Or set environment variable
 export MCP_HTTP_PORT=8080
-npm run dev
+bun run dev
 ```
 
 #### Manual Server Control

@@ -19,18 +19,18 @@ This is a Markdown-based ticket board application with a React frontend and Expr
 ```bash
 # Install frontend dependencies
 cd md-ticket-board
-npm install
+bun install
 
 # Install server dependencies
 cd server
-npm install
+bun install
 ```
 
 ### 2. Create Sample Tickets (Optional)
 To populate the board with sample data, run:
 ```bash
 cd server
-npm run create-samples
+bun run create-samples
 ```
 
 This will create 4 sample tickets in the `docs/CRs/` directory:
@@ -44,7 +44,7 @@ This will create 4 sample tickets in the `docs/CRs/` directory:
 #### Option A: Full Development Mode (Recommended)
 ```bash
 cd md-ticket-board
-npm run dev:full
+bun run dev:full
 ```
 This starts both the frontend (port 5173) and backend (port 3001) servers with automatic restart on file changes.
 
@@ -52,11 +52,11 @@ This starts both the frontend (port 5173) and backend (port 3001) servers with a
 ```bash
 # Terminal 1 - Frontend
 cd md-ticket-board
-npm run dev
+bun run dev
 
 # Terminal 2 - Backend
 cd md-ticket-board/server
-npm run dev
+bun run dev
 ```
 
 ### 4. Access the Application
@@ -144,21 +144,21 @@ The application uses Tailwind CSS for styling. Configuration is in:
 ## Scripts
 
 ### Frontend Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+- `bun run dev` - Start development server
+- `bun run build` - Build for production
+- `bun run preview` - Preview production build
+- `bun run lint` - Run ESLint
 
 ### Backend Scripts
-- `npm run start` - Start production server
-- `npm run dev` - Start development server with nodemon
-- `npm run create-samples` - Create sample ticket data
-- `npm run test` - Run tests
-- `npm run lint` - Run ESLint
+- `bun run start` - Start production server
+- `bun run dev` - Start development server with nodemon
+- `bun run create-samples` - Create sample ticket data
+- `bun run test` - Run tests
+- `bun run lint` - Run ESLint
 
 ### Combined Scripts
-- `npm run dev:full` - Start both frontend and backend in development mode
-- `npm run server:dev` - Start backend from root directory
+- `bun run dev:full` - Start both frontend and backend in development mode
+- `bun run server:dev` - Start backend from root directory
 
 ## Troubleshooting
 
@@ -177,13 +177,13 @@ The application uses Tailwind CSS for styling. Configuration is in:
    - Make sure both servers are running when testing
 
 4. **Module Not Found Errors**
-   - Run `npm install` in both the root and server directories
+   - Run `bun install` in both the root and server directories
    - Check that all dependencies are properly installed
 
 ### Debug Mode
 Enable debug logging by setting the `DEBUG` environment variable:
 ```bash
-DEBUG=* npm run dev:full
+DEBUG=* bun run dev:full
 ```
 
 ## Deployment
@@ -192,7 +192,7 @@ DEBUG=* npm run dev:full
 ```bash
 # Build frontend
 cd md-ticket-board
-npm run build
+bun run build
 
 # Start backend
 cd server

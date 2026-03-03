@@ -85,8 +85,8 @@ expect(result.data.key).toBe('TEST-001')  // Will fail
 
 ### Prerequisites
 
-1. Build the MCP server: `cd mcp-server && npm run build`
-2. Ensure test dependencies are installed: `npm install`
+1. Build the MCP server: `cd mcp-server && bun run build`
+2. Ensure test dependencies are installed: `bun install`
 
 ### Create a New Test File
 
@@ -731,13 +731,13 @@ const client = new MCPClient(testEnv, {
 ### Run Single Test
 
 ```bash
-npm test -- --testNamePattern="should do something"
+bun test -- --testNamePattern="should do something"
 ```
 
 ### Run with Debug Output
 
 ```bash
-npm test -- --verbose --no-cache
+bun test -- --verbose --no-cache
 ```
 
 ### Inspect Server Output
@@ -754,16 +754,16 @@ this.process.stderr?.on('data', (data) => {
 
 ```bash
 # Run all E2E tests
-npm test -- tests/e2e/
+bun test -- tests/e2e/
 
 # Run specific test file
-npm test -- tests/e2e/tools/create-cr.spec.ts
+bun test -- tests/e2e/tools/create-cr.spec.ts
 
 # Run with coverage
-npm test -- tests/e2e/ --coverage
+bun test -- tests/e2e/ --coverage
 
 # Run with verbose output
-npm test -- tests/e2e/ --verbose
+bun test -- tests/e2e/ --verbose
 ```
 
 ---
@@ -845,19 +845,19 @@ expect(response.data).toContain('Success')
 
 ```bash
 # Run all E2E tests
-cd mcp-server && npm test
+cd mcp-server && bun test
 
 # Run specific test file
-npm test -- tests/e2e/tools/create-cr.spec.ts
+bun test -- tests/e2e/tools/create-cr.spec.ts
 
 # Run tests matching a pattern
-npm test -- --testNamePattern="valid Creation"
+bun test -- --testNamePattern="valid Creation"
 
 # Run with coverage
-npm test -- --coverage
+bun test -- --coverage
 
 # Run in watch mode
-npm test -- --watch
+bun test -- --watch
 ```
 
 ---
