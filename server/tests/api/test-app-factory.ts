@@ -41,6 +41,7 @@ interface SharedProjectServiceLike {
   getAllProjects: () => Promise<unknown[]>
   getProjectConfig: (path: string) => unknown
   getProjectCRs: (path: string) => Promise<unknown[]>
+  getProjectCRsMetadata: (path: string) => Promise<unknown[]>
   getSystemDirectories: (path?: string) => Promise<unknown>
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<unknown>
   checkDirectoryExists: (dirPath: string) => Promise<boolean>
@@ -66,6 +67,13 @@ class ProjectServiceAdapter {
 
   async getProjectCRs(path: string) {
     return this.projectService.getProjectCRs(path)
+  }
+
+  /**
+   * MDT-094: Get CR metadata only (without content)
+   */
+  async getProjectCRsMetadata(path: string) {
+    return this.projectService.getProjectCRsMetadata(path)
   }
 
   /**

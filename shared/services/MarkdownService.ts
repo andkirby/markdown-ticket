@@ -1,7 +1,8 @@
 import type { Ticket } from '../models/Ticket.js'
+import type { TicketMetadata } from '../models/Ticket.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { normalizeTicket } from '../models/Ticket.js'
+import { normalizeTicket, normalizeTicketMetadata } from '../models/Ticket.js'
 import { PATTERNS } from '../utils/constants.js'
 import { CRService } from './CRService.js'
 
@@ -277,6 +278,121 @@ export class MarkdownService {
     catch (error) {
       console.error(`Error scanning markdown files in ${dirPath}:`, error)
       return []
+    }
+  }
+
+  /**
+   * MDT-094: Scan directory for markdown files and extract metadata only.
+   *
+   * Optimized version of scanMarkdownFiles that:
+   * - Reads only YAML frontmatter, skips markdown body
+   * - Returns TicketMetadata[] (no content field)
+   * - Reduces payload size for list operations
+   *
+   * @param dirPath - Directory to scan for markdown files
+   * @param projectPath - Optional project path for H1 title extraction
+   * @returns Array of TicketMetadata (without content)
+   */
+  static async scanTicketMetadata(dirPath: string, projectPath?: string): Promise<TicketMetadata[]> {
+    try {
+      if (!fs.existsSync(dirPath)) {
+        return []
+      }
+
+      const files = fs.readdirSync(dirPath)
+        .filter(file => file.endsWith('.md'))
+        .map(file => path.join(dirPath, file))
+
+      const metadataList: TicketMetadata[] = []
+
+      for (const filePath of files) {
+        try {
+          const metadata = await this.extractTicketMetadata(filePath, projectPath)
+          if (metadata) {
+            metadataList.push(metadata)
+          }
+        }
+        catch (error) {
+          // Log warning and skip problematic files, continue with others
+          console.warn(`[MDT-094] Warning: Failed to extract metadata from ${filePath}:`, error)
+        }
+      }
+
+      return metadataList
+    }
+    catch (error) {
+      console.error(`[MDT-094] Error scanning ticket metadata in ${dirPath}:`, error)
+      return []
+    }
+  }
+
+  /**
+   * MDT-094: Extract metadata from a single markdown file.
+   *
+   * Reads only YAML frontmatter, does NOT parse markdown body.
+   * This is the key optimization for metadata-only list operations.
+   *
+   * @param filePath - Path to markdown file
+   * @param projectPath - Optional project path for H1 title extraction
+   * @returns TicketMetadata or null if file has no valid frontmatter
+   */
+  static async extractTicketMetadata(filePath: string, projectPath?: string): Promise<TicketMetadata | null> {
+    try {
+      if (!fs.existsSync(filePath)) {
+        return null
+      }
+
+      // Read file content
+      const content = fs.readFileSync(filePath, 'utf8')
+
+      // Match YAML frontmatter only
+      const frontmatterMatch = content.match(PATTERNS.YAML_FRONTMATTER)
+
+      if (!frontmatterMatch) {
+        return null
+      }
+
+      const yamlContent = frontmatterMatch[1]
+      const markdownBody = frontmatterMatch[2]
+
+      // Parse YAML frontmatter
+      const parsedYaml = this.parseYamlFrontmatter(yamlContent)
+
+      if (!parsedYaml) {
+        // Invalid YAML - return null (graceful handling)
+        return null
+      }
+
+      // MDT-064: Extract title from H1 header with fallback
+      let extractedTitle = parsedYaml.title || 'Untitled'
+      if (projectPath) {
+        try {
+          extractedTitle = await CRService.extractTitle(projectPath, filePath, markdownBody)
+        }
+        catch {
+          // Fallback to frontmatter title
+        }
+      }
+
+      // Get file stats for dates if not in frontmatter
+      const stats = fs.statSync(filePath)
+
+      // Build raw metadata object
+      const rawMetadata = {
+        ...parsedYaml,
+        title: extractedTitle,
+        filePath,
+        dateCreated: parsedYaml.dateCreated || stats.birthtime || stats.ctime,
+        lastModified: parsedYaml.lastModified || stats.mtime,
+        // content is intentionally NOT included
+      }
+
+      // Normalize to TicketMetadata
+      return normalizeTicketMetadata(rawMetadata)
+    }
+    catch (error) {
+      console.warn(`[MDT-094] Error extracting metadata from ${filePath}:`, error)
+      return null
     }
   }
 }

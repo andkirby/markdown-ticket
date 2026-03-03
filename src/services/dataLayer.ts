@@ -9,6 +9,7 @@
  */
 
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project'
+import type { TicketMetadata } from '@mdt/shared/models/Ticket'
 import type { Status, Ticket } from '../types'
 import { CRStatus, CRType } from '@mdt/domain-contracts'
 
@@ -121,6 +122,34 @@ class DataLayer {
     }
     catch (error) {
       console.error(`[DataLayer] ❌ Error fetching tickets:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * MDT-094: Fetch ticket metadata only (without content) for list views.
+   *
+   * This method is optimized for list/card views that don't need the full content.
+   * The API returns TicketMetadata[] which excludes the content field.
+   *
+   * @param projectId - Project ID or code
+   * @returns Array of TicketMetadata (no content field)
+   */
+  async fetchTicketsMetadata(projectId: string): Promise<TicketMetadata[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ticket metadata: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      const metadata = this.normalizeTicketsMetadata(data)
+
+      return metadata
+    }
+    catch (error) {
+      console.error(`[DataLayer] ❌ Error fetching ticket metadata:`, error)
       throw error
     }
   }
@@ -253,6 +282,14 @@ class DataLayer {
   }
 
   /**
+   * MDT-094: Normalize metadata array from API response.
+   * Returns TicketMetadata[] without content field.
+   */
+  private normalizeTicketsMetadata(data: ApiTicketItem[]): TicketMetadata[] {
+    return data.map(item => this.normalizeTicketMetadata(item))
+  }
+
+  /**
    * Normalize a single ticket from API response
    */
   private normalizeTicket(item: ApiTicketItem): Ticket {
@@ -298,6 +335,64 @@ class DataLayer {
       phaseEpic: item.phaseEpic || '',
       description: item.description || '',
       rationale: item.rationale || '',
+      assignee: item.assignee || '',
+      implementationNotes: item.implementationNotes || '',
+
+      // Relationship fields (normalize to arrays)
+      relatedTickets: normalizeArray(item.relatedTickets),
+      dependsOn: normalizeArray(item.dependsOn),
+      blocks: normalizeArray(item.blocks),
+
+      // Worktree fields (MDT-095)
+      inWorktree: typeof item.inWorktree === 'boolean' ? item.inWorktree : false,
+      worktreePath: typeof item.worktreePath === 'string' ? item.worktreePath : undefined,
+    }
+  }
+
+  /**
+   * MDT-094: Normalize a single TicketMetadata from API response.
+   * Same as normalizeTicket but excludes content field.
+   */
+  private normalizeTicketMetadata(item: ApiTicketItem): TicketMetadata {
+    // Helper to normalize arrays
+    const normalizeArray = (value: string | string[] | undefined): string[] => {
+      if (Array.isArray(value))
+        return value.filter(Boolean)
+      if (typeof value === 'string' && value.trim()) {
+        return value.split(',').map(s => s.trim()).filter(Boolean)
+      }
+      return []
+    }
+
+    // Helper to parse dates
+    const parseDate = (dateValue: string | Date | null | undefined): Date | null => {
+      if (!dateValue)
+        return null
+      if (dateValue instanceof Date)
+        return dateValue
+      if (typeof dateValue === 'string') {
+        const parsed = new Date(dateValue)
+        return Number.isNaN(parsed.getTime()) ? null : parsed
+      }
+      return null
+    }
+
+    return {
+      // Core fields (content intentionally excluded)
+      code: item.code || item.key || '',
+      title: item.title || '',
+      status: item.status || CRStatus.PROPOSED,
+      type: item.type || CRType.FEATURE_ENHANCEMENT,
+      priority: item.priority || 'Medium',
+      filePath: item.filePath || item.path || '',
+
+      // Dates
+      dateCreated: parseDate(item.dateCreated),
+      lastModified: parseDate(item.lastModified),
+      implementationDate: parseDate(item.implementationDate),
+
+      // Optional fields
+      phaseEpic: item.phaseEpic || '',
       assignee: item.assignee || '',
       implementationNotes: item.implementationNotes || '',
 

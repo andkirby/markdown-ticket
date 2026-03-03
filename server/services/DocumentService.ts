@@ -8,6 +8,7 @@ interface Project {
   id: string
   project: {
     name: string
+    code?: string
     path: string
     active: boolean
   }
@@ -55,7 +56,7 @@ export class DocumentService {
     }
 
     const projects = await this.projectDiscovery.getAllProjects()
-    const project = projects.find(p => p.id === projectId)
+    const project = projects.find(p => p.id === projectId || p.project.code === projectId)
 
     if (!project) {
       throw new Error('Project not found')
