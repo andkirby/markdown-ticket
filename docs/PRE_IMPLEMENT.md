@@ -296,8 +296,8 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/my-test.spec.ts --projec
 | `bun run build` | Frontend production build | Before deploying frontend |
 | `bun run build:all` | Build ALL projects | Before committing |
 | `bun run build:shared` | Build shared code | After shared/ changes |
-| `cd mcp-server && bun run build` | Build MCP server | After mcp-server/ changes |
-| `cd domain-contracts && bun run build` | Build domain contracts | After domain-contracts/ changes |
+| `bun run --cwd mcp-server build` | Build MCP server | After mcp-server/ changes |
+| `bun run --cwd domain-contracts build` | Build domain contracts | After domain-contracts/ changes |
 
 ### Development Workflow
 

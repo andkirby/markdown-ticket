@@ -290,7 +290,7 @@ Each template includes:
 **MCP Server Not Found**:
 ```bash
 # Verify build
-cd mcp-server && bun run build
+bun run --cwd mcp-server build
 
 # Check file exists
 ls -la $HOME/markdown-ticket/mcp-server/dist/index.js
