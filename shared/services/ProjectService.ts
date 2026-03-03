@@ -1,5 +1,5 @@
 import type { Project } from '../models/Project.js'
-import type { Ticket } from '../models/Ticket.js'
+import type { Ticket, TicketMetadata } from '../models/Ticket.js'
 import type {
   IProjectCacheService,
   IProjectConfigService,
@@ -218,6 +218,74 @@ export class ProjectService implements IProjectService {
     }
     catch (e) {
       logQuiet(this.quiet, `Error getting CRs for project ${path}:`, e)
+      return []
+    }
+  }
+
+  /**
+   * MDT-094: Get CR metadata only (without content) for list operations.
+   * Optimized for list endpoints - reduces payload by excluding markdown body.
+   */
+  async getProjectCRsMetadata(path: string): Promise<TicketMetadata[]> {
+    try {
+      const config = this.getProjectConfig(path)
+      if (!config?.project)
+        return []
+      const ticketsPath = config.project.ticketsPath || DEFAULTS.TICKETS_PATH
+      const projectCode = config.project.code
+      const fullCRPath = resolvePath(path, ticketsPath)
+      if (!directoryExists(fullCRPath))
+        return []
+
+      const { MarkdownService } = await import('./MarkdownService.js')
+      const metadataList = await MarkdownService.scanTicketMetadata(fullCRPath, path)
+
+      // MDT-095: Resolve worktree paths for each metadata entry
+      const worktreeEnabled = config.worktree?.enabled !== false
+      if (worktreeEnabled && projectCode) {
+        const resolvedMetadata = await Promise.all(
+          metadataList.map(async (metadata) => {
+            const resolvedWorktreePath = await this.worktree.resolvePath(
+              path,
+              metadata.code,
+              ticketsPath,
+              projectCode,
+            )
+            const isInWorktree = resolvedWorktreePath !== path
+
+            if (isInWorktree) {
+              const originalFileName = metadata.filePath?.split('/').pop() || `${metadata.code}.md`
+              const worktreeFilePath = joinPaths(resolvedWorktreePath, ticketsPath, originalFileName)
+
+              const worktreeMetadata = await MarkdownService.extractTicketMetadata(worktreeFilePath, resolvedWorktreePath)
+              if (worktreeMetadata) {
+                return {
+                  ...worktreeMetadata,
+                  filePath: worktreeFilePath,
+                  inWorktree: true,
+                  worktreePath: resolvedWorktreePath,
+                }
+              }
+              return {
+                ...metadata,
+                filePath: worktreeFilePath,
+                inWorktree: true,
+                worktreePath: resolvedWorktreePath,
+              }
+            }
+            return {
+              ...metadata,
+              inWorktree: false,
+            }
+          }),
+        )
+        return resolvedMetadata
+      }
+
+      return metadataList
+    }
+    catch (e) {
+      logQuiet(this.quiet, `[MDT-094] Error getting CR metadata for project ${path}:`, e)
       return []
     }
   }

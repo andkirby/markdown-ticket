@@ -9,6 +9,7 @@ interface Project {
   id: string
   project: {
     name: string
+    code?: string
     path: string
     active: boolean
   }
@@ -91,7 +92,7 @@ export class TreeService {
 
   private async _getProject(projectId: string): Promise<Project> {
     const projects = await this.projectDiscovery.getAllProjects()
-    const project = projects.find(p => p.id === projectId)
+    const project = projects.find(p => p.id === projectId || p.project.code === projectId)
 
     if (!project) {
       throw new Error('Project not found')

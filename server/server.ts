@@ -73,6 +73,13 @@ class ProjectServiceAdapter {
   }
 
   /**
+   * MDT-094: Get CR metadata only (without content) for list operations.
+   */
+  async getProjectCRsMetadata(path: string) {
+    return this.projectService.getProjectCRsMetadata(path)
+  }
+
+  /**
    * Additional methods needed by ProjectController.
    */
   async getSystemDirectories(path?: string) {
