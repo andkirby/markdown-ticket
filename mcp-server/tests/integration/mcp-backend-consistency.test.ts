@@ -80,6 +80,7 @@ interface MockService {
   getAllProjects: jest.Mock
   getProjectConfig: jest.Mock
   getProjectCRs: jest.Mock
+  getProjectCRsMetadata: jest.Mock
   getSystemDirectories: jest.Mock
   configureDocuments: jest.Mock
   projectDiscovery: {
@@ -149,6 +150,7 @@ describe('mCP-Backend Consistency Integration Tests', () => {
       getAllProjects: jest.fn(),
       getProjectConfig: jest.fn(),
       getProjectCRs: jest.fn(),
+      getProjectCRsMetadata: jest.fn(),
       getSystemDirectories: jest.fn(),
       configureDocuments: jest.fn(),
       projectDiscovery: {
