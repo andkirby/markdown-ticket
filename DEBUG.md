@@ -216,7 +216,7 @@ All procedures have been verified with evidence.
 
 ### Runtime `backend-express` / TEST / VERIFIED
 
-- **Action**: `cd server && bun test`
+- **Action**: `cd server && jest`
 - **Signal**:
   ```
   Test Suites: 9 passed, 9 total
@@ -389,10 +389,10 @@ This builds shared code and starts both frontend (5173) and backend (3001).
 | Runtime | Start | Stop | Test |
 |---------|-------|------|------|
 | frontend-vite | `bun run dev` | `Ctrl+C` | `bun run fe:test` |
-| backend-express | `bun run dev:server` | `Ctrl+C` | `cd server && bun test` |
-| mcp-server | `cd mcp-server && bun run dev` | `Ctrl+C` | `cd mcp-server && bun test` |
-| shared-lib | `bun run build:shared` | N/A | `cd shared && bun test` |
-| domain-contracts | `bun run build:domain-contracts` | N/A | `cd domain-contracts && bun test` |
+| backend-express | `bun run dev:server` | `Ctrl+C` | `cd server && jest` |
+| mcp-server | `cd mcp-server && bun run dev` | `Ctrl+C` | `cd mcp-server && jest` |
+| shared-lib | `bun run build:shared` | N/A | `cd shared && jest` |
+| domain-contracts | `bun run build:domain-contracts` | N/A | `cd domain-contracts && jest` |
 | e2e-playwright | `bun run test:e2e` | `Ctrl+C` | `bun run test:e2e` |
 
 ### MCP Server Modes
