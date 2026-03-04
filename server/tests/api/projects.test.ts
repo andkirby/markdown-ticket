@@ -34,6 +34,8 @@ interface ProjectListItem {
   project: {
     active: boolean
     path: string
+    code?: string
+    name?: string
   }
   configPath: string
 }
@@ -411,6 +413,22 @@ describe('projects API - Integration Scenarios', () => {
     expect(listed!.id).toBe(configRes.body.project.id)
   })
 })
+
+/**
+ * MDT-123: Duplicate Project Code Prevention Tests
+ *
+ * Tests that duplicate project codes are filtered during auto-discovery.
+ * This catches worktrees and clones that have the same code as the main project.
+ *
+ * Test cases from ticket:
+ * | Directory                  | Config ID       | Config Code | Result                  |
+ * |---------------------------|-----------------|-------------|-------------------------|
+ * | markdown-ticket           | markdown-ticket | MDT         | ✅ ACCEPTED (first)     |
+ * | markdown-ticket-aws-...   | (none)          | MDT         | ❌ SKIP: duplicate code |
+ * | scip-finder/markdown-...  | markdown-ticket | MDT         | ❌ SKIP: duplicate code |
+ * | markdown-ticket-MDT-123   | markdown-ticket | MDT         | ❌ SKIP: ID mismatch    |
+ * | other-project             | other-project   | OTH         | ✅ ACCEPTED (unique)    |
+ */
 describe('projects API - Edge Cases and Boundary Conditions', () => {
   let tempDir: string
   let app: Express
