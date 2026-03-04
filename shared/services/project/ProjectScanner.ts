@@ -90,11 +90,13 @@ export class ProjectScanner {
             return // Skip this project - ID must match directory
           }
 
-          // Track projects by code to handle duplicates without proper IDs
-          // Check for duplicate discovery configs by code (for configs without explicit ID)
-          if (!config.project.id && config.project.code) {
+          // Check for duplicate project codes across ALL discovered projects
+          // This catches worktrees and clones that have the same code but different paths
+          // IMPORTANT: Must check ALL configs, not just those without IDs
+          if (config.project.code) {
             if (!validateNoDuplicateByCodeInDiscovery(config.project.code, discovered)) {
-              logQuiet(this.quiet, `Ignoring duplicate project ${directoryName} with code "${config.project.code}" (no ID in config)`)
+              const idInfo = config.project.id ? ` (has ID: ${config.project.id})` : ' (no ID in config)'
+              logQuiet(this.quiet, `Ignoring duplicate project ${directoryName} with code "${config.project.code}"${idInfo}`)
               return // Skip duplicate
             }
           }

@@ -147,14 +147,15 @@ describe('validateNoDuplicateByCode', () => {
       expect(validateNoDuplicateByCode('BBB', projects)).toBe(false)
     })
 
-    it('should only check projects without explicit ID', () => {
+    it('should check ALL projects regardless of ID (catches worktrees)', () => {
       const projects = [
-        createMockProject({ id: 'proj1', code: 'AAA' }), // Has ID
-        createMockProject({ id: undefined, code: 'BBB' }), // No ID - should match
+        createMockProject({ id: 'proj1', code: 'AAA' }), // Has ID - should still match
+        createMockProject({ id: undefined, code: 'BBB' }),
         createMockProject({ id: 'proj3', code: 'CCC' }),
       ]
+      expect(validateNoDuplicateByCode('AAA', projects)).toBe(false) // Now catches duplicates with ID
       expect(validateNoDuplicateByCode('BBB', projects)).toBe(false)
-      expect(validateNoDuplicateByCode('AAA', projects)).toBe(true) // Has ID, so not a duplicate
+      expect(validateNoDuplicateByCode('CCC', projects)).toBe(false)
     })
   })
 

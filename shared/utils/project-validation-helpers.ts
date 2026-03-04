@@ -45,8 +45,12 @@ export function validateProjectIdMatchesDirectory(
 /**
  * Validates no duplicate project code exists in the project list
  *
- * This prevents duplicate projects from being added when no explicit ID is set.
+ * This prevents duplicate projects (including worktrees) from being added.
  * The check is case-insensitive to catch variations like 'MDT' vs 'mdt'.
+ *
+ * IMPORTANT: This checks ALL existing projects for duplicate codes, not just
+ * those without IDs. This catches worktrees that have the same code as the
+ * main project but different directory names.
  *
  * @param code - The project code to validate (may be undefined)
  * @param existingProjects - List of existing projects to check against
@@ -55,11 +59,11 @@ export function validateProjectIdMatchesDirectory(
  * @example
  * ```ts
  * const projects = [
- *   { id: 'proj1', project: { code: 'AAA' } },
+ *   { id: 'proj1', project: { code: 'AAA', id: 'proj1' } },
  *   { id: 'proj2', project: { code: 'BBB' } },
  * ]
  * validateNoDuplicateByCode('CCC', projects) // true
- * validateNoDuplicateByCode('AAA', projects) // false
+ * validateNoDuplicateByCode('AAA', projects) // false (even though proj1 has ID)
  * validateNoDuplicateByCode('aaa', projects) // false (case-insensitive)
  * validateNoDuplicateByCode(undefined, projects) // true
  * ```
@@ -73,10 +77,10 @@ export function validateNoDuplicateByCode(
     return true
   }
 
-  // Check for existing projects with the same code but no ID
-  // (projects without explicit IDs are identified by code)
+  // Check for existing projects with the same code
+  // This catches worktrees and duplicate projects regardless of ID presence
   const hasDuplicate = existingProjects.some(
-    p => p.project.code?.toLowerCase() === code.toLowerCase() && !p.project.id,
+    p => p.project.code?.toLowerCase() === code.toLowerCase(),
   )
 
   return !hasDuplicate
@@ -85,8 +89,12 @@ export function validateNoDuplicateByCode(
 /**
  * Validates no duplicate project code exists in the discovery config list
  *
- * This prevents duplicate projects from being added when no explicit ID is set.
+ * This prevents duplicate projects (including worktrees) from being added.
  * The check is case-insensitive to catch variations like 'MDT' vs 'mdt'.
+ *
+ * IMPORTANT: This checks ALL existing configs for duplicate codes, not just
+ * those without IDs. This catches worktrees that have the same code as the
+ * main project but different directory names.
  *
  * @param code - The project code to validate (may be undefined)
  * @param discoveryConfigs - List of existing discovery configs to check against
@@ -95,11 +103,11 @@ export function validateNoDuplicateByCode(
  * @example
  * ```ts
  * const configs = [
- *   { config: { project: { code: 'AAA' } } },
+ *   { config: { project: { code: 'AAA', id: 'proj1' } } },
  *   { config: { project: { code: 'BBB' } } },
  * ]
  * validateNoDuplicateByCodeInDiscovery('CCC', configs) // true
- * validateNoDuplicateByCodeInDiscovery('AAA', configs) // false
+ * validateNoDuplicateByCodeInDiscovery('AAA', configs) // false (even though proj1 has ID)
  * validateNoDuplicateByCodeInDiscovery('aaa', configs) // false (case-insensitive)
  * validateNoDuplicateByCodeInDiscovery(undefined, configs) // true
  * ```
@@ -113,10 +121,10 @@ export function validateNoDuplicateByCodeInDiscovery(
     return true
   }
 
-  // Check for existing discovery configs with the same code but no ID
-  // (configs without explicit IDs are identified by code)
+  // Check for existing discovery configs with the same code
+  // This catches worktrees and duplicate projects regardless of ID presence
   const hasDuplicate = discoveryConfigs.some(
-    dc => dc.config.project.code?.toLowerCase() === code.toLowerCase() && !dc.config.project.id,
+    dc => dc.config.project.code?.toLowerCase() === code.toLowerCase(),
   )
 
   return !hasDuplicate
