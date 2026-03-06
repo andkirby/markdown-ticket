@@ -101,8 +101,22 @@ export const projectSelectors = {
   projectCode: '[data-testid="project-code"]',
   /** Ticket count badge */
   ticketCount: '[data-testid="ticket-count"]',
+  /** Hamburger menu button */
+  hamburgerMenu: '[data-testid="hamburger-menu"]',
+  /** Add project button in navigation */
+  addProjectButton: '[data-testid="add-project-button"]',
   /** Add project modal */
   addProjectModal: '[data-testid="add-project-modal"]',
+  /** Project name input field */
+  projectNameInput: '[data-testid="project-name-input"]',
+  /** Project code input field */
+  projectCodeInput: '[data-testid="project-code-input"]',
+  /** Project path input field */
+  projectPathInput: '[data-testid="project-path-input"]',
+  /** Submit button for project creation */
+  projectSubmitButton: '[data-testid="project-submit-button"]',
+  /** Cancel button for project creation */
+  projectCancelButton: '[data-testid="project-cancel-button"]',
   /** Browse button for project path */
   projectPathBrowseButton: '[data-testid="project-path-browse-button"]',
   /** Folder browser modal */
@@ -113,6 +127,16 @@ export const projectSelectors = {
   folderBrowserItem: '[data-testid="folder-browser-item"]',
   /** Folder browser confirm button */
   folderBrowserSelectButton: '[data-testid="folder-browser-select-button"]',
+  /** Confirmation dialog for project creation */
+  confirmCreationDialog: '[data-testid="confirm-creation-dialog"]',
+  /** Confirm button in confirmation dialog */
+  confirmCreationButton: '[data-testid="confirm-creation-button"]',
+  /** Success dialog after project creation */
+  successDialog: '[data-testid="success-dialog"]',
+  /** Done button in success dialog */
+  successDoneButton: '[data-testid="success-done-button"]',
+  /** Project option in navigation (by code) */
+  projectOption: (code: string) => `[data-testid="project-option-${code}"]`,
 } as const
 
 /**
