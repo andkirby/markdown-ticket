@@ -86,7 +86,7 @@ counter-api/
 # suppress unused file copies
 **/.unused
 **/unused.*
-typescript-graph.md
+**/typescript-graph.md
 # MDT agentic implementation checkpoint state
 **/.checkpoint.json
 **/.checkpoint.yaml
@@ -95,3 +95,6 @@ typescript-graph.md
 # Task status tracking
 *.tasks-status.yaml
 .checkpoint.yaml
+
+# debug files
+_*
