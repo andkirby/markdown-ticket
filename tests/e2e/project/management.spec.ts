@@ -20,28 +20,26 @@ import { waitForBoardReady } from '../utils/helpers.js'
  */
 test.describe('Project Management', () => {
   test('add project modal opens', async ({ page, e2eContext }) => {
-    // Create a scenario so we have a project to navigate from
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
-    // Navigate to the project
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
     // Click hamburger menu to reveal add project button
-    await page.click('[data-testid="hamburger-menu"]')
+    await page.click(projectSelectors.hamburgerMenu)
 
     // Then click add project button
-    await page.click('[data-testid="add-project-button"]')
+    await page.click(projectSelectors.addProjectButton)
 
     // Verify the add project modal appears
-    const modal = page.locator('[data-testid="add-project-modal"]')
+    const modal = page.locator(projectSelectors.addProjectModal)
     await expect(modal).toBeVisible()
 
     // Verify modal has essential elements
-    await expect(page.locator('[data-testid="project-name-input"]')).toBeVisible()
-    await expect(page.locator('[data-testid="project-code-input"]')).toBeVisible()
-    await expect(page.locator('[data-testid="project-submit-button"]')).toBeVisible()
-    await expect(page.locator('[data-testid="project-cancel-button"]')).toBeVisible()
+    await expect(page.locator(projectSelectors.projectNameInput)).toBeVisible()
+    await expect(page.locator(projectSelectors.projectCodeInput)).toBeVisible()
+    await expect(page.locator(projectSelectors.projectSubmitButton)).toBeVisible()
+    await expect(page.locator(projectSelectors.projectCancelButton)).toBeVisible()
   })
 
   test('project path folder browser loads directories', async ({ page, e2eContext }) => {
@@ -50,8 +48,8 @@ test.describe('Project Management', () => {
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    await page.click('[data-testid="hamburger-menu"]')
-    await page.click('[data-testid="add-project-button"]')
+    await page.click(projectSelectors.hamburgerMenu)
+    await page.click(projectSelectors.addProjectButton)
 
     await expect(page.locator(projectSelectors.addProjectModal)).toBeVisible()
 
@@ -64,21 +62,19 @@ test.describe('Project Management', () => {
   })
 
   test('create new project', async ({ page, e2eContext }) => {
-    // Create a scenario so we have a project to navigate from
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
-    // Navigate to the project
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
     // Click hamburger menu to reveal add project button
-    await page.click('[data-testid="hamburger-menu"]')
+    await page.click(projectSelectors.hamburgerMenu)
 
     // Then click add project button
-    await page.click('[data-testid="add-project-button"]')
+    await page.click(projectSelectors.addProjectButton)
 
     // Wait for modal to appear
-    const modal = page.locator('[data-testid="add-project-modal"]')
+    const modal = page.locator(projectSelectors.addProjectModal)
     await expect(modal).toBeVisible()
 
     // Fill in the form
@@ -86,34 +82,33 @@ test.describe('Project Management', () => {
     const newProjectCode = 'NEW'
     const newProjectPath = '~/test-projects/my-new-project'
 
-    await page.fill('[data-testid="project-name-input"]', newProjectName)
-    await page.fill('[data-testid="project-code-input"]', newProjectCode)
-    await page.fill('[data-testid="project-path-input"]', newProjectPath)
+    await page.fill(projectSelectors.projectNameInput, newProjectName)
+    await page.fill(projectSelectors.projectCodeInput, newProjectCode)
+    await page.fill(projectSelectors.projectPathInput, newProjectPath)
 
     // Wait for submit button to be enabled
-    await expect(page.locator('[data-testid="project-submit-button"]')).toBeEnabled()
+    await expect(page.locator(projectSelectors.projectSubmitButton)).toBeEnabled()
 
     // Submit the form
-    await page.click('[data-testid="project-submit-button"]')
+    await page.click(projectSelectors.projectSubmitButton)
 
-    // Wait for confirmation dialog to appear and be ready
-    await expect(page.locator('text=Confirm Project Creation')).toBeVisible({ timeout: 5000 })
-    await page.waitForTimeout(200) // Allow animation to complete
+    // Wait for confirmation dialog to appear
+    await expect(page.locator(projectSelectors.confirmCreationDialog)).toBeVisible({ timeout: 5000 })
 
-    // Click the confirm button (second Create Project button, in confirmation dialog)
-    await page.locator('button').filter({ hasText: 'Create Project' }).nth(1).click()
+    // Click the confirm button
+    await page.click(projectSelectors.confirmCreationButton)
 
     // Wait for success dialog
-    await expect(page.locator('text=Project Created Successfully')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator(projectSelectors.successDialog)).toBeVisible({ timeout: 10000 })
 
     // Click Done to close success dialog
-    await page.locator('button:has-text("Done")').click()
+    await page.click(projectSelectors.successDoneButton)
 
     // Verify modal closes
     await expect(modal).toBeHidden()
 
     // Verify the new project appears in the navigation
-    const newProjectOption = page.locator(`[data-testid="project-option-${newProjectCode}"]`)
+    const newProjectOption = page.locator(projectSelectors.projectOption(newProjectCode))
     await expect(newProjectOption).toBeVisible()
 
     // Click the new project to switch to it
@@ -123,25 +118,21 @@ test.describe('Project Management', () => {
     await waitForBoardReady(page)
 
     // Verify project name is displayed
-    const projectName = page.locator('[data-testid="project-name"]')
+    const projectName = page.locator(projectSelectors.projectName)
     await expect(projectName).toHaveText(newProjectName)
   })
 
   test('switch projects via selector', async ({ page, e2eContext }) => {
-    // Create first project with scenario
     const firstProject = await buildScenario(e2eContext.projectFactory, 'simple')
-
-    // Create second project
     const secondProject = await e2eContext.projectFactory.createProject('empty', {
       name: 'Second Test Project',
     })
 
-    // Navigate to the first project
     await page.goto(`/prj/${firstProject.projectCode}`)
     await waitForBoardReady(page)
 
     // Verify we're on the first project
-    const projectName = page.locator('[data-testid="project-name"]')
+    const projectName = page.locator(projectSelectors.projectName)
     await expect(projectName).toHaveText(firstProject.projectName)
 
     // Verify tickets from first project are visible
@@ -150,7 +141,7 @@ test.describe('Project Management', () => {
     expect(firstTicketCount).toBeGreaterThanOrEqual(firstProject.ticketCount)
 
     // Switch to the second project using the project selector
-    const secondProjectOption = page.locator(`[data-testid="project-option-${secondProject.key}"]`)
+    const secondProjectOption = page.locator(projectSelectors.projectOption(secondProject.key))
     await expect(secondProjectOption).toBeVisible()
     await secondProjectOption.click()
 
@@ -165,7 +156,7 @@ test.describe('Project Management', () => {
     await expect(secondProjectTickets).toHaveCount(0)
 
     // Switch back to the first project
-    const firstProjectOption = page.locator(`[data-testid="project-option-${firstProject.projectCode}"]`)
+    const firstProjectOption = page.locator(projectSelectors.projectOption(firstProject.projectCode))
     await firstProjectOption.click()
 
     // Wait for board to reload
