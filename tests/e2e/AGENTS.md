@@ -1,5 +1,10 @@
 # AGENTS.md — Writing E2E Tests
 
+Essential guidance for agents writing E2E tests. For detailed reference, see:
+- `TESTING_SCENARIOS.md` — Scenario presets and API reference
+- `TESTING_PATTERNS.md` — Common test patterns and recipes
+- `TESTING_INFRASTRUCTURE.md` — Test environment setup details
+
 ## File Structure
 
 ```
@@ -34,8 +39,8 @@ test.describe('My Feature', () => {
     // 1. Create isolated test data
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
-    // 2. Navigate — app auto-selects the only project in the isolated env
-    await page.goto('/')
+    // 2. Navigate — CRITICAL: always navigate directly to your project
+    await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
     // 3. Interact and assert
@@ -76,125 +81,40 @@ Read it before writing a test — never guess selectors from component names.
 - **Cache disabled**: the test backend has `setCacheTTL(0)` — projects created mid-test
   are immediately visible to subsequent API calls
 
-## Scenarios
+## Critical Rule: Always Navigate Directly
 
-`buildScenario(projectFactory, type)` creates a named preset project with tickets and returns a `ScenarioResult`:
-
-```typescript
-interface ScenarioResult {
-  projectCode: string   // e.g. 'TABC' — use in selectors: `project-option-${projectCode}`
-  projectName: string   // human-readable name
-  projectDir: string    // absolute path to project on disk
-  crCodes: string[]     // e.g. ['TABC-1', 'TABC-2', 'TABC-3']
-  ticketCount: number   // crCodes.length (only successfully created tickets)
-}
-```
-
-### Preset sizes
-
-| Type | Tickets | Statuses present | Use when |
-|------|---------|-----------------|----------|
-| `'simple'` | 3 | Implemented, In Progress, Proposed | Default — smoke tests, basic rendering, single-ticket interactions |
-| `'medium'` | 7 | Implemented ×2, In Progress ×2, Proposed ×3 | Multiple columns populated, filtering, sorting |
-| `'complex'` | 12 | Implemented ×3, In Progress ×3, Proposed ×6 | Board overflow, pagination, bulk operations |
-
-### When to use `buildScenario` vs `projectFactory` directly
-
-Use `buildScenario` when the test just needs data to exist and doesn't care about specifics.
-
-Use `projectFactory` directly when the test depends on exact ticket titles, types, priorities, or statuses:
+`e2eContext` is a **singleton** — projects created by any test persist for all subsequent tests. Each test gets a fresh `page`, but `page.goto('/')` redirects to `projects[0]` (whatever the backend returns first), which may belong to a different test.
 
 ```typescript
-const project = await e2eContext.projectFactory.createProject('empty', { name: 'My Test Project' })
-await e2eContext.projectFactory.createTestCR(project.key, {
-  title: 'My CR',
-  type: 'Feature Enhancement',
-  status: 'In Progress',
-  priority: 'High',
-  content: 'Details here.',
-})
-```
-
-## Creating Custom Test Data
-
-See the **Scenarios** section above — prefer `buildScenario` unless you need precise control over ticket content.
-
-## Shared Environment — Critical Patterns
-
-`e2eContext` is a **singleton**: projects created by any test persist for all subsequent tests in the run. There is no per-test teardown.
-
-Each test does get a fresh `page` (clean localStorage). That means `page.goto('/')` redirects to `projects[0]` — whatever the backend returns first — which may belong to a different test.
-
-### Rule: always navigate directly to your project
-
-```typescript
-// ❌ Only safe if your test is definitely first and no prior test created a project
+// ❌ Only safe if your test is definitely first
 await page.goto('/')
 await waitForBoardReady(page)
 
-// ✅ Always correct — goes straight to your project regardless of what else exists
+// ✅ Always correct — goes straight to your project
 await page.goto(`/prj/${scenario.projectCode}`)
 await waitForBoardReady(page)
 ```
 
-The smoke test in `infrastructure.spec.ts` uses `page.goto('/')` intentionally because it runs first in serial mode. All other tests should navigate directly.
+Exception: The smoke test in `infrastructure.spec.ts` uses `page.goto('/')` intentionally because it runs first in serial mode.
 
-### Adding tickets to a scenario project
+## Scenarios Quick Reference
 
-```typescript
-const scenario = await buildScenario(projectFactory, 'simple')
+`buildScenario(projectFactory, type)` creates preset projects with tickets:
 
-// Add one ticket
-await projectFactory.createTestCR(scenario.projectCode, {
-  title: 'Extra Ticket',
-  type: 'Bug Fix',
-  status: 'Proposed',
-  priority: 'High',
-  content: 'Description here.',
-})
+| Type | Tickets | Use for |
+|------|---------|---------|
+| `'simple'` | 3 | Smoke tests, basic rendering |
+| `'medium'` | 7 | Multiple columns, filtering, sorting |
+| `'complex'` | 12 | Overflow, pagination, bulk operations |
 
-// Add several tickets at once
-await projectFactory.createMultipleCRs(scenario.projectCode, [
-  { title: 'Ticket A', type: 'Feature Enhancement', status: 'In Progress', priority: 'Medium', content: '...' },
-  { title: 'Ticket B', type: 'Bug Fix', status: 'Proposed', priority: 'Low', content: '...' },
-])
-```
+Use `buildScenario` when test just needs data. Use `projectFactory` directly for precise control.
 
-### Creating extra projects
+**See `TESTING_SCENARIOS.md` for complete API reference and usage patterns.**
 
-```typescript
-const extra = await projectFactory.createProject('empty', { name: 'Secondary Project' })
-// extra.key  — generated project code e.g. 'TXYZ'
-// extra.path — absolute path on disk
-```
+## Common Patterns
 
-Each `createProject` call generates a unique code automatically. If your test needs a predictable code, pass it explicitly:
+For recipes like adding tickets, creating extra projects, and multi-project tests, see `TESTING_PATTERNS.md`.
 
-```typescript
-const extra = await projectFactory.createProject('empty', { name: 'Secondary Project', code: 'SEC' })
-```
+## Infrastructure Details
 
-### Designing tests that create multiple projects
-
-When a test creates two or more projects, the app will show both in the nav bar. Navigate explicitly to the one you want to interact with:
-
-```typescript
-const primary = await buildScenario(projectFactory, 'simple')
-const secondary = await projectFactory.createProject('empty', { name: 'Other Project' })
-
-// Navigate to primary — don't rely on auto-selection
-await page.goto(`/prj/${primary.projectCode}`)
-await waitForBoardReady(page)
-
-// Switch to secondary explicitly
-await page.click(`[data-testid="project-option-${secondary.key}"]`)
-await waitForBoardReady(page)
-```
-
-## Isolation Contract
-
-- `CONFIG_DIR` → temp directory, set before backend imports load
-- `createTestApp()` → lazy-imported in `e2e-context.ts` after `CONFIG_DIR` is set
-- Never import `createTestApp` at the top of a file — always lazy-load it
-
-Violating the order causes the backend to read from your real config directory.
+For isolation contract, CONFIG_DIR ordering, and test environment lifecycle, see `TESTING_INFRASTRUCTURE.md`.
