@@ -196,7 +196,7 @@ class DataLayer {
     subDocName: string,
   ): Promise<{ code: string, content: string, dateCreated: string | null, lastModified: string | null }> {
     const response = await fetch(
-      `${this.baseUrl}/projects/${projectId}/crs/${ticketCode}/subdocuments/${subDocName}`,
+      `${this.baseUrl}/projects/${projectId}/crs/${ticketCode}/subdocuments/${encodeURIComponent(subDocName)}`,
     )
 
     if (!response.ok) {

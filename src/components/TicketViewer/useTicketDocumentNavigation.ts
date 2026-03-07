@@ -1,23 +1,30 @@
 /**
- * useTicketDocumentNavigation - MDT-093.
+ * useTicketDocumentNavigation - MDT-093, MDT-094.
  *
  * Sole frontend authority for selected path and folder-stack transitions.
- * Manages URL hash synchronization for deep linking.
+ * Manages URL path synchronization for deep linking (path-based routing).
  *
  * Covers: BR-4.1, BR-4.2, BR-4.3, BR-4.4, C4
  */
 
 import { useCallback, useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import type { Location } from 'react-router-dom'
 import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
+import { apiPathToUrlPath, extractSubDocPath, urlPathToApiPath } from '../../utils/subdocPathValidation'
 
 interface UseTicketDocumentNavigationOptions {
   subdocuments: SubDocument[]
+  ticketCode: string // Added for URL generation
+  projectCode: string // Added for direct navigation (avoids redirect/remount)
 }
 
 interface UseTicketDocumentNavigationResult {
   selectedPath: string
   folderStack: string[]
   selectPath: (path: string) => void
+  pendingPath: string | null
+  confirmPathSwitch: () => void
 }
 
 /**
@@ -61,58 +68,111 @@ function deriveFolderStack(path: string, subdocuments: SubDocument[]): string[] 
 }
 
 /**
- * Initialize selected path from URL hash, falling back to 'main' if invalid.
+ * Initialize selected path from URL path, falling back to 'main' if invalid.
+ * Handles backward compatibility with hash-based URLs.
  */
-function initFromHash(subdocuments: SubDocument[]): { selectedPath: string, folderStack: string[] } {
-  const hash = window.location.hash.replace(/^#/, '')
-  if (!hash) {
-    return { selectedPath: 'main', folderStack: [] }
+function initFromPath(
+  subdocuments: SubDocument[],
+  ticketCode: string,
+  projectCode: string,
+  location: Location,
+): { selectedPath: string, folderStack: string[], needsRedirect: boolean, redirectUrl?: string } {
+  // Check for hash-based URL (backward compatibility)
+  const hash = location.hash.replace(/^#/, '')
+  if (hash) {
+    const validPaths = collectPaths(subdocuments)
+    if (validPaths.has(hash)) {
+      // Redirect to path-based URL (using full project path to avoid double redirect)
+      const urlPath = apiPathToUrlPath(hash)
+      return {
+        selectedPath: hash,
+        folderStack: deriveFolderStack(hash, subdocuments),
+        needsRedirect: true,
+        redirectUrl: `/prj/${projectCode}/ticket/${ticketCode}/${urlPath}`,
+      }
+    }
   }
 
-  const validPaths = collectPaths(subdocuments)
-  if (validPaths.has(hash)) {
-    return { selectedPath: hash, folderStack: deriveFolderStack(hash, subdocuments) }
+  // Check for path-based URL
+  const subDocPath = extractSubDocPath(location.pathname, ticketCode)
+  if (subDocPath) {
+    const apiPath = urlPathToApiPath(subDocPath)
+    const validPaths = collectPaths(subdocuments)
+    if (validPaths.has(apiPath)) {
+      return {
+        selectedPath: apiPath,
+        folderStack: deriveFolderStack(apiPath, subdocuments),
+        needsRedirect: false,
+      }
+    }
   }
 
-  return { selectedPath: 'main', folderStack: [] }
+  // Default to main document
+  return { selectedPath: 'main', folderStack: [], needsRedirect: false }
 }
 
 export function useTicketDocumentNavigation(
   options: UseTicketDocumentNavigationOptions,
 ): UseTicketDocumentNavigationResult {
-  const { subdocuments } = options
+  const { subdocuments, ticketCode, projectCode } = options
+  const location = useLocation()
+  const navigate = useNavigate()
 
-  const [state, setState] = useState(() => initFromHash(subdocuments))
+  const [state, setState] = useState(() => initFromPath(subdocuments, ticketCode, projectCode, location))
+  const [pendingPath, setPendingPath] = useState<string | null>(null)
 
-  // Re-check hash when subdocuments become available after async fetch
+  // Handle redirect from hash-based URL
+  useEffect(() => {
+    if (state.needsRedirect && state.redirectUrl) {
+      navigate(state.redirectUrl, { replace: true })
+    }
+  }, [state.needsRedirect, state.redirectUrl, navigate])
+
+  // Re-check path when subdocuments become available after async fetch
   useEffect(() => {
     if (state.selectedPath === 'main') {
-      const fromHash = initFromHash(subdocuments)
-      if (fromHash.selectedPath !== 'main') {
-        setState(fromHash)
+      const fromPath = initFromPath(subdocuments, ticketCode, projectCode, location)
+      if (fromPath.selectedPath !== 'main' && !fromPath.needsRedirect) {
+        setState(prev => ({ ...prev, selectedPath: fromPath.selectedPath, folderStack: fromPath.folderStack }))
       }
     }
-  }, [subdocuments])
+  }, [subdocuments, ticketCode, projectCode, location])
 
   const selectPath = useCallback((path: string) => {
+    // Set pending path to indicate preload is in progress
+    setPendingPath(path)
+
     setState((prev) => {
       const folderStack = deriveFolderStack(path, subdocuments)
 
-      // Update URL hash
+      // Build target URL path using full project path (avoids redirect/remount)
+      let targetPath: string
       if (path === 'main') {
-        window.location.hash = ''
+        targetPath = `/prj/${projectCode}/ticket/${ticketCode}`
       }
       else {
-        window.location.hash = path
+        const urlPath = apiPathToUrlPath(path)
+        targetPath = `/prj/${projectCode}/ticket/${ticketCode}/${urlPath}`
       }
 
-      return { ...prev, selectedPath: path, folderStack }
+      // Only navigate if the URL actually needs to change (prevents unnecessary remounts)
+      if (location.pathname !== targetPath) {
+        navigate(targetPath, { replace: true })
+      }
+
+      return { ...prev, selectedPath: path, folderStack, needsRedirect: false }
     })
-  }, [subdocuments])
+  }, [subdocuments, ticketCode, projectCode, navigate, location.pathname])
+
+  const confirmPathSwitch = useCallback(() => {
+    setPendingPath(null)
+  }, [])
 
   return {
     selectedPath: state.selectedPath,
     folderStack: state.folderStack,
     selectPath,
+    pendingPath,
+    confirmPathSwitch,
   }
 }
