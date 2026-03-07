@@ -100,20 +100,32 @@ components:
           description: Phase or epic this CR belongs to
           example: Phase 1
         dependsOn:
-          type: string
-          description: Comma-separated CR codes this depends on
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: CR codes this depends on (comma-separated string or array)
           example: 'MDT-001, MDT-002'
         blocks:
-          type: string
-          description: Comma-separated CR codes blocked by this
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: CR codes blocked by this (comma-separated string or array)
           example: MDT-010
         assignee:
           type: string
           description: Person assigned to implement this CR
           example: john.doe
         relatedTickets:
-          type: string
-          description: Comma-separated related CR codes
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: Related CR codes (comma-separated string or array)
           example: MDT-003
         impactAreas:
           type: array
@@ -131,6 +143,54 @@ components:
         implementationNotes:
           type: string
           description: Notes about the implementation
+        subdocuments:
+          type: array
+          description: Ordered sub-documents discovered in the ticket's sub-document directory (MDT-093)
+          items:
+            $ref: '#/components/schemas/SubDocument'
+    SubDocument:
+      type: object
+      required:
+        - name
+        - kind
+        - children
+      properties:
+        name:
+          type: string
+          description: Entry name without file extension
+        kind:
+          type: string
+          enum: [file, folder]
+          description: Entry type
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubDocument'
+          description: Nested entries (populated for folders)
+    SubDocumentDetail:
+      type: object
+      required:
+        - code
+        - content
+        - dateCreated
+        - lastModified
+      properties:
+        code:
+          type: string
+          description: Sub-document identifier (name without extension)
+        content:
+          type: string
+          description: Markdown content
+        dateCreated:
+          type: string
+          format: date-time
+          nullable: true
+          description: File creation date
+        lastModified:
+          type: string
+          format: date-time
+          nullable: true
+          description: File last modified date
     CRInput:
       type: object
       required:
@@ -1060,6 +1120,30 @@ paths:
       responses:
         '204':
           description: CR deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  '/api/projects/{projectId}/crs/{crId}/subdocuments/{subDocName}':
+    get:
+      summary: Get sub-document content
+      description: Retrieves the content and metadata for a specific sub-document within a ticket's sub-document directory (MDT-093)
+      tags:
+        - CRs
+      parameters:
+        - $ref: '#/components/parameters/projectId'
+        - $ref: '#/components/parameters/crId'
+        - name: subDocName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Sub-document name without .md extension
+      responses:
+        '200':
+          description: Sub-document content and metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubDocumentDetail'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/projects/register:

@@ -1,105 +1,29 @@
-# Architecture: MDT-093
+# Architecture
 
-**Source**: [MDT-093](../MDT-093-add-sub-document-support-with-sticky-tabs-in-ticke.md)
-**Generated**: 2026-03-02
-
-## Overview
+## Rationale
 
 This architecture adds hierarchical sub-document navigation to ticket view without changing the underlying CR file format or markdown rendering pipeline. The design keeps one backend authority for discovery and ordering, one frontend authority for selected path and hash state, and uses grouped `shadcn` tab rows to expose files, folders, and nested folders without flattening the hierarchy.
-
-## Constraint Carryover
-
-| Constraint ID | Enforcement |
-|---------------|-------------|
-| C1 | Canonical Runtime Flows / Module Boundaries: discovery comes only from filesystem-backed ticket artifacts |
-| C2 | Canonical Runtime Flows / Module Boundaries: ordering is computed on the server and consumed as delivered |
-| C3 | Key Dependencies / Module Boundaries: navigation rows render with `shadcn` Tabs |
-| C4 | Canonical Runtime Flows / Runtime Prerequisites: selected relative document path is mirrored in the URL hash |
-| C5 | Runtime Prerequisites / Error Philosophy: SSE absence degrades to manual navigation with last loaded structure |
-| C6 | Key Dependencies / Module Boundaries: content rendering continues through `MarkdownContent` and shared markdown services |
-| C7 | Runtime Prerequisites / Error Philosophy: selection keeps load-start latency within the required window |
-| C8 | Runtime Prerequisites / Error Philosophy: discovery and retrieval support markdown files up to 1MB |
-| C9 | Module Boundaries / Error Philosophy: sticky rows remain visible without disruptive layout shift |
-| C10 | Structure / Module Boundaries: API additions are documented in `server/openapi.yaml` |
 
 ## Pattern
 
 **Hierarchical Navigation with Server-Owned Discovery** — The server returns a hierarchical document tree and ordered metadata, while the frontend renders one `Tabs` row per active folder level and resolves the selected file path. This fits because ordering, grouping, and missing-path fallback must stay deterministic across reloads, deep links, and realtime updates.
 
-## Canonical Runtime Flows
-
-| Critical Behavior | Canonical Runtime Flow (single path) | Owner Module |
-|-------------------|--------------------------------------|--------------|
-| Discover ordered document tree | `Project routes -> ProjectController.getCR -> TicketService.getCR -> shared ticket lookup + sub-document discovery -> CR response includes hierarchical subdocuments` | `server/services/TicketService.ts` |
-| Select folder and reveal next row | `TicketDocumentTabs -> useTicketDocumentNavigation.selectFolder(relativePath) -> active folder stack recalculated -> next Tabs row rendered while current document stays visible` | `src/components/TicketViewer/useTicketDocumentNavigation.ts` |
-| Select file and render content | `TicketDocumentTabs -> useTicketDocumentContent.selectFile(relativePath) -> dataLayer fetches CR sub-document endpoint -> response normalized -> MarkdownContent renders selected document -> hash updated` | `src/components/TicketViewer/useTicketDocumentContent.ts` |
-| Apply realtime structure changes | `/api/events -> useSSEEvents -> useTicketDocumentRealtime -> dataLayer refetches CR tree -> navigation state reconciled -> missing active path falls back to main` | `src/components/TicketViewer/useTicketDocumentRealtime.ts` |
-| Render sticky multi-row tab UI | `TicketViewer/index.tsx -> TicketDocumentTabs renders primary and nested tab rows with shadcn Tabs -> sticky container remains visible during scroll` | `src/components/TicketViewer/TicketDocumentTabs.tsx` |
-
-Rules:
-- One behavior = one canonical flow
-- One behavior = one owner module
-- No duplicate owners
-
 ## Key Dependencies
 
-| Capability | Decision | Scope | Rationale |
-|------------|----------|-------|-----------|
-| Hierarchical tab primitive | Use existing `shadcn` Tabs | runtime | Required by C3 and supports one row per active folder level without inventing custom focus behavior |
-| Markdown rendering | Use existing `src/components/MarkdownContent.tsx` with shared markdown services | runtime | Preserves the current rendering pipeline required by C6 |
-| Realtime transport | Use existing `/api/events` SSE stream and `useSSEEvents` integration | runtime | Reuses current file-change delivery instead of adding a feature-specific transport |
+| Capability | Decision | Rationale |
+|------------|----------|-----------|
+| Hierarchical tab primitive | Use existing `shadcn` Tabs | Required by C3; supports one row per active folder level without custom focus behavior |
+| Markdown rendering | Use existing `MarkdownContent.tsx` | Preserves current rendering pipeline required by C6 |
+| Realtime transport | Use existing `/api/events` SSE stream | Reuses current file-change delivery instead of adding feature-specific transport |
 
 ## Runtime Prerequisites
 
-| Dependency | Type | Required | When Absent |
-|------------|------|----------|-------------|
-| `.mdt-config.toml` `project.ticketSubdocuments` | project config | No | Server uses the default ordered set, then appends remaining entries in natural ascending name order |
-| Ticket-related sub-document files and directories | filesystem convention | No | Ticket view shows only `main` and behaves as before the feature |
-| `/api/events` | SSE endpoint | No | Navigation remains usable with the last loaded structure but does not auto-refresh |
-| CR sub-document retrieval endpoint | API endpoint | Yes | File selection cannot load non-main documents |
-
-## Test vs Runtime Separation
-
-| Runtime Module | Test Scaffolding | Separation Rule |
-|----------------|------------------|-----------------|
-| `src/components/TicketViewer/index.tsx` | `tests/e2e/subdocument-tabs.spec.ts` | E2E covers user-visible hierarchy and deep-link flows; no test-only branching in the viewer |
-| `src/components/TicketViewer/useTicketDocumentNavigation.ts` | `src/components/TicketViewer/useTicketDocumentNavigation.test.ts` | Hash parsing and folder-stack reconciliation stay pure and testable outside runtime wiring |
-| `src/components/TicketViewer/useTicketDocumentRealtime.ts` | `src/components/TicketViewer/useTicketDocumentRealtime.test.ts` | SSE reconciliation logic is isolated; transport mocks stay in tests only |
-| `server/services/TicketService.ts` | `server/tests/api/ticket-subdocuments.test.ts` | Discovery and ordering logic stay in the service; fixtures and filesystem mocks stay in tests |
-
-## Structure
-
-```text
-/Users/kirby/home/markdown-ticket/
-├── src/App.tsx                                    # runtime entry that mounts TicketViewer for the selected CR
-├── src/components/TicketViewer/                   # ticket document navigation runtime package
-│   ├── index.tsx                                  # composes tab rows, content area, and sticky container
-│   ├── TicketDocumentTabs.tsx                     # renders one shadcn Tabs row per active hierarchy level
-│   ├── useTicketDocumentNavigation.ts             # owns selected relative path, folder stack, and hash sync
-│   ├── useTicketDocumentContent.ts                # loads individual sub-documents and exposes loading/error state
-│   └── useTicketDocumentRealtime.ts               # reconciles SSE updates against the current navigation state
-├── src/components/MarkdownContent.tsx             # existing markdown renderer for main and sub-document content
-├── src/services/dataLayer.ts                      # GET /api/projects/:projectId/crs/:crId and GET /api/projects/:projectId/crs/:crId/documents/*documentPath
-├── server/routes/projects.ts                      # project/CR routes including hierarchical sub-document retrieval
-├── server/controllers/ProjectController.ts        # HTTP translation for CR tree and document content responses
-├── server/services/TicketService.ts               # server authority for discovery, ordering, and sub-document reads
-├── shared/models/SubDocument.ts                   # hierarchical file/folder metadata contract shared by client and server
-└── server/openapi.yaml                            # public API schema for CR tree and sub-document retrieval
-```
-
-## Module Boundaries
-
-| Module | Owns | Must Not |
-|--------|------|----------|
-| `src/components/TicketViewer/index.tsx` | Composition of navigation rows, content panel, and sticky layout | Discovery logic, ordering rules, or raw fetch orchestration |
-| `src/components/TicketViewer/TicketDocumentTabs.tsx` | Rendering primary and nested tab rows with `shadcn` Tabs | URL hash parsing, content fetching, or filesystem semantics |
-| `src/components/TicketViewer/useTicketDocumentNavigation.ts` | Selected relative path, active folder stack, and hash synchronization | HTTP I/O or SSE subscription setup |
-| `src/components/TicketViewer/useTicketDocumentContent.ts` | Loading selected file content and surfacing loading/error state | Ordering decisions or sticky layout behavior |
-| `src/components/TicketViewer/useTicketDocumentRealtime.ts` | Reconciling live tree updates with current selection | Initial tree discovery or content rendering |
-| `src/services/dataLayer.ts` | Frontend HTTP calls and response normalization for CR tree and document content | UI state decisions or folder-stack reconciliation |
-| `server/services/TicketService.ts` | Filesystem discovery, default/configured ordering, hierarchical metadata, and sub-document reads | HTTP response formatting or frontend state semantics |
-| `server/controllers/ProjectController.ts` | Mapping CR/tree service results into API responses | Discovery rules or frontend navigation logic |
-| `shared/models/SubDocument.ts` | Shared hierarchical metadata shape for files and folders | Rendering policy or transport behavior |
+| Dependency | Required | When Absent |
+|------------|----------|-------------|
+| `.mdt-config.toml` `project.ticketSubdocuments` | No | Server uses default order, then appends remaining entries |
+| Ticket-related sub-document files/directories | No | Ticket view shows only `main` |
+| `/api/events` SSE endpoint | No | Navigation remains usable but does not auto-refresh |
+| CR sub-document retrieval endpoint | Yes | File selection cannot load non-main documents |
 
 ## Architecture Invariants
 
@@ -115,5 +39,95 @@ The degraded state must never be worse than the current pre-feature ticket view.
 
 To add another ordered top-level document family or grouped folder convention: extend `shared/models/SubDocument.ts` only if the metadata shape changes, update `server/services/TicketService.ts` to classify and order the new entries, and keep `TicketDocumentTabs.tsx` rendering generic so it can display any additional hierarchy level without new special-case UI branches.
 
----
-*Generated by /mdt:architecture*
+## Obligations
+
+- API returns hierarchical sub-document metadata with CR; individual retrieval returns code, content, dates (`OBL-api-subdocument-endpoints`)
+  Derived From: `BR-6.1`, `BR-6.2`
+  Artifacts: `ART-server-project-controller`, `ART-server-ticket-service`, `ART-data-layer`
+- File selection triggers lazy content load via dataLayer; loading/error states surface in content area (`OBL-content-loading-pipeline`)
+  Derived From: `BR-3.1`, `BR-3.2`, `BR-5.3`, `C6`, `C7`, `C8`
+  Artifacts: `ART-use-ticket-document-content`, `ART-data-layer`, `ART-markdown-content`
+- One shadcn Tabs row per active folder level; folders reveal children in next row without flattening (`OBL-hierarchical-tab-rows`)
+  Derived From: `BR-2.1`, `BR-2.2`, `BR-2.3`, `BR-2.4`, `BR-2.5`, `C3`
+  Artifacts: `ART-ticket-document-tabs`, `ART-ticket-viewer-index`
+- useTicketDocumentNavigation is the sole frontend authority for selected path and folder-stack transitions (`OBL-navigation-transition-authority`)
+  Derived From: `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `C4`
+  Artifacts: `ART-use-ticket-document-navigation`, `ART-ticket-document-tabs`
+- Hide tab navigation when no sub-documents exist; show only main ticket content (`OBL-no-nav-when-empty`)
+  Derived From: `BR-1.5`
+  Artifacts: `ART-ticket-document-tabs`, `ART-ticket-viewer-index`
+- Sub-document API changes published to openapi.yaml (`OBL-openapi-documentation`)
+  Derived From: `BR-6.3`, `C10`
+  Artifacts: `ART-openapi-spec`, `ART-server-project-controller`
+- SSE updates reconcile tree structure; removed active document falls back to main; manual navigation continues if SSE unavailable (`OBL-realtime-reconciliation`)
+  Derived From: `BR-5.1`, `BR-5.2`, `BR-5.4`, `C5`
+  Artifacts: `ART-use-ticket-document-realtime`, `ART-ticket-viewer-index`
+- Server owns sub-document discovery and ordering; frontend consumes as delivered (`OBL-server-discovery-authority`)
+  Derived From: `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `C1`, `C2`
+  Artifacts: `ART-server-ticket-service`, `ART-shared-subdocument-model`, `ART-data-layer`
+- Tab navigation remains visible during scroll without disruptive layout shift (`OBL-sticky-navigation-layout`)
+  Derived From: `BR-3.3`, `BR-3.4`, `C9`
+  Artifacts: `ART-ticket-document-tabs`, `ART-ticket-viewer-index`
+- Test scaffolding stays separate from runtime; no test-only logic in production code (`OBL-test-runtime-separation`)
+  Derived From: `C1`, `C2`, `C5`
+  Artifacts: `ART-e2e-subdocument-tests`, `ART-nav-hook-unit-tests`, `ART-realtime-hook-tests`, `ART-api-subdocument-tests`
+
+## Artifacts
+
+| Artifact ID | Path | Kind | Referencing Obligations |
+|---|---|---|---|
+| `ART-api-subdocument-tests` | `server/tests/api/ticket-subdocuments.test.ts` | test | `OBL-test-runtime-separation` |
+| `ART-data-layer` | `src/services/dataLayer.ts` | runtime | `OBL-api-subdocument-endpoints`, `OBL-content-loading-pipeline`, `OBL-server-discovery-authority` |
+| `ART-e2e-subdocument-tests` | `tests/e2e/subdocument-tabs.spec.ts` | test | `OBL-test-runtime-separation` |
+| `ART-markdown-content` | `src/components/MarkdownContent.tsx` | runtime | `OBL-content-loading-pipeline` |
+| `ART-nav-hook-unit-tests` | `src/components/TicketViewer/useTicketDocumentNavigation.test.ts` | test | `OBL-test-runtime-separation` |
+| `ART-openapi-spec` | `server/openapi.yaml` | config | `OBL-openapi-documentation` |
+| `ART-realtime-hook-tests` | `src/components/TicketViewer/useTicketDocumentRealtime.test.ts` | test | `OBL-test-runtime-separation` |
+| `ART-server-project-controller` | `server/controllers/ProjectController.ts` | runtime | `OBL-api-subdocument-endpoints`, `OBL-openapi-documentation` |
+| `ART-server-ticket-service` | `server/services/TicketService.ts` | runtime | `OBL-api-subdocument-endpoints`, `OBL-server-discovery-authority` |
+| `ART-shared-subdocument-model` | `shared/models/SubDocument.ts` | runtime | `OBL-server-discovery-authority` |
+| `ART-ticket-document-tabs` | `src/components/TicketViewer/TicketDocumentTabs.tsx` | runtime | `OBL-hierarchical-tab-rows`, `OBL-navigation-transition-authority`, `OBL-no-nav-when-empty`, `OBL-sticky-navigation-layout` |
+| `ART-ticket-viewer-index` | `src/components/TicketViewer/index.tsx` | runtime | `OBL-hierarchical-tab-rows`, `OBL-no-nav-when-empty`, `OBL-realtime-reconciliation`, `OBL-sticky-navigation-layout` |
+| `ART-use-ticket-document-content` | `src/components/TicketViewer/useTicketDocumentContent.ts` | runtime | `OBL-content-loading-pipeline` |
+| `ART-use-ticket-document-navigation` | `src/components/TicketViewer/useTicketDocumentNavigation.ts` | runtime | `OBL-navigation-transition-authority` |
+| `ART-use-ticket-document-realtime` | `src/components/TicketViewer/useTicketDocumentRealtime.ts` | runtime | `OBL-realtime-reconciliation` |
+
+## Derivation Summary
+
+| Requirement ID | Obligation Count | Obligation IDs |
+|---|---:|---|
+| `BR-1.1` | 1 | `OBL-server-discovery-authority` |
+| `BR-1.2` | 1 | `OBL-server-discovery-authority` |
+| `BR-1.3` | 1 | `OBL-server-discovery-authority` |
+| `BR-1.4` | 1 | `OBL-server-discovery-authority` |
+| `BR-1.5` | 1 | `OBL-no-nav-when-empty` |
+| `BR-2.1` | 1 | `OBL-hierarchical-tab-rows` |
+| `BR-2.2` | 1 | `OBL-hierarchical-tab-rows` |
+| `BR-2.3` | 1 | `OBL-hierarchical-tab-rows` |
+| `BR-2.4` | 1 | `OBL-hierarchical-tab-rows` |
+| `BR-2.5` | 1 | `OBL-hierarchical-tab-rows` |
+| `BR-3.1` | 1 | `OBL-content-loading-pipeline` |
+| `BR-3.2` | 1 | `OBL-content-loading-pipeline` |
+| `BR-3.3` | 1 | `OBL-sticky-navigation-layout` |
+| `BR-3.4` | 1 | `OBL-sticky-navigation-layout` |
+| `BR-4.1` | 1 | `OBL-navigation-transition-authority` |
+| `BR-4.2` | 1 | `OBL-navigation-transition-authority` |
+| `BR-4.3` | 1 | `OBL-navigation-transition-authority` |
+| `BR-4.4` | 1 | `OBL-navigation-transition-authority` |
+| `BR-5.1` | 1 | `OBL-realtime-reconciliation` |
+| `BR-5.2` | 1 | `OBL-realtime-reconciliation` |
+| `BR-5.3` | 1 | `OBL-content-loading-pipeline` |
+| `BR-5.4` | 1 | `OBL-realtime-reconciliation` |
+| `BR-6.1` | 1 | `OBL-api-subdocument-endpoints` |
+| `BR-6.2` | 1 | `OBL-api-subdocument-endpoints` |
+| `BR-6.3` | 1 | `OBL-openapi-documentation` |
+| `C1` | 2 | `OBL-server-discovery-authority`, `OBL-test-runtime-separation` |
+| `C2` | 2 | `OBL-server-discovery-authority`, `OBL-test-runtime-separation` |
+| `C3` | 1 | `OBL-hierarchical-tab-rows` |
+| `C4` | 1 | `OBL-navigation-transition-authority` |
+| `C5` | 2 | `OBL-realtime-reconciliation`, `OBL-test-runtime-separation` |
+| `C6` | 1 | `OBL-content-loading-pipeline` |
+| `C7` | 1 | `OBL-content-loading-pipeline` |
+| `C8` | 1 | `OBL-content-loading-pipeline` |
+| `C9` | 1 | `OBL-sticky-navigation-layout` |
+| `C10` | 1 | `OBL-openapi-documentation` |
