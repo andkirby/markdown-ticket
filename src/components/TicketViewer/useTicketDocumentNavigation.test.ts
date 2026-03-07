@@ -25,7 +25,7 @@ describe('useTicketDocumentNavigation', () => {
   // ─── Initial state ────────────────────────────────────────────────────────
 
   it('initializes with main selected and empty folder stack', () => {
-    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments: [] }))
+    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments: [], ticketCode: 'MDT-093', projectCode: 'MDT' }))
     expect(result.current.selectedPath).toBe('main')
     expect(result.current.folderStack).toEqual([])
   })
@@ -35,14 +35,14 @@ describe('useTicketDocumentNavigation', () => {
   it('selects the document referenced by a valid URL hash on mount (BR-4.3)', () => {
     window.location.hash = 'requirements'
     const subdocuments = [{ name: 'requirements', kind: 'file' as const, children: [] }]
-    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments }))
+    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }))
     expect(result.current.selectedPath).toBe('requirements')
   })
 
   it('falls back to main when URL hash references a non-existent document (BR-4.4)', () => {
     window.location.hash = 'nonexistent-doc'
     const subdocuments = [{ name: 'requirements', kind: 'file' as const, children: [] }]
-    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments }))
+    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }))
     expect(result.current.selectedPath).toBe('main')
   })
 
@@ -55,7 +55,7 @@ describe('useTicketDocumentNavigation', () => {
         children: [{ name: 'spike', kind: 'file' as const, children: [] }],
       },
     ]
-    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments }))
+    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }))
     expect(result.current.selectedPath).toBe('poc/spike')
     expect(result.current.folderStack).toContain('poc')
   })
@@ -64,7 +64,7 @@ describe('useTicketDocumentNavigation', () => {
 
   it('updates URL hash when a non-main document is selected (BR-4.1, C4)', () => {
     const subdocuments = [{ name: 'tasks', kind: 'file' as const, children: [] }]
-    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments }))
+    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }))
 
     act(() => {
       result.current.selectPath('tasks')
@@ -82,7 +82,7 @@ describe('useTicketDocumentNavigation', () => {
         children: [{ name: 'results', kind: 'file' as const, children: [] }],
       },
     ]
-    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments }))
+    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }))
 
     act(() => {
       result.current.selectPath('poc/results')
@@ -94,7 +94,7 @@ describe('useTicketDocumentNavigation', () => {
   it('clears URL hash when main is selected (BR-4.1)', () => {
     window.location.hash = 'tasks'
     const subdocuments = [{ name: 'tasks', kind: 'file' as const, children: [] }]
-    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments }))
+    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }))
 
     act(() => {
       result.current.selectPath('main')
@@ -114,7 +114,7 @@ describe('useTicketDocumentNavigation', () => {
         children: [{ name: 'spike', kind: 'file' as const, children: [] }],
       },
     ]
-    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments }))
+    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }))
 
     act(() => {
       result.current.selectPath('poc')
@@ -128,7 +128,7 @@ describe('useTicketDocumentNavigation', () => {
   // ─── Single authority guarantee ───────────────────────────────────────────
 
   it('exposes selectPath as the only mutation interface (single transition authority)', () => {
-    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments: [] }))
+    const { result } = renderHook(() => useTicketDocumentNavigation({ subdocuments: [], ticketCode: 'MDT-093', projectCode: 'MDT' }))
     // Only selectPath, selectedPath, and folderStack should be on the public API
     expect(typeof result.current.selectPath).toBe('function')
     expect(typeof result.current.selectedPath).toBe('string')
