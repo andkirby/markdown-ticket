@@ -2,42 +2,106 @@
 
 ## Rationale
 
-This architecture adds hierarchical sub-document navigation to ticket view without changing the underlying CR file format or markdown rendering pipeline. The design keeps one backend authority for discovery and ordering, one frontend authority for selected path and hash state, and uses grouped `shadcn` tab rows to expose files, folders, and nested folders without flattening the hierarchy.
+## Worktree Path Resolution for Sub-Document Discovery
 
-## Pattern
+### Problem Statement
 
-**Hierarchical Navigation with Server-Owned Discovery** — The server returns a hierarchical document tree and ordered metadata, while the frontend renders one `Tabs` row per active folder level and resolves the selected file path. This fits because ordering, grouping, and missing-path fallback must stay deterministic across reloads, deep links, and realtime updates.
+The server-side `TicketService` discovers sub-documents by constructing file paths directly from the project path and ticket ID. This fails in git worktree scenarios where tickets live in worktree directories instead of the main project directory. The shared `TicketService` already implements worktree resolution (MDT-095), but the server adapter does not use this capability.
 
-## Key Dependencies
+### Solution Pattern
 
-| Capability | Decision | Rationale |
-|------------|----------|-----------|
-| Hierarchical tab primitive | Use existing `shadcn` Tabs | Required by C3; supports one row per active folder level without custom focus behavior |
-| Markdown rendering | Use existing `MarkdownContent.tsx` | Preserves current rendering pipeline required by C6 |
-| Realtime transport | Use existing `/api/events` SSE stream | Reuses current file-change delivery instead of adding feature-specific transport |
+**Constructor Injection with Path Resolution** — Inject `WorktreeService` into `server/services/TicketService.ts` and call `resolvePath()` before constructing file paths for sub-document discovery. This mirrors the pattern already established in `shared/services/TicketService.ts`, ensuring consistency across the codebase.
 
-## Runtime Prerequisites
+### Modified Components
+
+#### 1. `server/services/TicketService.ts`
+
+**Changes:**
+- Add `WorktreeService` import from `@mdt/shared/services/WorktreeService.js`
+- Inject `WorktreeService` via constructor (already receives `projectDiscovery`)
+- Modify `discoverSubDocuments()` to resolve worktree path before file system operations
+- Modify `getSubDocument()` to resolve worktree path before reading file content
+
+**Implementation Pattern:**
+```typescript
+// In constructor
+this.worktreeService = new WorktreeService()
+
+// In discoverSubDocuments()
+const config = this.projectService.getProjectConfig(project.project.path)
+const resolvedPath = await this.worktreeService.resolvePath(
+  project.project.path,
+  crId,
+  config.project?.ticketsPath || 'docs/CRs',
+  config.project?.code || 'MDT'
+)
+const subdocDir = join(resolvedPath, ticketsPath, crId)
+```
+
+#### 2. `server/controllers/ProjectController.ts`
+
+**Changes:**
+- No direct changes needed (delegates to `TicketService`)
+
+#### 3. `server/server.ts`
+
+**Changes:**
+- No changes needed (instantiation already uses constructor injection pattern)
+
+### Data Flow
+
+```
+API Request
+  → ProjectController.getCR()
+    → TicketService.getCR()
+      → SharedTicketService.getCR() [already has worktree support]
+    → TicketService.discoverSubDocuments()
+      → WorktreeService.resolvePath(projectPath, ticketCode, ticketsPath, projectCode)
+        → Checks cache for worktree mapping
+        → Returns worktree path if ticket file exists there
+        → Falls back to main project path if no worktree or missing file
+      → Constructs file path using resolved path
+      → Reads directory structure
+    → Returns CR with sub-document metadata
+  → Response to client
+```
+
+### Error Handling
+
+- **Worktree resolution fails**: Falls back to main project path (silent degradation per MDT-095)
+- **WorktreeService unavailable**: System continues with main path (feature flag can disable worktrees)
+- **File system errors**: Existing error handling remains unchanged
+- **Cache miss**: `WorktreeService` detects worktrees on-demand and caches results
+
+### Runtime Prerequisites
 
 | Dependency | Required | When Absent |
 |------------|----------|-------------|
-| `.mdt-config.toml` `project.ticketSubdocuments` | No | Server uses default order, then appends remaining entries |
-| Ticket-related sub-document files/directories | No | Ticket view shows only `main` |
-| `/api/events` SSE endpoint | No | Navigation remains usable but does not auto-refresh |
-| CR sub-document retrieval endpoint | Yes | File selection cannot load non-main documents |
+| `WorktreeService` initialized | Yes | System falls back to main path behavior |
+| Git worktree present | No | Main path used (pre-existing behavior) |
+| Ticket file in worktree | No | Falls back to main path if worktree file missing |
+| `.mdt-config.toml` with worktree config | No | Uses defaults (enabled=true, code from project config) |
 
-## Architecture Invariants
+### Architecture Invariants
 
-- `one transition authority`: `useTicketDocumentNavigation.ts` is the only frontend module that decides selected path and folder-stack transitions.
-- `one processing orchestration path`: all discovery and ordering logic flows through `server/services/TicketService.ts` before the frontend renders navigation.
-- `no test-only logic in runtime files`: mocks, fixture trees, and SSE simulation stay in test files only.
+- **single worktree authority**: `WorktreeService` is the only component that detects worktrees and resolves paths
+- **path resolution before file ops**: All file system access for ticket content must go through `resolvePath()` first
+- **fallback to main**: If worktree resolution fails or file not found, system gracefully degrades to main project path
+- **consistent pattern**: Server-side `TicketService` mirrors the worktree pattern from shared `TicketService`
 
-## Error Philosophy
+### Extension Rule
 
-The degraded state must never be worse than the current pre-feature ticket view. If sub-document discovery yields nothing, config is absent, or SSE delivery is unavailable, the viewer still renders `main` content and manual navigation continues from the last successfully loaded tree. Invalid hashes, missing active documents, and removed nodes recover to `main`, while document-load failures stay localized to the content area so the navigation structure remains available.
+To extend worktree support to other server-side services:
+1. Import `WorktreeService` from `@mdt/shared/services/WorktreeService.js`
+2. Inject via constructor (or use singleton pattern)
+3. Call `resolvePath(projectPath, ticketCode, ticketsPath, projectCode)` before file operations
+4. Handle fallback to main path gracefully
+5. Add tests for both worktree and non-worktree scenarios
 
-## Extension Rule
+### Related Tickets
 
-To add another ordered top-level document family or grouped folder convention: extend `shared/models/SubDocument.ts` only if the metadata shape changes, update `server/services/TicketService.ts` to classify and order the new entries, and keep `TicketDocumentTabs.tsx` rendering generic so it can display any additional hierarchy level without new special-case UI branches.
+- **MDT-095**: Initial worktree support in shared `TicketService`
+- **MDT-093**: Sub-document navigation feature (this fix enables it in worktrees)
 
 ## Obligations
 
@@ -78,7 +142,7 @@ To add another ordered top-level document family or grouped folder convention: e
 |---|---|---|---|
 | `ART-api-subdocument-tests` | `server/tests/api/ticket-subdocuments.test.ts` | test | `OBL-test-runtime-separation` |
 | `ART-data-layer` | `src/services/dataLayer.ts` | runtime | `OBL-api-subdocument-endpoints`, `OBL-content-loading-pipeline`, `OBL-server-discovery-authority` |
-| `ART-e2e-subdocument-tests` | `tests/e2e/subdocument-tabs.spec.ts` | test | `OBL-test-runtime-separation` |
+| `ART-e2e-subdocument-tests` | `tests/e2e/ticket/subdoc-navigation.spec.ts` | test | `OBL-test-runtime-separation` |
 | `ART-markdown-content` | `src/components/MarkdownContent.tsx` | runtime | `OBL-content-loading-pipeline` |
 | `ART-nav-hook-unit-tests` | `src/components/TicketViewer/useTicketDocumentNavigation.test.ts` | test | `OBL-test-runtime-separation` |
 | `ART-openapi-spec` | `server/openapi.yaml` | config | `OBL-openapi-documentation` |

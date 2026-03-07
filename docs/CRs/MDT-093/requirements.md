@@ -30,13 +30,14 @@ This feature adds sub-document navigation to ticket view so users can move betwe
 - `BR-3.2` [bdd] WHILE selected document content is loading, the system shall display loading feedback in the content area.
 - `BR-3.3` [bdd] WHILE the user scrolls ticket content, the system shall keep sub-document navigation visible.
 - `BR-3.4` [bdd] WHILE sticky navigation is active, the system shall avoid layout shift that disrupts reading or navigation.
+- `BR-3.5` [bdd] WHEN a user clicks a sub-document tab, the system shall preload content before switching tabs to prevent layout shift
 
 ### BR-4
 
-- `BR-4.1` [bdd] WHEN a user selects a non-main document, the system shall update the URL hash to the selected relative document path.
-- `BR-4.2` [bdd] WHEN a user selects a nested document, the system shall encode the nested path in the URL hash using slash-separated folder segments.
-- `BR-4.3` [bdd] WHEN a page loads with a valid sub-document hash, the system shall reopen the required folder levels and display the targeted document.
-- `BR-4.4` [bdd] IF the URL hash references a document path that no longer exists, THEN the system shall fall back to main.
+- `BR-4.1` [bdd] WHEN a user selects a non-main document, the system shall update the URL path to the selected document with .md extension
+- `BR-4.2` [bdd] WHEN a user selects a nested document, the system shall encode the nested path in the URL path using slash-separated folder segments with .md extension
+- `BR-4.3` [bdd] WHEN a page loads with a valid sub-document path, the system shall reopen the required folder levels and display the targeted document
+- `BR-4.4` [bdd] IF the URL path references a document path that no longer exists, THEN the system shall fall back to main
 
 ### BR-5
 
@@ -56,13 +57,16 @@ This feature adds sub-document navigation to ticket view so users can move betwe
 - `C1` [tests] Sub-documents are discovered from ticket-related files and directories, not created synthetically in the UI.
 - `C2` [tests] Ordering comes from backend discovery plus project configuration, not client-side resorting.
 - `C3` [tests] Sub-document navigation uses shadcn Tabs.
-- `C4` [tests] Deep links use stable relative document paths in the URL hash.
+- `C4` [tests] Deep links use path-based URLs with .md extension for stable, shareable references to sub-documents
 - `C5` [tests] Realtime delivery failure does not block manual navigation.
 - `C6` [tests] Existing markdown rendering remains the content rendering pipeline for sub-documents.
 - `C7` [tests] Tab switching begins content loading within 100ms.
 - `C8` [tests] Sub-document parsing supports markdown files up to 1MB.
 - `C9` [tests] Sticky navigation does not create disruptive layout shift.
 - `C10` [tests] OpenAPI documentation is updated for sub-document API changes.
+- `C-11` [tests] Sub-document URL paths must end with .md extension for security and format consistency
+- `C-12` [tests] Sub-document URL paths must not contain .. (double dot) to prevent path traversal attacks
+- `C-13` [tests] The system shall maintain backward compatibility by redirecting hash-based URLs to path-based URLs automatically
 
 ## Edge Cases
 
@@ -72,7 +76,7 @@ _No edge cases recorded._
 
 | Route | Count | IDs |
 |---|---:|---|
-| bdd | 22 | `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-1.5`, `BR-2.1`, `BR-2.2`, `BR-2.3`, `BR-2.4`, `BR-2.5`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-3.4`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4` |
-| tests | 13 | `BR-6.1`, `BR-6.2`, `BR-6.3`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10` |
+| bdd | 23 | `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-1.5`, `BR-2.1`, `BR-2.2`, `BR-2.3`, `BR-2.4`, `BR-2.5`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-3.4`, `BR-3.5`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4` |
+| tests | 16 | `BR-6.1`, `BR-6.2`, `BR-6.3`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C-11`, `C-12`, `C-13` |
 | clarification | 0 | - |
 | not_applicable | 0 | - |

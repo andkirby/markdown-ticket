@@ -145,46 +145,6 @@
       ]
     },
     {
-      "id": "BR-4.1",
-      "kind": "behavior",
-      "text": "WHEN a user selects a non-main document, the system shall update the URL hash to the selected relative document path.",
-      "sourceRef": "CR Section 4 Feature Contract: URL routing",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-4.2",
-      "kind": "behavior",
-      "text": "WHEN a user selects a nested document, the system shall encode the nested path in the URL hash using slash-separated folder segments.",
-      "sourceRef": "CR Section 4 Feature Contract: URL routing",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-4.3",
-      "kind": "behavior",
-      "text": "WHEN a page loads with a valid sub-document hash, the system shall reopen the required folder levels and display the targeted document.",
-      "sourceRef": "CR Section 4 Feature Contract: Hash fallback",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-4.4",
-      "kind": "behavior",
-      "text": "IF the URL hash references a document path that no longer exists, THEN the system shall fall back to main.",
-      "sourceRef": "CR Section 4 Feature Contract: Hash fallback",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-5.1",
       "kind": "behavior",
       "text": "WHEN the underlying sub-document structure changes, the system shall update the visible navigation to match the current files and folders.",
@@ -242,13 +202,6 @@
       "id": "C3",
       "kind": "constraint",
       "text": "Sub-document navigation uses shadcn Tabs.",
-      "sourceRef": "CR Section 1 Technical Constraints",
-      "routePolicy": "tests"
-    },
-    {
-      "id": "C4",
-      "kind": "constraint",
-      "text": "Deep links use stable relative document paths in the URL hash.",
       "sourceRef": "CR Section 1 Technical Constraints",
       "routePolicy": "tests"
     },
@@ -322,6 +275,110 @@
       "routePolicy": "tests",
       "tags": [
         "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN a user selects a non-main document, the system shall update the URL path to the selected document with .md extension",
+      "sourceRef": "MDT-093 Section 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "path-based-routing",
+        "deep-linking"
+      ]
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN a user selects a nested document, the system shall encode the nested path in the URL path using slash-separated folder segments with .md extension",
+      "sourceRef": "MDT-093 Section 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "path-based-routing",
+        "nested-folders"
+      ]
+    },
+    {
+      "id": "BR-4.3",
+      "kind": "behavior",
+      "text": "WHEN a page loads with a valid sub-document path, the system shall reopen the required folder levels and display the targeted document",
+      "sourceRef": "MDT-093 Section 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "path-based-routing",
+        "deep-link"
+      ]
+    },
+    {
+      "id": "BR-4.4",
+      "kind": "behavior",
+      "text": "IF the URL path references a document path that no longer exists, THEN the system shall fall back to main",
+      "sourceRef": "MDT-093 Section 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "path-based-routing",
+        "error-handling"
+      ]
+    },
+    {
+      "id": "BR-3.5",
+      "kind": "behavior",
+      "text": "WHEN a user clicks a sub-document tab, the system shall preload content before switching tabs to prevent layout shift",
+      "sourceRef": "MDT-094 preload implementation",
+      "routePolicy": "bdd",
+      "tags": [
+        "preload-pattern",
+        "ux",
+        "smooth-transitions"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Deep links use path-based URLs with .md extension for stable, shareable references to sub-documents",
+      "sourceRef": "MDT-094 path-based routing",
+      "routePolicy": "tests",
+      "tags": [
+        "path-based-routing",
+        "deep-linking",
+        "url-format"
+      ]
+    },
+    {
+      "id": "C-11",
+      "kind": "constraint",
+      "text": "Sub-document URL paths must end with .md extension for security and format consistency",
+      "sourceRef": "MDT-094 path validation",
+      "routePolicy": "tests",
+      "tags": [
+        "security",
+        "url-validation",
+        "extension-required"
+      ]
+    },
+    {
+      "id": "C-12",
+      "kind": "constraint",
+      "text": "Sub-document URL paths must not contain .. (double dot) to prevent path traversal attacks",
+      "sourceRef": "MDT-094 path validation",
+      "routePolicy": "tests",
+      "tags": [
+        "security",
+        "path-traversal-prevention",
+        "validation"
+      ]
+    },
+    {
+      "id": "C-13",
+      "kind": "constraint",
+      "text": "The system shall maintain backward compatibility by redirecting hash-based URLs to path-based URLs automatically",
+      "sourceRef": "MDT-094 backward compatibility",
+      "routePolicy": "tests",
+      "tags": [
+        "backward-compatibility",
+        "hash-redirect",
+        "deprecated"
       ]
     }
   ],
