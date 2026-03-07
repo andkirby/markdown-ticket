@@ -6,6 +6,7 @@ import type { CRData, TicketService } from '../services/TicketService.js'
 import type { TreeNode } from '../types/tree.js'
 
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
+import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 
 export interface Ticket {
   code: string
@@ -87,6 +88,11 @@ export class ProjectController {
    */
   private ticketService?: TicketService
 
+  /**
+   * WorktreeService for worktree path resolution (MDT-093).
+   */
+  private worktreeService: WorktreeService
+
   constructor(
     projectService: ProjectServiceExtension,
     fileSystemService: FileSystemService,
@@ -105,6 +111,7 @@ export class ProjectController {
     this.projectManager = new ProjectManager(true) // Quiet mode for server
     this.ticketController = ticketController
     this.ticketService = ticketService
+    this.worktreeService = new WorktreeService() // MDT-093: Initialize WorktreeService
   }
 
   /**
