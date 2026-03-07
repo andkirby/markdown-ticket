@@ -24,8 +24,10 @@ interface TicketViewerProps {
 export function TicketViewer({ ticket, projectId }: TicketViewerProps) {
   const initialSubdocuments = (ticket as unknown as { subdocuments?: SubDocument[] }).subdocuments ?? []
 
-  const { selectedPath, folderStack, selectPath } = useTicketDocumentNavigation({
+  const { selectedPath, folderStack, selectPath, pendingPath, confirmPathSwitch } = useTicketDocumentNavigation({
     subdocuments: initialSubdocuments,
+    ticketCode: ticket.code,
+    projectCode: projectId, // projectId is the project code (e.g., "MDT")
   })
 
   const { subdocuments } = useTicketDocumentRealtime({
@@ -39,6 +41,8 @@ export function TicketViewer({ ticket, projectId }: TicketViewerProps) {
     ticketCode: ticket.code,
     selectedPath,
     mainContent: ticket.content ?? '',
+    pendingPath,
+    onContentLoaded: confirmPathSwitch,
   })
 
   return (
@@ -48,11 +52,16 @@ export function TicketViewer({ ticket, projectId }: TicketViewerProps) {
         selectedPath={selectedPath}
         folderStack={folderStack}
         onSelect={selectPath}
+        pendingPath={pendingPath}
       />
 
       {/* @testid subdoc-content — content area displaying the currently selected sub-document */}
       <div data-testid="subdoc-content" className="ticket-viewer-content flex-1 overflow-auto p-4">
-        {loading && (
+        {pendingPath && !loading && (
+          /* @testid subdoc-preloading — initial loading state when tab is clicked */
+          <div data-testid="subdoc-preloading" className="text-muted-foreground text-sm">Loading…</div>
+        )}
+        {!pendingPath && loading && (
           /* @testid subdoc-loading — loading indicator shown while sub-document content is fetching */
           <div data-testid="subdoc-loading" className="text-muted-foreground text-sm">Loading…</div>
         )}
@@ -62,7 +71,7 @@ export function TicketViewer({ ticket, projectId }: TicketViewerProps) {
             {error}
           </div>
         )}
-        {!loading && !error && (
+        {!pendingPath && !loading && !error && (
           <MarkdownContent
             markdown={content}
             currentProject={projectId}

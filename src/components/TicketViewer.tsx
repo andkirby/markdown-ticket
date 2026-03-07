@@ -101,7 +101,11 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
     [currentTicket],
   )
 
-  const { selectedPath, folderStack, selectPath } = useTicketDocumentNavigation({ subdocuments })
+  const { selectedPath, folderStack, selectPath, pendingPath, confirmPathSwitch } = useTicketDocumentNavigation({
+    subdocuments,
+    ticketCode: currentTicket?.code ?? '',
+    projectCode: projectCode ?? '',
+  })
 
   const { subdocuments: liveSubdocs } = useTicketDocumentRealtime({
     initialSubdocuments: subdocuments,
@@ -114,6 +118,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
     ticketCode: currentTicket?.code ?? '',
     selectedPath,
     mainContent: processedContent,
+    pendingPath,
+    onContentLoaded: confirmPathSwitch,
   })
 
   if (!currentTicket)
@@ -150,12 +156,19 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
             selectedPath={selectedPath}
             folderStack={folderStack}
             onSelect={selectPath}
+            pendingPath={pendingPath}
           />
 
           {/* Content area: sub-document or main ticket content */}
           {/* @testid subdoc-content — content area for selected sub-document */}
           <div data-testid="subdoc-content">
-            {subdocLoading && (
+            {pendingPath && !subdocLoading && (
+              /* @testid subdoc-preloading — initial loading state when tab is clicked */
+              <div data-testid="subdoc-preloading" className="text-muted-foreground text-sm py-2">
+                Loading…
+              </div>
+            )}
+            {!pendingPath && subdocLoading && (
               /* @testid subdoc-loading — loading indicator while fetching sub-document */
               <div data-testid="subdoc-loading" className="text-muted-foreground text-sm py-2">
                 Loading…
@@ -167,7 +180,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
                 {subdocError}
               </div>
             )}
-            {!subdocLoading && !subdocError && isOpen && projectCode && (
+            {!pendingPath && !subdocLoading && !subdocError && isOpen && projectCode && (
               /* @testid ticket-content — Markdown content area */
               <div data-testid="ticket-content">
                 <MarkdownContent
