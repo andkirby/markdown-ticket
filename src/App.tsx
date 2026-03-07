@@ -190,7 +190,8 @@ function ProjectRouteHandler() {
 
   const handleTicketClick = (ticket: Ticket) => {
     const viewParam = viewMode !== 'board' ? `?view=${viewMode}` : ''
-    navigate(`/prj/${projectCode}/ticket/${ticket.code}${viewParam}`)
+    const hash = window.location.hash
+    navigate(`/prj/${projectCode}/ticket/${ticket.code}${viewParam}${hash}`)
   }
 
   const handleTicketClose = () => {

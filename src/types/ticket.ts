@@ -23,6 +23,9 @@ export interface Ticket {
   implementationDate?: Date | null
   implementationNotes?: string
 
+  // MDT-093: Sub-document navigation
+  subdocuments?: import('@mdt/shared/models/SubDocument').SubDocument[]
+
   // MDT-095: Worktree fields (optional, backward compatible C5)
   inWorktree?: boolean
   worktreePath?: string

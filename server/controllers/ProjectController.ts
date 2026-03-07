@@ -593,6 +593,34 @@ export class ProjectController {
     }
   }
 
+  async getSubDocument(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { projectId, crId } = req.params
+      const subDocName = (req.params as Record<string, string>).subDocName
+
+      if (!projectId || !crId || !subDocName) {
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID, CR ID, and sub-document name are required' })
+        return
+      }
+
+      if (!this.ticketService) {
+        res.status(501).json({ error: 'Ticket service not available' })
+        return
+      }
+
+      const doc = await this.ticketService.getSubDocument(projectId, crId, subDocName)
+      res.json(doc)
+    }
+    catch (error: unknown) {
+      const err = error as Error
+      if (err.message === 'Project not found' || err.message === 'SubDocument not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
+        return
+      }
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get sub-document' })
+    }
+  }
+
   async deleteCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { projectId, crId } = req.params
