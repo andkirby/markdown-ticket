@@ -1,0 +1,1 @@
+This feature adds sub-document navigation to ticket view so users can move between the main ticket and related documents without leaving the current reading context. The system must support ordered top-level documents, grouped folder-backed entries such as prep/, poc/, and part-*, nested tab rows, sticky navigation, deep linking, and realtime synchronization with file changes.
