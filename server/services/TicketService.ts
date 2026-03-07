@@ -13,6 +13,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DEFAULT_SUBDOCUMENT_ORDER } from '@mdt/shared/models/SubDocument.js'
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
+import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 
 export interface CRData {
   code?: string
@@ -66,10 +67,12 @@ interface ProjectDiscovery {
 export class TicketService {
   private projectDiscovery: ProjectDiscovery
   private sharedTicketService: SharedTicketService
+  private readonly worktreeService: WorktreeService
 
   constructor(projectDiscovery: ProjectDiscovery) {
     this.projectDiscovery = projectDiscovery
     this.sharedTicketService = new SharedTicketService(false)
+    this.worktreeService = new WorktreeService()
   }
 
   /**
@@ -107,16 +110,31 @@ export class TicketService {
       throw new Error('CR not found')
     }
 
-    cr.subdocuments = this.discoverSubDocuments(project, crId)
+    // MDT-093: Await discoverSubDocuments now that it's async
+    cr.subdocuments = await this.discoverSubDocuments(project, crId)
     return cr
   }
 
   /**
    * Discover sub-documents for a CR, ordered by default order then alphabetically.
+   * MDT-093: Enhanced with worktree support - resolves path for sub-document discovery.
    */
-  private discoverSubDocuments(project: Project, crId: string): SubDocument[] {
+  private async discoverSubDocuments(project: Project, crId: string): Promise<SubDocument[]> {
     const ticketsPath = project.project.ticketsPath ?? 'docs/CRs'
-    const subdocDir = join(project.project.path, ticketsPath, crId)
+    const projectCode = project.project.code
+
+    // MDT-093: Resolve path using WorktreeService for worktree support
+    // If project code is undefined, skip worktree resolution and use main project path
+    const resolvedPath = projectCode
+      ? await this.worktreeService.resolvePath(
+          project.project.path,
+          crId,
+          ticketsPath,
+          projectCode,
+        )
+      : project.project.path
+
+    const subdocDir = join(resolvedPath, ticketsPath, crId)
 
     if (!existsSync(subdocDir)) {
       return []
@@ -188,6 +206,7 @@ export class TicketService {
 
   /**
    * Get individual sub-document content for a CR.
+   * MDT-093: Enhanced with worktree support - resolves path for sub-document retrieval.
    */
   async getSubDocument(
     projectId: string,
@@ -196,7 +215,20 @@ export class TicketService {
   ): Promise<{ code: string, content: string, dateCreated: Date | null, lastModified: Date | null }> {
     const project = await this.getProject(projectId)
     const ticketsPath = project.project.ticketsPath ?? 'docs/CRs'
-    const filePath = join(project.project.path, ticketsPath, crId, `${subDocName}.md`)
+    const projectCode = project.project.code
+
+    // MDT-093: Resolve path using WorktreeService for worktree support
+    // If project code is undefined, skip worktree resolution and use main project path
+    const resolvedPath = projectCode
+      ? await this.worktreeService.resolvePath(
+          project.project.path,
+          crId,
+          ticketsPath,
+          projectCode,
+        )
+      : project.project.path
+
+    const filePath = join(resolvedPath, ticketsPath, crId, `${subDocName}.md`)
 
     if (!existsSync(filePath)) {
       throw new Error('SubDocument not found')
