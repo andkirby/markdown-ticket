@@ -100,7 +100,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
     const modalContent = (
       <div className={`fixed inset-0 z-50 overflow-y-auto ${overlayClassName}`}>
-        <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="flex min-h-[100dvh] items-center justify-center p-4">
           {/* Background overlay */}
           <div
             className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
