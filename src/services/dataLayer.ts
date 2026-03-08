@@ -184,6 +184,29 @@ class DataLayer {
   }
 
   /**
+   * MDT-093: Fetch sub-document content for a specific ticket.
+   *
+   * @param projectId - Project ID or code
+   * @param ticketCode - Ticket/CR code (e.g. MDT-001)
+   * @param subDocName - Sub-document name without .md extension
+   */
+  async fetchSubDocument(
+    projectId: string,
+    ticketCode: string,
+    subDocName: string,
+  ): Promise<{ code: string, content: string, dateCreated: string | null, lastModified: string | null }> {
+    const response = await fetch(
+      `${this.baseUrl}/projects/${projectId}/crs/${ticketCode}/subdocuments/${encodeURIComponent(subDocName)}`,
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch sub-document ${subDocName}: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+
+  /**
    * Create a new ticket
    */
   async createTicket(projectId: string, data: CreateTicketData): Promise<Ticket> {
@@ -230,8 +253,8 @@ class DataLayer {
         else if (typeof value === 'boolean') {
           updateData[key] = value
         }
-        else if (value !== undefined && value !== null) {
-          updateData[key] = value
+        else if (value !== undefined && value !== null && !Array.isArray(value) || (Array.isArray(value) && typeof value[0] === 'string')) {
+          updateData[key] = value as string | string[]
         }
       }
 
@@ -342,6 +365,9 @@ class DataLayer {
       relatedTickets: normalizeArray(item.relatedTickets),
       dependsOn: normalizeArray(item.dependsOn),
       blocks: normalizeArray(item.blocks),
+
+      // MDT-093: Sub-document navigation
+      subdocuments: Array.isArray(item.subdocuments) ? item.subdocuments as import('@mdt/shared/models/SubDocument').SubDocument[] : undefined,
 
       // Worktree fields (MDT-095)
       inWorktree: typeof item.inWorktree === 'boolean' ? item.inWorktree : false,

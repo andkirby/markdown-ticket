@@ -1,0 +1,989 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-093"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a ticket has related sub-document files or folders, the system shall expose main plus discovered top-level entries for navigation.",
+      "sourceRef": "CR Section 4 Feature Contract: Document discovery",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN no custom order is configured, the system shall order recognized top-level entries as requirements, domain, architecture, poc, tests, tasks, debt.",
+      "sourceRef": "CR Section 4 Feature Contract: Default top-level subdocument order",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN .mdt-config.toml defines project.ticketSubdocuments, the system shall order matching top-level entries according to that configuration.",
+      "sourceRef": "CR Section 4 Feature Contract: Configuration",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN discovered top-level entries are not named in the configured or default order, the system shall append them after ordered entries using natural ascending name order.",
+      "sourceRef": "CR Section 4 Feature Contract: Ordering",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHILE a ticket has no related sub-document entries, the system shall omit sub-document navigation and display only the main ticket document.",
+      "sourceRef": "CR Section 4 Feature Contract: Conditional tabs",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN sub-document navigation is shown, the system shall present top-level files and folders in the primary tab row.",
+      "sourceRef": "CR Section 4 Feature Contract: Folder-backed tabs",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN a folder entry is selected, the system shall reveal that folder's children in the next tab row.",
+      "sourceRef": "CR Section 4 Feature Contract: Nested folders",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN a nested folder entry is selected, the system shall reveal another tab row for the next folder level.",
+      "sourceRef": "CR Section 4 Feature Contract: Nested folders",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "WHEN grouped folders such as prep/, poc/, or part-* are present, the system shall present them as grouped navigation entries rather than flattened descendant names.",
+      "sourceRef": "CR Section 4 Feature Contract: Folder-backed tabs",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.5",
+      "kind": "behavior",
+      "text": "WHILE a folder entry is selected, the system shall preserve the currently displayed document content until a descendant file entry is selected.",
+      "sourceRef": "CR Section 4 Feature Contract: Nested folders",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN a user selects main or a file entry, the system shall load and display the corresponding markdown document.",
+      "sourceRef": "CR Section 4 Feature Contract: Lazy loading",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHILE selected document content is loading, the system shall display loading feedback in the content area.",
+      "sourceRef": "CR Section 4 Feature Contract: Lazy loading",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHILE the user scrolls ticket content, the system shall keep sub-document navigation visible.",
+      "sourceRef": "CR Section 4 Feature Contract: Sticky positioning",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.4",
+      "kind": "behavior",
+      "text": "WHILE sticky navigation is active, the system shall avoid layout shift that disrupts reading or navigation.",
+      "sourceRef": "CR Non-Functional: No layout shift",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN the underlying sub-document structure changes, the system shall update the visible navigation to match the current files and folders.",
+      "sourceRef": "CR Section 4 Feature Contract: Real-time updates",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.2",
+      "kind": "behavior",
+      "text": "IF the active document is removed by a realtime update, THEN the system shall switch the visible document to main.",
+      "sourceRef": "CR Section 5 Acceptance Criteria: Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.3",
+      "kind": "behavior",
+      "text": "IF a selected document fails to load, THEN the system shall display an error in the content area without removing available navigation.",
+      "sourceRef": "CR Section 4 Feature Contract: Real-time updates",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.4",
+      "kind": "behavior",
+      "text": "WHILE realtime update delivery is unavailable, the system shall continue to allow manual navigation using the last successfully loaded structure.",
+      "sourceRef": "CR Non-Functional: Realtime Fallback",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Sub-documents are discovered from ticket-related files and directories, not created synthetically in the UI.",
+      "sourceRef": "CR Section 1 Technical Constraints",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Ordering comes from backend discovery plus project configuration, not client-side resorting.",
+      "sourceRef": "CR Section 1 Technical Constraints",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Sub-document navigation uses shadcn Tabs.",
+      "sourceRef": "CR Section 1 Technical Constraints",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Realtime delivery failure does not block manual navigation.",
+      "sourceRef": "CR Section 1 Technical Constraints",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Existing markdown rendering remains the content rendering pipeline for sub-documents.",
+      "sourceRef": "CR Section 1 Technical Constraints",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Tab switching begins content loading within 100ms.",
+      "sourceRef": "CR Section 5 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Sub-document parsing supports markdown files up to 1MB.",
+      "sourceRef": "CR Section 5 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "Sticky navigation does not create disruptive layout shift.",
+      "sourceRef": "CR Section 5 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "OpenAPI documentation is updated for sub-document API changes.",
+      "sourceRef": "CR Section 1 Technical Constraints",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHEN the ticket detail API returns sub-document metadata, the system shall represent files and folders in a hierarchical structure sufficient to render ordered multi-row navigation.",
+      "sourceRef": "CR Section 4 Feature Contract: Main ticket API",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.2",
+      "kind": "behavior",
+      "text": "WHEN the individual sub-document retrieval API returns a document, the system shall include code, content, dateCreated, and lastModified.",
+      "sourceRef": "CR Section 4 Feature Contract: Sub-document retrieval API",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.3",
+      "kind": "behavior",
+      "text": "WHEN sub-document API changes are delivered, the system shall publish matching OpenAPI documentation for those changes.",
+      "sourceRef": "CR Section 4 Feature Contract: OpenAPI Verification",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN a user selects a non-main document, the system shall update the URL path to the selected document with .md extension",
+      "sourceRef": "MDT-093 Section 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "path-based-routing",
+        "deep-linking"
+      ]
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN a user selects a nested document, the system shall encode the nested path in the URL path using slash-separated folder segments with .md extension",
+      "sourceRef": "MDT-093 Section 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "path-based-routing",
+        "nested-folders"
+      ]
+    },
+    {
+      "id": "BR-4.3",
+      "kind": "behavior",
+      "text": "WHEN a page loads with a valid sub-document path, the system shall reopen the required folder levels and display the targeted document",
+      "sourceRef": "MDT-093 Section 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "path-based-routing",
+        "deep-link"
+      ]
+    },
+    {
+      "id": "BR-4.4",
+      "kind": "behavior",
+      "text": "IF the URL path references a document path that no longer exists, THEN the system shall fall back to main",
+      "sourceRef": "MDT-093 Section 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "path-based-routing",
+        "error-handling"
+      ]
+    },
+    {
+      "id": "BR-3.5",
+      "kind": "behavior",
+      "text": "WHEN a user clicks a sub-document tab, the system shall preload content before switching tabs to prevent layout shift",
+      "sourceRef": "MDT-094 preload implementation",
+      "routePolicy": "bdd",
+      "tags": [
+        "preload-pattern",
+        "ux",
+        "smooth-transitions"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Deep links use path-based URLs with .md extension for stable, shareable references to sub-documents",
+      "sourceRef": "MDT-094 path-based routing",
+      "routePolicy": "tests",
+      "tags": [
+        "path-based-routing",
+        "deep-linking",
+        "url-format"
+      ]
+    },
+    {
+      "id": "C-11",
+      "kind": "constraint",
+      "text": "Sub-document URL paths must end with .md extension for security and format consistency",
+      "sourceRef": "MDT-094 path validation",
+      "routePolicy": "tests",
+      "tags": [
+        "security",
+        "url-validation",
+        "extension-required"
+      ]
+    },
+    {
+      "id": "C-12",
+      "kind": "constraint",
+      "text": "Sub-document URL paths must not contain .. (double dot) to prevent path traversal attacks",
+      "sourceRef": "MDT-094 path validation",
+      "routePolicy": "tests",
+      "tags": [
+        "security",
+        "path-traversal-prevention",
+        "validation"
+      ]
+    },
+    {
+      "id": "C-13",
+      "kind": "constraint",
+      "text": "The system shall maintain backward compatibility by redirecting hash-based URLs to path-based URLs automatically",
+      "sourceRef": "MDT-094 backward compatibility",
+      "routePolicy": "tests",
+      "tags": [
+        "backward-compatibility",
+        "hash-redirect",
+        "deprecated"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "subdoc_navigation_hidden_when_absent",
+      "title": "Sub-document navigation hidden when no related files",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "a ticket with no related sub-document files or folders",
+      "when": "I view the ticket detail page",
+      "then": "I see only the main ticket document without tab navigation",
+      "sourceRef": "requirements.md BR-1.5"
+    },
+    {
+      "id": "folder_tab_reveals_child_row",
+      "title": "Folder tab reveals child documents in next row",
+      "covers": [
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.5"
+      ],
+      "given": "a ticket with folder sub-documents and I am on the ticket page",
+      "when": "I select a folder tab",
+      "then": "a second tab row appears showing that folder's children and the current document content is preserved",
+      "sourceRef": "requirements.md BR-2"
+    },
+    {
+      "id": "grouped_folders_preserve_hierarchy",
+      "title": "Grouped folders preserve hierarchy without flattening",
+      "covers": [
+        "BR-2.4"
+      ],
+      "given": "a ticket with grouped folders like prep/ poc/ or part-*",
+      "when": "I view the sub-document navigation",
+      "then": "I see each folder as a grouped navigation entry in the primary row rather than flattened descendant names",
+      "sourceRef": "requirements.md BR-2.4"
+    },
+    {
+      "id": "document_selection_loads_content",
+      "title": "Selecting document tab loads and displays content",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "given": "a ticket with sub-documents and I am on the ticket page",
+      "when": "I select a document tab other than main",
+      "then": "I see loading feedback followed by the corresponding markdown content",
+      "sourceRef": "requirements.md BR-3.1,BR-3.2"
+    },
+    {
+      "id": "navigation_remains_visible_while_scrolling",
+      "title": "Navigation remains visible while scrolling content",
+      "covers": [
+        "BR-3.3",
+        "BR-3.4"
+      ],
+      "given": "a ticket with sub-documents and I have selected a tab with long content",
+      "when": "I scroll down through the document content",
+      "then": "the tab navigation stays visible and no layout shift disrupts my reading",
+      "sourceRef": "requirements.md BR-3.3,BR-3.4"
+    },
+    {
+      "id": "url_hash_updates_on_selection",
+      "title": "URL hash updates when selecting sub-document",
+      "covers": [
+        "BR-4.1",
+        "BR-4.2"
+      ],
+      "given": "a ticket with nested folder sub-documents and I am on the ticket page",
+      "when": "I select a nested document",
+      "then": "the URL hash updates to encode the full relative path using slash-separated segments",
+      "sourceRef": "requirements.md BR-4.1,BR-4.2"
+    },
+    {
+      "id": "navigation_updates_on_structure_change",
+      "title": "Navigation updates when sub-document structure changes",
+      "covers": [
+        "BR-5.1",
+        "BR-5.2"
+      ],
+      "given": "I am viewing a ticket with sub-documents and have a sub-document selected",
+      "when": "the underlying file structure changes removing my active document",
+      "then": "the navigation updates to match the current files and I am switched to the main tab",
+      "sourceRef": "requirements.md BR-5.1,BR-5.2"
+    },
+    {
+      "id": "manual_navigation_available_when_realtime_unavailable",
+      "title": "Manual navigation available when realtime updates unavailable",
+      "covers": [
+        "BR-5.4"
+      ],
+      "given": "I am viewing a ticket with sub-documents and realtime updates are unavailable",
+      "when": "I use the tab navigation to select different documents",
+      "then": "I can still navigate using the last successfully loaded structure",
+      "sourceRef": "requirements.md BR-5.4"
+    },
+    {
+      "id": "error_displayed_when_document_fails",
+      "title": "Error displayed when document fails to load",
+      "covers": [
+        "BR-5.3"
+      ],
+      "given": "I am viewing a ticket with sub-documents and have selected a tab",
+      "when": "the document content fails to load",
+      "then": "I see an error message in the content area while the navigation remains available",
+      "sourceRef": "requirements.md BR-5.3"
+    },
+    {
+      "id": "subdoc_navigation_shows_ordered_tabs",
+      "title": "Sub-document tabs appear in configured or default order",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-2.1"
+      ],
+      "given": "a ticket with related sub-document files; ordering is either default (no config) or custom (project.ticketSubdocuments set in .mdt-config.toml)",
+      "when": "I view the ticket detail page",
+      "then": "I see tab navigation with main plus discovered top-level entries in the configured or default order (requirements, domain, architecture, poc, tests, tasks, debt when default)",
+      "sourceRef": "requirements.md BR-1.1–BR-1.3, BR-2.1; Scenario Outline: <ordering_mode> in {default | custom_config}"
+    },
+    {
+      "id": "subdoc_unordered_entries_appended",
+      "title": "Entries not in configured order are appended alphabetically",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "a ticket with sub-document files where some names are not in the configured or default order list",
+      "when": "I view the ticket detail page",
+      "then": "I see the known ordered entries first, followed by the remaining entries in ascending alphabetical order",
+      "sourceRef": "requirements.md BR-1.4"
+    },
+    {
+      "id": "deep_link_restores_target_document",
+      "title": "Deep link opens targeted sub-document on page load",
+      "covers": [
+        "BR-4.3"
+      ],
+      "given": "a ticket with sub-documents including a nested folder",
+      "when": "I open the ticket page with a URL hash pointing to a valid nested sub-document path",
+      "then": "the required folder levels open and the targeted document is displayed",
+      "sourceRef": "requirements.md BR-4.3"
+    },
+    {
+      "id": "deep_link_invalid_hash_falls_back_to_main",
+      "title": "Deep link with missing target falls back to main",
+      "covers": [
+        "BR-4.4"
+      ],
+      "given": "a ticket with sub-documents",
+      "when": "I open the ticket page with a URL hash referencing a sub-document that no longer exists",
+      "then": "the main tab is shown instead",
+      "sourceRef": "requirements.md BR-4.4"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-server-discovery-authority",
+      "title": "Server owns sub-document discovery and ordering; frontend consumes as delivered",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "C1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-server-ticket-service",
+        "ART-shared-subdocument-model",
+        "ART-data-layer"
+      ],
+      "sourceRef": "architecture.md:Canonical Runtime Flows"
+    },
+    {
+      "id": "OBL-hierarchical-tab-rows",
+      "title": "One shadcn Tabs row per active folder level; folders reveal children in next row without flattening",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4",
+        "BR-2.5",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-ticket-document-tabs",
+        "ART-ticket-viewer-index"
+      ],
+      "sourceRef": "architecture.md:Canonical Runtime Flows"
+    },
+    {
+      "id": "OBL-navigation-transition-authority",
+      "title": "useTicketDocumentNavigation is the sole frontend authority for selected path and folder-stack transitions",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-use-ticket-document-navigation",
+        "ART-ticket-document-tabs"
+      ],
+      "sourceRef": "architecture.md:Architecture Invariants"
+    },
+    {
+      "id": "OBL-content-loading-pipeline",
+      "title": "File selection triggers lazy content load via dataLayer; loading/error states surface in content area",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-5.3",
+        "C6",
+        "C7",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-use-ticket-document-content",
+        "ART-data-layer",
+        "ART-markdown-content"
+      ],
+      "sourceRef": "architecture.md:Canonical Runtime Flows"
+    },
+    {
+      "id": "OBL-sticky-navigation-layout",
+      "title": "Tab navigation remains visible during scroll without disruptive layout shift",
+      "derivedFrom": [
+        "BR-3.3",
+        "BR-3.4",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-ticket-document-tabs",
+        "ART-ticket-viewer-index"
+      ],
+      "sourceRef": "architecture.md:Canonical Runtime Flows"
+    },
+    {
+      "id": "OBL-realtime-reconciliation",
+      "title": "SSE updates reconcile tree structure; removed active document falls back to main; manual navigation continues if SSE unavailable",
+      "derivedFrom": [
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.4",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-use-ticket-document-realtime",
+        "ART-ticket-viewer-index"
+      ],
+      "sourceRef": "architecture.md:Canonical Runtime Flows"
+    },
+    {
+      "id": "OBL-api-subdocument-endpoints",
+      "title": "API returns hierarchical sub-document metadata with CR; individual retrieval returns code, content, dates",
+      "derivedFrom": [
+        "BR-6.1",
+        "BR-6.2"
+      ],
+      "artifactIds": [
+        "ART-server-project-controller",
+        "ART-server-ticket-service",
+        "ART-data-layer"
+      ],
+      "sourceRef": "architecture.md:Canonical Runtime Flows"
+    },
+    {
+      "id": "OBL-openapi-documentation",
+      "title": "Sub-document API changes published to openapi.yaml",
+      "derivedFrom": [
+        "BR-6.3",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-openapi-spec",
+        "ART-server-project-controller"
+      ],
+      "sourceRef": "architecture.md:Module Boundaries"
+    },
+    {
+      "id": "OBL-test-runtime-separation",
+      "title": "Test scaffolding stays separate from runtime; no test-only logic in production code",
+      "derivedFrom": [
+        "C1",
+        "C2",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-e2e-subdocument-tests",
+        "ART-nav-hook-unit-tests",
+        "ART-realtime-hook-tests",
+        "ART-api-subdocument-tests"
+      ],
+      "sourceRef": "architecture.md:Test vs Runtime Separation"
+    },
+    {
+      "id": "OBL-no-nav-when-empty",
+      "title": "Hide tab navigation when no sub-documents exist; show only main ticket content",
+      "derivedFrom": [
+        "BR-1.5"
+      ],
+      "artifactIds": [
+        "ART-ticket-document-tabs",
+        "ART-ticket-viewer-index"
+      ],
+      "sourceRef": "architecture.md:Canonical Runtime Flows"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-ticket-viewer-index",
+      "path": "src/components/TicketViewer/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-ticket-document-tabs",
+      "path": "src/components/TicketViewer/TicketDocumentTabs.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-use-ticket-document-navigation",
+      "path": "src/components/TicketViewer/useTicketDocumentNavigation.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-use-ticket-document-content",
+      "path": "src/components/TicketViewer/useTicketDocumentContent.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-use-ticket-document-realtime",
+      "path": "src/components/TicketViewer/useTicketDocumentRealtime.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-data-layer",
+      "path": "src/services/dataLayer.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-server-ticket-service",
+      "path": "server/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-server-project-controller",
+      "path": "server/controllers/ProjectController.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-shared-subdocument-model",
+      "path": "shared/models/SubDocument.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-openapi-spec",
+      "path": "server/openapi.yaml",
+      "kind": "config",
+      "sourceRef": "architecture.md:Structure"
+    },
+    {
+      "id": "ART-markdown-content",
+      "path": "src/components/MarkdownContent.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md:Key Dependencies"
+    },
+    {
+      "id": "ART-nav-hook-unit-tests",
+      "path": "src/components/TicketViewer/useTicketDocumentNavigation.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md:Test vs Runtime Separation"
+    },
+    {
+      "id": "ART-realtime-hook-tests",
+      "path": "src/components/TicketViewer/useTicketDocumentRealtime.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md:Test vs Runtime Separation"
+    },
+    {
+      "id": "ART-api-subdocument-tests",
+      "path": "server/tests/api/ticket-subdocuments.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md:Test vs Runtime Separation"
+    },
+    {
+      "id": "ART-e2e-subdocument-tests",
+      "path": "tests/e2e/ticket/subdoc-navigation.spec.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-093"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-api-subdocuments",
+      "kind": "integration",
+      "title": "Sub-document API endpoints: subdocuments list ordering, individual retrieval, OpenAPI compliance",
+      "covers": [
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.4",
+        "BR-1.5",
+        "C1",
+        "C2",
+        "C8",
+        "C10"
+      ],
+      "file": "server/tests/api/ticket-subdocuments.test.ts",
+      "sourceRef": "tests.md:Sub-Document API"
+    },
+    {
+      "id": "TEST-nav-hook-unit",
+      "kind": "unit",
+      "title": "useTicketDocumentNavigation: selected path, folder stack, URL hash sync, fallback to main",
+      "covers": [
+        "C4",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4"
+      ],
+      "file": "src/components/TicketViewer/useTicketDocumentNavigation.test.ts",
+      "sourceRef": "tests.md:Navigation Hook"
+    },
+    {
+      "id": "TEST-realtime-hook-unit",
+      "kind": "unit",
+      "title": "useTicketDocumentRealtime: SSE reconciliation, active-removed callback, degraded-mode safety",
+      "covers": [
+        "C5",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.4"
+      ],
+      "file": "src/components/TicketViewer/useTicketDocumentRealtime.test.ts",
+      "sourceRef": "tests.md:Realtime Hook"
+    },
+    {
+      "id": "TEST-subdoc-navigation",
+      "kind": "e2e",
+      "title": "Sub-document navigation E2E: tabs, ordering, folder rows, sticky, deep link, SSE, error",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4",
+        "BR-2.5",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.4",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.3",
+        "C3",
+        "C6",
+        "C7",
+        "C9"
+      ],
+      "file": "tests/e2e/ticket/subdoc-navigation.spec.ts",
+      "sourceRef": "tests.md:E2E Navigation"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-7",
+      "title": "Frontend: Realtime synchronization hook",
+      "ownsArtifactIds": [
+        "ART-use-ticket-document-realtime",
+        "ART-realtime-hook-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-realtime-hook-unit",
+        "navigation_updates_on_structure_change",
+        "manual_navigation_available_when_realtime_unavailable"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Backend: OpenAPI documentation for sub-document endpoints",
+      "ownsArtifactIds": [
+        "ART-openapi-spec",
+        "ART-server-project-controller"
+      ],
+      "makesGreenIds": [
+        "TEST-api-subdocuments"
+      ],
+      "sourceRef": "tasks.md#task-9"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Walking Skeleton: Create SubDocument model and backend discovery",
+      "ownsArtifactIds": [
+        "ART-shared-subdocument-model",
+        "ART-server-ticket-service",
+        "ART-api-subdocument-tests"
+      ],
+      "makesGreenIds": [
+        "subdoc_navigation_shows_ordered_tabs"
+      ],
+      "sourceRef": "CR:MDT-093"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Frontend: TicketDocumentTabs component with navigation hook",
+      "ownsArtifactIds": [
+        "ART-ticket-document-tabs",
+        "ART-use-ticket-document-navigation",
+        "ART-nav-hook-unit-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-nav-hook-unit",
+        "subdoc_navigation_hidden_when_absent",
+        "subdoc_unordered_entries_appended"
+      ],
+      "sourceRef": "CR:MDT-093"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Frontend: dataLayer sub-document API integration",
+      "ownsArtifactIds": [
+        "ART-data-layer"
+      ],
+      "makesGreenIds": [
+        "subdoc_navigation_shows_ordered_tabs"
+      ],
+      "sourceRef": "CR:MDT-093"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Frontend: Hierarchical folder navigation",
+      "ownsArtifactIds": [
+        "ART-ticket-document-tabs"
+      ],
+      "makesGreenIds": [
+        "folder_tab_reveals_child_row",
+        "grouped_folders_preserve_hierarchy"
+      ],
+      "sourceRef": "CR:MDT-093"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Frontend: Content loading hook with sticky navigation",
+      "ownsArtifactIds": [
+        "ART-use-ticket-document-content",
+        "ART-ticket-viewer-index",
+        "ART-markdown-content"
+      ],
+      "makesGreenIds": [
+        "document_selection_loads_content",
+        "navigation_remains_visible_while_scrolling"
+      ],
+      "sourceRef": "CR:MDT-093"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Frontend: Deep linking with URL hash persistence",
+      "ownsArtifactIds": [
+        "ART-use-ticket-document-navigation"
+      ],
+      "makesGreenIds": [
+        "TEST-nav-hook-unit",
+        "url_hash_updates_on_selection",
+        "deep_link_restores_target_document",
+        "deep_link_invalid_hash_falls_back_to_main"
+      ],
+      "sourceRef": "CR:MDT-093"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Frontend: Error handling and E2E integration",
+      "ownsArtifactIds": [
+        "ART-ticket-viewer-index",
+        "ART-e2e-subdocument-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-subdoc-navigation",
+        "error_displayed_when_document_fails"
+      ],
+      "sourceRef": "CR:MDT-093"
+    }
+  ]
+}
