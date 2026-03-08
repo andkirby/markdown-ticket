@@ -74,7 +74,7 @@ export function RedirectToCurrentProject() {
         <div className="min-h-screen bg-background">
           {/* Simple Header - No project-specific elements */}
           <nav className="bg-card border-b shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto px-1 sm:px-2 lg:px-2">
               <div className="flex justify-between h-16">
                 <div className="flex items-center space-x-8">
                   <div className="flex-shrink-0">
