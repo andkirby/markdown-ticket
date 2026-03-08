@@ -1,0 +1,234 @@
+{
+  "ticket": "MDT-129",
+  "generatedAt": "2026-03-08T03:11:29.769Z",
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7.4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7.5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.6",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.7",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9.1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9.2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9.3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10.1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-10.2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-10.3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-10.4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-10.5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-10.6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-10.7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C9",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C10",
+      "routePolicy": "tests"
+    }
+  ]
+}

@@ -119,10 +119,11 @@ export async function navigateToDocuments(page: Page): Promise<void> {
  * Select a project from the project selector
  */
 export async function selectProject(page: Page, projectName: string): Promise<void> {
-  await page.click('[data-testid="project-selector"]')
+  // Click launcher to open panel
+  await page.click('[data-testid="project-selector-launcher"]')
 
-  // Wait for dropdown and click project
-  await page.click(`[data-testid="project-option-${projectName}"]`)
+  // Wait for panel and click project card
+  await page.click(`[data-testid="project-selector-card-${projectName}"]`)
 
   // Wait for board to reload
   await waitForBoardReady(page)

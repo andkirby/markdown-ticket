@@ -57,12 +57,14 @@ relatedTickets: MDT-039,MDT-118
 - No aggregate "All Projects" mode.
 - No rank or recency badges in the selector UI.
 - No title or description expansion for inactive visible rail items.
-## 3. Open Questions
-See [architecture.md](./MDT-129/architecture.md)
+## 3. Architecture
+> Architecture projection: [architecture.md](./architecture.md) (rendered from canonical spec-trace state)
 
-- **Pattern**: Progressive Disclosure with Anchored Overlay
-- **Key constraint**: Active project always visible; panel anchored directly below rail; mutable state in `project-selector.json`
-- **Extension**: Add new view modes by creating new components; no changes to existing rail/panel
+**Pattern**: Progressive Disclosure with Anchored Overlay
+
+**Key constraint**: Active project always visible; panel anchored directly below rail; mutable state in `project-selector.json`
+
+**Extension**: Add new view modes by creating new components; no changes to existing rail/panel
 ## 4. Acceptance Criteria
 ### Functional (Outcome-focused)
 - [ ] The selector rail shows the active project as a larger card containing project code and title.

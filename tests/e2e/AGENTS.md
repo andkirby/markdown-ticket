@@ -75,8 +75,10 @@ Read it before writing a test — never guess selectors from component names.
 
 - **Auto-project selection**: with one isolated project, the app selects it automatically —
   no need to click a project selector in most tests
-- **No dropdown**: `ProjectSelector` renders one button per project in the nav bar;
-  use `[data-testid="project-option-{CODE}"]` to target a specific project
+- **ProjectSelector rail**: `ProjectSelector` renders a rail of project buttons in the nav bar:
+  - Active project: `[data-testid="project-selector-card-{CODE}"]` (larger card)
+  - Inactive projects: `[data-testid="project-selector-chip-{CODE}"]` (compact chips)
+  - Launcher: `[data-testid="project-selector-launcher"]` (opens full panel)
 - **No `networkidle`**: SSE keeps a connection alive forever — always use `waitForLoadState('load')`
 - **Cache disabled**: the test backend has `setCacheTTL(0)` — projects created mid-test
   are immediately visible to subsequent API calls

@@ -135,8 +135,12 @@ export const projectSelectors = {
   successDialog: '[data-testid="success-dialog"]',
   /** Done button in success dialog */
   successDoneButton: '[data-testid="success-done-button"]',
-  /** Project option in navigation (by code) */
-  projectOption: (code: string) => `[data-testid="project-option-${code}"]`,
+  /** Project selector in navigation (by code) - matches both card (active) and chip (inactive) */
+  projectSelector: (code: string) => `[data-testid="project-selector-card-${code}"], [data-testid="project-selector-chip-${code}"]`,
+  /** Active project card (by code) */
+  projectSelectorCard: (code: string) => `[data-testid="project-selector-card-${code}"]`,
+  /** Inactive project chip (by code) */
+  projectSelectorChip: (code: string) => `[data-testid="project-selector-chip-${code}"]`,
 } as const
 
 /**
@@ -171,6 +175,32 @@ export const documentSelectors = {
   folderItem: '[data-testid="folder-item"]',
   /** File content viewer */
   fileViewer: '[data-testid="file-viewer"]',
+} as const
+
+/**
+ * Project selector selectors (MDT-129)
+ */
+export const selectorSelectors = {
+  /** Active project card (any code) */
+  activeProjectCard: '[data-testid^="project-selector-card-"]',
+  /** Inactive project chip (any code) */
+  inactiveProjectCard: '[data-testid^="project-selector-chip-"]',
+  /** Any project card or chip */
+  anyProjectCard: '[data-testid^="project-selector-card-"], [data-testid^="project-selector-chip-"]',
+  /** Project selector launcher button */
+  launcher: '[data-testid="project-selector-launcher"]',
+  /** Full project browser panel */
+  projectPanel: '[data-testid="project-panel"]',
+  /** Project card in panel (any code) */
+  projectPanelCard: '[data-testid^="project-selector-card-"]',
+  /** Project selector rail container */
+  rail: '[data-testid="project-selector-rail"]',
+  /** Favorite star button (uses aria-label) */
+  favoriteButton: 'button[aria-label="Toggle favorite"]',
+  /** Active project card by specific code */
+  activeProjectCardByCode: (code: string) => `[data-testid="project-selector-card-${code}"]`,
+  /** Inactive project chip by specific code */
+  inactiveProjectCardByCode: (code: string) => `[data-testid="project-selector-chip-${code}"]`,
 } as const
 
 /**
