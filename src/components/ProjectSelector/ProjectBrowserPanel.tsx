@@ -106,7 +106,6 @@ function computePanelOrder(
 const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
   projects,
   activeProjectKey,
-  preferences,
   selectorState,
   onProjectSelect,
   onFavoriteToggle,
