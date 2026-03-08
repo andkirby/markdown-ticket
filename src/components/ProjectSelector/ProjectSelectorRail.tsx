@@ -19,7 +19,7 @@
 
 import * as React from 'react'
 import type { Project } from '@mdt/shared/models/Project'
-import type { ProjectWithSelectorState, SelectorPreferences, SelectorState } from './types'
+import type { SelectorPreferences, SelectorState } from './types'
 import { useProjectSelectorManager } from './useProjectSelectorManager'
 import ProjectSelectorCard from './ProjectSelectorCard'
 import ProjectSelectorChip from './ProjectSelectorChip'
