@@ -254,7 +254,7 @@ test.describe('Project Selector - Project Switching', () => {
     await waitForBoardReady(page)
 
     // Verify we're on first project
-    await expect(page.locator('[data-testid="project-name"]')).toHaveText(firstProject.projectName)
+    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(firstProject.projectCode)
 
     // Click inactive project in rail
     const secondProjectCard = page.locator(`${selectorSelectors.inactiveProjectCard}:has-text("${secondProject.key}")`)
@@ -264,7 +264,7 @@ test.describe('Project Selector - Project Switching', () => {
     await waitForBoardReady(page)
 
     // Verify we're now on second project
-    await expect(page.locator('[data-testid="project-name"]')).toHaveText('Second Project')
+    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(secondProject.key)
   })
 
   test('select project from panel changes current project', async ({ page, e2eContext }) => {
@@ -289,7 +289,7 @@ test.describe('Project Selector - Project Switching', () => {
     await waitForBoardReady(page)
 
     // Verify we're now on second project
-    await expect(page.locator('[data-testid="project-name"]')).toHaveText('Second Project')
+    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(secondProject.key)
   })
 })
 
@@ -357,14 +357,14 @@ test.describe('Project Selector - State Persistence', () => {
     await waitForBoardReady(page)
 
     // Verify switch succeeded
-    await expect(page.locator('[data-testid="project-name"]')).toHaveText('Second Project')
+    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(secondProject.key)
 
     // Reload page to verify persistence
     await page.reload()
     await waitForBoardReady(page)
 
     // Should still be on second project (state persisted)
-    await expect(page.locator('[data-testid="project-name"]')).toHaveText('Second Project')
+    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(secondProject.key)
   })
 })
 
