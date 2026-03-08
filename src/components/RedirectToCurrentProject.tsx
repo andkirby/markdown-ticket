@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProjectManager } from '../hooks/useProjectManager'
 import { useTheme } from '../hooks/useTheme'
+import { MobileLogo } from './AppHeader'
 import { getProjectCode } from '../utils/projectUtils'
 import { getCurrentProject } from '../utils/routing'
 import { AddProjectModal } from './AddProjectModal'
@@ -77,7 +78,7 @@ export function RedirectToCurrentProject() {
               <div className="flex justify-between h-16">
                 <div className="flex items-center space-x-8">
                   <div className="flex-shrink-0">
-                    <img src="/logo.jpeg" alt="Logo" className="w-auto dark:invert" style={{ height: '3.8rem' }} />
+                    <MobileLogo />
                   </div>
                   <div className="flex items-center">
                     <h1 className="text-xl font-semibold">Markdown Ticket Board</h1>

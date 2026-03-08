@@ -21,7 +21,7 @@ tests/e2e/
   board/                        — board view tests (drag-drop, filtering)
   list/                         — list view tests (sorting, filtering)
   ticket/                       — ticket CRUD tests
-  navigation/                   — routing, project switching
+  navigation/                   — routing, project switching, view mode switching (MDT-131), mobile theme toggle (MDT-131)
 ```
 
 New spec files go in the matching feature folder.
@@ -79,6 +79,16 @@ Read it before writing a test — never guess selectors from component names.
   - Active project: `[data-testid="project-selector-card-{CODE}"]` (larger card)
   - Inactive projects: `[data-testid="project-selector-chip-{CODE}"]` (compact chips)
   - Launcher: `[data-testid="project-selector-launcher"]` (opens full panel)
+- **View Mode Switcher (MDT-131)**: Merged Board|List toggle with Documents button:
+  - Board|List toggle: `navSelectors.boardListToggle` — `[data-testid="board-list-toggle"]`
+  - Documents button: `navSelectors.documentsButton` — `[data-testid="documents-button"]`
+  - Hover overlay: `navSelectors.boardListToggleOverlay` — `[data-testid="board-list-toggle-overlay"]`
+  - View mode changes URL: `/prj/{code}` (board), `/prj/{code}/list`, `/prj/{code}/documents`
+- **Mobile Theme Toggle (MDT-131)**: 20% transparent floating button on mobile:
+  - Mobile theme toggle: `projectSelectors.mobileThemeToggle` — `[data-testid="mobile-theme-toggle"]`
+  - Only visible on mobile (< 768px)
+  - 20% opacity, fixed/absolute positioning in right corner
+  - NOT in hamburger menu (different from old desktop HamburgerMenu component)
 - **No `networkidle`**: SSE keeps a connection alive forever — always use `waitForLoadState('load')`
 - **Cache disabled**: the test backend has `setCacheTTL(0)` — projects created mid-test
   are immediately visible to subsequent API calls

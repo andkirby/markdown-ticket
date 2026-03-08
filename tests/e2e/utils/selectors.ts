@@ -19,6 +19,14 @@ export const navSelectors = {
   listTab: '[data-testid="nav-list"]',
   /** Documents view tab */
   documentsTab: '[data-testid="nav-documents"]',
+  /** Board|List toggle button (MDT-131) */
+  boardListToggle: '[data-testid="board-list-toggle"]',
+  /** Documents button (MDT-131) */
+  documentsButton: '[data-testid="documents-button"]',
+  /** Board|List toggle overlay (MDT-131) */
+  boardListToggleOverlay: '[data-testid="board-list-toggle-overlay"]',
+  /** View mode switcher container (MDT-131) */
+  viewModeSwitcher: '[data-testid="view-mode-switcher"]',
 } as const
 
 /**
@@ -103,6 +111,12 @@ export const projectSelectors = {
   ticketCount: '[data-testid="ticket-count"]',
   /** Hamburger menu button */
   hamburgerMenu: '[data-testid="hamburger-menu"]',
+  /** Theme light button in hamburger menu */
+  themeLight: '[data-testid="theme-light"]',
+  /** Theme dark button in hamburger menu */
+  themeDark: '[data-testid="theme-dark"]',
+  /** Theme system button in hamburger menu */
+  themeSystem: '[data-testid="theme-system"]',
   /** Add project button in navigation */
   addProjectButton: '[data-testid="add-project-button"]',
   /** Add project modal */

@@ -1,9 +1,11 @@
-import { Edit, Eye, EyeOff, Menu, Plus, Trash2 } from 'lucide-react'
+import { Edit, Eye, EyeOff, Menu, Monitor, Moon, Plus, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
 import { Button } from './UI/index'
+import { ButtonGroup, ButtonGroupSeparator } from './UI/button-group'
 
 interface HamburgerMenuProps {
   onAddProject: () => void
@@ -16,6 +18,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onEditProject,
   hasActiveProject = false,
 }) => {
+  const { themeMode, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const [eventHistoryForceHidden, setEventHistoryForceHidden] = useState(() => getEventHistoryForceHidden())
@@ -61,10 +64,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   }
 
   return (
-    <div className="relative" ref={menuRef}>
-      {/**
-       * @testid hamburger-menu — Button to open hamburger menu
-       */}
+    <div className="relative flex" ref={menuRef}>
+      {/* Desktop only: Mobile theme toggle handled by AppHeader/HamburgerMenu (MDT-131) */}
       <Button
         data-testid="hamburger-menu"
         variant="ghost"
@@ -89,8 +90,10 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               <Plus className="h-4 w-4 mr-2" />
               Add Project
             </button>
-            {hasActiveProject && onEditProject && (
+
+            {hasActiveProject && (
               <button
+                data-testid="edit-project-button"
                 onClick={handleEditProject}
                 className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
               >
@@ -98,34 +101,99 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                 Edit Project
               </button>
             )}
+
+            {/**
+             * @testid clear-cache-button — Button to clear browser cache
+             */}
             <button
+              data-testid="clear-cache-button"
               onClick={handleClearCache}
               className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Clear Cache
             </button>
-            {/* Event History Toggle - only in development */}
-            {import.meta.env.DEV && (
+
+            {/**
+             * @testid event-history-toggle — Button to toggle event history panel
+             */}
+            {!eventHistoryForceHidden && (
               <button
+                data-testid="event-history-toggle"
                 onClick={handleToggleEventHistory}
                 className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
               >
-                {eventHistoryForceHidden
-                  ? (
-                      <>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Show Event History
-                      </>
-                    )
-                  : (
-                      <>
-                        <EyeOff className="h-4 w-4 mr-2" />
-                        Hide Event History
-                      </>
-                    )}
+                <Eye className="h-4 w-4 mr-2" />
+                Event History
               </button>
             )}
+
+            {eventHistoryForceHidden && (
+              <button
+                data-testid="event-history-toggle"
+                onClick={handleToggleEventHistory}
+                className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <EyeOff className="h-4 w-4 mr-2" />
+                Event History
+              </button>
+            )}
+
+            {/* Delimiter before theme options */}
+            <ButtonGroupSeparator />
+
+            {/* Theme button group at bottom */}
+            <div className="px-2 py-1">
+              <ButtonGroup orientation="horizontal" className="w-full">
+                <button
+                  data-testid="theme-light"
+                  onClick={() => {
+                    setTheme('light')
+                    setIsOpen(false)
+                  }}
+                  className={`flex-1 flex items-center justify-center px-3 py-2 text-sm transition-colors rounded-l-md ${
+                    themeMode === 'light'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground hover:bg-muted/80'
+                  }`}
+                  title="Light theme"
+                >
+                  <Sun className="h-4 w-4" />
+                </button>
+
+                <button
+                  data-testid="theme-dark"
+                  onClick={() => {
+                    setTheme('dark')
+                    setIsOpen(false)
+                  }}
+                  className={`flex-1 flex items-center justify-center px-3 py-2 text-sm transition-colors ${
+                    themeMode === 'dark'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground hover:bg-muted/80'
+                  }`}
+                  title="Dark theme"
+                >
+                  <Moon className="h-4 w-4" />
+                </button>
+
+                <button
+                  data-testid="theme-system"
+                  onClick={() => {
+                    setTheme('system')
+                    setIsOpen(false)
+                  }}
+                  className={`flex-1 flex items-center justify-center px-3 py-2 text-sm transition-colors rounded-r-md ${
+                    themeMode === 'system'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground hover:bg-muted/80'
+                  }`}
+                  title="System theme"
+                >
+                  <Monitor className="h-4 w-4" />
+                </button>
+              </ButtonGroup>
+            </div>
           </div>
         </div>
       )}

@@ -5,46 +5,6 @@
   },
   "requirements": [
     {
-      "id": "BR-1.1",
-      "kind": "behavior",
-      "text": "WHEN application loads in board view, the system shall render a single merged Board|List button displaying the Board icon",
-      "sourceRef": "CR Section 5 Acceptance Criteria",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-1.2",
-      "kind": "behavior",
-      "text": "WHEN application loads in list view, the system shall render a single merged Board|List button displaying the List icon",
-      "sourceRef": "CR Section 5 Acceptance Criteria",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-1.3",
-      "kind": "behavior",
-      "text": "WHEN application loads in documents view, the system shall render a single merged Board|List button displaying the last-used board or list icon with a dimmed border",
-      "sourceRef": "CR Section 5 Acceptance Criteria",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-2.1",
-      "kind": "behavior",
-      "text": "WHEN user hovers over the Board|List button while in board or list view, the system shall display an overlay showing the alternate view icon within 150ms with a fade-in animation",
-      "sourceRef": "CR Section 5 Acceptance Criteria",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-2.2",
       "kind": "behavior",
       "text": "WHEN user hovers over the Board|List button while in documents view, the system shall NOT display an overlay",
@@ -184,26 +144,6 @@
       ]
     },
     {
-      "id": "BR-7.3",
-      "kind": "behavior",
-      "text": "WHEN application loads on mobile viewport, the system shall move the dark/light theme toggle button into the hamburger menu instead of the main navigation bar",
-      "sourceRef": "User requirement: mobile theme toggle",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-8",
-      "kind": "behavior",
-      "text": "WHEN user switches from Board view to List view, the Board|List toggle button shall display the List icon, and WHEN switching from List to Board view, it shall display the Board icon",
-      "sourceRef": "User requirement: icon relevance (emphasized)",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-9.1",
       "kind": "behavior",
       "text": "WHEN application displays list view on mobile viewport, the system shall render each ticket card with CR-key and tags/badges on line 1",
@@ -229,6 +169,55 @@
       "text": "Mobile viewport breakpoint SHALL be 768px (Tailwind md: breakpoint)",
       "sourceRef": "User requirement: mobile viewport definition",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN application loads in board view, the system shall render a single merged Board|List button displaying the original Board icon from /icon_board_col_64.webp",
+      "sourceRef": "CR:MDT-131",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN application loads in list view, the system shall render a single merged Board|List button displaying the original List icon from /icon_list_64.webp",
+      "sourceRef": "CR:MDT-131",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN application loads in documents view, the system shall render a single merged Board|List button displaying the last-used board or list icon from original webp files (/icon_board_col_64.webp or /icon_list_64.webp) with a dimmed border",
+      "sourceRef": "CR:MDT-131",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN user hovers over the Board|List button while in board or list view, the system shall display an overlay showing the alternate view icon from original webp files (/icon_list_64.webp or /icon_board_col_64.webp) within 150ms with a fade-in animation",
+      "sourceRef": "CR:MDT-131",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "WHEN user switches from Board view to List view, the Board|List toggle button shall display the original List icon from /icon_list_64.webp, and WHEN switching from List to Board view, it shall display the original Board icon from /icon_board_col_64.webp",
+      "sourceRef": "CR:MDT-131",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The Board|List toggle button SHALL use the original webp image files (/icon_board_col_64.webp and /icon_list_64.webp) with original button styles (h-12 w-12 rounded-md, border-2 with primary/muted-foreground colors, dark:invert) and SHALL NOT use icon library components (e.g., lucide-react, react-icons)",
+      "sourceRef": "CR:MDT-131",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-7.3",
+      "kind": "behavior",
+      "text": "WHEN user opens the hamburger menu on any device (mobile or desktop), the system shall display a button-group with 3 theme options (Light, Dark, System) showing only icons with no text labels. The active theme is highlighted with primary color. The desktop theme toggle button in the top right corner has been removed.",
+      "sourceRef": "CR:MDT-131",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -401,15 +390,61 @@
       "sourceRef": "MDT-131 CR requirements"
     },
     {
-      "id": "mobile_header_theme_toggle_in_menu",
-      "title": "Mobile navigation moves theme toggle to hamburger menu",
+      "id": "board_to_documents_transition",
+      "title": "Navigate from Board view to Documents view",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "I am in board view",
+      "when": "I click the Documents button",
+      "then": "I navigate to documents view and the Board|List button displays the Board icon with dimmed border",
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "list_to_documents_transition",
+      "title": "Navigate from List view to Documents view",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "I am in list view",
+      "when": "I click the Documents button",
+      "then": "I navigate to documents view and the Board|List button displays the List icon with dimmed border",
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "circular_board_documents_board",
+      "title": "Complete circular navigation: Board → Documents → Board",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "given": "I am in board view",
+      "when": "I click the Documents button then click the Board|List button",
+      "then": "I navigate to documents view and return to board view",
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "circular_list_documents_list",
+      "title": "Complete circular navigation: List → Documents → List",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "given": "I am in list view",
+      "when": "I click the Documents button then click the Board|List button",
+      "then": "I navigate to documents view and return to list view",
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "hamburger_menu_theme_button_group",
+      "title": "Hamburger menu shows 3-option theme button group on all devices",
       "covers": [
         "BR-7.3"
       ],
-      "given": "the application loads on mobile viewport (width < 768px)",
-      "when": "I view the navigation header",
-      "then": "I do not see the dark/light theme toggle button in the main navigation bar and it is available in the hamburger menu",
-      "sourceRef": "MDT-131 CR requirements"
+      "given": "the application is loaded on any device",
+      "when": "I open the hamburger menu",
+      "then": "I see a button-group with 3 icon-only theme options (Sun for Light, Moon for Dark, Monitor for System) and the active theme is highlighted",
+      "sourceRef": "CR:MDT-131"
     }
   ],
   "obligations": [
@@ -536,6 +571,19 @@
         "ART-project-view-modified"
       ],
       "sourceRef": "MDT-131 architecture"
+    },
+    {
+      "id": "OBL-hamburger-theme-controls",
+      "title": "Hamburger Menu Theme Controls",
+      "derivedFrom": [
+        "BR-7.3"
+      ],
+      "artifactIds": [
+        "ART-button-group",
+        "ART-button-group-separator",
+        "ART-hamburger-menu"
+      ],
+      "sourceRef": "CR:MDT-131"
     }
   ],
   "artifacts": [
@@ -604,6 +652,18 @@
       "path": "designs/logo-mdt-m-dark_64x64.png",
       "kind": "runtime",
       "sourceRef": "MDT-131 new asset"
+    },
+    {
+      "id": "ART-button-group",
+      "path": "src/components/UI/button-group.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "ART-button-group-separator",
+      "path": "src/components/UI/separator.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-131"
     }
   ],
   "testPlans": [
@@ -659,34 +719,6 @@
       "sourceRef": "OBL-mobile-header"
     },
     {
-      "id": "TEST-hamburger-menu",
-      "kind": "unit",
-      "title": "HamburgerMenu Component Unit Tests",
-      "covers": [
-        "BR-7.3"
-      ],
-      "file": "src/components/AppHeader/HamburgerMenu.test.tsx",
-      "sourceRef": "OBL-mobile-header"
-    },
-    {
-      "id": "TEST-view-mode-switcher",
-      "kind": "unit",
-      "title": "ViewModeSwitcher Component Unit Tests",
-      "covers": [
-        "BR-1.1",
-        "BR-1.2",
-        "BR-1.3",
-        "BR-6.1",
-        "BR-6.2",
-        "BR-8",
-        "C3",
-        "C4",
-        "C6"
-      ],
-      "file": "src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx",
-      "sourceRef": "OBL-view-mode-switcher-ui,OBL-responsive-navigation"
-    },
-    {
       "id": "TEST-build-integration",
       "kind": "integration",
       "title": "Build and Integration Tests",
@@ -695,7 +727,168 @@
         "C5"
       ],
       "sourceRef": "OBL-integration"
+    },
+    {
+      "id": "TEST-view-mode-switcher",
+      "kind": "e2e",
+      "title": "ViewModeSwitcher Component E2E Tests",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-8",
+        "C3",
+        "C4",
+        "C6",
+        "C7"
+      ],
+      "file": "tests/e2e/navigation/view-mode-switcher.spec.ts",
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "TEST-hamburger-menu",
+      "kind": "unit",
+      "title": "HamburgerMenu Component Unit Tests",
+      "covers": [
+        "BR-7.3"
+      ],
+      "file": "src/components/HamburgerMenu.test.tsx",
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "TEST-button-group",
+      "kind": "unit",
+      "title": "ButtonGroup Component Unit Tests",
+      "covers": [
+        "BR-7.3"
+      ],
+      "file": "src/components/UI/button-group.test.tsx",
+      "sourceRef": "CR:MDT-131"
     }
   ],
-  "tasks": []
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Create ViewMode type-safe enum and persistence hook",
+      "ownsArtifactIds": [
+        "ART-view-mode-types",
+        "ART-use-view-mode-persistence"
+      ],
+      "makesGreenIds": [
+        "TEST-use-view-mode-persistence"
+      ],
+      "sourceRef": "architecture.md#type-safe-enum-pattern"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Implement mobile card layout in ProjectView",
+      "ownsArtifactIds": [
+        "ART-project-view-modified"
+      ],
+      "makesGreenIds": [
+        "mobile_list_view_two_line_cards",
+        "TEST-mobile-responsive"
+      ],
+      "sourceRef": "architecture.md#mobile-responsive-strategy"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Build verification and integration tests",
+      "ownsArtifactIds": [
+        "ART-app-modified",
+        "ART-project-view-modified"
+      ],
+      "makesGreenIds": [
+        "TEST-build-integration"
+      ],
+      "sourceRef": "architecture.md#validation-checklist"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Create BoardListToggle component with hover overlay using original webp icons",
+      "ownsArtifactIds": [
+        "ART-board-list-toggle"
+      ],
+      "makesGreenIds": [
+        "hover_overlay_no_documents_view",
+        "hover_overlay_shows_alternate_icon",
+        "TEST-board-list-toggle"
+      ],
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Verify original icon and button style preservation (C7)",
+      "ownsArtifactIds": [
+        "ART-board-list-toggle"
+      ],
+      "makesGreenIds": [
+        "TEST-view-mode-switcher"
+      ],
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Create ViewModeSwitcher container component",
+      "ownsArtifactIds": [
+        "ART-view-mode-switcher-component",
+        "ART-view-mode-switcher-index"
+      ],
+      "makesGreenIds": [
+        "initial_view_board_mode",
+        "initial_view_documents_mode",
+        "initial_view_list_mode",
+        "board_to_documents_transition",
+        "list_to_documents_transition",
+        "TEST-view-mode-switcher"
+      ],
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Integrate ViewModeSwitcher into App.tsx with state management",
+      "ownsArtifactIds": [
+        "ART-app-modified"
+      ],
+      "makesGreenIds": [
+        "click_from_documents_to_last_used",
+        "click_toggle_board_to_list",
+        "click_toggle_list_to_board",
+        "circular_board_documents_board",
+        "circular_list_documents_list",
+        "desktop_navigation_two_buttons",
+        "mobile_navigation_one_button",
+        "persistence_loads_mode",
+        "persistence_saves_mode"
+      ],
+      "sourceRef": "CR:MDT-131"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Create AppHeader components (MobileLogo, HamburgerMenu, ButtonGroup)",
+      "ownsArtifactIds": [
+        "ART-app-header-index",
+        "ART-hamburger-menu",
+        "ART-mobile-logo",
+        "ART-mobile-logo-asset",
+        "ART-button-group",
+        "ART-button-group-separator"
+      ],
+      "makesGreenIds": [
+        "mobile_header_no_project_title",
+        "mobile_header_uses_mobile_logo",
+        "hamburger_menu_theme_button_group",
+        "TEST-hamburger-menu",
+        "TEST-button-group",
+        "TEST-mobile-logo"
+      ],
+      "sourceRef": "CR:MDT-131"
+    }
+  ]
 }
