@@ -12,16 +12,19 @@ import type { ViewMode } from './types'
 const DESKTOP_BREAKPOINT = 768
 
 interface ViewModeSwitcherProps {
-  currentMode: ViewMode
+  currentMode: 'board' | 'list' // Always board or list, never documents
   onModeChange: (mode: ViewMode) => void
+  isDocumentsView: boolean // Whether currently in documents view
 }
 
 export function ViewModeSwitcher({
   currentMode,
   onModeChange,
+  isDocumentsView,
 }: ViewModeSwitcherProps) {
-  const isDocumentsView = currentMode === 'documents'
-  const [isDesktop, setIsDesktop] = useState(true)
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth >= DESKTOP_BREAKPOINT
+  )
 
   useEffect(() => {
     const checkViewport = () => {

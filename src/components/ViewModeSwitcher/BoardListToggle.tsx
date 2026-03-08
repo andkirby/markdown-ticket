@@ -5,12 +5,10 @@
  * Features hover overlay showing alternate view icon.
  */
 
-import type { ViewMode } from './types'
-
 interface BoardListToggleProps {
-  currentMode: ViewMode
-  onModeChange: (mode: ViewMode) => void
-  isDocumentsView: boolean
+  currentMode: 'board' | 'list' // Always board or list, never documents
+  onModeChange: (mode: 'board' | 'list' | 'documents') => void
+  isDocumentsView: boolean // Whether currently in documents view
 }
 
 export function BoardListToggle({
@@ -23,7 +21,7 @@ export function BoardListToggle({
   const overlayIconSrc = currentMode === 'board' ? '/icon_list_64.webp' : '/icon_board_col_64.webp'
 
   // Determine target mode when clicked
-  const targetMode: ViewMode = currentMode === 'board' ? 'list' : 'board'
+  const targetMode: 'board' | 'list' = currentMode === 'board' ? 'list' : 'board'
 
   const handleClick = () => {
     // If in documents view, return to the current mode (exit documents)
@@ -34,12 +32,12 @@ export function BoardListToggle({
   return (
     <button
       data-testid="board-list-toggle"
-      data-state={isDocumentsView ? 'dimmed' : 'normal'}
+      data-current-mode={currentMode}
       onClick={handleClick}
       className={`h-12 w-12 rounded-md transition-all border-2 ${
         isDocumentsView
-          ? 'border-primary/50'
-          : 'border-primary'
+          ? 'border-transparent opacity-60 hover:border-muted-foreground/30'
+          : 'border-primary hover:border-muted-foreground/30'
       }`}
       type="button"
     >

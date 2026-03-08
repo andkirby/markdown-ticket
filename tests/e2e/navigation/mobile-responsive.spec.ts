@@ -7,7 +7,7 @@
 
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario, type ScenarioResult } from '../setup/index.js'
-import { waitForBoardReady } from '../utils/helpers.js'
+import { waitForBoardReady, waitForListReady } from '../utils/helpers.js'
 
 test.describe('MDT-131: Mobile Responsive UI', () => {
   let scenario: ScenarioResult
@@ -24,8 +24,9 @@ test.describe('MDT-131: Mobile Responsive UI', () => {
       await page.goto(`/prj/${scenario.projectCode}`)
       await waitForBoardReady(page)
 
-      const projectTitle = page.locator('[data-testid="project-name"]')
-      await expect(projectTitle).not.toBeVisible()
+      // Project title is now shown in the active project card in the nav
+      const activeProjectCard = page.locator('[data-testid="project-selector-rail-active"]')
+      await expect(activeProjectCard).toBeVisible()
     })
 
     test('should use mobile logo on mobile viewport', async ({ page }) => {
@@ -42,7 +43,7 @@ test.describe('MDT-131: Mobile Responsive UI', () => {
 
     test('should render ticket cards with 2-line layout on mobile', async ({ page }) => {
       await page.goto(`/prj/${scenario.projectCode}/list`)
-      await waitForBoardReady(page)
+      await waitForListReady(page)
 
       const ticketCard = page.locator('[data-testid^="ticket-card-"]').first()
       await expect(ticketCard).toBeVisible()
@@ -54,11 +55,14 @@ test.describe('MDT-131: Mobile Responsive UI', () => {
       await expect(line1).toBeVisible()
       await expect(line2).toBeVisible()
 
-      // Verify title takes 100% width
-      const titleWidth = await line2.locator('[data-testid="ticket-title"]').evaluate((el) => {
-        return window.getComputedStyle(el).width
+      // Verify title takes 100% width (check it matches container width)
+      const containerWidth = await line2.evaluate((el) => {
+        return el.getBoundingClientRect().width
       })
-      expect(titleWidth).toBe('100%')
+      const titleWidth = await line2.locator('[data-testid="ticket-title"]').evaluate((el) => {
+        return el.getBoundingClientRect().width
+      })
+      expect(titleWidth).toBe(containerWidth)
     })
   })
 })
