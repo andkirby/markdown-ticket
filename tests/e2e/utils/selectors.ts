@@ -19,6 +19,14 @@ export const navSelectors = {
   listTab: '[data-testid="nav-list"]',
   /** Documents view tab */
   documentsTab: '[data-testid="nav-documents"]',
+  /** Board|List toggle button (MDT-131) */
+  boardListToggle: '[data-testid="board-list-toggle"]',
+  /** Documents button (MDT-131) */
+  documentsButton: '[data-testid="documents-button"]',
+  /** Board|List toggle overlay (MDT-131) */
+  boardListToggleOverlay: '[data-testid="board-list-toggle-overlay"]',
+  /** View mode switcher container (MDT-131) */
+  viewModeSwitcher: '[data-testid="view-mode-switcher"]',
 } as const
 
 /**
@@ -47,6 +55,10 @@ export const boardSelectors = {
   filterControls: '[data-testid="filter-controls"]',
   /** Search input field */
   searchInput: '[data-testid="search-input"]',
+  /** Mobile column switcher trigger button */
+  mobileColumnSwitcherTrigger: '[data-testid="mobile-column-switcher-trigger"]',
+  /** Mobile column dropdown option by column name */
+  mobileColumnOption: (columnName: string) => `[data-testid="mobile-column-option-${columnName.toLowerCase().replace(/\s+/g, '-')}"]`,
 } as const
 
 /**
@@ -95,14 +107,18 @@ export const commonSelectors = {
  * Project info selectors
  */
 export const projectSelectors = {
-  /** Project name header */
-  projectName: '[data-testid="project-name"]',
   /** Project code */
   projectCode: '[data-testid="project-code"]',
   /** Ticket count badge */
   ticketCount: '[data-testid="ticket-count"]',
   /** Hamburger menu button */
   hamburgerMenu: '[data-testid="hamburger-menu"]',
+  /** Theme light button in hamburger menu */
+  themeLight: '[data-testid="theme-light"]',
+  /** Theme dark button in hamburger menu */
+  themeDark: '[data-testid="theme-dark"]',
+  /** Theme system button in hamburger menu */
+  themeSystem: '[data-testid="theme-system"]',
   /** Add project button in navigation */
   addProjectButton: '[data-testid="add-project-button"]',
   /** Add project modal */
@@ -141,6 +157,10 @@ export const projectSelectors = {
   projectSelectorCard: (code: string) => `[data-testid="project-selector-card-${code}"]`,
   /** Inactive project chip (by code) */
   projectSelectorChip: (code: string) => `[data-testid="project-selector-chip-${code}"]`,
+  /** Project option in panel (by code) - alias for projectSelectorCard for panel selections */
+  projectOption: (code: string) => `[data-testid="project-panel-content"] [data-testid="project-selector-card-${code}"]`,
+  /** Project name display - currently shown in active project card */
+  projectName: '[data-testid="project-selector-rail-active"] [data-testid="project-selector-card"]',
 } as const
 
 /**
@@ -149,10 +169,10 @@ export const projectSelectors = {
 export const listSelectors = {
   /** Ticket list container */
   ticketList: '[data-testid="ticket-list"]',
-  /** Ticket row in list (note: space-separated with ticket-row-{code}) */
-  ticketRow: '[data-testid~="ticket-row"]',
-  /** Ticket row by code (note: space-separated with ticket-row) */
-  rowByCode: (code: string) => `[data-testid~="ticket-row-${code}"]`,
+  /** Ticket card in list (card-based layout) */
+  ticketCard: '[data-testid^="ticket-card-"]',
+  /** Ticket card by code */
+  cardByCode: (code: string) => `[data-testid="ticket-card-${code}"]`,
   /** Sort controls container */
   sortControls: '[data-testid="sort-controls"]',
   /** Sort button for column */

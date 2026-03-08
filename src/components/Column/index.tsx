@@ -3,6 +3,12 @@ import { CRStatus } from '@mdt/domain-contracts'
 import * as React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useDrag } from 'react-dnd'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../UI/dropdown-menu'
 import { getVisibleColumns } from '../../config'
 import { getColumnGradient } from '../../utils/colorUtils'
 import { sortTickets } from '../../utils/sorting'
@@ -31,6 +37,11 @@ interface ColumnProps {
   clearTicketPosition: (ticketCode: string) => void
   /** Primary status for this column (for testid) */
   status?: Status
+  // Mobile column switcher props
+  allColumns?: Array<{ label: string, statuses: Status[], color: string }>
+  currentColumnIndex?: number
+  onColumnSwitch?: (index: number) => void
+  isMobileView?: boolean
 }
 
 interface DraggableTicketCardProps {
@@ -92,6 +103,10 @@ const Column: React.FC<ColumnProps> = ({
   getTicketPosition,
   clearTicketPosition,
   status,
+  allColumns,
+  currentColumnIndex = 0,
+  onColumnSwitch,
+  isMobileView = true,
 }) => {
   const [resolutionDialog, setResolutionDialog] = useState<{
     isOpen: boolean
@@ -203,7 +218,41 @@ const Column: React.FC<ColumnProps> = ({
       {/* Column Header */}
       <div className={`px-3 py-2 border border-black/5 dark:border-white/10 bg-gradient-to-br rounded-t-lg shadow-md z-10 ${getColumnGradient(column.color)}`}>
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-foreground">{column.label}</h3>
+          {/* Mobile: Column dropdown menu */}
+          {isMobileView && allColumns && onColumnSwitch ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  data-testid="mobile-column-switcher-trigger"
+                  className="font-semibold text-foreground text-left flex items-center gap-1 hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1 rounded transition-colors border border-transparent hover:border-black/10 dark:hover:border-white/10"
+                >
+                  <h3 className="font-semibold text-foreground">{column.label}</h3>
+                  <svg className="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {allColumns.map((col, idx) => (
+                  <DropdownMenuItem
+                    key={col.label}
+                    data-testid={`mobile-column-option-${col.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    onClick={() => onColumnSwitch(idx)}
+                    className={idx === currentColumnIndex ? 'bg-accent' : ''}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span>{col.label}</span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {allTickets.filter(t => col.statuses.includes(t.status as Status)).length}
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <h3 className="font-semibold text-foreground">{column.label}</h3>
+          )}
           <div className="flex items-center gap-2">
             {/* Status Toggle */}
             {toggleStatus && (

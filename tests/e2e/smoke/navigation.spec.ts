@@ -54,8 +54,11 @@ test.describe('Navigation', () => {
     })
 
     test('switches from board to list view', async ({ page }) => {
-      // Click list tab
-      await page.click(navSelectors.listTab)
+      // Click Board|List toggle to switch to list view
+      await page.click(navSelectors.boardListToggle)
+
+      // Verify URL changed to list view
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/list`)
 
       // Verify list view is visible
       await expect(page.locator('[data-testid="ticket-list"]')).toBeVisible()
@@ -65,8 +68,11 @@ test.describe('Navigation', () => {
     })
 
     test('switches from board to documents view', async ({ page }) => {
-      // Click documents tab
-      await page.click(navSelectors.documentsTab)
+      // Click documents button
+      await page.click(navSelectors.documentsButton)
+
+      // Verify URL changed to documents view
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/documents`)
 
       // Verify documents view is visible (use first() for strict mode compliance)
       await expect(page.locator('[data-testid="document-tree"]').first()).toBeVisible()
@@ -77,12 +83,16 @@ test.describe('Navigation', () => {
 
     test('switches from list back to board view', async ({ page }) => {
       // First switch to list view
-      await page.click(navSelectors.listTab)
+      await page.click(navSelectors.boardListToggle)
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/list`)
       await expect(page.locator('[data-testid="ticket-list"]')).toBeVisible()
 
-      // Then switch back to board view
-      await page.click(navSelectors.boardTab)
+      // Then switch back to board view by clicking Board|List toggle again
+      await page.click(navSelectors.boardListToggle)
       await waitForBoardReady(page)
+
+      // Verify URL changed back to board view
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}`)
 
       // Verify board is visible again
       await expect(page.locator('[data-testid="kanban-board"]')).toBeVisible()
@@ -93,12 +103,16 @@ test.describe('Navigation', () => {
 
     test('switches from documents back to board view', async ({ page }) => {
       // First switch to documents view
-      await page.click(navSelectors.documentsTab)
+      await page.click(navSelectors.documentsButton)
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/documents`)
       await expect(page.locator('[data-testid="document-tree"]').first()).toBeVisible()
 
-      // Then switch back to board view
-      await page.click(navSelectors.boardTab)
+      // Then switch back to board view by clicking Board|List toggle
+      await page.click(navSelectors.boardListToggle)
       await waitForBoardReady(page)
+
+      // Verify URL changed back to board view
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}`)
 
       // Verify board is visible again
       await expect(page.locator('[data-testid="kanban-board"]')).toBeVisible()
@@ -152,22 +166,24 @@ test.describe('Navigation', () => {
       await waitForBoardReady(page)
 
       // Verify first project is displayed as active card
-      const firstProjectButton = page.locator(`[data-testid="project-selector-card-${firstProject.projectCode}"]`)
-      await expect(firstProjectButton).toBeVisible()
+      const firstProjectCard = page.locator(`[data-testid="project-selector-card-${firstProject.projectCode}"]`)
+      await expect(firstProjectCard).toBeVisible()
 
       // Verify second project is displayed as inactive chip
-      const secondProjectButton = page.locator(`[data-testid="project-selector-chip-${secondProject.key}"]`)
-      await expect(secondProjectButton).toBeVisible()
+      const secondProjectChip = page.locator(`[data-testid="project-selector-chip-${secondProject.key}"]`)
+      await expect(secondProjectChip).toBeVisible()
 
-      // Switch to second project
-      await secondProjectButton.click()
+      // Switch to second project by clicking the chip
+      await secondProjectChip.click()
       await waitForBoardReady(page)
 
-      // Verify second project button now has active state
-      await expect(secondProjectButton).toHaveAttribute('data-active', 'true')
+      // Verify second project is now displayed as active card
+      const secondProjectCard = page.locator(`[data-testid="project-selector-card-${secondProject.key}"]`)
+      await expect(secondProjectCard).toBeVisible()
 
-      // Verify first project button no longer has active state
-      await expect(firstProjectButton).not.toHaveAttribute('data-active', 'true')
+      // Verify first project is now displayed as inactive chip
+      const firstProjectChip = page.locator(`[data-testid="project-selector-chip-${firstProject.projectCode}"]`)
+      await expect(firstProjectChip).toBeVisible()
     })
   })
 
