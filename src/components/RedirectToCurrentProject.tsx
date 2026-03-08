@@ -58,7 +58,7 @@ export function RedirectToCurrentProject() {
 
   if (loading) {
     return (
-      <div data-testid="loading" className="min-h-screen bg-background flex items-center justify-center">
+      <div data-testid="loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
         {/* @testid loading — Loading spinner/state */}
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -71,7 +71,7 @@ export function RedirectToCurrentProject() {
   if (projects.length === 0) {
     return (
       <TooltipProvider>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-[100dvh] bg-background">
           {/* Simple Header - No project-specific elements */}
           <nav className="bg-card border-b shadow-sm">
             <div className="max-w-7xl mx-auto px-1 sm:px-2 lg:px-2">
@@ -108,7 +108,7 @@ export function RedirectToCurrentProject() {
           </nav>
 
           {/* No Projects Content */}
-          <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+          <div className="flex items-center justify-center min-h-[calc(100dvh-4rem)]">
             <div className="text-center max-w-2xl mx-auto p-8">
               <div className="flex items-center justify-center gap-3 mb-6">
                 <h2 className="text-2xl font-semibold">No Projects Found</h2>
@@ -306,7 +306,7 @@ services:
   }
 
   return (
-    <div data-testid="loading" className="min-h-screen bg-background flex items-center justify-center">
+    <div data-testid="loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
       {/* @testid loading — Loading spinner/state */}
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>

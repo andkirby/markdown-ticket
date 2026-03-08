@@ -209,7 +209,7 @@ const Column: React.FC<ColumnProps> = ({
     <div
       ref={drop}
       data-testid={status ? `column-${status}` : undefined}
-      className={`column flex flex-col transition-all duration-200 ease-out h-full relative ${
+      className={`column flex flex-col transition-all duration-200 ease-out h-full min-h-0 relative ${
         isOver
           ? 'bg-blue-50/50 dark:bg-blue-950/30 ring-2 ring-blue-400/30'
           : ''
@@ -280,8 +280,7 @@ const Column: React.FC<ColumnProps> = ({
       <ScrollArea
         type="hover"
         scrollHideDelay={600}
-        className={`h-full border-r border-border ${isFirstColumn ? 'border-l border-border' : ''}`}
-        style={{ height: 'calc(100vh - 165px)' }}
+        className={`flex-1 min-h-0 border-r border-border ${isFirstColumn ? 'border-l border-border' : ''}`}
       >
         {/* @testid drop-zone — Column drop area for drag-and-drop */}
         <div data-testid="drop-zone" className="column-drop-zone px-3 py-2 space-y-2">

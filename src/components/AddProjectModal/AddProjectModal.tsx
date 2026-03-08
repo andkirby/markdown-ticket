@@ -182,7 +182,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
          */}
         <div
           data-testid={editMode ? "edit-project-modal" : "add-project-modal"}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[calc(100vh-100px)] flex flex-col"
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[calc(100dvh-100px)] flex flex-col"
           onClick={handleOverlayClick}
         >
           {/* Header */}

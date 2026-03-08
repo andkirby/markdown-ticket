@@ -165,10 +165,10 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
       data-testid="project-panel"
     >
       {/* Backdrop - full screen with dimming effect */}
-      <div className="fixed inset-0 w-screen h-screen bg-black/50 backdrop-blur-sm" />
+      <div className="fixed inset-0 w-screen h-[100dvh] bg-black/50 backdrop-blur-sm" />
 
       {/* Panel container - centered */}
-      <div className="relative flex items-start justify-center pt-20 pointer-events-none min-h-screen">
+      <div className="relative flex items-start justify-center pt-20 pointer-events-none min-h-[100dvh]">
         <div
           data-testid="project-panel-content"
           onClick={e => e.stopPropagation()}
