@@ -1,3 +1,4 @@
+import type { SubDocument } from '@mdt/shared/models/SubDocument'
 import type { Ticket } from '../types/ticket'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -10,6 +11,10 @@ import MarkdownContent from './MarkdownContent'
 import TableOfContents from './shared/TableOfContents'
 import TicketAttributes from './TicketAttributes'
 import { TicketCode } from './TicketCode'
+import { TicketDocumentTabs } from './TicketViewer/TicketDocumentTabs'
+import { useTicketDocumentContent } from './TicketViewer/useTicketDocumentContent'
+import { useTicketDocumentNavigation } from './TicketViewer/useTicketDocumentNavigation'
+import { useTicketDocumentRealtime } from './TicketViewer/useTicketDocumentRealtime'
 import { Modal, ModalBody, ModalHeader } from './UI/Modal'
 
 interface TicketViewerProps {
@@ -91,6 +96,32 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
     return processedContent ? extractTableOfContents(processedContent, 3) : []
   }, [processedContent])
 
+  const subdocuments = useMemo(
+    () => (currentTicket as (Ticket & { subdocuments?: SubDocument[] }) | null)?.subdocuments ?? [],
+    [currentTicket],
+  )
+
+  const { selectedPath, folderStack, selectPath, pendingPath, confirmPathSwitch } = useTicketDocumentNavigation({
+    subdocuments,
+    ticketCode: currentTicket?.code ?? '',
+    projectCode: projectCode ?? '',
+  })
+
+  const { subdocuments: liveSubdocs } = useTicketDocumentRealtime({
+    initialSubdocuments: subdocuments,
+    selectedPath,
+    onActiveRemoved: () => selectPath('main'),
+  })
+
+  const { content: subdocContent, loading: subdocLoading, error: subdocError } = useTicketDocumentContent({
+    projectId: projectCode ?? '',
+    ticketCode: currentTicket?.code ?? '',
+    selectedPath,
+    mainContent: processedContent,
+    pendingPath,
+    onContentLoaded: confirmPathSwitch,
+  })
+
   if (!currentTicket)
     return null
 
@@ -119,17 +150,47 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
             <TicketAttributes ticket={currentTicket} />
           </div>
 
-          {/* Rendered Markdown Content */}
-          {isOpen && processedContent && projectCode && (
-            /* @testid ticket-content — Markdown content area */
-            <div data-testid="ticket-content">
-              <MarkdownContent
-                markdown={processedContent}
-                currentProject={projectCode}
-                headerLevelStart={3}
-              />
-            </div>
-          )}
+          {/* Sub-document navigation tabs (MDT-093) */}
+          <TicketDocumentTabs
+            subdocuments={liveSubdocs}
+            selectedPath={selectedPath}
+            folderStack={folderStack}
+            onSelect={selectPath}
+            pendingPath={pendingPath}
+          />
+
+          {/* Content area: sub-document or main ticket content */}
+          {/* @testid subdoc-content — content area for selected sub-document */}
+          <div data-testid="subdoc-content">
+            {pendingPath && !subdocLoading && (
+              /* @testid subdoc-preloading — initial loading state when tab is clicked */
+              <div data-testid="subdoc-preloading" className="text-muted-foreground text-sm py-2">
+                Loading…
+              </div>
+            )}
+            {!pendingPath && subdocLoading && (
+              /* @testid subdoc-loading — loading indicator while fetching sub-document */
+              <div data-testid="subdoc-loading" className="text-muted-foreground text-sm py-2">
+                Loading…
+              </div>
+            )}
+            {subdocError && (
+              /* @testid subdoc-error — error message when sub-document fails to load */
+              <div data-testid="subdoc-error" className="text-destructive text-sm py-2" role="alert">
+                {subdocError}
+              </div>
+            )}
+            {!pendingPath && !subdocLoading && !subdocError && isOpen && projectCode && (
+              /* @testid ticket-content — Markdown content area */
+              <div data-testid="ticket-content">
+                <MarkdownContent
+                  markdown={subdocContent}
+                  currentProject={projectCode}
+                  headerLevelStart={3}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </ModalBody>
     </Modal>

@@ -1,0 +1,1 @@
+BDD scenarios cover five user journeys: sub-document discovery with ordering, hierarchical folder navigation with nested tab rows, document selection with sticky navigation, deep linking with URL hash persistence, and realtime synchronization with fallback behavior. 10 scenarios across 5 journeys, all within budget.

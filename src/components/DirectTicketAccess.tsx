@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { findProjectByTicketKey, normalizeTicketKey } from '../utils/routing'
+import { extractSubDocPath, validateSubDocPath } from '../utils/subdocPathValidation'
 import { RouteErrorModal } from './RouteErrorModal'
 
 export function DirectTicketAccess() {
@@ -27,8 +28,18 @@ export function DirectTicketAccess() {
           return
         }
 
-        // Redirect to project with ticket modal
-        navigate(`/prj/${projectCode}/ticket/${normalizedKey}`, { replace: true })
+        // MDT-094: Check if there's a sub-document path in the URL
+        // The wildcard route captures everything after /ticket/:ticketKey/
+        // We need to check the current pathname to extract the sub-document path
+        const pathname = window.location.pathname
+        const subDocPath = extractSubDocPath(pathname, normalizedKey)
+
+        // Redirect to project with ticket modal and optional sub-document path
+        const targetPath = subDocPath
+          ? `/prj/${projectCode}/ticket/${normalizedKey}/${subDocPath}`
+          : `/prj/${projectCode}/ticket/${normalizedKey}`
+
+        navigate(targetPath, { replace: true })
       }
       catch {
         setError('Failed to find ticket')
