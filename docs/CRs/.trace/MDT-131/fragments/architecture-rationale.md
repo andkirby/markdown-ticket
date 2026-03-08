@@ -24,14 +24,27 @@
 **Location:** `src/components/AppHeader/`
 
 **Files:**
-- `index.tsx` - Main AppHeader component
+- `index.tsx` - Export barrel
 - `MobileLogo.tsx` - Conditional logo component
-- `HamburgerMenu.tsx` - Mobile menu with theme toggle
 
 **Rationale:**
-- **Single Responsibility**: Toggle logic ≠ header layout ≠ card layout
-- **Reusability**: `HamburgerMenu` may be used elsewhere
-- **Testing**: Can test mobile header independently
+- **Single Responsibility**: Header components separated
+- **Mobile Logo**: Handles conditional rendering of mobile vs desktop logo
+
+### HamburgerMenu Component (Standalone)
+
+**Location:** `src/components/HamburgerMenu.tsx`
+
+**Features:**
+- Desktop-only by default (visible on all devices after implementation)
+- Contains: Add Project, Edit Project, Clear Cache, Event History, Theme Controls
+- Theme controls: ButtonGroup with 3 options (Light, Dark, System)
+- Works across all viewports (used in Board, SecondaryHeader)
+
+**Rationale:**
+- **Reusability**: Used in multiple places (Board.tsx, SecondaryHeader.tsx)
+- **Single Source of Truth**: Theme controls only in hamburger menu
+- **Consistency**: Same menu experience across all devices
 
 ## State Management
 
@@ -63,13 +76,19 @@ const handleModeChange = (newMode: ViewMode) => {
 ```
 App.tsx (state owner)
 ├── AppHeader/
-│   ├── AppHeader.tsx (container)
-│   ├── MobileLogo.tsx (conditional)
-│   └── HamburgerMenu.tsx (mobile-only)
+│   ├── index.tsx (export barrel)
+│   └── MobileLogo.tsx (conditional logo)
+├── HamburgerMenu.tsx (standalone, all devices)
+│   ├── ButtonGroup (theme controls)
+│   └── Menu items (Add/Edit Project, Clear Cache, Event History)
 └── ViewModeSwitcher/
     ├── ViewModeSwitcher.tsx (container)
     ├── BoardListToggle.tsx (toggle + overlay)
     └── useViewModePersistence.ts (hook)
+
+Other components using HamburgerMenu:
+├── Board.tsx (uses HamburgerMenu for project actions)
+└── SecondaryHeader.tsx (uses HamburgerMenu for project actions)
 ```
 
 ## Type-Safe Enum Pattern
@@ -108,8 +127,9 @@ export const ViewModeValues = Object.values(ViewMode)
 | Project title | Visible | Hidden |
 | Default logo | Visible | Hidden |
 | Mobile logo | Hidden | Visible |
-| Theme toggle (nav) | Visible | Hidden |
-| Theme toggle (menu) | Hidden | Visible |
+| HamburgerMenu | Visible | Visible |
+| Theme controls (in menu) | Visible | Visible |
+| Theme toggle (top-right nav) | Hidden | Hidden |
 
 ### Tailwind Approach
 - Use `md:` prefix for desktop-specific styles
@@ -167,9 +187,65 @@ ViewModeSwitcher → useViewModePersistence
 - **React 18+** - Functional components with hooks
 - **TypeScript** - Type safety
 - **TailwindCSS** - Styling with responsive utilities
-- **lucide-react** - Icons (Board, List, FileText, Menu, Sun, Moon)
-- **next-themes** - Theme management (useTheme hook)
+- **lucide-react** - Icons (Board, List, FileText, Menu, Sun, Moon, Monitor)
+- **shadcn/ui** - ButtonGroup component for theme controls
+- **next-themes** - Theme management (useTheme hook with system support)
 - **React Router** - Navigation/routing
+
+## Theme Controls Implementation
+
+### Theme Modes
+
+**Supported Modes:**
+- `light` - Explicit light mode
+- `dark` - Explicit dark mode
+- `system` - Follows OS preference
+
+### HamburgerMenu Integration
+
+**Location:** `src/components/HamburgerMenu.tsx`
+
+**Theme Controls:**
+- ButtonGroup with 3 icon-only buttons at bottom of menu
+- Sun icon → Light mode
+- Moon icon → Dark mode
+- Monitor icon → System mode
+- ButtonGroupSeparator provides visual delimiter
+- Active theme highlighted with primary color
+
+**Implementation:**
+```typescript
+// In HamburgerMenu.tsx
+import { ButtonGroup, ButtonGroupSeparator } from './UI/button-group'
+import { Sun, Moon, Monitor } from 'lucide-react'
+
+<ButtonGroup orientation="horizontal" className="w-full">
+  <button onClick={() => setTheme('light')} className={themeMode === 'light' ? 'bg-primary' : 'bg-muted'}>
+    <Sun className="h-4 w-4" />
+  </button>
+  <button onClick={() => setTheme('dark')} className={themeMode === 'dark' ? 'bg-primary' : 'bg-muted'}>
+    <Moon className="h-4 w-4" />
+  </button>
+  <button onClick={() => setTheme('system')} className={themeMode === 'system' ? 'bg-primary' : 'bg-muted'}>
+    <Monitor className="h-4 w-4" />
+  </button>
+</ButtonGroup>
+```
+
+**No Desktop Theme Toggle:**
+- Removed desktop theme toggle from main navigation header
+- Hamburger menu is the single source of truth for all theme controls
+- Works consistently across mobile and desktop
+
+### Theme Hook Enhancement
+
+**Location:** `src/hooks/useTheme.ts`
+
+**Enhancements:**
+- Added `system` theme mode
+- Returns both `theme` (resolved: 'light' | 'dark') and `themeMode` (user selection)
+- Listens to OS preference changes via `matchMedia('(prefers-color-scheme: dark)')`
+- Automatic updates when system theme changes
 
 ## Implementation Order
 
@@ -178,12 +254,14 @@ ViewModeSwitcher → useViewModePersistence
 3. Create `ViewModeSwitcher/BoardListToggle.tsx` (Leaf component)
 4. Create `ViewModeSwitcher/ViewModeSwitcher.tsx` (Container)
 5. Create `ViewModeSwitcher/index.tsx` (Export barrel)
-6. Create `AppHeader/MobileLogo.tsx` (New component)
-7. Create `AppHeader/HamburgerMenu.tsx` (New component)
-8. Create `AppHeader/AppHeader.tsx` (New container)
-9. Create `AppHeader/index.tsx` (Export barrel)
-10. Modify `App.tsx` (Import ViewModeSwitcher, add state)
-11. Modify `ProjectView.tsx` (Mobile card layout)
+6. Create `UI/button-group.tsx` (shadcn component)
+7. Create `UI/separator.tsx` (shadcn component)
+8. Enhance `hooks/useTheme.ts` (Add system mode support)
+9. Enhance `components/HamburgerMenu.tsx` (Add ButtonGroup theme controls)
+10. Create `AppHeader/MobileLogo.tsx` (New component)
+11. Create `AppHeader/index.tsx` (Export barrel)
+12. Modify `App.tsx` (Import ViewModeSwitcher, add state, remove desktop theme toggle)
+13. Modify `ProjectView.tsx` (Mobile card layout)
 
 ## Validation Checklist
 
@@ -194,5 +272,10 @@ ViewModeSwitcher → useViewModePersistence
 - [ ] All components have `data-testid` attributes for E2E
 - [ ] Hover animation uses 150ms transition
 - [ ] Overlay has `pointer-events-none` CSS property
+- [ ] Theme controls use ButtonGroup component
+- [ ] Theme modes: Light, Dark, System all functional
+- [ ] System theme responds to OS preference changes
+- [ ] Desktop theme toggle removed from main navigation
+- [ ] Hamburger menu theme controls work on all devices
 - [ ] TypeScript compilation succeeds
 - [ ] All existing tests pass

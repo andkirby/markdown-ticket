@@ -3,13 +3,9 @@ import type { SortPreferences } from '../config/sorting'
 import type { Ticket } from '../types'
 import { CRStatus } from '@mdt/domain-contracts'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getSortPreferences, setSortPreferences } from '../config/sorting'
-import { getProjectCode } from '../utils/projectUtils'
 import { sortTickets } from '../utils/sorting'
-import { AddProjectModal } from './AddProjectModal'
 import Board from './Board'
 import { DocumentsLayout } from './DocumentsView'
-import { SecondaryHeader } from './SecondaryHeader'
 import { TicketCode } from './TicketCode'
 
 type ViewMode = 'board' | 'list' | 'documents'
@@ -21,15 +17,14 @@ interface ProjectViewProps {
   selectedProject: Project | null
   tickets?: Ticket[]
   updateTicketOptimistic?: (ticketCode: string, updates: Partial<Ticket>) => Promise<Ticket>
-  onAddProject?: () => void
   viewMode?: ViewMode
-  refreshProjects?: () => Promise<void>
   loading?: boolean
+  sortPreferences?: SortPreferences
 }
 
-export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, onAddProject: _onAddProject, viewMode: externalViewMode, refreshProjects, loading: propLoading }: ProjectViewProps) {
+export default function ProjectView({ onTicketClick, selectedProject, tickets: propTickets, updateTicketOptimistic, viewMode: externalViewMode, loading: propLoading, sortPreferences }: ProjectViewProps) {
   // Use external viewMode if provided, otherwise fall back to internal state
-  const [internalViewMode, setInternalViewMode] = useState<ViewMode>(() => {
+  const [internalViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY)
     const validModes: ViewMode[] = ['board', 'list', 'documents']
     return (saved && validModes.includes(saved as ViewMode))
@@ -39,9 +34,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
 
   const viewMode = externalViewMode || internalViewMode
 
-  const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(getSortPreferences)
-  const [showAddProjectModal, setShowAddProjectModal] = useState(false)
-  const [showEditProjectModal, setShowEditProjectModal] = useState(false)
   const loading = propLoading || false
 
   // Use ref to prevent stale closure bug when switching projects
@@ -50,16 +42,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   useEffect(() => {
     selectedProjectRef.current = selectedProject
   }, [selectedProject])
-
-  const _handleViewModeChange = (mode: ViewMode) => {
-    setInternalViewMode(mode)
-    localStorage.setItem(VIEW_MODE_KEY, mode)
-  }
-
-  const handleSortPreferencesChange = useCallback((newPreferences: SortPreferences) => {
-    setLocalSortPreferences(newPreferences)
-    setSortPreferences(newPreferences)
-  }, [])
 
   const handleTicketUpdate = useCallback(async (ticketCode: string, updates: Partial<Ticket>) => {
     const currentProject = selectedProjectRef.current
@@ -115,24 +97,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-4 py-2 border-b border-border">
-        <div className="flex justify-between items-center">
-          <h1 data-testid="project-name" className="text-2xl font-bold text-foreground">
-            {selectedProject?.project.name || 'Board View'}
-          </h1>
-          <div className="flex items-center space-x-4">
-            <SecondaryHeader
-              viewMode={viewMode}
-              sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
-              onSortPreferencesChange={(viewMode === 'board' || viewMode === 'list') ? handleSortPreferencesChange : undefined}
-              onAddProject={() => setShowAddProjectModal(true)}
-              onEditProject={() => setShowEditProjectModal(true)}
-              selectedProject={selectedProject}
-            />
-          </div>
-        </div>
-      </div>
-
       <div className="flex-1 min-h-0 overflow-hidden">
         {viewMode === 'board'
           ? (
@@ -144,44 +108,71 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 selectedProject={selectedProject}
                 tickets={propTickets || []}
                 loading={loading}
-                sortPreferences={localSortPreferences}
+                sortPreferences={sortPreferences}
               />
             )
           : viewMode === 'list'
             ? (
                 <div className="h-full overflow-auto p-6">
                   <div data-testid="ticket-list" className="space-y-2">
-                    {sortTickets(propTickets || [], localSortPreferences.selectedAttribute, localSortPreferences.selectedDirection).map(ticket => (
+                    {sortTickets(propTickets || [], sortPreferences?.selectedAttribute || 'title', sortPreferences?.selectedDirection || 'asc').map(ticket => (
                       <div
                         key={ticket.code}
                         onClick={() => onTicketClick(ticket)}
-                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                        data-testid={`ticket-row ticket-row-${ticket.code}`}
+                        className="p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                        data-testid={`ticket-card-${ticket.code}`}
                       >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
+                        {/* Mobile layout: 2-line structure (< 768px) */}
+                        <div className="md:hidden">
+                          <div className="flex items-center space-x-2 mb-2" data-testid="ticket-card-line-1">
                             <TicketCode code={ticket.code} />
-                            <span className="font-medium">{ticket.title}</span>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              ticket.status === CRStatus.PROPOSED
+                                ? 'bg-blue-100 text-blue-800'
+                                : ticket.status === CRStatus.APPROVED
+                                  ? 'bg-green-100 text-green-800'
+                                  : ticket.status === CRStatus.IN_PROGRESS
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : ticket.status === CRStatus.IMPLEMENTED
+                                      ? 'bg-purple-100 text-purple-800'
+                                      : 'bg-red-100 text-red-800'
+                            }`}
+                            >
+                              {ticket.status}
+                            </span>
+                          </div>
+                          <div className="w-full" data-testid="ticket-card-line-2">
+                            <span className="font-medium block w-full" data-testid="ticket-title">{ticket.title}</span>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            ticket.status === CRStatus.PROPOSED
-                              ? 'bg-blue-100 text-blue-800'
-                              : ticket.status === CRStatus.APPROVED
-                                ? 'bg-green-100 text-green-800'
-                                : ticket.status === CRStatus.IN_PROGRESS
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : ticket.status === CRStatus.IMPLEMENTED
-                                    ? 'bg-purple-100 text-purple-800'
-                                    : 'bg-red-100 text-red-800'
-                          }`}
-                          >
-                            {ticket.status}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
-                          </span>
+
+                        {/* Desktop layout: horizontal structure (>= 768px) */}
+                        <div className="hidden md:flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3">
+                              <TicketCode code={ticket.code} />
+                              <span className="font-medium">{ticket.title}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              ticket.status === CRStatus.PROPOSED
+                                ? 'bg-blue-100 text-blue-800'
+                                : ticket.status === CRStatus.APPROVED
+                                  ? 'bg-green-100 text-green-800'
+                                  : ticket.status === CRStatus.IN_PROGRESS
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : ticket.status === CRStatus.IMPLEMENTED
+                                      ? 'bg-purple-100 text-purple-800'
+                                      : 'bg-red-100 text-red-800'
+                            }`}
+                            >
+                              {ticket.status}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -202,45 +193,6 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 )
               : null}
       </div>
-
-      <AddProjectModal
-        isOpen={showAddProjectModal}
-        onClose={() => setShowAddProjectModal(false)}
-        onProjectCreated={async () => {
-          setShowAddProjectModal(false)
-          if (refreshProjects) {
-            await refreshProjects()
-          }
-        }}
-      />
-
-      {selectedProject && (
-        <AddProjectModal
-          isOpen={showEditProjectModal}
-          onClose={() => setShowEditProjectModal(false)}
-          onProjectCreated={async () => {
-            console.warn('Edit project onProjectCreated called')
-            setShowEditProjectModal(false)
-            if (refreshProjects) {
-              console.warn('Calling refreshProjects...')
-              await refreshProjects()
-              console.warn('refreshProjects completed')
-            }
-            else {
-              console.warn('refreshProjects not available')
-            }
-          }}
-          editMode={true}
-          editProject={{
-            name: selectedProject.project.name,
-            code: getProjectCode(selectedProject),
-            path: selectedProject.project.path,
-            crsPath: 'docs/CRs',
-            description: selectedProject.project.description || '',
-            repositoryUrl: '',
-          }}
-        />
-      )}
     </div>
   )
 }

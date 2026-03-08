@@ -285,10 +285,20 @@
 
 /* Utility classes */
 @layer utilities {
+  .desktop-only {
+    @apply hidden;
+  }
+
+  @media (min-width: 768px) {
+    .desktop-only {
+      @apply flex;
+    }
+  }
+
   .text-balance {
     text-wrap: balance;
   }
-  
+
   .text-pretty {
     text-wrap: pretty;
   }
