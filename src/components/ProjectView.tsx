@@ -116,11 +116,11 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   return (
     <div className="h-full flex flex-col">
       <div className="px-4 py-2 border-b border-border">
-        <div className="flex justify-between items-center">
-          <h1 data-testid="project-name" className="text-2xl font-bold text-foreground">
+        <div className="flex items-center">
+          <h1 data-testid="project-name" className="text-2xl font-bold text-foreground hidden md:block">
             {selectedProject?.project.name || 'Board View'}
           </h1>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 ml-auto">
             <SecondaryHeader
               viewMode={viewMode}
               sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
@@ -155,33 +155,60 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                       <div
                         key={ticket.code}
                         onClick={() => onTicketClick(ticket)}
-                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                        data-testid={`ticket-row ticket-row-${ticket.code}`}
+                        className="p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                        data-testid={`ticket-card ticket-card-${ticket.code}`}
                       >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
+                        {/* Mobile layout: 2-line structure (< 768px) */}
+                        <div className="md:hidden">
+                          <div className="flex items-center space-x-2 mb-2" data-testid="ticket-card-line-1">
                             <TicketCode code={ticket.code} />
-                            <span className="font-medium">{ticket.title}</span>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              ticket.status === CRStatus.PROPOSED
+                                ? 'bg-blue-100 text-blue-800'
+                                : ticket.status === CRStatus.APPROVED
+                                  ? 'bg-green-100 text-green-800'
+                                  : ticket.status === CRStatus.IN_PROGRESS
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : ticket.status === CRStatus.IMPLEMENTED
+                                      ? 'bg-purple-100 text-purple-800'
+                                      : 'bg-red-100 text-red-800'
+                            }`}
+                            >
+                              {ticket.status}
+                            </span>
+                          </div>
+                          <div className="w-full" data-testid="ticket-card-line-2">
+                            <span className="font-medium" data-testid="ticket-title">{ticket.title}</span>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            ticket.status === CRStatus.PROPOSED
-                              ? 'bg-blue-100 text-blue-800'
-                              : ticket.status === CRStatus.APPROVED
-                                ? 'bg-green-100 text-green-800'
-                                : ticket.status === CRStatus.IN_PROGRESS
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : ticket.status === CRStatus.IMPLEMENTED
-                                    ? 'bg-purple-100 text-purple-800'
-                                    : 'bg-red-100 text-red-800'
-                          }`}
-                          >
-                            {ticket.status}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
-                          </span>
+
+                        {/* Desktop layout: horizontal structure (>= 768px) */}
+                        <div className="hidden md:flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3">
+                              <TicketCode code={ticket.code} />
+                              <span className="font-medium">{ticket.title}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              ticket.status === CRStatus.PROPOSED
+                                ? 'bg-blue-100 text-blue-800'
+                                : ticket.status === CRStatus.APPROVED
+                                  ? 'bg-green-100 text-green-800'
+                                  : ticket.status === CRStatus.IN_PROGRESS
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : ticket.status === CRStatus.IMPLEMENTED
+                                      ? 'bg-purple-100 text-purple-800'
+                                      : 'bg-red-100 text-red-800'
+                            }`}
+                            >
+                              {ticket.status}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}

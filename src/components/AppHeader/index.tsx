@@ -1,0 +1,1 @@
+export { MobileLogo } from './MobileLogo'
