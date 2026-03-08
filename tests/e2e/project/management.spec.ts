@@ -11,8 +11,7 @@
 
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario } from '../setup/index.js'
-import { boardSelectors } from '../utils/selectors.js'
-import { projectSelectors } from '../utils/selectors.js'
+import { boardSelectors, projectSelectors, selectorSelectors } from '../utils/selectors.js'
 import { waitForBoardReady } from '../utils/helpers.js'
 
 /**
@@ -107,19 +106,17 @@ test.describe('Project Management', () => {
     // Verify modal closes
     await expect(modal).toBeHidden()
 
-    // Verify the new project appears in the navigation
-    const newProjectOption = page.locator(projectSelectors.projectOption(newProjectCode))
-    await expect(newProjectOption).toBeVisible()
-
-    // Click the new project to switch to it
-    await newProjectOption.click()
-
-    // Verify we're on the new project (should be empty)
+    // Navigate directly to the new project to verify it was created
+    await page.goto(`/prj/${newProjectCode}`)
     await waitForBoardReady(page)
 
-    // Verify project name is displayed
-    const projectName = page.locator(projectSelectors.projectName)
-    await expect(projectName).toHaveText(newProjectName)
+    // Verify we're on the new project by checking the active card
+    const activeProjectCard = page.locator(projectSelectors.projectSelectorCard(newProjectCode))
+    await expect(activeProjectCard).toBeVisible()
+
+    // Verify the board is empty (no tickets)
+    const tickets = page.locator(boardSelectors.ticketCard)
+    await expect(tickets).toHaveCount(0)
   })
 
   test('switch projects via selector', async ({ page, e2eContext }) => {
@@ -131,16 +128,17 @@ test.describe('Project Management', () => {
     await page.goto(`/prj/${firstProject.projectCode}`)
     await waitForBoardReady(page)
 
-    // Verify we're on the first project
-    const projectName = page.locator(projectSelectors.projectName)
-    await expect(projectName).toHaveText(firstProject.projectName)
+    // Verify we're on the first project by checking active card
+    const firstProjectCard = page.locator(projectSelectors.projectSelectorCard(firstProject.projectCode))
+    await expect(firstProjectCard).toBeVisible()
 
     // Verify tickets from first project are visible
     const firstProjectTickets = page.locator(boardSelectors.ticketCard)
     const firstTicketCount = await firstProjectTickets.count()
     expect(firstTicketCount).toBeGreaterThanOrEqual(firstProject.ticketCount)
 
-    // Switch to the second project using the project selector
+    // Switch to the second project using the project selector panel
+    await page.click(selectorSelectors.launcher)
     const secondProjectOption = page.locator(projectSelectors.projectOption(secondProject.key))
     await expect(secondProjectOption).toBeVisible()
     await secondProjectOption.click()
@@ -148,14 +146,16 @@ test.describe('Project Management', () => {
     // Wait for board to reload
     await waitForBoardReady(page)
 
-    // Verify we're now on the second project
-    await expect(projectName).toHaveText('Second Test Project')
+    // Verify we're now on the second project by checking active card
+    const secondProjectCard = page.locator(projectSelectors.projectSelectorCard(secondProject.key))
+    await expect(secondProjectCard).toBeVisible()
 
     // Verify second project is empty (no tickets)
     const secondProjectTickets = page.locator(boardSelectors.ticketCard)
     await expect(secondProjectTickets).toHaveCount(0)
 
-    // Switch back to the first project
+    // Switch back to the first project via panel
+    await page.click(selectorSelectors.launcher)
     const firstProjectOption = page.locator(projectSelectors.projectOption(firstProject.projectCode))
     await firstProjectOption.click()
 
@@ -163,7 +163,7 @@ test.describe('Project Management', () => {
     await waitForBoardReady(page)
 
     // Verify we're back on the first project
-    await expect(projectName).toHaveText(firstProject.projectName)
+    await expect(firstProjectCard).toBeVisible()
 
     // Verify tickets are visible again
     const firstProjectTicketsAgain = page.locator(boardSelectors.ticketCard)

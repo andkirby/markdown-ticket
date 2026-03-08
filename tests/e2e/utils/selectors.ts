@@ -157,6 +157,10 @@ export const projectSelectors = {
   projectSelectorCard: (code: string) => `[data-testid="project-selector-card-${code}"]`,
   /** Inactive project chip (by code) */
   projectSelectorChip: (code: string) => `[data-testid="project-selector-chip-${code}"]`,
+  /** Project option in panel (by code) - alias for projectSelectorCard for panel selections */
+  projectOption: (code: string) => `[data-testid="project-panel-content"] [data-testid="project-selector-card-${code}"]`,
+  /** Project name display - currently shown in active project card */
+  projectName: '[data-testid="project-selector-rail-active"] [data-testid="project-selector-card"]',
 } as const
 
 /**

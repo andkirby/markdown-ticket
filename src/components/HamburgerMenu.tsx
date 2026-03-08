@@ -75,12 +75,14 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
       selectedAttribute: attribute,
       selectedDirection: sortAttribute?.defaultDirection || 'desc',
     }
+    setIsOpen(false)
     onSortPreferencesChange?.(newPreferences)
   }
 
   const handleSortDirectionToggle = () => {
     if (!sortPreferences) return
     const newDirection = sortPreferences.selectedDirection === 'asc' ? 'desc' : 'asc'
+    setIsOpen(false)
     onSortPreferencesChange?.({
       ...sortPreferences,
       selectedDirection: newDirection,

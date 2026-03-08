@@ -382,13 +382,13 @@ test.describe('Project Selector - Responsive Behavior', () => {
     const activeCard = page.locator(selectorSelectors.activeProjectCard)
     await expect(activeCard).toBeVisible()
 
-    // Launcher should be visible
+    // Launcher is hidden on mobile - clicking active card opens panel instead
     const launcher = page.locator(selectorSelectors.launcher)
-    await expect(launcher).toBeVisible()
+    await expect(launcher).toBeHidden()
 
     // Inactive cards may be hidden in collapsed mode
-    // Open panel to access remaining projects
-    await launcher.click()
+    // Open panel by clicking active project card
+    await activeCard.click()
     const panel = page.locator(selectorSelectors.projectPanel)
     await expect(panel).toBeVisible()
   })

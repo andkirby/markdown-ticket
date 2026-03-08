@@ -166,22 +166,24 @@ test.describe('Navigation', () => {
       await waitForBoardReady(page)
 
       // Verify first project is displayed as active card
-      const firstProjectButton = page.locator(`[data-testid="project-selector-card-${firstProject.projectCode}"]`)
-      await expect(firstProjectButton).toBeVisible()
+      const firstProjectCard = page.locator(`[data-testid="project-selector-card-${firstProject.projectCode}"]`)
+      await expect(firstProjectCard).toBeVisible()
 
       // Verify second project is displayed as inactive chip
-      const secondProjectButton = page.locator(`[data-testid="project-selector-chip-${secondProject.key}"]`)
-      await expect(secondProjectButton).toBeVisible()
+      const secondProjectChip = page.locator(`[data-testid="project-selector-chip-${secondProject.key}"]`)
+      await expect(secondProjectChip).toBeVisible()
 
-      // Switch to second project
-      await secondProjectButton.click()
+      // Switch to second project by clicking the chip
+      await secondProjectChip.click()
       await waitForBoardReady(page)
 
-      // Verify second project button now has active state
-      await expect(secondProjectButton).toHaveAttribute('data-active', 'true')
+      // Verify second project is now displayed as active card
+      const secondProjectCard = page.locator(`[data-testid="project-selector-card-${secondProject.key}"]`)
+      await expect(secondProjectCard).toBeVisible()
 
-      // Verify first project button no longer has active state
-      await expect(firstProjectButton).not.toHaveAttribute('data-active', 'true')
+      // Verify first project is now displayed as inactive chip
+      const firstProjectChip = page.locator(`[data-testid="project-selector-chip-${firstProject.projectCode}"]`)
+      await expect(firstProjectChip).toBeVisible()
     })
   })
 
