@@ -11,10 +11,10 @@
 
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario } from '../setup/index.js'
-import { listSelectors, navSelectors, ticketSelectors } from '../utils/selectors.js'
+import { listSelectors, ticketSelectors } from '../utils/selectors.js'
 
 test.describe('List View', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async () => {
     // Navigate to list view before each test - will be done in each test
     // Note: beforeEach doesn't have access to e2eContext, so tests navigate directly
   })
@@ -34,17 +34,17 @@ test.describe('List View', () => {
     const ticketList = page.locator(listSelectors.ticketList)
     await expect(ticketList).toBeVisible()
 
-    // Assert: Verify ticket rows are rendered
-    const ticketRows = page.locator(listSelectors.ticketRow)
-    const rowCount = await ticketRows.count()
+    // Assert: Verify ticket cards are rendered (card-based layout)
+    const ticketCards = page.locator('[data-testid^="ticket-card-"]')
+    const cardCount = await ticketCards.count()
 
     // Should have at least the tickets we created
-    expect(rowCount).toBeGreaterThanOrEqual(scenario.ticketCount)
+    expect(cardCount).toBeGreaterThanOrEqual(scenario.ticketCount)
 
-    // Assert: Verify each row has expected data attributes
+    // Assert: Verify each card has expected data attributes
     for (const crCode of scenario.crCodes) {
-      const row = page.locator(listSelectors.rowByCode(crCode))
-      await expect(row).toBeVisible()
+      const card = page.locator(`[data-testid="ticket-card-${crCode}"]`)
+      await expect(card).toBeVisible()
     }
   })
 
@@ -59,14 +59,14 @@ test.describe('List View', () => {
 
     // Get initial order of tickets (using data-testid attributes)
     const getTicketCodes = async (): Promise<string[]> => {
-      const rows = page.locator(listSelectors.ticketRow)
-      const count = await rows.count()
+      const cards = page.locator('[data-testid^="ticket-card-"]')
+      const count = await cards.count()
       const codes: string[] = []
       for (let i = 0; i < count; i++) {
-        const row = rows.nth(i)
-        const testId = await row.getAttribute('data-testid')
-        // Extract code from testid like "ticket-row ticket-row-ABC-1"
-        const match = testId?.match(/ticket-row-([A-Z0-9-]+)/)
+        const card = cards.nth(i)
+        const testId = await card.getAttribute('data-testid')
+        // Extract code from testid like "ticket-card-ABC-1"
+        const match = testId?.match(/ticket-card-([A-Z0-9-]+)/)
         if (match) {
           codes.push(match[1])
         }
@@ -75,6 +75,7 @@ test.describe('List View', () => {
     }
 
     const initialOrder = await getTicketCodes()
+    expect(initialOrder.length).toBeGreaterThan(0)
 
     // Act: Select Title from sort dropdown (available option)
     const sortSelect = page.locator('[data-testid="sort-controls"] select')
@@ -83,18 +84,25 @@ test.describe('List View', () => {
     // Wait for sorting to complete
     await page.waitForTimeout(500)
 
-    // Assert: Verify order changed (or at least sorting was attempted)
+    // Assert: Verify order changed after sorting by title
     const sortedOrder = await getTicketCodes()
     expect(sortedOrder.length).toBe(initialOrder.length)
+
+    // Verify that the order actually changed (not just the count)
+    // This assertion will fail if sorting doesn't work
+    expect(sortedOrder).not.toEqual(initialOrder)
 
     // Act: Toggle sort direction
     const directionToggle = page.locator('[data-testid="sort-controls"] button')
     await directionToggle.click()
     await page.waitForTimeout(500)
 
-    // Assert: Verify order changed again (or at least direction toggle worked)
+    // Assert: Verify order was reversed
     const reversedOrder = await getTicketCodes()
     expect(reversedOrder.length).toBe(initialOrder.length)
+
+    // Verify that reversing the direction actually reversed the order
+    expect(reversedOrder).toEqual([...sortedOrder].reverse())
   })
 
   test('click row opens ticket detail', async ({ page, e2eContext }) => {
@@ -109,9 +117,9 @@ test.describe('List View', () => {
     // Get the first ticket code
     const firstTicketCode = scenario.crCodes[0]
 
-    // Act: Click on a ticket row (this navigates to ticket detail URL which opens modal)
-    const ticketRow = page.locator(listSelectors.rowByCode(firstTicketCode))
-    await ticketRow.click()
+    // Act: Click on a ticket card (this navigates to ticket detail URL which opens modal)
+    const ticketCard = page.locator(`[data-testid="ticket-card-${firstTicketCode}"]`)
+    await ticketCard.click()
 
     // Wait for navigation to complete and modal to appear
     await page.waitForLoadState('load')

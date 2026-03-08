@@ -37,7 +37,7 @@ export const SortControls: React.FC<SortControlsProps> = ({
   )
 
   return (
-    <div data-testid="sort-controls" className="flex items-center space-x-2">
+    <div data-testid="sort-controls" className="hidden sm:flex items-center space-x-2">
       <select
         value={preferences.selectedAttribute}
         onChange={e => handleAttributeChange(e.target.value)}

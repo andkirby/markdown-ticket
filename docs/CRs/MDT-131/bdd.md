@@ -35,6 +35,21 @@
 
 ### BR-3
 
+- Navigate from Board view to Documents view (`board_to_documents_transition`)
+  Covers: `BR-3.1`
+  Given: I am in board view
+  When: I click the Documents button
+  Then: I navigate to documents view and the Board|List button displays the Board icon with dimmed border
+- Complete circular navigation: Board → Documents → Board (`circular_board_documents_board`)
+  Covers: `BR-3.1`, `BR-3.2`
+  Given: I am in board view
+  When: I click the Documents button then click the Board|List button
+  Then: I navigate to documents view and return to board view
+- Complete circular navigation: List → Documents → List (`circular_list_documents_list`)
+  Covers: `BR-3.1`, `BR-3.2`
+  Given: I am in list view
+  When: I click the Documents button then click the Board|List button
+  Then: I navigate to documents view and return to list view
 - Click from documents returns to last-used view (`click_from_documents_to_last_used`)
   Covers: `BR-3.2`
   Given: I am in documents view and the last-used mode was board
@@ -50,6 +65,11 @@
   Given: I am in list view
   When: I click the Board|List button
   Then: I navigate to board view and the Board|List button displays the List icon
+- Navigate from List view to Documents view (`list_to_documents_transition`)
+  Covers: `BR-3.1`
+  Given: I am in list view
+  When: I click the Documents button
+  Then: I navigate to documents view and the Board|List button displays the List icon with dimmed border
 
 ### BR-4
 
@@ -82,16 +102,16 @@
 
 ### BR-7
 
+- Hamburger menu shows 3-option theme button group on all devices (`hamburger_menu_theme_button_group`)
+  Covers: `BR-7.3`
+  Given: the application is loaded on any device
+  When: I open the hamburger menu
+  Then: I see a button-group with 3 icon-only theme options (Sun for Light, Moon for Dark, Monitor for System) and the active theme is highlighted
 - Mobile navigation hides project title (`mobile_header_no_project_title`)
   Covers: `BR-7.1`
   Given: the application loads on mobile viewport (width < 768px)
   When: I view the navigation header
   Then: I do not see the project title displayed
-- Mobile navigation moves theme toggle to hamburger menu (`mobile_header_theme_toggle_in_menu`)
-  Covers: `BR-7.3`
-  Given: the application loads on mobile viewport (width < 768px)
-  When: I view the navigation header
-  Then: I do not see the dark/light theme toggle button in the main navigation bar and it is available in the hamburger menu
 - Mobile navigation uses mobile logo (`mobile_header_uses_mobile_logo`)
   Covers: `BR-7.2`
   Given: the application loads on mobile viewport (width < 768px)
@@ -128,15 +148,15 @@
 | `BR-1.3` | 1 | `initial_view_documents_mode` |
 | `BR-2.1` | 1 | `hover_overlay_shows_alternate_icon` |
 | `BR-2.2` | 1 | `hover_overlay_no_documents_view` |
-| `BR-3.1` | 2 | `click_toggle_board_to_list`, `click_toggle_list_to_board` |
-| `BR-3.2` | 1 | `click_from_documents_to_last_used` |
+| `BR-3.1` | 6 | `board_to_documents_transition`, `circular_board_documents_board`, `circular_list_documents_list`, `click_toggle_board_to_list`, `click_toggle_list_to_board`, `list_to_documents_transition` |
+| `BR-3.2` | 3 | `circular_board_documents_board`, `circular_list_documents_list`, `click_from_documents_to_last_used` |
 | `BR-4` | 1 | `persistence_saves_mode` |
 | `BR-5` | 1 | `persistence_loads_mode` |
 | `BR-6.1` | 1 | `mobile_navigation_one_button` |
 | `BR-6.2` | 1 | `desktop_navigation_two_buttons` |
 | `BR-7.1` | 1 | `mobile_header_no_project_title` |
 | `BR-7.2` | 1 | `mobile_header_uses_mobile_logo` |
-| `BR-7.3` | 1 | `mobile_header_theme_toggle_in_menu` |
+| `BR-7.3` | 1 | `hamburger_menu_theme_button_group` |
 | `BR-8` | 2 | `click_toggle_board_to_list`, `click_toggle_list_to_board` |
 | `BR-9.1` | 1 | `mobile_list_view_two_line_cards` |
 | `BR-9.2` | 1 | `mobile_list_view_two_line_cards` |
