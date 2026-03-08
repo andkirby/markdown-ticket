@@ -12,7 +12,7 @@
 
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../UI/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../UI/tooltip'
 
 interface ProjectSelectorCardProps {
   /** Project with selector state to display */
