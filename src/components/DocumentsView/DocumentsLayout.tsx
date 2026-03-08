@@ -386,7 +386,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
             />
           </div>
         </div>
-        <ScrollArea className="h-[calc(100vh-200px)]">
+        <ScrollArea className="h-[calc(100dvh-200px)]">
           <div className="p-2">
             <FileTree
               files={filteredFiles}

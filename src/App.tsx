@@ -178,7 +178,7 @@ function ProjectRouteHandler() {
 
   if (projectsLoading) {
     return (
-      <div data-testid="loading" className="min-h-screen bg-background flex items-center justify-center">
+      <div data-testid="loading" className="min-h-[100dvh] bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     )
@@ -189,7 +189,7 @@ function ProjectRouteHandler() {
   }
 
   return (
-    <div className="App h-screen flex flex-col bg-background overflow-hidden">
+    <div className="App h-[100dvh] flex flex-col bg-background overflow-hidden">
       {/* Navigation Bar */}
       <nav
         data-testid="main-nav"

@@ -43,19 +43,9 @@ interface UseProjectManagerReturn {
   projectConfig: ProjectConfig | null
 }
 
-// Debug: Track hook instances
-let hookInstanceId = 0
-const getHookInstanceId = () => ++hookInstanceId
 
 export function useProjectManager(options: UseProjectManagerOptions = {}): UseProjectManagerReturn {
   const { autoSelectFirst = true, handleSSEEvents = false } = options
-
-  // Debug: Unique ID per hook instance
-  const instanceIdRef = useRef<number>(0)
-  if (instanceIdRef.current === 0) {
-    instanceIdRef.current = getHookInstanceId()
-  }
-  const instanceId = instanceIdRef.current
 
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProjectValue, setSelectedProjectValue] = useState<Project | null>(null)
@@ -66,22 +56,10 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
   const selectedProjectRef = useRef<Project | null>(null)
 
-  // DEBUG: Log hook initialization
-  useEffect(() => {
-    console.log(`[useProjectManager #${instanceId}] 🎬 Hook initialized with options:`, { autoSelectFirst, handleSSEEvents })
-    return () => {
-      console.log(`[useProjectManager #${instanceId}] 🧹 Hook unmounted`)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   // Fetch tickets for a specific project
   const fetchTicketsForProject = useCallback(async (project: Project): Promise<void> => {
     if (!project)
       return
-
-    // DEBUG: Trace API calls
-    console.log(`[useProjectManager #${instanceId}] 🎫 fetchTicketsForProject called for: ${project.id} (${project.project.name})`)
-    console.trace(`[useProjectManager #${instanceId}] Stack trace for fetchTicketsForProject`)
 
     try {
       const projectTickets = await dataLayer.fetchTickets(project.id)
@@ -176,10 +154,6 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     if (!project)
       return
 
-    // DEBUG: Trace API calls
-    console.log(`[useProjectManager #${instanceId}] ⚙️ fetchProjectConfig called for: ${project.id} (${project.project.name})`)
-    console.trace(`[useProjectManager #${instanceId}] Stack trace for fetchProjectConfig`)
-
     try {
       const response = await fetch(`/api/projects/${project.id}/config`)
       if (!response.ok) {
@@ -262,15 +236,10 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
 
   // Call the ref function in useEffect (refs are stable, no dependency issues)
   useEffect(() => {
-    // DEBUG: Trace when project change effect runs
-    console.log(`[useProjectManager #${instanceId}] 📌 Project change effect triggered - selectedProjectValue: ${selectedProjectValue ? selectedProjectValue.id : 'null'}, projects count: ${projects.length}`)
     handleProjectChangeRef.current?.(selectedProjectValue, projects)
   }, [selectedProjectValue, projects])
 
   const setSelectedProject = useCallback((project: Project | null) => {
-    // DEBUG: Trace project selection
-    console.log(`[useProjectManager #${instanceId}] 🔄 setSelectedProject called with: ${project ? `${project.id} (${project.project.name})` : 'null'}`)
-    console.trace(`[useProjectManager #${instanceId}] Stack trace for setSelectedProject`)
     setSelectedProjectValue(project)
   }, [])
 
