@@ -105,7 +105,16 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
     >
       {/* Active project card (always visible) */}
       {activeProject && (
-        <div data-testid="project-selector-rail-active">
+        <div
+          className="px-2"
+          data-testid="project-selector-rail-active"
+          onClick={isMobile ? (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onLauncherClick()
+          } : undefined}
+          style={isMobile ? { cursor: 'pointer' } : undefined}
+        >
           <ProjectSelectorCard
             project={activeProject}
             isActive={true}
@@ -133,8 +142,10 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
         </div>
       )}
 
-      {/* Launcher button (always visible) */}
-      <LauncherButton onLauncherClick={onLauncherClick} isPanelOpen={isPanelOpen} />
+      {/* Launcher button (hidden on mobile - tap active card instead) */}
+      <div className="hidden sm:block">
+        <LauncherButton onLauncherClick={onLauncherClick} isPanelOpen={isPanelOpen} />
+      </div>
     </div>
   )
 }

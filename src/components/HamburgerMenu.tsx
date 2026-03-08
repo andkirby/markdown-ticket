@@ -1,6 +1,8 @@
-import { Edit, Eye, EyeOff, Menu, Monitor, Moon, Plus, Sun, Trash2 } from 'lucide-react'
+import { ArrowUpDown, Edit, Eye, EyeOff, Menu, Monitor, Moon, Plus, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
+import type { SortPreferences } from '../config/sorting'
+import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
@@ -11,12 +13,16 @@ interface HamburgerMenuProps {
   onAddProject: () => void
   onEditProject?: () => void
   hasActiveProject?: boolean
+  sortPreferences?: SortPreferences
+  onSortPreferencesChange?: (preferences: SortPreferences) => void
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onAddProject,
   onEditProject,
   hasActiveProject = false,
+  sortPreferences,
+  onSortPreferencesChange,
 }) => {
   const { themeMode, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
@@ -63,6 +69,24 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     toggleEventHistory()
   }
 
+  const handleSortAttributeChange = (attribute: string) => {
+    const sortAttribute = DEFAULT_SORT_ATTRIBUTES.find(attr => attr.name === attribute)
+    const newPreferences = {
+      selectedAttribute: attribute,
+      selectedDirection: sortAttribute?.defaultDirection || 'desc',
+    }
+    onSortPreferencesChange?.(newPreferences)
+  }
+
+  const handleSortDirectionToggle = () => {
+    if (!sortPreferences) return
+    const newDirection = sortPreferences.selectedDirection === 'asc' ? 'desc' : 'asc'
+    onSortPreferencesChange?.({
+      ...sortPreferences,
+      selectedDirection: newDirection,
+    })
+  }
+
   return (
     <div className="relative flex" ref={menuRef}>
       {/* Desktop only: Mobile theme toggle handled by AppHeader/HamburgerMenu (MDT-131) */}
@@ -100,6 +124,40 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Project
               </button>
+            )}
+
+            {/* Sort Controls - mobile only (desktop has visible sort controls) */}
+            {sortPreferences && onSortPreferencesChange && (
+              <div className="sm:hidden">
+              <>
+                <div className="px-4 py-2 border-t border-border">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Sort by</div>
+                  <div className="space-y-1">
+                    {DEFAULT_SORT_ATTRIBUTES.map(attr => (
+                      <button
+                        key={attr.name}
+                        onClick={() => handleSortAttributeChange(attr.name)}
+                        className={`flex items-center w-full px-3 py-1.5 text-sm rounded transition-colors ${
+                          sortPreferences.selectedAttribute === attr.name
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {attr.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSortDirectionToggle}
+                  className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                >
+                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                  Sort {sortPreferences.selectedDirection === 'asc' ? 'Descending' : 'Ascending'}
+                </button>
+              </>
+              </div>
             )}
 
             {/**
