@@ -117,7 +117,11 @@ export async function getTicketStatus(page: Page, ticketCode: string): Promise<s
  * Navigate to board view
  */
 export async function navigateToBoard(page: Page): Promise<void> {
-  await page.click('[data-testid="nav-board"]')
+  // Check current mode and click toggle if needed
+  const currentMode = await page.getAttribute('[data-testid="board-list-toggle"]', 'data-current-mode')
+  if (currentMode !== 'board') {
+    await page.click('[data-testid="board-list-toggle"]')
+  }
   await waitForBoardReady(page)
 }
 
@@ -125,7 +129,11 @@ export async function navigateToBoard(page: Page): Promise<void> {
  * Navigate to list view
  */
 export async function navigateToList(page: Page): Promise<void> {
-  await page.click('[data-testid="nav-list"]')
+  // Check current mode and click toggle if needed
+  const currentMode = await page.getAttribute('[data-testid="board-list-toggle"]', 'data-current-mode')
+  if (currentMode !== 'list') {
+    await page.click('[data-testid="board-list-toggle"]')
+  }
   // Wait for list to load
   await page.waitForSelector('[data-testid="ticket-list"]', { state: 'visible' })
 }
@@ -134,7 +142,7 @@ export async function navigateToList(page: Page): Promise<void> {
  * Navigate to documents view
  */
 export async function navigateToDocuments(page: Page): Promise<void> {
-  await page.click('[data-testid="nav-documents"]')
+  await page.click('[data-testid="documents-button"]')
   // Wait for document tree to load
   await page.waitForSelector('[data-testid="document-tree"]', { state: 'visible' })
 }
