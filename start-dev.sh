@@ -78,18 +78,18 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
-# Check if npm is installed
-if ! command -v npm &> /dev/null; then
-    echo "❌ npm is not installed. Please install npm."
+# Check if bun is installed
+if ! command -v bun &> /dev/null; then
+    echo "❌ bun is not installed. Please install bun."
     exit 1
 fi
 
 # Install dependencies
 echo "📦 Installing frontend dependencies..."
-npm install
+bun install
 
 echo "📦 Installing server dependencies..."
-cd server && npm install && cd ..
+cd server && bun install && cd ..
 
 # Create tasks directory if it doesn't exist
 echo "📁 Creating tasks directory..."
@@ -103,7 +103,7 @@ kill_processes_on_ports 5173 3001
 # Check if nodemon is installed for development
 if ! command -v nodemon &> /dev/null; then
     echo "🔧 Installing nodemon for development..."
-    npm install -g nodemon
+    bun install -g nodemon
 fi
 
 echo "✅ Setup complete!"
@@ -113,13 +113,13 @@ echo "🎯 Starting the system..."
 # Check if user wants to start both servers (default) or specific ones
 if [ -z "$1" ] || [ "$1" = "both" ]; then
     echo "🚀 Starting both frontend and backend servers..."
-    npm run dev:full
+    bun run dev:full
 elif [ "$1" = "frontend" ]; then
     echo "🚀 Starting frontend server only..."
-    npm run dev
+    bun run dev
 elif [ "$1" = "backend" ]; then
     echo "🚀 Starting backend server only..."
-    npm run dev:server
+    bun run dev:server
 elif [ "$1" = "stop" ]; then
     stop_processes
     exit 0
