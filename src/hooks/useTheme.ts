@@ -3,21 +3,36 @@ import { useEffect, useRef, useState } from 'react'
 const COOKIE_NAME = 'theme'
 const COOKIE_EXPIRES_DAYS = 365
 
+type ThemeMode = 'light' | 'dark' | 'system'
+
+function getSystemTheme(): 'light' | 'dark' {
+  if (typeof window === 'undefined')
+    return 'light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
 export function useTheme() {
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     // Check if we're on the client side
     if (typeof window === 'undefined')
-      return 'light'
+      return 'system'
 
-    // Check for saved theme preference or default to light mode
+    // Check for saved theme preference
     const savedTheme = getCookie(COOKIE_NAME)
-    if (savedTheme === 'dark' || savedTheme === 'light') {
+    if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
       return savedTheme
     }
 
-    // Check system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    return prefersDark ? 'dark' : 'light'
+    // Default to system
+    return 'system'
+  })
+
+  // Track the actual applied theme (resolves 'system' to 'light' or 'dark')
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
+    if (themeMode === 'system') {
+      return getSystemTheme()
+    }
+    return themeMode
   })
 
   // Track mount status using a ref
@@ -27,26 +42,56 @@ export function useTheme() {
     mountedRef.current = true
   }, [])
 
+  // Update resolved theme when mode changes or system preference changes
+  useEffect(() => {
+    if (!mountedRef.current)
+      return
+
+    const updateResolvedTheme = () => {
+      if (themeMode === 'system') {
+        setResolvedTheme(getSystemTheme())
+      } else {
+        setResolvedTheme(themeMode)
+      }
+    }
+
+    updateResolvedTheme()
+
+    // Listen for system preference changes when in system mode
+    if (themeMode === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handler = () => updateResolvedTheme()
+      mediaQuery.addEventListener('change', handler)
+      return () => mediaQuery.removeEventListener('change', handler)
+    }
+  }, [themeMode])
+
+  // Apply theme to DOM
   useEffect(() => {
     if (!mountedRef.current)
       return
 
     const root = window.document.documentElement
     root.classList.remove('light', 'dark')
-    root.classList.add(theme)
+    root.classList.add(resolvedTheme)
 
     // Save to cookie
-    setCookie(COOKIE_NAME, theme, COOKIE_EXPIRES_DAYS)
-  }, [theme])
+    setCookie(COOKIE_NAME, themeMode, COOKIE_EXPIRES_DAYS)
+  }, [resolvedTheme, themeMode])
 
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light')
+    setThemeMode(prevMode => {
+      if (prevMode === 'light') return 'dark'
+      if (prevMode === 'dark') return 'system'
+      return 'light'
+    })
   }
 
   return {
-    theme,
+    theme: resolvedTheme,
+    themeMode,
     toggleTheme,
-    setTheme,
+    setTheme: setThemeMode,
     mounted: mountedRef.current,
   }
 }

@@ -10,13 +10,13 @@ This feature reduces navigation space from 3 buttons to 2 by merging Board and L
 
 ### BR-1
 
-- `BR-1.1` [bdd] WHEN application loads in board view, the system shall render a single merged Board|List button displaying the Board icon
-- `BR-1.2` [bdd] WHEN application loads in list view, the system shall render a single merged Board|List button displaying the List icon
-- `BR-1.3` [bdd] WHEN application loads in documents view, the system shall render a single merged Board|List button displaying the last-used board or list icon with a dimmed border
+- `BR-1.1` [bdd] WHEN application loads in board view, the system shall render a single merged Board|List button displaying the original Board icon from /icon_board_col_64.webp
+- `BR-1.2` [bdd] WHEN application loads in list view, the system shall render a single merged Board|List button displaying the original List icon from /icon_list_64.webp
+- `BR-1.3` [bdd] WHEN application loads in documents view, the system shall render a single merged Board|List button displaying the last-used board or list icon from original webp files (/icon_board_col_64.webp or /icon_list_64.webp) with a dimmed border
 
 ### BR-2
 
-- `BR-2.1` [bdd] WHEN user hovers over the Board|List button while in board or list view, the system shall display an overlay showing the alternate view icon within 150ms with a fade-in animation
+- `BR-2.1` [bdd] WHEN user hovers over the Board|List button while in board or list view, the system shall display an overlay showing the alternate view icon from original webp files (/icon_list_64.webp or /icon_board_col_64.webp) within 150ms with a fade-in animation
 - `BR-2.2` [bdd] WHEN user hovers over the Board|List button while in documents view, the system shall NOT display an overlay
 
 ### BR-3
@@ -41,11 +41,11 @@ This feature reduces navigation space from 3 buttons to 2 by merging Board and L
 
 - `BR-7.1` [bdd] WHEN application loads on mobile viewport, the system shall NOT display the project title in the navigation header
 - `BR-7.2` [bdd] WHEN application loads on mobile viewport, the system shall use the mobile logo from designs/logo-mdt-m-dark_64x64.png instead of the default logo
-- `BR-7.3` [bdd] WHEN application loads on mobile viewport, the system shall move the dark/light theme toggle button into the hamburger menu instead of the main navigation bar
+- `BR-7.3` [bdd] WHEN user opens the hamburger menu on any device (mobile or desktop), the system shall display a button-group with 3 theme options (Light, Dark, System) showing only icons with no text labels. The active theme is highlighted with primary color. The desktop theme toggle button in the top right corner has been removed.
 
 ### BR-8
 
-- `BR-8` [bdd] WHEN user switches from Board view to List view, the Board|List toggle button shall display the List icon, and WHEN switching from List to Board view, it shall display the Board icon
+- `BR-8` [bdd] WHEN user switches from Board view to List view, the Board|List toggle button shall display the original List icon from /icon_list_64.webp, and WHEN switching from List to Board view, it shall display the original Board icon from /icon_board_col_64.webp
 
 ### BR-9
 
@@ -60,6 +60,7 @@ This feature reduces navigation space from 3 buttons to 2 by merging Board and L
 - `C4` [tests] TypeScript compilation SHALL succeed without errors
 - `C5` [tests] All existing tests SHALL pass after component extraction
 - `C6` [tests] Mobile viewport breakpoint SHALL be 768px (Tailwind md: breakpoint)
+- `C7` [tests] The Board|List toggle button SHALL use the original webp image files (/icon_board_col_64.webp and /icon_list_64.webp) with original button styles (h-12 w-12 rounded-md, border-2 with primary/muted-foreground colors, dark:invert) and SHALL NOT use icon library components (e.g., lucide-react, react-icons)
 
 ## Edge Cases
 
@@ -71,6 +72,6 @@ This feature reduces navigation space from 3 buttons to 2 by merging Board and L
 | Route | Count | IDs |
 |---|---:|---|
 | bdd | 17 | `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-2.1`, `BR-2.2`, `BR-3.1`, `BR-3.2`, `BR-4`, `BR-5`, `BR-6.1`, `BR-6.2`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-8`, `BR-9.1`, `BR-9.2` |
-| tests | 8 | `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `Edge-1`, `Edge-2` |
+| tests | 9 | `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `Edge-1`, `Edge-2` |
 | clarification | 0 | - |
 | not_applicable | 0 | - |

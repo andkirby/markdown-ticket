@@ -1,8 +1,7 @@
-import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from './types'
-import { Moon, Sun } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { MobileLogo } from './components/AppHeader'
 import { EventHistory } from './components/DevTools/EventHistory'
 import { useEventHistoryState } from './components/DevTools/useEventHistoryState'
 import { DirectTicketAccess } from './components/DirectTicketAccess'
@@ -12,79 +11,18 @@ import { RedirectToCurrentProject } from './components/RedirectToCurrentProject'
 import { RouteErrorModal } from './components/RouteErrorModal'
 import TicketViewer from './components/TicketViewer'
 import { Toaster } from './components/UI/sonner'
+import { ViewModeSwitcher } from './components/ViewModeSwitcher'
 import { useProjectManager } from './hooks/useProjectManager'
-import { useTheme } from './hooks/useTheme'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
 import './utils/cache' // Import cache utilities for development
 import './services/sseClient' // Initialize SSE connection
-
-interface ViewModeSwitcherProps {
-  viewMode: 'board' | 'list' | 'documents'
-  onViewModeChange: (mode: 'board' | 'list' | 'documents') => void
-}
-
-function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps) {
-  return (
-    <div className="flex space-x-1">
-      <button
-        data-testid="nav-board"
-        onClick={() => onViewModeChange('board')}
-        className={`h-12 w-12 rounded-md transition-all ${
-          viewMode === 'board'
-            ? 'border-2 border-primary'
-            : 'border-2 border-transparent hover:border-muted-foreground/30'
-        }`}
-        title="Board View"
-      >
-        <img
-          src="/icon_board_col_64.webp"
-          alt="Board"
-          className="w-8 h-8 mx-auto dark:invert"
-        />
-      </button>
-      <button
-        data-testid="nav-list"
-        onClick={() => onViewModeChange('list')}
-        className={`h-12 w-12 rounded-md transition-all ${
-          viewMode === 'list'
-            ? 'border-2 border-primary'
-            : 'border-2 border-transparent hover:border-muted-foreground/30'
-        }`}
-        title="List View"
-      >
-        <img
-          src="/icon_list_64.webp"
-          alt="List"
-          className="w-8 h-8 mx-auto dark:invert"
-        />
-      </button>
-      <button
-        data-testid="nav-documents"
-        onClick={() => onViewModeChange('documents')}
-        className={`h-12 w-12 rounded-md transition-all ${
-          viewMode === 'documents'
-            ? 'border-2 border-primary'
-            : 'border-2 border-transparent hover:border-muted-foreground/30'
-        }`}
-        title="Documents View"
-      >
-        <img
-          src="/icon_docs_64.webp"
-          alt="Documents"
-          className="w-8 h-8 mx-auto dark:invert"
-        />
-      </button>
-    </div>
-  )
-}
 
 function ProjectRouteHandler() {
   const { projectCode } = useParams<{ projectCode: string }>()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
-  const { theme, toggleTheme } = useTheme()
 
   const {
     projects,
@@ -174,8 +112,14 @@ function ProjectRouteHandler() {
   const handleViewModeChange = (mode: 'board' | 'list' | 'documents') => {
     const basePath = `/prj/${projectCode}`
     const newPath = mode === 'board' ? basePath : `${basePath}/${mode}`
-    // Store current view mode preference
+
+    // Store view mode preferences
+    if (mode === 'board' || mode === 'list') {
+      // Store the last board/list mode separately
+      localStorage.setItem('lastBoardListMode', mode)
+    }
     localStorage.setItem('lastViewMode', mode)
+
     navigate(newPath)
   }
 
@@ -214,28 +158,12 @@ function ProjectRouteHandler() {
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-4 min-w-0 flex-1 overflow-hidden">
               <div className="flex-shrink-0">
-                <img src="/logo.jpeg" alt="Logo" className="h-14 w-auto dark:invert" />
+                <MobileLogo />
               </div>
-              <ViewModeSwitcher viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+              <ViewModeSwitcher currentMode={viewMode} onModeChange={handleViewModeChange} />
               <div className="min-w-0 flex-1">
                 <ProjectSelector />
               </div>
-            </div>
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <button
-                data-testid="theme-toggle"
-                onClick={toggleTheme}
-                className="btn btn-ghost p-2 h-10 w-10"
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark'
-                  ? (
-                      <Sun className="h-5 w-5" />
-                    )
-                  : (
-                      <Moon className="h-5 w-5" />
-                    )}
-              </button>
             </div>
           </div>
         </div>
