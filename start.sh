@@ -69,7 +69,7 @@ elif [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  ./start.sh build        # Build then start both servers"
     echo "  ./start.sh stop         # Stop all production servers"
     echo ""
-    echo "Note: This script uses pre-built .js files. Run 'npm run build:all' first if needed."
+    echo "Note: This script uses pre-built .js files. Run 'bun run build:all' first if needed."
     echo "For development mode with hot-reload, use: ./start-dev.sh"
     exit 0
 fi
@@ -110,7 +110,7 @@ fi
 if [ "$missing_builds" = true ]; then
     if [ "$1" = "build" ]; then
         echo "🔨 Building all components..."
-        npm run build:all
+        bun run build:all
         if [ $? -ne 0 ]; then
             echo "❌ Build failed. Please check the build logs above."
             exit 1
@@ -122,7 +122,7 @@ if [ "$missing_builds" = true ]; then
         echo "   ./start.sh build"
         echo ""
         echo "Or build manually:"
-        echo "   npm run build:all"
+        echo "   bun run build:all"
         echo ""
         echo "Then run this script again without 'build' option."
         exit 1
@@ -154,7 +154,7 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
 
     # Start frontend in background
     echo "🎨 Starting frontend production server on port 4173..."
-    (cd "${SCRIPT_DIR}" && npm run preview) &
+    (cd "${SCRIPT_DIR}" && bun run preview) &
     FRONTEND_PID=$!
 
     echo ""
@@ -174,7 +174,7 @@ if [ -z "$1" ] || [ "$1" = "both" ] || [ "$1" = "build" ]; then
 
 elif [ "$1" = "frontend" ]; then
     echo "🚀 Starting frontend production server only..."
-    cd "${SCRIPT_DIR}" && npm run preview
+    cd "${SCRIPT_DIR}" && bun run preview
 
 elif [ "$1" = "backend" ]; then
     echo "🚀 Starting backend production server only..."

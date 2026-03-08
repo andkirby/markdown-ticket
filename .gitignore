@@ -99,3 +99,6 @@ counter-api/
 # debug files
 _*
 designs/
+
+# debug spec-trace files
+spec-trace*.md
