@@ -38,6 +38,30 @@ export async function waitForBoardReady(page: Page, timeout = BOARD_READY_TIMEOU
 }
 
 /**
+ * Wait for list view to be ready (loading complete)
+ *
+ * Waits for:
+ * 1. Loading to disappear
+ * 2. Ticket list to be visible
+ */
+export async function waitForListReady(page: Page, timeout = BOARD_READY_TIMEOUT): Promise<void> {
+  await page.waitForSelector(commonSelectors.loading, { state: 'hidden', timeout })
+  await page.waitForSelector('[data-testid="ticket-list"]', { state: 'visible', timeout })
+}
+
+/**
+ * Wait for documents view to be ready (loading complete)
+ *
+ * Waits for:
+ * 1. Loading to disappear
+ * 2. Document tree to be visible
+ */
+export async function waitForDocumentsReady(page: Page, timeout = BOARD_READY_TIMEOUT): Promise<void> {
+  await page.waitForSelector(commonSelectors.loading, { state: 'hidden', timeout })
+  await page.waitForSelector('[data-testid="document-tree"]', { state: 'visible', timeout })
+}
+
+/**
  * Get the current ticket count displayed on the board
  */
 export async function getTicketCount(page: Page): Promise<number> {

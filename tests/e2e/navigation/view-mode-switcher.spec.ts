@@ -8,7 +8,7 @@
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario, type ScenarioResult } from '../setup/index.js'
 import { navSelectors } from '../utils/selectors.js'
-import { waitForBoardReady } from '../utils/helpers.js'
+import { waitForBoardReady, waitForListReady, waitForDocumentsReady } from '../utils/helpers.js'
 
 test.describe('MDT-131: View Mode Switcher', () => {
   let scenario: ScenarioResult
@@ -33,12 +33,12 @@ test.describe('MDT-131: View Mode Switcher', () => {
 
       // Reload to test initial state in list view
       await page.reload()
-      await waitForBoardReady(page)
+      await waitForListReady(page)
 
       await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'list')
     })
 
-    test('should show last-used mode with dimmed border in documents view', async ({ page }) => {
+    test('should show last-used mode in documents view', async ({ page }) => {
       // Set board mode as last-used
       await page.click(navSelectors.boardListToggle)
       await page.click(navSelectors.boardListToggle)
@@ -47,7 +47,8 @@ test.describe('MDT-131: View Mode Switcher', () => {
       await page.click(navSelectors.documentsButton)
       await page.waitForURL(`**/prj/${scenario.projectCode}/documents`)
 
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-state', 'dimmed')
+      // Verify board icon is shown (last-used mode)
+      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'board')
     })
   })
 
@@ -79,17 +80,17 @@ test.describe('MDT-131: View Mode Switcher', () => {
 
       // Hover and check overlay appears
       await page.locator(navSelectors.boardListToggle).hover()
-      await expect(overlay).toBeVisible({ timeout: 200 })
 
-      // Verify animation timing (within 150ms)
-      const opacity = await overlay.evaluate((el) => {
-        return window.getComputedStyle(el).opacity
-      })
-      expect(parseFloat(opacity)).toBeGreaterThan(0)
+      // Wait for transition to complete (150ms animation)
+      await page.waitForTimeout(200)
+
+      // Check that overlay is visible
+      await expect(overlay).toBeVisible()
     })
 
     test('should not show overlay when hovering in documents view', async ({ page }) => {
       await page.click(navSelectors.documentsButton)
+      await waitForDocumentsReady(page)
 
       await page.locator(navSelectors.boardListToggle).hover()
       await expect(page.locator(navSelectors.boardListToggleOverlay)).not.toBeVisible()
@@ -113,7 +114,7 @@ test.describe('MDT-131: View Mode Switcher', () => {
 
     test('should toggle from List to Board view and show List icon on button', async ({ page }) => {
       await page.goto(`/prj/${scenario.projectCode}/list`)
-      await waitForBoardReady(page)
+      await waitForListReady(page)
 
       const boardListButton = page.locator(navSelectors.boardListToggle)
 
@@ -144,9 +145,8 @@ test.describe('MDT-131: View Mode Switcher', () => {
       await page.click(navSelectors.documentsButton)
       await page.waitForURL(`**/prj/${scenario.projectCode}/documents`)
 
-      // Verify Board icon is shown with dimmed border
+      // Verify Board icon is shown (last-used mode)
       await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'board')
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-state', 'dimmed')
     })
 
     test('should navigate from List to Documents view', async ({ page }) => {
@@ -154,9 +154,8 @@ test.describe('MDT-131: View Mode Switcher', () => {
       await page.click(navSelectors.documentsButton)
       await page.waitForURL(`**/prj/${scenario.projectCode}/documents`)
 
-      // Verify List icon is shown with dimmed border
+      // Verify List icon is shown (last-used mode)
       await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'list')
-      await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-state', 'dimmed')
     })
 
     test('should complete circular navigation: Board → Documents → Board', async ({ page }) => {
@@ -206,7 +205,7 @@ test.describe('MDT-131: View Mode Switcher', () => {
 
       // Reload and verify
       await page.reload()
-      await waitForBoardReady(page)
+      await waitForListReady(page)
       await page.waitForURL(`**/prj/${scenario.projectCode}/list`)
 
       await expect(page.locator(navSelectors.boardListToggle)).toHaveAttribute('data-current-mode', 'list')

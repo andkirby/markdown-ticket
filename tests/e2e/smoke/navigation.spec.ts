@@ -54,8 +54,11 @@ test.describe('Navigation', () => {
     })
 
     test('switches from board to list view', async ({ page }) => {
-      // Click list tab
-      await page.click(navSelectors.listTab)
+      // Click Board|List toggle to switch to list view
+      await page.click(navSelectors.boardListToggle)
+
+      // Verify URL changed to list view
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/list`)
 
       // Verify list view is visible
       await expect(page.locator('[data-testid="ticket-list"]')).toBeVisible()
@@ -65,8 +68,11 @@ test.describe('Navigation', () => {
     })
 
     test('switches from board to documents view', async ({ page }) => {
-      // Click documents tab
-      await page.click(navSelectors.documentsTab)
+      // Click documents button
+      await page.click(navSelectors.documentsButton)
+
+      // Verify URL changed to documents view
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/documents`)
 
       // Verify documents view is visible (use first() for strict mode compliance)
       await expect(page.locator('[data-testid="document-tree"]').first()).toBeVisible()
@@ -77,12 +83,16 @@ test.describe('Navigation', () => {
 
     test('switches from list back to board view', async ({ page }) => {
       // First switch to list view
-      await page.click(navSelectors.listTab)
+      await page.click(navSelectors.boardListToggle)
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/list`)
       await expect(page.locator('[data-testid="ticket-list"]')).toBeVisible()
 
-      // Then switch back to board view
-      await page.click(navSelectors.boardTab)
+      // Then switch back to board view by clicking Board|List toggle again
+      await page.click(navSelectors.boardListToggle)
       await waitForBoardReady(page)
+
+      // Verify URL changed back to board view
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}`)
 
       // Verify board is visible again
       await expect(page.locator('[data-testid="kanban-board"]')).toBeVisible()
@@ -93,12 +103,16 @@ test.describe('Navigation', () => {
 
     test('switches from documents back to board view', async ({ page }) => {
       // First switch to documents view
-      await page.click(navSelectors.documentsTab)
+      await page.click(navSelectors.documentsButton)
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}/documents`)
       await expect(page.locator('[data-testid="document-tree"]').first()).toBeVisible()
 
-      // Then switch back to board view
-      await page.click(navSelectors.boardTab)
+      // Then switch back to board view by clicking Board|List toggle
+      await page.click(navSelectors.boardListToggle)
       await waitForBoardReady(page)
+
+      // Verify URL changed back to board view
+      await expect(page).toHaveURL(`/prj/${scenario!.projectCode}`)
 
       // Verify board is visible again
       await expect(page.locator('[data-testid="kanban-board"]')).toBeVisible()

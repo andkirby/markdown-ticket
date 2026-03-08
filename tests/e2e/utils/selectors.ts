@@ -103,8 +103,6 @@ export const commonSelectors = {
  * Project info selectors
  */
 export const projectSelectors = {
-  /** Project name header */
-  projectName: '[data-testid="project-name"]',
   /** Project code */
   projectCode: '[data-testid="project-code"]',
   /** Ticket count badge */
@@ -163,10 +161,10 @@ export const projectSelectors = {
 export const listSelectors = {
   /** Ticket list container */
   ticketList: '[data-testid="ticket-list"]',
-  /** Ticket row in list (note: space-separated with ticket-row-{code}) */
-  ticketRow: '[data-testid~="ticket-row"]',
-  /** Ticket row by code (note: space-separated with ticket-row) */
-  rowByCode: (code: string) => `[data-testid~="ticket-row-${code}"]`,
+  /** Ticket card in list (card-based layout) */
+  ticketCard: '[data-testid^="ticket-card-"]',
+  /** Ticket card by code */
+  cardByCode: (code: string) => `[data-testid="ticket-card-${code}"]`,
   /** Sort controls container */
   sortControls: '[data-testid="sort-controls"]',
   /** Sort button for column */
