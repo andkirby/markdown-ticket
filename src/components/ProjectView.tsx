@@ -108,6 +108,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                 selectedProject={selectedProject}
                 tickets={propTickets || []}
                 loading={loading}
+                sortPreferences={sortPreferences}
               />
             )
           : viewMode === 'list'
