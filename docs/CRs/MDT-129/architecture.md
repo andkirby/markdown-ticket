@@ -1,53 +1,16 @@
-# Architecture: MDT-129
+# Architecture
 
-**Source**: [MDT-129](../MDT-129-redesign-project-selector-launcher-panel.md)
-**Generated**: 2026-03-02
+## Rationale
+
+# Architecture Narrative
 
 ## Overview
 
 Redesigns the project selector from a uniform horizontal list into a tiered rail+panel system. The active project displays as an expanded card, inactive visible projects as compact code-only chips (or medium cards per preference), and a trailing launcher opens a full project browser panel directly below the rail. User preferences are loaded from `CONFIG_DIR/user.toml`; mutable selector state (favorites, usage) persists to `CONFIG_DIR/project-selector.json`. Design philosophy prioritizes visual hierarchy, progressive disclosure, and deterministic ordering.
 
-## Constraint Carryover
-
-| Constraint ID | Enforcement |
-|---------------|-------------|
-| C1 | Runtime Prerequisites — `CONFIG_DIR/user.toml` under `[ui.projectSelector]` |
-| C2 | Runtime Prerequisites — `CONFIG_DIR/project-selector.json` keyed by project code |
-| C3 | Canonical Runtime Flows — persistence shortly after selection, not on shutdown |
-| C4 | Runtime Prerequisites — uses existing `designs/acclaim.svg` |
-| C5 | Module Boundaries — panel anchored to selector via shared container |
-| C6 | Runtime Prerequisites — `visibleCount` default 7; `compactInactive` default true |
-| C7 | Selection Logic — active project always visible regardless of ordering rules |
-| C8 | Module Boundaries — selector rail ends with exactly one launcher control |
-| C9 | Module Boundaries — panel renders registered projects only; no synthetic "All Projects" |
-| C10 | Data Model — mutable selector state (`project-selector.json`) separate from immutable preferences (`user.toml`) on disk; combined over a single transport endpoint |
-
 ## Pattern
 
 **Progressive Disclosure with Anchored Overlay** — The rail shows minimal context (active + preference-driven inactive items), the panel reveals full detail on demand. This pattern fits because project selection is a frequent but secondary action; users need quick visual confirmation of current context without navigational clutter.
-
-## Canonical Runtime Flows
-
-| Critical Behavior | Canonical Runtime Flow (single path) | Owner Module |
-|-------------------|--------------------------------------|--------------|
-| Load selector data | App init → `useSelectorData` fetches `CONFIG_DIR/user.toml` and `CONFIG_DIR/project-selector.json` via single `/api/config/selector` call → parses `{preferences, selectorState}` → provides to selector | `src/components/ProjectSelector/` |
-| Display selector rail | `useProjectSelectorManager` computes visible subset using ordering rules → `ProjectSelectorRail` renders active card + compact/medium inactive chips + launcher | `src/components/ProjectSelector/` |
-| Compute rail ordering | Active project first → favorites (by `count` desc, then `lastUsedAt` desc) → non-favorites (by `lastUsedAt` desc, then `count` desc) → enforce active visibility | `src/utils/selectorOrdering.ts` |
-| Open project panel | User clicks launcher → panel open state (`useState` in `index.tsx`) sets `isOpen=true` → `ProjectBrowserPanel` renders below rail: favorites first (by `count` desc, then `lastUsedAt` desc), then non-favorites (by `lastUsedAt` desc, then `count` desc) | `src/components/ProjectSelector/` |
-| Switch project from rail | User clicks chip → `onProjectSelect` callback → `useProjectManager.setSelectedProject` updates selection → `useSelectorData` persists `lastUsedAt` and `count` → rail re-renders with new active | `src/hooks/useProjectManager.ts` |
-| Switch project from panel | User clicks panel card → `onProjectSelect` callback → panel closes → same flow as rail selection | `src/components/ProjectSelector/` |
-| Toggle favorite | User clicks favorite indicator → `useSelectorData.toggleFavorite` updates `favorite` field → persists to `project-selector.json` → UI reflects change | `src/components/ProjectSelector/` |
-| Persist usage state | Project selection → debounced write to `CONFIG_DIR/project-selector.json` (updates `lastUsedAt` timestamp, increments `count`) via private utility inside `useSelectorData` | `src/components/ProjectSelector/` |
-| Responsive collapse | Viewport < mobile breakpoint → `ProjectSelectorRail` renders active card + launcher only (no inactive chips) | `src/components/ProjectSelector/` |
-
-Rules:
-- One behavior = one canonical flow
-- One behavior = one owner module
-- No duplicate owners
-
-## Alternatives (if proposing simplifications)
-
-None — the CR scope is well-defined. All decisions below support the stated requirements.
 
 ## Key Dependencies
 
@@ -139,5 +102,128 @@ If persistence writes fail, the UI continues to display current favorite and usa
 
 To add a new selector view mode (e.g., grid): create `ProjectSelectorGrid.tsx`, add mode to `ViewModeSwitcher`, extend `useProjectSelectorManager` to provide grid-specific data. No changes to rail, panel, or ordering logic.
 
----
-*Generated by /mdt:architecture*
+## Obligations
+
+- Prioritize active project to remain visible in rail even when it would fall outside normal visible subset based on ordering rules (`OBL-active-project-always-visible`)
+  Derived From: `BR-1.3`, `BR-6.5`, `C7`
+  Artifacts: `ART-selector-manager-hook`, `ART-ordering-utils`, `ART-selector-rail`
+- Display active project as larger card containing code and title with favorite indicator when favorited (`OBL-active-project-card-display`)
+  Derived From: `BR-1.1`, `BR-1.2`
+  Artifacts: `ART-selector-card`, `ART-selector-rail`, `ART-selector-index`, `ART-selector-types`
+- Validate config values: visibleCount >=1 integer, compactInactive boolean; drop invalid project-state entries or fields; ignore unknown fields (`OBL-config-validation`)
+  Derived From: `BR-10.1`, `BR-10.2`, `BR-10.3`, `BR-10.4`, `BR-10.5`, `BR-10.6`, `BR-10.7`
+  Artifacts: `ART-selector-data-hook`, `ART-server-system-routes`, `ART-config-user-toml`, `ART-config-selector-state`
+- Load visibleCount and compactInactive from user.toml [ui.projectSelector]; fall back to defaults (visibleCount=7, compactInactive=true) when missing or invalid (`OBL-configuration-load-and-defaults`)
+  Derived From: `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `C6`, `C10`
+  Artifacts: `ART-selector-data-hook`, `ART-server-system-routes`, `ART-config-user-toml`
+- Render inactive visible rail projects as compact code-only chips (compactInactive=true) or medium cards (compactInactive=false) (`OBL-inactive-projects-display-mode`)
+  Derived From: `BR-2.1`, `BR-2.2`, `BR-2.3`
+  Artifacts: `ART-selector-chip`, `ART-selector-rail`, `ART-config-user-toml`
+- Display single launcher control at rail end using acclaim.svg; clicking opens panel directly below selector showing full project list (`OBL-launcher-and-panel-flow`)
+  Derived From: `BR-3.1`, `BR-3.2`, `BR-3.3`, `C4`, `C5`, `C8`
+  Artifacts: `ART-launcher-button`, `ART-browser-panel`, `ART-selector-index`, `ART-asset-acclaim-svg`
+- Load selector data from single /api/config/selector endpoint combining user.toml preferences and project-selector.json state (`OBL-load-selector-data`)
+  Derived From: `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-8.5`, `BR-8.6`, `C1`, `C2`, `C10`
+  Artifacts: `ART-selector-data-hook`, `ART-server-system-routes`, `ART-config-user-toml`, `ART-config-selector-state`
+- Panel displays all registered projects as cards with code, title, description; favorites first (by count desc, lastUsedAt desc), then non-favorites (by lastUsedAt desc, count desc) (`OBL-panel-displays-full-list`)
+  Derived From: `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `C9`
+  Artifacts: `ART-browser-panel`, `ART-ordering-utils`, `ART-selector-manager-hook`
+- Project selection from rail or panel changes current project via useProjectManager.setSelectedProject and updates usage state (lastUsedAt timestamp, increment count) (`OBL-project-switching-flow`)
+  Derived From: `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `C3`
+  Artifacts: `ART-selector-rail`, `ART-browser-panel`, `ART-selector-data-hook`, `ART-hook-project-manager`, `ART-config-selector-state`
+- Display active project first, then favorites (by count desc, lastUsedAt desc), then non-favorites (by lastUsedAt desc, count desc) within visibleCount limit (`OBL-rail-ordering`)
+  Derived From: `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`
+  Artifacts: `ART-selector-manager-hook`, `ART-ordering-utils`, `ART-selector-rail`, `ART-config-user-toml`
+- On mobile viewport, display only active project card and launcher; activating launcher provides access to remaining projects with same state model (`OBL-responsive-collapse`)
+  Derived From: `BR-9.1`, `BR-9.2`, `BR-9.3`
+  Artifacts: `ART-selector-rail`, `ART-selector-index`, `ART-browser-panel`
+- Persist selector state (favorite, lastUsedAt, count per project) to project-selector.json keyed by project code; write shortly after selection changes; handle missing or invalid JSON gracefully (`OBL-state-persistence`)
+  Derived From: `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `C2`, `C3`, `C10`
+  Artifacts: `ART-selector-data-hook`, `ART-config-selector-state`, `ART-server-system-routes`
+- E2E tests for selector behavior covering BR-1 through BR-10; Jest unit tests for ordering and data hook logic (`OBL-test-coverage`)
+  Derived From: `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-2.1`, `BR-2.2`, `BR-2.3`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-6.5`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-9.1`, `BR-9.2`, `BR-9.3`, `BR-10.1`, `BR-10.2`, `BR-10.3`, `BR-10.4`, `BR-10.5`, `BR-10.6`, `BR-10.7`
+  Artifacts: `ART-test-e2e-selector`, `ART-test-ordering`, `ART-test-selector-data-hook`
+
+## Artifacts
+
+| Artifact ID | Path | Kind | Referencing Obligations |
+|---|---|---|---|
+| `ART-asset-acclaim-svg` | `designs/acclaim.svg` | doc | `OBL-launcher-and-panel-flow` |
+| `ART-browser-panel` | `src/components/ProjectSelector/ProjectBrowserPanel.tsx` | runtime | `OBL-launcher-and-panel-flow`, `OBL-panel-displays-full-list`, `OBL-project-switching-flow`, `OBL-responsive-collapse` |
+| `ART-config-selector-state` | `CONFIG_DIR/project-selector.json` | config | `OBL-config-validation`, `OBL-load-selector-data`, `OBL-project-switching-flow`, `OBL-state-persistence` |
+| `ART-config-user-toml` | `CONFIG_DIR/user.toml` | config | `OBL-config-validation`, `OBL-configuration-load-and-defaults`, `OBL-inactive-projects-display-mode`, `OBL-load-selector-data`, `OBL-rail-ordering` |
+| `ART-hook-project-manager` | `src/hooks/useProjectManager.ts` | runtime | `OBL-project-switching-flow` |
+| `ART-launcher-button` | `src/components/ProjectSelector/LauncherButton.tsx` | runtime | `OBL-launcher-and-panel-flow` |
+| `ART-ordering-utils` | `src/utils/selectorOrdering.ts` | runtime | `OBL-active-project-always-visible`, `OBL-panel-displays-full-list`, `OBL-rail-ordering` |
+| `ART-selector-card` | `src/components/ProjectSelector/ProjectSelectorCard.tsx` | runtime | `OBL-active-project-card-display` |
+| `ART-selector-chip` | `src/components/ProjectSelector/ProjectSelectorChip.tsx` | runtime | `OBL-inactive-projects-display-mode` |
+| `ART-selector-data-hook` | `src/components/ProjectSelector/useSelectorData.ts` | runtime | `OBL-config-validation`, `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-project-switching-flow`, `OBL-state-persistence` |
+| `ART-selector-index` | `src/components/ProjectSelector/index.tsx` | runtime | `OBL-active-project-card-display`, `OBL-launcher-and-panel-flow`, `OBL-responsive-collapse` |
+| `ART-selector-manager-hook` | `src/components/ProjectSelector/useProjectSelectorManager.ts` | runtime | `OBL-active-project-always-visible`, `OBL-panel-displays-full-list`, `OBL-rail-ordering` |
+| `ART-selector-rail` | `src/components/ProjectSelector/ProjectSelectorRail.tsx` | runtime | `OBL-active-project-always-visible`, `OBL-active-project-card-display`, `OBL-inactive-projects-display-mode`, `OBL-project-switching-flow`, `OBL-rail-ordering`, `OBL-responsive-collapse` |
+| `ART-selector-types` | `src/components/ProjectSelector/types.ts` | runtime | `OBL-active-project-card-display` |
+| `ART-server-system-routes` | `server/routes/system.ts` | runtime | `OBL-config-validation`, `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-state-persistence` |
+| `ART-test-e2e-selector` | `tests/e2e/selector/project-selector.spec.ts` | test | `OBL-test-coverage` |
+| `ART-test-ordering` | `src/utils/selectorOrdering.test.ts` | test | `OBL-test-coverage` |
+| `ART-test-selector-data-hook` | `src/components/ProjectSelector/useSelectorData.test.ts` | test | `OBL-test-coverage` |
+
+## Derivation Summary
+
+| Requirement ID | Obligation Count | Obligation IDs |
+|---|---:|---|
+| `BR-1.1` | 2 | `OBL-active-project-card-display`, `OBL-test-coverage` |
+| `BR-1.2` | 2 | `OBL-active-project-card-display`, `OBL-test-coverage` |
+| `BR-1.3` | 2 | `OBL-active-project-always-visible`, `OBL-test-coverage` |
+| `BR-2.1` | 2 | `OBL-inactive-projects-display-mode`, `OBL-test-coverage` |
+| `BR-2.2` | 2 | `OBL-inactive-projects-display-mode`, `OBL-test-coverage` |
+| `BR-2.3` | 2 | `OBL-inactive-projects-display-mode`, `OBL-test-coverage` |
+| `BR-3.1` | 2 | `OBL-launcher-and-panel-flow`, `OBL-test-coverage` |
+| `BR-3.2` | 2 | `OBL-launcher-and-panel-flow`, `OBL-test-coverage` |
+| `BR-3.3` | 2 | `OBL-launcher-and-panel-flow`, `OBL-test-coverage` |
+| `BR-4.1` | 2 | `OBL-panel-displays-full-list`, `OBL-test-coverage` |
+| `BR-4.2` | 2 | `OBL-panel-displays-full-list`, `OBL-test-coverage` |
+| `BR-4.3` | 2 | `OBL-panel-displays-full-list`, `OBL-test-coverage` |
+| `BR-4.4` | 2 | `OBL-panel-displays-full-list`, `OBL-test-coverage` |
+| `BR-4.5` | 2 | `OBL-panel-displays-full-list`, `OBL-test-coverage` |
+| `BR-5.1` | 2 | `OBL-project-switching-flow`, `OBL-test-coverage` |
+| `BR-5.2` | 2 | `OBL-project-switching-flow`, `OBL-test-coverage` |
+| `BR-5.3` | 2 | `OBL-project-switching-flow`, `OBL-test-coverage` |
+| `BR-5.4` | 2 | `OBL-project-switching-flow`, `OBL-test-coverage` |
+| `BR-5.5` | 2 | `OBL-project-switching-flow`, `OBL-test-coverage` |
+| `BR-6.1` | 2 | `OBL-rail-ordering`, `OBL-test-coverage` |
+| `BR-6.2` | 2 | `OBL-rail-ordering`, `OBL-test-coverage` |
+| `BR-6.3` | 2 | `OBL-rail-ordering`, `OBL-test-coverage` |
+| `BR-6.4` | 2 | `OBL-rail-ordering`, `OBL-test-coverage` |
+| `BR-6.5` | 2 | `OBL-active-project-always-visible`, `OBL-test-coverage` |
+| `BR-7.1` | 3 | `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-test-coverage` |
+| `BR-7.2` | 3 | `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-test-coverage` |
+| `BR-7.3` | 3 | `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-test-coverage` |
+| `BR-7.4` | 2 | `OBL-configuration-load-and-defaults`, `OBL-test-coverage` |
+| `BR-7.5` | 2 | `OBL-configuration-load-and-defaults`, `OBL-test-coverage` |
+| `BR-8.1` | 2 | `OBL-state-persistence`, `OBL-test-coverage` |
+| `BR-8.2` | 2 | `OBL-state-persistence`, `OBL-test-coverage` |
+| `BR-8.3` | 2 | `OBL-state-persistence`, `OBL-test-coverage` |
+| `BR-8.4` | 2 | `OBL-state-persistence`, `OBL-test-coverage` |
+| `BR-8.5` | 3 | `OBL-load-selector-data`, `OBL-state-persistence`, `OBL-test-coverage` |
+| `BR-8.6` | 3 | `OBL-load-selector-data`, `OBL-state-persistence`, `OBL-test-coverage` |
+| `BR-8.7` | 2 | `OBL-state-persistence`, `OBL-test-coverage` |
+| `BR-9.1` | 2 | `OBL-responsive-collapse`, `OBL-test-coverage` |
+| `BR-9.2` | 2 | `OBL-responsive-collapse`, `OBL-test-coverage` |
+| `BR-9.3` | 2 | `OBL-responsive-collapse`, `OBL-test-coverage` |
+| `BR-10.1` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
+| `BR-10.2` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
+| `BR-10.3` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
+| `BR-10.4` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
+| `BR-10.5` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
+| `BR-10.6` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
+| `BR-10.7` | 2 | `OBL-config-validation`, `OBL-test-coverage` |
+| `C1` | 1 | `OBL-load-selector-data` |
+| `C2` | 2 | `OBL-load-selector-data`, `OBL-state-persistence` |
+| `C3` | 2 | `OBL-project-switching-flow`, `OBL-state-persistence` |
+| `C4` | 1 | `OBL-launcher-and-panel-flow` |
+| `C5` | 1 | `OBL-launcher-and-panel-flow` |
+| `C6` | 1 | `OBL-configuration-load-and-defaults` |
+| `C7` | 1 | `OBL-active-project-always-visible` |
+| `C8` | 1 | `OBL-launcher-and-panel-flow` |
+| `C9` | 1 | `OBL-panel-displays-full-list` |
+| `C10` | 3 | `OBL-configuration-load-and-defaults`, `OBL-load-selector-data`, `OBL-state-persistence` |

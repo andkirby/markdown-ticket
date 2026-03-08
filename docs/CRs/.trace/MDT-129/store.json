@@ -1,0 +1,1441 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-129"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the active project is favorited, the system shall display favorite state on the active project card.",
+      "sourceRef": "requirements.md BR-1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN the active project would otherwise fall outside the visible subset based on ordering rules, the system shall prioritize the active project to remain visible.",
+      "sourceRef": "requirements.md BR-1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN compactInactive is true, the system shall render inactive visible rail projects as compact code-only cards.",
+      "sourceRef": "requirements.md BR-2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN compactInactive is false, the system shall render inactive visible rail projects using medium card presentation.",
+      "sourceRef": "requirements.md BR-2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN an inactive visible project is rendered, the system shall not display title or description expansion in the rail.",
+      "sourceRef": "requirements.md BR-2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN the selector rail renders, the system shall display a single launcher control at the end of the selector rail.",
+      "sourceRef": "requirements.md BR-3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN the launcher is activated, the system shall open a panel directly below the selector.",
+      "sourceRef": "requirements.md BR-3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN the launcher uses a visual icon, the system shall use the acclaim visual asset.",
+      "sourceRef": "requirements.md BR-3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN the panel opens, the system shall display the full project list as cards containing project code, title, and description.",
+      "sourceRef": "requirements.md BR-4",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN a project in the panel is favorited, the system shall display favorite state on the full project card.",
+      "sourceRef": "requirements.md BR-4",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.3",
+      "kind": "behavior",
+      "text": "WHEN the panel renders, the system shall order favorites first, then remaining projects.",
+      "sourceRef": "requirements.md BR-4",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.4",
+      "kind": "behavior",
+      "text": "WHEN ordering remaining non-favorite projects in the panel, the system shall sort by lastUsedAt descending, with count descending as tie-break.",
+      "sourceRef": "requirements.md BR-4",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4.5",
+      "kind": "behavior",
+      "text": "WHEN favorites do not fit in the visible rail, the system shall display those favorites at the top of the expanded project list.",
+      "sourceRef": "requirements.md BR-4",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN a user selects a project from the selector rail, the system shall change the current project to the selected project.",
+      "sourceRef": "requirements.md BR-5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.2",
+      "kind": "behavior",
+      "text": "WHEN a user selects a project from the full project panel, the system shall change the current project to the selected project.",
+      "sourceRef": "requirements.md BR-5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.3",
+      "kind": "behavior",
+      "text": "WHEN project selection is committed, the system shall update usage state for the selected project.",
+      "sourceRef": "requirements.md BR-5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.4",
+      "kind": "behavior",
+      "text": "WHEN usage state is updated, the system shall set lastUsedAt to the current timestamp.",
+      "sourceRef": "requirements.md BR-5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5.5",
+      "kind": "behavior",
+      "text": "WHEN usage state is updated, the system shall increment count.",
+      "sourceRef": "requirements.md BR-5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHEN the selector rail renders, the system shall display the active project first.",
+      "sourceRef": "requirements.md BR-6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.2",
+      "kind": "behavior",
+      "text": "WHEN filling remaining visible rail slots, the system shall prioritize favorites first, then non-favorites.",
+      "sourceRef": "requirements.md BR-6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.3",
+      "kind": "behavior",
+      "text": "WHEN ordering visible favorites, the system shall sort by count descending, with lastUsedAt descending as tie-break.",
+      "sourceRef": "requirements.md BR-6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.4",
+      "kind": "behavior",
+      "text": "WHEN ordering visible non-favorites, the system shall sort by lastUsedAt descending, with count descending as tie-break.",
+      "sourceRef": "requirements.md BR-6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.5",
+      "kind": "behavior",
+      "text": "WHEN the active project would otherwise fall outside the visible subset based on ordering rules, the system shall prioritize the active project to remain visible regardless of favorite status.",
+      "sourceRef": "requirements.md BR-6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.1",
+      "kind": "behavior",
+      "text": "WHEN CONFIG_DIR/user.toml contains [ui.projectSelector].visibleCount, the system shall use that value as the number of visible projects in the rail.",
+      "sourceRef": "requirements.md BR-7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.2",
+      "kind": "behavior",
+      "text": "WHEN CONFIG_DIR/user.toml contains [ui.projectSelector].compactInactive, the system shall use that value to control inactive visible project presentation.",
+      "sourceRef": "requirements.md BR-7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.3",
+      "kind": "behavior",
+      "text": "WHEN CONFIG_DIR/user.toml is missing, the system shall fall back to default values without breaking the UI.",
+      "sourceRef": "requirements.md BR-7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.4",
+      "kind": "behavior",
+      "text": "WHEN visibleCount in user.toml is invalid, the system shall fall back to the default value (7).",
+      "sourceRef": "requirements.md BR-7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.5",
+      "kind": "behavior",
+      "text": "WHEN compactInactive in user.toml is invalid, the system shall fall back to the default value (true).",
+      "sourceRef": "requirements.md BR-7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8.1",
+      "kind": "behavior",
+      "text": "WHEN mutable selector state changes, the system shall persist the state to CONFIG_DIR/project-selector.json.",
+      "sourceRef": "requirements.md BR-8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8.2",
+      "kind": "behavior",
+      "text": "WHEN persisting selector state, the system shall key entries by project code.",
+      "sourceRef": "requirements.md BR-8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8.3",
+      "kind": "behavior",
+      "text": "WHEN persisting selector state, the system shall store favorite, lastUsedAt, and count per project.",
+      "sourceRef": "requirements.md BR-8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8.4",
+      "kind": "behavior",
+      "text": "WHEN persisting after project selection, the system shall write shortly after the selection changes and shall not depend on shutdown behavior.",
+      "sourceRef": "requirements.md BR-8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8.5",
+      "kind": "behavior",
+      "text": "WHEN CONFIG_DIR/project-selector.json is missing, the system shall initialize empty state without breaking the UI.",
+      "sourceRef": "requirements.md BR-8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8.6",
+      "kind": "behavior",
+      "text": "WHEN CONFIG_DIR/project-selector.json is invalid JSON, the system shall fall back to empty state without breaking the UI.",
+      "sourceRef": "requirements.md BR-8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8.7",
+      "kind": "behavior",
+      "text": "WHEN CONFIG_DIR/project-selector.json contains partially malformed entries, the system shall load valid project entries and drop invalid entries.",
+      "sourceRef": "requirements.md BR-8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-9.1",
+      "kind": "behavior",
+      "text": "WHEN the viewport is mobile-sized, the system shall display only the active project and launcher in the collapsed selector rail.",
+      "sourceRef": "requirements.md BR-9",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-9.2",
+      "kind": "behavior",
+      "text": "WHEN a mobile user activates the launcher, the system shall provide access to the remaining projects.",
+      "sourceRef": "requirements.md BR-9",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-9.3",
+      "kind": "behavior",
+      "text": "WHEN responsive presentation adapts by viewport, the system shall preserve the same selector state model and expanded project list behavior.",
+      "sourceRef": "requirements.md BR-9",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-10.1",
+      "kind": "behavior",
+      "text": "WHEN visibleCount is not an integer greater than or equal to 1, the system shall fall back to the default value (7).",
+      "sourceRef": "requirements.md BR-10",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-10.2",
+      "kind": "behavior",
+      "text": "WHEN compactInactive is not a boolean, the system shall fall back to the default value (true).",
+      "sourceRef": "requirements.md BR-10",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-10.3",
+      "kind": "behavior",
+      "text": "WHEN a project-state entry's favorite is not a boolean, the system shall drop that field or entry.",
+      "sourceRef": "requirements.md BR-10",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-10.4",
+      "kind": "behavior",
+      "text": "WHEN a project-state entry's lastUsedAt is present but not a valid ISO-8601 timestamp, the system shall drop that field.",
+      "sourceRef": "requirements.md BR-10",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-10.5",
+      "kind": "behavior",
+      "text": "WHEN a project-state entry's count is not an integer greater than or equal to 0, the system shall treat it as 0.",
+      "sourceRef": "requirements.md BR-10",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-10.6",
+      "kind": "behavior",
+      "text": "WHEN unknown fields appear in user.toml or project-selector.json, the system shall ignore them safely.",
+      "sourceRef": "requirements.md BR-10",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-10.7",
+      "kind": "behavior",
+      "text": "WHEN a per-project state entry is invalid, the system shall drop that entry without preventing other valid entries from loading.",
+      "sourceRef": "requirements.md BR-10",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "User preferences stored in CONFIG_DIR/user.toml under [ui.projectSelector]",
+      "sourceRef": "requirements.md Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Mutable selector state stored in CONFIG_DIR/project-selector.json, keyed by project code",
+      "sourceRef": "requirements.md Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Usage state writes occur shortly after project selection, not on shutdown",
+      "sourceRef": "requirements.md Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Full project browser panel is visually attached to the selector",
+      "sourceRef": "requirements.md Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "visibleCount default is 7; compactInactive default is true",
+      "sourceRef": "requirements.md Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "Mutable selector state remains separate from immutable user preferences",
+      "sourceRef": "requirements.md Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Launcher uses the existing acclaim visual asset",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Active project always counts toward visibleCount but is never hidden",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Selector rail ends with exactly one launcher control",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "No All Projects synthetic item is introduced",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN the user clicks the favorite star on any project card, the system shall toggle the favorite state and persist the change.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the selector rail renders, the system shall display the active project as a larger card containing project code, title, and description.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "active_project_favorite_indicator",
+      "title": "Favorite indicator on active project card",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "I am viewing the application and the active project is favorited",
+      "when": "the selector rail renders",
+      "then": "I see the favorite state displayed on the active project card",
+      "sourceRef": "BR-1.2"
+    },
+    {
+      "id": "active_project_always_visible",
+      "title": "Active project always visible regardless of ordering",
+      "covers": [
+        "BR-1.3",
+        "BR-6.5"
+      ],
+      "given": "the active project would fall outside the visible subset based on normal ordering rules",
+      "when": "the selector rail renders",
+      "then": "the active project is prioritized and remains visible in the rail",
+      "sourceRef": "BR-1.3, BR-6.5"
+    },
+    {
+      "id": "switch_project_from_rail",
+      "title": "Select project from selector rail changes current project",
+      "covers": [
+        "BR-5.1",
+        "BR-5.3",
+        "BR-5.4",
+        "BR-5.5"
+      ],
+      "given": "I am viewing the selector rail with multiple visible projects",
+      "when": "I select an inactive project from the rail",
+      "then": "the selected project becomes the current project and its usage state is updated with incremented count and current timestamp",
+      "sourceRef": "BR-5.1, BR-5.3, BR-5.4, BR-5.5"
+    },
+    {
+      "id": "switch_project_from_panel",
+      "title": "Select project from panel changes current project",
+      "covers": [
+        "BR-5.2",
+        "BR-5.3",
+        "BR-5.4",
+        "BR-5.5"
+      ],
+      "given": "I have opened the full project panel",
+      "when": "I select a project from the panel",
+      "then": "the selected project becomes the current project and its usage state is updated with incremented count and current timestamp",
+      "sourceRef": "BR-5.2, BR-5.3, BR-5.4, BR-5.5"
+    },
+    {
+      "id": "rail_ordering_prioritizes_favorites",
+      "title": "Rail ordering prioritizes favorites then sorts by usage",
+      "covers": [
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "BR-6.4"
+      ],
+      "given": "I have multiple projects with various favorite states and usage patterns",
+      "when": "the selector rail renders",
+      "then": "the active project appears first, followed by favorites sorted by count descending, then non-favorites sorted by lastUsedAt descending",
+      "sourceRef": "BR-6.1, BR-6.2, BR-6.3, BR-6.4"
+    },
+    {
+      "id": "configuration_controls_selector",
+      "title": "Configuration controls visible count and compact mode",
+      "covers": [
+        "BR-7.1",
+        "BR-7.2",
+        "BR-7.3",
+        "BR-7.4",
+        "BR-7.5"
+      ],
+      "given": "the user configuration file may have custom visibleCount and compactInactive settings",
+      "when": "the selector renders with valid configuration values",
+      "then": "the rail respects the configured visibleCount and compactInactive; invalid or missing values fall back to defaults (visibleCount=7, compactInactive=true)",
+      "sourceRef": "BR-7.1, BR-7.2, BR-7.3, BR-7.4, BR-7.5"
+    },
+    {
+      "id": "state_persists_after_selection",
+      "title": "State persists to file after project selection",
+      "covers": [
+        "BR-8.1",
+        "BR-8.2",
+        "BR-8.3",
+        "BR-8.4",
+        "BR-8.5",
+        "BR-8.6",
+        "BR-8.7"
+      ],
+      "given": "I select a project and the selector state changes",
+      "when": "the state is persisted",
+      "then": "the state is written to project-selector.json keyed by project code containing favorite, lastUsedAt, and count; missing or invalid files are handled gracefully without breaking the UI",
+      "sourceRef": "BR-8.1, BR-8.2, BR-8.3, BR-8.4, BR-8.5, BR-8.6, BR-8.7"
+    },
+    {
+      "id": "inactive_projects_display_mode",
+      "title": "Inactive visible projects display based on compact mode setting",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3"
+      ],
+      "given": "I have inactive visible projects in the selector rail",
+      "when": "the selector renders with <compactMode> setting",
+      "then": "inactive projects appear as <cardStyle>",
+      "sourceRef": "BR-2.1, BR-2.2, BR-2.3"
+    },
+    {
+      "id": "mobile_responsive_selector",
+      "title": "Mobile viewport shows collapsed selector rail",
+      "covers": [
+        "BR-9.1",
+        "BR-9.2",
+        "BR-9.3"
+      ],
+      "given": "I am viewing the application on a mobile-sized viewport",
+      "when": "the selector rail renders",
+      "then": "I see only the active project and launcher; activating the launcher provides access to remaining projects with the same state model",
+      "sourceRef": "BR-9.1, BR-9.2, BR-9.3"
+    },
+    {
+      "id": "launcher_opens_panel",
+      "title": "Launcher opens full project panel below selector",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3"
+      ],
+      "given": "I am viewing the selector rail",
+      "when": "I activate the launcher control at the end of the rail",
+      "then": "a panel opens directly below the selector showing the full project list using the acclaim visual asset",
+      "sourceRef": "BR-3.1, BR-3.2, BR-3.3"
+    },
+    {
+      "id": "panel_displays_full_project_list",
+      "title": "Panel displays full project list with favorites first",
+      "covers": [
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4",
+        "BR-4.5"
+      ],
+      "given": "I have opened the full project panel",
+      "when": "the panel renders",
+      "then": "I see all projects as cards with code, title, and description; favorites appear first with favorite indicators, followed by non-favorites sorted by lastUsedAt descending",
+      "sourceRef": "BR-4.1, BR-4.2, BR-4.3, BR-4.4, BR-4.5"
+    },
+    {
+      "id": "toggle_favorite_by_clicking_star",
+      "title": "Toggle favorite by clicking star",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "I am viewing the project selector with favorited and unfavorited projects",
+      "when": "I click the star icon on any project card",
+      "then": "the favorite state toggles for that project and the change is persisted to project-selector.json",
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "active_project_card_display",
+      "title": "Active project shown as larger card with code, title, and description",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "I am viewing the application with an active project selected",
+      "when": "the selector rail renders",
+      "then": "I see the active project displayed as a larger card containing the project code, title, and description",
+      "sourceRef": "CR:MDT-129"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-load-selector-data",
+      "title": "Load selector data from single /api/config/selector endpoint combining user.toml preferences and project-selector.json state",
+      "derivedFrom": [
+        "BR-7.1",
+        "BR-7.2",
+        "BR-7.3",
+        "BR-8.5",
+        "BR-8.6",
+        "C1",
+        "C2",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-selector-data-hook",
+        "ART-server-system-routes",
+        "ART-config-user-toml",
+        "ART-config-selector-state"
+      ],
+      "sourceRef": "Single fetch architecture"
+    },
+    {
+      "id": "OBL-active-project-always-visible",
+      "title": "Prioritize active project to remain visible in rail even when it would fall outside normal visible subset based on ordering rules",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-6.5",
+        "C7"
+      ],
+      "artifactIds": [
+        "ART-selector-manager-hook",
+        "ART-ordering-utils",
+        "ART-selector-rail"
+      ],
+      "sourceRef": "Active visibility guarantee"
+    },
+    {
+      "id": "OBL-inactive-projects-display-mode",
+      "title": "Render inactive visible rail projects as compact code-only chips (compactInactive=true) or medium cards (compactInactive=false)",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3"
+      ],
+      "artifactIds": [
+        "ART-selector-chip",
+        "ART-selector-rail",
+        "ART-config-user-toml"
+      ],
+      "sourceRef": "Inactive presentation modes"
+    },
+    {
+      "id": "OBL-launcher-and-panel-flow",
+      "title": "Display single launcher control at rail end using acclaim.svg; clicking opens panel directly below selector showing full project list",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "C4",
+        "C5",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-launcher-button",
+        "ART-browser-panel",
+        "ART-selector-index",
+        "ART-asset-acclaim-svg"
+      ],
+      "sourceRef": "Progressive disclosure mechanism"
+    },
+    {
+      "id": "OBL-panel-displays-full-list",
+      "title": "Panel displays all registered projects as cards with code, title, description; favorites first (by count desc, lastUsedAt desc), then non-favorites (by lastUsedAt desc, count desc)",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4",
+        "BR-4.5",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-browser-panel",
+        "ART-ordering-utils",
+        "ART-selector-manager-hook"
+      ],
+      "sourceRef": "Full project list presentation"
+    },
+    {
+      "id": "OBL-project-switching-flow",
+      "title": "Project selection from rail or panel changes current project via useProjectManager.setSelectedProject and updates usage state (lastUsedAt timestamp, increment count)",
+      "derivedFrom": [
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.3",
+        "BR-5.4",
+        "BR-5.5",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-selector-rail",
+        "ART-browser-panel",
+        "ART-selector-data-hook",
+        "ART-hook-project-manager",
+        "ART-config-selector-state"
+      ],
+      "sourceRef": "Unified selection authority"
+    },
+    {
+      "id": "OBL-rail-ordering",
+      "title": "Display active project first, then favorites (by count desc, lastUsedAt desc), then non-favorites (by lastUsedAt desc, count desc) within visibleCount limit",
+      "derivedFrom": [
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "BR-6.4"
+      ],
+      "artifactIds": [
+        "ART-selector-manager-hook",
+        "ART-ordering-utils",
+        "ART-selector-rail",
+        "ART-config-user-toml"
+      ],
+      "sourceRef": "Deterministic rail ordering"
+    },
+    {
+      "id": "OBL-configuration-load-and-defaults",
+      "title": "Load visibleCount and compactInactive from user.toml [ui.projectSelector]; fall back to defaults (visibleCount=7, compactInactive=true) when missing or invalid",
+      "derivedFrom": [
+        "BR-7.1",
+        "BR-7.2",
+        "BR-7.3",
+        "BR-7.4",
+        "BR-7.5",
+        "C6",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-selector-data-hook",
+        "ART-server-system-routes",
+        "ART-config-user-toml"
+      ],
+      "sourceRef": "Graceful config degradation"
+    },
+    {
+      "id": "OBL-state-persistence",
+      "title": "Persist selector state (favorite, lastUsedAt, count per project) to project-selector.json keyed by project code; write shortly after selection changes; handle missing or invalid JSON gracefully",
+      "derivedFrom": [
+        "BR-8.1",
+        "BR-8.2",
+        "BR-8.3",
+        "BR-8.4",
+        "BR-8.5",
+        "BR-8.6",
+        "BR-8.7",
+        "C2",
+        "C3",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-selector-data-hook",
+        "ART-config-selector-state",
+        "ART-server-system-routes"
+      ],
+      "sourceRef": "Debounced state persistence"
+    },
+    {
+      "id": "OBL-responsive-collapse",
+      "title": "On mobile viewport, display only active project card and launcher; activating launcher provides access to remaining projects with same state model",
+      "derivedFrom": [
+        "BR-9.1",
+        "BR-9.2",
+        "BR-9.3"
+      ],
+      "artifactIds": [
+        "ART-selector-rail",
+        "ART-selector-index",
+        "ART-browser-panel"
+      ],
+      "sourceRef": "Responsive presentation"
+    },
+    {
+      "id": "OBL-config-validation",
+      "title": "Validate config values: visibleCount >=1 integer, compactInactive boolean; drop invalid project-state entries or fields; ignore unknown fields",
+      "derivedFrom": [
+        "BR-10.1",
+        "BR-10.2",
+        "BR-10.3",
+        "BR-10.4",
+        "BR-10.5",
+        "BR-10.6",
+        "BR-10.7"
+      ],
+      "artifactIds": [
+        "ART-selector-data-hook",
+        "ART-server-system-routes",
+        "ART-config-user-toml",
+        "ART-config-selector-state"
+      ],
+      "sourceRef": "Config validation and error handling"
+    },
+    {
+      "id": "OBL-test-coverage",
+      "title": "E2E tests for selector behavior covering BR-1 through BR-10; Jest unit tests for ordering and data hook logic",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4",
+        "BR-4.5",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.3",
+        "BR-5.4",
+        "BR-5.5",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "BR-6.4",
+        "BR-6.5",
+        "BR-7.1",
+        "BR-7.2",
+        "BR-7.3",
+        "BR-7.4",
+        "BR-7.5",
+        "BR-8.1",
+        "BR-8.2",
+        "BR-8.3",
+        "BR-8.4",
+        "BR-8.5",
+        "BR-8.6",
+        "BR-8.7",
+        "BR-9.1",
+        "BR-9.2",
+        "BR-9.3",
+        "BR-10.1",
+        "BR-10.2",
+        "BR-10.3",
+        "BR-10.4",
+        "BR-10.5",
+        "BR-10.6",
+        "BR-10.7"
+      ],
+      "artifactIds": [
+        "ART-test-e2e-selector",
+        "ART-test-ordering",
+        "ART-test-selector-data-hook"
+      ],
+      "sourceRef": "Test coverage for selector functionality"
+    },
+    {
+      "id": "OBL-active-project-card-display",
+      "title": "Display active project as larger card containing code and title with favorite indicator when favorited",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2"
+      ],
+      "artifactIds": [
+        "ART-selector-card",
+        "ART-selector-rail",
+        "ART-selector-index",
+        "ART-selector-types"
+      ],
+      "sourceRef": "Active project visual hierarchy"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-selector-index",
+      "path": "src/components/ProjectSelector/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "ProjectSelector component container"
+    },
+    {
+      "id": "ART-selector-rail",
+      "path": "src/components/ProjectSelector/ProjectSelectorRail.tsx",
+      "kind": "runtime",
+      "sourceRef": "Rail rendering component"
+    },
+    {
+      "id": "ART-selector-card",
+      "path": "src/components/ProjectSelector/ProjectSelectorCard.tsx",
+      "kind": "runtime",
+      "sourceRef": "Active project card component"
+    },
+    {
+      "id": "ART-selector-chip",
+      "path": "src/components/ProjectSelector/ProjectSelectorChip.tsx",
+      "kind": "runtime",
+      "sourceRef": "Inactive project chip component"
+    },
+    {
+      "id": "ART-browser-panel",
+      "path": "src/components/ProjectSelector/ProjectBrowserPanel.tsx",
+      "kind": "runtime",
+      "sourceRef": "Full project panel component"
+    },
+    {
+      "id": "ART-launcher-button",
+      "path": "src/components/ProjectSelector/LauncherButton.tsx",
+      "kind": "runtime",
+      "sourceRef": "Launcher button with acclaim.svg"
+    },
+    {
+      "id": "ART-selector-types",
+      "path": "src/components/ProjectSelector/types.ts",
+      "kind": "runtime",
+      "sourceRef": "ProjectSelector type definitions"
+    },
+    {
+      "id": "ART-selector-data-hook",
+      "path": "src/components/ProjectSelector/useSelectorData.ts",
+      "kind": "runtime",
+      "sourceRef": "Data fetching and persistence hook"
+    },
+    {
+      "id": "ART-selector-manager-hook",
+      "path": "src/components/ProjectSelector/useProjectSelectorManager.ts",
+      "kind": "runtime",
+      "sourceRef": "Selector state management hook"
+    },
+    {
+      "id": "ART-ordering-utils",
+      "path": "src/utils/selectorOrdering.ts",
+      "kind": "runtime",
+      "sourceRef": "Pure ordering functions for rail and panel"
+    },
+    {
+      "id": "ART-server-system-routes",
+      "path": "server/routes/system.ts",
+      "kind": "runtime",
+      "sourceRef": "/api/config/selector endpoint"
+    },
+    {
+      "id": "ART-config-user-toml",
+      "path": "CONFIG_DIR/user.toml",
+      "kind": "config",
+      "sourceRef": "[ui.projectSelector] preferences"
+    },
+    {
+      "id": "ART-config-selector-state",
+      "path": "CONFIG_DIR/project-selector.json",
+      "kind": "config",
+      "sourceRef": "Mutable selector state keyed by project code"
+    },
+    {
+      "id": "ART-test-e2e-selector",
+      "path": "tests/e2e/selector/project-selector.spec.ts",
+      "kind": "test",
+      "sourceRef": "E2E tests for selector behavior"
+    },
+    {
+      "id": "ART-test-ordering",
+      "path": "src/utils/selectorOrdering.test.ts",
+      "kind": "test",
+      "sourceRef": "Jest unit tests for ordering functions"
+    },
+    {
+      "id": "ART-test-selector-data-hook",
+      "path": "src/components/ProjectSelector/useSelectorData.test.ts",
+      "kind": "test",
+      "sourceRef": "Jest tests for data hook"
+    },
+    {
+      "id": "ART-asset-acclaim-svg",
+      "path": "designs/acclaim.svg",
+      "kind": "doc",
+      "sourceRef": "Launcher visual asset"
+    },
+    {
+      "id": "ART-hook-project-manager",
+      "path": "src/hooks/useProjectManager.ts",
+      "kind": "runtime",
+      "sourceRef": "Existing project selection hook"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-selector-ordering",
+      "kind": "unit",
+      "title": "Selector Ordering Logic Tests",
+      "covers": [
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "BR-6.4",
+        "BR-4.3",
+        "BR-4.4"
+      ],
+      "file": "src/utils/selectorOrdering.test.ts",
+      "sourceRef": "architecture.md OBL-rail-ordering, OBL-panel-displays-full-list"
+    },
+    {
+      "id": "TEST-selector-data-hook",
+      "kind": "unit",
+      "title": "Selector Data Hook Tests",
+      "covers": [
+        "BR-7.1",
+        "BR-7.2",
+        "BR-7.3",
+        "BR-7.4",
+        "BR-7.5",
+        "BR-8.1",
+        "BR-8.2",
+        "BR-8.3",
+        "BR-8.4",
+        "BR-8.5",
+        "BR-8.6",
+        "BR-8.7",
+        "BR-10.1",
+        "BR-10.2",
+        "BR-10.3",
+        "BR-10.4",
+        "BR-10.5",
+        "BR-10.6",
+        "BR-10.7",
+        "C1",
+        "C2",
+        "C3",
+        "C5",
+        "C6",
+        "C10"
+      ],
+      "file": "src/components/ProjectSelector/useSelectorData.test.ts",
+      "sourceRef": "architecture.md OBL-config-validation, OBL-configuration-load-and-defaults, OBL-load-selector-data, OBL-state-persistence"
+    },
+    {
+      "id": "TEST-selector-api",
+      "kind": "unit",
+      "title": "Selector API Endpoint Tests",
+      "covers": [
+        "BR-7.1",
+        "BR-7.2",
+        "BR-7.3",
+        "BR-7.4",
+        "BR-7.5",
+        "BR-8.1",
+        "BR-8.2",
+        "BR-8.3",
+        "BR-8.4",
+        "BR-8.5",
+        "BR-8.6",
+        "BR-8.7",
+        "BR-10.1",
+        "BR-10.2",
+        "BR-10.3",
+        "BR-10.4",
+        "BR-10.5",
+        "BR-10.6",
+        "BR-10.7",
+        "C1",
+        "C2",
+        "C3",
+        "C5",
+        "C6",
+        "C10"
+      ],
+      "file": "server/tests/api/selector.test.ts",
+      "sourceRef": "architecture.md OBL-config-validation, OBL-configuration-load-and-defaults, OBL-load-selector-data, OBL-state-persistence"
+    },
+    {
+      "id": "TEST-project-selector-e2e",
+      "kind": "e2e",
+      "title": "Project Selector E2E Tests",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4",
+        "BR-4.5",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-5.3",
+        "BR-5.4",
+        "BR-5.5",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "BR-6.4",
+        "BR-6.5",
+        "BR-7.1",
+        "BR-7.2",
+        "BR-7.3",
+        "BR-7.4",
+        "BR-7.5",
+        "BR-8.1",
+        "BR-8.2",
+        "BR-8.3",
+        "BR-8.4",
+        "BR-8.5",
+        "BR-8.6",
+        "BR-8.7",
+        "BR-9.1",
+        "BR-9.2",
+        "BR-9.3",
+        "C4",
+        "C5",
+        "C7",
+        "C8",
+        "C9"
+      ],
+      "file": "tests/e2e/selector/project-selector.spec.ts",
+      "sourceRef": "CR:MDT-129"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-0",
+      "title": "Create missing infrastructure files and verify dependencies",
+      "ownsArtifactIds": [
+        "ART-selector-types"
+      ],
+      "makesGreenIds": [
+        "TEST-selector-api",
+        "TEST-selector-data-hook",
+        "TEST-selector-ordering"
+      ],
+      "sourceRef": "tasks.md#task-0"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Create selector types and interfaces",
+      "ownsArtifactIds": [
+        "ART-selector-types"
+      ],
+      "makesGreenIds": [
+        "TEST-selector-api",
+        "TEST-selector-data-hook"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Implement useProjectSelectorManager hook for visible subset computation",
+      "ownsArtifactIds": [
+        "ART-selector-manager-hook"
+      ],
+      "makesGreenIds": [
+        "active_project_always_visible",
+        "rail_ordering_prioritizes_favorites",
+        "panel_displays_full_project_list"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Create ProjectSelectorChip component for inactive project display",
+      "ownsArtifactIds": [
+        "ART-selector-chip"
+      ],
+      "makesGreenIds": [
+        "inactive_projects_display_mode",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Create ProjectSelectorRail component with responsive layout",
+      "ownsArtifactIds": [
+        "ART-selector-rail"
+      ],
+      "makesGreenIds": [
+        "active_project_always_visible",
+        "inactive_projects_display_mode",
+        "rail_ordering_prioritizes_favorites",
+        "mobile_responsive_selector",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "tasks.md#task-8"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Create LauncherButton component using acclaim.svg asset",
+      "ownsArtifactIds": [
+        "ART-launcher-button",
+        "ART-asset-acclaim-svg"
+      ],
+      "makesGreenIds": [
+        "launcher_opens_panel",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "tasks.md#task-9"
+    },
+    {
+      "id": "TASK-10",
+      "title": "Create ProjectBrowserPanel component with full project list",
+      "ownsArtifactIds": [
+        "ART-browser-panel"
+      ],
+      "makesGreenIds": [
+        "panel_displays_full_project_list",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "tasks.md#task-10"
+    },
+    {
+      "id": "TASK-11",
+      "title": "Create ProjectSelector index component with panel state management",
+      "ownsArtifactIds": [
+        "ART-selector-index"
+      ],
+      "makesGreenIds": [
+        "launcher_opens_panel",
+        "mobile_responsive_selector",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "tasks.md#task-11"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Implement ordering utility functions",
+      "ownsArtifactIds": [
+        "ART-ordering-utils",
+        "ART-test-ordering"
+      ],
+      "makesGreenIds": [
+        "TEST-selector-ordering",
+        "active_project_always_visible",
+        "rail_ordering_prioritizes_favorites",
+        "panel_displays_full_project_list"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Add /api/config/selector endpoint to server",
+      "ownsArtifactIds": [
+        "ART-server-system-routes",
+        "ART-config-user-toml",
+        "ART-config-selector-state"
+      ],
+      "makesGreenIds": [
+        "TEST-selector-api",
+        "configuration_controls_selector",
+        "state_persists_after_selection"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Implement useSelectorData hook with configuration loading and persistence",
+      "ownsArtifactIds": [
+        "ART-selector-data-hook",
+        "ART-test-selector-data-hook"
+      ],
+      "makesGreenIds": [
+        "TEST-selector-data-hook",
+        "configuration_controls_selector",
+        "state_persists_after_selection"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-12",
+      "title": "Integrate project switching with useProjectManager and state persistence",
+      "ownsArtifactIds": [
+        "ART-selector-rail",
+        "ART-browser-panel",
+        "ART-selector-data-hook",
+        "ART-hook-project-manager",
+        "ART-test-e2e-selector"
+      ],
+      "makesGreenIds": [
+        "switch_project_from_rail",
+        "switch_project_from_panel",
+        "state_persists_after_selection",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "tasks.md#task-12"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Create ProjectSelectorCard component for active project display",
+      "ownsArtifactIds": [
+        "ART-selector-card"
+      ],
+      "makesGreenIds": [
+        "active_project_card_display",
+        "active_project_favorite_indicator",
+        "toggle_favorite_by_clicking_star",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "CR:MDT-129"
+    }
+  ]
+}

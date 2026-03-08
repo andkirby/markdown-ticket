@@ -4,7 +4,7 @@
 
 ```typescript
 interface ScenarioResult {
-  projectCode: string   // e.g. 'TABC' — use in selectors: `project-option-${projectCode}`
+  projectCode: string   // e.g. 'TABC' — use in selectors: `project-selector-card-${projectCode}` (active) or `project-selector-chip-${projectCode}` (inactive)
   projectName: string   // human-readable name
   projectDir: string    // absolute path to project on disk
   crCodes: string[]     // e.g. ['TABC-1', 'TABC-2', 'TABC-3']

@@ -41,7 +41,7 @@ const secondary = await projectFactory.createProject('empty', { name: 'Other Pro
 await page.goto(`/prj/${primary.projectCode}`)
 await waitForBoardReady(page)
 
-// Switch to secondary
-await page.click(`[data-testid="project-option-${secondary.key}"]`)
+// Switch to secondary (click inactive chip)
+await page.click(`[data-testid="project-selector-chip-${secondary.key}"]`)
 await waitForBoardReady(page)
 ```

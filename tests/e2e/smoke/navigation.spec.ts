@@ -28,12 +28,12 @@ test.describe('Navigation', () => {
       // Wait for redirect and board to load
       await waitForBoardReady(page)
 
-      const activeProjectButton = page.locator('[data-testid^="project-option-"][data-active="true"]').first()
+      const activeProjectButton = page.locator('[data-testid^="project-selector-card-"]').first()
       await expect(activeProjectButton).toBeVisible()
 
       const activeProjectTestId = await activeProjectButton.getAttribute('data-testid')
       expect(activeProjectTestId).toBeTruthy()
-      const activeProjectCode = activeProjectTestId!.replace('project-option-', '')
+      const activeProjectCode = activeProjectTestId!.replace('project-selector-card-', '')
 
       // Verify URL was redirected to project
       await expect(page).toHaveURL(`/prj/${activeProjectCode}`)
@@ -126,8 +126,8 @@ test.describe('Navigation', () => {
       // Verify first project tickets are visible
       await expect(firstProjectTicket).toBeVisible({ timeout: 10000 })
 
-      // Click second project option
-      await page.click(`[data-testid="project-option-${secondProject.projectCode}"]`)
+      // Click second project option (chip, since it's inactive)
+      await page.click(`[data-testid="project-selector-chip-${secondProject.projectCode}"]`)
       await waitForBoardReady(page)
 
       // Verify URL changed to second project
@@ -151,13 +151,13 @@ test.describe('Navigation', () => {
       await page.goto(`/prj/${firstProject.projectCode}`)
       await waitForBoardReady(page)
 
-      // Verify first project button has active state
-      const firstProjectButton = page.locator(`[data-testid="project-option-${firstProject.projectCode}"]`)
-      await expect(firstProjectButton).toHaveAttribute('data-active', 'true')
+      // Verify first project is displayed as active card
+      const firstProjectButton = page.locator(`[data-testid="project-selector-card-${firstProject.projectCode}"]`)
+      await expect(firstProjectButton).toBeVisible()
 
-      // Verify second project button does not have active state
-      const secondProjectButton = page.locator(`[data-testid="project-option-${secondProject.key}"]`)
-      await expect(secondProjectButton).not.toHaveAttribute('data-active', 'true')
+      // Verify second project is displayed as inactive chip
+      const secondProjectButton = page.locator(`[data-testid="project-selector-chip-${secondProject.key}"]`)
+      await expect(secondProjectButton).toBeVisible()
 
       // Switch to second project
       await secondProjectButton.click()

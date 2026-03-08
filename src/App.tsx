@@ -179,15 +179,6 @@ function ProjectRouteHandler() {
     navigate(newPath)
   }
 
-  const handleProjectSelect = (project: Project) => {
-    // Preserve current view mode when switching projects
-    const lastViewMode = localStorage.getItem('lastViewMode') || 'board'
-    const projectCode = getProjectCode(project)
-    const basePath = `/prj/${projectCode}`
-    const newPath = lastViewMode === 'board' ? basePath : `${basePath}/${lastViewMode}`
-    navigate(newPath)
-  }
-
   const handleTicketClick = (ticket: Ticket) => {
     const viewParam = viewMode !== 'board' ? `?view=${viewMode}` : ''
     navigate(`/prj/${projectCode}/ticket/${ticket.code}${viewParam}`)
@@ -227,12 +218,7 @@ function ProjectRouteHandler() {
               </div>
               <ViewModeSwitcher viewMode={viewMode} onViewModeChange={handleViewModeChange} />
               <div className="min-w-0 flex-1">
-                <ProjectSelector
-                  projects={projects}
-                  selectedProject={selectedProject}
-                  onProjectSelect={handleProjectSelect}
-                  loading={projectsLoading}
-                />
+                <ProjectSelector />
               </div>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
