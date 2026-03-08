@@ -262,7 +262,7 @@ export async function buildScenario(
   // This ensures SSE events are broadcast when tickets are updated
   if (fileWatcher) {
     fileWatcher.initMultiProjectWatcher([
-      { id: project.key, path: `${project.path}/docs/CRs/*.md` },
+      { id: project.key, path: `${project.path}/docs/CRs` },
     ])
   }
 

@@ -93,6 +93,33 @@ export function createProjectRouter(projectController: ProjectController): Route
 
   /**
    * @openapi
+   * /api/projects/{projectId}/crs/{crId}/subdocuments/{subDocName}:
+   *   get:
+   *     summary: Get individual sub-document content
+   *     tags: [CRs]
+   *     parameters:
+   *       - $ref: '#/components/parameters/projectId'
+   *       - $ref: '#/components/parameters/crId'
+   *       - name: subDocName
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Sub-document name (without .md extension)
+   *     responses:
+   *       200:
+   *         description: Sub-document content
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/SubDocumentDetail'
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   */
+  router.get('/:projectId/crs/:crId/subdocuments/:subDocName', (req, res) => projectController.getSubDocument(req, res))
+
+  /**
+   * @openapi
    * /api/projects/{projectId}/crs:
    *   post:
    *     summary: Create new CR

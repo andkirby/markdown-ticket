@@ -1,6 +1,6 @@
 ---
 code: MDT-093
-status: Approved
+status: In Progress
 dateCreated: 2025-12-11T10:49:36.315Z
 type: Feature Enhancement
 priority: Medium
@@ -83,11 +83,19 @@ Add sub-document navigation to ticket view so users can move between the main ti
 - Tab labeling: First tab labeled "main" for ticket document; file tabs use filenames without `.md`; folder tabs use folder names
 - Conditional tabs: Only show tab interface when subdocuments array is not empty
 - Client-side rendering uses the existing markdown processing pipeline for content
-- Lazy loading: Load sub-document content when the user selects a sub-document
-- URL routing: Update URL with hash for deep linking (#subdocument-name)
+- Lazy loading with preload: Load sub-document content when user selects tab, but preload before switching to prevent layout shift
+- URL routing: Update URL with path-based deep linking (e.g., /ticket/{id}/requirements.md)
 - Real-time updates: React to SSE events for updated subdocuments list
 - Re-render optimization: Only re-render tabs when subdocuments array changes
-- Hash fallback: If URL hash references non-existent sub-document, show "main" tab
+- Path fallback: If URL references non-existent sub-document, show "main" tab
+
+### Path-Based Routing (MDT-094)
+- URL format: `[{folder/}]filename.md` - strict `.md` extension required
+- Security: Prohibit `../` for path traversal prevention
+- Security: Prohibit absolute paths
+- Support nested folders: `part-1/chapter-1/intro.md`
+- Backward compatibility: Hash URLs auto-redirect to path-based URLs
+- Client-side navigation: Tab switching updates URL without page reload
 ## 5. Acceptance Criteria
 ### Functional
 - [ ] The ticket detail API returns ticket data with a `subdocuments` array.

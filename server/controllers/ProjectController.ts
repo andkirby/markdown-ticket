@@ -6,6 +6,7 @@ import type { CRData, TicketService } from '../services/TicketService.js'
 import type { TreeNode } from '../types/tree.js'
 
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
+import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 
 export interface Ticket {
   code: string
@@ -87,6 +88,11 @@ export class ProjectController {
    */
   private ticketService?: TicketService
 
+  /**
+   * WorktreeService for worktree path resolution (MDT-093).
+   */
+  private worktreeService: WorktreeService
+
   constructor(
     projectService: ProjectServiceExtension,
     fileSystemService: FileSystemService,
@@ -105,6 +111,7 @@ export class ProjectController {
     this.projectManager = new ProjectManager(true) // Quiet mode for server
     this.ticketController = ticketController
     this.ticketService = ticketService
+    this.worktreeService = new WorktreeService() // MDT-093: Initialize WorktreeService
   }
 
   /**
@@ -590,6 +597,34 @@ export class ProjectController {
       }
 
       res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update CR', details: err.message })
+    }
+  }
+
+  async getSubDocument(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { projectId, crId } = req.params
+      const subDocName = (req.params as Record<string, string>).subDocName
+
+      if (!projectId || !crId || !subDocName) {
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID, CR ID, and sub-document name are required' })
+        return
+      }
+
+      if (!this.ticketService) {
+        res.status(501).json({ error: 'Ticket service not available' })
+        return
+      }
+
+      const doc = await this.ticketService.getSubDocument(projectId, crId, subDocName)
+      res.json(doc)
+    }
+    catch (error: unknown) {
+      const err = error as Error
+      if (err.message === 'Project not found' || err.message === 'SubDocument not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
+        return
+      }
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get sub-document' })
     }
   }
 

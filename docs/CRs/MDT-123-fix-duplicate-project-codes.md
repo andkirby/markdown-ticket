@@ -1,6 +1,6 @@
 ---
 code: MDT-123
-status: In Progress
+status: Implemented
 dateCreated: 2026-02-08T14:29:39.209Z
 type: Bug Fix
 priority: High
