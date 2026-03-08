@@ -1,0 +1,701 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-131"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN application loads in board view, the system shall render a single merged Board|List button displaying the Board icon",
+      "sourceRef": "CR Section 5 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN application loads in list view, the system shall render a single merged Board|List button displaying the List icon",
+      "sourceRef": "CR Section 5 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN application loads in documents view, the system shall render a single merged Board|List button displaying the last-used board or list icon with a dimmed border",
+      "sourceRef": "CR Section 5 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN user hovers over the Board|List button while in board or list view, the system shall display an overlay showing the alternate view icon within 150ms with a fade-in animation",
+      "sourceRef": "CR Section 5 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN user hovers over the Board|List button while in documents view, the system shall NOT display an overlay",
+      "sourceRef": "CR Section 5 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN user clicks the Board|List button while in board or list view, the system shall navigate to the alternate view (board to list, or list to board)",
+      "sourceRef": "CR Section 5 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN user clicks the Board|List button while in documents view, the system shall navigate to the last-used board or list view",
+      "sourceRef": "CR Section Section 5 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN user switches between board and list views, the system shall persist the last-used mode to localStorage with key 'lastBoardListMode'",
+      "sourceRef": "CR Section 5 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN application loads, the system shall read localStorage key 'lastBoardListMode' to determine the default board or list mode",
+      "sourceRef": "CR Section 5 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Hover overlay fade-in animation SHALL complete within 150ms",
+      "sourceRef": "CR Section 5 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Hover overlay SHALL have pointer-events-none CSS property to allow click events to pass through to the underlying button",
+      "sourceRef": "CR Section 5 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Component SHALL follow the Type-Safe Enum pattern defined in docs/PRE_IMPLEMENT.md for ViewMode type",
+      "sourceRef": "CR Section 4 Key Patterns",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "TypeScript compilation SHALL succeed without errors",
+      "sourceRef": "CR Section 5 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "All existing tests SHALL pass after component extraction",
+      "sourceRef": "CR Section 5 Non-Functional",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF localStorage key 'lastBoardListMode' is absent or contains an invalid value, the system shall default to 'board' mode",
+      "sourceRef": "CR Section 5 Acceptance Criteria",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "WHILE localStorage is unavailable (e.g., private browsing mode with disabled storage), the system shall function normally with default 'board' mode",
+      "sourceRef": "CR Section 2 Rationale - Maintains existing localStorage behavior",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHEN application loads on mobile viewport (width < 768px), the system shall render only the Board|List toggle button and hide the Documents button",
+      "sourceRef": "User requirement: mobile navigation",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6.2",
+      "kind": "behavior",
+      "text": "WHEN application loads on desktop viewport (width >= 768px), the system shall render both Board|List toggle button and Documents button",
+      "sourceRef": "User requirement: desktop navigation",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.1",
+      "kind": "behavior",
+      "text": "WHEN application loads on mobile viewport, the system shall NOT display the project title in the navigation header",
+      "sourceRef": "User requirement: mobile header",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.2",
+      "kind": "behavior",
+      "text": "WHEN application loads on mobile viewport, the system shall use the mobile logo from designs/logo-mdt-m-dark_64x64.png instead of the default logo",
+      "sourceRef": "User requirement: mobile logo",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7.3",
+      "kind": "behavior",
+      "text": "WHEN application loads on mobile viewport, the system shall move the dark/light theme toggle button into the hamburger menu instead of the main navigation bar",
+      "sourceRef": "User requirement: mobile theme toggle",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "WHEN user switches from Board view to List view, the Board|List toggle button shall display the List icon, and WHEN switching from List to Board view, it shall display the Board icon",
+      "sourceRef": "User requirement: icon relevance (emphasized)",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-9.1",
+      "kind": "behavior",
+      "text": "WHEN application displays list view on mobile viewport, the system shall render each ticket card with CR-key and tags/badges on line 1",
+      "sourceRef": "User requirement: mobile list view layout",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-9.2",
+      "kind": "behavior",
+      "text": "WHEN application displays list view on mobile viewport, the system shall render ticket title on line 2 at 100% width",
+      "sourceRef": "User requirement: mobile list view layout",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Mobile viewport breakpoint SHALL be 768px (Tailwind md: breakpoint)",
+      "sourceRef": "User requirement: mobile viewport definition",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "initial_view_board_mode",
+      "title": "Initial view displays Board icon",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "the application is loaded in board view",
+      "when": "I view the navigation header",
+      "then": "I see a single merged Board|List button displaying the Board icon",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "initial_view_list_mode",
+      "title": "Initial view displays List icon",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "the application is loaded in list view",
+      "when": "I view the navigation header",
+      "then": "I see a single merged Board|List button displaying the List icon",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "initial_view_documents_mode",
+      "title": "Documents view shows last-used mode with dimmed border",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "the application is loaded in documents view and the last-used board or list mode was board",
+      "when": "I view the navigation header",
+      "then": "I see a single merged Board|List button displaying the Board icon with a dimmed border",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "desktop_navigation_two_buttons",
+      "title": "Desktop shows both Board|List and Documents buttons",
+      "covers": [
+        "BR-6.2"
+      ],
+      "given": "the application loads on desktop viewport (width >= 768px)",
+      "when": "I view the navigation header",
+      "then": "I see both the Board|List toggle button and the Documents button",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "mobile_navigation_one_button",
+      "title": "Mobile shows only Board|List button",
+      "covers": [
+        "BR-6.1"
+      ],
+      "given": "the application loads on mobile viewport (width < 768px)",
+      "when": "I view the navigation header",
+      "then": "I see only the Board|List toggle button and the Documents button is hidden",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "hover_overlay_shows_alternate_icon",
+      "title": "Hover overlay displays alternate view icon",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "I am in board view",
+      "when": "I hover over the Board|List button",
+      "then": "I see an overlay showing the List icon appear within 150ms with a fade-in animation",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "hover_overlay_no_documents_view",
+      "title": "No hover overlay in documents view",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "I am in documents view",
+      "when": "I hover over the Board|List button",
+      "then": "I do not see an overlay",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "click_toggle_board_to_list",
+      "title": "Click toggles from Board to List view",
+      "covers": [
+        "BR-3.1",
+        "BR-8"
+      ],
+      "given": "I am in board view",
+      "when": "I click the Board|List button",
+      "then": "I navigate to list view and the Board|List button displays the Board icon",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "click_toggle_list_to_board",
+      "title": "Click toggles from List to Board view",
+      "covers": [
+        "BR-3.1",
+        "BR-8"
+      ],
+      "given": "I am in list view",
+      "when": "I click the Board|List button",
+      "then": "I navigate to board view and the Board|List button displays the List icon",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "click_from_documents_to_last_used",
+      "title": "Click from documents returns to last-used view",
+      "covers": [
+        "BR-3.2"
+      ],
+      "given": "I am in documents view and the last-used mode was board",
+      "when": "I click the Board|List button",
+      "then": "I navigate to board view",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "persistence_saves_mode",
+      "title": "Last-used mode is saved to localStorage",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "I am in board view",
+      "when": "I switch to list view",
+      "then": "the lastBoardListMode value in localStorage is set to list",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "persistence_loads_mode",
+      "title": "Application loads last-used mode from localStorage",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "the localStorage key lastBoardListMode is set to list",
+      "when": "the application loads",
+      "then": "the application displays in list view",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "mobile_list_view_two_line_cards",
+      "title": "Mobile list view uses 2-line card layout",
+      "covers": [
+        "BR-9.1",
+        "BR-9.2"
+      ],
+      "given": "the application is in list view on mobile viewport (width < 768px)",
+      "when": "I view ticket cards",
+      "then": "I see CR-key and badges on line 1 and title on line 2 at 100% width",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "mobile_header_no_project_title",
+      "title": "Mobile navigation hides project title",
+      "covers": [
+        "BR-7.1"
+      ],
+      "given": "the application loads on mobile viewport (width < 768px)",
+      "when": "I view the navigation header",
+      "then": "I do not see the project title displayed",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "mobile_header_uses_mobile_logo",
+      "title": "Mobile navigation uses mobile logo",
+      "covers": [
+        "BR-7.2"
+      ],
+      "given": "the application loads on mobile viewport (width < 768px)",
+      "when": "I view the navigation header",
+      "then": "I see the mobile logo from designs/logo-mdt-m-dark_64x64.png",
+      "sourceRef": "MDT-131 CR requirements"
+    },
+    {
+      "id": "mobile_header_theme_toggle_in_menu",
+      "title": "Mobile navigation moves theme toggle to hamburger menu",
+      "covers": [
+        "BR-7.3"
+      ],
+      "given": "the application loads on mobile viewport (width < 768px)",
+      "when": "I view the navigation header",
+      "then": "I do not see the dark/light theme toggle button in the main navigation bar and it is available in the hamburger menu",
+      "sourceRef": "MDT-131 CR requirements"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-view-mode-switcher-ui",
+      "title": "View Mode Switcher UI Implementation",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-8",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-view-mode-switcher-index",
+        "ART-view-mode-switcher-component",
+        "ART-view-mode-types",
+        "ART-app-modified"
+      ],
+      "sourceRef": "MDT-131 architecture"
+    },
+    {
+      "id": "OBL-hover-overlay",
+      "title": "Hover Overlay Implementation",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "C1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-board-list-toggle"
+      ],
+      "sourceRef": "MDT-131 architecture"
+    },
+    {
+      "id": "OBL-toggle-navigation",
+      "title": "Toggle Navigation Behavior",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "artifactIds": [
+        "ART-view-mode-switcher-component",
+        "ART-board-list-toggle"
+      ],
+      "sourceRef": "MDT-131 architecture"
+    },
+    {
+      "id": "OBL-persistence",
+      "title": "View Mode Persistence",
+      "derivedFrom": [
+        "BR-4",
+        "BR-5",
+        "Edge-1",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-use-view-mode-persistence",
+        "ART-app-modified"
+      ],
+      "sourceRef": "MDT-131 architecture"
+    },
+    {
+      "id": "OBL-responsive-navigation",
+      "title": "Responsive Navigation Buttons",
+      "derivedFrom": [
+        "BR-6.1",
+        "BR-6.2",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-view-mode-switcher-component",
+        "ART-app-modified"
+      ],
+      "sourceRef": "MDT-131 architecture"
+    },
+    {
+      "id": "OBL-mobile-header",
+      "title": "Mobile Header Components",
+      "derivedFrom": [
+        "BR-7.1",
+        "BR-7.2",
+        "BR-7.3"
+      ],
+      "artifactIds": [
+        "ART-app-header-index",
+        "ART-mobile-logo",
+        "ART-hamburger-menu",
+        "ART-mobile-logo-asset",
+        "ART-app-modified"
+      ],
+      "sourceRef": "MDT-131 architecture"
+    },
+    {
+      "id": "OBL-mobile-cards",
+      "title": "Mobile List View Cards",
+      "derivedFrom": [
+        "BR-9.1",
+        "BR-9.2"
+      ],
+      "artifactIds": [
+        "ART-project-view-modified"
+      ],
+      "sourceRef": "MDT-131 architecture"
+    },
+    {
+      "id": "OBL-integration",
+      "title": "Integration and Quality",
+      "derivedFrom": [
+        "C4",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-view-mode-switcher-index",
+        "ART-view-mode-switcher-component",
+        "ART-board-list-toggle",
+        "ART-use-view-mode-persistence",
+        "ART-view-mode-types",
+        "ART-app-header-index",
+        "ART-mobile-logo",
+        "ART-hamburger-menu",
+        "ART-app-modified",
+        "ART-project-view-modified"
+      ],
+      "sourceRef": "MDT-131 architecture"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-view-mode-switcher-index",
+      "path": "src/components/ViewModeSwitcher/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 CR artifact specifications"
+    },
+    {
+      "id": "ART-view-mode-switcher-component",
+      "path": "src/components/ViewModeSwitcher/ViewModeSwitcher.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 CR artifact specifications"
+    },
+    {
+      "id": "ART-board-list-toggle",
+      "path": "src/components/ViewModeSwitcher/BoardListToggle.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 CR artifact specifications"
+    },
+    {
+      "id": "ART-use-view-mode-persistence",
+      "path": "src/components/ViewModeSwitcher/useViewModePersistence.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 CR artifact specifications"
+    },
+    {
+      "id": "ART-view-mode-types",
+      "path": "src/components/ViewModeSwitcher/types.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 CR artifact specifications"
+    },
+    {
+      "id": "ART-app-header-index",
+      "path": "src/components/AppHeader/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 mobile responsive requirements"
+    },
+    {
+      "id": "ART-mobile-logo",
+      "path": "src/components/AppHeader/MobileLogo.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 mobile responsive requirements"
+    },
+    {
+      "id": "ART-hamburger-menu",
+      "path": "src/components/AppHeader/HamburgerMenu.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 mobile responsive requirements"
+    },
+    {
+      "id": "ART-app-modified",
+      "path": "src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 CR modified artifacts"
+    },
+    {
+      "id": "ART-project-view-modified",
+      "path": "src/components/ProjectView.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 CR modified artifacts"
+    },
+    {
+      "id": "ART-mobile-logo-asset",
+      "path": "designs/logo-mdt-m-dark_64x64.png",
+      "kind": "runtime",
+      "sourceRef": "MDT-131 new asset"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-mobile-responsive",
+      "kind": "e2e",
+      "title": "Mobile Responsive UI E2E Tests",
+      "covers": [
+        "BR-7.1",
+        "BR-7.2",
+        "BR-7.3",
+        "BR-9.1",
+        "BR-9.2"
+      ],
+      "file": "tests/e2e/navigation/mobile-responsive.spec.ts",
+      "sourceRef": "scenario:mobile_header_no_project_title,mobile_header_uses_mobile_logo,mobile_header_theme_toggle_in_menu,mobile_list_view_two_line_cards"
+    },
+    {
+      "id": "TEST-use-view-mode-persistence",
+      "kind": "unit",
+      "title": "useViewModePersistence Hook Unit Tests",
+      "covers": [
+        "BR-4",
+        "BR-5",
+        "Edge-1",
+        "Edge-2"
+      ],
+      "file": "src/components/ViewModeSwitcher/useViewModePersistence.test.ts",
+      "sourceRef": "OBL-persistence"
+    },
+    {
+      "id": "TEST-board-list-toggle",
+      "kind": "unit",
+      "title": "BoardListToggle Component Unit Tests",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-3.1",
+        "C1",
+        "C2"
+      ],
+      "file": "src/components/ViewModeSwitcher/BoardListToggle.test.tsx",
+      "sourceRef": "OBL-hover-overlay,OBL-toggle-navigation"
+    },
+    {
+      "id": "TEST-mobile-logo",
+      "kind": "unit",
+      "title": "MobileLogo Component Unit Tests",
+      "covers": [
+        "BR-7.2"
+      ],
+      "file": "src/components/AppHeader/MobileLogo.test.tsx",
+      "sourceRef": "OBL-mobile-header"
+    },
+    {
+      "id": "TEST-hamburger-menu",
+      "kind": "unit",
+      "title": "HamburgerMenu Component Unit Tests",
+      "covers": [
+        "BR-7.3"
+      ],
+      "file": "src/components/AppHeader/HamburgerMenu.test.tsx",
+      "sourceRef": "OBL-mobile-header"
+    },
+    {
+      "id": "TEST-view-mode-switcher",
+      "kind": "unit",
+      "title": "ViewModeSwitcher Component Unit Tests",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-8",
+        "C3",
+        "C4",
+        "C6"
+      ],
+      "file": "src/components/ViewModeSwitcher/ViewModeSwitcher.test.tsx",
+      "sourceRef": "OBL-view-mode-switcher-ui,OBL-responsive-navigation"
+    },
+    {
+      "id": "TEST-build-integration",
+      "kind": "integration",
+      "title": "Build and Integration Tests",
+      "covers": [
+        "C4",
+        "C5"
+      ],
+      "sourceRef": "OBL-integration"
+    }
+  ],
+  "tasks": []
+}
