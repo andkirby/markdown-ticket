@@ -84,8 +84,8 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   const cardClasses = `
     group relative
     ${isActive
-      ? 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800 shadow-md hover:shadow-lg'
-      : 'bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border-gray-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-md'
+        ? 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800 shadow-md hover:shadow-lg'
+        : 'bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border-gray-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-md'
     }
     border rounded-xl px-4 py-1.5 h-12
     ${useRailWidthConstraints ? 'min-w-[150px] max-w-[280px] flex-1' : ''}
@@ -107,7 +107,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
           {project.project.code || project.id}
         </div>
         <div className="flex-1 text-left min-w-0">
-          <div className="text-xs text-gray-700 dark:text-gray-300 truncate break-words leading-tight">
+          <div className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate break-words leading-tight">
             {project.project.name}
           </div>
           {shouldShowDescription && project.project.description && (
@@ -122,7 +122,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
           <button
             className="flex-shrink-0 hover:scale-110 transition-transform cursor-pointer"
             onClick={handleFavoriteClick}
-            title={onFavoriteToggle ? "Click to unfavorite" : "Favorited project"}
+            title={onFavoriteToggle ? 'Click to unfavorite' : 'Favorited project'}
             aria-label="Toggle favorite"
           >
             <StarIcon filled={true} />
