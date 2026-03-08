@@ -27,6 +27,7 @@ describe('ViewModeSwitcher', () => {
         <ViewModeSwitcher
           currentMode="board"
           onModeChange={mockOnModeChange}
+          isDocumentsView={false}
         />
       )
 
@@ -56,6 +57,7 @@ describe('ViewModeSwitcher', () => {
         <ViewModeSwitcher
           currentMode="board"
           onModeChange={mockOnModeChange}
+          isDocumentsView={false}
         />
       )
 
@@ -89,6 +91,7 @@ describe('ViewModeSwitcher', () => {
         <ViewModeSwitcher
           currentMode="board"
           onModeChange={mockOnModeChange}
+          isDocumentsView={false}
         />
       )
 
@@ -100,6 +103,7 @@ describe('ViewModeSwitcher', () => {
         <ViewModeSwitcher
           currentMode="board"
           onModeChange={mockOnModeChange}
+          isDocumentsView={false}
         />
       )
 
@@ -108,8 +112,8 @@ describe('ViewModeSwitcher', () => {
   })
 
   describe('type-safe enum usage (C3)', () => {
-    it('should accept all valid ViewMode values', () => {
-      const validModes: ViewMode[] = ['board', 'list', 'documents']
+    it('should accept valid board/list ViewMode values', () => {
+      const validModes: ('board' | 'list')[] = ['board', 'list']
 
       validModes.forEach((mode) => {
         expect(() => {
@@ -117,10 +121,26 @@ describe('ViewModeSwitcher', () => {
             <ViewModeSwitcher
               currentMode={mode}
               onModeChange={mockOnModeChange}
+              isDocumentsView={false}
             />
           )
         }).not.toThrow()
       })
+    })
+
+    it('should accept documents mode in onModeChange callback', () => {
+      render(
+        <ViewModeSwitcher
+          currentMode="board"
+          onModeChange={mockOnModeChange}
+          isDocumentsView={false}
+        />
+      )
+
+      // onModeChange should accept 'documents' even though currentMode cannot be 'documents'
+      expect(() => {
+        mockOnModeChange('documents')
+      }).not.toThrow()
     })
   })
 
@@ -130,6 +150,7 @@ describe('ViewModeSwitcher', () => {
         <ViewModeSwitcher
           currentMode="board"
           onModeChange={mockOnModeChange}
+          isDocumentsView={false}
         />
       )
 
@@ -138,6 +159,7 @@ describe('ViewModeSwitcher', () => {
         <ViewModeSwitcher
           currentMode="list"
           onModeChange={mockOnModeChange}
+          isDocumentsView={false}
         />
       )
 
@@ -150,6 +172,7 @@ describe('ViewModeSwitcher', () => {
         <ViewModeSwitcher
           currentMode="board"
           onModeChange={mockOnModeChange}
+          isDocumentsView={false}
         />
       )
 

@@ -1,6 +1,8 @@
+import type { SortPreferences } from './config/sorting'
 import type { Ticket } from './types'
 import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { AddProjectModal } from './components/AddProjectModal'
 import { MobileLogo } from './components/AppHeader'
 import { EventHistory } from './components/DevTools/EventHistory'
 import { useEventHistoryState } from './components/DevTools/useEventHistoryState'
@@ -9,9 +11,11 @@ import { ProjectSelector } from './components/ProjectSelector'
 import ProjectView from './components/ProjectView'
 import { RedirectToCurrentProject } from './components/RedirectToCurrentProject'
 import { RouteErrorModal } from './components/RouteErrorModal'
+import { SecondaryHeader } from './components/SecondaryHeader'
 import TicketViewer from './components/TicketViewer'
 import { Toaster } from './components/UI/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
+import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useProjectManager } from './hooks/useProjectManager'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
@@ -36,6 +40,10 @@ function ProjectRouteHandler() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [eventHistoryOpen, eventHistoryForceHidden, setEventHistoryState] = useEventHistoryState()
+  const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(getSortPreferences)
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false)
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false)
+  const [lastBoardListMode, setLastBoardListMode] = useState<'board' | 'list'>(() => (localStorage.getItem('lastBoardListMode') as 'board' | 'list') || 'board')
 
   // Store state setters in refs to avoid direct setState in useEffect
   const errorRef = useRef(error)
@@ -58,6 +66,19 @@ function ProjectRouteHandler() {
   }
 
   const viewMode = getCurrentViewMode()
+
+  const handleSortPreferencesChange = (newPreferences: SortPreferences) => {
+    setLocalSortPreferences(newPreferences)
+    setSortPreferences(newPreferences)
+  }
+
+  const handleAddProject = () => {
+    setShowAddProjectModal(true)
+  }
+
+  const handleEditProject = () => {
+    setShowEditProjectModal(true)
+  }
 
   // Handle project selection and validation
   useEffect(() => {
@@ -88,6 +109,25 @@ function ProjectRouteHandler() {
     setErrorRef.current(null)
   }, [projectCode, projects, projectsLoading, selectedProject, setSelectedProject])
 
+  // Initialize view mode from localStorage when URL has no view suffix
+  useEffect(() => {
+    if (!projectCode)
+      return
+
+    // Check if URL is just /prj/:code (no view suffix)
+    const isRootProjectPath = /^\/prj\/[^/]+$/.test(location.pathname)
+
+    if (isRootProjectPath) {
+      const lastBoardListMode = localStorage.getItem('lastBoardListMode')
+
+      // If user's last preference was list view, navigate to it
+      if (lastBoardListMode === 'list') {
+        navigate(`/prj/${projectCode}/list`, { replace: true })
+      }
+      // Otherwise stay on board view (default)
+    }
+  }, [projectCode, location.pathname, navigate])
+
   // Handle ticket modal from URL
   useEffect(() => {
     const ticketMatch = location.pathname.match(/\/ticket\/([^/]+)/)
@@ -117,6 +157,7 @@ function ProjectRouteHandler() {
     if (mode === 'board' || mode === 'list') {
       // Store the last board/list mode separately
       localStorage.setItem('lastBoardListMode', mode)
+      setLastBoardListMode(mode)
     }
     localStorage.setItem('lastViewMode', mode)
 
@@ -154,16 +195,30 @@ function ProjectRouteHandler() {
         data-testid="main-nav"
         className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 shadow-sm"
       >
-        <div className="px-4 sm:px-6 lg:px-8">
+        <div className="px-1 sm:px-2 lg:px-2">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-4 min-w-0 flex-1 overflow-hidden">
               <div className="flex-shrink-0">
                 <MobileLogo />
               </div>
-              <ViewModeSwitcher currentMode={viewMode} onModeChange={handleViewModeChange} />
+              <ViewModeSwitcher
+                currentMode={viewMode === 'documents' ? lastBoardListMode : viewMode}
+                onModeChange={handleViewModeChange}
+                isDocumentsView={viewMode === 'documents'}
+              />
               <div className="min-w-0 flex-1">
                 <ProjectSelector />
               </div>
+            </div>
+            <div className="flex items-center">
+              <SecondaryHeader
+                viewMode={viewMode}
+                sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
+                onSortPreferencesChange={(viewMode === 'board' || viewMode === 'list') ? handleSortPreferencesChange : undefined}
+                onAddProject={handleAddProject}
+                onEditProject={handleEditProject}
+                selectedProject={selectedProject}
+              />
             </div>
           </div>
         </div>
@@ -175,8 +230,7 @@ function ProjectRouteHandler() {
           selectedProject={selectedProject}
           tickets={tickets}
           viewMode={viewMode}
-          refreshProjects={refreshProjects}
-          loading={projectsLoading}
+          sortPreferences={(viewMode === 'board' || viewMode === 'list') ? localSortPreferences : undefined}
         />
       </div>
 
@@ -185,6 +239,39 @@ function ProjectRouteHandler() {
         isOpen={!!selectedTicket}
         onClose={handleTicketClose}
       />
+
+      <AddProjectModal
+        isOpen={showAddProjectModal}
+        onClose={() => setShowAddProjectModal(false)}
+        onProjectCreated={async () => {
+          setShowAddProjectModal(false)
+          if (refreshProjects) {
+            await refreshProjects()
+          }
+        }}
+      />
+
+      {selectedProject && (
+        <AddProjectModal
+          isOpen={showEditProjectModal}
+          onClose={() => setShowEditProjectModal(false)}
+          onProjectCreated={async () => {
+            setShowEditProjectModal(false)
+            if (refreshProjects) {
+              await refreshProjects()
+            }
+          }}
+          editMode={true}
+          editProject={{
+            name: selectedProject.project.name,
+            code: getProjectCode(selectedProject),
+            path: selectedProject.project.path,
+            crsPath: 'docs/CRs',
+            description: selectedProject.project.description || '',
+            repositoryUrl: '',
+          }}
+        />
+      )}
 
       <EventHistory
         isOpen={eventHistoryOpen}

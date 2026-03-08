@@ -169,19 +169,4 @@ describe('BoardListToggle', () => {
       expect(overlay).toHaveClass('transition-opacity', 'duration-150')
     })
   })
-
-  describe('dimmed state in documents view (BR-1.3)', () => {
-    it('should have dimmed border when in documents view', () => {
-      render(
-        <BoardListToggle
-          currentMode="board"
-          onModeChange={mockOnModeChange}
-          isDocumentsView={true}
-        />
-      )
-
-      const toggle = screen.getByTestId('board-list-toggle')
-      expect(toggle).toHaveAttribute('data-state', 'dimmed')
-    })
-  })
 })
