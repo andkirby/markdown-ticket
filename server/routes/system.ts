@@ -504,5 +504,236 @@ export function createSystemRouter(
     }
   })
 
+  /**
+   * @openapi
+   * /api/config/selector:
+   *   get:
+   *     tags: [System]
+   *     summary: Get project selector configuration and state
+   *     description: Returns preferences from user.toml and state from project-selector.json
+   *     responses:
+   *       200:
+   *         description: Selector configuration and state
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 preferences:
+   *                   type: object
+   *                   properties:
+   *                     visibleCount:
+   *                       type: integer
+   *                       description: Number of visible projects in selector
+   *                       example: 7
+   *                     compactInactive:
+   *                       type: boolean
+   *                       description: Whether to compact inactive projects
+   *                       example: true
+   *                 selectorState:
+   *                   type: object
+   *                   additionalProperties:
+   *                     type: object
+   *                     properties:
+   *                       favorite:
+   *                         type: boolean
+   *                       lastUsedAt:
+   *                         type: string
+   *                         format: date-time
+   *                       count:
+   *                         type: integer
+   *   post:
+   *     tags: [System]
+   *     summary: Update project selector state
+   *     description: Persists selector state to project-selector.json
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             additionalProperties:
+   *               type: object
+   *               properties:
+   *                 favorite:
+   *                   type: boolean
+   *                 lastUsedAt:
+   *                   type: string
+   *                   format: date-time
+   *                 count:
+   *                   type: integer
+   *     responses:
+   *       200:
+   *         description: State persisted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 message:
+   *                   type: string
+   *       400:
+   *         description: Invalid request body
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error400' }
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema: { $ref: '#/components/schemas/Error500' }
+   */
+
+  // Default preferences
+  const DEFAULT_PREFERENCES = {
+    visibleCount: 7,
+    compactInactive: true,
+  }
+
+  // Validate and sanitize a single selector state entry
+  function validateSelectorEntry(entry: unknown): { favorite: boolean, lastUsedAt?: string | null, count: number } {
+    const defaultEntry: { favorite: boolean, lastUsedAt?: string | null, count: number } = { favorite: false, count: 0 }
+
+    if (typeof entry !== 'object' || entry === null) {
+      return defaultEntry
+    }
+
+    const validated: { favorite: boolean, lastUsedAt?: string | null, count: number } = { ...defaultEntry }
+
+    // Validate favorite: must be boolean, default to false if invalid
+    if ('favorite' in entry) {
+      if (typeof (entry as Record<string, unknown>).favorite === 'boolean') {
+        validated.favorite = (entry as Record<string, unknown>).favorite as boolean
+      }
+      // If not boolean, use default false
+    }
+
+    // Validate lastUsedAt: must be valid ISO-8601 date
+    if ('lastUsedAt' in entry) {
+      if (typeof (entry as Record<string, unknown>).lastUsedAt === 'string') {
+        const date = Date.parse((entry as Record<string, unknown>).lastUsedAt as string)
+        if (!isNaN(date)) {
+          validated.lastUsedAt = (entry as Record<string, unknown>).lastUsedAt as string
+        } else {
+          // Invalid date, set to null
+          validated.lastUsedAt = null
+        }
+      } else {
+        // Not a string, set to null
+        validated.lastUsedAt = null
+      }
+    }
+
+    // Validate count: must be integer >= 0, default to 0 if invalid
+    if ('count' in entry) {
+      if (typeof (entry as Record<string, unknown>).count === 'number' && Number.isInteger((entry as Record<string, unknown>).count as number) && (entry as Record<string, unknown>).count as number >= 0) {
+        validated.count = (entry as Record<string, unknown>).count as number
+      }
+      // If not valid, use default 0 (already set)
+    }
+
+    return validated
+  }
+
+  // GET /api/config/selector - Return preferences and state
+  router.get('/config/selector', async (req: Request, res: Response) => {
+    try {
+      const configDir = getConfigDir()
+      console.log('[DEBUG] getConfigDir returned:', configDir)
+
+      // Read preferences from user.toml
+      let preferences = { ...DEFAULT_PREFERENCES }
+
+      try {
+        const userTomlPath = path.join(configDir, 'user.toml')
+        const userTomlContent = await fs.readFile(userTomlPath, 'utf8')
+        const parsedConfig = toml.parse(userTomlContent)
+
+        // Check for [ui.projectSelector] section
+        if (parsedConfig.ui?.projectSelector) {
+          const selectorConfig = parsedConfig.ui.projectSelector
+
+          // Validate visibleCount: integer >= 1
+          if (typeof selectorConfig.visibleCount === 'number' && Number.isInteger(selectorConfig.visibleCount) && selectorConfig.visibleCount >= 1) {
+            preferences.visibleCount = selectorConfig.visibleCount
+          }
+
+          // Validate compactInactive: boolean
+          if (typeof selectorConfig.compactInactive === 'boolean') {
+            preferences.compactInactive = selectorConfig.compactInactive
+          }
+        }
+      }
+      catch {
+        // File doesn't exist or is invalid, use defaults (silent fallback)
+      }
+
+      // Read selector state from project-selector.json
+      let selectorState: Record<string, unknown> = {}
+
+      try {
+        const statePath = path.join(configDir, 'project-selector.json')
+        const stateContent = await fs.readFile(statePath, 'utf8')
+        const parsedState = JSON.parse(stateContent)
+
+        // Validate each entry
+        if (typeof parsedState === 'object' && parsedState !== null) {
+          for (const [key, value] of Object.entries(parsedState)) {
+            const validated = validateSelectorEntry(value)
+            selectorState[key] = validated
+          }
+        }
+      }
+      catch {
+        // File doesn't exist or is invalid, use empty state (silent fallback)
+      }
+
+      res.json({ preferences, selectorState })
+    }
+    catch (error) {
+      console.error('Error reading selector config:', error)
+      res.status(500).json({ error: 'Failed to read selector config' })
+    }
+  })
+
+  // POST /api/config/selector - Persist selector state
+  router.post('/config/selector', async (req: Request, res: Response) => {
+    try {
+      const stateUpdate = req.body
+
+      if (typeof stateUpdate !== 'object' || stateUpdate === null) {
+        return res.status(400).json({ error: 'Bad Request', message: 'Request body must be an object' })
+      }
+
+      const configDir = getConfigDir()
+      const statePath = path.join(configDir, 'project-selector.json')
+
+      // Validate each entry in the update
+      const validatedState: Record<string, unknown> = {}
+
+      for (const [key, value] of Object.entries(stateUpdate)) {
+        const validated = validateSelectorEntry(value)
+        validatedState[key] = validated
+      }
+
+      // Ensure directory exists
+      await fs.mkdir(configDir, { recursive: true })
+
+      // Write to file
+      await fs.writeFile(statePath, JSON.stringify(validatedState, null, 2), 'utf8')
+
+      res.json({
+        success: true,
+        message: 'Selector state persisted successfully',
+      })
+    }
+    catch (error) {
+      console.error('Error writing selector state:', error)
+      res.status(500).json({ error: 'Failed to write selector state' })
+    }
+  })
+
   return router
 }

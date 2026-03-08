@@ -95,7 +95,7 @@ test.describe('E2E Infrastructure', () => {
 
     // Project button is visible in the nav (the ProjectSelector renders one button per project)
     const projectOption = page.locator(
-      `[data-testid="project-option-${scenarioResult!.projectCode}"]`,
+      `[data-testid="project-selector-card-${scenarioResult!.projectCode}"], [data-testid="project-selector-chip-${scenarioResult!.projectCode}"]`,
     )
     await expect(projectOption).toBeVisible()
 

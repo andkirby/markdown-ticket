@@ -72,6 +72,7 @@ Load the skills accordingly:
 - **State**: Custom React hooks, no external library
 - **Key**: `useProjectManager.ts` (central hub, uses refs to prevent stale closures)
 - **Views**: Board (drag-drop), List (tabular), DocumentsView (file browser)
+- **Component Standards**: See `src/MODALS.md` for modal/overlay patterns and conventions
 
 ### Backend (server/)
 Layered architecture: controllers → services → repositories
