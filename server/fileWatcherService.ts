@@ -420,10 +420,18 @@ class FileWatcherService extends EventEmitter {
       return
     }
 
-    console.warn(`File ${eventType} in project ${projectId}: ${filename}`)
+    // Detect subdoc files: parent directory matches a ticket code pattern (e.g. MDT-001)
+    const parts = filePath.split('/')
+    const parentDir = parts.length >= 2 ? parts[parts.length - 2] : ''
+    const isSubDoc = /^[A-Z]+-\d+$/.test(parentDir)
+    // For subdoc changes, emit as a change to the parent ticket so the frontend re-fetches
+    const effectiveFilename = isSubDoc ? `${parentDir}.md` : filename
+    const effectiveEventType = isSubDoc ? 'change' : eventType
+
+    console.warn(`File ${eventType} in project ${projectId}: ${filename}${isSubDoc ? ` (subdoc of ${parentDir})` : ''}`)
 
     // Debounce rapid file changes
-    const debounceKey = `${eventType}:${filePath}:${projectId}`
+    const debounceKey = `${effectiveEventType}:${effectiveFilename}:${projectId}`
 
     if (this.debounceTimers.has(debounceKey)) {
       clearTimeout(this.debounceTimers.get(debounceKey))
@@ -431,7 +439,7 @@ class FileWatcherService extends EventEmitter {
 
     const timer = setTimeout(() => {
       this.debounceTimers.delete(debounceKey)
-      this.broadcastFileChange(eventType, filename, projectId)
+      this.broadcastFileChange(effectiveEventType, effectiveFilename, projectId)
     }, 100)
 
     this.debounceTimers.set(debounceKey, timer)
