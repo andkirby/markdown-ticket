@@ -39,6 +39,9 @@ export interface Ticket {
   // MDT-095: Worktree fields (API response only)
   inWorktree?: boolean
   worktreePath?: string
+
+  // MDT-093: Sub-document navigation
+  subdocuments?: import('./SubDocument.js').SubDocument[]
 }
 
 /**

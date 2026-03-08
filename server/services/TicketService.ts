@@ -6,9 +6,14 @@
  */
 
 import type { Project } from '@mdt/shared/models/Project.js'
+import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+import { DEFAULT_SUBDOCUMENT_ORDER } from '@mdt/shared/models/SubDocument.js'
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
+import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 
 export interface CRData {
   code?: string
@@ -62,10 +67,12 @@ interface ProjectDiscovery {
 export class TicketService {
   private projectDiscovery: ProjectDiscovery
   private sharedTicketService: SharedTicketService
+  private readonly worktreeService: WorktreeService
 
   constructor(projectDiscovery: ProjectDiscovery) {
     this.projectDiscovery = projectDiscovery
     this.sharedTicketService = new SharedTicketService(false)
+    this.worktreeService = new WorktreeService()
   }
 
   /**
@@ -93,7 +100,7 @@ export class TicketService {
   }
 
   /**
-   * Get specific CR from a project.
+   * Get specific CR from a project, including discovered sub-documents.
    */
   async getCR(projectId: string, crId: string): Promise<Ticket> {
     const project = await this.getProject(projectId)
@@ -103,7 +110,139 @@ export class TicketService {
       throw new Error('CR not found')
     }
 
+    // MDT-093: Await discoverSubDocuments now that it's async
+    cr.subdocuments = await this.discoverSubDocuments(project, crId)
     return cr
+  }
+
+  /**
+   * Discover sub-documents for a CR, ordered by default order then alphabetically.
+   * MDT-093: Enhanced with worktree support - resolves path for sub-document discovery.
+   */
+  private async discoverSubDocuments(project: Project, crId: string): Promise<SubDocument[]> {
+    const ticketsPath = project.project.ticketsPath ?? 'docs/CRs'
+    const projectCode = project.project.code
+
+    // MDT-093: Resolve path using WorktreeService for worktree support
+    // If project code is undefined, skip worktree resolution and use main project path
+    const resolvedPath = projectCode
+      ? await this.worktreeService.resolvePath(
+          project.project.path,
+          crId,
+          ticketsPath,
+          projectCode,
+        )
+      : project.project.path
+
+    const subdocDir = join(resolvedPath, ticketsPath, crId)
+
+    if (!existsSync(subdocDir)) {
+      return []
+    }
+
+    let entries: string[]
+    try {
+      entries = readdirSync(subdocDir)
+    }
+    catch {
+      return []
+    }
+
+    const result: SubDocument[] = []
+    const unordered: SubDocument[] = []
+
+    const nameOf = (entry: string): string => entry.replace(/\.md$/, '')
+    const isMarkdownFile = (entry: string): boolean => entry.endsWith('.md')
+
+    const discoverChildren = (dirPath: string): SubDocument[] => {
+      let childEntries: string[]
+      try {
+        childEntries = readdirSync(dirPath)
+      }
+      catch {
+        return []
+      }
+      return childEntries
+        .filter(e => isMarkdownFile(e))
+        .sort()
+        .map(e => ({ name: nameOf(e), kind: 'file' as const, children: [] }))
+    }
+
+    const buildEntry = (entry: string): SubDocument | null => {
+      const fullPath = join(subdocDir, entry)
+      const stat = statSync(fullPath)
+      if (stat.isDirectory()) {
+        return { name: entry, kind: 'folder', children: discoverChildren(fullPath) }
+      }
+      if (isMarkdownFile(entry)) {
+        return { name: nameOf(entry), kind: 'file', children: [] }
+      }
+      return null
+    }
+
+    const entryMap = new Map<string, SubDocument>()
+    for (const entry of entries) {
+      const doc = buildEntry(entry)
+      if (doc) {
+        entryMap.set(doc.name, doc)
+      }
+    }
+
+    // Add ordered entries first
+    for (const name of DEFAULT_SUBDOCUMENT_ORDER) {
+      if (entryMap.has(name)) {
+        result.push(entryMap.get(name)!)
+        entryMap.delete(name)
+      }
+    }
+
+    // Append remaining entries alphabetically
+    for (const name of [...entryMap.keys()].sort()) {
+      unordered.push(entryMap.get(name)!)
+    }
+
+    return [...result, ...unordered]
+  }
+
+  /**
+   * Get individual sub-document content for a CR.
+   * MDT-093: Enhanced with worktree support - resolves path for sub-document retrieval.
+   */
+  async getSubDocument(
+    projectId: string,
+    crId: string,
+    subDocName: string,
+  ): Promise<{ code: string, content: string, dateCreated: Date | null, lastModified: Date | null }> {
+    const project = await this.getProject(projectId)
+    const ticketsPath = project.project.ticketsPath ?? 'docs/CRs'
+    const projectCode = project.project.code
+
+    // MDT-093: Resolve path using WorktreeService for worktree support
+    // If project code is undefined, skip worktree resolution and use main project path
+    const resolvedPath = projectCode
+      ? await this.worktreeService.resolvePath(
+          project.project.path,
+          crId,
+          ticketsPath,
+          projectCode,
+        )
+      : project.project.path
+
+    const filePath = join(resolvedPath, ticketsPath, crId, `${subDocName}.md`)
+
+    if (!existsSync(filePath)) {
+      throw new Error('SubDocument not found')
+    }
+
+    const stat = statSync(filePath)
+    const content = readFileSync(filePath, 'utf-8')
+
+    return {
+      code: subDocName,
+      content,
+      dateCreated: stat.birthtime,
+      lastModified: stat.mtime,
+    }
   }
 
   /**

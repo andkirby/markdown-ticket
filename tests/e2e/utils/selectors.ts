@@ -174,6 +174,34 @@ export const documentSelectors = {
 } as const
 
 /**
+ * Sub-document navigation selectors
+ *
+ * @testid subdoc-tabs — container for tab rows; only rendered when subdocuments exist
+ * @testid subdoc-tab-row — a single tab row (primary or nested); multiple may exist for folder levels
+ * @testid subdoc-tab-{name} — individual tab trigger, where {name} is the document or folder name
+ * @testid subdoc-content — content area displaying the currently selected sub-document
+ * @testid subdoc-preloading — initial loading state when tab is clicked but content not yet loaded
+ * @testid subdoc-loading — loading indicator shown while sub-document content is fetching
+ * @testid subdoc-error — error message shown when sub-document content fails to load
+ */
+export const subdocSelectors = {
+  /** Tabs container — only present when subdocuments exist */
+  tabsContainer: '[data-testid="subdoc-tabs"]',
+  /** A tab row element (primary or nested) */
+  tabRow: '[data-testid="subdoc-tab-row"]',
+  /** Individual tab trigger by document/folder name */
+  tabTrigger: (name: string) => `[data-testid="subdoc-tab-${name}"]`,
+  /** Content area for the selected sub-document */
+  content: '[data-testid="subdoc-content"]',
+  /** Preloading indicator when tab is clicked but content not yet loaded */
+  preloading: '[data-testid="subdoc-preloading"]',
+  /** Loading indicator during content fetch */
+  loading: '[data-testid="subdoc-loading"]',
+  /** Error message when content fails to load */
+  error: '[data-testid="subdoc-error"]',
+} as const
+
+/**
  * Markdown rendering selectors
  */
 export const markdownSelectors = {

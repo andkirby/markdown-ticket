@@ -105,13 +105,11 @@ export class TicketService {
     let mdPath: string
     let files: string[]
 
-    if (fs.existsSync(crDir)) {
+    const crFileInSubdir = path.join(crDir, `${crId}.md`)
+    if (fs.existsSync(crDir) && fs.existsSync(crFileInSubdir)) {
       // Subdirectory pattern: docs/CRs/API-001/API-001.md
-      files = fs.readdirSync(crDir).filter(f => f.endsWith('.md'))
-      if (files.length === 0) {
-        throw new Error('CR not found')
-      }
-      mdPath = path.join(crDir, files[0])
+      files = [path.basename(crFileInSubdir)]
+      mdPath = crFileInSubdir
     }
     else {
       // Flat file pattern: docs/CRs/API-001-test-cr-for-api-testing.md
