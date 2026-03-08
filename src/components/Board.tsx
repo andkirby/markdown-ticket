@@ -9,6 +9,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { getColumnForStatus, getVisibleColumns } from '../config'
 import { getSortPreferences, setSortPreferences } from '../config/sorting'
 import { useProjectManager } from '../hooks/useProjectManager'
+import { useBoardLayout } from '../hooks/useBoardLayout'
 import { useToast } from '../hooks/useToast'
 import { sortTickets } from '../utils/sorting'
 import Column from './Column'
@@ -47,6 +48,9 @@ const BoardContent: React.FC<BoardProps> = ({
   )
   const [filterQuery, setFilterQuery] = useState('')
   const { error: showError } = useToast()
+
+  // Use custom hook for board layout management (mobile column switching)
+  const { isMobile, activeColumnIndex, setActiveColumnIndex, shouldShowColumn } = useBoardLayout()
 
   // Only use the hook when no selectedProject prop is provided (multi-project mode)
   const hookData = useProjectManager({
@@ -509,15 +513,20 @@ const BoardContent: React.FC<BoardProps> = ({
 
       {/* Board Grid - render regardless of showHeader */}
       <div data-testid="kanban-board" className="board-container flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full items-stretch p-1 overflow-hidden">
-        {visibleColumns.map((column, index) => {
+        {visibleColumns
+          // On mobile, only show the active column; on desktop+, show all columns
+          .filter((_, index) => shouldShowColumn(index))
+          .map((column) => {
           // Get the primary status for this column (for testid)
           // Each column has at least one status in its statuses array
           const primaryStatus = column.statuses[0]
+          // Calculate actual column index in the full array
+          const actualColumnIndex = visibleColumns.findIndex(col => col.label === column.label)
           return (
             <Column
               key={column.label}
               column={column}
-              isFirstColumn={index === 0}
+              isFirstColumn={actualColumnIndex === 0}
               tickets={ticketsByColumn[column.label]}
               allTickets={tickets}
               sortAttribute={localSortPreferences.selectedAttribute}
@@ -530,6 +539,11 @@ const BoardContent: React.FC<BoardProps> = ({
               getTicketPosition={getTicketPosition}
               clearTicketPosition={clearTicketPosition}
               status={primaryStatus}
+              // Mobile column switcher props
+              allColumns={visibleColumns}
+              currentColumnIndex={actualColumnIndex}
+              onColumnSwitch={setActiveColumnIndex}
+              isMobileView={isMobile}
             />
           )
         })}

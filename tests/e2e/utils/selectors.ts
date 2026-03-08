@@ -55,6 +55,10 @@ export const boardSelectors = {
   filterControls: '[data-testid="filter-controls"]',
   /** Search input field */
   searchInput: '[data-testid="search-input"]',
+  /** Mobile column switcher trigger button */
+  mobileColumnSwitcherTrigger: '[data-testid="mobile-column-switcher-trigger"]',
+  /** Mobile column dropdown option by column name */
+  mobileColumnOption: (columnName: string) => `[data-testid="mobile-column-option-${columnName.toLowerCase().replace(/\s+/g, '-')}"]`,
 } as const
 
 /**

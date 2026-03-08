@@ -197,7 +197,7 @@ function ProjectRouteHandler() {
       >
         <div className="px-1 sm:px-2 lg:px-2">
           <div className="flex justify-between h-16">
-            <div className="flex items-center gap-4 min-w-0 flex-1 overflow-hidden">
+            <div className="flex items-center gap-1 sm:gap-4 min-w-0 flex-1 overflow-hidden">
               <div className="flex-shrink-0">
                 <MobileLogo />
               </div>

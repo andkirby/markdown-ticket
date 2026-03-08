@@ -24,8 +24,8 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   selectedProject,
 }) => {
   return (
-    <div className="flex items-center space-x-4">
-      {/* Sort Controls - visible in Board and List views */}
+    <div className="flex items-center space-x-1 sm:space-x-4">
+      {/* Sort Controls - desktop only (mobile inside hamburger menu) */}
       {(viewMode === 'board' || viewMode === 'list') && sortPreferences && onSortPreferencesChange && (
         <SortControls
           preferences={sortPreferences}
@@ -39,6 +39,8 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
           onAddProject={onAddProject}
           onEditProject={onEditProject}
           hasActiveProject={!!selectedProject}
+          sortPreferences={sortPreferences}
+          onSortPreferencesChange={onSortPreferencesChange}
         />
       )}
     </div>
