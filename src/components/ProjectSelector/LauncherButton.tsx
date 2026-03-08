@@ -6,12 +6,11 @@
  *
  * Behavior Requirements:
  * - BR-3.1: Single launcher control at rail end
- * - BR-3.2: Uses acclaim.svg visual asset
  * - BR-3.3: Clicking opens panel via onLauncherClick callback
  */
 
 import * as React from 'react'
-import acclaimSvg from '../../../designs/acclaim.svg'
+import { Plus } from 'lucide-react'
 
 /**
  * Props for LauncherButton component
@@ -26,7 +25,7 @@ export interface LauncherButtonProps {
 /**
  * LauncherButton component
  *
- * Displays a circular launcher button with acclaim.svg icon.
+ * Displays a circular launcher button with a plus icon.
  * Opens the project selector panel on click.
  *
  * Styling:
@@ -72,11 +71,7 @@ const LauncherButton: React.FC<LauncherButtonProps> = ({
       title="Open project selector panel"
       type="button"
     >
-      <img
-        src={acclaimSvg}
-        alt="Open project selector panel"
-        className="w-5 h-5 text-gray-700 dark:text-gray-300"
-      />
+      <Plus className="w-5 h-5 text-gray-700 dark:text-gray-300" />
     </button>
   )
 }
