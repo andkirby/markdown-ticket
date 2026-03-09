@@ -5,6 +5,7 @@ import { CRStatus } from '@mdt/domain-contracts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { sortTickets } from '../utils/sorting'
 import Board from './Board'
+import { StatusBadge } from './Badge'
 import { DocumentsLayout } from './DocumentsView'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './UI/table'
 import { TicketCode } from './TicketCode'
@@ -12,21 +13,6 @@ import { TicketCode } from './TicketCode'
 type ViewMode = 'board' | 'list' | 'documents'
 
 const VIEW_MODE_KEY = 'single-project-view-mode'
-
-/** Status badge styling helper */
-function getStatusBadgeClass(status: string): string {
-  const baseClasses = 'px-2 py-1 text-xs rounded-full'
-  const statusStyles: Record<string, string> = {
-    [CRStatus.PROPOSED]: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-    [CRStatus.APPROVED]: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-    [CRStatus.IN_PROGRESS]: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    [CRStatus.IMPLEMENTED]: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-    [CRStatus.REJECTED]: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    [CRStatus.ON_HOLD]: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
-    [CRStatus.PARTIALLY_IMPLEMENTED]: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-  }
-  return `${baseClasses} ${statusStyles[status] || statusStyles[CRStatus.PROPOSED]}`
-}
 
 interface ProjectViewProps {
   onTicketClick: (ticket: Ticket) => void
@@ -165,9 +151,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                               {ticket.title}
                             </TableCell>
                             <TableCell>
-                              <span className={getStatusBadgeClass(ticket.status)}>
-                                {ticket.status}
-                              </span>
+                              <StatusBadge status={ticket.status} />
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
@@ -189,9 +173,7 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
                       >
                         <div className="flex items-center justify-between mb-1">
                           <TicketCode code={ticket.code} />
-                          <span className={getStatusBadgeClass(ticket.status)}>
-                            {ticket.status}
-                          </span>
+                          <StatusBadge status={ticket.status} />
                         </div>
                         <p className="font-medium text-sm truncate" data-testid="ticket-title">{ticket.title}</p>
                       </div>

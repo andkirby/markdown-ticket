@@ -1,5 +1,9 @@
 // Test setup for frontend tests
 import '@testing-library/jest-dom'
+import { GlobalRegistrator } from '@happy-dom/global-registrator'
+
+// Initialize happy-dom for React component tests
+await GlobalRegistrator.register()
 
 // Polyfill for TextEncoder/TextDecoder in Jest (Node 18+)
 if (typeof TextEncoder === 'undefined') {
