@@ -91,11 +91,6 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
     return processContentForDisplay(currentTicket.content)
   }, [currentTicket?.content])
 
-  // Extract ToC items from processed content
-  const tocItems = useMemo(() => {
-    return processedContent ? extractTableOfContents(processedContent, 3) : []
-  }, [processedContent])
-
   const subdocuments = useMemo(
     () => (currentTicket as (Ticket & { subdocuments?: SubDocument[] }) | null)?.subdocuments ?? [],
     [currentTicket],
@@ -121,6 +116,11 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
     pendingPath,
     onContentLoaded: confirmPathSwitch,
   })
+
+  // Extract ToC items from the currently displayed content (main or subdoc)
+  const tocItems = useMemo(() => {
+    return subdocContent ? extractTableOfContents(subdocContent, 3) : []
+  }, [subdocContent])
 
   if (!currentTicket)
     return null
