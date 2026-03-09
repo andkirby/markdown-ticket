@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-136"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN user presses Cmd+K on Mac or Ctrl+K on Windows/Linux, the system shall open the quick search modal.",
+      "sourceRef": "CR Section 4: User Flow #1, AC #1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN the quick search modal opens, the system shall focus the search input field.",
+      "sourceRef": "CR Section 4: User Flow #2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN user presses up or down arrow keys, the system shall move selection between result items.",
+      "sourceRef": "CR Section 4: User Flow #5, AC #5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN user presses Enter with a result selected, the system shall close the modal and open the selected ticket's detail view.",
+      "sourceRef": "CR Section 4: User Flow #6, AC #6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "WHEN user presses Escape while the modal is open, the system shall close the modal without selecting a ticket.",
+      "sourceRef": "CR Section 4: User Flow #7, AC #7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "WHEN user clicks outside the modal content area, the system shall close the modal without selecting a ticket.",
+      "sourceRef": "CR AC #8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "IF no tickets match the search query, the system shall display a 'No results' message in the results area.",
+      "sourceRef": "CR AC #9",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The keyboard shortcut shall be Cmd+K on macOS and Ctrl+K on Windows/Linux platforms.",
+      "sourceRef": "CR Section 4: Technical Details",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The results list shall display a maximum of 10 matching tickets.",
+      "sourceRef": "CR Section 4: User Flow #4",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Title substring matching shall be case-insensitive.",
+      "sourceRef": "CR Section 4: Search Logic, AC #3",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHEN user types in the search input, the system shall filter tickets in real-time by ticket key number or title substring (case-insensitive, all words must match).",
+      "sourceRef": "CR Section 4: User Flow #3-4, AC #2-3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Multi-word queries shall use AND logic: all words in the query must appear in the ticket title (order-independent).",
+      "sourceRef": "Requirements clarification",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [],
+  "obligations": [],
+  "artifacts": [],
+  "testPlans": [],
+  "tasks": []
+}
