@@ -15,11 +15,6 @@ import { buildScenario } from '../setup/index.js'
 import { listSelectors, ticketSelectors } from '../utils/selectors.js'
 
 test.describe('List View', () => {
-  test.beforeEach(async () => {
-    // Navigate to list view before each test - will be done in each test
-    // Note: beforeEach doesn't have access to e2eContext, so tests navigate directly
-  })
-
   test('table renders with tickets', async ({ page, e2eContext }) => {
     // Arrange: Create a scenario with multiple tickets
     const scenario = await buildScenario(e2eContext.projectFactory, 'medium')
