@@ -2,15 +2,31 @@ import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import type { Ticket } from '../types'
 import { CRStatus } from '@mdt/domain-contracts'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { sortTickets } from '../utils/sorting'
 import Board from './Board'
 import { DocumentsLayout } from './DocumentsView'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './UI/table'
 import { TicketCode } from './TicketCode'
 
 type ViewMode = 'board' | 'list' | 'documents'
 
 const VIEW_MODE_KEY = 'single-project-view-mode'
+
+/** Status badge styling helper */
+function getStatusBadgeClass(status: string): string {
+  const baseClasses = 'px-2 py-1 text-xs rounded-full'
+  const statusStyles: Record<string, string> = {
+    [CRStatus.PROPOSED]: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    [CRStatus.APPROVED]: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    [CRStatus.IN_PROGRESS]: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    [CRStatus.IMPLEMENTED]: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+    [CRStatus.REJECTED]: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    [CRStatus.ON_HOLD]: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+    [CRStatus.PARTIALLY_IMPLEMENTED]: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+  }
+  return `${baseClasses} ${statusStyles[status] || statusStyles[CRStatus.PROPOSED]}`
+}
 
 interface ProjectViewProps {
   onTicketClick: (ticket: Ticket) => void
@@ -35,6 +51,15 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
   const viewMode = externalViewMode || internalViewMode
 
   const loading = propLoading || false
+
+  // Memoize sorted tickets to avoid re-sorting on every render
+  const sortedTickets = useMemo(() => {
+    return sortTickets(
+      propTickets || [],
+      sortPreferences?.selectedAttribute || 'title',
+      sortPreferences?.selectedDirection || 'asc',
+    )
+  }, [propTickets, sortPreferences?.selectedAttribute, sortPreferences?.selectedDirection])
 
   // Use ref to prevent stale closure bug when switching projects
   const selectedProjectRef = useRef<Project | null>(selectedProject)
@@ -113,67 +138,62 @@ export default function ProjectView({ onTicketClick, selectedProject, tickets: p
             )
           : viewMode === 'list'
             ? (
-                <div className="h-full overflow-auto p-6">
-                  <div data-testid="ticket-list" className="space-y-2">
-                    {sortTickets(propTickets || [], sortPreferences?.selectedAttribute || 'title', sortPreferences?.selectedDirection || 'asc').map(ticket => (
+                <div className="h-full overflow-auto">
+                  {/* Desktop: Table View */}
+                  <div className="hidden md:block" data-testid="ticket-table">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-28">Code</TableHead>
+                          <TableHead>Title</TableHead>
+                          <TableHead className="w-32">Status</TableHead>
+                          <TableHead className="w-32">Modified</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedTickets.map(ticket => (
+                          <TableRow
+                            key={ticket.code}
+                            onClick={() => onTicketClick(ticket)}
+                            className="cursor-pointer"
+                            data-testid={`ticket-row-${ticket.code}`}
+                          >
+                            <TableCell className="font-mono">
+                              <TicketCode code={ticket.code} />
+                            </TableCell>
+                            <TableCell className="font-medium" data-testid="ticket-title">
+                              {ticket.title}
+                            </TableCell>
+                            <TableCell>
+                              <span className={getStatusBadgeClass(ticket.status)}>
+                                {ticket.status}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile: Card View */}
+                  <div className="md:hidden p-4 space-y-2" data-testid="ticket-list">
+                    {sortedTickets.map(ticket => (
                       <div
                         key={ticket.code}
                         onClick={() => onTicketClick(ticket)}
-                        className="p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                        className="p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                         data-testid={`ticket-card-${ticket.code}`}
                       >
-                        {/* Mobile layout: 2-line structure (< 768px) */}
-                        <div className="md:hidden">
-                          <div className="flex items-center space-x-2 mb-2" data-testid="ticket-card-line-1">
-                            <TicketCode code={ticket.code} />
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              ticket.status === CRStatus.PROPOSED
-                                ? 'bg-blue-100 text-blue-800'
-                                : ticket.status === CRStatus.APPROVED
-                                  ? 'bg-green-100 text-green-800'
-                                  : ticket.status === CRStatus.IN_PROGRESS
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : ticket.status === CRStatus.IMPLEMENTED
-                                      ? 'bg-purple-100 text-purple-800'
-                                      : 'bg-red-100 text-red-800'
-                            }`}
-                            >
-                              {ticket.status}
-                            </span>
-                          </div>
-                          <div className="w-full" data-testid="ticket-card-line-2">
-                            <span className="font-medium block w-full" data-testid="ticket-title">{ticket.title}</span>
-                          </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <TicketCode code={ticket.code} />
+                          <span className={getStatusBadgeClass(ticket.status)}>
+                            {ticket.status}
+                          </span>
                         </div>
-
-                        {/* Desktop layout: horizontal structure (>= 768px) */}
-                        <div className="hidden md:flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3">
-                              <TicketCode code={ticket.code} />
-                              <span className="font-medium">{ticket.title}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              ticket.status === CRStatus.PROPOSED
-                                ? 'bg-blue-100 text-blue-800'
-                                : ticket.status === CRStatus.APPROVED
-                                  ? 'bg-green-100 text-green-800'
-                                  : ticket.status === CRStatus.IN_PROGRESS
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : ticket.status === CRStatus.IMPLEMENTED
-                                      ? 'bg-purple-100 text-purple-800'
-                                      : 'bg-red-100 text-red-800'
-                            }`}
-                            >
-                              {ticket.status}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {ticket.lastModified ? new Date(ticket.lastModified).toLocaleDateString() : 'Unknown'}
-                            </span>
-                          </div>
-                        </div>
+                        <p className="font-medium text-sm truncate" data-testid="ticket-title">{ticket.title}</p>
                       </div>
                     ))}
                   </div>

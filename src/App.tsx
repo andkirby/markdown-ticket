@@ -58,10 +58,15 @@ function ProjectRouteHandler() {
 
   // Determine current view mode from URL
   const getCurrentViewMode = (): 'board' | 'list' | 'documents' => {
+    // Check pathname first (for /prj/MDT/list, /prj/MDT/documents)
     if (location.pathname.includes('/list'))
       return 'list'
     if (location.pathname.includes('/documents'))
       return 'documents'
+    // Check query param when on ticket route (e.g., /prj/MDT/ticket/MDT-130?view=list)
+    const viewParam = searchParams.get('view')
+    if (viewParam === 'list' || viewParam === 'documents')
+      return viewParam
     return 'board'
   }
 
