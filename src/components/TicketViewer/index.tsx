@@ -56,26 +56,28 @@ export function TicketViewer({ ticket, projectId }: TicketViewerProps) {
       />
 
       {/* @testid subdoc-content — content area displaying the currently selected sub-document */}
-      <div data-testid="subdoc-content" className="ticket-viewer-content flex-1 overflow-auto p-4">
-        {pendingPath && !loading && (
-          /* @testid subdoc-preloading — initial loading state when tab is clicked */
-          <div data-testid="subdoc-preloading" className="text-muted-foreground text-sm">Loading…</div>
-        )}
-        {!pendingPath && loading && (
-          /* @testid subdoc-loading — loading indicator shown while sub-document content is fetching */
-          <div data-testid="subdoc-loading" className="text-muted-foreground text-sm">Loading…</div>
-        )}
+      <div data-testid="subdoc-content" className="ticket-viewer-content flex-1 overflow-auto p-4 relative">
         {error && (
           /* @testid subdoc-error — error message shown when sub-document content fails to load */
           <div data-testid="subdoc-error" className="text-destructive text-sm" role="alert">
             {error}
           </div>
         )}
-        {!pendingPath && !loading && !error && (
-          <MarkdownContent
-            markdown={content}
-            currentProject={projectId}
-          />
+        {!error && (
+          <>
+            {(pendingPath || loading) && (
+              /* @testid subdoc-loading — loading overlay shown while preserving previous content height */
+              <div data-testid="subdoc-loading" className="absolute inset-0 z-10 flex items-start justify-center pt-8 bg-background/50">
+                <span className="text-muted-foreground text-sm animate-pulse">Loading…</span>
+              </div>
+            )}
+            <div className={pendingPath || loading ? 'opacity-50 pointer-events-none' : ''}>
+              <MarkdownContent
+                markdown={content}
+                currentProject={projectId}
+              />
+            </div>
+          </>
         )}
       </div>
     </div>
