@@ -5,8 +5,14 @@
  * Coverage: BR-4, BR-6
  */
 
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, afterEach } from 'bun:test'
+import { render, screen, cleanup } from '@testing-library/react'
 import { PriorityBadge } from './PriorityBadge'
+
+// Cleanup DOM between tests
+afterEach(() => {
+  cleanup()
+})
 
 describe('PriorityBadge', () => {
   const allPriorities = ['Critical', 'High', 'Medium', 'Low']
