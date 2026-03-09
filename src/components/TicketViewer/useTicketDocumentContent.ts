@@ -8,7 +8,7 @@
  * Covers: BR-3.1, BR-3.2, BR-5.3, C6, C7, C8
  */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { dataLayer } from '../../services/dataLayer'
 import { urlPathToApiPath } from '../../utils/subdocPathValidation'
 
@@ -25,23 +25,57 @@ interface UseTicketDocumentContentResult {
   content: string
   loading: boolean
   error: string | null
+  /** Clear cached content for a specific path, or all paths if none specified. */
+  invalidateCache: (path?: string) => void
 }
 
 export function useTicketDocumentContent(
   options: UseTicketDocumentContentOptions,
 ): UseTicketDocumentContentResult {
-  const { projectId, ticketCode, selectedPath, mainContent, pendingPath, onContentLoaded } = options
+  const { projectId, ticketCode, selectedPath, mainContent, onContentLoaded } = options
 
   const [content, setContent] = useState<string>(mainContent)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Cache subdocument content keyed by path. Reset when ticket changes.
+  const cacheRef = useRef<Map<string, string>>(new Map())
+  const ticketKeyRef = useRef(`${projectId}:${ticketCode}`)
+
+  // Reset cache when ticket changes
+  if (`${projectId}:${ticketCode}` !== ticketKeyRef.current) {
+    cacheRef.current.clear()
+    ticketKeyRef.current = `${projectId}:${ticketCode}`
+  }
+
+  // Stabilize onContentLoaded to avoid re-triggering the effect
+  const onContentLoadedRef = useRef(onContentLoaded)
+  onContentLoadedRef.current = onContentLoaded
+
+  const invalidateCache = useCallback((path?: string) => {
+    if (path) {
+      cacheRef.current.delete(path)
+    } else {
+      cacheRef.current.clear()
+    }
+  }, [])
 
   useEffect(() => {
     if (selectedPath === 'main') {
       setContent(mainContent)
       setLoading(false)
       setError(null)
-      onContentLoaded?.()
+      onContentLoadedRef.current?.()
+      return
+    }
+
+    // Serve from cache if available
+    const cached = cacheRef.current.get(selectedPath)
+    if (cached !== undefined) {
+      setContent(cached)
+      setLoading(false)
+      setError(null)
+      onContentLoadedRef.current?.()
       return
     }
 
@@ -55,10 +89,11 @@ export function useTicketDocumentContent(
     dataLayer.fetchSubDocument(projectId, ticketCode, apiPath)
       .then((doc) => {
         if (!cancelled) {
+          cacheRef.current.set(selectedPath, doc.content)
           setContent(doc.content)
           setLoading(false)
           // Notify that content is ready for display
-          onContentLoaded?.()
+          onContentLoadedRef.current?.()
         }
       })
       .catch((err: unknown) => {
@@ -66,14 +101,14 @@ export function useTicketDocumentContent(
           setError(err instanceof Error ? err.message : 'Failed to load document')
           setLoading(false)
           // Still notify to clear pending state on error
-          onContentLoaded?.()
+          onContentLoadedRef.current?.()
         }
       })
 
     return () => {
       cancelled = true
     }
-  }, [selectedPath, projectId, ticketCode, mainContent, onContentLoaded])
+  }, [selectedPath, projectId, ticketCode, mainContent])
 
-  return { content, loading, error }
+  return { content, loading, error, invalidateCache }
 }
