@@ -42,12 +42,16 @@ export async function waitForBoardReady(page: Page, timeout = BOARD_READY_TIMEOU
  *
  * Waits for:
  * 1. Loading to disappear
- * 2. Ticket list to be visible
+ * 2. Ticket list to be visible (desktop table OR mobile card list)
  */
 export async function waitForListReady(page: Page, timeout = BOARD_READY_TIMEOUT): Promise<void> {
   await page.waitForSelector(commonSelectors.loading, { state: 'hidden', timeout })
-  // Wait for either desktop table or mobile list container
-  await page.waitForSelector(`${listSelectors.ticketTable}, ${listSelectors.ticketList}`, { state: 'visible', timeout })
+  // Wait for either desktop table or mobile list container to be visible
+  // Use Promise.race because waitForSelector with comma picks first DOM match, not first visible
+  await Promise.race([
+    page.locator(listSelectors.ticketTable).waitFor({ state: 'visible', timeout }),
+    page.locator(listSelectors.ticketList).waitFor({ state: 'visible', timeout }),
+  ])
 }
 
 /**
