@@ -8,7 +8,7 @@
  * @see docs/CRs/MDT-094/architecture.md
  */
 
-/// <reference types="jest" />
+import { describe, it, expect, beforeEach, mock } from 'bun:test'
 
 /**
  * DataLayer Metadata Tests - MDT-094.
@@ -18,8 +18,8 @@
  */
 
 // Mock fetch globally
-const mockFetch = jest.fn()
-global.fetch = mockFetch
+const mockFetch = mock()
+global.fetch = mockFetch as unknown as typeof fetch
 
 // Import after mocking
 // import { dataLayer } from './dataLayer'
@@ -46,7 +46,7 @@ interface TicketMetadata {
 
 describe('DataLayer.fetchTicketsMetadata (MDT-094)', () => {
   beforeEach(() => {
-    mockFetch.mockReset()
+    mockFetch.mockClear()
   })
 
   describe('fetchTicketsMetadata', () => {
