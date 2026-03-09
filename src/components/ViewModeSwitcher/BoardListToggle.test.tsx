@@ -5,15 +5,19 @@
  * Coverage: BR-2.1, BR-2.2, BR-3.1, C1, C2
  */
 
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, beforeEach, mock, afterEach } from 'bun:test'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { BoardListToggle } from './BoardListToggle'
-import type { ViewMode } from './types'
 
 describe('BoardListToggle', () => {
-  const mockOnModeChange = jest.fn()
+  const mockOnModeChange = mock()
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockOnModeChange.mockClear()
+  })
+
+  afterEach(() => {
+    cleanup()
   })
 
   describe('current mode display (BR-1.1, BR-1.2, BR-8)', () => {

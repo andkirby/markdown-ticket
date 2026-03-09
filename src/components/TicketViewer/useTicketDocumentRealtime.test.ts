@@ -10,6 +10,7 @@
  * - C5: Realtime delivery failure does not block manual navigation
  */
 
+import { describe, it, expect, mock } from 'bun:test'
 import { act, renderHook } from '@testing-library/react'
 import { useTicketDocumentRealtime } from './useTicketDocumentRealtime'
 
@@ -31,7 +32,7 @@ describe('useTicketDocumentRealtime', () => {
       useTicketDocumentRealtime({
         initialSubdocuments: initial,
         selectedPath: 'main',
-        onActiveRemoved: jest.fn(),
+        onActiveRemoved: mock(),
       }),
     )
     expect(Array.isArray(result.current.subdocuments)).toBe(true)
@@ -46,7 +47,7 @@ describe('useTicketDocumentRealtime', () => {
       useTicketDocumentRealtime({
         initialSubdocuments: initial,
         selectedPath: 'main',
-        onActiveRemoved: jest.fn(),
+        onActiveRemoved: mock(),
       }),
     )
 
@@ -73,7 +74,7 @@ describe('useTicketDocumentRealtime', () => {
       useTicketDocumentRealtime({
         initialSubdocuments: initial,
         selectedPath: 'main',
-        onActiveRemoved: jest.fn(),
+        onActiveRemoved: mock(),
       }),
     )
 
@@ -88,7 +89,7 @@ describe('useTicketDocumentRealtime', () => {
   // ─── Active document removed (BR-5.2) ────────────────────────────────────
 
   it('calls onActiveRemoved when the currently selected document disappears (BR-5.2)', () => {
-    const onActiveRemoved = jest.fn()
+    const onActiveRemoved = mock()
     const initial: SubDocEntry[] = [
       { name: 'tasks', kind: 'file', children: [] },
     ]
@@ -108,7 +109,7 @@ describe('useTicketDocumentRealtime', () => {
   })
 
   it('does not call onActiveRemoved when selected document remains in updated structure (BR-5.2)', () => {
-    const onActiveRemoved = jest.fn()
+    const onActiveRemoved = mock()
     const initial: SubDocEntry[] = [
       { name: 'requirements', kind: 'file', children: [] },
       { name: 'tasks', kind: 'file', children: [] },
@@ -138,7 +139,7 @@ describe('useTicketDocumentRealtime', () => {
       useTicketDocumentRealtime({
         initialSubdocuments: initial,
         selectedPath: 'main',
-        onActiveRemoved: jest.fn(),
+        onActiveRemoved: mock(),
       }),
     )
 
@@ -154,7 +155,7 @@ describe('useTicketDocumentRealtime', () => {
         useTicketDocumentRealtime({
           initialSubdocuments: initial,
           selectedPath: 'tasks',
-          onActiveRemoved: jest.fn(),
+          onActiveRemoved: mock(),
         }),
       )
     }).not.toThrow()

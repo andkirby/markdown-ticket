@@ -5,6 +5,7 @@
  * Coverage: BR-4, BR-5, Edge-1, Edge-2
  */
 
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { useViewModePersistence } from './useViewModePersistence'
 
 // Mock localStorage - compatible with both Jest and bun test

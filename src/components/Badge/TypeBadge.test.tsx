@@ -5,8 +5,14 @@
  * Coverage: BR-5, BR-7
  */
 
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, afterEach } from 'bun:test'
+import { render, screen, cleanup } from '@testing-library/react'
 import { TypeBadge } from './TypeBadge'
+
+// Cleanup DOM between tests
+afterEach(() => {
+  cleanup()
+})
 
 describe('TypeBadge', () => {
   const allTypes = [
