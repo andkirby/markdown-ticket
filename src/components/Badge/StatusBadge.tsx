@@ -25,11 +25,12 @@ export interface StatusBadgeProps extends StatusVariantProps {
  * <StatusBadge status="In Progress" />
  * <StatusBadge status="Approved" className="ml-2" />
  */
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, className, ...props }: StatusBadgeProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <Badge
       variant="outline"
       className={cn(statusVariants({ status }), className)}
+      {...props}
     >
       {status}
     </Badge>
