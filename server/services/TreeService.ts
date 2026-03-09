@@ -19,6 +19,7 @@ interface Project {
 
 interface _Config {
   documentPaths: string[]
+  excludeFolders: string[]
   ticketsPath?: string | null | undefined
 }
 
@@ -63,8 +64,9 @@ export class TreeService {
     const projectConfig: ProjectConfig = {
       document: {
         paths: docPaths,
-        excludeFolders: [],
+        excludeFolders: config.excludeFolders,
       },
+      ticketsPath: config.ticketsPath ?? undefined,
     }
     const allFiles = await builder.build(project.project.path, projectConfig) as TreeNode[]
 
@@ -83,8 +85,9 @@ export class TreeService {
     const projectConfig: ProjectConfig = {
       document: {
         paths: config.documentPaths,
-        excludeFolders: [],
+        excludeFolders: config.excludeFolders,
       },
+      ticketsPath: config.ticketsPath ?? undefined,
     }
 
     return await builder.build(project.project.path, projectConfig) as TreeNode[]

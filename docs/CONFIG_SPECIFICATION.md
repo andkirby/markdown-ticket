@@ -86,7 +86,7 @@ The system supports three valid file relationship states:
 | Field | Type | Required | Default | Range | Description |
 |-------|------|----------|---------|-------|-------------|
 | `paths` | array | Optional | [] | - | Paths to documentation (files, dirs, globs) |
-| `excludeFolders` | array | Optional | [] | - | Folder names to exclude from discovery |
+| `excludeFolders` | array | Optional | [`{ticketsPath}`, `node_modules`, `.git`] | - | Folder names to exclude from discovery. `ticketsPath` is always auto-added if not present. |
 | `maxDepth` | number | Optional | 3 | 1-10 | Maximum directory depth for scanning |
 
 
@@ -127,7 +127,7 @@ The document viewer integrates with project configuration to provide markdown fi
 ### Discovery Behavior
 
 1. **Exclusion First**: Any path containing folder name in `excludeFolders` is excluded
-2. **Auto-Exclusion**: `ticketsPath` is automatically added to exclusions
+2. **Auto-Exclusion**: `ticketsPath` is automatically added to `excludeFolders` to prevent CR ticket files from appearing in documents view
 3. **Scanning**: System scans `paths` for `.md` files up to `maxDepth` levels
 4. **Path Types**:
    - **Files**: Direct path to specific markdown (depth doesn't apply)
