@@ -81,10 +81,7 @@ test.describe('MDT-131: View Mode Switcher', () => {
       // Hover and check overlay appears
       await page.locator(navSelectors.boardListToggle).hover()
 
-      // Wait for transition to complete (150ms animation)
-      await page.waitForTimeout(200)
-
-      // Check that overlay is visible
+      // Check that overlay is visible (Playwright retries automatically)
       await expect(overlay).toBeVisible()
     })
 
