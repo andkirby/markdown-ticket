@@ -61,6 +61,11 @@ export class ConfigRepository {
           config.ticketsPath = parsed.project.path.trim()
         }
       }
+
+      // Always ensure ticketsPath is in excludeFolders to prevent CR files from appearing in documents
+      if (config.ticketsPath && !config.excludeFolders.includes(config.ticketsPath)) {
+        config.excludeFolders.push(config.ticketsPath)
+      }
     }
     catch (error) {
       console.error('Failed to parse TOML configuration:', error)

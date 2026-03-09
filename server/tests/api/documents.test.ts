@@ -268,6 +268,46 @@ describe('documents API Tests (MDT-106)', () => {
     })
   })
 
+  describe('excludeFolders behavior', () => {
+    it('should exclude tickets path from document tree', async () => {
+      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+
+      assertSuccess(response, 200)
+      assertIsArray(response)
+
+      // Flatten tree to check all paths
+      const walk = (nodes: Array<Record<string, unknown>>): string[] =>
+        nodes.flatMap(node => [
+          node.path as string,
+          ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : []),
+        ])
+
+      const allPaths = walk(response.body as Array<Record<string, unknown>>)
+
+      // Tickets path (docs/CRs) should NOT appear in documents
+      const ticketsPath = allPaths.find(p => p && p.includes('CRs'))
+      expect(ticketsPath).toBeUndefined()
+    })
+
+    it('should not include CR ticket files in document listing', async () => {
+      const response = await request(app).get(`/api/documents?projectId=${projectCode}`)
+
+      assertSuccess(response, 200)
+
+      const walk = (nodes: Array<Record<string, unknown>>): string[] =>
+        nodes.flatMap(node => [
+          node.path as string,
+          ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : []),
+        ])
+
+      const allPaths = walk(response.body as Array<Record<string, unknown>>)
+
+      // No CR ticket files (MDT-XXX-*.md pattern) should appear
+      const crFiles = allPaths.filter(p => p && /MDT-\d{3}-.*\.md$/.test(p))
+      expect(crFiles).toHaveLength(0)
+    })
+  })
+
   describe('error cases', () => {
     it('should return 400 for missing projectId in discovery', async () => {
       const response = await request(app).get('/api/documents')
