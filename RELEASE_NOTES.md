@@ -1,5 +1,45 @@
 # Release Notes
 
+## v0.12.0 (2026-03-09)
+
+### 🎉 New Features
+
+**Mobile-First Kanban Board (MDT-131, MDT-132)**
+- **Mobile Column Switcher**: On mobile viewports, see one full-width column at a time with dropdown navigation
+- **Responsive Navigation**: Board/List toggle merged with hover overlay, optimized for touch
+- **System Theme Toggle**: Floating theme button on mobile for quick dark/light switching
+- **Desktop Unchanged**: Full multi-column layout preserved on larger screens
+
+**Project Selector Redesign (MDT-129)**
+- **Rail Navigation**: Active project shown as prominent card, others as compact chips
+- **Quick Access Panel**: Launcher button opens full project list for switching
+- **State Persistence**: Last selected project remembered across sessions
+- **Favorites Support**: Star projects to prioritize them in the rail
+
+**Sub-Document Support (MDT-093)**
+- **Sticky Tabs**: Open related documents in tabs within ticket detail view
+- **Path-Based Routing**: Direct URLs to specific sub-documents
+- **Worktree Integration**: Sub-documents work correctly in git worktrees
+
+### 🐛 Bug Fixes
+
+**Project Discovery (MDT-123)**
+- Fixed duplicate project codes appearing in registry when projects share the same code
+- Improved validation to prevent configuration conflicts
+
+### 🚀 Improvements
+
+**E2E Testing Infrastructure (MDT-092, MDT-128, MDT-130)**
+- Isolated test environments prevent interference with user projects
+- Comprehensive smoke tests for critical UI paths
+- Markdown rendering coverage for nested lists, Mermaid diagrams, tables, and code blocks
+
+**API Optimization (MDT-094)**
+- Reduced CR listing payload size by removing content from list responses
+- Faster board loading for projects with many tickets
+
+---
+
 ## v0.11.0 (2026-02-22)
 
 ### 🎉 New Features
