@@ -161,34 +161,30 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
 
           {/* Content area: sub-document or main ticket content */}
           {/* @testid subdoc-content — content area for selected sub-document */}
-          <div data-testid="subdoc-content">
-            {pendingPath && !subdocLoading && (
-              /* @testid subdoc-preloading — initial loading state when tab is clicked */
-              <div data-testid="subdoc-preloading" className="text-muted-foreground text-sm py-2">
-                Loading…
-              </div>
-            )}
-            {!pendingPath && subdocLoading && (
-              /* @testid subdoc-loading — loading indicator while fetching sub-document */
-              <div data-testid="subdoc-loading" className="text-muted-foreground text-sm py-2">
-                Loading…
-              </div>
-            )}
+          <div data-testid="subdoc-content" className="relative">
             {subdocError && (
               /* @testid subdoc-error — error message when sub-document fails to load */
               <div data-testid="subdoc-error" className="text-destructive text-sm py-2" role="alert">
                 {subdocError}
               </div>
             )}
-            {!pendingPath && !subdocLoading && !subdocError && isOpen && projectCode && (
-              /* @testid ticket-content — Markdown content area */
-              <div data-testid="ticket-content">
-                <MarkdownContent
-                  markdown={subdocContent}
-                  currentProject={projectCode}
-                  headerLevelStart={3}
-                />
-              </div>
+            {!subdocError && isOpen && projectCode && (
+              <>
+                {(pendingPath || subdocLoading) && (
+                  /* @testid subdoc-loading — loading overlay preserving previous content height */
+                  <div data-testid="subdoc-loading" className="absolute inset-0 z-10 flex items-start justify-center pt-8 bg-background/50">
+                    <span className="text-muted-foreground text-sm animate-pulse">Loading…</span>
+                  </div>
+                )}
+                {/* @testid ticket-content — Markdown content area (stays mounted to prevent layout collapse) */}
+                <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'opacity-50 pointer-events-none' : ''}>
+                  <MarkdownContent
+                    markdown={subdocContent}
+                    currentProject={projectCode}
+                    headerLevelStart={3}
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>

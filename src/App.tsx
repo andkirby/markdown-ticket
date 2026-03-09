@@ -292,9 +292,9 @@ function App() {
         <Route path="/prj/:projectCode" element={<ProjectRouteHandler />} />
         <Route path="/prj/:projectCode/list" element={<ProjectRouteHandler />} />
         <Route path="/prj/:projectCode/documents" element={<ProjectRouteHandler />} />
-        <Route path="/prj/:projectCode/ticket/:ticketKey" element={<ProjectRouteHandler />} />
-        {/* MDT-094: Path-based routing for sub-documents */}
+        {/* MDT-094: Unified route for tickets with optional sub-document path */}
         <Route path="/prj/:projectCode/ticket/:ticketKey/*" element={<ProjectRouteHandler />} />
+        <Route path="/prj/:projectCode/ticket/:ticketKey" element={<ProjectRouteHandler />} />
         <Route path="/ticket/:ticketKey" element={<DirectTicketAccess />} />
         {/* MDT-094: Direct ticket access with sub-document path */}
         <Route path="/ticket/:ticketKey/*" element={<DirectTicketAccess />} />
