@@ -106,7 +106,7 @@ const ProjectSelectorChip: React.FC<ProjectSelectorChipProps> = ({
         <div
           className={cardClasses}
           onClick={handleClick}
-          data-testid={`project-selector-chip project-selector-chip-${project.project.code || project.id}`}
+          data-testid={`project-selector-chip-${project.project.code || project.id}`}
           data-project-key={project.project.code || project.id}
         >
           <div className="flex items-center gap-2 h-full">
