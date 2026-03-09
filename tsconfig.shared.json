@@ -28,6 +28,7 @@
     "dist",
     "shared/**/__tests__/**/*",
     "shared/**/*.test.ts",
-    "shared/**/*.spec.ts"
+    "shared/**/*.spec.ts",
+    "shared/**/*.config.ts"
   ]
 }
