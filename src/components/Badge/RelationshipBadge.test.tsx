@@ -5,6 +5,7 @@
  * Coverage: BR-8
  */
 
+import { describe, it, expect, afterEach } from 'bun:test'
 import { render, screen, cleanup } from '@testing-library/react'
 import { RelationshipBadge } from './RelationshipBadge'
 

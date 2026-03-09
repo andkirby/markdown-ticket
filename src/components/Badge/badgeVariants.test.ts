@@ -5,6 +5,7 @@
  * Coverage: BR-2, BR-6, BR-7, C3, C5
  */
 
+import { describe, it, expect } from 'bun:test'
 import { statusVariants, priorityVariants, typeVariants, contextVariants, relationshipVariants } from './badgeVariants'
 
 describe('badgeVariants', () => {
