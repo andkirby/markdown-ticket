@@ -70,7 +70,7 @@ test.describe('Sub-Document Preload', () => {
     await expect(detailPanel.locator(subdocSelectors.content)).toContainText('Section 50')
   })
 
-  test('tab disabled during content load to prevent rapid clicking', async ({ page, e2eContext }) => {
+  test('loading indicator shown during content fetch', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
     const ticketCode = scenario.crCodes[0]
 
@@ -90,13 +90,15 @@ test.describe('Sub-Document Preload', () => {
 
     const detailPanel = page.locator(ticketSelectors.detailPanel)
 
-    // Click requirements tab and immediately check if it's disabled
+    // Click requirements tab and immediately check for loading indicator
     await detailPanel.locator(subdocSelectors.tabTrigger('requirements')).click()
 
-    // Tab should have the loading indicator (…)
+    // Tab should become active
     const requirementsTab = detailPanel.locator(subdocSelectors.tabTrigger('requirements'))
-    const tabText = await requirementsTab.textContent()
-    expect(tabText).toContain('…')
+    await expect(requirementsTab).toHaveAttribute('data-state', 'active')
+
+    // Loading indicator should be visible in the content area during fetch
+    await expect(detailPanel.locator(subdocSelectors.loading)).toBeVisible()
   })
 
   test('multiple rapid tab clicks are handled gracefully', async ({ page, e2eContext }) => {

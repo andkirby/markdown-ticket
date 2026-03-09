@@ -85,9 +85,11 @@ test.describe('E2E Infrastructure', () => {
     }
   })
 
-  test('project appears in frontend', async ({ page }) => {
-    // Ensure scenario was created
-    expect(scenarioResult).toBeDefined()
+  test('project appears in frontend', async ({ page, e2eContext }) => {
+    // If running in isolation (not as part of serial suite), create scenario
+    if (!scenarioResult) {
+      scenarioResult = await buildScenario(e2eContext.projectFactory, 'simple')
+    }
 
     // Navigate to frontend — the app auto-selects the first project
     await page.goto('/')
