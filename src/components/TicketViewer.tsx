@@ -144,7 +144,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
         closeTestId="close-detail"
       />
       <ModalBody>
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0">
           {/* Ticket Metadata */}
           <div className="p-5 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
             <TicketAttributes ticket={currentTicket} />

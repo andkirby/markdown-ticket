@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
 const modalVariants = cva(
-  'relative overflow-hidden rounded-lg bg-white dark:bg-slate-900 shadow-xl transition-all sm:my-8 sm:w-full',
+  'relative w-full rounded-lg bg-white dark:bg-slate-900 shadow-xl transition-all sm:my-8',
   {
     variants: {
       size: {
