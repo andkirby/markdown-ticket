@@ -167,12 +167,22 @@ export const projectSelectors = {
  * List view selectors
  */
 export const listSelectors = {
-  /** Ticket list container */
+  /** Ticket list container (mobile cards) */
   ticketList: '[data-testid="ticket-list"]',
-  /** Ticket card in list (card-based layout) */
+  /** Ticket table container (desktop) */
+  ticketTable: '[data-testid="ticket-table"]',
+  /** Any ticket item (desktop row or mobile card) */
+  ticketItem: '[data-testid^="ticket-row-"], [data-testid^="ticket-card-"]',
+  /** Ticket item by code (desktop row or mobile card) */
+  itemByCode: (code: string) => `[data-testid="ticket-row-${code}"], [data-testid="ticket-card-${code}"]`,
+  /** Ticket card in list (mobile card-based layout) */
   ticketCard: '[data-testid^="ticket-card-"]',
+  /** Ticket row in table (desktop) */
+  ticketRow: '[data-testid^="ticket-row-"]',
   /** Ticket card by code */
   cardByCode: (code: string) => `[data-testid="ticket-card-${code}"]`,
+  /** Ticket row by code */
+  rowByCode: (code: string) => `[data-testid="ticket-row-${code}"]`,
   /** Sort controls container */
   sortControls: '[data-testid="sort-controls"]',
   /** Sort button for column */

@@ -6,7 +6,8 @@
  * 2. Sorting by columns
  * 3. Clicking rows to open ticket details
  *
- * RED phase: Tests may fail due to missing selectors or implementation.
+ * Desktop uses table view (ticket-table, ticket-row-*)
+ * Mobile uses card view (ticket-list, ticket-card-*)
  */
 
 import { expect, test } from '../fixtures/test-fixtures.js'
@@ -27,24 +28,20 @@ test.describe('List View', () => {
     await page.goto(`/prj/${scenario.projectCode}/list`)
     await page.waitForLoadState('load')
 
-    // Wait for list container to be visible
-    await page.waitForSelector(listSelectors.ticketList, { state: 'visible', timeout: 10000 })
+    // Wait for either table (desktop) or list (mobile) to be visible
+    await page.waitForSelector(`${listSelectors.ticketTable}, ${listSelectors.ticketList}`, { state: 'visible', timeout: 10000 })
 
-    // Assert: Verify ticket list container exists
-    const ticketList = page.locator(listSelectors.ticketList)
-    await expect(ticketList).toBeVisible()
-
-    // Assert: Verify ticket cards are rendered (card-based layout)
-    const ticketCards = page.locator('[data-testid^="ticket-card-"]')
-    const cardCount = await ticketCards.count()
+    // Assert: Verify ticket items are rendered (desktop rows or mobile cards)
+    const ticketItems = page.locator(listSelectors.ticketItem)
+    const itemCount = await ticketItems.count()
 
     // Should have at least the tickets we created
-    expect(cardCount).toBeGreaterThanOrEqual(scenario.ticketCount)
+    expect(itemCount).toBeGreaterThanOrEqual(scenario.ticketCount)
 
-    // Assert: Verify each card has expected data attributes
+    // Assert: Verify each item has expected data attributes
     for (const crCode of scenario.crCodes) {
-      const card = page.locator(`[data-testid="ticket-card-${crCode}"]`)
-      await expect(card).toBeVisible()
+      const item = page.locator(listSelectors.itemByCode(crCode))
+      await expect(item.first()).toBeVisible()
     }
   })
 
@@ -55,18 +52,18 @@ test.describe('List View', () => {
     // Navigate to list view
     await page.goto(`/prj/${scenario.projectCode}/list`)
     await page.waitForLoadState('load')
-    await page.waitForSelector(listSelectors.ticketList, { state: 'visible', timeout: 10000 })
+    await page.waitForSelector(`${listSelectors.ticketTable}, ${listSelectors.ticketList}`, { state: 'visible', timeout: 10000 })
 
     // Get initial order of tickets (using data-testid attributes)
     const getTicketCodes = async (): Promise<string[]> => {
-      const cards = page.locator('[data-testid^="ticket-card-"]')
-      const count = await cards.count()
+      const items = page.locator(listSelectors.ticketItem)
+      const count = await items.count()
       const codes: string[] = []
       for (let i = 0; i < count; i++) {
-        const card = cards.nth(i)
-        const testId = await card.getAttribute('data-testid')
-        // Extract code from testid like "ticket-card-ABC-1"
-        const match = testId?.match(/ticket-card-([A-Z0-9-]+)/)
+        const item = items.nth(i)
+        const testId = await item.getAttribute('data-testid')
+        // Extract code from testid like "ticket-row-ABC-1" or "ticket-card-ABC-1"
+        const match = testId?.match(/ticket-(?:row|card)-([A-Z0-9-]+)/)
         if (match) {
           codes.push(match[1])
         }
@@ -112,14 +109,14 @@ test.describe('List View', () => {
     // Navigate to list view
     await page.goto(`/prj/${scenario.projectCode}/list`)
     await page.waitForLoadState('load')
-    await page.waitForSelector(listSelectors.ticketList, { state: 'visible', timeout: 10000 })
+    await page.waitForSelector(`${listSelectors.ticketTable}, ${listSelectors.ticketList}`, { state: 'visible', timeout: 10000 })
 
     // Get the first ticket code
     const firstTicketCode = scenario.crCodes[0]
 
-    // Act: Click on a ticket card (this navigates to ticket detail URL which opens modal)
-    const ticketCard = page.locator(`[data-testid="ticket-card-${firstTicketCode}"]`)
-    await ticketCard.click()
+    // Act: Click on a ticket item (this navigates to ticket detail URL which opens modal)
+    const ticketItem = page.locator(listSelectors.itemByCode(firstTicketCode))
+    await ticketItem.first().click()
 
     // Wait for navigation to complete and modal to appear
     await page.waitForLoadState('load')

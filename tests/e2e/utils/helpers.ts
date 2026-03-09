@@ -6,7 +6,7 @@
 
 import type { Page } from '@playwright/test'
 import { expect } from '@playwright/test'
-import { boardSelectors, commonSelectors, ticketSelectors } from './selectors.js'
+import { boardSelectors, commonSelectors, listSelectors, ticketSelectors } from './selectors.js'
 
 /** Default timeout for board ready state */
 const BOARD_READY_TIMEOUT = 10000
@@ -46,7 +46,8 @@ export async function waitForBoardReady(page: Page, timeout = BOARD_READY_TIMEOU
  */
 export async function waitForListReady(page: Page, timeout = BOARD_READY_TIMEOUT): Promise<void> {
   await page.waitForSelector(commonSelectors.loading, { state: 'hidden', timeout })
-  await page.waitForSelector('[data-testid="ticket-list"]', { state: 'visible', timeout })
+  // Wait for either desktop table or mobile list container
+  await page.waitForSelector(`${listSelectors.ticketTable}, ${listSelectors.ticketList}`, { state: 'visible', timeout })
 }
 
 /**
