@@ -23,6 +23,8 @@
     "dist",
     "**/__tests__/**/*",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "*.config.ts",
+    "**/*.config.ts"
   ]
 }

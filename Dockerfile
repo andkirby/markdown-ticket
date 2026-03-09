@@ -2,13 +2,14 @@
 # Development: Vite dev server with hot reload
 # Production: Static build served with nginx
 
-FROM node:20-alpine AS base
+FROM oven/bun:alpine AS base
 WORKDIR /app
 
 # Install dependencies for shared code and frontend (workspace monorepo)
 COPY package*.json ./
 COPY tsconfig.shared.json ./
 COPY shared ./shared
+COPY domain-contracts ./domain-contracts
 COPY server/package*.json ./server/
 COPY mcp-server/package*.json ./mcp-server/
 
@@ -16,7 +17,7 @@ COPY mcp-server/package*.json ./mcp-server/
 FROM base AS development
 
 # Install all dependencies (including devDependencies)
-RUN npm ci
+RUN bun install --frozen-lockfile
 
 # Copy source code and configuration files
 COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
@@ -24,8 +25,9 @@ COPY postcss.config.js tailwind.config.js ./
 COPY src ./src
 COPY public ./public
 
-# Build shared code
-RUN npm run build:shared
+# Build domain-contracts and shared code
+RUN bun run build:domain-contracts
+RUN bun run build:shared
 
 # Expose Vite dev server port
 EXPOSE 5173
@@ -34,22 +36,24 @@ EXPOSE 5173
 ENV NODE_ENV=development
 
 # Start Vite dev server with host 0.0.0.0 for Docker
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # Production build stage
 FROM base AS build
 
 # Install all dependencies for build (including devDependencies for compilation)
-RUN npm ci
+RUN bun install --frozen-lockfile
 
 # Copy source code and configuration files
 COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
 COPY postcss.config.js tailwind.config.js ./
 COPY src ./src
 COPY public ./public
+COPY domain-contracts ./domain-contracts
 
-# Build shared code and frontend
-RUN npm run build
+# Build domain-contracts, shared code, and frontend
+RUN bun run build:domain-contracts
+RUN bun run build
 
 # Production stage
 FROM nginx:alpine AS production
