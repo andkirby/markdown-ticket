@@ -3,6 +3,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Make wide tables horizontally scrollable on small screens */
+.prose table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent inline code and long words from breaking layout */
+.prose {
+  overflow-wrap: anywhere;
+}
+
+.prose code {
+  word-break: break-all;
+}
+
+/* Prevent pre/code blocks from overflowing */
+.prose pre {
+  overflow-x: auto;
+}
+
 /* Remove backticks and padding for Mermaid code blocks */
 .prose code.mermaid::before,
 .prose code.mermaid::after {
