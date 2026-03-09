@@ -25,11 +25,12 @@ export interface PriorityBadgeProps extends PriorityVariantProps {
  * <PriorityBadge priority="High" />
  * <PriorityBadge priority="Critical" className="ml-2" />
  */
-export function PriorityBadge({ priority, className }: PriorityBadgeProps) {
+export function PriorityBadge({ priority, className, ...props }: PriorityBadgeProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <Badge
       variant="outline"
       className={cn(priorityVariants({ priority }), className)}
+      {...props}
     >
       {priority}
     </Badge>
