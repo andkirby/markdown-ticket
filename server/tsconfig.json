@@ -24,11 +24,9 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "isolatedModules": true
   },
-  "references": [
-    { "path": "../tsconfig.shared.json" }
-  ],
   "include": [
     "server.ts",
     "fileWatcherService.ts",
