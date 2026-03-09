@@ -142,27 +142,15 @@ export function useTicketDocumentNavigation(
     // Set pending path to indicate preload is in progress
     setPendingPath(path)
 
-    setState((prev) => {
-      const folderStack = deriveFolderStack(path, subdocuments)
+    const folderStack = deriveFolderStack(path, subdocuments)
 
-      // Build target URL path using full project path (avoids redirect/remount)
-      let targetPath: string
-      if (path === 'main') {
-        targetPath = `/prj/${projectCode}/ticket/${ticketCode}`
-      }
-      else {
-        const urlPath = apiPathToUrlPath(path)
-        targetPath = `/prj/${projectCode}/ticket/${ticketCode}/${urlPath}`
-      }
+    setState(prev => ({ ...prev, selectedPath: path, folderStack, needsRedirect: false }))
 
-      // Only navigate if the URL actually needs to change (prevents unnecessary remounts)
-      if (location.pathname !== targetPath) {
-        navigate(targetPath, { replace: true })
-      }
-
-      return { ...prev, selectedPath: path, folderStack, needsRedirect: false }
-    })
-  }, [subdocuments, ticketCode, projectCode, navigate, location.pathname])
+    // URL is kept at the ticket level (/prj/CODE/ticket/KEY) to avoid
+    // React Router route switching between exact and wildcard routes,
+    // which remounts ProjectRouteHandler and breaks modal state.
+    // Deep linking to subdocs is still supported via initial URL parsing.
+  }, [subdocuments])
 
   const confirmPathSwitch = useCallback(() => {
     setPendingPath(null)

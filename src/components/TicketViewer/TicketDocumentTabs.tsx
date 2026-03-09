@@ -17,7 +17,7 @@ interface TicketDocumentTabsProps {
   selectedPath: string
   folderStack: string[]
   onSelect: (path: string) => void
-  pendingPath: string | null
+  pendingPath?: string | null
 }
 
 /**
@@ -63,7 +63,6 @@ export function TicketDocumentTabs({
   selectedPath,
   folderStack,
   onSelect,
-  pendingPath,
 }: TicketDocumentTabsProps) {
   // Hidden when no sub-documents exist (BR-1.5)
   if (subdocuments.length === 0) {
@@ -99,11 +98,6 @@ export function TicketDocumentTabs({
           {/* @testid subdoc-tab-row — a single tab row (primary or nested) */}
           <Tabs.List data-testid="subdoc-tab-row" className="flex overflow-x-auto scrollbar-hide border-b px-2">
             {row.entries.map(entry => {
-              // Determine full path for this entry
-              const prefix = folderStack.slice(0, rowIdx).join('/')
-              const fullPath = prefix ? `${prefix}/${entry.name}` : entry.name
-              const isPending = pendingPath === fullPath
-
               return (
                 /* @testid subdoc-tab-{name} — individual tab trigger */
                 <Tabs.Trigger
@@ -111,13 +105,9 @@ export function TicketDocumentTabs({
                   value={entry.name}
                   data-testid={`subdoc-tab-${entry.name}`}
                   className="px-3 py-2 text-sm font-medium whitespace-nowrap data-[state=active]:border-b-2 data-[state=active]:border-primary relative"
-                  disabled={isPending}
                 >
                   {entry.name === 'main' ? 'Main' : entry.name}
                   {entry.kind === 'folder' ? ' ▶' : ''}
-                  {isPending && (
-                    <span className="ml-1 text-xs animate-pulse">…</span>
-                  )}
                 </Tabs.Trigger>
               )
             })}
