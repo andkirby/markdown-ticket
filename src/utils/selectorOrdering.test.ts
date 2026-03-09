@@ -11,8 +11,7 @@
  * RED phase: Tests will fail until selectorOrdering.ts is implemented.
  */
 
-/// <reference types="jest" />
-
+import { describe, it, expect } from 'bun:test'
 import {
   computeRailOrder,
   computePanelOrder,

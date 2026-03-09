@@ -5,10 +5,28 @@
  * Coverage: BR-7.2
  */
 
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, beforeEach, mock, afterEach } from 'bun:test'
+import { render, screen, cleanup } from '@testing-library/react'
 import { MobileLogo } from './MobileLogo'
 
+const createMatchMedia = (matches: boolean) => mock().mockImplementation((query: string) => ({
+  matches,
+  media: query,
+  onchange: null,
+  addListener: mock(),
+  removeListener: mock(),
+  addEventListener: mock(),
+  removeEventListener: mock(),
+  dispatchEvent: mock(),
+}))
+
 describe('MobileLogo', () => {
+  afterEach(() => {
+    cleanup()
+    // @ts-expect-error - resetting mock
+    delete window.matchMedia
+  })
+
   describe('desktop view', () => {
     beforeEach(() => {
       // Mock desktop viewport
@@ -18,16 +36,7 @@ describe('MobileLogo', () => {
         value: 1200,
       })
 
-      window.matchMedia = jest.fn().mockImplementation((query) => ({
-        matches: query.includes('(min-width: 768px)'),
-        media: query,
-        onchange: null,
-        addListener: jest.fn(),
-        removeListener: jest.fn(),
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-      }))
+      window.matchMedia = createMatchMedia(true)
     })
 
     it('should display default logo on desktop (≥768px)', () => {
@@ -48,16 +57,7 @@ describe('MobileLogo', () => {
         value: 375,
       })
 
-      window.matchMedia = jest.fn().mockImplementation((query) => ({
-        matches: !query.includes('(min-width: 768px)'),
-        media: query,
-        onchange: null,
-        addListener: jest.fn(),
-        removeListener: jest.fn(),
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-      }))
+      window.matchMedia = createMatchMedia(false)
     })
 
     it('should display mobile logo on mobile (<768px) (BR-7.2)', () => {

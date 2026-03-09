@@ -11,16 +11,21 @@
  * RED phase: Tests will fail until useSelectorData.ts is implemented.
  */
 
+import { describe, it, expect, afterEach, mock, beforeEach } from 'bun:test'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { useSelectorData } from './useSelectorData'
 import type { SelectorPreferences, SelectorState } from './types'
 
 // Mock fetch globally
-global.fetch = jest.fn()
+const mockFetch = mock()
+global.fetch = mockFetch as unknown as typeof fetch
 
 describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', () => {
+  beforeEach(() => {
+    mockFetch.mockClear()
+  })
   afterEach(() => {
-    jest.clearAllMocks()
+    mockFetch.mockClear()
   })
 
   it('returns visibleCount from user.toml', async () => {
@@ -95,8 +100,11 @@ describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', ()
 })
 
 describe('useSelectorData - BR-7.3: Fallback to defaults when config missing', () => {
+  beforeEach(() => {
+    mockFetch.mockClear()
+  })
   afterEach(() => {
-    jest.clearAllMocks()
+    mockFetch.mockClear()
   })
 
   it('returns default preferences when user.toml does not exist', async () => {
@@ -125,8 +133,11 @@ describe('useSelectorData - BR-7.3: Fallback to defaults when config missing', (
 })
 
 describe('useSelectorData - BR-7.4, BR-7.5: Invalid config fallbacks', () => {
+  beforeEach(() => {
+    mockFetch.mockClear()
+  })
   afterEach(() => {
-    jest.clearAllMocks()
+    mockFetch.mockClear()
   })
 
   it('falls back to default visibleCount when value is not integer', async () => {
@@ -223,8 +234,11 @@ describe('useSelectorData - BR-7.4, BR-7.5: Invalid config fallbacks', () => {
 })
 
 describe('useSelectorData - BR-8.5, BR-8.6: Selector state loading', () => {
+  beforeEach(() => {
+    mockFetch.mockClear()
+  })
   afterEach(() => {
-    jest.clearAllMocks()
+    mockFetch.mockClear()
   })
 
   it('returns empty state when project-selector.json does not exist', async () => {
@@ -284,9 +298,15 @@ describe('useSelectorData - BR-8.5, BR-8.6: Selector state loading', () => {
   })
 
   it('falls back to empty state when JSON is invalid', async () => {
-    ;(global.fetch as jest.MockedFunction<typeof fetch>).mockRejectedValueOnce(
-      new Error('Invalid JSON')
-    )
+    // Suppress console.error for this test
+    const originalError = console.error
+    console.error = () => {}
+
+    // Mock a response that fails when json() is called
+    ;(global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.reject(new Error('Invalid JSON')),
+    })
 
     const { result } = renderHook(() => useSelectorData())
 
@@ -297,12 +317,17 @@ describe('useSelectorData - BR-8.5, BR-8.6: Selector state loading', () => {
     // Should handle error gracefully and return defaults
     expect(result.current.preferences.visibleCount).toBe(7)
     expect(result.current.preferences.compactInactive).toBe(true)
+
+    console.error = originalError
   })
 })
 
 describe('useSelectorData - BR-10.x: Validation and error handling', () => {
+  beforeEach(() => {
+    mockFetch.mockClear()
+  })
   afterEach(() => {
-    jest.clearAllMocks()
+    mockFetch.mockClear()
   })
 
   it('drops invalid entries but keeps valid ones', async () => {
@@ -530,8 +555,11 @@ describe('useSelectorData - BR-10.x: Validation and error handling', () => {
 })
 
 describe('useSelectorData - BR-5.3, BR-5.4, BR-5.5: Usage tracking', () => {
+  beforeEach(() => {
+    mockFetch.mockClear()
+  })
   afterEach(() => {
-    jest.clearAllMocks()
+    mockFetch.mockClear()
   })
 
   it('updates usage state when project is selected', async () => {
@@ -549,7 +577,7 @@ describe('useSelectorData - BR-5.3, BR-5.4, BR-5.5: Usage tracking', () => {
       },
     }
 
-    ;(global.fetch as jest.MockedFunction<typeof fetch>)
+    ;(global.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -591,7 +619,7 @@ describe('useSelectorData - BR-5.3, BR-5.4, BR-5.5: Usage tracking', () => {
       },
     }
 
-    ;(global.fetch as jest.MockedFunction<typeof fetch>)
+    ;(global.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -632,7 +660,7 @@ describe('useSelectorData - BR-5.3, BR-5.4, BR-5.5: Usage tracking', () => {
       },
     }
 
-    ;(global.fetch as jest.MockedFunction<typeof fetch>)
+    ;(global.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -664,8 +692,11 @@ describe('useSelectorData - BR-5.3, BR-5.4, BR-5.5: Usage tracking', () => {
 })
 
 describe('useSelectorData - BR-8.1, BR-8.2: Favorite toggle', () => {
+  beforeEach(() => {
+    mockFetch.mockClear()
+  })
   afterEach(() => {
-    jest.clearAllMocks()
+    mockFetch.mockClear()
   })
 
   it('toggles favorite state for a project', async () => {
@@ -683,7 +714,7 @@ describe('useSelectorData - BR-8.1, BR-8.2: Favorite toggle', () => {
       },
     }
 
-    ;(global.fetch as jest.MockedFunction<typeof fetch>)
+    ;(global.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -724,7 +755,7 @@ describe('useSelectorData - BR-8.1, BR-8.2: Favorite toggle', () => {
       },
     }
 
-    ;(global.fetch as jest.MockedFunction<typeof fetch>)
+    ;(global.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,

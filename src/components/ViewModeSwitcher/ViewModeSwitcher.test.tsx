@@ -5,20 +5,39 @@
  * Coverage: BR-1.*, BR-6.*, BR-8, C3
  */
 
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, beforeEach, mock, afterEach } from 'bun:test'
+import { render, screen, cleanup } from '@testing-library/react'
 import { ViewModeSwitcher } from './ViewModeSwitcher'
 import type { ViewMode } from './types'
 
-// Mock child components
-jest.mock('./BoardListToggle', () => ({
+// Mock child components using Bun's mock.module
+mock.module('./BoardListToggle', () => ({
   BoardListToggle: () => <div data-testid="board-list-toggle">BoardListToggle</div>,
 }))
 
+const createMatchMedia = (matches: boolean) => mock().mockImplementation((query: string) => ({
+  matches,
+  media: query,
+  onchange: null,
+  addListener: mock(),
+  removeListener: mock(),
+  addEventListener: mock(),
+  removeEventListener: mock(),
+  dispatchEvent: mock(),
+}))
+
 describe('ViewModeSwitcher', () => {
-  const mockOnModeChange = jest.fn()
+  const mockOnModeChange = mock()
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockOnModeChange.mockClear()
+  })
+
+  afterEach(() => {
+    cleanup()
+    // Reset window.matchMedia
+    // @ts-expect-error - resetting mock
+    delete window.matchMedia
   })
 
   describe('component composition', () => {
@@ -42,16 +61,7 @@ describe('ViewModeSwitcher', () => {
         value: 1200,
       })
 
-      window.matchMedia = jest.fn().mockImplementation((query) => ({
-        matches: query.includes('(min-width: 768px)'),
-        media: query,
-        onchange: null,
-        addListener: jest.fn(),
-        removeListener: jest.fn(),
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-      }))
+      window.matchMedia = createMatchMedia(true)
 
       render(
         <ViewModeSwitcher
@@ -74,16 +84,7 @@ describe('ViewModeSwitcher', () => {
         value: 375,
       })
 
-      window.matchMedia = jest.fn().mockImplementation((query) => ({
-        matches: !query.includes('(min-width: 768px)'),
-        media: query,
-        onchange: null,
-        addListener: jest.fn(),
-        removeListener: jest.fn(),
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-      }))
+      window.matchMedia = createMatchMedia(false)
     })
 
     it('should hide Documents button on mobile viewport (< 768px) (BR-6.1)', () => {
