@@ -17,6 +17,6 @@ searchPaths = ["/projects"]
 EOF
 fi
 
-node /app/shared/dist/tools/config-cli.js set discovery.searchPaths "${CONFIG_DISCOVER_PATH:-/projects}"
+bun /app/shared/dist/tools/config-cli.js set discovery.searchPaths "${CONFIG_DISCOVER_PATH:-/projects}"
 
 exec "$@"
