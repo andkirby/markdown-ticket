@@ -1,5 +1,33 @@
 # Release Notes
 
+## v0.12.1 (2026-03-09)
+
+### 🎉 New Features
+
+**Enhanced List View (MDT-134)**
+- **shadcn/ui Table**: Modern table component with sorting and responsive design
+- **Better Visual Hierarchy**: Cleaner column layout for ticket attributes
+
+**Sub-Document Tabs (MDT-093)**
+- **Sticky Tabs**: Open related documents in tabs within ticket detail view
+- **Performance**: Cached subdocument content prevents redundant API calls
+- **Mobile Fix**: Fixed modal collapse and content overflow on mobile
+
+### 🚀 Improvements
+
+**Project Selector (MDT-129)**
+- **Consistent data-testid**: Fixed selector chip for reliable E2E testing
+
+**Badge Components (MDT-135)**
+- **Unified Styling**: Consolidated ticket badge styles across all views
+- **data-testid Forwarding**: All badge components now pass test IDs correctly
+
+**Test Infrastructure**
+- Fixed flaky E2E tests to match actual implementation behavior
+- Fixed responsive list view test assertions
+
+---
+
 ## v0.12.0 (2026-03-09)
 
 ### 🎉 New Features

@@ -1,0 +1,1 @@
+Cmd+K Quick Search provides keyboard-driven ticket discovery across all views. Users can instantly find tickets by key number or title substring, navigate results with arrow keys, and jump directly to ticket detail. The modal uses preloaded ticket data for zero-latency filtering.

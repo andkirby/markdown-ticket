@@ -1,0 +1,668 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-135"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "Status badge colors identical across all views",
+      "sourceRef": "CR AC Functional #1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "All CRStatus values have defined colors",
+      "sourceRef": "CR AC Functional #2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "Dark mode colors consistent across views",
+      "sourceRef": "CR AC Functional #3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Existing E2E tests continue to pass",
+      "sourceRef": "CR AC Quality #1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "TypeScript validation passes",
+      "sourceRef": "CR AC Quality #2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Single source of truth for status color mapping",
+      "sourceRef": "CR AC Non-Functional #1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "No duplicate getStatusColor functions",
+      "sourceRef": "CR AC Non-Functional #2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "Priority badge colors identical across all views",
+      "sourceRef": "CR AC Functional #2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "Type badge colors identical across all views",
+      "sourceRef": "CR AC Functional #3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "All Priority values have defined colors",
+      "sourceRef": "CR AC Functional #5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "All CRType values have defined colors",
+      "sourceRef": "CR AC Functional #6",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "Relationship and context badges are consistent",
+      "sourceRef": "CR AC Functional #7-8",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Badge variants use cva for type safety",
+      "sourceRef": "CR AC Non-Functional #3",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [],
+  "obligations": [
+    {
+      "id": "OBL-consumer-migration",
+      "title": "All views (ProjectView, TicketAttributeTags, TicketAttributes) import StatusBadge",
+      "derivedFrom": [
+        "BR-1",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-project-view",
+        "ART-ticket-attribute-tags",
+        "ART-ticket-attributes"
+      ],
+      "sourceRef": "architecture:integration"
+    },
+    {
+      "id": "OBL-remove-dupes",
+      "title": "Remove inline getStatusColor/getStatusBadgeClass functions from consumers",
+      "derivedFrom": [
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-project-view",
+        "ART-ticket-attribute-tags",
+        "ART-ticket-attributes"
+      ],
+      "sourceRef": "architecture:cleanup"
+    },
+    {
+      "id": "OBL-test-compat",
+      "title": "E2E tests continue to pass without modification",
+      "derivedFrom": [
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-e2e-list-view"
+      ],
+      "sourceRef": "architecture:compatibility"
+    },
+    {
+      "id": "OBL-color-source",
+      "title": "badgeVariants.ts defines ALL attribute color mappings using cva",
+      "derivedFrom": [
+        "BR-2",
+        "BR-6",
+        "BR-7",
+        "C3",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-badge-variants",
+        "ART-badge-types"
+      ],
+      "sourceRef": "architecture:single source"
+    },
+    {
+      "id": "OBL-test-status",
+      "title": "StatusBadge unit tests cover all CRStatus values and dark mode",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-status-badge-test",
+        "ART-status-badge"
+      ],
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "OBL-test-priority",
+      "title": "PriorityBadge unit tests cover all Priority values with gradient styling",
+      "derivedFrom": [
+        "BR-4",
+        "BR-6"
+      ],
+      "artifactIds": [
+        "ART-priority-badge-test",
+        "ART-priority-badge"
+      ],
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "OBL-test-type",
+      "title": "TypeBadge unit tests cover all CRType values with gradient styling",
+      "derivedFrom": [
+        "BR-5",
+        "BR-7"
+      ],
+      "artifactIds": [
+        "ART-type-badge-test",
+        "ART-type-badge"
+      ],
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "OBL-test-context",
+      "title": "ContextBadge unit tests cover phase/epic, assignee, worktree variants",
+      "derivedFrom": [
+        "BR-8"
+      ],
+      "artifactIds": [
+        "ART-context-badge-test",
+        "ART-context-badge"
+      ],
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "OBL-test-relationship",
+      "title": "RelationshipBadge unit tests cover related, depends, blocks variants",
+      "derivedFrom": [
+        "BR-8"
+      ],
+      "artifactIds": [
+        "ART-relationship-badge-test",
+        "ART-relationship-badge"
+      ],
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "OBL-test-variants",
+      "title": "badgeVariants unit tests verify color mappings for all attributes",
+      "derivedFrom": [
+        "BR-2",
+        "BR-6",
+        "BR-7",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-badge-variants-test",
+        "ART-badge-variants"
+      ],
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "OBL-test-e2e-verify",
+      "title": "Verify existing E2E tests pass after migration",
+      "derivedFrom": [
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-e2e-list-view"
+      ],
+      "sourceRef": "test:e2e"
+    },
+    {
+      "id": "OBL-dark-mode",
+      "title": "All status variants use consistent dark mode shades (950)",
+      "derivedFrom": [
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-badge-variants"
+      ],
+      "sourceRef": "architecture:theming"
+    },
+    {
+      "id": "OBL-context-badges",
+      "title": "ContextBadge component for phase/epic, assignee, worktree",
+      "derivedFrom": [
+        "BR-8"
+      ],
+      "artifactIds": [
+        "ART-context-badge",
+        "ART-badge-variants"
+      ],
+      "sourceRef": "architecture:context"
+    },
+    {
+      "id": "OBL-priority-badge",
+      "title": "PriorityBadge component with unified gradient styling",
+      "derivedFrom": [
+        "BR-4",
+        "BR-6"
+      ],
+      "artifactIds": [
+        "ART-priority-badge",
+        "ART-badge-variants"
+      ],
+      "sourceRef": "architecture:priority"
+    },
+    {
+      "id": "OBL-relationship-badges",
+      "title": "RelationshipBadge component for related, depends, blocks",
+      "derivedFrom": [
+        "BR-8"
+      ],
+      "artifactIds": [
+        "ART-relationship-badge",
+        "ART-badge-variants"
+      ],
+      "sourceRef": "architecture:relationships"
+    },
+    {
+      "id": "OBL-single-owner",
+      "title": "Badge module owns ALL ticket attribute badge rendering",
+      "derivedFrom": [
+        "BR-1",
+        "BR-4",
+        "BR-5",
+        "C3",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-status-badge",
+        "ART-badge-variants",
+        "ART-badge-index"
+      ],
+      "sourceRef": "architecture:ownership"
+    },
+    {
+      "id": "OBL-type-badge",
+      "title": "TypeBadge component with unified gradient styling",
+      "derivedFrom": [
+        "BR-5",
+        "BR-7"
+      ],
+      "artifactIds": [
+        "ART-type-badge",
+        "ART-badge-variants"
+      ],
+      "sourceRef": "architecture:type"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-status-badge",
+      "path": "src/components/Badge/StatusBadge.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:new component"
+    },
+    {
+      "id": "ART-status-variants",
+      "path": "src/components/Badge/statusVariants.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:color mapping"
+    },
+    {
+      "id": "ART-badge-types",
+      "path": "src/components/Badge/types.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:type definitions"
+    },
+    {
+      "id": "ART-badge-index",
+      "path": "src/components/Badge/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:exports"
+    },
+    {
+      "id": "ART-project-view",
+      "path": "src/components/ProjectView.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:consumer"
+    },
+    {
+      "id": "ART-ticket-attribute-tags",
+      "path": "src/components/TicketAttributeTags.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:consumer"
+    },
+    {
+      "id": "ART-ticket-attributes",
+      "path": "src/components/TicketAttributes.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:consumer"
+    },
+    {
+      "id": "ART-e2e-list-view",
+      "path": "tests/e2e/list/view.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture:test coverage"
+    },
+    {
+      "id": "ART-priority-badge",
+      "path": "src/components/Badge/PriorityBadge.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:priority component"
+    },
+    {
+      "id": "ART-type-badge",
+      "path": "src/components/Badge/TypeBadge.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:type component"
+    },
+    {
+      "id": "ART-context-badge",
+      "path": "src/components/Badge/ContextBadge.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:context component"
+    },
+    {
+      "id": "ART-relationship-badge",
+      "path": "src/components/Badge/RelationshipBadge.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:relationship component"
+    },
+    {
+      "id": "ART-badge-variants",
+      "path": "src/components/Badge/badgeVariants.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:all variants"
+    },
+    {
+      "id": "ART-status-badge-test",
+      "path": "src/components/Badge/StatusBadge.test.tsx",
+      "kind": "test",
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "ART-priority-badge-test",
+      "path": "src/components/Badge/PriorityBadge.test.tsx",
+      "kind": "test",
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "ART-type-badge-test",
+      "path": "src/components/Badge/TypeBadge.test.tsx",
+      "kind": "test",
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "ART-context-badge-test",
+      "path": "src/components/Badge/ContextBadge.test.tsx",
+      "kind": "test",
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "ART-relationship-badge-test",
+      "path": "src/components/Badge/RelationshipBadge.test.tsx",
+      "kind": "test",
+      "sourceRef": "test:unit"
+    },
+    {
+      "id": "ART-badge-variants-test",
+      "path": "src/components/Badge/badgeVariants.test.ts",
+      "kind": "test",
+      "sourceRef": "test:unit"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-badge-e2e-compat",
+      "kind": "e2e",
+      "title": "Verify existing E2E tests pass",
+      "covers": [
+        "C1"
+      ],
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "TEST-typescript-validation",
+      "kind": "manual",
+      "title": "TypeScript validation passes",
+      "covers": [
+        "C2"
+      ],
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "TEST-badge-single-source",
+      "kind": "unit",
+      "title": "Single source of truth for badge variants",
+      "covers": [
+        "C3",
+        "C5"
+      ],
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "TEST-no-duplicate-funcs",
+      "kind": "unit",
+      "title": "No duplicate color functions remain",
+      "covers": [
+        "C4"
+      ],
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "TEST-badge-variants",
+      "kind": "unit",
+      "title": "Badge variants color mappings",
+      "covers": [
+        "BR-2",
+        "BR-6",
+        "BR-7",
+        "C3",
+        "C5"
+      ],
+      "file": "src/components/Badge/badgeVariants.test.ts",
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "TEST-status-badge",
+      "kind": "unit",
+      "title": "StatusBadge component tests",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3"
+      ],
+      "file": "src/components/Badge/StatusBadge.test.tsx",
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "TEST-priority-badge",
+      "kind": "unit",
+      "title": "PriorityBadge component tests",
+      "covers": [
+        "BR-4",
+        "BR-6"
+      ],
+      "file": "src/components/Badge/PriorityBadge.test.tsx",
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "TEST-type-badge",
+      "kind": "unit",
+      "title": "TypeBadge component tests",
+      "covers": [
+        "BR-5",
+        "BR-7"
+      ],
+      "file": "src/components/Badge/TypeBadge.test.tsx",
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "TEST-context-badge",
+      "kind": "unit",
+      "title": "ContextBadge component tests",
+      "covers": [
+        "BR-8"
+      ],
+      "file": "src/components/Badge/ContextBadge.test.tsx",
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "TEST-relationship-badge",
+      "kind": "unit",
+      "title": "RelationshipBadge component tests",
+      "covers": [
+        "BR-8"
+      ],
+      "file": "src/components/Badge/RelationshipBadge.test.tsx",
+      "sourceRef": "CR:MDT-135"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-7",
+      "title": "Create Badge module index",
+      "ownsArtifactIds": [
+        "ART-badge-index"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Migrate ProjectView to use StatusBadge",
+      "ownsArtifactIds": [
+        "ART-project-view"
+      ],
+      "makesGreenIds": [
+        "TEST-badge-e2e-compat",
+        "TEST-no-duplicate-funcs"
+      ],
+      "sourceRef": "tasks.md#task-8"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Migrate TicketAttributeTags to Badge module",
+      "ownsArtifactIds": [
+        "ART-ticket-attribute-tags"
+      ],
+      "makesGreenIds": [
+        "TEST-no-duplicate-funcs"
+      ],
+      "sourceRef": "tasks.md#task-9"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Create badge variants and types",
+      "ownsArtifactIds": [
+        "ART-badge-variants",
+        "ART-badge-types",
+        "ART-badge-variants-test"
+      ],
+      "makesGreenIds": [
+        "TEST-badge-variants"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Create StatusBadge component",
+      "ownsArtifactIds": [
+        "ART-status-badge",
+        "ART-status-badge-test"
+      ],
+      "makesGreenIds": [
+        "TEST-status-badge"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Create PriorityBadge component",
+      "ownsArtifactIds": [
+        "ART-priority-badge",
+        "ART-priority-badge-test"
+      ],
+      "makesGreenIds": [
+        "TEST-priority-badge"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Create TypeBadge component",
+      "ownsArtifactIds": [
+        "ART-type-badge",
+        "ART-type-badge-test"
+      ],
+      "makesGreenIds": [
+        "TEST-type-badge"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Create ContextBadge component",
+      "ownsArtifactIds": [
+        "ART-context-badge",
+        "ART-context-badge-test"
+      ],
+      "makesGreenIds": [
+        "TEST-context-badge"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Create RelationshipBadge component",
+      "ownsArtifactIds": [
+        "ART-relationship-badge",
+        "ART-relationship-badge-test"
+      ],
+      "makesGreenIds": [
+        "TEST-relationship-badge"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-10",
+      "title": "Migrate TicketAttributes to Badge module",
+      "ownsArtifactIds": [
+        "ART-ticket-attributes",
+        "ART-e2e-list-view"
+      ],
+      "makesGreenIds": [
+        "TEST-no-duplicate-funcs",
+        "TEST-typescript-validation",
+        "TEST-badge-single-source",
+        "TEST-badge-e2e-compat"
+      ],
+      "sourceRef": "tasks.md#task-10"
+    }
+  ]
+}
