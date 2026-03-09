@@ -97,7 +97,7 @@ export function TicketDocumentTabs({
           }}
         >
           {/* @testid subdoc-tab-row — a single tab row (primary or nested) */}
-          <Tabs.List data-testid="subdoc-tab-row" className="flex border-b px-2">
+          <Tabs.List data-testid="subdoc-tab-row" className="flex overflow-x-auto scrollbar-hide border-b px-2">
             {row.entries.map(entry => {
               // Determine full path for this entry
               const prefix = folderStack.slice(0, rowIdx).join('/')
@@ -110,7 +110,7 @@ export function TicketDocumentTabs({
                   key={entry.name}
                   value={entry.name}
                   data-testid={`subdoc-tab-${entry.name}`}
-                  className="px-3 py-2 text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-primary relative"
+                  className="px-3 py-2 text-sm font-medium whitespace-nowrap data-[state=active]:border-b-2 data-[state=active]:border-primary relative"
                   disabled={isPending}
                 >
                   {entry.name === 'main' ? 'Main' : entry.name}
