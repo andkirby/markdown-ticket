@@ -17,8 +17,7 @@
 ### e2e
 
 - Project Selector E2E Tests (`TEST-project-selector-e2e`)
-  Covers: `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-2.1`, `BR-2.2`, `BR-2.3`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-6.5`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-9.1`, `BR-9.2`, `BR-9.3`, `C4`, `C5`, `C7`, `C8`, `C9`
-  File: `tests/e2e/selector/project-selector.spec.ts`
+  Covers: `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-2.1`, `BR-2.3`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-3.4`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-6.5`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-9.1`, `BR-9.3`, `C5`, `C7`, `C9`
 
 ## Requirement Coverage Summary
 
@@ -34,10 +33,8 @@
 | `C1` | tests | `TEST-selector-api`, `TEST-selector-data-hook` | - |
 | `C2` | tests | `TEST-selector-api`, `TEST-selector-data-hook` | - |
 | `C3` | tests | `TEST-selector-api`, `TEST-selector-data-hook` | - |
-| `C4` | tests | `TEST-project-selector-e2e` | - |
 | `C5` | tests | `TEST-project-selector-e2e`, `TEST-selector-api`, `TEST-selector-data-hook` | - |
 | `C6` | tests | `TEST-selector-api`, `TEST-selector-data-hook` | - |
 | `C7` | tests | `TEST-project-selector-e2e` | - |
-| `C8` | tests | `TEST-project-selector-e2e` | - |
 | `C9` | tests | `TEST-project-selector-e2e` | - |
 | `C10` | tests | `TEST-selector-api`, `TEST-selector-data-hook` | - |

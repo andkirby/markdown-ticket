@@ -29,9 +29,10 @@ relatedTickets: MDT-039,MDT-118
 - In scope:
 - Present the active project as a larger card in the selector rail.
 - Present inactive visible projects as compact code-only cards in the selector rail.
-- Add a single trailing launcher control at the end of the selector rail.
-- Show the full project list in a panel directly below the selector when the launcher is opened.
+- Open the full project browser panel by clicking the active project card.
+- Show the full project list in a panel directly below the selector.
 - Show favorite state on full project cards and on the active project card.
+- Show hover cards on inactive project chips revealing full project details.
 - Support a configurable visible project count through global UI configuration.
 - Out of scope:
 - Cross-project aggregate browsing mode.
@@ -41,17 +42,18 @@ relatedTickets: MDT-039,MDT-118
 ### Success Conditions
 - The selector rail clearly identifies the current project.
 - The selector rail remains compact while still exposing quick access to visible inactive projects.
-- Users can open a full project browser from a single launcher at the end of the selector rail.
+- Users can open a full project browser by clicking the active project card.
 - The full project browser appears directly below the selector.
 - Users can switch projects from both the selector rail and the full project browser.
+- Hovering over inactive project chips reveals full project details.
 - Favorite state is visible consistently in the selector experience.
 - The selector remains usable when the number of projects exceeds the visible rail count.
 
 ### Constraints
-- The launcher uses the existing acclaim visual asset.
 - The full project browser is visually attached to the selector.
 - Project switching behavior remains supported.
 - Visible selector capacity is controlled through global UI configuration.
+- Hover cards appear on inactive chips with configurable delay (100ms open/close).
 
 ### Non-Goals
 - No aggregate "All Projects" mode.
@@ -67,37 +69,38 @@ relatedTickets: MDT-039,MDT-118
 **Extension**: Add new view modes by creating new components; no changes to existing rail/panel
 ## 4. Acceptance Criteria
 ### Functional (Outcome-focused)
-- [ ] The selector rail shows the active project as a larger card containing project code and title.
-- [ ] The selector rail shows inactive visible projects as compact code-only cards.
-- [ ] The selector rail ends with a single launcher control.
-- [ ] Activating the launcher opens a panel directly below the selector.
-- [ ] The panel shows the full project list as cards containing project code, title, and description.
-- [ ] Favorite state is visible on full project cards.
-- [ ] Favorite state is visible on the active project card when the active project is favorited.
-- [ ] Selecting a project from the selector rail changes the current project.
-- [ ] Selecting a project from the full project panel changes the current project.
-- [ ] The selector supports a configured visible project count through global UI configuration.
+- [x] The selector rail shows the active project as a larger card containing project code and title.
+- [x] The selector rail shows inactive visible projects as compact code-only cards.
+- [x] Clicking the active project card opens a panel directly below the selector.
+- [x] Hovering over inactive project chips shows a hover card with full project details.
+- [x] The panel shows the full project list as cards containing project code, title, and description.
+- [x] Favorite state is visible on full project cards.
+- [x] Favorite state is visible on the active project card when the active project is favorited.
+- [x] Selecting a project from the selector rail changes the current project.
+- [x] Selecting a project from the full project panel changes the current project.
+- [x] The selector supports a configured visible project count through global UI configuration.
 
 ### Non-Functional
-- [ ] The selector remains readable and operable when many projects are registered.
-- [ ] The panel remains visually anchored to the selector.
-- [ ] The interaction remains usable on desktop and mobile-sized viewports.
-- [ ] The updated behavior is covered by stable automated selectors.
+- [x] The selector remains readable and operable when many projects are registered.
+- [x] The panel remains visually anchored to the selector.
+- [x] The interaction remains usable on desktop and mobile-sized viewports.
+- [x] The updated behavior is covered by stable automated selectors.
 
 ### Edge Cases
-- [ ] Long project titles do not break the active rail card or full project cards.
-- [ ] Projects without descriptions remain selectable and visually coherent in the panel.
-- [ ] The active project remains visible even when it would otherwise fall outside the normal visible subset.
-- [ ] Absence of favorite state does not create broken spacing or misaligned controls.
-- [ ] The selector behaves correctly when the total number of projects is less than or equal to the visible count.
+- [x] Long project titles do not break the active rail card or full project cards.
+- [x] Projects without descriptions remain selectable and visually coherent in the panel.
+- [x] The active project remains visible even when it would otherwise fall outside the normal visible subset.
+- [x] Absence of favorite state does not create broken spacing or misaligned controls.
+- [x] The selector behaves correctly when the total number of projects is less than or equal to the visible count.
 ## 5. Verification
 ### How to Verify Success
 - Manual verification:
-- Confirm that the rail shows one active larger card, compact inactive cards, and one trailing launcher.
-- Confirm that the launcher opens a full project panel directly below the selector.
+- Confirm that the rail shows one active larger card and compact inactive cards.
+- Confirm that clicking the active project card opens a full project panel directly below the selector.
+- Confirm that hovering over inactive project chips shows hover cards with full project details.
 - Confirm that project switching works from both the rail and the full project panel.
 - Automated verification:
-- Verify active card rendering, compact inactive rendering, launcher open behavior, panel rendering, and project switching.
+- Verify active card rendering, compact inactive rendering, hover card behavior, panel rendering, and project switching.
 - Verify behavior when project count is below, equal to, and above the configured visible limit.
 - Documentation verification:
 - Confirm that global configuration documentation describes visible selector capacity and selector behavior.

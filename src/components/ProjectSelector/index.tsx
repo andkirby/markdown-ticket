@@ -161,7 +161,7 @@ const ProjectSelector = ({ className = '' }: { className?: string }) => {
       className={`project-selector ${className}`.trim()}
       data-testid="project-selector"
     >
-      {/* Rail: active project + inactive visible projects + launcher */}
+      {/* Rail: active project + inactive visible projects */}
       <TooltipProvider>
         <ProjectSelectorRail
           projects={projects}
@@ -171,7 +171,6 @@ const ProjectSelector = ({ className = '' }: { className?: string }) => {
           onProjectSelect={handleProjectSelect}
           onLauncherClick={handleLauncherClick}
           onFavoriteToggle={handleFavoriteToggle}
-          isPanelOpen={isPanelOpen}
         />
       </TooltipProvider>
 
