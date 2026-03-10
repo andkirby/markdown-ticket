@@ -1,244 +1,121 @@
-# Architecture: MDT-096
+# Architecture
 
-**Source**: [MDT-096](..//MDT-096-refactor-serverfilewatcherservicets-for-git-worktr.md)
-**Generated**: 2025-12-15
-**Complexity Score**: 11
+## Rationale
 
-## Overview
+# Architecture Rationale
 
-This architecture refactors the 439-line FileWatcherService into focused services that support multiple path monitoring while maintaining backward compatibility. The design separates concerns between file watching and SSE broadcasting, enabling cleaner testing and easier extension for Git worktree support.
+## Pattern: Service Decomposition
 
-## Pattern
-
-**Service Decomposition** — Split a monolithic service into focused, single-responsibility services that communicate through well-defined interfaces.
-
-This pattern improves testability, reduces cognitive load, and allows each service to evolve independently.
-
-## Key Dependencies
-
-No external dependencies added — continues using existing chokidar and EventEmitter from Node.js ecosystem.
-
-## Component Boundaries
-
-```mermaid
-graph TB
-    subgraph "File Watcher Subsystem"
-        PWS[PathWatcherService]
-        PW[PathWatcher]
-    end
-
-    subgraph "SSE Subsystem"
-        SSEB[SSEBroadcaster]
-        CM[ClientManager]
-    end
-
-    subgraph "Orchestration"
-        FWS[FileWatcherService Facade]
-    end
-
-    subgraph "External"
-        PS[ProjectService]
-        INV[FileInvoker]
-        CLI[SSE Clients]
-    end
-
-    PWS --> PW
-    PWS --> SSEB
-    SSEB --> CM
-    CM --> CLI
-    FWS --> PWS
-    PS --> FWS
-    INV --> FWS
-
-    style PWS fill:#e1f5fe
-    style PW fill:#f3e5f5
-    style SSEB fill:#e8f5e9
-    style CM fill:#fff3e0
-    style FWS fill:#fce4ec
-```
-
-| Component | Responsibility | Owns | Depends On |
-|-----------|----------------|------|------------|
-| `PathWatcherService` | Manages multiple path watchers, debouncing, event routing | Watcher instances, path registry | `PathWatcher`, `SSEBroadcaster` |
-| `PathWatcher` | Wrapper around chokidar for single path | chokidar instance, event handlers | chokidar library |
-| `SSEBroadcaster` | Formats and broadcasts SSE events | Event queue, broadcast logic | `ClientManager` |
-| `ClientManager` | Manages SSE client connections | Client set, heartbeat timer | None |
-| `index.ts` | Public API, exports main interface | Service exports | All internal services |
-
-## State Flows
-
-```mermaid
-stateDiagram-v2
-    [*] --> SinglePath: initFileWatcher()
-    [*] --> MultiPath: initMultiProjectWatcher()
-
-    MultiPath --> AddingPath: addWatchPath()
-    AddingPath --> MultiPath: success
-    AddingPath --> Error: invalid path
-    Error --> MultiPath: recovery
-
-    MultiPath --> RemovingPath: removeWatchPath()
-    RemovingPath --> MultiPath: success
-
-    state AddingPath {
-        [*] --> Validate
-        Validate --> CreateWatcher
-        CreateWatcher --> RegisterEvents
-        RegisterEvents --> [*]
-    }
-```
-
-| State | Entry Condition | Exit Condition | Invariants |
-|-------|-----------------|----------------|------------|
-| SinglePath | `initFileWatcher()` called | `initMultiProjectWatcher()` or `stop()` | Exactly one default watcher exists |
-| MultiPath | `initMultiProjectWatcher()` called | `stop()` | All watchers have unique IDs |
-| AddingPath | `addWatchPath()` called | Path registered successfully or error | No duplicate path IDs |
-| RemovingPath | `removeWatchPath()` called | Path unregistered or not found | Remaining watchers unaffected |
-
-## Shared Patterns
-
-| Pattern | Occurrences | Extract To |
-|---------|-------------|------------|
-| Event debouncing | FileWatcherService.handleFileEvent | `PathWatcher` (internal) |
-| Client lifecycle management | FileWatcherService add/removeClient | `ClientManager` |
-| Event queue management | FileWatcherService eventQueue | `SSEBroadcaster` |
-| Error logging | Throughout FileWatcherService | Each service (via shared utils) |
-
-> Phase 1 extracts these patterns into focused services before adding multi-path functionality.
+Split the monolithic 683-line FileWatcherService into focused modules following Single Responsibility Principle.
 
 ## Structure
 
 ```
-server/
-├── services/
-│   ├── fileWatcher/
-│   │   ├── index.ts                → Main service interface
-│   │   ├── PathWatcherService.ts   → Core multi-path logic (150 lines)
-│   │   ├── PathWatcher.ts          → Single path wrapper (100 lines)
-│   │   ├── SSEBroadcaster.ts       → Event formatting/broadcasting (125 lines)
-│   │   └── ClientManager.ts        → SSE client management (100 lines)
+server/services/fileWatcher/
+├── index.ts                    # Facade (~50 lines)
+├── PathWatcherService.ts       # Multi-watcher orchestration (~120 lines)
+├── SSEBroadcaster.ts           # Client lifecycle + broadcasting (~150 lines)
+└── __tests__/
+    ├── PathWatcherService.spec.ts
+    └── SSEBroadcaster.spec.ts
 ```
 
-## Size Guidance
+## Runtime Flow
 
-| Module | Role | Limit | Hard Max |
-|--------|------|-------|----------|
-| `PathWatcherService.ts` | Feature | 150 | 225 |
-| `PathWatcher.ts` | Feature | 100 | 150 |
-| `SSEBroadcaster.ts` | Feature | 125 | 200 |
-| `ClientManager.ts` | Utility | 100 | 150 |
-| `index.ts` | Orchestration | 75 | 110 |
-| Tests per module | - | 150 | 225 |
+1. **Initialization**: `FileWatcherService` facade creates `PathWatcherService` and `SSEBroadcaster`
+2. **Path Addition**: `addWatcher()` → `PathWatcherService.createWatcher()` → chokidar instance
+3. **File Change**: chokidar event → `PathWatcherService` → `SSEBroadcaster.broadcast()`
+4. **Client Connect**: SSE route → `SSEBroadcaster.addClient()`
 
-## Error Scenarios
+## Key Decisions
 
-| Scenario | Detection | Response | Recovery |
-|----------|-----------|----------|----------|
-| Invalid watch path | Path validation fails | Log error, emit 'path-error' event | Continue with existing paths |
-| Watcher crash | chokidar error event | Clean up instance, emit 'watcher-failed' | Attempt restart after delay |
-| SSE client disconnects | Socket error/close event | Remove from client set | Automatic on next operation |
-| Duplicate path ID | Path registry check | Reject with error, log warning | Operation fails, no state change |
-| Memory leak in event queue | Queue size > 1000 | Trim to last 100, log warning | Continue with reduced queue |
-
-## Refactoring Plan
-
-### Transformation Matrix
-| Component | From | To | Reduction | Reason |
-|-----------|------|----|-----------|--------|
-| File watching logic | `fileWatcherService.ts` (439 lines) | `PathWatcherService.ts` + `PathWatcher.ts` (250 lines) | 43% smaller | Separation of concerns |
-| SSE broadcasting | `fileWatcherService.ts` mixed | `SSEBroadcaster.ts` + `ClientManager.ts` (225 lines) | 49% smaller | Isolated broadcast logic |
-| Client management | `fileWatcherService.ts` mixed | `ClientManager.ts` (100 lines) | 77% smaller | Single responsibility |
-
-### Interface Replacement
-| Old Interface | New Interface | Status | Verification |
-|---------------|---------------|--------|--------------|
-| `new FileWatcherService()` | `new PathWatcherService()` | Replaced | Tests in `PathWatcherService.spec.ts` |
-| `initFileWatcher(watchPath)` | `initWatchPaths([{id: 'default', path: watchPath}])` | Updated | Tests in `PathWatcherService.spec.ts` |
-| `initMultiProjectWatcher(projectPaths)` | `initWatchPaths(projectPaths)` | Renamed | Tests in `PathWatcherService.spec.ts` |
-| `addClient(response)` | `sseBroadcaster.addClient(response)` | Moved | Tests in `SSEBroadcaster.spec.ts` |
-| `removeClient(response)` | `clientManager.removeClient(response)` | Moved | Tests in `ClientManager.spec.ts` |
-| Event emission | Unchanged API through index.ts exports | Preserved | Integration tests verify event flow |
-
-### Behavioral Equivalence
-- Test suite: New comprehensive tests lock all existing behaviors
-- Performance: Single chokidar instance ensures minimal overhead (<5%)
-
-## Migration Guide
-
-### Import Changes
-
-**Before:**
-```typescript
-import FileWatcherService from './fileWatcherService.js'
-
-const fileWatcher = new FileWatcherService()
-```
-
-**After:**
-```typescript
-import FileWatcherService from './services/fileWatcher/index.js'
-
-const fileWatcher = new FileWatcherService()
-```
-
-### API Changes
-
-| Old API | New API | Notes |
-|---------|---------|-------|
-| `initFileWatcher(watchPath)` | `initWatchPaths([{id: 'default', path: watchPath}])` | Array of paths required |
-| `initMultiProjectWatcher(projectPaths)` | `initWatchPaths(projectPaths)` | Same signature, renamed |
-| `addClient(response)` | `sseBroadcaster.addClient(response)` | Access via exported `sseBroadcaster` |
-| `removeClient(response)` | `clientManager.removeClient(response)` | Access via exported `clientManager` |
-| `getClientCount()` | `clientManager.getClientCount()` | Access via exported `clientManager` |
-| `setFileInvoker(fileInvoker)` | Direct injection in constructor | Cleaner dependency injection |
-
-### File Updates Required
-
-1. **server.ts** (3 changes):
-   - Update import path
-   - Pass fileInvoker to constructor
-   - Replace method calls
-
-2. **server/routes/sse.ts** (3 changes):
-   - Update import path
-   - Access `sseBroadcaster` for client management
-   - Access `clientManager` for client count
-
-3. **server/routes/system.ts** (1 change):
-   - Update import path only (uses `getClientCount()`)
-
-### Example Updated server.ts
-```typescript
-// Before
-import FileWatcherService from './fileWatcherService.js'
-
-// After
-import FileWatcherService from './services/fileWatcher/index.js'
-
-const fileWatcher = new FileWatcherService()
-fileWatcher.setFileInvoker(documentService.fileInvoker)
-fileWatcher.initFileWatcher(watchPath)
-const fileWatcher = new FileWatcherService({
-  fileInvoker: documentService.fileInvoker
-})
-fileWatcher.initWatchPaths([{ id: 'main', path: watchPath }])
-```
+| Decision | Rationale |
+|----------|-----------|
+| Keep chokidar direct | Wrapper adds indirection without value |
+| Merge ClientManager into SSEBroadcaster | Tightly coupled, separating adds complexity |
+| Facade pattern | Preserves backward compatibility, enables incremental migration |
 
 ## Extension Rule
 
-To add new path-related feature:
-1. Add method to `PathWatcherService` (limit 150 lines total)
-2. Export from `index.ts` if public API needed
-3. Add tests in `PathWatcherService.spec.ts` (limit 150 lines)
+- **Path features**: Add to `PathWatcherService` (limit 150 lines)
+- **SSE features**: Add to `SSEBroadcaster` (limit 150 lines)
+- **New cross-cutting**: Add to facade, delegate to services
 
-To add new SSE feature:
-1. Add method to `SSEBroadcaster` (limit 125 lines total)
-2. Update `ClientManager` if client-related (limit 100 lines)
-3. Add corresponding tests
+## Migration Path
 
-To expose new functionality:
-1. Add export to `index.ts` (limit 75 lines)
-2. Update import statements in consuming modules
+1. Create new services alongside existing
+2. Update facade to delegate
+3. Migrate tests
+4. Remove old `server/fileWatcherService.ts`
 
----
-*Generated by /mdt:architecture*
+## Obligations
+
+- FileWatcherService facade preserves existing API surface (`OBL-backward-compat-facade`)
+  Derived From: `BR-1.5`, `C-2.2`
+  Artifacts: `ART-file-watcher-facade`, `ART-worktree-test`, `ART-sse-test`
+- File changes trigger cache invalidation (`OBL-cache-invalidation`)
+  Derived From: `BR-1.7`
+  Artifacts: `ART-path-watcher-service`, `ART-path-watcher-test`
+- Rapid file changes are debounced to prevent duplicates (`OBL-debounce-events`)
+  Derived From: `C-2.5`
+  Artifacts: `ART-sse-broadcaster`, `ART-debounce-test`
+- Watcher failures are logged without crashing service (`OBL-graceful-degradation`)
+  Derived From: `C-2.4`, `Edge-3.2`
+  Artifacts: `ART-path-watcher-service`, `ART-path-watcher-test`
+- Heartbeat detects and removes dead SSE connections (`OBL-heartbeat-cleanup`)
+  Derived From: `C-2.6`
+  Artifacts: `ART-sse-broadcaster`, `ART-heartbeat-test`
+- Old fileWatcherService.ts is deprecated and removed after migration (`OBL-migration-deprecation`)
+  Derived From: `BR-1.5`
+  Artifacts: `ART-old-service`, `ART-file-watcher-facade`
+- PathWatcherService orchestrates multiple chokidar watchers (`OBL-multi-path-orchestration`)
+  Derived From: `BR-1.1`, `BR-1.3`, `BR-1.4`, `C-2.3`
+  Artifacts: `ART-path-watcher-service`, `ART-path-watcher-test`
+- Multi-path monitoring adds <5% overhead per path (`OBL-performance-constraint`)
+  Derived From: `C-2.1`
+  Artifacts: `ART-path-watcher-service`, `ART-path-watcher-test`
+- Concurrent add/remove operations are safe (`OBL-race-condition-handling`)
+  Derived From: `Edge-3.1`
+  Artifacts: `ART-path-watcher-service`, `ART-path-watcher-test`
+- Registry watcher broadcasts project lifecycle events (`OBL-registry-watcher`)
+  Derived From: `BR-1.6`
+  Artifacts: `ART-path-watcher-service`, `ART-registry-test`
+- SSEBroadcaster manages client connections and event broadcasting (`OBL-sse-client-lifecycle`)
+  Derived From: `BR-1.2`, `C-2.2`, `C-2.3`
+  Artifacts: `ART-sse-broadcaster`, `ART-broadcaster-test`
+
+## Artifacts
+
+| Artifact ID | Path | Kind | Referencing Obligations |
+|---|---|---|---|
+| `ART-broadcaster-test` | `server/services/fileWatcher/__tests__/SSEBroadcaster.spec.ts` | test | `OBL-sse-client-lifecycle` |
+| `ART-debounce-test` | `server/services/fileWatcher/__tests__/Debounce.spec.ts` | test | `OBL-debounce-events` |
+| `ART-file-watcher-facade` | `server/services/fileWatcher/index.ts` | runtime | `OBL-backward-compat-facade`, `OBL-migration-deprecation` |
+| `ART-heartbeat-test` | `server/services/fileWatcher/__tests__/Heartbeat.spec.ts` | test | `OBL-heartbeat-cleanup` |
+| `ART-old-service` | `server/fileWatcherService.ts` | runtime | `OBL-migration-deprecation` |
+| `ART-path-watcher-service` | `server/services/fileWatcher/PathWatcherService.ts` | runtime | `OBL-cache-invalidation`, `OBL-graceful-degradation`, `OBL-multi-path-orchestration`, `OBL-performance-constraint`, `OBL-race-condition-handling`, `OBL-registry-watcher` |
+| `ART-path-watcher-test` | `server/services/fileWatcher/__tests__/PathWatcherService.spec.ts` | test | `OBL-cache-invalidation`, `OBL-graceful-degradation`, `OBL-multi-path-orchestration`, `OBL-performance-constraint`, `OBL-race-condition-handling` |
+| `ART-registry-test` | `server/services/fileWatcher/__tests__/RegistryWatcher.spec.ts` | test | `OBL-registry-watcher` |
+| `ART-sse-broadcaster` | `server/services/fileWatcher/SSEBroadcaster.ts` | runtime | `OBL-debounce-events`, `OBL-heartbeat-cleanup`, `OBL-sse-client-lifecycle` |
+| `ART-sse-test` | `server/tests/api/sse.test.ts` | test | `OBL-backward-compat-facade` |
+| `ART-worktree-test` | `server/tests/fileWatcherService.worktree.test.ts` | test | `OBL-backward-compat-facade` |
+
+## Derivation Summary
+
+| Requirement ID | Obligation Count | Obligation IDs |
+|---|---:|---|
+| `BR-1.1` | 1 | `OBL-multi-path-orchestration` |
+| `BR-1.2` | 1 | `OBL-sse-client-lifecycle` |
+| `BR-1.3` | 1 | `OBL-multi-path-orchestration` |
+| `BR-1.4` | 1 | `OBL-multi-path-orchestration` |
+| `BR-1.5` | 2 | `OBL-backward-compat-facade`, `OBL-migration-deprecation` |
+| `BR-1.6` | 1 | `OBL-registry-watcher` |
+| `BR-1.7` | 1 | `OBL-cache-invalidation` |
+| `C-2.1` | 1 | `OBL-performance-constraint` |
+| `C-2.2` | 2 | `OBL-backward-compat-facade`, `OBL-sse-client-lifecycle` |
+| `C-2.3` | 2 | `OBL-multi-path-orchestration`, `OBL-sse-client-lifecycle` |
+| `C-2.4` | 1 | `OBL-graceful-degradation` |
+| `C-2.5` | 1 | `OBL-debounce-events` |
+| `C-2.6` | 1 | `OBL-heartbeat-cleanup` |
+| `Edge-3.1` | 1 | `OBL-race-condition-handling` |
+| `Edge-3.2` | 1 | `OBL-graceful-degradation` |

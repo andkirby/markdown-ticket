@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express'
 import type { ProjectController } from '../controllers/ProjectController.js'
-import type FileWatcherService from '../fileWatcherService.js'
+import type FileWatcherService from '../services/fileWatcher/index.js'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'

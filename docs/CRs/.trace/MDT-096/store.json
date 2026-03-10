@@ -1,0 +1,562 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-096"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "FileWatcherService monitors multiple directory paths simultaneously",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "SSE events identify which project path triggered the change",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "Service accepts dynamic path additions at runtime",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "Service accepts dynamic path removals at runtime",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "Existing single-path API remains functional for backward compatibility",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-2.1",
+      "kind": "constraint",
+      "text": "Must not degrade file watching performance (<5% overhead per additional path)",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "C-2.2",
+      "kind": "constraint",
+      "text": "Must maintain existing SSE event format for backward compatibility",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "C-2.3",
+      "kind": "constraint",
+      "text": "Each service module must not exceed 150 lines",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "C-2.4",
+      "kind": "constraint",
+      "text": "Must gracefully degrade if watcher creation fails (log error, continue)",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "Edge-3.1",
+      "kind": "edge_case",
+      "text": "Handle concurrent add/remove operations without race conditions",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "Edge-3.2",
+      "kind": "edge_case",
+      "text": "Handle watcher creation failure for individual paths without affecting other watchers",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "Global registry watcher detects project config changes and broadcasts events",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "Cache invalidation triggers when watched files change",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-2.5",
+      "kind": "constraint",
+      "text": "Debouncing prevents rapid duplicate events within 100ms window",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "not_applicable"
+    },
+    {
+      "id": "C-2.6",
+      "kind": "constraint",
+      "text": "Heartbeat runs every 30 seconds to detect dead connections",
+      "sourceRef": "CR:MDT-096",
+      "routePolicy": "not_applicable"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "multi_path_monitoring",
+      "title": "Multiple paths monitored simultaneously",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "FileWatcherService is initialized",
+      "when": "with multiple project paths registered",
+      "then": "each path has an active watcher and changes trigger events",
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "sse_path_identification",
+      "title": "SSE events identify source path",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "A file change occurs in a watched path",
+      "when": "when the SSE event is broadcast",
+      "then": "the event data includes the projectId that triggered it",
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "dynamic_path_addition",
+      "title": "Paths can be added at runtime",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "FileWatcherService is running",
+      "when": "when addWatcher() is called with a new path",
+      "then": "the new watcher is created and begins monitoring",
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "dynamic_path_removal",
+      "title": "Paths can be removed at runtime",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Multiple watchers are active",
+      "when": "when removeWorktreeWatcher() is called",
+      "then": "the specified watcher is closed and removed without affecting others",
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "backward_compat_single_path",
+      "title": "Single-path API still works",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "Existing code uses initFileWatcher()",
+      "when": "with a single path argument",
+      "then": "file watching works as before",
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "registry_changes_detected",
+      "title": "Registry config changes trigger events",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "Global registry watcher is active",
+      "when": "a project .toml file is added/changed/removed",
+      "then": "a project-created/updated/deleted event is broadcast to SSE clients",
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "cache_invalidated_on_change",
+      "title": "File changes invalidate cache",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "FileInvoker is connected to watcher",
+      "when": "a watched file changes",
+      "then": "invalidateFile() is called with the file path",
+      "sourceRef": "CR:MDT-096"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-multi-path-orchestration",
+      "title": "PathWatcherService orchestrates multiple chokidar watchers",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4",
+        "C-2.3"
+      ],
+      "artifactIds": [
+        "ART-path-watcher-service",
+        "ART-path-watcher-test"
+      ],
+      "sourceRef": "MDT-096 Architecture"
+    },
+    {
+      "id": "OBL-sse-client-lifecycle",
+      "title": "SSEBroadcaster manages client connections and event broadcasting",
+      "derivedFrom": [
+        "BR-1.2",
+        "C-2.2",
+        "C-2.3"
+      ],
+      "artifactIds": [
+        "ART-sse-broadcaster",
+        "ART-broadcaster-test"
+      ],
+      "sourceRef": "MDT-096 Architecture"
+    },
+    {
+      "id": "OBL-backward-compat-facade",
+      "title": "FileWatcherService facade preserves existing API surface",
+      "derivedFrom": [
+        "BR-1.5",
+        "C-2.2"
+      ],
+      "artifactIds": [
+        "ART-file-watcher-facade",
+        "ART-worktree-test",
+        "ART-sse-test"
+      ],
+      "sourceRef": "MDT-096 Architecture"
+    },
+    {
+      "id": "OBL-graceful-degradation",
+      "title": "Watcher failures are logged without crashing service",
+      "derivedFrom": [
+        "C-2.4",
+        "Edge-3.2"
+      ],
+      "artifactIds": [
+        "ART-path-watcher-service",
+        "ART-path-watcher-test"
+      ],
+      "sourceRef": "MDT-096 Architecture"
+    },
+    {
+      "id": "OBL-performance-constraint",
+      "title": "Multi-path monitoring adds <5% overhead per path",
+      "derivedFrom": [
+        "C-2.1"
+      ],
+      "artifactIds": [
+        "ART-path-watcher-service",
+        "ART-path-watcher-test"
+      ],
+      "sourceRef": "MDT-096 Architecture"
+    },
+    {
+      "id": "OBL-race-condition-handling",
+      "title": "Concurrent add/remove operations are safe",
+      "derivedFrom": [
+        "Edge-3.1"
+      ],
+      "artifactIds": [
+        "ART-path-watcher-service",
+        "ART-path-watcher-test"
+      ],
+      "sourceRef": "MDT-096 Architecture"
+    },
+    {
+      "id": "OBL-migration-deprecation",
+      "title": "Old fileWatcherService.ts is deprecated and removed after migration",
+      "derivedFrom": [
+        "BR-1.5"
+      ],
+      "artifactIds": [
+        "ART-old-service",
+        "ART-file-watcher-facade"
+      ],
+      "sourceRef": "MDT-096 Migration Plan"
+    },
+    {
+      "id": "OBL-registry-watcher",
+      "title": "Registry watcher broadcasts project lifecycle events",
+      "derivedFrom": [
+        "BR-1.6"
+      ],
+      "artifactIds": [
+        "ART-path-watcher-service",
+        "ART-registry-test"
+      ],
+      "sourceRef": "MDT-096 Gap Coverage"
+    },
+    {
+      "id": "OBL-cache-invalidation",
+      "title": "File changes trigger cache invalidation",
+      "derivedFrom": [
+        "BR-1.7"
+      ],
+      "artifactIds": [
+        "ART-path-watcher-service",
+        "ART-path-watcher-test"
+      ],
+      "sourceRef": "MDT-096 Gap Coverage"
+    },
+    {
+      "id": "OBL-debounce-events",
+      "title": "Rapid file changes are debounced to prevent duplicates",
+      "derivedFrom": [
+        "C-2.5"
+      ],
+      "artifactIds": [
+        "ART-sse-broadcaster",
+        "ART-debounce-test"
+      ],
+      "sourceRef": "MDT-096 Gap Coverage"
+    },
+    {
+      "id": "OBL-heartbeat-cleanup",
+      "title": "Heartbeat detects and removes dead SSE connections",
+      "derivedFrom": [
+        "C-2.6"
+      ],
+      "artifactIds": [
+        "ART-sse-broadcaster",
+        "ART-heartbeat-test"
+      ],
+      "sourceRef": "MDT-096 Gap Coverage"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-path-watcher-service",
+      "path": "server/services/fileWatcher/PathWatcherService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-096 Architecture Spec"
+    },
+    {
+      "id": "ART-sse-broadcaster",
+      "path": "server/services/fileWatcher/SSEBroadcaster.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-096 Architecture Spec"
+    },
+    {
+      "id": "ART-file-watcher-facade",
+      "path": "server/services/fileWatcher/index.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-096 Architecture Spec"
+    },
+    {
+      "id": "ART-path-watcher-test",
+      "path": "server/services/fileWatcher/__tests__/PathWatcherService.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-096 Architecture Spec"
+    },
+    {
+      "id": "ART-broadcaster-test",
+      "path": "server/services/fileWatcher/__tests__/SSEBroadcaster.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-096 Architecture Spec"
+    },
+    {
+      "id": "ART-worktree-test",
+      "path": "server/tests/fileWatcherService.worktree.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-095/MDT-096"
+    },
+    {
+      "id": "ART-sse-test",
+      "path": "server/tests/api/sse.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-106/MDT-096"
+    },
+    {
+      "id": "ART-old-service",
+      "path": "server/fileWatcherService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-096 (to be removed after migration)"
+    },
+    {
+      "id": "ART-registry-test",
+      "path": "server/services/fileWatcher/__tests__/RegistryWatcher.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-096 Test Coverage Gap"
+    },
+    {
+      "id": "ART-debounce-test",
+      "path": "server/services/fileWatcher/__tests__/Debounce.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-096 Test Coverage Gap"
+    },
+    {
+      "id": "ART-heartbeat-test",
+      "path": "server/services/fileWatcher/__tests__/Heartbeat.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-096 Test Coverage Gap"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-multi-path-unit",
+      "kind": "unit",
+      "title": "PathWatcherService unit tests for multi-path orchestration",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4",
+        "C-2.4",
+        "Edge-3.1",
+        "Edge-3.2"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TEST-sse-broadcaster-unit",
+      "kind": "unit",
+      "title": "SSEBroadcaster unit tests for client lifecycle and broadcasting",
+      "covers": [
+        "BR-1.2",
+        "C-2.2"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TEST-worktree-integration",
+      "kind": "integration",
+      "title": "Existing worktree tests validate facade backward compatibility",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "C-2.1"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TEST-sse-api",
+      "kind": "integration",
+      "title": "Existing SSE API tests validate endpoint behavior",
+      "covers": [
+        "BR-1.2",
+        "C-2.2"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TEST-performance",
+      "kind": "integration",
+      "title": "Performance benchmark for multi-path overhead",
+      "covers": [
+        "C-2.1"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TEST-debounce-unit",
+      "kind": "unit",
+      "title": "Debouncing logic prevents rapid duplicate events",
+      "covers": [
+        "C-2.5"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TEST-heartbeat-unit",
+      "kind": "unit",
+      "title": "Heartbeat detects and removes dead SSE connections",
+      "covers": [
+        "C-2.6"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TEST-registry-watcher-unit",
+      "kind": "unit",
+      "title": "Global registry watcher detects project config changes",
+      "covers": [
+        "BR-1.6"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TEST-cache-invalidation-unit",
+      "kind": "unit",
+      "title": "Cache invalidation triggers on file change events",
+      "covers": [
+        "BR-1.7"
+      ],
+      "sourceRef": "CR:MDT-096"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-4",
+      "title": "Update imports in server.ts, test-app-factory.ts, e2e-context.ts",
+      "ownsArtifactIds": [
+        "ART-old-service"
+      ],
+      "makesGreenIds": [
+        "TEST-worktree-integration"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Create FileWatcherService facade with backward compatibility",
+      "ownsArtifactIds": [
+        "ART-file-watcher-facade"
+      ],
+      "makesGreenIds": [
+        "TEST-worktree-integration",
+        "backward_compat_single_path"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Create SSEBroadcaster for client lifecycle management",
+      "ownsArtifactIds": [
+        "ART-sse-broadcaster",
+        "ART-broadcaster-test",
+        "ART-sse-test",
+        "ART-debounce-test",
+        "ART-heartbeat-test"
+      ],
+      "makesGreenIds": [
+        "TEST-sse-broadcaster-unit",
+        "TEST-sse-api",
+        "TEST-debounce-unit",
+        "TEST-heartbeat-unit",
+        "sse_path_identification"
+      ],
+      "sourceRef": "CR:MDT-096"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Create PathWatcherService for multi-path orchestration",
+      "ownsArtifactIds": [
+        "ART-path-watcher-service",
+        "ART-path-watcher-test",
+        "ART-worktree-test",
+        "ART-registry-test"
+      ],
+      "makesGreenIds": [
+        "TEST-multi-path-unit",
+        "TEST-performance",
+        "TEST-registry-watcher-unit",
+        "TEST-cache-invalidation-unit",
+        "multi_path_monitoring",
+        "dynamic_path_addition",
+        "dynamic_path_removal",
+        "registry_changes_detected",
+        "cache_invalidated_on_change"
+      ],
+      "sourceRef": "CR:MDT-096"
+    }
+  ]
+}
