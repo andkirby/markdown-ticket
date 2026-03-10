@@ -5,8 +5,8 @@
 
 import type { Response } from 'supertest'
 
-export interface SSEMessage { data?: string, event?: string, id?: string, retry?: number }
-export interface ExpectedSSEEvent { event?: string, data?: string | Record<string, unknown>, id?: string }
+interface SSEMessage { data?: string, event?: string, id?: string, retry?: number }
+interface ExpectedSSEEvent { event?: string, data?: string | Record<string, unknown>, id?: string }
 
 /** Mock EventSource using Node's EventTarget */
 class _MockEventSource extends EventTarget {

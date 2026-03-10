@@ -58,6 +58,7 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "eslint": "^9.39.2",
     "jest": "^29.7.0",
+    "jest-openapi": "^0.14.2",
     "supertest": "^6.3.3",
     "ts-jest": "^29.2.5",
     "tsc-alias": "^1.8.16",

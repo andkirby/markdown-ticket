@@ -26,7 +26,7 @@ function initJestOpenAPI(): void {
 initJestOpenAPI()
 
 /** Test environment context returned from setup */
-export interface TestContext {
+interface TestContext {
   tempDir: string
   configDir: string
   app: Express
