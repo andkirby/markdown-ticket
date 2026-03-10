@@ -1,9 +1,11 @@
 ---
 code: MDT-065
-status: Proposed
+status: Approved
 dateCreated: 2025-10-05T21:53:52.125Z
 type: Technical Debt
 priority: Medium
+relatedTickets: MDT-059
+dependsOn: MDT-059
 ---
 
 # Review and improve smart link implementation
