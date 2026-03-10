@@ -14,7 +14,7 @@ import express from 'express'
 import { DocumentController } from './controllers/DocumentController.js'
 import { ProjectController } from './controllers/ProjectController.js'
 import { TicketController } from './controllers/TicketController.js'
-import FileWatcherService from './fileWatcherService.js'
+import FileWatcherService from './services/fileWatcher/index.js'
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { createDevToolsRouter, setupLogInterception } from './routes/devtools.js'

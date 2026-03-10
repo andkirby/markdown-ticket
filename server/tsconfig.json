@@ -29,7 +29,6 @@
   },
   "include": [
     "server.ts",
-    "fileWatcherService.ts",
     "counterAPI.ts",
     "createSampleTickets.ts",
     "services/**/*.ts",

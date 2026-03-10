@@ -12,7 +12,7 @@
  * - OpenAPI contract validation.
  *
  * @see server/routes/sse.ts
- * @see server/fileWatcherService.ts
+ * @see server/services/fileWatcher
  */
 import type { Express } from 'express'
 import type { Buffer } from 'node:buffer'
