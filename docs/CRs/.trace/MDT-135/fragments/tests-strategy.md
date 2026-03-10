@@ -1,0 +1,1 @@
+RelationshipBadge tests verify both styling variants and clickable link behavior using MemoryRouter context. Tests cover same-project links (TEST-100) and cross-project links (OTHER-123) to ensure SmartLink integration works correctly.

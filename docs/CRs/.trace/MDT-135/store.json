@@ -205,18 +205,6 @@
       "sourceRef": "test:unit"
     },
     {
-      "id": "OBL-test-relationship",
-      "title": "RelationshipBadge unit tests cover related, depends, blocks variants",
-      "derivedFrom": [
-        "BR-8"
-      ],
-      "artifactIds": [
-        "ART-relationship-badge-test",
-        "ART-relationship-badge"
-      ],
-      "sourceRef": "test:unit"
-    },
-    {
       "id": "OBL-test-variants",
       "title": "badgeVariants unit tests verify color mappings for all attributes",
       "derivedFrom": [
@@ -279,18 +267,6 @@
       "sourceRef": "architecture:priority"
     },
     {
-      "id": "OBL-relationship-badges",
-      "title": "RelationshipBadge component for related, depends, blocks",
-      "derivedFrom": [
-        "BR-8"
-      ],
-      "artifactIds": [
-        "ART-relationship-badge",
-        "ART-badge-variants"
-      ],
-      "sourceRef": "architecture:relationships"
-    },
-    {
       "id": "OBL-single-owner",
       "title": "Badge module owns ALL ticket attribute badge rendering",
       "derivedFrom": [
@@ -319,6 +295,34 @@
         "ART-badge-variants"
       ],
       "sourceRef": "architecture:type"
+    },
+    {
+      "id": "OBL-relationship-badges",
+      "title": "RelationshipBadge component for related, depends, blocks with SmartLink integration",
+      "derivedFrom": [
+        "BR-8"
+      ],
+      "artifactIds": [
+        "ART-relationship-badge",
+        "ART-badge-variants",
+        "ART-smart-link",
+        "ART-link-processor"
+      ],
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "OBL-test-relationship",
+      "title": "RelationshipBadge unit tests cover related, depends, blocks variants and clickable links",
+      "derivedFrom": [
+        "BR-8"
+      ],
+      "artifactIds": [
+        "ART-relationship-badge-test",
+        "ART-relationship-badge",
+        "ART-smart-link",
+        "ART-link-processor"
+      ],
+      "sourceRef": "CR:MDT-135"
     }
   ],
   "artifacts": [
@@ -327,12 +331,6 @@
       "path": "src/components/Badge/StatusBadge.tsx",
       "kind": "runtime",
       "sourceRef": "architecture:new component"
-    },
-    {
-      "id": "ART-status-variants",
-      "path": "src/components/Badge/statusVariants.ts",
-      "kind": "runtime",
-      "sourceRef": "architecture:color mapping"
     },
     {
       "id": "ART-badge-types",
@@ -435,6 +433,18 @@
       "path": "src/components/Badge/badgeVariants.test.ts",
       "kind": "test",
       "sourceRef": "test:unit"
+    },
+    {
+      "id": "ART-smart-link",
+      "path": "src/components/SmartLink.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-135"
+    },
+    {
+      "id": "ART-link-processor",
+      "path": "src/utils/linkProcessor.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-135"
     }
   ],
   "testPlans": [

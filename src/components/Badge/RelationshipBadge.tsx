@@ -8,10 +8,12 @@
  * Coverage: BR-8
  */
 
+import { useParams } from 'react-router-dom'
 import { cn } from '../../lib/utils'
+import { classifyLink } from '../../utils/linkProcessor'
 import { Badge } from '../UI/badge'
+import SmartLink from '../SmartLink'
 import { relationshipVariants } from './badgeVariants'
-// Note: SmartLink requires router context, so we use a simple span for links in this component
 import type { RelationshipVariant } from './types'
 
 export interface RelationshipBadgeProps {
@@ -41,6 +43,7 @@ const RELATIONSHIP_ICONS: Record<RelationshipVariant, string> = {
  * <RelationshipBadge variant="blocks" links={['MDT-200']} />
  */
 export function RelationshipBadge({ variant, links, className }: RelationshipBadgeProps) {
+  const { projectCode } = useParams<{ projectCode: string }>()
   const icon = RELATIONSHIP_ICONS[variant]
   const title = links.join(', ')
 
@@ -53,7 +56,14 @@ export function RelationshipBadge({ variant, links, className }: RelationshipBad
       <span className="mr-1">{icon}</span>
       {links.map((link, index) => (
         <span key={link}>
-          <span>{link}</span>
+          <SmartLink
+            link={classifyLink(link, projectCode || '')}
+            currentProject={projectCode || ''}
+            showIcon={false}
+            className="hover:underline"
+          >
+            {link}
+          </SmartLink>
           {index < links.length - 1 && <span className="mx-1">,</span>}
         </span>
       ))}
