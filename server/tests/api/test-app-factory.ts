@@ -109,7 +109,7 @@ interface FileInvokerAdapter {
  * IMPORTANT: Call this AFTER setting process.env.CONFIG_DIR to ensure
  * services use the test configuration directory.
  */
-export interface TestAppResult {
+interface TestAppResult {
   app: Express
   fileWatcher: FileWatcherService
 }

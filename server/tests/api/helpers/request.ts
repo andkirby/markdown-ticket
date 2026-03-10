@@ -12,7 +12,7 @@ import request from 'supertest'
 /**
  * Request options for customizing requests.
  */
-export interface RequestOptions {
+interface RequestOptions {
   headers?: Record<string, string>
   query?: Record<string, string | number | boolean>
 }
