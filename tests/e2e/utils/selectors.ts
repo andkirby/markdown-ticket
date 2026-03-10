@@ -278,3 +278,29 @@ export const markdownSelectors = {
   /** Rendered fenced code block */
   codeBlock: 'pre code',
 } as const
+
+/**
+ * Quick Search selectors (MDT-136)
+ *
+ * @testid quick-search-modal — modal overlay container
+ * @testid quick-search-input — search input field
+ * @testid quick-search-results — results list container
+ * @testid quick-search-result-item — individual result item
+ * @testid quick-search-no-results — no results message
+ */
+export const quickSearchSelectors = {
+  /** Modal overlay container */
+  modal: '[data-testid="quick-search-modal"]',
+  /** Search input field */
+  input: '[data-testid="quick-search-input"]',
+  /** Results list container */
+  results: '[data-testid="quick-search-results"]',
+  /** Individual result item */
+  resultItem: '[data-testid="quick-search-result-item"]',
+  /** Selected/highlighted result item */
+  selectedResult: '[data-testid="quick-search-result-item"][aria-selected="true"]',
+  /** Result item by ticket code */
+  resultByCode: (code: string) => `[data-testid="quick-search-result-item-${code}"]`,
+  /** No results message */
+  noResults: '[data-testid="quick-search-no-results"]',
+} as const
