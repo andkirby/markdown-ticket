@@ -9,7 +9,6 @@ dependsOn: MDT-059
 ---
 
 # Review and improve smart link implementation
-
 ## Description
 
 Review the smart link implementation from MDT-059 to address potential issues and ensure it follows project standards.
