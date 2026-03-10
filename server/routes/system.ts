@@ -272,7 +272,6 @@ export function createSystemRouter(
         expandedPath,
       }
 
-      logger.debug(`🔍 Enhanced path check for "${inputPath}": expanded="${expandedPath}", exists=${result.exists}, inDiscovery=${result.isInDiscovery}`)
       res.json(result)
     }
     catch (error) {
@@ -641,7 +640,7 @@ export function createSystemRouter(
   router.get('/config/selector', async (req: Request, res: Response) => {
     try {
       const configDir = getConfigDir()
-      console.log('[DEBUG] getConfigDir returned:', configDir)
+      logger.debug('getConfigDir returned:', configDir)
 
       // Read preferences from user.toml
       let preferences = { ...DEFAULT_PREFERENCES }
