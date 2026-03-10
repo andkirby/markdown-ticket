@@ -13,15 +13,15 @@ Ticket: `MDT-129`
 
 ### BR-2
 
-- `BR-2.1` [bdd] WHEN compactInactive is true, the system shall render inactive visible rail projects as compact code-only cards.
-- `BR-2.2` [bdd] WHEN compactInactive is false, the system shall render inactive visible rail projects using medium card presentation.
+- `BR-2.1` [bdd] WHEN compactInactive is true (default), the system shall render inactive visible rail projects as compact code-only cards.
 - `BR-2.3` [bdd] WHEN an inactive visible project is rendered, the system shall not display title or description expansion in the rail.
 
 ### BR-3
 
-- `BR-3.1` [bdd] WHEN the selector rail renders, the system shall display a single launcher control at the end of the selector rail.
-- `BR-3.2` [bdd] WHEN the launcher is activated, the system shall open a panel directly below the selector.
-- `BR-3.3` [bdd] WHEN the launcher uses a visual icon, the system shall use the acclaim visual asset.
+- `BR-3.1` [bdd] WHEN the user clicks the active project card, the system shall open the full project browser panel.
+- `BR-3.2` [bdd] WHEN the user hovers over an inactive project chip, the system shall display a hover card with full project details after a short delay.
+- `BR-3.3` [bdd] WHEN a hover card displays, the system shall show the project code, name, description, and favorite status.
+- `BR-3.4` [bdd] WHEN the user stops hovering over an inactive project chip, the system shall dismiss the hover card after a short delay.
 
 ### BR-4
 
@@ -67,8 +67,7 @@ Ticket: `MDT-129`
 
 ### BR-9
 
-- `BR-9.1` [bdd] WHEN the viewport is mobile-sized, the system shall display only the active project and launcher in the collapsed selector rail.
-- `BR-9.2` [bdd] WHEN a mobile user activates the launcher, the system shall provide access to the remaining projects.
+- `BR-9.1` [bdd] WHEN the viewport is mobile-sized, the system shall display only the active project in the collapsed selector rail.
 - `BR-9.3` [bdd] WHEN responsive presentation adapts by viewport, the system shall preserve the same selector state model and expanded project list behavior.
 
 ### BR-10
@@ -86,11 +85,9 @@ Ticket: `MDT-129`
 - `C1` [tests] User preferences stored in CONFIG_DIR/user.toml under [ui.projectSelector]
 - `C2` [tests] Mutable selector state stored in CONFIG_DIR/project-selector.json, keyed by project code
 - `C3` [tests] Usage state writes occur shortly after project selection, not on shutdown
-- `C4` [tests] Launcher uses the existing acclaim visual asset
 - `C5` [tests] Full project browser panel is visually attached to the selector
 - `C6` [tests] visibleCount default is 7; compactInactive default is true
 - `C7` [tests] Active project always counts toward visibleCount but is never hidden
-- `C8` [tests] Selector rail ends with exactly one launcher control
 - `C9` [tests] No All Projects synthetic item is introduced
 - `C10` [tests] Mutable selector state remains separate from immutable user preferences
 
@@ -102,7 +99,7 @@ _No edge cases recorded._
 
 | Route | Count | IDs |
 |---|---:|---|
-| bdd | 40 | `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-2.1`, `BR-2.2`, `BR-2.3`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-6.5`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-9.1`, `BR-9.2`, `BR-9.3` |
-| tests | 17 | `BR-10.1`, `BR-10.2`, `BR-10.3`, `BR-10.4`, `BR-10.5`, `BR-10.6`, `BR-10.7`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10` |
+| bdd | 39 | `BR-1.1`, `BR-1.2`, `BR-1.3`, `BR-1.4`, `BR-2.1`, `BR-2.3`, `BR-3.1`, `BR-3.2`, `BR-3.3`, `BR-3.4`, `BR-4.1`, `BR-4.2`, `BR-4.3`, `BR-4.4`, `BR-4.5`, `BR-5.1`, `BR-5.2`, `BR-5.3`, `BR-5.4`, `BR-5.5`, `BR-6.1`, `BR-6.2`, `BR-6.3`, `BR-6.4`, `BR-6.5`, `BR-7.1`, `BR-7.2`, `BR-7.3`, `BR-7.4`, `BR-7.5`, `BR-8.1`, `BR-8.2`, `BR-8.3`, `BR-8.4`, `BR-8.5`, `BR-8.6`, `BR-8.7`, `BR-9.1`, `BR-9.3` |
+| tests | 15 | `BR-10.1`, `BR-10.2`, `BR-10.3`, `BR-10.4`, `BR-10.5`, `BR-10.6`, `BR-10.7`, `C1`, `C2`, `C3`, `C5`, `C6`, `C7`, `C9`, `C10` |
 | clarification | 0 | - |
 | not_applicable | 0 | - |

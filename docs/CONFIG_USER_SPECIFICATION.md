@@ -17,7 +17,7 @@ CONFIG_DIR/user.toml
 
 ## Project Selector
 
-The project selector rail displays a compact view of available projects with access to the full list via a launcher panel.
+The project selector rail displays a compact view of available projects. Clicking the active project card opens a full project browser panel. Hovering over inactive project chips reveals additional project details.
 
 ### Configuration
 
@@ -32,15 +32,15 @@ compactInactive = true
 | Field | Type | Description |
 |-------|------|-------------|
 | `visibleCount` | integer | Number of visible project entries in the selector rail |
-| `compactInactive` | boolean | Whether inactive visible projects use compact code-only cards in the selector rail |
+| `compactInactive` | boolean | Whether inactive visible projects use compact code-only chips (default: true) |
 
 ### Behavior
 
-- **Active project**: Always visible in the selector rail as a larger card
+- **Active project**: Always visible in the selector rail as a larger card; clicking it opens the full project browser panel
 - **Visible rail**: Shows active project plus `visibleCount - 1` additional projects
   - Favorites are prioritized and ordered by usage count and last used time
   - Non-favorites appear after favorites
-- **Launcher**: Single control at the end of the rail that opens a full project panel
+- **Inactive project chips**: Display as compact code-only cards; hovering reveals full project details (code, name, description, favorite status) in a hover card
 - **Panel**: Shows all projects with favorite indicators and access to all project switching functionality
 - **Favorites**: Persisted per-project state stored in `CONFIG_DIR/project-selector.json`
 

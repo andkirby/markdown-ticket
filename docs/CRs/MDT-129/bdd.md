@@ -28,18 +28,23 @@
 ### BR-2
 
 - Inactive visible projects display based on compact mode setting (`inactive_projects_display_mode`)
-  Covers: `BR-2.1`, `BR-2.2`, `BR-2.3`
+  Covers: `BR-2.1`, `BR-2.3`
   Given: I have inactive visible projects in the selector rail
   When: the selector renders with <compactMode> setting
   Then: inactive projects appear as <cardStyle>
 
 ### BR-3
 
-- Launcher opens full project panel below selector (`launcher_opens_panel`)
-  Covers: `BR-3.1`, `BR-3.2`, `BR-3.3`
-  Given: I am viewing the selector rail
-  When: I activate the launcher control at the end of the rail
-  Then: a panel opens directly below the selector showing the full project list using the acclaim visual asset
+- Active project card click opens full project browser (`active_project_click_opens_browser`)
+  Covers: `BR-3.1`
+  Given: I am viewing the application with an active project selected
+  When: I click the active project card
+  Then: the full project browser panel opens displaying all projects
+- Hover card displays on inactive project chip hover (`hover_card_displays_on_chip`)
+  Covers: `BR-3.2`, `BR-3.3`, `BR-3.4`
+  Given: I am viewing the selector rail with inactive project chips visible
+  When: I hover over an inactive project chip
+  Then: a hover card appears after a short delay showing the project code, name, description, and favorite status; when I stop hovering, the card dismisses after a short delay
 
 ### BR-4
 
@@ -94,10 +99,10 @@
 ### BR-9
 
 - Mobile viewport shows collapsed selector rail (`mobile_responsive_selector`)
-  Covers: `BR-9.1`, `BR-9.2`, `BR-9.3`
+  Covers: `BR-9.1`, `BR-9.3`
   Given: I am viewing the application on a mobile-sized viewport
   When: the selector rail renders
-  Then: I see only the active project and launcher; activating the launcher provides access to remaining projects with the same state model
+  Then: I see only the active project; clicking the active project provides access to remaining projects with the same state model
 
 ## Coverage Summary
 
@@ -108,11 +113,11 @@
 | `BR-1.3` | 1 | `active_project_always_visible` |
 | `BR-1.4` | 1 | `toggle_favorite_by_clicking_star` |
 | `BR-2.1` | 1 | `inactive_projects_display_mode` |
-| `BR-2.2` | 1 | `inactive_projects_display_mode` |
 | `BR-2.3` | 1 | `inactive_projects_display_mode` |
-| `BR-3.1` | 1 | `launcher_opens_panel` |
-| `BR-3.2` | 1 | `launcher_opens_panel` |
-| `BR-3.3` | 1 | `launcher_opens_panel` |
+| `BR-3.1` | 1 | `active_project_click_opens_browser` |
+| `BR-3.2` | 1 | `hover_card_displays_on_chip` |
+| `BR-3.3` | 1 | `hover_card_displays_on_chip` |
+| `BR-3.4` | 1 | `hover_card_displays_on_chip` |
 | `BR-4.1` | 1 | `panel_displays_full_project_list` |
 | `BR-4.2` | 1 | `panel_displays_full_project_list` |
 | `BR-4.3` | 1 | `panel_displays_full_project_list` |
@@ -141,5 +146,4 @@
 | `BR-8.6` | 1 | `state_persists_after_selection` |
 | `BR-8.7` | 1 | `state_persists_after_selection` |
 | `BR-9.1` | 1 | `mobile_responsive_selector` |
-| `BR-9.2` | 1 | `mobile_responsive_selector` |
 | `BR-9.3` | 1 | `mobile_responsive_selector` |

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Redesigns the project selector from a uniform horizontal list into a tiered rail+panel system. The active project displays as an expanded card, inactive visible projects as compact code-only chips (or medium cards per preference), and a trailing launcher opens a full project browser panel directly below the rail. User preferences are loaded from `CONFIG_DIR/user.toml`; mutable selector state (favorites, usage) persists to `CONFIG_DIR/project-selector.json`. Design philosophy prioritizes visual hierarchy, progressive disclosure, and deterministic ordering.
+Redesigns the project selector from a uniform horizontal list into a tiered rail+panel system. The active project displays as an expanded card, inactive visible projects as compact code-only chips, and clicking the active project card opens a full project browser panel directly below the rail. Hovering over inactive project chips reveals full project details in hover cards. User preferences are loaded from `CONFIG_DIR/user.toml`; mutable selector state (favorites, usage) persists to `CONFIG_DIR/project-selector.json`. Design philosophy prioritizes visual hierarchy, progressive disclosure, and deterministic ordering.
 
 ## Pattern
 
@@ -22,7 +22,6 @@ Redesigns the project selector from a uniform horizontal list into a tiered rail
 |------------|------|----------|-------------|
 | `CONFIG_DIR/user.toml` | config file | No | Falls back to defaults: `visibleCount=7`, `compactInactive=true` |
 | `CONFIG_DIR/project-selector.json` | state file | No | Initializes empty state `{}` |
-| `designs/acclaim.svg` | asset | Yes | Launcher icon missing; fallback to text label |
 | `/api/config/selector` | endpoint | No | Selector uses default preferences and empty state |
 
 ## Test vs Runtime Separation
@@ -38,13 +37,14 @@ Redesigns the project selector from a uniform horizontal list into a tiered rail
 ```
 src/
 ├── components/
+│   ├── UI/
+│   │   └── hover-card.tsx            # Hover card primitive with delay defaults (100ms open/close)
 │   └── ProjectSelector/              # All selector-specific code colocated
 │       ├── index.tsx                 # Public export, renders rail + panel container; owns panel open state
-│       ├── ProjectSelectorRail.tsx   # Active card + inactive chips + launcher
-│       ├── ProjectSelectorCard.tsx   # Active project expanded card (code + title + favorite)
-│       ├── ProjectSelectorChip.tsx   # Inactive compact code-only or medium card
+│       ├── ProjectSelectorRail.tsx   # Active card + inactive chips; active card click opens browser
+│       ├── ProjectSelectorCard.tsx   # Active project expanded card (code + title + description + favorite)
+│       ├── ProjectSelectorChip.tsx   # Inactive compact chip with hover card
 │       ├── ProjectBrowserPanel.tsx   # Full project list overlay panel
-│       ├── LauncherButton.tsx        # Trailing launcher using acclaim.svg
 │       ├── types.ts                  # ProjectSelectorProps, ProjectWithSelectorState
 │       ├── useSelectorData.ts        # Fetches preferences + state via /api/config/selector; manages favorites, usage, persistence (debounced write is a private utility within this file)
 │       └── useProjectSelectorManager.ts # Computes visible subset using ordering rules
@@ -63,8 +63,9 @@ server/
 | Module | Owns | Must Not |
 |--------|------|----------|
 | `ProjectSelector/index.tsx` | Composition of rail + panel, visibility coordination, panel open/close state | Direct project switching logic |
-| `ProjectSelectorRail.tsx` | Rendering active card, chips, launcher in horizontal layout; responsive collapse | Panel state management |
+| `ProjectSelectorRail.tsx` | Rendering active card and chips in horizontal layout; active card click opens browser; responsive collapse | Panel state management |
 | `ProjectBrowserPanel.tsx` | Full project list, favorite indicators, panel positioning | Rail composition |
+| `UI/hover-card.tsx` | Hover card primitive with default delays | None (reusable component) |
 | `ProjectSelector/useProjectSelectorManager.ts` | Computing visible subset from projects + config + selector state | DOM rendering, persistence |
 | `ProjectSelector/useSelectorData.ts` | Fetching `{preferences, selectorState}` from `/api/config/selector`; managing favorite toggle, usage tracking, persistence triggers; debounced write utility (private) | Ordering logic, DOM rendering |
 | `selectorOrdering.ts` | Pure ordering functions (active-first, favorites-by-count, non-favorites-by-recency) | I/O, state management |
