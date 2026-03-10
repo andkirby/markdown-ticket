@@ -10,7 +10,7 @@
 import type { Express } from 'express'
 import type { Server } from 'node:http'
 import type { PortConfig, ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
-import type FileWatcherService from '../../../server/fileWatcherService.js'
+import type FileWatcherService from '../../../server/services/fileWatcher/index.js'
 import { createServer } from 'node:http'
 
 // Lazy-loaded to ensure CONFIG_DIR is set before import
