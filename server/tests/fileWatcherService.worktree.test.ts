@@ -8,7 +8,7 @@
 
 import { EventEmitter } from 'node:events'
 import chokidar from 'chokidar'
-import FileWatcherService from '../fileWatcherService.js'
+import FileWatcherService from '../services/fileWatcher/index.js'
 
 // Mock chokidar
 jest.mock('chokidar')
@@ -113,6 +113,10 @@ describe('FileWatcherService - Worktree Extensions (MDT-095)', () => {
     it('should log error and continue if file watching for a worktree fails (C4)', () => {
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
 
+      // Set up error listener to prevent unhandled error
+      const errorHandler = jest.fn()
+      fileWatcher.on('error', errorHandler)
+
       // Make chokidar.watch throw for this worktree
       mockChokidar.watch.mockImplementationOnce(() => {
         throw new Error('Permission denied')
@@ -123,6 +127,7 @@ describe('FileWatcherService - Worktree Extensions (MDT-095)', () => {
 
       expect(watcherId).toBeNull() // Returns null on failure
       expect(consoleErrorSpy).toHaveBeenCalled()
+      expect(errorHandler).toHaveBeenCalled() // Error was emitted
 
       consoleErrorSpy.mockRestore()
     })

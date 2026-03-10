@@ -1,5 +1,5 @@
 import type { Request } from 'express'
-import type FileWatcherService from '../fileWatcherService.js'
+import type FileWatcherService from '../services/fileWatcher/index.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import { Router } from 'express'
 
