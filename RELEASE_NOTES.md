@@ -1,5 +1,25 @@
 # Release Notes
 
+## v0.12.2 (2026-03-10)
+
+### 🎉 New Features
+
+**Quick Search (MDT-136)**
+- **Cmd+K Shortcut**: Press Cmd+K (Mac) or Ctrl+K (Windows/Linux) to open quick search
+- **Instant Ticket Access**: Search by title or ticket key (e.g., "MDT-123")
+- **Keyboard Navigation**: Use arrow keys to navigate results, Enter to select
+
+### 🚀 Improvements
+
+**Project Selector (MDT-129)**
+- **Hover Cards**: Hover over inactive project chips to see full project details
+- **Active Card Click**: Click the active project card to open the full project browser
+
+**Badge Components (MDT-135)**
+- **Clickable Links Restored**: Relationship badges (Related, Depends On, Blocks) now properly link to referenced tickets
+
+---
+
 ## v0.12.1 (2026-03-09)
 
 ### 🎉 New Features
