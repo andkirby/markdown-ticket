@@ -154,28 +154,49 @@ To add a new badge type:
   Artifacts: `ART-project-view`, `ART-ticket-attribute-tags`, `ART-ticket-attributes`
 - ContextBadge component for phase/epic, assignee, worktree (`OBL-context-badges`)
   Derived From: `BR-8`
-  Artifacts: `ART-context-badge`, `ART-status-variants`
+  Artifacts: `ART-context-badge`, `ART-badge-variants`
 - All status variants use consistent dark mode shades (950) (`OBL-dark-mode`)
   Derived From: `BR-3`
-  Artifacts: `ART-status-variants`
+  Artifacts: `ART-badge-variants`
 - PriorityBadge component with unified gradient styling (`OBL-priority-badge`)
   Derived From: `BR-4`, `BR-6`
-  Artifacts: `ART-priority-badge`, `ART-status-variants`
-- RelationshipBadge component for related, depends, blocks (`OBL-relationship-badges`)
+  Artifacts: `ART-priority-badge`, `ART-badge-variants`
+- RelationshipBadge component for related, depends, blocks with SmartLink integration (`OBL-relationship-badges`)
   Derived From: `BR-8`
-  Artifacts: `ART-relationship-badge`, `ART-status-variants`
+  Artifacts: `ART-relationship-badge`, `ART-badge-variants`, `ART-smart-link`, `ART-link-processor`
 - Remove inline getStatusColor/getStatusBadgeClass functions from consumers (`OBL-remove-dupes`)
   Derived From: `C4`
   Artifacts: `ART-project-view`, `ART-ticket-attribute-tags`, `ART-ticket-attributes`
 - Badge module owns ALL ticket attribute badge rendering (`OBL-single-owner`)
   Derived From: `BR-1`, `BR-4`, `BR-5`, `C3`, `C4`
-  Artifacts: `ART-status-badge`, `ART-status-variants`, `ART-badge-index`
+  Artifacts: `ART-status-badge`, `ART-badge-variants`, `ART-badge-index`
 - E2E tests continue to pass without modification (`OBL-test-compat`)
   Derived From: `C1`
   Artifacts: `ART-e2e-list-view`
+- ContextBadge unit tests cover phase/epic, assignee, worktree variants (`OBL-test-context`)
+  Derived From: `BR-8`
+  Artifacts: `ART-context-badge-test`, `ART-context-badge`
+- Verify existing E2E tests pass after migration (`OBL-test-e2e-verify`)
+  Derived From: `C1`
+  Artifacts: `ART-e2e-list-view`
+- PriorityBadge unit tests cover all Priority values with gradient styling (`OBL-test-priority`)
+  Derived From: `BR-4`, `BR-6`
+  Artifacts: `ART-priority-badge-test`, `ART-priority-badge`
+- RelationshipBadge unit tests cover related, depends, blocks variants and clickable links (`OBL-test-relationship`)
+  Derived From: `BR-8`
+  Artifacts: `ART-relationship-badge-test`, `ART-relationship-badge`, `ART-smart-link`, `ART-link-processor`
+- StatusBadge unit tests cover all CRStatus values and dark mode (`OBL-test-status`)
+  Derived From: `BR-1`, `BR-2`, `BR-3`
+  Artifacts: `ART-status-badge-test`, `ART-status-badge`
+- TypeBadge unit tests cover all CRType values with gradient styling (`OBL-test-type`)
+  Derived From: `BR-5`, `BR-7`
+  Artifacts: `ART-type-badge-test`, `ART-type-badge`
+- badgeVariants unit tests verify color mappings for all attributes (`OBL-test-variants`)
+  Derived From: `BR-2`, `BR-6`, `BR-7`, `C3`
+  Artifacts: `ART-badge-variants-test`, `ART-badge-variants`
 - TypeBadge component with unified gradient styling (`OBL-type-badge`)
   Derived From: `BR-5`, `BR-7`
-  Artifacts: `ART-type-badge`, `ART-status-variants`
+  Artifacts: `ART-type-badge`, `ART-badge-variants`
 
 ## Artifacts
 
@@ -183,31 +204,38 @@ To add a new badge type:
 |---|---|---|---|
 | `ART-badge-index` | `src/components/Badge/index.ts` | runtime | `OBL-single-owner` |
 | `ART-badge-types` | `src/components/Badge/types.ts` | runtime | `OBL-color-source` |
-| `ART-badge-variants` | `src/components/Badge/badgeVariants.ts` | runtime | `OBL-color-source` |
-| `ART-context-badge` | `src/components/Badge/ContextBadge.tsx` | runtime | `OBL-context-badges` |
-| `ART-e2e-list-view` | `tests/e2e/list/view.spec.ts` | test | `OBL-test-compat` |
-| `ART-priority-badge` | `src/components/Badge/PriorityBadge.tsx` | runtime | `OBL-priority-badge` |
+| `ART-badge-variants` | `src/components/Badge/badgeVariants.ts` | runtime | `OBL-color-source`, `OBL-context-badges`, `OBL-dark-mode`, `OBL-priority-badge`, `OBL-relationship-badges`, `OBL-single-owner`, `OBL-test-variants`, `OBL-type-badge` |
+| `ART-badge-variants-test` | `src/components/Badge/badgeVariants.test.ts` | test | `OBL-test-variants` |
+| `ART-context-badge` | `src/components/Badge/ContextBadge.tsx` | runtime | `OBL-context-badges`, `OBL-test-context` |
+| `ART-context-badge-test` | `src/components/Badge/ContextBadge.test.tsx` | test | `OBL-test-context` |
+| `ART-e2e-list-view` | `tests/e2e/list/view.spec.ts` | test | `OBL-test-compat`, `OBL-test-e2e-verify` |
+| `ART-link-processor` | `src/utils/linkProcessor.ts` | runtime | `OBL-relationship-badges`, `OBL-test-relationship` |
+| `ART-priority-badge` | `src/components/Badge/PriorityBadge.tsx` | runtime | `OBL-priority-badge`, `OBL-test-priority` |
+| `ART-priority-badge-test` | `src/components/Badge/PriorityBadge.test.tsx` | test | `OBL-test-priority` |
 | `ART-project-view` | `src/components/ProjectView.tsx` | runtime | `OBL-consumer-migration`, `OBL-remove-dupes` |
-| `ART-relationship-badge` | `src/components/Badge/RelationshipBadge.tsx` | runtime | `OBL-relationship-badges` |
-| `ART-status-badge` | `src/components/Badge/StatusBadge.tsx` | runtime | `OBL-single-owner` |
-| `ART-status-variants` | `src/components/Badge/statusVariants.ts` | runtime | `OBL-context-badges`, `OBL-dark-mode`, `OBL-priority-badge`, `OBL-relationship-badges`, `OBL-single-owner`, `OBL-type-badge` |
+| `ART-relationship-badge` | `src/components/Badge/RelationshipBadge.tsx` | runtime | `OBL-relationship-badges`, `OBL-test-relationship` |
+| `ART-relationship-badge-test` | `src/components/Badge/RelationshipBadge.test.tsx` | test | `OBL-test-relationship` |
+| `ART-smart-link` | `src/components/SmartLink.tsx` | runtime | `OBL-relationship-badges`, `OBL-test-relationship` |
+| `ART-status-badge` | `src/components/Badge/StatusBadge.tsx` | runtime | `OBL-single-owner`, `OBL-test-status` |
+| `ART-status-badge-test` | `src/components/Badge/StatusBadge.test.tsx` | test | `OBL-test-status` |
 | `ART-ticket-attribute-tags` | `src/components/TicketAttributeTags.tsx` | runtime | `OBL-consumer-migration`, `OBL-remove-dupes` |
 | `ART-ticket-attributes` | `src/components/TicketAttributes.tsx` | runtime | `OBL-consumer-migration`, `OBL-remove-dupes` |
-| `ART-type-badge` | `src/components/Badge/TypeBadge.tsx` | runtime | `OBL-type-badge` |
+| `ART-type-badge` | `src/components/Badge/TypeBadge.tsx` | runtime | `OBL-test-type`, `OBL-type-badge` |
+| `ART-type-badge-test` | `src/components/Badge/TypeBadge.test.tsx` | test | `OBL-test-type` |
 
 ## Derivation Summary
 
 | Requirement ID | Obligation Count | Obligation IDs |
 |---|---:|---|
-| `BR-1` | 2 | `OBL-consumer-migration`, `OBL-single-owner` |
-| `BR-2` | 1 | `OBL-color-source` |
-| `BR-3` | 1 | `OBL-dark-mode` |
-| `BR-4` | 2 | `OBL-priority-badge`, `OBL-single-owner` |
-| `BR-5` | 2 | `OBL-single-owner`, `OBL-type-badge` |
-| `BR-6` | 2 | `OBL-color-source`, `OBL-priority-badge` |
-| `BR-7` | 2 | `OBL-color-source`, `OBL-type-badge` |
-| `BR-8` | 2 | `OBL-context-badges`, `OBL-relationship-badges` |
-| `C1` | 1 | `OBL-test-compat` |
-| `C3` | 2 | `OBL-color-source`, `OBL-single-owner` |
+| `BR-1` | 3 | `OBL-consumer-migration`, `OBL-single-owner`, `OBL-test-status` |
+| `BR-2` | 3 | `OBL-color-source`, `OBL-test-status`, `OBL-test-variants` |
+| `BR-3` | 2 | `OBL-dark-mode`, `OBL-test-status` |
+| `BR-4` | 3 | `OBL-priority-badge`, `OBL-single-owner`, `OBL-test-priority` |
+| `BR-5` | 3 | `OBL-single-owner`, `OBL-test-type`, `OBL-type-badge` |
+| `BR-6` | 4 | `OBL-color-source`, `OBL-priority-badge`, `OBL-test-priority`, `OBL-test-variants` |
+| `BR-7` | 4 | `OBL-color-source`, `OBL-test-type`, `OBL-test-variants`, `OBL-type-badge` |
+| `BR-8` | 4 | `OBL-context-badges`, `OBL-relationship-badges`, `OBL-test-context`, `OBL-test-relationship` |
+| `C1` | 2 | `OBL-test-compat`, `OBL-test-e2e-verify` |
+| `C3` | 3 | `OBL-color-source`, `OBL-single-owner`, `OBL-test-variants` |
 | `C4` | 3 | `OBL-consumer-migration`, `OBL-remove-dupes`, `OBL-single-owner` |
 | `C5` | 1 | `OBL-color-source` |

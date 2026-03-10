@@ -4,6 +4,7 @@ status: Implemented
 dateCreated: 2026-03-09T16:23:29.598Z
 type: Architecture
 priority: Medium
+relatedTickets: MDT-042
 ---
 
 # Consolidate ticket badge styling across views
