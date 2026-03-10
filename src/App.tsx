@@ -9,6 +9,7 @@ import { useEventHistoryState } from './components/DevTools/useEventHistoryState
 import { DirectTicketAccess } from './components/DirectTicketAccess'
 import { ProjectSelector } from './components/ProjectSelector'
 import ProjectView from './components/ProjectView'
+import { QuickSearchModal } from './components/QuickSearch'
 import { RedirectToCurrentProject } from './components/RedirectToCurrentProject'
 import { RouteErrorModal } from './components/RouteErrorModal'
 import { SecondaryHeader } from './components/SecondaryHeader'
@@ -16,6 +17,7 @@ import TicketViewer from './components/TicketViewer'
 import { Toaster } from './components/UI/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
+import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
 import { useProjectManager } from './hooks/useProjectManager'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
@@ -44,6 +46,12 @@ function ProjectRouteHandler() {
   const [showAddProjectModal, setShowAddProjectModal] = useState(false)
   const [showEditProjectModal, setShowEditProjectModal] = useState(false)
   const [lastBoardListMode, setLastBoardListMode] = useState<'board' | 'list'>(() => (localStorage.getItem('lastBoardListMode') as 'board' | 'list') || 'board')
+  const [showQuickSearch, setShowQuickSearch] = useState(false)
+
+  // Global keyboard shortcuts
+  useGlobalKeyboard({
+    onQuickSearch: () => setShowQuickSearch(true),
+  })
 
   // Store state setters in refs to avoid direct setState in useEffect
   const errorRef = useRef(error)
@@ -283,6 +291,14 @@ function ProjectRouteHandler() {
         onOpenChange={open => setEventHistoryState(open, false)}
         forceHidden={eventHistoryForceHidden}
       />
+
+      <QuickSearchModal
+        isOpen={showQuickSearch}
+        onClose={() => setShowQuickSearch(false)}
+        tickets={tickets}
+        onSelectTicket={handleTicketClick}
+      />
+
       <Toaster />
     </div>
   )

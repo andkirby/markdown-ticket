@@ -125,9 +125,347 @@
       ]
     }
   ],
-  "scenarios": [],
-  "obligations": [],
-  "artifacts": [],
-  "testPlans": [],
-  "tasks": []
+  "scenarios": [
+    {
+      "id": "open_modal_with_keyboard_shortcut",
+      "title": "Open quick search modal with keyboard shortcut",
+      "covers": [
+        "BR-1",
+        "BR-2"
+      ],
+      "given": "I am on the board view with multiple tickets visible",
+      "when": "I press Cmd+K (Mac) or Ctrl+K (Windows/Linux)",
+      "then": "the quick search modal opens and the search input is focused",
+      "sourceRef": "BR-1, BR-2"
+    },
+    {
+      "id": "close_modal_with_escape",
+      "title": "Close modal with Escape key",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "the quick search modal is open",
+      "when": "I press Escape",
+      "then": "the modal closes without selecting a ticket",
+      "sourceRef": "BR-6"
+    },
+    {
+      "id": "close_modal_with_click_outside",
+      "title": "Close modal by clicking outside",
+      "covers": [
+        "BR-7"
+      ],
+      "given": "the quick search modal is open",
+      "when": "I click outside the modal content area",
+      "then": "the modal closes without selecting a ticket",
+      "sourceRef": "BR-7"
+    },
+    {
+      "id": "filter_by_ticket_key",
+      "title": "Filter tickets by key number",
+      "covers": [
+        "BR-3"
+      ],
+      "given": "the quick search modal is open with multiple tickets available",
+      "when": "I type a ticket key number like \"136\"",
+      "then": "the results show only tickets with matching key numbers (e.g., MDT-136)",
+      "sourceRef": "BR-3"
+    },
+    {
+      "id": "filter_by_title_substring",
+      "title": "Filter tickets by title substring",
+      "covers": [
+        "BR-3"
+      ],
+      "given": "the quick search modal is open with tickets titled \"Badge Color Fix\" and \"Header Badge\"",
+      "when": "I type \"badge color\"",
+      "then": "the results show only \"Badge Color Fix\" (AND logic, case-insensitive)",
+      "sourceRef": "BR-3"
+    },
+    {
+      "id": "show_no_results_state",
+      "title": "Display no results message",
+      "covers": [
+        "BR-8"
+      ],
+      "given": "the quick search modal is open",
+      "when": "I type a query that matches no ticket titles or keys",
+      "then": "the results area displays a \"No results\" message",
+      "sourceRef": "BR-8"
+    },
+    {
+      "id": "navigate_results_with_arrow_keys",
+      "title": "Navigate results with arrow keys",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "the quick search modal shows multiple results",
+      "when": "I press the down arrow key then the up arrow key",
+      "then": "the selection moves to the next result then back to the previous result",
+      "sourceRef": "BR-4"
+    },
+    {
+      "id": "select_ticket_and_open_detail",
+      "title": "Select ticket and open detail view",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "the quick search modal shows results with one selected",
+      "when": "I press Enter",
+      "then": "the modal closes and the selected ticket detail view opens",
+      "sourceRef": "BR-5"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-modal-open",
+      "title": "Keyboard shortcut opens modal with auto-focused input",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-use-global-keyboard",
+        "ART-quick-search-modal",
+        "ART-quick-search-input",
+        "ART-quick-search-index"
+      ],
+      "sourceRef": "CR Section 4: Technical Details - Keyboard Handler"
+    },
+    {
+      "id": "OBL-modal-close",
+      "title": "Escape key and click-outside close modal without selection",
+      "derivedFrom": [
+        "BR-6",
+        "BR-7"
+      ],
+      "artifactIds": [
+        "ART-quick-search-modal",
+        "ART-quick-search-index"
+      ],
+      "sourceRef": "CR Section 4: User Flow #7, MODALS.md Required Behaviors"
+    },
+    {
+      "id": "OBL-search-filter",
+      "title": "Filter tickets by key number or title substring (case-insensitive, AND logic)",
+      "derivedFrom": [
+        "BR-3",
+        "C3",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-use-quick-search",
+        "ART-quick-search-input",
+        "ART-quick-search-results",
+        "ART-quick-search-index",
+        "ART-quick-search-e2e-test"
+      ],
+      "sourceRef": "CR Section 4: Search Logic"
+    },
+    {
+      "id": "OBL-results-navigation",
+      "title": "Arrow keys navigate through result items",
+      "derivedFrom": [
+        "BR-4"
+      ],
+      "artifactIds": [
+        "ART-quick-search-results",
+        "ART-use-quick-search",
+        "ART-quick-search-e2e-test"
+      ],
+      "sourceRef": "CR Section 4: User Flow #5"
+    },
+    {
+      "id": "OBL-ticket-selection",
+      "title": "Enter selects ticket and opens detail view",
+      "derivedFrom": [
+        "BR-5"
+      ],
+      "artifactIds": [
+        "ART-quick-search-modal",
+        "ART-quick-search-results",
+        "ART-quick-search-e2e-test"
+      ],
+      "sourceRef": "CR Section 4: User Flow #6"
+    },
+    {
+      "id": "OBL-empty-state",
+      "title": "Display 'No results' message when no matches",
+      "derivedFrom": [
+        "BR-8"
+      ],
+      "artifactIds": [
+        "ART-quick-search-results",
+        "ART-quick-search-e2e-test"
+      ],
+      "sourceRef": "CR AC #9"
+    },
+    {
+      "id": "OBL-result-limit",
+      "title": "Results list limited to 10 items maximum",
+      "derivedFrom": [
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-use-quick-search",
+        "ART-quick-search-results",
+        "ART-quick-search-e2e-test"
+      ],
+      "sourceRef": "CR Section 4: User Flow #4"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-quick-search-modal",
+      "path": "src/components/QuickSearch/QuickSearchModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4: Component Structure"
+    },
+    {
+      "id": "ART-quick-search-input",
+      "path": "src/components/QuickSearch/QuickSearchInput.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4: Component Structure"
+    },
+    {
+      "id": "ART-quick-search-results",
+      "path": "src/components/QuickSearch/QuickSearchResults.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4: Component Structure"
+    },
+    {
+      "id": "ART-use-quick-search",
+      "path": "src/hooks/useQuickSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4: Component Structure"
+    },
+    {
+      "id": "ART-use-global-keyboard",
+      "path": "src/hooks/useGlobalKeyboard.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4: Technical Details - Keyboard Handler"
+    },
+    {
+      "id": "ART-quick-search-index",
+      "path": "src/components/QuickSearch/index.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4: Component Structure"
+    },
+    {
+      "id": "ART-quick-search-e2e-test",
+      "path": "tests/e2e/quick-search/modal.spec.ts",
+      "kind": "test",
+      "sourceRef": "BDD test-plan: TEST-quick-search-modal"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-use-quick-search-unit",
+      "kind": "unit",
+      "title": "useQuickSearch Hook Unit Tests",
+      "covers": [
+        "BR-3",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "file": "src/hooks/useQuickSearch.test.ts",
+      "sourceRef": "tests.md: Unit Tests section"
+    },
+    {
+      "id": "TEST-quick-search-modal",
+      "kind": "e2e",
+      "title": "Quick Search Modal E2E Tests",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "C1",
+        "C2"
+      ],
+      "file": "tests/e2e/quick-search/modal.spec.ts",
+      "sourceRef": "tests.md: E2E Tests section"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Walking Skeleton - Create QuickSearch component stubs",
+      "ownsArtifactIds": [
+        "ART-quick-search-index",
+        "ART-quick-search-modal",
+        "ART-quick-search-input",
+        "ART-quick-search-results",
+        "ART-use-global-keyboard",
+        "ART-use-quick-search"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Search Filtering - useQuickSearch hook with filtering logic",
+      "ownsArtifactIds": [
+        "ART-use-quick-search"
+      ],
+      "makesGreenIds": [
+        "filter_by_ticket_key",
+        "filter_by_title_substring",
+        "TEST-use-quick-search-unit"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Results Display - Render filtered results with limits and empty state",
+      "ownsArtifactIds": [
+        "ART-quick-search-results",
+        "ART-quick-search-modal"
+      ],
+      "makesGreenIds": [
+        "filter_by_ticket_key",
+        "filter_by_title_substring",
+        "show_no_results_state",
+        "TEST-quick-search-modal"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Navigation & Selection - Arrow keys and Enter to select ticket",
+      "ownsArtifactIds": [
+        "ART-quick-search-results",
+        "ART-use-quick-search"
+      ],
+      "makesGreenIds": [
+        "navigate_results_with_arrow_keys",
+        "select_ticket_and_open_detail",
+        "TEST-quick-search-modal"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Modal Open/Close - Global keyboard shortcut and modal visibility",
+      "ownsArtifactIds": [
+        "ART-use-global-keyboard",
+        "ART-quick-search-modal",
+        "ART-quick-search-input",
+        "ART-quick-search-index",
+        "ART-quick-search-e2e-test"
+      ],
+      "makesGreenIds": [
+        "open_modal_with_keyboard_shortcut",
+        "close_modal_with_escape",
+        "close_modal_with_click_outside",
+        "TEST-quick-search-modal"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    }
+  ]
 }

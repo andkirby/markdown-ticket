@@ -1,6 +1,6 @@
 ---
 code: MDT-136
-status: In Progress
+status: Implemented
 dateCreated: 2026-03-09T20:41:09.373Z
 type: Feature Enhancement
 priority: Medium
@@ -96,3 +96,9 @@ src/components/QuickSearch/
 - [ ] Works on Board, List, and Documents views
 
 > Requirements projection: [requirements.md](./MDT-136/requirements.md) (rendered from canonical spec-trace state)
+
+> BDD projection: [bdd.md](./MDT-136/bdd.md) (rendered from canonical spec-trace state)
+
+> Architecture projection: [architecture.md](./MDT-136/architecture.md) (rendered from canonical spec-trace state)
+
+> Tests projection: [tests.md](./MDT-136/tests.md) (rendered from canonical spec-trace state)
