@@ -12,7 +12,11 @@
 
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../UI/tooltip'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '../UI/hover-card'
 
 interface ProjectSelectorCardProps {
   /** Project with selector state to display */
@@ -82,12 +86,12 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   }
 
   const cardClasses = `
-    group relative
+    group relative flex items-center justify-center
     ${isActive
         ? 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800 shadow-md hover:shadow-lg'
         : 'bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border-gray-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-md'
     }
-    border rounded-xl px-2 sm:px-4 py-1.5 h-12
+    border rounded-xl px-2 sm:px-4 py-1.5 min-h-12
     ${useRailWidthConstraints ? 'min-w-[100px] sm:min-w-[150px] max-w-[280px] flex-1' : ''}
     hover:-translate-y-0.5 hover:scale-[1.02]
     transition-all duration-200 ease-out
@@ -101,7 +105,21 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
       data-testid={`project-selector-card-${project.project.code || project.id}`}
       data-project-key={project.project.code || project.id}
     >
-      <div className="flex items-center gap-1 sm:gap-2 h-full">
+      {/* Favorite indicator - overlay star */}
+      {onFavoriteToggle && (
+        <button
+          className={`absolute top-1 right-1 w-5 h-5 hover:scale-110 transition-all cursor-pointer drop-shadow-md opacity-60 group-hover:opacity-100 ${
+            project.favorite ? 'fill-yellow-400 text-yellow-400 rotate-[15deg]' : 'fill-none text-gray-400'
+          }`}
+          onClick={handleFavoriteClick}
+          title={project.favorite ? 'Click to unfavorite' : 'Click to favorite'}
+          aria-label="Toggle favorite"
+        >
+          <StarIcon filled={!!project.favorite} />
+        </button>
+      )}
+
+      <div className="flex items-center gap-1 sm:gap-2 w-full">
         {/* Project code and title */}
         <div className="text-xs sm:text-sm font-medium flex-shrink-0 text-gray-900 dark:text-white">
           {project.project.code || project.id}
@@ -116,48 +134,51 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
             </div>
           )}
         </div>
-
-        {/* Favorite indicator - clickable */}
-        {project.favorite && (
-          <button
-            className="flex-shrink-0 hover:scale-110 transition-transform cursor-pointer"
-            onClick={handleFavoriteClick}
-            title={onFavoriteToggle ? 'Click to unfavorite' : 'Favorited project'}
-            aria-label="Toggle favorite"
-          >
-            <StarIcon filled={true} />
-          </button>
-        )}
-        {!project.favorite && onFavoriteToggle && (
-          <button
-            className="flex-shrink-0 hover:scale-110 transition-transform cursor-pointer opacity-60 hover:opacity-100"
-            onClick={handleFavoriteClick}
-            title="Click to favorite"
-            aria-label="Toggle favorite"
-          >
-            <StarIcon filled={false} />
-          </button>
-        )}
       </div>
     </div>
   )
 
-  // Only add tooltip if not showing description inline
+  // Only add hover card if not showing description inline
   if (!shouldShowDescription) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
+      <HoverCard>
+        <HoverCardTrigger asChild>
           {cardContent}
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="text-sm">
-            <div className="font-medium">{project.project.name}</div>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80 p-0">
+          <div className="p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-bold text-gray-900 dark:text-white">
+                  {project.project.code || project.id}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {project.project.name}
+                </div>
+              </div>
+              {project.favorite && (
+                <svg
+                  className="w-5 h-5 fill-yellow-400 text-yellow-400"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                  />
+                </svg>
+              )}
+            </div>
             {project.project.description && (
-              <div className="text-xs text-muted-foreground mt-1">{project.project.description}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                {project.project.description}
+              </div>
             )}
           </div>
-        </TooltipContent>
-      </Tooltip>
+        </HoverCardContent>
+      </HoverCard>
     )
   }
 

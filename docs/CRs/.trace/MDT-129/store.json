@@ -25,60 +25,10 @@
       ]
     },
     {
-      "id": "BR-2.1",
-      "kind": "behavior",
-      "text": "WHEN compactInactive is true, the system shall render inactive visible rail projects as compact code-only cards.",
-      "sourceRef": "requirements.md BR-2",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-2.2",
-      "kind": "behavior",
-      "text": "WHEN compactInactive is false, the system shall render inactive visible rail projects using medium card presentation.",
-      "sourceRef": "requirements.md BR-2",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-2.3",
       "kind": "behavior",
       "text": "WHEN an inactive visible project is rendered, the system shall not display title or description expansion in the rail.",
       "sourceRef": "requirements.md BR-2",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-3.1",
-      "kind": "behavior",
-      "text": "WHEN the selector rail renders, the system shall display a single launcher control at the end of the selector rail.",
-      "sourceRef": "requirements.md BR-3",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-3.2",
-      "kind": "behavior",
-      "text": "WHEN the launcher is activated, the system shall open a panel directly below the selector.",
-      "sourceRef": "requirements.md BR-3",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-3.3",
-      "kind": "behavior",
-      "text": "WHEN the launcher uses a visual icon, the system shall use the acclaim visual asset.",
-      "sourceRef": "requirements.md BR-3",
       "routePolicy": "bdd",
       "tags": [
         "timing:now"
@@ -355,26 +305,6 @@
       ]
     },
     {
-      "id": "BR-9.1",
-      "kind": "behavior",
-      "text": "WHEN the viewport is mobile-sized, the system shall display only the active project and launcher in the collapsed selector rail.",
-      "sourceRef": "requirements.md BR-9",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "BR-9.2",
-      "kind": "behavior",
-      "text": "WHEN a mobile user activates the launcher, the system shall provide access to the remaining projects.",
-      "sourceRef": "requirements.md BR-9",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-9.3",
       "kind": "behavior",
       "text": "WHEN responsive presentation adapts by viewport, the system shall preserve the same selector state model and expanded project list behavior.",
@@ -515,23 +445,9 @@
       ]
     },
     {
-      "id": "C4",
-      "kind": "constraint",
-      "text": "Launcher uses the existing acclaim visual asset",
-      "sourceRef": "CR:MDT-129",
-      "routePolicy": "tests"
-    },
-    {
       "id": "C7",
       "kind": "constraint",
       "text": "Active project always counts toward visibleCount but is never hidden",
-      "sourceRef": "CR:MDT-129",
-      "routePolicy": "tests"
-    },
-    {
-      "id": "C8",
-      "kind": "constraint",
-      "text": "Selector rail ends with exactly one launcher control",
       "sourceRef": "CR:MDT-129",
       "routePolicy": "tests"
     },
@@ -553,6 +469,48 @@
       "id": "BR-1.1",
       "kind": "behavior",
       "text": "WHEN the selector rail renders, the system shall display the active project as a larger card containing project code, title, and description.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN the user clicks the active project card, the system shall open the full project browser panel.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN the user hovers over an inactive project chip, the system shall display a hover card with full project details after a short delay.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN a hover card displays, the system shall show the project code, name, description, and favorite status.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.4",
+      "kind": "behavior",
+      "text": "WHEN the user stops hovering over an inactive project chip, the system shall dismiss the hover card after a short delay.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN compactInactive is true (default), the system shall render inactive visible rail projects as compact code-only cards.",
+      "sourceRef": "CR:MDT-129",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9.1",
+      "kind": "behavior",
+      "text": "WHEN the viewport is mobile-sized, the system shall display only the active project in the collapsed selector rail.",
       "sourceRef": "CR:MDT-129",
       "routePolicy": "bdd"
     }
@@ -656,45 +614,6 @@
       "sourceRef": "BR-8.1, BR-8.2, BR-8.3, BR-8.4, BR-8.5, BR-8.6, BR-8.7"
     },
     {
-      "id": "inactive_projects_display_mode",
-      "title": "Inactive visible projects display based on compact mode setting",
-      "covers": [
-        "BR-2.1",
-        "BR-2.2",
-        "BR-2.3"
-      ],
-      "given": "I have inactive visible projects in the selector rail",
-      "when": "the selector renders with <compactMode> setting",
-      "then": "inactive projects appear as <cardStyle>",
-      "sourceRef": "BR-2.1, BR-2.2, BR-2.3"
-    },
-    {
-      "id": "mobile_responsive_selector",
-      "title": "Mobile viewport shows collapsed selector rail",
-      "covers": [
-        "BR-9.1",
-        "BR-9.2",
-        "BR-9.3"
-      ],
-      "given": "I am viewing the application on a mobile-sized viewport",
-      "when": "the selector rail renders",
-      "then": "I see only the active project and launcher; activating the launcher provides access to remaining projects with the same state model",
-      "sourceRef": "BR-9.1, BR-9.2, BR-9.3"
-    },
-    {
-      "id": "launcher_opens_panel",
-      "title": "Launcher opens full project panel below selector",
-      "covers": [
-        "BR-3.1",
-        "BR-3.2",
-        "BR-3.3"
-      ],
-      "given": "I am viewing the selector rail",
-      "when": "I activate the launcher control at the end of the rail",
-      "then": "a panel opens directly below the selector showing the full project list using the acclaim visual asset",
-      "sourceRef": "BR-3.1, BR-3.2, BR-3.3"
-    },
-    {
       "id": "panel_displays_full_project_list",
       "title": "Panel displays full project list with favorites first",
       "covers": [
@@ -729,6 +648,54 @@
       "given": "I am viewing the application with an active project selected",
       "when": "the selector rail renders",
       "then": "I see the active project displayed as a larger card containing the project code, title, and description",
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "inactive_projects_display_mode",
+      "title": "Inactive visible projects display based on compact mode setting",
+      "covers": [
+        "BR-2.1",
+        "BR-2.3"
+      ],
+      "given": "I have inactive visible projects in the selector rail",
+      "when": "the selector renders with <compactMode> setting",
+      "then": "inactive projects appear as <cardStyle>",
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "mobile_responsive_selector",
+      "title": "Mobile viewport shows collapsed selector rail",
+      "covers": [
+        "BR-9.1",
+        "BR-9.3"
+      ],
+      "given": "I am viewing the application on a mobile-sized viewport",
+      "when": "the selector rail renders",
+      "then": "I see only the active project; clicking the active project provides access to remaining projects with the same state model",
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "active_project_click_opens_browser",
+      "title": "Active project card click opens full project browser",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "I am viewing the application with an active project selected",
+      "when": "I click the active project card",
+      "then": "the full project browser panel opens displaying all projects",
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "hover_card_displays_on_chip",
+      "title": "Hover card displays on inactive project chip hover",
+      "covers": [
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.4"
+      ],
+      "given": "I am viewing the selector rail with inactive project chips visible",
+      "when": "I hover over an inactive project chip",
+      "then": "a hover card appears after a short delay showing the project code, name, description, and favorite status; when I stop hovering, the card dismisses after a short delay",
       "sourceRef": "CR:MDT-129"
     }
   ],
@@ -768,40 +735,6 @@
         "ART-selector-rail"
       ],
       "sourceRef": "Active visibility guarantee"
-    },
-    {
-      "id": "OBL-inactive-projects-display-mode",
-      "title": "Render inactive visible rail projects as compact code-only chips (compactInactive=true) or medium cards (compactInactive=false)",
-      "derivedFrom": [
-        "BR-2.1",
-        "BR-2.2",
-        "BR-2.3"
-      ],
-      "artifactIds": [
-        "ART-selector-chip",
-        "ART-selector-rail",
-        "ART-config-user-toml"
-      ],
-      "sourceRef": "Inactive presentation modes"
-    },
-    {
-      "id": "OBL-launcher-and-panel-flow",
-      "title": "Display single launcher control at rail end using acclaim.svg; clicking opens panel directly below selector showing full project list",
-      "derivedFrom": [
-        "BR-3.1",
-        "BR-3.2",
-        "BR-3.3",
-        "C4",
-        "C5",
-        "C8"
-      ],
-      "artifactIds": [
-        "ART-launcher-button",
-        "ART-browser-panel",
-        "ART-selector-index",
-        "ART-asset-acclaim-svg"
-      ],
-      "sourceRef": "Progressive disclosure mechanism"
     },
     {
       "id": "OBL-panel-displays-full-list",
@@ -900,21 +833,6 @@
       "sourceRef": "Debounced state persistence"
     },
     {
-      "id": "OBL-responsive-collapse",
-      "title": "On mobile viewport, display only active project card and launcher; activating launcher provides access to remaining projects with same state model",
-      "derivedFrom": [
-        "BR-9.1",
-        "BR-9.2",
-        "BR-9.3"
-      ],
-      "artifactIds": [
-        "ART-selector-rail",
-        "ART-selector-index",
-        "ART-browser-panel"
-      ],
-      "sourceRef": "Responsive presentation"
-    },
-    {
       "id": "OBL-config-validation",
       "title": "Validate config values: visibleCount >=1 integer, compactInactive boolean; drop invalid project-state entries or fields; ignore unknown fields",
       "derivedFrom": [
@@ -935,18 +853,92 @@
       "sourceRef": "Config validation and error handling"
     },
     {
+      "id": "OBL-inactive-projects-display-mode",
+      "title": "Render inactive visible rail projects as compact chips",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.3"
+      ],
+      "artifactIds": [
+        "ART-selector-chip",
+        "ART-selector-rail",
+        "ART-config-user-toml"
+      ],
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "OBL-hover-card-on-chips",
+      "title": "Display hover card with full project details on inactive chip hover",
+      "derivedFrom": [
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.4"
+      ],
+      "artifactIds": [
+        "ART-selector-chip",
+        "ART-selector-card",
+        "ART-hover-card-component"
+      ],
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "OBL-active-project-click-opens-browser",
+      "title": "Active project card click opens full project browser panel",
+      "derivedFrom": [
+        "BR-3.1"
+      ],
+      "artifactIds": [
+        "ART-selector-rail",
+        "ART-browser-panel",
+        "ART-selector-index"
+      ],
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "OBL-responsive-collapse",
+      "title": "On mobile viewport, display only active project card; clicking it provides access to remaining projects",
+      "derivedFrom": [
+        "BR-9.1",
+        "BR-9.3"
+      ],
+      "artifactIds": [
+        "ART-selector-rail",
+        "ART-selector-index",
+        "ART-browser-panel"
+      ],
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "OBL-active-project-card-display",
+      "title": "Display active project as larger card containing code and title with favorite indicator; clicking opens browser panel",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-3.1"
+      ],
+      "artifactIds": [
+        "ART-selector-card",
+        "ART-selector-rail",
+        "ART-selector-index",
+        "ART-browser-panel",
+        "ART-selector-types"
+      ],
+      "sourceRef": "CR:MDT-129"
+    },
+    {
       "id": "OBL-test-coverage",
-      "title": "E2E tests for selector behavior covering BR-1 through BR-10; Jest unit tests for ordering and data hook logic",
+      "title": "E2E tests for selector behavior; Jest unit tests for ordering and data hook logic",
       "derivedFrom": [
         "BR-1.1",
         "BR-1.2",
         "BR-1.3",
+        "BR-1.4",
         "BR-2.1",
-        "BR-2.2",
         "BR-2.3",
         "BR-3.1",
         "BR-3.2",
         "BR-3.3",
+        "BR-3.4",
         "BR-4.1",
         "BR-4.2",
         "BR-4.3",
@@ -975,7 +967,6 @@
         "BR-8.6",
         "BR-8.7",
         "BR-9.1",
-        "BR-9.2",
         "BR-9.3",
         "BR-10.1",
         "BR-10.2",
@@ -983,29 +974,22 @@
         "BR-10.4",
         "BR-10.5",
         "BR-10.6",
-        "BR-10.7"
+        "BR-10.7",
+        "C1",
+        "C2",
+        "C3",
+        "C5",
+        "C6",
+        "C7",
+        "C9",
+        "C10"
       ],
       "artifactIds": [
         "ART-test-e2e-selector",
         "ART-test-ordering",
         "ART-test-selector-data-hook"
       ],
-      "sourceRef": "Test coverage for selector functionality"
-    },
-    {
-      "id": "OBL-active-project-card-display",
-      "title": "Display active project as larger card containing code and title with favorite indicator when favorited",
-      "derivedFrom": [
-        "BR-1.1",
-        "BR-1.2"
-      ],
-      "artifactIds": [
-        "ART-selector-card",
-        "ART-selector-rail",
-        "ART-selector-index",
-        "ART-selector-types"
-      ],
-      "sourceRef": "Active project visual hierarchy"
+      "sourceRef": "CR:MDT-129"
     }
   ],
   "artifacts": [
@@ -1038,12 +1022,6 @@
       "path": "src/components/ProjectSelector/ProjectBrowserPanel.tsx",
       "kind": "runtime",
       "sourceRef": "Full project panel component"
-    },
-    {
-      "id": "ART-launcher-button",
-      "path": "src/components/ProjectSelector/LauncherButton.tsx",
-      "kind": "runtime",
-      "sourceRef": "Launcher button with acclaim.svg"
     },
     {
       "id": "ART-selector-types",
@@ -1106,16 +1084,16 @@
       "sourceRef": "Jest tests for data hook"
     },
     {
-      "id": "ART-asset-acclaim-svg",
-      "path": "designs/acclaim.svg",
-      "kind": "doc",
-      "sourceRef": "Launcher visual asset"
-    },
-    {
       "id": "ART-hook-project-manager",
       "path": "src/hooks/useProjectManager.ts",
       "kind": "runtime",
       "sourceRef": "Existing project selection hook"
+    },
+    {
+      "id": "ART-hover-card-component",
+      "path": "src/components/UI/hover-card.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-129"
     }
   ],
   "testPlans": [
@@ -1212,11 +1190,11 @@
         "BR-1.3",
         "BR-1.4",
         "BR-2.1",
-        "BR-2.2",
         "BR-2.3",
         "BR-3.1",
         "BR-3.2",
         "BR-3.3",
+        "BR-3.4",
         "BR-4.1",
         "BR-4.2",
         "BR-4.3",
@@ -1245,15 +1223,11 @@
         "BR-8.6",
         "BR-8.7",
         "BR-9.1",
-        "BR-9.2",
         "BR-9.3",
-        "C4",
         "C5",
         "C7",
-        "C8",
         "C9"
       ],
-      "file": "tests/e2e/selector/project-selector.spec.ts",
       "sourceRef": "CR:MDT-129"
     }
   ],
@@ -1297,46 +1271,6 @@
       "sourceRef": "tasks.md#task-5"
     },
     {
-      "id": "TASK-7",
-      "title": "Create ProjectSelectorChip component for inactive project display",
-      "ownsArtifactIds": [
-        "ART-selector-chip"
-      ],
-      "makesGreenIds": [
-        "inactive_projects_display_mode",
-        "TEST-project-selector-e2e"
-      ],
-      "sourceRef": "tasks.md#task-7"
-    },
-    {
-      "id": "TASK-8",
-      "title": "Create ProjectSelectorRail component with responsive layout",
-      "ownsArtifactIds": [
-        "ART-selector-rail"
-      ],
-      "makesGreenIds": [
-        "active_project_always_visible",
-        "inactive_projects_display_mode",
-        "rail_ordering_prioritizes_favorites",
-        "mobile_responsive_selector",
-        "TEST-project-selector-e2e"
-      ],
-      "sourceRef": "tasks.md#task-8"
-    },
-    {
-      "id": "TASK-9",
-      "title": "Create LauncherButton component using acclaim.svg asset",
-      "ownsArtifactIds": [
-        "ART-launcher-button",
-        "ART-asset-acclaim-svg"
-      ],
-      "makesGreenIds": [
-        "launcher_opens_panel",
-        "TEST-project-selector-e2e"
-      ],
-      "sourceRef": "tasks.md#task-9"
-    },
-    {
       "id": "TASK-10",
       "title": "Create ProjectBrowserPanel component with full project list",
       "ownsArtifactIds": [
@@ -1347,19 +1281,6 @@
         "TEST-project-selector-e2e"
       ],
       "sourceRef": "tasks.md#task-10"
-    },
-    {
-      "id": "TASK-11",
-      "title": "Create ProjectSelector index component with panel state management",
-      "ownsArtifactIds": [
-        "ART-selector-index"
-      ],
-      "makesGreenIds": [
-        "launcher_opens_panel",
-        "mobile_responsive_selector",
-        "TEST-project-selector-e2e"
-      ],
-      "sourceRef": "tasks.md#task-11"
     },
     {
       "id": "TASK-2",
@@ -1433,6 +1354,48 @@
         "active_project_card_display",
         "active_project_favorite_indicator",
         "toggle_favorite_by_clicking_star",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "TASK-11",
+      "title": "Create ProjectSelector index component with panel state management",
+      "ownsArtifactIds": [
+        "ART-selector-index"
+      ],
+      "makesGreenIds": [
+        "mobile_responsive_selector",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Create ProjectSelectorChip component for inactive project display",
+      "ownsArtifactIds": [
+        "ART-selector-chip",
+        "ART-hover-card-component"
+      ],
+      "makesGreenIds": [
+        "inactive_projects_display_mode",
+        "hover_card_displays_on_chip",
+        "TEST-project-selector-e2e"
+      ],
+      "sourceRef": "CR:MDT-129"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Create ProjectSelectorRail component with responsive layout",
+      "ownsArtifactIds": [
+        "ART-selector-rail"
+      ],
+      "makesGreenIds": [
+        "active_project_always_visible",
+        "inactive_projects_display_mode",
+        "active_project_click_opens_browser",
+        "mobile_responsive_selector",
+        "rail_ordering_prioritizes_favorites",
         "TEST-project-selector-e2e"
       ],
       "sourceRef": "CR:MDT-129"

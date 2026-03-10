@@ -24,20 +24,17 @@
   Owns: `ART-selector-card`
   Makes Green: `active_project_card_display`, `active_project_favorite_indicator`, `TEST-project-selector-e2e`, `toggle_favorite_by_clicking_star`
 - Create ProjectSelectorChip component for inactive project display (`TASK-7`)
-  Owns: `ART-selector-chip`
-  Makes Green: `inactive_projects_display_mode`, `TEST-project-selector-e2e`
+  Owns: `ART-hover-card-component`, `ART-selector-chip`
+  Makes Green: `hover_card_displays_on_chip`, `inactive_projects_display_mode`, `TEST-project-selector-e2e`
 - Create ProjectSelectorRail component with responsive layout (`TASK-8`)
   Owns: `ART-selector-rail`
-  Makes Green: `active_project_always_visible`, `inactive_projects_display_mode`, `mobile_responsive_selector`, `rail_ordering_prioritizes_favorites`, `TEST-project-selector-e2e`
-- Create LauncherButton component using acclaim.svg asset (`TASK-9`)
-  Owns: `ART-asset-acclaim-svg`, `ART-launcher-button`
-  Makes Green: `launcher_opens_panel`, `TEST-project-selector-e2e`
+  Makes Green: `active_project_always_visible`, `active_project_click_opens_browser`, `inactive_projects_display_mode`, `mobile_responsive_selector`, `rail_ordering_prioritizes_favorites`, `TEST-project-selector-e2e`
 - Create ProjectBrowserPanel component with full project list (`TASK-10`)
   Owns: `ART-browser-panel`
   Makes Green: `panel_displays_full_project_list`, `TEST-project-selector-e2e`
 - Create ProjectSelector index component with panel state management (`TASK-11`)
   Owns: `ART-selector-index`
-  Makes Green: `launcher_opens_panel`, `mobile_responsive_selector`, `TEST-project-selector-e2e`
+  Makes Green: `mobile_responsive_selector`, `TEST-project-selector-e2e`
 - Integrate project switching with useProjectManager and state persistence (`TASK-12`)
   Owns: `ART-browser-panel`, `ART-hook-project-manager`, `ART-selector-data-hook`, `ART-selector-rail`, `ART-test-e2e-selector`
   Makes Green: `state_persists_after_selection`, `switch_project_from_panel`, `switch_project_from_rail`, `TEST-project-selector-e2e`
@@ -46,12 +43,11 @@
 
 | Artifact ID | Owning Task IDs |
 |---|---|
-| `ART-asset-acclaim-svg` | `TASK-9` |
 | `ART-browser-panel` | `TASK-10`, `TASK-12` |
 | `ART-config-selector-state` | `TASK-3` |
 | `ART-config-user-toml` | `TASK-3` |
 | `ART-hook-project-manager` | `TASK-12` |
-| `ART-launcher-button` | `TASK-9` |
+| `ART-hover-card-component` | `TASK-7` |
 | `ART-ordering-utils` | `TASK-2` |
 | `ART-selector-card` | `TASK-6` |
 | `ART-selector-chip` | `TASK-7` |
@@ -71,17 +67,18 @@
 |---|---|
 | `active_project_always_visible` | `TASK-2`, `TASK-5`, `TASK-8` |
 | `active_project_card_display` | `TASK-6` |
+| `active_project_click_opens_browser` | `TASK-8` |
 | `active_project_favorite_indicator` | `TASK-6` |
 | `configuration_controls_selector` | `TASK-3`, `TASK-4` |
+| `hover_card_displays_on_chip` | `TASK-7` |
 | `inactive_projects_display_mode` | `TASK-7`, `TASK-8` |
-| `launcher_opens_panel` | `TASK-9`, `TASK-11` |
 | `mobile_responsive_selector` | `TASK-8`, `TASK-11` |
 | `panel_displays_full_project_list` | `TASK-2`, `TASK-5`, `TASK-10` |
 | `rail_ordering_prioritizes_favorites` | `TASK-2`, `TASK-5`, `TASK-8` |
 | `state_persists_after_selection` | `TASK-3`, `TASK-4`, `TASK-12` |
 | `switch_project_from_panel` | `TASK-12` |
 | `switch_project_from_rail` | `TASK-12` |
-| `TEST-project-selector-e2e` | `TASK-6`, `TASK-7`, `TASK-8`, `TASK-9`, `TASK-10`, `TASK-11`, `TASK-12` |
+| `TEST-project-selector-e2e` | `TASK-6`, `TASK-7`, `TASK-8`, `TASK-10`, `TASK-11`, `TASK-12` |
 | `TEST-selector-api` | `TASK-0`, `TASK-1`, `TASK-3` |
 | `TEST-selector-data-hook` | `TASK-0`, `TASK-1`, `TASK-4` |
 | `TEST-selector-ordering` | `TASK-0`, `TASK-2` |
