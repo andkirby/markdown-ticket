@@ -68,8 +68,8 @@ Questions to resolve during architecture/design:
 
 | Area | Question | Constraints |
 |------|----------|-------------|
-| Architecture | Extend MDT-091 test patterns or create separate HTTP test suite? | Must reuse existing infrastructure |
-| Test Client | How to implement `HTTPMCPClient`? Extend `MCPTestClient` or new base class? | Must match stdio client interface |
+| ~~Architecture~~ | ~~Extend MDT-091 test patterns or create separate HTTP test suite?~~ | ~~Must reuse existing infrastructure~~ **RESOLVED**: Parameterize existing tests |
+| ~~Test Client~~ | ~~How to implement `HTTPMCPClient`? Extend `MCPTestClient` or new base class?~~ | ~~Must match stdio client interface~~ **RESOLVED**: Use existing `MCPClient` with `{ transport: 'http' }` |
 | SSE Testing | How to test server-sent events (GET /mcp)? | Requires real SSE client or simulation |
 | Security Testing | How to safely test auth/rate limiting without real credentials? | Must use test tokens/mocks |
 | Test Execution | Run tests sequentially or in parallel? Both transports at once or separate runs? | Must maintain isolation |
@@ -83,8 +83,8 @@ Questions to resolve during architecture/design:
 
 ### Decisions Deferred
 
-- Implementation approach (determined by `/mdt:architecture`)
-- Specific test files and structure (determined by `/mdt:architecture`)
+- ~~Implementation approach~~ **RESOLVED**: Parameterize existing tests (see §6 Clarifications)
+- ~~Specific test files and structure~~ **RESOLVED**: Same files, parameterized transport
 - Task breakdown (determined by `/mdt:tasks`)
 - Whether to test Phase 2 features in same CR or separate
 
@@ -106,7 +106,6 @@ Questions to resolve during architecture/design:
 - [ ] Test isolation maintained (no cross-test state leakage)
 - [ ] Tests pass consistently in CI/CD environment
 - [ ] No process leaks after HTTP server tests
-- [ ] Memory usage stable during test execution
 
 ### Edge Cases
 
@@ -131,3 +130,43 @@ No baseline metrics yet — establish during implementation:
 - Test execution time (target: < 90 seconds)
 - Number of tests passing (target: 221+ matching stdio coverage)
 - Code coverage percentage for HTTP transport
+
+## 6. Clarifications
+
+### Session 2026-03-10
+
+- **Q**: Do we need separate HTTP test files, or can we parameterize existing stdio tests?
+- **A**: The `MCPClient` already supports both transports via `transport` option. We can parameterize tests to run with both transports:
+
+```typescript
+const transports: ('stdio' | 'http')[] = ['stdio', 'http']
+
+transports.forEach(transport => {
+  describe(`${transport} transport`, () => {
+    let mcpClient: MCPClient
+
+    beforeEach(async () => {
+      mcpClient = new MCPClient(testEnv, { transport })
+      await mcpClient.start()
+    })
+
+    // existing test cases unchanged
+  })
+})
+```
+
+**Benefits**:
+- Single source of truth for test logic
+- No code duplication
+- Automatic parity between transports
+- Only transport-specific assertions need conditional handling (e.g., stderr checks for stdio only)
+
+**Considerations**:
+
+| Aspect | Stdio | HTTP |
+|--------|-------|------|
+| Server startup | Process spawn | Port binding (3002) |
+| Error surface | Process exit, stderr | HTTP status codes |
+| Connection issues | Process death | Network errors |
+
+**Recommendation**: Create parameterized test runner. Most tests work identically; only a few need transport-specific assertions.
