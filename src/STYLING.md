@@ -192,6 +192,7 @@ Global classes in `src/index.css`:
 | Class | Purpose |
 |-------|---------|
 | `.btn`, `.btn-*` | Button variants |
+| `.badge`, `.badge[*]` | Ticket attribute badges (see badge.css) |
 | `.card`, `.card-*` | Card structure |
 | `.input`, `.input-error` | Form inputs |
 | `.label` | Form labels |
@@ -202,6 +203,8 @@ Global classes in `src/index.css`:
 | `.fav-star`, `.fav-star--*` | Favorite star indicator |
 | `.count-badge`, `.count-badge--*` | Count indicators |
 | `.status-dot`, `.status-dot--*` | Pulsing status dots |
+
+**Note:** Badge styles use data attributes (`.badge[data-status="approved"]`) instead of CVA. See [BADGE_ARCHITECTURE.md](BADGE_ARCHITECTURE.md) for the complete pattern.
 
 ---
 

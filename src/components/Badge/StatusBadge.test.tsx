@@ -2,6 +2,7 @@
  * MDT-135: StatusBadge Component Unit Tests
  *
  * Tests status badge rendering for all CRStatus values.
+ * Uses data attributes for color mapping (see badge.css).
  * Coverage: BR-1, BR-2, BR-3
  */
 
@@ -33,81 +34,75 @@ describe('StatusBadge', () => {
 
     it('should apply Badge base styling', () => {
       const { container } = render(<StatusBadge status="In Progress" />)
-      const badge = container.firstChild
+      const badge = container.firstChild as HTMLElement
 
+      expect(badge).toHaveClass('badge')
       expect(badge).toHaveClass('rounded-full')
     })
 
     it('should apply outline variant styling', () => {
       const { container } = render(<StatusBadge status="Approved" />)
-      const badge = container.firstChild
+      const badge = container.firstChild as HTMLElement
 
       expect(badge).toHaveClass('border')
     })
   })
 
-  describe('status color mapping', () => {
-    it('should apply gray colors for Proposed status', () => {
+  describe('data attribute mapping', () => {
+    it('should set data-status="proposed" for Proposed status', () => {
       const { container } = render(<StatusBadge status="Proposed" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge?.className).toMatch(/gray/)
+      expect(badge?.getAttribute('data-status')).toBe('proposed')
     })
 
-    it('should apply blue colors for Approved status', () => {
+    it('should set data-status="approved" for Approved status', () => {
       const { container } = render(<StatusBadge status="Approved" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge?.className).toMatch(/blue/)
+      expect(badge?.getAttribute('data-status')).toBe('approved')
     })
 
-    it('should apply yellow colors for In Progress status', () => {
+    it('should set data-status="in-progress" for In Progress status', () => {
       const { container } = render(<StatusBadge status="In Progress" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge?.className).toMatch(/yellow/)
+      expect(badge?.getAttribute('data-status')).toBe('in-progress')
     })
 
-    it('should apply green colors for Implemented status', () => {
+    it('should set data-status="implemented" for Implemented status', () => {
       const { container } = render(<StatusBadge status="Implemented" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge?.className).toMatch(/green/)
+      expect(badge?.getAttribute('data-status')).toBe('implemented')
     })
 
-    it('should apply red colors for Rejected status', () => {
+    it('should set data-status="rejected" for Rejected status', () => {
       const { container } = render(<StatusBadge status="Rejected" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge?.className).toMatch(/red/)
+      expect(badge?.getAttribute('data-status')).toBe('rejected')
     })
 
-    it('should apply orange colors for On Hold status', () => {
+    it('should set data-status="on-hold" for On Hold status', () => {
       const { container } = render(<StatusBadge status="On Hold" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge?.className).toMatch(/orange/)
+      expect(badge?.getAttribute('data-status')).toBe('on-hold')
     })
 
-    it('should apply purple colors for Partially Implemented status', () => {
+    it('should set data-status="partially-implemented" for Partially Implemented status', () => {
       const { container } = render(<StatusBadge status="Partially Implemented" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/purple/)
+      expect(badge?.getAttribute('data-status')).toBe('partially-implemented')
     })
-  })
 
-  describe('dark mode consistency (BR-3)', () => {
-    it.each(allStatuses)('should use 950 shade for dark mode background on "%s"', (status) => {
-      const { container } = render(<StatusBadge status={status} />)
+    it('should set data-status for unknown status (lowercase with hyphens)', () => {
+      const { container } = render(<StatusBadge status="Unknown Status" />)
       const badge = container.firstChild as HTMLElement
-      const classes = badge.className
 
-      // Extract dark mode background shade
-      const darkBgMatch = classes.match(/dark:bg-(\w+)-(\d+)/)
-      if (darkBgMatch) {
-        expect(darkBgMatch[2]).toBe('950')
-      }
+      expect(badge?.getAttribute('data-status')).toBe('unknown-status')
     })
   })
 
@@ -117,8 +112,7 @@ describe('StatusBadge', () => {
       const badge = container.firstChild as HTMLElement
 
       expect(screen.getByText('Unknown Status')).toBeInTheDocument()
-      // Should fall back to gray
-      expect(badge?.className).toMatch(/gray/)
+      expect(badge).toHaveClass('badge')
     })
   })
 

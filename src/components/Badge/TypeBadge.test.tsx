@@ -2,6 +2,7 @@
  * MDT-135: TypeBadge Component Unit Tests
  *
  * Tests type badge rendering with gradient styling.
+ * Uses data attributes for color mapping (see badge.css).
  * Coverage: BR-5, BR-7
  */
 
@@ -32,79 +33,71 @@ describe('TypeBadge', () => {
 
     it('should apply Badge base styling', () => {
       const { container } = render(<TypeBadge type="Feature Enhancement" />)
-      const badge = container.firstChild
+      const badge = container.firstChild as HTMLElement
 
+      expect(badge).toHaveClass('badge')
       expect(badge).toHaveClass('rounded-full')
     })
   })
 
-  describe('gradient styling (BR-5)', () => {
-    it.each(allTypes)('should use gradient styling for type "%s"', (type) => {
-      const { container } = render(<TypeBadge type={type} />)
-      const badge = container.firstChild as HTMLElement
-
-      expect(badge.className).toContain('bg-gradient-to-r')
-    })
-
-    it('should apply blue/indigo gradient for Feature Enhancement', () => {
+  describe('data attribute mapping', () => {
+    it('should set data-type="feature-enhancement" for Feature Enhancement', () => {
       const { container } = render(<TypeBadge type="Feature Enhancement" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/blue|indigo/)
+      expect(badge?.getAttribute('data-type')).toBe('feature-enhancement')
     })
 
-    it('should apply orange/amber gradient for Bug Fix', () => {
+    it('should set data-type="bug-fix" for Bug Fix', () => {
       const { container } = render(<TypeBadge type="Bug Fix" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/orange|amber/)
+      expect(badge?.getAttribute('data-type')).toBe('bug-fix')
     })
 
-    it('should apply purple/violet gradient for Architecture', () => {
+    it('should set data-type="architecture" for Architecture', () => {
       const { container } = render(<TypeBadge type="Architecture" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/purple|violet/)
+      expect(badge?.getAttribute('data-type')).toBe('architecture')
     })
 
-    it('should apply slate/gray gradient for Technical Debt', () => {
+    it('should set data-type="technical-debt" for Technical Debt', () => {
       const { container } = render(<TypeBadge type="Technical Debt" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/slate|gray/)
+      expect(badge?.getAttribute('data-type')).toBe('technical-debt')
     })
 
-    it('should apply cyan/teal gradient for Documentation', () => {
+    it('should set data-type="documentation" for Documentation', () => {
       const { container } = render(<TypeBadge type="Documentation" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/cyan|teal/)
+      expect(badge?.getAttribute('data-type')).toBe('documentation')
     })
 
-    it('should apply pink/rose gradient for Research', () => {
+    it('should set data-type="research" for Research', () => {
       const { container } = render(<TypeBadge type="Research" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/pink|rose/)
+      expect(badge?.getAttribute('data-type')).toBe('research')
     })
-  })
 
-  describe('dark mode consistency', () => {
-    it.each(allTypes)('should include dark mode classes for type "%s"', (type) => {
-      const { container } = render(<TypeBadge type={type} />)
+    it('should set data-type for unknown type (lowercase with hyphens)', () => {
+      const { container } = render(<TypeBadge type="Unknown Type" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toContain('dark:')
+      expect(badge?.getAttribute('data-type')).toBe('unknown-type')
     })
   })
 
   describe('unknown type handling', () => {
     it('should render unknown type with fallback styling', () => {
       const { container } = render(<TypeBadge type="Unknown" />)
-      const badge = container.firstChild
+      const badge = container.firstChild as HTMLElement
 
       expect(screen.getByText('Unknown')).toBeInTheDocument()
-      expect(badge).toBeTruthy()
+      expect(badge).toHaveClass('badge')
     })
   })
 })
