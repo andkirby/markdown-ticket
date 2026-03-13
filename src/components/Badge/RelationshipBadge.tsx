@@ -11,7 +11,7 @@
 import { useParams } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { classifyLink } from '../../utils/linkProcessor'
-import { Badge } from '../UI/badge'
+import { Badge } from '../ui/badge'
 import SmartLink from '../SmartLink'
 import type { RelationshipVariant } from './types'
 

@@ -9,7 +9,7 @@
  */
 
 import { cn } from '../../lib/utils'
-import { Badge } from '../UI/badge'
+import { Badge } from '../ui/badge'
 import type { PriorityVariantProps } from './types'
 
 export interface PriorityBadgeProps extends PriorityVariantProps {

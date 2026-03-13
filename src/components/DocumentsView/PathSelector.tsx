@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useCallback, useEffect, useState } from 'react'
-import { ScrollArea } from '@/components/UI/scroll-area'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface PathItem {
   name: string
