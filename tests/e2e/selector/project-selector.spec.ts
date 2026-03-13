@@ -191,26 +191,23 @@ test.describe('Project Selector - Inactive Projects Display', () => {
   })
 })
 
-test.describe('Project Selector - Launcher and Panel', () => {
-  test('launcher opens full project panel below selector', async ({ page, e2eContext }) => {
+test.describe('Project Selector - Panel', () => {
+  test('active project card opens full project panel', async ({ page, e2eContext }) => {
     const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
-    // Verify launcher is visible
-    const launcher = page.locator(selectorSelectors.launcher)
-    await expect(launcher).toBeVisible()
-
-    // Click launcher to open panel
-    await launcher.click()
+    // Click active project card to open panel
+    const activeCard = page.locator(selectorSelectors.activeProjectCard)
+    await activeCard.click()
 
     // Verify panel opens below selector
     const panel = page.locator(selectorSelectors.projectPanel)
     await expect(panel).toBeVisible()
   })
 
-  test('panel displays full project list with favorites first', async ({ page, e2eContext }) => {
+  test('panel displays full project list with active first', async ({ page, e2eContext }) => {
     // Get initial project count before creating new ones
     const backendUrl = process.env.VITE_BACKEND_URL || 'http://localhost:4001'
     const initialProjectsResponse = await fetch(`${backendUrl}/api/projects`)
@@ -228,13 +225,16 @@ test.describe('Project Selector - Launcher and Panel', () => {
     await page.goto(`/prj/${firstProject.projectCode}`)
     await waitForBoardReady(page)
 
-    // Open panel
-    await page.locator(selectorSelectors.launcher).click()
+    // Open panel by clicking active project card
+    const activeCard = page.locator(selectorSelectors.activeProjectCard)
+    await activeCard.click()
+
     const panel = page.locator(selectorSelectors.projectPanel)
     await expect(panel).toBeVisible()
 
     // Verify all projects are shown as cards (initial + 3 new ones)
-    const projectCards = panel.locator(selectorSelectors.projectPanelCard)
+    // Use descendant selector to get only cards within the panel
+    const projectCards = panel.locator('[data-testid^="project-selector-card-"]')
     await expect(projectCards).toHaveCount(initialCount + 3)
 
     // Verify cards contain code, title, and description
@@ -276,13 +276,15 @@ test.describe('Project Selector - Project Switching', () => {
     await page.goto(`/prj/${firstProject.projectCode}`)
     await waitForBoardReady(page)
 
-    // Open panel
-    await page.locator(selectorSelectors.launcher).click()
+    // Open panel by clicking active project card
+    const activeCard = page.locator(selectorSelectors.activeProjectCard)
+    await activeCard.click()
+
     const panel = page.locator(selectorSelectors.projectPanel)
     await expect(panel).toBeVisible()
 
-    // Click project in panel
-    const secondProjectCard = panel.locator(`${selectorSelectors.projectPanelCard}:has-text("${secondProject.key}")`)
+    // Click project in panel (use descendant selector to get cards within panel)
+    const secondProjectCard = panel.locator(`[data-testid^="project-selector-card-"]:has-text("${secondProject.key}")`)
     await secondProjectCard.click()
 
     // Wait for switch
@@ -381,10 +383,6 @@ test.describe('Project Selector - Responsive Behavior', () => {
     // Active project should be visible
     const activeCard = page.locator(selectorSelectors.activeProjectCard)
     await expect(activeCard).toBeVisible()
-
-    // Launcher is hidden on mobile - clicking active card opens panel instead
-    const launcher = page.locator(selectorSelectors.launcher)
-    await expect(launcher).toBeHidden()
 
     // Inactive cards may be hidden in collapsed mode
     // Open panel by clicking active project card
