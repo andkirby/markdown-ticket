@@ -204,10 +204,10 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
                   )
                 : (
                     <span
-                      className={`flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full transition-colors duration-200 ${
+                      className={`count-badge ${
                         mergeMode || (isActive && !mergeMode)
-                          ? 'bg-orange-500 text-white' // Orange in merge mode or switch mode
-                          : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' // Gray in normal mode
+                          ? 'count-badge--active'
+                          : 'count-badge--inactive'
                       }`}
                     >
                       {ticketCount}
@@ -220,7 +220,7 @@ const StatusToggle: React.FC<StatusToggleProps> = ({
 
       {/* Visual indicator for active merge mode */}
       {mergeMode && (
-        <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+        <div className="status-dot status-dot--sm status-dot--orange" />
       )}
     </div>
   )
