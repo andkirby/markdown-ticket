@@ -63,7 +63,7 @@ return (
 ### Reusable Component
 
 ```tsx
-import { Modal } from '@/components/UI/Modal'
+import { Modal } from '@/components/ui/Modal'
 
 <Modal isOpen={show} onClose={() => setShow(false)} size="lg">
   <ModalHeader>Title</ModalHeader>
@@ -76,7 +76,7 @@ import { Modal } from '@/components/UI/Modal'
 
 | Component | Location |
 |-----------|----------|
-| UI/Modal | `src/components/UI/Modal.tsx` |
+| UI/Modal | `src/components/ui/Modal.tsx` |
 | RouteErrorModal | `src/components/RouteErrorModal.tsx` |
 | AddProjectModal | `src/components/AddProjectModal/` |
 | ProjectBrowserPanel | `src/components/ProjectSelector/` |

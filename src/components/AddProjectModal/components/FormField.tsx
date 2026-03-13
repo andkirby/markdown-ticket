@@ -1,8 +1,8 @@
 import { Check, CircleX, Folder, HelpCircle } from 'lucide-react'
 import * as React from 'react'
 import { useState } from 'react'
-import { Button } from '../../UI'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../UI/tooltip'
+import { Button } from '../../ui'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip'
 import FolderBrowserModal from './FolderBrowserModal'
 
 interface FormFieldProps {

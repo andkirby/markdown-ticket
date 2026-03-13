@@ -8,13 +8,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../UI/dropdown-menu'
+} from '../ui/dropdown-menu'
 import { getVisibleColumns } from '../../config'
 import { getColumnGradient } from '../../utils/colorUtils'
 import { sortTickets } from '../../utils/sorting'
 import { ResolutionDialog } from '../ResolutionDialog'
 import TicketCard from '../TicketCard'
-import { ScrollArea } from '../UI/scroll-area'
+import { ScrollArea } from '../ui/scroll-area'
 import StatusToggle from './StatusToggle'
 import { useButtonModes } from './useButtonModes'
 import { useDropZone } from './useDropZone'

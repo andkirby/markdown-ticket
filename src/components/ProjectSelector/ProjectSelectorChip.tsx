@@ -16,7 +16,7 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from '../UI/hover-card'
+} from '../ui/hover-card'
 import { Icon } from '../shared/Icon'
 
 interface ProjectSelectorChipProps {
