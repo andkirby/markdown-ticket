@@ -1,8 +1,8 @@
 import type { Status } from '../types'
 import * as React from 'react'
 import { getStatusColor, getStatusDescription, getStatusLabel } from '../config/statusConfig'
-import { Button } from './UI/Button'
-import { Modal, ModalBody, ModalFooter, ModalHeader } from './UI/Modal'
+import { Button } from './ui/Button'
+import { Modal, ModalBody, ModalFooter, ModalHeader } from './ui/Modal'
 
 interface ResolutionDialogProps {
   isOpen: boolean

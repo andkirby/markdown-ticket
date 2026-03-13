@@ -15,7 +15,7 @@ import { TicketDocumentTabs } from './TicketViewer/TicketDocumentTabs'
 import { useTicketDocumentContent } from './TicketViewer/useTicketDocumentContent'
 import { useTicketDocumentNavigation } from './TicketViewer/useTicketDocumentNavigation'
 import { useTicketDocumentRealtime } from './TicketViewer/useTicketDocumentRealtime'
-import { Modal, ModalBody, ModalHeader } from './UI/Modal'
+import { Modal, ModalBody, ModalHeader } from './ui/Modal'
 
 interface TicketViewerProps {
   ticket: Ticket | null
