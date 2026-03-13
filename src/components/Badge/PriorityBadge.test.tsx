@@ -2,6 +2,7 @@
  * MDT-135: PriorityBadge Component Unit Tests
  *
  * Tests priority badge rendering with gradient styling.
+ * Uses data attributes for color mapping (see badge.css).
  * Coverage: BR-4, BR-6
  */
 
@@ -25,66 +26,57 @@ describe('PriorityBadge', () => {
 
     it('should apply Badge base styling', () => {
       const { container } = render(<PriorityBadge priority="High" />)
-      const badge = container.firstChild
+      const badge = container.firstChild as HTMLElement
 
+      expect(badge).toHaveClass('badge')
       expect(badge).toHaveClass('rounded-full')
     })
   })
 
-  describe('gradient styling (BR-4)', () => {
-    it.each(allPriorities)('should use gradient styling for priority "%s"', (priority) => {
-      const { container } = render(<PriorityBadge priority={priority} />)
-      const badge = container.firstChild as HTMLElement
-
-      expect(badge.className).toContain('bg-gradient-to-r')
-    })
-
-    it('should apply rose gradient for Critical priority', () => {
+  describe('data attribute mapping', () => {
+    it('should set data-priority="critical" for Critical priority', () => {
       const { container } = render(<PriorityBadge priority="Critical" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/rose/)
+      expect(badge?.getAttribute('data-priority')).toBe('critical')
     })
 
-    it('should apply rose gradient for High priority', () => {
+    it('should set data-priority="high" for High priority', () => {
       const { container } = render(<PriorityBadge priority="High" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/rose/)
+      expect(badge?.getAttribute('data-priority')).toBe('high')
     })
 
-    it('should apply amber gradient for Medium priority', () => {
+    it('should set data-priority="medium" for Medium priority', () => {
       const { container } = render(<PriorityBadge priority="Medium" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/amber/)
+      expect(badge?.getAttribute('data-priority')).toBe('medium')
     })
 
-    it('should apply emerald gradient for Low priority', () => {
+    it('should set data-priority="low" for Low priority', () => {
       const { container } = render(<PriorityBadge priority="Low" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/emerald/)
+      expect(badge?.getAttribute('data-priority')).toBe('low')
     })
-  })
 
-  describe('dark mode consistency', () => {
-    it.each(allPriorities)('should include dark mode classes for priority "%s"', (priority) => {
-      const { container } = render(<PriorityBadge priority={priority} />)
+    it('should set data-priority for unknown priority (lowercase)', () => {
+      const { container } = render(<PriorityBadge priority="Unknown Priority" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toContain('dark:')
+      expect(badge?.getAttribute('data-priority')).toBe('unknown-priority')
     })
   })
 
   describe('unknown priority handling', () => {
     it('should render unknown priority with fallback styling', () => {
       const { container } = render(<PriorityBadge priority="Unknown" />)
-      const badge = container.firstChild
+      const badge = container.firstChild as HTMLElement
 
       expect(screen.getByText('Unknown')).toBeInTheDocument()
-      // Should fall back to a default
-      expect(badge).toBeTruthy()
+      expect(badge).toHaveClass('badge')
     })
   })
 })

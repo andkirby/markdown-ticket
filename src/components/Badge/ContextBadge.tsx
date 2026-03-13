@@ -2,7 +2,7 @@
  * MDT-135: ContextBadge Component
  *
  * Displays context badges for phase/epic, assignee, and worktree.
- * Uses centralized color mappings from badgeVariants.ts.
+ * Uses data attributes for color mapping (see badge.css).
  *
  * Obligations: OBL-context-badges
  * Coverage: BR-8
@@ -10,7 +10,6 @@
 
 import { cn } from '../../lib/utils'
 import { Badge } from '../UI/badge'
-import { contextVariants } from './badgeVariants'
 import type { ContextVariant } from './types'
 
 export interface ContextBadgeProps {
@@ -41,7 +40,8 @@ export function ContextBadge({ variant, value, worktreePath, className }: Contex
   return (
     <Badge
       variant="outline"
-      className={cn(contextVariants({ variant }), className)}
+      className={cn('badge', className)}
+      data-context={variant}
       title={title}
     >
       {displayValue}

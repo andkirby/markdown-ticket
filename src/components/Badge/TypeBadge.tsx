@@ -2,7 +2,7 @@
  * MDT-135: TypeBadge Component
  *
  * Displays a badge for ticket type with gradient styling.
- * Uses centralized color mappings from badgeVariants.ts.
+ * Uses data attributes for color mapping (see badge.css).
  *
  * Obligations: OBL-type-badge
  * Coverage: BR-5, BR-7
@@ -10,12 +10,19 @@
 
 import { cn } from '../../lib/utils'
 import { Badge } from '../UI/badge'
-import { typeVariants } from './badgeVariants'
 import type { TypeVariantProps } from './types'
 
 export interface TypeBadgeProps extends TypeVariantProps {
   /** Additional CSS classes */
   className?: string
+}
+
+/**
+ * Converts type string to data attribute format.
+ * "Feature Enhancement" -> "feature-enhancement" (lowercase with hyphens)
+ */
+function formatDataAttr(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, '-')
 }
 
 /**
@@ -29,7 +36,8 @@ export function TypeBadge({ type, className, ...props }: TypeBadgeProps & React.
   return (
     <Badge
       variant="outline"
-      className={cn(typeVariants({ type }), className)}
+      className={cn('badge', className)}
+      data-type={formatDataAttr(type)}
       {...props}
     >
       {type}

@@ -2,6 +2,7 @@
  * MDT-135: ContextBadge Component Unit Tests
  *
  * Tests context badges (phase/epic, assignee, worktree).
+ * Uses data attributes for color mapping (see badge.css).
  * Coverage: BR-8
  */
 
@@ -21,25 +22,25 @@ describe('ContextBadge', () => {
       expect(screen.getByText('Phase 1')).toBeInTheDocument()
     })
 
-    it('should apply gray colors for phase', () => {
+    it('should set data-context="phase" for phase variant', () => {
       const { container } = render(<ContextBadge variant="phase" value="Epic A" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/gray/)
+      expect(badge?.getAttribute('data-context')).toBe('phase')
     })
   })
 
   describe('assignee variant', () => {
-    it('should render assignee value with icon', () => {
+    it('should render assignee value', () => {
       render(<ContextBadge variant="assignee" value="john" />)
       expect(screen.getByText('john')).toBeInTheDocument()
     })
 
-    it('should apply purple colors for assignee', () => {
+    it('should set data-context="assignee" for assignee variant', () => {
       const { container } = render(<ContextBadge variant="assignee" value="jane" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/purple/)
+      expect(badge?.getAttribute('data-context')).toBe('assignee')
     })
   })
 
@@ -49,18 +50,17 @@ describe('ContextBadge', () => {
       expect(screen.getByText(/worktree/i)).toBeInTheDocument()
     })
 
-    it('should apply emerald colors for worktree', () => {
+    it('should set data-context="worktree" for worktree variant', () => {
       const { container } = render(<ContextBadge variant="worktree" />)
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toMatch(/emerald/)
+      expect(badge?.getAttribute('data-context')).toBe('worktree')
     })
 
     it('should show worktree path in title when provided', () => {
       const { container } = render(<ContextBadge variant="worktree" worktreePath="/path/to/worktree" />)
       const badge = container.firstChild as HTMLElement
 
-      // Title attribute should contain path
       expect(badge?.getAttribute('title')).toContain('/path/to/worktree')
     })
   })
@@ -70,20 +70,10 @@ describe('ContextBadge', () => {
       const { container } = render(
         <ContextBadge variant={variant} value={variant === 'worktree' ? undefined : 'test'} />,
       )
-      const badge = container.firstChild
-
-      expect(badge).toHaveClass('rounded-full')
-    })
-  })
-
-  describe('dark mode consistency', () => {
-    it.each(['phase', 'assignee', 'worktree'] as const)('should include dark mode classes for variant "%s"', (variant) => {
-      const { container } = render(
-        <ContextBadge variant={variant} value={variant === 'worktree' ? undefined : 'test'} />,
-      )
       const badge = container.firstChild as HTMLElement
 
-      expect(badge.className).toContain('dark:')
+      expect(badge).toHaveClass('badge')
+      expect(badge).toHaveClass('rounded-full')
     })
   })
 })
