@@ -6,8 +6,8 @@ import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
-import { Button } from './UI/index'
-import { ButtonGroup, ButtonGroupSeparator } from './UI/button-group'
+import { Button } from './ui/index'
+import { ButtonGroup, ButtonGroupSeparator } from './ui/button-group'
 
 interface HamburgerMenuProps {
   onAddProject: () => void
