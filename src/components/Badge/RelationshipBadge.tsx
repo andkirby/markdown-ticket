@@ -2,7 +2,7 @@
  * MDT-135: RelationshipBadge Component
  *
  * Displays relationship badges for related, depends, and blocks links.
- * Uses centralized color mappings from badgeVariants.ts.
+ * Uses data attributes for color mapping (see badge.css).
  *
  * Obligations: OBL-relationship-badges
  * Coverage: BR-8
@@ -13,7 +13,6 @@ import { cn } from '../../lib/utils'
 import { classifyLink } from '../../utils/linkProcessor'
 import { Badge } from '../UI/badge'
 import SmartLink from '../SmartLink'
-import { relationshipVariants } from './badgeVariants'
 import type { RelationshipVariant } from './types'
 
 export interface RelationshipBadgeProps {
@@ -50,7 +49,8 @@ export function RelationshipBadge({ variant, links, className }: RelationshipBad
   return (
     <Badge
       variant="outline"
-      className={cn(relationshipVariants({ variant }), className)}
+      className={cn('badge', className)}
+      data-relationship={variant}
       title={title}
     >
       <span className="mr-1">{icon}</span>

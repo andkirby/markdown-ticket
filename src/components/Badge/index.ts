@@ -3,6 +3,7 @@
  *
  * Centralized badge components for ticket attribute rendering.
  * This module owns ALL badge styling - no other component defines badge colors.
+ * Uses data attributes for color mapping (see badge.css).
  *
  * Obligations: OBL-single-owner
  */
@@ -22,15 +23,6 @@ export type { ContextBadgeProps } from './ContextBadge'
 
 export { RelationshipBadge } from './RelationshipBadge'
 export type { RelationshipBadgeProps } from './RelationshipBadge'
-
-// Variant functions (for advanced use cases)
-export {
-  contextVariants,
-  priorityVariants,
-  relationshipVariants,
-  statusVariants,
-  typeVariants,
-} from './badgeVariants'
 
 // Types
 export type {

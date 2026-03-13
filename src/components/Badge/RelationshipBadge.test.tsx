@@ -2,6 +2,7 @@
  * MDT-135: RelationshipBadge Component Unit Tests
  *
  * Tests relationship badges (related, depends, blocks).
+ * Uses data attributes for color mapping (see badge.css).
  * Coverage: BR-8
  */
 
@@ -47,15 +48,15 @@ describe('RelationshipBadge', () => {
       expect(screen.getByText('TEST-101')).toBeInTheDocument()
     })
 
-    it('should apply cyan colors for related', () => {
+    it('should set data-relationship="related" for related variant', () => {
       const { container } = render(
         <TestHarness projectCode="TEST">
           <RelationshipBadge variant="related" links={['TEST-100']} />
         </TestHarness>,
       )
-      const badge = container.querySelector('.rounded-full')
+      const badge = container.querySelector('.badge') as HTMLElement
 
-      expect(badge?.className).toMatch(/cyan/)
+      expect(badge?.getAttribute('data-relationship')).toBe('related')
     })
   })
 
@@ -71,15 +72,15 @@ describe('RelationshipBadge', () => {
       expect(screen.getByText('TEST-050')).toBeInTheDocument()
     })
 
-    it('should apply amber colors for depends', () => {
+    it('should set data-relationship="depends" for depends variant', () => {
       const { container } = render(
         <TestHarness projectCode="TEST">
           <RelationshipBadge variant="depends" links={['TEST-050']} />
         </TestHarness>,
       )
-      const badge = container.querySelector('.rounded-full')
+      const badge = container.querySelector('.badge') as HTMLElement
 
-      expect(badge?.className).toMatch(/amber/)
+      expect(badge?.getAttribute('data-relationship')).toBe('depends')
     })
   })
 
@@ -95,15 +96,15 @@ describe('RelationshipBadge', () => {
       expect(screen.getByText('TEST-200')).toBeInTheDocument()
     })
 
-    it('should apply rose colors for blocks', () => {
+    it('should set data-relationship="blocks" for blocks variant', () => {
       const { container } = render(
         <TestHarness projectCode="TEST">
           <RelationshipBadge variant="blocks" links={['TEST-200']} />
         </TestHarness>,
       )
-      const badge = container.querySelector('.rounded-full')
+      const badge = container.querySelector('.badge') as HTMLElement
 
-      expect(badge?.className).toMatch(/rose/)
+      expect(badge?.getAttribute('data-relationship')).toBe('blocks')
     })
   })
 
@@ -128,22 +129,9 @@ describe('RelationshipBadge', () => {
           <RelationshipBadge variant={variant} links={['TEST-100']} />
         </TestHarness>,
       )
-      const badge = container.querySelector('.rounded-full')
+      const badge = container.querySelector('.badge')
 
       expect(badge).toBeTruthy()
-    })
-  })
-
-  describe('dark mode consistency', () => {
-    it.each(['related', 'depends', 'blocks'] as const)('should include dark mode classes for variant "%s"', (variant) => {
-      const { container } = render(
-        <TestHarness projectCode="TEST">
-          <RelationshipBadge variant={variant} links={['TEST-100']} />
-        </TestHarness>,
-      )
-      const badge = container.querySelector('.rounded-full')
-
-      expect(badge?.className).toContain('dark:')
     })
   })
 
