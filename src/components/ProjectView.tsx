@@ -7,7 +7,7 @@ import { sortTickets } from '../utils/sorting'
 import Board from './Board'
 import { StatusBadge } from './Badge'
 import { DocumentsLayout } from './DocumentsView'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './UI/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import { TicketCode } from './TicketCode'
 
 type ViewMode = 'board' | 'list' | 'documents'

@@ -16,9 +16,9 @@ import Column from './Column'
 import { FilterControls } from './FilterControls'
 import { HamburgerMenu } from './HamburgerMenu'
 import { SortControls } from './SortControls'
-import { Alert, AlertDescription, AlertTitle } from './UI/alert'
-import { Button } from './UI/index'
-import { ScrollArea } from './UI/scroll-area'
+import { Alert, AlertDescription, AlertTitle } from './ui/alert'
+import { Button } from './ui/index'
+import { ScrollArea } from './ui/scroll-area'
 
 interface BoardProps {
   onTicketClick: (ticket: Ticket) => void

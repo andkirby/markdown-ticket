@@ -7,8 +7,8 @@ import { MobileLogo } from './AppHeader'
 import { getProjectCode } from '../utils/projectUtils'
 import { getCurrentProject } from '../utils/routing'
 import { AddProjectModal } from './AddProjectModal'
-import { Alert, AlertDescription, AlertTitle } from './UI/alert'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './UI/tooltip'
+import { Alert, AlertDescription, AlertTitle } from './ui/alert'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 
 interface ConfigInfo {
   configDir: string
