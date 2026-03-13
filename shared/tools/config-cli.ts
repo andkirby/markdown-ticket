@@ -4,7 +4,7 @@ import type { GlobalConfig } from '../services/project/types.js'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import toml from 'toml'
+import { parseToml } from '../utils/toml.js'
 import { getDefaultPaths } from '../utils/constants.js'
 
 /**
@@ -138,7 +138,7 @@ class ConfigManager {
       }
 
       const configContent = fs.readFileSync(this.configPath, 'utf8')
-      const parsedConfig = toml.parse(configContent)
+      const parsedConfig = parseToml(configContent) as any
 
       // Check for old config structure and migrate if needed
       if (parsedConfig.dashboard) {
