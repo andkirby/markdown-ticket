@@ -79,6 +79,16 @@ priority: Medium
 
 ## 5. Verification
 
+> Requirements trace projection: [requirements.trace.md](./MDT-098/requirements.trace.md)
+> Requirements notes: [requirements.md](./MDT-098/requirements.md)
+> BDD trace projection: [bdd.trace.md](./MDT-098/bdd.trace.md)
+> BDD notes: [bdd.md](./MDT-098/bdd.md)
+> Architecture trace projection: [architecture.trace.md](./MDT-098/architecture.trace.md)
+> Architecture notes: [architecture.md](./MDT-098/architecture.md)
+> Tests trace projection: [tests.trace.md](./MDT-098/tests.trace.md)
+> Tasks trace projection: [tasks.trace.md](./MDT-098/tasks.trace.md)
+> Tasks: [tasks.md](./MDT-098/tasks.md)
+
 ### How to Verify Success
 - Manual verification: Create/modify configuration file programmatically and verify valid TOML output
 - Automated verification: Run existing test suite with new library
@@ -100,3 +110,7 @@ Replaced custom TOML implementation with `smol-toml` library providing full pars
 - Arrays formatted with spaces: `[ "a", "b", "c" ]`
 
 **Verification**: All acceptance criteria met. Configuration files can now be both read and written programmatically with data integrity maintained through roundtrip operations.
+
+## Related Documentation
+- See `docs/CRs/MDT-098/toml-migration.md` for detailed migration notes
+- Architecture pattern documented in `docs/architecture/toml-operations.md`

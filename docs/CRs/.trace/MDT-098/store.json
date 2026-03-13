@@ -1,0 +1,250 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-098"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN ConfigRepository reads TOML files, the system shall use @mdt/shared/utils/toml.ts parseToml function",
+      "sourceRef": "toml-standardization.md lines 64-67",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN server/routes/system.ts reads TOML files, the system shall use @mdt/shared/utils/toml.ts parseToml function",
+      "sourceRef": "toml-standardization.md lines 70-73",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHEN shared/tools/config-cli.ts reads TOML files, the system shall use @mdt/shared/utils/toml.ts parseToml function",
+      "sourceRef": "toml-standardization.md lines 76-79",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "AFTER all TOML operations are standardized, the system shall remove the toml v3.0.0 package from dependencies",
+      "sourceRef": "toml-standardization.md lines 89-94",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "No direct imports of 'toml' package shall remain in server/ or shared/ directories (except shared/utils/toml.ts)",
+      "sourceRef": "toml-standardization.md line 141",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN user saves path configuration changes in the path selector modal, the system shall persist those changes to the project configuration file",
+      "sourceRef": "tests/e2e/documents/path-persistence.spec.ts lines 103-108",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "path_changes_persist",
+      "title": "Path selector changes persist after save",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "I am viewing the documents view",
+      "when": "I open the path selector modal, toggle a document path checkbox, and click save",
+      "then": "the checkbox state should match my saved selection when reopening the modal",
+      "sourceRef": "tests/e2e/documents/path-persistence.spec.ts"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-config-repository-uses-shared",
+      "title": "ConfigRepository shall use @mdt/shared/utils/toml.ts for all TOML parse operations",
+      "derivedFrom": [
+        "BR-1"
+      ],
+      "artifactIds": [
+        "ART-shared-utils-toml",
+        "ART-config-repository"
+      ],
+      "sourceRef": "requirements.trace.md BR-1"
+    },
+    {
+      "id": "OBL-system-routes-uses-shared",
+      "title": "server/routes/system.ts shall use @mdt/shared/utils/toml.ts for all TOML parse operations",
+      "derivedFrom": [
+        "BR-2"
+      ],
+      "artifactIds": [
+        "ART-shared-utils-toml",
+        "ART-system-routes"
+      ],
+      "sourceRef": "requirements.trace.md BR-2"
+    },
+    {
+      "id": "OBL-config-cli-uses-shared",
+      "title": "config-cli.ts shall use @mdt/shared/utils/toml.ts for all TOML parse operations",
+      "derivedFrom": [
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-shared-utils-toml",
+        "ART-config-cli"
+      ],
+      "sourceRef": "requirements.trace.md BR-3"
+    },
+    {
+      "id": "OBL-remove-toml-package",
+      "title": "Remove toml v3.0.0 package from dependencies after standardization",
+      "derivedFrom": [
+        "BR-4"
+      ],
+      "artifactIds": [
+        "ART-package-json"
+      ],
+      "sourceRef": "requirements.trace.md BR-4"
+    },
+    {
+      "id": "OBL-no-direct-toml-imports",
+      "title": "No direct imports of toml package shall remain in server/ or shared/ directories",
+      "derivedFrom": [
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-config-repository",
+        "ART-system-routes",
+        "ART-config-cli"
+      ],
+      "sourceRef": "requirements.trace.md C1"
+    },
+    {
+      "id": "OBL-path-persistence-single-entrypoint",
+      "title": "Path configuration persistence requires single-entrypoint TOML operations to prevent data corruption from incompatible parsers",
+      "derivedFrom": [
+        "BR-5"
+      ],
+      "artifactIds": [
+        "ART-shared-utils-toml",
+        "ART-config-repository",
+        "ART-e2e-path-persistence"
+      ],
+      "sourceRef": "bdd.trace.md BR-5"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-shared-utils-toml",
+      "path": "shared/utils/toml.ts",
+      "kind": "runtime",
+      "sourceRef": "toml-standardization.md line 10"
+    },
+    {
+      "id": "ART-config-repository",
+      "path": "server/repositories/ConfigRepository.ts",
+      "kind": "runtime",
+      "sourceRef": "toml-standardization.md line 11"
+    },
+    {
+      "id": "ART-system-routes",
+      "path": "server/routes/system.ts",
+      "kind": "runtime",
+      "sourceRef": "toml-standardization.md line 13"
+    },
+    {
+      "id": "ART-config-cli",
+      "path": "shared/tools/config-cli.ts",
+      "kind": "runtime",
+      "sourceRef": "toml-standardization.md line 13"
+    },
+    {
+      "id": "ART-package-json",
+      "path": "package.json",
+      "kind": "config",
+      "sourceRef": "requirements.md BR-4"
+    },
+    {
+      "id": "ART-e2e-path-persistence",
+      "path": "tests/e2e/documents/path-persistence.spec.ts",
+      "kind": "test",
+      "sourceRef": "bdd.trace.md BR-5"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-path-persistence",
+      "kind": "e2e",
+      "title": "Path selector persistence E2E test",
+      "covers": [
+        "BR-5"
+      ],
+      "file": "tests/e2e/documents/path-persistence.spec.ts",
+      "sourceRef": "scenario:path_changes_persist"
+    },
+    {
+      "id": "TEST-toml-standardization",
+      "kind": "unit",
+      "title": "TOML standardization validation tests",
+      "covers": [
+        "C1",
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4"
+      ],
+      "file": "server/tests/unit/toml-standardization.test.ts",
+      "sourceRef": "architecture.trace.md OBL-no-direct-toml-imports"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Remove unused toml package dependencies",
+      "ownsArtifactIds": [
+        "ART-package-json"
+      ],
+      "makesGreenIds": [
+        "TEST-toml-standardization"
+      ],
+      "sourceRef": "requirements.md BR-4"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Verify TOML standardization and run validation tests",
+      "ownsArtifactIds": [
+        "ART-shared-utils-toml",
+        "ART-config-repository",
+        "ART-system-routes",
+        "ART-config-cli",
+        "ART-e2e-path-persistence"
+      ],
+      "makesGreenIds": [
+        "TEST-toml-standardization",
+        "TEST-path-persistence",
+        "path_changes_persist"
+      ],
+      "sourceRef": "tests.md"
+    }
+  ]
+}

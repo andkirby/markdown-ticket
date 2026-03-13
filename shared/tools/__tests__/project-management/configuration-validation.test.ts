@@ -7,7 +7,7 @@ import type { Buffer } from 'node:buffer'
 import { execSync } from 'node:child_process'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { parse as parseToml } from 'toml'
+import { parseToml } from '../../../utils/toml.js'
 import { TestEnvironment } from '../../../test-lib/index'
 
 // Global test environment instance

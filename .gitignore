@@ -102,3 +102,7 @@ designs/
 
 # debug spec-trace files
 spec-trace*.md
+**/*.trace.md
+*.bun-build
+/*.md
+/*.txt
