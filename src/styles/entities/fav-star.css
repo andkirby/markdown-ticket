@@ -1,0 +1,101 @@
+/**
+ * Favorite Star Styles
+ *
+ * Themeable star icon for project favorites.
+ * Uses CSS variables for light/dark mode support.
+ *
+ * Usage:
+ *   <Icon name="fav-star" className="fav-star" />
+ *   <Icon name="fav-star" className="fav-star active" />
+ *   <Icon name="fav-star" className="fav-star fav-star--chip" />
+ */
+
+/* Base star styles */
+.fav-star {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: var(--star-inactive-fill);
+  color: var(--star-inactive-color);
+  transition: fill 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Hover state - brighter appearance (only on direct hover) */
+.fav-star:hover {
+  fill: var(--star-hover-fill);
+  color: var(--star-hover-color);
+}
+
+/* Active/favorited state */
+.fav-star.active {
+  fill: var(--star-active-fill);
+  color: var(--star-active-color);
+}
+
+/* Active star turns yellow on card hover OR direct star hover */
+.fav-star.active:hover,
+.group:hover .fav-star.active {
+  fill: var(--star-active-hover-fill);
+  color: var(--star-active-hover-color);
+}
+
+/* Chip variant - smaller, rotated overlay */
+.fav-star--chip {
+  position: absolute;
+  top: 0;
+  right: -0.375rem;
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: var(--star-chip-fill);
+  color: var(--star-chip-color);
+  transform: rotate(15deg);
+  opacity: 0.6;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.1));
+}
+
+.fav-star--chip:hover,
+.group:hover .fav-star--chip {
+  fill: var(--star-hover-fill);
+  color: var(--star-hover-color);
+  opacity: 1;
+}
+
+/* Card variant - inline with content */
+.fav-star--card {
+  flex-shrink: 0;
+}
+
+/* CSS Variables - Light Mode (default) */
+:root {
+  --star-inactive-fill: transparent;
+  --star-inactive-color: theme('colors.gray.400');
+
+  --star-hover-fill: theme('colors.yellow.500');
+  --star-hover-color: theme('colors.yellow.600');
+
+  --star-active-fill: theme('colors.gray.400');
+  --star-active-color: theme('colors.gray.500');
+
+  --star-active-hover-fill: theme('colors.yellow.500');
+  --star-active-hover-color: theme('colors.yellow.600');
+
+  --star-chip-fill: theme('colors.gray.400');
+  --star-chip-color: theme('colors.gray.500');
+}
+
+/* CSS Variables - Dark Mode */
+.dark {
+  --star-inactive-fill: transparent;
+  --star-inactive-color: theme('colors.slate.500');
+
+  --star-hover-fill: theme('colors.yellow.400');
+  --star-hover-color: theme('colors.yellow.500');
+
+  --star-active-fill: theme('colors.slate.500');
+  --star-active-color: theme('colors.slate.400');
+
+  --star-active-hover-fill: theme('colors.yellow.400');
+  --star-active-hover-color: theme('colors.yellow.500');
+
+  --star-chip-fill: theme('colors.slate.500');
+  --star-chip-color: theme('colors.slate.400');
+}

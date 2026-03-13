@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import './styles/entities/fav-star.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -191,32 +193,30 @@
     @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
   }
 
-  .badge {
-    @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  /* Count badges (small numbers in toggles/buttons) */
+  .count-badge {
+    @apply flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full transition-colors duration-200;
   }
 
-  .badge-primary {
-    @apply border-transparent bg-primary text-primary-foreground hover:bg-primary/80;
+  .count-badge--active {
+    @apply bg-orange-500 text-white;
   }
 
-  .badge-secondary {
-    @apply border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  .count-badge--inactive {
+    @apply bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300;
   }
 
-  .badge-success {
-    @apply bg-success-100 text-success-800 border-transparent;
+  /* Status indicators (pulsing dots) */
+  .status-dot {
+    @apply absolute rounded-full animate-pulse;
   }
 
-  .badge-warning {
-    @apply bg-warning-100 text-warning-800 border-transparent;
+  .status-dot--sm {
+    @apply -top-1 -right-1 w-2 h-2;
   }
 
-  .badge-error {
-    @apply bg-error-100 text-error-800 border-transparent;
-  }
-
-  .badge-outline {
-    @apply text-foreground border;
+  .status-dot--orange {
+    @apply bg-orange-500;
   }
 
   .avatar {
