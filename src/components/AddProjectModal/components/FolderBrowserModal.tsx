@@ -1,8 +1,8 @@
 import { ChevronRight, Folder } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/UI/index'
-import { ScrollArea } from '@/components/UI/scroll-area'
+import { Button } from '@/components/ui/index'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { usePathResolution } from '@/hooks/usePathResolution'
 
 interface DirectoryItem {

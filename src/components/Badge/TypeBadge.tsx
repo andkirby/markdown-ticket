@@ -9,7 +9,7 @@
  */
 
 import { cn } from '../../lib/utils'
-import { Badge } from '../UI/badge'
+import { Badge } from '../ui/badge'
 import type { TypeVariantProps } from './types'
 
 export interface TypeBadgeProps extends TypeVariantProps {

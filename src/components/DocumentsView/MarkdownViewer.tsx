@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import TableOfContents from '@/components/shared/TableOfContents'
-import { ScrollArea } from '@/components/UI/scroll-area'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { extractTableOfContents } from '@/utils/tableOfContents'
 import MarkdownContent from '../MarkdownContent'
 

@@ -31,7 +31,7 @@ import { useProjectManager } from '@/hooks/useProjectManager'
 import { useSelectorData } from './useSelectorData'
 import ProjectSelectorRail from './ProjectSelectorRail'
 import ProjectBrowserPanel from './ProjectBrowserPanel'
-import { TooltipProvider } from '../UI/tooltip'
+import { TooltipProvider } from '../ui/tooltip'
 
 /**
  * ProjectSelector component
