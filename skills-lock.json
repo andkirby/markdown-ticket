@@ -11,6 +11,11 @@
       "sourceType": "github",
       "computedHash": "7075ab30f588019197a2f1518bb4c9d33d69d33352af079b5f9c60303ad3886e"
     },
+    "react": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "computedHash": "b838edcf3c3a56e2e2b2eef0876bc7d3c36bb79ff1026017ed14a0ea34b7ac98"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",

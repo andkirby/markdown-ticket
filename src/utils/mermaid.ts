@@ -1,4 +1,5 @@
 import mermaid from 'mermaid'
+import { ADAPTIVE_SCALE, SCALE_FACTORS, THEME_CONFIG, ZOOM_LIMITS } from './mermaid/constants'
 
 // Vendor-prefixed Fullscreen API extensions
 interface HTMLElementWithFullscreen extends HTMLElement {
@@ -39,9 +40,7 @@ function initMermaid() {
       startOnLoad: false,
       theme: isDark ? 'dark' : 'default',
       themeVariables: {
-        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-        fontSize: '14px',
-        background: 'transparent',
+        ...THEME_CONFIG,
         primaryColor: isDark ? '#1f2937' : '#f9fafb',
         primaryTextColor: isDark ? '#f9fafb' : '#1f2937',
       },
@@ -210,7 +209,7 @@ function updateFullscreenButtons() {
         const isInModal = !!diagram.closest('[role="dialog"]') || !!diagram.closest('.modal')
 
         // Calculate adaptive scale by comparing rendered sizes
-        let adaptiveScale = 2.3 // Fallback default
+        let adaptiveScale: number = ADAPTIVE_SCALE.DEFAULT // Fallback default
 
         // Get current rendered dimensions
         const containerRect = container.getBoundingClientRect()
@@ -218,8 +217,8 @@ function updateFullscreenButtons() {
 
         if (containerRect.width > 0 && containerRect.height > 0 && diagramRect.width > 0 && diagramRect.height > 0) {
           // Get available screen space (90% of viewport)
-          const maxWidth = window.innerWidth * 0.9
-          const maxHeight = window.innerHeight * 0.9
+          const maxWidth = window.innerWidth * SCALE_FACTORS.FULLSCREEN_FIT
+          const maxHeight = window.innerHeight * SCALE_FACTORS.FULLSCREEN_FIT
 
           // Calculate what scale would make the current diagram fit the target size
           const scaleX = maxWidth / diagramRect.width
@@ -229,12 +228,12 @@ function updateFullscreenButtons() {
           const calculatedScale = Math.min(scaleX, scaleY)
 
           // Apply reasonable bounds to the calculated scale
-          adaptiveScale = Math.max(0.5, Math.min(8, calculatedScale))
+          adaptiveScale = Math.max(ADAPTIVE_SCALE.MIN, Math.min(ADAPTIVE_SCALE.MAX, calculatedScale))
         }
         else {
           // Fallback to context-based scaling if no dimensions available
           if (parentContainer && !isInModal) {
-            adaptiveScale = 3.0 // Documents view
+            adaptiveScale = ADAPTIVE_SCALE.DOCUMENTS_VIEW // Documents view
           }
         }
 
@@ -280,7 +279,7 @@ function enableZoom(container: HTMLElement) {
     return
 
   // Get the adaptive scale that was set during fullscreen entry
-  const adaptiveScale = Number.parseFloat(diagram.dataset.fullscreenScale || '2.3')
+  const adaptiveScale = Number.parseFloat(diagram.dataset.fullscreenScale || String(ADAPTIVE_SCALE.DEFAULT))
   let scale = adaptiveScale
   let isDragging = false
   let dragStart = { x: 0, y: 0 }
@@ -296,23 +295,23 @@ function enableZoom(container: HTMLElement) {
 
     // Get adaptive max zoom based on current rendered dimensions
     const diagramRect = diagram.getBoundingClientRect()
-    let maxZoom = 10 // Default higher limit
+    let maxZoom: number = ZOOM_LIMITS.DEFAULT_MAX
 
-    if (diagramRect.width > 800 || diagramRect.height > 600) {
-      maxZoom = 15 // Very wide/tall diagrams get higher zoom
+    if (diagramRect.width > ZOOM_LIMITS.WIDTH_THRESHOLD || diagramRect.height > ZOOM_LIMITS.HEIGHT_THRESHOLD) {
+      maxZoom = ZOOM_LIMITS.WIDE_MAX
     }
-    if (diagramRect.width > 1200 || diagramRect.height > 800) {
-      maxZoom = 20 // Extremely wide diagrams get even higher zoom
+    if (diagramRect.width > ZOOM_LIMITS.ULTRA_WIDTH_THRESHOLD || diagramRect.height > ZOOM_LIMITS.ULTRA_HEIGHT_THRESHOLD) {
+      maxZoom = ZOOM_LIMITS.ULTRA_WIDE_MAX
     }
 
-    // Use percentage-based scaling (10% of current scale)
-    const scaleStep = scale * 0.1 // 10% of current scale
-    const pinchScaleStep = scale * 0.15 // 15% of current scale for pinch
+    // Use percentage-based scaling
+    const scaleStep = scale * SCALE_FACTORS.WHEEL_STEP
+    const pinchScaleStep = scale * SCALE_FACTORS.PINCH_STEP
 
     // Handle pinch-to-zoom on trackpads (ctrlKey is set during pinch gestures)
     if (e.ctrlKey) {
       const delta = e.deltaY > 0 ? -pinchScaleStep : pinchScaleStep
-      const newScale = Math.max(0.1, Math.min(maxZoom, scale + delta))
+      const newScale = Math.max(ZOOM_LIMITS.MIN, Math.min(maxZoom, scale + delta))
 
       if (newScale !== scale) {
         scale = newScale
@@ -320,9 +319,9 @@ function enableZoom(container: HTMLElement) {
       }
     }
     else {
-      // Regular scroll wheel zoom - 10% of current scale
+      // Regular scroll wheel zoom
       const delta = e.deltaY > 0 ? -scaleStep : scaleStep
-      const newScale = Math.max(0.1, Math.min(maxZoom, scale + delta))
+      const newScale = Math.max(ZOOM_LIMITS.MIN, Math.min(maxZoom, scale + delta))
 
       if (newScale !== scale) {
         scale = newScale
@@ -391,19 +390,19 @@ function enableZoom(container: HTMLElement) {
       if (lastTouchDistance > 0) {
         // Get adaptive zoom limits for touch as well using rendered dimensions
         const diagramRect = diagram.getBoundingClientRect()
-        let maxZoom = 10
+        let maxZoom: number = ZOOM_LIMITS.DEFAULT_MAX
 
-        if (diagramRect.width > 800 || diagramRect.height > 600) {
-          maxZoom = 15
+        if (diagramRect.width > ZOOM_LIMITS.WIDTH_THRESHOLD || diagramRect.height > ZOOM_LIMITS.HEIGHT_THRESHOLD) {
+          maxZoom = ZOOM_LIMITS.WIDE_MAX
         }
-        if (diagramRect.width > 1200 || diagramRect.height > 800) {
-          maxZoom = 20
+        if (diagramRect.width > ZOOM_LIMITS.ULTRA_WIDTH_THRESHOLD || diagramRect.height > ZOOM_LIMITS.ULTRA_HEIGHT_THRESHOLD) {
+          maxZoom = ZOOM_LIMITS.ULTRA_WIDE_MAX
         }
 
-        // Use percentage-based scaling for touch as well (10% of current scale)
-        const touchScaleStep = scale * 0.1
+        // Use percentage-based scaling for touch as well
+        const touchScaleStep = scale * SCALE_FACTORS.WHEEL_STEP
         const delta = (distance - lastTouchDistance) > 0 ? touchScaleStep : -touchScaleStep
-        const newScale = Math.max(0.1, Math.min(maxZoom, scale + delta))
+        const newScale = Math.max(ZOOM_LIMITS.MIN, Math.min(maxZoom, scale + delta))
 
         if (newScale !== scale) {
           scale = newScale
