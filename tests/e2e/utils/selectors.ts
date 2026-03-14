@@ -208,6 +208,32 @@ export const documentSelectors = {
 } as const
 
 /**
+ * Path selector selectors (for document configuration modal)
+ */
+export const pathSelectorSelectors = {
+  /** Configure paths button in documents view header */
+  configureButton: '[data-testid="configure-paths-button"]',
+  /** Path selector modal container */
+  pathSelector: '[data-testid="path-selector"]',
+  /** Checkbox for a specific path (use with path, e.g., path-checkbox-docs)
+   *  Special cases: 'root' for ./, other paths have / replaced with -
+   */
+  pathCheckbox: (path: string) => {
+    // Map path to the safe testid format used in the component
+    const safeTestId = path === './'
+      ? 'root'
+      : path.replace(/\//g, '-').replace(/^\./, 'root')
+    return `[data-testid="path-checkbox-${safeTestId}"]`
+  },
+  /** Cancel button */
+  cancelButton: '[data-testid="path-selector-cancel"]',
+  /** Save button */
+  saveButton: '[data-testid="path-selector-save"]',
+  /** Selected count display */
+  count: '[data-testid="path-selector-count"]',
+} as const
+
+/**
  * Project selector selectors (MDT-129)
  */
 export const selectorSelectors = {

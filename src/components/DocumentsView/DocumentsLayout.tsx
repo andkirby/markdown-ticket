@@ -371,6 +371,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
               onClick={() => setShowPathSelector(true)}
               className="p-1 hover:bg-muted rounded transition-colors"
               title="Configure document paths"
+              data-testid="configure-paths-button"
             >
               <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
             </button>

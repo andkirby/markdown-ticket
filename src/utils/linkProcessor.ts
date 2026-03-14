@@ -196,9 +196,9 @@ function extractDocumentPaths(projectConfig: ProjectConfig | undefined): string[
   if (!projectConfig)
     return []
 
-  // Handle nested document.paths structure
-  if (projectConfig.document?.paths) {
-    return projectConfig.document.paths
+  // Handle nested document.paths structure under project
+  if (projectConfig.project?.document?.paths) {
+    return projectConfig.project.document.paths
   }
 
   return []

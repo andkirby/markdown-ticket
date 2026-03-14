@@ -129,13 +129,13 @@ excludeFolders = ["node_modules"]
       expect(config.ticketsPath).toBeNull()
     })
 
-    it('should handle legacy document.paths format', async () => {
+    it('should handle current project.document.paths format', async () => {
       const configContent = `
 [project]
 name = "Test Project"
 code = "TEST"
 
-[document]
+[project.document]
 paths = ["docs", "src"]
 `
       await fs.writeFile(path.join(tempDir, '.mdt-config.toml'), configContent)

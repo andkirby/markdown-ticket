@@ -53,10 +53,10 @@ export function ViewModeSwitcher({
         <button
           data-testid="documents-button"
           onClick={() => onModeChange('documents')}
-          className={`h-12 w-12 rounded-md transition-all border-2 ${
+          className={`h-12 w-12 rounded-md transition-all border ${
             isDocumentsView
-              ? 'border-2 border-primary'
-              : 'border-2 border-transparent hover:border-muted-foreground/30'
+              ? 'border-primary'
+              : 'border-transparent hover:border-muted-foreground/30'
           }`}
           type="button"
           title="Documents View"

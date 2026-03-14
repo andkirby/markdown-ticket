@@ -8,7 +8,7 @@ import process from 'node:process'
 import { getConfigDir } from '@mdt/shared/utils/constants.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import { Router } from 'express'
-import * as toml from 'toml'
+import { parseToml } from '@mdt/shared/utils/toml.js'
 
 interface FileInvoker {
   clearCache: () => void
@@ -238,7 +238,7 @@ export function createSystemRouter(
         const configDir = getConfigDir()
         const configPath = path.join(configDir, 'config.toml')
         const configContent = await fs.readFile(configPath, 'utf8')
-        const parsedConfig = toml.parse(configContent)
+        const parsedConfig = parseToml(configContent) as any
         const discoveryPaths = parsedConfig.discovery?.searchPaths || []
 
         // More precise matching: path must start with discovery path AND
@@ -352,7 +352,7 @@ export function createSystemRouter(
 
       try {
         const configContent = await fs.readFile(configPath, 'utf8')
-        const parsedConfig = toml.parse(configContent)
+        const parsedConfig = parseToml(configContent) as any
 
         // Extract configuration using proper TOML parsing
         const response = {
@@ -420,7 +420,7 @@ export function createSystemRouter(
 
       try {
         const configContent = await fs.readFile(configPath, 'utf8')
-        const parsedConfig = toml.parse(configContent)
+        const parsedConfig = parseToml(configContent) as any
 
         res.json(parsedConfig)
       }
@@ -648,7 +648,7 @@ export function createSystemRouter(
       try {
         const userTomlPath = path.join(configDir, 'user.toml')
         const userTomlContent = await fs.readFile(userTomlPath, 'utf8')
-        const parsedConfig = toml.parse(userTomlContent)
+        const parsedConfig = parseToml(userTomlContent) as any
 
         // Check for [ui.projectSelector] section
         if (parsedConfig.ui?.projectSelector) {
