@@ -34,7 +34,7 @@ export function BoardListToggle({
       data-testid="board-list-toggle"
       data-current-mode={currentMode}
       onClick={handleClick}
-      className={`h-12 w-12 rounded-md transition-all border-2 ${
+      className={`h-12 w-12 rounded-md transition-all border ${
         isDocumentsView
           ? 'border-transparent opacity-60 hover:border-muted-foreground/30'
           : 'border-primary hover:border-muted-foreground/30'
@@ -54,7 +54,7 @@ export function BoardListToggle({
       {/* Hover overlay - hidden in documents view, shown with hover in board/list view */}
       <div
         data-testid="board-list-toggle-overlay"
-        className={`absolute inset-0 bg-background/95 rounded-md border-2 border-primary flex items-center justify-center transition-opacity animate-in fade-in duration-150 pointer-events-none ${
+        className={`absolute inset-0 bg-background/95 rounded-md border border-primary flex items-center justify-center transition-opacity animate-in fade-in duration-150 pointer-events-none ${
           isDocumentsView
             ? 'hidden'
             : 'opacity-0 hover:opacity-100'

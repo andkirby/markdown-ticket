@@ -1,6 +1,6 @@
 ---
 code: MDT-109
-status: Proposed
+status: Implemented
 dateCreated: 2025-12-28T19:13:17.813Z
 type: Bug Fix
 priority: Medium
@@ -61,18 +61,12 @@ Add `parsed.project?.document?.paths` and `data.config?.project?.document?.paths
 | `src/components/DocumentsView/PathSelector.tsx:37-38` | Expression updated | Change to `data.config?.project?.document?.paths` |
 
 ## 5. Acceptance Criteria
-
 ### Functional
 
-- [ ] `ConfigRepository._parseConfig()` reads paths from `[project.document]` TOML table
-- [ ] `/api/documents?projectId=markdown-ticket` returns document tree (not 404)
-- [ ] PathSelector checkboxes show pre-selected when Edit clicked
-- [ ] Configured paths display correctly in Documents view
-
-### Non-Functional
-
-- [ ] No breaking changes to existing configurations using legacy formats
-- [ ] No changes to API contracts or response structures
+- [x] `ConfigRepository._parseConfig()` reads paths from `[project.document]` TOML table
+- [x] `/api/documents?projectId=markdown-ticket` returns document tree (not 404)
+- [x] PathSelector checkboxes show pre-selected when Edit clicked
+- [x] Configured paths display correctly in Documents view
 
 ### Testing
 

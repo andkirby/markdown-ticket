@@ -116,19 +116,19 @@ export class ProjectConfigService implements IProjectConfigService {
         ticketsPath: finalTicketsPath,
       }
 
-      // Initialize document configuration if not present
-      if (!config.document)
-        config.document = {}
+      // Ensure project.document structure exists
+      if (!config.project.document)
+        config.project.document = {}
 
       // Auto-add custom tickets path to excludeFolders if it's not the default
       // This prevents tickets from being included in document discovery
       if (finalTicketsPath && finalTicketsPath !== DEFAULTS.TICKETS_PATH) {
-        if (!config.document.excludeFolders) {
-          config.document.excludeFolders = []
+        if (!config.project.document.excludeFolders) {
+          config.project.document.excludeFolders = []
         }
         // Add the custom tickets path if not already excluded
-        if (!config.document.excludeFolders.includes(finalTicketsPath)) {
-          config.document.excludeFolders.push(finalTicketsPath)
+        if (!config.project.document.excludeFolders.includes(finalTicketsPath)) {
+          config.project.document.excludeFolders.push(finalTicketsPath)
           logQuiet(this.quiet, `Added custom tickets path to excludeFolders: ${finalTicketsPath}`)
         }
       }
@@ -168,8 +168,8 @@ export class ProjectConfigService implements IProjectConfigService {
         description: '',
         repository: '',
         ticketsPath: DEFAULTS.TICKETS_PATH,
+        document: {},
       },
-      document: {},
     }
   }
 
@@ -264,12 +264,24 @@ export class ProjectConfigService implements IProjectConfigService {
     try {
       const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
       if (fileExists(configPath)) {
-        // Use Partial since parsed data might be incomplete
-        const localConfig = parseToml(readFile(configPath)) as Partial<ProjectConfig>
-        if (!localConfig.document) {
-          localConfig.document = {}
+        // Use 'any' because TypeScript type has document as sibling, but TOML structure nests it under project
+        const localConfig = parseToml(readFile(configPath)) as any
+
+        // Ensure project.document structure exists
+        if (!localConfig.project) {
+          localConfig.project = {}
         }
-        localConfig.document.paths = documentPaths
+        if (!localConfig.project.document) {
+          localConfig.project.document = {}
+        }
+
+        // Remove old buggy [document] section if exists (MDT-098)
+        // The TOML file should only have [project.document], not a top-level [document]
+        delete localConfig.document
+
+        // Set paths under project.document to match TOML structure [project.document.paths]
+        localConfig.project.document.paths = documentPaths
+
         writeFile(configPath, stringify(localConfig))
         logQuiet(this.quiet, `Updated document paths for project ${projectId}: [${documentPaths.join(', ')}]`)
       }

@@ -87,11 +87,11 @@ export interface ProjectConfig {
     description?: string
     repository?: string
     ticketsPath?: string // Tickets path relative to project root
-  }
-  document: {
-    paths?: string[]
-    excludeFolders?: string[]
-    maxDepth?: number
+    document?: {
+      paths?: string[]
+      excludeFolders?: string[]
+      maxDepth?: number
+    }
   }
   worktree?: {
     enabled?: boolean // Enable or disable worktree support (default: true)
@@ -153,7 +153,7 @@ export function migrateLegacyConfig(config: ProjectConfig): ProjectConfig {
   // because isLegacyConfig() checks for its existence and non-undefined value
   const legacyTicketsPath = config.project.path! // Non-null assertion - safe due to isLegacyConfig check
 
-  // Create a clean migrated configuration
+  // Create a clean migrated configuration with document nested under project
   return {
     ...config,
     project: {
@@ -163,11 +163,11 @@ export function migrateLegacyConfig(config: ProjectConfig): ProjectConfig {
       path: '.',
       // Move the legacy path to ticketsPath where it belongs
       ticketsPath: legacyTicketsPath,
-    },
-    // Add document section for legacy configs that don't have it
-    document: config.document || {
-      paths: Array.isArray((config as LegacyProjectConfig).document_paths) ? (config as LegacyProjectConfig).document_paths : [],
-      excludeFolders: Array.isArray((config as LegacyProjectConfig).exclude_folders) ? (config as LegacyProjectConfig).exclude_folders : [],
+      // Add document section under project for legacy configs that don't have it
+      document: config.project?.document || {
+        paths: Array.isArray((config as LegacyProjectConfig).document_paths) ? (config as LegacyProjectConfig).document_paths : [],
+        excludeFolders: Array.isArray((config as LegacyProjectConfig).exclude_folders) ? (config as LegacyProjectConfig).exclude_folders : [],
+      },
     },
   }
 }

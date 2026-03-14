@@ -6,6 +6,8 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
+import { parseToml, stringify } from '../../../../../../shared/utils/toml.js'
+import type { ProjectConfig } from '../../../../../../shared/models/Project.js'
 
 // Get CONFIG_DIR from environment, with fallback
 function getConfigDir(): string {
@@ -19,6 +21,8 @@ interface ProjectRegistryEntry {
   path: string
   projectDir: string
   active: boolean
+  documentPaths: string[]
+  excludeFolders: string[]
 }
 
 interface ProjectListEntry {
@@ -133,6 +137,29 @@ export class ProjectService {
       const codeMatch = content.match(/code\s*=\s*["']([^"']+)["']/)
       const ticketsPathMatch = content.match(/ticketsPath\s*=\s*["']([^"']+)["']/)
 
+      // Parse [project.document] section specifically
+      const projectDocSection = content.match(/\[project\.document\]([\s\S]*?)(?=\[|$)/)
+      let documentPaths: string[] = []
+      let excludeFolders: string[] = ['node_modules', '.git', 'dist']
+
+      if (projectDocSection) {
+        const sectionContent = projectDocSection[1]
+
+        // Parse paths array from [project.document] section
+        const pathsMatch = sectionContent.match(/paths\s*=\s*\[([^\]]+)\]/)
+        if (pathsMatch) {
+          const pathsRaw = pathsMatch[1]
+          documentPaths = pathsRaw.match(/["']([^"']+)["']/g)?.map(m => m.slice(1, -1)) || []
+        }
+
+        // Parse excludeFolders array from [project.document] section
+        const excludeMatch = sectionContent.match(/excludeFolders\s*=\s*\[([^\]]+)\]/)
+        if (excludeMatch) {
+          const excludeRaw = excludeMatch[1]
+          excludeFolders = excludeRaw.match(/["']([^"']+)["']/g)?.map(m => m.slice(1, -1)) || []
+        }
+      }
+
       if (nameMatch && codeMatch) {
         // Store the project directory name as the path
         const projectDirName = path.basename(path.dirname(configPath))
@@ -143,6 +170,8 @@ export class ProjectService {
           path: path.dirname(configPath), // Full path for file operations
           projectDir: projectDirName, // Just the directory name for registry lookups
           active: true,
+          documentPaths,
+          excludeFolders,
         })
       }
     }
@@ -182,14 +211,20 @@ export class ProjectService {
   /**
    * Get project configuration by path
    */
-  getProjectConfig(projectPath: string): ProjectConfigEntry | null {
+  getProjectConfig(projectPath: string): { project: { name: string; code: string; ticketsPath: string; path: string }, document: { paths?: string[]; excludeFolders?: string[] } } | null {
     for (const [key, project] of this.projectsRegistry.entries()) {
       if (project.path === projectPath || key === projectPath || project.projectDir === projectPath || project.code === projectPath) {
         return {
-          name: project.name,
-          code: project.code,
-          ticketsPath: project.ticketsPath,
-          path: project.path,
+          project: {
+            name: project.name,
+            code: project.code,
+            ticketsPath: project.ticketsPath,
+            path: project.path,
+          },
+          document: {
+            paths: project.documentPaths || [],
+            excludeFolders: project.excludeFolders || [],
+          },
         }
       }
     }
@@ -206,8 +241,8 @@ export class ProjectService {
       return []
     }
 
-    // Use the full path from config, not the input projectPath which might be just "API"
-    const ticketsDir = path.join(config.path, config.ticketsPath)
+    // Use the full path from config.project, not the input projectPath which might be just "API"
+    const ticketsDir = path.join(config.project.path, config.project.ticketsPath)
     if (!fs.existsSync(ticketsDir)) {
       return []
     }
@@ -316,21 +351,26 @@ export class ProjectService {
     }
 
     // Read existing config
-    let content = fs.readFileSync(configPath, 'utf-8')
+    const content = fs.readFileSync(configPath, 'utf-8')
+    // Use 'any' because TypeScript type has document as sibling, but TOML structure nests it under project
+    const config = parseToml(content) as any
 
-    // Check if [document] section exists
-    if (content.includes('[document]')) {
-      // Replace existing paths
-      content = content.replace(/paths\s*=\s*\[[^\]]*\]/, `paths = ${JSON.stringify(documentPaths)}`)
+    // Ensure project.document structure exists
+    if (!config.project) {
+      config.project = {}
     }
-    else {
-      // Add [document] section
-      content += '\n[document]\n'
-      content += `paths = ${JSON.stringify(documentPaths)}\n`
+    if (!config.project.document) {
+      config.project.document = {}
     }
+
+    // Remove old buggy [document] section if exists (MDT-098)
+    delete config.document
+
+    // Set paths under project.document to match TOML structure [project.document.paths]
+    config.project.document.paths = documentPaths
 
     // Write updated config
-    fs.writeFileSync(configPath, content, 'utf-8')
+    fs.writeFileSync(configPath, stringify(config), 'utf-8')
 
     // Reload registry to pick up the changes
     this.loadProjectsRegistry()
