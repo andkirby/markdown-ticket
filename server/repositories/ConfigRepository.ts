@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
-import * as toml from 'toml'
+import { parseToml } from '@mdt/shared/utils/toml.js'
 
 interface ProjectConfiguration {
   documentPaths: string[]
@@ -34,17 +34,17 @@ export class ConfigRepository {
 
     try {
       // Parse TOML content properly using TOML library
-      const parsed = toml.parse(content)
+      const parsed = parseToml(content) as any
 
-      // Parse document paths (current format: project.document.paths, legacy: document.paths, document_paths, project.document_paths)
-      const docPaths = parsed.project?.document?.paths || parsed.document?.paths || parsed.document_paths || parsed.project?.document_paths
+      // Parse document paths
+      const docPaths = parsed.project?.document?.paths
 
       if (docPaths && Array.isArray(docPaths)) {
         config.documentPaths = docPaths.filter(path => typeof path === 'string')
       }
 
-      // Parse exclude folders (current format: project.document.excludeFolders, legacy: document.excludeFolders, exclude_folders, project.exclude_folders)
-      const exclFolders = parsed.project?.document?.excludeFolders || parsed.document?.excludeFolders || parsed.exclude_folders || parsed.project?.exclude_folders
+      // Parse exclude folders
+      const exclFolders = parsed.project?.document?.excludeFolders
 
       if (exclFolders && Array.isArray(exclFolders)) {
         config.excludeFolders = exclFolders.filter(folder => typeof folder === 'string')

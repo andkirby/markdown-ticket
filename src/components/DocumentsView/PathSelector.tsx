@@ -1,3 +1,12 @@
+/**
+ * PathSelector - Modal for selecting document paths to include in documents view
+ *
+ * @testid path-selector — Main container for the path selector modal
+ * @testid path-checkbox-{path} — Checkbox for a specific path (e.g., path-checkbox-docs)
+ * @testid path-selector-cancel — Cancel button
+ * @testid path-selector-save — Save selection button
+ * @testid path-selector-count — Display showing number of selected items
+ */
 import * as React from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -46,8 +55,8 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
       if (response.ok) {
         const data = await response.json()
 
-        // Use only the top-level document paths from config, not the expanded tree
-        // API returns: config.project.document.paths
+        // Use document.paths from config (nested under project.document)
+        // API returns: { project, config: { project: { document: { paths: [...] } } } }
         const configuredPaths = new Set<string>(data.config?.project?.document?.paths || [])
         setSelectedPaths(configuredPaths)
       }
@@ -83,6 +92,12 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
       path.startsWith(`${item.path}/`) && path !== item.path,
     )
 
+    // Create a safe testid by replacing special characters
+    // ./ becomes _root_ and other slashes become dashes
+    const safeTestId = item.path === './'
+      ? 'root'
+      : item.path.replace(/\//g, '-').replace(/^\./, 'root')
+
     return (
       <div key={item.path} style={{ marginLeft: `${depth * 20}px` }}>
         <label
@@ -95,6 +110,7 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
             checked={isSelected}
             onChange={() => toggleSelection(item.path, item.type === 'folder', item)}
             className="mr-2 cursor-pointer"
+            data-testid={`path-checkbox-${safeTestId}`}
           />
           <span className={`text-sm ${item.type === 'folder' ? 'font-medium' : ''} ${hasSelectedChildren ? 'text-primary' : ''}`}>
             {item.type === 'folder' ? '📁' : '📄'}
@@ -111,16 +127,8 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
     onPathsSelected(Array.from(selectedPaths))
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading file system...</div>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex flex-col h-[70vh]">
+    <div className="flex flex-col h-[70vh]" data-testid="path-selector">
       {/* Fixed Header */}
       <div className="flex-shrink-0 p-6 border-b">
         <h3 className="text-xl font-semibold text-gray-900 mb-2">Select Document Paths</h3>
@@ -137,18 +145,24 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
         style={{ height: 'calc(80vh - 250px)' }}
       >
         <div className="p-6">
-          <div className="border border-gray-200 rounded-lg">
-            <div className="p-4">
-              {items.map(item => renderItem(item))}
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-muted-foreground">Loading file system...</div>
             </div>
-          </div>
+          ) : (
+            <div className="border border-gray-200 rounded-lg">
+              <div className="p-4">
+                {items.map(item => renderItem(item))}
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
       {/* Fixed Footer */}
       <div className="flex-shrink-0 border-t p-6">
         <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600" data-testid="path-selector-count">
             {selectedPaths.size}
             {' '}
             item
@@ -160,6 +174,7 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
             <button
               onClick={onCancel}
               className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              data-testid="path-selector-cancel"
             >
               Cancel
             </button>
@@ -167,6 +182,7 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
               onClick={handleSave}
               disabled={selectedPaths.size === 0}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="path-selector-save"
             >
               Save Selection
             </button>
