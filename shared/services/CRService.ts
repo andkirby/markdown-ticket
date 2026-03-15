@@ -1,4 +1,5 @@
 import type { TicketData } from '../models/Ticket.js'
+import { CRStatus } from '../models/Types.js'
 import { TitleExtractionService } from './TitleExtractionService.js'
 
 export class CRService {
@@ -12,7 +13,7 @@ export class CRService {
     return {
       code: ticketCode,
       title: data.title,
-      status: 'Proposed',
+      status: CRStatus.PROPOSED,
       type: ticketType,
       priority: data.priority || 'Medium',
       dateCreated: now,

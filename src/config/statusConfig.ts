@@ -1,5 +1,6 @@
 import type {StatusConfig} from '@mdt/shared/models/Config'
 import type {CRStatus} from '@mdt/shared/models/Types'
+import { CRStatus as CRStatusEnum } from '@mdt/shared/models/Types'
 
 // Status Configuration using shared interface
 const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
@@ -8,7 +9,7 @@ const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
     color: 'gray',
     description: 'New change request has been submitted and is awaiting review',
     isTerminal: false,
-    canTransitionTo: ['Approved', 'Rejected'],
+    canTransitionTo: [CRStatusEnum.APPROVED, CRStatusEnum.REJECTED],
     order: 1,
   },
   'Approved': {
@@ -16,7 +17,7 @@ const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
     color: 'green',
     description: 'Change request has been approved and can be implemented',
     isTerminal: false,
-    canTransitionTo: ['In Progress', 'On Hold', 'Rejected'],
+    canTransitionTo: [CRStatusEnum.IN_PROGRESS, CRStatusEnum.ON_HOLD, CRStatusEnum.REJECTED],
     order: 2,
   },
   'In Progress': {
@@ -24,7 +25,7 @@ const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
     color: 'blue',
     description: 'Change request is currently being implemented',
     isTerminal: false,
-    canTransitionTo: ['Implemented', 'On Hold', 'Rejected'],
+    canTransitionTo: [CRStatusEnum.IMPLEMENTED, CRStatusEnum.ON_HOLD, CRStatusEnum.REJECTED],
     order: 3,
   },
   'Implemented': {
@@ -40,7 +41,7 @@ const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
     color: 'indigo',
     description: 'Only part of the change request has been implemented',
     isTerminal: false,
-    canTransitionTo: ['Implemented', 'Rejected'],
+    canTransitionTo: [CRStatusEnum.IMPLEMENTED, CRStatusEnum.REJECTED],
     order: 5,
   },
   'On Hold': {
@@ -48,7 +49,7 @@ const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
     color: 'orange',
     description: 'Implementation of change request has been temporarily paused',
     isTerminal: false,
-    canTransitionTo: ['Approved', 'Rejected', 'In Progress'],
+    canTransitionTo: [CRStatusEnum.APPROVED, CRStatusEnum.REJECTED, CRStatusEnum.IN_PROGRESS],
     order: 6,
   },
   'Rejected': {
@@ -68,7 +69,7 @@ const BOARD_COLUMNS = {
     label: 'Backlog',
     color: 'gray',
     description: 'Work that needs to be done',
-    statuses: ['Proposed'] as CRStatus[],
+    statuses: [CRStatusEnum.PROPOSED] as CRStatus[],
     visible: true,
     order: 1,
   },
@@ -78,7 +79,7 @@ const BOARD_COLUMNS = {
     label: 'Open',
     color: 'blue',
     description: 'Work that is ready to start',
-    statuses: ['Approved'] as CRStatus[],
+    statuses: [CRStatusEnum.APPROVED] as CRStatus[],
     visible: true,
     order: 2,
   },
@@ -88,7 +89,7 @@ const BOARD_COLUMNS = {
     label: 'In Progress',
     color: 'yellow',
     description: 'Work currently being done',
-    statuses: ['In Progress', 'On Hold'] as CRStatus[],
+    statuses: [CRStatusEnum.IN_PROGRESS, CRStatusEnum.ON_HOLD] as CRStatus[],
     visible: true,
     order: 3,
   },
@@ -98,7 +99,7 @@ const BOARD_COLUMNS = {
     label: 'Done',
     color: 'green',
     description: 'Completed work',
-    statuses: ['Implemented', 'Partially Implemented', 'Rejected'] as CRStatus[],
+    statuses: [CRStatusEnum.IMPLEMENTED, CRStatusEnum.PARTIALLY_IMPLEMENTED, CRStatusEnum.REJECTED] as CRStatus[],
     visible: true,
     order: 4,
   },
@@ -108,7 +109,7 @@ const BOARD_COLUMNS = {
     label: 'Deferred',
     color: 'orange',
     description: 'Work that is paused or cancelled',
-    statuses: ['Rejected'] as CRStatus[],
+    statuses: [CRStatusEnum.REJECTED] as CRStatus[],
     visible: false,
     order: 5,
   },
@@ -117,22 +118,22 @@ const BOARD_COLUMNS = {
 // Status Groupings (for compatibility)
 const _STATUS_GROUPS = {
   // Active statuses that can be worked on
-  active: ['Proposed', 'Approved', 'In Progress', 'On Hold'] as CRStatus[],
+  active: [CRStatusEnum.PROPOSED, CRStatusEnum.APPROVED, CRStatusEnum.IN_PROGRESS, CRStatusEnum.ON_HOLD] as CRStatus[],
 
   // Completed/terminal statuses
-  completed: ['Implemented', 'Rejected'] as CRStatus[],
+  completed: [CRStatusEnum.IMPLEMENTED, CRStatusEnum.REJECTED] as CRStatus[],
 
   // Statuses that require review
-  review: ['Proposed'] as CRStatus[],
+  review: [CRStatusEnum.PROPOSED] as CRStatus[],
 
   // Statuses that are in development
-  development: ['In Progress', 'Partially Implemented'] as CRStatus[],
+  development: [CRStatusEnum.IN_PROGRESS, CRStatusEnum.PARTIALLY_IMPLEMENTED] as CRStatus[],
 
   // Statuses that are blocked or paused
-  blocked: ['On Hold', 'Rejected'] as CRStatus[],
+  blocked: [CRStatusEnum.ON_HOLD, CRStatusEnum.REJECTED] as CRStatus[],
 
   // Statuses that are final
-  final: ['Implemented', 'Rejected'] as CRStatus[],
+  final: [CRStatusEnum.IMPLEMENTED, CRStatusEnum.REJECTED] as CRStatus[],
 }
 
 // Get visible columns for the board
@@ -218,19 +219,19 @@ function _sortStatusesByOrder(statuses: CRStatus[]): CRStatus[] {
 
 // Get initial statuses for new tickets
 function _getInitialStatuses(): CRStatus[] {
-  return ['Proposed']
+  return [CRStatusEnum.PROPOSED]
 }
 
 // Get statuses that can be set for new tickets
 function _getNewTicketStatuses(): CRStatus[] {
-  return ['Proposed']
+  return [CRStatusEnum.PROPOSED]
 }
 
 // Check if status change requires implementation date update
 function _shouldUpdateImplementationDate(oldStatus: CRStatus, newStatus: CRStatus): boolean {
   // Update implementation date when transitioning to "In Progress" or "Implemented"
-  const statusesThatTriggerUpdate = ['In Progress', 'Implemented']
-  return statusesThatTriggerUpdate.includes(newStatus) && oldStatus !== newStatus
+  const statusesThatTriggerUpdate: CRStatus[] = [CRStatusEnum.IN_PROGRESS, CRStatusEnum.IMPLEMENTED]
+  return (statusesThatTriggerUpdate as readonly CRStatus[]).includes(newStatus) && oldStatus !== newStatus
 }
 
 // Get workflow suggestions for a status
@@ -238,14 +239,14 @@ function _getWorkflowSuggestions(currentStatus: CRStatus): CRStatus[] {
   // Common workflow suggestions based on current status
   const suggestions: CRStatus[] = []
 
-  if (currentStatus === 'Proposed') {
-    suggestions.push('Approved')
-  } else if (currentStatus === 'Approved') {
-    suggestions.push('In Progress', 'On Hold')
-  } else if (currentStatus === 'In Progress') {
-    suggestions.push('Implemented', 'On Hold')
-  } else if (currentStatus === 'On Hold') {
-    suggestions.push('Approved', 'Rejected', 'In Progress')
+  if (currentStatus === CRStatusEnum.PROPOSED) {
+    suggestions.push(CRStatusEnum.APPROVED)
+  } else if (currentStatus === CRStatusEnum.APPROVED) {
+    suggestions.push(CRStatusEnum.IN_PROGRESS, CRStatusEnum.ON_HOLD)
+  } else if (currentStatus === CRStatusEnum.IN_PROGRESS) {
+    suggestions.push(CRStatusEnum.IMPLEMENTED, CRStatusEnum.ON_HOLD)
+  } else if (currentStatus === CRStatusEnum.ON_HOLD) {
+    suggestions.push(CRStatusEnum.APPROVED, CRStatusEnum.REJECTED, CRStatusEnum.IN_PROGRESS)
   }
 
   return suggestions.filter(status => canTransitionFromTo(currentStatus, status))
