@@ -37,9 +37,6 @@ export const CR_STATUSES = [
   DomainCRStatus.IMPLEMENTED,
   DomainCRStatus.REJECTED,
   DomainCRStatus.ON_HOLD,
-  DomainCRStatus.SUPERSEDED,
-  DomainCRStatus.DEPRECATED,
-  DomainCRStatus.DUPLICATE,
   DomainCRStatus.PARTIALLY_IMPLEMENTED,
 ] as const satisfies readonly CRStatus[]
 

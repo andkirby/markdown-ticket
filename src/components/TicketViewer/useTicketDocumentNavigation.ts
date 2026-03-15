@@ -29,14 +29,27 @@ interface UseTicketDocumentNavigationResult {
 
 /**
  * Find all valid file/folder paths in the subdocument tree.
+ * MDT-138: Uses dot notation for virtual folders, slash notation for physical folders.
+ * Also generates slash-separated paths for virtual folders for backward compatibility.
  */
-function collectPaths(docs: SubDocument[], prefix = ''): Set<string> {
+function collectPaths(docs: SubDocument[], prefix = '', isVirtualPrefix = false): Set<string> {
   const paths = new Set<string>()
   for (const doc of docs) {
-    const fullPath = prefix ? `${prefix}/${doc.name}` : doc.name
+    // Use dot separator if parent is virtual, otherwise use slash
+    const separator = isVirtualPrefix || doc.isVirtual ? '.' : '/'
+    const fullPath = prefix ? `${prefix}${separator}${doc.name}` : doc.name
     paths.add(fullPath)
+
+    // MDT-138: For backward compatibility, also add slash-separated path for virtual folders
+    if (isVirtualPrefix || doc.isVirtual) {
+      const slashPath = prefix ? `${prefix}/${doc.name}` : doc.name
+      paths.add(slashPath)
+    }
+
     if (doc.kind === 'folder' && doc.children.length > 0) {
-      for (const child of collectPaths(doc.children, fullPath)) {
+      // Pass along virtual flag to children
+      const isVirtual = doc.isVirtual === true
+      for (const child of collectPaths(doc.children, fullPath, isVirtual)) {
         paths.add(child)
       }
     }
@@ -48,9 +61,11 @@ function collectPaths(docs: SubDocument[], prefix = ''): Set<string> {
  * Derive folder stack from a selected path and subdocument tree.
  * Files: parent folder segments. e.g. 'poc/spike' → ['poc']
  * Folders: all segments including the folder itself. e.g. 'poc' → ['poc']
+ * MDT-138: Handles both slash-separated (physical folders) and dot-notation (virtual folders) paths.
  */
 function deriveFolderStack(path: string, subdocuments: SubDocument[]): string[] {
-  const segments = path.split('/')
+  // MDT-138: Split by both slash and dot to handle both physical and virtual folders
+  const segments = path.split(/[./]/)
 
   const isFolder = (docs: SubDocument[], segs: string[]): boolean => {
     if (segs.length === 0) return false
@@ -129,13 +144,16 @@ export function useTicketDocumentNavigation(
   }, [state.needsRedirect, state.redirectUrl, navigate])
 
   // Re-check path when subdocuments become available after async fetch
+  // Note: We use a ref to track if we've already initialized from URL to avoid stale closure issues
+  // MDT-138: Removed state.selectedPath from deps to prevent race condition.
+  // Only sync FROM URL TO state, not the other way around.
   useEffect(() => {
-    if (state.selectedPath === 'main') {
-      const fromPath = initFromPath(subdocuments, ticketCode, projectCode, location)
-      if (fromPath.selectedPath !== 'main' && !fromPath.needsRedirect) {
-        setState(prev => ({ ...prev, selectedPath: fromPath.selectedPath, folderStack: fromPath.folderStack }))
-      }
+    const fromPath = initFromPath(subdocuments, ticketCode, projectCode, location)
+    // Only update if we found a valid path in the URL that differs from current state
+    if (fromPath.selectedPath !== 'main' && !fromPath.needsRedirect && fromPath.selectedPath !== state.selectedPath) {
+      setState(prev => ({ ...prev, selectedPath: fromPath.selectedPath, folderStack: fromPath.folderStack }))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subdocuments, ticketCode, projectCode, location])
 
   const selectPath = useCallback((path: string) => {
@@ -146,11 +164,10 @@ export function useTicketDocumentNavigation(
 
     setState(prev => ({ ...prev, selectedPath: path, folderStack, needsRedirect: false }))
 
-    // URL is kept at the ticket level (/prj/CODE/ticket/KEY) to avoid
-    // React Router route switching between exact and wildcard routes,
-    // which remounts ProjectRouteHandler and breaks modal state.
-    // Deep linking to subdocs is still supported via initial URL parsing.
-  }, [subdocuments])
+    // Update URL to include namespace path for deep linking support
+    const urlPath = apiPathToUrlPath(path)
+    navigate(`/prj/${projectCode}/ticket/${ticketCode}/${urlPath}`, { replace: true })
+  }, [subdocuments, projectCode, ticketCode, navigate])
 
   const confirmPathSwitch = useCallback(() => {
     setPendingPath(null)

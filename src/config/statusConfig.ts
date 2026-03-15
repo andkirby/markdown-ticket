@@ -1,5 +1,5 @@
-import type { StatusConfig } from '@mdt/shared/models/Config'
-import type { CRStatus } from '@mdt/shared/models/Types'
+import type {StatusConfig} from '@mdt/shared/models/Config'
+import type {CRStatus} from '@mdt/shared/models/Types'
 
 // Status Configuration using shared interface
 const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
@@ -59,30 +59,6 @@ const STATUS_CONFIG: Record<CRStatus, StatusConfig> = {
     canTransitionTo: [],
     order: 7,
   },
-  'Superseded': {
-    label: 'Superseded',
-    color: 'purple',
-    description: 'Change request has been replaced by a newer version',
-    isTerminal: true,
-    canTransitionTo: [],
-    order: 8,
-  },
-  'Deprecated': {
-    label: 'Deprecated',
-    color: 'yellow',
-    description: 'Change request is no longer recommended for use',
-    isTerminal: false,
-    canTransitionTo: ['Rejected'],
-    order: 9,
-  },
-  'Duplicate': {
-    label: 'Duplicate',
-    color: 'pink',
-    description: 'Change request is a duplicate of an existing request',
-    isTerminal: true,
-    canTransitionTo: [],
-    order: 10,
-  },
 }
 
 // Simplified Board Column Configuration
@@ -132,7 +108,7 @@ const BOARD_COLUMNS = {
     label: 'Deferred',
     color: 'orange',
     description: 'Work that is paused or cancelled',
-    statuses: ['Rejected', 'Superseded', 'Duplicate'] as CRStatus[],
+    statuses: ['Rejected'] as CRStatus[],
     visible: false,
     order: 5,
   },
@@ -141,10 +117,10 @@ const BOARD_COLUMNS = {
 // Status Groupings (for compatibility)
 const _STATUS_GROUPS = {
   // Active statuses that can be worked on
-  active: ['Proposed', 'Approved', 'In Progress', 'On Hold', 'Deprecated'] as CRStatus[],
+  active: ['Proposed', 'Approved', 'In Progress', 'On Hold'] as CRStatus[],
 
   // Completed/terminal statuses
-  completed: ['Implemented', 'Rejected', 'Superseded', 'Duplicate'] as CRStatus[],
+  completed: ['Implemented', 'Rejected'] as CRStatus[],
 
   // Statuses that require review
   review: ['Proposed'] as CRStatus[],
@@ -153,10 +129,10 @@ const _STATUS_GROUPS = {
   development: ['In Progress', 'Partially Implemented'] as CRStatus[],
 
   // Statuses that are blocked or paused
-  blocked: ['On Hold', 'Rejected', 'Deprecated'] as CRStatus[],
+  blocked: ['On Hold', 'Rejected'] as CRStatus[],
 
   // Statuses that are final
-  final: ['Implemented', 'Rejected', 'Superseded', 'Duplicate'] as CRStatus[],
+  final: ['Implemented', 'Rejected'] as CRStatus[],
 }
 
 // Get visible columns for the board
@@ -264,14 +240,11 @@ function _getWorkflowSuggestions(currentStatus: CRStatus): CRStatus[] {
 
   if (currentStatus === 'Proposed') {
     suggestions.push('Approved')
-  }
-  else if (currentStatus === 'Approved') {
+  } else if (currentStatus === 'Approved') {
     suggestions.push('In Progress', 'On Hold')
-  }
-  else if (currentStatus === 'In Progress') {
+  } else if (currentStatus === 'In Progress') {
     suggestions.push('Implemented', 'On Hold')
-  }
-  else if (currentStatus === 'On Hold') {
+  } else if (currentStatus === 'On Hold') {
     suggestions.push('Approved', 'Rejected', 'In Progress')
   }
 

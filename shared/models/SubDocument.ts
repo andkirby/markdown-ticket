@@ -12,6 +12,10 @@ export interface SubDocument {
   kind: 'file' | 'folder'
   /** Nested entries (only populated for kind='folder') */
   children: SubDocument[]
+  /** Marks virtual folders created from dot-notation files (e.g., 'api/auth' from 'api.auth.md') */
+  isVirtual?: boolean
+  /** Relative file path from CR root (e.g., 'MDT-138/requirements.md') */
+  filePath?: string
 }
 
 /**
