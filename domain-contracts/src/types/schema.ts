@@ -13,9 +13,6 @@ export const CRStatus = {
   IMPLEMENTED: 'Implemented',
   REJECTED: 'Rejected',
   ON_HOLD: 'On Hold',
-  SUPERSEDED: 'Superseded',
-  DEPRECATED: 'Deprecated',
-  DUPLICATE: 'Duplicate',
   PARTIALLY_IMPLEMENTED: 'Partially Implemented',
 } as const
 
@@ -28,9 +25,6 @@ export const CRStatuses = [
   CRStatus.IMPLEMENTED,
   CRStatus.REJECTED,
   CRStatus.ON_HOLD,
-  CRStatus.SUPERSEDED,
-  CRStatus.DEPRECATED,
-  CRStatus.DUPLICATE,
   CRStatus.PARTIALLY_IMPLEMENTED,
 ] as const
 
