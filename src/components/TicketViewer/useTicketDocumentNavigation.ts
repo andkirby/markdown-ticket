@@ -58,14 +58,34 @@ function collectPaths(docs: SubDocument[], prefix = '', isVirtualPrefix = false)
 }
 
 /**
+ * Split a path into segments, respecting physical (/) vs virtual (.) notation.
+ * Physical paths like 'bdd/another.trace' → ['bdd', 'another.trace'] (dot preserved)
+ * Virtual paths like 'bdd.trace' → ['bdd', 'trace'] (dot is separator)
+ */
+function splitPathSegments(path: string): string[] {
+  if (path === "main") {
+    return ["main"];
+  }
+
+  // Check if this is a physical path (contains /)
+  if (path.includes("/")) {
+    // Physical path: split only by /, preserve dots in filenames
+    return path.split("/");
+  }
+
+  // Virtual path: split by .
+  return path.split(".");
+}
+
+/**
  * Derive folder stack from a selected path and subdocument tree.
  * Files: parent folder segments. e.g. 'poc/spike' → ['poc']
  * Folders: all segments including the folder itself. e.g. 'poc' → ['poc']
  * MDT-138: Handles both slash-separated (physical folders) and dot-notation (virtual folders) paths.
  */
 function deriveFolderStack(path: string, subdocuments: SubDocument[]): string[] {
-  // MDT-138: Split by both slash and dot to handle both physical and virtual folders
-  const segments = path.split(/[./]/)
+  // MDT-138: Use smart splitting that respects physical (/) vs virtual (.) notation
+  const segments = splitPathSegments(path)
 
   const isFolder = (docs: SubDocument[], segs: string[]): boolean => {
     if (segs.length === 0) return false
