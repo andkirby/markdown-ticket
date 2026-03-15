@@ -406,6 +406,37 @@ test.describe('MDT-138: Dot-Notation Namespace Tabs', () => {
       await expect(page).toHaveURL(expectedUrl)
     })
 
+    test('BR-DOT-IN-PATH - Physical child with dot in filename navigates correctly', async ({ page }) => {
+      // This test uses the real MDT-138 ticket which has:
+      // - bdd.md (root file)
+      // - bdd.trace.md (virtual child)
+      // - bdd/another.trace.md (physical child with dot in name)
+
+      // When: I navigate directly to the bdd folder and then click the /another.trace sub-tab
+      await page.goto('/prj/MDT/ticket/MDT-138')
+      await page.waitForSelector('[data-testid="subdoc-tab-bdd"]', { timeout: 30000 })
+      await page.click('[data-testid="subdoc-tab-bdd"]')
+
+      // Wait for the second tab row to appear
+      await page.waitForSelector('[data-testid="subdoc-tab-row"] >> nth=1', { timeout: 5000 })
+
+      // Verify the /another.trace tab exists (physical children have / prefix when mixed with virtual)
+      const anotherTraceTab = page.locator('[data-testid="subdoc-tab-/another.trace"]')
+      await expect(anotherTraceTab).toBeVisible({ timeout: 10000 })
+
+      // Click the physical child tab
+      await anotherTraceTab.click()
+
+      // Then: URL should be bdd/another.trace.md (NOT main.md)
+      await expect(page).toHaveURL(/\/MDT-138\/bdd\/another\.trace\.md$/)
+
+      // And the tab should be active
+      await expect(anotherTraceTab).toHaveAttribute('data-state', 'active')
+
+      // And content should be from the correct file (physical trace, not virtual trace)
+      await expect(page.locator('[data-testid="subdoc-content"]')).toContainText('another.trace')
+    })
+
     test('C-FILEPATH - API response includes filePath for all nodes', async ({ page, e2eContext }) => {
       const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
       const ticketCode = scenario.crCodes[0]
