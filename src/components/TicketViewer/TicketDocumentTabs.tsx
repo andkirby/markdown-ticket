@@ -21,6 +21,26 @@ interface TicketDocumentTabsProps {
 }
 
 /**
+ * Split a path into segments, respecting physical (/) vs virtual (.) notation.
+ * Physical paths like 'bdd/another.trace' → ['bdd', 'another.trace'] (dot preserved)
+ * Virtual paths like 'bdd.trace' → ['bdd', 'trace'] (dot is separator)
+ */
+function splitPathSegments(selectedPath: string): string[] {
+  if (selectedPath === "main") {
+    return ["main"];
+  }
+
+  // Check if this is a physical path (contains /)
+  if (selectedPath.includes("/")) {
+    // Physical path: split only by /, preserve dots in filenames
+    return selectedPath.split("/");
+  }
+
+  // Virtual path: split by .
+  return selectedPath.split(".");
+}
+
+/**
  * Build tab rows from current folderStack and subdocuments tree.
  * Returns array of { entries, activeValue } for each row.
  */
@@ -38,9 +58,8 @@ function buildTabRows(
   ];
 
   // Determine which top-level entry is "active" (first segment of path, or 'main')
-  // MDT-138: Split by both slash and dot to handle both physical and virtual folders
-  const pathSegments =
-    selectedPath === "main" ? ["main"] : selectedPath.split(/[./]/);
+  // MDT-138: Use smart splitting that respects physical (/) vs virtual (.) notation
+  const pathSegments = splitPathSegments(selectedPath);
   const topActive = pathSegments[0];
 
   rows.push({ entries: topLevel, activeValue: topActive });
@@ -102,6 +121,12 @@ export function TicketDocumentTabs({
           key={rowIdx}
           value={row.activeValue}
           onValueChange={(value) => {
+            // Guard: Skip if this is a redundant event (Radix fires on re-render)
+            // This prevents stale closures from overwriting navigation
+            if (value === row.activeValue) {
+              return;
+            }
+
             // Determine full path based on folder nesting
             // MDT-138: Use dot notation for virtual folders, slash notation for physical folders
             // Physical children have / prefix in their name to distinguish from virtual children

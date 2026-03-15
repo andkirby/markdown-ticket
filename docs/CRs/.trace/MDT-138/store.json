@@ -145,16 +145,6 @@
       ]
     },
     {
-      "id": "Edge-4",
-      "kind": "edge_case",
-      "text": "IF both '{type}.{semantic}.md' AND '{type}/{other}.md' exist, THEN folder content shall display with '/' prefix in gray color as '[/{other}]'",
-      "sourceRef": "Clarification 2026-03-12",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-9",
       "kind": "behavior",
       "text": "WHEN user navigates to a URL with format '/prj/{code}/ticket/{ticket}/{type}.md', the system shall display the '{type}' tab",
@@ -239,6 +229,13 @@
       "text": "WHEN a namespace has sub-tabs, the system SHALL order them as: [Main] first (if root exists), then dot-notation sub-tabs alphanumerically, then folder sub-tabs (with / prefix) alphanumerically",
       "sourceRef": "CR:MDT-138",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF a physical folder child filename contains dots (e.g., 'bdd/another.trace.md'), THEN path splitting MUST preserve dots in the filename segment (split by '/' only, not by '.')",
+      "sourceRef": "CR:MDT-138",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -438,6 +435,17 @@
       "given": "a namespace has bdd.md (root), bdd.bbb.md, bdd.aaa.md, and bdd/legacy.md",
       "when": "the sub-tabs render",
       "then": "order is [Main], [aaa], [bbb], [/legacy]",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "physical_child_with_dot_in_filename",
+      "title": "Physical child with dot in filename navigates correctly",
+      "covers": [
+        "BR-11"
+      ],
+      "given": "a ticket with 'bdd.md' (root), 'bdd.trace.md' (virtual), and 'bdd/another.trace.md' (physical child with dot in name)",
+      "when": "I click the '[/another.trace]' sub-tab in the bdd namespace",
+      "then": "URL shows 'bdd/another.trace.md' (NOT 'main.md'), the tab is active, and content loads from the physical file",
       "sourceRef": "CR:MDT-138"
     }
   ],
