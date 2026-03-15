@@ -5,6 +5,14 @@
 
 import { CRPriorities, CRStatuses, CRTypes } from '@mdt/domain-contracts'
 
+/**
+ * CR code pattern for OpenAPI (matches domain-contracts CR_CODE_PATTERN)
+ * Format: PREFIX-123 where PREFIX is 3-5 alphanumeric chars (first must be letter)
+ *
+ * Source of truth: @mdt/domain-contracts CR_CODE_PATTERN
+ */
+export const CR_CODE_PATTERN_STRING = '^[A-Z][A-Z0-9]{2,4}-\\\\d{3,4}$'
+
 // Enums - imported from domain-contracts for single source of truth
 const CRStatusEnum = CRStatuses
 const CRTypeEnum = CRTypes
@@ -34,7 +42,7 @@ export const schemas = {
     type: 'object',
     required: ['code', 'title', 'status', 'type', 'priority'],
     properties: {
-      code: { type: 'string', description: 'Unique CR identifier', example: 'MDT-001', pattern: '^[A-Z]+-\\d{3,}$' },
+      code: { type: 'string', description: 'Unique CR identifier', example: 'MDT-001', pattern: CR_CODE_PATTERN_STRING },
       title: { type: 'string', description: 'CR title', example: 'Implement user authentication' },
       status: { $ref: '#/components/schemas/CRStatus' },
       type: { $ref: '#/components/schemas/CRType' },
@@ -90,6 +98,31 @@ export const schemas = {
       path: { type: 'string', description: 'Relative path from project root', example: 'docs/architecture.md' },
       name: { type: 'string', description: 'Document filename', example: 'architecture.md' },
       content: { type: 'string', description: 'Document content (when requested)' },
+    },
+  },
+
+  SubDocument: {
+    type: 'object',
+    required: ['name', 'type'],
+    properties: {
+      name: { type: 'string', description: 'Sub-document identifier (name without extension)', example: 'requirements' },
+      type: { type: 'string', enum: ['file', 'folder'], description: 'Entry type' },
+      children: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/SubDocument' },
+        description: 'Nested entries (populated for folders)',
+      },
+    },
+  },
+
+  SubDocumentDetail: {
+    type: 'object',
+    required: ['code', 'content', 'dateCreated', 'lastModified'],
+    properties: {
+      code: { type: 'string', description: 'Sub-document identifier (name without extension)', example: 'requirements' },
+      content: { type: 'string', description: 'Markdown content' },
+      dateCreated: { type: 'string', format: 'date-time', nullable: true, description: 'File creation date' },
+      lastModified: { type: 'string', format: 'date-time', nullable: true, description: 'File last modified date' },
     },
   },
 
@@ -244,7 +277,7 @@ export const parameters = {
     name: 'crId',
     in: 'path',
     required: true,
-    schema: { type: 'string', pattern: '^[A-Z]+-\\d{3,}$' },
+    schema: { type: 'string', pattern: CR_CODE_PATTERN_STRING },
     description: 'CR identifier',
     example: 'MDT-001',
   },

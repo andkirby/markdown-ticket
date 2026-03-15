@@ -427,6 +427,11 @@ export default defineConfig(() => {
           changeOrigin: true,
           secure: false,
         },
+        '/api-docs': {
+          target: backendUrl,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
   }
