@@ -4,7 +4,8 @@
 
 import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 import type { TicketData } from '../../models/Ticket.js'
-import type { CRStatus, ValidationResult } from '../../models/Types.js'
+import type { ValidationResult } from '../../models/Types.js'
+import { CRStatus } from '../../models/Types.js'
 
 /** Configuration for ticket creation */
 export interface TicketCreationConfig {
@@ -34,7 +35,7 @@ export interface ITicketCreator {
 /** Abstract base class for ticket creators */
 export abstract class BaseTicketCreator implements ITicketCreator {
   protected readonly validTypes: CRTypeValue[] = ['Architecture', 'Feature Enhancement', 'Bug Fix', 'Technical Debt', 'Documentation', 'Research']
-  protected readonly validStatuses: CRStatus[] = ['Proposed', 'Approved', 'In Progress', 'Implemented', 'Rejected']
+  protected readonly validStatuses: CRStatus[] = [CRStatus.PROPOSED, CRStatus.APPROVED, CRStatus.IN_PROGRESS, CRStatus.IMPLEMENTED, CRStatus.REJECTED]
   protected readonly validPriorities: CRPriorityValue[] = ['Low', 'Medium', 'High', 'Critical']
 
   /** Generate next ticket code */
