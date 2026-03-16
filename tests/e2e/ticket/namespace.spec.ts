@@ -235,9 +235,11 @@ test.describe('MDT-138: Dot-Notation Namespace Tabs', () => {
       await waitForBoardReady(page)
       await page.click(subdocSelectors.tabTrigger('bdd'))
 
-      // Then: I see both '[scenario-1]' (dot-notation) and '[/legacy]' (physical folder child with / prefix)
+      // Then: I see both '[scenario-1]' (dot-notation) and '[legacy]' (physical folder child)
+      // Note: With new architecture, physical children have clean names (no / prefix)
+      // The distinction is in the data-filepath attribute, not the tab name
       await expect(page.locator(subdocSelectors.tabTrigger('scenario-1'))).toBeVisible()
-      await expect(page.locator(subdocSelectors.tabTrigger('/legacy'))).toBeVisible()
+      await expect(page.locator(subdocSelectors.tabTrigger('legacy'))).toBeVisible()
     })
 
     test('special_characters_preserved - Special characters preserved in semantic part', async ({ page, e2eContext }) => {
@@ -412,7 +414,7 @@ test.describe('MDT-138: Dot-Notation Namespace Tabs', () => {
       // - bdd.trace.md (virtual child)
       // - bdd/another.trace.md (physical child with dot in name)
 
-      // When: I navigate directly to the bdd folder and then click the /another.trace sub-tab
+      // When: I navigate directly to the bdd folder and then click the another.trace sub-tab
       await page.goto('/prj/MDT/ticket/MDT-138')
       await page.waitForSelector('[data-testid="subdoc-tab-bdd"]', { timeout: 30000 })
       await page.click('[data-testid="subdoc-tab-bdd"]')
@@ -420,9 +422,12 @@ test.describe('MDT-138: Dot-Notation Namespace Tabs', () => {
       // Wait for the second tab row to appear
       await page.waitForSelector('[data-testid="subdoc-tab-row"] >> nth=1', { timeout: 5000 })
 
-      // Verify the /another.trace tab exists (physical children have / prefix when mixed with virtual)
-      const anotherTraceTab = page.locator('[data-testid="subdoc-tab-/another.trace"]')
+      // Verify the another.trace tab exists (clean name, data-filepath distinguishes physical vs virtual)
+      const anotherTraceTab = page.locator('[data-testid="subdoc-tab-another.trace"]')
       await expect(anotherTraceTab).toBeVisible({ timeout: 10000 })
+
+      // Verify it has the correct data-filepath attribute (source of truth for navigation)
+      await expect(anotherTraceTab).toHaveAttribute('data-filepath', 'MDT-138/bdd/another.trace.md')
 
       // Click the physical child tab
       await anotherTraceTab.click()

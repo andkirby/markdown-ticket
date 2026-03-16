@@ -103,6 +103,24 @@ export function apiPathToUrlPath(apiPath: string): string {
 }
 
 /**
+ * Converts a filePath from SubDocument to an API path.
+ * The filePath is the source of truth for navigation and URL building.
+ *
+ * @param filePath - Full file path from SubDocument (e.g., 'MDT-138/bdd/another.trace.md')
+ * @param ticketId - Ticket ID to strip from path (e.g., 'MDT-138')
+ * @returns API path for state/URL (e.g., 'bdd/another.trace')
+ *
+ * @example
+ * filePathToApiPath('MDT-138/bdd.trace.md', 'MDT-138') // 'bdd.trace'
+ * filePathToApiPath('MDT-138/bdd/another.trace.md', 'MDT-138') // 'bdd/another.trace'
+ */
+export function filePathToApiPath(filePath: string, ticketId: string): string {
+  return filePath
+    .replace(`${ticketId}/`, '')  // Remove ticket ID prefix
+    .replace(/\.md$/, '')         // Remove .md extension
+}
+
+/**
  * Extracts the sub-document path from a URL pathname.
  *
  * Expected format: /ticket/:crId/* or /prj/:projectCode/ticket/:crId/*
