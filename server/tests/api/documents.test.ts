@@ -16,7 +16,7 @@
 import request from 'supertest'
 import { createTestDocument, createTestDocumentSet, documentFixtures, documentPaths } from './fixtures/documents'
 import { assertBadRequest, assertErrorMessage, assertIsArray, assertNotFound, assertSuccess } from './helpers'
-import { cleanupTestEnvironment, createTestProjectWithCR, setupTestEnvironment } from './setup'
+import { cleanupTestEnvironment, createTestProjectWithCR, setProjectDocumentMaxDepth, setupTestEnvironment } from './setup'
 
 interface DocumentNode {
   type: string
@@ -73,6 +73,36 @@ describe('documents API Tests (MDT-106)', () => {
       assertSuccess(response, 200)
       assertIsArray(response)
       expect(response.body.length).toBeGreaterThan(0)
+    })
+
+    it('should respect configured document maxDepth', async () => {
+      const depthLimitedProject = await projectFactory.createProject('empty', {
+        name: 'Depth Limited Documents Project',
+        code: 'DDEP',
+        documentPaths: ['docs', 'README.md'],
+      })
+
+      await setProjectDocumentMaxDepth(projectFactory, depthLimitedProject.key, 2)
+      await createTestDocument(projectFactory, depthLimitedProject.key, 'README.md', documentFixtures.withoutFrontmatter)
+      await createTestDocument(projectFactory, depthLimitedProject.key, 'docs/overview.md', documentFixtures.withFrontmatter)
+      await createTestDocument(projectFactory, depthLimitedProject.key, 'docs/guide/getting-started.md', documentFixtures.complexFrontmatter)
+
+      const response = await request(app).get(`/api/documents?projectId=${depthLimitedProject.key}`)
+
+      assertSuccess(response, 200)
+      assertIsArray(response)
+
+      const walk = (nodes: Array<Record<string, unknown>>): string[] =>
+        nodes.flatMap(node => [
+          node.path as string,
+          ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : []),
+        ])
+
+      const allPaths = walk(response.body as Array<Record<string, unknown>>)
+
+      expect(allPaths).toContain('README.md')
+      expect(allPaths).toContain('docs/overview.md')
+      expect(allPaths).not.toContain('docs/guide/getting-started.md')
     })
 
     it('should return documents with correct structure', async () => {

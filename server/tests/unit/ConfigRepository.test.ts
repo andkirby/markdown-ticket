@@ -29,6 +29,7 @@ describe('ConfigRepository', () => {
       expect(config.excludeFolders).toContain('docs/CRs')
       expect(config.excludeFolders).toContain('node_modules')
       expect(config.excludeFolders).toContain('.git')
+      expect(config.maxDepth).toBeUndefined()
       expect(config.ticketsPath).toBeNull()
     })
 
@@ -66,6 +67,24 @@ excludeFolders = ["node_modules", "dist"]
 
       expect(config.excludeFolders).toContain('node_modules')
       expect(config.excludeFolders).toContain('dist')
+    })
+
+    it('should parse document maxDepth from config', async () => {
+      const configContent = `
+[project]
+name = "Test Project"
+code = "TEST"
+ticketsPath = "tickets"
+
+[project.document]
+paths = ["docs"]
+maxDepth = 5
+`
+      await fs.writeFile(path.join(tempDir, '.mdt-config.toml'), configContent)
+
+      const config = await configRepository.getConfig(tempDir)
+
+      expect(config.maxDepth).toBe(5)
     })
 
     it('should always include ticketsPath in excludeFolders even if not explicitly listed', async () => {

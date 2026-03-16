@@ -6,8 +6,8 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
-import { parseToml, stringify } from '../../../../../../shared/utils/toml.js'
-import type { ProjectConfig } from '../../../../../../shared/models/Project.js'
+import type { ProjectConfig } from '@mdt/shared/models/Project.js'
+import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 
 // Get CONFIG_DIR from environment, with fallback
 function getConfigDir(): string {
