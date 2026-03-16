@@ -10,37 +10,39 @@
 # Exclude .husky directory and allow in comments
 HOME_PATH_PATTERN='/(Users|home)/[a-zA-Z0-9_-]+/'
 
-# Get list of staged files (excluding .husky and deleted files)
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=AC | grep -v '\.husky/' || true)
+block_home_paths_code() {
+  # Get list of staged files (excluding .husky and deleted files)
+  staged_files=$(git diff --cached --name-only --diff-filter=AC | grep -v '\.husky/' || true)
 
-if [ -z "$STAGED_FILES" ]; then
-  exit 0
-fi
-
-# Check each staged file for home paths
-VIOLATIONS=""
-for FILE in $STAGED_FILES; do
-  # Check for home paths in non-comment lines
-  # Skip: comments, string literals that are clearly examples/URLs
-  if git diff --cached "$FILE" | grep -E "^\+" | grep -v "^\+\+\+" | \
-    grep -v "^\s*//" | grep -v "^\s*\*" | grep -v "^\s*#" | \
-    grep -v "example" | grep -v "http" | grep -v "https" | \
-    grep -E "$HOME_PATH_PATTERN" > /dev/null; then
-    VIOLATIONS="$VIOLATIONS  $FILE\n"
+  if [ -z "$staged_files" ]; then
+    return 0
   fi
-done
 
-if [ -n "$VIOLATIONS" ]; then
-  echo "❌ Blocked: Absolute home paths detected in staged files"
-  echo ""
-  echo "The following files contain absolute home paths:"
-  echo -e "$VIOLATIONS"
-  echo ""
-  echo "Please replace absolute paths with:"
-  echo "  - Relative paths from project root"
-  echo "  - Environment variables"
-  echo "  - Path.join() / path.resolve() constructs"
-  exit 1
-fi
+  # Check each staged file for home paths
+  violations=""
+  for file in $staged_files; do
+    # Check for home paths in non-comment lines
+    # Skip: comments, string literals that are clearly examples/URLs
+    if git diff --cached -- "$file" | grep -E '^\+' | grep -vE '^\+\+\+' | \
+      grep -v '^[[:space:]]*//' | grep -v '^[[:space:]]*\*' | grep -v '^[[:space:]]*#' | \
+      grep -v "example" | grep -v "http" | grep -v "https" | \
+      grep -E "$HOME_PATH_PATTERN" > /dev/null; then
+      violations="$violations  $file\n"
+    fi
+  done
 
-exit 0
+  if [ -n "$violations" ]; then
+    echo "❌ Blocked: Absolute home paths detected in staged files"
+    echo ""
+    echo "The following files contain absolute home paths:"
+    echo -e "$violations"
+    echo ""
+    echo "Please replace absolute paths with:"
+    echo "  - Relative paths from project root"
+    echo "  - Environment variables"
+    echo "  - Path.join() / path.resolve() constructs"
+    return 1
+  fi
+
+  return 0
+}

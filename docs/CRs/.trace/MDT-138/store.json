@@ -1,0 +1,825 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-138"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN a ticket has files matching '{type}.md' only with no dot-variants, the system shall display a single '{type}' tab",
+      "sourceRef": "CR Section 2: Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN a ticket has files matching '{type}.{semantic}.md', the system shall group them under a '{type}' namespace tab with sub-tabs for each semantic part sorted alphanumerically",
+      "sourceRef": "CR Section 2: Success Conditions, Namespace Rules",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHEN no '{type}.md' root file exists for dot-notation files, the system shall NOT display a '[main]' tab",
+      "sourceRef": "CR Section 2: Success Conditions, Constraints",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN a file matches 'a.b.c.md' pattern, the system shall display it as namespace 'a' with sub-key 'b.c' preserving multiple dots",
+      "sourceRef": "CR Section 2: Success Conditions, Namespace Rules",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN user selects a namespace tab, the system shall display the first sub-document content",
+      "sourceRef": "CR Section 4: Acceptance Criteria - Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "WHEN sub-document files are added or removed via file system, the system shall update the tab structure via SSE within 1 second",
+      "sourceRef": "CR Section 4: Acceptance Criteria - Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "WHEN both folder-based and dot-notation documents exist in the same ticket, the system shall display both without conflicts",
+      "sourceRef": "CR Section 4: Acceptance Criteria - Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C-1",
+      "kind": "constraint",
+      "text": "Namespace parsing shall complete in less than 10ms per ticket",
+      "sourceRef": "CR Section 4: Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C-2",
+      "kind": "constraint",
+      "text": "Tab rendering shall use existing shadcn Tabs component patterns",
+      "sourceRef": "CR Section 3: Known Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C-3",
+      "kind": "constraint",
+      "text": "No layout shift shall occur when switching between namespace levels",
+      "sourceRef": "CR Section 4: Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C-4",
+      "kind": "constraint",
+      "text": "API response shall be backward compatible - dot-notation files appear as virtual folders in existing subdocuments array",
+      "sourceRef": "CR Section 3: Resolved Decisions, Alternatives",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a file matches 'a.b.c.d.md' with 4+ segments, THEN the system shall display namespace 'a' with sub-key 'b.c.d' preserving all dots after the first",
+      "sourceRef": "CR Section 4: Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF both 'architecture/' folder AND 'architecture.x.md' file exist, THEN the system shall display both as separate entries without conflicts",
+      "sourceRef": "CR Section 4: Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF a semantic part contains special characters like 'tests.e2e-smoke.md', THEN the system shall preserve the full semantic including hyphens",
+      "sourceRef": "CR Section 4: Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-9",
+      "kind": "behavior",
+      "text": "WHEN user navigates to a URL with format '/prj/{code}/ticket/{ticket}/{type}.md', the system shall display the '{type}' tab",
+      "sourceRef": "Routing clarification",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-10",
+      "kind": "behavior",
+      "text": "WHEN user navigates to a URL with format '/prj/{code}/ticket/{ticket}/{type}.{semantic}.md', the system shall display the '{type}' namespace tab with '{semantic}' subtab",
+      "sourceRef": "Routing clarification",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-11",
+      "kind": "behavior",
+      "text": "WHEN user navigates to a URL with format '/prj/{code}/ticket/{ticket}/{type}/{subfile}.md', the system shall display the '{type}' namespace tab with '/{subfile}' subtab (gray slash prefix)",
+      "sourceRef": "Routing clarification",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "WHEN user navigates to a sub-document, the system shall update the URL with the file path format '/prj/{code}/ticket/{ticket}/{type}.{semantic}.md' or '/prj/{code}/ticket/{ticket}/{type}/{subfile}.md'",
+      "sourceRef": "CR:MDT-138",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.1",
+      "kind": "behavior",
+      "text": "WHEN viewing any ticket, the system SHALL always display a [Main] tab as the first tab in the tab bar",
+      "sourceRef": "MISSING_SPECS.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.2",
+      "kind": "behavior",
+      "text": "WHEN dot-notation files exist, the system SHALL display them ONLY as sub-tabs within their virtual folder",
+      "sourceRef": "MISSING_SPECS.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.3",
+      "kind": "behavior",
+      "text": "WHEN clicking a virtual folder tab, the system SHALL navigate to the root file (namespace.md)",
+      "sourceRef": "MISSING_SPECS.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8.4",
+      "kind": "behavior",
+      "text": "WHEN clicking [main] child in virtual folder, the path SHALL be just the namespace",
+      "sourceRef": "MISSING_SPECS.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C-4.1",
+      "kind": "constraint",
+      "text": "The API SHALL include filePath for ALL subdocument nodes. Virtual folder [main] child maps to root file (bdd.md).",
+      "sourceRef": "MISSING_SPECS.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C-4.2",
+      "kind": "constraint",
+      "text": "URL paths: dot notation for virtual folders (bdd.trace.md), slash notation for physical folders (bdd/legacy.md)",
+      "sourceRef": "MISSING_SPECS.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-12",
+      "kind": "behavior",
+      "text": "WHEN a namespace has sub-tabs, the system SHALL order them as: [Main] first (if root exists), then dot-notation sub-tabs alphanumerically, then folder sub-tabs (with / prefix) alphanumerically",
+      "sourceRef": "CR:MDT-138",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF a physical folder child filename contains dots (e.g., 'bdd/another.trace.md'), THEN path splitting MUST preserve dots in the filename segment (split by '/' only, not by '.')",
+      "sourceRef": "CR:MDT-138",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "single_tab_display",
+      "title": "Single tab display for root document",
+      "covers": [
+        "BR-1"
+      ],
+      "given": "a ticket with only 'architecture.md' file (no dot-variants)",
+      "when": "I view the ticket detail page",
+      "then": "I see a single 'architecture' tab (no namespace expansion)",
+      "sourceRef": "BR-1"
+    },
+    {
+      "id": "no_main_tab_without_root",
+      "title": "No main tab when no root document exists",
+      "covers": [
+        "BR-3"
+      ],
+      "given": "a ticket with 'tests.one.md' and 'tests.two.md' but no 'tests.md'",
+      "when": "I view the ticket detail page",
+      "then": "I see '[tests >]' namespace tab with sub-tabs '[one]' and '[two]' but NO '[main]' tab",
+      "sourceRef": "BR-3"
+    },
+    {
+      "id": "multi_dot_preservation",
+      "title": "Multi-dot preservation in sub-key",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "a ticket with 'a.b.c.md' file",
+      "when": "I view the ticket detail page",
+      "then": "I see '[a >]' namespace tab with sub-tab '[b.c]' (dots preserved after first)",
+      "sourceRef": "BR-4"
+    },
+    {
+      "id": "namespace_grouping_with_sorting",
+      "title": "Namespace grouping with alphanumerical sorting",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "a ticket with 'architecture.md', 'architecture.alpha.md', and 'architecture.beta.md'",
+      "when": "I view the ticket detail page",
+      "then": "I see '[architecture >]' namespace tab with sub-tabs '[main]', '[alpha]', '[beta]' sorted alphanumerically",
+      "sourceRef": "BR-2"
+    },
+    {
+      "id": "namespace_selection_shows_first",
+      "title": "Namespace selection shows first sub-document",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "a ticket with 'bdd.scenario-1.md' and 'bdd.scenario-2.md'",
+      "when": "I click the '[bdd >]' namespace tab",
+      "then": "I see the content of 'bdd.scenario-1.md' (first sub-document alphanumerically)",
+      "sourceRef": "BR-5"
+    },
+    {
+      "id": "url_routing_namespace_path",
+      "title": "URL routing with namespace path",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "a ticket MDT-100 with 'requirements.scope.md'",
+      "when": "I navigate to view 'requirements.scope.md' sub-document",
+      "then": "the URL shows '/ticket/MDT-100/requirements/scope' path format",
+      "sourceRef": "BR-6"
+    },
+    {
+      "id": "sse_adds_subdocument",
+      "title": "SSE adds new sub-document tab",
+      "covers": [
+        "BR-7"
+      ],
+      "given": "I am viewing a ticket with 'architecture.md'",
+      "when": "a new file 'architecture.review.md' is created in the ticket directory",
+      "then": "the tab structure updates to show '[architecture >]' with '[main]' and '[review]' sub-tabs within 1 second",
+      "sourceRef": "BR-7"
+    },
+    {
+      "id": "sse_removes_subdocument",
+      "title": "SSE removes sub-document tab",
+      "covers": [
+        "BR-7"
+      ],
+      "given": "I am viewing a ticket with 'tests.one.md' and 'tests.two.md'",
+      "when": "the file 'tests.two.md' is deleted from the ticket directory",
+      "then": "the tab structure updates to show only '[tests >]' with '[one]' sub-tab within 1 second",
+      "sourceRef": "BR-7"
+    },
+    {
+      "id": "folder_dot_coexistence",
+      "title": "Folder and dot-notation coexistence",
+      "covers": [
+        "BR-8"
+      ],
+      "given": "a ticket with 'bdd.scenario-1.md' and 'bdd/legacy.md'",
+      "when": "I view the ticket detail page",
+      "then": "I see '[bdd >]' namespace tab with both '[scenario-1]' and '[/legacy]' (folder content with gray slash prefix)",
+      "sourceRef": "BR-8,Edge-4"
+    },
+    {
+      "id": "special_characters_preserved",
+      "title": "Special characters preserved in semantic part",
+      "covers": [
+        "BR-8"
+      ],
+      "given": "a ticket with 'tests.e2e-smoke.md'",
+      "when": "I view the ticket detail page",
+      "then": "I see '[tests >]' namespace tab with sub-tab '[e2e-smoke]' (hyphen preserved)",
+      "sourceRef": "BR-8,Edge-3"
+    },
+    {
+      "id": "root_document_url_routing",
+      "title": "Root document URL displays single tab",
+      "covers": [
+        "BR-9"
+      ],
+      "given": "A ticket with 'architecture.md' file only",
+      "when": "User navigates to URL '/prj/{code}/ticket/{ticket}/architecture.md'",
+      "then": "The system displays the 'architecture' tab",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "dot_notation_url_routing",
+      "title": "Dot-notation URL displays namespace subtab",
+      "covers": [
+        "BR-10"
+      ],
+      "given": "A ticket with 'architecture.approve-it.md' file",
+      "when": "User navigates to URL '/prj/{code}/ticket/{ticket}/architecture.approve-it.md'",
+      "then": "The system displays 'architecture' namespace tab with 'approve-it' subtab",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "folder_subfile_url_routing",
+      "title": "Folder subfile URL displays gray slash subtab",
+      "covers": [
+        "BR-11"
+      ],
+      "given": "A ticket with 'bdd/legacy.md' file in folder",
+      "when": "User navigates to URL '/prj/{code}/ticket/{ticket}/bdd/legacy.md'",
+      "then": "The system displays 'bdd' namespace tab with '/legacy' subtab (gray slash prefix)",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "main_tab_always_visible",
+      "title": "Main tab always visible for primary ticket content",
+      "covers": [
+        "BR-8.1"
+      ],
+      "given": "user is viewing any ticket",
+      "when": "the tab bar renders",
+      "then": "a [Main] tab appears as the first tab",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "dot_notation_in_virtual_folder",
+      "title": "Dot-notation files appear only inside virtual folders",
+      "covers": [
+        "BR-8.2"
+      ],
+      "given": "a ticket has files matching '{type}.{semantic}.md'",
+      "when": "the tab bar renders",
+      "then": "dot-notation files appear as sub-tabs within their virtual folder, not as separate top-level tabs",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "virtual_folder_click_forward",
+      "title": "Clicking virtual folder navigates to root file",
+      "covers": [
+        "BR-8.3"
+      ],
+      "given": "a virtual folder tab exists (e.g., [bdd >])",
+      "when": "user clicks the virtual folder tab",
+      "then": "the system navigates to the root file (namespace.md)",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "main_child_path_equals_namespace",
+      "title": "Main child path equals namespace",
+      "covers": [
+        "BR-8.4"
+      ],
+      "given": "a virtual folder with [main] child exists",
+      "when": "user clicks the [main] child",
+      "then": "the path is just the namespace (e.g., 'bdd'), not dot-notation ('bdd.main')",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "sub_tab_ordering",
+      "title": "Sub-tabs ordered: Main first, then dot-notation alpha, then folder alpha",
+      "covers": [
+        "BR-12"
+      ],
+      "given": "a namespace has bdd.md (root), bdd.bbb.md, bdd.aaa.md, and bdd/legacy.md",
+      "when": "the sub-tabs render",
+      "then": "order is [Main], [aaa], [bbb], [/legacy]",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "physical_child_with_dot_in_filename",
+      "title": "Physical child with dot in filename navigates correctly",
+      "covers": [
+        "BR-11"
+      ],
+      "given": "a ticket with 'bdd.md' (root), 'bdd.trace.md' (virtual), and 'bdd/another.trace.md' (physical child with dot in name)",
+      "when": "I click the '[/another.trace]' sub-tab in the bdd namespace",
+      "then": "URL shows 'bdd/another.trace.md' (NOT 'main.md'), the tab is active, and content loads from the physical file",
+      "sourceRef": "CR:MDT-138"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-namespace-parsing",
+      "title": "Backend parses dot-notation filenames into namespace/sub-key structure as virtual folders",
+      "derivedFrom": [
+        "BR-2",
+        "BR-4",
+        "C-1",
+        "C-4"
+      ],
+      "artifactIds": [
+        "ART-document-service",
+        "ART-document-service-test"
+      ],
+      "sourceRef": "CR Section 3: Resolved Decisions"
+    },
+    {
+      "id": "OBL-namespace-grouping-ui",
+      "title": "Frontend groups subdocuments by namespace with alphanumerical sorting and conditional main tab",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-5",
+        "C-2",
+        "C-3"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs",
+        "ART-document-types"
+      ],
+      "sourceRef": "CR Section 2: Namespace Rules"
+    },
+    {
+      "id": "OBL-url-routing",
+      "title": "Frontend updates URL with namespace path format",
+      "derivedFrom": [
+        "BR-6"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs"
+      ],
+      "sourceRef": "CR Section 4"
+    },
+    {
+      "id": "OBL-sse-updates",
+      "title": "Sse broadcasts subdocument changes within 1 second",
+      "derivedFrom": [
+        "BR-7"
+      ],
+      "artifactIds": [
+        "ART-document-service",
+        "ART-document-types",
+        "ART-namespace-e2e"
+      ],
+      "sourceRef": "CR Section 4"
+    },
+    {
+      "id": "OBL-coexistence",
+      "title": "Display both folder and dot-notation together",
+      "derivedFrom": [
+        "BR-8",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs",
+        "ART-document-service"
+      ],
+      "sourceRef": "BR-8, Edge-3, Edge-4"
+    },
+    {
+      "id": "OBL-backward-compat",
+      "title": "API response maintains backward compatibility with virtual folders",
+      "derivedFrom": [
+        "C-4"
+      ],
+      "artifactIds": [
+        "ART-document-service"
+      ],
+      "sourceRef": "CR Section 3.6"
+    },
+    {
+      "id": "OBL-root-document-routing",
+      "title": "Root document URL displays single tab",
+      "derivedFrom": [
+        "BR-9"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs"
+      ],
+      "sourceRef": "Routing clarification"
+    },
+    {
+      "id": "OBL-dot-notation-routing",
+      "title": "Dot-notation URL displays namespace subtab",
+      "derivedFrom": [
+        "BR-10"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs"
+      ],
+      "sourceRef": "Routing clarification"
+    },
+    {
+      "id": "OBL-folder-subfile-routing",
+      "title": "Folder subfile URL displays gray slash subtab",
+      "derivedFrom": [
+        "BR-11"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs"
+      ],
+      "sourceRef": "Routing clarification"
+    },
+    {
+      "id": "OBL-main-tab-always-visible",
+      "title": "Main tab always visible for primary ticket content",
+      "derivedFrom": [
+        "BR-8.1"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs"
+      ],
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "OBL-no-duplicate-tabs",
+      "title": "Dot-notation files appear only inside virtual folders",
+      "derivedFrom": [
+        "BR-8.2"
+      ],
+      "artifactIds": [
+        "ART-document-service"
+      ],
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "OBL-virtual-folder-click-forward",
+      "title": "Clicking virtual folder navigates to root file",
+      "derivedFrom": [
+        "BR-8.3"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs",
+        "ART-navigation-hook"
+      ],
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "OBL-main-path-in-virtual-folder",
+      "title": "Main child path equals namespace",
+      "derivedFrom": [
+        "BR-8.4"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs",
+        "ART-navigation-hook"
+      ],
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "OBL-url-format-by-folder-type",
+      "title": "URL uses dot for virtual, slash for physical folders",
+      "derivedFrom": [
+        "C-4.2"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs",
+        "ART-document-service"
+      ],
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "OBL-filepath-in-api-response",
+      "title": "API includes filePath for all subdocument nodes",
+      "derivedFrom": [
+        "C-4.1"
+      ],
+      "artifactIds": [
+        "ART-document-service"
+      ],
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "OBL-no-main-tab",
+      "title": "No main tab when no root document exists",
+      "derivedFrom": [
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs"
+      ],
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "OBL-sub-tab-ordering",
+      "title": "Sub-tabs ordered: Main first, then dot-notation alpha, then folder alpha",
+      "derivedFrom": [
+        "BR-12"
+      ],
+      "artifactIds": [
+        "ART-subdoc-tabs"
+      ],
+      "sourceRef": "CR:MDT-138"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-subdoc-tabs",
+      "path": "src/components/TicketDetail/SubDocumentTabs.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR Section 3.6"
+    },
+    {
+      "id": "ART-document-types",
+      "path": "shared/types/Document.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 3.6"
+    },
+    {
+      "id": "ART-document-service",
+      "path": "server/src/services/DocumentService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 3.6"
+    },
+    {
+      "id": "ART-document-service-test",
+      "path": "server/src/__tests__/services/DocumentService.test.ts",
+      "kind": "test",
+      "sourceRef": "CR Section 3.6"
+    },
+    {
+      "id": "ART-namespace-e2e",
+      "path": "tests/e2e/ticket/namespace.spec.ts",
+      "kind": "test",
+      "sourceRef": "BDD"
+    },
+    {
+      "id": "ART-navigation-hook",
+      "path": "src/components/TicketViewer/useTicketDocumentNavigation.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-138"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-namespace-parser-unit",
+      "kind": "unit",
+      "title": "Namespace parsing functions unit tests",
+      "covers": [
+        "C-1",
+        "Edge-1",
+        "Edge-3"
+      ],
+      "file": "server/tests/unit/namespace-parser.test.ts",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "TEST-namespace-api-integration",
+      "kind": "integration",
+      "title": "Namespace API integration tests",
+      "covers": [
+        "BR-2",
+        "BR-3",
+        "BR-5",
+        "C-1",
+        "C-4",
+        "Edge-1",
+        "Edge-3",
+        "Edge-4"
+      ],
+      "file": "server/tests/api/ticket-namespace.test.ts",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "TEST-namespace-tabs",
+      "kind": "e2e",
+      "title": "Dot-notation namespace tab E2E tests",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "C-2",
+        "C-3",
+        "Edge-2",
+        "Edge-4"
+      ],
+      "file": "tests/e2e/ticket/namespace.spec.ts",
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "TEST-filepath-api-response",
+      "kind": "e2e",
+      "title": "Verify filePath in API response for all subdocument nodes",
+      "covers": [
+        "C-4.1"
+      ],
+      "sourceRef": "CR:MDT-138"
+    },
+    {
+      "id": "TEST-url-format-by-folder",
+      "kind": "e2e",
+      "title": "Verify URL format uses dot for virtual folders, slash for physical folders",
+      "covers": [
+        "C-4.2"
+      ],
+      "sourceRef": "CR:MDT-138"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Extend SubDocument type with isVirtual field",
+      "ownsArtifactIds": [
+        "ART-document-types"
+      ],
+      "makesGreenIds": [
+        "TEST-namespace-parser-unit"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Implement namespace parsing in TicketService",
+      "ownsArtifactIds": [
+        "ART-document-service",
+        "ART-document-service-test"
+      ],
+      "makesGreenIds": [
+        "TEST-namespace-parser-unit",
+        "TEST-namespace-api-integration"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Update TicketDocumentTabs for namespace grouping",
+      "ownsArtifactIds": [
+        "ART-namespace-e2e",
+        "ART-navigation-hook",
+        "ART-subdoc-tabs"
+      ],
+      "makesGreenIds": [
+        "dot_notation_url_routing",
+        "folder_dot_coexistence",
+        "folder_subfile_url_routing",
+        "multi_dot_preservation",
+        "namespace_grouping_with_sorting",
+        "namespace_selection_shows_first",
+        "no_main_tab_without_root",
+        "root_document_url_routing",
+        "single_tab_display",
+        "special_characters_preserved",
+        "sse_adds_subdocument",
+        "sse_removes_subdocument",
+        "TEST-namespace-tabs",
+        "url_routing_namespace_path",
+        "main_tab_always_visible",
+        "dot_notation_in_virtual_folder",
+        "virtual_folder_click_forward",
+        "main_child_path_equals_namespace",
+        "TEST-filepath-api-response",
+        "TEST-url-format-by-folder",
+        "sub_tab_ordering"
+      ],
+      "sourceRef": "CR:MDT-138"
+    }
+  ]
+}

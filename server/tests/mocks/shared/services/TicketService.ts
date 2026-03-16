@@ -233,16 +233,13 @@ export class TicketService {
 
     // Define valid status transitions
     const validTransitions: Record<string, string[]> = {
-      'Proposed': ['Approved', 'Rejected', 'In Progress', 'On Hold', 'Implemented', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
-      'Approved': ['In Progress', 'Rejected', 'On Hold', 'Implemented', 'Proposed', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
-      'In Progress': ['Implemented', 'Approved', 'On Hold', 'Rejected', 'Proposed', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
-      'Implemented': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'On Hold', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
-      'Rejected': ['Proposed', 'Approved', 'Implemented', 'On Hold', 'In Progress', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
-      'On Hold': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'Implemented', 'Superseded', 'Deprecated', 'Duplicate', 'Partially Implemented'],
-      'Superseded': ['Proposed', 'Approved', 'In Progress', 'Implemented', 'On Hold', 'Rejected', 'Deprecated', 'Duplicate', 'Partially Implemented'],
-      'Deprecated': ['Superseded', 'Proposed'],
-      'Duplicate': ['Superseded', 'Rejected'],
-      'Partially Implemented': ['Implemented', 'In Progress', 'On Hold', 'Superseded', 'Rejected', 'Proposed'],
+      'Proposed': ['Approved', 'Rejected', 'In Progress', 'On Hold', 'Implemented', 'Partially Implemented'],
+      'Approved': ['In Progress', 'Rejected', 'On Hold', 'Implemented', 'Proposed', 'Partially Implemented'],
+      'In Progress': ['Implemented', 'Approved', 'On Hold', 'Rejected', 'Proposed', 'Partially Implemented'],
+      'Implemented': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'On Hold', 'Partially Implemented'],
+      'Rejected': ['Proposed', 'Approved', 'Implemented', 'On Hold', 'In Progress', 'Partially Implemented'],
+      'On Hold': ['In Progress', 'Approved', 'Rejected', 'Proposed', 'Implemented', 'Partially Implemented'],
+      'Partially Implemented': ['Implemented', 'In Progress', 'On Hold', 'Rejected', 'Proposed'],
     }
 
     const allowedTransitions = validTransitions[currentStatus] || []

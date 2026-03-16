@@ -17,9 +17,6 @@ export const STATUSES = [
   'Implemented',
   'Rejected',
   'On Hold',
-  'Superseded',
-  'Deprecated',
-  'Duplicate',
   'Partially Implemented',
 ] as const
 

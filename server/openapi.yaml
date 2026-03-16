@@ -47,6 +47,7 @@ components:
         - Implemented
         - Rejected
         - On Hold
+        - Partially Implemented
       description: Change Request status
       example: Proposed
     CRType:
@@ -57,6 +58,7 @@ components:
         - Bug Fix
         - Technical Debt
         - Documentation
+        - Research
       description: Change Request type
       example: Feature Enhancement
     CRPriority:
@@ -81,7 +83,7 @@ components:
           type: string
           description: Unique CR identifier
           example: MDT-001
-          pattern: '^[A-Z]+-\d{3,}$'
+          pattern: '^[A-Z][A-Z0-9]{2,4}-\\d{3,4}$'
         title:
           type: string
           description: CR title
@@ -100,32 +102,20 @@ components:
           description: Phase or epic this CR belongs to
           example: Phase 1
         dependsOn:
-          oneOf:
-            - type: string
-            - type: array
-              items:
-                type: string
-          description: CR codes this depends on (comma-separated string or array)
+          type: string
+          description: Comma-separated CR codes this depends on
           example: 'MDT-001, MDT-002'
         blocks:
-          oneOf:
-            - type: string
-            - type: array
-              items:
-                type: string
-          description: CR codes blocked by this (comma-separated string or array)
+          type: string
+          description: Comma-separated CR codes blocked by this
           example: MDT-010
         assignee:
           type: string
           description: Person assigned to implement this CR
           example: john.doe
         relatedTickets:
-          oneOf:
-            - type: string
-            - type: array
-              items:
-                type: string
-          description: Related CR codes (comma-separated string or array)
+          type: string
+          description: Comma-separated related CR codes
           example: MDT-003
         impactAreas:
           type: array
@@ -139,58 +129,10 @@ components:
           type: string
           format: date
           description: Date implementation completed (ISO 8601)
-          example: 2025-09-20
+          example: '2025-09-20'
         implementationNotes:
           type: string
           description: Notes about the implementation
-        subdocuments:
-          type: array
-          description: Ordered sub-documents discovered in the ticket's sub-document directory (MDT-093)
-          items:
-            $ref: '#/components/schemas/SubDocument'
-    SubDocument:
-      type: object
-      required:
-        - name
-        - kind
-        - children
-      properties:
-        name:
-          type: string
-          description: Entry name without file extension
-        kind:
-          type: string
-          enum: [file, folder]
-          description: Entry type
-        children:
-          type: array
-          items:
-            $ref: '#/components/schemas/SubDocument'
-          description: Nested entries (populated for folders)
-    SubDocumentDetail:
-      type: object
-      required:
-        - code
-        - content
-        - dateCreated
-        - lastModified
-      properties:
-        code:
-          type: string
-          description: Sub-document identifier (name without extension)
-        content:
-          type: string
-          description: Markdown content
-        dateCreated:
-          type: string
-          format: date-time
-          nullable: true
-          description: File creation date
-        lastModified:
-          type: string
-          format: date-time
-          nullable: true
-          description: File last modified date
     CRInput:
       type: object
       required:
@@ -286,6 +228,52 @@ components:
         content:
           type: string
           description: Document content (when requested)
+    SubDocument:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          description: Sub-document identifier (name without extension)
+          example: requirements
+        type:
+          type: string
+          enum:
+            - file
+            - folder
+          description: Entry type
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubDocument'
+          description: Nested entries (populated for folders)
+    SubDocumentDetail:
+      type: object
+      required:
+        - code
+        - content
+        - dateCreated
+        - lastModified
+      properties:
+        code:
+          type: string
+          description: Sub-document identifier (name without extension)
+          example: requirements
+        content:
+          type: string
+          description: Markdown content
+        dateCreated:
+          type: string
+          format: date-time
+          nullable: true
+          description: File creation date
+        lastModified:
+          type: string
+          format: date-time
+          nullable: true
+          description: File last modified date
     Error400:
       type: object
       required:
@@ -511,7 +499,7 @@ components:
       required: true
       schema:
         type: string
-        pattern: '^[A-Z]+-\d{3,}$'
+        pattern: '^[A-Z][A-Z0-9]{2,4}-\\d{3,4}$'
       description: CR identifier
       example: MDT-001
     projectCode:
@@ -990,13 +978,6 @@ paths:
       summary: List all projects
       tags:
         - Projects
-      parameters:
-        - name: bypassCache
-          in: query
-          schema:
-            type: boolean
-            default: false
-          description: Force cache refresh and reload all projects from disk
       responses:
         '200':
           description: List of all registered projects
@@ -1029,12 +1010,6 @@ paths:
         - CRs
       parameters:
         - $ref: '#/components/parameters/projectId'
-        - name: bypassCache
-          in: query
-          schema:
-            type: boolean
-            default: false
-          description: Force cache refresh and reload all projects before fetching CRs
       responses:
         '200':
           description: List of CRs
@@ -1124,8 +1099,7 @@ paths:
           $ref: '#/components/responses/NotFound'
   '/api/projects/{projectId}/crs/{crId}/subdocuments/{subDocName}':
     get:
-      summary: Get sub-document content
-      description: Retrieves the content and metadata for a specific sub-document within a ticket's sub-document directory (MDT-093)
+      summary: Get individual sub-document content
       tags:
         - CRs
       parameters:
@@ -1136,29 +1110,16 @@ paths:
           required: true
           schema:
             type: string
-          description: Sub-document name without .md extension
+          description: Sub-document name (without .md extension)
       responses:
         '200':
-          description: Sub-document content and metadata
+          description: Sub-document content
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubDocumentDetail'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/projects/register:
-    post:
-      summary: Register project (deprecated)
-      tags:
-        - Projects
-      deprecated: true
-      responses:
-        '501':
-          description: Endpoint deprecated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   /api/projects/create:
     post:
       summary: Create new project
@@ -1479,6 +1440,88 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error500'
+  /api/config/selector:
+    get:
+      tags:
+        - System
+      summary: Get project selector configuration and state
+      description: Returns preferences from user.toml and state from project-selector.json
+      responses:
+        '200':
+          description: Selector configuration and state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  preferences:
+                    type: object
+                    properties:
+                      visibleCount:
+                        type: integer
+                        description: Number of visible projects in selector
+                        example: 7
+                      compactInactive:
+                        type: boolean
+                        description: Whether to compact inactive projects
+                        example: true
+                  selectorState:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        favorite:
+                          type: boolean
+                        lastUsedAt:
+                          type: string
+                          format: date-time
+                        count:
+                          type: integer
+    post:
+      tags:
+        - System
+      summary: Update project selector state
+      description: Persists selector state to project-selector.json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  favorite:
+                    type: boolean
+                  lastUsedAt:
+                    type: string
+                    format: date-time
+                  count:
+                    type: integer
+      responses:
+        '200':
+          description: State persisted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error500'
   /api/tasks:
     get:
       tags:
@@ -1623,179 +1666,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error400'
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error500'
-  '/api/duplicates/{projectId}':
-    get:
-      tags:
-        - Duplicates
-      summary: Get duplicate tickets (deprecated)
-      description: |
-        Finds tickets with identical or similar titles within a project.
-        **Deprecated per MDT-082** - returns empty results.
-      deprecated: true
-      parameters:
-        - $ref: '#/components/parameters/projectId'
-      responses:
-        '200':
-          description: Duplicate detection results
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  duplicates:
-                    type: array
-                    items:
-                      type: object
-                  totalDuplicates:
-                    type: integer
-                    example: 0
-        '400':
-          description: Missing project ID
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error400'
-        '404':
-          description: Project not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error404'
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error500'
-  /api/duplicates/preview:
-    post:
-      tags:
-        - Duplicates
-      summary: Preview duplicate rename (deprecated)
-      description: |
-        Previews changes that would occur when renaming a duplicate ticket.
-        **Deprecated per MDT-082** - returns empty results.
-      deprecated: true
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - projectId
-                - filepath
-              properties:
-                projectId:
-                  type: string
-                  example: mdt
-                filepath:
-                  type: string
-                  example: docs/CRs/MDT-001.md
-      responses:
-        '200':
-          description: Rename preview
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  originalFilepath:
-                    type: string
-                  newFilepath:
-                    type: string
-                  oldCode:
-                    type: string
-                  newCode:
-                    type: string
-                  changesPreview:
-                    type: string
-        '400':
-          description: Missing required fields
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error400'
-        '404':
-          description: Project not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error404'
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error500'
-  /api/duplicates/resolve:
-    post:
-      tags:
-        - Duplicates
-      summary: Resolve duplicate ticket (deprecated)
-      description: |
-        Resolves a duplicate by renaming or deleting the ticket.
-        **Deprecated per MDT-082** - returns empty results.
-      deprecated: true
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - projectId
-                - oldFilepath
-                - action
-              properties:
-                projectId:
-                  type: string
-                  example: mdt
-                oldFilepath:
-                  type: string
-                  example: docs/CRs/MDT-001.md
-                action:
-                  type: string
-                  enum:
-                    - rename
-                    - delete
-                  example: rename
-      responses:
-        '200':
-          description: Resolution result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-                  action:
-                    type: string
-                  originalFilepath:
-                    type: string
-                  newFilepath:
-                    type: string
-        '400':
-          description: Missing required fields
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error400'
-        '404':
-          description: Project not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error404'
         '500':
           description: Server error
           content:

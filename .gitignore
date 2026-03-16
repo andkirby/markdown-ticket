@@ -88,9 +88,9 @@ counter-api/
 **/unused.*
 **/typescript-graph.md
 # MDT agentic implementation checkpoint state
-**/.checkpoint.json
-**/.checkpoint.yaml
-.*/
+**/.*.json
+**/.*.yaml
+/.*/
 
 # Task status tracking
 *.tasks-status.yaml
