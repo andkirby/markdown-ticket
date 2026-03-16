@@ -16,10 +16,20 @@
       "sourceType": "github",
       "computedHash": "b838edcf3c3a56e2e2b2eef0876bc7d3c36bb79ff1026017ed14a0ea34b7ac98"
     },
+    "react-best-practices": {
+      "source": "0xbigboss/claude-code",
+      "sourceType": "github",
+      "computedHash": "aa9b223c6803bc5d1aaa6829efe33e17de1f69927abf00819d0fd2b9e319ff4f"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
       "computedHash": "1ec42c9b918b315d8e5c6c856b78c3c4725fc93dea30b9b7e9975c69848fcce6"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "afeca00ac2f492d88fdd010e73d91719a5b57c564bb4a73325b0bd77e11323ab"
     },
     "vercel-react-native-skills": {
       "source": "vercel-labs/agent-skills",
