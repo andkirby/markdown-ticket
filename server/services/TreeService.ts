@@ -20,6 +20,7 @@ interface Project {
 interface _Config {
   documentPaths: string[]
   excludeFolders: string[]
+  maxDepth?: number
   ticketsPath?: string | null | undefined
 }
 
@@ -65,10 +66,11 @@ export class TreeService {
       document: {
         paths: docPaths,
         excludeFolders: config.excludeFolders,
+        maxDepth: config.maxDepth,
       },
       ticketsPath: config.ticketsPath ?? undefined,
     }
-    const allFiles = await builder.build(project.project.path, projectConfig) as TreeNode[]
+    const allFiles = await builder.build(project.project.path, projectConfig, config.maxDepth) as TreeNode[]
 
     return this._filterByDocumentPaths(allFiles, docPaths)
   }
@@ -86,11 +88,12 @@ export class TreeService {
       document: {
         paths: config.documentPaths,
         excludeFolders: config.excludeFolders,
+        maxDepth: config.maxDepth,
       },
       ticketsPath: config.ticketsPath ?? undefined,
     }
 
-    return await builder.build(project.project.path, projectConfig) as TreeNode[]
+    return await builder.build(project.project.path, projectConfig, config.maxDepth) as TreeNode[]
   }
 
   private async _getProject(projectId: string): Promise<Project> {

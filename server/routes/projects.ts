@@ -199,28 +199,6 @@ export function createProjectRouter(projectController: ProjectController): Route
 
   /**
    * @openapi
-   * /api/projects/register:
-   *   post:
-   *     summary: Register project (deprecated)
-   *     tags: [Projects]
-   *     deprecated: true
-   *     responses:
-   *       501:
-   *         description: Endpoint deprecated
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Error'
-   */
-  router.post('/register', (req, res) => {
-    res.status(501).json({
-      error: 'This endpoint is deprecated',
-      message: 'Please use POST /api/projects/create instead',
-    })
-  })
-
-  /**
-   * @openapi
    * /api/projects/create:
    *   post:
    *     summary: Create new project

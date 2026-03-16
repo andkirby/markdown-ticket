@@ -15,6 +15,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import process from 'node:process'
 import jestOpenAPI from 'jest-openapi'
+import { promises as fs } from 'node:fs'
+import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
 
 // Initialize jest-openapi with OpenAPI spec (jest runs in CommonJS context)
 const openApiSpecPath = join(__dirname, '../../openapi.yaml')
@@ -105,6 +107,27 @@ export async function createTestProjectWithCR(
   }
 
   return { projectCode: project.key, crCode: crResult.crCode! }
+}
+
+export async function setProjectDocumentMaxDepth(
+  projectFactory: ProjectFactory,
+  projectCode: string,
+  maxDepth: number,
+): Promise<void> {
+  const configPath = join(projectFactory.getProjectsDir(), projectCode, '.mdt-config.toml')
+  const content = await fs.readFile(configPath, 'utf8')
+  const config = parseToml(content) as any
+
+  if (!config.project) {
+    config.project = {}
+  }
+  if (!config.project.document) {
+    config.project.document = {}
+  }
+
+  config.project.document.maxDepth = maxDepth
+
+  await fs.writeFile(configPath, stringify(config), 'utf8')
 }
 
 /** Reset the test setup cache (useful for testing multiple isolated scenarios) */

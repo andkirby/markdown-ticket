@@ -6,6 +6,7 @@ import { parseToml } from '@mdt/shared/utils/toml.js'
 interface ProjectConfiguration {
   documentPaths: string[]
   excludeFolders: string[]
+  maxDepth?: number
   ticketsPath: string | null
 }
 
@@ -50,6 +51,12 @@ export class ConfigRepository {
         config.excludeFolders = exclFolders.filter(folder => typeof folder === 'string')
       }
 
+      const maxDepth = parsed.project?.document?.maxDepth
+
+      if (typeof maxDepth === 'number' && Number.isInteger(maxDepth)) {
+        config.maxDepth = maxDepth
+      }
+
       // Parse tickets path from project section
       if (parsed.project) {
         // New format: project.ticketsPath
@@ -79,6 +86,7 @@ export class ConfigRepository {
     return {
       documentPaths: [],
       excludeFolders: [DEFAULTS.TICKETS_PATH, 'node_modules', '.git'],
+      maxDepth: undefined,
       ticketsPath: null,
     }
   }
