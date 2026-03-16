@@ -7,18 +7,21 @@
 
 /// <reference types="jest" />
 
+import { createTestDocument, documentFixtures } from './fixtures/documents'
 import { assertBadRequest, assertBodyHasProperties, assertErrorMessage, assertIsArray, assertNotFound, assertSuccess, createGetRequest, createPostRequest } from './helpers'
-import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
+import { cleanupTestEnvironment, setProjectDocumentMaxDepth, setupTestEnvironment } from './setup'
 
 describe('system Endpoint Tests (MDT-106)', () => {
   let tempDir: string
   let app: Awaited<ReturnType<typeof setupTestEnvironment>>['app']
+  let projectFactory: Awaited<ReturnType<typeof setupTestEnvironment>>['projectFactory']
 
   beforeAll(async () => {
     const context = await setupTestEnvironment()
 
     tempDir = context.tempDir
     app = context.app
+    projectFactory = context.projectFactory
   })
 
   afterAll(async () => {
@@ -107,6 +110,38 @@ describe('system Endpoint Tests (MDT-106)', () => {
       const response = await createPostRequest(app, '/api/filesystem/exists', { path: tempDir })
 
       expect(response).toSatisfyApiSpec()
+    })
+  })
+
+  describe('gET /api/filesystem', () => {
+    it('should respect configured document maxDepth for path selection trees', async () => {
+      const project = await projectFactory.createProject('empty', {
+        name: 'Path Selection Depth Project',
+        code: 'PDEP',
+        documentPaths: ['docs', 'README.md'],
+      })
+
+      await setProjectDocumentMaxDepth(projectFactory, project.key, 2)
+      await createTestDocument(projectFactory, project.key, 'README.md', documentFixtures.withoutFrontmatter)
+      await createTestDocument(projectFactory, project.key, 'docs/overview.md', documentFixtures.withFrontmatter)
+      await createTestDocument(projectFactory, project.key, 'docs/guide/getting-started.md', documentFixtures.complexFrontmatter)
+
+      const response = await createGetRequest(app, `/api/filesystem?projectId=${project.key}`)
+
+      assertSuccess(response, 200)
+      assertIsArray(response)
+
+      const walk = (nodes: Array<Record<string, unknown>>): string[] =>
+        nodes.flatMap(node => [
+          node.path as string,
+          ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : []),
+        ])
+
+      const allPaths = walk(response.body as Array<Record<string, unknown>>)
+
+      expect(allPaths).toContain('README.md')
+      expect(allPaths).toContain('docs/overview.md')
+      expect(allPaths).not.toContain('docs/guide/getting-started.md')
     })
   })
 
