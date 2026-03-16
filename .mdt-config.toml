@@ -9,6 +9,6 @@ description = "Kanban-style ticket board with markdown storage"
 repository = "https://github.com/user/markdown-ticket"
 
 [project.document]
-paths = [ "generated-docs", "logger-tree", "docs" ]
+paths = [ "generated-docs", "docs" ]
 excludeFolders = [ "node_modules", ".git", "test-results" ]
 maxDepth = 5
