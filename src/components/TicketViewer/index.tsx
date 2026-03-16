@@ -154,6 +154,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
             folderStack={folderStack}
             onSelect={selectPath}
             pendingPath={pendingPath}
+            ticketCode={currentTicket?.code ?? ''}
           />
 
           {/* Content area: sub-document or main ticket content */}

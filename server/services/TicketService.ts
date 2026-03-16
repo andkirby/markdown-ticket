@@ -404,14 +404,9 @@ export class TicketService {
         // BR-12: Order is [Main] first, then dot-notation alpha, then /folder alpha
         if (nsDoc.isVirtual && !existing.isVirtual) {
           // Physical folder exists, merge children from virtual folder
-          // Note: physical children get / prefix to distinguish from virtual children with same name
-          const physicalChildren = existing.children.map(child => ({
-            ...child,
-            name: `/${child.name}`,
-          }))
-
-          // Merge and sort according to BR-12
-          existing.children = mergeAndSortChildren(nsDoc.children, physicalChildren)
+          // BR-12: Order is [Main] first, then dot-notation alpha, then /folder alpha
+          // Note: Children may have duplicate names; frontend uses filePath for identification
+          existing.children = mergeAndSortChildren(nsDoc.children, existing.children)
           existing.isVirtual = false
         }
         else if (!nsDoc.isVirtual && existing.isVirtual) {
@@ -421,14 +416,9 @@ export class TicketService {
         else if (!nsDoc.isVirtual && !existing.isVirtual) {
           // Both are non-virtual (physical) folders - this happens when groupNamespacedFiles
           // returns a folder for dot-notation files that also has a physical folder on disk
-          // Note: physical children get / prefix to distinguish from virtual children with same name
-          const physicalChildren = existing.children.map(child => ({
-            ...child,
-            name: `/${child.name}`,
-          }))
-
-          // Merge and sort according to BR-12
-          existing.children = mergeAndSortChildren(nsDoc.children, physicalChildren)
+          // BR-12: Order is [Main] first, then dot-notation alpha, then /folder alpha
+          // Note: Children may have duplicate names; frontend uses filePath for identification
+          existing.children = mergeAndSortChildren(nsDoc.children, existing.children)
           existing.isVirtual = false
         }
         // If both are virtual, keep existing

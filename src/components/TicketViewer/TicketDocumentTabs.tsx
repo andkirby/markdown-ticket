@@ -11,6 +11,7 @@
 
 import * as Tabs from "@radix-ui/react-tabs";
 import type { SubDocument } from "@mdt/shared/models/SubDocument";
+import { filePathToApiPath } from "../../utils/subdocPathValidation";
 
 interface TicketDocumentTabsProps {
   subdocuments: SubDocument[];
@@ -18,6 +19,7 @@ interface TicketDocumentTabsProps {
   folderStack: string[];
   onSelect: (path: string) => void;
   pendingPath?: string | null;
+  ticketCode: string; // Required for converting filePath to apiPath
 }
 
 /**
@@ -48,6 +50,7 @@ function buildTabRows(
   subdocuments: SubDocument[],
   selectedPath: string,
   folderStack: string[],
+  ticketCode: string,
 ): Array<{ entries: SubDocument[]; activeValue: string }> {
   const rows: Array<{ entries: SubDocument[]; activeValue: string }> = [];
 
@@ -77,12 +80,15 @@ function buildTabRows(
     // Path segments use normalized names (no prefix)
     const pathSegment = pathSegments[i + 1] ?? "";
 
-    // Find matching child - handle both virtual (no prefix) and physical (/ prefix) children
-    // Physical children have names like '/trace', virtual children have names like 'trace'
+    // Find matching child using filePath as the source of truth
+    // Convert child's filePath to apiPath and match with pathSegment
     let activeInRow = folder.children.find((c) => {
-      // Normalize child name: strip leading / for physical children
-      const normalized = c.name.startsWith("/") ? c.name.slice(1) : c.name;
-      return normalized === pathSegment;
+      if (!c.filePath) return false;
+      // Convert filePath to apiPath (e.g., "MDT-138/bdd/another.trace.md" → "bdd/another.trace")
+      const apiPath = filePathToApiPath(c.filePath, ticketCode);
+      // Get the last segment of the apiPath
+      const lastSegment = apiPath.includes('/') ? apiPath.split('/').pop()! : apiPath.split('.').pop()!;
+      return lastSegment === pathSegment;
     })?.name;
 
     // Default to first child if no match found
@@ -102,13 +108,14 @@ export function TicketDocumentTabs({
   selectedPath,
   folderStack,
   onSelect,
+  ticketCode,
 }: TicketDocumentTabsProps) {
   // Hidden when no sub-documents exist (BR-1.5)
   if (subdocuments.length === 0) {
     return null;
   }
 
-  const rows = buildTabRows(subdocuments, selectedPath, folderStack);
+  const rows = buildTabRows(subdocuments, selectedPath, folderStack, ticketCode);
 
   return (
     /* @testid subdoc-tabs — container for tab rows; only rendered when subdocuments exist */
@@ -127,54 +134,31 @@ export function TicketDocumentTabs({
               return;
             }
 
-            // Determine full path based on folder nesting
-            // MDT-138: Use dot notation for virtual folders, slash notation for physical folders
-            // Physical children have / prefix in their name to distinguish from virtual children
-            const prefix = folderStack.slice(0, rowIdx);
+            // Find the entry by name
             const entry = row.entries.find((e) => e.name === value);
-
-            // Check if this is a physical child (name starts with /)
-            const isPhysicalChild = value.startsWith("/");
-            const childName = isPhysicalChild ? value.slice(1) : value;
-
-            // Build path using appropriate separator
-            let fullPath: string;
-            if (prefix.length > 0) {
-              if (isPhysicalChild) {
-                // Physical child uses slash notation
-                // e.g., 'bdd' folder + '/aaa' child = 'bdd/aaa'
-                fullPath = [...prefix, childName].join("/");
-              } else if (childName === "main") {
-                // Special case: 'main' child in virtual folder represents root file
-                // e.g., 'bdd' folder + 'main' child = 'bdd' (not 'bdd.main')
-                fullPath = prefix.join(".");
-              } else {
-                // Virtual child uses dot notation
-                // e.g., 'bdd' folder + 'trace' child = 'bdd.trace'
-                fullPath = [...prefix, childName].join(".");
+            if (!entry?.filePath) {
+              // Main tab has no filePath, handle specially
+              if (value === "main") {
+                onSelect("main");
               }
-            } else {
-              fullPath = childName;
+              return;
             }
 
-            // For folders, auto-navigate to first child so content loads
-            if (entry?.kind === "folder" && entry.children.length > 0) {
-              const firstChild = entry.children[0];
-              const firstIsPhysical = firstChild.name.startsWith("/");
-              const firstName = firstIsPhysical
-                ? firstChild.name.slice(1)
-                : firstChild.name;
+            // Use filePath as the source of truth for navigation
+            // Convert filePath to apiPath for state/URL (e.g., "MDT-138/bdd/another.trace.md" → "bdd/another.trace")
+            const apiPath = filePathToApiPath(entry.filePath, ticketCode);
 
-              if (firstName === "main") {
-                // 'main' child always represents the root file (e.g., bdd.md)
-                // Navigate to namespace only, regardless of isVirtual
-                onSelect(fullPath);
-              } else {
-                const separator = entry.isVirtual === true ? "." : "/";
-                onSelect(`${fullPath}${separator}${firstName}`);
+            // For folders, auto-navigate to first child so content loads
+            if (entry.kind === "folder" && entry.children.length > 0) {
+              const firstChild = entry.children[0];
+              if (firstChild.filePath) {
+                // Use first child's filePath for navigation
+                const firstApiPath = filePathToApiPath(firstChild.filePath, ticketCode);
+                onSelect(firstApiPath);
               }
             } else {
-              onSelect(fullPath);
+              // For files, use the apiPath directly
+              onSelect(apiPath);
             }
           }}
         >
@@ -190,6 +174,7 @@ export function TicketDocumentTabs({
                   key={entry.name}
                   value={entry.name}
                   data-testid={`subdoc-tab-${entry.name}`}
+                  data-filepath={entry.filePath || undefined} // Store filePath as source of truth
                   className="px-3 py-2 text-sm font-medium whitespace-nowrap data-[state=active]:border-b-2 data-[state=active]:border-primary relative"
                 >
                   {entry.name === "main" ? "Main" : entry.name}
