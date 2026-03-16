@@ -7,6 +7,7 @@
 
 import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 import type { CRStatus } from '../../models/Types.js'
+import { CRStatus as CRStatusEnum } from '../../models/Types.js'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { withRetry } from '../utils/retry-helper.js'
@@ -83,7 +84,7 @@ To be filled...
       const fullContent = `---
 code: ${crCode}
 title: ${ticketData.title}
-status: ${ticketData.status || 'Proposed'}
+status: ${ticketData.status || CRStatusEnum.PROPOSED}
 type: ${ticketData.type}
 priority: ${ticketData.priority || 'Medium'}
 ${ticketData.phaseEpic ? `phaseEpic: ${ticketData.phaseEpic}` : ''}

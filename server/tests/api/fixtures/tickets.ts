@@ -20,10 +20,7 @@ const _statusFixtures: Record<CRStatus, string> = {
   'Implemented': tpl('TEST-004', 'Implemented', 'Documentation', 'Low'),
   'Rejected': tpl('TEST-005', 'Rejected', 'Feature Enhancement', 'Low'),
   'On Hold': tpl('TEST-006', 'On Hold', 'Feature Enhancement', 'Medium'),
-  'Superseded': tpl('TEST-007', 'Superseded', 'Bug Fix', 'Low'),
-  'Deprecated': tpl('TEST-008', 'Deprecated', 'Technical Debt', 'Low'),
-  'Duplicate': tpl('TEST-009', 'Duplicate', 'Documentation', 'Low'),
-  'Partially Implemented': tpl('TEST-010', 'Partially Implemented', 'Feature Enhancement', 'Medium'),
+  'Partially Implemented': tpl('TEST-007', 'Partially Implemented', 'Feature Enhancement', 'Medium'),
 }
 
 // Type fixtures (Feature Enhancement, Bug Fix, Technical Debt, Architecture, Documentation, Research)

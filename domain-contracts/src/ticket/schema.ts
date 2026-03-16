@@ -7,13 +7,19 @@ import { z } from 'zod'
 import { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema.js'
 
 /**
+ * CR code pattern for validation and OpenAPI schemas
+ * Format: PREFIX-123 where PREFIX is 2-4 alphanumeric chars (first must be letter)
+ */
+export const CR_CODE_PATTERN = /^[A-Z][A-Z0-9]{2,4}-\d{3,4}$/
+
+/**
  * Base CR schema with field validation
  * Core CR entity with required and optional fields
  */
 export const CRSchema = z.object({
   /** CR code: PREFIX-123 format (e.g., MDT-101) */
   code: z.string()
-    .regex(/^[A-Z][A-Z0-9]{2,4}-\d{3,4}$/, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
+    .regex(CR_CODE_PATTERN, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
   /** CR title: required, max 200 characters */
   title: z.string()
     .min(1, 'Title is required')
@@ -67,7 +73,7 @@ export const CreateTicketInputSchema = CRSchema
 export const UpdateTicketInputSchema = z.object({
   /** CR code: required for identification */
   code: z.string()
-    .regex(/^[A-Z][A-Z0-9]{2,4}-\d{3,4}$/, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
+    .regex(CR_CODE_PATTERN, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
   /** Optional new title */
   title: z.string()
     .min(1, 'Title is required')

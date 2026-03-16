@@ -64,20 +64,24 @@ export function validateSubDocPath(path: string): boolean {
 
 /**
  * Converts a URL path (with .md extension) to an API path (without .md extension).
+ * MDT-138: Preserves dot-notation for virtual folders, slash-notation for physical folders.
  *
- * @param urlPath - Path from URL (e.g., 'prep/test.md')
- * @returns Path for API call (e.g., 'prep/test')
+ * The backend handles both formats:
+ * - Virtual folders: 'tests.trace' → looks for 'tests.trace.md'
+ * - Physical folders: 'bdd/legacy' → looks for 'bdd/legacy.md' or 'bdd.legacy.md'
+ *
+ * @param urlPath - Path from URL (e.g., 'prep/test.md', 'tests.trace.md')
+ * @returns Path for API call (e.g., 'prep/test', 'tests.trace')
  *
  * @example
  * urlPathToApiPath('prep/test.md') // 'prep/test'
  * urlPathToApiPath('part-1/chapter-1/intro.md') // 'part-1/chapter-1/intro'
+ * urlPathToApiPath('tests.trace.md') // 'tests.trace' (virtual folder)
  */
 export function urlPathToApiPath(urlPath: string): string {
-  // Remove .md extension
-  if (urlPath.endsWith('.md')) {
-    return urlPath.slice(0, -3)
-  }
-  return urlPath
+  // Remove .md extension - no other transformation needed
+  // The backend handles both dot and slash notation
+  return urlPath.endsWith('.md') ? urlPath.slice(0, -3) : urlPath
 }
 
 /**
