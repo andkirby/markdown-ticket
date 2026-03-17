@@ -6,6 +6,12 @@
 import { z } from 'zod'
 
 /**
+ * Project code pattern for validation
+ * Format: 2-5 characters, uppercase letter followed by alphanumeric
+ */
+export const PROJECT_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}$/
+
+/**
  * Document configuration schema for project
  * Defines how documents are discovered and processed
  */
@@ -59,7 +65,7 @@ export const ProjectSchema = z.object({
   code: z.string()
     .min(2, 'Project code must be 2-5 chars')
     .max(5, 'Project code must be 2-5 chars')
-    .regex(/^[A-Z][A-Z0-9]{1,4}$/, 'Project code must be 2-5 chars, start with uppercase letter, and contain only alphanumeric characters'),
+    .regex(PROJECT_CODE_PATTERN, 'Project code must be 2-5 chars, start with uppercase letter, and contain only alphanumeric characters'),
   /** Project name: minimum 3 characters */
   name: z.string()
     .refine(
@@ -103,7 +109,7 @@ export const ProjectConfigSchema = z.object({
 export const CreateProjectInputSchema = z.object({
   /** Project code: 2-5 characters, uppercase letter followed by alphanumeric */
   code: z.string()
-    .regex(/^[A-Z][A-Z0-9]{1,4}$/, 'Project code must be 2-5 characters, start with uppercase letter, and contain only alphanumeric characters'),
+    .regex(PROJECT_CODE_PATTERN, 'Project code must be 2-5 characters, start with uppercase letter, and contain only alphanumeric characters'),
   /** Project name: minimum 3 characters */
   name: z.string()
     .min(3, 'Project name must have at least 3 characters')
@@ -127,7 +133,7 @@ export const CreateProjectInputSchema = z.object({
 export const UpdateProjectInputSchema = z.object({
   /** Project code: 2-5 characters, uppercase letter followed by alphanumeric */
   code: z.string()
-    .regex(/^[A-Z][A-Z0-9]{1,4}$/, 'Project code must be 2-5 characters, start with uppercase letter, and contain only alphanumeric characters')
+    .regex(PROJECT_CODE_PATTERN, 'Project code must be 2-5 characters, start with uppercase letter, and contain only alphanumeric characters')
     .optional(),
   /** Project name: minimum 3 characters */
   name: z.string()

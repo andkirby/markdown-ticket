@@ -59,36 +59,7 @@ interface _Suggestion {
   matchScore: number
 }
 
-// Zod Schemas for Validation
-const _TicketSchema = z.object({
-  // Required Core Attributes
-  code: z.string().regex(/^[A-Z]{2,}-[A-Z]\d{3}$/, 'Invalid ticket code format'),
-  title: z.string().min(1, 'Title is required'),
-  status: z.string().min(1, 'Status is required'),
-  dateCreated: z.date(),
-  type: z.string().min(1, 'Type is required'),
-  priority: z.string().min(1, 'Priority is required'),
-  phaseEpic: z.string().min(1, 'Phase epic is required'),
-
-  // Optional Attributes
-  description: z.string().optional(),
-  rationale: z.string().optional(),
-  relatedTickets: z.array(z.string()).optional(),
-  dependsOn: z.array(z.string()).optional(),
-  blocks: z.array(z.string()).optional(),
-  assignee: z.string().optional(),
-  implementationDate: z.date().optional(),
-  implementationNotes: z.string().optional(),
-
-  // MDT-095: Worktree fields (optional, backward compatible C5)
-  inWorktree: z.boolean().optional(),
-  worktreePath: z.string().optional(),
-
-  // Derived/System Fields
-  filePath: z.string(),
-  lastModified: z.date(),
-  content: z.string(),
-})
+// Zod Schemas for Validation (removed unused _TicketSchema - use TicketSchema below)
 
 // MDT-095: Export TicketSchema for use in tests - base schema with worktree fields optional
 export const TicketSchema = z.object({
@@ -124,8 +95,6 @@ export const TicketSchema = z.object({
 export function isTicketInWorktree(ticket: Partial<Ticket>): boolean {
   return ticket.inWorktree === true
 }
-
-type _TicketFormData = z.infer<typeof _TicketSchema>
 
 // Status Enum Values - imported from shared types
 export type Status = typeof CR_STATUSES[number]
