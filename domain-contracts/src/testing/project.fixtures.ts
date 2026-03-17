@@ -8,6 +8,7 @@ import type {
   DocumentConfig,
   Project,
   ProjectConfig,
+  ProjectConfigProject,
   UpdateProjectInput,
 } from '../project/schema'
 
@@ -48,10 +49,12 @@ export function buildProjectConfig(
     maxDepth: 3,
   }
 
-  return {
-    project,
-    'project.document': { ...defaultDocumentConfig, ...documentOverrides },
+  const projectConfig: ProjectConfigProject = {
+    ...project,
+    document: { ...defaultDocumentConfig, ...documentOverrides },
   }
+
+  return { project: projectConfig }
 }
 
 /**

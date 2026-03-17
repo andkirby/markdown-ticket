@@ -1,13 +1,14 @@
+import type { DocumentConfig, TicketsPath } from '@mdt/domain-contracts'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 
-interface ProjectConfiguration {
-  documentPaths: string[]
-  excludeFolders: string[]
-  maxDepth?: number
-  ticketsPath: string | null
+export interface ProjectConfiguration {
+  documentPaths: DocumentConfig['paths']
+  excludeFolders: DocumentConfig['excludeFolders']
+  maxDepth?: DocumentConfig['maxDepth']
+  ticketsPath: TicketsPath | null
 }
 
 /**

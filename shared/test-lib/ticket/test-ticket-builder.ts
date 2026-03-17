@@ -7,6 +7,7 @@
 
 import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 import type { CRStatus } from '../../models/Types.js'
+import type { ProjectConfig } from '../project-factory-types.js'
 import { CRStatus as CRStatusEnum } from '../../models/Types.js'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -36,14 +37,14 @@ export interface TestCRResult {
 /** Builder for creating test tickets with counter management */
 export class TestTicketBuilder {
   private projectsDir: string
-  private projectConfigs: Map<string, { ticketsPath?: string }> = new Map()
+  private projectConfigs: Map<string, Pick<ProjectConfig, 'ticketsPath'>> = new Map()
 
   constructor(projectsDir: string) {
     this.projectsDir = projectsDir
   }
 
   /** Register a project configuration */
-  registerProject(projectCode: string, ticketsPath?: string): void {
+  registerProject(projectCode: string, ticketsPath?: ProjectConfig['ticketsPath']): void {
     this.projectConfigs.set(projectCode, { ticketsPath })
   }
 

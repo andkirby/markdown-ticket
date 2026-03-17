@@ -6,29 +6,12 @@
  */
 
 import type { Project } from '../../models/Project.js'
+import type { ProjectConfig, ProjectData } from '../project-factory-types.js'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ProjectConfigService } from '../../services/project/ProjectConfigService.js'
 import { ProjectRegistry } from '../../services/project/ProjectRegistry.js'
 import { withRetry } from '../utils/retry-helper.js'
-
-/** Project configuration for test projects */
-export interface ProjectConfig {
-  repository?: string
-  name?: string
-  code?: string
-  description?: string
-  ticketsPath?: string
-  documentPaths?: string[]
-  excludeFolders?: string[]
-}
-
-/** Created project data */
-export interface ProjectData {
-  key: string
-  path: string
-  config: ProjectConfig
-}
 
 /** Error class for TestProjectBuilder operations */
 export class TestProjectBuilderError extends Error {

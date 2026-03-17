@@ -1,3 +1,8 @@
+import type {
+  ProjectConfig,
+  ProjectData,
+} from '@mdt/shared/test-lib'
+
 /**
  * Project Factory Types
  *
@@ -7,22 +12,7 @@
 
 // ===== Existing Types from ProjectFactory =====
 
-export interface ProjectConfig {
-  repository?: string
-  name?: string
-  code?: string
-  description?: string
-  ticketsPath?: string
-  documentPaths?: string[]
-  excludeFolders?: string[]
-  worktreeEnabled?: boolean
-}
-
-export interface ProjectData {
-  key: string
-  path: string
-  config: ProjectConfig
-}
+export type { ProjectConfig, ProjectData }
 
 export interface TestCRData {
   title: string
