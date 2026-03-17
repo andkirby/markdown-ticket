@@ -55,7 +55,8 @@ export {
   validatePortConfig,
 } from './config/ports.js'
 export { EventListenerRegistry } from './core/event-listener-registry.js'
-export { type ProjectConfig, type ProjectData, ProjectFactory, type TestCRResult, type TestScenario } from './core/project-factory.js'
+export { type ProjectConfig, type ProjectData } from './project-factory-types.js'
+export { ProjectFactory, type TestCRResult, type TestScenario } from './core/project-factory.js'
 export { ProjectFactoryError } from './core/project-factory.js'
 export { ServerConfigFactory } from './core/server-config-factory.js'
 export { TestEnvironment } from './core/test-environment.js'
@@ -67,7 +68,8 @@ export { TestServer } from './core/test-server.js'
 
 export { FileTicketCreator, type TicketCreationConfig, type TicketCreationResult } from './ticket/file-ticket-creator.js'
 
-export { TestProjectBuilder, type ProjectConfig as TestProjectBuilderConfig, TestProjectBuilderError, type ProjectData as TestProjectData } from './ticket/test-project-builder.js'
+export { TestProjectBuilder, TestProjectBuilderError } from './ticket/test-project-builder.js'
+export type { ProjectConfig as TestProjectBuilderConfig, ProjectData as TestProjectData } from './project-factory-types.js'
 
 export { type TestCRData, TestTicketBuilder } from './ticket/test-ticket-builder.js'
 

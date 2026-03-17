@@ -12,7 +12,7 @@
 export * from '@mdt/shared/test-lib'
 export { ProjectFactory } from '@mdt/shared/test-lib/core/project-factory'
 // Re-export types
-export type { ProjectConfig, ProjectData, TestCRResult, TestScenario } from '@mdt/shared/test-lib/core/project-factory'
+export type { ProjectConfig, ProjectData, TestCRResult, TestScenario } from '@mdt/shared/test-lib'
 
 // Use @mdt/shared path alias (mapped to ../shared/dist/* in tsconfig.json)
 export { TestEnvironment } from '@mdt/shared/test-lib/core/test-environment'

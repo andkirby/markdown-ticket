@@ -1,3 +1,10 @@
+import type {
+  DocumentConfig as DomainDocumentConfig,
+  Project as DomainProject,
+} from '@mdt/domain-contracts'
+
+import type { WorktreeConfigInput } from '@mdt/domain-contracts'
+
 /**
  * Three-Strategy Configuration Architecture Interfaces
  *
@@ -10,27 +17,31 @@
  * Local project configuration (Project-First and Auto-Discovery Strategies)
  * Complete project definition stored locally for portability
  */
+type LocalProjectFields = Pick<DomainProject, 'id' | 'name' | 'code' | 'ticketsPath' | 'description' | 'repository' | 'active'>
+type DocumentConfig = Partial<DomainDocumentConfig>
+type LocalProjectConfigProject = Omit<LocalProjectFields, 'id'> & {
+  id?: LocalProjectFields['id']
+  path?: string // Project root path (optional - config file location determines root)
+  startNumber: number
+  counterFile: string
+}
+type UnifiedProjectFields = Omit<LocalProjectFields, 'code' | 'description'> & {
+  code?: LocalProjectFields['code']
+  path: string // Absolute path to project directory
+  configFile: string // Path to local config file
+  counterFile?: string
+  startNumber?: number
+  description: string
+}
+type LegacyProjectConfigProject = Omit<LocalProjectConfigProject, 'active'> & {
+  active?: LocalProjectFields['active'] // Added for three-strategy architecture compatibility
+  document?: DocumentConfig
+}
+
 export interface LocalProjectConfig {
-  project: {
-    id?: string
-    name: string
-    code: string
-    path?: string // Project root path (optional - config file location determines root)
-    startNumber: number
-    counterFile: string
-    active: boolean
-    description?: string
-    repository?: string
-    ticketsPath?: string // Tickets path relative to project root (e.g., "docs/CRs")
-  }
-  document: {
-    paths?: string[]
-    excludeFolders?: string[]
-    maxDepth?: number
-  }
-  worktree?: {
-    enabled?: boolean // Enable or disable worktree support (default: true)
-  }
+  project: LocalProjectConfigProject
+  document: DocumentConfig
+  worktree?: WorktreeConfigInput
 }
 
 /**
@@ -39,19 +50,7 @@ export interface LocalProjectConfig {
  */
 export interface Project {
   id: string
-  project: {
-    id?: string
-    name: string
-    code?: string
-    path: string // Absolute path to project directory
-    configFile: string // Path to local config file
-    counterFile?: string
-    startNumber?: number
-    active: boolean
-    description: string
-    repository?: string
-    ticketsPath?: string
-  }
+  project: UnifiedProjectFields
   metadata: {
     dateRegistered: string
     lastAccessed: string
@@ -76,26 +75,8 @@ export interface Project {
  * @deprecated Use LocalProjectConfig instead
  */
 export interface ProjectConfig {
-  project: {
-    id?: string
-    name: string
-    code: string
-    path?: string // Optional: config file location determines project root
-    startNumber: number
-    counterFile: string
-    active?: boolean // Added for three-strategy architecture compatibility
-    description?: string
-    repository?: string
-    ticketsPath?: string // Tickets path relative to project root
-    document?: {
-      paths?: string[]
-      excludeFolders?: string[]
-      maxDepth?: number
-    }
-  }
-  worktree?: {
-    enabled?: boolean // Enable or disable worktree support (default: true)
-  }
+  project: LegacyProjectConfigProject
+  worktree?: WorktreeConfigInput
 }
 
 /**

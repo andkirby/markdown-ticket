@@ -1,3 +1,4 @@
+import type { Project as DomainProject } from '@mdt/domain-contracts'
 import type { Project, ProjectConfig } from '../../models/Project.js'
 import type { Ticket } from '../../models/Ticket.js'
 
@@ -99,25 +100,21 @@ export interface IProjectService extends
   IProjectFileSystemService {}
 
 /** Registry data structure */
-export interface RegistryData {
-  project: {
-    path: string
-    code?: string
-    name?: string
-    id?: string
-    ticketsPath?: string
-    description?: string
-    active?: boolean
-    startNumber?: number
-    counterFile?: string
-    repository?: string
-    dateRegistered?: string
-    document?: {
-      paths?: string[]
-      excludeFolders?: string[]
-      maxDepth?: number
-    }
+type RegistryProjectFields = Pick<DomainProject, 'ticketsPath' | 'code' | 'name' | 'id' | 'description' | 'active' | 'repository'>
+type RegistryProjectData = Partial<RegistryProjectFields> & {
+  path: string
+  startNumber?: number
+  counterFile?: string
+  dateRegistered?: string
+  document?: {
+    paths?: string[]
+    excludeFolders?: string[]
+    maxDepth?: number
   }
+}
+
+export interface RegistryData {
+  project: RegistryProjectData
   metadata: {
     dateRegistered: string
     lastAccessed: string
