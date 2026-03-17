@@ -138,4 +138,4 @@ export const TicketSchemas = {
 /**
  * Export individual enum schemas for convenience
  */
-export { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema.js'
+export { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'

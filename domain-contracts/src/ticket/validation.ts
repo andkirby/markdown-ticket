@@ -9,7 +9,7 @@ import {
   CRSchema,
   TicketSchema,
   UpdateTicketInputSchema,
-} from './schema.js'
+} from './schema'
 
 /**
  * Validate ticket data using TicketSchema.parse()
