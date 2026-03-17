@@ -59,9 +59,7 @@ export function buildCR(overrides: Partial<CR> = {}): CR {
  */
 export function buildCreateTicketInput(overrides: Partial<CreateTicketInput> = {}): CreateTicketInput {
   const defaults: CreateTicketInput = {
-    code: 'WEB-001',
     title: 'Add dark mode support',
-    status: CRStatus.APPROVED,
     type: CRType.FEATURE_ENHANCEMENT,
     priority: CRPriority.HIGH,
   }
@@ -76,7 +74,6 @@ export function buildCreateTicketInput(overrides: Partial<CreateTicketInput> = {
  */
 export function buildUpdateTicketInput(overrides: Partial<UpdateTicketInput> = {}): UpdateTicketInput {
   const defaults: UpdateTicketInput = {
-    code: 'MDT-101',
     priority: CRPriority.HIGH,
   }
 

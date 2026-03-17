@@ -94,7 +94,7 @@ export class TestProjectBuilder {
 
     const project: Project = {
       id: projectCode,
-      project: { name: projectName, code: projectCode, path: projectPath, configFile: join(projectPath, '.mdt-config.toml'), active: true, description: config.description || 'Test project', repository: config.repository || 'test-repo', ticketsPath: config.ticketsPath || 'docs/CRs' },
+      project: { id: projectCode, name: projectName, code: projectCode, path: projectPath, configFile: join(projectPath, '.mdt-config.toml'), active: true, description: config.description || 'Test project', repository: config.repository || 'test-repo', ticketsPath: config.ticketsPath || 'docs/CRs' },
       metadata: { dateRegistered: new Date().toISOString().split('T')[0], lastAccessed: new Date().toISOString().split('T')[0], version: '1.0.0' },
       document: { paths: config.documentPaths || ['docs'], excludeFolders: config.excludeFolders || ['node_modules', '.git', 'dist'] },
     }

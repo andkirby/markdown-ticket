@@ -53,7 +53,7 @@ export class ProjectFactory {
     const project: Project = {
       id: projectId,
       project: {
-        id: config.project.id || undefined, // Store explicit ID if set
+        id: projectId,
         name: config.project.name,
         code: config.project.code,
         path: projectPath,
@@ -106,7 +106,7 @@ export class ProjectFactory {
     const project: Project = {
       id: projectId,
       project: {
-        id: registryData.project.id || undefined,
+        id: projectId,
         name: registryData.project.name || projectId,
         code: registryData.project.code,
         path: projectPath,
@@ -116,7 +116,7 @@ export class ProjectFactory {
         active: registryData.project.active !== false,
         description: registryData.project.description || '',
         repository: registryData.project.repository || '',
-        ticketsPath: registryData.project.ticketsPath,
+        ticketsPath: registryData.project.ticketsPath || DEFAULTS.TICKETS_PATH,
       },
       metadata: {
         dateRegistered: registryData.metadata.dateRegistered || new Date().toISOString().split('T')[0],

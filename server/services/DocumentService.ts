@@ -1,18 +1,8 @@
+import type { Project } from '@mdt/shared/models/Project.js'
 import type { TreeNode } from '../types/tree.js'
 import * as path from 'node:path'
 import { FileOperationInvoker } from '../invokers/FileOperationInvoker.js'
 import { TreeService } from './TreeService.js'
-
-// Type definitions
-interface Project {
-  id: string
-  project: {
-    name: string
-    code?: string
-    path: string
-    active: boolean
-  }
-}
 
 interface ProjectDiscovery {
   getAllProjects: () => Promise<Project[]>

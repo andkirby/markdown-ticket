@@ -5,6 +5,7 @@
 
 // Export all schemas and types from schema.ts
 export * from './schema'
+export * from './worktree'
 
 // Export all validation functions from validation.ts
 export * from './validation'

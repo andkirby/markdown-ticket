@@ -9,17 +9,15 @@
  */
 
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project'
-import type { TicketMetadata } from '@mdt/shared/models/Ticket'
+import type { TicketData, TicketMetadata } from '@mdt/shared/models/Ticket'
 import type { Status, Ticket } from '../types'
-import { CRStatus, CRType } from '@mdt/domain-contracts'
+import {
+  normalizeTicket as normalizeSharedTicket,
+  normalizeTicketMetadata as normalizeSharedTicketMetadata,
+} from '@mdt/shared/models/Ticket'
 
-interface CreateTicketData {
-  code?: string
-  title: string
-  type: string
+type CreateTicketData = TicketData & {
   status?: Status
-  priority?: string
-  [key: string]: string | string[] | Date | undefined
 }
 
 type ApiTicketItem = Partial<Omit<Ticket, 'dateCreated' | 'lastModified' | 'implementationDate'>> & {
@@ -153,7 +151,7 @@ class DataLayer {
       }
 
       const data = await response.json()
-      const ticket = this.normalizeTicket(data)
+      const ticket = normalizeSharedTicket(data)
 
       console.warn(`[DataLayer] ✅ Fetched ticket: ${ticketCode} (content length: ${ticket.content?.length || 0})`)
 
@@ -207,7 +205,7 @@ class DataLayer {
       }
 
       const createdTicket = await response.json()
-      const ticket = this.normalizeTicket(createdTicket)
+      const ticket = normalizeSharedTicket(createdTicket)
 
       return ticket
     }
@@ -283,7 +281,7 @@ class DataLayer {
    * Normalize tickets from API response
    */
   private normalizeTickets(data: ApiTicketItem[]): Ticket[] {
-    return data.map(item => this.normalizeTicket(item))
+    return data.map(item => normalizeSharedTicket(item))
   }
 
   /**
@@ -291,128 +289,7 @@ class DataLayer {
    * Returns TicketMetadata[] without content field.
    */
   private normalizeTicketsMetadata(data: ApiTicketItem[]): TicketMetadata[] {
-    return data.map(item => this.normalizeTicketMetadata(item))
-  }
-
-  /**
-   * Normalize a single ticket from API response
-   */
-  private normalizeTicket(item: ApiTicketItem): Ticket {
-    // Helper to normalize arrays
-    const normalizeArray = (value: string | string[] | undefined): string[] => {
-      if (Array.isArray(value))
-        return value.filter(Boolean)
-      if (typeof value === 'string' && value.trim()) {
-        return value.split(',').map(s => s.trim()).filter(Boolean)
-      }
-      return []
-    }
-
-    // Helper to parse dates
-    const parseDate = (dateValue: string | Date | null | undefined): Date | null => {
-      if (!dateValue)
-        return null
-      if (dateValue instanceof Date)
-        return dateValue
-      if (typeof dateValue === 'string') {
-        const parsed = new Date(dateValue)
-        return Number.isNaN(parsed.getTime()) ? null : parsed
-      }
-      return null
-    }
-
-    return {
-      // Core fields
-      code: item.code || item.key || '',
-      title: item.title || '',
-      status: item.status || CRStatus.PROPOSED,
-      type: item.type || CRType.FEATURE_ENHANCEMENT,
-      priority: item.priority || 'Medium',
-      content: item.content || '',
-      filePath: item.filePath || item.path || '',
-
-      // Dates
-      dateCreated: parseDate(item.dateCreated),
-      lastModified: parseDate(item.lastModified),
-      implementationDate: parseDate(item.implementationDate),
-
-      // Optional fields
-      phaseEpic: item.phaseEpic || '',
-      description: item.description || '',
-      rationale: item.rationale || '',
-      assignee: item.assignee || '',
-      implementationNotes: item.implementationNotes || '',
-
-      // Relationship fields (normalize to arrays)
-      relatedTickets: normalizeArray(item.relatedTickets),
-      dependsOn: normalizeArray(item.dependsOn),
-      blocks: normalizeArray(item.blocks),
-
-      // MDT-093: Sub-document navigation
-      subdocuments: Array.isArray(item.subdocuments) ? item.subdocuments as import('@mdt/shared/models/SubDocument').SubDocument[] : undefined,
-
-      // Worktree fields (MDT-095)
-      inWorktree: typeof item.inWorktree === 'boolean' ? item.inWorktree : false,
-      worktreePath: typeof item.worktreePath === 'string' ? item.worktreePath : undefined,
-    }
-  }
-
-  /**
-   * MDT-094: Normalize a single TicketMetadata from API response.
-   * Same as normalizeTicket but excludes content field.
-   */
-  private normalizeTicketMetadata(item: ApiTicketItem): TicketMetadata {
-    // Helper to normalize arrays
-    const normalizeArray = (value: string | string[] | undefined): string[] => {
-      if (Array.isArray(value))
-        return value.filter(Boolean)
-      if (typeof value === 'string' && value.trim()) {
-        return value.split(',').map(s => s.trim()).filter(Boolean)
-      }
-      return []
-    }
-
-    // Helper to parse dates
-    const parseDate = (dateValue: string | Date | null | undefined): Date | null => {
-      if (!dateValue)
-        return null
-      if (dateValue instanceof Date)
-        return dateValue
-      if (typeof dateValue === 'string') {
-        const parsed = new Date(dateValue)
-        return Number.isNaN(parsed.getTime()) ? null : parsed
-      }
-      return null
-    }
-
-    return {
-      // Core fields (content intentionally excluded)
-      code: item.code || item.key || '',
-      title: item.title || '',
-      status: item.status || CRStatus.PROPOSED,
-      type: item.type || CRType.FEATURE_ENHANCEMENT,
-      priority: item.priority || 'Medium',
-      filePath: item.filePath || item.path || '',
-
-      // Dates
-      dateCreated: parseDate(item.dateCreated),
-      lastModified: parseDate(item.lastModified),
-      implementationDate: parseDate(item.implementationDate),
-
-      // Optional fields
-      phaseEpic: item.phaseEpic || '',
-      assignee: item.assignee || '',
-      implementationNotes: item.implementationNotes || '',
-
-      // Relationship fields (normalize to arrays)
-      relatedTickets: normalizeArray(item.relatedTickets),
-      dependsOn: normalizeArray(item.dependsOn),
-      blocks: normalizeArray(item.blocks),
-
-      // Worktree fields (MDT-095)
-      inWorktree: typeof item.inWorktree === 'boolean' ? item.inWorktree : false,
-      worktreePath: typeof item.worktreePath === 'string' ? item.worktreePath : undefined,
-    }
+    return data.map(item => normalizeSharedTicketMetadata(item))
   }
 }
 

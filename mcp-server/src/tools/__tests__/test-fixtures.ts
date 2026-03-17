@@ -12,7 +12,7 @@
 export interface Project {
   id: string
   project: {
-    id?: string
+    id: string
     name: string
     code?: string
     path: string
@@ -22,7 +22,7 @@ export interface Project {
     active: boolean
     description: string
     repository?: string
-    ticketsPath?: string
+    ticketsPath: string
   }
   metadata: {
     dateRegistered: string
@@ -116,6 +116,7 @@ export function createMockProject(overrides?: Partial<Project>): Project {
   return {
     id: 'test-project-id',
     project: {
+      id: 'test-project-id',
       code: 'MDT',
       name: 'Test Project',
       path: '/test/path',

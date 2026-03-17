@@ -5,7 +5,7 @@ import type {
   TicketMetadata,
   TicketUpdateAttrs,
 } from '@mdt/domain-contracts'
-import { CRType } from '@mdt/domain-contracts'
+import { CRType, TICKET_UPDATE_ALLOWED_ATTRS, TICKET_UPDATE_ATTRS } from '@mdt/domain-contracts'
 
 export type {
   Ticket,
@@ -13,6 +13,11 @@ export type {
   TicketFilters,
   TicketMetadata,
   TicketUpdateAttrs,
+} from '@mdt/domain-contracts'
+
+export {
+  TICKET_UPDATE_ALLOWED_ATTRS,
+  TICKET_UPDATE_ATTRS,
 } from '@mdt/domain-contracts'
 
 /**
@@ -98,30 +103,6 @@ export function normalizeTicket(rawTicket: unknown): Ticket {
 export function arrayToString(arr: string[]): string {
   return Array.isArray(arr) ? arr.join(',') : ''
 }
-
-/**
- * Whitelist of attributes allowed for update_cr_attrs operations
- * Aligned with docs/create_ticket.md lines 28-42 (Complete Attribute Reference)
- *
- * Excludes:
- * - code (system field)
- * - title (MDT-064: update via H1 header in markdown using manage_cr_sections)
- * - type (immutable after creation)
- * - status (use update_cr_status tool)
- * - content (use manage_cr_sections tool)
- * - dateCreated (system field, immutable)
- * - lastModified (auto-updated on any change)
- */
-export const TICKET_UPDATE_ALLOWED_ATTRS = new Set<keyof TicketUpdateAttrs>([
-  'priority',
-  'phaseEpic',
-  'relatedTickets',
-  'dependsOn',
-  'blocks',
-  'assignee',
-  'implementationDate',
-  'implementationNotes',
-])
 
 /**
  * MDT-094: Normalize unknown input to TicketMetadata.

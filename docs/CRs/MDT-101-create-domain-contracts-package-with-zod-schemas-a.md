@@ -119,6 +119,21 @@ domain-contracts/
       index.ts
 ```
 
+### Migration Checklist
+
+- [x] Create the `domain-contracts` package and root production exports
+- [x] Create shared primitive contracts in `domain-contracts/src/types/`
+- [x] Create ticket contracts in `domain-contracts/src/ticket/`
+- [x] Split ticket contracts by role: `entity`, `frontmatter`, `input`, `subdocument`, `validation`
+- [x] Migrate canonical ticket shape ownership out of `shared`, `server`, `mcp-server`, and `src`
+- [ ] Consolidate the project contract into `domain-contracts/src/project/` as the canonical source of truth
+- [ ] Migrate `LocalProjectConfig`, merged `Project`, registry entry, and project input/update shapes into project contracts
+- [ ] Move worktree schemas and types from `shared/models/WorktreeTypes.ts` into contracts
+- [ ] Remove remaining project and worktree duplicates from `shared`, `server`, `mcp-server`, and `src`
+- [ ] Decide whether template metadata should become a formal contract
+- [ ] Decide whether global config should become a formal contract
+- [ ] Keep transport-only payloads such as SSE events, tree nodes, and directory listings out of domain contracts unless a separate transport-contract layer is introduced
+
 ## 4. Decision
 
 | Approach | Key Difference | Why Rejected / Accepted |

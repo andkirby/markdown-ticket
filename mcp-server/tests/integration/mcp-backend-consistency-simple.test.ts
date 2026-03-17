@@ -28,11 +28,19 @@ jest.mock('../../../server/routes/projects', () => ({
 const testProject = {
   id: 'test-project',
   project: {
+    id: 'test-project',
     name: 'Test Project',
     code: 'TEST',
     path: '/tmp/test-project',
+    configFile: '/tmp/test-project/.mdt-config.toml',
     active: true,
-    crPath: '/tmp/test-project/docs/CRs',
+    description: 'Test project',
+    ticketsPath: 'docs/CRs',
+  },
+  metadata: {
+    dateRegistered: '2025-01-01T00:00:00Z',
+    lastAccessed: '2025-01-01T00:00:00Z',
+    version: '1.0.0',
   },
 }
 
