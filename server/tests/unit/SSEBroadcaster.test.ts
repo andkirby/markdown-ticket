@@ -45,8 +45,8 @@ describe('SSEBroadcaster', () => {
       expect(broadcaster.getClientCount()).toBe(1)
 
       // Simulate client close by calling the registered callback
-      const onCalls = mockClient.on.mock.calls
-      const closeCallback = onCalls.find((call) => call[0] === 'close')?.[1]
+      const onCalls = (mockClient.on as jest.Mock).mock.calls
+      const closeCallback = onCalls.find((call: unknown[]) => call[0] === 'close')?.[1]
       if (closeCallback) {
         closeCallback()
       }
@@ -60,8 +60,8 @@ describe('SSEBroadcaster', () => {
       expect(broadcaster.getClientCount()).toBe(1)
 
       // Simulate client error by calling the registered callback
-      const onCalls = mockClient.on.mock.calls
-      const errorCallback = onCalls.find((call) => call[0] === 'error')?.[1]
+      const onCalls = (mockClient.on as jest.Mock).mock.calls
+      const errorCallback = onCalls.find((call: unknown[]) => call[0] === 'error')?.[1]
       if (errorCallback) {
         errorCallback()
       }
@@ -179,7 +179,7 @@ describe('SSEBroadcaster', () => {
     it('should remove client when write throws error', () => {
       const client1 = createMockClient()
       const client2 = createMockClient()
-      client1.write.mockImplementation(() => {
+      ;(client1.write as jest.Mock).mockImplementation(() => {
         throw new Error('Write error')
       })
       broadcaster.addClient(client1)
@@ -283,7 +283,7 @@ describe('SSEBroadcaster', () => {
       expect(client2.write).toHaveBeenCalled()
 
       // Parse and verify the event structure
-      const writtenData = client1.write.mock.calls[0][0] as string
+      const writtenData = (client1.write as jest.Mock).mock.calls[0][0] as string
       const parsedEvent = JSON.parse(writtenData.split('data: ')[1].split('\n\n')[0])
 
       expect(parsedEvent.type).toBe('heartbeat')
@@ -319,7 +319,7 @@ describe('SSEBroadcaster', () => {
     it('should remove clients that fail during heartbeat', () => {
       const client1 = createMockClient()
       const client2 = createMockClient()
-      client1.write.mockImplementation(() => {
+      ;(client1.write as jest.Mock).mockImplementation(() => {
         throw new Error('Heartbeat error')
       })
       broadcaster.addClient(client1)
@@ -380,7 +380,7 @@ describe('SSEBroadcaster', () => {
 
     it('should handle errors when ending client connections', () => {
       const client = createMockClient({ headersSent: false })
-      client.end.mockImplementation(() => {
+      ;(client.end as jest.Mock)?.mockImplementation(() => {
         throw new Error('End error')
       })
       broadcaster.addClient(client)
