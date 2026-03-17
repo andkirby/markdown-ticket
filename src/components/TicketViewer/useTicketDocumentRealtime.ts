@@ -74,15 +74,19 @@ export function useTicketDocumentRealtime(
   // Also reconcile: if the active path was removed, fall back to main (BR-5.2)
   // Note: We only call onActiveRemoved if subdocuments are non-empty, to avoid
   // triggering during initial load when the path hasn't been initialized from URL yet.
-  // MDT-138: Removed selectedPath from deps to prevent race condition during navigation.
+  // MDT-138: selectedPath NOT in deps to prevent race condition during navigation.
   // Path validity should only be checked when the tree structure changes, not on user clicks.
+  // Use ref for selectedPath to access current value without triggering effect.
+  const selectedPathRef = useRef(selectedPath)
+  selectedPathRef.current = selectedPath
+
   useEffect(() => {
     setSubdocuments(initialSubdocuments)
-    if (initialSubdocuments.length > 0 && selectedPath !== 'main' && !pathExistsInTree(selectedPath, initialSubdocuments)) {
+    if (initialSubdocuments.length > 0 && selectedPathRef.current !== 'main' && !pathExistsInTree(selectedPathRef.current, initialSubdocuments)) {
       onActiveRemovedRef.current()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSubdocuments, selectedPath])
+  }, [initialSubdocuments])
 
 
   const handleSSEUpdate = useCallback(
@@ -90,11 +94,11 @@ export function useTicketDocumentRealtime(
       setSubdocuments(updated)
 
       // Check if the currently selected document still exists (BR-5.2)
-      if (!pathExistsInTree(selectedPath, updated)) {
+      if (!pathExistsInTree(selectedPathRef.current, updated)) {
         onActiveRemovedRef.current()
       }
     },
-    [selectedPath],
+    [],
   )
 
   return { subdocuments, handleSSEUpdate }
