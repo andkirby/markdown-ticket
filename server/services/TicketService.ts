@@ -9,6 +9,7 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
+import type { TicketUpdateAttrs } from '@mdt/domain-contracts'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { DEFAULT_SUBDOCUMENT_ORDER } from '@mdt/shared/models/SubDocument.js'
@@ -207,14 +208,8 @@ export function groupNamespacedFiles(
   return result
 }
 
-interface CRPartialUpdates {
-  status?: string
-  priority?: string
-  phaseEpic?: string
-  assignee?: string
-  relatedTickets?: string
-  dependsOn?: string
-  blocks?: string
+type CRPartialUpdates = TicketUpdateAttrs & {
+  status?: CRStatus
   [key: string]: unknown
 }
 
