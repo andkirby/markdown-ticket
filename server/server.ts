@@ -123,11 +123,7 @@ const projectDiscovery = new SharedProjectService()
 
 // Business logic services
 const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery)
-/**
- * Type cast for compatibility.
- */
-// eslint-disable-next-line ts/no-explicit-any
-const ticketService = new TicketService(projectDiscovery as any)
+const ticketService = new TicketService(projectDiscovery)
 /**
  * Type cast for compatibility.
  */

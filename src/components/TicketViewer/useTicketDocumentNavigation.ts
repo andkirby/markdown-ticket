@@ -7,7 +7,7 @@
  * Covers: BR-4.1, BR-4.2, BR-4.3, BR-4.4, C4
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { Location } from 'react-router-dom'
 import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
@@ -163,12 +163,31 @@ export function useTicketDocumentNavigation(
     }
   }, [state.needsRedirect, state.redirectUrl, navigate])
 
+  // Track previous ticketCode to detect ticket changes
+  const prevTicketCodeRef = useRef(ticketCode)
+
   // Re-check path when subdocuments become available after async fetch
   // Note: We use a ref to track if we've already initialized from URL to avoid stale closure issues
   // MDT-138: Removed state.selectedPath from deps to prevent race condition.
   // Only sync FROM URL TO state, not the other way around.
   useEffect(() => {
+    const ticketChanged = prevTicketCodeRef.current !== ticketCode
+    prevTicketCodeRef.current = ticketCode
+
     const fromPath = initFromPath(subdocuments, ticketCode, projectCode, location)
+
+    // If ticket changed, always sync from URL (or reset to main if path invalid)
+    if (ticketChanged) {
+      setState(prev => ({
+        ...prev,
+        selectedPath: fromPath.selectedPath,
+        folderStack: fromPath.folderStack,
+        needsRedirect: fromPath.needsRedirect,
+        redirectUrl: fromPath.redirectUrl,
+      }))
+      return
+    }
+
     // Only update if we found a valid path in the URL that differs from current state
     if (fromPath.selectedPath !== 'main' && !fromPath.needsRedirect && fromPath.selectedPath !== state.selectedPath) {
       setState(prev => ({ ...prev, selectedPath: fromPath.selectedPath, folderStack: fromPath.folderStack }))
