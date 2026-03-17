@@ -277,7 +277,7 @@ export class TicketService {
       // Write back to file
       await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
 
-      console.error(`✅ Updated CR ${key} status to ${status}`)
+      console.warn(`✅ Updated CR ${key} status to ${status}`)
       return true
     }
     catch (error) {
@@ -344,7 +344,7 @@ export class TicketService {
       // Write back to file
       await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
 
-      console.error(`✅ Updated CR ${key} attributes`)
+      console.warn(`✅ Updated CR ${key} attributes`)
       return true
     }
     catch (error) {
@@ -452,7 +452,7 @@ export class TicketService {
       }
 
       await fs.remove(cr.filePath)
-      console.error(`🗑️ Deleted CR ${key}`)
+      console.warn(`🗑️ Deleted CR ${key}`)
       return true
     }
     catch (error) {
