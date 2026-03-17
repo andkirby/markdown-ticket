@@ -1,4 +1,4 @@
-import type { Project as DomainProject } from '@mdt/domain-contracts'
+import type { ProjectDetails } from '@mdt/domain-contracts'
 import * as path from 'node:path'
 import { glob } from 'glob'
 import { shouldIgnorePath } from '../utils/fsIgnoreList.js'
@@ -9,7 +9,7 @@ interface ITreeBuildingStrategy {
 }
 
 // Project configuration interface (simplified for this context)
-type ProjectConfig = Partial<Pick<DomainProject, 'ticketsPath'>> & {
+type ProjectConfig = Partial<Pick<ProjectDetails, 'ticketsPath'>> & {
   excludeFolders?: string[]
   [key: string]: unknown
 }

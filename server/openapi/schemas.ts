@@ -10,6 +10,8 @@ import {
   CRStatusSchema,
   CRTypeSchema,
   CreateTicketInputSchema,
+  LocalProjectConfigSchema,
+  ProjectSchema,
   SubDocumentSchema,
   TICKET_UPDATE_ATTRS,
   TicketSchema,
@@ -328,10 +330,28 @@ const subDocumentPropertyDocs: Record<string, OpenApiSchema> = {
   filePath: { description: 'Relative path to the represented markdown file' },
 }
 
+const projectPropertyDocs: Record<string, OpenApiSchema> = {
+  id: { description: 'Project identifier', example: 'markdown-ticket' },
+  project: { description: 'Normalized runtime project fields' },
+  metadata: { description: 'Project registry metadata' },
+  tickets: { description: 'Ticket-related project settings' },
+  document: { description: 'Project-level document discovery settings' },
+  autoDiscovered: { description: 'Whether the project was found by auto-discovery', example: false },
+  configPath: { description: 'Path to the local project config file, if available' },
+  registryFile: { description: 'Path to the global registry file, if registered' },
+}
+
+const localProjectConfigPropertyDocs: Record<string, OpenApiSchema> = {
+  project: { description: 'Local project configuration stored in `.mdt-config.toml`' },
+  worktree: { description: 'Optional worktree settings for the project' },
+}
+
 const ticketSchema = zodObjectToOpenApi(TicketSchema as unknown as ZodLikeSchema, ticketPropertyDocs)
 const ticketInputSchema = zodObjectToOpenApi(CreateTicketInputSchema as unknown as ZodLikeSchema, ticketInputPropertyDocs)
 const ticketUpdateSchema = zodObjectToOpenApi(UpdateTicketInputSchema as unknown as ZodLikeSchema, ticketUpdatePropertyDocs)
 const subDocumentSchema = zodObjectToOpenApi(SubDocumentSchema as unknown as ZodLikeSchema, subDocumentPropertyDocs)
+const projectSchema = zodObjectToOpenApi(ProjectSchema as unknown as ZodLikeSchema, projectPropertyDocs)
+const localProjectConfigSchema = zodObjectToOpenApi(LocalProjectConfigSchema as unknown as ZodLikeSchema, localProjectConfigPropertyDocs)
 
 export const crPatchProperties = TICKET_UPDATE_ATTRS.reduce<Record<string, unknown>>(
   (properties: Record<string, unknown>, field: keyof TicketUpdateAttrs) => {
@@ -363,20 +383,7 @@ export const schemas = {
 
   CRInput: ticketInputSchema,
 
-  Project: {
-    type: 'object',
-    required: ['id', 'name', 'code', 'path', 'enabled'],
-    properties: {
-      id: { type: 'string', description: 'Unique project identifier', example: 'mdt' },
-      name: { type: 'string', description: 'Project display name', example: 'Markdown Ticket' },
-      code: { type: 'string', description: 'Project code used in CR identifiers', example: 'MDT' },
-      path: { type: 'string', description: 'Absolute path to project directory', example: '/Users/dev/project' },
-      enabled: { type: 'boolean', description: 'Whether the project is active', example: true },
-      crPath: { type: 'string', description: 'Path to CR directory relative to project root', example: 'docs/CRs' },
-      documentPaths: { type: 'array', items: { type: 'string' }, description: 'Paths for document discovery', example: ['docs'] },
-      excludeFolders: { type: 'array', items: { type: 'string' }, description: 'Folders to exclude', example: ['node_modules'] },
-    },
-  },
+  Project: projectSchema,
 
   Document: {
     type: 'object',
@@ -440,18 +447,11 @@ export const schemas = {
 
   ProjectConfig: {
     type: 'object',
-    description: 'Project configuration from .mdt-config.toml',
+    description: 'Project plus local configuration from `.mdt-config.toml`',
+    required: ['project', 'config'],
     properties: {
-      project: {
-        type: 'object',
-        properties: {
-          name: { type: 'string', example: 'Markdown Ticket' },
-          code: { type: 'string', example: 'MDT' },
-          crPath: { type: 'string', example: 'docs/CRs' },
-        },
-      },
-      documentPaths: { type: 'array', items: { type: 'string' }, example: ['docs'] },
-      excludeFolders: { type: 'array', items: { type: 'string' }, example: ['node_modules'] },
+      project: applyOpenApiDocs(projectSchema, { description: 'Normalized runtime project' }),
+      config: applyOpenApiDocs(localProjectConfigSchema, { description: 'Project-local configuration file' }),
     },
   },
 

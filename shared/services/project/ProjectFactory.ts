@@ -102,13 +102,18 @@ export class ProjectFactory {
 
     // For global-only projects, ID comes from registry or directory name
     const projectId = registryData.project.id || directoryName
+    const projectCode = registryData.project.code
+
+    if (!projectCode) {
+      throw new Error(`Registry entry at ${registryPath} is missing project code`)
+    }
 
     const project: Project = {
       id: projectId,
       project: {
         id: projectId,
         name: registryData.project.name || projectId,
-        code: registryData.project.code,
+        code: projectCode,
         path: projectPath,
         configFile: '', // No local config for global-only projects
         startNumber: registryData.project.startNumber || DEFAULTS.START_NUMBER,
