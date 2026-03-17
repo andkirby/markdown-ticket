@@ -7,6 +7,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
 import type {ProjectConfig} from '@mdt/shared/models/Project.js'
+import {DEFAULTS} from '@mdt/shared/utils/constants.js'
 import {parseToml, stringify} from '@mdt/shared/utils/toml.js'
 
 // Get CONFIG_DIR from environment, with fallback
@@ -166,7 +167,7 @@ export class ProjectService {
         this.projectsRegistry.set(entryName, {
           name: nameMatch[1],
           code: codeMatch[1],
-          ticketsPath: ticketsPathMatch ? ticketsPathMatch[1] : 'docs/CRs',
+          ticketsPath: ticketsPathMatch ? ticketsPathMatch[1] : DEFAULTS.TICKETS_PATH,
           path: path.dirname(configPath), // Full path for file operations
           projectDir: projectDirName, // Just the directory name for registry lookups
           active: true,
