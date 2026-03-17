@@ -105,7 +105,7 @@ describe('RegistryWatcher (BR-1.6)', () => {
       service.initGlobalRegistryWatcher()
 
       const addCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'add',
+        (call: unknown[]) => call[0] === 'add',
       )?.[1]
 
       addCallback?.('/mock/config/projects/MDT.toml')
@@ -125,7 +125,7 @@ describe('RegistryWatcher (BR-1.6)', () => {
       service.initGlobalRegistryWatcher()
 
       const changeCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'change',
+        (call: unknown[]) => call[0] === 'change',
       )?.[1]
 
       changeCallback?.('/mock/config/projects/MDT.toml')
@@ -145,7 +145,7 @@ describe('RegistryWatcher (BR-1.6)', () => {
       service.initGlobalRegistryWatcher()
 
       const unlinkCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'unlink',
+        (call: unknown[]) => call[0] === 'unlink',
       )?.[1]
 
       unlinkCallback?.('/mock/config/projects/MDT.toml')
@@ -167,13 +167,13 @@ describe('RegistryWatcher (BR-1.6)', () => {
       service.initGlobalRegistryWatcher()
 
       const addCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'add',
+        (call: unknown[]) => call[0] === 'add',
       )?.[1]
       const changeCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'change',
+        (call: unknown[]) => call[0] === 'change',
       )?.[1]
       const unlinkCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'unlink',
+        (call: unknown[]) => call[0] === 'unlink',
       )?.[1]
 
       addCallback?.('/mock/config/projects/TEST-PROJECT.toml')
@@ -193,7 +193,7 @@ describe('RegistryWatcher (BR-1.6)', () => {
       service.initGlobalRegistryWatcher()
 
       const addCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'add',
+        (call: unknown[]) => call[0] === 'add',
       )?.[1]
 
       addCallback?.('/mock/config/projects/proj1.toml')
@@ -210,7 +210,7 @@ describe('RegistryWatcher (BR-1.6)', () => {
       service.initGlobalRegistryWatcher()
 
       const changeCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'change',
+        (call: unknown[]) => call[0] === 'change',
       )?.[1]
 
       changeCallback?.('/mock/config/projects/MDT.toml')
@@ -234,7 +234,7 @@ describe('RegistryWatcher (BR-1.6)', () => {
       service.initGlobalRegistryWatcher()
 
       const errorCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'error',
+        (call: unknown[]) => call[0] === 'error',
       )?.[1]
 
       const testError = new Error('Registry watcher failed')
@@ -250,7 +250,7 @@ describe('RegistryWatcher (BR-1.6)', () => {
       service.initGlobalRegistryWatcher()
 
       const readyCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'ready',
+        (call: unknown[]) => call[0] === 'ready',
       )?.[1]
 
       readyCallback?.()
@@ -272,13 +272,13 @@ describe('RegistryWatcher (BR-1.6)', () => {
       service.initGlobalRegistryWatcher()
 
       const addCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'add',
+        (call: unknown[]) => call[0] === 'add',
       )?.[1]
       const changeCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'change',
+        (call: unknown[]) => call[0] === 'change',
       )?.[1]
       const unlinkCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'unlink',
+        (call: unknown[]) => call[0] === 'unlink',
       )?.[1]
 
       addCallback?.('/mock/config/projects/proj1.toml')
@@ -305,13 +305,13 @@ describe('RegistryWatcher (BR-1.6)', () => {
 
       // Simulate project watcher ready - get first ready callback
       const readyCalls = mockWatcher.on.mock.calls.filter(
-        (call): call is [string, () => void] => call[0] === 'ready',
+        (call: unknown[]): call is [string, () => void] => call[0] === 'ready',
       )
       readyCalls[0]?.[1]() // Project watcher ready
 
       // Find the last 'add' callback (from registry watcher, which was initialized second)
       const addCalls = mockWatcher.on.mock.calls.filter(
-        (call): call is [string, (path: string) => void] => call[0] === 'add',
+        (call: unknown[]): call is [string, (path: string) => void] => call[0] === 'add',
       )
       const registryAddCallback = addCalls[addCalls.length - 1]?.[1]
       registryAddCallback?.('/mock/config/projects/NEW.toml')
