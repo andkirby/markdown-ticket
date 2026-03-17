@@ -1,6 +1,6 @@
 import type { Project } from '../../models/Project.js'
 import type { RegistryData } from './types.js'
-import { getDefaultPaths } from '../../utils/constants.js'
+import { DEFAULTS, getDefaultPaths } from '../../utils/constants.js'
 import {
   createDirectory,
   directoryExists,
@@ -116,7 +116,7 @@ export class ProjectRegistry {
             code: project.project.code,
             id: project.project.id,
             path: project.project.path,
-            ticketsPath: project.project.ticketsPath || 'docs/CRs',
+            ticketsPath: project.project.ticketsPath || DEFAULTS.TICKETS_PATH,
             description: project.project.description || '',
             active: project.project.active,
             dateRegistered: project.metadata.dateRegistered,

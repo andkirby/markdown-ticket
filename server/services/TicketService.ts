@@ -15,6 +15,7 @@ import { join } from 'node:path'
 import { DEFAULT_SUBDOCUMENT_ORDER } from '@mdt/shared/models/SubDocument.js'
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
+import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 
 export interface CRData {
   code?: string
@@ -315,7 +316,7 @@ export class TicketService {
    * Once resolved, downstream logic works against native paths only.
    */
   private async resolveTicketLocation(project: Project, crId: string): Promise<ResolvedTicketLocation> {
-    const ticketsPath = project.project.ticketsPath ?? 'docs/CRs'
+    const ticketsPath = project.project.ticketsPath ?? DEFAULTS.TICKETS_PATH
     const projectCode = project.project.code
 
     const projectRoot = projectCode

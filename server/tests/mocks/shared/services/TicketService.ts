@@ -5,6 +5,7 @@
 
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { ProjectService } from './ProjectService'
 
 export interface Ticket {
@@ -58,9 +59,9 @@ export class TicketService {
     const config = this.projectService.getProjectConfig(project.project.path)
 
     // Use the full path from config if available, otherwise fall back to project.project.path
-    const projectBasePath = config?.path || project.project.path
+    const projectBasePath = config?.project.path || project.project.path
 
-    const crPath = config?.ticketsPath || 'docs/CRs'
+    const crPath = config?.project.ticketsPath || DEFAULTS.TICKETS_PATH
     return path.resolve(projectBasePath, crPath)
   }
 
