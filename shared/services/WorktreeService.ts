@@ -11,10 +11,11 @@
  * @module shared/services/WorktreeService
  */
 
-import type { WorktreeConfig } from '../models/WorktreeTypes.js'
+import type { WorktreeConfig } from '@mdt/domain-contracts'
 import { execFile } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { WorktreeConfigSchema } from '@mdt/domain-contracts'
 
 import { promisify } from 'node:util'
 
@@ -88,9 +89,7 @@ export class WorktreeService {
    * @param options - Service configuration options
    */
   constructor(options?: WorktreeServiceOptions) {
-    this.config = {
-      enabled: options?.enabled ?? true,
-    }
+    this.config = WorktreeConfigSchema.parse(options ?? {})
     this.cache = new Map()
   }
 

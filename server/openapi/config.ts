@@ -6,7 +6,7 @@
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import swaggerJsdoc from 'swagger-jsdoc'
-import { parameters, schemas } from './schemas.js'
+import { crPatchProperties, parameters, schemas } from './schemas.js'
 
 // ES module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url)
@@ -122,9 +122,7 @@ All endpoints return consistent error responses with \`error\` and \`message\` f
             type: 'object',
             properties: {
               status: { $ref: '#/components/schemas/CRStatus' },
-              priority: { $ref: '#/components/schemas/CRPriority' },
-              assignee: { type: 'string' },
-              phaseEpic: { type: 'string' },
+              ...crPatchProperties,
             },
           } } },
         },

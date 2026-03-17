@@ -19,7 +19,6 @@ async function generateOpenAPISpec(): Promise<void> {
     const yamlContent = yaml.dump(swaggerSpec, {
       indent: 2,
       lineWidth: 120,
-      noRefs: true,
     })
 
     await fs.writeFile(outputPath, yamlContent, 'utf8')

@@ -17,12 +17,8 @@ import { TicketService as SharedTicketService } from '@mdt/shared/services/Ticke
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 
-export interface CRData {
+export type CRData = Pick<TicketData, 'title' | 'type' | 'priority' | 'description'> & {
   code?: string
-  title: string
-  type: string
-  priority?: string
-  description?: string
 }
 
 export interface CreateCRResult {
