@@ -21,6 +21,7 @@ import {
   arrayToString,
   TICKET_UPDATE_ALLOWED_ATTRS,
 } from '../models/Ticket.js'
+import { DEFAULTS } from '../utils/constants.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
 import { TemplateService } from './TemplateService.js'
@@ -52,16 +53,16 @@ export class TicketService {
     try {
       const config = this.projectService.getProjectConfig(project.project.path)
       if (!config || !config.project) {
-        return path.resolve(project.project.path, 'docs/CRs')
+        return path.resolve(project.project.path, DEFAULTS.TICKETS_PATH)
       }
 
       // Use helper function with backward compatibility
-      const crPath = getTicketsPath(config, 'docs/CRs')
+      const crPath = getTicketsPath(config, DEFAULTS.TICKETS_PATH)
       return path.resolve(project.project.path, crPath)
     }
     catch (error) {
       console.warn(`Failed to get CR path config for project ${project.id}, using default:`, error)
-      return path.resolve(project.project.path, 'docs/CRs')
+      return path.resolve(project.project.path, DEFAULTS.TICKETS_PATH)
     }
   }
 
@@ -82,7 +83,7 @@ export class TicketService {
       return { path: project.project.path, isInWorktree: false }
     }
 
-    const ticketsPath = config.project.ticketsPath || 'docs/CRs'
+    const ticketsPath = config.project.ticketsPath || DEFAULTS.TICKETS_PATH
     const projectCode = config.project.code
 
     // Check if worktree disabled
@@ -178,7 +179,7 @@ export class TicketService {
 
       // Get config and scan only resolved directory
       const config = this.projectService.getProjectConfig(project.project.path)
-      const ticketsPath = config?.project?.ticketsPath || 'docs/CRs'
+      const ticketsPath = config?.project?.ticketsPath || DEFAULTS.TICKETS_PATH
       const fullCRPath = path.join(resolvedPath, ticketsPath)
 
       // Check if directory exists
@@ -228,7 +229,7 @@ export class TicketService {
       const { path: resolvedPath, isInWorktree } = await this.resolveTicketPath(project, crKey)
 
       const config = this.projectService.getProjectConfig(project.project.path)
-      const ticketsPath = config?.project?.ticketsPath || 'docs/CRs'
+      const ticketsPath = config?.project?.ticketsPath || DEFAULTS.TICKETS_PATH
       const crPath = path.join(resolvedPath, ticketsPath)
 
       const titleSlug = this.createSlug(data.title)
