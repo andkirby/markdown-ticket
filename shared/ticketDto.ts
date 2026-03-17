@@ -1,35 +1,7 @@
-/**
- * Shared Ticket DTO for Frontend, Backend, and MCP
- * Ensures consistent data structure across all systems
- */
-
+import type { Ticket as TicketDTO } from '@mdt/domain-contracts'
 import { CRType } from '@mdt/domain-contracts'
 
-export interface TicketDTO {
-  // Core required fields
-  code: string
-  title: string
-  status: string
-  type: string
-  priority: string
-  dateCreated: Date | null
-  lastModified: Date | null
-  content: string
-  filePath: string
-
-  // Optional fields
-  phaseEpic?: string
-  description?: string
-  rationale?: string
-  assignee?: string
-  implementationDate?: Date | null
-  implementationNotes?: string
-
-  // Relationship fields (always arrays)
-  relatedTickets: string[]
-  dependsOn: string[]
-  blocks: string[]
-}
+export type { TicketDTO }
 
 /**
  * Normalize ticket data to ensure consistent structure

@@ -22,30 +22,12 @@ interface CreateTicketData {
   [key: string]: string | string[] | Date | undefined
 }
 
-/**
- * API response format for tickets (camelCase fields)
- */
-interface ApiTicketItem {
-  code?: string
+type ApiTicketItem = Partial<Omit<Ticket, 'dateCreated' | 'lastModified' | 'implementationDate'>> & {
   key?: string
-  title?: string
-  status?: string
-  type?: string
-  priority?: string
-  content?: string
-  filePath?: string
   path?: string
   dateCreated?: string | Date | null
   lastModified?: string | Date | null
   implementationDate?: string | Date | null
-  phaseEpic?: string
-  description?: string
-  rationale?: string
-  assignee?: string
-  implementationNotes?: string
-  relatedTickets?: string | string[]
-  dependsOn?: string | string[]
-  blocks?: string | string[]
   [key: string]: unknown
 }
 
