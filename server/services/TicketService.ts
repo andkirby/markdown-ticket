@@ -222,6 +222,13 @@ interface ProjectDiscovery {
   getAllProjects: () => Promise<Project[]>
 }
 
+interface ResolvedTicketLocation {
+  projectRoot: string
+  ticketDir: string
+  ticketsPath: string
+  isWorktree: boolean
+}
+
 /**
  * Web Server Ticket Service
  * Adapts shared TicketService for web API use (string projectIds vs Project objects).
@@ -279,16 +286,44 @@ export class TicketService {
 
   /**
    * Discover sub-documents for a CR, ordered by default order then alphabetically.
-   * MDT-093: Enhanced with worktree support - resolves path for sub-document discovery.
+   * MDT-093: Enhanced with worktree support - resolves ticket location before discovery.
    * MDT-138: Enhanced with namespace parsing - groups dot-notation files into virtual folders.
    */
   private async discoverSubDocuments(project: Project, crId: string): Promise<SubDocument[]> {
+    const location = await this.resolveTicketLocation(project, crId)
+    return this.discoverSubDocumentsInDirectory(location.ticketDir, crId)
+  }
+
+  /**
+   * Native subdocument discovery against a resolved ticket directory.
+   */
+  private discoverSubDocumentsInDirectory(ticketDir: string, crId: string): SubDocument[] {
+    if (!existsSync(ticketDir)) {
+      return []
+    }
+
+    const entries = this.readDirectorySafe(ticketDir)
+    if (entries.length === 0) {
+      return []
+    }
+
+    const { entryMap, markdownFiles, existingFolders } = this.scanEntries(entries, ticketDir, crId)
+
+    // Apply namespace grouping and merge with scanned entries
+    this.mergeNamespaceGrouped(entryMap, markdownFiles, existingFolders, crId)
+
+    return this.sortSubDocuments(entryMap)
+  }
+
+  /**
+   * Resolve the effective ticket location with worktree support.
+   * Once resolved, downstream logic works against native paths only.
+   */
+  private async resolveTicketLocation(project: Project, crId: string): Promise<ResolvedTicketLocation> {
     const ticketsPath = project.project.ticketsPath ?? 'docs/CRs'
     const projectCode = project.project.code
 
-    // MDT-093: Resolve path using WorktreeService for worktree support
-    // If project code is undefined, skip worktree resolution and use main project path
-    const resolvedPath = projectCode
+    const projectRoot = projectCode
       ? await this.worktreeService.resolvePath(
           project.project.path,
           crId,
@@ -297,173 +332,246 @@ export class TicketService {
         )
       : project.project.path
 
-    const subdocDir = join(resolvedPath, ticketsPath, crId)
-
-    if (!existsSync(subdocDir)) {
-      return []
+    return {
+      projectRoot,
+      ticketDir: join(projectRoot, ticketsPath, crId),
+      ticketsPath,
+      isWorktree: projectRoot !== project.project.path,
     }
+  }
 
-    let entries: string[]
+  /**
+   * Safely read directory contents, returning empty array on failure.
+   */
+  private readDirectorySafe(dirPath: string): string[] {
     try {
-      entries = readdirSync(subdocDir)
+      return readdirSync(dirPath)
     }
     catch {
       return []
     }
+  }
 
-    const result: SubDocument[] = []
-    const unordered: SubDocument[] = []
-
-    const nameOf = (entry: string): string => entry.replace(/\.md$/, '')
-    const isMarkdownFile = (entry: string): boolean => entry.endsWith('.md')
-
-    // Collect physical folders for namespace grouping
-    const existingFolders = new Set<string>()
-
-    const discoverChildren = (dirPath: string, folderPath: string): SubDocument[] => {
-      let childEntries: string[]
-      try {
-        childEntries = readdirSync(dirPath)
-      }
-      catch {
-        return []
-      }
-      return childEntries
-        .filter(e => isMarkdownFile(e))
-        .sort()
-        .map(e => ({
-          name: nameOf(e),
-          kind: 'file' as const,
-          children: [],
-          filePath: `${crId}/${folderPath}/${e}`,
-        }))
-    }
-
-    const buildEntry = (entry: string): SubDocument | null => {
-      const fullPath = join(subdocDir, entry)
-      const stat = statSync(fullPath)
-      if (stat.isDirectory()) {
-        existingFolders.add(entry) // Track physical folders
-        return {
-          name: entry,
-          kind: 'folder',
-          children: discoverChildren(fullPath, entry),
-          filePath: `${crId}/${entry}`,
-          isVirtual: false,
-        }
-      }
-      if (isMarkdownFile(entry)) {
-        return { name: nameOf(entry), kind: 'file', children: [], filePath: `${crId}/${entry}` }
-      }
-      return null
-    }
-
+  /**
+   * Scan directory entries and build entry map with conflict resolution.
+   */
+  private scanEntries(
+    entries: string[],
+    subdocDir: string,
+    crId: string,
+  ): {
+    entryMap: Map<string, SubDocument>
+    markdownFiles: string[]
+    existingFolders: Set<string>
+  } {
     const entryMap = new Map<string, SubDocument>()
     const markdownFiles: string[] = []
+    const existingFolders = new Set<string>()
 
     for (const entry of entries) {
-      const doc = buildEntry(entry)
+      const doc = this.buildEntryFromPath(entry, subdocDir, crId, existingFolders)
       if (!doc) continue
 
       if (doc.kind === 'file') {
         markdownFiles.push(doc.name)
       }
 
-      // Handle name conflicts between files and folders (e.g., bdd.md and bdd/)
-      const existing = entryMap.get(doc.name)
-      if (existing) {
-        // If existing is a folder and new is a file, the folder wins (keep existing)
-        // The file will be processed as a [main] child during namespace grouping
-        if (existing.kind === 'folder' && doc.kind === 'file') {
-          // Keep the folder entry, don't replace with file
-          continue
-        }
-        // If existing is a file and new is a folder, replace with folder
-        if (existing.kind === 'file' && doc.kind === 'folder') {
-          entryMap.set(doc.name, doc)
-          continue
-        }
-        // Otherwise, replace with new entry
-        entryMap.set(doc.name, doc)
-      } else {
-        entryMap.set(doc.name, doc)
-      }
+      this.handleEntryConflict(entryMap, doc)
     }
 
-    // MDT-138: Apply namespace grouping to merge dot-notation files into virtual folders
-    const namespaceGrouped = groupNamespacedFiles(markdownFiles, existingFolders, crId)
+    return { entryMap, markdownFiles, existingFolders }
+  }
 
-    // MDT-138: Remove dot-notation files from entryMap since they are now in namespace folders
-    // This prevents duplicate entries (e.g., 'bdd.trace' appearing both as top-level file
-    // and as child inside 'bdd' folder)
+  /**
+   * Build a SubDocument from a directory entry.
+   */
+  private buildEntryFromPath(
+    entry: string,
+    subdocDir: string,
+    crId: string,
+    existingFolders: Set<string>,
+  ): SubDocument | null {
+    const fullPath = join(subdocDir, entry)
+
+    try {
+      const stat = statSync(fullPath)
+
+      if (stat.isDirectory()) {
+        existingFolders.add(entry)
+        return {
+          name: entry,
+          kind: 'folder',
+          children: this.discoverFolderChildren(fullPath, crId, entry),
+          filePath: `${crId}/${entry}`,
+          isVirtual: false,
+        }
+      }
+
+      if (entry.endsWith('.md')) {
+        return {
+          name: entry.replace(/\.md$/, ''),
+          kind: 'file',
+          children: [],
+          filePath: `${crId}/${entry}`,
+        }
+      }
+
+      return null
+    }
+    catch {
+      return null
+    }
+  }
+
+  /**
+   * Discover children files within a physical folder.
+   */
+  private discoverFolderChildren(dirPath: string, crId: string, folderName: string): SubDocument[] {
+    const childEntries = this.readDirectorySafe(dirPath)
+
+    return childEntries
+      .filter(e => e.endsWith('.md'))
+      .sort()
+      .map(e => ({
+        name: e.replace(/\.md$/, ''),
+        kind: 'file' as const,
+        children: [],
+        filePath: `${crId}/${folderName}/${e}`,
+      }))
+  }
+
+  /**
+   * Handle name conflicts between files and folders.
+   * Folder entries take precedence over file entries with the same name.
+   */
+  private handleEntryConflict(entryMap: Map<string, SubDocument>, doc: SubDocument): void {
+    const existing = entryMap.get(doc.name)
+
+    if (!existing) {
+      entryMap.set(doc.name, doc)
+      return
+    }
+
+    // Folder wins over file - keep existing folder, discard new file
+    if (existing.kind === 'folder' && doc.kind === 'file') {
+      return
+    }
+
+    // Replace file with folder
+    entryMap.set(doc.name, doc)
+  }
+
+  /**
+   * Merge namespace-grouped entries with scanned entries.
+   * Removes dot-notation files from top-level, then merges virtual/physical folders.
+   */
+  private mergeNamespaceGrouped(
+    entryMap: Map<string, SubDocument>,
+    markdownFiles: string[],
+    existingFolders: Set<string>,
+    crId: string,
+  ): void {
+    // Remove dot-notation files from top-level (they're now in namespace folders)
     for (const file of markdownFiles) {
-      const parsed = parseNamespace(file)
-      if (parsed) {
-        // This file is now inside a namespace folder, remove from top-level entryMap
+      if (parseNamespace(file)) {
         entryMap.delete(file)
       }
     }
 
-    // Merge namespace-grouped entries with entryMap, giving precedence to namespace folders
+    // Merge namespace-grouped virtual folders with scanned entries
+    const namespaceGrouped = groupNamespacedFiles(markdownFiles, existingFolders, crId)
+
     for (const nsDoc of namespaceGrouped) {
       const existing = entryMap.get(nsDoc.name)
+
       if (!existing) {
-        // No existing entry, add the namespace-grouped one
         entryMap.set(nsDoc.name, nsDoc)
+        continue
       }
-      else if (existing.kind === 'file' && nsDoc.kind === 'file') {
-        // Both are files - keep existing (directory scan takes precedence)
-        // Don't replace with namespace-grouped version
-      }
-      else if (existing.kind === 'file' && nsDoc.kind === 'folder') {
-        // Replace file entry with namespace folder (e.g., architecture.md → architecture/ virtual folder)
-        entryMap.set(nsDoc.name, nsDoc)
-      }
-      else if (existing.kind === 'folder' && nsDoc.kind === 'folder') {
-        // Both are folders - merge children
-        // BR-12: Order is [Main] first, then dot-notation alpha, then /folder alpha
-        if (nsDoc.isVirtual && !existing.isVirtual) {
-          // Physical folder exists, merge children from virtual folder
-          // BR-12: Order is [Main] first, then dot-notation alpha, then /folder alpha
-          // Note: Children may have duplicate names; frontend uses filePath for identification
-          existing.children = mergeAndSortChildren(nsDoc.children, existing.children)
-          existing.isVirtual = false
-        }
-        else if (!nsDoc.isVirtual && existing.isVirtual) {
-          // Existing is virtual, replace with non-virtual version
-          entryMap.set(nsDoc.name, nsDoc)
-        }
-        else if (!nsDoc.isVirtual && !existing.isVirtual) {
-          // Both are non-virtual (physical) folders - this happens when groupNamespacedFiles
-          // returns a folder for dot-notation files that also has a physical folder on disk
-          // BR-12: Order is [Main] first, then dot-notation alpha, then /folder alpha
-          // Note: Children may have duplicate names; frontend uses filePath for identification
-          existing.children = mergeAndSortChildren(nsDoc.children, existing.children)
-          existing.isVirtual = false
-        }
-        // If both are virtual, keep existing
-      }
+
+      this.mergeEntryWithNamespace(entryMap, existing, nsDoc)
+    }
+  }
+
+  /**
+   * Merge a single namespace entry with an existing entry.
+   */
+  private mergeEntryWithNamespace(
+    entryMap: Map<string, SubDocument>,
+    existing: SubDocument,
+    nsDoc: SubDocument,
+  ): void {
+    // Both files - keep existing (directory scan precedence)
+    if (existing.kind === 'file' && nsDoc.kind === 'file') {
+      return
     }
 
-    // Add ordered entries first
+    // Replace file with namespace folder
+    if (existing.kind === 'file' && nsDoc.kind === 'folder') {
+      entryMap.set(nsDoc.name, nsDoc)
+      return
+    }
+
+    // Both folders - merge children based on virtual state
+    if (existing.kind === 'folder' && nsDoc.kind === 'folder') {
+      this.mergeFolderEntries(existing, nsDoc)
+    }
+  }
+
+  /**
+   * Merge two folder entries, handling virtual vs physical state.
+   * BR-12: Order is [Main] first, then dot-notation alpha, then /folder alpha.
+   */
+  private mergeFolderEntries(existing: SubDocument, nsDoc: SubDocument): void {
+    // Existing is physical, nsDoc is virtual - merge children
+    if (nsDoc.isVirtual && !existing.isVirtual) {
+      existing.children = mergeAndSortChildren(nsDoc.children, existing.children)
+      existing.isVirtual = false
+      return
+    }
+
+    // Existing is virtual, nsDoc is physical - replace
+    if (!nsDoc.isVirtual && existing.isVirtual) {
+      // Can't modify map here, handled by caller
+      return
+    }
+
+    // Both are physical - merge children (both may have dot-notation files)
+    if (!nsDoc.isVirtual && !existing.isVirtual) {
+      existing.children = mergeAndSortChildren(nsDoc.children, existing.children)
+      existing.isVirtual = false
+    }
+    // Both virtual - keep existing
+  }
+
+  /**
+   * Sort subdocuments: default order first, then alphabetically.
+   */
+  private sortSubDocuments(entryMap: Map<string, SubDocument>): SubDocument[] {
+    const ordered: SubDocument[] = []
+    const remaining: SubDocument[] = []
+
+    // Extract ordered entries first
     for (const name of DEFAULT_SUBDOCUMENT_ORDER) {
-      if (entryMap.has(name)) {
-        result.push(entryMap.get(name)!)
+      const entry = entryMap.get(name)
+      if (entry) {
+        ordered.push(entry)
         entryMap.delete(name)
       }
     }
 
-    // Append remaining entries alphabetically
-    for (const name of [...entryMap.keys()].sort()) {
-      unordered.push(entryMap.get(name)!)
+    // Append remaining alphabetically
+    const sortedNames = [...entryMap.keys()].sort()
+    for (const name of sortedNames) {
+      remaining.push(entryMap.get(name)!)
     }
 
-    return [...result, ...unordered]
+    return [...ordered, ...remaining]
   }
 
   /**
    * Get individual sub-document content for a CR.
-   * MDT-093: Enhanced with worktree support - resolves path for sub-document retrieval.
+   * MDT-093: Enhanced with worktree support - resolves ticket location before retrieval.
    * MDT-138: Enhanced with namespace support - handles dot-notation files.
    */
   async getSubDocument(
@@ -472,59 +580,10 @@ export class TicketService {
     subDocName: string,
   ): Promise<{ code: string, content: string, dateCreated: Date | null, lastModified: Date | null }> {
     const project = await this.getProject(projectId)
-    const ticketsPath = project.project.ticketsPath ?? 'docs/CRs'
-    const projectCode = project.project.code
+    const location = await this.resolveTicketLocation(project, crId)
+    const filePath = this.resolveSubDocumentPath(location.ticketDir, subDocName)
 
-    // MDT-093: Resolve path using WorktreeService for worktree support
-    // If project code is undefined, skip worktree resolution and use main project path
-    const resolvedPath = projectCode
-      ? await this.worktreeService.resolvePath(
-          project.project.path,
-          crId,
-          ticketsPath,
-          projectCode,
-        )
-      : project.project.path
-
-    const subdocDir = join(resolvedPath, ticketsPath, crId)
-
-    // First, try to find the file directly (handles folder-based paths like "bdd/scenario-1")
-    let filePath = join(subdocDir, `${subDocName}.md`)
-
-    // MDT-138: If not found, try to convert to dot-notation file
-    if (!existsSync(filePath)) {
-      // Check if the path contains a slash (folder-based path)
-      const slashIndex = subDocName.indexOf('/')
-      if (slashIndex !== -1) {
-        // Convert "bdd/scenario-1" to "bdd.scenario-1.md"
-        const dotNotationPath = subDocName.replace(/\//g, '.')
-        filePath = join(subdocDir, `${dotNotationPath}.md`)
-      }
-    }
-
-    // MDT-138: If still not found, try to find a dot-notation file by searching the directory
-    if (!existsSync(filePath)) {
-      try {
-        const entries = readdirSync(subdocDir)
-        // Look for a file matching the subDocName pattern
-        // For "scenario-1", look for "*.scenario-1.md"
-        const lastSegment = subDocName.split('/').pop()!
-        const dotNotationFile = entries.find(entry => {
-          const name = entry.replace(/\.md$/, '')
-          const parsed = parseNamespace(name)
-          return parsed && parsed.subKey === lastSegment
-        })
-
-        if (dotNotationFile) {
-          filePath = join(subdocDir, dotNotationFile)
-        }
-      }
-      catch {
-        // Directory read failed, filePath remains not found
-      }
-    }
-
-    if (!existsSync(filePath)) {
+    if (!filePath) {
       throw new Error('SubDocument not found')
     }
 
@@ -536,6 +595,58 @@ export class TicketService {
       content,
       dateCreated: stat.birthtime,
       lastModified: stat.mtime,
+    }
+  }
+
+  /**
+   * Resolve a subdocument name to a concrete file path inside a resolved ticket directory.
+   */
+  private resolveSubDocumentPath(
+    ticketDir: string,
+    subDocName: string,
+  ): string | null {
+    const directFilePath = join(ticketDir, `${subDocName}.md`)
+    if (existsSync(directFilePath)) {
+      return directFilePath
+    }
+
+    const dotNotationFilePath = this.resolveDotNotationPath(ticketDir, subDocName)
+    if (dotNotationFilePath) {
+      return dotNotationFilePath
+    }
+
+    return this.findNamespacedSubDocumentPath(ticketDir, subDocName)
+  }
+
+  /**
+   * Convert folder-like subdocument names to dot-notation file paths when applicable.
+   */
+  private resolveDotNotationPath(subdocDir: string, subDocName: string): string | null {
+    if (!subDocName.includes('/')) {
+      return null
+    }
+
+    const dotNotationPath = join(subdocDir, `${subDocName.replace(/\//g, '.')}.md`)
+    return existsSync(dotNotationPath) ? dotNotationPath : null
+  }
+
+  /**
+   * Find a dot-notation subdocument file by matching the requested final path segment.
+   */
+  private findNamespacedSubDocumentPath(subdocDir: string, subDocName: string): string | null {
+    try {
+      const entries = readdirSync(subdocDir)
+      const lastSegment = subDocName.split('/').pop()!
+      const dotNotationFile = entries.find(entry => {
+        const name = entry.replace(/\.md$/, '')
+        const parsed = parseNamespace(name)
+        return parsed && parsed.subKey === lastSegment
+      })
+
+      return dotNotationFile ? join(subdocDir, dotNotationFile) : null
+    }
+    catch {
+      return null
     }
   }
 

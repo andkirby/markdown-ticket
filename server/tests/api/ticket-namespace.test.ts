@@ -213,10 +213,14 @@ describe('Namespace API (MDT-138)', () => {
       expect(bdd?.isVirtual).toBe(false) // Physical folder exists
 
       // Should have both dot-notation and folder children
-      // Physical children have / prefix to distinguish from virtual children with same name
+      // Physical and virtual children use filePath to distinguish, not name prefix
       const names = bdd?.children?.map(c => c.name) || []
       expect(names).toContain('scenario-1')
-      expect(names).toContain('/legacy') // Folder content with / prefix
+      expect(names).toContain('legacy') // Physical folder child
+
+      // Verify filePath distinguishes physical vs virtual children
+      const legacy = bdd?.children?.find(c => c.name === 'legacy')
+      expect(legacy?.filePath).toBe(`${crCode}/bdd/legacy.md`) // Physical path uses slash
     })
 
     it('handles four-segment filename (Edge-1)', async () => {
@@ -273,7 +277,7 @@ describe('Namespace API (MDT-138)', () => {
       const arch = findSubdoc(subdocs, 'architecture')
 
       expect(arch?.kind).toBe('folder')
-      expect(arch?.isVirtual).toBeUndefined() // Not virtual, physical folder
+      expect(arch?.isVirtual).toBe(false) // Physical folder (not virtual)
       expect(arch?.children?.map(c => c.name)).toEqual(['main', 'review'])
 
       // Verify filePath is included for physical folders
