@@ -7,14 +7,17 @@
  */
 
 import { execSync } from 'node:child_process'
+import path from 'node:path'
 import { describe, test, expect } from '@jest/globals'
+
+const repoRoot = path.resolve(__dirname, '../../..')
 
 describe('TOML Standardization (MDT-098)', () => {
   describe('Constraint C1: No direct toml package imports', () => {
     test('shall not have direct imports of "toml" in server/ or shared/', () => {
       // grep -r "from 'toml'" server/ shared/ --include="*.ts" | grep -v "shared/utils/toml"
       const cmd = "grep -r \"from 'toml'\" server/ shared/ --include=\"*.ts\" | grep -v \"shared/utils/toml\" || true"
-      const result = execSync(cmd, { encoding: 'utf-8', cwd: process.cwd() })
+      const result = execSync(cmd, { encoding: 'utf-8', cwd: repoRoot })
 
       // Should be empty (no direct imports found)
       expect(result.trim()).toBe('')
@@ -23,7 +26,7 @@ describe('TOML Standardization (MDT-098)', () => {
     test('shall only import smol-toml in shared/utils/toml.ts', () => {
       // grep -r "from 'smol-toml'" shared/ --include="*.ts"
       const cmd = "grep -r \"from 'smol-toml'\" shared/ --include=\"*.ts\""
-      const result = execSync(cmd, { encoding: 'utf-8', cwd: process.cwd() })
+      const result = execSync(cmd, { encoding: 'utf-8', cwd: repoRoot })
 
       // Should only find the import in shared/utils/toml.ts
       const lines = result.trim().split('\n').filter(Boolean)
@@ -44,7 +47,7 @@ describe('TOML Standardization (MDT-098)', () => {
       ]
 
       const cmd = `grep -r "@mdt/shared/utils/toml" ${consumingFiles.join(' ')}`
-      const result = execSync(cmd, { encoding: 'utf-8', cwd: process.cwd() })
+      const result = execSync(cmd, { encoding: 'utf-8', cwd: repoRoot })
 
       // All consuming files should import from shared utils
       expect(result.trim()).not.toBe('')
