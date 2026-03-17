@@ -43,10 +43,7 @@ export function useSelectorData(): SelectorData & {
 
         if (cancelled) return
 
-        // Validate and sanitize preferences
         const validatedPreferences = validatePreferences(data.preferences || {})
-
-        // Validate and sanitize selector state
         const validatedState = validateSelectorState(data.selectorState || {})
 
         setPreferences(validatedPreferences)
@@ -148,10 +145,6 @@ export function useSelectorData(): SelectorData & {
   }
 }
 
-/**
- * Validate and sanitize preferences from API
- * Implements BR-7.4, BR-7.5
- */
 function validatePreferences(raw: Record<string, unknown>): SelectorPreferences {
   let visibleCount = DEFAULT_PREFERENCES.visibleCount
   const rawVisibleCount = raw.visibleCount
@@ -165,17 +158,12 @@ function validatePreferences(raw: Record<string, unknown>): SelectorPreferences 
     compactInactive = rawCompactInactive
   }
 
-  // Return only known fields
   return {
     visibleCount,
     compactInactive,
   }
 }
 
-/**
- * Validate and sanitize selector state from API
- * Implements BR-10.x validation
- */
 function validateSelectorState(raw: Record<string, unknown>): Record<string, SelectorState> {
   const validated: Record<string, SelectorState> = {}
 
@@ -186,13 +174,11 @@ function validateSelectorState(raw: Record<string, unknown>): Record<string, Sel
 
     const stateEntry = entry as Record<string, unknown>
 
-    // Validate favorite: non-boolean treats as false
     let favorite = false
     if (typeof stateEntry.favorite === 'boolean') {
       favorite = stateEntry.favorite
     }
 
-    // Validate lastUsedAt: invalid dates become null
     let lastUsedAt: string | null = null
     if (typeof stateEntry.lastUsedAt === 'string') {
       const date = new Date(stateEntry.lastUsedAt)
@@ -201,13 +187,11 @@ function validateSelectorState(raw: Record<string, unknown>): Record<string, Sel
       }
     }
 
-    // Validate count: non-integer or negative becomes 0
     let count = 0
     if (typeof stateEntry.count === 'number' && Number.isInteger(stateEntry.count)) {
       count = Math.max(0, stateEntry.count)
     }
 
-    // Include entry if at least one field is valid
     validated[projectKey] = {
       favorite,
       lastUsedAt,

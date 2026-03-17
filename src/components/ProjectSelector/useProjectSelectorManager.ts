@@ -180,6 +180,7 @@ export function useProjectSelectorManager(
         configFile: '',
         active: false,
         description: '',
+        repository: '',
         ticketsPath: ''
       },
       metadata: {
