@@ -102,11 +102,11 @@ C4Component
 
     Container_Boundary(services, "Business Services") {
         Component(doc_service, "DocumentService", "Service", "Document business logic")
-        Component(fs_service, "FileSystemService", "Service", "File system operations")
+        Component(tree_service, "TreeService", "Service", "File tree operations")
     }
 
     Rel(doc_service, facade, "Uses")
-    Rel(fs_service, facade, "Uses")
+    Rel(tree_service, facade, "Uses")
     Rel(facade, strategy_factory, "Creates strategies")
     Rel(facade, config_repo, "Gets config")
     Rel(facade, tree_builder, "Builds trees")

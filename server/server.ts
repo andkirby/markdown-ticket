@@ -1,7 +1,6 @@
 import type { Express } from 'express'
 import * as path from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
 import { getTicketsPath } from '@mdt/shared/models/Project.js'
 // Services
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
@@ -13,7 +12,6 @@ import express from 'express'
 // Controllers
 import { DocumentController } from './controllers/DocumentController.js'
 import { ProjectController } from './controllers/ProjectController.js'
-import { TicketController } from './controllers/TicketController.js'
 import FileWatcherService from './services/fileWatcher/index.js'
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
@@ -24,10 +22,9 @@ import { createDocumentRouter } from './routes/documents.js'
 import { createProjectRouter } from './routes/projects.js'
 import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
-import { createTicketRouter } from './routes/tickets.js'
 import { DocumentService } from './services/DocumentService.js'
-import { FileSystemService } from './services/FileSystemService.js'
 import { TicketService } from './services/TicketService.js'
+import { TreeService } from './services/TreeService.js'
 
 // Extended project type for server use
 interface ServerProject {
@@ -106,13 +103,6 @@ class ProjectServiceAdapter {
 const app: Express = express()
 const PORT: number = Number(process.env.PORT) || 3001
 
-// ES module __dirname equivalent
-const __filename: string = fileURLToPath(import.meta.url)
-const __dirname: string = path.dirname(__filename)
-
-// Configuration
-const TICKETS_DIR: string = path.join(__dirname, 'sample-tasks')
-
 // =============================================================================
 // Middleware
 // =============================================================================
@@ -143,7 +133,7 @@ const ticketService = new TicketService(projectDiscovery as any)
  */
 // eslint-disable-next-line ts/no-explicit-any
 const documentService = new DocumentService(projectDiscovery as any)
-const fileSystemService = new FileSystemService(TICKETS_DIR)
+const treeService = new TreeService(projectDiscovery)
 
 // Connect file watcher to document service for cache invalidation
 fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter)
@@ -155,13 +145,12 @@ fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter)
 const projectController = new ProjectController(
   // eslint-disable-next-line ts/no-explicit-any
   projectServiceAdapter as any, // Use the adapter which provides the expected interface
-  fileSystemService,
+  treeService,
   fileWatcher,
   undefined, // ticketController (not needed)
   ticketService, // Pass the ticketService for CR operations
 )
 
-const ticketController = new TicketController(fileSystemService)
 const documentController = new DocumentController(documentService)
 
 // =============================================================================
@@ -230,11 +219,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
     }
 
     if (projectPaths.length === 0) {
-      logger.warn('⚠️  No valid project paths found, falling back to single watcher')
-      const watchPath: string = path.join(TICKETS_DIR, '*.md')
-
-      fileWatcher.initFileWatcher(watchPath)
-      logger.info(`📡 Single file watcher initialized for: ${watchPath}`)
+      logger.warn('⚠️  No valid project paths found, skipping file watcher initialization')
     }
     else {
       fileWatcher.initMultiProjectWatcher(projectPaths)
@@ -250,10 +235,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
   }
   catch (error) {
     console.error('Error initializing multi-project watchers:', error)
-    const watchPath: string = path.join(TICKETS_DIR, '*.md')
-
-    fileWatcher.initFileWatcher(watchPath)
-    logger.info(`📡 Fallback file watcher initialized for: ${watchPath}`)
+    logger.warn('⚠️  Failed to initialize file watchers')
   }
 }
 
@@ -263,9 +245,6 @@ async function initializeMultiProjectWatchers(): Promise<void> {
 
 // Multi-Project API routes
 app.use('/api/projects', createProjectRouter(projectController))
-
-// Legacy single-project task routes
-app.use('/api/tasks', createTicketRouter(ticketController))
 
 // Document routes
 app.use('/api/documents', createDocumentRouter(documentController, projectController))
@@ -302,34 +281,11 @@ export { app }
 // Server Initialization
 // =============================================================================
 
-async function initializeServer(): Promise<void> {
-  await fileSystemService.ensureTasksDirectory()
-
-  // Create sample tickets if directory is empty
-  try {
-    const fs = await import('node:fs/promises')
-    const files = await fs.readdir(TICKETS_DIR)
-
-    if (files.length === 0) {
-      logger.info('Creating sample tickets...')
-      // Sample tickets creation moved to a separate function if needed
-    }
-  }
-  catch (error) {
-    console.error('Error checking tasks directory:', error)
-  }
-}
-
 // Start server only when run directly (not when imported for testing)
 if (import.meta.url === `file://${process.argv[1]}`) {
   app.listen(PORT, async () => {
     logger.info(`🚀 Ticket board server running on port ${PORT}`)
-    logger.info(`📁 Tasks directory: ${TICKETS_DIR}`)
     logger.info(`🌐 API endpoints:`)
-    logger.info(`   GET  /api/tasks - List all task files`)
-    logger.info(`   GET  /api/tasks/:filename - Get specific task`)
-    logger.info(`   POST /api/tasks/save - Save task file`)
-    logger.info(`   DELETE /api/tasks/:filename - Delete task file`)
     logger.info(`   GET  /api/events - Server-Sent Events for real-time updates`)
     logger.info(`   GET  /api/status - Server status`)
     logger.info(`   GET  /api/projects - List all registered projects`)
@@ -340,7 +296,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     logger.info(`   GET  /api-docs - API Documentation (Redoc UI)`)
 
     // Initialize the server
-    await initializeServer()
     await initializeMultiProjectWatchers()
     fileWatcher.startHeartbeat()
   })
