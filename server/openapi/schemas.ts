@@ -3,15 +3,13 @@
  * Route JSDoc annotations should use $ref: '#/components/schemas/{Name}'.
  */
 
-import { CRPriorities, CRStatuses, CRTypes } from '@mdt/domain-contracts'
+import { CR_CODE_PATTERN, CRPriorities, CRStatuses, CRTypes } from '@mdt/domain-contracts'
 
 /**
- * CR code pattern for OpenAPI (matches domain-contracts CR_CODE_PATTERN)
- * Format: PREFIX-123 where PREFIX is 3-5 alphanumeric chars (first must be letter)
- *
- * Source of truth: @mdt/domain-contracts CR_CODE_PATTERN
+ * CR code pattern for OpenAPI schemas (string format)
+ * Converted from domain-contracts CR_CODE_PATTERN regex
  */
-export const CR_CODE_PATTERN_STRING = '^[A-Z][A-Z0-9]{2,4}-\\\\d{3,4}$'
+export const CR_CODE_PATTERN_STRING = CR_CODE_PATTERN.source
 
 // Enums - imported from domain-contracts for single source of truth
 const CRStatusEnum = CRStatuses
@@ -49,10 +47,10 @@ export const schemas = {
       priority: { $ref: '#/components/schemas/CRPriority' },
       content: { type: 'string', description: 'Full markdown content of the CR' },
       phaseEpic: { type: 'string', description: 'Phase or epic this CR belongs to', example: 'Phase 1' },
-      dependsOn: { type: 'string', description: 'Comma-separated CR codes this depends on', example: 'MDT-001, MDT-002' },
-      blocks: { type: 'string', description: 'Comma-separated CR codes blocked by this', example: 'MDT-010' },
+      dependsOn: { type: 'array', items: { type: 'string' }, description: 'CR codes this depends on', example: ['MDT-001', 'MDT-002'] },
+      blocks: { type: 'array', items: { type: 'string' }, description: 'CR codes blocked by this', example: ['MDT-010'] },
       assignee: { type: 'string', description: 'Person assigned to implement this CR', example: 'john.doe' },
-      relatedTickets: { type: 'string', description: 'Comma-separated related CR codes', example: 'MDT-003' },
+      relatedTickets: { type: 'array', items: { type: 'string' }, description: 'Related CR codes', example: ['MDT-003'] },
       impactAreas: { type: 'array', items: { type: 'string' }, description: 'System areas impacted', example: ['backend', 'api'] },
       implementationDate: { type: 'string', format: 'date', description: 'Date implementation completed (ISO 8601)', example: '2025-09-20' },
       implementationNotes: { type: 'string', description: 'Notes about the implementation' },
@@ -68,10 +66,10 @@ export const schemas = {
       priority: { $ref: '#/components/schemas/CRPriority' },
       content: { type: 'string', description: 'Full markdown content (template auto-generated if omitted)' },
       phaseEpic: { type: 'string' },
-      dependsOn: { type: 'string' },
-      blocks: { type: 'string' },
+      dependsOn: { type: 'array', items: { type: 'string' } },
+      blocks: { type: 'array', items: { type: 'string' } },
       assignee: { type: 'string' },
-      relatedTickets: { type: 'string' },
+      relatedTickets: { type: 'array', items: { type: 'string' } },
       impactAreas: { type: 'array', items: { type: 'string' } },
     },
   },

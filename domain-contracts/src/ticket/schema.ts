@@ -4,13 +4,14 @@
  */
 
 import { z } from 'zod'
-import { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema.js'
+import { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'
+import { PROJECT_CODE_PATTERN } from '../project/schema'
 
 /**
  * CR code pattern for validation and OpenAPI schemas
- * Format: PREFIX-123 where PREFIX is 2-4 alphanumeric chars (first must be letter)
+ * Format: PROJECT_CODE_PATTERN-123 where PROJECT_CODE_PATTERN is 2-5 alphanumeric chars (first must be letter)
  */
-export const CR_CODE_PATTERN = /^[A-Z][A-Z0-9]{2,4}-\d{3,4}$/
+export const CR_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}-\d{3,4}$/
 
 /**
  * Base CR schema with field validation

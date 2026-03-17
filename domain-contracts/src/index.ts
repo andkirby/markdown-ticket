@@ -4,13 +4,10 @@
  */
 
 // Export project-related schemas and validation
-export * from './project/index.js'
+export * from './project'
 
-// Export ticket/CR-related schemas and validation
-export * from './ticket/index.js'
-
-// Export CR code pattern for OpenAPI schemas
-export { CR_CODE_PATTERN } from './ticket/schema.js'
+// Export ticket/CR-related schemas and validation (includes CR_CODE_PATTERN)
+export * from './ticket'
 
 // Export core types and enums
-export * from './types/index.js'
+export * from './types'

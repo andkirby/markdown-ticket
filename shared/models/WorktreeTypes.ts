@@ -7,13 +7,14 @@
  * @module shared/models/WorktreeTypes
  */
 
+import { CR_CODE_PATTERN } from '@mdt/domain-contracts'
 import { z } from 'zod'
 
 /**
- * Ticket code pattern: PROJECT_CODE-NUMBER (e.g., MDT-095, API-123)
- * Matches branch naming conventions for feature/bugfix branches.
+ * Ticket code pattern for worktree validation
+ * Re-exports from domain-contracts for consistency
  */
-const TICKET_CODE_PATTERN = /^[A-Z]{2,}-\d{3,}$/
+const TICKET_CODE_PATTERN = CR_CODE_PATTERN
 
 /**
  * WorktreeMapping represents a single worktree entry mapping a ticket code to its filesystem path.
