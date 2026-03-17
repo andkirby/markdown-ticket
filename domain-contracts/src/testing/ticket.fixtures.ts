@@ -8,8 +8,8 @@ import type {
   CreateTicketInput,
   Ticket,
   UpdateTicketInput,
-} from '../ticket/schema.js'
-import { CRPriority, CRStatus, CRType } from '../types/schema.js'
+} from '../ticket/schema'
+import { CRPriority, CRStatus, CRType } from '../types/schema'
 
 /**
  * Creates a valid Ticket with optional overrides

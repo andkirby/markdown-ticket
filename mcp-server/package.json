@@ -27,8 +27,8 @@
   "dependencies": {
     "@antfu/eslint-config": "7.4.3",
     "@eslint-react/eslint-plugin": "^2.11.0",
-    "@mdt/domain-contracts": "*",
-    "@mdt/shared": "*",
+    "@mdt/domain-contracts": "file:../domain-contracts",
+    "@mdt/shared": "file:../shared",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.4",

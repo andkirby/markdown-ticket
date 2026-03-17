@@ -9,7 +9,7 @@ import type {
   Project,
   ProjectConfig,
   UpdateProjectInput,
-} from '../project/schema.js'
+} from '../project/schema'
 
 /**
  * Creates a valid Project with optional overrides

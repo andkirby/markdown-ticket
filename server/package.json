@@ -34,8 +34,8 @@
   "dependencies": {
     "@antfu/eslint-config": "7.4.3",
     "@eslint-react/eslint-plugin": "^2.11.0",
-    "@mdt/domain-contracts": "*",
-    "@mdt/shared": "*",
+    "@mdt/domain-contracts": "file:../domain-contracts",
+    "@mdt/shared": "file:../shared",
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "@typescript-eslint/parser": "^8.56.0",
     "chokidar": "^3.6.0",
