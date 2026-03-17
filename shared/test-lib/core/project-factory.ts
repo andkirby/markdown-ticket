@@ -7,6 +7,7 @@
 
 import type { CRPriorityValue as CRPriority, CRTypeValue as CRType } from '@mdt/domain-contracts'
 import type { CRStatus } from '../../models/Types.js'
+import type { ProjectConfig, ProjectData } from '../project-factory-types.js'
 import type { TestEnvironment } from './test-environment.js'
 import { join } from 'node:path'
 import { TestProjectBuilder } from '../ticket/test-project-builder.js'
@@ -27,24 +28,6 @@ export interface SimpleCR {
   relatedTickets?: string
   dependsOn?: string
   blocks?: string
-}
-
-/** Project configuration for test projects */
-export interface ProjectConfig {
-  repository?: string
-  name?: string
-  code?: string
-  description?: string
-  ticketsPath?: string
-  documentPaths?: string[]
-  excludeFolders?: string[]
-}
-
-/** Created project data */
-export interface ProjectData {
-  key: string
-  path: string
-  config: ProjectConfig
 }
 
 /** Test CR data structure */

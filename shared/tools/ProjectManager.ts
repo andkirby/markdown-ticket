@@ -1,3 +1,7 @@
+import type {
+  CreateProjectInput as ContractCreateProjectInput,
+  UpdateProjectInput as ContractUpdateProjectInput,
+} from '@mdt/domain-contracts'
 import type { Project } from '../models/Project.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -10,26 +14,18 @@ import { ProjectValidator } from './ProjectValidator.node.js'
 /**
  * Project update input
  */
-export interface ProjectUpdateInput {
-  name?: string
-  description?: string
-  repository?: string
-  active?: boolean
-  ticketsPath?: string // Relative path for tickets
-}
+type ProjectUpdateFields = Pick<ContractUpdateProjectInput, 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>
+export type ProjectUpdateInput = Partial<ProjectUpdateFields>
 
 /**
  * Project creation input
  */
-export interface ProjectCreateInput {
-  name: string
-  code?: string
+type ProjectCreateFields = Pick<ContractCreateProjectInput, 'code' | 'description' | 'repository' | 'ticketsPath'>
+export type ProjectCreateInput = Partial<ProjectCreateFields> & {
+  name: ContractCreateProjectInput['name']
   path: string
-  description?: string
-  repository?: string
   globalOnly?: boolean // Strategy 1: Global-only mode
   createProjectPath?: boolean // Flag to auto-create project directory
-  ticketsPath?: string // Relative path for tickets (default: DEFAULTS.TICKETS_PATH)
   documentPaths?: string[] // Document discovery paths (global-only mode only)
   maxDepth?: number // Document discovery max depth (global-only mode only)
 }

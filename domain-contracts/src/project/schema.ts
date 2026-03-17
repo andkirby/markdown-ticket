@@ -10,6 +10,40 @@ import { z } from 'zod'
  * Format: 2-5 characters, uppercase letter followed by alphanumeric
  */
 export const PROJECT_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}$/
+const WINDOWS_ABSOLUTE_PATH_PATTERN = /^[A-Za-z]:[\\/]/u
+const TICKETS_PATH_INVALID_CHARS_PATTERN = /[<>"|?*]/u
+
+function normalizeTicketsPath(path: string): string {
+  return path
+    .replace(/\\/gu, '/')
+    .replace(/^\.\/+/u, '')
+    .replace(/\/+$/u, '')
+}
+
+/**
+ * Tickets path schema with field-level validation only.
+ * Must remain a project-root-relative path.
+ */
+export const TicketsPathSchema = z.string()
+  .trim()
+  .min(1, 'Tickets path is required')
+  .refine(
+    path => !path.startsWith('/') && !WINDOWS_ABSOLUTE_PATH_PATTERN.test(path),
+    'Tickets path must be relative to project root',
+  )
+  .refine(
+    path => !TICKETS_PATH_INVALID_CHARS_PATTERN.test(path),
+    'Tickets path contains invalid path characters',
+  )
+  .refine(
+    (path) => {
+      const segments = path.split(/[\\/]+/u)
+      return segments.every(segment => segment !== '..')
+    },
+    'Tickets path cannot leave the project root',
+  )
+  .transform(normalizeTicketsPath)
+  .refine(path => path.length > 0, 'Tickets path is required')
 
 /**
  * Document configuration schema for project
@@ -81,8 +115,7 @@ export const ProjectSchema = z.object({
   id: z.string()
     .min(1, 'Required'),
   /** Path to tickets directory relative to project root */
-  ticketsPath: z.string()
-    .min(1, 'Tickets path is required'),
+  ticketsPath: TicketsPathSchema,
   /** Optional project description */
   description: z.string().optional(),
   /** Optional repository URL */
@@ -92,14 +125,20 @@ export const ProjectSchema = z.object({
 })
 
 /**
+ * Project configuration project section.
+ * Mirrors the nested TOML shape used by project config parsing.
+ */
+export const ProjectConfigProjectSchema = ProjectSchema.extend({
+  document: DocumentConfigSchema.optional().default({}),
+})
+
+/**
  * Complete project configuration schema
  * Combines project with document configuration
  */
 export const ProjectConfigSchema = z.object({
   /** Core project configuration */
-  'project': ProjectSchema,
-  /** Document discovery configuration */
-  'project.document': DocumentConfigSchema.optional().default({}),
+  project: ProjectConfigProjectSchema,
 })
 
 /**
@@ -118,8 +157,7 @@ export const CreateProjectInputSchema = z.object({
   id: z.string()
     .min(1, 'Project ID is required'),
   /** Path to tickets directory relative to project root */
-  ticketsPath: z.string()
-    .min(1, 'Tickets path is required'),
+  ticketsPath: TicketsPathSchema,
   /** Optional project description */
   description: z.string().optional(),
   /** Optional repository URL */
@@ -141,9 +179,7 @@ export const UpdateProjectInputSchema = z.object({
     .trim()
     .optional(),
   /** Path to tickets directory relative to project root */
-  ticketsPath: z.string()
-    .min(1, 'Tickets path is required')
-    .optional(),
+  ticketsPath: TicketsPathSchema.optional(),
   /** Optional project description */
   description: z.string().optional(),
   /** Optional repository URL */
@@ -162,18 +198,22 @@ export const UpdateProjectInputSchema = z.object({
 
 // TypeScript types inferred from schemas
 export type Project = z.infer<typeof ProjectSchema>
+export type ProjectConfigProject = z.infer<typeof ProjectConfigProjectSchema>
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>
 export type DocumentConfig = z.infer<typeof DocumentConfigSchema>
 export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>
 export type UpdateProjectInput = z.infer<typeof UpdateProjectInputSchema>
+export type TicketsPath = z.infer<typeof TicketsPathSchema>
 
 /**
  * Export all schemas for use in other modules
  */
 export const ProjectSchemas = {
   project: ProjectSchema,
+  projectConfigProject: ProjectConfigProjectSchema,
   projectConfig: ProjectConfigSchema,
   documentConfig: DocumentConfigSchema,
   createProjectInput: CreateProjectInputSchema,
   updateProjectInput: UpdateProjectInputSchema,
+  ticketsPath: TicketsPathSchema,
 } as const

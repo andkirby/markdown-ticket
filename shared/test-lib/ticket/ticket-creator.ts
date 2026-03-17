@@ -5,13 +5,15 @@
 import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 import type { TicketData } from '../../models/Ticket.js'
 import type { ValidationResult } from '../../models/Types.js'
+import type { ProjectConfig as TestProjectConfig } from '../project-factory-types.js'
 import { CRStatus } from '../../models/Types.js'
 
 /** Configuration for ticket creation */
-export interface TicketCreationConfig {
+type TicketPathConfig = Pick<TestProjectConfig, 'ticketsPath'>
+
+export type TicketCreationConfig = TicketPathConfig & {
   projectCode: string
   projectPath: string
-  ticketsPath?: string
   validateContent?: boolean
 }
 
@@ -39,7 +41,7 @@ export abstract class BaseTicketCreator implements ITicketCreator {
   protected readonly validPriorities: CRPriorityValue[] = ['Low', 'Medium', 'High', 'Critical']
 
   /** Generate next ticket code */
-  protected abstract generateTicketCode(projectCode: string, projectPath: string, ticketsPath?: string): string | Promise<string>
+  protected abstract generateTicketCode(projectCode: string, projectPath: string, ticketsPath?: TestProjectConfig['ticketsPath']): string | Promise<string>
 
   /** Create a single ticket/CR */
   abstract createTicket(config: TicketCreationConfig, data: TicketData): Promise<TicketCreationResult>

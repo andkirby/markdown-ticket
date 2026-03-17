@@ -1,28 +1,9 @@
+import type { Project } from '@mdt/shared/models/Project.js'
 import type { FileMetadata } from '../commands/ExtractMetadataCommand.js'
 import type { ProjectConfig, TreeNode as StrategyTreeNode } from '../strategies/TreeBuildingStrategy.js'
 import { TreeBuilder } from '../builders/TreeBuilder.js'
 import { TreeStrategyFactory } from '../factories/TreeStrategyFactory.js'
 import { ConfigRepository } from '../repositories/ConfigRepository.js'
-
-// Type definitions
-interface Project {
-  id: string
-  project: {
-    name: string
-    code?: string
-    path: string
-    active: boolean
-  }
-  autoDiscovered?: boolean
-  configPath?: string
-}
-
-interface _Config {
-  documentPaths: string[]
-  excludeFolders: string[]
-  maxDepth?: number
-  ticketsPath?: string | null | undefined
-}
 
 // Re-export TreeNode with metadata support
 interface TreeNode extends StrategyTreeNode {
