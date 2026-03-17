@@ -126,12 +126,13 @@ domain-contracts/
 - [x] Create ticket contracts in `domain-contracts/src/ticket/`
 - [x] Split ticket contracts by role: `entity`, `frontmatter`, `input`, `subdocument`, `validation`
 - [x] Migrate canonical ticket shape ownership out of `shared`, `server`, `mcp-server`, and `src`
+- [x] Move worktree schemas and types from `shared/models/WorktreeTypes.ts` into contracts
 - [ ] Consolidate the project contract into `domain-contracts/src/project/` as the canonical source of truth
 - [ ] Migrate `LocalProjectConfig`, merged `Project`, registry entry, and project input/update shapes into project contracts
-- [ ] Move worktree schemas and types from `shared/models/WorktreeTypes.ts` into contracts
 - [ ] Remove remaining project and worktree duplicates from `shared`, `server`, `mcp-server`, and `src`
 - [ ] Decide whether template metadata should become a formal contract
-- [ ] Decide whether global config should become a formal contract
+- [x] Create formal app config contracts for `config.toml` and `user.toml`
+- [x] Keep selector preferences in `user.toml` as a separate user-config contract, not in global `config.toml`
 - [ ] Keep transport-only payloads such as SSE events, tree nodes, and directory listings out of domain contracts unless a separate transport-contract layer is introduced
 
 ## 4. Decision

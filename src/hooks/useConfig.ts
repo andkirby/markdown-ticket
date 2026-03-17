@@ -1,24 +1,8 @@
+import type { GlobalConfig } from '@mdt/domain-contracts'
 import { useEffect, useState } from 'react'
 
-interface GlobalConfig {
-  counter_api?: {
-    enabled?: boolean
-    endpoint?: string
-    api_key?: string
-  }
-  dashboard?: {
-    port?: number
-    autoRefresh?: boolean
-    refreshInterval?: number
-  }
-  discovery?: {
-    autoDiscover?: boolean
-    searchPaths?: string[]
-  }
-}
-
 export function useConfig() {
-  const [config, setConfig] = useState<GlobalConfig>({})
+  const [config, setConfig] = useState<GlobalConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,7 +13,7 @@ export function useConfig() {
 
       const response = await fetch('/api/config/global')
       if (response.ok) {
-        const data = await response.json()
+        const data: GlobalConfig = await response.json()
         setConfig(data)
       }
       else {

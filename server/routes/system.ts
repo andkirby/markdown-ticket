@@ -1,6 +1,11 @@
 import type { Request, Response } from 'express'
 import type { ProjectController } from '../controllers/ProjectController.js'
 import type FileWatcherService from '../services/fileWatcher/index.js'
+import {
+  validateGlobalConfig,
+  validateSelectorState,
+  validateUserConfig,
+} from '@mdt/domain-contracts'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
@@ -17,6 +22,39 @@ interface FileInvoker {
 
 interface ProjectDiscovery {
   clearCache?: () => void | Promise<void>
+}
+
+async function loadGlobalConfig(configDir: string) {
+  try {
+    const configPath = path.join(configDir, 'config.toml')
+    const configContent = await fs.readFile(configPath, 'utf8')
+    return validateGlobalConfig(parseToml(configContent))
+  }
+  catch {
+    return validateGlobalConfig({})
+  }
+}
+
+async function loadUserConfig(configDir: string) {
+  try {
+    const userConfigPath = path.join(configDir, 'user.toml')
+    const userConfigContent = await fs.readFile(userConfigPath, 'utf8')
+    return validateUserConfig(parseToml(userConfigContent))
+  }
+  catch {
+    return validateUserConfig({})
+  }
+}
+
+async function loadSelectorState(configDir: string) {
+  try {
+    const statePath = path.join(configDir, 'project-selector.json')
+    const stateContent = await fs.readFile(statePath, 'utf8')
+    return validateSelectorState(JSON.parse(stateContent))
+  }
+  catch {
+    return validateSelectorState({})
+  }
 }
 
 /**
@@ -113,32 +151,12 @@ export function createSystemRouter(
   router.get('/config/links', async (req: Request, res: Response) => {
     try {
       const configDir = getConfigDir()
-      const configPath = path.join(configDir, 'config.toml')
-      const configData = await fs.readFile(configPath, 'utf8')
+      const config = await loadGlobalConfig(configDir)
 
-      // Simple TOML parsing for [links] section
-      const linkSection = configData.match(/\[links\]([\s\S]*?)(?=\[|$)/)
-
-      if (linkSection) {
-        const linkConfig: Record<string, boolean> = {}
-        const lines = linkSection[1].split('\n')
-
-        for (const line of lines) {
-          const match = line.trim().match(/^(\w+)\s*=\s*(true|false)$/)
-
-          if (match) {
-            linkConfig[match[1]] = match[2] === 'true'
-          }
-        }
-
-        res.json(linkConfig)
-      }
-      else {
-        res.status(404).json({ error: 'Link configuration not found' })
-      }
+      res.json(config.links)
     }
     catch {
-      res.status(404).json({ error: 'Configuration file not found' })
+      res.status(500).json({ error: 'Failed to read configuration file' })
     }
   })
 
@@ -236,10 +254,8 @@ export function createSystemRouter(
 
       try {
         const configDir = getConfigDir()
-        const configPath = path.join(configDir, 'config.toml')
-        const configContent = await fs.readFile(configPath, 'utf8')
-        const parsedConfig = parseToml(configContent) as any
-        const discoveryPaths = parsedConfig.discovery?.searchPaths || []
+        const config = await loadGlobalConfig(configDir)
+        const discoveryPaths = config.discovery.searchPaths
 
         // More precise matching: path must start with discovery path AND
         // either be exactly the discovery path OR have a separator after it
@@ -346,39 +362,14 @@ export function createSystemRouter(
   router.get('/config', async (req: Request, res: Response) => {
     try {
       const configDir = getConfigDir()
-      const configPath = path.join(configDir, 'config.toml')
+      const config = await loadGlobalConfig(configDir)
 
-      logger.debug(`Reading config from: ${configPath}`)
+      logger.debug(`Reading config from: ${path.join(configDir, 'config.toml')}`)
 
-      try {
-        const configContent = await fs.readFile(configPath, 'utf8')
-        const parsedConfig = parseToml(configContent) as any
-
-        // Extract configuration using proper TOML parsing
-        const response = {
-          configDir,
-          discovery: {
-            autoDiscover: parsedConfig.discovery?.autoDiscover ?? true,
-            searchPaths: parsedConfig.discovery?.searchPaths ?? [],
-            maxDepth: parsedConfig.discovery?.maxDepth ?? 3,
-          },
-        }
-
-        res.json(response)
-      }
-      catch {
-        // Config file doesn't exist, return defaults
-        const response = {
-          configDir,
-          discovery: {
-            autoDiscover: true,
-            searchPaths: [],
-            maxDepth: 3,
-          },
-        }
-
-        res.json(response)
-      }
+      res.json({
+        configDir,
+        discovery: config.discovery,
+      })
     }
     catch (error) {
       console.error('Error reading config:', error)
@@ -414,44 +405,9 @@ export function createSystemRouter(
   router.get('/config/global', async (req: Request, res: Response) => {
     try {
       const configDir = getConfigDir()
-      const configPath = path.join(configDir, 'config.toml')
+      logger.debug(`Reading global config from: ${path.join(configDir, 'config.toml')}`)
 
-      logger.debug(`Reading global config from: ${configPath}`)
-
-      try {
-        const configContent = await fs.readFile(configPath, 'utf8')
-        const parsedConfig = parseToml(configContent) as any
-
-        res.json(parsedConfig)
-      }
-      catch {
-        // Config file doesn't exist, return default config
-        const defaultConfig = {
-          discovery: {
-            autoDiscover: true,
-            searchPaths: [],
-            maxDepth: 3,
-          },
-          links: {
-            enableAutoLinking: true,
-            enableTicketLinks: true,
-            enableDocumentLinks: true,
-            enableHoverPreviews: false,
-            linkValidation: false,
-          },
-          ui: {
-            theme: 'auto',
-            autoRefresh: true,
-            refreshInterval: 5000,
-          },
-          system: {
-            logLevel: 'info',
-            cacheTimeout: 30000,
-          },
-        }
-
-        res.json(defaultConfig)
-      }
+      res.json(await loadGlobalConfig(configDir))
     }
     catch (error) {
       console.error('Error reading global config:', error)
@@ -585,111 +541,18 @@ export function createSystemRouter(
    *             schema: { $ref: '#/components/schemas/Error500' }
    */
 
-  // Default preferences
-  const DEFAULT_PREFERENCES = {
-    visibleCount: 7,
-    compactInactive: true,
-  }
-
-  // Validate and sanitize a single selector state entry
-  function validateSelectorEntry(entry: unknown): { favorite: boolean, lastUsedAt?: string | null, count: number } {
-    const defaultEntry: { favorite: boolean, lastUsedAt?: string | null, count: number } = { favorite: false, count: 0 }
-
-    if (typeof entry !== 'object' || entry === null) {
-      return defaultEntry
-    }
-
-    const validated: { favorite: boolean, lastUsedAt?: string | null, count: number } = { ...defaultEntry }
-
-    // Validate favorite: must be boolean, default to false if invalid
-    if ('favorite' in entry) {
-      if (typeof (entry as Record<string, unknown>).favorite === 'boolean') {
-        validated.favorite = (entry as Record<string, unknown>).favorite as boolean
-      }
-      // If not boolean, use default false
-    }
-
-    // Validate lastUsedAt: must be valid ISO-8601 date
-    if ('lastUsedAt' in entry) {
-      if (typeof (entry as Record<string, unknown>).lastUsedAt === 'string') {
-        const date = Date.parse((entry as Record<string, unknown>).lastUsedAt as string)
-        if (!isNaN(date)) {
-          validated.lastUsedAt = (entry as Record<string, unknown>).lastUsedAt as string
-        } else {
-          // Invalid date, set to null
-          validated.lastUsedAt = null
-        }
-      } else {
-        // Not a string, set to null
-        validated.lastUsedAt = null
-      }
-    }
-
-    // Validate count: must be integer >= 0, default to 0 if invalid
-    if ('count' in entry) {
-      if (typeof (entry as Record<string, unknown>).count === 'number' && Number.isInteger((entry as Record<string, unknown>).count as number) && (entry as Record<string, unknown>).count as number >= 0) {
-        validated.count = (entry as Record<string, unknown>).count as number
-      }
-      // If not valid, use default 0 (already set)
-    }
-
-    return validated
-  }
-
   // GET /api/config/selector - Return preferences and state
   router.get('/config/selector', async (req: Request, res: Response) => {
     try {
       const configDir = getConfigDir()
       logger.debug('getConfigDir returned:', configDir)
+      const userConfig = await loadUserConfig(configDir)
+      const selectorState = await loadSelectorState(configDir)
 
-      // Read preferences from user.toml
-      let preferences = { ...DEFAULT_PREFERENCES }
-
-      try {
-        const userTomlPath = path.join(configDir, 'user.toml')
-        const userTomlContent = await fs.readFile(userTomlPath, 'utf8')
-        const parsedConfig = parseToml(userTomlContent) as any
-
-        // Check for [ui.projectSelector] section
-        if (parsedConfig.ui?.projectSelector) {
-          const selectorConfig = parsedConfig.ui.projectSelector
-
-          // Validate visibleCount: integer >= 1
-          if (typeof selectorConfig.visibleCount === 'number' && Number.isInteger(selectorConfig.visibleCount) && selectorConfig.visibleCount >= 1) {
-            preferences.visibleCount = selectorConfig.visibleCount
-          }
-
-          // Validate compactInactive: boolean
-          if (typeof selectorConfig.compactInactive === 'boolean') {
-            preferences.compactInactive = selectorConfig.compactInactive
-          }
-        }
-      }
-      catch {
-        // File doesn't exist or is invalid, use defaults (silent fallback)
-      }
-
-      // Read selector state from project-selector.json
-      let selectorState: Record<string, unknown> = {}
-
-      try {
-        const statePath = path.join(configDir, 'project-selector.json')
-        const stateContent = await fs.readFile(statePath, 'utf8')
-        const parsedState = JSON.parse(stateContent)
-
-        // Validate each entry
-        if (typeof parsedState === 'object' && parsedState !== null) {
-          for (const [key, value] of Object.entries(parsedState)) {
-            const validated = validateSelectorEntry(value)
-            selectorState[key] = validated
-          }
-        }
-      }
-      catch {
-        // File doesn't exist or is invalid, use empty state (silent fallback)
-      }
-
-      res.json({ preferences, selectorState })
+      res.json({
+        preferences: userConfig.ui.projectSelector,
+        selectorState,
+      })
     }
     catch (error) {
       console.error('Error reading selector config:', error)
@@ -708,14 +571,7 @@ export function createSystemRouter(
 
       const configDir = getConfigDir()
       const statePath = path.join(configDir, 'project-selector.json')
-
-      // Validate each entry in the update
-      const validatedState: Record<string, unknown> = {}
-
-      for (const [key, value] of Object.entries(stateUpdate)) {
-        const validated = validateSelectorEntry(value)
-        validatedState[key] = validated
-      }
+      const validatedState = validateSelectorState(stateUpdate)
 
       // Ensure directory exists
       await fs.mkdir(configDir, { recursive: true })

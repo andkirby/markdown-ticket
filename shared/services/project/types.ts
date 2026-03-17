@@ -1,31 +1,8 @@
-import type { Project as DomainProject } from '@mdt/domain-contracts'
+import type { GlobalConfig as DomainGlobalConfig, Project as DomainProject } from '@mdt/domain-contracts'
 import type { Project, ProjectConfig } from '../../models/Project.js'
 import type { Ticket } from '../../models/Ticket.js'
 
-/** Global configuration interface */
-export interface GlobalConfig {
-  discovery: {
-    autoDiscover: boolean
-    searchPaths: string[]
-    maxDepth?: number
-  }
-  links: {
-    enableAutoLinking: boolean
-    enableTicketLinks: boolean
-    enableDocumentLinks: boolean
-    enableHoverPreviews?: boolean
-    linkValidation?: boolean
-  }
-  ui?: {
-    theme?: 'light' | 'dark' | 'auto'
-    autoRefresh?: boolean
-    refreshInterval?: number
-  }
-  system?: {
-    logLevel?: 'error' | 'warn' | 'info' | 'debug'
-    cacheTimeout?: number
-  }
-}
+export type GlobalConfig = DomainGlobalConfig
 
 /** Project cache structure */
 export interface ProjectCache {
