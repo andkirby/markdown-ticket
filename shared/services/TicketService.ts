@@ -25,7 +25,7 @@ import { DEFAULTS } from '../utils/constants.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
 import { TemplateService } from './TemplateService.js'
-import { WorktreeService } from './WorktreeService.js'
+import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
 
 /**
  * Unified Ticket Service for CRUD Operations
@@ -38,12 +38,12 @@ import { WorktreeService } from './WorktreeService.js'
 export class TicketService {
   private projectService: ProjectService
   private templateService: TemplateService
-  private readonly worktreeService: WorktreeService
+  private readonly ticketLocationResolver: TicketLocationResolver
 
   constructor(quiet: boolean = false) {
     this.projectService = new ProjectService(quiet)
     this.templateService = new TemplateService(undefined, quiet)
-    this.worktreeService = new WorktreeService()
+    this.ticketLocationResolver = new TicketLocationResolver(this.projectService)
   }
 
   /**
@@ -63,68 +63,6 @@ export class TicketService {
     catch (error) {
       console.warn(`Failed to get CR path config for project ${project.id}, using default:`, error)
       return path.resolve(project.project.path, DEFAULTS.TICKETS_PATH)
-    }
-  }
-
-  /**
-   * MDT-095: Resolves the project path for a specific ticket, considering worktree mappings.
-   *
-   * @param project - Project configuration
-   * @param ticketCode - Ticket code (e.g., 'MDT-095')
-   * @returns Object with resolved path and whether it's in a worktree
-   * @private
-   */
-  private async resolveTicketPath(
-    project: Project,
-    ticketCode: string,
-  ): Promise<{ path: string, isInWorktree: boolean }> {
-    const config = this.projectService.getProjectConfig(project.project.path)
-    if (!config?.project) {
-      return { path: project.project.path, isInWorktree: false }
-    }
-
-    const ticketsPath = config.project.ticketsPath || DEFAULTS.TICKETS_PATH
-    const projectCode = config.project.code
-
-    // Check if worktree disabled
-    const worktreeEnabled = config.worktree?.enabled !== false
-    if (!worktreeEnabled || !projectCode) {
-      return { path: project.project.path, isInWorktree: false }
-    }
-
-    // Resolve using WorktreeService
-    const resolvedPath = await this.worktreeService.resolvePath(
-      project.project.path,
-      ticketCode,
-      ticketsPath,
-      projectCode,
-    )
-
-    const isInWorktree = resolvedPath !== project.project.path
-    return { path: resolvedPath, isInWorktree }
-  }
-
-  /**
-   * MDT-095: Creates a resolved project object with correct path for ticket.
-   *
-   * @param project - Original project
-   * @param resolvedPath - Path resolved for worktree
-   * @returns Project with updated path (if different)
-   * @private
-   */
-  private createResolvedProject(
-    project: Project,
-    resolvedPath: string,
-  ): Project {
-    if (resolvedPath === project.project.path) {
-      return project
-    }
-    return {
-      ...project,
-      project: {
-        ...project.project,
-        path: resolvedPath,
-      },
     }
   }
 
@@ -173,14 +111,10 @@ export class TicketService {
    */
   async getCR(project: Project, key: string): Promise<Ticket | null> {
     try {
-      // Resolve path for this specific ticket
-      const { path: resolvedPath, isInWorktree } = await this.resolveTicketPath(project, key)
-      this.createResolvedProject(project, resolvedPath)
+      const location = await this.ticketLocationResolver.resolve(project, key)
 
       // Get config and scan only resolved directory
-      const config = this.projectService.getProjectConfig(project.project.path)
-      const ticketsPath = config?.project?.ticketsPath || DEFAULTS.TICKETS_PATH
-      const fullCRPath = path.join(resolvedPath, ticketsPath)
+      const fullCRPath = path.join(location.projectRoot, location.ticketsPath)
 
       // Check if directory exists
       try {
@@ -192,7 +126,7 @@ export class TicketService {
 
       // Use MarkdownService to scan only the resolved directory
       const { MarkdownService } = await import('./MarkdownService.js')
-      const tickets = await MarkdownService.scanMarkdownFiles(fullCRPath, resolvedPath)
+      const tickets = await MarkdownService.scanMarkdownFiles(fullCRPath, location.projectRoot)
 
       const targetCR = tickets.find(cr =>
         cr.code.toUpperCase() === key.toUpperCase(),
@@ -206,8 +140,8 @@ export class TicketService {
       // Add worktree metadata
       return {
         ...targetCR,
-        inWorktree: isInWorktree,
-        worktreePath: isInWorktree ? resolvedPath : undefined,
+        inWorktree: location.isWorktree,
+        worktreePath: location.isWorktree ? location.projectRoot : undefined,
       }
     }
     catch (error) {
@@ -225,12 +159,8 @@ export class TicketService {
       const nextNumber = await this.getNextCRNumber(project)
       const crKey = `${project.project.code}-${String(nextNumber).padStart(3, '0')}`
 
-      // Resolve path for this ticket code
-      const { path: resolvedPath, isInWorktree } = await this.resolveTicketPath(project, crKey)
-
-      const config = this.projectService.getProjectConfig(project.project.path)
-      const ticketsPath = config?.project?.ticketsPath || DEFAULTS.TICKETS_PATH
-      const crPath = path.join(resolvedPath, ticketsPath)
+      const location = await this.ticketLocationResolver.resolve(project, crKey)
+      const crPath = path.join(location.projectRoot, location.ticketsPath)
 
       const titleSlug = this.createSlug(data.title)
       const filename = `${crKey}-${titleSlug}.md`
@@ -244,8 +174,8 @@ export class TicketService {
 
       return {
         ...ticket,
-        inWorktree: isInWorktree,
-        worktreePath: isInWorktree ? resolvedPath : undefined,
+        inWorktree: location.isWorktree,
+        worktreePath: location.isWorktree ? location.projectRoot : undefined,
       }
     }
     catch (error) {

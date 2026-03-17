@@ -69,6 +69,11 @@ export function useTicketDocumentContent(
       return
     }
 
+    // Guard: Don't fetch if ticketCode is empty (ticket transitioning)
+    if (!ticketCode) {
+      return
+    }
+
     // Serve from cache if available
     const cached = cacheRef.current.get(selectedPath)
     if (cached !== undefined) {
