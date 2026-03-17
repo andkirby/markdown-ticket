@@ -32,10 +32,9 @@ export interface ServerConfig {
     logLevel: 'debug' | 'info' | 'warn' | 'error'
   }
   discovery: {
-    registryPath: string // Path to global registry (new approach)
-    scanPaths: string[] // Legacy scan paths (old approach)
+    registryPath: string // Path to global registry
     excludePaths: string[]
-    maxDepth: number // For legacy scanning
+    maxDepth: number // For directory scanning
     cacheTimeout: number
   }
   templates: {

@@ -5,38 +5,19 @@ import process from 'node:process'
 import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 import * as fs from 'fs-extra'
-
-/**
- * Configuration file structure (from config.toml)
- */
-interface FileConfig {
-  server?: {
-    port?: number
-    logLevel?: 'debug' | 'info' | 'warn' | 'error'
-  }
-  discovery?: {
-    scanPaths?: string[]
-    excludePaths?: string[]
-    maxDepth?: number
-    mdtConfigSearchDepth?: number
-    cacheTimeout?: number
-  }
-  templates?: {
-    customPath?: string
-  }
-}
+import { safeValidateMcpServerConfig } from '@mdt/domain-contracts'
 
 /**
  * Server configuration with merged approach.
  *
  * Configuration sources (in order of precedence):
- * 1. config.toml (optional) - for server settings and scanPaths
+ * 1. config.toml (optional) - for server settings
  * 2. Environment variables (MCP_LOG_LEVEL, MCP_CACHE_TIMEOUT)
  * 3. Hardcoded defaults
  *
- * Project discovery supports BOTH:
+ * Project discovery:
  * - Global registry: Uses DEFAULT_PATHS.CONFIG_FILE environment variable or DEFAULT_PATHS.PROJECTS_REGISTRY
- * - ScanPaths: Configured directories scanned for *-config.toml files
+ * - Parent directory search: Searches up from cwd for .mdt-config.toml files
  */
 
 interface ServerConfig {
@@ -46,10 +27,8 @@ interface ServerConfig {
   }
   discovery: {
     registryPath: string // Path to global registry
-    scanPaths: string[] // Additional scan paths
     excludePaths: string[]
     maxDepth: number // For directory scanning
-    mdtConfigSearchDepth: number // For project .mdt-config.toml detection
     cacheTimeout: number
   }
   templates: {
@@ -64,7 +43,6 @@ const DEFAULT_CONFIG: ServerConfig = {
   },
   discovery: {
     registryPath: DEFAULT_PATHS.PROJECTS_REGISTRY,
-    scanPaths: [], // Empty by default, populated from config.toml if present
     excludePaths: [
       'node_modules',
       '.git',
@@ -80,7 +58,6 @@ const DEFAULT_CONFIG: ServerConfig = {
       'temp',
     ],
     maxDepth: 4,
-    mdtConfigSearchDepth: 3, // Default depth for .mdt-config.toml parent directory search
     cacheTimeout: Number.parseInt(process.env.MCP_CACHE_TIMEOUT || '300', 10), // 5 minutes default
   },
   templates: {
@@ -99,7 +76,6 @@ export class ConfigService {
     this.log(`📋 Configuration loaded`)
     this.log(`   Log Level: ${this.config.server.logLevel}`)
     this.log(`   Registry Path: ${this.config.discovery.registryPath}`)
-    this.log(`   Scan Paths: ${this.config.discovery.scanPaths.length} configured`)
     this.log(`   Cache Timeout: ${this.config.discovery.cacheTimeout}s`)
   }
 
@@ -114,11 +90,23 @@ export class ConfigService {
       if (existsSync(DEFAULT_PATHS.CONFIG_FILE)) {
         this.log(`📝 Loading config from: ${DEFAULT_PATHS.CONFIG_FILE}`)
         const configContent = readFileSync(DEFAULT_PATHS.CONFIG_FILE, 'utf-8')
-        const fileConfig = parseToml(configContent) as FileConfig
+        const parsedToml = parseToml(configContent)
+
+        // Validate parsed TOML against domain contract
+        const validationResult = safeValidateMcpServerConfig(parsedToml)
+
+        if (!validationResult.success) {
+          const errors = validationResult.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n  ')
+          console.warn(`⚠️  Configuration validation failed:\n  ${errors}`)
+          console.warn(`   Falling back to defaults`)
+          return
+        }
+
+        const fileConfig = validationResult.data
 
         // Merge server settings
         if (fileConfig.server) {
-          if (fileConfig.server.port) {
+          if (fileConfig.server.port !== undefined) {
             this.config.server.port = fileConfig.server.port
           }
           if (fileConfig.server.logLevel && !process.env.MCP_LOG_LEVEL) {
@@ -129,21 +117,13 @@ export class ConfigService {
 
         // Merge discovery settings
         if (fileConfig.discovery) {
-          if (Array.isArray(fileConfig.discovery.scanPaths)) {
-            this.config.discovery.scanPaths = fileConfig.discovery.scanPaths.map((p: string) =>
-              this.expandPath(p),
-            )
-          }
-          if (Array.isArray(fileConfig.discovery.excludePaths)) {
+          if (fileConfig.discovery.excludePaths) {
             this.config.discovery.excludePaths = fileConfig.discovery.excludePaths
           }
-          if (typeof fileConfig.discovery.maxDepth === 'number') {
+          if (fileConfig.discovery.maxDepth !== undefined) {
             this.config.discovery.maxDepth = fileConfig.discovery.maxDepth
           }
-          if (typeof fileConfig.discovery.mdtConfigSearchDepth === 'number') {
-            this.config.discovery.mdtConfigSearchDepth = fileConfig.discovery.mdtConfigSearchDepth
-          }
-          if (typeof fileConfig.discovery.cacheTimeout === 'number' && !process.env.MCP_CACHE_TIMEOUT) {
+          if (fileConfig.discovery.cacheTimeout !== undefined && !process.env.MCP_CACHE_TIMEOUT) {
             // Environment variable takes precedence
             this.config.discovery.cacheTimeout = fileConfig.discovery.cacheTimeout
           }
@@ -179,10 +159,10 @@ export class ConfigService {
    * Get the search depth for .mdt-config.toml parent directory search.
    * Used by project detector to limit how many parent directories to search.
    *
-   * @returns Search depth (default: 3)
+   * @returns Search depth (fixed at 3)
    */
   getSearchDepth(): number {
-    return this.config.discovery.mdtConfigSearchDepth
+    return 3
   }
 
   async validateConfig(): Promise<{ valid: boolean, errors: string[], warnings: string[] }> {
@@ -217,18 +197,6 @@ export class ConfigService {
         }
         catch (error) {
           errors.push(`Failed to create registry path: ${(error as Error).message}`)
-        }
-      }
-
-      // Validate scanPaths
-      if (!Array.isArray(this.config.discovery.scanPaths)) {
-        warnings.push('discovery.scanPaths should be an array')
-      }
-      else if (this.config.discovery.scanPaths.length > 0) {
-        for (const scanPath of this.config.discovery.scanPaths) {
-          if (!await fs.pathExists(scanPath)) {
-            warnings.push(`Scan path does not exist: ${scanPath}`)
-          }
         }
       }
 

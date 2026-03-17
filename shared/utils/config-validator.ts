@@ -1,11 +1,12 @@
-import type { GlobalConfig } from '../services/project/types.js'
+import type { GlobalConfig } from '@mdt/domain-contracts'
+import { GLOBAL_CONFIG_DEFAULTS, validateGlobalConfig } from '@mdt/domain-contracts'
 import { logQuiet } from './logger.js'
 
-const defaultConfig = {
-  discovery: { autoDiscover: true, searchPaths: [], maxDepth: 3 },
-  links: { enableAutoLinking: true, enableTicketLinks: true, enableDocumentLinks: true, enableHoverPreviews: false, linkValidation: false },
-  ui: { theme: 'auto' as const, autoRefresh: true, refreshInterval: 5000 },
-  system: { logLevel: 'info' as const, cacheTimeout: 30000 },
+const defaultConfig: GlobalConfig = {
+  discovery: { ...GLOBAL_CONFIG_DEFAULTS.discovery, searchPaths: [...GLOBAL_CONFIG_DEFAULTS.discovery.searchPaths] },
+  links: { ...GLOBAL_CONFIG_DEFAULTS.links },
+  ui: { ...GLOBAL_CONFIG_DEFAULTS.ui },
+  system: { ...GLOBAL_CONFIG_DEFAULTS.system },
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -59,45 +60,31 @@ export function migrateConfig(oldConfig: unknown, quiet = false): GlobalConfig {
 
 export function validateConfig(config: unknown, quiet = false): GlobalConfig {
   logQuiet(quiet, 'Validating global configuration...')
-
   const root = asRecord(config)
-  const discovery = asRecord(root.discovery)
-  const links = asRecord(root.links)
-  const ui = asRecord(root.ui)
-  const system = asRecord(root.system)
 
-  const result: GlobalConfig = {
+  return validateGlobalConfig({
     discovery: {
-      autoDiscover: getBool(discovery?.autoDiscover, defaultConfig.discovery.autoDiscover),
-      searchPaths: getArray(discovery?.searchPaths, defaultConfig.discovery.searchPaths),
-      maxDepth: getNumber(discovery?.maxDepth, defaultConfig.discovery.maxDepth),
+      autoDiscover: getBool(asRecord(root.discovery).autoDiscover, defaultConfig.discovery.autoDiscover),
+      searchPaths: getArray(asRecord(root.discovery).searchPaths, defaultConfig.discovery.searchPaths),
+      maxDepth: getNumber(asRecord(root.discovery).maxDepth, defaultConfig.discovery.maxDepth),
     },
     links: {
-      enableAutoLinking: getBool(links?.enableAutoLinking, defaultConfig.links.enableAutoLinking),
-      enableTicketLinks: getBool(links?.enableTicketLinks, defaultConfig.links.enableTicketLinks),
-      enableDocumentLinks: getBool(links?.enableDocumentLinks, defaultConfig.links.enableDocumentLinks),
-      enableHoverPreviews: getBool(links?.enableHoverPreviews, defaultConfig.links.enableHoverPreviews),
-      linkValidation: getBool(links?.linkValidation, defaultConfig.links.linkValidation),
+      enableAutoLinking: getBool(asRecord(root.links).enableAutoLinking, defaultConfig.links.enableAutoLinking),
+      enableTicketLinks: getBool(asRecord(root.links).enableTicketLinks, defaultConfig.links.enableTicketLinks),
+      enableDocumentLinks: getBool(asRecord(root.links).enableDocumentLinks, defaultConfig.links.enableDocumentLinks),
+      enableHoverPreviews: getBool(asRecord(root.links).enableHoverPreviews, defaultConfig.links.enableHoverPreviews),
+      linkValidation: getBool(asRecord(root.links).linkValidation, defaultConfig.links.linkValidation),
     },
-  }
-
-  // Add optional properties if they exist or have defaults
-  if (root.ui !== undefined) {
-    result.ui = {
-      theme: getEnum(ui?.theme, ['light', 'dark', 'auto'], defaultConfig.ui.theme) as 'auto' | 'light' | 'dark',
-      autoRefresh: getBool(ui?.autoRefresh, defaultConfig.ui.autoRefresh),
-      refreshInterval: getNumber(ui?.refreshInterval, defaultConfig.ui.refreshInterval),
-    }
-  }
-
-  if (root.system !== undefined) {
-    result.system = {
-      logLevel: getEnum(system?.logLevel, ['error', 'warn', 'info', 'debug'], defaultConfig.system.logLevel) as 'error' | 'warn' | 'info' | 'debug',
-      cacheTimeout: getNumber(system?.cacheTimeout, defaultConfig.system.cacheTimeout),
-    }
-  }
-
-  return result
+    ui: {
+      theme: getEnum(asRecord(root.ui).theme, ['light', 'dark', 'auto'], defaultConfig.ui.theme),
+      autoRefresh: getBool(asRecord(root.ui).autoRefresh, defaultConfig.ui.autoRefresh),
+      refreshInterval: getNumber(asRecord(root.ui).refreshInterval, defaultConfig.ui.refreshInterval),
+    },
+    system: {
+      logLevel: getEnum(asRecord(root.system).logLevel, ['error', 'warn', 'info', 'debug'], defaultConfig.system.logLevel),
+      cacheTimeout: getNumber(asRecord(root.system).cacheTimeout, defaultConfig.system.cacheTimeout),
+    },
+  })
 }
 
 export function processConfig(config: unknown, quiet = false): GlobalConfig {

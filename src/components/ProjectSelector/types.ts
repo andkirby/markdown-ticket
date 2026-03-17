@@ -5,31 +5,20 @@
  * Includes props, state interfaces, and data structures for rail+panel selector.
  */
 
+import type { SelectorPreferences, SelectorStateEntry } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project'
 
 /**
  * User preferences loaded from CONFIG_DIR/user.toml [ui.projectSelector]
  * These are immutable user settings that control selector presentation
  */
-export interface SelectorPreferences {
-  /** Number of visible projects in the rail (default: 7) */
-  visibleCount: number
-  /** Whether to render inactive visible projects as compact code-only chips (default: true) */
-  compactInactive: boolean
-}
+export type { SelectorPreferences }
 
 /**
  * Per-project selector state loaded from CONFIG_DIR/project-selector.json
  * This mutable state tracks usage and favorites across sessions
  */
-export interface SelectorState {
-  /** Whether this project is favorited */
-  favorite: boolean
-  /** ISO-8601 timestamp of last usage, or null if never used */
-  lastUsedAt: string | null
-  /** Number of times this project has been selected */
-  count: number
-}
+export type SelectorState = SelectorStateEntry
 
 /**
  * Project enriched with selector state for ordering and display logic

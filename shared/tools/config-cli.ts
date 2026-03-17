@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
-import type { GlobalConfig } from '../services/project/types.js'
+import type { GlobalConfig } from '@mdt/domain-contracts'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { parseToml } from '../utils/toml.js'
 import { getDefaultPaths } from '../utils/constants.js'
+import { getDefaultConfig as getDefaultConfigUtil, processConfig } from '../utils/config-validator.js'
 
 /**
  * Unknown object type for dynamic property access
@@ -16,32 +17,6 @@ type UnknownObject = Record<string, unknown>
  * Configuration value types supported in TOML
  */
 type ConfigValue = string | number | boolean | string[] | null | undefined
-
-/**
- * Old configuration structure (pre-migration)
- */
-interface OldConfigStructure {
-  dashboard?: {
-    autoRefresh?: boolean
-    refreshInterval?: number
-  }
-  discovery?: {
-    autoDiscover?: boolean
-    searchPaths?: string[]
-  }
-  [key: string]: unknown
-}
-
-/**
- * Raw parsed TOML configuration
- */
-interface RawParsedConfig extends UnknownObject {
-  discovery?: UnknownObject
-  links?: UnknownObject
-  ui?: UnknownObject
-  system?: UnknownObject
-  dashboard?: UnknownObject
-}
 
 /**
  * Configuration error class
@@ -138,15 +113,9 @@ class ConfigManager {
       }
 
       const configContent = fs.readFileSync(this.configPath, 'utf8')
-      const parsedConfig = parseToml(configContent) as any
+      const parsedConfig = parseToml(configContent)
 
-      // Check for old config structure and migrate if needed
-      if (parsedConfig.dashboard) {
-        console.warn('Migrating old configuration structure...')
-        return this.migrateConfig(parsedConfig)
-      }
-
-      return this.validateConfig(parsedConfig)
+      return processConfig(parsedConfig)
     }
     catch (error) {
       throw new ConfigError(`Failed to read configuration: ${error instanceof Error ? error.message : String(error)}`, error as Error)
@@ -232,114 +201,7 @@ class ConfigManager {
    * Get default configuration
    */
   getDefaultConfig(): GlobalConfig {
-    return {
-      discovery: {
-        autoDiscover: true,
-        searchPaths: [],
-        maxDepth: 3,
-      },
-      links: {
-        enableAutoLinking: true,
-        enableTicketLinks: true,
-        enableDocumentLinks: true,
-        enableHoverPreviews: false,
-        linkValidation: false,
-      },
-      ui: {
-        theme: 'auto',
-        autoRefresh: true,
-        refreshInterval: 5000,
-      },
-      system: {
-        logLevel: 'info',
-        cacheTimeout: 30000,
-      },
-    }
-  }
-
-  /**
-   * Migrate old configuration to new structure
-   */
-  private migrateConfig(oldConfig: OldConfigStructure): GlobalConfig {
-    const defaultConfig = this.getDefaultConfig()
-
-    return {
-      discovery: {
-        autoDiscover: oldConfig.discovery?.autoDiscover ?? defaultConfig.discovery.autoDiscover,
-        searchPaths: oldConfig.discovery?.searchPaths ?? defaultConfig.discovery.searchPaths,
-        maxDepth: defaultConfig.discovery.maxDepth,
-      },
-      links: {
-        enableAutoLinking: oldConfig.dashboard?.autoRefresh ?? defaultConfig.links.enableAutoLinking,
-        enableTicketLinks: defaultConfig.links.enableTicketLinks,
-        enableDocumentLinks: defaultConfig.links.enableDocumentLinks,
-        enableHoverPreviews: defaultConfig.links.enableHoverPreviews,
-        linkValidation: defaultConfig.links.linkValidation,
-      },
-      ui: {
-        theme: defaultConfig.ui?.theme,
-        autoRefresh: oldConfig.dashboard?.autoRefresh ?? defaultConfig.ui?.autoRefresh,
-        refreshInterval: oldConfig.dashboard?.refreshInterval ?? defaultConfig.ui?.refreshInterval,
-      },
-      system: defaultConfig.system,
-    }
-  }
-
-  /**
-   * Validate configuration against GlobalConfig interface
-   */
-  private validateConfig(config: RawParsedConfig): GlobalConfig {
-    const defaultConfig = this.getDefaultConfig()
-
-    return {
-      discovery: {
-        autoDiscover: typeof config.discovery?.autoDiscover === 'boolean'
-          ? config.discovery.autoDiscover
-          : defaultConfig.discovery.autoDiscover,
-        searchPaths: Array.isArray(config.discovery?.searchPaths)
-          ? (config.discovery.searchPaths as string[])
-          : defaultConfig.discovery.searchPaths,
-        maxDepth: typeof config.discovery?.maxDepth === 'number'
-          ? config.discovery.maxDepth
-          : defaultConfig.discovery.maxDepth,
-      },
-      links: {
-        enableAutoLinking: typeof config.links?.enableAutoLinking === 'boolean'
-          ? config.links.enableAutoLinking
-          : defaultConfig.links.enableAutoLinking,
-        enableTicketLinks: typeof config.links?.enableTicketLinks === 'boolean'
-          ? config.links.enableTicketLinks
-          : defaultConfig.links.enableTicketLinks,
-        enableDocumentLinks: typeof config.links?.enableDocumentLinks === 'boolean'
-          ? config.links.enableDocumentLinks
-          : defaultConfig.links.enableDocumentLinks,
-        enableHoverPreviews: typeof config.links?.enableHoverPreviews === 'boolean'
-          ? config.links.enableHoverPreviews
-          : defaultConfig.links.enableHoverPreviews,
-        linkValidation: typeof config.links?.linkValidation === 'boolean'
-          ? config.links.linkValidation
-          : defaultConfig.links.linkValidation,
-      },
-      ui: {
-        theme: ['light', 'dark', 'auto'].includes(config.ui?.theme as string)
-          ? (config.ui?.theme as 'light' | 'dark' | 'auto')
-          : defaultConfig.ui?.theme,
-        autoRefresh: typeof config.ui?.autoRefresh === 'boolean'
-          ? config.ui?.autoRefresh
-          : defaultConfig.ui?.autoRefresh,
-        refreshInterval: typeof config.ui?.refreshInterval === 'number'
-          ? config.ui?.refreshInterval
-          : defaultConfig.ui?.refreshInterval,
-      },
-      system: {
-        logLevel: ['error', 'warn', 'info', 'debug'].includes(config.system?.logLevel as string)
-          ? (config.system?.logLevel as 'error' | 'warn' | 'info' | 'debug')
-          : defaultConfig.system?.logLevel,
-        cacheTimeout: typeof config.system?.cacheTimeout === 'number'
-          ? config.system?.cacheTimeout
-          : defaultConfig.system?.cacheTimeout,
-      },
-    }
+    return getDefaultConfigUtil()
   }
 
   /**
