@@ -94,6 +94,11 @@ export function normalizeTicket(rawTicket: unknown): Ticket {
     normalizedTicket.worktreePath = ticket.worktreePath
   }
 
+  // MDT-093: Preserve subdocuments array if present
+  if (Array.isArray(ticket.subdocuments)) {
+    normalizedTicket.subdocuments = ticket.subdocuments
+  }
+
   return normalizedTicket
 }
 
