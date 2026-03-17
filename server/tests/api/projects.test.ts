@@ -172,8 +172,9 @@ describe('projects API - GET /api/projects/:id/config', () => {
     assertSuccess(res, 200)
     expect(res.body).toHaveProperty('project')
     expect(res.body).toHaveProperty('config')
-    expect(res.body.config).toHaveProperty('name')
-    expect(res.body.config).toHaveProperty('code')
+    expect(res.body.config).toHaveProperty('project')
+    expect(res.body.config.project).toHaveProperty('name')
+    expect(res.body.config.project).toHaveProperty('code')
   })
   it('should validate get config response against OpenAPI spec', async () => {
     const res = await request(app).get(`/api/projects/${testProjectId}/config`)
