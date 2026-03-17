@@ -6,8 +6,8 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import process from 'node:process'
-import type { ProjectConfig } from '@mdt/shared/models/Project.js'
-import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
+import type {ProjectConfig} from '@mdt/shared/models/Project.js'
+import {parseToml, stringify} from '@mdt/shared/utils/toml.js'
 
 // Get CONFIG_DIR from environment, with fallback
 function getConfigDir(): string {
@@ -96,7 +96,7 @@ export class ProjectService {
     // 1. Load from registry pattern: configDir/projects/ (symlinks to actual projects)
     const projectsRegistryDir = path.join(currentConfigDir, 'projects')
     if (fs.existsSync(projectsRegistryDir)) {
-      const entries = fs.readdirSync(projectsRegistryDir, { withFileTypes: true })
+      const entries = fs.readdirSync(projectsRegistryDir, {withFileTypes: true})
       for (const entry of entries) {
         if (entry.isDirectory()) {
           const configPath = path.join(projectsRegistryDir, entry.name, '.mdt-config.toml')
@@ -111,7 +111,7 @@ export class ProjectService {
     // The configDir is usually {tempDir}/config, so projects would be at {tempDir}/projects
     const tempDirProjects = path.join(path.dirname(currentConfigDir), 'projects')
     if (fs.existsSync(tempDirProjects) && tempDirProjects !== projectsRegistryDir) {
-      const entries = fs.readdirSync(tempDirProjects, { withFileTypes: true })
+      const entries = fs.readdirSync(tempDirProjects, {withFileTypes: true})
       for (const entry of entries) {
         if (entry.isDirectory()) {
           const configPath = path.join(tempDirProjects, entry.name, '.mdt-config.toml')
@@ -174,8 +174,7 @@ export class ProjectService {
           excludeFolders,
         })
       }
-    }
-    catch {
+    } catch {
       // Skip invalid configs
     }
   }
@@ -211,7 +210,10 @@ export class ProjectService {
   /**
    * Get project configuration by path
    */
-  getProjectConfig(projectPath: string): { project: { name: string; code: string; ticketsPath: string; path: string }, document: { paths?: string[]; excludeFolders?: string[] } } | null {
+  getProjectConfig(projectPath: string): {
+    project: { name: string; code: string; ticketsPath: string; path: string },
+    document: { paths?: string[]; excludeFolders?: string[] }
+  } | null {
     for (const [key, project] of this.projectsRegistry.entries()) {
       if (project.path === projectPath || key === projectPath || project.projectDir === projectPath || project.code === projectPath) {
         return {
@@ -250,7 +252,7 @@ export class ProjectService {
     const crs: ProjectCR[] = []
 
     // Scan for .md files directly in tickets directory (matches real implementation)
-    const entries = fs.readdirSync(ticketsDir, { withFileTypes: true })
+    const entries = fs.readdirSync(ticketsDir, {withFileTypes: true})
 
     for (const entry of entries) {
       if (entry.isFile() && entry.name.endsWith('.md')) {
@@ -289,8 +291,7 @@ export class ProjectService {
               blocks: [],
             })
           }
-        }
-        catch {
+        } catch {
           // Skip invalid files
         }
       }
@@ -307,14 +308,13 @@ export class ProjectService {
     const startPath = rootPath || process.cwd()
 
     try {
-      const entries = fs.readdirSync(startPath, { withFileTypes: true })
+      const entries = fs.readdirSync(startPath, {withFileTypes: true})
       for (const entry of entries) {
         if (entry.isDirectory() && !entry.name.startsWith('.')) {
           dirs.push(entry.name)
         }
       }
-    }
-    catch {
+    } catch {
       // Return empty array on error
     }
 
@@ -375,7 +375,7 @@ export class ProjectService {
     // Reload registry to pick up the changes
     this.loadProjectsRegistry()
 
-    return { success: true, message: 'Documents configured' }
+    return {success: true, message: 'Documents configured'}
   }
 
   /**
@@ -407,5 +407,5 @@ export class ProjectService {
   }
 }
 
-export const GlobalConfig = {}
-export const Project = class {}
+export const Project = class {
+}
