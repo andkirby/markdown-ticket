@@ -37,28 +37,50 @@ export interface TicketFilters {
   }
 }
 
-export const CreateTicketInputSchema = TicketFrontmatterSchema.extend({
+export const TICKET_UPDATE_ATTRS = [
+  'priority',
+  'phaseEpic',
+  'relatedTickets',
+  'dependsOn',
+  'blocks',
+  'assignee',
+  'implementationDate',
+  'implementationNotes',
+] as const satisfies readonly (keyof TicketUpdateAttrs)[]
+
+export const TICKET_UPDATE_ALLOWED_ATTRS = new Set<keyof TicketUpdateAttrs>(TICKET_UPDATE_ATTRS)
+
+const RelationshipInputSchema = z.union([z.string(), z.array(z.string())])
+
+export const CreateTicketInputSchema = TicketFrontmatterSchema.pick({
+  title: true,
+  type: true,
+  priority: true,
+  phaseEpic: true,
+  impactAreas: true,
+  assignee: true,
+  content: true,
+}).extend({
+  relatedTickets: RelationshipInputSchema.optional(),
+  dependsOn: RelationshipInputSchema.optional(),
+  blocks: RelationshipInputSchema.optional(),
   description: z.string().optional(),
   rationale: z.string().optional(),
 })
 
-export const UpdateTicketInputSchema = CreateTicketInputSchema.omit({
-  code: true,
-  title: true,
-  status: true,
-  type: true,
-  content: true,
-  description: true,
-  rationale: true,
-}).partial().extend({
-  code: z.string()
-    .regex(CR_CODE_PATTERN, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
+export const UpdateTicketInputSchema = z.object({
+  priority: TicketFrontmatterSchema.shape.priority.optional(),
+  phaseEpic: TicketFrontmatterSchema.shape.phaseEpic,
+  relatedTickets: RelationshipInputSchema.optional(),
+  dependsOn: RelationshipInputSchema.optional(),
+  blocks: RelationshipInputSchema.optional(),
+  assignee: TicketFrontmatterSchema.shape.assignee,
   implementationDate: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, use YYYY-MM-DD')
     .optional(),
   implementationNotes: z.string().optional(),
 }).refine(
-  (data) => Object.keys(data).some(key => key !== 'code'),
+  data => Object.keys(data).length > 0,
   { message: 'At least one field must be provided for update' },
 )
 

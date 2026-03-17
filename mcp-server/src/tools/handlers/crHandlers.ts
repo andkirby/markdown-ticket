@@ -14,6 +14,7 @@ import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
 import type { CRService } from '../../services/crService.js'
+import type { Ticket } from '@mdt/domain-contracts'
 import { CRStatus as CRStatusEnum, CRTypes } from '@mdt/domain-contracts'
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ContentProcessor } from '../../services/SectionManagement/ContentProcessor.js'
@@ -21,6 +22,20 @@ import { normalizeKey } from '../../utils/keyNormalizer.js'
 import { Sanitizer } from '../../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../../utils/toolError.js'
 import { validateOperation, validateRequired } from '../../utils/validation.js'
+
+type CRAttributes
+  = Pick<Ticket, 'code' | 'title' | 'status' | 'type' | 'priority'>
+    & Partial<Pick<
+      Ticket,
+      | 'phaseEpic'
+      | 'assignee'
+      | 'dependsOn'
+      | 'blocks'
+      | 'relatedTickets'
+      | 'impactAreas'
+      | 'implementationDate'
+      | 'implementationNotes'
+    >>
 
 /**
  * CR Handlers Class
@@ -114,23 +129,6 @@ export class CRHandlers {
           const parsedTicket = await MarkdownService.parseMarkdownContent(fileContent)
           if (!parsedTicket) {
             throw ToolError.toolExecution(`Failed to parse CR file for ${normalizedKey}`)
-          }
-
-          // Build attributes object from parsed ticket
-          interface CRAttributes {
-            code: string
-            title: string
-            status: string
-            type: string
-            priority: string
-            phaseEpic?: string
-            assignee?: string
-            dependsOn?: string[]
-            blocks?: string[]
-            relatedTickets?: string
-            impactAreas?: string[]
-            implementationDate?: string
-            implementationNotes?: string
           }
 
           const attributes: CRAttributes = {

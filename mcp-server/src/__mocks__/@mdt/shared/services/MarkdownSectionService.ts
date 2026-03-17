@@ -1,5 +1,3 @@
-import { jest } from '@jest/globals'
-
 /**
  * Mock implementation of MarkdownSectionService for testing
  *

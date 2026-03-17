@@ -179,7 +179,8 @@ export function useProjectSelectorManager(
         path: '',
         configFile: '',
         active: false,
-        description: ''
+        description: '',
+        ticketsPath: ''
       },
       metadata: {
         dateRegistered: '',
