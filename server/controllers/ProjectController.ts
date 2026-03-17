@@ -1,3 +1,4 @@
+import type { Ticket as DomainTicket } from '@mdt/domain-contracts'
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project.js'
 import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
 import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
@@ -8,10 +9,7 @@ import type { TreeNode } from '../types/tree.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 
-export interface Ticket {
-  code: string
-  filePath: string
-}
+export type Ticket = Pick<DomainTicket, 'code' | 'filePath'>
 
 interface DirectoryListing {
   currentPath: string

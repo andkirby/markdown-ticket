@@ -3,4 +3,5 @@
  */
 
 export * from './schema'
+export * from './subdocument'
 export * from './validation'

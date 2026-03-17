@@ -1,40 +1,9 @@
-import type { CRPriorities, CRTypes } from '@mdt/domain-contracts'
+import type { CRPriorities, CRStatusValue, CRTypes } from '@mdt/domain-contracts'
+import type { Ticket } from '@mdt/domain-contracts'
 import type { CR_STATUSES } from '@mdt/shared/models/Types'
-import { z } from 'zod'
+import { TicketSchema } from '@mdt/domain-contracts'
 
-// Core Ticket Interface - matches shared DTO
-export interface Ticket {
-  // Required Core Attributes
-  code: string
-  title: string
-  status: string
-  type: string
-  priority: string
-  dateCreated: Date | null
-  lastModified: Date | null
-  content: string
-  filePath: string
-
-  // Optional Attributes
-  phaseEpic?: string
-  description?: string
-  rationale?: string
-  assignee?: string
-  implementationDate?: Date | null
-  implementationNotes?: string
-
-  // MDT-093: Sub-document navigation
-  subdocuments?: import('@mdt/shared/models/SubDocument').SubDocument[]
-
-  // MDT-095: Worktree fields (optional, backward compatible C5)
-  inWorktree?: boolean
-  worktreePath?: string
-
-  // Relationship fields (always arrays)
-  relatedTickets: string[]
-  dependsOn: string[]
-  blocks: string[]
-}
+export type { Ticket } from '@mdt/domain-contracts'
 
 // Ticket Update Interface
 interface _TicketUpdate {
@@ -59,37 +28,7 @@ interface _Suggestion {
   matchScore: number
 }
 
-// Zod Schemas for Validation (removed unused _TicketSchema - use TicketSchema below)
-
-// MDT-095: Export TicketSchema for use in tests - base schema with worktree fields optional
-export const TicketSchema = z.object({
-  // Required Core Attributes
-  code: z.string().min(1, 'Code is required'),
-  title: z.string().min(1, 'Title is required'),
-  status: z.string().min(1, 'Status is required'),
-  type: z.string().min(1, 'Type is required'),
-  priority: z.string().min(1, 'Priority is required'),
-
-  // Optional Attributes
-  phaseEpic: z.string().optional(),
-  description: z.string().optional(),
-  rationale: z.string().optional(),
-  assignee: z.string().optional(),
-  implementationDate: z.date().optional(),
-  implementationNotes: z.string().optional(),
-
-  // MDT-095: Worktree fields (optional, backward compatible C5)
-  inWorktree: z.boolean().optional(),
-  worktreePath: z.string().optional(),
-
-  // Relationship fields (always arrays)
-  relatedTickets: z.array(z.string()).optional(),
-  dependsOn: z.array(z.string()).optional(),
-  blocks: z.array(z.string()).optional(),
-})
-
-// MDT-095: TicketWithWorktreeSchema - same as TicketSchema (both have optional worktree fields)
-// Export removed to avoid duplicate export - use TicketSchema directly
+export { TicketSchema }
 
 // MDT-095: Helper function to check if ticket is in a worktree
 export function isTicketInWorktree(ticket: Partial<Ticket>): boolean {
@@ -97,7 +36,7 @@ export function isTicketInWorktree(ticket: Partial<Ticket>): boolean {
 }
 
 // Status Enum Values - imported from shared types
-export type Status = typeof CR_STATUSES[number]
+export type Status = CRStatusValue | typeof CR_STATUSES[number]
 
 // Type Enum Values - imported from domain-contracts
 type _Type = typeof CRTypes[number]

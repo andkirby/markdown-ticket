@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events'
+import type { Ticket } from '@mdt/domain-contracts'
 
 /** SSE event type for client communication. */
 export interface SSEEvent {
@@ -7,12 +8,7 @@ export interface SSEEvent {
 }
 
 /** Ticket metadata extracted from frontmatter. */
-export interface TicketData {
-  code?: string
-  title?: string
-  status?: string
-  type?: string
-  priority?: string
+export type TicketData = Partial<Pick<Ticket, 'code' | 'title' | 'status' | 'type' | 'priority'>> & {
   lastModified?: string
 }
 
@@ -141,4 +137,3 @@ export class SSEBroadcaster extends EventEmitter {
     this.eventQueue = []
   }
 }
-

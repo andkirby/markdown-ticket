@@ -3,15 +3,81 @@
  * Core entity schemas with field-level validation only
  */
 
-import { z } from 'zod'
-import { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'
-import { PROJECT_CODE_PATTERN } from '../project/schema'
+import {z} from 'zod'
+import {CRPrioritySchema, CRStatusSchema, CRTypeSchema} from '../types/schema'
+import {PROJECT_CODE_PATTERN} from '../project/schema'
+import {SubDocumentSchema, type SubDocument} from './subdocument'
 
 /**
  * CR code pattern for validation and OpenAPI schemas
  * Format: PROJECT_CODE_PATTERN-123 where PROJECT_CODE_PATTERN is 2-5 alphanumeric chars (first must be letter)
  */
 export const CR_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}-\d{3,4}$/
+
+export interface Ticket {
+  code: string
+  title: string
+  status: string
+  type: string
+  priority: string
+  dateCreated: Date | null
+  lastModified: Date | null
+  content: string
+  filePath: string
+  phaseEpic?: string
+  description?: string
+  rationale?: string
+  assignee?: string
+  implementationDate?: Date | null
+  implementationNotes?: string
+  impactAreas?: string[]
+  relatedTickets: string[]
+  dependsOn: string[]
+  blocks: string[]
+  inWorktree?: boolean
+  worktreePath?: string
+  subdocuments?: SubDocument[]
+}
+
+export interface TicketData {
+  title: string
+  type: string
+  priority?: string
+  phaseEpic?: string
+  impactAreas?: string[]
+  relatedTickets?: string | string[]
+  dependsOn?: string | string[]
+  blocks?: string | string[]
+  assignee?: string
+  content?: string
+  description?: string
+  rationale?: string
+}
+
+export interface TicketUpdateAttrs {
+  priority?: string
+  phaseEpic?: string
+  relatedTickets?: string | string[]
+  dependsOn?: string | string[]
+  blocks?: string | string[]
+  assignee?: string
+  implementationDate?: Date | null
+  implementationNotes?: string
+}
+
+export interface TicketFilters {
+  status?: string | string[]
+  type?: string | string[]
+  priority?: string | string[]
+  dateRange?: {
+    start?: Date
+    end?: Date
+  }
+}
+
+export type TicketMetadata = Omit<Ticket, 'content'>
+
+const DateFieldSchema = z.date().nullable()
 
 /**
  * Base CR schema with field validation
@@ -56,57 +122,64 @@ export const CRSchema = z.object({
 })
 
 /**
- * Ticket schema (extends CR with additional fields)
- * Currently identical to CR schema but allows for future extension
+ * Ticket schema (normalized app shape)
  */
-export const TicketSchema = CRSchema
+export const TicketSchema: z.ZodType<Ticket> = z.object({
+  code: z.string()
+    .regex(CR_CODE_PATTERN, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
+  title: z.string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be 200 characters or less'),
+  status: CRStatusSchema,
+  type: CRTypeSchema,
+  priority: CRPrioritySchema,
+  dateCreated: DateFieldSchema,
+  lastModified: DateFieldSchema,
+  content: z.string(),
+  filePath: z.string(),
+  phaseEpic: z.string().optional(),
+  description: z.string().optional(),
+  rationale: z.string().optional(),
+  assignee: z.string().optional(),
+  implementationDate: DateFieldSchema.optional(),
+  implementationNotes: z.string().optional(),
+  impactAreas: z.array(z.string()).optional(),
+  relatedTickets: z.array(z.string()),
+  dependsOn: z.array(z.string()),
+  blocks: z.array(z.string()),
+  inWorktree: z.boolean().optional(),
+  worktreePath: z.string().optional(),
+  subdocuments: z.array(SubDocumentSchema).optional(),
+})
 
 /**
  * Input schema for creating tickets
  * Only required fields, no default values applied
  */
-export const CreateTicketInputSchema = CRSchema
+export const CreateTicketInputSchema = CRSchema.extend({
+  description: z.string().optional(),
+  rationale: z.string().optional(),
+})
 
 /**
  * Input schema for updating tickets
  * Partial update with code required for identification
  */
-export const UpdateTicketInputSchema = z.object({
+export const UpdateTicketInputSchema = CreateTicketInputSchema.omit({
+  code: true,
+  title: true,
+  status: true,
+  type: true,
+  content: true,
+  description: true,
+  rationale: true,
+}).partial().extend({
   /** CR code: required for identification */
   code: z.string()
     .regex(CR_CODE_PATTERN, 'CR code must be in format PREFIX-123 (e.g., MDT-101)'),
-  /** Optional new title */
-  title: z.string()
-    .min(1, 'Title is required')
-    .max(200, 'Title must be 200 characters or less')
-    .refine(title => title.trim().length > 0, 'Title cannot be empty or whitespace-only')
-    .transform(title => title.trim())
-    .optional(),
-  /** Optional new status */
-  status: CRStatusSchema.optional(),
-  /** Optional new type */
-  type: CRTypeSchema.optional(),
-  /** Optional new priority */
-  priority: CRPrioritySchema.optional(),
-  /** Optional new phase or epic identifier */
-  phaseEpic: z.string().optional(),
-  /** Optional new areas impacted by this CR */
-  impactAreas: z.array(z.string()).optional(),
-  /** Optional new comma-separated list of related ticket codes */
-  relatedTickets: z.string().optional(),
-  /** Optional new comma-separated list of dependencies */
-  dependsOn: z.string().optional(),
-  /** Optional new comma-separated list of tickets blocked by this CR */
-  blocks: z.string().optional(),
-  /** Optional new assignee email address */
-  assignee: z.string().email('Invalid email format').optional(),
-  /** Optional new CR content in markdown format */
-  content: z.string().optional(),
-  /** Optional new implementation date in YYYY-MM-DD format */
   implementationDate: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, use YYYY-MM-DD')
     .optional(),
-  /** Optional new implementation notes */
   implementationNotes: z.string().optional(),
 }).refine(
   (data) => {
@@ -121,7 +194,6 @@ export const UpdateTicketInputSchema = z.object({
 
 // TypeScript types inferred from schemas
 export type CR = z.infer<typeof CRSchema>
-export type Ticket = z.infer<typeof TicketSchema>
 export type CreateTicketInput = z.infer<typeof CreateTicketInputSchema>
 export type UpdateTicketInput = z.infer<typeof UpdateTicketInputSchema>
 
@@ -138,4 +210,4 @@ export const TicketSchemas = {
 /**
  * Export individual enum schemas for convenience
  */
-export { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'
+export {CRPrioritySchema, CRStatusSchema, CRTypeSchema} from '../types/schema'

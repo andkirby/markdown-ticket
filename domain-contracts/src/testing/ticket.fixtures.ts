@@ -23,6 +23,13 @@ export function buildTicket(overrides: Partial<Ticket> = {}): Ticket {
     status: CRStatus.PROPOSED,
     type: CRType.FEATURE_ENHANCEMENT,
     priority: CRPriority.MEDIUM,
+    dateCreated: new Date('2025-01-01T00:00:00.000Z'),
+    lastModified: new Date('2025-01-01T00:00:00.000Z'),
+    content: '',
+    filePath: 'docs/CRs/MDT-101.md',
+    relatedTickets: [],
+    dependsOn: [],
+    blocks: [],
   }
 
   return { ...defaults, ...overrides }
@@ -34,7 +41,15 @@ export function buildTicket(overrides: Partial<Ticket> = {}): Ticket {
  * @returns Valid CR object
  */
 export function buildCR(overrides: Partial<CR> = {}): CR {
-  return buildTicket(overrides)
+  const defaults: CR = {
+    code: 'MDT-101',
+    title: 'Implement user authentication',
+    status: CRStatus.PROPOSED,
+    type: CRType.FEATURE_ENHANCEMENT,
+    priority: CRPriority.MEDIUM,
+  }
+
+  return { ...defaults, ...overrides }
 }
 
 /**
@@ -60,10 +75,9 @@ export function buildCreateTicketInput(overrides: Partial<CreateTicketInput> = {
  * @returns Valid UpdateTicketInput object
  */
 export function buildUpdateTicketInput(overrides: Partial<UpdateTicketInput> = {}): UpdateTicketInput {
-  // Default to updating status to ensure at least one field is present
   const defaults: UpdateTicketInput = {
     code: 'MDT-101',
-    status: CRStatus.IN_PROGRESS,
+    priority: CRPriority.HIGH,
   }
 
   return { ...defaults, ...overrides }
@@ -85,7 +99,7 @@ export function buildTicketWithRelationship(
 ): Ticket {
   return buildTicket({
     code: ticketCode,
-    [relationshipType]: tickets.join(', '),
+    [relationshipType]: tickets,
     ...overrides,
   })
 }
@@ -117,12 +131,15 @@ export function buildFullTicket(overrides: Partial<Ticket> = {}): Ticket {
     priority: CRPriority.LOW,
     phaseEpic: 'Phase 2 - API Enhancement',
     impactAreas: ['Documentation', 'Developer Experience'],
-    relatedTickets: 'DOC-002, DOC-003',
-    dependsOn: 'API-001',
-    blocks: 'WEB-005',
+    relatedTickets: ['DOC-002', 'DOC-003'],
+    dependsOn: ['API-001'],
+    blocks: ['WEB-005'],
     assignee: 'technical-writer@example.com',
     content: '## 1. Description\n\nUpdate all API endpoints documentation...',
-    implementationDate: '2025-01-15',
+    filePath: 'docs/CRs/DOC-001.md',
+    dateCreated: new Date('2025-01-10T00:00:00.000Z'),
+    lastModified: new Date('2025-01-15T00:00:00.000Z'),
+    implementationDate: new Date('2025-01-15T00:00:00.000Z'),
     implementationNotes: 'Pending review from team lead',
     ...overrides,
   })

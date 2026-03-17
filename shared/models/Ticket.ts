@@ -1,48 +1,19 @@
-/**
- * Shared Ticket Model for Frontend, Backend, and MCP
- * Ensures consistent data structure across all systems
- */
-
+import type {
+  Ticket,
+  TicketData,
+  TicketFilters,
+  TicketMetadata,
+  TicketUpdateAttrs,
+} from '@mdt/domain-contracts'
 import { CRType } from '@mdt/domain-contracts'
 
-export interface Ticket {
-  // Core required fields
-  code: string
-  title: string
-  status: string
-  type: string
-  priority: string
-  dateCreated: Date | null
-  lastModified: Date | null
-  /**
-   * Full markdown content including:
-   * - ## Description section (problem statement, current/desired state)
-   * - ## Rationale section (why this change is needed)
-   * - ## Solution Analysis
-   * - ## Implementation Specification
-   * - ## Acceptance Criteria
-   */
-  content: string
-  filePath: string
-
-  // Optional fields
-  phaseEpic?: string
-  assignee?: string
-  implementationDate?: Date | null
-  implementationNotes?: string
-
-  // Relationship fields (always arrays)
-  relatedTickets: string[]
-  dependsOn: string[]
-  blocks: string[]
-
-  // MDT-095: Worktree fields (API response only)
-  inWorktree?: boolean
-  worktreePath?: string
-
-  // MDT-093: Sub-document navigation
-  subdocuments?: import('./SubDocument.js').SubDocument[]
-}
+export type {
+  Ticket,
+  TicketData,
+  TicketFilters,
+  TicketMetadata,
+  TicketUpdateAttrs,
+} from '@mdt/domain-contracts'
 
 /**
  * Helper function to safely parse date values
@@ -129,43 +100,6 @@ export function arrayToString(arr: string[]): string {
 }
 
 /**
- * Data interface for creating new tickets
- */
-export interface TicketData {
-  title: string
-  type: string
-  priority?: string
-  phaseEpic?: string
-  impactAreas?: string[]
-  relatedTickets?: string
-  dependsOn?: string
-  blocks?: string
-  assignee?: string
-  content?: string
-}
-
-/**
- * Allowed attributes for update_cr_attrs MCP tool
- * Restricted subset of TicketData - excludes title and content (immutable)
- * Per docs/create_ticket.md: includes post-implementation fields like implementationDate and implementationNotes
- *
- * MDT-064 (H1 as Single Source of Truth):
- * - Title must be updated via H1 header in markdown using manage_cr_sections
- * - YAML title attribute is auto-generated from H1 and should NOT be updated directly
- * - This enforces H1 as the authoritative title source
- */
-export interface TicketUpdateAttrs {
-  priority?: string
-  phaseEpic?: string
-  relatedTickets?: string
-  dependsOn?: string
-  blocks?: string
-  assignee?: string
-  implementationDate?: Date | null
-  implementationNotes?: string
-}
-
-/**
  * Whitelist of attributes allowed for update_cr_attrs operations
  * Aligned with docs/create_ticket.md lines 28-42 (Complete Attribute Reference)
  *
@@ -188,31 +122,6 @@ export const TICKET_UPDATE_ALLOWED_ATTRS = new Set<keyof TicketUpdateAttrs>([
   'implementationDate',
   'implementationNotes',
 ])
-
-/**
- * Filtering interface for ticket queries
- */
-export interface TicketFilters {
-  status?: string | string[]
-  type?: string | string[]
-  priority?: string | string[]
-  dateRange?: {
-    start?: Date
-    end?: Date
-  }
-}
-
-/**
- * MDT-094: TicketMetadata - metadata-only type for list operations.
- *
- * Excludes `content` field to reduce payload size for list views.
- * Used by:
- * - GET /api/projects/:id/crs (list endpoint)
- * - dataLayer.fetchTicketsMetadata() (frontend)
- *
- * The detail endpoint (GET /api/projects/:id/crs/:code) returns full Ticket with content.
- */
-export type TicketMetadata = Omit<Ticket, 'content'>
 
 /**
  * MDT-094: Normalize unknown input to TicketMetadata.
