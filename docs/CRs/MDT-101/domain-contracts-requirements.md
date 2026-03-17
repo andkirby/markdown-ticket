@@ -16,12 +16,18 @@
 ### MUST
 - Define entity schemas using a validation library (single source of truth)
 - Derive TypeScript types from schemas (library-specific inference)
-- Define input schemas in same file as entity schema
+- Define input schemas in the same entity module as the entity schema
 - Be used by both production code and tests
 
 ### MUST NOT
 - Define service interfaces (those belong closer to implementation)
 - Contain hardcoded test data in production exports
+- Require every entity to use exactly one file layout
+
+### SHOULD
+- Keep one canonical schema per domain concept
+- Split large entities into focused files when it improves clarity
+- Use `schema.ts` as a stable entrypoint or compatibility barrel when the entity module has multiple files
 
 ## Validation
 

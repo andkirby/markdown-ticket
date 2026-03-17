@@ -6,10 +6,13 @@
 domain-contracts/
   src/
     project/
-      schema.ts
+      schema.ts                 ← Public entrypoint or compatibility barrel
+      entity.ts                 ← Optional canonical entity schema
+      input.ts                  ← Optional input schemas
+      frontmatter.ts            ← Optional boundary schemas
       validation.ts
       __tests__/
-        schema.test.ts           ← Schema business rules
+        schema.test.ts           ← Schema-specific rules
         validation.test.ts       ← Validation function behavior
 
     testing/
@@ -18,9 +21,9 @@ domain-contracts/
 
 ## What to Test
 
-### Schema Business Rules
+### Schema Rules
 
-Test **your rules**, not Zod:
+Test your schema rules and derivation logic, not the validation library itself:
 
 | Test | Why |
 |------|-----|
@@ -198,6 +201,15 @@ it('buildProject returns valid project', () => {
 ```
 
 If fixtures break, other tests will fail.
+
+## Entity-Agnostic Testing Pattern
+
+The exact file names can vary by entity. Test the public contract layout that exists for that entity:
+
+- If the entity uses a single `schema.ts`, test that file directly
+- If the entity is split across `entity.ts`, `input.ts`, or `frontmatter.ts`, test each focused concern where it lives
+- Keep `validation.ts` tests focused on wrapper behavior
+- Keep tests aligned to the entity module's public entrypoint, not to a forced file naming convention
 
 ## Test Organization
 

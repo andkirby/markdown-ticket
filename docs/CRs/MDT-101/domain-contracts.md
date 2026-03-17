@@ -17,7 +17,10 @@ domain-contracts/
     index.ts                     ← Main production exports
 
     {entity}/                    ← One directory per domain entity
-      schema.ts                  ← Entity schema + input schemas + derived types
+      schema.ts                  ← Compatibility barrel or primary schema entrypoint
+      entity.ts                  ← Canonical normalized entity schema (optional)
+      input.ts                   ← Create/update/input schemas (optional)
+      frontmatter.ts             ← Boundary or persisted format schemas (optional)
       validation.ts              ← Validation functions
       index.ts                   ← Public exports for entity
 
@@ -44,35 +47,44 @@ domain-contracts     ← Pure schemas, minimal dependencies
 
 ## File Patterns
 
-### Entity Schema File (`src/{entity}/schema.ts`)
+### Entity Module (`src/{entity}/`)
 
 Contains:
-- Primary entity schema with field validation rules
-- Input schemas derived from entity schema (create, update, etc.)
+- One canonical entity schema
+- Any boundary-specific schemas needed by that entity
+- Input schemas derived from the canonical or boundary schemas
 - Type definitions derived from schemas
+- A stable public entrypoint for consumers
 
 ```typescript
-// Import your preferred validation library
-import { SchemaLibrary } from 'validation-lib'
-
-// Primary entity schema
+// Canonical entity schema
 export const EntitySchema = SchemaLibrary.object({
-  // Field definitions with validation rules
+  // Normalized in-memory shape
 })
 
-// Input schemas (examples)
-export const CreateEntityInputSchema = EntitySchema.pick({
+// Optional persisted/boundary format schema
+export const EntityBoundarySchema = SchemaLibrary.object({
+  // Serialized or transport-oriented shape
+})
+
+// Input schemas
+export const CreateEntityInputSchema = EntityBoundarySchema.pick({
   // Selected fields for creation
 })
 
-export const UpdateEntityInputSchema = EntitySchema.partial().required({
-  // Required identifier for updates
-})
+export const UpdateEntityInputSchema = CreateEntityInputSchema.partial()
 
-// Type definitions
 export type Entity = InferType<typeof EntitySchema>
 export type CreateEntityInput = InferType<typeof CreateEntityInputSchema>
 ```
+
+`schema.ts` does not need to contain everything itself. It can be a compatibility barrel that re-exports `entity.ts`, `input.ts`, `frontmatter.ts`, and any legacy aliases.
+
+Current ticket example in this repo:
+- `entity.ts` = normalized runtime ticket
+- `frontmatter.ts` = persisted/frontmatter shape
+- `input.ts` = create/update input schemas
+- `schema.ts` = compatibility barrel
 
 ### Validation File (`src/{entity}/validation.ts`)
 
@@ -100,7 +112,7 @@ export function safeValidateEntity(input: unknown) {
 
 **Entity exports (`src/{entity}/index.ts`)**:
 ```typescript
-export * from './schema'
+export * from './schema'      // stable consumer entrypoint
 export * from './validation'
 ```
 
@@ -239,3 +251,4 @@ describe('entity service', () => {
 3. **Type Safety**: TypeScript prevents invalid data from passing through
 4. **Test Isolation**: Fixtures provide valid test data without circular dependencies
 5. **Minimal Dependencies**: Contracts only depend on validation library, not on business logic
+6. **Entity-Agnostic Structure**: Each entity may use one file or several focused files; the principle is one source of truth per concept, not one file shape for every entity
