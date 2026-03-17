@@ -3,77 +3,16 @@
  *
  * MDT-094: Added TicketMetadata and normalizeTicketMetadata
  */
+export type {
+  Ticket,
+  TicketData,
+  TicketFilters,
+  TicketMetadata,
+  TicketUpdateAttrs,
+} from '@mdt/domain-contracts'
+import { TICKET_UPDATE_ALLOWED_ATTRS } from '@mdt/shared/models/Ticket.js'
 
-export interface Ticket {
-  code: string
-  title: string
-  status: string
-  type: string
-  priority: string
-  dateCreated: Date | null
-  lastModified: Date | null
-  content: string
-  filePath: string
-  phaseEpic?: string
-  assignee?: string
-  implementationDate?: Date | null
-  implementationNotes?: string
-  relatedTickets: string[]
-  dependsOn: string[]
-  blocks: string[]
-  inWorktree?: boolean
-  worktreePath?: string
-}
-
-/**
- * MDT-094: TicketMetadata type (excludes content)
- */
-export type TicketMetadata = Omit<Ticket, 'content'>
-
-export interface TicketData {
-  title: string
-  type: string
-  priority?: string
-  phaseEpic?: string
-  impactAreas?: string[]
-  relatedTickets?: string
-  dependsOn?: string
-  blocks?: string
-  assignee?: string
-  content?: string
-}
-
-export interface TicketUpdateAttrs {
-  priority?: string
-  phaseEpic?: string
-  relatedTickets?: string
-  dependsOn?: string
-  blocks?: string
-  assignee?: string
-  implementationDate?: Date | null
-  implementationNotes?: string
-}
-
-export const TICKET_UPDATE_ALLOWED_ATTRS = new Set<keyof TicketUpdateAttrs>([
-  'priority',
-  'phaseEpic',
-  'relatedTickets',
-  'dependsOn',
-  'blocks',
-  'assignee',
-  'implementationDate',
-  'implementationNotes',
-])
-
-export interface TicketFilters {
-  status?: string | string[]
-  type?: string | string[]
-  priority?: string | string[]
-  dateRange?: {
-    start?: Date
-    end?: Date
-  }
-}
+export { TICKET_UPDATE_ALLOWED_ATTRS }
 
 /**
  * Helper to safely parse date values
