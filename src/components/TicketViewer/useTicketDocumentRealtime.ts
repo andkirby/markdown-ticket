@@ -7,7 +7,7 @@
  * Covers: BR-5.1, BR-5.2, BR-5.4, C5
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
 
 interface UseTicketDocumentRealtimeOptions {
@@ -67,6 +67,8 @@ export function useTicketDocumentRealtime(
   const { initialSubdocuments, selectedPath, onActiveRemoved } = options
 
   const [subdocuments, setSubdocuments] = useState<SubDocument[]>(initialSubdocuments)
+  const onActiveRemovedRef = useRef(onActiveRemoved)
+  onActiveRemovedRef.current = onActiveRemoved
 
   // Sync state when initialSubdocuments changes (e.g. after async ticket fetch or SSE)
   // Also reconcile: if the active path was removed, fall back to main (BR-5.2)
@@ -77,10 +79,10 @@ export function useTicketDocumentRealtime(
   useEffect(() => {
     setSubdocuments(initialSubdocuments)
     if (initialSubdocuments.length > 0 && selectedPath !== 'main' && !pathExistsInTree(selectedPath, initialSubdocuments)) {
-      onActiveRemoved()
+      onActiveRemovedRef.current()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSubdocuments, onActiveRemoved])
+  }, [initialSubdocuments, selectedPath])
 
 
   const handleSSEUpdate = useCallback(
@@ -89,10 +91,10 @@ export function useTicketDocumentRealtime(
 
       // Check if the currently selected document still exists (BR-5.2)
       if (!pathExistsInTree(selectedPath, updated)) {
-        onActiveRemoved()
+        onActiveRemovedRef.current()
       }
     },
-    [selectedPath, onActiveRemoved],
+    [selectedPath],
   )
 
   return { subdocuments, handleSSEUpdate }
