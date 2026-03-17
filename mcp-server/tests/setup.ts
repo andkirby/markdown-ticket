@@ -11,14 +11,6 @@ jest.mock('fs', () => ({
   },
 }))
 
-// Mock chokidar (file watcher)
-jest.mock('chokidar', () => ({
-  watch: jest.fn(() => ({
-    on: jest.fn(),
-    close: jest.fn(),
-  })),
-}))
-
 // Mock console methods globally for cleaner test output
 globalThis.console = {
   ...console,

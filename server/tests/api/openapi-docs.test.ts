@@ -45,6 +45,9 @@ describe('openAPI Docs Endpoint Tests (MDT-106)', () => {
       res.setHeader('Content-Type', 'text/html')
       res.send(REDOC_HTML)
     })
+    app.use((_req: Request, res: Response) => {
+      res.status(404).json({ error: 'Not Found' })
+    })
   })
 
   describe('gET /api-docs', () => {

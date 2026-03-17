@@ -10,6 +10,7 @@
 
 import type { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
 import type { Express } from 'express'
+import type FileWatcherService from '../../services/fileWatcher/index.js'
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -45,6 +46,7 @@ interface TestContext {
 // Global cache (shared across all test runs)
 let cachedApp: Express | null = null
 let cachedConfigDir: string | null = null
+let cachedFileWatcher: FileWatcherService | null = null
 
 /**
  * Setup test environment with isolated temporary directory and Express app.
@@ -68,10 +70,12 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   else {
     cachedApp = null
     const { createTestApp: createApp } = await import('./test-app-factory')
+    const testApp = createApp()
 
-    app = createApp().app
+    app = testApp.app
     cachedApp = app
     cachedConfigDir = configDir
+    cachedFileWatcher = testApp.fileWatcher
   }
 
   const { TestEnvironment, ProjectFactory } = await import('@mdt/shared/test-lib')
@@ -85,6 +89,11 @@ export async function setupTestEnvironment(): Promise<TestContext> {
 
 /** Cleanup test environment after tests complete */
 export async function cleanupTestEnvironment(tempDir: string): Promise<void> {
+  cachedFileWatcher?.stop()
+  cachedFileWatcher = null
+  cachedApp = null
+  cachedConfigDir = null
+
   if (existsSync(tempDir) && tempDir.startsWith(tmpdir())) {
     rmSync(tempDir, { recursive: true, force: true })
   }
@@ -132,6 +141,8 @@ export async function setProjectDocumentMaxDepth(
 
 /** Reset the test setup cache (useful for testing multiple isolated scenarios) */
 function _resetTestSetupCache(): void {
+  cachedFileWatcher?.stop()
+  cachedFileWatcher = null
   cachedApp = null
   cachedConfigDir = null
 }

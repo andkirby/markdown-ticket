@@ -4,7 +4,10 @@ export default {
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts', '**/*.spec.ts'],
-  testPathIgnorePatterns: ['<rootDir>/tests/integration/'],
+  testPathIgnorePatterns: [
+    '<rootDir>/tests/integration/',
+    '<rootDir>/tests/e2e/',
+  ],
   moduleFileExtensions: ['ts', 'js', 'mjs'],
   verbose: true,
   silent: false,
