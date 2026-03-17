@@ -83,7 +83,7 @@ components:
           type: string
           description: Unique CR identifier
           example: MDT-001
-          pattern: '^[A-Z][A-Z0-9]{2,4}-\\d{3,4}$'
+          pattern: '^[A-Z][A-Z0-9]{1,4}-\d{3,4}$'
         title:
           type: string
           description: CR title
@@ -102,21 +102,31 @@ components:
           description: Phase or epic this CR belongs to
           example: Phase 1
         dependsOn:
-          type: string
-          description: Comma-separated CR codes this depends on
-          example: 'MDT-001, MDT-002'
+          type: array
+          items:
+            type: string
+          description: CR codes this depends on
+          example:
+            - MDT-001
+            - MDT-002
         blocks:
-          type: string
-          description: Comma-separated CR codes blocked by this
-          example: MDT-010
+          type: array
+          items:
+            type: string
+          description: CR codes blocked by this
+          example:
+            - MDT-010
         assignee:
           type: string
           description: Person assigned to implement this CR
           example: john.doe
         relatedTickets:
-          type: string
-          description: Comma-separated related CR codes
-          example: MDT-003
+          type: array
+          items:
+            type: string
+          description: Related CR codes
+          example:
+            - MDT-003
         impactAreas:
           type: array
           items:
@@ -153,13 +163,19 @@ components:
         phaseEpic:
           type: string
         dependsOn:
-          type: string
+          type: array
+          items:
+            type: string
         blocks:
-          type: string
+          type: array
+          items:
+            type: string
         assignee:
           type: string
         relatedTickets:
-          type: string
+          type: array
+          items:
+            type: string
         impactAreas:
           type: array
           items:
@@ -499,7 +515,7 @@ components:
       required: true
       schema:
         type: string
-        pattern: '^[A-Z][A-Z0-9]{2,4}-\\d{3,4}$'
+        pattern: '^[A-Z][A-Z0-9]{1,4}-\d{3,4}$'
       description: CR identifier
       example: MDT-001
     projectCode:
@@ -1512,156 +1528,6 @@ paths:
                     type: string
         '400':
           description: Invalid request body
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error400'
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error500'
-  /api/tasks:
-    get:
-      tags:
-        - Tasks
-      summary: List all task files
-      description: Returns array of markdown filenames from the legacy tasks directory
-      responses:
-        '200':
-          description: List of task filenames
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-                  example: task-001.md
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error500'
-  '/api/tasks/{filename}':
-    get:
-      tags:
-        - Tasks
-      summary: Get task file content
-      description: Returns raw markdown content of a specific task file
-      parameters:
-        - name: filename
-          in: path
-          required: true
-          schema:
-            type: string
-          example: task-001.md
-      responses:
-        '200':
-          description: Task file content (raw markdown)
-          content:
-            text/plain:
-              schema:
-                type: string
-        '400':
-          description: Missing filename
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error400'
-        '404':
-          description: Task not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error404'
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error500'
-    delete:
-      tags:
-        - Tasks
-      summary: Delete task file
-      description: Removes a task markdown file from the filesystem
-      parameters:
-        - name: filename
-          in: path
-          required: true
-          schema:
-            type: string
-          example: task-001.md
-      responses:
-        '200':
-          description: Task deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-        '400':
-          description: Missing filename
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error400'
-        '404':
-          description: Task not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error404'
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error500'
-  /api/tasks/save:
-    post:
-      tags:
-        - Tasks
-      summary: Save task file
-      description: Creates or updates a task markdown file
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - filename
-                - content
-              properties:
-                filename:
-                  type: string
-                  example: task-001.md
-                content:
-                  type: string
-                  description: Markdown content
-      responses:
-        '200':
-          description: Task saved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-                  filename:
-                    type: string
-        '400':
-          description: Missing required fields
           content:
             application/json:
               schema:

@@ -13,7 +13,7 @@ export {
   buildProjectWithComplexDocumentConfig,
   buildUpdateProjectInput,
   invalidFixtures,
-} from './project.fixtures.js'
+} from './project.fixtures'
 
 // Ticket fixtures
 export {
@@ -27,4 +27,4 @@ export {
   buildTicketWithRelations,
   buildTicketWithRelationship,
   buildUpdateTicketInput,
-} from './ticket.fixtures.js'
+} from './ticket.fixtures'
