@@ -24,8 +24,8 @@ describe('TOML Standardization (MDT-098)', () => {
     })
 
     test('shall only import smol-toml in shared/utils/toml.ts', () => {
-      // grep -r "from 'smol-toml'" shared/ --include="*.ts"
-      const cmd = "grep -r \"from 'smol-toml'\" shared/ --include=\"*.ts\""
+      // grep -r "from 'smol-toml'" shared/ --include="*.ts" --exclude-dir=dist
+      const cmd = "grep -r \"from 'smol-toml'\" shared/ --include=\"*.ts\" --exclude-dir=dist"
       const result = execSync(cmd, { encoding: 'utf-8', cwd: repoRoot })
 
       // Should only find the import in shared/utils/toml.ts

@@ -3,9 +3,28 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
 import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js'
+import { parseToml } from '@mdt/shared/utils/toml.js'
 import * as fs from 'fs-extra'
 
-import * as toml from 'toml'
+/**
+ * Configuration file structure (from config.toml)
+ */
+interface FileConfig {
+  server?: {
+    port?: number
+    logLevel?: 'debug' | 'info' | 'warn' | 'error'
+  }
+  discovery?: {
+    scanPaths?: string[]
+    excludePaths?: string[]
+    maxDepth?: number
+    mdtConfigSearchDepth?: number
+    cacheTimeout?: number
+  }
+  templates?: {
+    customPath?: string
+  }
+}
 
 /**
  * Server configuration with merged approach.
@@ -95,7 +114,7 @@ export class ConfigService {
       if (existsSync(DEFAULT_PATHS.CONFIG_FILE)) {
         this.log(`📝 Loading config from: ${DEFAULT_PATHS.CONFIG_FILE}`)
         const configContent = readFileSync(DEFAULT_PATHS.CONFIG_FILE, 'utf-8')
-        const fileConfig = toml.parse(configContent)
+        const fileConfig = parseToml(configContent) as FileConfig
 
         // Merge server settings
         if (fileConfig.server) {
