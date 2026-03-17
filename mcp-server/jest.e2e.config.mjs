@@ -15,6 +15,7 @@ export default {
   },
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@mdt/domain-contracts(.*)$': '<rootDir>/../domain-contracts/src$1',
     '^@mdt/shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
     '^shared/test-lib(.*)$': '<rootDir>/../shared/test-lib$1',
     '^shared/(.*)$': '<rootDir>/../shared/dist/$1',
