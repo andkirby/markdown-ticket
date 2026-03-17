@@ -65,12 +65,12 @@ The MDT-092 implementation successfully delivers an isolated test environment fr
 - **Impact**: Type conversion and mapping code scattered throughout; inconsistent data handling
 - **Suggested Fix**: Create a unified TestTicket interface that extends/implements common base
 
-### 5. Hidden Coupling: Direct file system operations in business logic
+### 5. Hidden Coupling: Direct file system operations in business logic (RESOLVED)
 
 - **Location**: `file-ticket-creator.ts` (lines 37-63, 81-91), `project-factory.ts`
 - **Evidence**: Business logic directly calling fs operations without abstraction layer
 - **Impact**: Difficult to test file operations in isolation; coupling to Node.js fs API
-- **Suggested Fix**: Create a FileSystemService interface with implementations for test/production
+- **Suggested Fix**: ~~Create a FileSystemService interface with implementations for test/production~~ (Note: Server FileSystemService was removed - now using TreeService directly. This debt item remains relevant for shared/test-lib but not the server layer.)
 
 ## Low Severity
 

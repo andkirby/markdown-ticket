@@ -20,17 +20,15 @@ import cors from 'cors'
 import express from 'express'
 import { DocumentController } from '../../controllers/DocumentController'
 import { ProjectController } from '../../controllers/ProjectController'
-import { TicketController } from '../../controllers/TicketController'
 import FileWatcherService from '../../services/fileWatcher/index.js'
 import { errorHandler, notFoundHandler } from '../../middleware/errorHandler'
 import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
 import { createSSERouter } from '../../routes/sse'
 import { createSystemRouter } from '../../routes/system'
-import { createTicketRouter } from '../../routes/tickets'
 import { DocumentService } from '../../services/DocumentService'
-import { FileSystemService } from '../../services/FileSystemService'
 import { TicketService } from '../../services/TicketService'
+import { TreeService } from '../../services/TreeService'
 
 // Note: Skipping createDocsRouter due to import.meta issue in openapi/config.ts
 // import { createDocsRouter } from '../../routes/docs';
@@ -135,7 +133,7 @@ export function createTestApp(): TestAppResult {
   const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery as unknown as SharedProjectServiceLike)
   const ticketService = new TicketService(projectDiscovery)
   const documentService = new DocumentService(projectDiscovery)
-  const fileSystemService = new FileSystemService(process.cwd())
+  const treeService = new TreeService(projectDiscovery)
 
   // Connect file watcher to document service for cache invalidation
   fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter)
@@ -143,18 +141,16 @@ export function createTestApp(): TestAppResult {
   // Initialize Controllers
   const projectController = new ProjectController(
     projectServiceAdapter as unknown as ProjectServiceExtension,
-    fileSystemService,
+    treeService,
     fileWatcher,
     undefined, // ticketController (not needed)
     ticketService,
   )
 
-  const ticketController = new TicketController(fileSystemService)
   const documentController = new DocumentController(documentService)
 
   // Register Routes
   app.use('/api/projects', createProjectRouter(projectController))
-  app.use('/api/tasks', createTicketRouter(ticketController))
   app.use('/api/documents', createDocumentRouter(documentController, projectController))
   app.use('/api/events', createSSERouter(fileWatcher))
   app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))

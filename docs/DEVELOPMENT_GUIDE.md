@@ -103,7 +103,7 @@ server/
 - `ProjectService` - Multi-project management
 - `TicketService` - CR/ticket operations with numbering
 - `DocumentService` - Document discovery with path filtering
-- `FileSystemService` - Legacy task file operations
+- `TreeService` - File tree building for path selection
 
 **Important Routes:**
 - `/api/projects` - Multi-project operations

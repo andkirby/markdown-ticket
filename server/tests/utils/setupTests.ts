@@ -65,12 +65,13 @@ export function createMockTicketService() {
   return mockTicketService
 }
 
-export function createMockFileSystemService() {
-  const mockFileSystemService = {
-    buildProjectFileSystemTree: jest.fn(),
+export function createMockTreeService() {
+  const mockTreeService = {
+    getPathSelectionTree: jest.fn(),
+    getDocumentTree: jest.fn(),
   }
 
-  return mockFileSystemService
+  return mockTreeService
 }
 
 /**
