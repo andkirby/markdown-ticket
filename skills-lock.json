@@ -21,6 +21,11 @@
       "sourceType": "github",
       "computedHash": "aa9b223c6803bc5d1aaa6829efe33e17de1f69927abf00819d0fd2b9e319ff4f"
     },
+    "refactor-method-complexity-reduce": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "a09a18f7b370e105c20480f9c772169948262fa07fdf5fbd4c5d45b2def958e0"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
