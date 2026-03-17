@@ -94,7 +94,7 @@ describe('groupNamespacedFiles', () => {
   describe('namespace grouping', () => {
     it('creates virtual folder for dot-notation files (BR-2)', () => {
       const files = ['architecture.approve-it', 'architecture.update.v2']
-      const result = groupNamespacedFiles(files, new Set())
+      const result = groupNamespacedFiles(files, new Set(), 'MDT-138')
 
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('architecture')
@@ -106,7 +106,7 @@ describe('groupNamespacedFiles', () => {
 
     it('includes [main] tab when root file exists', () => {
       const files = ['architecture', 'architecture.approve-it', 'architecture.beta']
-      const result = groupNamespacedFiles(files, new Set())
+      const result = groupNamespacedFiles(files, new Set(), 'MDT-138')
 
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('architecture')
@@ -115,7 +115,7 @@ describe('groupNamespacedFiles', () => {
 
     it('omits [main] tab when no root file exists', () => {
       const files = ['tests.one', 'tests.two']
-      const result = groupNamespacedFiles(files, new Set())
+      const result = groupNamespacedFiles(files, new Set(), 'MDT-138')
 
       expect(result).toHaveLength(1)
       expect(result[0].children.map(c => c.name)).toEqual(['one', 'two'])
@@ -124,7 +124,7 @@ describe('groupNamespacedFiles', () => {
 
     it('sorts sub-tabs alphanumerically', () => {
       const files = ['architecture.zeta', 'architecture.alpha', 'architecture.beta']
-      const result = groupNamespacedFiles(files, new Set())
+      const result = groupNamespacedFiles(files, new Set(), 'MDT-138')
 
       expect(result[0].children.map(c => c.name)).toEqual(['alpha', 'beta', 'zeta'])
     })
@@ -133,7 +133,7 @@ describe('groupNamespacedFiles', () => {
   describe('multiple dots preservation (BR-5)', () => {
     it('preserves b.c as sub-key for a.b.c.md', () => {
       const files = ['a.b.c']
-      const result = groupNamespacedFiles(files, new Set())
+      const result = groupNamespacedFiles(files, new Set(), 'MDT-138')
 
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('a')
@@ -145,7 +145,7 @@ describe('groupNamespacedFiles', () => {
   describe('folder coexistence', () => {
     it('marks virtual folder when no physical folder exists', () => {
       const files = ['bdd.scenario-1']
-      const result = groupNamespacedFiles(files, new Set())
+      const result = groupNamespacedFiles(files, new Set(), 'MDT-138')
 
       expect(result[0].isVirtual).toBe(true)
     })
@@ -153,7 +153,7 @@ describe('groupNamespacedFiles', () => {
     it('does not mark as virtual when physical folder exists', () => {
       const files = ['bdd.scenario-1']
       const existingFolders = new Set(['bdd'])
-      const result = groupNamespacedFiles(files, existingFolders)
+      const result = groupNamespacedFiles(files, existingFolders, 'MDT-138')
 
       expect(result[0].isVirtual).toBe(false)
     })
@@ -162,7 +162,7 @@ describe('groupNamespacedFiles', () => {
   describe('mixed scenarios', () => {
     it('handles standalone files alongside namespaced files', () => {
       const files = ['requirements', 'architecture', 'architecture.approve-it']
-      const result = groupNamespacedFiles(files, new Set())
+      const result = groupNamespacedFiles(files, new Set(), 'MDT-138')
 
       // Should have requirements as standalone and architecture as namespace
       expect(result).toHaveLength(2)
@@ -172,7 +172,7 @@ describe('groupNamespacedFiles', () => {
 
     it('handles multiple namespaces', () => {
       const files = ['architecture.approve-it', 'tests.one', 'tests.two']
-      const result = groupNamespacedFiles(files, new Set())
+      const result = groupNamespacedFiles(files, new Set(), 'MDT-138')
 
       expect(result).toHaveLength(2)
       expect(result.find(r => r.name === 'architecture')).toBeDefined()
@@ -197,7 +197,7 @@ describe('groupNamespacedFiles', () => {
       ]
 
       const start = performance.now()
-      groupNamespacedFiles(files, new Set())
+      groupNamespacedFiles(files, new Set(), 'MDT-138')
       const duration = performance.now() - start
 
       expect(duration).toBeLessThan(10)
@@ -210,7 +210,7 @@ describe('groupNamespacedFiles', () => {
       }
 
       const start = performance.now()
-      groupNamespacedFiles(files, new Set())
+      groupNamespacedFiles(files, new Set(), 'MDT-138')
       const duration = performance.now() - start
 
       expect(duration).toBeLessThan(10)

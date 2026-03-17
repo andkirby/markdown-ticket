@@ -86,7 +86,7 @@ describe('PathWatcherService', () => {
 
       // Get the 'ready' callback and call it
       const readyCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'ready',
+        (call: [string, Function]) => call[0] === 'ready',
       )?.[1]
       readyCallback?.()
 
@@ -109,7 +109,7 @@ describe('PathWatcherService', () => {
 
       // Simulate ready event
       const readyCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'ready',
+        (call: [string, Function]) => call[0] === 'ready',
       )?.[1]
       readyCallback?.()
 
@@ -136,7 +136,7 @@ describe('PathWatcherService', () => {
       service.addWatcher('MDT', 'MDT-095', '/path/to/worktree')
 
       const errorCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'error',
+        (call: [string, Function]) => call[0] === 'error',
       )?.[1]
       const testError = new Error('Watcher failed')
       errorCallback?.(testError)
@@ -234,7 +234,7 @@ describe('PathWatcherService', () => {
       service.initMultiProjectWatcher([{ id: 'test', path: '/test/*.md' }])
 
       const changeCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'change',
+        (call: [string, Function]) => call[0] === 'change',
       )?.[1]
 
       changeCallback?.('/test/file.md')
@@ -254,7 +254,7 @@ describe('PathWatcherService', () => {
       service.initMultiProjectWatcher([{ id: 'test', path: '/test/*' }])
 
       const changeCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'change',
+        (call: [string, Function]) => call[0] === 'change',
       )?.[1]
 
       changeCallback?.('/test/file.txt')
@@ -269,7 +269,7 @@ describe('PathWatcherService', () => {
       service.initMultiProjectWatcher([{ id: 'test', path: '/test/*' }])
 
       const changeCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'change',
+        (call: [string, Function]) => call[0] === 'change',
       )?.[1]
 
       changeCallback?.('/test/MDT-095/architecture.md')
@@ -364,7 +364,7 @@ describe('PathWatcherService', () => {
       service.initMultiProjectWatcher([{ id: 'test', path: '/test/*.md' }])
 
       const errorCallback = mockWatcher.on.mock.calls.find(
-        call => call[0] === 'error',
+        (call: [string, Function]) => call[0] === 'error',
       )?.[1]
 
       errorCallback?.(new Error('Watcher error'))
