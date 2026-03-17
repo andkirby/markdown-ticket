@@ -1,6 +1,6 @@
 ---
 code: MDT-101
-status: In Progress
+status: On Hold
 dateCreated: 2025-12-19T14:39:23.333Z
 type: Architecture
 priority: Medium
@@ -29,27 +29,7 @@ priority: Medium
 ### Scope
 - **Changes**: Create new domain-contracts package, migrate types from shared/models
 - **Unchanged**: Implementation logic in services, UI components, MCP handlers
-
-## Architecture Design
-> **Extracted**: Validation architecture details moved to [architecture.md](./architecture.md#phase-11-enhanced-project-validation)
-
-**Summary**:
-- Pattern: Layered Validation with Zod
-- Components: 4 modules (schema, validation, migration, index)
-- Key constraint: Schema validation at boundaries, custom rules for business logic
-
-**Extension Rule**: To add Project validation, create rule in `validation.ts` (limit 100 lines) using Zod refine/superRefine.
-
-## 3. Alternatives Considered
-
-> **Extracted**: Complex architecture — see [architecture.md](./architecture.md)
-
-**Summary**:
-- Pattern: Schema-First Domain Contracts
-- Components: 6 (Project, Ticket, Types schemas + 3 consumer packages)
-- Key constraint: Each schema file ≤150 lines, runtime validation at boundaries
-
-**Extension Rule**: To add entity, create schema file (limit 150 lines) with Zod schema and export inferred type.
+, create schema file (limit 150 lines) with Zod schema and export inferred type.
 
 | Approach | Key Difference | Why Rejected |
 |----------|---------------|--------------|
