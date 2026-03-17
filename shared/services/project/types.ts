@@ -1,4 +1,4 @@
-import type { GlobalConfig as DomainGlobalConfig, Project as DomainProject } from '@mdt/domain-contracts'
+import type { GlobalConfig as DomainGlobalConfig, RegistryData as DomainRegistryData } from '@mdt/domain-contracts'
 import type { Project, ProjectConfig } from '../../models/Project.js'
 import type { Ticket } from '../../models/Ticket.js'
 
@@ -77,28 +77,7 @@ export interface IProjectService extends
   IProjectFileSystemService {}
 
 /** Registry data structure */
-type RegistryProjectFields = Pick<DomainProject, 'ticketsPath' | 'code' | 'name' | 'id' | 'description' | 'active' | 'repository'>
-type RegistryProjectData = Partial<RegistryProjectFields> & {
-  path: string
-  startNumber?: number
-  counterFile?: string
-  dateRegistered?: string
-  document?: {
-    paths?: string[]
-    excludeFolders?: string[]
-    maxDepth?: number
-  }
-}
-
-export interface RegistryData {
-  project: RegistryProjectData
-  metadata: {
-    dateRegistered: string
-    lastAccessed: string
-    version: string
-    globalOnly?: boolean
-  }
-}
+export type RegistryData = DomainRegistryData
 
 /** Project scan options */
 export interface ProjectScanOptions {
