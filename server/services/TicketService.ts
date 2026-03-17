@@ -349,6 +349,7 @@ export class TicketService {
           kind: 'folder',
           children: discoverChildren(fullPath, entry),
           filePath: `${crId}/${entry}`,
+          isVirtual: false,
         }
       }
       if (isMarkdownFile(entry)) {
@@ -362,10 +363,29 @@ export class TicketService {
 
     for (const entry of entries) {
       const doc = buildEntry(entry)
-      if (doc) {
-        if (doc.kind === 'file') {
-          markdownFiles.push(doc.name)
+      if (!doc) continue
+
+      if (doc.kind === 'file') {
+        markdownFiles.push(doc.name)
+      }
+
+      // Handle name conflicts between files and folders (e.g., bdd.md and bdd/)
+      const existing = entryMap.get(doc.name)
+      if (existing) {
+        // If existing is a folder and new is a file, the folder wins (keep existing)
+        // The file will be processed as a [main] child during namespace grouping
+        if (existing.kind === 'folder' && doc.kind === 'file') {
+          // Keep the folder entry, don't replace with file
+          continue
         }
+        // If existing is a file and new is a folder, replace with folder
+        if (existing.kind === 'file' && doc.kind === 'folder') {
+          entryMap.set(doc.name, doc)
+          continue
+        }
+        // Otherwise, replace with new entry
+        entryMap.set(doc.name, doc)
+      } else {
         entryMap.set(doc.name, doc)
       }
     }
