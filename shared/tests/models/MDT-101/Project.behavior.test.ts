@@ -30,9 +30,13 @@ describe('project Model - Behavioral Preservation', () => {
       const mockProject: Project = {
         id: 'test-project',
         project: {
+          id: 'test-project',
           name: 'Test Project',
+          code: 'TEST',
           path: '/test/path',
           configFile: '/test/config.toml',
+          repository: 'https://example.com/test',
+          ticketsPath: 'docs/CRs',
           active: true,
           description: 'Test description',
         },
@@ -60,10 +64,10 @@ describe('project Model - Behavioral Preservation', () => {
           startNumber: 1,
           counterFile: '.mdt-next',
           active: true,
-        },
-        document: {
-          paths: ['docs'],
-          excludeFolders: ['node_modules'],
+          document: {
+            paths: ['docs'],
+            excludeFolders: ['node_modules'],
+          },
         },
       }
 
@@ -72,8 +76,8 @@ describe('project Model - Behavioral Preservation', () => {
       expect(typeof mockConfig.project.startNumber).toBe('number')
       expect(typeof mockConfig.project.counterFile).toBe('string')
       expect(typeof mockConfig.project.active).toBe('boolean')
-      expect(Array.isArray(mockConfig.document.paths)).toBe(true)
-      expect(Array.isArray(mockConfig.document.excludeFolders)).toBe(true)
+      expect(Array.isArray(mockConfig.project.document?.paths)).toBe(true)
+      expect(Array.isArray(mockConfig.project.document?.excludeFolders)).toBe(true)
     })
   })
 

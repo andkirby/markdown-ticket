@@ -1,24 +1,15 @@
-/**
- * MDT-101 Phase 1: Project Test Fixtures
- * Test builders for Project entities with field-level validation
- */
-
 import type {
   CreateProjectInput,
   DocumentConfig,
+  LocalProjectConfig,
+  LocalProjectConfigProject,
   Project,
-  ProjectConfig,
-  ProjectConfigProject,
+  ProjectDetails,
   UpdateProjectInput,
 } from '../project/schema'
 
-/**
- * Creates a valid Project with optional overrides
- * @param overrides - Partial project data to override defaults
- * @returns Valid Project object
- */
-export function buildProject(overrides: Partial<Project> = {}): Project {
-  const defaults: Project = {
+export function buildProjectDetails(overrides: Partial<ProjectDetails> = {}): ProjectDetails {
+  const defaults: ProjectDetails = {
     code: 'MDT',
     name: 'Markdown Ticket',
     id: 'markdown-ticket',
@@ -31,37 +22,68 @@ export function buildProject(overrides: Partial<Project> = {}): Project {
   return { ...defaults, ...overrides }
 }
 
-/**
- * Creates a ProjectConfig with DocumentConfig
- * @param projectOverrides - Optional overrides for project section
- * @param documentOverrides - Optional overrides for document config
- * @returns Valid ProjectConfig object
- */
-export function buildProjectConfig(
-  projectOverrides: Partial<Project> = {},
-  documentOverrides: Partial<DocumentConfig> = {},
-): ProjectConfig {
-  const project = buildProject(projectOverrides)
+export function buildProject(overrides: Partial<Project> = {}): Project {
+  const projectDetails = buildProjectDetails()
+  const runtimeProject: Project = {
+    id: projectDetails.id,
+    project: {
+      ...projectDetails,
+      path: '/tmp/markdown-ticket',
+      configFile: '/tmp/markdown-ticket/.mdt-config.toml',
+      counterFile: '.mdt-next',
+      startNumber: 1,
+      description: projectDetails.description || '',
+      repository: projectDetails.repository || '',
+    },
+    metadata: {
+      dateRegistered: '2025-01-01',
+      lastAccessed: '2025-01-01',
+      version: '1.0.0',
+    },
+  }
 
+  return {
+    ...runtimeProject,
+    ...overrides,
+    project: {
+      ...runtimeProject.project,
+      ...(overrides.project || {}),
+    },
+    metadata: {
+      ...runtimeProject.metadata,
+      ...(overrides.metadata || {}),
+    },
+  }
+}
+
+export function buildProjectConfig(
+  projectOverrides: Partial<LocalProjectConfigProject> = {},
+  documentOverrides: Partial<DocumentConfig> = {},
+): LocalProjectConfig {
+  const projectDetails = buildProjectDetails({
+    code: projectOverrides.code,
+    name: projectOverrides.name,
+    id: projectOverrides.id,
+    ticketsPath: projectOverrides.ticketsPath,
+    description: projectOverrides.description,
+    repository: projectOverrides.repository,
+    active: projectOverrides.active,
+  })
   const defaultDocumentConfig: DocumentConfig = {
     paths: ['docs/**/*.md', 'README.md'],
     excludeFolders: ['node_modules', '.git', 'dist'],
     maxDepth: 3,
   }
 
-  const projectConfig: ProjectConfigProject = {
-    ...project,
+  const projectConfig: LocalProjectConfigProject = {
+    ...projectDetails,
+    ...projectOverrides,
     document: { ...defaultDocumentConfig, ...documentOverrides },
   }
 
   return { project: projectConfig }
 }
 
-/**
- * Creates valid CreateProjectInput
- * @param overrides - Partial input data to override defaults
- * @returns Valid CreateProjectInput object
- */
 export function buildCreateProjectInput(overrides: Partial<CreateProjectInput> = {}): CreateProjectInput {
   const defaults: CreateProjectInput = {
     code: 'WEB',
@@ -75,13 +97,7 @@ export function buildCreateProjectInput(overrides: Partial<CreateProjectInput> =
   return { ...defaults, ...overrides }
 }
 
-/**
- * Creates valid UpdateProjectInput
- * @param overrides - Partial update data (at least one field required)
- * @returns Valid UpdateProjectInput object
- */
 export function buildUpdateProjectInput(overrides: Partial<UpdateProjectInput> = {}): UpdateProjectInput {
-  // Default to updating name to ensure at least one field is present
   const defaults: UpdateProjectInput = {
     name: 'Updated Project Name',
   }
@@ -89,22 +105,24 @@ export function buildUpdateProjectInput(overrides: Partial<UpdateProjectInput> =
   return { ...defaults, ...overrides }
 }
 
-/**
- * Creates Project with minimum valid values
- */
 export function buildMinimalProject(): Project {
   return buildProject({
-    code: 'A1',
-    name: 'ABC',
     id: 'a',
-    ticketsPath: 't',
+    project: {
+      id: 'a',
+      code: 'A1',
+      name: 'ABC',
+      path: '/tmp/a',
+      configFile: '/tmp/a/.mdt-config.toml',
+      active: true,
+      description: '',
+      repository: '',
+      ticketsPath: 't',
+    },
   })
 }
 
-/**
- * Creates Project with complex DocumentConfig
- */
-export function buildProjectWithComplexDocumentConfig(): ProjectConfig {
+export function buildProjectWithComplexDocumentConfig(): LocalProjectConfig {
   return buildProjectConfig(
     {},
     {
@@ -115,15 +133,24 @@ export function buildProjectWithComplexDocumentConfig(): ProjectConfig {
   )
 }
 
-/**
- * Invalid fixtures for validation testing
- */
 export const invalidFixtures = {
   project: {
-    invalidCode: buildProject({ code: 'invalid' }),
-    emptyName: buildProject({ name: '' }),
-    emptyId: buildProject({ id: '' }),
-    emptyTicketsPath: buildProject({ ticketsPath: '' }),
+    invalidCode: (() => {
+      const baseProject = buildProject()
+      return buildProject({ project: { ...baseProject.project, code: 'invalid' } })
+    })(),
+    emptyName: (() => {
+      const baseProject = buildProject()
+      return buildProject({ project: { ...baseProject.project, name: '' } })
+    })(),
+    emptyId: (() => {
+      const baseProject = buildProject()
+      return buildProject({ id: '', project: { ...baseProject.project, id: '' } })
+    })(),
+    emptyTicketsPath: (() => {
+      const baseProject = buildProject()
+      return buildProject({ project: { ...baseProject.project, ticketsPath: '' } })
+    })(),
   },
   createInput: {
     invalidCode: buildCreateProjectInput({ code: 'x' }),
@@ -143,21 +170,19 @@ export const invalidFixtures = {
   },
 }
 
-/**
- * Helper function for creating test data variations
- */
-
-/**
- * Creates multiple projects with sequential IDs
- * @param count - Number of projects to create
- * @param baseCode - Base project code (will append number)
- * @returns Array of valid Project objects
- */
 export function buildProjects(count: number, baseCode = 'PRJ'): Project[] {
-  return Array.from({ length: count }, (_, i) =>
-    buildProject({
-      code: `${baseCode}${(i + 1).toString().padStart(2, '0')}`,
-      id: `${baseCode.toLowerCase()}-${i + 1}`,
-      name: `Project ${i + 1}`,
-    }))
+  return Array.from({ length: count }, (_, i) => {
+    const code = `${baseCode}${(i + 1).toString().padStart(2, '0')}`
+    const id = `${baseCode.toLowerCase()}-${i + 1}`
+    const baseProject = buildProject()
+    return buildProject({
+      id,
+      project: {
+        ...baseProject.project,
+        code,
+        id,
+        name: `Project ${i + 1}`,
+      },
+    })
+  })
 }

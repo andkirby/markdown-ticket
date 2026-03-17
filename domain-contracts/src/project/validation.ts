@@ -6,7 +6,9 @@
 import {
   CreateProjectInputSchema,
   DocumentConfigSchema,
+  LocalProjectConfigSchema,
   ProjectConfigSchema,
+  ProjectRegistryEntrySchema,
   ProjectSchema,
   UpdateProjectInputSchema,
 } from './schema'
@@ -43,6 +45,14 @@ export function safeValidateProjectConfig(data: unknown) {
   return ProjectConfigSchema.safeParse(data)
 }
 
+export function validateLocalProjectConfig(data: unknown) {
+  return LocalProjectConfigSchema.parse(data)
+}
+
+export function safeValidateLocalProjectConfig(data: unknown) {
+  return LocalProjectConfigSchema.safeParse(data)
+}
+
 /**
  * Validate document configuration using DocumentConfigSchema.parse()
  * Throws ZodError on validation failure
@@ -57,6 +67,14 @@ export function validateDocumentConfig(data: unknown) {
  */
 export function safeValidateDocumentConfig(data: unknown) {
   return DocumentConfigSchema.safeParse(data)
+}
+
+export function validateProjectRegistryEntry(data: unknown) {
+  return ProjectRegistryEntrySchema.parse(data)
+}
+
+export function safeValidateProjectRegistryEntry(data: unknown) {
+  return ProjectRegistryEntrySchema.safeParse(data)
 }
 
 /**
