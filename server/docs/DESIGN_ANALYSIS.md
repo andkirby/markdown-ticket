@@ -124,7 +124,7 @@ class FileMetadataCommand {
 
 4. **Refactor Existing Services**
    - `DocumentService` uses `TreeService.getDocumentNavigationTree()`
-   - `FileSystemService` uses `TreeService.getPathSelectionTree()`
+   - `TreeService` provides `getPathSelectionTree()` method directly
    - Remove duplicate code
 
 ### Phase 3: Enhancement (Low Priority)

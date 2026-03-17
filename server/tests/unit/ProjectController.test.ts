@@ -1,14 +1,14 @@
 /// <reference types="jest" />
 
 import type { Response } from 'express'
-import type { AuthenticatedRequest, FileSystemService, ProjectServiceExtension } from '../../controllers/ProjectController.js'
+import type { AuthenticatedRequest, ProjectServiceExtension, TreeServiceInterface } from '../../controllers/ProjectController.js'
 import type { CreateCRResult, DeleteResult, TicketService, UpdateCRResult } from '../../services/TicketService.js'
 import { ProjectController } from '../../controllers/ProjectController.js'
 import {
-  createMockFileSystemService,
   createMockProjectService,
   createMockReqRes,
   createMockTicketService,
+  createMockTreeService,
   mockCR,
   mockProject,
 } from '../utils/setupTests.js'
@@ -28,16 +28,16 @@ describe('projectController - CRUD Operations', () => {
   let projectController: ProjectController
   let mockProjectService: ProjectServiceExtension
   let mockTicketService: MockTicketService
-  let mockFileSystemService: FileSystemService
+  let mockTreeService: TreeServiceInterface
 
   beforeEach(() => {
     mockProjectService = createMockProjectService() as unknown as ProjectServiceExtension
     mockTicketService = createMockTicketService() as MockTicketService
-    mockFileSystemService = createMockFileSystemService() as unknown as FileSystemService
+    mockTreeService = createMockTreeService() as unknown as TreeServiceInterface
 
     projectController = new ProjectController(
       mockProjectService,
-      mockFileSystemService,
+      mockTreeService,
       {}, // fileWatcher - empty object for tests
       undefined, // ticketController
       mockTicketService as unknown as TicketService,
@@ -110,7 +110,7 @@ describe('projectController - CRUD Operations', () => {
 
       const controllerWithoutService = new ProjectController(
         mockProjectService,
-        mockFileSystemService,
+        mockTreeService,
         mockFileWatcher,
       )
 

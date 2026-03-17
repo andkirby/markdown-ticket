@@ -57,8 +57,8 @@ export interface ProjectServiceExtension {
   }
 }
 
-export interface FileSystemService {
-  buildProjectFileSystemTree: (projectId: string, projectDiscovery: ProjectServiceExtension['projectDiscovery']) => Promise<TreeNode[]>
+export interface TreeServiceInterface {
+  getPathSelectionTree: (projectId: string) => Promise<TreeNode[]>
 }
 
 interface FileWatcher {
@@ -70,7 +70,7 @@ interface FileWatcher {
  */
 export class ProjectController {
   private projectService: ProjectServiceExtension
-  private fileSystemService: FileSystemService
+  private treeService: TreeServiceInterface
   private fileWatcher: FileWatcher
   private projectManager: ProjectManager
   /**
@@ -95,7 +95,7 @@ export class ProjectController {
 
   constructor(
     projectService: ProjectServiceExtension,
-    fileSystemService: FileSystemService,
+    treeService: TreeServiceInterface,
     fileWatcher: FileWatcher,
     ticketController?: {
       ticketService?: {
@@ -106,7 +106,7 @@ export class ProjectController {
     ticketService?: TicketService, // Optional TicketService for CR operations
   ) {
     this.projectService = projectService
-    this.fileSystemService = fileSystemService
+    this.treeService = treeService
     this.fileWatcher = fileWatcher
     this.projectManager = new ProjectManager(true) // Quiet mode for server
     this.ticketController = ticketController
@@ -322,10 +322,7 @@ export class ProjectController {
         return
       }
 
-      const items = await this.fileSystemService.buildProjectFileSystemTree(
-        projectId,
-        this.projectService.projectDiscovery,
-      )
+      const items = await this.treeService.getPathSelectionTree(projectId)
 
       res.json(items)
     }

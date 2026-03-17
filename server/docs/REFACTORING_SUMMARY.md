@@ -23,7 +23,7 @@ server/
 │   ├── ProjectService.js - Project operations
 │   ├── TicketService.js - Ticket/CR operations
 │   ├── DocumentService.js - Document management
-│   └── FileSystemService.js - File operations
+│   └── TreeService.js - File tree operations
 ├── controllers/ - HTTP request handling
 │   ├── ProjectController.js - Project endpoints
 │   ├── TicketController.js - Ticket/legacy endpoints
@@ -52,7 +52,7 @@ server/
 - `ProjectService.js` - Project CRUD operations
 - `TicketService.js` - Ticket/CR operations
 - `DocumentService.js` - Document discovery and management
-- `FileSystemService.js` - Legacy task file operations
+- `TreeService.js` - File tree operations
 
 ### Phase 3: Create Controller Layer ✅
 - `ProjectController.js` - 12 project-related endpoints
@@ -122,16 +122,14 @@ All endpoints tested and confirmed working:
 - `server/services/ProjectService.js`
 - `server/services/TicketService.js`
 - `server/services/DocumentService.js`
-- `server/services/FileSystemService.js`
+- `server/services/TreeService.js`
 
-### Controllers (3 files)
+### Controllers (2 files)
 - `server/controllers/ProjectController.js`
-- `server/controllers/TicketController.js`
 - `server/controllers/DocumentController.js`
 
-### Routes (6 files)
+### Routes (5 files)
 - `server/routes/projects.js`
-- `server/routes/tickets.js`
 - `server/routes/documents.js`
 - `server/routes/sse.js`
 - `server/routes/system.js`
