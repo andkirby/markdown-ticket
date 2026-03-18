@@ -1,50 +1,19 @@
 /**
  * Test Fixtures for MCP Server Tests
  *
- * This file provides local type definitions and test data to avoid requiring
- * the shared/dist directory to be built during testing. These types match
- * the interfaces from @mdt/shared but are defined locally for test isolation.
+ * Imports canonical types from domain-contracts to prevent type drift.
+ * Only defines local types for test-specific constructs not in domain-contracts.
  */
 
-/**
- * Local Project interface matching @mdt/shared/models/Project
- */
-export interface Project {
-  id: string
-  project: {
-    id: string
-    name: string
-    code?: string
-    path: string
-    configFile: string
-    counterFile?: string
-    startNumber?: number
-    active: boolean
-    description: string
-    repository?: string
-    ticketsPath: string
-  }
-  metadata: {
-    dateRegistered: string
-    lastAccessed: string
-    version: string
-    globalOnly?: boolean
-  }
-  tickets?: {
-    codePattern?: string
-  }
-  document?: {
-    paths?: string[]
-    excludeFolders?: string[]
-    maxDepth?: number
-  }
-  autoDiscovered?: boolean
-  configPath?: string
-  registryFile?: string
-}
+// Re-export canonical types from domain-contracts
+export type { Project } from '@mdt/domain-contracts'
+
+// Import for use in createMockProject
+import type { Project } from '@mdt/domain-contracts'
 
 /**
- * Local Ticket interface matching @mdt/shared/models/Ticket
+ * Local Ticket interface for tests
+ * Matches the runtime Ticket type used by handlers
  */
 export interface Ticket {
   code: string
@@ -69,7 +38,7 @@ export interface Ticket {
 }
 
 /**
- * Local TicketData interface matching @mdt/shared/models/Ticket
+ * Local TicketData interface for test input
  */
 export interface TicketData {
   title: string
@@ -85,7 +54,7 @@ export interface TicketData {
 }
 
 /**
- * Local TicketFilters interface matching @mdt/shared/models/Ticket
+ * Local TicketFilters interface for test queries
  */
 export interface TicketFilters {
   status?: string | string[]
@@ -113,7 +82,7 @@ export interface SectionMatch {
  * Create a mock project for testing
  */
 export function createMockProject(overrides?: Partial<Project>): Project {
-  return {
+  const base: Project = {
     id: 'test-project-id',
     project: {
       id: 'test-project-id',
@@ -124,14 +93,15 @@ export function createMockProject(overrides?: Partial<Project>): Project {
       ticketsPath: 'docs/CRs',
       active: true,
       description: 'Test project for MCP server',
+      repository: 'https://github.com/test/repo.git',
     },
     metadata: {
       dateRegistered: '2024-01-01T00:00:00.000Z',
       lastAccessed: '2024-01-02T00:00:00.000Z',
       version: '1.0.0',
     },
-    ...overrides,
   }
+  return { ...base, ...overrides } as Project
 }
 
 /**
