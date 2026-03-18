@@ -6,7 +6,7 @@ import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { getConfigDir } from '@mdt/shared/utils/constants.js'
 import * as chokidar from 'chokidar'
 
-export interface ProjectPath { id: string; path: string }
+export interface ProjectPath { id: string; path: string; projectRoot?: string; projectCode?: string }
 
 export interface WorktreeWatcherEntry {
   watcherId: string
@@ -16,6 +16,22 @@ export interface WorktreeWatcherEntry {
   watcher: chokidar.FSWatcher
 }
 
+/** Subdocument metadata extracted from file path */
+export interface SubdocumentInfo {
+  code: string // e.g., "architecture", "bdd", "tests"
+  filePath: string // e.g., "MDT-142/architecture.md"
+}
+
+/** Extended file-change event with subdocument metadata (MDT-142) */
+export interface FileChangeEventPayload {
+  eventType: 'add' | 'change' | 'unlink'
+  filename: string
+  projectId: string
+  timestamp: number
+  subdocument: SubdocumentInfo | null
+  source: 'main' | 'worktree'
+}
+
 const OPTS = { ignoreInitial: true, persistent: true, awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 100 } }
 
 export class PathWatcherService extends EventEmitter {
@@ -23,15 +39,35 @@ export class PathWatcherService extends EventEmitter {
   private worktreeWatchers = new Map<string, WorktreeWatcherEntry>()
   private watchPaths = new Map<string, string>()
   private worktreeService = new WorktreeService({ enabled: true })
+  /** Active worktree ticket codes to exclude from main watcher (MDT-142 C2) */
+  private activeWorktreeExclusions = new Set<string>()
+  /** MDT-142: Map project root -> { projectId, projectCode } for worktree HEAD monitoring */
+  private projectRegistry = new Map<string, { projectId: string; projectCode: string }>()
 
   initMultiProjectWatcher(projectPaths: ProjectPath[]): this {
     for (const p of projectPaths) {
       if (this.watchers.has(p.id)) continue
-      this.watchPaths.set(p.id, p.path)
-      this.createWatcher(p.id, p.path, w => {
-        w.on('add', fp => this.handleFileEvent('add', fp, p.id))
-          .on('change', fp => this.handleFileEvent('change', fp, p.id))
-          .on('unlink', fp => this.handleFileEvent('unlink', fp, p.id))
+      // MDT-142 C1: Use recursive pattern to capture nested subdocuments
+      let recursivePath = p.path
+      if (!p.path.includes('**')) {
+        if (p.path.endsWith('*.md')) {
+          // Replace single-level *.md with recursive **/*.md
+          recursivePath = p.path.replace(/\/?\*\.md$/, '/**/*.md')
+        }
+        else if (p.path.endsWith('.md')) {
+          // Specific file - keep as is
+          recursivePath = p.path
+        }
+        else {
+          // Directory - append recursive pattern
+          recursivePath = p.path.replace(/\/$/, '') + '/**/*.md'
+        }
+      }
+      this.watchPaths.set(p.id, recursivePath)
+      this.createWatcher(p.id, recursivePath, w => {
+        w.on('add', fp => this.handleFileEvent('add', fp, p.id, 'main'))
+          .on('change', fp => this.handleFileEvent('change', fp, p.id, 'main'))
+          .on('unlink', fp => this.handleFileEvent('unlink', fp, p.id, 'main'))
           .on('error', e => this.emit('error', { error: e, projectId: p.id }))
           .on('ready', () => this.emit('ready', { projectId: p.id }))
         this.watchers.set(p.id, w)
@@ -53,17 +89,156 @@ export class PathWatcherService extends EventEmitter {
     })
   }
 
+  /**
+   * MDT-142: Auto-discover worktrees for a project and create watchers.
+   * Call this after initMultiProjectWatcher() to set up worktree watchers.
+   */
+  async initWorktreeWatchers(projectId: string, projectPath: string, projectCode?: string): Promise<number> {
+    let count = 0
+    const code = projectCode || projectId.toUpperCase()
+
+    // Register project for HEAD monitoring
+    this.projectRegistry.set(projectPath, { projectId, projectCode: code })
+
+    console.warn(`[Worktree] Checking ${projectId} at ${projectPath} (code: ${code})`)
+    try {
+      const worktrees = await this.worktreeService.detect(projectPath, code)
+      console.warn(`[Worktree] Found ${worktrees.size} worktrees for ${projectId}:`, Object.fromEntries(worktrees))
+      for (const [ticketCode, worktreePath] of worktrees) {
+        const result = this.addWatcher(projectId, ticketCode, worktreePath)
+        if (result) {
+          console.warn(`[Worktree] Created watcher for ${ticketCode} at ${worktreePath}`)
+          count++
+        }
+      }
+
+      // MDT-142 C3: Watch .git/worktrees for runtime worktree detection
+      this.initWorktreeHeadWatcher(projectPath, projectId, code)
+    }
+    catch (e) {
+      console.warn(`[Worktree] Failed to detect worktrees for ${projectId}:`, e)
+    }
+    return count
+  }
+
+  /**
+   * MDT-142 C3: Watch .git/worktrees star dir HEAD for worktree add/remove detection.
+   * When a HEAD file appears, a new worktree was created.
+   * When a HEAD file disappears, a worktree was removed.
+   */
+  initWorktreeHeadWatcher(projectPath: string, projectId: string, projectCode: string): void {
+    const worktreesDir = path.join(projectPath, '.git', 'worktrees')
+    if (!fs.existsSync(worktreesDir)) {
+      console.warn(`[Worktree] No .git/worktrees directory for ${projectId}`)
+      return
+    }
+
+    const watcherId = `${projectId}__worktree_heads`
+    if (this.watchers.has(watcherId)) return
+
+    const headPattern = path.join(worktreesDir, '*', 'HEAD')
+    console.warn(`[Worktree] Watching ${worktreesDir}/*/HEAD for ${projectId}`)
+
+    this.createWatcher(watcherId, headPattern, w => {
+      w.on('add', (fp: string) => this.handleWorktreeHeadEvent('add', fp, projectId, projectCode, projectPath))
+        .on('unlink', (fp: string) => this.handleWorktreeHeadEvent('unlink', fp, projectId, projectCode, projectPath))
+        .on('error', (e: Error) => console.error(`[Worktree] HEAD watcher error for ${projectId}:`, e))
+      this.watchers.set(watcherId, w)
+    })
+  }
+
+  /**
+   * MDT-142 C3: Handle worktree HEAD file changes.
+   * Extract ticket code from branch name and create/remove worktree watcher.
+   */
+  private handleWorktreeHeadEvent(
+    event: 'add' | 'unlink',
+    headPath: string,
+    projectId: string,
+    projectCode: string,
+    projectPath: string,
+  ): void {
+    // HEAD path: /path/to/project/.git/worktrees/worktree-name/HEAD
+    // Extract worktree name from path
+    const parts = headPath.split(path.sep)
+    const worktreesIdx = parts.lastIndexOf('worktrees')
+    if (worktreesIdx === -1) return
+
+    const worktreeName = parts[worktreesIdx + 1]
+    if (!worktreeName) return
+
+    if (event === 'add') {
+      // New worktree created - read HEAD to get branch name and extract ticket code
+      try {
+        const headContent = fs.readFileSync(headPath, 'utf8').trim()
+        // HEAD contains: "ref: refs/heads/MDT-142-some-feature" or a commit hash
+        const branchMatch = headContent.match(/refs\/heads\/([A-Z]+-\d+)/)
+        if (branchMatch) {
+          const ticketCode = branchMatch[1]
+          // Derive worktree path from the worktree name
+          // The worktree directory is typically at projectRoot/../worktree-name or similar
+          // We need to find the actual worktree path
+          const gitPath = path.join(projectPath, '.git', 'worktrees', worktreeName, 'gitdir')
+          if (fs.existsSync(gitPath)) {
+            // gitdir file contains path to .git in worktree, e.g., /path/to/worktree/.git
+            const gitdirContent = fs.readFileSync(gitPath, 'utf8').trim()
+            const worktreeGitDir = path.dirname(gitdirContent)
+            const worktreePath = path.dirname(worktreeGitDir)
+
+            console.warn(`[Worktree] Detected new worktree ${ticketCode} at ${worktreePath}`)
+            this.addWatcher(projectId, ticketCode, worktreePath)
+            this.emit('worktree-added', { projectId, ticketCode, worktreePath })
+          }
+          else {
+            // Fallback: try to find worktree by searching common locations
+            console.warn(`[Worktree] Could not find gitdir for ${worktreeName}, trying detection...`)
+            this.worktreeService.detect(projectPath, projectCode).then(worktrees => {
+              const worktreePath = worktrees.get(ticketCode)
+              if (worktreePath) {
+                console.warn(`[Worktree] Found worktree ${ticketCode} at ${worktreePath}`)
+                this.addWatcher(projectId, ticketCode, worktreePath)
+                this.emit('worktree-added', { projectId, ticketCode, worktreePath })
+              }
+            }).catch(e => console.warn(`[Worktree] Failed to detect worktree:`, e))
+          }
+        }
+      }
+      catch (e) {
+        console.warn(`[Worktree] Failed to read HEAD file ${headPath}:`, e)
+      }
+    }
+    else if (event === 'unlink') {
+      // Worktree removed - find and close the watcher
+      // We need to match by worktree name pattern
+      const watcherToRemove = Array.from(this.worktreeWatchers.entries())
+        .find(([wid, entry]) => wid.includes(worktreeName))
+
+      if (watcherToRemove) {
+        const [wid, entry] = watcherToRemove
+        console.warn(`[Worktree] Detected removed worktree ${entry.ticketCode}`)
+        this.removeWorktreeWatcher(projectId, entry.ticketCode)
+          .then(() => this.emit('worktree-removed', { projectId, ticketCode: entry.ticketCode }))
+          .catch(e => console.warn(`[Worktree] Failed to remove watcher:`, e))
+      }
+    }
+  }
+
   addWatcher(pid: string, tc: string, wp: string): string | null {
     const wid = `${pid}__worktree__${tc}`
     if (this.worktreeWatchers.has(wid)) return wid
     try {
-      const w = chokidar.watch(path.join(wp, '*.md'), OPTS)
-        .on('add', fp => this.handleFileEvent('add', fp, pid))
-        .on('change', fp => this.handleFileEvent('change', fp, pid))
-        .on('unlink', fp => this.handleFileEvent('unlink', fp, pid))
+      // MDT-142 C2: Track active worktree for exclusion from main watcher
+      this.activeWorktreeExclusions.add(tc)
+
+      // MDT-142 C1: Use recursive pattern for worktree watcher too
+      const recursivePath = path.join(wp, '**/*.md')
+      const w = chokidar.watch(recursivePath, OPTS)
+        .on('add', fp => this.handleFileEvent('add', fp, pid, 'worktree'))
+        .on('change', fp => this.handleFileEvent('change', fp, pid, 'worktree'))
+        .on('unlink', fp => this.handleFileEvent('unlink', fp, pid, 'worktree'))
         .on('error', e => this.emit('worktree-error', { error: e, projectId: pid, ticketCode: tc }))
         .on('ready', () => this.emit('worktree-ready', { projectId: pid, ticketCode: tc, watcherId: wid }))
-      this.worktreeWatchers.set(wid, { watcherId: wid, projectId: pid, ticketCode: tc, watchPath: path.join(wp, '*.md'), watcher: w })
+      this.worktreeWatchers.set(wid, { watcherId: wid, projectId: pid, ticketCode: tc, watchPath: recursivePath, watcher: w })
       return wid
     }
     catch (e) {
@@ -80,10 +255,13 @@ export class PathWatcherService extends EventEmitter {
     try {
       await entry.watcher.close()
       this.worktreeWatchers.delete(wid)
+      // MDT-142 C2: Remove from exclusion set
+      this.activeWorktreeExclusions.delete(tc)
     }
     catch (e) {
       console.error(`Error closing worktree watcher ${wid}:`, e)
       this.worktreeWatchers.delete(wid)
+      this.activeWorktreeExclusions.delete(tc)
     }
   }
 
@@ -115,20 +293,93 @@ export class PathWatcherService extends EventEmitter {
     this.emit('registry-change', { type: etm[et], data: { projectId: pid, timestamp: now, eventId: eid, source: 'file_watcher' } })
   }
 
-  private handleFileEvent(et: string, fp: string, pid: string): void {
+  /**
+   * Parse subdocument info from file path (MDT-142)
+   * Examples:
+   *   "docs/CRs/MDT-142/architecture.md" -> { code: "architecture", filePath: "MDT-142/architecture.md" }
+   *   "docs/CRs/MDT-142/prep/architecture.md" -> { code: "prep/architecture", filePath: "MDT-142/prep/architecture.md" }
+   *   "docs/CRs/MDT-142.md" -> null (main ticket file)
+   */
+  private parseSubdocumentInfo(fp: string): { ticketCode: string; subdocument: SubdocumentInfo | null } | null {
+    const parts = fp.split('/')
+    const fn = parts[parts.length - 1]
+
+    // Search backwards to find ticket folder (e.g., MDT-142)
+    for (let i = parts.length - 2; i >= 0; i--) {
+      const dir = parts[i]
+      const ticketMatch = dir.match(/^([A-Z]+-\d+)$/)
+      if (ticketMatch) {
+        const ticketCode = ticketMatch[1]
+        // Extract subdocument code from filename
+        const codeMatch = fn.match(/^(.+)\.md$/)
+        if (codeMatch && codeMatch[1] !== ticketCode) {
+          // Build relative path from ticket folder to file
+          // e.g., for "docs/CRs/MDT-142/prep/architecture.md" -> "prep/architecture"
+          const relativePath = parts.slice(i + 1).join('/')
+          return {
+            ticketCode,
+            subdocument: {
+              code: relativePath.replace(/\.md$/, ''), // "prep/architecture"
+              filePath: `${ticketCode}/${relativePath}`, // "MDT-142/prep/architecture.md"
+            },
+          }
+        }
+        // Main ticket file inside folder (MDT-142/MDT-142.md) - treat as main file
+        return { ticketCode, subdocument: null }
+      }
+    }
+
+    // Check if this is a slug file (e.g., MDT-142-some-title.md)
+    const slugMatch = fn?.match(/^([A-Z]+-\d+)(?:-.+)?\.md$/)
+    if (slugMatch) {
+      return { ticketCode: slugMatch[1], subdocument: null }
+    }
+
+    return null
+  }
+
+  private handleFileEvent(et: string, fp: string, pid: string, source: 'main' | 'worktree'): void {
     const fn = fp.split('/').pop()
     if (!fn?.endsWith('.md')) return
-    const parts = fp.split('/')
-    const pd = parts.length >= 2 ? parts[parts.length - 2] : ''
-    const isSub = /^[A-Z]+-\d+$/.test(pd)
-    const efn = isSub ? `${pd}.md` : fn
-    const eet = isSub ? 'change' : et
-    this.emit('file-change', { eventType: eet, filename: efn, projectId: pid, timestamp: Date.now() })
+
+    // MDT-142: Parse subdocument info
+    const parsed = this.parseSubdocumentInfo(fp)
+    if (!parsed) return // Not a ticket file
+
+    const { ticketCode, subdocument } = parsed
+
+    // MDT-142 C2: Worktree exclusion - skip if this ticket has an active worktree watcher
+    // and the event is coming from the main watcher
+    if (source === 'main' && this.activeWorktreeExclusions.has(ticketCode)) {
+      // Skip this event - the worktree watcher will emit it
+      return
+    }
+
+    // Determine the filename to emit
+    // For subdocuments, emit the full relative path (e.g., "MDT-142/architecture.md")
+    // For main files, emit the ticket filename (e.g., "MDT-142.md")
+    const emitFilename = subdocument ? subdocument.filePath : `${ticketCode}.md`
+
+    // MDT-142: Preserve eventType for subdocuments (don't coalesce 'add' to 'change')
+    const eventType = et as 'add' | 'change' | 'unlink'
+
+    const payload: FileChangeEventPayload = {
+      eventType,
+      filename: emitFilename,
+      projectId: pid,
+      timestamp: Date.now(),
+      subdocument,
+      source,
+    }
+
+    this.emit('file-change', payload)
   }
 
   private createWatcher(id: string, wp: string, init: (w: chokidar.FSWatcher) => void): void {
     try {
-      init(chokidar.watch(wp, OPTS))
+      const w = chokidar.watch(wp, OPTS)
+      init(w)
+      this.watchers.set(id, w)
     }
     catch (e) {
       console.error(`Failed to create watcher for ${id}:`, e)

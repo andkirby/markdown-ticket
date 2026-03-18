@@ -9,6 +9,11 @@
     "module": "ES2020",
     "moduleResolution": "bundler",
     "paths": {
+      "@mdt/shared/test-lib": ["../shared/test-lib/index.ts"],
+      "@mdt/shared/test-lib/utils/git-helper": ["../shared/test-lib/utils/git-helper.ts"],
+      "@mdt/shared/test-lib/utils/git-helper.js": ["../shared/test-lib/utils/git-helper.ts"],
+      "@mdt/shared/test-lib/*": ["../shared/test-lib/*"],
+      "@mdt/shared/services/WorktreeService.js": ["../shared/services/WorktreeService.ts"],
       "@mdt/shared/*": ["../shared/dist/*"]
     },
     "resolveJsonModule": true,
