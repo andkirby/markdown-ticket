@@ -149,22 +149,13 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
     sseEvents.selectedProjectRef.current = selectedProjectValue
   }, [selectedProjectValue, sseEvents])
 
-  // Fetch project configuration
+  // Fetch project configuration (MDT-133: uses dataLayer for deduplication)
   const fetchProjectConfig = useCallback(async (project: Project): Promise<void> => {
     if (!project)
       return
 
     try {
-      const response = await fetch(`/api/projects/${project.id}/config`)
-      if (!response.ok) {
-        if (response.status === 404) {
-          setProjectConfig(null)
-          return
-        }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const config = await response.json()
+      const config = await dataLayer.fetchProjectConfig(project.id)
       setProjectConfig(config)
     }
     catch (error) {

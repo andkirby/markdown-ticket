@@ -1,6 +1,6 @@
 ---
 code: MDT-133
-status: Proposed
+status: Implemented
 dateCreated: 2026-03-08T21:24:33.730Z
 type: Technical Debt
 priority: Medium
@@ -88,8 +88,47 @@ class DataLayer {
 
 ## 5. Acceptance Criteria
 
-- [ ] Switching projects makes exactly 1 call to `/api/projects/{id}/crs`
-- [ ] Switching projects makes exactly 1 call to `/api/projects/{id}/config`
-- [ ] All existing E2E tests pass
-- [ ] Unit test added for request deduplication
-- [ ] Debug logging added during investigation is removed or made conditional
+- [x] Switching projects makes exactly 1 call to `/api/projects/{id}/crs`
+- [x] Switching projects makes exactly 1 call to `/api/projects/{id}/config`
+- [x] All existing E2E tests pass
+- [x] Unit test added for request deduplication
+- [x] Debug logging added during investigation is removed or made conditional
+
+## 6. Implementation Summary
+
+**Completed:** 2026-03-18
+
+### Changes Made
+
+1. **`src/services/dataLayer.ts`**
+   - Added `pendingRequests` Map to track in-flight requests
+   - Added `dedupe<T>()` helper method that shares Promises across concurrent callers
+   - Wrapped `fetchTickets()` and `fetchProjectConfig()` with deduplication
+
+2. **`src/hooks/useProjectManager.ts`**
+   - Updated `fetchProjectConfig` to use `dataLayer.fetchProjectConfig()` instead of raw `fetch()`
+
+3. **`src/services/dataLayer.dedupe.test.ts`**
+   - Added unit tests for deduplication behavior (10 tests, all passing)
+
+### Verification
+
+**Unit Tests:** 10/10 pass (C1, C2, C3 coverage)
+
+**Browser Verification** (via playwright-cli):
+
+| State | `/crs` calls | `/config` calls |
+|-------|--------------|-----------------|
+| Before fix | 2x ❌ | 2x ❌ |
+| After fix | 1x ✅ | 1x ✅ |
+
+Project switching also verified: switching from MDT → SUML → MDT results in exactly 1 call per endpoint for each project.
+
+## 7. References
+
+> Architecture trace projection: [architecture.trace.md](./MDT-133/architecture.trace.md)
+> Architecture notes: [architecture.md](./MDT-133/architecture.md)
+> Assessment: [assess.md](./MDT-133/assess.md)
+> Test plan: [tests.trace.md](./MDT-133/tests.trace.md)
+> Tasks trace: [tasks.trace.md](./MDT-133/tasks.trace.md)
+> Tasks: [tasks.md](./MDT-133/tasks.md)

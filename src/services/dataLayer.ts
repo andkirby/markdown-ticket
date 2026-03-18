@@ -34,6 +34,36 @@ type ApiTicketItem = Partial<Omit<Ticket, 'dateCreated' | 'lastModified' | 'impl
  */
 class DataLayer {
   private baseUrl = '/api'
+  /**
+   * MDT-133: Request deduplication map.
+   * Tracks in-flight requests to prevent duplicate API calls
+   * when multiple concurrent requests are made for the same resource.
+   */
+  private pendingRequests = new Map<string, Promise<unknown>>()
+
+  /**
+   * MDT-133: Deduplicate concurrent requests for the same resource.
+   *
+   * If a request for the same key is already in flight, returns the
+   * existing Promise. Otherwise, creates a new request and stores it
+   * until it settles (success or failure).
+   *
+   * @param key - Unique identifier for the request (e.g., "tickets-MDT")
+   * @param fetcher - Function that performs the actual fetch
+   * @returns Promise that resolves to the fetch result
+   */
+  private async dedupe<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+    if (this.pendingRequests.has(key)) {
+      return this.pendingRequests.get(key) as Promise<T>
+    }
+
+    const promise = fetcher().finally(() => {
+      this.pendingRequests.delete(key)
+    })
+
+    this.pendingRequests.set(key, promise)
+    return promise
+  }
 
   /**
    * Fetch all projects
@@ -58,52 +88,58 @@ class DataLayer {
 
   /**
    * Fetch project configuration
+   * MDT-133: Deduplicated to prevent duplicate concurrent requests
    */
   async fetchProjectConfig(projectId: string): Promise<ProjectConfig | null> {
-    try {
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/config`)
+    return this.dedupe(`config-${projectId}`, async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/projects/${projectId}/config`)
 
-      if (!response.ok) {
-        if (response.status === 404) {
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`Failed to fetch project config: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+
+        return data.config
+      }
+      catch (error) {
+        console.error(`[DataLayer] ❌ Error fetching project config:`, error)
+        // Only return null for 404s, throw for real errors
+        if (error instanceof Error && error.message.includes('404')) {
           return null
         }
-        throw new Error(`Failed to fetch project config: ${response.statusText}`)
+        throw error
       }
-
-      const data = await response.json()
-
-      return data.config
-    }
-    catch (error) {
-      console.error(`[DataLayer] ❌ Error fetching project config:`, error)
-      // Only return null for 404s, throw for real errors
-      if (error instanceof Error && error.message.includes('404')) {
-        return null
-      }
-      throw error
-    }
+    })
   }
 
   /**
    * Fetch tickets for a specific project
+   * MDT-133: Deduplicated to prevent duplicate concurrent requests
    */
   async fetchTickets(projectId: string): Promise<Ticket[]> {
-    try {
-      const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`)
+    return this.dedupe(`tickets-${projectId}`, async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/projects/${projectId}/crs`)
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch tickets: ${response.statusText}`)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch tickets: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        const tickets = this.normalizeTickets(data)
+
+        return tickets
       }
-
-      const data = await response.json()
-      const tickets = this.normalizeTickets(data)
-
-      return tickets
-    }
-    catch (error) {
-      console.error(`[DataLayer] ❌ Error fetching tickets:`, error)
-      throw error
-    }
+      catch (error) {
+        console.error(`[DataLayer] ❌ Error fetching tickets:`, error)
+        throw error
+      }
+    })
   }
 
   /**
@@ -297,3 +333,4 @@ class DataLayer {
 export const dataLayer = new DataLayer()
 
 // Export class for testing
+export { DataLayer }
