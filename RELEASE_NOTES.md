@@ -1,5 +1,47 @@
 # Release Notes
 
+## v0.13.0 (2026-03-18)
+
+### 🎉 New Features
+
+**Dot-Notation Namespace System (MDT-138)**
+- **Filename-Based Grouping**: Organize related documents using dot notation without creating folders
+- **Example**: `architecture.md` + `architecture.api.md` + `architecture.testing.md` shows as grouped tabs
+- **Mixed Approach**: Combine folder-based and dot-notation systems in the same project
+- **Nested Dots Preserved**: `a.b.c.md` becomes `[a >] [b.c]` (first segment = namespace)
+
+### 🐛 Bug Fixes
+
+**Document Configuration (MDT-109, MDT-140)**
+- **Path Parsing**: Fixed `project.document.paths` configuration not being read correctly
+- **maxDepth Respected**: Document tree depth now honors `project.document.maxDepth` setting
+- **No More Silent Failures**: Configuration values are now properly applied instead of being ignored
+
+**Real-Time Updates (MDT-142)**
+- **Subdocument SSE Events**: Changes to `docs/CRs/MDT-XXX/*.md` files now trigger targeted UI updates
+- **Worktree Support**: Subdocument changes in git worktrees emit events with proper source attribution
+- **No Duplicate Events**: Fixed duplicate SSE events when files exist in both main and worktree
+
+### 🚀 Improvements
+
+**Git Worktree Infrastructure (MDT-096)**
+- **Multi-Path Watching**: FileWatcherService can now monitor multiple directory paths simultaneously
+- **Worktree-Aware Events**: SSE events correctly identify which path (main or worktree) triggered changes
+- **Cleaner Architecture**: Decomposed file watching into focused modules for better maintainability
+
+**TOML Configuration (MDT-098)**
+- **Full Read/Write Support**: New `smol-toml` library supports both parsing and stringifying
+- **Preserve Comments**: Configuration edits maintain file structure and comments
+- **Single Library**: Consolidated from multiple TOML implementations to one
+
+**Code Quality**
+- **Mermaid Module Refactored (MDT-139)**: Extracted magic numbers to constants, reduced complexity
+- **Legacy Code Removed (MDT-141)**: Deleted unused FileSystemService and legacy ticket routes
+- **Badge Styling Unified (MDT-135)**: Consistent badge appearance across all views
+- **Domain Contracts Package (MDT-101)**: Zod schema validation package for shared type safety (in progress)
+
+---
+
 ## v0.12.2 (2026-03-10)
 
 ### 🎉 New Features
