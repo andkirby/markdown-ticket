@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-133"
+  },
+  "requirements": [
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The dataLayer deduplication mechanism shall return the same Promise for concurrent identical requests and clean up after resolution",
+      "sourceRef": "CR Section 4: Implementation Specification",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "WHEN multiple concurrent requests are made to fetch tickets for the same project, the system shall issue exactly one HTTP request to /api/projects/{id}/crs",
+      "sourceRef": "CR Section 5: AC1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "WHEN multiple concurrent requests are made to fetch config for the same project, the system shall issue exactly one HTTP request to /api/projects/{id}/config",
+      "sourceRef": "CR Section 5: AC2",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [],
+  "obligations": [
+    {
+      "id": "OBL-dedupe-pattern",
+      "title": "Implement request deduplication in dataLayer using pendingRequests Map",
+      "derivedFrom": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-datalayer"
+      ],
+      "sourceRef": "CR Section 4: Implementation Specification"
+    },
+    {
+      "id": "OBL-dedupe-test",
+      "title": "Add unit test verifying deduplication behavior for concurrent requests",
+      "derivedFrom": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-datalayer-dedupe-test"
+      ],
+      "sourceRef": "CR Section 5: AC4"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-datalayer",
+      "path": "src/services/dataLayer.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4: Implementation Specification"
+    },
+    {
+      "id": "ART-datalayer-dedupe-test",
+      "path": "src/services/dataLayer.dedupe.test.ts",
+      "kind": "test",
+      "sourceRef": "CR Section 5: Acceptance Criteria"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-dedupe-cleanup",
+      "kind": "unit",
+      "title": "Verify pending request cleanup after resolution",
+      "covers": [
+        "C3"
+      ],
+      "file": "src/services/dataLayer.dedupe.test.ts",
+      "sourceRef": "architecture.md: C3"
+    },
+    {
+      "id": "TEST-e2e-project-switch",
+      "kind": "e2e",
+      "title": "E2E: Project switching triggers correct API calls",
+      "covers": [
+        "C1",
+        "C2"
+      ],
+      "file": "tests/e2e/project/management.spec.ts",
+      "sourceRef": "Existing E2E: switch projects via selector"
+    },
+    {
+      "id": "TEST-dedupe-concurrent-config",
+      "kind": "unit",
+      "title": "Verify concurrent fetchProjectConfig calls result in single HTTP request",
+      "covers": [
+        "C2",
+        "C3"
+      ],
+      "file": "src/services/dataLayer.dedupe.test.ts",
+      "sourceRef": "architecture.md: C2, C3"
+    },
+    {
+      "id": "TEST-dedupe-concurrent-tickets",
+      "kind": "unit",
+      "title": "Verify concurrent fetchTickets calls result in single HTTP request",
+      "covers": [
+        "C1",
+        "C3"
+      ],
+      "file": "src/services/dataLayer.dedupe.test.ts",
+      "sourceRef": "architecture.md: C1, C3"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Implement request deduplication in dataLayer",
+      "ownsArtifactIds": [
+        "ART-datalayer",
+        "ART-datalayer-dedupe-test"
+      ],
+      "makesGreenIds": [
+        "TEST-dedupe-concurrent-tickets",
+        "TEST-dedupe-concurrent-config",
+        "TEST-dedupe-cleanup",
+        "TEST-e2e-project-switch"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    }
+  ]
+}
