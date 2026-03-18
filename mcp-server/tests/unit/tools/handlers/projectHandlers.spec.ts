@@ -34,6 +34,7 @@ describe('ProjectHandlers - resolveProject', () => {
           configFile: '/test/path1/.mdt-config.toml',
           active: true,
           description: 'A test project',
+          repository: 'https://github.com/test/repo1.git',
           ticketsPath: 'docs/CRs',
         },
         metadata: {
@@ -52,6 +53,7 @@ describe('ProjectHandlers - resolveProject', () => {
           configFile: '/test/path2/.mdt-config.toml',
           active: true,
           description: 'An API test project',
+          repository: 'https://github.com/test/repo2.git',
           ticketsPath: 'docs/CRs',
         },
         metadata: {
