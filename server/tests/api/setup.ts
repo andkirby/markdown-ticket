@@ -33,6 +33,7 @@ interface TestContext {
   tempDir: string
   configDir: string
   app: Express
+  fileWatcher: FileWatcherService
   /**
    * TestEnvironment from shared/test-lib.
    */
@@ -78,13 +79,17 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     cachedFileWatcher = testApp.fileWatcher
   }
 
+  if (!cachedFileWatcher) {
+    throw new Error('Test file watcher was not initialized')
+  }
+
   const { TestEnvironment, ProjectFactory } = await import('@mdt/shared/test-lib')
   const testEnv = new TestEnvironment()
 
   await testEnv.setup()
   const projectFactory = new ProjectFactory(testEnv)
 
-  return { tempDir, configDir, app, testEnv, projectFactory }
+  return { tempDir, configDir, app, fileWatcher: cachedFileWatcher, testEnv, projectFactory }
 }
 
 /** Cleanup test environment after tests complete */

@@ -25,10 +25,12 @@ export default {
     // Add domain-contracts mapping
     '^@mdt/domain-contracts$': '<rootDir>/../domain-contracts/src/index.ts',
     '^@mdt/domain-contracts/(.*)$': '<rootDir>/../domain-contracts/src/$1',
+    '^@mdt/shared/services/WorktreeService\\.js$': '<rootDir>/../shared/services/WorktreeService.ts',
     // Use real shared ticket-subdocument services during server tests
     '^@mdt/shared/services/ticket/(.*)\\.js$': '<rootDir>/../shared/services/ticket/$1',
     '^@mdt/shared/services/ticket/(.*)$': '<rootDir>/../shared/services/ticket/$1',
     // Map shared modules to mocks, but exclude test-lib (uses real implementation from TypeScript source)
+    '^@mdt/shared/test-lib$': '<rootDir>/../shared/test-lib/index.ts',
     '^@mdt/shared/test-lib/(.*)$': '<rootDir>/../shared/test-lib/$1',
     // Map shared modules to mocks, removing .js extension
     '^@mdt/shared/(.*)\\.js$': '<rootDir>/tests/mocks/shared/$1',

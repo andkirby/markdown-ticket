@@ -122,6 +122,16 @@ export {
   spawnProcess,
 } from './utils/process-helper.js'
 
+export {
+  commitAllChanges,
+  createGitWorktree,
+  getCurrentGitBranch,
+  initGitRepository,
+  runGitCommand,
+  type CreateGitWorktreeInput,
+  type GitCommandResult,
+} from './utils/git-helper.js'
+
 // Retry helper
 export {
   RetryError,

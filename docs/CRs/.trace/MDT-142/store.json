@@ -1,0 +1,480 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-142"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a file exists in both main project and an active worktree, the system shall emit exactly one SSE event for that file change",
+      "sourceRef": "CR Section 3 - Solution Analysis, Worktree Exclusion",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN the frontend receives an SSE event with subdocument metadata, the system shall emit ticket:subdocument:changed to enable targeted UI updates without full ticket refresh",
+      "sourceRef": "CR Section 4.6 - Frontend Event Mapping",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The main project file watcher shall use recursive pattern docs/CRs/**/*.md to capture subdocument changes",
+      "sourceRef": "CR Section 4.2 - Watcher Pattern Changes",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The main project watcher shall exclude active worktree ticket paths (docs/CRs/MDT-XXX/*.md and docs/CRs/MDT-XXX-*.md) to prevent duplicate events",
+      "sourceRef": "CR Section 4.3 - Worktree Exclusion Rules",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall monitor .git/worktrees/{worktreeName}/HEAD files for changes to trigger watcher reconfiguration",
+      "sourceRef": "CR Section 4.5 - Worktree Monitoring",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Main ticket file changes shall emit ticket:updated event as before with no breaking changes to existing SSE event consumers",
+      "sourceRef": "CR Section 5 AC5 - Backward Compatibility",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "WHEN a subdocument is created or deleted (not just modified), the system shall emit SSE events with the appropriate eventType (add/unlink) and subdocument metadata",
+      "sourceRef": "CR Section 4.1 - SSE Event Structure",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN a worktree is added or removed, the system shall automatically detect the change and reconfigure file watchers",
+      "sourceRef": "CR Section 4.5 - Worktree Monitoring",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "WHEN a worktree is removed while watchers are active, the system shall clean up the worktree watcher and remove exclusions from main watcher",
+      "sourceRef": "CR Section 4.5 - Worktree Monitoring",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a subdocument file changes (in main project or worktree), the system shall emit an SSE event containing the subdocument code, file path, and source indicator",
+      "sourceRef": "CR Section 4.1 - SSE Event Structure",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "worktree_add_auto_detects",
+      "title": "Worktree addition auto-detects and reconfigures watchers",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "I have a main project with file watching active",
+      "when": "a new worktree is created for a ticket",
+      "then": "changes made in the worktree are reflected in the main project UI in real-time",
+      "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "no_duplicate_events_worktree",
+      "title": "No duplicate events when file exists in both main and worktree",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "a ticket file exists in both main project and an active worktree",
+      "when": "the file is modified in either location",
+      "then": "the UI receives exactly one update event (not two)",
+      "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "subdocument_sse_event_main_project",
+      "title": "Subdocument change in main project triggers SSE event",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4"
+      ],
+      "given": "I am viewing a ticket with subdocuments in the main project",
+      "when": "a subdocument file is modified in the main project ticket folder",
+      "then": "the SSE event contains the subdocument code, file path, and source='main'",
+      "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "subdocument_sse_event_worktree",
+      "title": "Subdocument change in worktree triggers SSE event",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.2"
+      ],
+      "given": "I have an active worktree for a ticket with subdocuments",
+      "when": "a subdocument file is modified in the worktree ticket folder",
+      "then": "the SSE event contains the subdocument code, file path, and source='worktree'",
+      "sourceRef": "CR:MDT-142"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-recursive-watch-pattern",
+      "title": "Main watcher uses recursive pattern to capture subdocuments",
+      "derivedFrom": [
+        "BR-1.1",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-path-watcher-service"
+      ],
+      "sourceRef": "CR Section 4.2 - Watcher Pattern Changes"
+    },
+    {
+      "id": "OBL-worktree-exclusion",
+      "title": "Main watcher excludes active worktree paths to prevent duplicate events",
+      "derivedFrom": [
+        "BR-1.3",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-path-watcher-service"
+      ],
+      "sourceRef": "CR Section 4.3 - Worktree Exclusion Rules"
+    },
+    {
+      "id": "OBL-worktree-auto-discovery",
+      "title": "System monitors .git/worktrees/*/HEAD to auto-detect worktree changes",
+      "derivedFrom": [
+        "BR-1.2",
+        "C3",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-path-watcher-service"
+      ],
+      "sourceRef": "CR Section 4.5 - Worktree Monitoring"
+    },
+    {
+      "id": "OBL-subdocument-event-structure",
+      "title": "SSE events include subdocument metadata and source indicator",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.4",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-sse-broadcaster"
+      ],
+      "sourceRef": "CR Section 4.1 - SSE Event Structure"
+    },
+    {
+      "id": "OBL-frontend-event-mapping",
+      "title": "Frontend maps SSE events to ticket:subdocument:changed or ticket:updated",
+      "derivedFrom": [
+        "BR-1.4",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-event-bus",
+        "ART-use-sse-events"
+      ],
+      "sourceRef": "CR Section 4.6 - Frontend Event Mapping"
+    },
+    {
+      "id": "OBL-subdocument-content-refresh",
+      "title": "Handle ticket:subdocument:changed with 5 cases: change(viewing=refetch, not=invalidate), add(unlink=refetch ticket, viewing=switch to main)",
+      "derivedFrom": [
+        "BR-1.4",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer",
+        "ART-use-sse-events"
+      ],
+      "sourceRef": "CR Section 4.6 - Frontend Event Mapping"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-path-watcher-service",
+      "path": "server/services/fileWatcher/PathWatcherService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4.2-4.5"
+    },
+    {
+      "id": "ART-sse-broadcaster",
+      "path": "server/services/fileWatcher/SSEBroadcaster.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4.1 - SSE Event Structure"
+    },
+    {
+      "id": "ART-event-bus",
+      "path": "src/services/eventBus.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4.6 - Frontend Event Mapping"
+    },
+    {
+      "id": "ART-use-sse-events",
+      "path": "src/hooks/useSSEEvents.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4.6 - Frontend Event Mapping"
+    },
+    {
+      "id": "ART-ticket-viewer",
+      "path": "src/components/TicketViewer/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4.6 - Frontend Event Mapping"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-path-watcher-exclusion",
+      "kind": "unit",
+      "title": "PathWatcherService excludes active worktree paths to prevent duplicate events",
+      "covers": [
+        "BR-1.3",
+        "C2"
+      ],
+      "file": "server/tests/fileWatcherService.subdocument.test.ts",
+      "sourceRef": "OBL-worktree-exclusion"
+    },
+    {
+      "id": "TEST-e2e-subdocument-sse",
+      "kind": "e2e",
+      "title": "E2E: Subdocument changes trigger SSE events with correct payload",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4"
+      ],
+      "file": "tests/e2e/filewatcher/subdocument-sse.spec.ts",
+      "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "TEST-path-watcher-recursive",
+      "kind": "unit",
+      "title": "PathWatcherService uses recursive pattern and extracts subdocument metadata",
+      "covers": [
+        "BR-1.1",
+        "C1"
+      ],
+      "file": "server/tests/fileWatcherService.subdocument.test.ts",
+      "sourceRef": "OBL-recursive-watch-pattern"
+    },
+    {
+      "id": "TEST-worktree-exclusion",
+      "kind": "unit",
+      "title": "PathWatcherService excludes active worktree paths to prevent duplicate events",
+      "covers": [
+        "BR-1.3",
+        "C2"
+      ],
+      "file": "server/tests/fileWatcherService.subdocument.test.ts",
+      "sourceRef": "OBL-worktree-exclusion"
+    },
+    {
+      "id": "TEST-worktree-auto-discovery",
+      "kind": "unit",
+      "title": "PathWatcherService monitors .git/worktrees/*/HEAD for auto-discovery",
+      "covers": [
+        "BR-1.2",
+        "C3",
+        "Edge-1"
+      ],
+      "file": "server/tests/fileWatcherService.worktree.test.ts",
+      "sourceRef": "OBL-worktree-auto-discovery"
+    },
+    {
+      "id": "TEST-ticket-viewer-subdocument",
+      "kind": "unit",
+      "title": "TicketViewer handles ticket:subdocument:changed with 5 cases",
+      "covers": [
+        "BR-1.4",
+        "Edge-2"
+      ],
+      "file": "src/components/TicketViewer/useTicketDocumentRealtime.test.ts",
+      "sourceRef": "OBL-subdocument-content-refresh"
+    },
+    {
+      "id": "TEST-sse-subdocument-events",
+      "kind": "unit",
+      "title": "SSEBroadcaster emits events with subdocument metadata and source indicator",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4",
+        "Edge-2"
+      ],
+      "file": "server/tests/sseBroadcaster.subdocument.test.ts",
+      "sourceRef": "OBL-subdocument-event-structure"
+    },
+    {
+      "id": "TEST-frontend-event-mapping",
+      "kind": "unit",
+      "title": "useSSEEvents maps SSE events to ticket:subdocument:changed or ticket:updated",
+      "covers": [
+        "BR-1.4",
+        "C4"
+      ],
+      "file": "src/hooks/useSSEEvents.subdocument.test.ts",
+      "sourceRef": "OBL-frontend-event-mapping"
+    },
+    {
+      "id": "TEST-e2e-authored-stage-refresh",
+      "kind": "e2e",
+      "title": "E2E: Authored stage subdocuments refetch after SSE changes",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4"
+      ],
+      "file": "tests/e2e/filewatcher/subdocument-sse.spec.ts",
+      "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "TEST-e2e-spec-trace-refresh",
+      "kind": "e2e",
+      "title": "E2E: Rendered trace subdocuments refetch after SSE changes",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4"
+      ],
+      "file": "tests/e2e/filewatcher/subdocument-sse.spec.ts",
+      "sourceRef": "CR:MDT-142"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-3",
+      "title": "SSEBroadcaster: Add subdocument metadata and source to SSE events",
+      "ownsArtifactIds": [
+        "ART-sse-broadcaster"
+      ],
+      "makesGreenIds": [
+        "TEST-sse-subdocument-events"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "EventBus: Add ticket:subdocument:changed event type",
+      "ownsArtifactIds": [
+        "ART-event-bus"
+      ],
+      "makesGreenIds": [
+        "TEST-frontend-event-mapping"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "useSSEEvents: Map SSE file-change to ticket:subdocument:changed or ticket:updated",
+      "ownsArtifactIds": [
+        "ART-use-sse-events"
+      ],
+      "makesGreenIds": [
+        "TEST-frontend-event-mapping"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "TicketViewer: Handle ticket:subdocument:changed with 5 cases",
+      "ownsArtifactIds": [
+        "ART-ticket-viewer"
+      ],
+      "makesGreenIds": [
+        "TEST-ticket-viewer-subdocument"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-2",
+      "title": "PathWatcherService: Worktree auto-discovery via .git/worktrees/*/HEAD monitoring",
+      "ownsArtifactIds": [
+        "ART-path-watcher-service"
+      ],
+      "makesGreenIds": [
+        "TEST-worktree-auto-discovery",
+        "worktree_add_auto_detects"
+      ],
+      "skills": [
+        "architecture-patterns"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-1",
+      "title": "PathWatcherService: Recursive pattern + subdocument extraction + worktree exclusion",
+      "ownsArtifactIds": [
+        "ART-path-watcher-service"
+      ],
+      "makesGreenIds": [
+        "TEST-path-watcher-recursive",
+        "TEST-path-watcher-exclusion",
+        "TEST-worktree-exclusion",
+        "no_duplicate_events_worktree"
+      ],
+      "skills": [
+        "architecture-patterns"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-7",
+      "title": "E2E: Verify subdocument SSE events flow end-to-end",
+      "makesGreenIds": [
+        "TEST-e2e-authored-stage-refresh",
+        "TEST-e2e-spec-trace-refresh",
+        "TEST-e2e-subdocument-sse",
+        "subdocument_sse_event_main_project",
+        "subdocument_sse_event_worktree"
+      ],
+      "skills": [
+        "playwright-skill"
+      ],
+      "sourceRef": "CR:MDT-142"
+    }
+  ]
+}

@@ -12,13 +12,14 @@
 
 import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 export type EventType
   // Ticket events
   = | 'ticket:created'
     | 'ticket:updated'
     | 'ticket:deleted'
+    | 'ticket:subdocument:changed' // MDT-142: Subdocument change events
   // Project events
     | 'project:created'
     | 'project:changed'
@@ -49,6 +50,18 @@ export interface TicketEventPayload {
     priority: string
     lastModified: string
   } | null
+}
+
+/** MDT-142: Subdocument change event payload */
+export interface TicketSubdocumentEventPayload {
+  ticketCode: string
+  projectId: string
+  eventType: 'add' | 'change' | 'unlink'
+  subdocument: {
+    code: string
+    filePath: string
+  }
+  source: 'main' | 'worktree'
 }
 
 export interface ProjectEventPayload {
@@ -93,6 +106,7 @@ export interface EventPayloadMap {
   'ticket:created': TicketEventPayload
   'ticket:updated': TicketEventPayload
   'ticket:deleted': Pick<TicketEventPayload, 'ticketCode' | 'projectId'>
+  'ticket:subdocument:changed': TicketSubdocumentEventPayload // MDT-142
 
   // Project events
   'project:created': ProjectEventPayload
@@ -492,6 +506,12 @@ export function useEventBus<T extends EventType>(
   dependencies: unknown[] = [],
   source?: string,
 ): void {
+  const handlerRef = useRef(handler)
+
+  useEffect(() => {
+    handlerRef.current = handler
+  }, [handler])
+
   useEffect(() => {
     // Try to infer component name from the call stack if not provided
     let componentSource = source
@@ -512,10 +532,10 @@ export function useEventBus<T extends EventType>(
 
     const unsubscribe = eventBus.on(
       eventType,
-      handler as EventListener,
+      (event => handlerRef.current(event as TypedEvent<T>)) as EventListener,
       componentSource ? { source: componentSource } : undefined,
     )
     return unsubscribe
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventType, ...dependencies])
+  }, [eventType, source, ...dependencies])
 }
