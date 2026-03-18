@@ -221,6 +221,8 @@ markdown-ticket/
 
 ## What's New
 
+- **v0.13.0** (2026-03-18): Dot-notation subdocument grouping, git worktree SSE events, TOML read/write support
+- **v0.12.0** (2026-03-09): Mobile-first board, project selector redesign, subdocument tabs
 - **v0.11.0** (2026-02-22): Git worktree support, universal AI assistant support, SDD-first README
 - **v0.10.0** (2026-02-15): Single-project MCP mode, Research ticket type
 - **v0.9.0** (2026-01-17): Modern UI, E2E testing, code metrics
