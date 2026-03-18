@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import matter from 'gray-matter'
-import { PathWatcherService, ProjectPath, WorktreeWatcherEntry } from './PathWatcherService.js'
+import { PathWatcherService, ProjectPath, WorktreeWatcherEntry, FileChangeEventPayload } from './PathWatcherService.js'
 import { SSEBroadcaster, ResponseLike, SSEEvent, FileChangeEvent, TicketData } from './SSEBroadcaster.js'
 
 interface FileInvoker {
@@ -122,14 +122,10 @@ class FileWatcherService extends EventEmitter {
   /**
    * Handle file change events and broadcast to SSE clients with ticket data.
    * Includes cache invalidation and ticket metadata parsing.
+   * MDT-142: Now includes subdocument metadata and source attribution.
    */
-  private handleFileChangeForSSE(data: {
-    eventType: string
-    filename: string
-    projectId: string
-    timestamp: number
-  }): void {
-    const { eventType, filename, projectId, timestamp } = data
+  private handleFileChangeForSSE(data: FileChangeEventPayload): void {
+    const { eventType, filename, projectId, timestamp, subdocument, source } = data
     let ticketData: TicketData | null = null
 
     // Invalidate cache for changed files
@@ -179,10 +175,13 @@ class FileWatcherService extends EventEmitter {
           projectId,
           timestamp,
           ticketData: ticketData || undefined,
+          // MDT-142: Include subdocument metadata for targeted UI updates
+          subdocument,
+          source,
         },
       }
 
-      console.warn(`Broadcasting file-change: ${eventType} - ${filename} in project ${projectId}`)
+      console.warn(`Broadcasting file-change: ${eventType} - ${filename} in project ${projectId}${subdocument ? ` (subdocument: ${subdocument.code})` : ''}`)
       this.sseBroadcaster.broadcast(event)
     }, 100)
   }
@@ -214,6 +213,13 @@ class FileWatcherService extends EventEmitter {
    */
   initGlobalRegistryWatcher(): void {
     this.pathWatcher.initGlobalRegistryWatcher()
+  }
+
+  /**
+   * MDT-142: Auto-discover and create worktree watchers for a project.
+   */
+  async initWorktreeWatchers(projectId: string, projectPath: string, projectCode?: string): Promise<number> {
+    return this.pathWatcher.initWorktreeWatchers(projectId, projectPath, projectCode)
   }
 
   /**
@@ -294,9 +300,16 @@ class FileWatcherService extends EventEmitter {
   }
 
   /** Backward compatibility: broadcast file change */
-  async broadcastFileChange(eventType: string, filename: string, projectId: string): Promise<void> {
+  async broadcastFileChange(eventType: 'add' | 'change' | 'unlink', filename: string, projectId: string): Promise<void> {
     // Trigger the internal file change handler
-    this.handleFileChangeForSSE({ eventType, filename, projectId, timestamp: Date.now() })
+    this.handleFileChangeForSSE({
+      eventType,
+      filename,
+      projectId,
+      timestamp: Date.now(),
+      subdocument: null,
+      source: 'main',
+    })
   }
 
   /** Backward compatibility: send SSE event */

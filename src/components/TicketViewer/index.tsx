@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { dataLayer } from '../../services/dataLayer'
 import { useEventBus, type TypedEvent } from '../../services/eventBus'
+import { filePathToApiPath } from '../../utils/subdocPathValidation'
 import { extractTableOfContents } from '../../utils/tableOfContents'
 import { processContentForDisplay } from '../../utils/titleExtraction'
 import MarkdownContent from '../MarkdownContent'
@@ -30,7 +31,23 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
   // MDT-094: Update internal state when prop changes.
   // When a ticket is selected, fetch full ticket content if not already present.
   useEffect(() => {
-    setCurrentTicket(ticket)
+    setCurrentTicket((prev) => {
+      if (!ticket) {
+        return null
+      }
+
+      if (prev && prev.code === ticket.code) {
+        return {
+          ...prev,
+          ...ticket,
+          // Preserve richer viewer-local data when list metadata refreshes.
+          content: ticket.content || prev.content,
+          subdocuments: ticket.subdocuments || prev.subdocuments,
+        }
+      }
+
+      return ticket
+    })
 
     // If ticket is opened but has no content, fetch the full ticket
     if (ticket && isOpen && !ticket.content && projectCode) {
@@ -47,19 +64,20 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
   // Listen for real-time updates to this specific ticket
   useEventBus('ticket:updated', useCallback((event: TypedEvent<'ticket:updated'>) => {
     const updatedTicket = event.payload.ticket
-    if (!updatedTicket || typeof updatedTicket !== 'object' || !('code' in updatedTicket)) {
-      return
-    }
+    const updatedTicketCode = typeof updatedTicket === 'object' && updatedTicket && 'code' in updatedTicket
+      ? String(updatedTicket.code)
+      : event.payload.ticketCode
 
     setCurrentTicket((prev: Ticket | null) => {
       const openTicket = prev ?? ticket
 
-      if (!openTicket || openTicket.code !== updatedTicket.code) {
+      if (!openTicket || openTicket.code !== updatedTicketCode) {
         return prev
       }
 
-      // Fetch complete ticket data including content
-      dataLayer.fetchTicket(event.payload.projectId, updatedTicket.code as string)
+      // Always refetch the full ticket when the open ticket file changes.
+      // SSE metadata parsing can legitimately fail or be partial for filesystem events.
+      dataLayer.fetchTicket(event.payload.projectId, updatedTicketCode)
         .then((fullTicket: Ticket | null) => {
           if (fullTicket) {
             setCurrentTicket((current: Ticket | null) => {
@@ -72,6 +90,10 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
           }
         })
         .catch((err: Error) => console.error('Failed to fetch updated ticket:', err))
+
+      if (!updatedTicket || typeof updatedTicket !== 'object' || !('code' in updatedTicket)) {
+        return openTicket
+      }
 
       const lastModified = updatedTicket.lastModified instanceof Date
         ? updatedTicket.lastModified
@@ -102,13 +124,13 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
     projectCode: projectCode ?? '',
   })
 
-  const { subdocuments: liveSubdocs } = useTicketDocumentRealtime({
+  const { subdocuments: liveSubdocs, handleSSEUpdate } = useTicketDocumentRealtime({
     initialSubdocuments: subdocuments,
     selectedPath,
     onActiveRemoved: () => selectPath('main'),
   })
 
-  const { content: subdocContent, loading: subdocLoading, error: subdocError } = useTicketDocumentContent({
+  const { content: subdocContent, loading: subdocLoading, error: subdocError, invalidateCache, invalidateAndRefetch } = useTicketDocumentContent({
     projectId: projectCode ?? '',
     ticketCode: currentTicket?.code ?? '',
     selectedPath,
@@ -116,6 +138,65 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
     pendingPath,
     onContentLoaded: confirmPathSwitch,
   })
+
+  // MDT-142: Handle subdocument change events
+  useEventBus('ticket:subdocument:changed', useCallback((event: TypedEvent<'ticket:subdocument:changed'>) => {
+    const { ticketCode, eventType, subdocument } = event.payload
+    console.log('[TicketViewer] SSE subdocument event', { ticketCode, eventType, subdocument, currentTicketCode: currentTicket?.code, selectedPath })
+
+    // Ignore if not for this ticket
+    if (!currentTicket || currentTicket.code !== ticketCode) {
+      console.log('[TicketViewer] Ignoring - ticket mismatch')
+      return
+    }
+
+    const subdocumentPath = filePathToApiPath(subdocument.filePath, currentTicket.code)
+    console.log('[TicketViewer] Converted path', { subdocumentPath, selectedPath })
+
+    switch (eventType) {
+      case 'change': {
+        // MDT-142 Case 1 & 2: Invalidate cache and refetch if viewing
+        console.log('[TicketViewer] change event - calling invalidateAndRefetch')
+        invalidateAndRefetch(subdocumentPath)
+        break
+      }
+      case 'add': {
+        // Case 3: Refetch ticket to refresh tabs list
+        if (projectCode) {
+          dataLayer.fetchTicket(projectCode, ticketCode)
+            .then((fullTicket: Ticket | null) => {
+              if (fullTicket) {
+                handleSSEUpdate(fullTicket.subdocuments ?? [])
+                setCurrentTicket(prev => prev?.code === fullTicket.code ? { ...prev, ...fullTicket } : prev)
+              }
+            })
+            .catch((err: Error) => console.error('Failed to refetch ticket after add:', err))
+        }
+        break
+      }
+      case 'unlink': {
+        // Invalidate cache for the removed subdocument
+        invalidateCache(subdocumentPath)
+
+        if (selectedPath === subdocumentPath) {
+          // Case 5: Viewing the deleted subdocument - switch to main
+          selectPath('main')
+        }
+        // Case 4 & 5: Refetch ticket to refresh tabs list
+        if (projectCode) {
+          dataLayer.fetchTicket(projectCode, ticketCode)
+            .then((fullTicket: Ticket | null) => {
+              if (fullTicket) {
+                handleSSEUpdate(fullTicket.subdocuments ?? [])
+                setCurrentTicket(prev => prev?.code === fullTicket.code ? { ...prev, ...fullTicket } : prev)
+              }
+            })
+            .catch((err: Error) => console.error('Failed to refetch ticket after unlink:', err))
+        }
+        break
+      }
+    }
+  }, [currentTicket, selectedPath, invalidateCache, invalidateAndRefetch, selectPath, projectCode, handleSSEUpdate]))
 
   // Extract ToC items from the currently displayed content (main or subdoc)
   const tocItems = useMemo(() => {

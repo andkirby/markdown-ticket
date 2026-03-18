@@ -27,6 +27,8 @@ interface UseTicketDocumentContentResult {
   error: string | null
   /** Clear cached content for a specific path, or all paths if none specified. */
   invalidateCache: (path?: string) => void
+  /** MDT-142: Invalidate cache AND trigger refetch for currently viewed path. */
+  invalidateAndRefetch: (path: string) => void
 }
 
 export function useTicketDocumentContent(
@@ -37,6 +39,8 @@ export function useTicketDocumentContent(
   const [content, setContent] = useState<string>(mainContent)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // MDT-142: Increment to force refetch of current path
+  const [refetchKey, setRefetchKey] = useState(0)
 
   // Cache subdocument content keyed by path. Reset when ticket changes.
   const cacheRef = useRef<Map<string, string>>(new Map())
@@ -60,7 +64,19 @@ export function useTicketDocumentContent(
     }
   }, [])
 
+  // MDT-142: Invalidate cache and trigger refetch for currently viewed path
+  const invalidateAndRefetch = useCallback((path: string) => {
+    console.log('[useTicketDocumentContent] invalidateAndRefetch', { path, selectedPath, match: path === selectedPath })
+    cacheRef.current.delete(path)
+    // Only trigger refetch if we're viewing this path
+    if (path === selectedPath) {
+      console.log('[useTicketDocumentContent] Triggering refetch via refetchKey')
+      setRefetchKey(k => k + 1)
+    }
+  }, [selectedPath])
+
   useEffect(() => {
+    console.log('[useTicketDocumentContent] useEffect triggered', { selectedPath, refetchKey, ticketCode })
     if (selectedPath === 'main') {
       setContent(mainContent)
       setLoading(false)
@@ -74,8 +90,9 @@ export function useTicketDocumentContent(
       return
     }
 
-    // Serve from cache if available
+    // Serve from cache if available (cache is cleared by invalidateAndRefetch)
     const cached = cacheRef.current.get(selectedPath)
+    console.log('[useTicketDocumentContent] Cache check', { selectedPath, hasCached: cached !== undefined })
     if (cached !== undefined) {
       setContent(cached)
       setLoading(false)
@@ -113,7 +130,7 @@ export function useTicketDocumentContent(
     return () => {
       cancelled = true
     }
-  }, [selectedPath, projectId, ticketCode, mainContent])
+  }, [selectedPath, projectId, ticketCode, mainContent, refetchKey])
 
-  return { content, loading, error, invalidateCache }
+  return { content, loading, error, invalidateCache, invalidateAndRefetch }
 }

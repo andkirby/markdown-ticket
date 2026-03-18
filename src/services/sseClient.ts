@@ -27,7 +27,12 @@ interface SSEMessageData {
       lastModified: string
     } | null
     eventId?: string
-    source?: string
+    source?: 'main' | 'worktree'
+    /** MDT-142: Subdocument metadata for targeted UI updates */
+    subdocument?: {
+      code: string
+      filePath: string
+    } | null
     [key: string]: unknown
   }
 }
@@ -297,24 +302,48 @@ class SSEClient {
 
   /**
    * Handle file change events and map to ticket events
+   * MDT-142: Now handles subdocument events with targeted UI updates
    */
   private handleFileChange(data: SSEMessageData['data']): void {
-    const { eventType, filename, projectId, ticketData } = data
+    const { eventType, filename, projectId, ticketData, subdocument, source } = data
 
     if (!filename || !eventType) {
       console.warn('[SSEClient] ⚠️ Invalid file change data:', data)
       return
     }
 
-    // Extract ticket code from filename
-    const ticketCode = filename.replace('.md', '')
+    // MDT-142: Extract ticket code from filename or subdocument path
+    let ticketCode: string
+    if (subdocument?.filePath) {
+      // Subdocument path: "MDT-142/architecture.md" -> "MDT-142"
+      const match = subdocument.filePath.match(/^([A-Z]+-\d+)/)
+      ticketCode = match ? match[1] : filename.replace('.md', '')
+    }
+    else {
+      ticketCode = filename.replace('.md', '')
+    }
 
     console.warn('[SSEClient] 📝 File change detected:', {
       eventType,
       ticketCode,
       projectId,
       hasTicketData: !!ticketData,
+      hasSubdocument: !!subdocument,
+      source: source || 'unknown',
     })
+
+    // MDT-142: If subdocument metadata exists, emit subdocument event
+    if (subdocument) {
+      console.log('[SSEClient] Emitting ticket:subdocument:changed', { ticketCode, eventType, subdocument })
+      eventBus.emit('ticket:subdocument:changed', {
+        ticketCode,
+        projectId: projectId || '',
+        eventType: eventType as 'add' | 'change' | 'unlink',
+        subdocument,
+        source: source || 'main',
+      }, 'sse')
+      return
+    }
 
     // Map file system events to business events with ticket data
     switch (eventType) {

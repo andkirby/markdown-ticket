@@ -1,4 +1,5 @@
 import type { Express } from 'express'
+import type { ProjectPath } from './services/fileWatcher/PathWatcherService.js'
 import * as path from 'node:path'
 import process from 'node:process'
 import { getTicketsPath } from '@mdt/shared/models/Project.js'
@@ -161,7 +162,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
 
     logger.info(`Found ${projects.length} projects for file watching`)
 
-    const projectPaths: { id: string, path: string }[] = []
+    const projectPaths: ProjectPath[] = []
 
     // Add configured projects
     for (const project of projects) {
@@ -202,6 +203,8 @@ async function initializeMultiProjectWatchers(): Promise<void> {
           projectPaths.push({
             id: serverProject.id,
             path: watchPath,
+            projectRoot: configPath,
+            projectCode: config.project?.code || serverProject.id.toUpperCase(), // MDT-142: Use project code for worktree detection
           })
           logger.info(`✅ Will watch project ${serverProject.project.name} at: ${watchPath}`)
         }
@@ -224,6 +227,19 @@ async function initializeMultiProjectWatchers(): Promise<void> {
       projectPaths.forEach((project) => {
         logger.info(`   📂 ${project.id}: ${project.path}`)
       })
+
+      // MDT-142: Auto-discover and create worktree watchers
+      for (const project of projectPaths) {
+        // Use stored project root, or derive from watch path
+        const projectRoot = project.projectRoot || project.path.replace(/\/?\*\*?\/\*\.md$/, '').replace(/\/[^/]+\/[^/]+$/, '')
+        fileWatcher.initWorktreeWatchers(project.id, projectRoot, project.projectCode)
+          .then(count => {
+            if (count > 0) {
+              logger.info(`   🌿 ${project.id}: ${count} worktree watcher(s) created`)
+            }
+          })
+          .catch(err => logger.warn(`   🌿 ${project.id}: Failed to init worktree watchers:`, err))
+      }
     }
 
     // Initialize global registry watcher for project lifecycle events

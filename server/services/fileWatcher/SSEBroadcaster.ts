@@ -21,6 +21,13 @@ export interface FileChangeEvent {
     projectId: string
     timestamp: number
     ticketData?: TicketData
+    /** MDT-142: Subdocument metadata for targeted UI updates */
+    subdocument?: {
+      code: string
+      filePath: string
+    } | null
+    /** MDT-142: Source attribution for main vs worktree events */
+    source?: 'main' | 'worktree'
   }
 }
 
