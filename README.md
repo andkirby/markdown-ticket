@@ -6,6 +6,11 @@ Transform how you build software with AI: write specifications first, generate t
 
 ---
 
+<img width="1351" height="1002" alt="image" src="https://github.com/user-attachments/assets/7347bacc-d6f6-40bc-ad4e-73210e68b7b3" />
+
+
+---
+
 ## Quick Start
 
 ### 1. Install SDD Commands
