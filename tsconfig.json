@@ -4,6 +4,9 @@
     "jsx": "react-jsx",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
 
+    /* Bun types */
+    "types": ["bun"],
+
     /* Node.js types */
     "moduleDetection": "force",
     "useDefineForClassFields": true,
