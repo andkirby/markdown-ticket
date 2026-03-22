@@ -7,11 +7,12 @@
  * Covers: BR-4.1, BR-4.2, BR-4.3, BR-4.4, C4
  */
 
+import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
+import type { Location } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import type { Location } from 'react-router-dom'
-import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
 import { apiPathToUrlPath, extractSubDocPath, urlPathToApiPath } from '../../utils/subdocPathValidation'
+import { deriveFolderStack, ROOT_DOCUMENT_PATH } from './subdocumentPath'
 
 interface UseTicketDocumentNavigationOptions {
   subdocuments: SubDocument[]
@@ -58,51 +59,6 @@ function collectPaths(docs: SubDocument[], prefix = '', isVirtualPrefix = false)
 }
 
 /**
- * Split a path into segments, respecting physical (/) vs virtual (.) notation.
- * Physical paths like 'bdd/another.trace' → ['bdd', 'another.trace'] (dot preserved)
- * Virtual paths like 'bdd.trace' → ['bdd', 'trace'] (dot is separator)
- */
-function splitPathSegments(path: string): string[] {
-  if (path === "main") {
-    return ["main"];
-  }
-
-  // Check if this is a physical path (contains /)
-  if (path.includes("/")) {
-    // Physical path: split only by /, preserve dots in filenames
-    return path.split("/");
-  }
-
-  // Virtual path: split by .
-  return path.split(".");
-}
-
-/**
- * Derive folder stack from a selected path and subdocument tree.
- * Files: parent folder segments. e.g. 'poc/spike' → ['poc']
- * Folders: all segments including the folder itself. e.g. 'poc' → ['poc']
- * MDT-138: Handles both slash-separated (physical folders) and dot-notation (virtual folders) paths.
- */
-function deriveFolderStack(path: string, subdocuments: SubDocument[]): string[] {
-  // MDT-138: Use smart splitting that respects physical (/) vs virtual (.) notation
-  const segments = splitPathSegments(path)
-
-  const isFolder = (docs: SubDocument[], segs: string[]): boolean => {
-    if (segs.length === 0) return false
-    const [head, ...rest] = segs
-    const match = docs.find(d => d.name === head)
-    if (!match) return false
-    if (rest.length === 0) return match.kind === 'folder'
-    return isFolder(match.children, rest)
-  }
-
-  if (isFolder(subdocuments, segments)) {
-    return segments
-  }
-  return segments.slice(0, -1)
-}
-
-/**
  * Initialize selected path from URL path, falling back to 'main' if invalid.
  * Handles backward compatibility with hash-based URLs.
  */
@@ -143,7 +99,7 @@ function initFromPath(
   }
 
   // Default to main document
-  return { selectedPath: 'main', folderStack: [], needsRedirect: false }
+  return { selectedPath: ROOT_DOCUMENT_PATH, folderStack: [], needsRedirect: false }
 }
 
 export function useTicketDocumentNavigation(
@@ -189,7 +145,11 @@ export function useTicketDocumentNavigation(
     }
 
     // Only update if we found a valid path in the URL that differs from current state
-    if (fromPath.selectedPath !== 'main' && !fromPath.needsRedirect && fromPath.selectedPath !== state.selectedPath) {
+    if (
+      fromPath.selectedPath !== ROOT_DOCUMENT_PATH
+      && !fromPath.needsRedirect
+      && fromPath.selectedPath !== state.selectedPath
+    ) {
       setState(prev => ({ ...prev, selectedPath: fromPath.selectedPath, folderStack: fromPath.folderStack }))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

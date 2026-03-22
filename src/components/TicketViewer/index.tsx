@@ -234,7 +234,6 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
             selectedPath={selectedPath}
             folderStack={folderStack}
             onSelect={selectPath}
-            pendingPath={pendingPath}
             ticketCode={currentTicket?.code ?? ''}
           />
 
