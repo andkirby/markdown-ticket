@@ -1,5 +1,5 @@
 import type { Ticket } from '../../types'
-import { ContextBadge, PriorityBadge, StatusBadge, TypeBadge } from '../Badge'
+import { ContextBadge, PriorityBadge, RelationshipBadge, StatusBadge, TypeBadge } from '../Badge'
 import { TicketCode } from '../TicketCode'
 
 interface CompactTicketHeaderProps {
@@ -31,6 +31,15 @@ export function CompactTicketHeader({ ticket, className = '' }: CompactTicketHea
           )}
           {ticket.inWorktree === true && (
             <ContextBadge variant="worktree" worktreePath={ticket.worktreePath} data-testid="worktree-badge" />
+          )}
+          {(ticket.relatedTickets?.length || 0) > 0 && (
+            <RelationshipBadge variant="related" links={ticket.relatedTickets} />
+          )}
+          {(ticket.dependsOn?.length || 0) > 0 && (
+            <RelationshipBadge variant="depends" links={ticket.dependsOn} />
+          )}
+          {(ticket.blocks?.length || 0) > 0 && (
+            <RelationshipBadge variant="blocks" links={ticket.blocks} />
           )}
         </div>
       </div>
