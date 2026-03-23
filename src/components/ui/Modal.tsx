@@ -3,6 +3,7 @@ import { cva } from 'class-variance-authority'
 import * as React from 'react'
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { cn } from '../../lib/utils'
 
 const modalVariants = cva(
   'relative w-full rounded-lg bg-white dark:bg-slate-900 shadow-xl transition-all sm:my-8',
@@ -199,7 +200,7 @@ const ModalBody = React.forwardRef<HTMLDivElement, ModalBodyProps>(
     return (
       <div
         ref={ref}
-        className={`p-6 ${className}`}
+        className={cn('p-6', className)}
         {...props}
       >
         {children}
