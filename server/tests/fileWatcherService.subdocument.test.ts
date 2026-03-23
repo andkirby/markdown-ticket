@@ -1,7 +1,7 @@
 /**
  * FileWatcherService Subdocument Tests
  *
- * MDT-142: Subdocument SSE Events - recursive watching pattern and *
+ * MDT-142: Subdocument SSE Events - bounded watching pattern and *
  *
  * Covers: BR-1.1, BR-1.3, C1, C2
  *
@@ -37,16 +37,16 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
     fileWatcher.stop()
   })
 
-  describe('OBL-recursive-watch-pattern: Main watcher uses recursive pattern (C1)', () => {
-    it('should use **/*.md pattern to capture nested subdocuments', () => {
+  describe('OBL-two-level-watch-pattern: Main watcher observes ticket root and one nested level (C1)', () => {
+    it('should use a two-level markdown glob instead of recursive **/*.md', () => {
       const projectPath = '/test/project'
       const projectId = 'MDT'
 
       fileWatcher.initMultiProjectWatcher([{ id: projectId, path: projectPath }])
 
-      // Should use recursive pattern
+      // Should watch ticket root files and one nested folder level only
       expect(mockChokidar.watch).toHaveBeenCalledWith(
-        expect.stringContaining('**/*.md'),
+        '/test/project/{*.md,*/*.md}',
         expect.any(Object)
       )
     })
@@ -142,6 +142,25 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
       if (changeHandler) {
         changeHandler('/test/project/docs/CRs/MDT-142/architecture.md')
       }
+    })
+
+    it('should ignore subdocuments deeper than one folder level', () => {
+      const projectPath = '/test/project/docs/CRs/*.md'
+      const projectId = 'MDT'
+      const changeSpy = jest.fn()
+
+      fileWatcher.initMultiProjectWatcher([{ id: projectId, path: projectPath }])
+      fileWatcher.on('file-change', changeSpy)
+
+      const changeHandler = mockWatcher.on.mock.calls.find(
+        (call) => call[0] === 'change'
+      )?.[1]
+
+      if (changeHandler) {
+        changeHandler('/test/project/docs/CRs/MDT-142/poc/nested/deep.md')
+      }
+
+      expect(changeSpy).not.toHaveBeenCalled()
     })
 
     it('should extract ticket code from slug file path (MDT-142-slug.md)', (done) => {

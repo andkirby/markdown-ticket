@@ -62,8 +62,8 @@ describe('PathWatcherService', () => {
       service.initMultiProjectWatcher(projectPaths)
 
       expect(chokidar.watch).toHaveBeenCalledTimes(2)
-      expect(chokidar.watch).toHaveBeenCalledWith('/path1/*.md', expect.any(Object))
-      expect(chokidar.watch).toHaveBeenCalledWith('/path2/*.md', expect.any(Object))
+      expect(chokidar.watch).toHaveBeenCalledWith('/path1/{*.md,*/*.md}', expect.any(Object))
+      expect(chokidar.watch).toHaveBeenCalledWith('/path2/{*.md,*/*.md}', expect.any(Object))
       expect(mockWatcher.on).toHaveBeenCalledWith('ready', expect.any(Function))
     })
 
@@ -227,7 +227,7 @@ describe('PathWatcherService', () => {
   })
 
   describe('File change handling', () => {
-    it('should emit file-change event for .md files', () => {
+    it('should emit file-change event for ticket markdown files', () => {
       const changeSpy = jest.fn()
       service.on('file-change', changeSpy)
 
@@ -237,12 +237,14 @@ describe('PathWatcherService', () => {
         (call: [string, Function]) => call[0] === 'change',
       )?.[1]
 
-      changeCallback?.('/test/file.md')
+      changeCallback?.('/test/MDT-095.md')
 
       expect(changeSpy).toHaveBeenCalledWith({
         eventType: 'change',
-        filename: 'file.md',
+        filename: 'MDT-095.md',
         projectId: 'test',
+        source: 'main',
+        subdocument: null,
         timestamp: expect.any(Number),
       })
     })
@@ -262,7 +264,7 @@ describe('PathWatcherService', () => {
       expect(changeSpy).not.toHaveBeenCalled()
     })
 
-    it('should handle subdoc files as parent ticket changes', () => {
+    it('should emit subdocument metadata for ticket subdocument files', () => {
       const changeSpy = jest.fn()
       service.on('file-change', changeSpy)
 
@@ -276,8 +278,13 @@ describe('PathWatcherService', () => {
 
       expect(changeSpy).toHaveBeenCalledWith({
         eventType: 'change',
-        filename: 'MDT-095.md',
+        filename: 'MDT-095/architecture.md',
         projectId: 'test',
+        source: 'main',
+        subdocument: {
+          code: 'architecture',
+          filePath: 'MDT-095/architecture.md',
+        },
         timestamp: expect.any(Number),
       })
     })

@@ -59,4 +59,27 @@ describe('SubdocumentService', () => {
       content: '# approve',
     })
   })
+
+  it('keeps a root markdown file when a same-name folder has no supported markdown children', () => {
+    writeFileSync(join(location.ticketDir, 'poc.md'), '# poc')
+    mkdirSync(join(location.ticketDir, 'poc'))
+    mkdirSync(join(location.ticketDir, 'poc', 'nested'), { recursive: true })
+    writeFileSync(join(location.ticketDir, 'poc', 'nested', 'deep.md'), '# ignored')
+
+    expect(service.discover(location, 'MDT-138')).toEqual([
+      {
+        name: 'poc',
+        kind: 'file',
+        children: [],
+        filePath: 'MDT-138/poc.md',
+      },
+    ])
+  })
+
+  it('rejects subdocument paths deeper than one folder level', () => {
+    mkdirSync(join(location.ticketDir, 'poc', 'nested'), { recursive: true })
+    writeFileSync(join(location.ticketDir, 'poc', 'nested', 'deep.md'), '# ignored')
+
+    expect(service.resolvePath(location, 'poc/nested/deep')).toBeNull()
+  })
 })

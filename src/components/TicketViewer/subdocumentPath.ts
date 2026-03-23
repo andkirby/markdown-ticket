@@ -140,7 +140,7 @@ export function resolveTicketDocumentSelectionPath(
     return null
   }
 
-  if (entry.name === ROOT_DOCUMENT_PATH) {
+  if (entry.name === ROOT_DOCUMENT_PATH && !entry.filePath) {
     return ROOT_DOCUMENT_PATH
   }
 

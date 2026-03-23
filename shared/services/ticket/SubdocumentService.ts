@@ -23,6 +23,10 @@ export class SubdocumentService {
   }
 
   resolvePath(location: ResolvedTicketLocation, subDocName: string): string | null {
+    if (!this.isSupportedSubdocumentPath(subDocName)) {
+      return null
+    }
+
     const directFilePath = join(location.ticketDir, `${subDocName}.md`)
     if (existsSync(directFilePath)) {
       return directFilePath
@@ -103,11 +107,16 @@ export class SubdocumentService {
       const stat = statSync(fullPath)
 
       if (stat.isDirectory()) {
+        const children = this.discoverFolderChildren(fullPath, crId, entry)
+        if (children.length === 0) {
+          return null
+        }
+
         existingFolders.add(entry)
         return {
           name: entry,
           kind: 'folder',
-          children: this.discoverFolderChildren(fullPath, crId, entry),
+          children,
           filePath: `${crId}/${entry}`,
           isVirtual: false,
         }
@@ -182,5 +191,10 @@ export class SubdocumentService {
     catch {
       return null
     }
+  }
+
+  private isSupportedSubdocumentPath(subDocName: string): boolean {
+    const segments = subDocName.split('/').filter(Boolean)
+    return segments.length >= 1 && segments.length <= 2
   }
 }
