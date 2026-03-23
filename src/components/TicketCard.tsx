@@ -26,8 +26,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClic
       <div className="flex items-start justify-between mb-2">
         <h4 className="ticket-title font-semibold text-gray-900 dark:text-white text-sm">
           <TicketCode code={ticket.code} ticket={ticket} />
-          {' '}
-          •
+          <span className="mx-1 text-gray-900 dark:text-white">•</span>
           {ticket.title}
         </h4>
       </div>
