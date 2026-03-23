@@ -47,24 +47,9 @@ export class PathWatcherService extends EventEmitter {
   initMultiProjectWatcher(projectPaths: ProjectPath[]): this {
     for (const p of projectPaths) {
       if (this.watchers.has(p.id)) continue
-      // MDT-142 C1: Use recursive pattern to capture nested subdocuments
-      let recursivePath = p.path
-      if (!p.path.includes('**')) {
-        if (p.path.endsWith('*.md')) {
-          // Replace single-level *.md with recursive **/*.md
-          recursivePath = p.path.replace(/\/?\*\.md$/, '/**/*.md')
-        }
-        else if (p.path.endsWith('.md')) {
-          // Specific file - keep as is
-          recursivePath = p.path
-        }
-        else {
-          // Directory - append recursive pattern
-          recursivePath = p.path.replace(/\/$/, '') + '/**/*.md'
-        }
-      }
-      this.watchPaths.set(p.id, recursivePath)
-      this.createWatcher(p.id, recursivePath, w => {
+      const { basePath, watchPattern } = this.buildTwoLevelWatchPath(p.path)
+      this.watchPaths.set(p.id, basePath)
+      this.createWatcher(p.id, watchPattern, w => {
         w.on('add', fp => this.handleFileEvent('add', fp, p.id, 'main'))
           .on('change', fp => this.handleFileEvent('change', fp, p.id, 'main'))
           .on('unlink', fp => this.handleFileEvent('unlink', fp, p.id, 'main'))
@@ -310,12 +295,18 @@ export class PathWatcherService extends EventEmitter {
       const ticketMatch = dir.match(/^([A-Z]+-\d+)$/)
       if (ticketMatch) {
         const ticketCode = ticketMatch[1]
+        const relativeParts = parts.slice(i + 1)
+
+        if (relativeParts.length > 2) {
+          return null
+        }
+
         // Extract subdocument code from filename
         const codeMatch = fn.match(/^(.+)\.md$/)
         if (codeMatch && codeMatch[1] !== ticketCode) {
           // Build relative path from ticket folder to file
           // e.g., for "docs/CRs/MDT-142/prep/architecture.md" -> "prep/architecture"
-          const relativePath = parts.slice(i + 1).join('/')
+          const relativePath = relativeParts.join('/')
           return {
             ticketCode,
             subdocument: {
@@ -385,6 +376,34 @@ export class PathWatcherService extends EventEmitter {
       console.error(`Failed to create watcher for ${id}:`, e)
       this.emit('error', { error: e, projectId: id })
     }
+  }
+
+  private buildTwoLevelWatchPath(watchPath: string): { basePath: string, watchPattern: string } {
+    if (watchPath.endsWith('.md') && !watchPath.includes('*')) {
+      const lastSlash = watchPath.lastIndexOf('/')
+      return {
+        basePath: lastSlash === -1 ? '' : watchPath.slice(0, lastSlash + 1),
+        watchPattern: watchPath,
+      }
+    }
+
+    const basePath = this.normalizeBasePath(watchPath)
+    return {
+      basePath,
+      watchPattern: `${basePath}{*.md,*/*.md}`,
+    }
+  }
+
+  private normalizeBasePath(watchPath: string): string {
+    if (watchPath.endsWith('*.md')) {
+      return watchPath.slice(0, -'*.md'.length)
+    }
+
+    if (watchPath.endsWith('*')) {
+      return watchPath.slice(0, -1)
+    }
+
+    return watchPath.replace(/\/?$/, '/')
   }
 
   stop(): void {
