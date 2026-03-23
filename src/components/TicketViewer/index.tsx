@@ -9,14 +9,14 @@ import { filePathToApiPath } from '../../utils/subdocPathValidation'
 import { extractTableOfContents } from '../../utils/tableOfContents'
 import { processContentForDisplay } from '../../utils/titleExtraction'
 import MarkdownContent from '../MarkdownContent'
+import { RelativeTimestamp } from '../shared/RelativeTimestamp'
 import TableOfContents from '../shared/TableOfContents'
-import TicketAttributes from '../TicketAttributes'
-import { TicketCode } from '../TicketCode'
+import { CompactTicketHeader } from './CompactTicketHeader'
 import { TicketDocumentTabs } from './TicketDocumentTabs'
 import { useTicketDocumentContent } from './useTicketDocumentContent'
 import { useTicketDocumentNavigation } from './useTicketDocumentNavigation'
 import { useTicketDocumentRealtime } from './useTicketDocumentRealtime'
-import { Modal, ModalBody, ModalHeader } from '../ui/Modal'
+import { Modal, ModalBody } from '../ui/Modal'
 
 interface TicketViewerProps {
   ticket: Ticket | null
@@ -209,26 +209,31 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" data-testid="ticket-detail">
       <TableOfContents items={tocItems} view="ticket" />
-      <ModalHeader
-        title={(
-          <span data-testid="ticket-title">
-            <TicketCode code={currentTicket.code} ticket={currentTicket} />
-            {' '}
-            •
-            {currentTicket.title}
-          </span>
-        )}
-        onClose={onClose}
-        closeTestId="close-detail"
-      />
-      <ModalBody>
-        <div className="space-y-4 min-w-0">
-          {/* Ticket Metadata */}
-          <div className="p-5 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
-            <TicketAttributes ticket={currentTicket} />
-          </div>
+      <button
+        type="button"
+        aria-label="Close ticket viewer"
+        data-testid="close-detail"
+        className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-gray-500 dark:hover:bg-slate-800 dark:hover:text-gray-200"
+        onClick={onClose}
+      >
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+      <ModalBody className="p-0">
+        <div className="min-w-0">
+          <CompactTicketHeader ticket={currentTicket} />
 
-          {/* Sub-document navigation tabs (MDT-093) */}
           <TicketDocumentTabs
             subdocuments={liveSubdocs}
             selectedPath={selectedPath}
@@ -237,10 +242,9 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
             ticketCode={currentTicket?.code ?? ''}
           />
 
-          {/* Content area: sub-document or main ticket content */}
           <div data-testid="subdoc-content" className="relative">
             {subdocError && (
-              <div data-testid="subdoc-error" className="text-destructive text-sm py-2" role="alert">
+              <div data-testid="subdoc-error" className="px-4 py-3 text-sm text-destructive" role="alert">
                 {subdocError}
               </div>
             )}
@@ -253,12 +257,20 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
                     </span>
                   </div>
                 )}
-                <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'opacity-50 pointer-events-none' : ''}>
-                  <MarkdownContent
-                    markdown={subdocContent}
-                    currentProject={projectCode}
-                    headerLevelStart={3}
-                  />
+                <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'pointer-events-none opacity-50' : ''}>
+                  <div className="relative px-4 py-4 sm:px-5">
+                    <div className="absolute right-4 top-4 z-[1] sm:right-5">
+                      <RelativeTimestamp
+                        createdAt={currentTicket.dateCreated}
+                        updatedAt={currentTicket.lastModified}
+                      />
+                    </div>
+                    <MarkdownContent
+                      markdown={subdocContent}
+                      currentProject={projectCode}
+                      headerLevelStart={3}
+                    />
+                  </div>
                 </div>
               </>
             )}

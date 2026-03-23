@@ -67,7 +67,7 @@ export function TicketDocumentTabs({
   return (
     <div
       data-testid="subdoc-tabs"
-      className="ticket-document-tabs sticky top-0 z-10 bg-background border-b"
+      className="ticket-document-tabs sticky top-0 z-10 bg-background/50 backdrop-blur-sm"
     >
       {rows.map(row => (
         <Tabs.Root
@@ -79,7 +79,7 @@ export function TicketDocumentTabs({
         >
           <Tabs.List
             data-testid="subdoc-tab-row"
-            className="flex overflow-x-auto scrollbar-hide border-b px-2"
+            className="flex overflow-x-auto scrollbar-hide border-b border-gray-200 px-4 dark:border-gray-700"
           >
             {row.entries.map(entry => (
               <Tabs.Trigger
@@ -87,7 +87,7 @@ export function TicketDocumentTabs({
                 value={entry.name}
                 data-testid={`subdoc-tab-${entry.name}`}
                 data-filepath={entry.filePath || undefined}
-                className="px-3 py-2 text-sm font-medium whitespace-nowrap data-[state=active]:border-b-2 data-[state=active]:border-primary relative"
+                className="relative mr-3 whitespace-nowrap px-2 py-1.5 text-sm font-medium text-gray-700 transition-[color,transform,opacity] last:mr-0 hover:-translate-y-0.5 hover:scale-[1.01] hover:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-gray-900 data-[state=active]:hover:translate-y-0 data-[state=active]:hover:scale-100 dark:text-gray-200 dark:hover:text-white dark:data-[state=active]:text-white"
               >
                 {entry.name === ROOT_DOCUMENT_PATH ? 'Main' : entry.name}
                 {entry.kind === 'folder' ? ' ▶' : ''}
