@@ -21,6 +21,11 @@
       "sourceType": "github",
       "computedHash": "aa9b223c6803bc5d1aaa6829efe33e17de1f69927abf00819d0fd2b9e319ff4f"
     },
+    "react-native-architecture": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "f9a0f18d522b307981b6f188b8501c9c9326adeb8aca5b46b679731dc69681ae"
+    },
     "refactor-method-complexity-reduce": {
       "source": "github/awesome-copilot",
       "sourceType": "github",

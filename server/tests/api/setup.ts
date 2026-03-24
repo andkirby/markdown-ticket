@@ -144,6 +144,27 @@ export async function setProjectDocumentMaxDepth(
   await fs.writeFile(configPath, stringify(config), 'utf8')
 }
 
+export async function setProjectDocumentPaths(
+  projectFactory: ProjectFactory,
+  projectCode: string,
+  documentPaths: string[],
+): Promise<void> {
+  const configPath = join(projectFactory.getProjectsDir(), projectCode, '.mdt-config.toml')
+  const content = await fs.readFile(configPath, 'utf8')
+  const config = parseToml(content) as any
+
+  if (!config.project) {
+    config.project = {}
+  }
+  if (!config.project.document) {
+    config.project.document = {}
+  }
+
+  config.project.document.paths = documentPaths
+
+  await fs.writeFile(configPath, stringify(config), 'utf8')
+}
+
 /** Reset the test setup cache (useful for testing multiple isolated scenarios) */
 function _resetTestSetupCache(): void {
   cachedFileWatcher?.stop()

@@ -16,7 +16,13 @@
 import request from 'supertest'
 import { createTestDocument, createTestDocumentSet, documentFixtures, documentPaths } from './fixtures/documents'
 import { assertBadRequest, assertErrorMessage, assertIsArray, assertNotFound, assertSuccess } from './helpers'
-import { cleanupTestEnvironment, createTestProjectWithCR, setProjectDocumentMaxDepth, setupTestEnvironment } from './setup'
+import {
+  cleanupTestEnvironment,
+  createTestProjectWithCR,
+  setProjectDocumentMaxDepth,
+  setProjectDocumentPaths,
+  setupTestEnvironment,
+} from './setup'
 
 interface DocumentNode {
   type: string
@@ -335,6 +341,69 @@ describe('documents API Tests (MDT-106)', () => {
       // No CR ticket files (MDT-XXX-*.md pattern) should appear
       const crFiles = allPaths.filter(p => p && /MDT-\d{3}-.*\.md$/.test(p))
       expect(crFiles).toHaveLength(0)
+    })
+  })
+
+  describe('folder merging (duplicate folder paths)', () => {
+    let mergedProjectCode: string
+
+    beforeAll(async () => {
+      // Create a project with individual file paths under the same folder
+      const project = await projectFactory.createProject('empty', {
+        name: 'Folder Merge Test Project',
+        code: 'FOLDM',
+      })
+      mergedProjectCode = project.key
+
+      // Create test files in research folder
+      await createTestDocument(projectFactory, mergedProjectCode, 'research/arch-1.md', documentFixtures.withFrontmatter)
+      await createTestDocument(projectFactory, mergedProjectCode, 'research/arch-2.md', documentFixtures.complexFrontmatter)
+      await createTestDocument(projectFactory, mergedProjectCode, 'docs/readme.md', documentFixtures.withoutFrontmatter)
+
+      // Configure paths to include individual files (like the AY project issue)
+      await setProjectDocumentPaths(projectFactory, mergedProjectCode, [
+        'docs',
+        'research/arch-1.md',
+        'research/arch-2.md',
+      ])
+    })
+
+    it('should merge duplicate folder paths into single folder node', async () => {
+      const response = await request(app).get(`/api/documents?projectId=${mergedProjectCode}`)
+
+      assertSuccess(response, 200)
+      assertIsArray(response)
+
+      // Count how many "research" folders exist
+      const researchFolders = (response.body as Array<Record<string, unknown>>)
+        .filter(node => node.path === 'research')
+
+      // Should have exactly 1 research folder, not 2
+      expect(researchFolders.length).toBe(1)
+
+      const researchFolder = researchFolders[0]
+      expect(researchFolder.type).toBe('folder')
+      expect(Array.isArray(researchFolder.children)).toBe(true)
+
+      // Should have both files as children
+      const children = researchFolder.children as Array<Record<string, unknown>>
+      expect(children.length).toBe(2)
+
+      const childPaths = children.map(c => c.path as string)
+      expect(childPaths).toContain('research/arch-1.md')
+      expect(childPaths).toContain('research/arch-2.md')
+    })
+
+    it('should include both docs folder and research folder', async () => {
+      const response = await request(app).get(`/api/documents?projectId=${mergedProjectCode}`)
+
+      assertSuccess(response, 200)
+      assertIsArray(response)
+
+      const rootPaths = (response.body as Array<Record<string, unknown>>).map(n => n.path as string)
+
+      expect(rootPaths).toContain('docs')
+      expect(rootPaths).toContain('research')
     })
   })
 

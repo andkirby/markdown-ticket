@@ -97,7 +97,9 @@ export class TreeService {
       results.push(...matches)
     }
 
-    return results.sort((a, b) => {
+    const merged = this._mergeFolders(results)
+
+    return merged.sort((a, b) => {
       if (a.type !== b.type) {
         return a.type === 'folder' ? -1 : 1
       }
@@ -128,5 +130,31 @@ export class TreeService {
     }
 
     return results
+  }
+
+  private _mergeFolders(nodes: TreeNode[]): TreeNode[] {
+    const pathMap = new Map<string, TreeNode>()
+
+    for (const node of nodes) {
+      if (node.type === 'file') {
+        pathMap.set(node.path, node)
+      }
+      else if (node.type === 'folder' && node.children) {
+        const existing = pathMap.get(node.path)
+
+        if (existing && existing.type === 'folder' && existing.children) {
+          // Merge children of folders with the same path
+          const mergedChildren = this._mergeFolders([...existing.children, ...node.children])
+          pathMap.set(node.path, { ...existing, children: mergedChildren })
+        }
+        else {
+          // Recursively merge children within this folder
+          const mergedChildren = this._mergeFolders(node.children)
+          pathMap.set(node.path, { ...node, children: mergedChildren })
+        }
+      }
+    }
+
+    return Array.from(pathMap.values())
   }
 }
