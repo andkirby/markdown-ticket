@@ -1,0 +1,638 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-143"
+  },
+  "requirements": [
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN operator supplies a numeric, zero-padded, mixed-case, or prefixed ticket reference, the system shall normalize it to an uppercase zero-padded ticket key before lookup.",
+      "sourceRef": "CR §3 Ticket Key Resolution",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHEN operator supplies an explicit cross-project key or PROJECT/TICKET pair, the system shall resolve the requested ticket without requiring the current working directory to be inside that project.",
+      "sourceRef": "CR §3 Ticket Key Resolution",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-11",
+      "kind": "behavior",
+      "text": "WHEN output is written to an interactive terminal with color enabled, the system shall render status, priority, and type indicators using color categories that match the web UI badge mappings.",
+      "sourceRef": "CR §3 Color Output",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-12",
+      "kind": "behavior",
+      "text": "WHEN cli.ticket.absolutePath is unset or false, the system shall display ticket paths relative to the project root.",
+      "sourceRef": "CR §3 Configuration",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-13",
+      "kind": "behavior",
+      "text": "WHEN cli.ticket.absolutePath is true, the system shall display ticket paths as absolute filesystem paths.",
+      "sourceRef": "CR §3 Configuration",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "WHILE ~/.config/mdt/cli.toml is absent, the system shall default to relative-path display and color-enabled output for interactive terminals.",
+      "sourceRef": "CR §3 Configuration",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall derive CLI status, priority, and type color mappings from the web UI badge definitions so category-to-color mapping remains aligned across interfaces.",
+      "sourceRef": "CR §6 References: src/components/Badge/badge.css",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "WHEN mdt-cli create consumes user-provided title, slug, or standard input body text, the system shall persist that content as ticket data without executing, interpolating, or shell-expanding it.",
+      "sourceRef": "CR §3 STDIN Handling",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "WHILE output is redirected, piped, or --no-color is set, the system shall emit the same ticket information without ANSI color sequences.",
+      "sourceRef": "CR AC-7 Color Output",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF operator supplies an invalid ticket key, THEN the system shall reject the command with a clear error that identifies the key as invalid and describes an accepted key format.",
+      "sourceRef": "CR AC-8 Error Handling",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF operator uses numeric shorthand outside a detected project and without explicit project context, THEN the system shall reject the request with an error that states project context is required.",
+      "sourceRef": "CR AC-6 Project Detection",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "WHEN shorthand ticket resolution depends on project auto-detection, the system shall search parent directories up to the filesystem root for project configuration before deciding that no project context exists.",
+      "sourceRef": "CR §3 Project Detection",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-16",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli project init in a folder that is not yet configured as a project, the system shall create project configuration for the current folder using provided code and name values or interactive defaults when omitted.",
+      "sourceRef": "CR §3 Project Init",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket get <key>, mdt-cli ticket <key>, mdt-cli t <key>, or mdt-cli <key> with a resolvable ticket reference, the system shall print the matching ticket title followed by labeled status, type, priority, phase, assignee, created date, modified date, and path fields.",
+      "sourceRef": "CR:3 View Ticket",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket list, mdt-cli list, or mdt-cli ls inside a detected project, the system shall display every ticket in that project in compact form and report the project ticket count.",
+      "sourceRef": "CR:3 List Tickets",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli project ls or mdt-cli project list, the system shall display each discovered project with its code, identifier, description, and filesystem path.",
+      "sourceRef": "CR:3 Project Commands",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-14",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli project current or mdt-cli project inside a detected project, the system shall display the current project code, name, description, path, and relevant configuration values.",
+      "sourceRef": "CR:3 Project Commands",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-15",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli project get <code>, mdt-cli project info <code>, or mdt-cli project <code>, the system shall resolve the project code case-insensitively and display that project's information.",
+      "sourceRef": "CR:3 Project Commands",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-17",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli project with a single token after the namespace, the system shall reserve exact lowercase ls and list as project-list aliases and treat other tokens such as LS or LIST as project-code lookup inputs.",
+      "sourceRef": "CR:3 Project Commands",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket create or mdt-cli create with a valid type, title, and optional priority or slug arguments, the system shall create one new ticket with default metadata and print the created ticket key and path.",
+      "sourceRef": "CR:3 Create Ticket",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "WHEN operator passes type and priority tokens to mdt-cli ticket create or mdt-cli create, the system shall interpret the same create request regardless of the order in which those tokens are provided.",
+      "sourceRef": "CR:3 Create Ticket",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket create or mdt-cli create with a slug but without a quoted title, the system shall derive the ticket title from the slug before creating the ticket.",
+      "sourceRef": "CR:3 Create Ticket",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9",
+      "kind": "behavior",
+      "text": "WHEN mdt-cli ticket create or mdt-cli create receives piped standard input, the system shall generate ticket frontmatter and an H1 title, append the piped content as the ticket body, and skip template generation.",
+      "sourceRef": "CR:3 Create Ticket",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF operator omits required command arguments or supplies an unrecognized create token, unsupported attribute-mutation form, unsupported attribute key, unsupported attribute operator, or unrecognized explicit project verb, THEN the system shall reject the command with a clear corrective message and a suggestion for the closest valid token when available.",
+      "sourceRef": "CR:4 AC-3,AC-5,AC-6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-10",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes in one response.",
+      "sourceRef": "CR:3 Update Attributes",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall accept only status, priority, phase, assignee, related, depends, blocks, impl-date, and impl-notes as mutable CLI attributes; only related, depends, and blocks may use += or -= operators, while all other mutable attributes use = only.",
+      "sourceRef": "CR:3 Update Attributes",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "initialize_project_in_current_folder",
+      "title": "Initialize a project in the current folder",
+      "covers": [
+        "BR-16"
+      ],
+      "given": "Given I am in a folder that does not yet contain project configuration",
+      "when": "When I run mdt-cli project init MDT Markdown Ticket Board",
+      "then": "Then the current folder should receive project configuration for code MDT and name Markdown Ticket Board",
+      "sourceRef": "requirements:BR-16"
+    },
+    {
+      "id": "render_colored_relative_ticket_output",
+      "title": "Render colored ticket output with relative paths",
+      "covers": [
+        "BR-11",
+        "BR-12"
+      ],
+      "given": "Given I run the CLI in an interactive terminal with color enabled and relative path mode",
+      "when": "When I run mdt-cli 12",
+      "then": "Then I should see colorized status, priority, and type indicators and a path relative to the project root",
+      "sourceRef": "requirements:BR-11,BR-12"
+    },
+    {
+      "id": "render_absolute_ticket_path_when_configured",
+      "title": "Render absolute ticket paths when configured",
+      "covers": [
+        "BR-13"
+      ],
+      "given": "Given cli.ticket.absolutePath is set to true",
+      "when": "When I run mdt-cli 12",
+      "then": "Then I should see the ticket path as an absolute filesystem path",
+      "sourceRef": "requirements:BR-13"
+    },
+    {
+      "id": "view_ticket_from_detected_project",
+      "title": "View a ticket from detected project via bare shortcut",
+      "covers": [
+        "BR-1",
+        "BR-2"
+      ],
+      "given": "Given I am in a project directory that contains ticket MDT-012",
+      "when": "When I run mdt-cli 12",
+      "then": "Then I should see MDT-012 with its title and labeled status, type, priority, phase, assignee, created date, modified date, and relative path",
+      "sourceRef": "requirements:BR-1,BR-2"
+    },
+    {
+      "id": "view_ticket_across_projects",
+      "title": "View a ticket across projects via canonical ticket get command",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3"
+      ],
+      "given": "Given I am outside the target project and ticket API-012 exists",
+      "when": "When I run mdt-cli ticket get API-12",
+      "then": "Then I should see API-012 with its title and labeled fields without requiring current-directory project context",
+      "sourceRef": "requirements:BR-1,BR-2,BR-3"
+    },
+    {
+      "id": "list_tickets_in_detected_project",
+      "title": "List tickets via canonical ticket list command",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "Given I am in a project directory with multiple tickets",
+      "when": "When I run mdt-cli ticket list",
+      "then": "Then I should see every ticket in compact form and the project ticket count",
+      "sourceRef": "requirements:BR-4"
+    },
+    {
+      "id": "list_projects_via_project_namespace",
+      "title": "List discovered projects via project list aliases",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "Given multiple projects are registered",
+      "when": "When I run mdt-cli project list",
+      "then": "Then I should see each discovered project with its code, identifier, description, and filesystem path",
+      "sourceRef": "requirements:BR-5"
+    },
+    {
+      "id": "show_current_project_details",
+      "title": "Show current project details via project shortcut",
+      "covers": [
+        "BR-14"
+      ],
+      "given": "Given I am in a configured project directory",
+      "when": "When I run mdt-cli project",
+      "then": "Then I should see the current project code, name, description, path, and relevant configuration values",
+      "sourceRef": "requirements:BR-14"
+    },
+    {
+      "id": "resolve_project_token_without_subcommand_collision",
+      "title": "Resolve project lookup shortcut without colliding with list aliases",
+      "covers": [
+        "BR-15",
+        "BR-17"
+      ],
+      "given": "Given a project with code LS is registered",
+      "when": "When I run mdt-cli project LS",
+      "then": "Then I should see the LS project information instead of the project list",
+      "sourceRef": "requirements:BR-15,BR-17"
+    },
+    {
+      "id": "create_ticket_from_slug_with_order_independent_tokens",
+      "title": "Create a ticket via canonical ticket create with order-independent tokens",
+      "covers": [
+        "BR-6",
+        "BR-7",
+        "BR-8"
+      ],
+      "given": "Given I am in a project directory that can create new tickets",
+      "when": "When I run mdt-cli ticket create feature/high add-dark-mode",
+      "then": "Then a new ticket should be created with the derived title Add dark mode, the requested priority, and a reported key and path",
+      "sourceRef": "requirements:BR-6,BR-7,BR-8"
+    },
+    {
+      "id": "create_ticket_from_piped_input",
+      "title": "Create a ticket from piped standard input via the create alias",
+      "covers": [
+        "BR-6",
+        "BR-9"
+      ],
+      "given": "Given I am in a project directory and I pipe markdown content into the CLI",
+      "when": "When I run cat spec.md | mdt-cli create feature 'CLI tool'",
+      "then": "Then a new ticket should be created with generated frontmatter and title, followed by the literal piped body content and a reported key and path",
+      "sourceRef": "requirements:BR-6,BR-9"
+    },
+    {
+      "id": "update_ticket_attributes_in_one_command",
+      "title": "Update ticket attributes with set, add, and remove operators through the top-level attr command",
+      "covers": [
+        "BR-10"
+      ],
+      "given": "Given ticket MDT-012 has related MDT-001 and supports status and relation updates",
+      "when": "When I run mdt-cli attr MDT-012 status=implemented related+=ABC-003 depends-=MDT-001",
+      "then": "Then MDT-012 should update the scalar attribute, append the new relation without duplicates, remove the requested dependency, and report the applied changes in one confirmation response",
+      "sourceRef": "requirements:BR-10"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-output-rendering",
+      "title": "CLI output formatting shall centralize labeled field rendering, relative-vs-absolute path policy, and TTY color gating while keeping status, priority, and type color categories aligned with the web badge stylesheet.",
+      "derivedFrom": [
+        "BR-11",
+        "BR-12",
+        "BR-13",
+        "C1",
+        "C3",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-cli-formatter",
+        "ART-cli-colors",
+        "ART-cli-config",
+        "ART-badge-css"
+      ],
+      "sourceRef": "architecture:Output Rendering"
+    },
+    {
+      "id": "OBL-detector-extraction",
+      "title": "Project detection shall move into shared utilities, and existing MCP startup detection shall consume the shared detector instead of maintaining a private implementation.",
+      "derivedFrom": [
+        "BR-2",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-shared-project-detector",
+        "ART-mcp-index"
+      ],
+      "sourceRef": "architecture:Shared Reuse"
+    },
+    {
+      "id": "OBL-cli-bootstrap",
+      "title": "Register the CLI as a workspace package with a dedicated bin entry, bootstrap a commander program at the entrypoint, and normalize supported shortcut argv before framework parse.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-4",
+        "BR-5",
+        "BR-14",
+        "BR-15",
+        "BR-16",
+        "BR-17"
+      ],
+      "artifactIds": [
+        "ART-root-package-json",
+        "ART-cli-package-json",
+        "ART-cli-tsconfig",
+        "ART-cli-index",
+        "ART-cli-args"
+      ],
+      "sourceRef": "architecture:Build vs Use Decisions"
+    },
+    {
+      "id": "OBL-cli-verification-harness",
+      "title": "Executable acceptance for the CLI shall run through a spawned-process integration harness inside the CLI package and cover both canonical commander commands and supported shortcut forms rather than the browser-only Playwright suite.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-4",
+        "BR-5",
+        "BR-14",
+        "BR-15",
+        "BR-16",
+        "BR-17",
+        "C5",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-cli-index",
+        "ART-cli-args",
+        "ART-cli-package-json",
+        "ART-cli-integration-test"
+      ],
+      "sourceRef": "architecture:Runtime and Test Separation"
+    },
+    {
+      "id": "OBL-project-namespace",
+      "title": "The project command shall be implemented as a commander subtree that owns current-project info, project listing, explicit get or info verbs, bare project-code shortcuts, and current-folder initialization while delegating project operations to shared project management services.",
+      "derivedFrom": [
+        "BR-5",
+        "BR-14",
+        "BR-15",
+        "BR-16",
+        "BR-17",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-cli-project",
+        "ART-cli-index",
+        "ART-cli-args",
+        "ART-cli-config",
+        "ART-shared-project-detector",
+        "ART-shared-project-manager"
+      ],
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "OBL-ticket-read-path",
+      "title": "Ticket view and list commands shall use a commander ticket subtree plus a small shortcut normalizer for bare-key and alias forms, detect project context through shared project detection, and read CR data through shared ticket services instead of duplicating file traversal logic.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "C4",
+        "Edge-1",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-cli-view",
+        "ART-cli-list",
+        "ART-cli-index",
+        "ART-cli-args",
+        "ART-shared-project-detector",
+        "ART-shared-ticket-service"
+      ],
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "OBL-ticket-mutation",
+      "title": "Ticket create shall be registered under the commander ticket subtree with a top-level create alias, while the top-level attr command parses =, +=, and -= tokens, routes ticket persistence through shared ticket services, and isolates STDIN body capture from command dispatch.",
+      "derivedFrom": [
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-10",
+        "C2",
+        "C5",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-cli-create",
+        "ART-cli-attr",
+        "ART-cli-args",
+        "ART-cli-stdin",
+        "ART-shared-ticket-service",
+        "ART-cli-index"
+      ],
+      "sourceRef": "architecture:Module Boundaries"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-root-package-json",
+      "path": "package.json",
+      "kind": "config",
+      "sourceRef": "architecture:Structure"
+    },
+    {
+      "id": "ART-cli-package-json",
+      "path": "cli/package.json",
+      "kind": "config",
+      "sourceRef": "architecture:Structure"
+    },
+    {
+      "id": "ART-cli-tsconfig",
+      "path": "cli/tsconfig.json",
+      "kind": "config",
+      "sourceRef": "architecture:Structure"
+    },
+    {
+      "id": "ART-cli-view",
+      "path": "cli/src/commands/view.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "ART-cli-list",
+      "path": "cli/src/commands/list.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "ART-cli-create",
+      "path": "cli/src/commands/create.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "ART-cli-attr",
+      "path": "cli/src/commands/attr.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "ART-cli-formatter",
+      "path": "cli/src/output/formatter.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "ART-cli-colors",
+      "path": "cli/src/output/colors.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "ART-cli-config",
+      "path": "cli/src/utils/cliConfig.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "ART-cli-stdin",
+      "path": "cli/src/utils/stdin.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "ART-shared-project-detector",
+      "path": "shared/utils/projectDetector.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Shared Reuse"
+    },
+    {
+      "id": "ART-shared-project-manager",
+      "path": "shared/tools/ProjectManager.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Shared Reuse"
+    },
+    {
+      "id": "ART-shared-ticket-service",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Shared Reuse"
+    },
+    {
+      "id": "ART-badge-css",
+      "path": "src/components/Badge/badge.css",
+      "kind": "runtime",
+      "sourceRef": "architecture:Color Mapping"
+    },
+    {
+      "id": "ART-cli-integration-test",
+      "path": "cli/tests/integration/mdt-cli.integration.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture:Verification Strategy"
+    },
+    {
+      "id": "ART-mcp-index",
+      "path": "mcp-server/src/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Shared Reuse"
+    },
+    {
+      "id": "ART-cli-index",
+      "path": "cli/src/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Structure"
+    },
+    {
+      "id": "ART-cli-args",
+      "path": "cli/src/utils/args.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Structure"
+    },
+    {
+      "id": "ART-cli-project",
+      "path": "cli/src/commands/project.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Structure"
+    }
+  ],
+  "testPlans": [],
+  "tasks": []
+}
