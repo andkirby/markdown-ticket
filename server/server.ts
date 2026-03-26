@@ -2,6 +2,13 @@ import type { Express } from 'express'
 import type { ProjectPath } from './services/fileWatcher/PathWatcherService.js'
 import * as path from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
+
+// Load environment variables from root .env.local (for CORS_ALLOWED_ORIGINS, etc.)
+import { config } from 'dotenv'
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+config({ path: path.resolve(__dirname, '../.env.local') })
+
 import { getTicketsPath } from '@mdt/shared/models/Project.js'
 // Services
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
@@ -108,7 +115,33 @@ const PORT: number = Number(process.env.PORT) || 3001
 // Middleware
 // =============================================================================
 
-app.use(cors())
+// CORS configuration - allow additional origins via environment variable
+// ALLOWED_DOMAINS is shared with Vite (uses hostnames only, we generate full URLs)
+const additionalDomains = process.env.ALLOWED_DOMAINS?.split(',').map(d => d.trim()).filter(Boolean) || []
+const allowedOrigins = [
+  'http://localhost:5173', // Vite dev server
+  'http://localhost:3001', // Backend server (for same-origin requests)
+  'http://localhost:4173', // Vite preview server
+  ...additionalDomains.flatMap(d => [`https://${d}`, `http://${d}`]),
+]
+if (additionalDomains.length > 0) {
+  logger.info(`🌐 CORS allowed origins: ${additionalDomains.join(', ')}`)
+}
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true)
+    }
+    else {
+      logger.warn(`CORS blocked origin: ${origin}`)
+      callback(null, false) // Reject without throwing error
+    }
+  },
+  credentials: true,
+}))
 app.use(express.json())
 
 // Setup log interception for dev tools
