@@ -24,6 +24,7 @@ jest.mock('../../../services/crService.js')
 describe('CRHandlers - Worktree Integration (MDT-095)', () => {
   let crHandlers: CRHandlers
   let mockCrServiceInstance: jest.Mocked<CRService>
+  let mockTicketService: { updateTicketAttributes: jest.Mock }
 
   const mockProject: Project = createMockProject({
     project: {
@@ -65,14 +66,26 @@ describe('CRHandlers - Worktree Integration (MDT-095)', () => {
       suggestImprovements: jest.fn().mockReturnValue([]),
     }
 
-    // Note: WorktreeService is NO LONGER passed to CRHandlers (MDT-095)
-    // Worktree resolution now happens in the shared TicketService layer
+    mockTicketService = {
+      updateTicketAttributes: jest.fn().mockResolvedValue({
+        ticket: mockTicket,
+        target: {
+          projectId: 'test-project',
+          projectCode: 'MDT',
+          ticketKey: 'MDT-001',
+        },
+        normalizedInputs: [],
+        changedFields: ['priority'],
+      }),
+    }
+
     crHandlers = new CRHandlers(
       mockCrServiceInstance,
       MarkdownService as unknown as typeof MarkdownService,
       titleService,
       templateService,
-    )
+      mockTicketService as unknown as any,
+    );
 
     process.env.MCP_SANITIZATION_ENABLED = 'false'
   })
@@ -155,10 +168,14 @@ describe('CRHandlers - Worktree Integration (MDT-095)', () => {
         { priority: 'High' },
       )
 
-      expect(mockCrServiceInstance.updateCRAttrs).toHaveBeenCalledWith(
-        mockProject,
-        'MDT-001',
-        { priority: 'High' },
+      expect(mockTicketService.updateTicketAttributes).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectRef: 'MDT',
+          ticketKey: 'MDT-001',
+          operations: expect.arrayContaining([
+            expect.objectContaining({ field: 'priority', op: 'replace' }),
+          ]),
+        }),
       )
       expect(result).toContain('Updated CR MDT-001')
     })

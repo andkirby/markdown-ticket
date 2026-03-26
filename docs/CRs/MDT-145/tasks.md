@@ -58,8 +58,8 @@
 - `TEST-ticket-subdocuments`
 
 **Done when**:
-- [ ] Shared service errors are typed and consumer-neutral
-- [ ] Project and ticket services can return structured failures without CLI coupling
+- [x] Shared service errors are typed and consumer-neutral
+- [x] Project and ticket services can return structured failures without CLI coupling
 
 ---
 
@@ -75,8 +75,8 @@
 - `detect_project_context_from_nested_directory`
 
 **Done when**:
-- [ ] Detection searches parent directories to filesystem root
-- [ ] Detection returns explicit no-project result
+- [x] Detection searches parent directories to filesystem root
+- [x] Detection returns explicit no-project result
 
 ---
 
@@ -91,10 +91,10 @@
 - `TEST-project-service`
 
 **Done when**:
-- [ ] Project entity and project input roles are explicit in `domain-contracts`
-- [ ] Ticket canonical entity/input ownership remains explicit and unchanged by service-interface work
-- [ ] Existing config, registry, and worktree roles remain specialized
-- [ ] Service interfaces remain in `shared`
+- [x] Project entity and project input roles are explicit in `domain-contracts`
+- [x] Ticket canonical entity/input ownership remains explicit and unchanged by service-interface work
+- [x] Existing config, registry, and worktree roles remain specialized
+- [x] Service interfaces remain in `shared`
 
 ---
 

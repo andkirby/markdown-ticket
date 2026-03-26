@@ -24,8 +24,27 @@ import {
 import { DEFAULTS } from '../utils/constants.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
+import type { ReadResult } from './project/types.js'
+import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
 import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
+import type {
+  AttrOperation,
+  GetTicketRequest,
+  ListTicketsRequest,
+  TicketReadResult,
+  TicketWriteResult,
+  UpdateTicketAttributesRequest,
+} from './ticket/types.js'
+
+const RELATION_FIELDS = ['relatedTickets', 'dependsOn', 'blocks'] as const
+
+function normalizeValue(value: string | string[]): string | string[] {
+  if (Array.isArray(value)) {
+    return value.map(v => v.trim())
+  }
+  return value.trim()
+}
 
 /**
  * Unified Ticket Service for CRUD Operations
@@ -46,6 +65,116 @@ export class TicketService {
     this.ticketLocationResolver = new TicketLocationResolver(this.projectService)
   }
 
+  async listTickets(request: ListTicketsRequest): Promise<ReadResult<Ticket[]>> {
+    const project = await this.requireProject(request.projectRef)
+    return {
+      data: await this.listCRs(project, request.filters),
+    }
+  }
+
+  async getTicket(request: GetTicketRequest): Promise<TicketReadResult> {
+    const project = await this.requireProject(request.projectRef)
+    const ticket = await this.getCR(project, request.ticketKey)
+
+    if (!ticket) {
+      throw ServiceError.ticketNotFound(request.ticketKey)
+    }
+
+    return { data: ticket }
+  }
+
+  async updateTicketAttributes(request: UpdateTicketAttributesRequest): Promise<TicketWriteResult<AttrOperation[]>> {
+    const project = await this.requireProject(request.projectRef)
+    const currentTicket = await this.getCR(project, request.ticketKey)
+
+    if (!currentTicket) {
+      throw ServiceError.ticketNotFound(request.ticketKey)
+    }
+
+    const normalizedOperations = request.operations.map(operation => ({
+      ...operation,
+      value: normalizeValue(operation.value),
+    }))
+
+    this.validateAttrOperations(normalizedOperations)
+
+    const changedFields: string[] = []
+    const updates: Record<string, string | string[]> = {}
+
+    for (const operation of normalizedOperations) {
+      const currentValue = this.getTicketField(currentTicket, operation.field)
+
+      if (operation.op === 'replace') {
+        if (this.isRelationField(operation.field)) {
+          const nextValue = Array.isArray(operation.value)
+            ? operation.value
+            : (operation.value ? [operation.value] : [])
+          const currentRelationValue = this.getRelationField(currentTicket, operation.field)
+
+          if (JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)) {
+            updates[operation.field] = nextValue
+            changedFields.push(operation.field)
+          }
+          continue
+        }
+
+        const nextValue = Array.isArray(operation.value) ? operation.value.join(',') : operation.value
+        if (currentValue !== nextValue) {
+          updates[operation.field] = nextValue
+          changedFields.push(operation.field)
+        }
+        continue
+      }
+
+      const currentRelationValue = this.getRelationField(currentTicket, operation.field)
+      const normalizedValues = Array.isArray(operation.value) ? operation.value : [operation.value]
+
+      if (operation.op === 'add') {
+        const nextValue = [...new Set([...currentRelationValue, ...normalizedValues])]
+        if (JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)) {
+          updates[operation.field] = nextValue
+          changedFields.push(operation.field)
+        }
+        continue
+      }
+
+      const valuesToRemove = new Set(normalizedValues)
+      const nextValue = currentRelationValue.filter(value => !valuesToRemove.has(value))
+      if (JSON.stringify(currentRelationValue) !== JSON.stringify(nextValue)) {
+        updates[operation.field] = nextValue
+        changedFields.push(operation.field)
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      const persistUpdates = Object.fromEntries(
+        Object.entries(updates).map(([field, value]) => [
+          field,
+          Array.isArray(value) ? value.join(',') : value,
+        ]),
+      ) as Partial<TicketData>
+
+      await this.updateCRAttrs(project, request.ticketKey, persistUpdates)
+    }
+
+    const updatedTicket = await this.getCR(project, request.ticketKey)
+    if (!updatedTicket) {
+      throw ServiceError.persistenceError(`Ticket ${request.ticketKey} disappeared after update`)
+    }
+
+    return {
+      ticket: updatedTicket,
+      target: {
+        projectId: project.id,
+        projectCode: project.project.code,
+        ticketKey: request.ticketKey,
+      },
+      normalizedInputs: normalizedOperations,
+      changedFields,
+      path: updatedTicket.filePath,
+    }
+  }
+
   /**
    * Get the correct CR path for a project with backward compatibility
    */
@@ -61,7 +190,7 @@ export class TicketService {
       return path.resolve(project.project.path, crPath)
     }
     catch (error) {
-      console.warn(`Failed to get CR path config for project ${project.id}, using default:`, error)
+      // Fallback to default path on error
       return path.resolve(project.project.path, DEFAULTS.TICKETS_PATH)
     }
   }
@@ -99,8 +228,7 @@ export class TicketService {
         return b.code.localeCompare(a.code)
       })
     }
-    catch (error) {
-      console.error(`Failed to list CRs for project ${project.id}:`, error)
+    catch {
       return []
     }
   }
@@ -133,7 +261,6 @@ export class TicketService {
       )
 
       if (!targetCR) {
-        console.warn(`CR ${key} not found in project ${project.id}`)
         return null
       }
 
@@ -144,8 +271,7 @@ export class TicketService {
         worktreePath: location.isWorktree ? location.projectRoot : undefined,
       }
     }
-    catch (error) {
-      console.error(`Failed to get CR ${key} for project ${project.id}:`, error)
+    catch {
       return null
     }
   }
@@ -179,7 +305,6 @@ export class TicketService {
       }
     }
     catch (error) {
-      console.error(`Failed to create CR for project ${project.id}:`, error)
       throw new Error(`Failed to create CR: ${(error as Error).message}`)
     }
   }
@@ -207,7 +332,6 @@ export class TicketService {
       // Write back to file
       await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
 
-      console.warn(`✅ Updated CR ${key} status to ${status}`)
       return true
     }
     catch (error) {
@@ -274,7 +398,6 @@ export class TicketService {
       // Write back to file
       await fs.outputFile(cr.filePath, updatedContent, 'utf-8')
 
-      console.warn(`✅ Updated CR ${key} attributes`)
       return true
     }
     catch (error) {
@@ -371,6 +494,48 @@ export class TicketService {
     }
   }
 
+  private async requireProject(projectRef: string): Promise<Project> {
+    const result = await this.projectService.getProject(projectRef)
+    return result.data
+  }
+
+  private isRelationField(field: string): boolean {
+    return RELATION_FIELDS.includes(field as typeof RELATION_FIELDS[number])
+  }
+
+  private validateAttrOperations(operations: AttrOperation[]): void {
+    for (const operation of operations) {
+      if ((operation.op === 'add' || operation.op === 'remove') && !this.isRelationField(operation.field)) {
+        throw ServiceError.invalidOperation(
+          `Cannot use '${operation.op}' operation on non-relation field '${operation.field}'. Only relation fields (${RELATION_FIELDS.join(', ')}) support add/remove operations.`,
+          { field: operation.field, op: operation.op },
+        )
+      }
+    }
+  }
+
+  private getRelationField(ticket: Ticket, field: string): string[] {
+    const value = (ticket as unknown as Record<string, unknown>)[field]
+    if (Array.isArray(value)) {
+      return value.filter((item): item is string => typeof item === 'string')
+    }
+    if (typeof value === 'string' && value) {
+      return value.split(',').map(item => item.trim()).filter(Boolean)
+    }
+    return []
+  }
+
+  private getTicketField(ticket: Ticket, field: string): string {
+    const value = (ticket as unknown as Record<string, unknown>)[field]
+    if (typeof value === 'string') {
+      return value
+    }
+    if (Array.isArray(value)) {
+      return value.join(',')
+    }
+    return ''
+  }
+
   /**
    * Delete a CR from a project
    */
@@ -382,11 +547,9 @@ export class TicketService {
       }
 
       await fs.remove(cr.filePath)
-      console.warn(`🗑️ Deleted CR ${key}`)
       return true
     }
-    catch (error) {
-      console.error(`Failed to delete CR ${key}:`, error)
+    catch {
       return false
     }
   }
@@ -420,8 +583,7 @@ export class TicketService {
 
       return nextNumber
     }
-    catch (error) {
-      console.warn(`Failed to get next CR number: ${(error as Error).message}`)
+    catch {
       return project.project.startNumber || 1
     }
   }
