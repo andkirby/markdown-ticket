@@ -137,7 +137,7 @@ function createPutRequest<T extends string | object | undefined = object>(
  * @param options - Optional request configuration
  * @returns Promise resolving to Supertest Response
  */
-export function createDeleteRequest(
+function createDeleteRequest(
   app: Express,
   path: string,
   options?: RequestOptions,

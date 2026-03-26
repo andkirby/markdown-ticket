@@ -6,9 +6,9 @@ import type { Project } from '../models/Project.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { ProjectService } from '../services/ProjectService.js'
+import { ServiceError } from '../services/ServiceError.js'
 import { CONFIG_FILES, DEFAULTS } from '../utils/constants.js'
 import { calculatePathDepth, isPathWithinSearchPaths } from '../utils/path-resolver.js'
-import { CLI_ERROR_CODES, ProjectError } from './project-cli.js'
 import { ProjectValidator } from './ProjectValidator.node.js'
 
 /**
@@ -36,10 +36,8 @@ export type ProjectCreateInput = Partial<ProjectCreateFields> & {
  */
 export class ProjectManager {
   private projectService: ProjectService
-  private quiet: boolean
 
   constructor(quiet: boolean = false) {
-    this.quiet = quiet
     this.projectService = new ProjectService(quiet)
   }
 
@@ -50,7 +48,7 @@ export class ProjectManager {
     // Validate name
     const nameResult = ProjectValidator.validateName(input.name)
     if (!nameResult.valid) {
-      throw new ProjectError(nameResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+      throw ServiceError.validationError(nameResult.error!)
     }
     const name = nameResult.normalized!
 
@@ -59,7 +57,7 @@ export class ProjectManager {
     if (input.code) {
       const codeResult = ProjectValidator.validateCode(input.code)
       if (!codeResult.valid) {
-        throw new ProjectError(codeResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+        throw ServiceError.validationError(codeResult.error!)
       }
       code = codeResult.normalized!
     }
@@ -72,7 +70,7 @@ export class ProjectManager {
       mustExist: !input.createProjectPath,
     })
     if (!pathResult.valid) {
-      throw new ProjectError(pathResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+      throw ServiceError.validationError(pathResult.error!)
     }
     const projectPath = pathResult.normalized!
 
@@ -82,9 +80,8 @@ export class ProjectManager {
     // Check if code is already used by another project
     const existingProjectByCode = allProjects.find(p => p.project.code === code)
     if (existingProjectByCode) {
-      throw new ProjectError(
+      throw ServiceError.validationError(
         `Project with code "${code}" already exists. To modify this project, use the update command: npm run project:update -- ${code}`,
-        CLI_ERROR_CODES.VALIDATION_ERROR,
       )
     }
 
@@ -107,7 +104,7 @@ export class ProjectManager {
     if (description) {
       const descResult = ProjectValidator.validateDescription(description)
       if (!descResult.valid) {
-        throw new ProjectError(descResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+        throw ServiceError.validationError(descResult.error!)
       }
     }
 
@@ -116,7 +113,7 @@ export class ProjectManager {
     if (repository) {
       const repoResult = ProjectValidator.validateRepository(repository)
       if (!repoResult.valid) {
-        throw new ProjectError(repoResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+        throw ServiceError.validationError(repoResult.error!)
       }
     }
 
@@ -125,7 +122,7 @@ export class ProjectManager {
     if (input.ticketsPath) {
       const ticketsPathResult = ProjectValidator.validateTicketsPath(input.ticketsPath)
       if (!ticketsPathResult.valid) {
-        throw new ProjectError(ticketsPathResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+        throw ServiceError.validationError(ticketsPathResult.error!)
       }
       ticketsPath = ticketsPathResult.normalized!
     }
@@ -135,7 +132,7 @@ export class ProjectManager {
       fs.mkdirSync(projectPath, { recursive: true })
     }
     else if (!input.globalOnly && !fs.existsSync(projectPath) && !input.createProjectPath) {
-      throw new ProjectError(`Project path does not exist: ${projectPath}. Use --create-project-path flag to auto-create.`, CLI_ERROR_CODES.VALIDATION_ERROR)
+      throw ServiceError.validationError(`Project path does not exist: ${projectPath}. Use --create-project-path flag to auto-create.`)
     }
 
     // Determine if this should be an auto-discovery project
@@ -240,7 +237,7 @@ export class ProjectManager {
     const project = await this.projectService.getProjectByCodeOrId(codeOrId)
 
     if (!project) {
-      throw new ProjectError(`Project not found: ${codeOrId}`, CLI_ERROR_CODES.NOT_FOUND)
+      throw ServiceError.projectNotFound(codeOrId)
     }
 
     return project
@@ -259,7 +256,7 @@ export class ProjectManager {
     if (updates.name !== undefined) {
       const nameResult = ProjectValidator.validateName(updates.name)
       if (!nameResult.valid) {
-        throw new ProjectError(nameResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+        throw ServiceError.validationError(nameResult.error!)
       }
       validatedUpdates.name = nameResult.normalized!
     }
@@ -267,7 +264,7 @@ export class ProjectManager {
     if (updates.description !== undefined) {
       const descResult = ProjectValidator.validateDescription(updates.description)
       if (!descResult.valid) {
-        throw new ProjectError(descResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+        throw ServiceError.validationError(descResult.error!)
       }
       validatedUpdates.description = descResult.normalized!
     }
@@ -275,7 +272,7 @@ export class ProjectManager {
     if (updates.repository !== undefined) {
       const repoResult = ProjectValidator.validateRepository(updates.repository)
       if (!repoResult.valid) {
-        throw new ProjectError(repoResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+        throw ServiceError.validationError(repoResult.error!)
       }
       validatedUpdates.repository = repoResult.normalized!
     }
@@ -283,7 +280,7 @@ export class ProjectManager {
     if (updates.ticketsPath !== undefined) {
       const ticketsPathResult = ProjectValidator.validateTicketsPath(updates.ticketsPath)
       if (!ticketsPathResult.valid) {
-        throw new ProjectError(ticketsPathResult.error!, CLI_ERROR_CODES.VALIDATION_ERROR)
+        throw ServiceError.validationError(ticketsPathResult.error!)
       }
       validatedUpdates.ticketsPath = ticketsPathResult.normalized!
     }

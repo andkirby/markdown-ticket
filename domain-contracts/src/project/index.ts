@@ -3,7 +3,11 @@
  * Clean public API for project package
  */
 
-// Export all schemas and types from schema.ts
+// Export role-explicit project contracts first
+export * from './entity'
+export * from './input'
+
+// Export all schemas and types from schema.ts for compatibility
 export * from './schema'
 export * from './worktree'
 

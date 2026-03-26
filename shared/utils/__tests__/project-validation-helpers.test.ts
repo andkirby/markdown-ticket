@@ -3,7 +3,6 @@
  */
 
 import type { Project } from '../../models/Project.js'
-import { describe, expect, it } from '@jest/globals'
 import { fileExists } from '../file-utils.js'
 import {
   validateConfigExists,
@@ -22,14 +21,18 @@ function createMockProject(overrides: {
   id?: string
   code?: string
 }): Project {
+  const id = overrides.id ?? 'temp-id'
+  const code = overrides.code ?? 'TEMP'
   return {
-    id: overrides.id || 'temp-id',
+    id,
     project: {
-      id: overrides.id,
+      id,
       name: 'Test Project',
-      code: overrides.code,
+      code,
       path: '/test/path',
       configFile: '/test/path/.mdt-config.toml',
+      ticketsPath: 'docs/CRs',
+      repository: '',
       active: true,
       description: 'Test project description',
     },

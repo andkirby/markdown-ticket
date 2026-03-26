@@ -36,5 +36,3 @@ export function Icon({ name, className, 'aria-label': ariaLabel }: IconProps) {
     </svg>
   )
 }
-
-export default Icon

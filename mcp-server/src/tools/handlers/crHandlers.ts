@@ -13,8 +13,10 @@ import type { TicketData, TicketFilters } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
+import type { TicketService } from '@mdt/shared/services/TicketService.js'
 import type { CRService } from '../../services/crService.js'
 import type { Ticket } from '@mdt/domain-contracts'
+import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
 import { CRStatus as CRStatusEnum, CRTypes } from '@mdt/domain-contracts'
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ContentProcessor } from '../../services/SectionManagement/ContentProcessor.js'
@@ -37,6 +39,13 @@ type CRAttributes
       | 'implementationNotes'
     >>
 
+function hasServiceErrorCode(error: unknown, code: string): error is { code: string, message: string } {
+  return typeof error === 'object'
+    && error !== null
+    && 'code' in error
+    && (error as { code?: unknown }).code === code
+}
+
 /**
  * CR Handlers Class
  *
@@ -49,6 +58,7 @@ export class CRHandlers {
     private markdownService: MarkdownService,
     private titleExtractionService: TitleExtractionService,
     private templateService: TemplateService,
+    private ticketService: TicketService,
   ) {}
 
   /**
@@ -347,6 +357,7 @@ export class CRHandlers {
 
   /**
    * Handler for update_cr_attrs tool
+   * Uses shared TicketService attribute capability (MDT-145)
    */
   async handleUpdateCRAttrs(project: Project, key: string, attributes: Record<string, unknown>): Promise<string> {
     // Normalize key (MDT-121: supports numeric shorthand and lowercase prefixes)
@@ -359,33 +370,50 @@ export class CRHandlers {
       throw ToolError.protocol(attrsValidation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
     }
 
-    // TicketService now handles worktree resolution internally (MDT-095)
-    const ticket = await this.crService.getCR(project, normalizedKey)
-    if (!ticket) {
-      throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
-    }
+    // Convert attributes to replace operations for shared TicketService attribute updates
+    const operations: AttrOperation[] = Object.entries(attributes)
+      .filter(([, value]) => value !== undefined && value !== null)
+      .map(([field, value]) => ({
+        field,
+        op: 'replace' as const,
+        value: Array.isArray(value) ? value : String(value),
+      }))
 
-    const success = await this.crService.updateCRAttrs(project, normalizedKey, attributes)
-    if (!success) {
-      throw ToolError.toolExecution(`Failed to update CR '${normalizedKey}' attributes`)
-    }
+    try {
+      const result = await this.ticketService.updateTicketAttributes({
+        projectRef: project.project.code || project.id,
+        ticketKey: normalizedKey,
+        operations,
+      })
 
-    const lines = [
-      `✅ **Updated CR ${normalizedKey} Attributes**`,
-      '',
-      `- Title: ${ticket.title}`,
-      `- Status: ${ticket.status}`,
-      '',
-      '**Updated Fields:**',
-    ]
+      const lines = [
+        `✅ **Updated CR ${normalizedKey} Attributes**`,
+        '',
+        `- Title: ${result.ticket.title}`,
+        `- Status: ${result.ticket.status}`,
+        '',
+        '**Updated Fields:**',
+      ]
 
-    for (const [field, value] of Object.entries(attributes)) {
-      if (value !== undefined && value !== null) {
-        lines.push(`- ${field}: ${value}`)
+      for (const field of result.changedFields || []) {
+        const ticketAsRecord = result.ticket as unknown as Record<string, unknown>
+        const value = ticketAsRecord[field]
+        if (value !== undefined) {
+          lines.push(`- ${field}: ${Array.isArray(value) ? value.join(', ') : value}`)
+        }
       }
-    }
 
-    return lines.join('\n')
+      return lines.join('\n')
+    }
+    catch (error) {
+      if (hasServiceErrorCode(error, 'TICKET_NOT_FOUND')) {
+        throw ToolError.toolExecution(`CR '${normalizedKey}' not found in project '${project.project.code || project.id}'`)
+      }
+      if (hasServiceErrorCode(error, 'INVALID_OPERATION')) {
+        throw ToolError.protocol(error.message, JsonRpcErrorCode.InvalidParams)
+      }
+      throw ToolError.toolExecution(`Failed to update CR '${normalizedKey}': ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 
   /**

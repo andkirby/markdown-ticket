@@ -1,8 +1,16 @@
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { ProjectService } from '@mdt/shared/services/ProjectService.js'
+import process from 'node:process'
 import { Sanitizer } from '../../utils/sanitizer.js'
 import { JsonRpcErrorCode, ToolError } from '../../utils/toolError.js'
 import { validateProjectKey } from '../../utils/validation.js'
+
+function isProjectNotFoundError(error: unknown): error is { code: string, message: string } {
+  return typeof error === 'object'
+    && error !== null
+    && 'code' in error
+    && (error as { code?: unknown }).code === 'PROJECT_NOT_FOUND'
+}
 
 /**
  * Project-specific tool handlers for MCP server
@@ -104,7 +112,7 @@ export class ProjectHandlers {
 
     // No project context available - this is a protocol error (missing required parameter)
     throw ToolError.protocol(
-      'Project key is required. Either start MCP server from a project directory with `.mdt-config.toml`, or provide the `project` parameter explicitly.',
+      `Project key is required. Either start MCP server from a project directory with \`.mdt-config.toml\`, or provide the \`project\` parameter explicitly. Current working directory: ${process.cwd()}`,
       JsonRpcErrorCode.InvalidParams,
     )
   }
@@ -119,31 +127,31 @@ export class ProjectHandlers {
       throw ToolError.protocol(validation.message || 'Validation error', JsonRpcErrorCode.InvalidParams)
     }
 
-    // Get all projects (uses cache if available)
-    const projects = await this.projectService.getAllProjects()
-    this.cachedProjects = projects
+    const normalizedKey = validation.value as string
+    try {
+      const result = await this.projectService.getProject(normalizedKey)
+      return result.data
+    }
+    catch (error) {
+      if (!isProjectNotFoundError(error)) {
+        throw error
+      }
 
-    // Look for project by validated code first, then fall back to id for backward compatibility
-    const normalizedKey = validation.value
-    const project = projects.find(p =>
-      p.project.code === normalizedKey || p.id === normalizedKey,
-    )
-    if (!project) {
-      const availableKeys = projects.map(p =>
-        p.project.code || p.id,
+      const projectsResult = await this.projectService.listProjects({ includeInactive: true })
+      this.cachedProjects = projectsResult.data
+      const availableKeys = projectsResult.data.map(project =>
+        project.project.code || project.id,
       ).filter(Boolean).join(', ')
-      // Project not found is a business logic failure (tool execution error)
+
       throw ToolError.toolExecution(`Project '${normalizedKey}' not found. Available projects: ${availableKeys}`)
     }
-    return project
   }
 
   /**
    * List all discovered projects
    */
   private async handleListProjects(): Promise<string> {
-    // Get all projects (uses cache if available)
-    const projects = await this.projectService.getAllProjects()
+    const { data: projects } = await this.projectService.listProjects({ includeInactive: true })
     this.cachedProjects = projects
 
     if (projects.length === 0) {

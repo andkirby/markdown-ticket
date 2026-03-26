@@ -31,17 +31,6 @@ export interface FileChangeEvent {
   }
 }
 
-/** Registry lifecycle event data structure. */
-export interface RegistryEvent {
-  type: string
-  data: {
-    projectId: string
-    timestamp: number
-    eventId: string
-    source: string
-  }
-}
-
 /** Response-like object for SSE client connections. */
 export interface ResponseLike {
   write: (data: string) => void
