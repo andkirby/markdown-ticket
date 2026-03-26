@@ -22,7 +22,7 @@ import {
  * CR code pattern for OpenAPI schemas (string format)
  * Converted from domain-contracts CR_CODE_PATTERN regex
  */
-export const CR_CODE_PATTERN_STRING = CR_CODE_PATTERN.source
+const CR_CODE_PATTERN_STRING = CR_CODE_PATTERN.source
 
 type OpenApiSchema = Record<string, unknown>
 type OpenApiObjectSchema = OpenApiSchema & {

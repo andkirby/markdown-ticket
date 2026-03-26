@@ -4,6 +4,47 @@ import type { Ticket } from '../../models/Ticket.js'
 
 export type GlobalConfig = DomainGlobalConfig
 
+export interface ReadResult<TData, TContext = undefined> {
+  data: TData
+  context?: TContext
+}
+
+export interface WriteResult<TNormalizedInput> {
+  target: {
+    projectId: string
+    projectCode: string
+    ticketKey?: string
+  }
+  normalizedInputs: TNormalizedInput
+  changedFields: string[]
+  path: string
+}
+
+export interface ResolveCurrentProjectRequest {
+  cwd?: string
+}
+
+export interface ResolveCurrentProjectFoundContext {
+  detectedFrom: string
+}
+
+export interface ResolveCurrentProjectNoneContext {
+  none: true
+  searchedFrom: string
+}
+
+export type ResolveCurrentProjectResult =
+  | ReadResult<Project, ResolveCurrentProjectFoundContext>
+  | ReadResult<null, ResolveCurrentProjectNoneContext>
+
+export interface GetProjectRequest {
+  projectRef: string
+}
+
+export interface ListProjectsRequest {
+  includeInactive?: boolean
+}
+
 /** Project cache structure */
 export interface ProjectCache {
   projects: Project[] | null

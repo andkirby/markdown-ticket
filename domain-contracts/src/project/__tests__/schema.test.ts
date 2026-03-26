@@ -5,16 +5,17 @@
 
 // Import schemas to be tested
 import {
+  CreateProjectInputSchema,
   DocumentConfigSchema,
-  ProjectSchema,
+  ProjectDetailsSchema,
 } from '../schema.js'
 
-describe('projectSchema', () => {
+describe('createProjectInputSchema', () => {
   // Testing OUR regex rule for code field
   describe('code format', () => {
     // Valid cases - our rule accepts these
     it('accepts MIN boundary (2 chars)', () => {
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'MD',
         name: 'Test Project',
         id: 'test',
@@ -23,7 +24,7 @@ describe('projectSchema', () => {
     })
 
     it('accepts MAX boundary (5 chars)', () => {
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'Z9999',
         name: 'Test Project',
         id: 'test',
@@ -32,14 +33,14 @@ describe('projectSchema', () => {
     })
 
     it('accepts middle range (3-4 chars)', () => {
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'MDT',
         name: 'Test Project',
         id: 'test',
         ticketsPath: './cr',
       })).not.toThrow()
 
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'WEB1',
         name: 'Test Project',
         id: 'test',
@@ -49,7 +50,7 @@ describe('projectSchema', () => {
 
     // Invalid cases - our rule rejects these
     it('rejects below MIN (1 char)', () => {
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'M',
         name: 'Test Project',
         id: 'test',
@@ -58,7 +59,7 @@ describe('projectSchema', () => {
     })
 
     it('rejects above MAX (6+ chars)', () => {
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'TOOLONG',
         name: 'Test Project',
         id: 'test',
@@ -67,7 +68,7 @@ describe('projectSchema', () => {
     })
 
     it('rejects wrong format (lowercase)', () => {
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'mdt',
         name: 'Test Project',
         id: 'test',
@@ -76,7 +77,7 @@ describe('projectSchema', () => {
     })
 
     it('rejects wrong format (special chars)', () => {
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'MD_1',
         name: 'Test Project',
         id: 'test',
@@ -88,7 +89,7 @@ describe('projectSchema', () => {
   // Testing OUR length rule for name field
   describe('name length', () => {
     it('accepts MIN boundary (3 chars)', () => {
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'MDT',
         name: 'ABC',
         id: 'test',
@@ -97,7 +98,7 @@ describe('projectSchema', () => {
     })
 
     it('rejects below MIN (2 chars)', () => {
-      expect(() => ProjectSchema.parse({
+      expect(() => CreateProjectInputSchema.parse({
         code: 'MDT',
         name: 'AB',
         id: 'test',
@@ -111,7 +112,7 @@ describe('projectSchema', () => {
   // Testing OUR design choice for optional fields
   describe('optional fields', () => {
     it('accepts missing description', () => {
-      const result = ProjectSchema.parse({
+      const result = CreateProjectInputSchema.parse({
         code: 'MDT',
         name: 'Test Project',
         id: 'test',
@@ -121,7 +122,7 @@ describe('projectSchema', () => {
     })
 
     it('accepts missing repository', () => {
-      const result = ProjectSchema.parse({
+      const result = CreateProjectInputSchema.parse({
         code: 'MDT',
         name: 'Test Project',
         id: 'test',
@@ -131,7 +132,7 @@ describe('projectSchema', () => {
     })
 
     it('accepts all optional fields', () => {
-      const result = ProjectSchema.parse({
+      const result = CreateProjectInputSchema.parse({
         code: 'MDT',
         name: 'Test Project',
         id: 'test',
@@ -144,10 +145,9 @@ describe('projectSchema', () => {
     })
   })
 
-  // Testing OUR default value choice
-  describe('default values', () => {
+  describe('defaults on persisted project details', () => {
     it('defaults active to true', () => {
-      const result = ProjectSchema.parse({
+      const result = ProjectDetailsSchema.parse({
         code: 'MDT',
         name: 'Test Project',
         id: 'test',

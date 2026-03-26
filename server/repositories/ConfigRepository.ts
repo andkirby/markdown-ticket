@@ -4,7 +4,7 @@ import * as path from 'node:path'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 
-export interface ProjectConfiguration {
+interface ProjectConfiguration {
   documentPaths: DocumentConfig['paths']
   excludeFolders: DocumentConfig['excludeFolders']
   maxDepth?: DocumentConfig['maxDepth']

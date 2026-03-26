@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { readFileSync } from 'node:fs'
 import process from 'node:process'
 
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
@@ -11,7 +10,6 @@ import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { ConfigService } from './config/index.js'
 import { CRService } from './services/crService.js'
 import { MCPTools } from './tools/index.js'
-import { find } from './tools/utils/projectDetector.js'
 import { startHttpTransport } from './transports/http.js'
 import { startStdioTransport } from './transports/stdio.js'
 
@@ -101,52 +99,26 @@ class MCPCRServer {
   /**
    * Detect default project from current working directory
    * Called at startup to enable single-project mode
+   * Uses shared ProjectService for root-up detection
    */
-  private startupProjectDetection(): void {
+  private async startupProjectDetection(): Promise<void> {
     this.log('🔍 Detecting project configuration...')
 
-    // Get search depth from global config
-    const searchDepth = this.configService.getSearchDepth()
-    const result = find(searchDepth)
+    const result = await this.projectService.resolveCurrentProject()
 
-    if (result.configPath) {
-      // Parse project code from config file
-      const projectCode = this.parseProjectCode(result.configPath)
-      if (projectCode) {
-        this.detectedProject = projectCode
-        this.log(`✅ Single-project mode: ${projectCode} (search depth: ${searchDepth})`)
-      }
-      else {
-        this.log('ℹ️  Config found but no project code - Multi-project mode')
-      }
+    if (result.data) {
+      this.detectedProject = result.data.project.code
+      this.log(`✅ Single-project mode: ${this.detectedProject}`)
     }
     else {
       this.log('ℹ️  Multi-project mode')
     }
   }
 
-  /**
-   * Parse project code from .mdt-config.toml file
-   * Minimal TOML parsing: find code line
-   *
-   * @param configPath - Path to the config file
-   * @returns Project code or null if not found
-   */
-  private parseProjectCode(configPath: string): string | null {
-    try {
-      const content = readFileSync(configPath, 'utf-8')
-      const match = content.match(/code\s*=\s*["']([^"']+)["']/)
-      return match?.[1] || null
-    }
-    catch {
-      return null
-    }
-  }
-
   async start(): Promise<void> {
     try {
       // Detect project from cwd (before starting transports)
-      this.startupProjectDetection()
+      await this.startupProjectDetection()
 
       // Initialize MCP tools with detected project context
       this.initializeMCPTools()

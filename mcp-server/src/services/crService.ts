@@ -19,6 +19,13 @@ export class CRService {
     this.ticketService = new TicketService(false) // Not quiet, enable logging
   }
 
+  /**
+   * Get the underlying TicketService for direct capability handlers.
+   */
+  getTicketService(): TicketService {
+    return this.ticketService
+  }
+
   async listCRs(project: Project, filters?: TicketFilters): Promise<Ticket[]> {
     return this.ticketService.listCRs(project, filters)
   }

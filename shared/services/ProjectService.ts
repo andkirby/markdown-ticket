@@ -1,21 +1,46 @@
 import type { Project } from '../models/Project.js'
 import type { Ticket, TicketMetadata } from '../models/Ticket.js'
 import type {
+  GetProjectRequest,
   IProjectCacheService,
   IProjectConfigService,
   IProjectDiscoveryService,
   IProjectFileSystemService,
   IProjectService,
+  ListProjectsRequest,
+  ReadResult,
+  ResolveCurrentProjectRequest,
+  ResolveCurrentProjectResult,
 } from './project/types.js'
+import { realpathSync } from 'node:fs'
 import process from 'node:process'
+import path from 'node:path'
 import { CONFIG_FILES, DEFAULTS } from '../utils/constants.js'
 import { deleteFile, directoryExists, fileExists } from '../utils/file-utils.js'
 import { logQuiet } from '../utils/logger.js'
 import { buildConfigFilePath, buildProjectPath, joinPaths, resolvePath } from '../utils/path-resolver.js'
+import { detectProjectContext } from '../utils/projectDetector.js'
 import { ProjectCacheService } from './project/ProjectCacheService.js'
 import { ProjectConfigService } from './project/ProjectConfigService.js'
 import { ProjectDiscoveryService } from './project/ProjectDiscoveryService.js'
+import { ServiceError } from './ServiceError.js'
 import { WorktreeService } from './WorktreeService.js'
+
+function normalizePath(inputPath: string): string {
+  try {
+    return realpathSync(path.resolve(inputPath))
+  }
+  catch {
+    return path.resolve(inputPath)
+  }
+}
+
+function isPathWithinProject(candidatePath: string, projectPath: string): boolean {
+  const normalizedCandidate = normalizePath(candidatePath)
+  const normalizedProject = normalizePath(projectPath)
+  const relativePath = path.relative(normalizedProject, normalizedCandidate)
+  return relativePath === '' || (!relativePath.startsWith('..') && !path.isAbsolute(relativePath))
+}
 
 export class ProjectService implements IProjectService {
   private discovery: IProjectDiscoveryService
@@ -150,6 +175,74 @@ export class ProjectService implements IProjectService {
 
   setCachedProjects(p: Project[]) {
     this.cache.setCachedProjects(p)
+  }
+
+  async resolveCurrentProject(request: ResolveCurrentProjectRequest = {}): Promise<ResolveCurrentProjectResult> {
+    const cwd = request.cwd || process.cwd()
+    const detection = detectProjectContext(cwd)
+    const allProjects = await this.getAllProjects(true)
+
+    if (detection.found && detection.projectRoot) {
+      const config = this.getProjectConfig(detection.projectRoot)
+      const normalizedDetectedProjectRoot = normalizePath(detection.projectRoot)
+
+      if (!config) {
+        throw ServiceError.validationError('Detected project configuration could not be loaded', {
+          configPath: detection.configPath,
+          projectRoot: detection.projectRoot,
+        })
+      }
+
+      const existingProject = allProjects.find(project =>
+        normalizePath(project.project.path) === normalizedDetectedProjectRoot,
+      )
+
+      if (existingProject) {
+        return {
+          data: existingProject,
+          context: { detectedFrom: detection.projectRoot },
+        }
+      }
+    }
+
+    const projectFromPath = allProjects
+      .filter(project => isPathWithinProject(cwd, project.project.path))
+      .sort((left, right) => right.project.path.length - left.project.path.length)[0]
+
+    if (!projectFromPath) {
+      return {
+        data: null,
+        context: {
+          none: true,
+          searchedFrom: cwd,
+        },
+      }
+    }
+
+    return {
+      data: projectFromPath,
+      context: { detectedFrom: projectFromPath.project.path },
+    }
+  }
+
+  async getProject(request: GetProjectRequest | string): Promise<ReadResult<Project>> {
+    const projectRef = typeof request === 'string' ? request : request.projectRef
+    const project = await this.getProjectByCodeOrId(projectRef)
+
+    if (!project) {
+      throw ServiceError.projectNotFound(projectRef)
+    }
+
+    return { data: project }
+  }
+
+  async listProjects(request: ListProjectsRequest = {}): Promise<ReadResult<Project[]>> {
+    const projects = await this.getAllProjects()
+    const filteredProjects = request.includeInactive
+      ? projects
+      : projects.filter(project => project.project.active !== false)
+
+    return { data: filteredProjects }
   }
 
   // Operations
@@ -312,7 +405,15 @@ export class ProjectService implements IProjectService {
 
   async getProjectByCodeOrId(codeOrId: string): Promise<Project | null> {
     const allProjects = await this.getAllProjects()
-    return allProjects.find(p => p.id === codeOrId || p.project.code === codeOrId) || null
+    const normalizedInput = codeOrId.toLowerCase()
+    return allProjects.find((project) => {
+      if (project.id === codeOrId) {
+        return true
+      }
+
+      const projectCode = project.project.code
+      return typeof projectCode === 'string' && projectCode.toLowerCase() === normalizedInput
+    }) || null
   }
 
   async generateProjectId(name: string): Promise<string> {

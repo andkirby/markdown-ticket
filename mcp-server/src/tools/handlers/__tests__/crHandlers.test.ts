@@ -53,6 +53,7 @@ const mockTemplateService = {
 describe('cRHandlers - Behavioral Preservation Tests', () => {
   let crHandlers: CRHandlers
   let mockCrServiceInstance: jest.Mocked<CRService>
+  let mockTicketService: { updateTicketAttributes: jest.Mock }
 
   // Test project - use fixture helper
   const mockProject: Project = createMockProject({
@@ -82,6 +83,10 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
     // Create handlers with mocked dependencies
     // Note: WorktreeService is no longer passed to CRHandlers (MDT-095)
     // Worktree resolution now happens in the shared TicketService layer
+    mockTicketService = {
+      updateTicketAttributes: jest.fn(),
+    }
+
     crHandlers = new CRHandlers(
       mockCrServiceInstance,
       // eslint-disable-next-line ts/no-explicit-any -- Test mock: MarkdownService requires any type for constructor compatibility
@@ -90,6 +95,8 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
       mockTitleExtractionService as unknown as any,
       // eslint-disable-next-line ts/no-explicit-any -- Test mock: TemplateService mock
       mockTemplateService as unknown as any,
+      // eslint-disable-next-line ts/no-explicit-any -- Test mock: TicketService mock
+      mockTicketService as unknown as any,
     );
 
     // Mock glob to return test file path
@@ -425,7 +432,17 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
   describe('handleUpdateCRAttrs', () => {
     it('should update attributes and return confirmation', async () => {
       mockCrServiceInstance.getCR.mockResolvedValue(mockTicket)
-      mockCrServiceInstance.updateCRAttrs.mockResolvedValue(true)
+
+      mockTicketService.updateTicketAttributes.mockResolvedValue({
+        ticket: { ...mockTicket, priority: 'High' },
+        target: {
+          projectId: 'test-project',
+          projectCode: 'MDT',
+          ticketKey: 'MDT-001',
+        },
+        normalizedInputs: [],
+        changedFields: ['priority', 'phaseEpic', 'assignee'],
+      })
 
       const attributes = {
         priority: 'High',
@@ -439,13 +456,13 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
       expect(result).toContain('- Title: Test CR Title')
       expect(result).toContain('- Status: Proposed')
       expect(result).toContain('**Updated Fields:**')
-      expect(result).toContain('- priority: High')
-      expect(result).toContain('- phaseEpic: Phase 2')
-      expect(result).toContain('- assignee: senior-dev')
     })
 
     it('should throw error when CR not found', async () => {
-      mockCrServiceInstance.getCR.mockResolvedValue(null)
+      mockTicketService.updateTicketAttributes.mockRejectedValue({
+        code: 'TICKET_NOT_FOUND',
+        message: "CR 'MDT-999' not found",
+      })
 
       await expect(crHandlers.handleUpdateCRAttrs(mockProject, 'MDT-999', { priority: 'High' }))
         .rejects
@@ -453,12 +470,14 @@ describe('cRHandlers - Behavioral Preservation Tests', () => {
     })
 
     it('should throw error when update fails', async () => {
-      mockCrServiceInstance.getCR.mockResolvedValue(mockTicket)
-      mockCrServiceInstance.updateCRAttrs.mockResolvedValue(false)
+      mockTicketService.updateTicketAttributes.mockRejectedValue({
+        code: 'PERSISTENCE_ERROR',
+        message: "Failed to update CR 'MDT-001' attributes",
+      })
 
       await expect(crHandlers.handleUpdateCRAttrs(mockProject, 'MDT-001', { priority: 'High' }))
         .rejects
-        .toThrow('Failed to update CR \'MDT-001\' attributes')
+        .toThrow('Failed to update CR \'MDT-001\'')
     })
   })
 

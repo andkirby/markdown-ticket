@@ -13,6 +13,7 @@ import type { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import type { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import type { TemplateService } from '@mdt/shared/services/TemplateService.js'
 import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
+import type { TicketService } from '@mdt/shared/services/TicketService.js'
 import type { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import type { CRService } from '../services/crService.js'
 import { MarkdownSectionService } from '@mdt/shared/services/MarkdownSectionService.js'
@@ -48,13 +49,17 @@ export class MCPTools {
     worktreeService: WorktreeService, // Still injected but not passed to CRHandlers (MDT-095)
     detectedProject: string | null = null,
   ) {
+    const ticketService: TicketService = crService.getTicketService()
+
     // Initialize handlers with injected services
     this.projectHandlers = new ProjectHandlers(projectService)
+
     this.crHandlers = new CRHandlers(
       crService,
       markdownService,
       titleExtractionService,
       templateService,
+      ticketService,
     )
     this.sectionHandlers = new SectionHandlers(crService, MarkdownSectionService)
     this.detectedProject = detectedProject
