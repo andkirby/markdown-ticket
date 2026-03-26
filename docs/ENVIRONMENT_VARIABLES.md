@@ -90,6 +90,16 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 - **Default**: `true` in Docker environments
 - **Usage**: Docker compose files
 
+### ALLOWED_DOMAINS
+- **Description**: Unified domain allowlist for both CORS and Vite dev server
+- **Format**: `mydomain.com,another.com` (hostnames only, no protocol)
+- **Default**: None
+- **Usage**: `server/server.ts`, `vite.config.ts`
+- **Notes**:
+  - Backend generates `https://` and `http://` URLs for CORS
+  - Vite uses hostnames directly for `allowedHosts`
+  - Set in `.env.local` to keep private domains out of git
+
 ### DOCKER
 - **Description**: Indicates running in Docker environment
 - **Type**: Boolean
@@ -275,6 +285,9 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 VITE_BACKEND_URL=http://localhost:3001
 VITE_FRONTEND_LOGGING_AUTOSTART=false
 NODE_ENV=development
+
+# Optional: Allow custom domains (keeps private domains out of git)
+# ALLOWED_DOMAINS=my-private-domain.com
 ```
 
 ### Docker Development

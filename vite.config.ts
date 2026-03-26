@@ -1,7 +1,8 @@
 /* eslint-disable node/prefer-global/process -- Build config, unused-imports/no-unused-vars -- Unused variables in config, unicorn/prefer-number-properties, node/handle-callback-err, style/multiline-ternary -- Config file patterns */
+import type http from 'node:http'
 import path from 'node:path'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
 // Frontend logging state
 let frontendSessionActive = false
@@ -9,7 +10,7 @@ let frontendSessionStart = null
 const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 minutes
 const frontendLogs = []
 const MAX_FRONTEND_LOGS = 1000
-const streamClients = new Set() // SSE clients
+const streamClients = new Set<http.ServerResponse>() // SSE clients
 
 // DEV mode logging state
 let devModeActive = false
@@ -20,11 +21,31 @@ const MAX_DEV_MODE_LOGS = 1000
 const DEV_MODE_RATE_LIMIT = 300 // 300 logs per minute
 let devModeLogCount = 0
 let devModeRateLimitStart = Date.now()
-const devStreamClients = new Set() // DEV mode SSE clients
+const devStreamClients = new Set<http.ServerResponse>() // DEV mode SSE clients
 
 // Status endpoint rate limiting - reduced for development
 const statusRequestTimes = new Map() // IP -> last request time
 const STATUS_RATE_LIMIT = 2000 // 2 seconds minimum between requests (reduced from 10s)
+
+function parseCsvEnv(value?: string) {
+  return value
+    ?.split(',')
+    .map(entry => entry.trim())
+    .filter(Boolean) || []
+}
+
+function toAllowedHost(entry: string) {
+  try {
+    return new URL(entry).hostname
+  }
+  catch {
+    return entry
+      .replace(/^[a-z]+:\/\//i, '')
+      .replace(/\/.*$/, '')
+      .replace(/:\d+$/, '')
+      .trim()
+  }
+}
 
 // Vite plugin for frontend logging endpoints
 function frontendLoggingPlugin() {
@@ -398,9 +419,26 @@ ${scriptTag}
 }
 
 // https://vitejs.dev/config/
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  // Load env vars from .env.local (Vite doesn't auto-load for config)
+  const env = loadEnv(mode, process.cwd(), '')
+
   // In Docker, use backend service name; for E2E tests use VITE_BACKEND_URL; otherwise use localhost
-  const backendUrl = process.env.VITE_BACKEND_URL || process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
+  const backendUrl = env.VITE_BACKEND_URL || process.env.DOCKER_BACKEND_URL || 'http://localhost:3001'
+
+  // Allowed hosts for Vite dev server (for tunneling/custom domains)
+  // ALLOWED_DOMAINS is shared with backend CORS (uses hostnames only)
+  const additionalHosts = parseCsvEnv(env.ALLOWED_DOMAINS || process.env.ALLOWED_DOMAINS)
+  const allowedHosts = [
+    '.loca.lt',
+    '.trycloudflare.com',
+    '.ngrok-free.app',
+    ...additionalHosts,
+  ]
+
+  if (additionalHosts.length > 0) {
+    console.log(`🌐 Vite allowed hosts: ${additionalHosts.join(', ')}`)
+  }
 
   return {
     plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],
@@ -416,11 +454,7 @@ export default defineConfig(() => {
     server: {
       host: '0.0.0.0',
       port: Number(process.env.PORT) || 5173,
-      allowedHosts: [
-        '.loca.lt',
-        '.trycloudflare.com',
-        '.ngrok-free.app',
-      ],
+      allowedHosts,
       proxy: {
         '/api': {
           target: backendUrl,
