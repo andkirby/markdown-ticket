@@ -1,0 +1,762 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-145"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN a consumer resolves current project context through the shared detector from any directory inside a project, the system shall search parent directories to the filesystem root, return the nearest project configuration result, and report no project context only if none exists.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN a consumer resolves a project by code or identifier through the shared project service, the system shall preserve exact identifier lookup, treat project-code matches case-insensitively, and return the same project record for equivalent code forms.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHEN a consumer queries projects through the shared project service, the system shall expose project list as a distinct capability from project attribute updates and return consumer-neutral project records.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN a consumer queries tickets through the shared ticket service, the system shall expose ticket list as a distinct capability from ticket update flows and support filtering by status, type, priority, and date range.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "WHEN a consumer updates ticket attributes through the shared ticket service, the system shall accept explicit replace operations for mutable attr fields, accept explicit add and remove operations only for relation fields, reject title and content in attr-update flow, apply the requested operations atomically, and return the normalized final attribute values.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "WHEN a consumer updates a ticket document through the shared ticket document capability, the system shall treat title as part of the ticket entity, keep the markdown H1 as the authoritative stored title source, and process title and content changes through document-update flow rather than attr-update flow.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "WHEN a consumer requests ticket subdocuments through the shared ticket service, the system shall expose subdocument listing as a distinct capability from main ticket document retrieval and return subdocument metadata without requiring attr-update or document-update flows.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9",
+      "kind": "behavior",
+      "text": "WHEN a consumer updates project attributes or ticket attributes or ticket documents through shared services, the system shall return a structured result object with target identity, normalized inputs, persisted path when applicable, and changed fields instead of a bare boolean success value.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The shared service framework shall expose consumer-neutral request and result contracts that exclude CLI formatting, ANSI color policy, transport wrappers, and presentation-specific field naming.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Only relation fields relatedTickets, dependsOn, and blocks may accept add or remove mutation operations; title and content shall not be mutable through ticket attr-update contracts.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The shared project and ticket framework shall not depend on CLI-specific error codes, CLI-specific exception classes, or direct terminal logging in normal success or expected validation-failure paths.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Canonical entity, input, and config shapes shall remain owned by domain-contracts, with project contracts using explicit role modules such as entity and input, while shared shall own service-layer operation contracts, service interfaces, orchestration logic, filesystem policy, and consumer-neutral utilities.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "WHEN user-supplied title, body, notes, attribute values, filter values, or document content pass through shared project or ticket APIs, the system shall persist or compare them as literal data without command execution, interpolation, or shell expansion.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF the shared project detector reaches the filesystem root without finding project configuration, THEN it shall return an explicit no-project result and shall not fall back to an unrelated registered project.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF a project lookup token matches neither a registered identifier nor a normalized project code, THEN the shared project service shall return a typed not-found outcome that includes the unresolved token.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF a consumer requests add or remove mutation on a non-relation ticket attr field, or attempts title or content through attr-update flow, THEN the shared ticket attr-update capability shall reject the request with a structured validation error and shall leave the ticket unchanged.",
+      "sourceRef": "CR:MDT-145",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN a consumer updates project attributes through the shared project service, the system shall apply project updates through a structured update capability and return a shared structured write-result family instead of a bare boolean success value.",
+      "sourceRef": "requirements:Write return contract",
+      "routePolicy": "bdd"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "detect_project_context_from_nested_directory",
+      "title": "Detect project context from a nested working directory",
+      "covers": [
+        "BR-1"
+      ],
+      "given": "Given the current working directory is nested inside a project",
+      "when": "When a consumer resolves current project context through the shared project service",
+      "then": "Then the shared detector searches parent directories to the filesystem root and returns the nearest project configuration result",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "resolve_project_case_insensitively_via_shared_lookup",
+      "title": "Resolve the same project through equivalent code forms",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "Given a project is registered with a canonical project code",
+      "when": "When a consumer resolves that project through equivalent code forms",
+      "then": "Then the shared project service preserves exact identifier semantics and returns the same project for equivalent project-code forms",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "list_projects_through_shared_project_service",
+      "title": "List projects through the shared project service",
+      "covers": [
+        "BR-3"
+      ],
+      "given": "Given multiple projects are available through shared discovery",
+      "when": "When a consumer calls the shared project list capability",
+      "then": "Then the result returns consumer-neutral project records through a list capability that is distinct from project updates",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "update_project_attributes_through_shared_project_service",
+      "title": "Update project attributes through the shared project service",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "Given a project exists and project updates are allowed",
+      "when": "When a consumer applies a project attribute update through the shared project service",
+      "then": "Then the update flows through a structured project update capability and returns a structured result instead of a bare boolean",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "list_tickets_with_supported_filters",
+      "title": "List tickets with supported filters",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "Given tickets exist for a project with varying statuses, types, priorities, and dates",
+      "when": "When a consumer queries tickets through the shared ticket service with supported filters",
+      "then": "Then the service returns the filtered ticket list through a list capability that is distinct from ticket update flows",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "apply_relation_attr_operations_atomically",
+      "title": "Apply ticket attr set, add, and remove operations atomically",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "Given a ticket exists with mutable attr fields and relation fields",
+      "when": "When a consumer applies ticket attr updates through the shared ticket service",
+      "then": "Then replace operations work for mutable attr fields, add/remove work only for relation fields, title/content are rejected, and the accepted operations persist atomically",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "update_ticket_document_with_h1_title_authority",
+      "title": "Update ticket document with H1 title authority",
+      "covers": [
+        "BR-7"
+      ],
+      "given": "Given a ticket document exists with markdown content and an authoritative H1 title",
+      "when": "When a consumer updates the ticket document through the shared document capability",
+      "then": "Then title and content changes flow through document-update logic and the markdown H1 remains the authoritative stored title source",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "list_ticket_subdocuments_separately_from_ticket_document",
+      "title": "List ticket subdocuments separately from the main ticket document",
+      "covers": [
+        "BR-8"
+      ],
+      "given": "Given a ticket has one or more subdocuments",
+      "when": "When a consumer requests ticket subdocuments through the shared ticket service",
+      "then": "Then the service returns subdocument metadata through a dedicated listing capability that is separate from main ticket document retrieval",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "return_structured_results_for_shared_writes",
+      "title": "Return structured results for shared project and ticket writes",
+      "covers": [
+        "BR-9"
+      ],
+      "given": "Given a consumer performs a project update or ticket attr update or ticket document update through shared services",
+      "when": "When the requested update succeeds",
+      "then": "Then the shared service returns a structured success result containing target identity, normalized inputs, persisted path when applicable, and changed fields instead of a bare boolean",
+      "sourceRef": "CR:MDT-145"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-domain-contract-boundary",
+      "title": "Canonical entity, input, and config shapes shall remain in domain-contracts, including clearer project entity/input role modules, while shared service-layer request/result contracts and service interfaces live in shared service type modules and are re-exported from the shared package entrypoint.",
+      "derivedFrom": [
+        "C1",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-shared-index",
+        "ART-domain-project-entity",
+        "ART-domain-project-input",
+        "ART-domain-ticket-entity",
+        "ART-domain-ticket-input",
+        "ART-shared-project-types",
+        "ART-shared-ticket-types"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "OBL-logging-discipline",
+      "title": "Shared project and ticket services shall keep terminal output under consumer control by removing direct console logging from normal success and expected validation-failure paths and surfacing diagnostics through typed results, typed errors, or injected logging hooks.",
+      "derivedFrom": [
+        "BR-4",
+        "BR-6",
+        "BR-7",
+        "BR-9",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-shared-project-service",
+        "ART-shared-project-manager",
+        "ART-shared-ticket-service",
+        "ART-shared-ticket-document-service",
+        "ART-shared-service-error"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "OBL-project-management-boundary",
+      "title": "ProjectManager shall remain the bootstrap and update orchestration owner only, shall stop depending on CLI-specific error types, and shall not become the shared project query or update contract surface.",
+      "derivedFrom": [
+        "C3",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-shared-project-manager",
+        "ART-shared-service-error",
+        "ART-shared-project-types",
+        "ART-shared-project-service"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "OBL-shared-project-service",
+      "title": "Shared project capabilities shall be exposed through a project service surface that owns current-project detection, explicit lookup, project listing, and project attribute updates with consumer-neutral result contracts for downstream consumers such as CLI and MCP.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "C1",
+        "Edge-1",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-shared-project-detector",
+        "ART-shared-project-service",
+        "ART-shared-project-types",
+        "ART-shared-service-error",
+        "ART-mcp-index",
+        "ART-mcp-project-handlers"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "OBL-ticket-service-contract",
+      "title": "Shared ticket capabilities shall be exposed through a ticket service surface for ticket list, ticket attr updates, and ticket subdocument listing, plus a document-focused collaborator for markdown-aware ticket document updates, with title/H1 authority preserved and structured write results returned for downstream consumers such as CLI and MCP.",
+      "derivedFrom": [
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "C1",
+        "C2",
+        "C5",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-shared-ticket-service",
+        "ART-shared-ticket-types",
+        "ART-shared-ticket-document-service",
+        "ART-shared-service-error",
+        "ART-mcp-cr-service",
+        "ART-mcp-cr-handlers"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "OBL-framework-verification",
+      "title": "Shared-layer verification shall lock root-up project detection, case-insensitive project lookup, project list and project update capabilities, ticket list filters, ticket attr updates, ticket document updates, ticket subdocument listing, and shared write-result-family behavior through dedicated shared tests before consumer adoption is considered complete.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "C2",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-shared-detector-test",
+        "ART-shared-project-service-test",
+        "ART-shared-ticket-query-test",
+        "ART-shared-ticket-attr-test",
+        "ART-shared-ticket-document-test",
+        "ART-shared-ticket-subdocuments-test",
+        "ART-shared-project-detector",
+        "ART-shared-project-service",
+        "ART-shared-ticket-service",
+        "ART-shared-ticket-document-service"
+      ],
+      "sourceRef": "tests:Overview"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-domain-project-entity",
+      "path": "domain-contracts/src/project/entity.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-domain-project-input",
+      "path": "domain-contracts/src/project/input.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-domain-ticket-entity",
+      "path": "domain-contracts/src/ticket/entity.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-domain-ticket-input",
+      "path": "domain-contracts/src/ticket/input.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-service-error",
+      "path": "shared/services/ServiceError.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-project-detector",
+      "path": "shared/utils/projectDetector.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-detector-test",
+      "path": "shared/utils/__tests__/projectDetector.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-project-service",
+      "path": "shared/services/ProjectService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-project-types",
+      "path": "shared/services/project/types.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-project-service-test",
+      "path": "shared/services/project/__tests__/ProjectService.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-project-manager",
+      "path": "shared/tools/ProjectManager.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-ticket-service",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-ticket-types",
+      "path": "shared/services/ticket/types.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-ticket-query-test",
+      "path": "shared/services/ticket/__tests__/TicketService.query.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-ticket-attr-test",
+      "path": "shared/services/ticket/__tests__/TicketService.attributes.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-ticket-document-service",
+      "path": "shared/services/ticket/TicketDocumentService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-ticket-document-test",
+      "path": "shared/services/ticket/__tests__/TicketDocumentService.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-ticket-subdocuments-test",
+      "path": "shared/services/ticket/__tests__/TicketService.subdocuments.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-shared-index",
+      "path": "shared/index.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-mcp-index",
+      "path": "mcp-server/src/index.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-mcp-project-handlers",
+      "path": "mcp-server/src/tools/handlers/projectHandlers.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-mcp-cr-service",
+      "path": "mcp-server/src/services/crService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "ART-mcp-cr-handlers",
+      "path": "mcp-server/src/tools/handlers/crHandlers.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-145"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-project-detector",
+      "kind": "unit",
+      "title": "Project detector root-up search",
+      "covers": [
+        "BR-1",
+        "Edge-1",
+        "C1"
+      ],
+      "file": "shared/utils/__tests__/projectDetector.test.ts",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TEST-project-service",
+      "kind": "unit",
+      "title": "Project service capabilities",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "Edge-1",
+        "Edge-2",
+        "C1",
+        "C3",
+        "C4"
+      ],
+      "file": "shared/services/project/__tests__/ProjectService.test.ts",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TEST-ticket-query",
+      "kind": "unit",
+      "title": "Ticket service query capability",
+      "covers": [
+        "BR-5",
+        "C1",
+        "C5"
+      ],
+      "file": "shared/services/ticket/__tests__/TicketService.query.test.ts",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TEST-ticket-attributes",
+      "kind": "unit",
+      "title": "Ticket service attr-update capability",
+      "covers": [
+        "BR-6",
+        "BR-9",
+        "C1",
+        "C2",
+        "C3",
+        "C5",
+        "Edge-3"
+      ],
+      "file": "shared/services/ticket/__tests__/TicketService.attributes.test.ts",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TEST-ticket-document",
+      "kind": "unit",
+      "title": "Ticket document update capability",
+      "covers": [
+        "BR-7",
+        "BR-9",
+        "C1",
+        "C3",
+        "C5"
+      ],
+      "file": "shared/services/ticket/__tests__/TicketDocumentService.test.ts",
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TEST-ticket-subdocuments",
+      "kind": "unit",
+      "title": "Ticket subdocument listing capability",
+      "covers": [
+        "BR-8",
+        "C1",
+        "C3"
+      ],
+      "file": "shared/services/ticket/__tests__/TicketService.subdocuments.test.ts",
+      "sourceRef": "CR:MDT-145"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-service-error",
+      "title": "Create shared ServiceError type",
+      "ownsArtifactIds": [
+        "ART-shared-service-error"
+      ],
+      "makesGreenIds": [
+        "TEST-project-service",
+        "TEST-ticket-attributes",
+        "TEST-ticket-document",
+        "TEST-ticket-subdocuments"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-project-detector",
+      "title": "Create projectDetector utility",
+      "ownsArtifactIds": [
+        "ART-shared-project-detector",
+        "ART-shared-detector-test"
+      ],
+      "makesGreenIds": [
+        "TEST-project-detector",
+        "detect_project_context_from_nested_directory"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-project-types",
+      "title": "Extend project service types with contracts",
+      "ownsArtifactIds": [
+        "ART-shared-project-types"
+      ],
+      "makesGreenIds": [
+        "TEST-project-service"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-project-context",
+      "title": "Reshape ProjectService capabilities",
+      "ownsArtifactIds": [
+        "ART-shared-project-service",
+        "ART-shared-project-service-test"
+      ],
+      "makesGreenIds": [
+        "TEST-project-service",
+        "detect_project_context_from_nested_directory",
+        "resolve_project_case_insensitively_via_shared_lookup",
+        "list_projects_through_shared_project_service",
+        "update_project_attributes_through_shared_project_service"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-ticket-types",
+      "title": "Extend ticket service types with contracts",
+      "ownsArtifactIds": [
+        "ART-shared-ticket-types"
+      ],
+      "makesGreenIds": [
+        "TEST-ticket-query",
+        "TEST-ticket-attributes",
+        "TEST-ticket-document",
+        "TEST-ticket-subdocuments"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-ticket-document",
+      "title": "Create TicketDocumentService",
+      "ownsArtifactIds": [
+        "ART-shared-ticket-document-service",
+        "ART-shared-ticket-document-test"
+      ],
+      "makesGreenIds": [
+        "TEST-ticket-document",
+        "update_ticket_document_with_h1_title_authority"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-ticket-mutation",
+      "title": "Reshape TicketService capabilities",
+      "ownsArtifactIds": [
+        "ART-shared-ticket-service",
+        "ART-shared-ticket-query-test",
+        "ART-shared-ticket-attr-test",
+        "ART-shared-ticket-subdocuments-test"
+      ],
+      "makesGreenIds": [
+        "TEST-ticket-query",
+        "TEST-ticket-attributes",
+        "TEST-ticket-subdocuments",
+        "list_tickets_with_supported_filters",
+        "apply_relation_attr_operations_atomically",
+        "list_ticket_subdocuments_separately_from_ticket_document",
+        "return_structured_results_for_shared_writes"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-logging-cleanup",
+      "title": "Remove console logging from shared services",
+      "ownsArtifactIds": [
+        "ART-shared-project-service",
+        "ART-shared-ticket-service"
+      ],
+      "makesGreenIds": [
+        "TEST-project-service",
+        "TEST-ticket-attributes",
+        "TEST-ticket-document",
+        "TEST-ticket-subdocuments"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-project-manager-cleanup",
+      "title": "Remove CLI error dependencies from ProjectManager",
+      "ownsArtifactIds": [
+        "ART-shared-project-manager"
+      ],
+      "makesGreenIds": [
+        "TEST-project-service"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-shared-exports",
+      "title": "Update shared/index.ts exports",
+      "ownsArtifactIds": [
+        "ART-shared-index"
+      ],
+      "makesGreenIds": [
+        "TEST-project-service",
+        "TEST-ticket-query",
+        "TEST-ticket-attributes",
+        "TEST-ticket-document",
+        "TEST-ticket-subdocuments"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-mcp-migration",
+      "title": "Migrate MCP to use reshaped shared services",
+      "ownsArtifactIds": [
+        "ART-mcp-index",
+        "ART-mcp-project-handlers",
+        "ART-mcp-cr-service",
+        "ART-mcp-cr-handlers"
+      ],
+      "makesGreenIds": [
+        "detect_project_context_from_nested_directory",
+        "list_projects_through_shared_project_service",
+        "list_tickets_with_supported_filters",
+        "apply_relation_attr_operations_atomically",
+        "update_ticket_document_with_h1_title_authority"
+      ],
+      "sourceRef": "CR:MDT-145"
+    },
+    {
+      "id": "TASK-domain-contracts-verify",
+      "title": "Clarify domain contract roles",
+      "ownsArtifactIds": [
+        "ART-domain-project-entity",
+        "ART-domain-project-input",
+        "ART-domain-ticket-entity",
+        "ART-domain-ticket-input"
+      ],
+      "makesGreenIds": [
+        "TEST-project-service"
+      ],
+      "sourceRef": "CR:MDT-145"
+    }
+  ]
+}
