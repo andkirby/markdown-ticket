@@ -212,18 +212,18 @@
       "routePolicy": "tests"
     },
     {
-      "id": "BR-10",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes in one response.",
-      "sourceRef": "CR:3 Update Attributes",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "C2",
       "kind": "constraint",
       "text": "The system shall accept only status, priority, phase, assignee, related, depends, blocks, impl-date, and impl-notes as mutable CLI attributes; only related, depends, and blocks may use += or -= operators, while all other mutable attributes use = only.",
       "sourceRef": "CR:3 Update Attributes",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-10",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket attr <ticket> <attr-op><value>... or mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes in one response.",
+      "sourceRef": "requirements:Attribute mutation grammar",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -358,14 +358,14 @@
     },
     {
       "id": "update_ticket_attributes_in_one_command",
-      "title": "Update ticket attributes with set, add, and remove operators through the top-level attr command",
+      "title": "Update ticket attributes with set, add, and remove operators through canonical ticket attr and the attr alias",
       "covers": [
         "BR-10"
       ],
-      "given": "Given ticket MDT-012 has related MDT-001 and supports status and relation updates",
-      "when": "When I run mdt-cli attr MDT-012 status=implemented related+=ABC-003 depends-=MDT-001",
-      "then": "Then MDT-012 should update the scalar attribute, append the new relation without duplicates, remove the requested dependency, and report the applied changes in one confirmation response",
-      "sourceRef": "requirements:BR-10"
+      "given": "Given a detected project and an existing ticket MDT-012 with mutable scalar and relation attributes",
+      "when": "When the operator runs mdt-cli ticket attr MDT-012 status=implemented related+=ABC-003 depends-=MDT-001 or the equivalent mdt-cli attr MDT-012 ... alias form",
+      "then": "Then the CLI updates the target ticket using the requested set, add, and remove operations, normalizes accepted aliases, and prints one confirmation response describing the applied changes",
+      "sourceRef": "bdd:Ticket mutation and formatting"
     }
   ],
   "obligations": [
@@ -387,19 +387,6 @@
         "ART-badge-css"
       ],
       "sourceRef": "architecture:Output Rendering"
-    },
-    {
-      "id": "OBL-detector-extraction",
-      "title": "Project detection shall move into shared utilities, and existing MCP startup detection shall consume the shared detector instead of maintaining a private implementation.",
-      "derivedFrom": [
-        "BR-2",
-        "C4"
-      ],
-      "artifactIds": [
-        "ART-shared-project-detector",
-        "ART-mcp-index"
-      ],
-      "sourceRef": "architecture:Shared Reuse"
     },
     {
       "id": "OBL-cli-bootstrap",
@@ -424,7 +411,7 @@
     },
     {
       "id": "OBL-cli-verification-harness",
-      "title": "Executable acceptance for the CLI shall run through a spawned-process integration harness inside the CLI package and cover both canonical commander commands and supported shortcut forms rather than the browser-only Playwright suite.",
+      "title": "Executable acceptance for the CLI shall run through repo-native CLI E2E tests in the CLI package using @mdt/shared/test-lib, cover both canonical commander commands and supported shortcut forms, and avoid introducing bats or browser-only Playwright as the primary harness.",
       "derivedFrom": [
         "BR-1",
         "BR-4",
@@ -440,34 +427,29 @@
         "ART-cli-index",
         "ART-cli-args",
         "ART-cli-package-json",
-        "ART-cli-integration-test"
+        "ART-cli-integration-test",
+        "ART-shared-test-lib"
       ],
       "sourceRef": "architecture:Runtime and Test Separation"
     },
     {
-      "id": "OBL-project-namespace",
-      "title": "The project command shall be implemented as a commander subtree that owns current-project info, project listing, explicit get or info verbs, bare project-code shortcuts, and current-folder initialization while delegating project operations to shared project management services.",
+      "id": "OBL-detector-extraction",
+      "title": "CLI shorthand ticket and project resolution shall consume the shared root-up project detection rule through ProjectService rather than a private detector copy.",
       "derivedFrom": [
-        "BR-5",
-        "BR-14",
-        "BR-15",
-        "BR-16",
-        "BR-17",
-        "Edge-2"
+        "BR-2",
+        "C4"
       ],
       "artifactIds": [
-        "ART-cli-project",
-        "ART-cli-index",
-        "ART-cli-args",
-        "ART-cli-config",
         "ART-shared-project-detector",
-        "ART-shared-project-manager"
+        "ART-shared-project-service",
+        "ART-cli-view",
+        "ART-cli-project"
       ],
-      "sourceRef": "architecture:Module Boundaries"
+      "sourceRef": "architecture:Shared API Contract"
     },
     {
       "id": "OBL-ticket-read-path",
-      "title": "Ticket view and list commands shall use a commander ticket subtree plus a small shortcut normalizer for bare-key and alias forms, detect project context through shared project detection, and read CR data through shared ticket services instead of duplicating file traversal logic.",
+      "title": "Ticket view and list commands shall use a commander ticket subtree plus a small shortcut normalizer for bare-key and alias forms, resolve project context through ProjectService, and read ticket data through TicketService instead of duplicating file traversal logic.",
       "derivedFrom": [
         "BR-1",
         "BR-2",
@@ -482,14 +464,14 @@
         "ART-cli-list",
         "ART-cli-index",
         "ART-cli-args",
-        "ART-shared-project-detector",
+        "ART-shared-project-service",
         "ART-shared-ticket-service"
       ],
       "sourceRef": "architecture:Module Boundaries"
     },
     {
       "id": "OBL-ticket-mutation",
-      "title": "Ticket create shall be registered under the commander ticket subtree with a top-level create alias, while the top-level attr command parses =, +=, and -= tokens, routes ticket persistence through shared ticket services, and isolates STDIN body capture from command dispatch.",
+      "title": "Ticket create and attr shall be registered under the commander ticket subtree with top-level create and attr aliases, while attr parsing translates =, +=, and -= tokens into the shared AttrOperation model, routes writes through TicketService, and isolates STDIN body capture from command dispatch.",
       "derivedFrom": [
         "BR-6",
         "BR-7",
@@ -506,7 +488,30 @@
         "ART-cli-args",
         "ART-cli-stdin",
         "ART-shared-ticket-service",
+        "ART-shared-ticket-types",
         "ART-cli-index"
+      ],
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "OBL-project-namespace",
+      "title": "The project command shall be implemented as a commander subtree that owns current-project info, project listing, explicit get or info verbs, bare project-code shortcuts, and current-folder initialization while routing project reads through ProjectService and init through ProjectManager.",
+      "derivedFrom": [
+        "BR-5",
+        "BR-14",
+        "BR-15",
+        "BR-16",
+        "BR-17",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-cli-project",
+        "ART-cli-index",
+        "ART-cli-args",
+        "ART-cli-config",
+        "ART-shared-project-service",
+        "ART-shared-project-types",
+        "ART-shared-project-manager"
       ],
       "sourceRef": "architecture:Module Boundaries"
     }
@@ -603,18 +608,6 @@
       "sourceRef": "architecture:Color Mapping"
     },
     {
-      "id": "ART-cli-integration-test",
-      "path": "cli/tests/integration/mdt-cli.integration.test.ts",
-      "kind": "test",
-      "sourceRef": "architecture:Verification Strategy"
-    },
-    {
-      "id": "ART-mcp-index",
-      "path": "mcp-server/src/index.ts",
-      "kind": "runtime",
-      "sourceRef": "architecture:Shared Reuse"
-    },
-    {
       "id": "ART-cli-index",
       "path": "cli/src/index.ts",
       "kind": "runtime",
@@ -631,8 +624,240 @@
       "path": "cli/src/commands/project.ts",
       "kind": "runtime",
       "sourceRef": "architecture:Structure"
+    },
+    {
+      "id": "ART-cli-integration-test",
+      "path": "cli/tests/e2e/mdt-cli.e2e.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture:Structure"
+    },
+    {
+      "id": "ART-shared-test-lib",
+      "path": "shared/test-lib/index.ts",
+      "kind": "test",
+      "sourceRef": "architecture:Shared Test Infrastructure"
+    },
+    {
+      "id": "ART-shared-project-service",
+      "path": "shared/services/ProjectService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Shared API Contract"
+    },
+    {
+      "id": "ART-shared-project-types",
+      "path": "shared/services/project/types.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Shared API Contract"
+    },
+    {
+      "id": "ART-shared-ticket-types",
+      "path": "shared/services/ticket/types.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:Shared API Contract"
     }
   ],
-  "testPlans": [],
-  "tasks": []
+  "testPlans": [
+    {
+      "id": "TEST-cli-bootstrap",
+      "kind": "e2e",
+      "title": "CLI bootstrap and shortcut normalization",
+      "covers": [
+        "BR-1",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-10",
+        "BR-14",
+        "BR-15",
+        "BR-17",
+        "Edge-2"
+      ],
+      "file": "cli/tests/e2e/smoke/cli-bootstrap.spec.ts",
+      "sourceRef": "tests:CLI Bootstrap"
+    },
+    {
+      "id": "TEST-cli-ticket-read",
+      "kind": "e2e",
+      "title": "Ticket read and list CLI flows",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-11",
+        "BR-12",
+        "BR-13",
+        "C1",
+        "C3",
+        "C4",
+        "C6",
+        "Edge-1",
+        "Edge-3"
+      ],
+      "file": "cli/tests/e2e/ticket/read.spec.ts",
+      "sourceRef": "tests:Ticket Read/List"
+    },
+    {
+      "id": "TEST-cli-project",
+      "kind": "e2e",
+      "title": "Project namespace CLI flows",
+      "covers": [
+        "BR-5",
+        "BR-14",
+        "BR-15",
+        "BR-16",
+        "BR-17",
+        "C4",
+        "Edge-2"
+      ],
+      "file": "cli/tests/e2e/project/project.spec.ts",
+      "sourceRef": "tests:Project Namespace"
+    },
+    {
+      "id": "TEST-cli-ticket-create",
+      "kind": "e2e",
+      "title": "Ticket create CLI flows",
+      "covers": [
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "C1",
+        "C5",
+        "Edge-2"
+      ],
+      "file": "cli/tests/e2e/ticket/create.spec.ts",
+      "sourceRef": "tests:Ticket Create"
+    },
+    {
+      "id": "TEST-cli-ticket-attr",
+      "kind": "e2e",
+      "title": "Ticket attr CLI flows",
+      "covers": [
+        "BR-10",
+        "C2",
+        "C5",
+        "Edge-2"
+      ],
+      "file": "cli/tests/e2e/ticket/attr.spec.ts",
+      "sourceRef": "tests:Ticket Attr"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-cli-bootstrap",
+      "title": "Bootstrap CLI package and commander tree",
+      "ownsArtifactIds": [
+        "ART-root-package-json",
+        "ART-cli-package-json",
+        "ART-cli-tsconfig",
+        "ART-cli-index",
+        "ART-cli-args"
+      ],
+      "makesGreenIds": [
+        "TEST-cli-bootstrap"
+      ],
+      "sourceRef": "tasks:Task 1"
+    },
+    {
+      "id": "TASK-cli-ticket-read",
+      "title": "Implement ticket read and list commands on shared services",
+      "ownsArtifactIds": [
+        "ART-cli-view",
+        "ART-cli-list",
+        "ART-shared-project-service",
+        "ART-shared-ticket-service",
+        "ART-shared-project-detector"
+      ],
+      "makesGreenIds": [
+        "view_ticket_from_detected_project",
+        "view_ticket_across_projects",
+        "list_tickets_in_detected_project",
+        "TEST-cli-ticket-read"
+      ],
+      "sourceRef": "tasks:Task 2"
+    },
+    {
+      "id": "TASK-cli-create",
+      "title": "Implement ticket create and stdin flow",
+      "ownsArtifactIds": [
+        "ART-cli-create",
+        "ART-cli-stdin",
+        "ART-shared-ticket-service"
+      ],
+      "makesGreenIds": [
+        "create_ticket_from_slug_with_order_independent_tokens",
+        "create_ticket_from_piped_input",
+        "TEST-cli-ticket-create"
+      ],
+      "sourceRef": "tasks:Task 4"
+    },
+    {
+      "id": "TASK-cli-attr",
+      "title": "Implement ticket attr parser and mutation flow",
+      "ownsArtifactIds": [
+        "ART-cli-attr",
+        "ART-shared-ticket-service",
+        "ART-shared-ticket-types"
+      ],
+      "makesGreenIds": [
+        "update_ticket_attributes_in_one_command",
+        "TEST-cli-ticket-attr"
+      ],
+      "sourceRef": "tasks:Task 5"
+    },
+    {
+      "id": "TASK-cli-output",
+      "title": "Implement formatter, color policy, and CLI config",
+      "ownsArtifactIds": [
+        "ART-cli-formatter",
+        "ART-cli-colors",
+        "ART-cli-config",
+        "ART-badge-css"
+      ],
+      "makesGreenIds": [
+        "render_colored_relative_ticket_output",
+        "render_absolute_ticket_path_when_configured",
+        "TEST-cli-ticket-read",
+        "TEST-cli-project",
+        "TEST-cli-ticket-create"
+      ],
+      "sourceRef": "tasks:Task 6"
+    },
+    {
+      "id": "TASK-cli-e2e",
+      "title": "Add CLI E2E harness and suites",
+      "ownsArtifactIds": [
+        "ART-cli-integration-test",
+        "ART-shared-test-lib"
+      ],
+      "makesGreenIds": [
+        "TEST-cli-bootstrap",
+        "TEST-cli-ticket-read",
+        "TEST-cli-project",
+        "TEST-cli-ticket-create",
+        "TEST-cli-ticket-attr"
+      ],
+      "sourceRef": "tasks:Task 7"
+    },
+    {
+      "id": "TASK-cli-project",
+      "title": "Implement project namespace on shared project services",
+      "ownsArtifactIds": [
+        "ART-cli-project",
+        "ART-shared-project-service",
+        "ART-shared-project-types",
+        "ART-shared-project-manager",
+        "ART-cli-config"
+      ],
+      "makesGreenIds": [
+        "show_current_project_details",
+        "list_projects_via_project_namespace",
+        "resolve_project_token_without_subcommand_collision",
+        "initialize_project_in_current_folder",
+        "TEST-cli-project"
+      ],
+      "sourceRef": "tasks:Task 3"
+    }
+  ]
 }

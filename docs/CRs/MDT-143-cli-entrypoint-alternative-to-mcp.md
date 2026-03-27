@@ -2,7 +2,7 @@
 code: MDT-143
 status: Approved
 dateCreated: 2026-03-20T20:24:43.278Z
-lastModified: 2026-03-23T17:03:06Z
+lastModified: 2026-03-26T22:45:00Z
 type: Feature Enhancement
 priority: Medium
 phaseEpic: Phase B (Enhancement)
@@ -22,8 +22,8 @@ Users need command-line access to manage tickets and projects without relying on
 ### Current State
 - Ticket management requires MCP tools (via LLM clients) or web UI
 - No standalone CLI for ticket operations
-- Project detection logic exists only in MCP server (`mcp-server/src/tools/utils/projectDetector.ts`)
-- Key normalization exists in shared code (`shared/utils/keyNormalizer.ts`)
+- Shared project and ticket services now exist, but there is no terminal entrypoint over them
+- Key normalization and project detection already exist in shared code, but are not exposed through a CLI
 
 ### Desired State
 A standalone `mdt-cli` command providing:
@@ -44,7 +44,8 @@ A standalone `mdt-cli` command providing:
 
 ### Impact Areas
 - **New package**: `cli/` directory with CLI implementation
-- **Shared code**: Extract project detector from MCP to `shared/utils/projectDetector.ts`
+- **Shared code**: Consume `shared/services/ProjectService.ts` and `shared/services/TicketService.ts` as the CLI-facing shared contract
+- **Shared backend**: Keep `shared/tools/ProjectManager.ts` as the project-init/bootstrap backend rather than a read/query API
 - **Configuration**: New `~/.config/mdt/cli.toml` for CLI settings
 
 ## 2. Solution Analysis
@@ -106,7 +107,8 @@ mdt-cli project ls|list                 # Project listing
 mdt-cli project init [code] [name]      # Initialize project in current folder
 mdt-cli ticket create <type>[/<priority>] <title> [slug]  # Canonical create
 mdt-cli create <type>[/<priority>] <title> [slug]         # Create alias
-mdt-cli attr <ticket> <attr>=<value>... # Update ticket attributes
+mdt-cli ticket attr <ticket> <attr-op><value>...          # Canonical attribute update
+mdt-cli attr <ticket> <attr-op><value>...                 # Attribute alias
 ```
 
 ### Ticket Key Resolution
@@ -230,14 +232,14 @@ Created MDT-013: Fix login timeout
 
 #### Update Attributes
 ```bash
-mdt-cli attr MDT-012 status=Implemented
-mdt-cli attr MDT-012 status=in_progress              # snake_case accepted
-mdt-cli attr MDT-012 priority=high phase='Phase C'
-mdt-cli attr MDT-012 assignee='alice' related='ABC-001,DEF-002'
-mdt-cli attr MDT-012 related+=ABC-003 depends-=MDT-001
+mdt-cli ticket attr MDT-012 status=Implemented
+mdt-cli attr MDT-012 status=in_progress              # shortcut alias; snake_case accepted
+mdt-cli ticket attr MDT-012 priority=high phase='Phase C'
+mdt-cli ticket attr MDT-012 assignee='alice' related='ABC-001,DEF-002'
+mdt-cli ticket attr MDT-012 related+=ABC-003 depends-=MDT-001
 ```
 
-`mdt-cli attr <ticket> <attr>=<value>...` is the only supported attribute-mutation form in v1. Shortcut forms such as `mdt-cli 12 attr ...` or `mdt-cli 12 status=...` are not part of this ticket.
+`mdt-cli ticket attr <ticket> <attr-op><value>...` is the canonical attribute-mutation form in v1. `mdt-cli attr <ticket> <attr-op><value>...` remains a supported shortcut alias. Ticket-key-prefixed forms such as `mdt-cli 12 attr ...` or `mdt-cli 12 status=...` are not part of this ticket.
 
 **Operator rules**:
 - Scalar attributes (`status`, `priority`, `phase`, `assignee`, `impl-date`, `impl-notes`) use `=`
@@ -310,17 +312,16 @@ absolutePath = false    # false = relative paths (default), true = absolute path
 color = true            # --no-color to disable
 ```
 
-### Project Detection
+### Shared Integration Boundary
 
-Extract existing detector from MCP to shared:
+The CLI is a consumer of the shared service framework, not a second implementation of project or ticket rules.
 
-**Source**: `mcp-server/src/tools/utils/projectDetector.ts`
-**Target**: `shared/utils/projectDetector.ts`
+- `shared/services/ProjectService.ts` owns current-project resolution, explicit project lookup, and project listing
+- `shared/services/TicketService.ts` owns ticket read/list/attr-update capabilities
+- `shared/tools/ProjectManager.ts` remains the bootstrap backend for `project init`
+- `shared/utils/projectDetector.ts` remains the shared cwd-to-project detection utility used below the service layer
 
-Logic:
-1. Search upward from CWD for `.mdt-config.toml`
-2. Parse `code` field from config
-3. Return project code or null (multi-project mode)
+The CLI may keep temporary compatibility calls to legacy shared helpers where the shared entity-service surface is not complete yet, but those calls must stay behind CLI command modules and must not reintroduce MCP-private logic or direct markdown mutation.
 
 ### STDIN Handling
 
@@ -368,17 +369,22 @@ cli/
 │   │   └── colors.ts      # Color definitions (from badge.css)
 │   └── utils/
 │       ├── args.ts        # Shortcut normalization before commander parse
-│       └── detection.ts   # Project detection wrapper
+│       ├── cliConfig.ts   # CLI config
+│       └── stdin.ts       # STDIN adapter
+├── tests/
+│   └── e2e/
+│       └── mdt-cli.e2e.test.ts   # CLI E2E with shared/test-lib
 └── README.md
 ```
 
 ### Dependencies
 
-- `@mdt/shared` - Shared services (ProjectService, CRService, TemplateService)
+- `@mdt/shared` - Shared services (`ProjectService`, `TicketService`, `ProjectManager`, `projectDetector`, shared test-lib)
 - `@mdt/domain-contracts` - Types and enums
 - `chalk` or `picocolors` - Terminal colors
 - `commander` - CLI framework
 - `toml` - Config file parsing
+- `@mdt/shared/test-lib` - Isolated CLI E2E environment and project fixtures
 
 ## 4. Acceptance Criteria
 
@@ -417,7 +423,8 @@ cli/
 - [ ] Returns created ticket key and path
 
 ### AC-6: Update Attributes
-- [ ] `mdt-cli attr MDT-012 status=implemented` updates status
+- [ ] `mdt-cli ticket attr MDT-012 status=implemented` updates status
+- [ ] `mdt-cli attr MDT-012 status=implemented` resolves to the same behavior as `mdt-cli ticket attr`
 - [ ] Snake_case values accepted and normalized
 - [ ] Multiple attributes can be updated in one command
 - [ ] Returns confirmation with changed values
@@ -452,10 +459,20 @@ cli/
 
 > Architecture notes: [architecture.md](./MDT-143/architecture.md)
 
+> Tests trace projection: [tests.trace.md](./MDT-143/tests.trace.md)
+
+> Tests notes: [tests.md](./MDT-143/tests.md)
+
+> Tasks trace projection: [tasks.trace.md](./MDT-143/tasks.trace.md)
+
+> Tasks notes: [tasks.md](./MDT-143/tasks.md)
+
 ## 6. References
 
 - `src/components/Badge/badge.css` - Color definitions (single source of truth)
 - `src/config/statusConfig.ts` - Status configuration and colors
 - `shared/utils/keyNormalizer.ts` - Key normalization logic
-- `mcp-server/src/tools/utils/projectDetector.ts` - Project detection (to be extracted)
+- `shared/utils/projectDetector.ts` - Shared project detection
+- `shared/services/ProjectService.ts` - Shared project query/current-project contract
+- `shared/services/TicketService.ts` - Shared ticket query and attr-update contract
 - `docs/create_ticket.md` - Ticket attribute reference
