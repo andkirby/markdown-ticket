@@ -28,9 +28,10 @@ Playwright exists for browser E2E in this repository, but MDT-143 introduces a t
 ## Test-Facing Contract Notes
 
 - Ticket detail output is acceptance-visible as labeled fields, not as a raw JSON dump.
-- The canonical command tree is `ticket get|list|create`, `project current|get|info|ls|list|init`, and top-level `attr`, with shortcut coverage retained only for `mdt-cli 12`, `mdt-cli t 12`, `mdt-cli project`, `mdt-cli project <code>`, and `mdt-cli create`.
+- The canonical command tree is `ticket get|list|create|attr` and `project current|get|info|ls|list|init`, with shortcut coverage retained only for `mdt-cli 12`, `mdt-cli t 12`, `mdt-cli project`, `mdt-cli project <code>`, `mdt-cli create`, and `mdt-cli attr`.
 - Exact lowercase `ls` and `list` remain reserved project-list aliases, while `LS` remains available for project-code lookup collisions.
-- Attribute mutation is acceptance-visible only through `mdt-cli attr <ticket> <attr-op><value>...`; ticket-key-prefixed write shortcuts are out of scope for this ticket.
+- Ticket and project read paths are expected to stand on the shared entity-service surface; project-init stays a separate bootstrap path.
+- Attribute mutation is acceptance-visible through canonical `mdt-cli ticket attr <ticket> <attr-op><value>...`, with `mdt-cli attr <ticket> <attr-op><value>...` retained as the shortcut alias; ticket-key-prefixed write shortcuts are out of scope for this ticket.
 - Relation attributes must cover all three operator paths: `=` replace, `+=` append with dedupe, and `-=` remove.
 - `project init` is expected to materialize project configuration in the current folder, not just print a template to stdout.
 - STDIN creation is a no-template path: generated frontmatter plus generated H1, followed by the literal piped body content.
@@ -38,7 +39,7 @@ Playwright exists for browser E2E in this repository, but MDT-143 introduces a t
 ## Execution Notes
 
 - Current scenario coverage is canonical in `spec-trace`; no executable CLI suite was added in this stage.
-- `/mdt:architecture` has now chosen a spawned-process integration harness inside `cli/tests/integration/` for CLI acceptance rather than the browser Playwright suite.
+- `/mdt:architecture` has now chosen repo-native CLI E2E tests inside `cli/tests/e2e/`, built on `@mdt/shared/test-lib`, rather than the browser Playwright suite or `bats`.
 - `/mdt:tests` should translate these journeys into concrete failing suites once the CLI package layout and invocation contract are finalized.
 
 ---
