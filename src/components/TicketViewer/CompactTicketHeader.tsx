@@ -11,7 +11,7 @@ export function CompactTicketHeader({ ticket, className = '' }: CompactTicketHea
   return (
     <div className={className}>
       <div className="border-b border-gray-200 px-4 py-3 pr-14 dark:border-gray-700">
-        <h1 className="min-w-0 text-base font-semibold leading-6 text-gray-900 dark:text-white">
+        <h1 className="min-w-0 text-base font-semibold leading-6 text-gray-900 dark:text-white" data-testid="ticket-title">
           <TicketCode code={ticket.code} ticket={ticket} />
           <span className="mx-1 text-gray-900 dark:text-white">•</span>
           <span className="break-words text-gray-900 dark:text-white">{ticket.title}</span>

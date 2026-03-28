@@ -399,7 +399,21 @@ export class CRHandlers {
         const ticketAsRecord = result.ticket as unknown as Record<string, unknown>
         const value = ticketAsRecord[field]
         if (value !== undefined) {
-          lines.push(`- ${field}: ${Array.isArray(value) ? value.join(', ') : value}`)
+          let formattedValue: string
+          if (Array.isArray(value)) {
+            formattedValue = value.join(', ')
+          }
+          else if (value instanceof Date) {
+            // Use local date components to avoid timezone shifts
+            const year = value.getFullYear()
+            const month = String(value.getMonth() + 1).padStart(2, '0')
+            const day = String(value.getDate()).padStart(2, '0')
+            formattedValue = `${year}-${month}-${day}`
+          }
+          else {
+            formattedValue = String(value)
+          }
+          lines.push(`- ${field}: ${formattedValue}`)
         }
       }
 

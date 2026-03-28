@@ -68,10 +68,11 @@ test.describe('Ticket Detail Modal', () => {
     // Verify content area is visible
     await expect(page.locator(ticketSelectors.content)).toBeVisible()
 
-    // Verify markdown elements are rendered (headers, lists, etc.)
+    // Wait for markdown to render — content may be empty initially while fetching
     const content = page.locator(ticketSelectors.content)
+    await expect(content.locator('h1, h2, h3, p, ul, ol').first()).toBeVisible({ timeout: 5000 })
 
-    // Check for common markdown elements
+    // Verify markdown elements are rendered (headers, lists, etc.)
     const hasMarkdownElements = await content.evaluate((el) => {
       return el.innerHTML.includes('<h') || // headers
              el.innerHTML.includes('<p') ||  // paragraphs

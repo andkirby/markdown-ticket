@@ -78,7 +78,7 @@ Read it before writing a test — never guess selectors from component names.
 - **ProjectSelector rail**: `ProjectSelector` renders a rail of project buttons in the nav bar:
   - Active project: `[data-testid="project-selector-card-{CODE}"]` (larger card)
   - Inactive projects: `[data-testid="project-selector-chip-{CODE}"]` (compact chips)
-  - Launcher: `[data-testid="project-selector-launcher"]` (opens full panel)
+  - Clicking the active project card opens the full project panel
 - **View Mode Switcher (MDT-131)**: Merged Board|List toggle with Documents button:
   - Board|List toggle: `navSelectors.boardListToggle` — `[data-testid="board-list-toggle"]`
   - Documents button: `navSelectors.documentsButton` — `[data-testid="documents-button"]`

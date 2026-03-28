@@ -103,9 +103,13 @@ export async function modifyTicketFile(
   }
 
   // Determine body content
-  const updatedBody = modifications.content !== undefined
+  const nextBodyContent = modifications.content !== undefined
     ? modifications.content
     : bodyContent
+
+  const updatedBody = modifications.title !== undefined && modifications.content === undefined
+    ? replaceMarkdownTitle(nextBodyContent, modifications.title)
+    : nextBodyContent
 
   // Reconstruct file with modified frontmatter
   const updatedContent = `---
@@ -139,6 +143,25 @@ function replaceYamlField(frontmatter: string, field: string, value: string): st
 
   // Field doesn't exist, append it
   return `${frontmatter}\n${field}: "${value}"`
+}
+
+/**
+ * Replace the first markdown H1.
+ *
+ * Ticket titles are derived from the first H1 in the markdown body, not just
+ * from frontmatter.title, so title edits in filesystem tests must keep both in sync.
+ */
+function replaceMarkdownTitle(bodyContent: string, title: string): string {
+  const headingPattern = /^#\s+.*$/m
+
+  if (headingPattern.test(bodyContent)) {
+    return bodyContent.replace(headingPattern, `# ${title}`)
+  }
+
+  const trimmedBody = bodyContent.trimStart()
+  return trimmedBody.length > 0
+    ? `# ${title}\n\n${trimmedBody}`
+    : `# ${title}`
 }
 
 /**
