@@ -162,7 +162,7 @@ test.describe('Board Drag-Drop', () => {
 
       // Arm the SSE listener before the drag so the second page can't miss the broadcast.
       await Promise.all([
-        waitForSSEEvent(secondPage, 'file-change', { 'ticketData.code': proposedTicketCode }),
+        waitForSSEEvent(secondPage, 'file-change', { filename: `${proposedTicketCode}.md` }),
         dragTicketToColumn(page, proposedTicketCode, targetStatus),
       ])
 
