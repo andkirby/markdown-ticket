@@ -399,6 +399,7 @@ counterFile = ".mdt-next"
           path: join(tempDir, 'projects', 'REGGLOBAL'),
           configFile: '', // Empty indicates global-only
           ticketsPath: 'docs/CRs',
+          repository: '',
           active: true,
           description: '',
         },
@@ -429,6 +430,8 @@ counterFile = ".mdt-next"
           id: 'REGLOCAL',
           path: localProjectPath,
           configFile: join(localProjectPath, '.mdt-config.toml'),
+          ticketsPath: 'docs/CRs',
+          repository: '',
           active: true,
           description: '',
         },
