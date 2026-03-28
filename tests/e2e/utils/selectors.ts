@@ -243,8 +243,10 @@ export const selectorSelectors = {
   inactiveProjectCard: '[data-testid^="project-selector-chip-"]',
   /** Any project card or chip */
   anyProjectCard: '[data-testid^="project-selector-card-"], [data-testid^="project-selector-chip-"]',
-  /** Project selector launcher button */
-  launcher: '[data-testid="project-selector-launcher"]',
+  /** Active project card trigger that opens the full project panel */
+  panelTrigger: '[data-testid="project-selector-rail-active"] [data-testid^="project-selector-card-"]',
+  /** Backwards-compatible alias for older tests that still call this the launcher */
+  launcher: '[data-testid="project-selector-rail-active"] [data-testid^="project-selector-card-"]',
   /** Full project browser panel */
   projectPanel: '[data-testid="project-panel"]',
   /** Project card in panel (any code) */

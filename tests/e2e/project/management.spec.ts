@@ -138,7 +138,7 @@ test.describe('Project Management', () => {
     expect(firstTicketCount).toBeGreaterThanOrEqual(firstProject.ticketCount)
 
     // Switch to the second project using the project selector panel
-    await page.click(selectorSelectors.launcher)
+    await page.click(selectorSelectors.panelTrigger)
     const secondProjectOption = page.locator(projectSelectors.projectOption(secondProject.key))
     await expect(secondProjectOption).toBeVisible()
     await secondProjectOption.click()
@@ -155,7 +155,7 @@ test.describe('Project Management', () => {
     await expect(secondProjectTickets).toHaveCount(0)
 
     // Switch back to the first project via panel
-    await page.click(selectorSelectors.launcher)
+    await page.click(selectorSelectors.panelTrigger)
     const firstProjectOption = page.locator(projectSelectors.projectOption(firstProject.projectCode))
     await firstProjectOption.click()
 

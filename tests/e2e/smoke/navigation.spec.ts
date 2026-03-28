@@ -10,8 +10,8 @@
 
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario, type ScenarioResult } from '../setup/index.js'
-import { boardSelectors, navSelectors, ticketSelectors } from '../utils/selectors.js'
-import { waitForBoardReady } from '../utils/helpers.js'
+import { boardSelectors, navSelectors, selectorSelectors, ticketSelectors } from '../utils/selectors.js'
+import { selectProjectViaPanel, waitForBoardReady } from '../utils/helpers.js'
 
 /**
  * Test suite for navigation functionality
@@ -140,9 +140,8 @@ test.describe('Navigation', () => {
       // Verify first project tickets are visible
       await expect(firstProjectTicket).toBeVisible({ timeout: 10000 })
 
-      // Click second project option (chip, since it's inactive)
-      await page.click(`[data-testid="project-selector-chip-${secondProject.projectCode}"]`)
-      await waitForBoardReady(page)
+      // Switch to second project via panel (reliable even with many accumulated projects)
+      await selectProjectViaPanel(page, secondProject.projectCode)
 
       // Verify URL changed to second project
       await expect(page).toHaveURL(`/prj/${secondProject.projectCode}`)
@@ -169,21 +168,15 @@ test.describe('Navigation', () => {
       const firstProjectCard = page.locator(`[data-testid="project-selector-card-${firstProject.projectCode}"]`)
       await expect(firstProjectCard).toBeVisible()
 
-      // Verify second project is displayed as inactive chip
-      const secondProjectChip = page.locator(`[data-testid="project-selector-chip-${secondProject.key}"]`)
-      await expect(secondProjectChip).toBeVisible()
-
-      // Switch to second project by clicking the chip
-      await secondProjectChip.click()
-      await waitForBoardReady(page)
+      // Switch to second project via panel (reliable even with many accumulated projects)
+      await selectProjectViaPanel(page, secondProject.key)
 
       // Verify second project is now displayed as active card
       const secondProjectCard = page.locator(`[data-testid="project-selector-card-${secondProject.key}"]`)
       await expect(secondProjectCard).toBeVisible()
 
-      // Verify first project is now displayed as inactive chip
-      const firstProjectChip = page.locator(`[data-testid="project-selector-chip-${firstProject.projectCode}"]`)
-      await expect(firstProjectChip).toBeVisible()
+      // Verify the active card shows second project's name
+      await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(secondProject.key)
     })
   })
 

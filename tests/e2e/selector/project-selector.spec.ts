@@ -17,7 +17,7 @@
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario } from '../setup/index.js'
 import { selectorSelectors } from '../utils/selectors.js'
-import { waitForBoardReady } from '../utils/helpers.js'
+import { waitForBoardReady, selectProjectViaPanel } from '../utils/helpers.js'
 
 test.describe('Project Selector - Active Project Display', () => {
   test('active project shown as larger card with code and title', async ({ page, e2eContext }) => {
@@ -173,21 +173,20 @@ test.describe('Project Selector - Favorite Toggle', () => {
 test.describe('Project Selector - Inactive Projects Display', () => {
   test('inactive visible projects display based on compact mode setting', async ({ page, e2eContext }) => {
     const firstProject = await buildScenario(e2eContext.projectFactory, 'simple')
-    const secondProject = await e2eContext.projectFactory.createProject('empty', {
-      name: 'Second Project',
-    })
 
     await page.goto(`/prj/${firstProject.projectCode}`)
     await waitForBoardReady(page)
 
-    // Verify inactive project cards are visible
+    // Verify inactive project chips are visible in the rail
     const inactiveCards = page.locator(selectorSelectors.inactiveProjectCard)
     await expect(inactiveCards.first()).toBeVisible()
 
-    // Compact mode shows code only; medium mode shows more detail
-    // Default is compact mode (code-only)
-    const secondProjectCard = page.locator(`${selectorSelectors.inactiveProjectCard}:has-text("${secondProject.key}")`)
-    await expect(secondProjectCard).toBeVisible()
+    // Compact mode (default) shows project codes as text in chips
+    // Don't assert on a specific project code — accumulated projects from previous
+    // tests may push this test's own projects outside the visibleCount limit.
+    // Instead, verify the first chip displays a project code pattern (e.g., "TABX")
+    const firstChip = inactiveCards.first()
+    await expect(firstChip).toHaveText(/^[A-Z]{4}$/, { timeout: 5000 })
   })
 })
 
@@ -256,12 +255,8 @@ test.describe('Project Selector - Project Switching', () => {
     // Verify we're on first project
     await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(firstProject.projectCode)
 
-    // Click inactive project in rail
-    const secondProjectCard = page.locator(`${selectorSelectors.inactiveProjectCard}:has-text("${secondProject.key}")`)
-    await secondProjectCard.click()
-
-    // Wait for switch
-    await waitForBoardReady(page)
+    // Switch via panel (reliable with many accumulated projects from previous tests)
+    await selectProjectViaPanel(page, secondProject.key)
 
     // Verify we're now on second project
     await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(secondProject.key)
@@ -353,10 +348,8 @@ test.describe('Project Selector - State Persistence', () => {
     await page.goto(`/prj/${firstProject.projectCode}`)
     await waitForBoardReady(page)
 
-    // Switch to second project
-    const secondProjectCard = page.locator(`${selectorSelectors.inactiveProjectCard}:has-text("${secondProject.key}")`)
-    await secondProjectCard.click()
-    await waitForBoardReady(page)
+    // Switch to second project via panel (reliable even with many accumulated projects)
+    await selectProjectViaPanel(page, secondProject.key)
 
     // Verify switch succeeded
     await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(secondProject.key)

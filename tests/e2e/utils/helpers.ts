@@ -6,7 +6,7 @@
 
 import type { Page } from '@playwright/test'
 import { expect } from '@playwright/test'
-import { boardSelectors, commonSelectors, listSelectors, ticketSelectors } from './selectors.js'
+import { boardSelectors, commonSelectors, listSelectors, selectorSelectors, ticketSelectors } from './selectors.js'
 
 /** Default timeout for board ready state */
 const BOARD_READY_TIMEOUT = 10000
@@ -153,11 +153,33 @@ export async function navigateToDocuments(page: Page): Promise<void> {
 }
 
 /**
+ * Select a project from the project selector panel
+ *
+ * Opens the panel (which shows ALL projects regardless of visibleCount)
+ * and clicks the target project card. Use this instead of rail chip clicks
+ * when the target project may not fit in the visibleCount-limited rail.
+ */
+export async function selectProjectViaPanel(page: Page, projectCode: string): Promise<void> {
+  // Open panel by clicking active project card
+  await page.click(selectorSelectors.panelTrigger)
+
+  // Wait for panel and click project card within it
+  const panel = page.locator(selectorSelectors.projectPanel)
+  await expect(panel).toBeVisible()
+
+  const projectCard = panel.locator(`[data-testid="project-selector-card-${projectCode}"]`)
+  await projectCard.click()
+
+  // Wait for board to reload
+  await waitForBoardReady(page)
+}
+
+/**
  * Select a project from the project selector
  */
 export async function selectProject(page: Page, projectName: string): Promise<void> {
-  // Click launcher to open panel
-  await page.click('[data-testid="project-selector-launcher"]')
+  // Click the active project card to open the selector panel
+  await page.click(selectorSelectors.panelTrigger)
 
   // Wait for panel and click project card
   await page.click(`[data-testid="project-selector-card-${projectName}"]`)
