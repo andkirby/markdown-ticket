@@ -231,8 +231,8 @@ describe('projectFactory - Project Creation', () => {
     expect(configContent).toContain('name = "Test Project"')
     expect(configContent).toContain('code = "TST"')
     expect(configContent).toContain('ticketsPath = "specs/tickets"')
-    // Note: ProjectConfigService generates [document] at top level (not [project.document])
-    expect(configContent).toContain('[document]')
+    // Note: ProjectConfigService generates [project.document] (nested, not top-level [document])
+    expect(configContent).toContain('[project.document]')
     // Note: Custom ticketsPath is auto-added to excludeFolders by the service
     expect(configContent).toContain('excludeFolders =')
   })

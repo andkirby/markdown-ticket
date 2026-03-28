@@ -4,7 +4,7 @@ import { ProjectCacheService } from '../ProjectCacheService'
 describe('projectCacheService', () => {
   let service: ProjectCacheService
   const mockProjects: Project[] = [
-    { id: 'p1', project: { name: 'P1', code: 'P1', path: '/p1', configFile: '/c1', active: true, description: '' }, metadata: { dateRegistered: '2024-01-01', lastAccessed: '2024-01-01', version: '1.0.0' } },
+    { id: 'p1', project: { name: 'P1', code: 'P1', id: 'p1', path: '/p1', configFile: '/c1', ticketsPath: 'docs/CRs', repository: '', active: true, description: '' }, metadata: { dateRegistered: '2024-01-01', lastAccessed: '2024-01-01', version: '1.0.0' } },
   ]
 
   beforeEach(() => {
