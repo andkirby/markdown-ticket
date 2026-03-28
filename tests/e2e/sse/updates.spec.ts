@@ -85,7 +85,7 @@ test.describe("SSE Real-time Updates - File System Modifications", () => {
 
     // Modify ticket file on disk and wait for SSE event
     await Promise.all([
-      waitForSSEEvent(page, "file-change", { "ticketData.code": ticketCode }),
+      waitForSSEEvent(page, "file-change", { filename: `${ticketCode}.md` }),
       modifyTicketFile(projectDir, ticketCode, { title: newTitle }),
     ]);
 
@@ -121,7 +121,7 @@ test.describe("SSE Real-time Updates - File System Modifications", () => {
 
     // Modify status in ticket file on disk and wait for SSE event
     await Promise.all([
-      waitForSSEEvent(page, "file-change", { "ticketData.code": ticketCode }),
+      waitForSSEEvent(page, "file-change", { filename: `${ticketCode}.md` }),
       modifyTicketFile(projectDir, ticketCode, { status: newStatus }),
     ]);
 
@@ -177,7 +177,7 @@ test.describe("SSE Real-time Updates - File System Modifications", () => {
       // Wait for all SSE events and modify all files
       const waitForBulkUpdates = Promise.all(
         updates.map((u) =>
-          waitForSSEEvent(page, "file-change", { "ticketData.code": u.code }),
+          waitForSSEEvent(page, "file-change", { filename: `${u.code}.md` }),
         ),
       );
 
