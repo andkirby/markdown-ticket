@@ -64,9 +64,25 @@ describe('ProjectHandlers - resolveProject', () => {
       },
     ]
 
-    // Create mock ProjectService
+    // Create mock ProjectService with all methods used by ProjectHandlers
     mockProjectService = {
       getAllProjects: jest.fn().mockResolvedValue(mockProjects),
+      getProject: jest.fn().mockImplementation((projectRef: string) => {
+        const project = mockProjects.find(
+          p => p.project.code === projectRef.toUpperCase() || p.id === projectRef,
+        )
+        if (!project) {
+          const error = Object.assign(new Error(`Project '${projectRef}' not found`), { code: 'PROJECT_NOT_FOUND' })
+          return Promise.reject(error)
+        }
+        return Promise.resolve({ data: project })
+      }),
+      listProjects: jest.fn().mockImplementation((request: { includeInactive?: boolean } = {}) => {
+        const filtered = request.includeInactive
+          ? mockProjects
+          : mockProjects.filter(p => p.project.active !== false)
+        return Promise.resolve({ data: filtered })
+      }),
     } as unknown as jest.Mocked<ProjectService>
 
     projectHandlers = new ProjectHandlers(mockProjectService)
@@ -77,20 +93,21 @@ describe('ProjectHandlers - resolveProject', () => {
       const result = await projectHandlers.resolveProject('TEST', null)
 
       expect(result).toEqual(mockProjects[0])
-      expect(mockProjectService.getAllProjects).toHaveBeenCalled()
+      expect(mockProjectService.getProject).toHaveBeenCalledWith('TEST')
     })
 
     it('Given explicit project with different case WHEN resolving THEN normalizes to uppercase', async () => {
       const result = await projectHandlers.resolveProject('test', null)
 
       expect(result).toEqual(mockProjects[0])
+      expect(mockProjectService.getProject).toHaveBeenCalledWith('TEST')
     })
 
     it('Given explicit project parameter WHEN resolving THEN ignores detected default', async () => {
       const result = await projectHandlers.resolveProject('API', 'TEST')
 
       expect(result).toEqual(mockProjects[1])
-      expect(mockProjectService.getAllProjects).toHaveBeenCalled()
+      expect(mockProjectService.getProject).toHaveBeenCalledWith('API')
     })
 
     it('Given explicit project by ID WHEN resolving AND ID matches validation pattern THEN returns project', async () => {
@@ -108,7 +125,7 @@ describe('ProjectHandlers - resolveProject', () => {
       const result = await projectHandlers.resolveProject(undefined, 'TEST')
 
       expect(result).toEqual(mockProjects[0])
-      expect(mockProjectService.getAllProjects).toHaveBeenCalled()
+      expect(mockProjectService.getProject).toHaveBeenCalledWith('TEST')
     })
 
     it('Given detected project with lowercase WHEN resolving THEN normalizes to uppercase', async () => {
@@ -187,8 +204,8 @@ describe('ProjectHandlers - resolveProject', () => {
       await projectHandlers.resolveProject('TEST', null)
       await projectHandlers.resolveProject('API', null)
 
-      // Should call getAllProjects twice since each resolution triggers it
-      expect(mockProjectService.getAllProjects).toHaveBeenCalledTimes(2)
+      // Should call getProject twice since each resolution triggers it
+      expect(mockProjectService.getProject).toHaveBeenCalledTimes(2)
     })
   })
 
