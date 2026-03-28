@@ -226,8 +226,8 @@ describe('configuration validation', () => {
       expect(project.name).toBe(testProject.name)
       expect(project.code).toBe(testProject.code)
 
-      // Verify document configuration (top-level section)
-      expect(localConfig!.document).toBeDefined()
+      // Verify document configuration (nested under project section)
+      expect((localConfig!.project as Record<string, unknown>).document).toBeDefined()
     })
   })
 

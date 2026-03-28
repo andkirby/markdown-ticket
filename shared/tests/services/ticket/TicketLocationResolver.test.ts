@@ -8,8 +8,10 @@ const baseProject: Project = {
     name: 'Markdown Ticket',
     code: 'MDT',
     path: '/repo',
+    configFile: '/repo/.mdt-config.toml',
     ticketsPath: 'docs/CRs',
     description: '',
+    repository: '',
     active: true,
   },
   metadata: {
