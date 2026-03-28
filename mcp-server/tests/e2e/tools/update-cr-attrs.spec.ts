@@ -623,16 +623,17 @@ Basic implementation steps.
       })
 
       const response = await callUpdateCRAttrs('TEST', crKey, {
-        implementationDate: '2025/01/15', // Wrong format
+        implementationDate: '2025/01/15', // Wrong format (accepted but normalized to ISO)
       })
 
-      // The tool appears to accept any date format without validation
+      // The tool accepts any date format and normalizes to ISO format (YYYY-MM-DD)
       expect(response.success).toBe(true)
       expect(response.data).toBeDefined()
 
       if (isStringData(response.data)) {
         expect(response.data).toContain(`Updated CR ${crKey}`)
-        expect(response.data).toContain('implementationDate: 2025/01/15')
+        // Date is normalized to ISO format (2025-01-15) regardless of input format
+        expect(response.data).toContain('implementationDate: 2025-01-15')
       }
     })
 

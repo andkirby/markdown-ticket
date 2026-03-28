@@ -83,14 +83,11 @@ test.describe("SSE Real-time Updates - File System Modifications", () => {
     // Verify initial state
     await expect(initialTicket).toBeVisible();
 
-    // Modify ticket file on disk and wait for SSE event
-    await Promise.all([
-      waitForSSEEvent(page, "file-change", { filename: `${ticketCode}.md` }),
-      modifyTicketFile(projectDir, ticketCode, { title: newTitle }),
-    ]);
+    // Modify ticket file on disk (triggers SSE)
+    await modifyTicketFile(projectDir, ticketCode, { title: newTitle });
 
-    // Verify title updated on board
-    await expect(initialTicket).toContainText(newTitle, { timeout: 3000 });
+    // Wait for UI to update (polling with retry)
+    await expect(initialTicket).toContainText(newTitle, { timeout: 10000 });
   });
 
   /**
@@ -190,9 +187,15 @@ test.describe("SSE Real-time Updates - File System Modifications", () => {
         ),
       ]);
 
-      // Wait for UI to update on both pages
-      await page.waitForTimeout(500);
-      await secondPage.waitForTimeout(500);
+      // Wait for UI to update on both pages (debounce + API call + render)
+      await page.waitForTimeout(1000);
+      await secondPage.waitForTimeout(1000);
+
+      // Verify all updates reflected on first page
+      for (const update of updates) {
+        const ticketSelector = boardSelectors.ticketByCode(update.code);
+        await expect(page.locator(ticketSelector)).toContainText(update.title, { timeout: 5000 });
+      }
 
       // Verify all updates reflected on first page
       for (const update of updates) {

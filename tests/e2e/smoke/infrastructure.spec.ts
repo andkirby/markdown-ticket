@@ -91,15 +91,16 @@ test.describe('E2E Infrastructure', () => {
       scenarioResult = await buildScenario(e2eContext.projectFactory, 'simple')
     }
 
-    // Navigate to frontend — the app auto-selects the first project
-    await page.goto('/')
+    // Navigate directly to the project — avoids auto-redirect to a different
+    // project when many projects have accumulated from previous tests
+    await page.goto(`/prj/${scenarioResult!.projectCode}`)
     await waitForBoardReady(page)
 
-    // Project button is visible in the nav (the ProjectSelector renders one button per project)
-    const projectOption = page.locator(
-      `[data-testid="project-selector-card-${scenarioResult!.projectCode}"], [data-testid="project-selector-chip-${scenarioResult!.projectCode}"]`,
+    // Project card is visible in the nav as the active project
+    const projectCard = page.locator(
+      `[data-testid="project-selector-card-${scenarioResult!.projectCode}"]`,
     )
-    await expect(projectOption).toBeVisible()
+    await expect(projectCard).toBeVisible()
 
     // Verify tickets appear on board (auto-selected project loads its tickets)
     const ticketCards = page.locator(boardSelectors.ticketCard)

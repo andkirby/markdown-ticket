@@ -114,7 +114,10 @@ test.describe('Sub-Document Navigation', () => {
     await waitForBoardReady(page)
     await openTicketDetail(page, ticketCode)
 
+    // Wait for sub-doc tabs to appear (file watcher + SSE propagation delay)
     const tabRow = page.locator(ticketSelectors.detailPanel).locator(subdocSelectors.tabRow).first()
+    await expect(tabRow.locator('[data-testid^="subdoc-tab-"]').first()).toBeVisible({ timeout: 10000 })
+
     const tabs = tabRow.locator('[data-testid^="subdoc-tab-"]')
     const tabNames = await tabs.evaluateAll((els) =>
       els.map((el) => el.getAttribute('data-testid')?.replace('subdoc-tab-', '') ?? ''),
