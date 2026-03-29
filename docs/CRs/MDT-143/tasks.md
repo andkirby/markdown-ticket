@@ -57,9 +57,9 @@
 - `TEST-cli-bootstrap`
 
 **Done when**:
-- [ ] `cli/bin/mdt-cli` is exposed through `cli/package.json`
-- [ ] Canonical `ticket` and `project` namespaces are registered in commander
-- [ ] Supported shortcuts rewrite into the canonical command tree before parse
+- [x] `cli/bin/mdt-cli` is exposed through `cli/package.json`
+- [x] Canonical `ticket` and `project` namespaces are registered in commander
+- [x] Supported shortcuts rewrite into the canonical command tree before parse
 
 ---
 
@@ -77,9 +77,9 @@
 - `TEST-cli-ticket-read`
 
 **Done when**:
-- [ ] Ticket read/list routes use shared project-context resolution
-- [ ] Bare-key and cross-project lookups share the same normalized key path
-- [ ] Errors for invalid keys and missing project context remain user-facing
+- [x] Ticket read/list routes use shared project-context resolution
+- [x] Bare-key and cross-project lookups share the same normalized key path
+- [x] Errors for invalid keys and missing project context remain user-facing
 
 ---
 
@@ -98,9 +98,9 @@
 - `TEST-cli-project`
 
 **Done when**:
-- [ ] `project`, `project current`, `project get|info`, and `project ls|list` all route through one commander subtree
-- [ ] Bare `project <code>` lookup preserves lowercase subcommand reservation rules
-- [ ] `project init` materializes project configuration in the current folder
+- [x] `project`, `project current`, `project get|info`, and `project ls|list` all route through one commander subtree
+- [x] Bare `project <code>` lookup preserves lowercase subcommand reservation rules
+- [x] `project init` materializes project configuration in the current folder
 
 ---
 
@@ -117,9 +117,9 @@
 - `TEST-cli-ticket-create`
 
 **Done when**:
-- [ ] `ticket create` and `create` route to the same create path
-- [ ] Stdin mode writes generated frontmatter and H1 followed by literal body content
-- [ ] Create input is treated as data, not shell instructions
+- [x] `ticket create` and `create` route to the same create path
+- [x] Stdin mode writes generated frontmatter and H1 followed by literal body content
+- [x] Create input is treated as data, not shell instructions
 
 ---
 
@@ -135,9 +135,9 @@
 - `TEST-cli-ticket-attr`
 
 **Done when**:
-- [ ] Scalar `=` and relation `=`, `+=`, `-=` tokens map to shared attr operations
-- [ ] Unsupported fields, operators, and missing args fail with corrective errors
-- [ ] One command can apply multiple attr operations and print one confirmation response
+- [x] Scalar `=` and relation `=`, `+=`, `-=` tokens map to shared attr operations
+- [x] Unsupported fields, operators, and missing args fail with corrective errors
+- [x] One command can apply multiple attr operations and print one confirmation response
 
 ---
 
@@ -156,9 +156,9 @@
 - `TEST-cli-ticket-create`
 
 **Done when**:
-- [ ] Relative/absolute path output respects CLI config defaults
-- [ ] ANSI colors are emitted only for interactive color-enabled targets
-- [ ] Badge color categories remain aligned with the web UI mapping
+- [x] Relative/absolute path output respects CLI config defaults
+- [x] ANSI colors are emitted only for interactive color-enabled targets
+- [x] Badge color categories remain aligned with the web UI mapping
 
 ---
 
@@ -177,9 +177,9 @@
 - `TEST-cli-ticket-attr`
 
 **Done when**:
-- [ ] CLI E2E covers canonical commands and retained shortcuts
-- [ ] Temp projects and config are provisioned through `@mdt/shared/test-lib`
-- [ ] Suites assert stdout, stderr, exit codes, and resulting files where applicable
+- [x] CLI E2E covers canonical commands and retained shortcuts
+- [x] Temp projects and config are provisioned through `@mdt/shared/test-lib`
+- [x] Suites assert stdout, stderr, exit codes, and resulting files where applicable
 
 ---
 
