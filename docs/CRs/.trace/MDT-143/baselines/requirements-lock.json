@@ -1,0 +1,110 @@
+{
+  "ticket": "MDT-143",
+  "generatedAt": "2026-03-29T12:50:22.149Z",
+  "requirements": [
+    {
+      "id": "BR-1",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-8",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-9",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-10",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-12",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-13",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-14",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-15",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-16",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-17",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "routePolicy": "tests"
+    }
+  ]
+}

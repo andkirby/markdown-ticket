@@ -1,0 +1,25 @@
+{
+  "name": "@mdt/cli",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "CLI tool for Markdown Ticket management",
+  "bin": {
+    "mdt-cli": "./bin/mdt-cli"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "dev": "bun run src/index.ts",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:e2e": "bun test tests/e2e"
+  },
+  "dependencies": {
+    "@mdt/shared": "workspace:*",
+    "@mdt/domain-contracts": "workspace:*",
+    "commander": "^13.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}
