@@ -125,6 +125,20 @@ Layered architecture: controllers → services → repositories
 
 Following documented patterns prevents duplication and ensures consistency across the codebase.
 
+### CLI Business Logic Boundary
+
+The `cli/` package is a **thin presentation shell** over shared services. It must not contain business logic.
+
+| Belongs in `cli/` | Belongs in `shared/` or `domain-contracts/` |
+|-------------------|---------------------------------------------|
+| Argv parsing and normalization | Filtering, sorting, pagination |
+| Output formatting and color rendering | Fuzzy matching and query logic |
+| Terminal UX (TTY detection, --no-color) | Entity validation and mutation rules |
+| Shortcut normalization before commander | Key normalization, project detection |
+| --guide generation from commander tree | Data model and type definitions |
+
+**Rule**: If the logic would be useful to another consumer (MCP server, web UI, another CLI), it belongs in shared. CLI only parses input into shared request types and renders output.
+
 ## Documentation Priority
 
 **ALWAYS check existing documentation FIRST before answering "how to" questions.**

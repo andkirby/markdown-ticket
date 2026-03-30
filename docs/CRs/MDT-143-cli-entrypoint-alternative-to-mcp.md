@@ -2,7 +2,7 @@
 code: MDT-143
 status: Approved
 dateCreated: 2026-03-20T20:24:43.278Z
-lastModified: 2026-03-26T22:45:00Z
+lastModified: 2026-03-29T22:26:29.601Z
 type: Feature Enhancement
 priority: Medium
 phaseEpic: Phase B (Enhancement)
@@ -468,7 +468,6 @@ cli/
 > Tasks notes: [tasks.md](./MDT-143/tasks.md)
 
 ## 6. References
-
 - `src/components/Badge/badge.css` - Color definitions (single source of truth)
 - `src/config/statusConfig.ts` - Status configuration and colors
 - `shared/utils/keyNormalizer.ts` - Key normalization logic
@@ -476,3 +475,22 @@ cli/
 - `shared/services/ProjectService.ts` - Shared project query/current-project contract
 - `shared/services/TicketService.ts` - Shared ticket query and attr-update contract
 - `docs/create_ticket.md` - Ticket attribute reference
+
+### UAT Session 2026-03-30
+
+**Approved changes**: CLI UX refinements applied as same-ticket UAT delta.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| Attr output format (pipe-separated old→new, no-op exit 0) | BR-10 refined |
+| Element-level color scheme (title white, key light-blue, code dark cyan, id gray, path gray) | BR-11 refined |
+| Project ls output format with per-element colors | BR-5 refined |
+| Ticket list default 10-ticket limit, newest-first sort | BR-4 refined |
+| Positional list filters (AND cross-field, comma+fuzzy within) | BR-18 added |
+| List output modes (--files, --info) and ticket ls alias | BR-4 refined |
+| --guide flag (global + per-namespace, generated from commander tree) | BR-19 added |
+
+**Updated workflow documents**: requirements.md, bdd.md, architecture.md, tests.md, tasks.md (all via spec-trace sync)
+**uat.md written**: yes
+**Strict drift/lock**: not used (no lock baseline exists)
+**New tasks**: TASK-cli-list-enhancements, TASK-cli-guide, TASK-cli-output-refinements, TASK-cli-e2e-refinements
