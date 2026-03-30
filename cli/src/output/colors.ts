@@ -3,8 +3,10 @@
  *
  * Terminal color definitions aligned with web UI badge.css categories.
  * Provides ANSI color codes gated by CLI configuration and TTY detection.
+ * Color maps are keyed by canonical values from @mdt/domain-contracts.
  */
 
+import { CRPriority, CRStatus, CRType } from '@mdt/domain-contracts/types'
 import { getCliConfig } from '../utils/cliConfig.js'
 
 /**
@@ -86,93 +88,64 @@ export function badge(text: string, colorFn?: (s: string) => string): string {
   return `[${colored}]`
 }
 
+// -------------------------------------------------------------------
+// Status → color: keyed by CRStatus constants
+// -------------------------------------------------------------------
+
+const statusColorMap: Record<string, string> = {
+  [CRStatus.PROPOSED]: ANSI.gray,
+  [CRStatus.APPROVED]: ANSI.blue,
+  [CRStatus.IN_PROGRESS]: ANSI.yellow,
+  [CRStatus.IMPLEMENTED]: ANSI.green,
+  [CRStatus.REJECTED]: ANSI.red,
+  [CRStatus.ON_HOLD]: ANSI.dim + ANSI.yellow,
+  [CRStatus.PARTIALLY_IMPLEMENTED]: ANSI.magenta,
+}
+
 /**
  * Colorize status value (aligned with badge.css)
- *
- * Status color mapping (from badge.css):
- * - Proposed: gray text
- * - Approved: blue text
- * - In Progress: yellow text
- * - Implemented: green text
- * - Rejected: red text
- * - On Hold: orange text (dim yellow)
- * - Partially Implemented: magenta text
- *
- * @param status - Status value
- * @returns Colorized status (or plain text if colors disabled)
  */
 export function colorizeStatus(status: string): string {
-  const normalizedStatus = status.toLowerCase().replace(/\s+/g, '-')
-
-  const statusColorMap: Record<string, string> = {
-    'proposed': ANSI.gray,
-    'approved': ANSI.blue,
-    'in-progress': ANSI.yellow,
-    'implemented': ANSI.green,
-    'rejected': ANSI.red,
-    'on-hold': ANSI.dim + ANSI.yellow,
-    'partially-implemented': ANSI.magenta,
-    'superseded': ANSI.brightBlue,
-    'deprecated': ANSI.gray,
-    'duplicate': ANSI.gray,
-  }
-
-  const colorCode = statusColorMap[normalizedStatus] || ANSI.gray
+  const colorCode = statusColorMap[status] || ANSI.gray
   return colorize(status, colorCode)
+}
+
+// -------------------------------------------------------------------
+// Priority → color: keyed by CRPriority constants
+// -------------------------------------------------------------------
+
+const priorityColorMap: Record<string, string> = {
+  [CRPriority.LOW]: ANSI.green,
+  [CRPriority.MEDIUM]: ANSI.yellow,
+  [CRPriority.HIGH]: ANSI.brightRed,
+  [CRPriority.CRITICAL]: ANSI.bold + ANSI.brightRed,
 }
 
 /**
  * Colorize priority value (aligned with badge.css)
- *
- * Priority color mapping (from badge.css):
- * - Critical: bright red + bold
- * - High: bright red
- * - Medium: yellow
- * - Low: green
- *
- * @param priority - Priority value
- * @returns Colorized priority (or plain text if colors disabled)
  */
 export function colorizePriority(priority: string): string {
-  const normalizedPriority = priority.toLowerCase()
-
-  const priorityColorMap: Record<string, string> = {
-    'critical': ANSI.bold + ANSI.brightRed,
-    'high': ANSI.brightRed,
-    'medium': ANSI.yellow,
-    'low': ANSI.green,
-  }
-
-  const colorCode = priorityColorMap[normalizedPriority] || ANSI.yellow
+  const colorCode = priorityColorMap[priority] || ANSI.yellow
   return colorize(priority, colorCode)
+}
+
+// -------------------------------------------------------------------
+// Type → color: keyed by CRType constants
+// -------------------------------------------------------------------
+
+const typeColorMap: Record<string, string> = {
+  [CRType.ARCHITECTURE]: ANSI.magenta,
+  [CRType.FEATURE_ENHANCEMENT]: ANSI.blue,
+  [CRType.BUG_FIX]: ANSI.red,
+  [CRType.TECHNICAL_DEBT]: ANSI.gray,
+  [CRType.DOCUMENTATION]: ANSI.cyan,
+  [CRType.RESEARCH]: ANSI.brightMagenta,
 }
 
 /**
  * Colorize type value (aligned with badge.css)
- *
- * Type color mapping (from badge.css):
- * - Feature Enhancement: blue
- * - Bug Fix: red
- * - Architecture: magenta
- * - Technical Debt: gray
- * - Documentation: cyan
- * - Research: pink (bright magenta)
- *
- * @param type - Type value
- * @returns Colorized type (or plain text if colors disabled)
  */
 export function colorizeType(type: string): string {
-  const normalizedType = type.toLowerCase().replace(/\s+/g, '-')
-
-  const typeColorMap: Record<string, string> = {
-    'feature-enhancement': ANSI.blue,
-    'bug-fix': ANSI.red,
-    'architecture': ANSI.magenta,
-    'technical-debt': ANSI.gray,
-    'documentation': ANSI.cyan,
-    'research': ANSI.brightMagenta,
-  }
-
-  const colorCode = typeColorMap[normalizedType] || ANSI.blue
+  const colorCode = typeColorMap[type] || ANSI.blue
   return colorize(type, colorCode)
 }

@@ -10,6 +10,7 @@ import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
 import { normalizeKey, KeyNormalizationError } from '@mdt/shared/utils/keyNormalizer.js'
+import { PRIORITY_TOKENS, STATUS_ALIASES } from '../utils/aliases.js'
 import { formatTicketAttr } from '../output/formatter.js'
 
 /**
@@ -45,33 +46,6 @@ const SCALAR_FIELDS = new Set([
   'implementationDate',
   'implementationNotes',
 ])
-
-/**
- * Priority shorthand mapping
- */
-const PRIORITY_ALIASES: Record<string, string> = {
-  p1: 'Critical',
-  p2: 'High',
-  p3: 'Medium',
-  p4: 'Low',
-}
-
-/**
- * Status alias mapping for CLI convenience
- */
-const STATUS_ALIASES: Record<string, string> = {
-  proposed: 'Proposed',
-  approved: 'Approved',
-  in_progress: 'In Progress',
-  'in-progress': 'In Progress',
-  inprogress: 'In Progress',
-  implemented: 'Implemented',
-  rejected: 'Rejected',
-  on_hold: 'On Hold',
-  'on-hold': 'On Hold',
-  onhold: 'On Hold',
-  partial: 'Partially Implemented',
-}
 
 /**
  * Parse ticket key to extract project code and ticket key
@@ -206,7 +180,7 @@ function normalizeFieldValue(field: string, value: string): string | string[] {
   // Priority normalization
   if (field === 'priority') {
     const normalizedKey = trimmedValue.toLowerCase()
-    return PRIORITY_ALIASES[normalizedKey] || trimmedValue
+    return PRIORITY_TOKENS[normalizedKey] || trimmedValue
   }
 
   // Relation fields: split on commas for list operations
