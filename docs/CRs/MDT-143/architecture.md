@@ -37,9 +37,10 @@ These shared APIs are the intended integration surface for `cli/`. Command modul
 | `shared/utils/keyNormalizer.ts` | `normalizeKey`, `KeyNormalizationError` | Default ticket command, explicit ticket key normalization, invalid-key error shaping |
 | `shared/services/ProjectService.ts` | `resolveCurrentProject`, `getProject`, `listProjects` | `project`, `project current`, `project get|info <code>`, bare `project <code>`, and ticket/project shortcut context resolution |
 | `shared/tools/ProjectManager.ts` | `createProject` | `project init` bootstrap only |
-| `shared/services/TicketService.ts` | `getTicket`, `listTickets`, `updateTicketAttributes`, legacy create helper path | Ticket view, ticket list, ticket attr, and ticket create without duplicating markdown persistence |
+| `shared/services/TicketService.ts` | `getTicket`, `listTickets`, `updateTicketAttributes`, legacy create helper path | Ticket view, ticket list (with filters, sort, pagination), ticket attr, and ticket create without duplicating markdown persistence |
+| `domain-contracts/src/ticket/input.ts` | `TicketFilters`, `AttrOperation` | CLI parses positional `key=value` args into `TicketFilters`; shared owns filtering, fuzzy matching, sorting, and pagination |
 | `shared/services/project/types.ts` | `ReadResult`, `WriteResult`, project request/result contracts | Keep CLI adapters aligned with the shared consumer contract surface |
-| `shared/services/ticket/types.ts` | `AttrOperation`, ticket request/result contracts | Parse CLI attr tokens into the shared operation contract rather than inventing a second mutation model |
+| `shared/services/ticket/types.ts` | `ListTicketsRequest`, `AttrOperation`, ticket request/result contracts | Parse CLI attr tokens into the shared operation contract rather than inventing a second mutation model |
 | `shared/utils/toml.ts` | `parseToml`, `stringify` | Read CLI TOML config and avoid introducing a second TOML parser |
 
 ### Shared Gaps
@@ -48,6 +49,7 @@ These shared APIs are the intended integration surface for `cli/`. Command modul
 |-----|--------|---------------|
 | Consumer-facing ticket create contract | **Still transitional** | `MDT-145` formalized ticket read/attr/document capability boundaries, but ticket create still rides a legacy shared helper path |
 | Ticket document collaborator | **Future-facing for CLI** | `TicketDocumentService` is part of the shared target shape, but `MDT-143` does not expose document-edit commands in v1 |
+| TicketFilters expansion | **UAT required** | `TicketFilters` needs `assignee` and `phaseEpic` fields, fuzzy matching semantics, and `listTickets` needs sort/limit/offset pagination support |
 
 ### Not Missing in Shared
 
@@ -61,10 +63,11 @@ These shared APIs are the intended integration surface for `cli/`. Command modul
 |--------|-------|----------------|
 | `cli/src/index.ts` | CLI entrypoint | Bootstrap commander, register canonical verbs, own help/exit behavior, and route normalized argv into command handlers |
 | `cli/src/utils/args.ts` | Shortcut normalization | Rewrite approved shortcut forms before commander parse without becoming a second command parser |
-| `cli/src/commands/view.ts` + `cli/src/commands/list.ts` | Ticket read path | Resolve project context through `ProjectService`, normalize keys, read ticket data through `TicketService`, hand off to formatter |
+| `cli/src/commands/view.ts` + `cli/src/commands/list.ts` | Ticket read/list path | Resolve project context through `ProjectService`, normalize keys, read ticket data through `TicketService`, apply positional filters with AND cross-field and comma+fuzzy within-field matching, truncate to 10 newest by default, hand off to formatter |
 | `cli/src/commands/project.ts` | Project namespace | Register `current`, `get|info`, `ls|list`, and `init`, route project reads through `ProjectService`, and route init through `ProjectManager` |
 | `cli/src/commands/create.ts` + `cli/src/commands/attr.ts` | Ticket mutation | Register `ticket create` and `ticket attr` in the commander ticket subtree, retain top-level `create` and `attr` aliases, parse `=`, `+=`, and `-=` attr tokens, capture stdin when present, and call shared ticket write APIs |
-| `cli/src/output/formatter.ts` + `cli/src/output/colors.ts` | Presentation layer | Labeled terminal output, relative vs absolute path rendering, TTY color policy |
+| `cli/src/output/formatter.ts` + `cli/src/output/colors.ts` | Presentation layer | Labeled terminal output with per-element colors (title white, key light-blue, code dark cyan, id gray, path gray), relative vs absolute path rendering, TTY color policy, pipe-separated attr confirmation format |
+| `cli/src/output/guide.ts` | Command guide | Generate --guide output from the registered commander tree at global and per-namespace scope |
 | `cli/src/utils/cliConfig.ts` | CLI config | Read `~/.config/mdt/cli.toml`, apply defaults when absent |
 | `cli/src/utils/stdin.ts` | Input adapter | Detect piped stdin and return literal body text without interpolation |
 | `cli/tests/e2e/*.test.ts` | CLI E2E | Run the built CLI as a real child process against isolated projects created through `@mdt/shared/test-lib` |
@@ -120,6 +123,7 @@ cli/
     output/
       formatter.ts
       colors.ts
+      guide.ts                   # --guide generation from commander tree
     utils/
       args.ts                     # shortcut normalization before commander parse
       cliConfig.ts
@@ -160,6 +164,7 @@ shared/
 6. **Single formatting owner**: All human-readable terminal output passes through `formatter.ts`.
 7. **Color policy is gated**: ANSI output is allowed only when config allows it and the target stream is interactive.
 8. **Mockups are narrative**: Output sketches live in `architecture.md` for operator guidance and are not canonical trace records.
+9. **No business logic in CLI**: Filtering, sorting, pagination, fuzzy matching, and query logic belong in `shared/`. CLI only parses argv into shared request types and renders results.
 
 ## E2E Decision
 
@@ -188,17 +193,72 @@ MDT-012 Add CLI access to tickets and projects
   path: docs/CRs/MDT-012-add-cli-access.md
 ```
 
+Colors: ticket key (MDT-012) light-blue, title white, path gray.
+
+### Ticket List
+
+```text
+$ mdt-cli list
+
+MDT-012 Add CLI access to tickets and projects
+Implemented | Feature Enhancement | High | Phase B (Enhancement)
+docs/CRs/MDT-012-add-cli-access.md
+
+MDT-011 MCP HTTP transport
+In Progress | Feature Enhancement | Medium
+docs/CRs/MDT-011-mcp-http.md
+
+10 tickets in MDT project
+```
+
+Default: 10 tickets, newest-first. `--all` for all, `--limit N` to override.
+
+Filters (positional, AND across fields, comma+fuzzy within):
+```text
+$ mdt-cli list status=impl priority=high type=architecture
+```
+
+Output modes: `--files` (paths only), `--info` (no path line).
+
 ### Current Project
 
 ```text
 $ mdt-cli project
 
-MDT (markdown-ticket)
-  name:         Markdown Ticket Board
-  description:  Kanban board with markdown-based tickets and MCP integration
-  path:         ~/Projects/markdown-ticket
-  ticketsPath:  docs/CRs
-  config:       .mdt-config.toml
+MDT (markdown-ticket)  Markdown Ticket Board
+  Kanban board with markdown-based tickets and MCP integration
+  ~/Projects/markdown-ticket
+```
+
+Colors: project code dark cyan, id gray, title white, description normal, path gray.
+
+### Project List
+
+```text
+$ mdt-cli project ls
+
+MDT (markdown-ticket)  Markdown Ticket Board
+  Kanban board with markdown-based tickets and MCP integration
+  ~/Projects/markdown-ticket
+
+API (api-gateway)  API Gateway Service
+  Central API gateway for microservices
+  ~/Projects/api-gateway
+```
+
+### Attr Update
+
+```text
+$ mdt-cli ticket attr MDT-012 status=implemented
+
+Updated MDT-012 | status: In Progress → Implemented
+```
+
+No-op:
+```text
+$ mdt-cli ticket attr MDT-012 status=implemented
+
+MDT-012 | status: unchanged (Implemented)
 ```
 
 ### Project Init

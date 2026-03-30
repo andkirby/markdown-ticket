@@ -16,6 +16,10 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 | Project namespace | `cli/tests/e2e/project/project.spec.ts` | 10 |
 | Ticket create | `cli/tests/e2e/ticket/create.spec.ts` | 10 |
 | Ticket attr | `cli/tests/e2e/ticket/attr.spec.ts` | 12 |
+| Ticket list enhancements | `cli/tests/e2e/ticket/list-enhancements.spec.ts` | TBA |
+| Attr output format | `cli/tests/e2e/ticket/attr-output.spec.ts` | TBA |
+| CLI color scheme | `cli/tests/e2e/output/color-scheme.spec.ts` | TBA |
+| Command guide | `cli/tests/e2e/guide.spec.ts` | TBA |
 
 ## Test Details
 
@@ -93,6 +97,48 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 | should reject missing attr arguments with a corrective error | Edge-2 |
 | should keep attr values as literal data without shell interpolation | C5 |
 | should print one confirmation response with the applied changes | BR-10 |
+
+### Ticket List Enhancements (`cli/tests/e2e/ticket/list-enhancements.spec.ts`)
+
+| Test Name | Covers |
+|-----------|--------|
+| should default to 10 tickets sorted newest-first | BR-4 |
+| should show all tickets with --all flag | BR-4 |
+| should show N tickets with --limit N | BR-4 |
+| should filter by single field with exact match | BR-18 |
+| should filter by single field with fuzzy match (e.g., status=impl) | BR-18 |
+| should filter by single field with comma-separated values (OR within field) | BR-18 |
+| should combine multiple filters with AND across fields | BR-18 |
+| should show file paths only with --files | BR-4 |
+| should show info without paths with --info | BR-4 |
+| should support ticket ls alias | BR-4 |
+
+### Attr Output Format (`cli/tests/e2e/ticket/attr-output.spec.ts`)
+
+| Test Name | Covers |
+|-----------|--------|
+| should print pipe-separated old→new confirmation on successful update | BR-10 |
+| should print multiple pipe-separated changes when updating multiple attributes | BR-10 |
+| should print unchanged message and exit 0 when value is already set | BR-10 |
+
+### CLI Color Scheme (`cli/tests/e2e/output/color-scheme.spec.ts`)
+
+| Test Name | Covers |
+|-----------|--------|
+| should render ticket key in light-blue | BR-11 |
+| should render ticket title in white | BR-11 |
+| should render project code in dark cyan | BR-11 |
+| should render project ID in gray parentheses | BR-11 |
+| should render file paths in gray | BR-11 |
+
+### Command Guide (`cli/tests/e2e/guide.spec.ts`)
+
+| Test Name | Covers |
+|-----------|--------|
+| should print full command manual with --guide at global scope | BR-19 |
+| should print ticket commands only with ticket --guide | BR-19 |
+| should print project commands only with project --guide | BR-19 |
+| should include all registered aliases in guide output | BR-19 |
 
 ## Constraint Coverage
 
