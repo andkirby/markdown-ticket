@@ -436,9 +436,6 @@ export default defineConfig(({ mode }) => {
     ...additionalHosts,
   ]
 
-  if (additionalHosts.length > 0) {
-    console.log(`🌐 Vite allowed hosts: ${additionalHosts.join(', ')}`)
-  }
 
   return {
     plugins: [react(), frontendLoggingPlugin(), envInjectionPlugin()],

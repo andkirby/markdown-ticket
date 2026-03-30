@@ -9,7 +9,7 @@ const STORAGE_KEY = 'lastBoardListMode'
  * Custom hook for view mode persistence
  * Handles localStorage operations with graceful error handling
  */
-export function useViewModePersistence() {
+export function getViewModePersistence() {
   /**
    * Gets the last board/list mode from localStorage
    * @returns 'board' or 'list', defaults to 'board' on missing/invalid/error
@@ -26,7 +26,7 @@ export function useViewModePersistence() {
       // Default to 'board' for missing/invalid values (Edge-1)
       return 'board'
     }
-    catch (error) {
+    catch {
       // Handle localStorage unavailable gracefully (Edge-2)
       return 'board'
     }
@@ -40,7 +40,7 @@ export function useViewModePersistence() {
     try {
       localStorage.setItem(STORAGE_KEY, mode)
     }
-    catch (error) {
+    catch {
       // Handle localStorage failure gracefully (Edge-2)
       // Don't throw - just fail silently
     }

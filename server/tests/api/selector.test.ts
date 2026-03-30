@@ -9,10 +9,10 @@
 
 /// <reference types="jest" />
 
-import { writeFileSync, readFileSync, unlinkSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import process from 'node:process'
-import { assertSuccess, assertBodyHasProperties, createGetRequest, createPostRequest } from './helpers'
+import { assertBodyHasProperties, assertSuccess, createGetRequest, createPostRequest } from './helpers'
 import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
 
 describe('Selector Config Endpoint Tests (MDT-129)', () => {
@@ -62,7 +62,6 @@ compactInactive = false
         const userTomlPath = join(currentConfigDir, 'user.toml')
 
         // Ensure config directory exists
-        const { existsSync, mkdirSync } = require('node:fs')
         if (!existsSync(currentConfigDir)) {
           mkdirSync(currentConfigDir, { recursive: true })
         }
@@ -74,7 +73,8 @@ compactInactive = false
         // Clean up user.toml
         try {
           unlinkSync(join(getCurrentConfigDir(), 'user.toml'))
-        } catch {
+        }
+        catch {
           // Ignore if file doesn't exist
         }
       })
@@ -109,7 +109,8 @@ compactInactive = false
         // Clean up user.toml
         try {
           unlinkSync(join(getCurrentConfigDir(), 'user.toml'))
-        } catch {
+        }
+        catch {
           // Ignore if file doesn't exist
         }
       })
@@ -176,7 +177,8 @@ compactInactive = "yes"
         // Clean up project-selector.json
         try {
           unlinkSync(join(getCurrentConfigDir(), 'project-selector.json'))
-        } catch {
+        }
+        catch {
           // Ignore if file doesn't exist
         }
       })
@@ -225,7 +227,8 @@ compactInactive = "yes"
         // Clean up project-selector.json
         try {
           unlinkSync(join(getCurrentConfigDir(), 'project-selector.json'))
-        } catch {
+        }
+        catch {
           // Ignore if file doesn't exist
         }
       })
@@ -262,7 +265,8 @@ compactInactive = "yes"
           // If entry exists, fields should be sanitized
           expect(typeof invalidEntry.favorite).toBe('boolean')
           expect(typeof invalidEntry.count).toBe('number')
-        } else {
+        }
+        else {
           // Entry should be dropped
           expect(invalidEntry).toBeUndefined()
         }
@@ -385,7 +389,8 @@ anotherUnknown = 123
         // Clean up project-selector.json
         try {
           unlinkSync(join(getCurrentConfigDir(), 'project-selector.json'))
-        } catch {
+        }
+        catch {
           // Ignore if file doesn't exist
         }
       })

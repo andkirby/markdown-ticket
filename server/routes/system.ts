@@ -1,19 +1,19 @@
 import type { Request, Response } from 'express'
 import type { ProjectController } from '../controllers/ProjectController.js'
 import type FileWatcherService from '../services/fileWatcher/index.js'
+import * as fs from 'node:fs/promises'
+import * as os from 'node:os'
+import * as path from 'node:path'
+import process from 'node:process'
 import {
   validateGlobalConfig,
   validateSelectorState,
   validateUserConfig,
 } from '@mdt/domain-contracts'
-import * as fs from 'node:fs/promises'
-import * as os from 'node:os'
-import * as path from 'node:path'
-import process from 'node:process'
 import { getConfigDir } from '@mdt/shared/utils/constants.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
-import { Router } from 'express'
 import { parseToml } from '@mdt/shared/utils/toml.js'
+import { Router } from 'express'
 
 interface FileInvoker {
   clearCache: () => void

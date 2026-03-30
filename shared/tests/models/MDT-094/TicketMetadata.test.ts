@@ -85,7 +85,7 @@ describe('TicketMetadata (MDT-094)', () => {
 
     it('should have optional fields matching Ticket', () => {
       // Optional fields from Ticket that should also be in TicketMetadata
-      const optionalFields = [
+      const _optionalFields = [
         'phaseEpic',
         'assignee',
         'implementationDate',

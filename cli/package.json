@@ -11,11 +11,13 @@
     "dev": "bun run src/index.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
-    "test:e2e": "bun test tests/e2e"
+    "test:e2e": "bun test tests/e2e",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --report-unused-disable-directives --max-warnings 0 --fix"
   },
   "dependencies": {
-    "@mdt/shared": "workspace:*",
     "@mdt/domain-contracts": "workspace:*",
+    "@mdt/shared": "workspace:*",
     "commander": "^13.1.0"
   },
   "devDependencies": {

@@ -67,17 +67,20 @@ export function useTicketDocumentContent(
 
   // MDT-142: Invalidate cache and trigger refetch for currently viewed path
   const invalidateAndRefetch = useCallback((path: string) => {
-    console.log('[useTicketDocumentContent] invalidateAndRefetch', { path, selectedPath, match: path === selectedPath })
+    if (import.meta.env.DEV)
+      console.warn('[useTicketDocumentContent] invalidateAndRefetch', { path, selectedPath, match: path === selectedPath })
     cacheRef.current.delete(path)
     // Only trigger refetch if we're viewing this path
     if (path === selectedPath) {
-      console.log('[useTicketDocumentContent] Triggering refetch via refetchKey')
+      if (import.meta.env.DEV)
+        console.warn('[useTicketDocumentContent] Triggering refetch via refetchKey')
       setRefetchKey(k => k + 1)
     }
   }, [selectedPath])
 
   useEffect(() => {
-    console.log('[useTicketDocumentContent] useEffect triggered', { selectedPath, refetchKey, ticketCode })
+    if (import.meta.env.DEV)
+      console.warn('[useTicketDocumentContent] useEffect triggered', { selectedPath, refetchKey, ticketCode })
     if (selectedPath === 'main') {
       setContent(mainContent)
       setLoading(false)
@@ -93,7 +96,8 @@ export function useTicketDocumentContent(
 
     // Serve from cache if available (cache is cleared by invalidateAndRefetch)
     const cached = cacheRef.current.get(selectedPath)
-    console.log('[useTicketDocumentContent] Cache check', { selectedPath, hasCached: cached !== undefined })
+    if (import.meta.env.DEV)
+      console.warn('[useTicketDocumentContent] Cache check', { selectedPath, hasCached: cached !== undefined })
     if (cached !== undefined) {
       setContent(cached)
       setLoading(false)

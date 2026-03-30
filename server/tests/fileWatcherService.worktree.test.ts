@@ -28,9 +28,9 @@ describe('FileWatcherService - Worktree Extensions (MDT-095)', () => {
       close: jest.fn().mockResolvedValue(undefined),
       add: jest.fn().mockReturnThis(),
       on: jest.fn().mockReturnThis(),
-    } as any // eslint-disable-line ts/no-explicit-any
+    } as any
 
-    mockChokidar.watch.mockReturnValue(mockWatcher as any) // eslint-disable-line ts/no-explicit-any
+    mockChokidar.watch.mockReturnValue(mockWatcher as any)
   })
 
   afterEach(async () => {
@@ -93,8 +93,8 @@ describe('FileWatcherService - Worktree Extensions (MDT-095)', () => {
       const mockWatcher2 = { ...mockWatcher, close: jest.fn().mockResolvedValue(undefined) }
 
       mockChokidar.watch
-        .mockReturnValueOnce(mockWatcher1 as any) // eslint-disable-line ts/no-explicit-any
-        .mockReturnValueOnce(mockWatcher2 as any) // eslint-disable-line ts/no-explicit-any
+        .mockReturnValueOnce(mockWatcher1 as any)
+        .mockReturnValueOnce(mockWatcher2 as any)
 
       // Add worktree watchers
       fileWatcher.addWatcher(projectId, 'MDT-095', worktreePath1)
@@ -194,8 +194,8 @@ describe('FileWatcherService - Worktree Extensions (MDT-095)', () => {
       const mockWatcher2 = { ...mockWatcher, close: jest.fn().mockResolvedValue(undefined) }
 
       mockChokidar.watch
-        .mockReturnValueOnce(mockWatcher1 as any) // eslint-disable-line ts/no-explicit-any
-        .mockReturnValueOnce(mockWatcher2 as any) // eslint-disable-line ts/no-explicit-any
+        .mockReturnValueOnce(mockWatcher1 as any)
+        .mockReturnValueOnce(mockWatcher2 as any)
 
       // Add worktree watchers
       fileWatcher.addWatcher(projectId, 'MDT-095', '/test/worktrees/MDT-095')
@@ -218,7 +218,7 @@ describe('FileWatcherService - Worktree Extensions (MDT-095)', () => {
 
 describe('FileWatcherService - Worktree Auto-Discovery (MDT-142)', () => {
   let fileWatcher: FileWatcherService
-  let mockWatcher: jest.Mocked<EventEmitter & { close: jest.Mock; add: jest.Mock }>
+  let mockWatcher: jest.Mocked<EventEmitter & { close: jest.Mock, add: jest.Mock }>
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -242,8 +242,8 @@ describe('FileWatcherService - Worktree Auto-Discovery (MDT-142)', () => {
 
       // Should watch worktrees directory
       const watchCalls = mockChokidar.watch.mock.calls
-      const worktreeCall = watchCalls.find((call) =>
-        call[0].toString().includes('worktrees')
+      const _worktreeCall = watchCalls.find(call =>
+        call[0].toString().includes('worktrees'),
       )
 
       // This test verifies the expected behavior once implemented
@@ -287,7 +287,7 @@ describe('FileWatcherService - Worktree Auto-Discovery (MDT-142)', () => {
 
       // Trigger the ready event
       const readyHandler = mockWatcher.on.mock.calls.find(
-        (call) => call[0] === 'ready'
+        call => call[0] === 'ready',
       )?.[1]
 
       if (readyHandler) {
@@ -302,7 +302,7 @@ describe('FileWatcherService - Worktree Auto-Discovery (MDT-142)', () => {
 
       // Should not throw
       await expect(
-        fileWatcher.removeWorktreeWatcher(projectId, 'MDT-999')
+        fileWatcher.removeWorktreeWatcher(projectId, 'MDT-999'),
       ).resolves.not.toThrow()
     })
   })

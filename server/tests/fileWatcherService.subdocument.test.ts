@@ -19,7 +19,7 @@ const mockChokidar = chokidar as jest.Mocked<typeof chokidar>
 
 describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
   let fileWatcher: FileWatcherService
-  let mockWatcher: jest.Mocked<EventEmitter & { close: jest.Mock; add: jest.Mock }>
+  let mockWatcher: jest.Mocked<EventEmitter & { close: jest.Mock, add: jest.Mock }>
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -47,7 +47,7 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
       // Should watch ticket root files and one nested folder level only
       expect(mockChokidar.watch).toHaveBeenCalledWith(
         '/test/project/{*.md,*/*.md}',
-        expect.any(Object)
+        expect.any(Object),
       )
     })
 
@@ -66,7 +66,7 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
 
       // Simulate file change in subdocument path
       const changeHandler = mockWatcher.on.mock.calls.find(
-        (call) => call[0] === 'change'
+        call => call[0] === 'change',
       )?.[1]
 
       if (changeHandler) {
@@ -105,7 +105,7 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
 
       // Simulate same file change from both watchers
       const mainHandler = mockWatcher.on.mock.calls.find(
-        (call) => call[0] === 'change'
+        call => call[0] === 'change',
       )?.[1]
 
       if (mainHandler) {
@@ -136,7 +136,7 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
       })
 
       const changeHandler = mockWatcher.on.mock.calls.find(
-        (call) => call[0] === 'change'
+        call => call[0] === 'change',
       )?.[1]
 
       if (changeHandler) {
@@ -153,7 +153,7 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
       fileWatcher.on('file-change', changeSpy)
 
       const changeHandler = mockWatcher.on.mock.calls.find(
-        (call) => call[0] === 'change'
+        call => call[0] === 'change',
       )?.[1]
 
       if (changeHandler) {
@@ -175,7 +175,7 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
       })
 
       const changeHandler = mockWatcher.on.mock.calls.find(
-        (call) => call[0] === 'change'
+        call => call[0] === 'change',
       )?.[1]
 
       if (changeHandler) {
@@ -197,7 +197,7 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
       })
 
       const addHandler = mockWatcher.on.mock.calls.find(
-        (call) => call[0] === 'add'
+        call => call[0] === 'add',
       )?.[1]
 
       if (addHandler) {
@@ -217,7 +217,7 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
       })
 
       const unlinkHandler = mockWatcher.on.mock.calls.find(
-        (call) => call[0] === 'unlink'
+        call => call[0] === 'unlink',
       )?.[1]
 
       if (unlinkHandler) {

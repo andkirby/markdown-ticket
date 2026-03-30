@@ -4,28 +4,28 @@
  * Tests for project operations: current, get, info, list, ls, init.
  */
 
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import { TestEnvironment, ProjectFactory } from '@mdt/shared/test-lib'
-import { runCli } from '../helpers/cli-runner.js'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { runCli } from '../helpers/cli-runner.js'
 
 describe('Project Namespace', () => {
   let testEnv: TestEnvironment
   let projectFactory: ProjectFactory
   let projectDir: string
-  let configDir: string
+  let _configDir: string
   let projectCode: string
   let projectCode2: string
 
   beforeAll(async () => {
     testEnv = new TestEnvironment()
     await testEnv.setup()
-    configDir = testEnv.getConfigDirectory()
+    _configDir = testEnv.getConfigDirectory()
     projectFactory = new ProjectFactory(testEnv)
 
     // Create a test project
-    const project = await projectFactory.createProject({
+    const project = await projectFactory.createProject('empty', {
       code: 'TEST',
       name: 'Test Project',
       description: 'Test project for CLI E2E',
@@ -35,7 +35,7 @@ describe('Project Namespace', () => {
     projectCode = project.key
 
     // Create another project for list tests
-    const project2 = await projectFactory.createProject({
+    const project2 = await projectFactory.createProject('empty', {
       code: 'PROJ',
       name: 'Second Project',
       description: 'Second test project',

@@ -15,9 +15,9 @@ import type { WorktreeConfig } from '@mdt/domain-contracts'
 import { execFile } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { WorktreeConfigSchema } from '@mdt/domain-contracts'
-
 import { promisify } from 'node:util'
+
+import { WorktreeConfigSchema } from '@mdt/domain-contracts'
 
 const execFileAsync = promisify(execFile)
 

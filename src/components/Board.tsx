@@ -50,7 +50,7 @@ const BoardContent: React.FC<BoardProps> = ({
   const { error: showError } = useToast()
 
   // Use custom hook for board layout management (mobile column switching)
-  const { isMobile, activeColumnIndex, setActiveColumnIndex, shouldShowColumn } = useBoardLayout()
+  const { isMobile, setActiveColumnIndex, shouldShowColumn } = useBoardLayout()
 
   // Only use the hook when no selectedProject prop is provided (multi-project mode)
   const hookData = useProjectManager({

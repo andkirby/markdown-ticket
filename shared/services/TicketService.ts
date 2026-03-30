@@ -12,6 +12,15 @@ import type {
   TicketUpdateAttrs,
 } from '../models/Ticket.js'
 import type { CRStatus } from '../models/Types.js'
+import type { ReadResult } from './project/types.js'
+import type {
+  AttrOperation,
+  GetTicketRequest,
+  ListTicketsRequest,
+  TicketReadResult,
+  TicketWriteResult,
+  UpdateTicketAttributesRequest,
+} from './ticket/types.js'
 import { readdir, readFile } from 'node:fs/promises'
 import * as path from 'node:path'
 import { CRStatus as CRStatusEnum } from '@mdt/domain-contracts'
@@ -24,18 +33,9 @@ import {
 import { DEFAULTS } from '../utils/constants.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
-import type { ReadResult } from './project/types.js'
 import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
 import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
-import type {
-  AttrOperation,
-  GetTicketRequest,
-  ListTicketsRequest,
-  TicketReadResult,
-  TicketWriteResult,
-  UpdateTicketAttributesRequest,
-} from './ticket/types.js'
 
 const RELATION_FIELDS = ['relatedTickets', 'dependsOn', 'blocks'] as const
 
@@ -189,7 +189,7 @@ export class TicketService {
       const crPath = getTicketsPath(config, DEFAULTS.TICKETS_PATH)
       return path.resolve(project.project.path, crPath)
     }
-    catch (error) {
+    catch {
       // Fallback to default path on error
       return path.resolve(project.project.path, DEFAULTS.TICKETS_PATH)
     }

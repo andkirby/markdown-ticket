@@ -4,23 +4,20 @@ import * as path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
-// Load environment variables from root .env.local (for CORS_ALLOWED_ORIGINS, etc.)
-import { config } from 'dotenv'
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-config({ path: path.resolve(__dirname, '../.env.local') })
-
 import { getTicketsPath } from '@mdt/shared/models/Project.js'
+
 // Services
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 import { logger } from '@mdt/shared/utils/server-logger.js'
 import cors from 'cors'
+// Load environment variables from root .env.local (for CORS_ALLOWED_ORIGINS, etc.)
+import { config } from 'dotenv'
 import express from 'express'
 // Controllers
 import { DocumentController } from './controllers/DocumentController.js'
 import { ProjectController } from './controllers/ProjectController.js'
-import FileWatcherService from './services/fileWatcher/index.js'
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { createDevToolsRouter, setupLogInterception } from './routes/devtools.js'
@@ -31,8 +28,12 @@ import { createProjectRouter } from './routes/projects.js'
 import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
 import { DocumentService } from './services/DocumentService.js'
+import FileWatcherService from './services/fileWatcher/index.js'
 import { TicketService } from './services/TicketService.js'
 import { TreeService } from './services/TreeService.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+config({ path: path.resolve(__dirname, '../.env.local') })
 
 // Extended project type for server use
 interface ServerProject {
@@ -131,7 +132,8 @@ if (additionalDomains.length > 0) {
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true)
+    if (!origin)
+      return callback(null, true)
     if (allowedOrigins.includes(origin)) {
       callback(null, true)
     }
@@ -161,7 +163,7 @@ const ticketService = new TicketService(projectDiscovery)
 /**
  * Type cast for compatibility.
  */
-// eslint-disable-next-line ts/no-explicit-any
+
 const documentService = new DocumentService(projectDiscovery as any)
 const treeService = new TreeService(projectDiscovery)
 
@@ -173,7 +175,7 @@ fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter)
 // =============================================================================
 
 const projectController = new ProjectController(
-  // eslint-disable-next-line ts/no-explicit-any
+
   projectServiceAdapter as any, // Use the adapter which provides the expected interface
   treeService,
   fileWatcher,
@@ -266,7 +268,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
         // Use stored project root, or derive from watch path
         const projectRoot = project.projectRoot || project.path.replace(/\/?\*\*?\/\*\.md$/, '').replace(/\/[^/]+\/[^/]+$/, '')
         fileWatcher.initWorktreeWatchers(project.id, projectRoot, project.projectCode)
-          .then(count => {
+          .then((count) => {
             if (count > 0) {
               logger.info(`   🌿 ${project.id}: ${count} worktree watcher(s) created`)
             }

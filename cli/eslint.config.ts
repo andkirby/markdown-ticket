@@ -9,14 +9,14 @@ export default antfu(
       'node_modules',
       'coverage',
       '**/*.md',
-      'test-lib/README.md',
-      'test-lib/write-tests-guide.md',
     ],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'ts/no-explicit-any': 'off',
+      'jsdoc/check-param-names': 'off',
+      'no-console': 'off',
     },
   },
   {

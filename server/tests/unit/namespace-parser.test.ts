@@ -11,8 +11,7 @@
  * - Edge-3: tests.e2e-smoke.md → namespace 'tests', sub-key 'e2e-smoke' (hyphens preserved)
  */
 
-import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
-import { parseNamespace, groupNamespacedFiles } from '../../services/TicketService.js'
+import { groupNamespacedFiles, parseNamespace } from '../../services/TicketService.js'
 
 describe('parseNamespace', () => {
   describe('basic parsing', () => {

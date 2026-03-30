@@ -1,3 +1,5 @@
+import * as path from 'node:path'
+
 /**
  * Project Detector Utility
  * MDT-145: Root-up .mdt-config.toml detection from current working directory
@@ -5,7 +7,7 @@
  * This is a stub for TDD - implementation will be added in Task 2
  */
 
-import * as path from 'node:path'
+import process from 'node:process'
 import { fileExists } from './file-utils.js'
 
 export interface ProjectDetectionResult {

@@ -4,27 +4,27 @@
  * Tests for viewing and listing tickets through various command forms.
  */
 
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import { TestEnvironment, ProjectFactory } from '@mdt/shared/test-lib'
-import { runCli } from '../helpers/cli-runner.js'
-import { mkdir, readFile } from 'node:fs/promises'
+import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { runCli } from '../helpers/cli-runner.js'
 
 describe('Ticket Read/List', () => {
   let testEnv: TestEnvironment
   let projectFactory: ProjectFactory
   let projectDir: string
-  let configDir: string
+  let _configDir: string
   let projectCode: string
 
   beforeAll(async () => {
     testEnv = new TestEnvironment()
     await testEnv.setup()
-    configDir = testEnv.getConfigDirectory()
+    _configDir = testEnv.getConfigDirectory()
     projectFactory = new ProjectFactory(testEnv)
 
     // Create a test project
-    const project = await projectFactory.createProject({
+    const project = await projectFactory.createProject('empty', {
       code: 'TEST',
       name: 'Test Project',
       description: 'Test project for CLI E2E',
@@ -75,7 +75,7 @@ describe('Ticket Read/List', () => {
 
   test('should resolve explicit cross-project ticket lookup', async () => {
     // Create another project
-    const project2 = await projectFactory.createProject({
+    const project2 = await projectFactory.createProject('empty', {
       code: 'PROJ',
       name: 'Second Project',
       description: 'Second test project',
@@ -157,7 +157,7 @@ describe('Ticket Read/List', () => {
 
     expect(result.exitCode).toBe(0)
     // Should not contain ANSI escape codes
-    expect(result.stdout).not.toContain('\x1b[')
+    expect(result.stdout).not.toContain('\x1B[')
   })
 
   test('should search parent directories for shorthand resolution', async () => {

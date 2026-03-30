@@ -1,14 +1,14 @@
 /// <reference types="jest" />
 
-import type { AddressInfo } from 'node:net'
-import type { Server } from 'node:http'
 import type { ProjectData } from '@mdt/shared/test-lib'
+import type { Server } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import type FileWatcherService from '../../services/fileWatcher/index.js'
 import { promises as fs } from 'node:fs'
 import { createServer } from 'node:http'
 import { dirname, join } from 'node:path'
-import { commitAllChanges, createGitWorktree, initGitRepository } from '@mdt/shared/test-lib'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
+import { commitAllChanges, createGitWorktree, initGitRepository } from '@mdt/shared/test-lib'
 import { cleanupTestEnvironment, setupTestEnvironment } from '../api/setup'
 
 interface RecordedSSEEvent {
@@ -153,10 +153,7 @@ async function waitForWatcherEvent<T extends Record<string, unknown>>(
   timeoutMs = DEFAULT_TIMEOUT_MS,
 ): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      fileWatcher.off(eventName, onEvent)
-      reject(new Error(`Timed out waiting for ${eventName}`))
-    }, timeoutMs)
+    let timeoutId: ReturnType<typeof setTimeout>
 
     const onEvent = (event: T) => {
       if (!matcher(event)) {
@@ -167,6 +164,11 @@ async function waitForWatcherEvent<T extends Record<string, unknown>>(
       fileWatcher.off(eventName, onEvent)
       resolve(event)
     }
+
+    timeoutId = setTimeout(() => {
+      fileWatcher.off(eventName, onEvent)
+      reject(new Error(`Timed out waiting for ${eventName}`))
+    }, timeoutMs)
 
     fileWatcher.on(eventName, onEvent)
   })

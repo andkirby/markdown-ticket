@@ -6,7 +6,7 @@ import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { getConfigDir } from '@mdt/shared/utils/constants.js'
 import * as chokidar from 'chokidar'
 
-export interface ProjectPath { id: string; path: string; projectRoot?: string; projectCode?: string }
+export interface ProjectPath { id: string, path: string, projectRoot?: string, projectCode?: string }
 
 export interface WorktreeWatcherEntry {
   watcherId: string
@@ -42,14 +42,15 @@ export class PathWatcherService extends EventEmitter {
   /** Active worktree ticket codes to exclude from main watcher (MDT-142 C2) */
   private activeWorktreeExclusions = new Set<string>()
   /** MDT-142: Map project root -> { projectId, projectCode } for worktree HEAD monitoring */
-  private projectRegistry = new Map<string, { projectId: string; projectCode: string }>()
+  private projectRegistry = new Map<string, { projectId: string, projectCode: string }>()
 
   initMultiProjectWatcher(projectPaths: ProjectPath[]): this {
     for (const p of projectPaths) {
-      if (this.watchers.has(p.id)) continue
+      if (this.watchers.has(p.id))
+        continue
       const { basePath, watchPattern } = this.buildTwoLevelWatchPath(p.path)
       this.watchPaths.set(p.id, basePath)
-      this.createWatcher(p.id, watchPattern, w => {
+      this.createWatcher(p.id, watchPattern, (w) => {
         w.on('add', fp => this.handleFileEvent('add', fp, p.id, 'main'))
           .on('change', fp => this.handleFileEvent('change', fp, p.id, 'main'))
           .on('unlink', fp => this.handleFileEvent('unlink', fp, p.id, 'main'))
@@ -63,8 +64,9 @@ export class PathWatcherService extends EventEmitter {
 
   initGlobalRegistryWatcher(): void {
     const rp = path.join(getConfigDir(), 'projects')
-    if (!fs.existsSync(rp)) return
-    this.createWatcher('__global_registry__', path.join(rp, '*.toml'), w => {
+    if (!fs.existsSync(rp))
+      return
+    this.createWatcher('__global_registry__', path.join(rp, '*.toml'), (w) => {
       w.on('add', fp => this.handleRegistryEvent('add', fp))
         .on('change', fp => this.handleRegistryEvent('change', fp))
         .on('unlink', fp => this.handleRegistryEvent('unlink', fp))
@@ -119,12 +121,13 @@ export class PathWatcherService extends EventEmitter {
     }
 
     const watcherId = `${projectId}__worktree_heads`
-    if (this.watchers.has(watcherId)) return
+    if (this.watchers.has(watcherId))
+      return
 
     const headPattern = path.join(worktreesDir, '*', 'HEAD')
     console.warn(`[Worktree] Watching ${worktreesDir}/*/HEAD for ${projectId}`)
 
-    this.createWatcher(watcherId, headPattern, w => {
+    this.createWatcher(watcherId, headPattern, (w) => {
       w.on('add', (fp: string) => this.handleWorktreeHeadEvent('add', fp, projectId, projectCode, projectPath))
         .on('unlink', (fp: string) => this.handleWorktreeHeadEvent('unlink', fp, projectId, projectCode, projectPath))
         .on('error', (e: Error) => console.error(`[Worktree] HEAD watcher error for ${projectId}:`, e))
@@ -147,10 +150,12 @@ export class PathWatcherService extends EventEmitter {
     // Extract worktree name from path
     const parts = headPath.split(path.sep)
     const worktreesIdx = parts.lastIndexOf('worktrees')
-    if (worktreesIdx === -1) return
+    if (worktreesIdx === -1)
+      return
 
     const worktreeName = parts[worktreesIdx + 1]
-    if (!worktreeName) return
+    if (!worktreeName)
+      return
 
     if (event === 'add') {
       // New worktree created - read HEAD to get branch name and extract ticket code
@@ -177,7 +182,7 @@ export class PathWatcherService extends EventEmitter {
           else {
             // Fallback: try to find worktree by searching common locations
             console.warn(`[Worktree] Could not find gitdir for ${worktreeName}, trying detection...`)
-            this.worktreeService.detect(projectPath, projectCode).then(worktrees => {
+            this.worktreeService.detect(projectPath, projectCode).then((worktrees) => {
               const worktreePath = worktrees.get(ticketCode)
               if (worktreePath) {
                 console.warn(`[Worktree] Found worktree ${ticketCode} at ${worktreePath}`)
@@ -196,10 +201,10 @@ export class PathWatcherService extends EventEmitter {
       // Worktree removed - find and close the watcher
       // We need to match by worktree name pattern
       const watcherToRemove = Array.from(this.worktreeWatchers.entries())
-        .find(([wid, entry]) => wid.includes(worktreeName))
+        .find(([wid, _entry]) => wid.includes(worktreeName))
 
       if (watcherToRemove) {
-        const [wid, entry] = watcherToRemove
+        const [_wid, entry] = watcherToRemove
         console.warn(`[Worktree] Detected removed worktree ${entry.ticketCode}`)
         this.removeWorktreeWatcher(projectId, entry.ticketCode)
           .then(() => this.emit('worktree-removed', { projectId, ticketCode: entry.ticketCode }))
@@ -210,7 +215,8 @@ export class PathWatcherService extends EventEmitter {
 
   addWatcher(pid: string, tc: string, wp: string): string | null {
     const wid = `${pid}__worktree__${tc}`
-    if (this.worktreeWatchers.has(wid)) return wid
+    if (this.worktreeWatchers.has(wid))
+      return wid
     try {
       // MDT-142 C2: Track active worktree for exclusion from main watcher
       this.activeWorktreeExclusions.add(tc)
@@ -236,7 +242,8 @@ export class PathWatcherService extends EventEmitter {
   async removeWorktreeWatcher(pid: string, tc: string): Promise<void> {
     const wid = `${pid}__worktree__${tc}`
     const entry = this.worktreeWatchers.get(wid)
-    if (!entry) return
+    if (!entry)
+      return
     try {
       await entry.watcher.close()
       this.worktreeWatchers.delete(wid)
@@ -264,8 +271,10 @@ export class PathWatcherService extends EventEmitter {
       const gi = rp.indexOf('*')
       return gi !== -1 ? rp.substring(0, gi) : rp
     }
-    if (pid === 'debug') return path.join(process.cwd(), '..', 'debug-tasks')
-    if (pid === 'markdown-ticket') return path.join(process.cwd(), '..', 'docs', 'CRs')
+    if (pid === 'debug')
+      return path.join(process.cwd(), '..', 'debug-tasks')
+    if (pid === 'markdown-ticket')
+      return path.join(process.cwd(), '..', 'docs', 'CRs')
     return path.join(process.cwd(), '..')
   }
 
@@ -285,7 +294,7 @@ export class PathWatcherService extends EventEmitter {
    *   "docs/CRs/MDT-142/prep/architecture.md" -> { code: "prep/architecture", filePath: "MDT-142/prep/architecture.md" }
    *   "docs/CRs/MDT-142.md" -> null (main ticket file)
    */
-  private parseSubdocumentInfo(fp: string): { ticketCode: string; subdocument: SubdocumentInfo | null } | null {
+  private parseSubdocumentInfo(fp: string): { ticketCode: string, subdocument: SubdocumentInfo | null } | null {
     const parts = fp.split('/')
     const fn = parts[parts.length - 1]
 
@@ -331,11 +340,13 @@ export class PathWatcherService extends EventEmitter {
 
   private handleFileEvent(et: string, fp: string, pid: string, source: 'main' | 'worktree'): void {
     const fn = fp.split('/').pop()
-    if (!fn?.endsWith('.md')) return
+    if (!fn?.endsWith('.md'))
+      return
 
     // MDT-142: Parse subdocument info
     const parsed = this.parseSubdocumentInfo(fp)
-    if (!parsed) return // Not a ticket file
+    if (!parsed)
+      return // Not a ticket file
 
     const { ticketCode, subdocument } = parsed
 

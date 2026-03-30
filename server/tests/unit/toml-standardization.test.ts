@@ -8,7 +8,7 @@
 
 import { execSync } from 'node:child_process'
 import path from 'node:path'
-import { describe, test, expect } from '@jest/globals'
+import { describe, expect, test } from '@jest/globals'
 
 const repoRoot = path.resolve(__dirname, '../../..')
 
@@ -16,7 +16,7 @@ describe('TOML Standardization (MDT-098)', () => {
   describe('Constraint C1: No direct toml package imports', () => {
     test('shall not have direct imports of "toml" in server/ or shared/', () => {
       // grep -r "from 'toml'" server/ shared/ --include="*.ts" | grep -v "shared/utils/toml"
-      const cmd = "grep -r \"from 'toml'\" server/ shared/ --include=\"*.ts\" | grep -v \"shared/utils/toml\" || true"
+      const cmd = 'grep -r "from \'toml\'" server/ shared/ --include="*.ts" | grep -v "shared/utils/toml" || true'
       const result = execSync(cmd, { encoding: 'utf-8', cwd: repoRoot })
 
       // Should be empty (no direct imports found)
@@ -25,7 +25,7 @@ describe('TOML Standardization (MDT-098)', () => {
 
     test('shall only import smol-toml in shared/utils/toml.ts', () => {
       // grep -r "from 'smol-toml'" shared/ --include="*.ts" --exclude-dir=dist
-      const cmd = "grep -r \"from 'smol-toml'\" shared/ --include=\"*.ts\" --exclude-dir=dist"
+      const cmd = 'grep -r "from \'smol-toml\'" shared/ --include="*.ts" --exclude-dir=dist'
       const result = execSync(cmd, { encoding: 'utf-8', cwd: repoRoot })
 
       // Should only find the import in shared/utils/toml.ts
@@ -33,7 +33,7 @@ describe('TOML Standardization (MDT-098)', () => {
       expect(lines.length).toBeGreaterThan(0)
 
       // All lines should point to shared/utils/toml.ts
-      lines.forEach(line => {
+      lines.forEach((line) => {
         expect(line).toContain('shared/utils/toml.ts')
       })
     })
@@ -57,6 +57,7 @@ describe('TOML Standardization (MDT-098)', () => {
   describe('Data Integrity: Parse-Stringify Roundtrip', () => {
     test('smol-toml parse → stringify → parse preserves structure', () => {
       // This test validates that the single parser produces consistent output
+      // eslint-disable-next-line ts/no-require-imports
       const { parseToml, stringify } = require('@mdt/shared/utils/toml.js')
 
       const original = {

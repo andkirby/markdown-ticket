@@ -5,10 +5,10 @@
  * Uses shared toml parser for consistency.
  */
 
-import { parseToml } from '@mdt/shared/utils/toml.js'
-import { readFileSync, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
+import { join } from 'node:path'
+import { parseToml } from '@mdt/shared/utils/toml.js'
 
 /**
  * CLI configuration interface
@@ -82,7 +82,7 @@ export function loadCliConfig(): CliConfig {
       display: { color },
     }
   }
-  catch (error) {
+  catch {
     // If parsing fails, return defaults
     return { ...DEFAULT_CONFIG }
   }

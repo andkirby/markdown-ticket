@@ -15,8 +15,8 @@
 
 /// <reference types="jest" />
 
-import type { Express } from 'express'
 import type { ProjectFactory } from '@mdt/shared/test-lib'
+import type { Express } from 'express'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import supertest from 'supertest'
@@ -85,7 +85,7 @@ describe('Sub-Document API (MDT-093)', () => {
       expect(Array.isArray(subdocs)).toBe(true)
       expect(subdocs.length).toBeGreaterThan(0)
 
-      const names = subdocs.map((s) => s.name)
+      const names = subdocs.map(s => s.name)
       // Default order: requirements before architecture before tasks
       expect(names.indexOf('requirements')).toBeLessThan(names.indexOf('architecture'))
       expect(names.indexOf('architecture')).toBeLessThan(names.indexOf('tasks'))
@@ -100,7 +100,7 @@ describe('Sub-Document API (MDT-093)', () => {
       const response = await supertest(app).get(`/api/projects/${projectCode}/crs/${crCode}`)
       assertSuccess(response)
 
-      const names = (response.body.subdocuments as Array<{ name: string }>).map((s) => s.name)
+      const names = (response.body.subdocuments as Array<{ name: string }>).map(s => s.name)
       expect(names.indexOf('requirements')).toBeLessThan(names.indexOf('alpha'))
       expect(names.indexOf('alpha')).toBeLessThan(names.indexOf('zebra'))
     })

@@ -12,7 +12,6 @@
 
 import type { Express } from 'express'
 import type { ProjectServiceExtension } from '../../controllers/ProjectController'
-import process from 'node:process'
 import { ProjectService as SharedProjectService } from '@mdt/shared/services/ProjectService.js'
 
 import cors from 'cors'
@@ -20,13 +19,13 @@ import cors from 'cors'
 import express from 'express'
 import { DocumentController } from '../../controllers/DocumentController'
 import { ProjectController } from '../../controllers/ProjectController'
-import FileWatcherService from '../../services/fileWatcher/index.js'
 import { errorHandler, notFoundHandler } from '../../middleware/errorHandler'
 import { createDocumentRouter } from '../../routes/documents'
 import { createProjectRouter } from '../../routes/projects'
 import { createSSERouter } from '../../routes/sse'
 import { createSystemRouter } from '../../routes/system'
 import { DocumentService } from '../../services/DocumentService'
+import FileWatcherService from '../../services/fileWatcher/index.js'
 import { TicketService } from '../../services/TicketService'
 import { TreeService } from '../../services/TreeService'
 

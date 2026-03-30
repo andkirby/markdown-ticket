@@ -48,19 +48,6 @@ export default function FolderBrowserModal({
   // 🔐 Simplified path resolution hook - uses enhanced API
   const { checkPath } = usePathResolution()
 
-  useEffect(() => {
-    if (!isOpen) {
-      setDirectoryListing(null)
-      setSelectedPath('')
-      setLoading(true)
-      setCurrentPath('')
-      setClickState({})
-      return
-    }
-
-    void loadFileSystem(initialPath.trim())
-  }, [checkPath, initialPath, isOpen])
-
   const loadFileSystem = async (path: string = '') => {
     try {
       setLoading(true)
@@ -104,6 +91,20 @@ export default function FolderBrowserModal({
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (!isOpen) {
+      setDirectoryListing(null)
+      setSelectedPath('')
+      setLoading(true)
+      setCurrentPath('')
+      setClickState({})
+      return
+    }
+
+    void loadFileSystem(initialPath.trim())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkPath, initialPath, isOpen])
 
   const navigateToFolder = (path: string) => {
     setCurrentPath(path)

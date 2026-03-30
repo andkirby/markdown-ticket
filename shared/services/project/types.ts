@@ -33,9 +33,9 @@ export interface ResolveCurrentProjectNoneContext {
   searchedFrom: string
 }
 
-export type ResolveCurrentProjectResult =
-  | ReadResult<Project, ResolveCurrentProjectFoundContext>
-  | ReadResult<null, ResolveCurrentProjectNoneContext>
+export type ResolveCurrentProjectResult
+  = | ReadResult<Project, ResolveCurrentProjectFoundContext>
+    | ReadResult<null, ResolveCurrentProjectNoneContext>
 
 export interface GetProjectRequest {
   projectRef: string

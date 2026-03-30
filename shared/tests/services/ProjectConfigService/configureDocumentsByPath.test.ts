@@ -12,8 +12,8 @@
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { ProjectConfigService } from '../../../services/project/ProjectConfigService'
-import { parseToml, stringify } from '../../../utils/toml'
 import { ProjectFactory, TestEnvironment } from '../../../test-lib'
+import { parseToml, stringify } from '../../../utils/toml'
 
 describe('ProjectConfigService - configureDocumentsByPath', () => {
   let testEnv: TestEnvironment

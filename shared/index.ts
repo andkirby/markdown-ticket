@@ -27,11 +27,11 @@ export * from './services/MarkdownService.js'
 export type { GlobalConfig } from './services/project/types.js'
 // Services
 export * from './services/ProjectService.js'
-export * from './services/TemplateService.js'
-
 // MDT-145: Shared Service Framework
 export { ServiceError } from './services/ServiceError.js'
+
 export type { ServiceErrorCode, ServiceErrorPayload } from './services/ServiceError.js'
+export * from './services/TemplateService.js'
 
 // Tools
 export * from './tools/ProjectManager.js'

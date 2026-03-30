@@ -65,7 +65,9 @@ export function useSelectorData(): SelectorData & {
     }
 
     loadData()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Persist state changes to API (debounced)
@@ -186,7 +188,7 @@ function validateSelectorState(raw: Record<string, unknown>): Record<string, Sel
     let lastUsedAt: string | null = null
     if (typeof stateEntry.lastUsedAt === 'string') {
       const date = new Date(stateEntry.lastUsedAt)
-      if (!isNaN(date.getTime())) {
+      if (!Number.isNaN(date.getTime())) {
         lastUsedAt = stateEntry.lastUsedAt
       }
     }

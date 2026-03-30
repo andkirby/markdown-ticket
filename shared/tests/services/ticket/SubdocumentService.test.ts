@@ -1,7 +1,7 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import type { ResolvedTicketLocation } from '../../../services/ticket/types.js'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { ResolvedTicketLocation } from '../../../services/ticket/types.js'
 import { SubdocumentService } from '../../../services/ticket/SubdocumentService.js'
 
 describe('SubdocumentService', () => {
