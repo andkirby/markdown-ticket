@@ -14,6 +14,8 @@ export interface TicketData {
   content?: string
   description?: string
   rationale?: string
+  /** Explicit slug for filename (e.g. 'paste-to-shell'). Falls back to title-derived slug when absent. */
+  slug?: string
 }
 
 export interface TicketUpdateAttrs {
