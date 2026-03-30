@@ -22,10 +22,9 @@ describe('Ticket Create', () => {
     projectFactory = new ProjectFactory(testEnv)
 
     // Create a test project
-    const project = await projectFactory.createProject({
+    const project = await projectFactory.createProject('empty', {
       code: 'TEST',
       name: 'Test Project',
-      description: 'Test project for CLI E2E',
     })
 
     projectDir = project.path
@@ -221,5 +220,25 @@ describe('Ticket Create', () => {
       // Title should be preserved literally
       expect(viewResult.stdout).toContain('Test with $pecial and "quotes"')
     }
+  })
+
+  test('should use explicit slug in filename when slug argument is provided', async () => {
+    const result = await runCli(
+      ['create', 'feature/p2', 'Paste selected query to shell from history modal', 'paste-to-shell'],
+      { cwd: projectDir },
+    )
+
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('Created')
+
+    // The output path should use the slug, not the title
+    // Bug: currently produces {KEY}-featurep2.md instead of {KEY}-paste-to-shell.md
+    expect(result.stdout).toContain('paste-to-shell.md')
+    expect(result.stdout).not.toMatch(/\d+-featurep2\.md/)
+
+    // Verify the file actually exists on disk with the slug-based name
+    const pathMatch = result.stdout.match(new RegExp(`(docs/CRs/${projectCode}-\\d+-[\\w-]+\\.md)`))
+    expect(pathMatch).toBeTruthy()
+    expect(pathMatch![1]).toContain('paste-to-shell')
   })
 })

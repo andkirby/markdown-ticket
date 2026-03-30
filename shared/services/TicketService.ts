@@ -288,7 +288,7 @@ export class TicketService {
       const location = await this.ticketLocationResolver.resolve(project, crKey)
       const crPath = path.join(location.projectRoot, location.ticketsPath)
 
-      const titleSlug = this.createSlug(data.title)
+      const titleSlug = data.slug ?? this.createSlug(data.title)
       const filename = `${crKey}-${titleSlug}.md`
       const filePath = path.join(crPath, filename)
 
