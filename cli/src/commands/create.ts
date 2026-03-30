@@ -1,3 +1,4 @@
+import type { Project } from '@mdt/shared/models/Project.js'
 /**
  * CLI Ticket Create Command (MDT-143)
  *
@@ -6,13 +7,13 @@
  * Reads content from stdin when piped.
  */
 
-import type { Project } from '@mdt/shared/models/Project.js'
 import type { TicketData } from '@mdt/shared/models/Ticket.js'
+import process from 'node:process'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
+import { formatTicketCreate } from '../output/formatter.js'
 import { DEFAULT_PRIORITY, DEFAULT_TYPE, PRIORITY_TOKENS, TYPE_TOKENS } from '../utils/aliases.js'
 import { readStdin } from '../utils/stdin.js'
-import { formatTicketCreate } from '../output/formatter.js'
 
 /**
  * Parsed create tokens
@@ -37,8 +38,8 @@ interface ParsedTokens {
  * @returns Parsed type, priority, title, and slug
  */
 function parseCreateTokens(tokens: string[]): ParsedTokens {
-  let type = DEFAULT_TYPE
-  let priority = DEFAULT_PRIORITY
+  let type: string = DEFAULT_TYPE
+  let priority: string = DEFAULT_PRIORITY
   let title: string | null = null
   let slug: string | null = null
 
@@ -58,8 +59,8 @@ function parseCreateTokens(tokens: string[]): ParsedTokens {
     }
 
     // Check for quoted title (single or double quotes)
-    if ((token.startsWith("'") && token.endsWith("'")) ||
-        (token.startsWith('"') && token.endsWith('"'))) {
+    if ((token.startsWith('\'') && token.endsWith('\''))
+      || (token.startsWith('"') && token.endsWith('"'))) {
       title = token.slice(1, -1) // Remove quotes
       continue
     }
@@ -122,7 +123,7 @@ export async function ticketCreateAction(
   options: { stdin?: boolean },
 ): Promise<void> {
   // Parse tokens to extract type, priority, title, slug
-  const { type, priority, title, slug } = parseCreateTokens(tokens)
+  const { type, priority, title, slug: _slug } = parseCreateTokens(tokens)
 
   // Check for stdin content
   let content: string | undefined

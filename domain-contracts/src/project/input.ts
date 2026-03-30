@@ -16,10 +16,10 @@ export type {
   LocalProjectConfig,
   LocalProjectConfigProject,
   ProjectConfig,
+  ProjectConfigProject,
   ProjectDetails,
   ProjectDocumentSettings,
   TicketsPath,
-  ProjectConfigProject,
   UpdateProjectInput,
 } from './schema'
 

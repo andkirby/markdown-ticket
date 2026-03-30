@@ -12,8 +12,8 @@
 
 /// <reference types="jest" />
 
-import type { Express } from 'express'
 import type { ProjectFactory } from '@mdt/shared/test-lib'
+import type { Express } from 'express'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import supertest from 'supertest'

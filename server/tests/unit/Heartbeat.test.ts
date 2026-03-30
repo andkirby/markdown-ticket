@@ -246,7 +246,7 @@ describe('SSEBroadcaster Heartbeat', () => {
         })
       })
 
-      clients.forEach((client) => broadcaster.addClient(client))
+      clients.forEach(client => broadcaster.addClient(client))
 
       broadcaster.startHeartbeat(1000)
       jest.advanceTimersByTime(1000)
@@ -364,7 +364,7 @@ describe('SSEBroadcaster Heartbeat', () => {
 /**
  * Create a mock SSE client for testing.
  */
-function createMockClient(overrides: { headersSent?: boolean; destroyed?: boolean; closed?: boolean } = {}) {
+function createMockClient(overrides: { headersSent?: boolean, destroyed?: boolean, closed?: boolean } = {}) {
   return {
     write: jest.fn(),
     on: jest.fn(),

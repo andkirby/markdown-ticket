@@ -10,7 +10,9 @@ import { filePathToApiPath } from '../../utils/subdocPathValidation'
 import { extractTableOfContents } from '../../utils/tableOfContents'
 import { processContentForDisplay } from '../../utils/titleExtraction'
 import MarkdownContent from '../MarkdownContent'
+// eslint-disable-next-line no-restricted-imports
 import { RelativeTimestamp } from '../shared/RelativeTimestamp'
+// eslint-disable-next-line no-restricted-imports
 import TableOfContents from '../shared/TableOfContents'
 import { Modal, ModalBody } from '../ui/Modal'
 import { CompactTicketHeader } from './CompactTicketHeader'
@@ -143,21 +145,25 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
   // MDT-142: Handle subdocument change events
   useEventBus('ticket:subdocument:changed', useCallback((event: TypedEvent<'ticket:subdocument:changed'>) => {
     const { ticketCode, eventType, subdocument } = event.payload
-    console.log('[TicketViewer] SSE subdocument event', { ticketCode, eventType, subdocument, currentTicketCode: currentTicket?.code, selectedPath })
+    if (import.meta.env.DEV)
+      console.warn('[TicketViewer] SSE subdocument event', { ticketCode, eventType, subdocument, currentTicketCode: currentTicket?.code, selectedPath })
 
     // Ignore if not for this ticket
     if (!currentTicket || currentTicket.code !== ticketCode) {
-      console.log('[TicketViewer] Ignoring - ticket mismatch')
+      if (import.meta.env.DEV)
+        console.warn('[TicketViewer] Ignoring - ticket mismatch')
       return
     }
 
     const subdocumentPath = filePathToApiPath(subdocument.filePath, currentTicket.code)
-    console.log('[TicketViewer] Converted path', { subdocumentPath, selectedPath })
+    if (import.meta.env.DEV)
+      console.warn('[TicketViewer] Converted path', { subdocumentPath, selectedPath })
 
     switch (eventType) {
       case 'change': {
         // MDT-142 Case 1 & 2: Invalidate cache and refetch if viewing
-        console.log('[TicketViewer] change event - calling invalidateAndRefetch')
+        if (import.meta.env.DEV)
+          console.warn('[TicketViewer] change event - calling invalidateAndRefetch')
         invalidateAndRefetch(subdocumentPath)
         break
       }

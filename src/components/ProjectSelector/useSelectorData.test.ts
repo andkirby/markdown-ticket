@@ -18,7 +18,7 @@ import { useSelectorData } from './useSelectorData'
 
 // Mock fetch globally
 const mockFetch = mock()
-global.fetch = mockFetch as unknown as typeof fetch
+globalThis.fetch = mockFetch as unknown as typeof fetch
 
 describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', () => {
   beforeEach(() => {
@@ -37,7 +37,7 @@ describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', ()
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -60,7 +60,7 @@ describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', ()
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -83,7 +83,7 @@ describe('useSelectorData - BR-7.1, BR-7.2: Load preferences from user.toml', ()
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -116,7 +116,7 @@ describe('useSelectorData - BR-7.3: Fallback to defaults when config missing', (
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -149,7 +149,7 @@ describe('useSelectorData - BR-7.4, BR-7.5: Invalid config fallbacks', () => {
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -172,7 +172,7 @@ describe('useSelectorData - BR-7.4, BR-7.5: Invalid config fallbacks', () => {
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -195,7 +195,7 @@ describe('useSelectorData - BR-7.4, BR-7.5: Invalid config fallbacks', () => {
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -218,7 +218,7 @@ describe('useSelectorData - BR-7.4, BR-7.5: Invalid config fallbacks', () => {
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -250,7 +250,7 @@ describe('useSelectorData - BR-8.5, BR-8.6: Selector state loading', () => {
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -279,7 +279,7 @@ describe('useSelectorData - BR-8.5, BR-8.6: Selector state loading', () => {
       },
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -303,7 +303,7 @@ describe('useSelectorData - BR-8.5, BR-8.6: Selector state loading', () => {
     console.error = () => {}
 
     // Mock a response that fails when json() is called
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: () => Promise.reject(new Error('Invalid JSON')),
     })
@@ -350,7 +350,7 @@ describe('useSelectorData - BR-10.x: Validation and error handling', () => {
       },
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -389,7 +389,7 @@ describe('useSelectorData - BR-10.x: Validation and error handling', () => {
       },
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -419,7 +419,7 @@ describe('useSelectorData - BR-10.x: Validation and error handling', () => {
       },
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -449,7 +449,7 @@ describe('useSelectorData - BR-10.x: Validation and error handling', () => {
       },
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -479,7 +479,7 @@ describe('useSelectorData - BR-10.x: Validation and error handling', () => {
       },
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -504,7 +504,7 @@ describe('useSelectorData - BR-10.x: Validation and error handling', () => {
       selectorState: {},
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -537,7 +537,7 @@ describe('useSelectorData - BR-10.x: Validation and error handling', () => {
       },
     }
 
-    ;(global.fetch as any).mockResolvedValueOnce({
+    ;(globalThis.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     } as Response)
@@ -577,7 +577,7 @@ describe('useSelectorData - BR-5.3, BR-5.4, BR-5.5: Usage tracking', () => {
       },
     }
 
-    ;(global.fetch as typeof mockFetch)
+    ;(globalThis.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -600,7 +600,7 @@ describe('useSelectorData - BR-5.3, BR-5.4, BR-5.5: Usage tracking', () => {
 
     // Should trigger persistence (debounced)
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(2) // initial load + persist
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2) // initial load + persist
     }, { timeout: 1000 })
   })
 
@@ -619,7 +619,7 @@ describe('useSelectorData - BR-5.3, BR-5.4, BR-5.5: Usage tracking', () => {
       },
     }
 
-    ;(global.fetch as typeof mockFetch)
+    ;(globalThis.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -660,7 +660,7 @@ describe('useSelectorData - BR-5.3, BR-5.4, BR-5.5: Usage tracking', () => {
       },
     }
 
-    ;(global.fetch as typeof mockFetch)
+    ;(globalThis.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -714,7 +714,7 @@ describe('useSelectorData - BR-8.1, BR-8.2: Favorite toggle', () => {
       },
     }
 
-    ;(global.fetch as typeof mockFetch)
+    ;(globalThis.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -755,7 +755,7 @@ describe('useSelectorData - BR-8.1, BR-8.2: Favorite toggle', () => {
       },
     }
 
-    ;(global.fetch as typeof mockFetch)
+    ;(globalThis.fetch as typeof mockFetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -777,7 +777,7 @@ describe('useSelectorData - BR-8.1, BR-8.2: Favorite toggle', () => {
 
     // Should trigger persistence
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(2) // initial load + persist
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2) // initial load + persist
     }, { timeout: 1000 })
   })
 })

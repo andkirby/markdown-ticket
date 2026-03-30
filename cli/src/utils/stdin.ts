@@ -1,3 +1,4 @@
+import process from 'node:process'
 /**
  * CLI Stdin Reader (MDT-143)
  *

@@ -14,7 +14,7 @@ export default antfu(
   {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'warn',
+      'ts/no-explicit-any': 'off',
     },
   },
   {

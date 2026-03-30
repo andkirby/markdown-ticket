@@ -19,7 +19,7 @@ import { beforeEach, describe, expect, it, mock } from 'bun:test'
 
 // Mock fetch globally
 const mockFetch = mock()
-global.fetch = mockFetch as unknown as typeof fetch
+globalThis.fetch = mockFetch as unknown as typeof fetch
 
 // Import after mocking
 // import { dataLayer } from './dataLayer'

@@ -1,3 +1,4 @@
+import type { Ticket } from '@mdt/shared/models/Ticket.js'
 /**
  * CLI Ticket List Command (MDT-143)
  *
@@ -5,8 +6,7 @@
  * Resolves project context and displays all tickets in compact format.
  */
 
-import type { Ticket } from '@mdt/shared/models/Ticket.js'
-import type { Project } from '@mdt/shared/models/Project.js'
+import process from 'node:process'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { formatTicketList as formatTicketListFormatter } from '../output/formatter.js'

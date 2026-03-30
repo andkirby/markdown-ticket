@@ -269,7 +269,7 @@ class DataLayer {
         else if (typeof value === 'boolean') {
           updateData[key] = value
         }
-        else if (value !== undefined && value !== null && !Array.isArray(value) || (Array.isArray(value) && typeof value[0] === 'string')) {
+        else if ((value !== undefined && value !== null && !Array.isArray(value)) || (Array.isArray(value) && typeof value[0] === 'string')) {
           updateData[key] = value as string | string[]
         }
       }

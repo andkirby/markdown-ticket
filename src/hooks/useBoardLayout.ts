@@ -7,11 +7,11 @@ import { useMediaQuery } from './useMediaQuery'
  * On mobile devices, only one column is visible at a time. This hook provides
  * the state and helper functions needed to implement this behavior.
  *
- * @returns Object containing layout state and helpers
- * @returns {boolean} isMobile - Whether the current viewport is mobile-sized
- * @returns {number} activeColumnIndex - Index of the currently active column (mobile only)
- * @returns {function} setActiveColumnIndex - Function to set the active column index
- * @returns {function} shouldShowColumn - Helper to determine if a column should be visible
+ * @returns Object containing layout state and helpers:
+ *   - isMobile: Whether the current viewport is mobile-sized
+ *   - activeColumnIndex: Index of the currently active column (mobile only)
+ *   - setActiveColumnIndex: Function to set the active column index
+ *   - shouldShowColumn: Helper to determine if a column should be visible
  *
  * @example
  * ```tsx

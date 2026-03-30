@@ -1,5 +1,5 @@
-import { EventEmitter } from 'node:events'
 import type { Ticket } from '@mdt/domain-contracts'
+import { EventEmitter } from 'node:events'
 
 /** SSE event type for client communication. */
 export interface SSEEvent {
@@ -66,12 +66,14 @@ export class SSEBroadcaster extends EventEmitter {
 
   broadcast(event: SSEEvent): void {
     this.eventQueue.push(event)
-    if (this.eventQueue.length > 50) this.eventQueue = this.eventQueue.slice(-50)
+    if (this.eventQueue.length > 50)
+      this.eventQueue = this.eventQueue.slice(-50)
 
     const staleClients: ResponseLike[] = []
     this.clients.forEach((client) => {
       try {
-        if (client.destroyed || client.closed) staleClients.push(client)
+        if (client.destroyed || client.closed)
+          staleClients.push(client)
         else this.sendSSEEvent(client, event)
       }
       catch {
@@ -79,12 +81,13 @@ export class SSEBroadcaster extends EventEmitter {
       }
     })
 
-    staleClients.forEach((client) => this.removeClient(client))
+    staleClients.forEach(client => this.removeClient(client))
     this.emit('broadcast', event)
   }
 
   debouncedBroadcast(key: string, fn: () => void, delay = 100): void {
-    if (this.debounceTimers.has(key)) clearTimeout(this.debounceTimers.get(key)!)
+    if (this.debounceTimers.has(key))
+      clearTimeout(this.debounceTimers.get(key)!)
     const timer = setTimeout(() => {
       this.debounceTimers.delete(key)
       fn()
@@ -101,7 +104,8 @@ export class SSEBroadcaster extends EventEmitter {
             this.removeClient(client)
             return
           }
-          if (!client.headersSent) this.sendSSEEvent(client, heartbeatEvent)
+          if (!client.headersSent)
+            this.sendSSEEvent(client, heartbeatEvent)
         }
         catch {
           this.removeClient(client)
@@ -119,11 +123,12 @@ export class SSEBroadcaster extends EventEmitter {
   }
 
   stop(): void {
-    this.debounceTimers.forEach((timer) => clearTimeout(timer))
+    this.debounceTimers.forEach(timer => clearTimeout(timer))
     this.debounceTimers.clear()
     this.clients.forEach((client) => {
       try {
-        if (!client.headersSent && client.end) client.end()
+        if (!client.headersSent && client.end)
+          client.end()
       }
       catch {
         // Ignore cleanup errors

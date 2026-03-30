@@ -4,11 +4,11 @@
  * Tests for creating tickets through various command forms.
  */
 
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import { TestEnvironment, ProjectFactory } from '@mdt/shared/test-lib'
-import { runCli, runCliWithStdin } from '../helpers/cli-runner.js'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { runCli, runCliWithStdin } from '../helpers/cli-runner.js'
 
 describe('Ticket Create', () => {
   let testEnv: TestEnvironment
@@ -73,7 +73,7 @@ describe('Ticket Create', () => {
       const ticketKey = match[0]
       const viewResult = await runCli(['ticket', 'get', ticketKey], {
         cwd: projectDir,
-        })
+      })
 
       expect(viewResult.stdout).toContain('High')
       expect(viewResult.stdout).toContain('Bug Fix')
@@ -96,7 +96,7 @@ describe('Ticket Create', () => {
       const ticketKey = match[0]
       const viewResult = await runCli(['ticket', 'get', ticketKey], {
         cwd: projectDir,
-        })
+      })
 
       expect(viewResult.stdout).toContain('Fix Database Pool')
     }
@@ -109,7 +109,7 @@ describe('Ticket Create', () => {
       stdinBody,
       {
         cwd: projectDir,
-        },
+      },
     )
 
     expect(result.exitCode).toBe(0)
@@ -119,7 +119,7 @@ describe('Ticket Create', () => {
     expect(match).toBeTruthy()
 
     if (match) {
-      const ticketKey = match[1]
+      const _ticketKey = match[1]
       // Find the actual file path
       const pathMatch = result.stdout.match(new RegExp(`(docs\\/CRs\\/${projectCode}-\\d+[^\\s]*)`))
       expect(pathMatch).toBeTruthy()
@@ -129,7 +129,7 @@ describe('Ticket Create', () => {
         const content = await readFile(ticketPath, 'utf-8')
 
         // Should contain frontmatter and stdin body
-        expect(content).toContain('---')  // Frontmatter delimiter
+        expect(content).toContain('---') // Frontmatter delimiter
         expect(content).toContain('Additional Content')
       }
     }
@@ -142,7 +142,7 @@ describe('Ticket Create', () => {
       stdinBody,
       {
         cwd: projectDir,
-        },
+      },
     )
 
     expect(result.exitCode).toBe(0)
@@ -216,7 +216,7 @@ describe('Ticket Create', () => {
       const ticketKey = match[0]
       const viewResult = await runCli(['ticket', 'get', ticketKey], {
         cwd: projectDir,
-        })
+      })
 
       // Title should be preserved literally
       expect(viewResult.stdout).toContain('Test with $pecial and "quotes"')

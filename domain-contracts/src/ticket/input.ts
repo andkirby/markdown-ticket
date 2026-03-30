@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { TicketFrontmatterSchema, CR_CODE_PATTERN } from './frontmatter'
+import { TicketFrontmatterSchema } from './frontmatter'
 
 export interface TicketData {
   title: string

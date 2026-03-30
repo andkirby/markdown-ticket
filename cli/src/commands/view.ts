@@ -1,3 +1,4 @@
+import type { Project } from '@mdt/shared/models/Project.js'
 /**
  * CLI Ticket View Command (MDT-143)
  *
@@ -6,11 +7,11 @@
  */
 
 import type { Ticket } from '@mdt/shared/models/Ticket.js'
-import type { Project } from '@mdt/shared/models/Project.js'
+import process from 'node:process'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
-import { normalizeKey, KeyNormalizationError } from '@mdt/shared/utils/keyNormalizer.js'
+import { KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { formatTicketView } from '../output/formatter.js'
 
 /**
@@ -40,7 +41,7 @@ function parseTicketKey(key: string): ParsedKey | null {
   // Full format with project code: "ABC-12"
   const fullFormatMatch = key.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
   if (fullFormatMatch) {
-    const [, projectCode, number] = fullFormatMatch
+    const [, projectCode, _number] = fullFormatMatch
     return {
       projectCode: projectCode.toUpperCase(),
       ticketKey: key, // Will be normalized later

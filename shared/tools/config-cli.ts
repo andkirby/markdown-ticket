@@ -4,9 +4,9 @@ import type { GlobalConfig } from '@mdt/domain-contracts'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import { parseToml } from '../utils/toml.js'
-import { getDefaultPaths } from '../utils/constants.js'
 import { getDefaultConfig as getDefaultConfigUtil, processConfig } from '../utils/config-validator.js'
+import { getDefaultPaths } from '../utils/constants.js'
+import { parseToml } from '../utils/toml.js'
 
 /**
  * Unknown object type for dynamic property access

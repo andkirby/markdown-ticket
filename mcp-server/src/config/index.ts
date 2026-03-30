@@ -2,10 +2,10 @@ import { existsSync, readFileSync } from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
+import { safeValidateMcpServerConfig } from '@mdt/domain-contracts'
 import { DEFAULT_PATHS } from '@mdt/shared/utils/constants.js'
 import { parseToml } from '@mdt/shared/utils/toml.js'
 import * as fs from 'fs-extra'
-import { safeValidateMcpServerConfig } from '@mdt/domain-contracts'
 
 /**
  * Server configuration with merged approach.
@@ -96,7 +96,7 @@ export class ConfigService {
         const validationResult = safeValidateMcpServerConfig(parsedToml)
 
         if (!validationResult.success) {
-          const errors = validationResult.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n  ')
+          const errors = validationResult.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('\n  ')
           console.warn(`⚠️  Configuration validation failed:\n  ${errors}`)
           console.warn(`   Falling back to defaults`)
           return

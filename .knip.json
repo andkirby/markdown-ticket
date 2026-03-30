@@ -8,6 +8,10 @@
     "server": {
       "entry": ["server.ts", "fileWatcherService.ts", "eslint.config.ts"],
       "project": ["**/*.ts", "*.ts"]
+    },
+    "cli": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
     }
   },
   "ignore": [

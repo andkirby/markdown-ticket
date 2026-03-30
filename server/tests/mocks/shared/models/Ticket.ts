@@ -3,6 +3,8 @@
  *
  * MDT-094: Added TicketMetadata and normalizeTicketMetadata
  */
+import { TICKET_UPDATE_ALLOWED_ATTRS } from '@mdt/shared/models/Ticket.js'
+
 export type {
   Ticket,
   TicketData,
@@ -10,7 +12,6 @@ export type {
   TicketMetadata,
   TicketUpdateAttrs,
 } from '@mdt/domain-contracts'
-import { TICKET_UPDATE_ALLOWED_ATTRS } from '@mdt/shared/models/Ticket.js'
 
 export { TICKET_UPDATE_ALLOWED_ATTRS }
 
@@ -18,8 +19,10 @@ export { TICKET_UPDATE_ALLOWED_ATTRS }
  * Helper to safely parse date values
  */
 function parseDate(dateValue: unknown): Date | null {
-  if (!dateValue) return null
-  if (dateValue instanceof Date) return dateValue
+  if (!dateValue)
+    return null
+  if (dateValue instanceof Date)
+    return dateValue
   if (typeof dateValue === 'string') {
     const parsed = new Date(dateValue)
     return Number.isNaN(parsed.getTime()) ? null : parsed

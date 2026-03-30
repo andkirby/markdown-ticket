@@ -15,7 +15,7 @@
 
 /// <reference types="jest" />
 
-import { assertSuccess, assertBodyHasProperties, projectApi } from '../api/helpers'
+import { assertBodyHasProperties, assertSuccess, projectApi } from '../api/helpers'
 import { cleanupTestEnvironment, createTestProjectWithCR, setupTestEnvironment } from '../api/setup'
 
 describe('API Metadata Tests - MDT-094', () => {

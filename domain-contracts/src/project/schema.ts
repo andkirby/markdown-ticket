@@ -1,6 +1,6 @@
+import type { WorktreeConfig } from './worktree'
 import { z } from 'zod'
 import { WorktreeConfigSchema } from './worktree'
-import type { WorktreeConfig } from './worktree'
 
 export const PROJECT_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}$/
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/u

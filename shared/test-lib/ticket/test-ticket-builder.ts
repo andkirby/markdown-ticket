@@ -8,9 +8,9 @@
 import type { CRPriorityValue, CRTypeValue } from '@mdt/domain-contracts'
 import type { CRStatus } from '../../models/Types.js'
 import type { ProjectConfig } from '../project-factory-types.js'
-import { CRStatus as CRStatusEnum } from '../../models/Types.js'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { CRStatus as CRStatusEnum } from '../../models/Types.js'
 import { withRetry } from '../utils/retry-helper.js'
 
 /** Test CR data structure */

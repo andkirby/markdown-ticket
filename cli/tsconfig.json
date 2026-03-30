@@ -4,6 +4,10 @@
     "rootDir": "src",
     "module": "ES2022",
     "moduleResolution": "bundler",
+    "paths": {
+      "@mdt/shared": ["../shared/dist/index.js"],
+      "@mdt/shared/*": ["../shared/dist/*"]
+    },
     "strict": true,
     "noImplicitAny": false,
     "declaration": true,
@@ -11,11 +15,7 @@
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "paths": {
-      "@mdt/shared": ["../shared/dist/index.js"],
-      "@mdt/shared/*": ["../shared/dist/*"]
-    }
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "tests"]

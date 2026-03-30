@@ -13,8 +13,8 @@ import type {
   ResolveCurrentProjectResult,
 } from './project/types.js'
 import { realpathSync } from 'node:fs'
-import process from 'node:process'
 import path from 'node:path'
+import process from 'node:process'
 import { CONFIG_FILES, DEFAULTS } from '../utils/constants.js'
 import { deleteFile, directoryExists, fileExists } from '../utils/file-utils.js'
 import { logQuiet } from '../utils/logger.js'

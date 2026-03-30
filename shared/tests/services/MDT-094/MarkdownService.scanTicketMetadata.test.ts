@@ -183,7 +183,7 @@ priority: Medium
   describe('performance characteristics', () => {
     it('should extract metadata without content field', async () => {
       const ticketPath = join(tempDir, 'performance-test.md')
-      const largeContent = '\n'.repeat(1000) + '# Content\n' + 'x'.repeat(50_000)
+      const largeContent = `${'\n'.repeat(1000)}# Content\n${'x'.repeat(50_000)}`
 
       writeFileSync(ticketPath, `---
 code: MDT-PERF

@@ -1,5 +1,5 @@
-import { PathWatcherService } from '../../services/fileWatcher/PathWatcherService.js'
 import * as chokidar from 'chokidar'
+import { PathWatcherService } from '../../services/fileWatcher/PathWatcherService.js'
 
 // Mock chokidar
 jest.mock('chokidar', () => {
@@ -160,9 +160,9 @@ describe('RegistryWatcher (BR-1.6)', () => {
 
     it('should extract project ID from filename', () => {
       const events: any[] = []
-      service.on('project-created', (data) => events.push(data))
-      service.on('project-updated', (data) => events.push(data))
-      service.on('project-deleted', (data) => events.push(data))
+      service.on('project-created', data => events.push(data))
+      service.on('project-updated', data => events.push(data))
+      service.on('project-deleted', data => events.push(data))
 
       service.initGlobalRegistryWatcher()
 

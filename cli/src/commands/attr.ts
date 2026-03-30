@@ -1,3 +1,4 @@
+import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
 /**
  * CLI Ticket Attr Command (MDT-143)
  *
@@ -5,25 +6,25 @@
  * Parses CLI attr tokens into shared AttrOperation requests and invokes shared ticket attr updates.
  */
 
+import process from 'node:process'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
-import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
-import { normalizeKey, KeyNormalizationError } from '@mdt/shared/utils/keyNormalizer.js'
-import { PRIORITY_TOKENS, STATUS_ALIASES } from '../utils/aliases.js'
+import { KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { formatTicketAttr } from '../output/formatter.js'
+import { PRIORITY_TOKENS, STATUS_ALIASES } from '../utils/aliases.js'
 
 /**
  * Field mapping: CLI key → shared field name
  */
 const FIELD_MAPPING: Record<string, string> = {
-  status: 'status',
-  priority: 'priority',
-  phase: 'phaseEpic',
-  assignee: 'assignee',
-  related: 'relatedTickets',
-  depends: 'dependsOn',
-  blocks: 'blocks',
+  'status': 'status',
+  'priority': 'priority',
+  'phase': 'phaseEpic',
+  'assignee': 'assignee',
+  'related': 'relatedTickets',
+  'depends': 'dependsOn',
+  'blocks': 'blocks',
   'impl-date': 'implementationDate',
   'impl-notes': 'implementationNotes',
 }
@@ -31,14 +32,14 @@ const FIELD_MAPPING: Record<string, string> = {
 /**
  * Reverse field mapping for error messages
  */
-const REVERSE_FIELD_MAPPING = Object.fromEntries(
+const _REVERSE_FIELD_MAPPING = Object.fromEntries(
   Object.entries(FIELD_MAPPING).map(([cli, shared]) => [shared, cli]),
 )
 
 /**
  * Scalar fields (only support = operator)
  */
-const SCALAR_FIELDS = new Set([
+const _SCALAR_FIELDS = new Set([
   'status',
   'priority',
   'phaseEpic',
@@ -70,7 +71,7 @@ function parseTicketKey(key: string): ParsedKey | null {
   // Full format with project code: "ABC-12"
   const fullFormatMatch = key.match(/^([a-z][a-z0-9]*)-(\d+)$/i)
   if (fullFormatMatch) {
-    const [, projectCode, number] = fullFormatMatch
+    const [, projectCode, _number] = fullFormatMatch
     return {
       projectCode: projectCode.toUpperCase(),
       ticketKey: key,
@@ -166,8 +167,8 @@ function parseAttrToken(token: string): AttrOperation {
 function normalizeFieldValue(field: string, value: string): string | string[] {
   // Handle quoted values (remove surrounding quotes)
   const trimmedValue = value.trim()
-  if ((trimmedValue.startsWith('"') && trimmedValue.endsWith('"')) ||
-      (trimmedValue.startsWith("'") && trimmedValue.endsWith("'"))) {
+  if ((trimmedValue.startsWith('"') && trimmedValue.endsWith('"'))
+    || (trimmedValue.startsWith('\'') && trimmedValue.endsWith('\''))) {
     return trimmedValue.slice(1, -1)
   }
 

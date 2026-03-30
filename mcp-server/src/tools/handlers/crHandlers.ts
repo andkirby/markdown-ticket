@@ -8,15 +8,15 @@
  * - Consistent error handling and response formatting
  */
 
+import type { Ticket } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { TicketData, TicketFilters } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
 import type { TemplateService } from '@mdt/shared/services/TemplateService.js'
-import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
-import type { TicketService } from '@mdt/shared/services/TicketService.js'
-import type { CRService } from '../../services/crService.js'
-import type { Ticket } from '@mdt/domain-contracts'
 import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
+import type { TicketService } from '@mdt/shared/services/TicketService.js'
+import type { TitleExtractionService } from '@mdt/shared/services/TitleExtractionService.js'
+import type { CRService } from '../../services/crService.js'
 import { CRStatus as CRStatusEnum, CRTypes } from '@mdt/domain-contracts'
 import { MarkdownService } from '@mdt/shared/services/MarkdownService.js'
 import { ContentProcessor } from '../../services/SectionManagement/ContentProcessor.js'

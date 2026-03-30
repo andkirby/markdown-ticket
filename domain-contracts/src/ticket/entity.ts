@@ -1,7 +1,8 @@
+import type { SubDocument } from './subdocument'
 import { z } from 'zod'
 import { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'
 import { CR_CODE_PATTERN } from './frontmatter'
-import { SubDocumentSchema, type SubDocument } from './subdocument'
+import { SubDocumentSchema } from './subdocument'
 
 export interface Ticket {
   code: string

@@ -9,7 +9,7 @@
  * defined here; the canonical enum values are self-mapped at module load.
  */
 
-import { CRPriority, CRPriorities, CRStatus, CRStatuses, CRType, CRTypes } from '@mdt/domain-contracts/types'
+import { CRPriorities, CRPriority, CRStatus, CRStatuses, CRType, CRTypes } from '@mdt/domain-contracts/types'
 
 // -------------------------------------------------------------------
 // Type aliases
@@ -20,15 +20,15 @@ import { CRPriority, CRPriorities, CRStatus, CRStatuses, CRType, CRTypes } from 
  * Keys are CLI tokens; values reference CRType constants.
  */
 const CLI_TYPE_SHORTHANDS: Record<string, string> = {
-  bug: CRType.BUG_FIX,
-  feature: CRType.FEATURE_ENHANCEMENT,
-  architecture: CRType.ARCHITECTURE,
-  debt: CRType.TECHNICAL_DEBT,
+  'bug': CRType.BUG_FIX,
+  'feature': CRType.FEATURE_ENHANCEMENT,
+  'architecture': CRType.ARCHITECTURE,
+  'debt': CRType.TECHNICAL_DEBT,
   'tech-debt': CRType.TECHNICAL_DEBT,
-  techdebt: CRType.TECHNICAL_DEBT,
-  documentation: CRType.DOCUMENTATION,
-  docs: CRType.DOCUMENTATION,
-  research: CRType.RESEARCH,
+  'techdebt': CRType.TECHNICAL_DEBT,
+  'documentation': CRType.DOCUMENTATION,
+  'docs': CRType.DOCUMENTATION,
+  'research': CRType.RESEARCH,
 }
 
 /**
@@ -65,17 +65,17 @@ for (const canonical of CRPriorities) {
 // -------------------------------------------------------------------
 
 const CLI_STATUS_SHORTHANDS: Record<string, string> = {
-  proposed: CRStatus.PROPOSED,
-  approved: CRStatus.APPROVED,
-  in_progress: CRStatus.IN_PROGRESS,
+  'proposed': CRStatus.PROPOSED,
+  'approved': CRStatus.APPROVED,
+  'in_progress': CRStatus.IN_PROGRESS,
   'in-progress': CRStatus.IN_PROGRESS,
-  inprogress: CRStatus.IN_PROGRESS,
-  implemented: CRStatus.IMPLEMENTED,
-  rejected: CRStatus.REJECTED,
-  on_hold: CRStatus.ON_HOLD,
+  'inprogress': CRStatus.IN_PROGRESS,
+  'implemented': CRStatus.IMPLEMENTED,
+  'rejected': CRStatus.REJECTED,
+  'on_hold': CRStatus.ON_HOLD,
   'on-hold': CRStatus.ON_HOLD,
-  onhold: CRStatus.ON_HOLD,
-  partial: CRStatus.PARTIALLY_IMPLEMENTED,
+  'onhold': CRStatus.ON_HOLD,
+  'partial': CRStatus.PARTIALLY_IMPLEMENTED,
 }
 
 /**

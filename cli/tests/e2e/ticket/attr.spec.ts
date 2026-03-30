@@ -4,11 +4,9 @@
  * Tests for updating ticket attributes through various command forms.
  */
 
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
-import { TestEnvironment, ProjectFactory } from '@mdt/shared/test-lib'
+import { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { runCli } from '../helpers/cli-runner.js'
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 
 describe('Ticket Attr', () => {
   let testEnv: TestEnvironment
@@ -160,7 +158,7 @@ describe('Ticket Attr', () => {
       ['attr', ticketKey, 'priority=Low', 'assignee=test-user'],
       {
         cwd: projectDir,
-        },
+      },
     )
 
     expect(result.exitCode).toBe(0)
