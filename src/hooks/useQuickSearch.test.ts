@@ -8,9 +8,9 @@
  * - Result limit (max 10)
  */
 
-import { describe, it, expect } from 'bun:test'
-import { filterTickets, MAX_RESULTS } from './useQuickSearch'
 import type { Ticket } from '../types'
+import { describe, expect, it } from 'bun:test'
+import { filterTickets, MAX_RESULTS } from './useQuickSearch'
 
 // Helper to create mock tickets
 function createMockTicket(overrides: Partial<Ticket> = {}): Ticket {
@@ -144,8 +144,7 @@ describe('useQuickSearch - Result limit (C2)', () => {
   it('limits results to max 10 items', () => {
     // Create 15 tickets that all match
     const tickets: Ticket[] = Array.from({ length: 15 }, (_, i) =>
-      createMockTicket({ code: `MDT-${100 + i}`, title: `Ticket ${i}` }),
-    )
+      createMockTicket({ code: `MDT-${100 + i}`, title: `Ticket ${i}` }))
 
     const result = filterTickets({ query: 'Ticket', tickets })
 

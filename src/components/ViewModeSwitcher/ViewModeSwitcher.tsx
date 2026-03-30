@@ -5,9 +5,9 @@
  * Composes BoardListToggle and Documents button with responsive behavior.
  */
 
-import { useState, useEffect } from 'react'
-import { BoardListToggle } from './BoardListToggle'
 import type { ViewMode } from './types'
+import { useEffect, useState } from 'react'
+import { BoardListToggle } from './BoardListToggle'
 
 const DESKTOP_BREAKPOINT = 768
 
@@ -23,7 +23,7 @@ export function ViewModeSwitcher({
   isDocumentsView,
 }: ViewModeSwitcherProps) {
   const [isDesktop, setIsDesktop] = useState(() =>
-    typeof window !== 'undefined' && window.innerWidth >= DESKTOP_BREAKPOINT
+    typeof window !== 'undefined' && window.innerWidth >= DESKTOP_BREAKPOINT,
   )
 
   useEffect(() => {

@@ -8,7 +8,7 @@
  * @see docs/CRs/MDT-094/architecture.md
  */
 
-import { describe, it, expect, beforeEach, mock } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 
 /**
  * DataLayer Metadata Tests - MDT-094.

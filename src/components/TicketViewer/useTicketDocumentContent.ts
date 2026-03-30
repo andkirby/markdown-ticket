@@ -59,7 +59,8 @@ export function useTicketDocumentContent(
   const invalidateCache = useCallback((path?: string) => {
     if (path) {
       cacheRef.current.delete(path)
-    } else {
+    }
+    else {
       cacheRef.current.clear()
     }
   }, [])

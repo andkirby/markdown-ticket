@@ -16,12 +16,12 @@
  * - Apply mobile responsive layout (collapse to active only)
  */
 
-import * as React from 'react'
 import type { Project } from '@mdt/shared/models/Project'
 import type { SelectorPreferences, SelectorState } from './types'
-import { useProjectSelectorManager } from './useProjectSelectorManager'
+import * as React from 'react'
 import ProjectSelectorCard from './ProjectSelectorCard'
 import ProjectSelectorChip from './ProjectSelectorChip'
+import { useProjectSelectorManager } from './useProjectSelectorManager'
 
 /**
  * Props for ProjectSelectorRail component
@@ -79,15 +79,15 @@ const ProjectSelectorRail: React.FC<ProjectSelectorRailProps> = ({
     projects,
     activeProjectKey,
     preferences,
-    selectorState
+    selectorState,
   )
 
   // Separate active and inactive projects
   const activeProject = railProjects.find(
-    p => (p.project.code || p.id) === activeProjectKey
+    p => (p.project.code || p.id) === activeProjectKey,
   )
   const inactiveProjects = railProjects.filter(
-    p => (p.project.code || p.id) !== activeProjectKey
+    p => (p.project.code || p.id) !== activeProjectKey,
   )
 
   // On mobile, only show active (BR-9.1)

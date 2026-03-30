@@ -11,10 +11,10 @@
  * RED phase: Tests will fail until useSelectorData.ts is implemented.
  */
 
-import { describe, it, expect, afterEach, mock, beforeEach } from 'bun:test'
-import { act, renderHook, waitFor } from '@testing-library/react'
-import { useSelectorData } from './useSelectorData'
 import type { SelectorPreferences, SelectorState } from './types'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { useSelectorData } from './useSelectorData'
 
 // Mock fetch globally
 const mockFetch = mock()

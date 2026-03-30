@@ -10,8 +10,8 @@
  * - C5: Realtime delivery failure does not block manual navigation
  */
 
-import { describe, it, expect, mock, beforeEach } from 'bun:test'
 import { act, renderHook } from '@testing-library/react'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { useTicketDocumentRealtime } from './useTicketDocumentRealtime'
 
 // RED phase: hook does not exist yet. Tests define the expected public interface.

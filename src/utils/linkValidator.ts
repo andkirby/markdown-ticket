@@ -54,7 +54,7 @@ function validateTicketReferences(container: HTMLElement): ValidationResult[] {
             },
           }
           results.push(result)
-          //console.warn(result.message, { href, text: parentLink.textContent })
+          // console.warn(result.message, { href, text: parentLink.textContent })
         }
         else {
           const result = {
@@ -67,7 +67,7 @@ function validateTicketReferences(container: HTMLElement): ValidationResult[] {
             },
           }
           results.push(result)
-          //console.error(result.message, { href, text: parentLink.textContent })
+          // console.error(result.message, { href, text: parentLink.textContent })
         }
       }
       else {
@@ -80,7 +80,7 @@ function validateTicketReferences(container: HTMLElement): ValidationResult[] {
           },
         }
         results.push(result)
-        //console.error(result.message, { text })
+        // console.error(result.message, { text })
       }
     }
   }

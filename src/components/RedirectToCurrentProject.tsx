@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProjectManager } from '../hooks/useProjectManager'
 import { useTheme } from '../hooks/useTheme'
-import { MobileLogo } from './AppHeader'
 import { getProjectCode } from '../utils/projectUtils'
 import { getCurrentProject } from '../utils/routing'
 import { AddProjectModal } from './AddProjectModal'
+import { MobileLogo } from './AppHeader'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 
@@ -86,8 +86,8 @@ export function RedirectToCurrentProject() {
                 </div>
                 <div className="flex items-center space-x-4">
                   {/**
-                   * @testid theme-toggle — Theme toggle button
-                   */}
+                    * @testid theme-toggle — Theme toggle button
+                    */}
                   <button
                     data-testid="theme-toggle"
                     onClick={toggleTheme}

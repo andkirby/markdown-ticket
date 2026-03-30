@@ -116,8 +116,8 @@ export function apiPathToUrlPath(apiPath: string): string {
  */
 export function filePathToApiPath(filePath: string, ticketId: string): string {
   return filePath
-    .replace(`${ticketId}/`, '')  // Remove ticket ID prefix
-    .replace(/\.md$/, '')         // Remove .md extension
+    .replace(`${ticketId}/`, '') // Remove ticket ID prefix
+    .replace(/\.md$/, '') // Remove .md extension
 }
 
 /**

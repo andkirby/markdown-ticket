@@ -1,5 +1,4 @@
-import type { CRPriorities, CRStatusValue, CRTypes } from '@mdt/domain-contracts'
-import type { Ticket } from '@mdt/domain-contracts'
+import type { CRPriorities, CRStatusValue, CRTypes, Ticket } from '@mdt/domain-contracts'
 import type { CR_STATUSES } from '@mdt/shared/models/Types'
 import { TicketSchema } from '@mdt/domain-contracts'
 

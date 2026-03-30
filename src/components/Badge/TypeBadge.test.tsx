@@ -6,8 +6,8 @@
  * Coverage: BR-5, BR-7
  */
 
-import { describe, it, expect, afterEach } from 'bun:test'
-import { render, screen, cleanup } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'bun:test'
 import { TypeBadge } from './TypeBadge'
 
 // Cleanup DOM between tests

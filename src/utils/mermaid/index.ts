@@ -1,11 +1,11 @@
+// Re-export constants for convenience
+export { ADAPTIVE_SCALE, SCALE_FACTORS, THEME_CONFIG, ZOOM_LIMITS } from './constants'
 // Public API - most common imports
 export { processMermaidBlocks } from './core'
-export { useMermaid, type UseMermaidReturn } from './hooks'
 
 // Internal exports for advanced usage
 export { initMermaid } from './core'
-export { addFullscreenButtons, updateFullscreenButtons, enterFullscreen, exitFullscreen } from './fullscreen'
-export { enableZoom, disableZoom, type ZoomHandlers, type HTMLElementWithZoomHandlers } from './zoom'
+export { addFullscreenButtons, enterFullscreen, exitFullscreen, updateFullscreenButtons } from './fullscreen'
+export { useMermaid, type UseMermaidReturn } from './hooks'
 
-// Re-export constants for convenience
-export { ADAPTIVE_SCALE, SCALE_FACTORS, THEME_CONFIG, ZOOM_LIMITS } from './constants'
+export { disableZoom, enableZoom, type HTMLElementWithZoomHandlers, type ZoomHandlers } from './zoom'

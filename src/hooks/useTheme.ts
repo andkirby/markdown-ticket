@@ -50,7 +50,8 @@ export function useTheme() {
     const updateResolvedTheme = () => {
       if (themeMode === 'system') {
         setResolvedTheme(getSystemTheme())
-      } else {
+      }
+      else {
         setResolvedTheme(themeMode)
       }
     }
@@ -80,9 +81,11 @@ export function useTheme() {
   }, [resolvedTheme, themeMode])
 
   const toggleTheme = () => {
-    setThemeMode(prevMode => {
-      if (prevMode === 'light') return 'dark'
-      if (prevMode === 'dark') return 'system'
+    setThemeMode((prevMode) => {
+      if (prevMode === 'light')
+        return 'dark'
+      if (prevMode === 'dark')
+        return 'system'
       return 'light'
     })
   }

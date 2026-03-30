@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
 import DOMPurify from 'dompurify'
+import { useMemo } from 'react'
 import showdown from 'showdown'
 import { getLinkConfig } from '../../config/linkConfig'
 import { classifyLink } from '../../utils/linkProcessor'

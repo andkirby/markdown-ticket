@@ -5,20 +5,22 @@
  * Coverage: BR-7.2
  */
 
-import { describe, it, expect, beforeEach, mock, afterEach } from 'bun:test'
-import { render, screen, cleanup } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { MobileLogo } from './MobileLogo'
 
-const createMatchMedia = (matches: boolean) => mock().mockImplementation((query: string) => ({
-  matches,
-  media: query,
-  onchange: null,
-  addListener: mock(),
-  removeListener: mock(),
-  addEventListener: mock(),
-  removeEventListener: mock(),
-  dispatchEvent: mock(),
-}))
+function createMatchMedia(matches: boolean) {
+  return mock().mockImplementation((query: string) => ({
+    matches,
+    media: query,
+    onchange: null,
+    addListener: mock(),
+    removeListener: mock(),
+    addEventListener: mock(),
+    removeEventListener: mock(),
+    dispatchEvent: mock(),
+  }))
+}
 
 describe('MobileLogo', () => {
   afterEach(() => {

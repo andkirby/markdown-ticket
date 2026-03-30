@@ -8,21 +8,21 @@
  * Obligations: OBL-single-owner
  */
 
-// Badge components
-export { StatusBadge } from './StatusBadge'
-export type { StatusBadgeProps } from './StatusBadge'
+export { ContextBadge } from './ContextBadge'
+export type { ContextBadgeProps } from './ContextBadge'
 
 export { PriorityBadge } from './PriorityBadge'
 export type { PriorityBadgeProps } from './PriorityBadge'
 
-export { TypeBadge } from './TypeBadge'
-export type { TypeBadgeProps } from './TypeBadge'
-
-export { ContextBadge } from './ContextBadge'
-export type { ContextBadgeProps } from './ContextBadge'
-
 export { RelationshipBadge } from './RelationshipBadge'
 export type { RelationshipBadgeProps } from './RelationshipBadge'
+
+// Badge components
+export { StatusBadge } from './StatusBadge'
+export type { StatusBadgeProps } from './StatusBadge'
+
+export { TypeBadge } from './TypeBadge'
+export type { TypeBadgeProps } from './TypeBadge'
 
 // Types
 export type {

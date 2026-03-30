@@ -8,9 +8,9 @@
  * Coverage: BR-5, BR-7
  */
 
+import type { TypeVariantProps } from './types'
 import { cn } from '../../lib/utils'
 import { Badge } from '../ui/badge'
-import type { TypeVariantProps } from './types'
 
 export interface TypeBadgeProps extends TypeVariantProps {
   /** Additional CSS classes */

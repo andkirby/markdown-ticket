@@ -8,9 +8,9 @@
  * Coverage: BR-4, BR-6
  */
 
+import type { PriorityVariantProps } from './types'
 import { cn } from '../../lib/utils'
 import { Badge } from '../ui/badge'
-import type { PriorityVariantProps } from './types'
 
 export interface PriorityBadgeProps extends PriorityVariantProps {
   /** Additional CSS classes */
