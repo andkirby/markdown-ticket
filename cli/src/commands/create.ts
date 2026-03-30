@@ -46,6 +46,24 @@ function parseCreateTokens(tokens: string[]): ParsedTokens {
   for (const token of tokens) {
     const lowerToken = token.toLowerCase()
 
+    // Check for combined type/priority token (e.g. "feature/p2", "bug/high")
+    if (lowerToken.includes('/') && !token.startsWith('"') && !token.startsWith("'")) {
+      const parts = lowerToken.split('/')
+      let matchedPart = false
+      for (const part of parts) {
+        if (part in TYPE_TOKENS) {
+          type = TYPE_TOKENS[part]
+          matchedPart = true
+        }
+        else if (part in PRIORITY_TOKENS) {
+          priority = PRIORITY_TOKENS[part]
+          matchedPart = true
+        }
+      }
+      if (matchedPart)
+        continue
+    }
+
     // Check for type token
     if (lowerToken in TYPE_TOKENS) {
       type = TYPE_TOKENS[lowerToken]
@@ -65,8 +83,8 @@ function parseCreateTokens(tokens: string[]): ParsedTokens {
       continue
     }
 
-    // Unquoted token with dashes - treat as slug if no title yet
-    if (token.includes('-') && !title) {
+    // Unquoted token with dashes - treat as slug
+    if (token.includes('-')) {
       slug = token
       continue
     }
@@ -123,7 +141,7 @@ export async function ticketCreateAction(
   options: { stdin?: boolean },
 ): Promise<void> {
   // Parse tokens to extract type, priority, title, slug
-  const { type, priority, title, slug: _slug } = parseCreateTokens(tokens)
+  const { type, priority, title, slug } = parseCreateTokens(tokens)
 
   // Check for stdin content
   let content: string | undefined
@@ -143,6 +161,7 @@ export async function ticketCreateAction(
     type,
     priority,
     content,
+    ...(slug && { slug }),
   }
 
   // Create the ticket via TicketService
