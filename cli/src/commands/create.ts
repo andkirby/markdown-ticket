@@ -10,36 +10,9 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { TicketData } from '@mdt/shared/models/Ticket.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
+import { DEFAULT_PRIORITY, DEFAULT_TYPE, PRIORITY_TOKENS, TYPE_TOKENS } from '../utils/aliases.js'
 import { readStdin } from '../utils/stdin.js'
 import { formatTicketCreate } from '../output/formatter.js'
-
-/**
- * CR type token mapping (case-insensitive)
- */
-const TYPE_TOKENS: Record<string, string> = {
-  'bug': 'Bug Fix',
-  'feature': 'Feature Enhancement',
-  'architecture': 'Architecture',
-  'tech-debt': 'Technical Debt',
-  'techdebt': 'Technical Debt',
-  'documentation': 'Documentation',
-  'docs': 'Documentation',
-  'research': 'Research',
-}
-
-/**
- * Priority token mapping (case-insensitive)
- */
-const PRIORITY_TOKENS: Record<string, string> = {
-  'critical': 'Critical',
-  'p1': 'Critical',
-  'high': 'High',
-  'p2': 'High',
-  'medium': 'Medium',
-  'p3': 'Medium',
-  'low': 'Low',
-  'p4': 'Low',
-}
 
 /**
  * Parsed create tokens
@@ -64,8 +37,8 @@ interface ParsedTokens {
  * @returns Parsed type, priority, title, and slug
  */
 function parseCreateTokens(tokens: string[]): ParsedTokens {
-  let type = 'Feature Enhancement' // Default
-  let priority = 'Medium' // Default
+  let type = DEFAULT_TYPE
+  let priority = DEFAULT_PRIORITY
   let title: string | null = null
   let slug: string | null = null
 
