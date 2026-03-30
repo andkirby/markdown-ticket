@@ -42,6 +42,15 @@ This CR introduces a standalone `mdt-cli` entrypoint for reading and mutating CR
 | `cli.ticket.absolutePath` | Controls whether ticket paths print as relative or absolute | `false` | Paths print relative to the project root |
 | `cli.display.color` | Controls whether interactive terminal output may use badge colors | `true` | Interactive output may use colors; redirected output stays plain text |
 
+## UAT Refinements (2026-03-30)
+
+- BR-4 expanded: default 10-ticket limit (newest-first), --all/--limit flags, --files/--info output modes, ticket ls alias, positional filter arguments
+- BR-5 expanded: per-element output format with color spec (code described, id gray, title white, description normal, path gray)
+- BR-10 expanded: pipe-separated old→new confirmation format; no-op exits 0 with unchanged message
+- BR-11 expanded: per-element color assignments (ticket title white, ticket key light-blue, project code dark cyan, project ID gray, file paths gray)
+- BR-18 added: positional list filter behavior (AND cross-field, comma+fuzzy within field) on status, priority, type, assignee, epic
+- BR-19 added: --guide flag at global and per-namespace scope, generated from commander tree
+
 ## Review Notes
 
 - The requirements intentionally lock project detection to filesystem-root search even though the current MCP helper shows a bounded search depth. Architecture should treat the existing implementation as insufficient, not as the target behavior.

@@ -25,16 +25,6 @@
       ]
     },
     {
-      "id": "BR-11",
-      "kind": "behavior",
-      "text": "WHEN output is written to an interactive terminal with color enabled, the system shall render status, priority, and type indicators using color categories that match the web UI badge mappings.",
-      "sourceRef": "CR §3 Color Output",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
       "id": "BR-12",
       "kind": "behavior",
       "text": "WHEN cli.ticket.absolutePath is unset or false, the system shall display ticket paths relative to the project root.",
@@ -142,20 +132,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "BR-4",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket list, mdt-cli list, or mdt-cli ls inside a detected project, the system shall display every ticket in that project in compact form and report the project ticket count.",
-      "sourceRef": "CR:3 List Tickets",
-      "routePolicy": "bdd"
-    },
-    {
-      "id": "BR-5",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli project ls or mdt-cli project list, the system shall display each discovered project with its code, identifier, description, and filesystem path.",
-      "sourceRef": "CR:3 Project Commands",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-14",
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli project current or mdt-cli project inside a detected project, the system shall display the current project code, name, description, path, and relevant configuration values.",
@@ -219,10 +195,45 @@
       "routePolicy": "tests"
     },
     {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket list, mdt-cli list, mdt-cli ls, or mdt-cli ticket ls inside a detected project, the system shall display up to 10 tickets sorted newest-first by modified date in compact form and report the project ticket count. The system shall support --all to show every ticket, --limit N to override the default count, --files to show file paths only, and --info to show ticket info without file paths. Positional filter arguments in key=value format (e.g., status=implemented priority=high) shall filter tickets using AND across fields and comma-separated fuzzy matching within a field.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli project ls or mdt-cli project list, the system shall display each discovered project with its code in described color, identifier in gray parentheses, title in white, description in normal color, and filesystem path in gray.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
       "id": "BR-10",
       "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket attr <ticket> <attr-op><value>... or mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes in one response.",
-      "sourceRef": "requirements:Attribute mutation grammar",
+      "text": "WHEN operator invokes mdt-cli ticket attr <ticket> <attr-op><value>... or mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes using pipe-separated format showing old and new values. When a value is unchanged, the system shall print an unchanged message and exit with code 0.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11",
+      "kind": "behavior",
+      "text": "WHEN output is written to an interactive terminal with color enabled, the system shall render ticket titles in white, ticket keys in light-blue, project codes in dark cyan, project identifiers in gray, project titles in white, project descriptions in normal color, and file paths in gray. Status, priority, and type indicators shall use color categories that match the web UI badge mappings.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-18",
+      "kind": "behavior",
+      "text": "WHEN operator provides positional filter arguments after mdt-cli list or mdt-cli ticket list in key=value format, the system shall filter the ticket list using AND logic across different fields and comma-separated fuzzy matching within a single field. Filterable fields shall include status, priority, type, assignee, and epic (mapped to phaseEpic).",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-19",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli --guide or mdt-cli <namespace> --guide, the system shall print a generated command manual covering all registered commands, aliases, and usage examples for the requested scope. The guide shall be derived from the commander command tree and must not require manual editing.",
+      "sourceRef": "CR:MDT-143",
       "routePolicy": "bdd"
     }
   ],
@@ -237,18 +248,6 @@
       "when": "When I run mdt-cli project init MDT Markdown Ticket Board",
       "then": "Then the current folder should receive project configuration for code MDT and name Markdown Ticket Board",
       "sourceRef": "requirements:BR-16"
-    },
-    {
-      "id": "render_colored_relative_ticket_output",
-      "title": "Render colored ticket output with relative paths",
-      "covers": [
-        "BR-11",
-        "BR-12"
-      ],
-      "given": "Given I run the CLI in an interactive terminal with color enabled and relative path mode",
-      "when": "When I run mdt-cli 12",
-      "then": "Then I should see colorized status, priority, and type indicators and a path relative to the project root",
-      "sourceRef": "requirements:BR-11,BR-12"
     },
     {
       "id": "render_absolute_ticket_path_when_configured",
@@ -285,28 +284,6 @@
       "when": "When I run mdt-cli ticket get API-12",
       "then": "Then I should see API-012 with its title and labeled fields without requiring current-directory project context",
       "sourceRef": "requirements:BR-1,BR-2,BR-3"
-    },
-    {
-      "id": "list_tickets_in_detected_project",
-      "title": "List tickets via canonical ticket list command",
-      "covers": [
-        "BR-4"
-      ],
-      "given": "Given I am in a project directory with multiple tickets",
-      "when": "When I run mdt-cli ticket list",
-      "then": "Then I should see every ticket in compact form and the project ticket count",
-      "sourceRef": "requirements:BR-4"
-    },
-    {
-      "id": "list_projects_via_project_namespace",
-      "title": "List discovered projects via project list aliases",
-      "covers": [
-        "BR-5"
-      ],
-      "given": "Given multiple projects are registered",
-      "when": "When I run mdt-cli project list",
-      "then": "Then I should see each discovered project with its code, identifier, description, and filesystem path",
-      "sourceRef": "requirements:BR-5"
     },
     {
       "id": "show_current_project_details",
@@ -357,15 +334,72 @@
       "sourceRef": "requirements:BR-6,BR-9"
     },
     {
+      "id": "list_tickets_in_detected_project",
+      "title": "List tickets via canonical ticket list command",
+      "covers": [
+        "BR-4",
+        "BR-18"
+      ],
+      "given": "operator is inside a detected project and invokes mdt-cli ticket list",
+      "when": "the command executes with no filters, with positional filters such as status=implemented priority=high, or with --files, --info, --all, or --limit flags",
+      "then": "the system displays up to 10 tickets sorted newest-first matching all applied filters, or all tickets with --all, or N tickets with --limit N, and reports the project ticket count",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
       "id": "update_ticket_attributes_in_one_command",
       "title": "Update ticket attributes with set, add, and remove operators through canonical ticket attr and the attr alias",
       "covers": [
         "BR-10"
       ],
-      "given": "Given a detected project and an existing ticket MDT-012 with mutable scalar and relation attributes",
-      "when": "When the operator runs mdt-cli ticket attr MDT-012 status=implemented related+=ABC-003 depends-=MDT-001 or the equivalent mdt-cli attr MDT-012 ... alias form",
-      "then": "Then the CLI updates the target ticket using the requested set, add, and remove operations, normalizes accepted aliases, and prints one confirmation response describing the applied changes",
-      "sourceRef": "bdd:Ticket mutation and formatting"
+      "given": "operator invokes mdt-cli ticket attr <ticket> <attr-op><value>... or mdt-cli attr <ticket> <attr-op><value>...",
+      "when": "the system applies all attribute mutations to the target ticket",
+      "then": "the system prints a pipe-separated confirmation showing each changed field with old and new values, or prints an unchanged message and exits code 0 when no value changed",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "list_projects_via_project_namespace",
+      "title": "List discovered projects via project list aliases",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "operator invokes mdt-cli project ls or mdt-cli project list",
+      "when": "the system resolves all discovered projects",
+      "then": "each project is displayed with its code in described color, identifier in gray parentheses, title in white, description in normal color, and filesystem path in gray",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "render_colored_relative_ticket_output",
+      "title": "Render colored ticket output with relative paths",
+      "covers": [
+        "BR-11",
+        "BR-12"
+      ],
+      "given": "operator views a ticket or ticket list on an interactive terminal with color enabled",
+      "when": "the system renders the output",
+      "then": "ticket titles appear in white, ticket keys in light-blue, project codes in dark cyan, and file paths in gray, with relative paths by default",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "filter_ticket_list_by_multiple_criteria",
+      "title": "Filter ticket list by multiple criteria with fuzzy matching",
+      "covers": [
+        "BR-18"
+      ],
+      "given": "operator invokes mdt-cli list with positional filters such as status=impl priority=high type=architecture",
+      "when": "the system matches tickets against all filter fields using AND across fields and fuzzy matching within each field",
+      "then": "only tickets satisfying all filter conditions are displayed, with status=impl matching implemented and status=implemented,in_progress matching tickets with either status",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "show_generated_command_guide",
+      "title": "Show generated command guide via --guide flag",
+      "covers": [
+        "BR-19"
+      ],
+      "given": "operator invokes mdt-cli --guide or mdt-cli ticket --guide",
+      "when": "the system collects all registered commands from the commander tree",
+      "then": "a formatted command manual is printed covering all commands, aliases, and usage examples for the requested scope without requiring manual editing",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "obligations": [
@@ -514,6 +548,45 @@
         "ART-shared-project-manager"
       ],
       "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "OBL-cli-guide",
+      "title": "The CLI shall expose a --guide flag at global and per-namespace scope that generates a command manual from the registered commander tree, including all commands, aliases, and usage examples.",
+      "derivedFrom": [
+        "BR-19"
+      ],
+      "artifactIds": [
+        "ART-cli-guide",
+        "ART-cli-index"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "OBL-ticket-list-enhancements",
+      "title": "The ticket list command shall support default truncation to 10 tickets newest-first, positional filter arguments with AND cross-field and comma-separated fuzzy within-field matching on status, priority, type, assignee, and epic, --all and --limit flags for paging control, and --files and --info output modes.",
+      "derivedFrom": [
+        "BR-4",
+        "BR-18"
+      ],
+      "artifactIds": [
+        "ART-cli-list",
+        "ART-cli-formatter",
+        "ART-cli-view"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "OBL-shared-list-contract",
+      "title": "TicketService.listTickets shall accept expanded TicketFilters (assignee, phaseEpic), fuzzy matching semantics, sort by dateModified newest-first, and limit/offset pagination. CLI must only parse positional key=value args into TicketFilters and pass them to the shared method; filtering, sorting, and pagination logic must remain in shared.",
+      "derivedFrom": [
+        "BR-4",
+        "BR-18"
+      ],
+      "artifactIds": [
+        "ART-domain-ticket-filters",
+        "ART-shared-ticket-service"
+      ],
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "artifacts": [
@@ -596,12 +669,6 @@
       "sourceRef": "architecture:Shared Reuse"
     },
     {
-      "id": "ART-shared-ticket-service",
-      "path": "shared/services/TicketService.ts",
-      "kind": "runtime",
-      "sourceRef": "architecture:Shared Reuse"
-    },
-    {
       "id": "ART-badge-css",
       "path": "src/components/Badge/badge.css",
       "kind": "runtime",
@@ -654,6 +721,24 @@
       "path": "shared/services/ticket/types.ts",
       "kind": "runtime",
       "sourceRef": "architecture:Shared API Contract"
+    },
+    {
+      "id": "ART-cli-guide",
+      "path": "cli/src/output/guide.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-domain-ticket-filters",
+      "path": "domain-contracts/src/ticket/input.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-shared-ticket-service",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "testPlans": [
@@ -741,6 +826,47 @@
       ],
       "file": "cli/tests/e2e/ticket/attr.spec.ts",
       "sourceRef": "tests:Ticket Attr"
+    },
+    {
+      "id": "TEST-cli-ticket-list-enhancements",
+      "kind": "e2e",
+      "title": "Ticket list filtering, paging, and output modes",
+      "covers": [
+        "BR-4",
+        "BR-18"
+      ],
+      "file": "cli/tests/e2e/ticket/list-enhancements.spec.ts",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-guide",
+      "kind": "e2e",
+      "title": "Generated command guide via --guide flag",
+      "covers": [
+        "BR-19"
+      ],
+      "file": "cli/tests/e2e/guide.spec.ts",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-attr-output",
+      "kind": "e2e",
+      "title": "Attr command output format and no-op behavior",
+      "covers": [
+        "BR-10"
+      ],
+      "file": "cli/tests/e2e/ticket/attr-output.spec.ts",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-color-scheme",
+      "kind": "e2e",
+      "title": "CLI color scheme per element type",
+      "covers": [
+        "BR-11"
+      ],
+      "file": "cli/tests/e2e/output/color-scheme.spec.ts",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "tasks": [
@@ -758,24 +884,6 @@
         "TEST-cli-bootstrap"
       ],
       "sourceRef": "tasks:Task 1"
-    },
-    {
-      "id": "TASK-cli-ticket-read",
-      "title": "Implement ticket read and list commands on shared services",
-      "ownsArtifactIds": [
-        "ART-cli-view",
-        "ART-cli-list",
-        "ART-shared-project-service",
-        "ART-shared-ticket-service",
-        "ART-shared-project-detector"
-      ],
-      "makesGreenIds": [
-        "view_ticket_from_detected_project",
-        "view_ticket_across_projects",
-        "list_tickets_in_detected_project",
-        "TEST-cli-ticket-read"
-      ],
-      "sourceRef": "tasks:Task 2"
     },
     {
       "id": "TASK-cli-create",
@@ -805,24 +913,6 @@
         "TEST-cli-ticket-attr"
       ],
       "sourceRef": "tasks:Task 5"
-    },
-    {
-      "id": "TASK-cli-output",
-      "title": "Implement formatter, color policy, and CLI config",
-      "ownsArtifactIds": [
-        "ART-cli-formatter",
-        "ART-cli-colors",
-        "ART-cli-config",
-        "ART-badge-css"
-      ],
-      "makesGreenIds": [
-        "render_colored_relative_ticket_output",
-        "render_absolute_ticket_path_when_configured",
-        "TEST-cli-ticket-read",
-        "TEST-cli-project",
-        "TEST-cli-ticket-create"
-      ],
-      "sourceRef": "tasks:Task 6"
     },
     {
       "id": "TASK-cli-e2e",
@@ -858,6 +948,102 @@
         "TEST-cli-project"
       ],
       "sourceRef": "tasks:Task 3"
+    },
+    {
+      "id": "TASK-cli-guide",
+      "title": "Add --guide flag with generated command manual",
+      "ownsArtifactIds": [
+        "ART-cli-guide"
+      ],
+      "makesGreenIds": [
+        "show_generated_command_guide",
+        "TEST-cli-guide"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-output-refinements",
+      "title": "Refine attr output format and element-level color scheme",
+      "ownsArtifactIds": [
+        "ART-cli-formatter",
+        "ART-cli-colors",
+        "ART-cli-attr"
+      ],
+      "makesGreenIds": [
+        "update_ticket_attributes_in_one_command",
+        "render_colored_relative_ticket_output",
+        "TEST-cli-attr-output",
+        "TEST-cli-color-scheme"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-e2e-refinements",
+      "title": "Add E2E suites for list enhancements, guide, attr output, and color scheme",
+      "ownsArtifactIds": [
+        "ART-cli-integration-test",
+        "ART-shared-test-lib"
+      ],
+      "makesGreenIds": [
+        "TEST-cli-ticket-list-enhancements",
+        "TEST-cli-guide",
+        "TEST-cli-attr-output",
+        "TEST-cli-color-scheme"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-output",
+      "title": "Implement formatter, color policy, and CLI config",
+      "ownsArtifactIds": [
+        "ART-cli-formatter",
+        "ART-cli-colors",
+        "ART-cli-config",
+        "ART-badge-css"
+      ],
+      "makesGreenIds": [
+        "render_absolute_ticket_path_when_configured",
+        "render_colored_relative_ticket_output",
+        "list_projects_via_project_namespace",
+        "TEST-cli-project",
+        "TEST-cli-ticket-create",
+        "TEST-cli-ticket-read"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-ticket-read",
+      "title": "Implement ticket read and list commands on shared services",
+      "ownsArtifactIds": [
+        "ART-cli-view",
+        "ART-cli-list",
+        "ART-shared-project-service",
+        "ART-shared-ticket-service",
+        "ART-shared-project-detector"
+      ],
+      "makesGreenIds": [
+        "view_ticket_from_detected_project",
+        "view_ticket_across_projects",
+        "list_tickets_in_detected_project",
+        "TEST-cli-ticket-read"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-list-enhancements",
+      "title": "Enhance ticket list with shared filters, fuzzy matching, sort, and pagination",
+      "ownsArtifactIds": [
+        "ART-cli-list",
+        "ART-cli-formatter",
+        "ART-domain-ticket-filters",
+        "ART-shared-ticket-service"
+      ],
+      "makesGreenIds": [
+        "list_tickets_in_detected_project",
+        "filter_ticket_list_by_multiple_criteria",
+        "TEST-cli-ticket-list-enhancements"
+      ],
+      "sourceRef": "CR:MDT-143"
     }
   ]
 }

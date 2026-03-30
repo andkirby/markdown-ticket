@@ -183,6 +183,88 @@
 
 ---
 
+### Task 8: Refine attr output format and element-level color scheme (UAT)
+
+**Structure**: `cli/src/output/formatter.ts`, `cli/src/output/colors.ts`, `cli/src/commands/attr.ts`
+
+**Scope**: Apply pipe-separated old→new attr confirmation, no-op unchanged message (exit 0), and per-element color assignments (ticket title white, ticket key light-blue, project code dark cyan, project ID gray, file paths gray)
+**Boundary**: Color policy stays in output module; command modules consume formatter only
+
+**Makes GREEN**:
+- `update_ticket_attributes_in_one_command`
+- `render_colored_relative_ticket_output`
+- `TEST-cli-attr-output`
+- `TEST-cli-color-scheme`
+
+**Done when**:
+- [ ] Attr confirmation uses pipe format: `Updated MDT-143 | status: In Progress → Implemented`
+- [ ] No-op attr prints unchanged message and exits 0
+- [ ] Per-element colors match spec (title white, key light-blue, code dark cyan, id gray, path gray)
+
+---
+
+### Task 9: Enhance ticket list with shared filters, fuzzy matching, sort, and pagination (UAT)
+
+**Structure**: `domain-contracts/src/ticket/input.ts`, `shared/services/TicketService.ts`, `cli/src/commands/list.ts`, `cli/src/output/formatter.ts`
+
+**Scope**: Expand `TicketFilters` with `assignee` and `phaseEpic` fields, add fuzzy matching semantics to `matchesFilters`, add `sort` (dateModified newest-first) and `limit`/`offset` pagination to `listTickets`. CLI parses positional `key=value` args into `TicketFilters` and passes to shared; no filtering/sorting logic in CLI.
+**Boundary**: Filtering, sorting, and pagination are shared concerns. CLI owns only argv parsing and output rendering.
+
+**Makes GREEN**:
+- `list_tickets_in_detected_project`
+- `filter_ticket_list_by_multiple_criteria`
+- `TEST-cli-ticket-list-enhancements`
+
+**Done when**:
+- [ ] Default list shows 10 tickets newest-first
+- [ ] `--all` shows all, `--limit N` overrides default
+- [ ] Positional filters work: `mdt-cli list status=impl priority=high`
+- [ ] Comma-separated fuzzy within field: `status=implemented,in_progress`
+- [ ] `--files` shows file paths only, `--info` shows info without paths
+- [ ] `mdt-cli ticket ls` works as alias
+
+---
+
+### Task 10: Add --guide flag with generated command manual (UAT)
+
+**Structure**: `cli/src/output/guide.ts`, `cli/src/index.ts`
+
+**Scope**: Add --guide at global and per-namespace scope that generates a command manual from the registered commander tree
+**Boundary**: Guide content is derived from commander metadata; no manual text maintenance
+
+**Makes GREEN**:
+- `show_generated_command_guide`
+- `TEST-cli-guide`
+
+**Done when**:
+- [ ] `mdt-cli --guide` prints full command manual
+- [ ] `mdt-cli ticket --guide` prints ticket commands only
+- [ ] `mdt-cli project --guide` prints project commands only
+- [ ] Guide reflects all registered commands and aliases
+
+---
+
+### Task 11: Add E2E suites for UAT refinements (UAT)
+
+**Structure**: `cli/tests/e2e/`
+
+**Scope**: Add E2E coverage for list enhancements, guide, attr output format, and color scheme
+**Boundary**: Use existing @mdt/shared/test-lib and CLI E2E harness
+
+**Makes GREEN**:
+- `TEST-cli-ticket-list-enhancements`
+- `TEST-cli-guide`
+- `TEST-cli-attr-output`
+- `TEST-cli-color-scheme`
+
+**Done when**:
+- [ ] List filter, paging, and output mode scenarios covered
+- [ ] Guide generation verified at global and per-namespace scope
+- [ ] Attr pipe format and no-op behavior asserted
+- [ ] Color scheme per element type verified
+
+---
+
 ## Post-Implementation
 
 - [ ] `mdt-cli` exposes the canonical `entity action` command tree plus approved shortcuts
