@@ -14,9 +14,9 @@
 
 interface IconProps {
   /** Icon name (matches symbol id in sprite.svg) */
-  name: string
+  'name': string
   /** CSS classes for styling/theming */
-  className?: string
+  'className'?: string
   /** Accessible label (defaults to icon name) */
   'aria-label'?: string
 }

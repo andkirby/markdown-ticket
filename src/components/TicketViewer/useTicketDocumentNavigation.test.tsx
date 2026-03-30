@@ -11,18 +11,20 @@
  * - C4: Deep links use stable relative document paths in the URL hash
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { act, renderHook } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { MemoryRouter } from 'react-router-dom'
 import { useTicketDocumentNavigation } from './useTicketDocumentNavigation'
 
 // Wrapper component to provide Router context
-const wrapper = ({ children, initialEntries = ['/'] }: { children: ReactNode; initialEntries?: string[] }) => (
-  <MemoryRouter initialEntries={initialEntries}>
-    {children}
-  </MemoryRouter>
-)
+function wrapper({ children, initialEntries = ['/'] }: { children: ReactNode, initialEntries?: string[] }) {
+  return (
+    <MemoryRouter initialEntries={initialEntries}>
+      {children}
+    </MemoryRouter>
+  )
+}
 
 describe('useTicketDocumentNavigation', () => {
   beforeEach(() => {
@@ -39,7 +41,7 @@ describe('useTicketDocumentNavigation', () => {
   it('initializes with main selected and empty folder stack', () => {
     const { result } = renderHook(
       () => useTicketDocumentNavigation({ subdocuments: [], ticketCode: 'MDT-093', projectCode: 'MDT' }),
-      { wrapper: ({ children }) => wrapper({ children }) }
+      { wrapper: ({ children }) => wrapper({ children }) },
     )
     expect(result.current.selectedPath).toBe('main')
     expect(result.current.folderStack).toEqual([])
@@ -51,7 +53,7 @@ describe('useTicketDocumentNavigation', () => {
     const subdocuments = [{ name: 'requirements', kind: 'file' as const, children: [] }]
     const { result } = renderHook(
       () => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
-      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/ticket/MDT-093#requirements'] }) }
+      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/ticket/MDT-093#requirements'] }) },
     )
     expect(result.current.selectedPath).toBe('requirements')
   })
@@ -60,7 +62,7 @@ describe('useTicketDocumentNavigation', () => {
     const subdocuments = [{ name: 'requirements', kind: 'file' as const, children: [] }]
     const { result } = renderHook(
       () => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
-      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/ticket/MDT-093#nonexistent-doc'] }) }
+      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/ticket/MDT-093#nonexistent-doc'] }) },
     )
     expect(result.current.selectedPath).toBe('main')
   })
@@ -75,7 +77,7 @@ describe('useTicketDocumentNavigation', () => {
     ]
     const { result } = renderHook(
       () => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
-      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/ticket/MDT-093#poc/spike'] }) }
+      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/ticket/MDT-093#poc/spike'] }) },
     )
     expect(result.current.selectedPath).toBe('poc/spike')
     expect(result.current.folderStack).toContain('poc')
@@ -87,7 +89,7 @@ describe('useTicketDocumentNavigation', () => {
     const subdocuments = [{ name: 'tasks', kind: 'file' as const, children: [] }]
     const { result } = renderHook(
       () => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
-      { wrapper: ({ children }) => wrapper({ children }) }
+      { wrapper: ({ children }) => wrapper({ children }) },
     )
 
     act(() => {
@@ -107,7 +109,7 @@ describe('useTicketDocumentNavigation', () => {
     ]
     const { result } = renderHook(
       () => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
-      { wrapper: ({ children }) => wrapper({ children }) }
+      { wrapper: ({ children }) => wrapper({ children }) },
     )
 
     act(() => {
@@ -121,7 +123,7 @@ describe('useTicketDocumentNavigation', () => {
     const subdocuments = [{ name: 'tasks', kind: 'file' as const, children: [] }]
     const { result } = renderHook(
       () => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
-      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/ticket/MDT-093#tasks'] }) }
+      { wrapper: ({ children }) => wrapper({ children, initialEntries: ['/ticket/MDT-093#tasks'] }) },
     )
 
     act(() => {
@@ -143,7 +145,7 @@ describe('useTicketDocumentNavigation', () => {
     ]
     const { result } = renderHook(
       () => useTicketDocumentNavigation({ subdocuments, ticketCode: 'MDT-093', projectCode: 'MDT' }),
-      { wrapper: ({ children }) => wrapper({ children }) }
+      { wrapper: ({ children }) => wrapper({ children }) },
     )
 
     act(() => {
@@ -159,7 +161,7 @@ describe('useTicketDocumentNavigation', () => {
   it('exposes selectPath as the only mutation interface (single transition authority)', () => {
     const { result } = renderHook(
       () => useTicketDocumentNavigation({ subdocuments: [], ticketCode: 'MDT-093', projectCode: 'MDT' }),
-      { wrapper: ({ children }) => wrapper({ children }) }
+      { wrapper: ({ children }) => wrapper({ children }) },
     )
     expect(typeof result.current.selectPath).toBe('function')
     expect(typeof result.current.selectedPath).toBe('string')

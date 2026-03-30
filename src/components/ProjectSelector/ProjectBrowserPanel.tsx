@@ -15,8 +15,8 @@
  * @testid project-panel-card — Individual project card in panel
  */
 
-import type { ProjectWithSelectorState, SelectorPreferences, SelectorState } from './types'
 import type { Project } from '@mdt/shared/models/Project'
+import type { ProjectWithSelectorState, SelectorPreferences, SelectorState } from './types'
 import * as React from 'react'
 import ProjectSelectorCard from './ProjectSelectorCard'
 
@@ -44,12 +44,12 @@ interface ProjectBrowserPanelProps {
  */
 function mergeProjectWithSelectorState(
   project: Project,
-  selectorState: Record<string, SelectorState>
+  selectorState: Record<string, SelectorState>,
 ): ProjectWithSelectorState {
   const state = selectorState[project.project.code || project.id] || {
     favorite: false,
     lastUsedAt: null,
-    count: 0
+    count: 0,
   }
 
   return {
@@ -57,7 +57,7 @@ function mergeProjectWithSelectorState(
     selectorState: state,
     favorite: state.favorite,
     lastUsedAt: state.lastUsedAt,
-    count: state.count
+    count: state.count,
   }
 }
 
@@ -67,17 +67,19 @@ function mergeProjectWithSelectorState(
  */
 function computePanelOrder(
   projects: Project[],
-  selectorState: Record<string, SelectorState>
+  selectorState: Record<string, SelectorState>,
 ): ProjectWithSelectorState[] {
   const projectsWithState = projects.map(project =>
-    mergeProjectWithSelectorState(project, selectorState)
+    mergeProjectWithSelectorState(project, selectorState),
   )
 
   // Sort: favorites first, then by lastUsedAt descending
   return projectsWithState.sort((a, b) => {
     // Favorites first
-    if (a.favorite && !b.favorite) return -1
-    if (!a.favorite && b.favorite) return 1
+    if (a.favorite && !b.favorite)
+      return -1
+    if (!a.favorite && b.favorite)
+      return 1
 
     // Both favorites or both non-favorites: sort by lastUsedAt descending
     const aLastUsed = a.lastUsedAt ? new Date(a.lastUsedAt).getTime() : 0
@@ -114,7 +116,8 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
 }) => {
   // Handle Escape key to close panel
   React.useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen)
+      return
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -128,7 +131,8 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
 
   // Prevent body scroll when panel is open
   React.useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen)
+      return
 
     document.body.style.overflow = 'hidden'
     return () => {
@@ -140,10 +144,11 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
   // MUST be before early return to avoid hooks rule violation
   const panelProjects = React.useMemo(
     () => computePanelOrder(projects, selectorState),
-    [projects, selectorState]
+    [projects, selectorState],
   )
 
-  if (!isOpen) return null
+  if (!isOpen)
+    return null
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     // Only close if clicking outside the panel content
@@ -174,57 +179,59 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
           onClick={e => e.stopPropagation()}
           className="pointer-events-auto relative w-full max-w-4xl mx-4 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden"
         >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Select Project
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Close panel"
-          >
-            <svg
-              className="w-5 h-5 text-gray-500 dark:text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Select Project
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Close panel"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Project list */}
-        <div className="max-h-[60vh] overflow-y-auto p-6">
-          {panelProjects.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-              No projects available
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {panelProjects.map((project) => (
-                <ProjectSelectorCard
-                  key={project.project.code || project.id}
-                  project={project}
-                  isActive={
-                    (project.project.code || project.id) === activeProjectKey
-                  }
-                  onSelect={handleProjectSelect}
-                  showDescription={true}
-                  onFavoriteToggle={onFavoriteToggle}
+              <svg
+                className="w-5 h-5 text-gray-500 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
                 />
-              ))}
-            </div>
-          )}
+              </svg>
+            </button>
+          </div>
+
+          {/* Project list */}
+          <div className="max-h-[60vh] overflow-y-auto p-6">
+            {panelProjects.length === 0
+              ? (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    No projects available
+                  </div>
+                )
+              : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {panelProjects.map(project => (
+                      <ProjectSelectorCard
+                        key={project.project.code || project.id}
+                        project={project}
+                        isActive={
+                          (project.project.code || project.id) === activeProjectKey
+                        }
+                        onSelect={handleProjectSelect}
+                        showDescription={true}
+                        onFavoriteToggle={onFavoriteToggle}
+                      />
+                    ))}
+                  </div>
+                )}
+          </div>
         </div>
       </div>
-    </div>
     </div>
   )
 }

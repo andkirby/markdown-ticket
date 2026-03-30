@@ -26,12 +26,12 @@
 
 import * as React from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getProjectCode } from '@/utils/projectUtils'
 import { useProjectManager } from '@/hooks/useProjectManager'
-import { useSelectorData } from './useSelectorData'
-import ProjectSelectorRail from './ProjectSelectorRail'
-import ProjectBrowserPanel from './ProjectBrowserPanel'
+import { getProjectCode } from '@/utils/projectUtils'
 import { TooltipProvider } from '../ui/tooltip'
+import ProjectBrowserPanel from './ProjectBrowserPanel'
+import ProjectSelectorRail from './ProjectSelectorRail'
+import { useSelectorData } from './useSelectorData'
 
 /**
  * ProjectSelector component
@@ -51,7 +51,7 @@ import { TooltipProvider } from '../ui/tooltip'
  *
  * @testid project-selector — Main selector container
  */
-const ProjectSelector = ({ className = '' }: { className?: string }) => {
+function ProjectSelector({ className = '' }: { className?: string }) {
   const { projectCode: urlProjectCode } = useParams<{ projectCode: string }>()
   const navigate = useNavigate()
 
@@ -113,7 +113,7 @@ const ProjectSelector = ({ className = '' }: { className?: string }) => {
 
       // Panel closes automatically via ProjectBrowserPanel's onSelect handler
     },
-    [projects, trackProjectUsage, setSelectedProject, navigate]
+    [projects, trackProjectUsage, setSelectedProject, navigate],
   )
 
   // Handle favorite toggle
@@ -122,7 +122,7 @@ const ProjectSelector = ({ className = '' }: { className?: string }) => {
       e.stopPropagation()
       toggleFavorite(projectKey)
     },
-    [toggleFavorite]
+    [toggleFavorite],
   )
 
   // Get active project key for display

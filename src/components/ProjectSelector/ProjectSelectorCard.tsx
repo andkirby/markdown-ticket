@@ -12,12 +12,12 @@
 
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
+import { Icon } from '../shared/Icon'
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '../ui/hover-card'
-import { Icon } from '../shared/Icon'
 
 interface ProjectSelectorCardProps {
   /** Project with selector state to display */

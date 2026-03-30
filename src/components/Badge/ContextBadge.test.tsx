@@ -6,8 +6,8 @@
  * Coverage: BR-8
  */
 
-import { describe, it, expect, afterEach } from 'bun:test'
 import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'bun:test'
 import { ContextBadge } from './ContextBadge'
 
 // Cleanup DOM between tests

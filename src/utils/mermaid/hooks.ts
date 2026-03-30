@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react'
 import mermaid from 'mermaid'
+import { useCallback, useEffect, useRef } from 'react'
 import { initMermaid } from './core'
 import { addFullscreenButtons, updateFullscreenButtons } from './fullscreen'
 import { disableZoom } from './zoom'

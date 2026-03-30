@@ -7,8 +7,8 @@
  * Covers: BR-5.1, BR-5.2, BR-5.4, C5
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SubDocument } from '@mdt/shared/models/SubDocument.js'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface UseTicketDocumentRealtimeOptions {
   initialSubdocuments: SubDocument[]
@@ -27,18 +27,18 @@ interface UseTicketDocumentRealtimeResult {
  * Virtual paths like 'bdd.trace' → ['bdd', 'trace'] (dot is separator)
  */
 function splitPathSegments(path: string): string[] {
-  if (path === "main") {
-    return ["main"];
+  if (path === 'main') {
+    return ['main']
   }
 
   // Check if this is a physical path (contains /)
-  if (path.includes("/")) {
+  if (path.includes('/')) {
     // Physical path: split only by /, preserve dots in filenames
-    return path.split("/");
+    return path.split('/')
   }
 
   // Virtual path: split by .
-  return path.split(".");
+  return path.split('.')
 }
 
 /**
@@ -46,7 +46,8 @@ function splitPathSegments(path: string): string[] {
  * MDT-138: Handles both slash-separated (physical folders) and dot-notation (virtual folders) paths.
  */
 function pathExistsInTree(path: string, docs: SubDocument[]): boolean {
-  if (path === 'main') return true
+  if (path === 'main')
+    return true
 
   // MDT-138: Use smart splitting that respects physical (/) vs virtual (.) notation
   const segments = splitPathSegments(path)
@@ -55,7 +56,8 @@ function pathExistsInTree(path: string, docs: SubDocument[]): boolean {
     // For physical children in folders, the name has a '/' prefix
     // Try to match both with and without the prefix
     const match = current.find(d => d.name === segment || d.name === `/${segment}`)
-    if (!match) return false
+    if (!match)
+      return false
     current = match.children
   }
   return true
@@ -85,9 +87,7 @@ export function useTicketDocumentRealtime(
     if (initialSubdocuments.length > 0 && selectedPathRef.current !== 'main' && !pathExistsInTree(selectedPathRef.current, initialSubdocuments)) {
       onActiveRemovedRef.current()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSubdocuments])
-
 
   const handleSSEUpdate = useCallback(
     (updated: SubDocument[]) => {

@@ -1,5 +1,5 @@
-import type {StatusConfig} from '@mdt/shared/models/Config'
-import type {CRStatus} from '@mdt/shared/models/Types'
+import type { StatusConfig } from '@mdt/shared/models/Config'
+import type { CRStatus } from '@mdt/shared/models/Types'
 import { CRStatus as CRStatusEnum } from '@mdt/shared/models/Types'
 
 // Status Configuration using shared interface
@@ -241,11 +241,14 @@ function _getWorkflowSuggestions(currentStatus: CRStatus): CRStatus[] {
 
   if (currentStatus === CRStatusEnum.PROPOSED) {
     suggestions.push(CRStatusEnum.APPROVED)
-  } else if (currentStatus === CRStatusEnum.APPROVED) {
+  }
+  else if (currentStatus === CRStatusEnum.APPROVED) {
     suggestions.push(CRStatusEnum.IN_PROGRESS, CRStatusEnum.ON_HOLD)
-  } else if (currentStatus === CRStatusEnum.IN_PROGRESS) {
+  }
+  else if (currentStatus === CRStatusEnum.IN_PROGRESS) {
     suggestions.push(CRStatusEnum.IMPLEMENTED, CRStatusEnum.ON_HOLD)
-  } else if (currentStatus === CRStatusEnum.ON_HOLD) {
+  }
+  else if (currentStatus === CRStatusEnum.ON_HOLD) {
     suggestions.push(CRStatusEnum.APPROVED, CRStatusEnum.REJECTED, CRStatusEnum.IN_PROGRESS)
   }
 

@@ -11,12 +11,14 @@
  * RED phase: Tests will fail until selectorOrdering.ts is implemented.
  */
 
-import { describe, it, expect } from 'bun:test'
-import {
-  computeRailOrder,
-  computePanelOrder,
+import type {
   ProjectWithSelectorState,
   SelectorPreferences,
+} from './selectorOrdering'
+import { describe, expect, it } from 'bun:test'
+import {
+  computePanelOrder,
+  computeRailOrder,
 } from './selectorOrdering'
 
 describe('selectorOrdering - BR-6.1: Active project appears first', () => {
@@ -82,7 +84,7 @@ describe('selectorOrdering - BR-6.1: Active project appears first', () => {
     expect(result[0].key).toBe('ACTIVE')
     // And it should be visible (within visibleCount)
     expect(result.length).toBeGreaterThan(0)
-    expect(result.some((p) => p.key === 'ACTIVE')).toBe(true)
+    expect(result.some(p => p.key === 'ACTIVE')).toBe(true)
   })
 })
 
@@ -130,10 +132,10 @@ describe('selectorOrdering - BR-6.2: Favorites before non-favorites', () => {
 
     const result = computeRailOrder(projects, 'ACTIVE', preferences)
 
-    const activeIndex = result.findIndex((p) => p.key === 'ACTIVE')
-    const fav1Index = result.findIndex((p) => p.key === 'FAV-1')
-    const fav2Index = result.findIndex((p) => p.key === 'FAV-2')
-    const nonFav1Index = result.findIndex((p) => p.key === 'NON-FAV-1')
+    const activeIndex = result.findIndex(p => p.key === 'ACTIVE')
+    const fav1Index = result.findIndex(p => p.key === 'FAV-1')
+    const fav2Index = result.findIndex(p => p.key === 'FAV-2')
+    const nonFav1Index = result.findIndex(p => p.key === 'NON-FAV-1')
 
     // Active is first
     expect(activeIndex).toBe(0)
@@ -196,8 +198,8 @@ describe('selectorOrdering - BR-6.3: Favorite ordering by count desc, lastUsedAt
 
     const result = computeRailOrder(projects, 'ACTIVE', preferences)
 
-    const favorites = result.filter((p) => p.favorite && p.key !== 'ACTIVE')
-    const favoriteKeys = favorites.map((p) => p.key)
+    const favorites = result.filter(p => p.favorite && p.key !== 'ACTIVE')
+    const favoriteKeys = favorites.map(p => p.key)
 
     // Should be ordered by count: HIGH-COUNT (100), MED-COUNT (50), LOW-COUNT (5)
     expect(favoriteKeys[0]).toBe('HIGH-COUNT')
@@ -240,7 +242,7 @@ describe('selectorOrdering - BR-6.3: Favorite ordering by count desc, lastUsedAt
 
     const result = computeRailOrder(projects, 'ACTIVE', preferences)
 
-    const favorites = result.filter((p) => p.favorite)
+    const favorites = result.filter(p => p.favorite)
     expect(favorites[0].key).toBe('NEW-TIE')
     expect(favorites[1].key).toBe('OLD-TIE')
   })
@@ -280,7 +282,7 @@ describe('selectorOrdering - BR-6.3: Favorite ordering by count desc, lastUsedAt
 
     const result = computeRailOrder(projects, 'ACTIVE', preferences)
 
-    const favorites = result.filter((p) => p.favorite)
+    const favorites = result.filter(p => p.favorite)
     expect(favorites[0].key).toBe('RECENTLY-USED')
     expect(favorites[1].key).toBe('NEVER-USED')
   })
@@ -321,7 +323,7 @@ describe('selectorOrdering - BR-6.4: Non-favorite ordering by lastUsedAt desc, c
     }
 
     const result = computeRailOrder(projects, 'ACTIVE', preferences)
-    const nonFavorites = result.filter((p) => !p.favorite && p.key !== 'ACTIVE')
+    const nonFavorites = result.filter(p => !p.favorite && p.key !== 'ACTIVE')
 
     // Recent should come before Old despite lower count
     expect(nonFavorites[0].key).toBe('RECENT')
@@ -362,7 +364,7 @@ describe('selectorOrdering - BR-6.4: Non-favorite ordering by lastUsedAt desc, c
     }
 
     const result = computeRailOrder(projects, 'ACTIVE', preferences)
-    const nonFavorites = result.filter((p) => !p.favorite && p.key !== 'ACTIVE')
+    const nonFavorites = result.filter(p => !p.favorite && p.key !== 'ACTIVE')
 
     expect(nonFavorites[0].key).toBe('HIGH-COUNT')
     expect(nonFavorites[1].key).toBe('LOW-COUNT')
@@ -402,7 +404,7 @@ describe('selectorOrdering - BR-6.4: Non-favorite ordering by lastUsedAt desc, c
     }
 
     const result = computeRailOrder(projects, 'ACTIVE', preferences)
-    const nonFavorites = result.filter((p) => !p.favorite && p.key !== 'ACTIVE')
+    const nonFavorites = result.filter(p => !p.favorite && p.key !== 'ACTIVE')
 
     expect(nonFavorites[0].key).toBe('USED')
     expect(nonFavorites[1].key).toBe('NEVER-USED')
@@ -546,8 +548,8 @@ describe('selectorOrdering - Panel ordering (BR-4.3, BR-4.4)', () => {
     const result = computePanelOrder(projects, 'ACTIVE')
 
     // All favorites should come before non-favorites
-    const lastFavoriteIndex = result.map((p) => p.favorite).lastIndexOf(true)
-    const firstNonFavoriteIndex = result.findIndex((p) => !p.favorite && p.key !== 'ACTIVE')
+    const lastFavoriteIndex = result.map(p => p.favorite).lastIndexOf(true)
+    const firstNonFavoriteIndex = result.findIndex(p => !p.favorite && p.key !== 'ACTIVE')
 
     if (lastFavoriteIndex > -1 && firstNonFavoriteIndex > -1) {
       expect(lastFavoriteIndex).toBeLessThan(firstNonFavoriteIndex)
@@ -583,7 +585,7 @@ describe('selectorOrdering - Panel ordering (BR-4.3, BR-4.4)', () => {
     ]
 
     const result = computePanelOrder(projects, 'ACTIVE')
-    const favorites = result.filter((p) => p.favorite)
+    const favorites = result.filter(p => p.favorite)
 
     expect(favorites[0].key).toBe('HIGH-COUNT')
     expect(favorites[1].key).toBe('LOW-COUNT')
@@ -618,7 +620,7 @@ describe('selectorOrdering - Panel ordering (BR-4.3, BR-4.4)', () => {
     ]
 
     const result = computePanelOrder(projects, 'ACTIVE')
-    const nonFavorites = result.filter((p) => !p.favorite && p.key !== 'ACTIVE')
+    const nonFavorites = result.filter(p => !p.favorite && p.key !== 'ACTIVE')
 
     expect(nonFavorites[0].key).toBe('RECENT')
     expect(nonFavorites[1].key).toBe('OLD')

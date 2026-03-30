@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { findProjectByTicketKey, normalizeTicketKey } from '../utils/routing'
-import { extractSubDocPath, validateSubDocPath } from '../utils/subdocPathValidation'
+import { extractSubDocPath } from '../utils/subdocPathValidation'
 import { RouteErrorModal } from './RouteErrorModal'
 
 export function DirectTicketAccess() {

@@ -145,17 +145,19 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
         style={{ height: 'calc(80vh - 250px)' }}
       >
         <div className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-muted-foreground">Loading file system...</div>
-            </div>
-          ) : (
-            <div className="border border-gray-200 rounded-lg">
-              <div className="p-4">
-                {items.map(item => renderItem(item))}
-              </div>
-            </div>
-          )}
+          {loading
+            ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-muted-foreground">Loading file system...</div>
+                </div>
+              )
+            : (
+                <div className="border border-gray-200 rounded-lg">
+                  <div className="p-4">
+                    {items.map(item => renderItem(item))}
+                  </div>
+                </div>
+              )}
         </div>
       </ScrollArea>
 

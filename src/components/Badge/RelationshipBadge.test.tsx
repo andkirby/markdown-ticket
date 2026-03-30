@@ -6,10 +6,10 @@
  * Coverage: BR-8
  */
 
-import { describe, it, expect, afterEach } from 'bun:test'
-import { render, screen, cleanup } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'bun:test'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { RelationshipBadge } from './RelationshipBadge'
 
 // Cleanup DOM between tests
