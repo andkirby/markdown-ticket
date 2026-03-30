@@ -1,5 +1,4 @@
-import type { Ticket } from '../models/Ticket.js'
-import type { TicketMetadata } from '../models/Ticket.js'
+import type { Ticket, TicketMetadata } from '../models/Ticket.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { normalizeTicket, normalizeTicketMetadata } from '../models/Ticket.js'

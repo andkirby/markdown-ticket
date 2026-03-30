@@ -1,11 +1,8 @@
 import type {
   Ticket,
-  TicketData,
-  TicketFilters,
   TicketMetadata,
-  TicketUpdateAttrs,
 } from '@mdt/domain-contracts'
-import { CRType, TICKET_UPDATE_ALLOWED_ATTRS, TICKET_UPDATE_ATTRS } from '@mdt/domain-contracts'
+import { CRType } from '@mdt/domain-contracts'
 
 export type {
   Ticket,

@@ -6,7 +6,8 @@
  * Requirements: BR-1.2, C-2.2
  */
 
-import { SSEBroadcaster, type SSEEvent, type ResponseLike } from '../../services/fileWatcher/SSEBroadcaster.js'
+import type { ResponseLike, SSEEvent } from '../../services/fileWatcher/SSEBroadcaster.js'
+import { SSEBroadcaster } from '../../services/fileWatcher/SSEBroadcaster.js'
 
 describe('SSEBroadcaster', () => {
   let broadcaster: SSEBroadcaster

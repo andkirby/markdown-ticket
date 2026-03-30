@@ -28,6 +28,9 @@ export default antfu(
       // Disable react/no-implicit-key as it requires full type info that isn't available
       'react/no-implicit-key': 'off',
 
+      // Disable overly strict rule about setState in useEffect - legitimate pattern for initialization
+      'react-hooks-extra/no-direct-set-state-in-use-effect': 'off',
+
       // Block relative imports to shared module - use @mdt/shared path alias instead
       // This is required because TypeScript project references expect imports from
       // built output (../shared/dist/*), not source files (../shared/*)
@@ -47,6 +50,8 @@ export default antfu(
     rules: {
       // Allow uppercase for Gherkin-style test patterns (GIVEN/WHEN/THEN)
       'test/prefer-lowercase-title': 'off',
+      // Allow any in test mocks
+      'ts/no-explicit-any': 'off',
     },
   },
 )

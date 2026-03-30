@@ -5,11 +5,11 @@
 
 import type { TicketUpdateAttrs } from '@mdt/domain-contracts'
 import {
-  CRPrioritySchema,
   CR_CODE_PATTERN,
+  CreateTicketInputSchema,
+  CRPrioritySchema,
   CRStatusSchema,
   CRTypeSchema,
-  CreateTicketInputSchema,
   LocalProjectConfigSchema,
   ProjectSchema,
   SubDocumentSchema,
@@ -31,7 +31,7 @@ type OpenApiObjectSchema = OpenApiSchema & {
   required?: string[]
 }
 
-type ZodLikeSchema = {
+interface ZodLikeSchema {
   _def: {
     typeName: string
     innerType?: ZodLikeSchema

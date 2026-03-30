@@ -8,8 +8,8 @@ import {
   DocumentConfigSchema,
   LocalProjectConfigSchema,
   ProjectConfigSchema,
-  ProjectSchema,
   ProjectRegistryEntrySchema,
+  ProjectSchema,
   UpdateProjectInputSchema,
 } from './schema'
 

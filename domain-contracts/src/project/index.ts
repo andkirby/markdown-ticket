@@ -9,7 +9,7 @@ export * from './input'
 
 // Export all schemas and types from schema.ts for compatibility
 export * from './schema'
-export * from './worktree'
-
 // Export all validation functions from validation.ts
 export * from './validation'
+
+export * from './worktree'

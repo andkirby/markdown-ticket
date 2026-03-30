@@ -12,6 +12,7 @@
 
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
+// eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
   HoverCard,

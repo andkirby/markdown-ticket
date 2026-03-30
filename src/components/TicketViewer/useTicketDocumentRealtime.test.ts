@@ -461,7 +461,7 @@ describe('useTicketDocumentRealtime - MDT-142 Subdocument Events', () => {
       ]
       const onActiveRemoved = mock()
 
-      const { result, rerender } = renderHook(() =>
+      const { result } = renderHook(() =>
         useTicketDocumentRealtime({
           initialSubdocuments: initial,
           selectedPath: 'architecture',

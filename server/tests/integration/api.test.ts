@@ -278,7 +278,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
       expect(response.body.length).toBeGreaterThan(0)
 
       // Should contain our initial test CR
-      // eslint-disable-next-line ts/no-explicit-any
+
       const testCR = response.body.find((cr: any) => cr.code === crCode)
 
       expect(testCR).toBeDefined()
@@ -315,7 +315,7 @@ describe('aPI Integration Tests - CRUD Endpoints (MDT-106)', () => {
       expect(response.body.length).toBeGreaterThan(0)
 
       // Should contain our test project
-      // eslint-disable-next-line ts/no-explicit-any
+
       const testProject = response.body.find((p: any) => p.id === projectCode)
 
       expect(testProject).toBeDefined()

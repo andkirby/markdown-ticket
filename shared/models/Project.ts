@@ -1,5 +1,5 @@
-import { ProjectConfigSchema } from '@mdt/domain-contracts'
 import type { ProjectConfig } from '@mdt/domain-contracts'
+import { ProjectConfigSchema } from '@mdt/domain-contracts'
 
 export type {
   CreateProjectInput,

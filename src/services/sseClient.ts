@@ -334,7 +334,8 @@ class SSEClient {
 
     // MDT-142: If subdocument metadata exists, emit subdocument event
     if (subdocument) {
-      console.log('[SSEClient] Emitting ticket:subdocument:changed', { ticketCode, eventType, subdocument })
+      if (import.meta.env.DEV)
+        console.warn('[SSEClient] Emitting ticket:subdocument:changed', { ticketCode, eventType, subdocument })
       eventBus.emit('ticket:subdocument:changed', {
         ticketCode,
         projectId: projectId || '',

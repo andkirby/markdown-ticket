@@ -1,9 +1,11 @@
+import type { FileChangeEventPayload, ProjectPath, WorktreeWatcherEntry } from './PathWatcherService.js'
+import type { FileChangeEvent, ResponseLike, SSEEvent, TicketData } from './SSEBroadcaster.js'
 import { EventEmitter } from 'node:events'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import matter from 'gray-matter'
-import { PathWatcherService, ProjectPath, WorktreeWatcherEntry, FileChangeEventPayload } from './PathWatcherService.js'
-import { SSEBroadcaster, ResponseLike, SSEEvent, FileChangeEvent, TicketData } from './SSEBroadcaster.js'
+import { PathWatcherService } from './PathWatcherService.js'
+import { SSEBroadcaster } from './SSEBroadcaster.js'
 
 interface FileInvoker {
   invalidateFile: (filePath: string) => void

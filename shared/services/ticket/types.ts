@@ -1,5 +1,5 @@
-import type { Ticket, TicketFilters } from '../../models/Ticket.js'
 import type { ProjectConfig } from '../../models/Project.js'
+import type { Ticket, TicketFilters } from '../../models/Ticket.js'
 import type { ReadResult, WriteResult } from '../project/types.js'
 
 export interface ResolvedTicketLocation {

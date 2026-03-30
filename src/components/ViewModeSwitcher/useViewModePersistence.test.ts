@@ -1,12 +1,12 @@
 /**
- * MDT-131: useViewModePersistence Unit Tests
+ * MDT-131: getViewModePersistence Unit Tests
  *
  * Tests localStorage persistence behavior including edge cases.
  * Coverage: BR-4, BR-5, Edge-1, Edge-2
  */
 
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { useViewModePersistence } from './useViewModePersistence'
+import { getViewModePersistence } from './useViewModePersistence'
 
 // Mock localStorage - compatible with both Jest and bun test
 function createMockLocalStorage() {
@@ -46,8 +46,8 @@ if (typeof globalThis.localStorage === 'undefined') {
 }
 else {
   // Replace existing localStorage
-  const originalGetItem = globalThis.localStorage.getItem
-  const originalSetItem = globalThis.localStorage.setItem
+  const _originalGetItem = globalThis.localStorage.getItem
+  const _originalSetItem = globalThis.localStorage.setItem
   Object.defineProperty(globalThis, 'localStorage', {
     value: localStorageMock,
     writable: true,
@@ -55,7 +55,7 @@ else {
   })
 }
 
-describe('useViewModePersistence', () => {
+describe('getViewModePersistence', () => {
   beforeEach(() => {
     // Clear the mock store before each test
     localStorageMock.clear()
@@ -64,35 +64,35 @@ describe('useViewModePersistence', () => {
   describe('getLastBoardListMode', () => {
     it('should return "board" when localStorage key is absent (Edge-1)', () => {
       // Key is not set, so getItem returns null
-      const { getLastBoardListMode } = useViewModePersistence()
+      const { getLastBoardListMode } = getViewModePersistence()
 
       expect(getLastBoardListMode()).toBe('board')
     })
 
     it('should return "board" when localStorage value is invalid (Edge-1)', () => {
       localStorageMock.setItem('lastBoardListMode', 'invalid-mode')
-      const { getLastBoardListMode } = useViewModePersistence()
+      const { getLastBoardListMode } = getViewModePersistence()
 
       expect(getLastBoardListMode()).toBe('board')
     })
 
     it('should return stored value when valid "board" (BR-5)', () => {
       localStorageMock.setItem('lastBoardListMode', 'board')
-      const { getLastBoardListMode } = useViewModePersistence()
+      const { getLastBoardListMode } = getViewModePersistence()
 
       expect(getLastBoardListMode()).toBe('board')
     })
 
     it('should return stored value when valid "list" (BR-5)', () => {
       localStorageMock.setItem('lastBoardListMode', 'list')
-      const { getLastBoardListMode } = useViewModePersistence()
+      const { getLastBoardListMode } = getViewModePersistence()
 
       expect(getLastBoardListMode()).toBe('list')
     })
 
     it('should return "board" when localStorage throws error (Edge-2)', () => {
       localStorageMock._shouldThrow()
-      const { getLastBoardListMode } = useViewModePersistence()
+      const { getLastBoardListMode } = getViewModePersistence()
 
       expect(getLastBoardListMode()).toBe('board')
     })
@@ -100,7 +100,7 @@ describe('useViewModePersistence', () => {
 
   describe('saveBoardListMode', () => {
     it('should save "board" to localStorage (BR-4)', () => {
-      const { saveBoardListMode } = useViewModePersistence()
+      const { saveBoardListMode } = getViewModePersistence()
 
       saveBoardListMode('board')
 
@@ -108,7 +108,7 @@ describe('useViewModePersistence', () => {
     })
 
     it('should save "list" to localStorage (BR-4)', () => {
-      const { saveBoardListMode } = useViewModePersistence()
+      const { saveBoardListMode } = getViewModePersistence()
 
       saveBoardListMode('list')
 
@@ -117,7 +117,7 @@ describe('useViewModePersistence', () => {
 
     it('should not throw error when localStorage fails (Edge-2)', () => {
       localStorageMock._shouldThrow()
-      const { saveBoardListMode } = useViewModePersistence()
+      const { saveBoardListMode } = getViewModePersistence()
 
       expect(() => {
         saveBoardListMode('board')
@@ -130,7 +130,7 @@ describe('useViewModePersistence', () => {
       localStorageMock._shouldThrow()
 
       expect(() => {
-        useViewModePersistence()
+        getViewModePersistence()
       }).not.toThrow()
     })
   })

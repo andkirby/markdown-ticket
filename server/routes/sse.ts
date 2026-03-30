@@ -37,7 +37,7 @@ export function createSSERouter(fileWatcher: FileWatcherService): Router {
    *               type: string
    *               description: SSE formatted events
    */
-  // eslint-disable-next-line ts/no-explicit-any
+
   router.get('/', (req: Request, res: any) => {
     // Set SSE headers
     res.writeHead(200, {

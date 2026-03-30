@@ -79,7 +79,7 @@ export function normalizeShortcuts(argv: string[]): string[] {
 
   // Pattern 6: Cross-project ticket key (e.g., "ABC/MDT-12") → ticket get
   // Pattern: PROJECT-CODE/TICKET-KEY or PROJECT/TICKET-NUMBER
-  const crossProjectPattern = /^[^/]+\/[a-z0-9][a-z0-9]*-\d+$/i
+  const crossProjectPattern = /^[^/]+\/[a-z0-9]+-\d+$/i
   if (crossProjectPattern.test(first)) {
     return buildArgv(['ticket', 'get', first, ...rest])
   }

@@ -9,7 +9,7 @@ import { classifyLink, getLinkConfigForProcessor } from './useMarkdownProcessor'
  * Creates parser options for converting HTML to React elements.
  * Replaces anchor tags with SmartLink components.
  */
-export function useHtmlParser(currentProject: string): HTMLReactParserOptions {
+export function getHtmlParserOptions(currentProject: string): HTMLReactParserOptions {
   // Get link config for reference (used by classifyLink internally)
   getLinkConfigForProcessor()
 

@@ -5,7 +5,7 @@
  * These are smoke tests that verify the CLI boots correctly and shows expected help text.
  */
 
-import { describe, test, expect } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 import { runCli } from '../helpers/cli-runner.js'
 
 describe('CLI Bootstrap', () => {

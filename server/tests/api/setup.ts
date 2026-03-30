@@ -11,13 +11,12 @@
 import type { ProjectFactory, TestEnvironment } from '@mdt/shared/test-lib'
 import type { Express } from 'express'
 import type FileWatcherService from '../../services/fileWatcher/index.js'
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, promises as fs, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import process from 'node:process'
-import jestOpenAPI from 'jest-openapi'
-import { promises as fs } from 'node:fs'
 import { parseToml, stringify } from '@mdt/shared/utils/toml.js'
+import jestOpenAPI from 'jest-openapi'
 
 // Initialize jest-openapi with OpenAPI spec (jest runs in CommonJS context)
 const openApiSpecPath = join(__dirname, '../../openapi.yaml')

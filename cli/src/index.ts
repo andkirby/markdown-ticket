@@ -1,3 +1,4 @@
+import process from 'node:process'
 /**
  * CLI Entry Point (MDT-143)
  *

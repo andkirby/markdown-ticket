@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process'
 /**
  * CLI Runner Helper for E2E Tests
  *
@@ -5,9 +6,8 @@
  * and capture stdout, stderr, and exit codes.
  */
 
-import { executeProcess } from '@mdt/shared/test-lib'
 import { resolve } from 'node:path'
-import { spawn } from 'node:child_process'
+import process from 'node:process'
 
 /**
  * Path to the CLI entry point

@@ -6,8 +6,8 @@ import type { Request, Response } from 'express'
 import type { CRData, TicketService } from '../services/TicketService.js'
 import type { TreeNode } from '../types/tree.js'
 
-import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
+import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 
 export type Ticket = Pick<DomainTicket, 'code' | 'filePath'>
 

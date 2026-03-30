@@ -5,14 +5,14 @@
  * This is a stub for TDD - implementation will be added in Task 1
  */
 
-export type ServiceErrorCode =
-  | 'NO_PROJECT_DETECTED'
-  | 'PROJECT_NOT_FOUND'
-  | 'TICKET_NOT_FOUND'
-  | 'INVALID_OPERATION'
-  | 'VALIDATION_ERROR'
-  | 'PERSISTENCE_ERROR'
-  | 'INTERNAL_ERROR'
+export type ServiceErrorCode
+  = | 'NO_PROJECT_DETECTED'
+    | 'PROJECT_NOT_FOUND'
+    | 'TICKET_NOT_FOUND'
+    | 'INVALID_OPERATION'
+    | 'VALIDATION_ERROR'
+    | 'PERSISTENCE_ERROR'
+    | 'INTERNAL_ERROR'
 
 export interface ServiceErrorPayload {
   code: ServiceErrorCode

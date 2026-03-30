@@ -1,3 +1,4 @@
+import type { Project } from '@mdt/shared/models/Project.js'
 /**
  * CLI Project Namespace Commands (MDT-143)
  *
@@ -5,11 +6,11 @@
  * Project lookups route through ProjectService, init routes through ProjectManager.
  */
 
-import type { Project } from '@mdt/shared/models/Project.js'
-import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
+import process from 'node:process'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
-import { formatProjectView, formatProjectList as formatProjectListFormatter } from '../output/formatter.js'
+import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
+import { formatProjectList as formatProjectListFormatter, formatProjectView } from '../output/formatter.js'
 
 /**
  * Format project list as JSON

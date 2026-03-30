@@ -5,14 +5,14 @@
  * Per MDT-082: Uses consolidated CRUD operations from shared layer.
  */
 
+import type { TicketUpdateAttrs } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
-import type { TicketUpdateAttrs } from '@mdt/domain-contracts'
-import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
+import { groupNamespacedFiles, parseNamespace } from '@mdt/shared/services/ticket/subdocuments/namespace.js'
 import { SubdocumentService } from '@mdt/shared/services/ticket/SubdocumentService.js'
 import { TicketLocationResolver } from '@mdt/shared/services/ticket/TicketLocationResolver.js'
-import { groupNamespacedFiles, parseNamespace } from '@mdt/shared/services/ticket/subdocuments/namespace.js'
+import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
 
 export type CRData = Pick<TicketData, 'title' | 'type' | 'priority' | 'description'> & {
   code?: string

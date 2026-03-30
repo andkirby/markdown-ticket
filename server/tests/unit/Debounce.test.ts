@@ -178,6 +178,7 @@ describe('SSEBroadcaster Debounce', () => {
       let receivedArgs: unknown[] = []
 
       const fn = function (this: unknown, ...args: unknown[]) {
+        // eslint-disable-next-line ts/no-this-alias
         context = this
         receivedArgs = args
       }

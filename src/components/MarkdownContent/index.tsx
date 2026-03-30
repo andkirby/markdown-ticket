@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useTheme } from '../../hooks/useTheme'
 import { loadPrismTheme } from '../../utils/syntaxHighlight'
 import { MarkdownErrorBoundary } from '../MarkdownErrorBoundary'
-import { useHtmlParser } from './useHtmlParser'
+import { getHtmlParserOptions } from './useHtmlParser'
 import { useMarkdownProcessor } from './useMarkdownProcessor'
 import { usePostRender } from './usePostRender'
 
@@ -44,7 +44,7 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
   const processedContent = useMarkdownProcessor(markdown, currentProject, headerLevelStart)
 
   // Get parser options for SmartLink replacement
-  const parserOptions = useHtmlParser(currentProject)
+  const parserOptions = getHtmlParserOptions(currentProject)
 
   // Handle post-render effects (Mermaid, link validation)
   usePostRender({
