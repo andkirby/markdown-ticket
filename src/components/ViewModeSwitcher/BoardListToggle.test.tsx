@@ -5,8 +5,8 @@
  * Coverage: BR-2.1, BR-2.2, BR-3.1, C1, C2
  */
 
-import { describe, it, expect, beforeEach, mock, afterEach } from 'bun:test'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { BoardListToggle } from './BoardListToggle'
 
 describe('BoardListToggle', () => {
@@ -27,7 +27,7 @@ describe('BoardListToggle', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       const boardIcon = screen.getByTestId('board-icon')
@@ -43,7 +43,7 @@ describe('BoardListToggle', () => {
           currentMode="list"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       const listIcon = screen.getByTestId('list-icon')
@@ -61,7 +61,7 @@ describe('BoardListToggle', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       const toggle = screen.getByTestId('board-list-toggle')
@@ -83,7 +83,7 @@ describe('BoardListToggle', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={true}
-        />
+        />,
       )
 
       const toggle = screen.getByTestId('board-list-toggle')
@@ -106,7 +106,7 @@ describe('BoardListToggle', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       const toggle = screen.getByTestId('board-list-toggle')
@@ -121,7 +121,7 @@ describe('BoardListToggle', () => {
           currentMode="list"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       const toggle = screen.getByTestId('board-list-toggle')
@@ -136,7 +136,7 @@ describe('BoardListToggle', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={true}
-        />
+        />,
       )
 
       const toggle = screen.getByTestId('board-list-toggle')
@@ -153,7 +153,7 @@ describe('BoardListToggle', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       const overlay = screen.getByTestId('board-list-toggle-overlay')
@@ -166,7 +166,7 @@ describe('BoardListToggle', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       const overlay = screen.getByTestId('board-list-toggle-overlay')

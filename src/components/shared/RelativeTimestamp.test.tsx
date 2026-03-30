@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, setSystemTime } from 'bun:test'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { RelativeTimestamp } from './RelativeTimestamp'
+import { afterEach, beforeEach, describe, expect, it, setSystemTime } from 'bun:test'
 import { formatFullDateTime } from '../../utils/dateFormat'
+import { RelativeTimestamp } from './RelativeTimestamp'
 
 const REAL_NOW = new Date()
 const FIXED_NOW = new Date('2026-03-23T12:00:00Z')

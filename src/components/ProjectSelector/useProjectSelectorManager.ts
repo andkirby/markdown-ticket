@@ -11,11 +11,11 @@
  * - Handle mobile responsive collapse (BR-9)
  */
 
-import { useMemo, useEffect, useState } from 'react'
 import type { Project } from '@mdt/shared/models/Project'
 import type { ProjectWithSelectorState as ProjectWithSelectorStateType, SelectorPreferences, SelectorState } from './types'
 import type { ProjectWithSelectorState } from '@/utils/selectorOrdering'
-import { computeRailOrder, computePanelOrder } from '@/utils/selectorOrdering'
+import { useEffect, useMemo, useState } from 'react'
+import { computePanelOrder, computeRailOrder } from '@/utils/selectorOrdering'
 
 /**
  * Return value from useProjectSelectorManager hook
@@ -34,12 +34,12 @@ export interface ProjectSelectorManagerResult {
  */
 function mergeProjectWithSelectorState(
   project: Project,
-  selectorState: Record<string, SelectorState>
+  selectorState: Record<string, SelectorState>,
 ): ProjectWithSelectorStateType {
   const state = selectorState[project.project.code || project.id] || {
     favorite: false,
     lastUsedAt: null,
-    count: 0
+    count: 0,
   }
 
   return {
@@ -47,7 +47,7 @@ function mergeProjectWithSelectorState(
     selectorState: state,
     favorite: state.favorite,
     lastUsedAt: state.lastUsedAt,
-    count: state.count
+    count: state.count,
   }
 }
 
@@ -113,14 +113,14 @@ export function useProjectSelectorManager(
   projects: Project[],
   activeProjectKey: string,
   preferences: SelectorPreferences,
-  selectorState: Record<string, SelectorState>
+  selectorState: Record<string, SelectorState>,
 ): ProjectSelectorManagerResult {
   const isMobile = useMobileDetection()
 
   // Merge projects with selector state
   const projectsWithState = useMemo(() => {
     return projects.map(project =>
-      mergeProjectWithSelectorState(project, selectorState)
+      mergeProjectWithSelectorState(project, selectorState),
     )
   }, [projects, selectorState])
 
@@ -132,7 +132,7 @@ export function useProjectSelectorManager(
       code: p.project.code || p.id, // Ensure code is never undefined
       favorite: p.favorite,
       lastUsedAt: p.lastUsedAt,
-      count: p.count
+      count: p.count,
     }))
   }, [projectsWithState])
 
@@ -156,7 +156,7 @@ export function useProjectSelectorManager(
   // Map ordering results back to ProjectWithSelectorStateType
   const mapToFullProject = (p: ProjectWithSelectorState): ProjectWithSelectorStateType => {
     const fullProject = projectsWithState.find(
-      proj => (proj.project.code || proj.id) === p.key
+      proj => (proj.project.code || proj.id) === p.key,
     )
 
     if (fullProject) {
@@ -167,7 +167,7 @@ export function useProjectSelectorManager(
     const state = selectorState[p.key] || {
       favorite: false,
       lastUsedAt: null,
-      count: 0
+      count: 0,
     }
 
     return {
@@ -181,23 +181,23 @@ export function useProjectSelectorManager(
         active: false,
         description: '',
         repository: '',
-        ticketsPath: ''
+        ticketsPath: '',
       },
       metadata: {
         dateRegistered: '',
         lastAccessed: '',
-        version: '1.0'
+        version: '1.0',
       },
       selectorState: state,
       favorite: state.favorite,
       lastUsedAt: state.lastUsedAt,
-      count: state.count
+      count: state.count,
     }
   }
 
   return {
     railProjects: railProjects.map(mapToFullProject),
     panelProjects: panelProjects.map(mapToFullProject),
-    isMobile
+    isMobile,
   }
 }

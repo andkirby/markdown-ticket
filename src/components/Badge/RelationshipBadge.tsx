@@ -8,12 +8,12 @@
  * Coverage: BR-8
  */
 
+import type { RelationshipVariant } from './types'
 import { useParams } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { classifyLink } from '../../utils/linkProcessor'
-import { Badge } from '../ui/badge'
 import SmartLink from '../SmartLink'
-import type { RelationshipVariant } from './types'
+import { Badge } from '../ui/badge'
 
 export interface RelationshipBadgeProps {
   /** Badge variant type */

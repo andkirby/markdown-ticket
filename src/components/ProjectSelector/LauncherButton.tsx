@@ -9,8 +9,8 @@
  * - BR-3.3: Clicking opens panel via onLauncherClick callback
  */
 
-import * as React from 'react'
 import { Plus } from 'lucide-react'
+import * as React from 'react'
 
 /**
  * Props for LauncherButton component

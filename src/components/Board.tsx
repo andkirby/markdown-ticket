@@ -8,8 +8,8 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { getColumnForStatus, getVisibleColumns } from '../config'
 import { getSortPreferences, setSortPreferences } from '../config/sorting'
-import { useProjectManager } from '../hooks/useProjectManager'
 import { useBoardLayout } from '../hooks/useBoardLayout'
+import { useProjectManager } from '../hooks/useProjectManager'
 import { useToast } from '../hooks/useToast'
 import { sortTickets } from '../utils/sorting'
 import Column from './Column'
@@ -519,34 +519,34 @@ const BoardContent: React.FC<BoardProps> = ({
           .map((column) => {
           // Get the primary status for this column (for testid)
           // Each column has at least one status in its statuses array
-          const primaryStatus = column.statuses[0]
-          // Calculate actual column index in the full array
-          const actualColumnIndex = visibleColumns.findIndex(col => col.label === column.label)
-          return (
-            <Column
-              key={column.label}
-              column={column}
-              isFirstColumn={actualColumnIndex === 0}
-              tickets={ticketsByColumn[column.label]}
-              allTickets={tickets}
-              sortAttribute={localSortPreferences.selectedAttribute}
-              sortDirection={localSortPreferences.selectedDirection}
-              onDrop={async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
-                console.warn('Board: Column onDrop called with:', { status, ticketKey: ticket.code, currentColumnIndex, currentTicketIndex })
-                await handleDrop(status, ticket, currentColumnIndex, currentTicketIndex)
-              }}
-              onTicketEdit={handleTicketEdit}
-              getTicketPosition={getTicketPosition}
-              clearTicketPosition={clearTicketPosition}
-              status={primaryStatus}
-              // Mobile column switcher props
-              allColumns={visibleColumns}
-              currentColumnIndex={actualColumnIndex}
-              onColumnSwitch={setActiveColumnIndex}
-              isMobileView={isMobile}
-            />
-          )
-        })}
+            const primaryStatus = column.statuses[0]
+            // Calculate actual column index in the full array
+            const actualColumnIndex = visibleColumns.findIndex(col => col.label === column.label)
+            return (
+              <Column
+                key={column.label}
+                column={column}
+                isFirstColumn={actualColumnIndex === 0}
+                tickets={ticketsByColumn[column.label]}
+                allTickets={tickets}
+                sortAttribute={localSortPreferences.selectedAttribute}
+                sortDirection={localSortPreferences.selectedDirection}
+                onDrop={async (status: Status, ticket: Ticket, currentColumnIndex?: number, currentTicketIndex?: number) => {
+                  console.warn('Board: Column onDrop called with:', { status, ticketKey: ticket.code, currentColumnIndex, currentTicketIndex })
+                  await handleDrop(status, ticket, currentColumnIndex, currentTicketIndex)
+                }}
+                onTicketEdit={handleTicketEdit}
+                getTicketPosition={getTicketPosition}
+                clearTicketPosition={clearTicketPosition}
+                status={primaryStatus}
+                // Mobile column switcher props
+                allColumns={visibleColumns}
+                currentColumnIndex={actualColumnIndex}
+                onColumnSwitch={setActiveColumnIndex}
+                isMobileView={isMobile}
+              />
+            )
+          })}
       </div>
     </div>
   )

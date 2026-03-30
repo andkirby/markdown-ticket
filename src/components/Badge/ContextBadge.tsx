@@ -8,19 +8,19 @@
  * Coverage: BR-8
  */
 
+import type { ContextVariant } from './types'
 import { cn } from '../../lib/utils'
 import { Badge } from '../ui/badge'
-import type { ContextVariant } from './types'
 
 export interface ContextBadgeProps {
   /** Badge variant type */
-  variant: ContextVariant
+  'variant': ContextVariant
   /** Value to display (not required for worktree) */
-  value?: string
+  'value'?: string
   /** Worktree path for title attribute */
-  worktreePath?: string
+  'worktreePath'?: string
   /** Additional CSS classes */
-  className?: string
+  'className'?: string
   /** Test ID for testing */
   'data-testid'?: string
 }

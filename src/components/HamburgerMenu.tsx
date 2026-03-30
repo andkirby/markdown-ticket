@@ -1,13 +1,13 @@
+import type { SortPreferences } from '../config/sorting'
 import { ArrowUpDown, Edit, Eye, EyeOff, Menu, Monitor, Moon, Plus, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import type { SortPreferences } from '../config/sorting'
 import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
 import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
-import { Button } from './ui/index'
 import { ButtonGroup, ButtonGroupSeparator } from './ui/button-group'
+import { Button } from './ui/index'
 
 interface HamburgerMenuProps {
   onAddProject: () => void
@@ -80,7 +80,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   }
 
   const handleSortDirectionToggle = () => {
-    if (!sortPreferences) return
+    if (!sortPreferences)
+      return
     const newDirection = sortPreferences.selectedDirection === 'asc' ? 'desc' : 'asc'
     setIsOpen(false)
     onSortPreferencesChange?.({
@@ -106,8 +107,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         <div className="absolute right-0 top-full mt-1 w-48 bg-background border border-border rounded-md shadow-lg z-50">
           <div className="py-1">
             {/**
-             * @testid add-project-button — Button to open add project modal
-             */}
+              * @testid add-project-button — Button to open add project modal
+              */}
             <button
               data-testid="add-project-button"
               onClick={handleAddProject}
@@ -131,40 +132,42 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             {/* Sort Controls - mobile only (desktop has visible sort controls) */}
             {sortPreferences && onSortPreferencesChange && (
               <div className="sm:hidden">
-              <>
-                <div className="px-4 py-2 border-t border-border">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Sort by</div>
-                  <div className="space-y-1">
-                    {DEFAULT_SORT_ATTRIBUTES.map(attr => (
-                      <button
-                        key={attr.name}
-                        onClick={() => handleSortAttributeChange(attr.name)}
-                        className={`flex items-center w-full px-3 py-1.5 text-sm rounded transition-colors ${
-                          sortPreferences.selectedAttribute === attr.name
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-foreground hover:bg-muted'
-                        }`}
-                      >
-                        {attr.label}
-                      </button>
-                    ))}
+                <>
+                  <div className="px-4 py-2 border-t border-border">
+                    <div className="text-xs font-medium text-muted-foreground mb-2">Sort by</div>
+                    <div className="space-y-1">
+                      {DEFAULT_SORT_ATTRIBUTES.map(attr => (
+                        <button
+                          key={attr.name}
+                          onClick={() => handleSortAttributeChange(attr.name)}
+                          className={`flex items-center w-full px-3 py-1.5 text-sm rounded transition-colors ${
+                            sortPreferences.selectedAttribute === attr.name
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-foreground hover:bg-muted'
+                          }`}
+                        >
+                          {attr.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  onClick={handleSortDirectionToggle}
-                  className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                >
-                  <ArrowUpDown className="h-4 w-4 mr-2" />
-                  Sort {sortPreferences.selectedDirection === 'asc' ? 'Descending' : 'Ascending'}
-                </button>
-              </>
+                  <button
+                    onClick={handleSortDirectionToggle}
+                    className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ArrowUpDown className="h-4 w-4 mr-2" />
+                    Sort
+                    {' '}
+                    {sortPreferences.selectedDirection === 'asc' ? 'Descending' : 'Ascending'}
+                  </button>
+                </>
               </div>
             )}
 
             {/**
-             * @testid clear-cache-button — Button to clear browser cache
-             */}
+              * @testid clear-cache-button — Button to clear browser cache
+              */}
             <button
               data-testid="clear-cache-button"
               onClick={handleClearCache}
@@ -175,8 +178,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             </button>
 
             {/**
-             * @testid event-history-toggle — Button to toggle event history panel
-             */}
+              * @testid event-history-toggle — Button to toggle event history panel
+              */}
             {!eventHistoryForceHidden && (
               <button
                 data-testid="event-history-toggle"

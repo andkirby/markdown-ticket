@@ -6,8 +6,8 @@
  * Manages favorite toggle, usage tracking, and persistence.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
 import type { SelectorData, SelectorPreferences, SelectorState } from './types'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const DEFAULT_PREFERENCES: SelectorPreferences = {
   visibleCount: 7,
@@ -41,7 +41,8 @@ export function useSelectorData(): SelectorData & {
         }
         const data = await response.json()
 
-        if (cancelled) return
+        if (cancelled)
+          return
 
         const validatedPreferences = validatePreferences(data.preferences || {})
         const validatedState = validateSelectorState(data.selectorState || {})
@@ -50,8 +51,10 @@ export function useSelectorData(): SelectorData & {
         setSelectorState(validatedState)
         setLoaded(true)
         setError(undefined)
-      } catch (err) {
-        if (cancelled) return
+      }
+      catch (err) {
+        if (cancelled)
+          return
         console.error('Failed to load selector data:', err)
         const errorMessage = err instanceof Error ? err.message : 'Unknown error'
         setError(errorMessage)
@@ -78,7 +81,8 @@ export function useSelectorData(): SelectorData & {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(state),
         })
-      } catch (err) {
+      }
+      catch (err) {
         console.error('Failed to persist selector state:', err)
       }
     }, 300)
@@ -88,7 +92,7 @@ export function useSelectorData(): SelectorData & {
 
   // Track project usage (BR-5.3, BR-5.4, BR-5.5)
   const trackProjectUsage = useCallback((projectKey: string) => {
-    setSelectorState(prevState => {
+    setSelectorState((prevState) => {
       const existing = prevState[projectKey] || {
         favorite: false,
         lastUsedAt: null,
@@ -113,7 +117,7 @@ export function useSelectorData(): SelectorData & {
 
   // Toggle favorite state (BR-8.1, BR-8.2)
   const toggleFavorite = useCallback((projectKey: string) => {
-    setSelectorState(prevState => {
+    setSelectorState((prevState) => {
       const existing = prevState[projectKey] || {
         favorite: false,
         lastUsedAt: null,

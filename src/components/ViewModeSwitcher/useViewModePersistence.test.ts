@@ -5,21 +5,23 @@
  * Coverage: BR-4, BR-5, Edge-1, Edge-2
  */
 
-import { describe, it, expect, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { useViewModePersistence } from './useViewModePersistence'
 
 // Mock localStorage - compatible with both Jest and bun test
-const createMockLocalStorage = () => {
+function createMockLocalStorage() {
   const store = new Map<string, string>()
   let shouldThrow = false
 
   return {
     getItem: (key: string) => {
-      if (shouldThrow) throw new Error('localStorage unavailable')
+      if (shouldThrow)
+        throw new Error('localStorage unavailable')
       return store.get(key) ?? null
     },
     setItem: (key: string, value: string) => {
-      if (shouldThrow) throw new Error('localStorage unavailable')
+      if (shouldThrow)
+        throw new Error('localStorage unavailable')
       store.set(key, value)
     },
     clear: () => {
@@ -41,7 +43,8 @@ const localStorageMock = createMockLocalStorage()
 // Mock global localStorage for both environments
 if (typeof globalThis.localStorage === 'undefined') {
   globalThis.localStorage = localStorageMock as unknown as Storage
-} else {
+}
+else {
   // Replace existing localStorage
   const originalGetItem = globalThis.localStorage.getItem
   const originalSetItem = globalThis.localStorage.setItem

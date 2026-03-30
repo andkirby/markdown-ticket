@@ -43,7 +43,6 @@ interface UseProjectManagerReturn {
   projectConfig: ProjectConfig | null
 }
 
-
 export function useProjectManager(options: UseProjectManagerOptions = {}): UseProjectManagerReturn {
   const { autoSelectFirst = true, handleSSEEvents = false } = options
 

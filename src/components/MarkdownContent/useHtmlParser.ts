@@ -1,4 +1,4 @@
-import type { HTMLReactParserOptions, DOMNode } from 'html-react-parser'
+import type { DOMNode, HTMLReactParserOptions } from 'html-react-parser'
 import { Element } from 'html-react-parser'
 import * as React from 'react'
 import SmartLink from '../SmartLink'

@@ -25,7 +25,8 @@ export function useViewModePersistence() {
 
       // Default to 'board' for missing/invalid values (Edge-1)
       return 'board'
-    } catch (error) {
+    }
+    catch (error) {
       // Handle localStorage unavailable gracefully (Edge-2)
       return 'board'
     }
@@ -38,7 +39,8 @@ export function useViewModePersistence() {
   const saveBoardListMode = (mode: 'board' | 'list'): void => {
     try {
       localStorage.setItem(STORAGE_KEY, mode)
-    } catch (error) {
+    }
+    catch (error) {
       // Handle localStorage failure gracefully (Edge-2)
       // Don't throw - just fail silently
     }

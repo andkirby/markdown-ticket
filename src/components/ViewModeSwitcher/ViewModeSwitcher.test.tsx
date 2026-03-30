@@ -5,26 +5,27 @@
  * Coverage: BR-1.*, BR-6.*, BR-8, C3
  */
 
-import { describe, it, expect, beforeEach, mock, afterEach } from 'bun:test'
-import { render, screen, cleanup } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { ViewModeSwitcher } from './ViewModeSwitcher'
-import type { ViewMode } from './types'
 
 // Mock child components using Bun's mock.module
 mock.module('./BoardListToggle', () => ({
   BoardListToggle: () => <div data-testid="board-list-toggle">BoardListToggle</div>,
 }))
 
-const createMatchMedia = (matches: boolean) => mock().mockImplementation((query: string) => ({
-  matches,
-  media: query,
-  onchange: null,
-  addListener: mock(),
-  removeListener: mock(),
-  addEventListener: mock(),
-  removeEventListener: mock(),
-  dispatchEvent: mock(),
-}))
+function createMatchMedia(matches: boolean) {
+  return mock().mockImplementation((query: string) => ({
+    matches,
+    media: query,
+    onchange: null,
+    addListener: mock(),
+    removeListener: mock(),
+    addEventListener: mock(),
+    removeEventListener: mock(),
+    dispatchEvent: mock(),
+  }))
+}
 
 describe('ViewModeSwitcher', () => {
   const mockOnModeChange = mock()
@@ -47,7 +48,7 @@ describe('ViewModeSwitcher', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       expect(screen.getByTestId('board-list-toggle')).toBeInTheDocument()
@@ -68,7 +69,7 @@ describe('ViewModeSwitcher', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       expect(screen.getByTestId('documents-button')).toBeInTheDocument()
@@ -93,7 +94,7 @@ describe('ViewModeSwitcher', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       expect(screen.queryByTestId('documents-button')).not.toBeInTheDocument()
@@ -105,7 +106,7 @@ describe('ViewModeSwitcher', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       expect(screen.getByTestId('board-list-toggle')).toBeInTheDocument()
@@ -123,7 +124,7 @@ describe('ViewModeSwitcher', () => {
               currentMode={mode}
               onModeChange={mockOnModeChange}
               isDocumentsView={false}
-            />
+            />,
           )
         }).not.toThrow()
       })
@@ -135,7 +136,7 @@ describe('ViewModeSwitcher', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       // onModeChange should accept 'documents' even though currentMode cannot be 'documents'
@@ -152,7 +153,7 @@ describe('ViewModeSwitcher', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       // Re-render with different mode
@@ -161,7 +162,7 @@ describe('ViewModeSwitcher', () => {
           currentMode="list"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       // Component should update without errors
@@ -174,7 +175,7 @@ describe('ViewModeSwitcher', () => {
           currentMode="board"
           onModeChange={mockOnModeChange}
           isDocumentsView={false}
-        />
+        />,
       )
 
       // BoardListToggle should be able to call onModeChange

@@ -178,10 +178,10 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         {/**
-         * @testid add-project-modal — Add/Edit Project modal container
-         */}
+          * @testid add-project-modal — Add/Edit Project modal container
+          */}
         <div
-          data-testid={editMode ? "edit-project-modal" : "add-project-modal"}
+          data-testid={editMode ? 'edit-project-modal' : 'add-project-modal'}
           className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[calc(100dvh-100px)] flex flex-col"
           onClick={handleOverlayClick}
         >
@@ -217,8 +217,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
             <div className="p-6 space-y-6">
               {/* Project Name */}
               {/**
-               * @testid project-name-input — Input for project name
-               */}
+                * @testid project-name-input — Input for project name
+                */}
               <FormField
                 label="Project Name"
                 value={formData.name}
@@ -232,8 +232,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
 
               {/* Project Code */}
               {/**
-               * @testid project-code-input — Input for project code
-               */}
+                * @testid project-code-input — Input for project code
+                */}
               <FormField
                 label="Project Code"
                 value={formData.code}
@@ -371,8 +371,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           <div className="border-t border-gray-200 dark:border-gray-700 p-6 flex-shrink-0">
             <div className="flex justify-end space-x-3">
               {/**
-               * @testid project-cancel-button — Cancel button in project modal
-               */}
+                * @testid project-cancel-button — Cancel button in project modal
+                */}
               <Button
                 variant="outline"
                 onClick={() => {
@@ -388,8 +388,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 Cancel
               </Button>
               {/**
-               * @testid project-submit-button — Submit button in project modal
-               */}
+                * @testid project-submit-button — Submit button in project modal
+                */}
               <Button
                 onClick={handleConfirmCreate}
                 disabled={isSubmitting || !formData.name || !formData.code || !formData.path}
@@ -430,8 +430,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       {showConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           {/**
-           * @testid confirm-creation-dialog — Confirmation dialog shown before creating project
-           */}
+            * @testid confirm-creation-dialog — Confirmation dialog shown before creating project
+            */}
           <div data-testid="confirm-creation-dialog" className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md">
             <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Confirm Project Creation</h3>
             <div className="mb-4 space-y-2">
@@ -468,8 +468,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 Cancel
               </Button>
               {/**
-               * @testid confirm-creation-button — Confirm button to create project
-               */}
+                * @testid confirm-creation-button — Confirm button to create project
+                */}
               <Button data-testid="confirm-creation-button" onClick={handleConfirmSubmit}>
                 Create Project
               </Button>
@@ -482,8 +482,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       {showSuccess && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           {/**
-           * @testid success-dialog — Success dialog shown after project is created
-           */}
+            * @testid success-dialog — Success dialog shown after project is created
+            */}
           <div data-testid="success-dialog" className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md text-center">
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -507,8 +507,8 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 Create Another
               </Button>
               {/**
-               * @testid success-done-button — Done button to close success dialog
-               */}
+                * @testid success-done-button — Done button to close success dialog
+                */}
               <Button
                 data-testid="success-done-button"
                 onClick={() => {

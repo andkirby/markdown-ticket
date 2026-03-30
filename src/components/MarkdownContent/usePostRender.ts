@@ -1,6 +1,7 @@
-import { useEffect, type RefObject } from 'react'
-import { useMermaid } from '../../utils/mermaid'
+import type { RefObject } from 'react'
+import { useEffect } from 'react'
 import { validateAllReferences } from '../../utils/linkValidator'
+import { useMermaid } from '../../utils/mermaid'
 
 interface UsePostRenderOptions {
   containerRef: RefObject<HTMLDivElement | null>

@@ -1,14 +1,13 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { SortPreferences } from '../config/sorting'
 import type { Ticket } from '../types'
-import { CRStatus } from '@mdt/domain-contracts'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { sortTickets } from '../utils/sorting'
-import Board from './Board'
 import { StatusBadge } from './Badge'
+import Board from './Board'
 import { DocumentsLayout } from './DocumentsView'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import { TicketCode } from './TicketCode'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
 type ViewMode = 'board' | 'list' | 'documents'
 

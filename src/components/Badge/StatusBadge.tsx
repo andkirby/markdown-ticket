@@ -8,9 +8,9 @@
  * Coverage: BR-1, BR-2, BR-3
  */
 
+import type { StatusVariantProps } from './types'
 import { cn } from '../../lib/utils'
 import { Badge } from '../ui/badge'
-import type { StatusVariantProps } from './types'
 
 export interface StatusBadgeProps extends StatusVariantProps {
   /** Additional CSS classes */

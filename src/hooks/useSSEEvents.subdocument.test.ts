@@ -6,7 +6,7 @@
  * Covers: BR-1.4, C4
  */
 
-import { describe, it, expect, beforeEach, mock } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { eventBus } from '../services/eventBus'
 
 describe('useSSEEvents - Subdocument Mapping (MDT-142)', () => {

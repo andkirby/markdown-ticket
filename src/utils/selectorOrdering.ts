@@ -9,7 +9,6 @@
  * - Non-favorites sorted by lastUsedAt desc, count desc
  */
 
-import type { Project } from '@mdt/shared/models/Project'
 import type { SelectorPreferences } from '../components/ProjectSelector/types'
 
 /**
@@ -31,7 +30,7 @@ export interface ProjectWithSelectorState {
 export function computeRailOrder(
   projects: ProjectWithSelectorState[],
   activeProjectKey: string,
-  preferences: SelectorPreferences
+  preferences: SelectorPreferences,
 ): ProjectWithSelectorState[] {
   if (projects.length === 0) {
     return []
@@ -64,7 +63,7 @@ export function computeRailOrder(
  */
 export function computePanelOrder(
   projects: ProjectWithSelectorState[],
-  activeProjectKey: string
+  activeProjectKey: string,
 ): ProjectWithSelectorState[] {
   if (projects.length === 0) {
     return []
@@ -92,12 +91,14 @@ export function computePanelOrder(
  * 3. Non-favorites: lastUsedAt desc, count desc
  */
 function sortProjectsByOrderingRules(
-  projects: ProjectWithSelectorState[]
+  projects: ProjectWithSelectorState[],
 ): ProjectWithSelectorState[] {
   return [...projects].sort((a, b) => {
     // Favorites first
-    if (a.favorite && !b.favorite) return -1
-    if (!a.favorite && b.favorite) return 1
+    if (a.favorite && !b.favorite)
+      return -1
+    if (!a.favorite && b.favorite)
+      return 1
 
     // Both are favorites - sort by count desc, then lastUsedAt desc
     if (a.favorite && b.favorite) {
@@ -108,8 +109,8 @@ function sortProjectsByOrderingRules(
     }
 
     // Both are non-favorites - sort by lastUsedAt desc, then count desc
-    return compareLastUsedAt(a.lastUsedAt, b.lastUsedAt) ||
-           b.count - a.count
+    return compareLastUsedAt(a.lastUsedAt, b.lastUsedAt)
+      || b.count - a.count
   })
 }
 
@@ -118,9 +119,12 @@ function sortProjectsByOrderingRules(
  * null values (never used) sort last
  */
 function compareLastUsedAt(a: string | null, b: string | null): number {
-  if (a === null && b === null) return 0
-  if (a === null) return 1 // null sorts last
-  if (b === null) return -1
+  if (a === null && b === null)
+    return 0
+  if (a === null)
+    return 1 // null sorts last
+  if (b === null)
+    return -1
 
   // Both are non-null - compare as dates (newest first)
   return b.localeCompare(a)
