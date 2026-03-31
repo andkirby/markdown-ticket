@@ -44,6 +44,7 @@ This CR introduces a standalone `mdt-cli` entrypoint for reading and mutating CR
 
 ## UAT Refinements (2026-03-30)
 
+- BR-1 expanded: ticket detail view shows 1st-level subdocuments from ticket CR directory
 - BR-4 expanded: default 10-ticket limit (newest-first), --all/--limit flags, --files/--info output modes, ticket ls alias, positional filter arguments
 - BR-5 expanded: per-element output format with color spec (code described, id gray, title white, description normal, path gray)
 - BR-10 expanded: pipe-separated old→new confirmation format; no-op exits 0 with unchanged message
