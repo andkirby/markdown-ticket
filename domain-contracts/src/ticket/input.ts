@@ -33,6 +33,8 @@ export interface TicketFilters {
   status?: string | string[]
   type?: string | string[]
   priority?: string | string[]
+  assignee?: string | string[]
+  phaseEpic?: string | string[]
   dateRange?: {
     start?: Date
     end?: Date

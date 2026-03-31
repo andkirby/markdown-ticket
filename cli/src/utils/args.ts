@@ -102,6 +102,12 @@ export function normalizeShortcuts(argv: string[]): string[] {
 
     const [second, ...restRest] = rest
 
+    // If second arg starts with --, it's an option, not a subcommand — pass through
+    if (second.startsWith('--') || second.startsWith('-')) {
+      // Let commander handle "project --guide" as-is
+      return argv
+    }
+
     // If second arg is NOT a reserved subcommand (case-sensitive), treat as project code
     if (!reservedProjectSubcommands.includes(second)) {
       // "project <code>" → "project get <code>"

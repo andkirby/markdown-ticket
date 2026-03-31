@@ -10,9 +10,9 @@ Apply post-implementation UX refinements to the CLI based on operator feedback: 
 ## Approved Changes
 
 1. **Attr output format** — pipe-separated old→new values; no-op exits 0 with `unchanged` message
-2. **Color scheme specificity** — ticket title white, ticket key light-blue, project code dark cyan, project ID gray, project description normal, file paths gray
-3. **`project ls` output format** — `CODE (id) Title\n  description\n  path` with per-element colors
-4. **`ticket list` default limit** — 10 tickets newest-first, `--all` and `--limit N` flags
+2. **Color scheme specificity** — ticket title white bold, ticket key light-cyan bold, project code dark cyan bold, project ID gray, project description normal, file paths gray
+3. **`project ls` output format** — `CODE Title\n  description\n  path` (no id) with per-element colors
+4. **`ticket list` default limit** — 10 tickets newest-first, `--all` and `--limit N` flags; metadata uses fixed-width columns (status 11, type 13, priority 8) with `|` separator; long values abbreviated (`Partially Implemented` → `Part. Impl`)
 5. **`ticket list` filters** — positional `key=value` args, AND across fields, comma+fuzzy within field
 6. **`ticket list` output modes** — `--files` (file paths only), `--info` (info without paths)
 7. **`ticket ls` alias** — `mdt-cli ticket ls` as consistency alias for `mdt-cli ticket list`
@@ -25,7 +25,7 @@ Apply post-implementation UX refinements to the CLI based on operator feedback: 
 | BR-4 | refine_in_place | Added default limit, filters, output modes, ticket ls alias |
 | BR-5 | refine_in_place | Added per-element output format and color spec |
 | BR-10 | refine_in_place | Added pipe-separated old→new format and no-op exit 0 |
-| BR-11 | refine_in_place | Added per-element color assignments (title, key, code, id, path) |
+| BR-11 | refine_in_place | Added per-element color assignments (title white bold, key light-cyan bold, code dark cyan bold, id gray, path gray) |
 | BR-18 | additive_change | NEW — positional list filter behavior |
 | BR-19 | additive_change | NEW — --guide flag behavior |
 

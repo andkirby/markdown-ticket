@@ -195,30 +195,9 @@
       "routePolicy": "tests"
     },
     {
-      "id": "BR-4",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket list, mdt-cli list, mdt-cli ls, or mdt-cli ticket ls inside a detected project, the system shall display up to 10 tickets sorted newest-first by modified date in compact form and report the project ticket count. The system shall support --all to show every ticket, --limit N to override the default count, --files to show file paths only, and --info to show ticket info without file paths. Positional filter arguments in key=value format (e.g., status=implemented priority=high) shall filter tickets using AND across fields and comma-separated fuzzy matching within a field.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
-      "id": "BR-5",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli project ls or mdt-cli project list, the system shall display each discovered project with its code in described color, identifier in gray parentheses, title in white, description in normal color, and filesystem path in gray.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-10",
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli ticket attr <ticket> <attr-op><value>... or mdt-cli attr <ticket> <attr-op><value>... with supported attribute keys, the system shall normalize accepted value aliases, apply = to scalar attributes, apply =, +=, or -= to relation attributes, update all supplied attributes on the target ticket, and confirm the applied changes using pipe-separated format showing old and new values. When a value is unchanged, the system shall print an unchanged message and exit with code 0.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
-      "id": "BR-11",
-      "kind": "behavior",
-      "text": "WHEN output is written to an interactive terminal with color enabled, the system shall render ticket titles in white, ticket keys in light-blue, project codes in dark cyan, project identifiers in gray, project titles in white, project descriptions in normal color, and file paths in gray. Status, priority, and type indicators shall use color categories that match the web UI badge mappings.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "bdd"
     },
@@ -233,6 +212,27 @@
       "id": "BR-19",
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli --guide or mdt-cli <namespace> --guide, the system shall print a generated command manual covering all registered commands, aliases, and usage examples for the requested scope. The guide shall be derived from the commander command tree and must not require manual editing.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-11",
+      "kind": "behavior",
+      "text": "WHEN output is written to an interactive terminal with color enabled, the system shall render ticket titles in white bold, ticket keys in light-cyan bold, project codes in dark cyan bold, project identifiers in gray, project titles in white bold, project descriptions in normal color, and file paths in gray. Status, priority, and type indicators shall use color categories that match the web UI badge mappings. Long status values shall use abbreviated display labels in list views (e.g., Partially Implemented → Part. Impl).",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket list, mdt-cli list, mdt-cli ls, or mdt-cli ticket ls inside a detected project, the system shall display up to 10 tickets sorted newest-first by modified date in compact form and report the project ticket count. Each ticket shall show the key and title on one line, followed by an indented pipe-separated metadata line with fixed-width columns (status 11, type 13, priority 8) and optional phase. The system shall support --all to show every ticket, --limit N to override the default count, --files to show file paths only, and --info to show ticket info without file paths. Positional filter arguments in key=value format (e.g., status=implemented priority=high) shall filter tickets using AND across fields and comma-separated fuzzy matching within a field.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli project ls or mdt-cli project list, the system shall display each discovered project with its code in described color, title in white bold, description in normal color, and filesystem path in gray. The project identifier shall not appear in list output. Project detail views (project current, project get, project info) shall display the full identifier in gray.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "bdd"
     }

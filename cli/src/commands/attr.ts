@@ -11,7 +11,7 @@ import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
-import { formatTicketAttr } from '../output/formatter.js'
+import { formatTicketAttrPipe, type AttrUpdateResult } from '../output/formatter.js'
 import { PRIORITY_TOKENS, STATUS_ALIASES } from '../utils/aliases.js'
 
 /**
@@ -277,6 +277,50 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
   const regularOps = operations.filter(op => op.field !== 'status')
 
   try {
+    // Resolve project object
+    const projects = await projectService.getAllProjects()
+    const project = projects.find(p => p.project.code === projectCode)
+    if (!project) {
+      console.error(`Error: Project '${projectCode}' not found`)
+      process.exit(1)
+    }
+
+    // Get current ticket to capture old values for pipe format
+    let currentTicket: import('@mdt/shared/models/Ticket.js').Ticket | null = null
+    try {
+      const ticketResult = await ticketService.getTicket({
+        projectRef: projectCode,
+        ticketKey,
+      })
+      currentTicket = ticketResult.data
+    }
+    catch {
+      // Ticket might not exist yet for status-only updates on new tickets
+    }
+
+    const results: AttrUpdateResult[] = []
+    const REVERSE_FIELD_MAPPING: Record<string, string> = {
+      status: 'status',
+      priority: 'priority',
+      phaseEpic: 'phase',
+      assignee: 'assignee',
+      relatedTickets: 'related',
+      dependsOn: 'depends',
+      blocks: 'blocks',
+      implementationDate: 'impl-date',
+      implementationNotes: 'impl-notes',
+    }
+
+    // Helper to get current field value from ticket
+    const getFieldValue = (field: string): string => {
+      if (!currentTicket) return '(none)'
+      const ticket = currentTicket as unknown as Record<string, unknown>
+      const val = ticket[field]
+      if (val == null) return '(none)'
+      if (Array.isArray(val)) return val.join(', ')
+      return String(val)
+    }
+
     // Handle status updates through updateCRStatus
     for (const statusOp of statusOps) {
       if (statusOp.op !== 'replace') {
@@ -284,16 +328,16 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
         process.exit(1)
       }
       const statusValue = typeof statusOp.value === 'string' ? statusOp.value : String(statusOp.value)
-
-      // Need to get the project object for updateCRStatus
-      const projects = await projectService.getAllProjects()
-      const project = projects.find(p => p.project.code === projectCode)
-      if (!project) {
-        console.error(`Error: Project '${projectCode}' not found`)
-        process.exit(1)
-      }
+      const oldValue = getFieldValue('status')
 
       await ticketService.updateCRStatus(project, ticketKey, statusValue as any)
+
+      results.push({
+        field: 'status',
+        op: 'replace',
+        oldValue,
+        newValue: statusValue,
+      })
     }
 
     // Handle regular attr updates through updateTicketAttributes
@@ -305,10 +349,22 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
         operations: regularOps,
       })
       resultTicketCode = result.ticket.code
+
+      // Build results with old/new values
+      for (const op of regularOps) {
+        const oldValue = getFieldValue(op.field)
+        const newValue = Array.isArray(op.value) ? op.value.join(', ') : String(op.value)
+        results.push({
+          field: op.field,
+          op: op.op,
+          oldValue,
+          newValue,
+        })
+      }
     }
 
-    // Print confirmation for all operations
-    console.log(formatTicketAttr(resultTicketCode, operations))
+    // Print pipe-separated confirmation
+    console.log(formatTicketAttrPipe(resultTicketCode, results))
   }
   catch (error) {
     if (error instanceof ServiceError) {

@@ -9,6 +9,32 @@
 import { CRPriority, CRStatus, CRType } from '@mdt/domain-contracts/types'
 import { getCliConfig } from '../utils/cliConfig.js'
 
+/** Strip ANSI escape codes from a string */
+function stripAnsi(s: string): string {
+  return s.replace(/\x1B\[[0-9;]*m/g, '')
+}
+
+/** Pad string to target visible width (ignoring ANSI codes) */
+export function visiblePadEnd(s: string, targetWidth: number): string {
+  const visible = stripAnsi(s)
+  const pad = targetWidth - visible.length
+  if (pad <= 0) return s
+  return s + ' '.repeat(pad)
+}
+
+/**
+ * Abbreviated display labels for long values in list views.
+ * Detail view (`formatTicketView`) always uses the full value.
+ */
+const STATUS_DISPLAY_LABELS: Record<string, string> = {
+  'Partially Implemented': 'Part. Impl',
+}
+
+/** Get display label for a status value (returns abbreviated form if available) */
+export function statusDisplayLabel(status: string): string {
+  return STATUS_DISPLAY_LABELS[status] || status
+}
+
 /**
  * ANSI color codes
  */
@@ -22,6 +48,7 @@ const ANSI = {
   blue: '\x1B[34m',
   magenta: '\x1B[35m',
   cyan: '\x1B[36m',
+  lightGray: '\x1B[37m',
   gray: '\x1B[90m',
   // Bright variants
   brightRed: '\x1B[91m',
@@ -44,8 +71,14 @@ const ANSI = {
  */
 export function shouldUseColor(): boolean {
   // Check NO_COLOR environment variable (https://no-color.org/)
-  if (process.env.NO_COLOR) {
+  // NO_COLOR=0 explicitly enables color (overrides the NO_COLOR standard)
+  if (process.env.NO_COLOR && process.env.NO_COLOR !== '0') {
     return false
+  }
+
+  // Check FORCE_COLOR environment variable
+  if (process.env.FORCE_COLOR) {
+    return true
   }
 
   // Check CLI configuration
@@ -137,15 +170,55 @@ const typeColorMap: Record<string, string> = {
   [CRType.ARCHITECTURE]: ANSI.magenta,
   [CRType.FEATURE_ENHANCEMENT]: ANSI.blue,
   [CRType.BUG_FIX]: ANSI.red,
-  [CRType.TECHNICAL_DEBT]: ANSI.gray,
+  [CRType.TECHNICAL_DEBT]: ANSI.lightGray,
   [CRType.DOCUMENTATION]: ANSI.cyan,
   [CRType.RESEARCH]: ANSI.brightMagenta,
 }
 
+/** First-word → color mapping for list views (avoids full-value lookup miss) */
+const typeFirstWordColorMap: Record<string, string> = {
+  'Architecture': ANSI.magenta,
+  'Feature': ANSI.blue,
+  'Bug': ANSI.red,
+  'Technical': ANSI.lightGray,
+  'Documentation': ANSI.cyan,
+  'Research': ANSI.brightMagenta,
+}
+
 /**
  * Colorize type value (aligned with badge.css)
+ * Accepts full type or first-word abbreviation.
  */
 export function colorizeType(type: string): string {
-  const colorCode = typeColorMap[type] || ANSI.blue
+  const colorCode = typeColorMap[type] || typeFirstWordColorMap[type] || ANSI.blue
   return colorize(type, colorCode)
+}
+
+// -------------------------------------------------------------------
+// Per-element color scheme (UAT Task 8)
+// -------------------------------------------------------------------
+
+/** Ticket title: white bold */
+export function colorizeTitle(title: string): string {
+  return colorize(title, ANSI.bold)
+}
+
+/** Ticket key (e.g., MDT-143): light-blue bold */
+export function colorizeTicketKey(key: string): string {
+  return colorize(key, ANSI.bold + ANSI.brightCyan)
+}
+
+/** Project code (e.g., MDT): dark cyan bold */
+export function colorizeProjectCode(code: string): string {
+  return colorize(code, ANSI.bold + ANSI.cyan)
+}
+
+/** Project ID (e.g., markdown-ticket): gray */
+export function colorizeProjectId(id: string): string {
+  return colorize(id, ANSI.gray)
+}
+
+/** File paths: gray */
+export function colorizePath(path: string): string {
+  return colorize(path, ANSI.gray)
 }
