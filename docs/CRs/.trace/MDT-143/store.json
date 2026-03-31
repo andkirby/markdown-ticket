@@ -125,13 +125,6 @@
       ]
     },
     {
-      "id": "BR-1",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket get <key>, mdt-cli ticket <key>, mdt-cli t <key>, or mdt-cli <key> with a resolvable ticket reference, the system shall print the matching ticket title followed by labeled status, type, priority, phase, assignee, created date, modified date, and path fields.",
-      "sourceRef": "CR:3 View Ticket",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-14",
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli project current or mdt-cli project inside a detected project, the system shall display the current project code, name, description, path, and relevant configuration values.",
@@ -233,6 +226,13 @@
       "id": "BR-5",
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli project ls or mdt-cli project list, the system shall display each discovered project with its code in described color, title in white bold, description in normal color, and filesystem path in gray. The project identifier shall not appear in list output. Project detail views (project current, project get, project info) shall display the full identifier in gray.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket get <key>, mdt-cli ticket <key>, mdt-cli t <key>, or mdt-cli <key> with a resolvable ticket reference, the system shall print the matching ticket title followed by labeled status, type, priority, phase, assignee, created date, modified date, and path fields. When the ticket has a corresponding CR directory (e.g., docs/CRs/MDT-012/), the system shall list the 1st-level files and directories in that directory below the path line, excluding the main ticket .md file. Directories are shown with a trailing slash. Nested directory contents are not expanded. If no subdocuments exist, the section is omitted.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "bdd"
     }
