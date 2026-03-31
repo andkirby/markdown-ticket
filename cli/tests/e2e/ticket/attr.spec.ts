@@ -21,7 +21,7 @@ describe('Ticket Attr', () => {
     projectFactory = new ProjectFactory(testEnv)
 
     // Create a test project
-    const project = await projectFactory.createProject({
+    const project = await projectFactory.createProject('empty', {
       code: 'TEST',
       name: 'Test Project',
       description: 'Test project for CLI E2E',
@@ -52,8 +52,10 @@ describe('Ticket Attr', () => {
     })
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('Updated')
+    // Pipe format: KEY | priority: Medium → High
+    expect(result.stdout).toContain('|')
     expect(result.stdout).toContain('priority')
+    expect(result.stdout).toContain('→')
 
     // Verify the change
     const viewResult = await runCli(['ticket', 'get', ticketKey], {
@@ -69,7 +71,8 @@ describe('Ticket Attr', () => {
     })
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('Updated')
+    expect(result.stdout).toContain('|')
+    expect(result.stdout).toContain('priority')
 
     const viewResult = await runCli(['ticket', 'get', ticketKey], {
       cwd: projectDir,
@@ -84,7 +87,8 @@ describe('Ticket Attr', () => {
     })
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('Updated')
+    expect(result.stdout).toContain('|')
+    expect(result.stdout).toContain('status')
 
     // Verify status was normalized to "In Progress"
     const viewResult = await runCli(['ticket', 'get', ticketKey], {
@@ -106,9 +110,7 @@ describe('Ticket Attr', () => {
     })
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('Updated')
-
-    // Verify the related tickets were set (the command shows what was updated)
+    expect(result.stdout).toContain('|')
     expect(result.stdout).toContain('related')
   })
 
@@ -133,7 +135,7 @@ describe('Ticket Attr', () => {
     expect(dupResult.exitCode).toBe(0)
 
     // Verify the append worked
-    expect(dupResult.stdout).toContain('Updated')
+    expect(dupResult.stdout).toContain('|')
   })
 
   test('should remove relation values with -=', async () => {
@@ -150,7 +152,7 @@ describe('Ticket Attr', () => {
     expect(result.exitCode).toBe(0)
 
     // Verify the remove worked
-    expect(result.stdout).toContain('Updated')
+    expect(result.stdout).toContain('|')
   })
 
   test('should update multiple supported attributes in one command', async () => {
@@ -162,7 +164,8 @@ describe('Ticket Attr', () => {
     )
 
     expect(result.exitCode).toBe(0)
-    expect(result.stdout).toContain('Updated')
+    expect(result.stdout).toContain('|')
+    expect(result.stdout).toContain('priority')
 
     // Verify both changes
     const viewResult = await runCli(['ticket', 'get', ticketKey], {
@@ -223,11 +226,11 @@ describe('Ticket Attr', () => {
 
     expect(result.exitCode).toBe(0)
 
-    // Should have exactly one "Updated" line
-    const updatedLines = result.stdout.split('\n').filter(line =>
-      line.includes('Updated'),
+    // Pipe format: should have one line per attribute
+    const pipeLines = result.stdout.split('\n').filter(line =>
+      line.includes('|'),
     )
-    expect(updatedLines.length).toBe(1)
+    expect(pipeLines.length).toBe(1)
 
     // Should mention the change
     expect(result.stdout).toContain('phase')

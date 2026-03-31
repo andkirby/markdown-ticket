@@ -66,7 +66,7 @@ These shared APIs are the intended integration surface for `cli/`. Command modul
 | `cli/src/commands/view.ts` + `cli/src/commands/list.ts` | Ticket read/list path | Resolve project context through `ProjectService`, normalize keys, read ticket data through `TicketService`, apply positional filters with AND cross-field and comma+fuzzy within-field matching, truncate to 10 newest by default, hand off to formatter |
 | `cli/src/commands/project.ts` | Project namespace | Register `current`, `get|info`, `ls|list`, and `init`, route project reads through `ProjectService`, and route init through `ProjectManager` |
 | `cli/src/commands/create.ts` + `cli/src/commands/attr.ts` | Ticket mutation | Register `ticket create` and `ticket attr` in the commander ticket subtree, retain top-level `create` and `attr` aliases, parse `=`, `+=`, and `-=` attr tokens, capture stdin when present, and call shared ticket write APIs |
-| `cli/src/output/formatter.ts` + `cli/src/output/colors.ts` | Presentation layer | Labeled terminal output with per-element colors (title white, key light-blue, code dark cyan, id gray, path gray), relative vs absolute path rendering, TTY color policy, pipe-separated attr confirmation format |
+| `cli/src/output/formatter.ts` + `cli/src/output/colors.ts` | Presentation layer | Labeled terminal output with per-element colors (title white, key light-cyan, code dark cyan, id gray, path gray), relative vs absolute path rendering, TTY color policy, pipe-separated attr confirmation format |
 | `cli/src/output/guide.ts` | Command guide | Generate --guide output from the registered commander tree at global and per-namespace scope |
 | `cli/src/utils/cliConfig.ts` | CLI config | Read `~/.config/mdt/cli.toml`, apply defaults when absent |
 | `cli/src/utils/stdin.ts` | Input adapter | Detect piped stdin and return literal body text without interpolation |
@@ -193,7 +193,7 @@ MDT-012 Add CLI access to tickets and projects
   path: docs/CRs/MDT-012-add-cli-access.md
 ```
 
-Colors: ticket key (MDT-012) light-blue, title white, path gray.
+Colors: ticket key (MDT-012) light-cyan bold, title white bold, path gray.
 
 ### Ticket List
 
@@ -201,12 +201,12 @@ Colors: ticket key (MDT-012) light-blue, title white, path gray.
 $ mdt-cli list
 
 MDT-012 Add CLI access to tickets and projects
-Implemented | Feature Enhancement | High | Phase B (Enhancement)
-docs/CRs/MDT-012-add-cli-access.md
+  Implemented | Feature       | High     | Phase B (Enhancement)
+  docs/CRs/MDT-012-add-cli-access.md
 
 MDT-011 MCP HTTP transport
-In Progress | Feature Enhancement | Medium
-docs/CRs/MDT-011-mcp-http.md
+  In Progress | Feature       | Medium   | Phase B (Enhancement)
+  docs/CRs/MDT-011-mcp-http.md
 
 10 tickets in MDT project
 ```
@@ -225,26 +225,29 @@ Output modes: `--files` (paths only), `--info` (no path line).
 ```text
 $ mdt-cli project
 
-MDT (markdown-ticket)  Markdown Ticket Board
-  Kanban board with markdown-based tickets and MCP integration
-  ~/Projects/markdown-ticket
+MDT (markdown-ticket)
+  name         Markdown Ticket Board
+  description  Kanban board with markdown-based tickets and MCP integration
+  path         ~/Projects/markdown-ticket
 ```
 
-Colors: project code dark cyan, id gray, title white, description normal, path gray.
+Colors: project code dark cyan bold, id gray, title white bold, description normal, path gray.
 
 ### Project List
 
 ```text
 $ mdt-cli project ls
 
-MDT (markdown-ticket)  Markdown Ticket Board
+MDT Markdown Ticket Board
   Kanban board with markdown-based tickets and MCP integration
   ~/Projects/markdown-ticket
 
-API (api-gateway)  API Gateway Service
+API API Gateway Service
   Central API gateway for microservices
   ~/Projects/api-gateway
 ```
+
+Note: `project ls` omits the project ID. Use `project current` or `project get` for full details including ID.
 
 ### Attr Update
 

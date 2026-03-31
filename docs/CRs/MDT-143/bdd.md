@@ -43,7 +43,7 @@ MDT-143 introduces a terminal-first CLI surface. CLI acceptance tests run as rea
 - `project init` is expected to materialize project configuration in the current folder, not just print a template to stdout.
 - STDIN creation is a no-template path: generated frontmatter plus generated H1, followed by the literal piped body content.
 - `--guide` at global scope prints a full command manual; at per-namespace scope (e.g., `ticket --guide`) prints that namespace's commands only. Content is generated from the commander tree.
-- Per-element color scheme: ticket title white, ticket key light-blue, project code dark cyan, project ID gray, project description normal, file paths gray.
+- Per-element color scheme: ticket title white bold, ticket key light-cyan bold, project code dark cyan bold, project description normal, file paths gray.
 
 ## Execution Notes
 

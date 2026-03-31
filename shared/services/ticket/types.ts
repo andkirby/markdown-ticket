@@ -36,7 +36,14 @@ export interface AttrOperation {
 export interface ListTicketsRequest {
   projectRef: string
   filters?: TicketFilters
+  sort?: ListTicketsSort
+  limit?: number
+  offset?: number
 }
+
+export type ListTicketsSort = 'dateModified' | 'dateCreated' | 'code'
+
+export const DEFAULT_LIST_LIMIT = 10
 
 export interface GetTicketRequest {
   projectRef: string
