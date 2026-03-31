@@ -44,6 +44,7 @@ MDT-143 introduces a terminal-first CLI surface. CLI acceptance tests run as rea
 - STDIN creation is a no-template path: generated frontmatter plus generated H1, followed by the literal piped body content.
 - `--guide` at global scope prints a full command manual; at per-namespace scope (e.g., `ticket --guide`) prints that namespace's commands only. Content is generated from the commander tree.
 - Per-element color scheme: ticket title white bold, ticket key light-cyan bold, project code dark cyan bold, project description normal, file paths gray.
+- Ticket detail view shows 1st-level subdocuments from the ticket's CR directory (e.g., `docs/CRs/MDT-012/`), excluding the main ticket `.md` file. Directories are shown with trailing `/`; nested contents are not expanded. Omitted when no subdocuments exist.
 
 ## Execution Notes
 
