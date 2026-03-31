@@ -8,6 +8,7 @@ import process from 'node:process'
 
 import { Command } from 'commander'
 import { normalizeShortcuts } from './utils/args.js'
+import { generateGuide } from './output/guide.js'
 
 /**
  * Main CLI entry point
@@ -17,6 +18,30 @@ export function main(): void {
   const normalizedArgs = normalizeShortcuts(process.argv)
   process.argv = normalizedArgs
 
+  // Check for --guide before commander parse (works at global scope)
+  if (process.argv.includes('--guide')) {
+    const program = new Command()
+    program
+      .name('mdt-cli')
+      .description('CLI tool for Markdown Ticket management')
+      .version('1.0.0')
+    // Register full command tree first so guide can reflect it
+    registerCommands(program)
+    // Check scope
+    const guideIndex = process.argv.indexOf('--guide')
+    const scopeIndex = guideIndex - 1
+    const scope = scopeIndex >= 2 ? process.argv[scopeIndex] : undefined
+    if (scope === 'ticket' || scope === 'project') {
+      const subCmd = program.commands.find(c => c.name() === scope)
+      if (subCmd) {
+        console.log(generateGuide(subCmd, scope))
+        return
+      }
+    }
+    console.log(generateGuide(program))
+    return
+  }
+
   // Create commander program
   const program = new Command()
 
@@ -24,6 +49,16 @@ export function main(): void {
     .name('mdt-cli')
     .description('CLI tool for Markdown Ticket management')
     .version('1.0.0')
+
+  registerCommands(program)
+
+  program.parse()
+}
+
+/**
+ * Register all commands on the program
+ */
+function registerCommands(program: Command): void {
 
   // ====================================================================
   // TICKET NAMESPACE
@@ -52,12 +87,19 @@ export function main(): void {
   // ticket list
   ticketCmd
     .command('list')
+    .alias('ls')
     .description('List tickets')
+    .argument('[filters...]', 'Filter arguments (e.g., status=impl priority=high)')
     .option('-j, --json', 'Output as JSON')
-    .action(async (options) => {
+    .option('-a, --all', 'Show all tickets (no limit)')
+    .option('-l, --limit <n>', 'Limit number of results', parseInt)
+    .option('-o, --offset <n>', 'Skip first N results', parseInt)
+    .option('--files', 'Show file paths only')
+    .option('--info', 'Show info without file paths')
+    .action(async (filters, options) => {
       const { ticketListAction } = await import('./commands/list.js')
       try {
-        await ticketListAction(options)
+        await ticketListAction(filters, options)
       }
       catch (error) {
         console.error(error)
@@ -190,10 +232,8 @@ export function main(): void {
     })
 
   // ====================================================================
-  // PARSE AND EXECUTE
+  // End of command registration
   // ====================================================================
-
-  program.parse()
 }
 
 // Run main when executed directly

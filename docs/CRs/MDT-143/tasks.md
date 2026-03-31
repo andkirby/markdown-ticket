@@ -187,7 +187,7 @@
 
 **Structure**: `cli/src/output/formatter.ts`, `cli/src/output/colors.ts`, `cli/src/commands/attr.ts`
 
-**Scope**: Apply pipe-separated old→new attr confirmation, no-op unchanged message (exit 0), and per-element color assignments (ticket title white, ticket key light-blue, project code dark cyan, project ID gray, file paths gray)
+**Scope**: Apply pipe-separated old→new attr confirmation, no-op unchanged message (exit 0), and per-element color assignments (ticket title white bold, ticket key light-cyan bold, project code dark cyan bold, project ID gray, file paths gray)
 **Boundary**: Color policy stays in output module; command modules consume formatter only
 
 **Makes GREEN**:
@@ -197,9 +197,9 @@
 - `TEST-cli-color-scheme`
 
 **Done when**:
-- [ ] Attr confirmation uses pipe format: `Updated MDT-143 | status: In Progress → Implemented`
-- [ ] No-op attr prints unchanged message and exits 0
-- [ ] Per-element colors match spec (title white, key light-blue, code dark cyan, id gray, path gray)
+- [x] Attr confirmation uses pipe format: `Updated MDT-143 | status: In Progress → Implemented`
+- [x] No-op attr prints unchanged message and exits 0
+- [x] Per-element colors match spec (title white bold, key light-cyan bold, code dark cyan bold, id gray, path gray)
 
 ---
 
@@ -216,12 +216,12 @@
 - `TEST-cli-ticket-list-enhancements`
 
 **Done when**:
-- [ ] Default list shows 10 tickets newest-first
-- [ ] `--all` shows all, `--limit N` overrides default
-- [ ] Positional filters work: `mdt-cli list status=impl priority=high`
-- [ ] Comma-separated fuzzy within field: `status=implemented,in_progress`
-- [ ] `--files` shows file paths only, `--info` shows info without paths
-- [ ] `mdt-cli ticket ls` works as alias
+- [x] Default list shows 10 tickets newest-first
+- [x] `--all` shows all, `--limit N` overrides default
+- [x] Positional filters work: `mdt-cli list status=impl priority=high`
+- [x] Comma-separated fuzzy within field: `status=implemented,in_progress`
+- [x] `--files` shows file paths only, `--info` shows info without paths
+- [x] `mdt-cli ticket ls` works as alias
 
 ---
 
@@ -237,10 +237,10 @@
 - `TEST-cli-guide`
 
 **Done when**:
-- [ ] `mdt-cli --guide` prints full command manual
-- [ ] `mdt-cli ticket --guide` prints ticket commands only
-- [ ] `mdt-cli project --guide` prints project commands only
-- [ ] Guide reflects all registered commands and aliases
+- [x] `mdt-cli --guide` prints full command manual
+- [x] `mdt-cli ticket --guide` prints ticket commands only
+- [x] `mdt-cli project --guide` prints project commands only
+- [x] Guide reflects all registered commands and aliases
 
 ---
 
@@ -258,16 +258,16 @@
 - `TEST-cli-color-scheme`
 
 **Done when**:
-- [ ] List filter, paging, and output mode scenarios covered
-- [ ] Guide generation verified at global and per-namespace scope
-- [ ] Attr pipe format and no-op behavior asserted
-- [ ] Color scheme per element type verified
+- [x] List filter, paging, and output mode scenarios covered
+- [x] Guide generation verified at global and per-namespace scope
+- [x] Attr pipe format and no-op behavior asserted
+- [x] Color scheme per element type verified
 
 ---
 
 ## Post-Implementation
 
-- [ ] `mdt-cli` exposes the canonical `entity action` command tree plus approved shortcuts
+- [x] `mdt-cli` exposes the canonical `entity action` command tree plus approved shortcuts
 - [ ] Project reads go through `ProjectService`; project init goes through `ProjectManager`
 - [ ] Ticket reads and attr writes go through `TicketService`
 - [ ] CLI output stays formatter-owned and TTY-aware

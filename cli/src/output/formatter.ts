@@ -11,7 +11,7 @@
 import type { Ticket } from '@mdt/shared/models/Ticket.js'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
-import { shouldUseColor, colorizeStatus, colorizePriority, colorizeType, badge } from './colors.js'
+import { shouldUseColor, colorizeStatus, colorizePriority, colorizeType, colorizeTitle, colorizeTicketKey, colorizeProjectCode, colorizeProjectId, colorizePath, badge, visiblePadEnd, statusDisplayLabel } from './colors.js'
 import { getCliConfig } from '../utils/cliConfig.js'
 
 /**
@@ -36,8 +36,8 @@ export function formatTicketView(ticket: Ticket, projectPath?: string): string {
   const lines: string[] = []
   const useColor = shouldUseColor()
 
-  // Header line
-  lines.push(`${ticket.code} ${ticket.title}`)
+  // Header line with per-element colors
+  lines.push(`${useColor ? colorizeTicketKey(ticket.code) : ticket.code} ${useColor ? colorizeTitle(ticket.title) : ticket.title}`)
   lines.push('─'.repeat(60))
 
   // Metadata fields (2-column layout)
@@ -81,10 +81,10 @@ export function formatTicketView(ticket: Ticket, projectPath?: string): string {
 
   lines.push('─'.repeat(60))
 
-  // File path (relative or absolute based on config)
+  // File path (relative or absolute based on config, colored gray)
   if (ticket.filePath) {
     const displayPath = formatPath(ticket.filePath, projectPath)
-    lines.push(`  path: ${displayPath}`)
+    lines.push(`  path: ${useColor ? colorizePath(displayPath) : displayPath}`)
   }
 
   // Worktree indicator
@@ -100,13 +100,9 @@ export function formatTicketView(ticket: Ticket, projectPath?: string): string {
  *
  * Output format:
  * ```
- * MDT-143 CLI access to tickets and projects [In Progress] [Feature Enhancement] [High]  Phase B
- *   docs/CRs/MDT-143-cli-entrypoint-alternative-to-mcp.md
- *
- * MDT-074 MCP HTTP transport [Implemented] [Feature] [Medium]
- *   docs/CRs/MDT-074-mcp-http.md
- *
- * 3 tickets in MDT project
+ * MDT-012 Add CLI access to tickets and projects
+ *   Implemented | Feature | High | Phase B
+ *   docs/CRs/MDT-012-add-cli-access.md
  * ```
  *
  * @param tickets - Tickets to format
@@ -119,40 +115,36 @@ export function formatTicketList(tickets: Ticket[], projectCode: string, project
   const useColor = shouldUseColor()
 
   for (const ticket of tickets) {
-    // Header line: CODE Title [Status] [Type] [Priority] [Phase]
-    const parts = [
-      `${ticket.code}`,
-      ticket.title,
-    ]
+    // Header line: CODE Title
+    const code = useColor ? colorizeTicketKey(ticket.code) : ticket.code
+    const title = useColor ? colorizeTitle(ticket.title) : ticket.title
+    lines.push(`${code} ${title}`)
 
-    const tags: string[] = []
+    // Pipe-separated metadata line with fixed-width columns
+    const STATUS_W = 11
+    const TYPE_W = 13
+    const PRIORITY_W = 8
 
-    // Status badge
-    const statusBadge = badge(ticket.status, useColor ? colorizeStatus : undefined)
-    tags.push(statusBadge)
-
-    // Type badge (first word of type)
+    const statusPart = visiblePadEnd(useColor ? colorizeStatus(statusDisplayLabel(ticket.status)) : statusDisplayLabel(ticket.status), STATUS_W)
     const typeFirstWord = ticket.type.split(' ')[0] ?? ticket.type
-    const typeBadge = badge(typeFirstWord, useColor ? colorizeType : undefined)
-    tags.push(typeBadge)
+    const typePart = visiblePadEnd(useColor ? colorizeType(typeFirstWord) : typeFirstWord, TYPE_W)
+    const metaParts = [statusPart, typePart]
 
-    // Priority badge (if present)
     if (ticket.priority) {
-      const priorityBadge = badge(ticket.priority, useColor ? colorizePriority : undefined)
-      tags.push(priorityBadge)
+      const priorityPart = visiblePadEnd(useColor ? colorizePriority(ticket.priority) : ticket.priority, PRIORITY_W)
+      metaParts.push(priorityPart)
     }
 
-    // Phase badge (if present)
     if (ticket.phaseEpic) {
-      tags.push(badge(ticket.phaseEpic))
+      metaParts.push(ticket.phaseEpic)
     }
 
-    lines.push(`${parts.join(' ')} ${tags.join(' ')}`)
+    lines.push(`  ${metaParts.join(' | ')}`)
 
-    // Path line
+    // Path line (colored gray)
     if (ticket.filePath) {
       const displayPath = formatPath(ticket.filePath, projectPath)
-      lines.push(`  ${displayPath}`)
+      lines.push(`  ${useColor ? colorizePath(displayPath) : displayPath}`)
     }
 
     // Worktree indicator
@@ -187,9 +179,12 @@ export function formatTicketList(tickets: Ticket[], projectCode: string, project
  */
 export function formatProjectView(project: Project): string {
   const lines: string[] = []
+  const useColor = shouldUseColor()
 
-  // Header line: CODE (identifier)
-  lines.push(`${project.project.code} (${project.id})`)
+  // Header line: CODE (identifier) with per-element colors
+  const code = useColor ? colorizeProjectCode(project.project.code) : project.project.code
+  const id = useColor ? colorizeProjectId(project.id) : project.id
+  lines.push(`${code} (${id})`)
 
   // Metadata fields (2-column layout where possible)
   const fields = [
@@ -204,8 +199,9 @@ export function formatProjectView(project: Project): string {
     }
   }
 
-  // Path and configuration
-  lines.push(`  ${'path'.padEnd(12)} ${project.project.path}`)
+  // Path and configuration (colored gray)
+  const projectPath = useColor ? colorizePath(project.project.path) : project.project.path
+  lines.push(`  ${'path'.padEnd(12)} ${projectPath}`)
   lines.push(`  ${'ticketsPath'.padEnd(12)} ${project.project.ticketsPath}`)
   lines.push(`  ${'config'.padEnd(12)} ${project.project.configFile || '(global-only)'}`)
 
@@ -217,11 +213,11 @@ export function formatProjectView(project: Project): string {
  *
  * Output format:
  * ```
- * MDT (markdown-ticket)  Markdown Ticket Board
+ * MDT | markdown-ticket | Markdown Ticket Board
  *   Kanban board with markdown-based tickets and MCP integration
  *   /Users/kirby/home/markdown-ticket
  *
- * API (api-server)  API Server
+ * API | api-server | API Server
  *   /Users/kirby/home/api-server
  *
  * 2 projects
@@ -232,18 +228,22 @@ export function formatProjectView(project: Project): string {
  */
 export function formatProjectList(projects: Project[]): string {
   const lines: string[] = []
+  const useColor = shouldUseColor()
 
   for (const project of projects) {
-    // Header line: CODE (identifier)  Name
-    lines.push(`${project.project.code} (${project.id})  ${project.project.name}`)
+    // Header line: CODE | Name
+    const code = useColor ? colorizeProjectCode(project.project.code) : project.project.code
+    const name = useColor ? colorizeTitle(project.project.name) : project.project.name
+    lines.push(`${code} ${name}`)
 
     // Description (if present)
     if (project.project.description) {
       lines.push(`  ${project.project.description}`)
     }
 
-    // Path
-    lines.push(`  ${project.project.path}`)
+    // Path (colored gray)
+    const projectPath = useColor ? colorizePath(project.project.path) : project.project.path
+    lines.push(`  ${projectPath}`)
 
     // Blank line between projects
     lines.push('')
@@ -265,16 +265,73 @@ export function formatProjectList(projects: Project[]): string {
  */
 export function formatTicketCreate(ticketKey: string, ticketPath: string, projectPath?: string): string {
   const lines: string[] = []
+  const useColor = shouldUseColor()
 
   const displayPath = formatPath(ticketPath, projectPath)
-  lines.push(`Created ${ticketKey}`)
-  lines.push(`  ${displayPath}`)
+  const coloredKey = useColor ? colorizeTicketKey(ticketKey) : ticketKey
+  lines.push(`Created ${coloredKey}`)
+  lines.push(`  ${useColor ? colorizePath(displayPath) : displayPath}`)
 
   return lines.join('\n')
 }
 
 /**
- * Format ticket attribute update confirmation
+ * Result of a single attribute update operation
+ */
+export interface AttrUpdateResult {
+  field: string
+  op: AttrOperation['op']
+  oldValue: string
+  newValue: string
+}
+
+/**
+ * Reverse field mapping for CLI display
+ */
+const REVERSE_FIELD_MAPPING: Record<string, string> = {
+  priority: 'priority',
+  phaseEpic: 'phase',
+  assignee: 'assignee',
+  relatedTickets: 'related',
+  dependsOn: 'depends',
+  blocks: 'blocks',
+  implementationDate: 'impl-date',
+  implementationNotes: 'impl-notes',
+  status: 'status',
+}
+
+/**
+ * Format ticket attribute update confirmation (pipe-separated format)
+ *
+ * Format: `Updated MDT-143 | status: In Progress → Implemented`
+ * No-op:  `MDT-143 | status: unchanged (Implemented)`
+ *
+ * @param ticketKey - Ticket key
+ * @param results - Array of update results with old/new values
+ * @returns Formatted attribute update message
+ */
+export function formatTicketAttrPipe(ticketKey: string, results: AttrUpdateResult[]): string {
+  const useColor = shouldUseColor()
+  const coloredKey = useColor ? colorizeTicketKey(ticketKey) : ticketKey
+  const lines: string[] = []
+
+  for (const result of results) {
+    const cliField = REVERSE_FIELD_MAPPING[result.field] || result.field
+    const isNoop = result.oldValue === result.newValue
+
+    if (isNoop) {
+      lines.push(`${coloredKey} | ${cliField}: unchanged (${result.newValue})`)
+    }
+    else {
+      lines.push(`${coloredKey} | ${cliField}: ${result.oldValue} → ${result.newValue}`)
+    }
+  }
+
+  return lines.join('\n')
+}
+
+/**
+ * Format ticket attribute update confirmation (legacy format)
  *
  * @param ticketKey - Ticket key
  * @param operations - Operations applied
@@ -284,18 +341,6 @@ export function formatTicketAttr(ticketKey: string, operations: AttrOperation[])
   const lines: string[] = []
 
   lines.push(`Updated ${ticketKey}:`)
-
-  // Reverse field mapping for CLI display
-  const REVERSE_FIELD_MAPPING: Record<string, string> = {
-    priority: 'priority',
-    phaseEpic: 'phase',
-    assignee: 'assignee',
-    relatedTickets: 'related',
-    dependsOn: 'depends',
-    blocks: 'blocks',
-    implementationDate: 'impl-date',
-    implementationNotes: 'impl-notes',
-  }
 
   for (const operation of operations) {
     const cliField = REVERSE_FIELD_MAPPING[operation.field] || operation.field

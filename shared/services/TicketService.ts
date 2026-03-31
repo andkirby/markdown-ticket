@@ -33,6 +33,15 @@ import {
 import { DEFAULTS } from '../utils/constants.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
+
+/**
+ * Case-insensitive substring match for fuzzy filtering.
+ * An empty pattern matches everything.
+ */
+function fuzzyMatch(haystack: string, needle: string): boolean {
+  if (!needle) return true
+  return haystack.toLowerCase().includes(needle.toLowerCase())
+}
 import { ServiceError } from './ServiceError.js'
 import { TemplateService } from './TemplateService.js'
 import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
@@ -67,9 +76,20 @@ export class TicketService {
 
   async listTickets(request: ListTicketsRequest): Promise<ReadResult<Ticket[]>> {
     const project = await this.requireProject(request.projectRef)
-    return {
-      data: await this.listCRs(project, request.filters),
+    let tickets = await this.listCRs(project, request.filters)
+
+    // Apply sorting (default: dateModified newest-first)
+    const sortField = request.sort || 'dateModified'
+    tickets = this.sortTickets(tickets, sortField)
+
+    // Apply pagination
+    const offset = request.offset ?? 0
+    const limit = request.limit
+    if (limit !== undefined || offset > 0) {
+      tickets = tickets.slice(offset, limit !== undefined ? offset + limit : undefined)
     }
+
+    return { data: tickets }
   }
 
   async getTicket(request: GetTicketRequest): Promise<TicketReadResult> {
@@ -589,27 +609,44 @@ export class TicketService {
   }
 
   /**
-   * Filter tickets based on criteria
+   * Filter tickets based on criteria with fuzzy matching support
+   *
+   * For each filter field:
+   * - Multiple values are OR'ed (match any)
+   * - Each value is matched as a case-insensitive substring (fuzzy)
+   * - Empty/null values on the ticket are treated as non-matching
    */
   private matchesFilters(ticket: Ticket, filters?: TicketFilters): boolean {
     if (!filters)
       return true
 
     if (filters.status) {
-      const statuses = Array.isArray(filters.status) ? filters.status : [filters.status]
-      if (!statuses.includes(ticket.status))
+      const values = Array.isArray(filters.status) ? filters.status : [filters.status]
+      if (!values.some(v => fuzzyMatch(ticket.status, v)))
         return false
     }
 
     if (filters.type) {
-      const types = Array.isArray(filters.type) ? filters.type : [filters.type]
-      if (!types.includes(ticket.type))
+      const values = Array.isArray(filters.type) ? filters.type : [filters.type]
+      if (!values.some(v => fuzzyMatch(ticket.type, v)))
         return false
     }
 
     if (filters.priority) {
-      const priorities = Array.isArray(filters.priority) ? filters.priority : [filters.priority]
-      if (!priorities.includes(ticket.priority))
+      const values = Array.isArray(filters.priority) ? filters.priority : [filters.priority]
+      if (!values.some(v => fuzzyMatch(ticket.priority, v)))
+        return false
+    }
+
+    if (filters.assignee) {
+      const values = Array.isArray(filters.assignee) ? filters.assignee : [filters.assignee]
+      if (!values.some(v => fuzzyMatch(ticket.assignee || '', v)))
+        return false
+    }
+
+    if (filters.phaseEpic) {
+      const values = Array.isArray(filters.phaseEpic) ? filters.phaseEpic : [filters.phaseEpic]
+      if (!values.some(v => fuzzyMatch(ticket.phaseEpic || '', v)))
         return false
     }
 
@@ -621,6 +658,31 @@ export class TicketService {
     }
 
     return true
+  }
+
+  /**
+   * Sort tickets by the given field (descending by default for dates, ascending for code)
+   */
+  private sortTickets(tickets: Ticket[], sortField: string): Ticket[] {
+    return [...tickets].sort((a, b) => {
+      switch (sortField) {
+        case 'dateModified': {
+          const aDate = a.lastModified?.getTime() ?? 0
+          const bDate = b.lastModified?.getTime() ?? 0
+          return bDate - aDate // newest first
+        }
+        case 'dateCreated': {
+          const aDate = a.dateCreated?.getTime() ?? 0
+          const bDate = b.dateCreated?.getTime() ?? 0
+          return bDate - aDate // newest first
+        }
+        case 'code': {
+          return a.code.localeCompare(b.code)
+        }
+        default:
+          return 0
+      }
+    })
   }
 
   /**

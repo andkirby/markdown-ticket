@@ -47,7 +47,7 @@ This CR introduces a standalone `mdt-cli` entrypoint for reading and mutating CR
 - BR-4 expanded: default 10-ticket limit (newest-first), --all/--limit flags, --files/--info output modes, ticket ls alias, positional filter arguments
 - BR-5 expanded: per-element output format with color spec (code described, id gray, title white, description normal, path gray)
 - BR-10 expanded: pipe-separated old→new confirmation format; no-op exits 0 with unchanged message
-- BR-11 expanded: per-element color assignments (ticket title white, ticket key light-blue, project code dark cyan, project ID gray, file paths gray)
+- BR-11 expanded: per-element color assignments (ticket title white, ticket key light-cyan, project code dark cyan, project ID gray, file paths gray)
 - BR-18 added: positional list filter behavior (AND cross-field, comma+fuzzy within field) on status, priority, type, assignee, epic
 - BR-19 added: --guide flag at global and per-namespace scope, generated from commander tree
 

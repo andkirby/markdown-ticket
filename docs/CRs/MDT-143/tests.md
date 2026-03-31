@@ -125,7 +125,7 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 
 | Test Name | Covers |
 |-----------|--------|
-| should render ticket key in light-blue | BR-11 |
+| should render ticket key in light-cyan | BR-11 |
 | should render ticket title in white | BR-11 |
 | should render project code in dark cyan | BR-11 |
 | should render project ID in gray parentheses | BR-11 |
