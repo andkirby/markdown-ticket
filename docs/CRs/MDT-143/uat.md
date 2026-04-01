@@ -69,7 +69,6 @@ MDT-012 Add CLI access to tickets and projects
 
 - Directory derivation from `ticket.filePath` — must handle both flat tickets (no directory) and directory-organized tickets
 - File system reads — must be non-blocking and handle missing directories gracefully
-- Trace files (`*.trace.md`) — should they be excluded? (decision: no, show all 1st-level entries)
 
 ## Open Decisions
 
