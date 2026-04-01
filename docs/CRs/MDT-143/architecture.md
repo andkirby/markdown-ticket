@@ -190,14 +190,14 @@ MDT-012 Add CLI access to tickets and projects
   created:   2026-03-15
   modified:  2026-03-20
 ─────────────────────────────────────────────
-  path: docs/CRs/MDT-012-add-cli-access.md
+  docs/CRs/MDT-012-add-cli-access.md
   docs/CRs/MDT-012/
     bdd.md
     sub-folder/
     anotherfile.md
 ```
 
-Colors: ticket key (MDT-012) light-cyan bold, title white bold, path gray. Subdocument entries are plain names; directories have trailing `/`. If no subdocuments exist, the directory section is omitted.
+Colors: ticket key (MDT-012) light-cyan bold, title white bold, all file paths gray. Directories have trailing `/`. If no subdocuments exist, the directory section is omitted.
 
 ### Ticket List
 
