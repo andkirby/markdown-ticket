@@ -867,6 +867,15 @@
       ],
       "file": "cli/tests/e2e/output/color-scheme.spec.ts",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-ticket-subdocuments",
+      "kind": "e2e",
+      "title": "Ticket detail view shows 1st-level subdocuments from CR directory",
+      "covers": [
+        "BR-1"
+      ],
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "tasks": [

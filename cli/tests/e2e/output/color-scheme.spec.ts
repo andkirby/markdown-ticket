@@ -45,7 +45,7 @@ describe('CLI Color Scheme', () => {
     await testEnv.cleanup()
   })
 
-  test('should render ticket key in light-blue when colors enabled', async () => {
+  test('should render ticket key in light-cyan when colors enabled', async () => {
     // Force colors by removing NO_COLOR and setting a pseudo-TTY indicator
     const result = await runCli(['ticket', 'get', ticketKey], {
       cwd: projectDir,
@@ -53,8 +53,8 @@ describe('CLI Color Scheme', () => {
     })
 
     expect(result.exitCode).toBe(0)
-    // Light-blue is \x1B[94m
-    expect(result.stdout).toContain('\x1B[94m')
+    // Light-cyan is \x1B[96m
+    expect(result.stdout).toContain('\x1B[96m')
     expect(result.stdout).toContain(ticketKey)
   })
 
@@ -100,11 +100,12 @@ describe('CLI Color Scheme', () => {
     })
 
     expect(result.exitCode).toBe(0)
-    // Path line should be gray
-    const pathLines = result.stdout.split('\n').filter(line => line.includes('path:'))
-    expect(pathLines.length).toBeGreaterThan(0)
-    // The path text after "path: " should contain gray ANSI
-    const pathLine = pathLines[0]!
+    // Path line (after second separator) should contain gray ANSI
+    const lines = result.stdout.split('\n')
+    const separatorCount = lines.reduce((acc, line) => acc + (line.startsWith('─') ? 1 : 0), 0)
+    const afterSecondSep = lines.slice(lines.findIndex(l => l.startsWith('─'), lines.findIndex(l => l.startsWith('─')) + 1) + 1)
+    const pathLine = afterSecondSep.find(line => line.trim().length > 0 && !line.includes('status') && !line.includes('priority') && !line.includes('type') && !line.includes('phase') && !line.includes('created') && !line.includes('modified') && !line.startsWith('─'))
+    expect(pathLine).toBeDefined()
     expect(pathLine).toContain('\x1B[90m')
   })
 

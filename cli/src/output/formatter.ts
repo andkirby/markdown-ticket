@@ -11,6 +11,8 @@
 import type { Ticket } from '@mdt/shared/models/Ticket.js'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
+import { readdirSync, statSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import { shouldUseColor, colorizeStatus, colorizePriority, colorizeType, colorizeTitle, colorizeTicketKey, colorizeProjectCode, colorizeProjectId, colorizePath, badge, visiblePadEnd, statusDisplayLabel } from './colors.js'
 import { getCliConfig } from '../utils/cliConfig.js'
 
@@ -26,6 +28,10 @@ import { getCliConfig } from '../utils/cliConfig.js'
  *   created    2026-03-15            modified   2026-03-20
  * ────────────────────────────────────────────────────────────
  *   path: docs/CRs/MDT-143-cli-entrypoint-alternative-to-mcp.md
+ *   docs/CRs/MDT-143/
+ *     bdd.md
+ *     sub-folder/
+ *     anotherfile.md
  * ```
  *
  * @param ticket - Ticket to format
@@ -84,12 +90,23 @@ export function formatTicketView(ticket: Ticket, projectPath?: string): string {
   // File path (relative or absolute based on config, colored gray)
   if (ticket.filePath) {
     const displayPath = formatPath(ticket.filePath, projectPath)
-    lines.push(`  path: ${useColor ? colorizePath(displayPath) : displayPath}`)
+    lines.push(`  ${useColor ? colorizePath(displayPath) : displayPath}`)
   }
 
   // Worktree indicator
   if (ticket.inWorktree && ticket.worktreePath) {
     lines.push(`  (in worktree: ${ticket.worktreePath})`)
+  }
+
+  // Subdocument listing (1st-level contents of ticket CR directory)
+  const subdocs = listSubdocuments(ticket)
+  if (subdocs) {
+    const crDir = resolve(dirname(ticket.filePath), ticket.code)
+    const displayDir = formatPath(crDir, projectPath)
+    lines.push(`  ${useColor ? colorizePath(`${displayDir}/`) : `${displayDir}/`}`)
+    for (const entry of subdocs) {
+      lines.push(`    ${useColor ? colorizePath(entry) : entry}`)
+    }
   }
 
   return lines.join('\n')
@@ -390,4 +407,73 @@ function formatPath(filePath: string, projectPath?: string): string {
 
   // If path doesn't start with project path, return as-is
   return filePath
+}
+
+/**
+ * List 1st-level entries in a ticket's CR directory.
+ *
+ * Derives the CR directory from the ticket code and the ticket file path parent.
+ * The CR directory is expected at `{ticketsPath}/{ticket.code}/`.
+ * Returns sorted entries (files as-is, directories with trailing /),
+ * or null if no CR directory exists or it's empty.
+ *
+ * @param ticket - Ticket with code and filePath
+ * @returns Sorted array of entry names, or null if no subdocuments
+ */
+function listSubdocuments(ticket: Ticket): string[] | null {
+  // CR directory is a sibling of the ticket file: dirname(filePath)/ticket.code
+  const crDir = resolve(dirname(ticket.filePath), ticket.code)
+
+  // Check if the CR directory exists and is actually a directory
+  let stat: ReturnType<typeof statSync>
+  try {
+    stat = statSync(crDir)
+  }
+  catch {
+    return null
+  }
+
+  if (!stat.isDirectory()) {
+    return null
+  }
+
+  // Read 1st-level entries
+  let entries: string[]
+  try {
+    entries = readdirSync(crDir)
+  }
+  catch {
+    return null
+  }
+
+  if (entries.length === 0) {
+    return null
+  }
+
+  // Sort: directories first, then files, alphabetically within each group
+  const sorted = entries.sort((a, b) => {
+    const aDir = isDirectorySafe(crDir, a)
+    const bDir = isDirectorySafe(crDir, b)
+    if (aDir && !bDir) return -1
+    if (!aDir && bDir) return 1
+    return a.localeCompare(b)
+  })
+
+  // Append trailing / for directories
+  return sorted.map(entry => {
+    if (isDirectorySafe(crDir, entry)) {
+      return `${entry}/`
+    }
+    return entry
+  })
+}
+
+/** Safely check if an entry is a directory */
+function isDirectorySafe(parentDir: string, entry: string): boolean {
+  try {
+    return statSync(resolve(parentDir, entry)).isDirectory()
+  }
+  catch {
+    return false
+  }
 }
