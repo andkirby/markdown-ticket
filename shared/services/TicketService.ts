@@ -33,18 +33,19 @@ import {
 import { DEFAULTS } from '../utils/constants.js'
 import { CRService as SharedCRService } from './CRService.js'
 import { ProjectService } from './ProjectService.js'
+import { ServiceError } from './ServiceError.js'
+import { TemplateService } from './TemplateService.js'
+import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
 
 /**
  * Case-insensitive substring match for fuzzy filtering.
  * An empty pattern matches everything.
  */
 function fuzzyMatch(haystack: string, needle: string): boolean {
-  if (!needle) return true
+  if (!needle)
+    return true
   return haystack.toLowerCase().includes(needle.toLowerCase())
 }
-import { ServiceError } from './ServiceError.js'
-import { TemplateService } from './TemplateService.js'
-import { TicketLocationResolver } from './ticket/TicketLocationResolver.js'
 
 const RELATION_FIELDS = ['relatedTickets', 'dependsOn', 'blocks'] as const
 

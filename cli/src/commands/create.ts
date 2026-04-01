@@ -47,7 +47,7 @@ function parseCreateTokens(tokens: string[]): ParsedTokens {
     const lowerToken = token.toLowerCase()
 
     // Check for combined type/priority token (e.g. "feature/p2", "bug/high")
-    if (lowerToken.includes('/') && !token.startsWith('"') && !token.startsWith("'")) {
+    if (lowerToken.includes('/') && !token.startsWith('"') && !token.startsWith('\'')) {
       const parts = lowerToken.split('/')
       let matchedPart = false
       for (const part of parts) {
