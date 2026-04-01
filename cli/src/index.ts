@@ -7,8 +7,8 @@ import process from 'node:process'
  */
 
 import { Command } from 'commander'
-import { normalizeShortcuts } from './utils/args.js'
 import { generateGuide } from './output/guide.js'
+import { normalizeShortcuts } from './utils/args.js'
 
 /**
  * Main CLI entry point
@@ -59,7 +59,6 @@ export function main(): void {
  * Register all commands on the program
  */
 function registerCommands(program: Command): void {
-
   // ====================================================================
   // TICKET NAMESPACE
   // ====================================================================
@@ -92,8 +91,8 @@ function registerCommands(program: Command): void {
     .argument('[filters...]', 'Filter arguments (e.g., status=impl priority=high)')
     .option('-j, --json', 'Output as JSON')
     .option('-a, --all', 'Show all tickets (no limit)')
-    .option('-l, --limit <n>', 'Limit number of results', parseInt)
-    .option('-o, --offset <n>', 'Skip first N results', parseInt)
+    .option('-l, --limit <n>', 'Limit number of results', Number.parseInt)
+    .option('-o, --offset <n>', 'Skip first N results', Number.parseInt)
     .option('--files', 'Show file paths only')
     .option('--info', 'Show info without file paths')
     .action(async (filters, options) => {
