@@ -6,12 +6,13 @@ import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
  * Parses CLI attr tokens into shared AttrOperation requests and invokes shared ticket attr updates.
  */
 
+import type { AttrUpdateResult } from '../output/formatter.js'
 import process from 'node:process'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
-import { formatTicketAttrPipe, type AttrUpdateResult } from '../output/formatter.js'
+import { formatTicketAttrPipe } from '../output/formatter.js'
 import { PRIORITY_TOKENS, STATUS_ALIASES } from '../utils/aliases.js'
 
 /**
@@ -32,10 +33,6 @@ const FIELD_MAPPING: Record<string, string> = {
 /**
  * Reverse field mapping for error messages
  */
-const _REVERSE_FIELD_MAPPING = Object.fromEntries(
-  Object.entries(FIELD_MAPPING).map(([cli, shared]) => [shared, cli]),
-)
-
 /**
  * Scalar fields (only support = operator)
  */
@@ -299,25 +296,17 @@ export async function ticketAttrAction(key: string, attrTokens: string[]): Promi
     }
 
     const results: AttrUpdateResult[] = []
-    const REVERSE_FIELD_MAPPING: Record<string, string> = {
-      status: 'status',
-      priority: 'priority',
-      phaseEpic: 'phase',
-      assignee: 'assignee',
-      relatedTickets: 'related',
-      dependsOn: 'depends',
-      blocks: 'blocks',
-      implementationDate: 'impl-date',
-      implementationNotes: 'impl-notes',
-    }
 
     // Helper to get current field value from ticket
     const getFieldValue = (field: string): string => {
-      if (!currentTicket) return '(none)'
+      if (!currentTicket)
+        return '(none)'
       const ticket = currentTicket as unknown as Record<string, unknown>
       const val = ticket[field]
-      if (val == null) return '(none)'
-      if (Array.isArray(val)) return val.join(', ')
+      if (val == null)
+        return '(none)'
+      if (Array.isArray(val))
+        return val.join(', ')
       return String(val)
     }
 

@@ -7,12 +7,13 @@
  */
 
 import type { Ticket } from '@mdt/shared/models/Ticket.js'
+import type { ListTicketsSort } from '@mdt/shared/services/ticket/types.js'
 import process from 'node:process'
-import { DEFAULT_LIST_LIMIT, type ListTicketsSort } from '@mdt/shared/services/ticket/types.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
+import { DEFAULT_LIST_LIMIT } from '@mdt/shared/services/ticket/types.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
+import { colorizePriority, colorizeStatus, colorizeTicketKey, colorizeTitle, colorizeType, shouldUseColor, statusDisplayLabel, visiblePadEnd } from '../output/colors.js'
 import { formatTicketList as formatTicketListFormatter } from '../output/formatter.js'
-import { badge, colorizePriority, colorizeStatus, colorizeTicketKey, colorizeTitle, colorizeType, shouldUseColor, visiblePadEnd, statusDisplayLabel } from '../output/colors.js'
 import { PRIORITY_TOKENS, STATUS_ALIASES, TYPE_TOKENS } from '../utils/aliases.js'
 
 /**
@@ -31,12 +32,12 @@ export interface ListCommandOptions {
  * Filterable field names and their mapping to TicketFilters keys
  */
 const FILTER_FIELD_MAPPING: Record<string, string> = {
-  'status': 'status',
-  'priority': 'priority',
-  'type': 'type',
-  'assignee': 'assignee',
-  'phase': 'phaseEpic',
-  'epic': 'phaseEpic',
+  status: 'status',
+  priority: 'priority',
+  type: 'type',
+  assignee: 'assignee',
+  phase: 'phaseEpic',
+  epic: 'phaseEpic',
 }
 
 /**
@@ -52,34 +53,37 @@ function parseFilters(filterArgs: string[]): Record<string, string | string[]> {
   const filters: Record<string, string | string[]> = {}
 
   for (const arg of filterArgs) {
-    if (!arg.includes('=')) continue
+    if (!arg.includes('='))
+      continue
 
     const eqIndex = arg.indexOf('=')
     const key = arg.slice(0, eqIndex).toLowerCase().trim()
     const value = arg.slice(eqIndex + 1).trim()
 
-    if (!key || !value) continue
+    if (!key || !value)
+      continue
 
     const filterField = FILTER_FIELD_MAPPING[key]
-    if (!filterField) continue
+    if (!filterField)
+      continue
 
     // Normalize value based on field type
     if (filterField === 'status') {
-      const values = value.split(',').map(v => {
+      const values = value.split(',').map((v) => {
         const normalized = v.trim().toLowerCase().replace(/[\s-]+/g, '_')
         return STATUS_ALIASES[normalized] || v.trim()
       })
       filters[filterField] = values
     }
     else if (filterField === 'priority') {
-      const values = value.split(',').map(v => {
+      const values = value.split(',').map((v) => {
         const normalized = v.trim().toLowerCase()
         return PRIORITY_TOKENS[normalized] || v.trim()
       })
       filters[filterField] = values
     }
     else if (filterField === 'type') {
-      const values = value.split(',').map(v => {
+      const values = value.split(',').map((v) => {
         const normalized = v.trim().toLowerCase()
         return TYPE_TOKENS[normalized] || v.trim()
       })
@@ -151,7 +155,8 @@ function formatTicketListInfo(tickets: Ticket[], projectCode: string, _projectPa
  * Make a file path relative to project root
  */
 function formatRelativePath(filePath: string, projectPath?: string): string {
-  if (!projectPath) return filePath
+  if (!projectPath)
+    return filePath
   if (filePath.startsWith(projectPath)) {
     const relative = filePath.slice(projectPath.length)
     return relative.startsWith('/') ? relative.slice(1) : relative

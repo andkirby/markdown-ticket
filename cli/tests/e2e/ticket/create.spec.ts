@@ -150,7 +150,7 @@ describe('Ticket Create', () => {
     expect(match).toBeTruthy()
 
     if (match) {
-      const ticketKey = match[0]
+      const _ticketKey = match[0]
       // Find the actual file path from stdout
       const pathMatch = result.stdout.match(new RegExp(`(docs\\/CRs\\/${projectCode}-\\d+[^\\s]*)`))
       expect(pathMatch).toBeTruthy()
