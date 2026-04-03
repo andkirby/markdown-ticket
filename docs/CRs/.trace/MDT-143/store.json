@@ -235,6 +235,34 @@
       "text": "WHEN operator invokes mdt-cli ticket get <key>, mdt-cli ticket <key>, mdt-cli t <key>, or mdt-cli <key> with a resolvable ticket reference, the system shall print the matching ticket title followed by labeled status, type, priority, phase, assignee, created date, modified date, and path fields. When the ticket has a corresponding CR directory (e.g., docs/CRs/MDT-012/), the system shall list the 1st-level files and directories in that directory below the path line, excluding the main ticket .md file. Directories are shown with a trailing slash. Nested directory contents are not expanded. If no subdocuments exist, the section is omitted.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-20",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket delete <key> or mdt-cli delete <key>, the system shall resolve the ticket, prompt for confirmation on an interactive terminal (showing key and title), delete the ticket file on confirmation, delete the ticket CR directory if it is empty after file removal, and print the deleted ticket key and relative path.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-21",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket delete <key> --force or mdt-cli delete <key> --force, or when standard input is not a TTY, the system shall skip the confirmation prompt and delete the ticket immediately.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF operator invokes mdt-cli ticket delete <key> and the ticket does not exist, THEN the system shall print 'Ticket <key> not found' and exit with code 1.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "IF operator invokes mdt-cli ticket delete on an interactive terminal without --force and declines the confirmation prompt, THEN the system shall print 'Cancelled' and exit with code 0 without deleting any file.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -400,6 +428,39 @@
       "when": "the system collects all registered commands from the commander tree",
       "then": "a formatted command manual is printed covering all commands, aliases, and usage examples for the requested scope without requiring manual editing",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "delete_ticket_interactive",
+      "title": "Delete a ticket via interactive confirmation",
+      "covers": [
+        "BR-20"
+      ],
+      "given": "a ticket MDT-007 exists in the current project",
+      "when": "operator runs mdt-cli ticket delete MDT-007 and confirms the prompt",
+      "then": "the ticket file is deleted, empty CR directory is removed, and 'Deleted MDT-007 <path>' is printed",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "delete_ticket_force",
+      "title": "Delete a ticket with --force skipping confirmation",
+      "covers": [
+        "BR-21"
+      ],
+      "given": "a ticket MDT-008 exists in the current project",
+      "when": "operator runs mdt-cli delete MDT-008 --force",
+      "then": "the ticket is deleted without a prompt and 'Deleted MDT-008 <path>' is printed",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "delete_ticket_non_tty",
+      "title": "Delete a ticket when stdin is piped (non-TTY)",
+      "covers": [
+        "BR-21"
+      ],
+      "given": "a ticket MDT-009 exists and stdin is not a TTY",
+      "when": "operator pipes input to mdt-cli ticket delete MDT-009",
+      "then": "the ticket is deleted without a prompt",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "obligations": [
@@ -444,29 +505,6 @@
       "sourceRef": "architecture:Build vs Use Decisions"
     },
     {
-      "id": "OBL-cli-verification-harness",
-      "title": "Executable acceptance for the CLI shall run through repo-native CLI E2E tests in the CLI package using @mdt/shared/test-lib, cover both canonical commander commands and supported shortcut forms, and avoid introducing bats or browser-only Playwright as the primary harness.",
-      "derivedFrom": [
-        "BR-1",
-        "BR-4",
-        "BR-5",
-        "BR-14",
-        "BR-15",
-        "BR-16",
-        "BR-17",
-        "C5",
-        "C6"
-      ],
-      "artifactIds": [
-        "ART-cli-index",
-        "ART-cli-args",
-        "ART-cli-package-json",
-        "ART-cli-integration-test",
-        "ART-shared-test-lib"
-      ],
-      "sourceRef": "architecture:Runtime and Test Separation"
-    },
-    {
       "id": "OBL-detector-extraction",
       "title": "CLI shorthand ticket and project resolution shall consume the shared root-up project detection rule through ProjectService rather than a private detector copy.",
       "derivedFrom": [
@@ -500,30 +538,6 @@
         "ART-cli-args",
         "ART-shared-project-service",
         "ART-shared-ticket-service"
-      ],
-      "sourceRef": "architecture:Module Boundaries"
-    },
-    {
-      "id": "OBL-ticket-mutation",
-      "title": "Ticket create and attr shall be registered under the commander ticket subtree with top-level create and attr aliases, while attr parsing translates =, +=, and -= tokens into the shared AttrOperation model, routes writes through TicketService, and isolates STDIN body capture from command dispatch.",
-      "derivedFrom": [
-        "BR-6",
-        "BR-7",
-        "BR-8",
-        "BR-9",
-        "BR-10",
-        "C2",
-        "C5",
-        "Edge-2"
-      ],
-      "artifactIds": [
-        "ART-cli-create",
-        "ART-cli-attr",
-        "ART-cli-args",
-        "ART-cli-stdin",
-        "ART-shared-ticket-service",
-        "ART-shared-ticket-types",
-        "ART-cli-index"
       ],
       "sourceRef": "architecture:Module Boundaries"
     },
@@ -585,6 +599,59 @@
       "artifactIds": [
         "ART-domain-ticket-filters",
         "ART-shared-ticket-service"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "OBL-ticket-mutation",
+      "title": "Ticket create, attr, and delete shall be registered under the commander ticket subtree with top-level aliases. Create parses tokens and stdin; attr translates =, +=, -= into shared AttrOperation; delete resolves the ticket, prompts on TTY unless --force, and delegates file removal to TicketService.deleteCR. Empty CR directories are cleaned up after deletion.",
+      "derivedFrom": [
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-10",
+        "BR-20",
+        "BR-21",
+        "C2",
+        "C5",
+        "Edge-2",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-cli-create",
+        "ART-cli-attr",
+        "ART-cli-delete",
+        "ART-cli-args",
+        "ART-cli-stdin",
+        "ART-shared-ticket-service",
+        "ART-shared-ticket-types",
+        "ART-cli-index"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "OBL-cli-verification-harness",
+      "title": "Executable acceptance for the CLI shall run through repo-native CLI E2E tests and unit tests in the CLI package using @mdt/shared/test-lib, cover both canonical commander commands and supported shortcut forms, and avoid introducing bats or browser-only Playwright as the primary harness.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-4",
+        "BR-5",
+        "BR-14",
+        "BR-15",
+        "BR-16",
+        "BR-17",
+        "C5",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-cli-index",
+        "ART-cli-args",
+        "ART-cli-package-json",
+        "ART-cli-integration-test",
+        "ART-cli-create-parse-tokens-test",
+        "ART-shared-test-lib"
       ],
       "sourceRef": "CR:MDT-143"
     }
@@ -745,6 +812,12 @@
       "path": "cli/tests/unit/commands/create.parse-tokens.test.ts",
       "kind": "test",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-cli-delete",
+      "path": "cli/src/commands/delete.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "testPlans": [
@@ -896,6 +969,19 @@
       ],
       "file": "cli/tests/unit/commands/create.parse-tokens.test.ts",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-ticket-delete",
+      "kind": "e2e",
+      "title": "Ticket delete CLI flows: interactive confirm, --force, non-TTY, not-found, cancel",
+      "covers": [
+        "BR-20",
+        "BR-21",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "file": "cli/tests/e2e/ticket/delete.spec.ts",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "tasks": [
@@ -913,21 +999,6 @@
         "TEST-cli-bootstrap"
       ],
       "sourceRef": "tasks:Task 1"
-    },
-    {
-      "id": "TASK-cli-create",
-      "title": "Implement ticket create and stdin flow",
-      "ownsArtifactIds": [
-        "ART-cli-create",
-        "ART-cli-stdin",
-        "ART-shared-ticket-service"
-      ],
-      "makesGreenIds": [
-        "create_ticket_from_slug_with_order_independent_tokens",
-        "create_ticket_from_piped_input",
-        "TEST-cli-ticket-create"
-      ],
-      "sourceRef": "tasks:Task 4"
     },
     {
       "id": "TASK-cli-attr",
@@ -1041,6 +1112,57 @@
       "sourceRef": "CR:MDT-143"
     },
     {
+      "id": "TASK-cli-list-enhancements",
+      "title": "Enhance ticket list with shared filters, fuzzy matching, sort, and pagination",
+      "ownsArtifactIds": [
+        "ART-cli-list",
+        "ART-cli-formatter",
+        "ART-domain-ticket-filters",
+        "ART-shared-ticket-service"
+      ],
+      "makesGreenIds": [
+        "list_tickets_in_detected_project",
+        "filter_ticket_list_by_multiple_criteria",
+        "TEST-cli-ticket-list-enhancements"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-delete",
+      "title": "Implement ticket delete command with interactive confirm and --force",
+      "ownsArtifactIds": [
+        "ART-cli-delete"
+      ],
+      "makesGreenIds": [
+        "delete_ticket_interactive",
+        "delete_ticket_force",
+        "delete_ticket_non_tty",
+        "TEST-cli-ticket-delete"
+      ],
+      "skills": [
+        "cli-presentation",
+        "shared-service-delegation"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-create",
+      "title": "Implement ticket create and stdin flow",
+      "ownsArtifactIds": [
+        "ART-cli-create",
+        "ART-cli-stdin",
+        "ART-shared-ticket-service",
+        "ART-cli-create-parse-tokens-test"
+      ],
+      "makesGreenIds": [
+        "create_ticket_from_slug_with_order_independent_tokens",
+        "create_ticket_from_piped_input",
+        "TEST-cli-ticket-create",
+        "TEST-cli-create-parse-tokens"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
       "id": "TASK-cli-ticket-read",
       "title": "Implement ticket read and list commands on shared services",
       "ownsArtifactIds": [
@@ -1054,23 +1176,8 @@
         "view_ticket_from_detected_project",
         "view_ticket_across_projects",
         "list_tickets_in_detected_project",
-        "TEST-cli-ticket-read"
-      ],
-      "sourceRef": "CR:MDT-143"
-    },
-    {
-      "id": "TASK-cli-list-enhancements",
-      "title": "Enhance ticket list with shared filters, fuzzy matching, sort, and pagination",
-      "ownsArtifactIds": [
-        "ART-cli-list",
-        "ART-cli-formatter",
-        "ART-domain-ticket-filters",
-        "ART-shared-ticket-service"
-      ],
-      "makesGreenIds": [
-        "list_tickets_in_detected_project",
-        "filter_ticket_list_by_multiple_criteria",
-        "TEST-cli-ticket-list-enhancements"
+        "TEST-cli-ticket-read",
+        "TEST-cli-ticket-subdocuments"
       ],
       "sourceRef": "CR:MDT-143"
     }

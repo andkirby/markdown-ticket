@@ -12,7 +12,7 @@
  * - t alias: "t ABC-12" → "ticket get ABC-12"
  * - ticket namespace: "ticket 5" → "ticket get 5"
  * - list shortcuts: "list", "ls" → "ticket list"
- * - create/attr: "create ..." → "ticket create ...", "attr ..." → "ticket attr ..."
+ * - create/attr/rename/delete: "create ..." → "ticket create ...", "attr ..." → "ticket attr ...", "rename ..." → "ticket rename ...", "delete ..." → "ticket delete ..."
  * - Cross-project: "ABC/MDT-12" → "ticket get ABC/MDT-12"
  * - project namespace: "project" → "project current", "project <code>" → "project get <code>"
  */
@@ -79,6 +79,10 @@ export function normalizeShortcuts(argv: string[]): string[] {
 
   if (first === 'rename') {
     return buildArgv(['ticket', 'rename', ...rest])
+  }
+
+  if (first === 'delete') {
+    return buildArgv(['ticket', 'delete', ...rest])
   }
 
   // Pattern 6: Cross-project ticket key (e.g., "ABC/MDT-12") → ticket get
