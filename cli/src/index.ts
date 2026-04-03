@@ -140,6 +140,23 @@ function registerCommands(program: Command): void {
       }
     })
 
+  // ticket delete
+  ticketCmd
+    .command('delete')
+    .description('Delete a ticket')
+    .argument('<key>', 'Ticket key')
+    .option('--force', 'Skip confirmation prompt')
+    .action(async (key, options) => {
+      const { ticketDeleteAction } = await import('./commands/delete.js')
+      try {
+        await ticketDeleteAction(key, options)
+      }
+      catch (error) {
+        console.error(`Error: ${(error as Error).message}`)
+        process.exit(1)
+      }
+    })
+
   // ticket rename
   ticketCmd
     .command('rename')
