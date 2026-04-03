@@ -739,6 +739,12 @@
       "path": "shared/services/TicketService.ts",
       "kind": "runtime",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "ART-cli-create-parse-tokens-test",
+      "path": "cli/tests/unit/commands/create.parse-tokens.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "testPlans": [
@@ -875,6 +881,20 @@
       "covers": [
         "BR-1"
       ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-create-parse-tokens",
+      "kind": "unit",
+      "title": "Token parsing unit tests for create command (slug vs title disambiguation)",
+      "covers": [
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "C5",
+        "Edge-2"
+      ],
+      "file": "cli/tests/unit/commands/create.parse-tokens.test.ts",
       "sourceRef": "CR:MDT-143"
     }
   ],

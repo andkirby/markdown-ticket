@@ -37,7 +37,7 @@ interface ParsedTokens {
  * @param tokens - Array of token strings
  * @returns Parsed type, priority, title, and slug
  */
-function parseCreateTokens(tokens: string[]): ParsedTokens {
+export function parseCreateTokens(tokens: string[]): ParsedTokens {
   let type: string = DEFAULT_TYPE
   let priority: string = DEFAULT_PRIORITY
   let title: string | null = null
@@ -83,9 +83,23 @@ function parseCreateTokens(tokens: string[]): ParsedTokens {
       continue
     }
 
-    // Unquoted token with dashes - treat as slug
-    if (token.includes('-')) {
-      slug = token
+    // Token with spaces is a title (e.g. unquoted multi-word passed by shell)
+    if (token.includes(' ')) {
+      title = token
+      continue
+    }
+
+    // Dashed token without spaces
+    if (token.includes('-') && !token.includes(' ')) {
+      if (title) {
+        // After title is set → explicit slug
+        slug = token
+      }
+      else {
+        // No title yet → use as both title and slug
+        title = token
+        slug = token
+      }
       continue
     }
 
@@ -93,6 +107,15 @@ function parseCreateTokens(tokens: string[]): ParsedTokens {
     if (!title) {
       title = token
     }
+  }
+
+  // Derive human-readable title from slug-style title if title is slug-only
+  // e.g. 'fix-database-pool' → 'Fix Database Pool'
+  if (title && !title.includes(' ') && title.includes('-')) {
+    title = title
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
   }
 
   // If no title but slug provided, derive title from slug
