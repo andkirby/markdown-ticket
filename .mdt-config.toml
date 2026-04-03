@@ -9,6 +9,6 @@ description = "Kanban-style ticket board with markdown storage"
 repository = "https://github.com/andkirby/markdown-ticket"
 
 [project.document]
-paths = [ "research", "docs" ]
+paths = [ "research", "docs", "cli/mdt-cli/SKILL.md" ]
 excludeFolders = [ "node_modules", ".git", "test-results" ]
 maxDepth = 5

@@ -140,6 +140,23 @@ function registerCommands(program: Command): void {
       }
     })
 
+  // ticket rename
+  ticketCmd
+    .command('rename')
+    .description('Rename a ticket (title and optional slug)')
+    .argument('<key>', 'Ticket key')
+    .argument('<tokens...>', 'New title (quoted) and optional slug')
+    .action(async (key, tokens) => {
+      const { ticketRenameAction } = await import('./commands/rename.js')
+      try {
+        await ticketRenameAction(key, tokens)
+      }
+      catch (error) {
+        console.error(error)
+        process.exit(1)
+      }
+    })
+
   // ====================================================================
   // PROJECT NAMESPACE
   // ====================================================================

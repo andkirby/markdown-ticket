@@ -68,13 +68,17 @@ export function normalizeShortcuts(argv: string[]): string[] {
     return buildArgv(['ticket', 'list', ...rest])
   }
 
-  // Pattern 5: create/attr shortcuts → ticket create/attr
+  // Pattern 5: create/attr/rename shortcuts → ticket create/attr/rename
   if (first === 'create') {
     return buildArgv(['ticket', 'create', ...rest])
   }
 
   if (first === 'attr') {
     return buildArgv(['ticket', 'attr', ...rest])
+  }
+
+  if (first === 'rename') {
+    return buildArgv(['ticket', 'rename', ...rest])
   }
 
   // Pattern 6: Cross-project ticket key (e.g., "ABC/MDT-12") → ticket get

@@ -797,6 +797,62 @@ export class TicketService {
   }
 
   /**
+   * Rename a ticket: update the H1 title and optionally the file slug.
+   *
+   * @param project - Project containing the ticket
+   * @param key - Ticket key (e.g., MDT-143)
+   * @param newTitle - New title string
+   * @param newSlug - Optional explicit slug. If omitted, derived from newTitle.
+   * @returns The updated ticket (with new filePath if renamed)
+   */
+  async renameTicket(project: Project, key: string, newTitle: string, newSlug?: string): Promise<Ticket> {
+    const ticket = await this.getCR(project, key)
+    if (!ticket) {
+      throw ServiceError.ticketNotFound(key)
+    }
+
+    const content = await readFile(ticket.filePath, 'utf-8')
+
+    // Replace first H1 with new title
+    const updatedContent = content.replace(
+      /^#\s+.+$/m,
+      `# ${newTitle}`,
+    )
+
+    // Determine new slug and filename
+    const slug = newSlug ?? this.createSlug(newTitle)
+    const dir = path.dirname(ticket.filePath)
+    const newFilename = `${key}-${slug}.md`
+    const newFilePath = path.join(dir, newFilename)
+
+    // Write content (to old or new path)
+    if (newFilePath !== ticket.filePath) {
+      // Write to new path then remove old
+      await fs.outputFile(newFilePath, updatedContent, 'utf-8')
+      await fs.remove(ticket.filePath)
+    }
+    else {
+      await fs.outputFile(ticket.filePath, updatedContent, 'utf-8')
+    }
+
+    // Re-read to return updated ticket
+    const location = await this.ticketLocationResolver.resolve(project, key)
+    const fullCRPath = path.join(location.projectRoot, location.ticketsPath)
+    const { MarkdownService } = await import('./MarkdownService.js')
+    const tickets = await MarkdownService.scanMarkdownFiles(fullCRPath, location.projectRoot)
+    const updated = tickets.find(t => t.code.toUpperCase() === key.toUpperCase())
+    if (!updated) {
+      throw ServiceError.persistenceError(`Ticket ${key} disappeared after rename`)
+    }
+
+    return {
+      ...updated,
+      inWorktree: location.isWorktree,
+      worktreePath: location.isWorktree ? location.projectRoot : undefined,
+    }
+  }
+
+  /**
    * Create URL-safe slug from title
    */
   private createSlug(title: string): string {
