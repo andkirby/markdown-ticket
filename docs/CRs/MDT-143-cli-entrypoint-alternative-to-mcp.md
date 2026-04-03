@@ -107,6 +107,8 @@ mdt-cli project ls|list                 # Project listing
 mdt-cli project init [code] [name]      # Initialize project in current folder
 mdt-cli ticket create <type>[/<priority>] <title> [slug]  # Canonical create
 mdt-cli create <type>[/<priority>] <title> [slug]         # Create alias
+mdt-cli ticket delete <ticket> [--force]                  # Delete ticket (prompts on TTY)
+mdt-cli delete <ticket> [--force]                          # Delete alias
 mdt-cli ticket attr <ticket> <attr-op><value>...          # Canonical attribute update
 mdt-cli attr <ticket> <attr-op><value>...                 # Attribute alias
 ```
@@ -229,6 +231,15 @@ cat spec.md | mdt-cli create feature 'CLI tool'
 Created MDT-013: Fix login timeout
   docs/CRs/MDT-013-fix-login-timeout.md
 ```
+
+#### Delete Ticket
+```bash
+mdt-cli ticket delete MDT-012           # Prompts on TTY: Delete MDT-012 (<title>)? [y/N]
+mdt-cli delete MDT-012 --force          # Skip confirmation
+mdt-cli delete MDT-012 < /dev/null      # Non-TTY stdin = implicit --force
+```
+
+Deletes the ticket `.md` file. Cleans up empty CR directories after removal. Prints `Deleted <key> <relative-path>` on success. Not-found tickets print an error and exit 1. Declining the prompt prints `Cancelled` and exits 0.
 
 #### Update Attributes
 ```bash
@@ -363,6 +374,7 @@ cli/
 │   │   ├── list.ts        # List tickets command
 │   │   ├── project.ts     # Project info/list/init commands
 │   │   ├── create.ts      # Create ticket command
+│   │   ├── delete.ts      # Delete ticket command
 │   │   └── attr.ts        # Update attributes command
 │   ├── output/
 │   │   ├── formatter.ts   # Output formatting
@@ -422,24 +434,33 @@ cli/
 - [ ] STDIN content becomes ticket body (no template)
 - [ ] Returns created ticket key and path
 
-### AC-6: Update Attributes
+### AC-6: Delete Ticket
+- [ ] `mdt-cli ticket delete MDT-012` prompts for confirmation on TTY
+- [ ] `mdt-cli delete MDT-012 --force` skips confirmation
+- [ ] Non-TTY stdin skips confirmation (implicit --force)
+- [ ] Deletes ticket file and cleans up empty CR directories
+- [ ] Not-found ticket prints error and exits 1
+- [ ] Declining prompt prints `Cancelled` and exits 0
+- [ ] Prints `Deleted <key> <relative-path>` on success
+
+### AC-7: Update Attributes
 - [ ] `mdt-cli ticket attr MDT-012 status=implemented` updates status
 - [ ] `mdt-cli attr MDT-012 status=implemented` resolves to the same behavior as `mdt-cli ticket attr`
 - [ ] Snake_case values accepted and normalized
 - [ ] Multiple attributes can be updated in one command
 - [ ] Returns confirmation with changed values
 
-### AC-7: Project Detection
+### AC-8: Project Detection
 - [ ] Detects project from current working directory
 - [ ] Works from any subdirectory within project
 - [ ] Clear error when not in a project and no explicit project given
 
-### AC-8: Color Output
+### AC-9: Color Output
 - [ ] Colors match web UI badge colors exactly
 - [ ] `--no-color` flag disables colors
 - [ ] Colors disabled when not TTY (pipe/redirection)
 
-### AC-9: Error Handling
+### AC-10: Error Handling
 - [ ] Clear error messages for invalid keys
 - [ ] Clear error for missing required arguments
 - [ ] Helpful suggestions for typos (e.g., "Did you mean 'feature'?")
@@ -494,3 +515,22 @@ cli/
 **uat.md written**: yes
 **Strict drift/lock**: not used (no lock baseline exists)
 **New tasks**: TASK-cli-list-enhancements, TASK-cli-guide, TASK-cli-output-refinements, TASK-cli-e2e-refinements
+
+### UAT Session 2026-04-03
+
+**Approved changes**: Slug fix + delete command applied as same-ticket UAT delta.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| Slug vs title disambiguation in create token parser | BR-6 bug fix (implementation, no spec change) |
+| Ticket delete with interactive confirmation | BR-20 added |
+| Delete --force and non-TTY implicit force | BR-21 added |
+| Delete not-found error | Edge-4 added |
+| Delete cancel on declined prompt | Edge-5 added |
+
+**Updated workflow documents**: requirements.md, bdd.md, architecture.md, tests.md, tasks.md (all via spec-trace sync)
+**uat.md written**: not rewritten (changes captured in trace)
+**Strict drift/lock**: not used
+**New tasks**: TASK-cli-delete
+**New artifacts**: ART-cli-delete, ART-cli-create-parse-tokens-test
+**New test plans**: TEST-cli-ticket-delete, TEST-cli-create-parse-tokens
