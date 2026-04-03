@@ -380,6 +380,44 @@ export function formatTicketAttr(ticketKey: string, operations: AttrOperation[])
 }
 
 /**
+ * Format ticket rename confirmation
+ *
+ * Format: `Renamed MDT-143 | Old Title → New Title`
+ *         `  docs/CRs/MDT-143-old-slug.md → docs/CRs/MDT-143-new-slug.md`
+ *
+ * @param ticketKey - Ticket key
+ * @param oldTitle - Previous title
+ * @param newTitle - New title
+ * @param oldPath - Previous file path
+ * @param newPath - New file path
+ * @param projectPath - Optional project root path for relative path calculation
+ * @returns Formatted rename message
+ */
+export function formatTicketRename(
+  ticketKey: string,
+  oldTitle: string,
+  newTitle: string,
+  oldPath: string,
+  newPath: string,
+  projectPath?: string,
+): string {
+  const useColor = shouldUseColor()
+  const coloredKey = useColor ? colorizeTicketKey(ticketKey) : ticketKey
+  const lines: string[] = []
+
+  lines.push(`Renamed ${coloredKey} | ${oldTitle} → ${newTitle}`)
+
+  const oldDisplay = formatPath(oldPath, projectPath)
+  const newDisplay = formatPath(newPath, projectPath)
+
+  if (oldDisplay !== newDisplay) {
+    lines.push(`  ${useColor ? colorizePath(oldDisplay) : oldDisplay} → ${useColor ? colorizePath(newDisplay) : newDisplay}`)
+  }
+
+  return lines.join('\n')
+}
+
+/**
  * Format file path based on CLI configuration
  *
  * - If absolutePath config is true: show absolute path
