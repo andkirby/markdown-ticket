@@ -545,3 +545,14 @@ cli/
 | `ticket create --project|-p` option | BR-6 refined (create targets a different project) |
 
 **Deferred**: `--code` (custom ticket namespace) requires domain-model changes across 6 shared modules. Discovery documented in [discovery-ticket-code-namespace.md](./MDT-143/discovery-ticket-code-namespace.md) for a future CR.
+
+### UAT Session 2026-04-05 (r2)
+
+**Approved changes**: Add `--project|-p` to `ticket list`.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| `ticket list --project|-p` option | BR-4 refined (list targets a different project) |
+| Unknown project rejection | Edge-8 added (new edge case) |
+
+**Updated workflow documents**: requirements, bdd, tests, tasks, uat.md. Requirements relocked.

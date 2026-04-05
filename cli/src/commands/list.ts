@@ -26,6 +26,7 @@ export interface ListCommandOptions {
   offset?: number
   files?: boolean
   info?: boolean
+  project?: string
 }
 
 /**
@@ -172,19 +173,30 @@ function formatRelativePath(filePath: string, projectPath?: string): string {
  * @throws Process.exit(1) on error
  */
 export async function ticketListAction(filterArgs: string[] = [], options: ListCommandOptions = {}): Promise<void> {
+  // Resolve project: explicit --project wins, otherwise cwd detection
   const projectService = new ProjectService(true) // quiet=true
   const ticketService = new TicketService(true)
+  let projectCode: string
+  let projectPath: string
 
-  // Resolve current project
-  const projectResult = await projectService.resolveCurrentProject()
-
-  if (!projectResult.data) {
-    console.error('Error: No project context. Run from a project directory.')
-    process.exit(1)
+  if (options.project) {
+    const resolved = await projectService.getProjectByCodeOrId(options.project)
+    if (!resolved) {
+      console.error(`Error: Project '${options.project}' not found`)
+      process.exit(1)
+    }
+    projectCode = resolved.project.code
+    projectPath = resolved.project.path
   }
-
-  const projectCode = projectResult.data.project.code
-  const projectPath = projectResult.data.project.path
+  else {
+    const projectResult = await projectService.resolveCurrentProject()
+    if (!projectResult.data) {
+      console.error('Error: No project context. Run from a project directory.')
+      process.exit(1)
+    }
+    projectCode = projectResult.data.project.code
+    projectPath = projectResult.data.project.path
+  }
 
   // Parse positional filter arguments
   const filters = parseFilters(filterArgs || [])
