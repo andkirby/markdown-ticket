@@ -65,6 +65,8 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 | should treat lowercase list and ls as reserved list aliases | BR-17 |
 | should treat LIST or LS as project-code lookup values, not list aliases | BR-17 |
 | should initialize a project in the current folder through project init | BR-16, Edge-2 |
+| should initialize a project with custom tickets path via --tickets-path | BR-16, Edge-7 |
+| should reject absolute tickets path on project init | BR-16, Edge-7 |
 
 ### Ticket Create (`cli/tests/e2e/ticket/create.spec.ts`)
 
@@ -80,6 +82,8 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 | should reject unknown create tokens with a corrective message | Edge-2 |
 | should keep project-root-relative path output by default after create | BR-12, C1 |
 | should avoid shell expansion or interpolation of create input data | C5 |
+| should create a ticket in a target project via --project | BR-6, Edge-6 |
+| should reject --project when the target project does not exist | BR-6, Edge-6 |
 
 ### Ticket Attr (`cli/tests/e2e/ticket/attr.spec.ts`)
 
@@ -146,6 +150,7 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 |---------------|-----------|-------|
 | C1 | `ticket/read.spec.ts`, `ticket/create.spec.ts` | CLI config defaults and relative-path output |
 | C2 | `ticket/attr.spec.ts` | Attr operator and mutable-field validation |
+| C4 | `ticket/read.spec.ts`, `project/project.spec.ts` | Root-up project detection for shorthand reads and init path validation |
 | C3 | `ticket/read.spec.ts` | Color-category parity with web badge mappings |
 | C4 | `ticket/read.spec.ts` | Root-up project detection for shorthand reads |
 | C5 | `ticket/create.spec.ts`, `ticket/attr.spec.ts` | Literal stdin and attr value handling |

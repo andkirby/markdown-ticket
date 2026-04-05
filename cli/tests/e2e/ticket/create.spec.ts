@@ -15,6 +15,7 @@ describe('Ticket Create', () => {
   let projectFactory: ProjectFactory
   let projectDir: string
   let projectCode: string
+  let projectCode2: string
 
   beforeAll(async () => {
     testEnv = new TestEnvironment()
@@ -29,6 +30,14 @@ describe('Ticket Create', () => {
 
     projectDir = project.path
     projectCode = project.key
+
+    // Create a second project for cross-project create tests
+    const project2 = await projectFactory.createProject('empty', {
+      code: 'PROJ',
+      name: 'Second Project',
+    })
+
+    projectCode2 = project2.key
   })
 
   afterAll(async () => {
@@ -240,5 +249,28 @@ describe('Ticket Create', () => {
     const pathMatch = result.stdout.match(new RegExp(`(docs/CRs/${projectCode}-\\d+-[\\w-]+\\.md)`))
     expect(pathMatch).toBeTruthy()
     expect(pathMatch![1]).toContain('paste-to-shell')
+  })
+
+  test('should create a ticket in a target project via --project', async () => {
+    const result = await runCli(
+      ['ticket', 'create', '--project', projectCode2, 'feature', 'Cross-project ticket'],
+      { cwd: projectDir },
+    )
+
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('Created')
+    expect(result.stdout).toContain(`${projectCode2}-`)
+  })
+
+  test('should reject --project when the target project does not exist', async () => {
+    const result = await runCli(
+      ['ticket', 'create', '--project', 'NOPE', 'feature', 'Test'],
+      { cwd: projectDir },
+    )
+
+    expect(result.exitCode).toBe(1)
+    expect(result.stderr).toContain('Project')
+    expect(result.stderr).toContain('NOPE')
+    expect(result.stderr).toContain('not found')
   })
 })

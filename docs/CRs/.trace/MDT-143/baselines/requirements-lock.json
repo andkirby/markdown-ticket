@@ -1,6 +1,6 @@
 {
   "ticket": "MDT-143",
-  "generatedAt": "2026-03-29T12:50:22.149Z",
+  "generatedAt": "2026-04-05T15:05:03.251Z",
   "requirements": [
     {
       "id": "BR-1",
@@ -71,6 +71,22 @@
       "routePolicy": "bdd"
     },
     {
+      "id": "BR-18",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-19",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-20",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-21",
+      "routePolicy": "bdd"
+    },
+    {
       "id": "C1",
       "routePolicy": "tests"
     },
@@ -104,6 +120,22 @@
     },
     {
       "id": "Edge-3",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-7",
       "routePolicy": "tests"
     }
   ]

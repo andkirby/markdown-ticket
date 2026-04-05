@@ -54,6 +54,7 @@ Filterable fields: `status`, `priority`, `type`, `assignee`, `epic`.
 
 ```bash
 mdt-cli create <type>[/<priority>] '<title>' [slug]
+mdt-cli ticket create --project <code> feature 'Add dark mode'
 mdt-cli ticket create --stdin feature 'Add dark mode' <<'EOF'
 ## Problem
 Users need a dark theme option.
@@ -62,6 +63,7 @@ EOF
 
 Creates a ticket with default metadata and prints the key and path.
 
+- **`--project <code>`** — create in a different project instead of cwd-detected one.
 - Type and priority tokens are order-independent.
 - Unquoted dashed token after title becomes the filename slug.
 - Without an explicit title, title is derived from the slug.
@@ -108,10 +110,12 @@ Relations (`related`, `depends`, `blocks`) support `=` (replace), `+=` (add), `-
 mdt-cli project                # Current project info
 mdt-cli project get <code>     # Project lookup (case-insensitive)
 mdt-cli project ls             # List all projects
-mdt-cli project init [code] [name]  # Initialize project in cwd
+mdt-cli project init [code] [name] [-t <path>]  # Initialize project in cwd
 ```
 
 Bare `mdt-cli project <code>` resolves as `project get <code>`. Lowercase `ls` and `list` are reserved as list aliases.
+
+- **`-t, --tickets-path <path>`** — set a custom tickets directory (relative to project root).
 
 ## Top-level Aliases
 

@@ -140,4 +140,36 @@ describe('Project Namespace', () => {
     const exists = await Bun.file(configPath).exists()
     expect(exists).toBe(true)
   })
+
+  test('should initialize a project with custom tickets path via --tickets-path', async () => {
+    const tempDir = join(testEnv.getTempDirectory(), 'init-custom-path')
+    await mkdir(tempDir, { recursive: true })
+
+    const result = await runCli(
+      ['project', 'init', 'CUS', 'Custom Path Project', '--tickets-path', 'issues/tickets'],
+      { cwd: tempDir },
+    )
+
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('Initialized')
+    expect(result.stdout).toContain('issues/tickets')
+
+    // Verify config file contains the custom path
+    const configPath = join(tempDir, '.mdt-config.toml')
+    const content = await Bun.file(configPath).text()
+    expect(content).toContain('issues/tickets')
+  })
+
+  test('should reject absolute tickets path on project init', async () => {
+    const tempDir = join(testEnv.getTempDirectory(), 'init-abs-path')
+    await mkdir(tempDir, { recursive: true })
+
+    const result = await runCli(
+      ['project', 'init', 'ABS', 'Abs Path Project', '--tickets-path', '/absolute/path'],
+      { cwd: tempDir },
+    )
+
+    expect(result.exitCode).toBe(1)
+    expect(result.stderr).toMatch(/relative|absolute/i)
+  })
 })

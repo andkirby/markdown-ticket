@@ -99,7 +99,7 @@ export async function projectListAction(options: { json?: boolean }): Promise<vo
 export async function projectInitAction(
   code: string,
   name: string,
-  options: { dir?: string },
+  options: { dir?: string; ticketsPath?: string },
 ): Promise<void> {
   const projectManager = new ProjectManager(true) // quiet=true
 
@@ -110,6 +110,7 @@ export async function projectInitAction(
       name,
       code,
       path: targetDir,
+      ...(options.ticketsPath && { ticketsPath: options.ticketsPath }),
     })
 
     console.log(`Initialized project ${project.project.code} in ${targetDir}`)

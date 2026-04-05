@@ -161,7 +161,7 @@ async function resolveCurrentProject(): Promise<Project> {
  */
 export async function ticketCreateAction(
   tokens: string[],
-  options: { stdin?: boolean },
+  options: { stdin?: boolean; project?: string },
 ): Promise<void> {
   // Parse tokens to extract type, priority, title, slug
   const { type, priority, title, slug } = parseCreateTokens(tokens)
@@ -175,8 +175,24 @@ export async function ticketCreateAction(
     }
   }
 
-  // Resolve current project
-  const project = await resolveCurrentProject()
+  // Resolve project: explicit --project wins, otherwise cwd detection
+  const projectService = new ProjectService(true) // quiet=true
+  let project: Project
+  if (options.project) {
+    const resolved = await projectService.getProjectByCodeOrId(options.project)
+    if (!resolved) {
+      console.error(`Error: Project '${options.project}' not found`)
+      process.exit(1)
+    }
+    project = resolved
+  }
+  else {
+    const result = await projectService.resolveCurrentProject()
+    if (!result.data) {
+      throw new Error('No project context found. Run from a project directory.')
+    }
+    project = result.data
+  }
 
   // Build ticket data
   const ticketData: TicketData = {

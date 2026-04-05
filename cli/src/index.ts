@@ -112,6 +112,7 @@ function registerCommands(program: Command): void {
     .description('Create a new ticket')
     .argument('[tokens...]', 'Type[/priority], title, and optional slug')
     .option('--stdin', 'Read ticket content from stdin')
+    .option('-p, --project <code>', 'Target project code')
     .action(async (tokens, options) => {
       const { ticketCreateAction } = await import('./commands/create.js')
       try {
@@ -253,6 +254,7 @@ function registerCommands(program: Command): void {
     .argument('<code>', 'Project code')
     .argument('<name>', 'Project name')
     .option('-d, --dir <path>', 'Project directory')
+    .option('-t, --tickets-path <path>', 'Tickets directory (relative to project root)')
     .action(async (code, name, options) => {
       const { projectInitAction } = await import('./commands/project.js')
       try {
