@@ -23,6 +23,7 @@ import { detectProjectContext } from '../utils/projectDetector.js'
 import { ProjectCacheService } from './project/ProjectCacheService.js'
 import { ProjectConfigService } from './project/ProjectConfigService.js'
 import { ProjectDiscoveryService } from './project/ProjectDiscoveryService.js'
+import { ProjectFactory } from './project/ProjectFactory.js'
 import { ServiceError } from './ServiceError.js'
 import { WorktreeService } from './WorktreeService.js'
 
@@ -202,6 +203,25 @@ export class ProjectService implements IProjectService {
           data: existingProject,
           context: { detectedFrom: detection.projectRoot },
         }
+      }
+
+      // Detection found a local .mdt-config.toml but the project is not in
+      // the global registry nor within auto-discovery range. Build a Project
+      // from the local config, register it as a reference in the global
+      // registry so it persists across sessions, and return it.
+      const factory = new ProjectFactory()
+      const project = factory.createFromConfig(config, detection.projectRoot)
+      project.autoDiscovered = true
+
+      this.discovery.registerProject(project)
+      this.clearCache()
+
+      return {
+        data: project,
+        context: {
+          detectedFrom: detection.projectRoot,
+          outOfDiscoveryRange: true,
+        },
       }
     }
 
