@@ -199,13 +199,6 @@
       "routePolicy": "bdd"
     },
     {
-      "id": "BR-4",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket list, mdt-cli list, mdt-cli ls, or mdt-cli ticket ls inside a detected project, the system shall display up to 10 tickets sorted newest-first by modified date in compact form and report the project ticket count. Each ticket shall show the key and title on one line, followed by an indented pipe-separated metadata line with fixed-width columns (status 11, type 13, priority 8) and optional phase. The system shall support --all to show every ticket, --limit N to override the default count, --files to show file paths only, and --info to show ticket info without file paths. Positional filter arguments in key=value format (e.g., status=implemented priority=high) shall filter tickets using AND across fields and comma-separated fuzzy matching within a field.",
-      "sourceRef": "CR:MDT-143",
-      "routePolicy": "bdd"
-    },
-    {
       "id": "BR-5",
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli project ls or mdt-cli project list, the system shall display each discovered project with its code in described color, title in white bold, description in normal color, and filesystem path in gray. The project identifier shall not appear in list output. Project detail views (project current, project get, project info) shall display the full identifier in gray.",
@@ -272,6 +265,20 @@
       "id": "Edge-7",
       "kind": "edge_case",
       "text": "IF operator invokes mdt-cli project init --tickets-path with an absolute path or empty string, THEN the system shall reject with a validation error describing that tickets path must be relative and non-empty.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket list, mdt-cli list, mdt-cli ls, or mdt-cli ticket ls, the system shall display up to 10 tickets sorted newest-first by modified date in compact form and report the project ticket count. Each ticket shall show the key and title on one line, followed by an indented pipe-separated metadata line with fixed-width columns (status 11, type 13, priority 8) and optional phase. The system shall support --all to show every ticket, --limit N to override the default count, --files to show file paths only, and --info to show ticket info without file paths. Positional filter arguments in key=value format (e.g., status=implemented priority=high) shall filter tickets using AND across fields and comma-separated fuzzy matching within a field. WHEN --project <code> is provided, the system shall list tickets from the specified project rather than the cwd-detected project. WHEN --project targets a project that does not exist, the system shall reject with 'Project <code> not found' and exit 1.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-8",
+      "kind": "edge_case",
+      "text": "IF operator invokes mdt-cli ticket list --project <code> and the project does not exist, THEN the system shall print 'Project <code> not found' and exit with code 1.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "tests"
     }
@@ -515,6 +522,28 @@
       "given": "a folder that is not yet configured as a project",
       "when": "operator runs mdt-cli project init NEW 'New Project' --tickets-path /abs/path",
       "then": "the system prints a validation error stating that tickets path must be relative and exits with code 1",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "list_tickets_in_target_project",
+      "title": "List tickets from a target project via --project flag",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "two registered projects TEST and PROJ with tickets in each",
+      "when": "operator runs mdt-cli ticket list --project PROJ from TEST project directory",
+      "then": "the system displays PROJ tickets only and does not show TEST tickets",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "list_tickets_rejects_unknown_project",
+      "title": "Reject ticket list when --project targets a non-existent project",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "operator is inside a detected project",
+      "when": "operator runs mdt-cli ticket list --project NOPE",
+      "then": "the system prints 'Project NOPE not found' and exits with code 1",
       "sourceRef": "CR:MDT-143"
     }
   ],
@@ -1039,6 +1068,18 @@
       ],
       "file": "cli/tests/e2e/project/project.spec.ts",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-list-enhancements",
+      "kind": "e2e",
+      "title": "CLI list enhancements E2E",
+      "covers": [
+        "BR-4",
+        "BR-18",
+        "Edge-8"
+      ],
+      "file": "cli/tests/e2e/ticket/list-enhancements.spec.ts",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "tasks": [
@@ -1150,22 +1191,6 @@
       "sourceRef": "CR:MDT-143"
     },
     {
-      "id": "TASK-cli-list-enhancements",
-      "title": "Enhance ticket list with shared filters, fuzzy matching, sort, and pagination",
-      "ownsArtifactIds": [
-        "ART-cli-list",
-        "ART-cli-formatter",
-        "ART-domain-ticket-filters",
-        "ART-shared-ticket-service"
-      ],
-      "makesGreenIds": [
-        "list_tickets_in_detected_project",
-        "filter_ticket_list_by_multiple_criteria",
-        "TEST-cli-ticket-list-enhancements"
-      ],
-      "sourceRef": "CR:MDT-143"
-    },
-    {
       "id": "TASK-cli-delete",
       "title": "Implement ticket delete command with interactive confirm and --force",
       "ownsArtifactIds": [
@@ -1239,6 +1264,18 @@
         "initialize_project_with_custom_tickets_path",
         "project_init_rejects_absolute_tickets_path",
         "TEST-cli-project"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-list-enhancements",
+      "title": "Implement list filtering, pagination, output modes, and --project flag",
+      "makesGreenIds": [
+        "list_tickets_in_detected_project",
+        "filter_ticket_list_by_multiple_criteria",
+        "list_tickets_in_target_project",
+        "list_tickets_rejects_unknown_project",
+        "TEST-cli-list-enhancements"
       ],
       "sourceRef": "CR:MDT-143"
     }

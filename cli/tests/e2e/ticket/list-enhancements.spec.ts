@@ -142,4 +142,31 @@ describe('Ticket List Enhancements', () => {
     const ticketLines = result.stdout.split('\n').filter(line => /^\w+-\d+/.test(line.trim()))
     expect(ticketLines.length).toBe(3)
   })
+
+  test('should list tickets in a target project via --project', async () => {
+    // Create a second project with a ticket
+    const project2 = await projectFactory.createProject('empty', {
+      code: 'PROJ',
+      name: 'Second Project',
+    })
+    await projectFactory.createMultipleCRs('PROJ', [
+      { title: 'Cross Project Ticket', type: 'Feature Enhancement', status: 'Proposed', priority: 'Medium', content: 'Xproj' },
+    ])
+
+    const result = await runCli(['ticket', 'list', '--project', 'PROJ'], { cwd: projectDir })
+
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('PROJ-')
+    expect(result.stdout).toContain('Cross Project Ticket')
+    expect(result.stdout).not.toContain('TEST-')
+  })
+
+  test('should reject --project when the target project does not exist', async () => {
+    const result = await runCli(['ticket', 'list', '--project', 'NOPE'], { cwd: projectDir })
+
+    expect(result.exitCode).toBe(1)
+    expect(result.stderr).toContain('Project')
+    expect(result.stderr).toContain('NOPE')
+    expect(result.stderr).toContain('not found')
+  })
 })

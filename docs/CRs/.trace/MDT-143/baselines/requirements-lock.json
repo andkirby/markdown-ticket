@@ -1,6 +1,6 @@
 {
   "ticket": "MDT-143",
-  "generatedAt": "2026-04-05T15:05:03.251Z",
+  "generatedAt": "2026-04-05T21:37:37.087Z",
   "requirements": [
     {
       "id": "BR-1",
@@ -136,6 +136,10 @@
     },
     {
       "id": "Edge-7",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-8",
       "routePolicy": "tests"
     }
   ]

@@ -95,6 +95,7 @@ function registerCommands(program: Command): void {
     .option('-o, --offset <n>', 'Skip first N results', Number.parseInt)
     .option('--files', 'Show file paths only')
     .option('--info', 'Show info without file paths')
+    .option('-p, --project <code>', 'Target project code')
     .action(async (filters, options) => {
       const { ticketListAction } = await import('./commands/list.js')
       try {

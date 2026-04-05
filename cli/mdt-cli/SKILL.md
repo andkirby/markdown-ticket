@@ -33,6 +33,7 @@ Prints ticket title, labeled metadata (status, type, priority, phase, assignee, 
 mdt-cli list                  # Shortcut
 mdt-cli ls                    # Shortcut
 mdt-cli ticket list           # Canonical form
+mdt-cli ticket list --project <code>  # List another project's tickets
 ```
 
 Shows up to 10 tickets sorted newest-first. Each ticket shows key + title on one line, then an indented metadata row.
@@ -43,6 +44,7 @@ Options:
 - `--files` — file paths only
 - `--info` — ticket info without paths
 - `--json` — parseable output for LLM consumption
+- `-p, --project <code>` — list tickets from a different project
 
 Filters — positional `key=value` args with AND across fields, comma-separated fuzzy match within a field:
 ```bash

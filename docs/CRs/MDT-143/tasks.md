@@ -296,6 +296,25 @@
 
 ---
 
+### Task 13: Add --project to ticket list (UAT)
+
+**Structure**: `cli/src/index.ts`, `cli/src/commands/list.ts`
+
+**Scope**: Wire `--project|-p` on `ticket list` to target a different project's tickets
+**Boundary**: No shared-layer changes — `TicketService.listTickets()` already accepts any `projectRef`
+
+**Makes GREEN**:
+- `list_tickets_in_target_project`
+- `list_tickets_rejects_unknown_project`
+- `TEST-cli-list-enhancements`
+
+**Done when**:
+- [x] `ticket list --project <code>` lists tickets from the specified project
+- [x] `--project` with unknown code prints "Project <code> not found" and exits 1
+- [x] Without `--project`, list falls back to cwd detection (unchanged behavior)
+
+---
+
 ## Post-Implementation
 
 - [x] `mdt-cli` exposes the canonical `entity action` command tree plus approved shortcuts
