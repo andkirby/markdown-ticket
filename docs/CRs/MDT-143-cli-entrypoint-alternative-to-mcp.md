@@ -1,8 +1,8 @@
 ---
 code: MDT-143
-status: In Progress
-dateCreated: 2026-03-20T20:24:43.278Z
-lastModified: 2026-03-29T22:26:29.601Z
+status: Implemented
+dateCreated: 2026-03-24T20:28:55.000Z
+lastModified: 2026-04-03T17:37:55.000Z
 type: Feature Enhancement
 priority: Medium
 phaseEpic: Phase B (Enhancement)
@@ -534,3 +534,14 @@ cli/
 **New tasks**: TASK-cli-delete
 **New artifacts**: ART-cli-delete, ART-cli-create-parse-tokens-test
 **New test plans**: TEST-cli-ticket-delete, TEST-cli-create-parse-tokens
+
+### UAT Session 2026-04-05
+
+**Approved changes**: Two safe CLI additions — `project init --tickets-path|-t` and `ticket create --project|-p`.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| `project init --tickets-path|-t` option | BR-6 refined (init accepts custom tickets path) |
+| `ticket create --project|-p` option | BR-6 refined (create targets a different project) |
+
+**Deferred**: `--code` (custom ticket namespace) requires domain-model changes across 6 shared modules. Discovery documented in [discovery-ticket-code-namespace.md](./MDT-143/discovery-ticket-code-namespace.md) for a future CR.
