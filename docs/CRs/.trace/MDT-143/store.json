@@ -115,16 +115,6 @@
       ]
     },
     {
-      "id": "BR-16",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli project init in a folder that is not yet configured as a project, the system shall create project configuration for the current folder using provided code and name values or interactive defaults when omitted.",
-      "sourceRef": "CR §3 Project Init",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
       "id": "BR-14",
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli project current or mdt-cli project inside a detected project, the system shall display the current project code, name, description, path, and relevant configuration values.",
@@ -143,13 +133,6 @@
       "kind": "behavior",
       "text": "WHEN operator invokes mdt-cli project with a single token after the namespace, the system shall reserve exact lowercase ls and list as project-list aliases and treat other tokens such as LS or LIST as project-code lookup inputs.",
       "sourceRef": "CR:3 Project Commands",
-      "routePolicy": "bdd"
-    },
-    {
-      "id": "BR-6",
-      "kind": "behavior",
-      "text": "WHEN operator invokes mdt-cli ticket create or mdt-cli create with a valid type, title, and optional priority or slug arguments, the system shall create one new ticket with default metadata and print the created ticket key and path.",
-      "sourceRef": "CR:3 Create Ticket",
       "routePolicy": "bdd"
     },
     {
@@ -261,6 +244,34 @@
       "id": "Edge-5",
       "kind": "edge_case",
       "text": "IF operator invokes mdt-cli ticket delete on an interactive terminal without --force and declines the confirmation prompt, THEN the system shall print 'Cancelled' and exit with code 0 without deleting any file.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli ticket create or mdt-cli create with a valid type, title, and optional priority or slug arguments, the system shall create one new ticket with default metadata and print the created ticket key and path. WHEN --project <code> is provided, the system shall create the ticket in the specified project rather than the cwd-detected project. WHEN --project targets a project that does not exist, the system shall reject with 'Project <code> not found' and exit 1.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-16",
+      "kind": "behavior",
+      "text": "WHEN operator invokes mdt-cli project init in a folder that is not yet configured as a project, the system shall create project configuration for the current folder using provided code and name values or interactive defaults when omitted. WHEN --tickets-path <path> is provided, the system shall set the tickets directory to the specified relative path. WHEN --tickets-path is an absolute path or empty, the system shall reject with a validation error.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "IF operator invokes mdt-cli ticket create --project <code> and the project does not exist, THEN the system shall print 'Project <code> not found' and exit with code 1.",
+      "sourceRef": "CR:MDT-143",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "IF operator invokes mdt-cli project init --tickets-path with an absolute path or empty string, THEN the system shall reject with a validation error describing that tickets path must be relative and non-empty.",
       "sourceRef": "CR:MDT-143",
       "routePolicy": "tests"
     }
@@ -460,6 +471,50 @@
       "given": "a ticket MDT-009 exists and stdin is not a TTY",
       "when": "operator pipes input to mdt-cli ticket delete MDT-009",
       "then": "the ticket is deleted without a prompt",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "create_ticket_in_target_project",
+      "title": "Create a ticket in a target project via --project",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "two registered projects TEST and PROJ exist",
+      "when": "operator runs mdt-cli ticket create --project PROJ feature 'Cross-project ticket'",
+      "then": "the system creates a ticket with key PROJ-NNN in PROJ's tickets path and prints the created key and file path",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "create_ticket_rejects_unknown_project",
+      "title": "Reject ticket create when --project targets a non-existent project",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "project NOPE is not registered",
+      "when": "operator runs mdt-cli ticket create --project NOPE feature 'Test'",
+      "then": "the system prints 'Project NOPE not found' to stderr and exits with code 1",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "initialize_project_with_custom_tickets_path",
+      "title": "Initialize a project with a custom tickets path via --tickets-path",
+      "covers": [
+        "BR-16"
+      ],
+      "given": "a folder that is not yet configured as a project",
+      "when": "operator runs mdt-cli project init NEW 'New Project' --tickets-path issues/tickets",
+      "then": "the system creates .mdt-config.toml with tickets_path set to issues/tickets and prints the custom path in the success output",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "project_init_rejects_absolute_tickets_path",
+      "title": "Reject project init when --tickets-path is absolute",
+      "covers": [
+        "BR-16"
+      ],
+      "given": "a folder that is not yet configured as a project",
+      "when": "operator runs mdt-cli project init NEW 'New Project' --tickets-path /abs/path",
+      "then": "the system prints a validation error stating that tickets path must be relative and exits with code 1",
       "sourceRef": "CR:MDT-143"
     }
   ],
@@ -862,38 +917,6 @@
       "sourceRef": "tests:Ticket Read/List"
     },
     {
-      "id": "TEST-cli-project",
-      "kind": "e2e",
-      "title": "Project namespace CLI flows",
-      "covers": [
-        "BR-5",
-        "BR-14",
-        "BR-15",
-        "BR-16",
-        "BR-17",
-        "C4",
-        "Edge-2"
-      ],
-      "file": "cli/tests/e2e/project/project.spec.ts",
-      "sourceRef": "tests:Project Namespace"
-    },
-    {
-      "id": "TEST-cli-ticket-create",
-      "kind": "e2e",
-      "title": "Ticket create CLI flows",
-      "covers": [
-        "BR-6",
-        "BR-7",
-        "BR-8",
-        "BR-9",
-        "C1",
-        "C5",
-        "Edge-2"
-      ],
-      "file": "cli/tests/e2e/ticket/create.spec.ts",
-      "sourceRef": "tests:Ticket Create"
-    },
-    {
       "id": "TEST-cli-ticket-attr",
       "kind": "e2e",
       "title": "Ticket attr CLI flows",
@@ -982,6 +1005,40 @@
       ],
       "file": "cli/tests/e2e/ticket/delete.spec.ts",
       "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-ticket-create",
+      "kind": "e2e",
+      "title": "Ticket create CLI flows: tokens, stdin, and cross-project --project",
+      "covers": [
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "C1",
+        "C5",
+        "Edge-2",
+        "Edge-6"
+      ],
+      "file": "cli/tests/e2e/ticket/create.spec.ts",
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TEST-cli-project",
+      "kind": "e2e",
+      "title": "Project namespace CLI flows: current, list, get, init with --tickets-path",
+      "covers": [
+        "BR-5",
+        "BR-14",
+        "BR-15",
+        "BR-16",
+        "BR-17",
+        "C4",
+        "Edge-2",
+        "Edge-7"
+      ],
+      "file": "cli/tests/e2e/project/project.spec.ts",
+      "sourceRef": "CR:MDT-143"
     }
   ],
   "tasks": [
@@ -1029,25 +1086,6 @@
         "TEST-cli-ticket-attr"
       ],
       "sourceRef": "tasks:Task 7"
-    },
-    {
-      "id": "TASK-cli-project",
-      "title": "Implement project namespace on shared project services",
-      "ownsArtifactIds": [
-        "ART-cli-project",
-        "ART-shared-project-service",
-        "ART-shared-project-types",
-        "ART-shared-project-manager",
-        "ART-cli-config"
-      ],
-      "makesGreenIds": [
-        "show_current_project_details",
-        "list_projects_via_project_namespace",
-        "resolve_project_token_without_subcommand_collision",
-        "initialize_project_in_current_folder",
-        "TEST-cli-project"
-      ],
-      "sourceRef": "tasks:Task 3"
     },
     {
       "id": "TASK-cli-guide",
@@ -1146,23 +1184,6 @@
       "sourceRef": "CR:MDT-143"
     },
     {
-      "id": "TASK-cli-create",
-      "title": "Implement ticket create and stdin flow",
-      "ownsArtifactIds": [
-        "ART-cli-create",
-        "ART-cli-stdin",
-        "ART-shared-ticket-service",
-        "ART-cli-create-parse-tokens-test"
-      ],
-      "makesGreenIds": [
-        "create_ticket_from_slug_with_order_independent_tokens",
-        "create_ticket_from_piped_input",
-        "TEST-cli-ticket-create",
-        "TEST-cli-create-parse-tokens"
-      ],
-      "sourceRef": "CR:MDT-143"
-    },
-    {
       "id": "TASK-cli-ticket-read",
       "title": "Implement ticket read and list commands on shared services",
       "ownsArtifactIds": [
@@ -1178,6 +1199,46 @@
         "list_tickets_in_detected_project",
         "TEST-cli-ticket-read",
         "TEST-cli-ticket-subdocuments"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-create",
+      "title": "Implement ticket create and stdin flow with --project support",
+      "ownsArtifactIds": [
+        "ART-cli-create",
+        "ART-cli-stdin",
+        "ART-shared-ticket-service",
+        "ART-cli-create-parse-tokens-test"
+      ],
+      "makesGreenIds": [
+        "create_ticket_from_slug_with_order_independent_tokens",
+        "create_ticket_from_piped_input",
+        "create_ticket_in_target_project",
+        "create_ticket_rejects_unknown_project",
+        "TEST-cli-ticket-create",
+        "TEST-cli-create-parse-tokens"
+      ],
+      "sourceRef": "CR:MDT-143"
+    },
+    {
+      "id": "TASK-cli-project",
+      "title": "Implement project namespace with --tickets-path on init",
+      "ownsArtifactIds": [
+        "ART-cli-project",
+        "ART-shared-project-service",
+        "ART-shared-project-types",
+        "ART-shared-project-manager",
+        "ART-cli-config"
+      ],
+      "makesGreenIds": [
+        "show_current_project_details",
+        "list_projects_via_project_namespace",
+        "resolve_project_token_without_subcommand_collision",
+        "initialize_project_in_current_folder",
+        "initialize_project_with_custom_tickets_path",
+        "project_init_rejects_absolute_tickets_path",
+        "TEST-cli-project"
       ],
       "sourceRef": "CR:MDT-143"
     }

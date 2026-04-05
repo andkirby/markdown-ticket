@@ -39,7 +39,7 @@
 |-----------|---------------|-------|------------|
 | M0: Bootstrap | — | Task 1 | CLI package builds and exposes commander entrypoint |
 | M1: Read Paths | `view_ticket_from_detected_project`, `view_ticket_across_projects`, `list_tickets_in_detected_project`, `show_current_project_details`, `list_projects_via_project_namespace`, `resolve_project_token_without_subcommand_collision` | Task 2, Task 3, Task 6 | Ticket/project read flows GREEN |
-| M2: Mutations | `initialize_project_in_current_folder`, `create_ticket_from_slug_with_order_independent_tokens`, `create_ticket_from_piped_input`, `update_ticket_attributes_in_one_command` | Task 4, Task 5, Task 6 | Create/attr/init flows GREEN |
+| M2: Mutations | `initialize_project_in_current_folder`, `initialize_project_with_custom_tickets_path`, `create_ticket_from_slug_with_order_independent_tokens`, `create_ticket_from_piped_input`, `update_ticket_attributes_in_one_command` | Task 4, Task 5, Task 6, Task 12 | Create/attr/init flows GREEN |
 | M3: Verification | all MDT-143 scenarios | Task 7 | CLI E2E suite GREEN |
 
 ---
@@ -95,12 +95,15 @@
 - `list_projects_via_project_namespace`
 - `resolve_project_token_without_subcommand_collision`
 - `initialize_project_in_current_folder`
+- `initialize_project_with_custom_tickets_path`
+- `project_init_rejects_absolute_tickets_path`
 - `TEST-cli-project`
 
 **Done when**:
 - [x] `project`, `project current`, `project get|info`, and `project ls|list` all route through one commander subtree
 - [x] Bare `project <code>` lookup preserves lowercase subcommand reservation rules
 - [x] `project init` materializes project configuration in the current folder
+- [x] `project init --tickets-path <path>` forwards the custom tickets path to `ProjectManager`
 
 ---
 
@@ -108,18 +111,22 @@
 
 **Structure**: `cli/src/commands/create.ts`, `cli/src/utils/stdin.ts`
 
-**Scope**: Implement `ticket create` and top-level `create` alias, including order-independent parsing and stdin handling  
+**Scope**: Implement `ticket create` and top-level `create` alias, including order-independent parsing, stdin handling, and `--project` for cross-project creation  
 **Boundary**: Ticket persistence must stay behind shared ticket ownership; CLI must not write markdown directly
 
 **Makes GREEN**:
 - `create_ticket_from_slug_with_order_independent_tokens`
 - `create_ticket_from_piped_input`
+- `create_ticket_in_target_project`
+- `create_ticket_rejects_unknown_project`
 - `TEST-cli-ticket-create`
 
 **Done when**:
 - [x] `ticket create` and `create` route to the same create path
 - [x] Stdin mode writes generated frontmatter and H1 followed by literal body content
 - [x] Create input is treated as data, not shell instructions
+- [x] `--project <code>` creates the ticket in the specified project
+- [x] `--project` with unknown code prints "Project <code> not found" and exits 1
 
 ---
 
@@ -262,6 +269,30 @@
 - [x] Guide generation verified at global and per-namespace scope
 - [x] Attr pipe format and no-op behavior asserted
 - [x] Color scheme per element type verified
+
+---
+
+### Task 12: Add --tickets-path to project init and --project to ticket create (UAT)
+
+**Structure**: `cli/src/index.ts`, `cli/src/commands/project.ts`, `cli/src/commands/create.ts`
+
+**Scope**: Wire `--tickets-path|-t` on `project init` to forward a custom tickets directory to `ProjectManager`, and `--project|-p` on `ticket create` to target a different project
+**Boundary**: No shared-layer changes — `ProjectManager.createProject()` already accepts `ticketsPath`, and `TicketService.createCR()` already takes any `Project` object
+
+**Makes GREEN**:
+- `initialize_project_with_custom_tickets_path`
+- `project_init_rejects_absolute_tickets_path`
+- `create_ticket_in_target_project`
+- `create_ticket_rejects_unknown_project`
+- `TEST-cli-project`
+- `TEST-cli-ticket-create`
+
+**Done when**:
+- [x] `project init --tickets-path <path>` sets the tickets directory in generated config
+- [x] Absolute and empty `--tickets-path` values are rejected by the shared validator
+- [x] `ticket create --project <code>` creates the ticket in the specified project
+- [x] `--project` with unknown code prints "Project <code> not found" and exits 1
+- [x] Without `--project`, create falls back to cwd detection (unchanged behavior)
 
 ---
 
