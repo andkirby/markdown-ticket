@@ -26,6 +26,7 @@ export interface ResolveCurrentProjectRequest {
 
 export interface ResolveCurrentProjectFoundContext {
   detectedFrom: string
+  outOfDiscoveryRange?: boolean
 }
 
 export interface ResolveCurrentProjectNoneContext {
