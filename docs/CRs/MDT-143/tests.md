@@ -116,6 +116,8 @@ CLI acceptance for `MDT-143` should run as real-process E2E in `cli/tests/e2e/`,
 | should show file paths only with --files | BR-4 |
 | should show info without paths with --info | BR-4 |
 | should support ticket ls alias | BR-4 |
+| should list tickets in a target project via --project | BR-4 |
+| should reject --project when the target project does not exist | BR-4, Edge-8 |
 
 ### Attr Output Format (`cli/tests/e2e/ticket/attr-output.spec.ts`)
 
