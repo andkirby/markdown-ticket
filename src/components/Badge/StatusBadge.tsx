@@ -15,6 +15,8 @@ import { Badge } from '../ui/badge'
 export interface StatusBadgeProps extends StatusVariantProps {
   /** Additional CSS classes */
   className?: string
+  /** Status is invalid - applies warning styling */
+  isInvalid?: boolean
 }
 
 /**
@@ -32,12 +34,12 @@ function formatDataAttr(value: string): string {
  * <StatusBadge status="In Progress" />
  * <StatusBadge status="Approved" className="ml-2" />
  */
-export function StatusBadge({ status, className, ...props }: StatusBadgeProps & React.HTMLAttributes<HTMLDivElement>) {
+export function StatusBadge({ status, className, isInvalid = false, ...props }: StatusBadgeProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <Badge
-      variant="outline"
-      className={cn('badge', className)}
-      data-status={formatDataAttr(status)}
+      variant={isInvalid ? 'solid' : 'outline'}
+      className={cn('badge', isInvalid && 'badge--invalid', className)}
+      data-status={isInvalid ? 'invalid' : formatDataAttr(status)}
       {...props}
     >
       {status}

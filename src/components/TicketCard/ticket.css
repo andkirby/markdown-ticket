@@ -1,0 +1,14 @@
+/**
+ * Ticket Card Styles
+ * Follows styling architecture from STYLING.md
+ */
+
+/* Base ticket card class - keeps inline layout and spacing in TSX */
+.ticket-card {
+  @apply border-gray-200/50 dark:border-slate-700/50;
+}
+
+/* Invalid status state - red border and ring */
+.ticket-card--invalid {
+  @apply border-red-500 dark:border-red-500 ring-2 ring-red-500/30;
+}
