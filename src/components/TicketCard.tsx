@@ -1,4 +1,5 @@
 import type { Ticket } from '../types'
+import type { CRStatus } from '@mdt/shared/models/Types'
 import * as React from 'react'
 import TicketAttributeTags from './TicketAttributeTags'
 import { TicketCode } from './TicketCode'
@@ -12,28 +13,53 @@ interface TicketCardProps {
 }
 
 /**
+ * Check if a status is a valid CR status.
+ * Compares against known status labels from statusConfig.
+ */
+function isValidStatus(status: string): boolean {
+  const validStatuses: CRStatus[] = [
+    'Proposed',
+    'Approved',
+    'In Progress',
+    'Implemented',
+    'Partially Implemented',
+    'On Hold',
+    'Rejected',
+  ]
+  return validStatuses.includes(status as CRStatus)
+}
+
+/**
  * @testid ticket-card — Ticket card container
  * @testid ticket-{code} — Ticket card by code (e.g., ticket-MDT-001)
  */
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onMove: _onMove, onClick: _onClick, onDragStart: _onDragStart, onEdit }) => {
+  const hasInvalidStatus = !isValidStatus(ticket.status)
+
   return (
     <div
-      className="group ticket-card bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border border-gray-200/50 dark:border-slate-700/50 rounded-xl px-3 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 hover:scale-[1.005] transition-all duration-300 ease-out cursor-pointer backdrop-blur-sm"
+      className={`group ticket-card bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border rounded-xl px-3 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 hover:scale-[1.005] transition-all duration-300 ease-out cursor-pointer backdrop-blur-sm ${
+        hasInvalidStatus ? 'ticket-card--invalid' : ''
+      }`}
       onClick={onEdit}
       data-testid={`ticket-card ticket-${ticket.code}`}
       data-ticket-key={ticket.code}
+      data-invalid={hasInvalidStatus ? 'true' : undefined}
+      title={hasInvalidStatus ? `Invalid status: "${ticket.status}"` : undefined}
     >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="ticket-title font-semibold text-gray-900 dark:text-white text-sm">
-          <TicketCode code={ticket.code} ticket={ticket} />
-          <span className="mx-1 text-gray-900 dark:text-white">•</span>
-          {ticket.title}
-        </h4>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <h4 className="ticket-title font-semibold text-gray-900 dark:text-white text-sm truncate">
+            <TicketCode code={ticket.code} ticket={ticket} />
+            <span className="mx-1 text-gray-900 dark:text-white">•</span>
+            {ticket.title}
+          </h4>
+        </div>
       </div>
 
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
-          <TicketAttributeTags ticket={ticket} />
+          <TicketAttributeTags ticket={ticket} isInvalidStatus={hasInvalidStatus} />
         </div>
 
         <div className="flex items-center space-x-1 shrink-0">
