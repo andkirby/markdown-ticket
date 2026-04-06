@@ -340,8 +340,8 @@ export class TicketService {
         throw new Error(`CR '${key}' not found in project '${project.id}'`)
       }
 
-      // Validate status transition
-      this.validateStatusTransition(cr.status, status)
+      // Note: Status transition validation removed to allow free movement
+      // This accommodates legacy/unknown status values in existing tickets
 
       // Read current file content
       const content = await readFile(cr.filePath, 'utf-8')

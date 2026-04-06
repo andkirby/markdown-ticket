@@ -4,12 +4,13 @@ import { ContextBadge, PriorityBadge, RelationshipBadge, StatusBadge, TypeBadge 
 interface TicketAttributeTagsProps {
   ticket: Ticket
   className?: string
+  isInvalidStatus?: boolean // Status is invalid - highlight badge
 }
 
-const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, className = '' }) => {
+const TicketAttributeTags: React.FC<TicketAttributeTagsProps> = ({ ticket, className = '', isInvalidStatus = false }) => {
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
-      <StatusBadge status={ticket.status} />
+      <StatusBadge status={ticket.status} isInvalid={isInvalidStatus} />
       <PriorityBadge priority={ticket.priority} />
       <TypeBadge type={ticket.type || 'Unknown'} />
       {ticket.phaseEpic && (

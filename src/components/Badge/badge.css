@@ -73,8 +73,13 @@
     @apply bg-gradient-to-r from-neutral-50 to-neutral-200 text-neutral-800 border-neutral-200 dark:from-neutral-950 dark:to-neutral-800 dark:text-neutral-200 dark:border-neutral-700;
   }
 
+  /* Invalid status (red gradient) */
+  .badge[data-status="invalid"] {
+    @apply bg-gradient-to-r from-red-50 to-red-100 text-red-800 border-red-200 dark:from-red-950 dark:to-red-800 dark:text-red-200 dark:border-red-700;
+  }
+
   /* Fallback for unknown status (gray gradient) */
-  .badge[data-status]:not([data-status="proposed"]):not([data-status="approved"]):not([data-status="in-progress"]):not([data-status="implemented"]):not([data-status="rejected"]):not([data-status="on-hold"]):not([data-status="partially-implemented"]):not([data-status="superseded"]):not([data-status="deprecated"]):not([data-status="duplicate"]) {
+  .badge[data-status]:not([data-status="proposed"]):not([data-status="approved"]):not([data-status="in-progress"]):not([data-status="implemented"]):not([data-status="rejected"]):not([data-status="on-hold"]):not([data-status="partially-implemented"]):not([data-status="superseded"]):not([data-status="deprecated"]):not([data-status="duplicate"]):not([data-status="invalid"]) {
     @apply bg-gradient-to-r from-gray-50 to-gray-300 text-gray-800 border-gray-300 dark:from-gray-950 dark:to-gray-700 dark:text-gray-200 dark:border-gray-600;
   }
 
