@@ -37,16 +37,16 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
     fileWatcher.stop()
   })
 
-  describe('OBL-two-level-watch-pattern: Main watcher observes ticket root and one nested level (C1)', () => {
-    it('should use a two-level markdown glob instead of recursive **/*.md', () => {
+  describe('OBL-recursive-watch-pattern: Main watcher observes all nesting depths (C1)', () => {
+    it('should use a recursive markdown glob to watch all subdirectory levels', () => {
       const projectPath = '/test/project'
       const projectId = 'MDT'
 
       fileWatcher.initMultiProjectWatcher([{ id: projectId, path: projectPath }])
 
-      // Should watch ticket root files and one nested folder level only
+      // Should recursively watch all markdown files at any depth
       expect(mockChokidar.watch).toHaveBeenCalledWith(
-        '/test/project/{*.md,*/*.md}',
+        '/test/project/**/*.md',
         expect.any(Object),
       )
     })
@@ -144,7 +144,7 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
       }
     })
 
-    it('should ignore subdocuments deeper than one folder level', () => {
+    it('should handle subdocuments at arbitrary nesting depth', () => {
       const projectPath = '/test/project/docs/CRs/*.md'
       const projectId = 'MDT'
       const changeSpy = jest.fn()
@@ -160,7 +160,15 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
         changeHandler('/test/project/docs/CRs/MDT-142/poc/nested/deep.md')
       }
 
-      expect(changeSpy).not.toHaveBeenCalled()
+      expect(changeSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filename: 'MDT-142/poc/nested/deep.md',
+          subdocument: {
+            code: 'poc/nested/deep',
+            filePath: 'MDT-142/poc/nested/deep.md',
+          },
+        }),
+      )
     })
 
     it('should extract ticket code from slug file path (MDT-142-slug.md)', (done) => {
