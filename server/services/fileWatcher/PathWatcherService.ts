@@ -306,10 +306,6 @@ export class PathWatcherService extends EventEmitter {
         const ticketCode = ticketMatch[1]
         const relativeParts = parts.slice(i + 1)
 
-        if (relativeParts.length > 2) {
-          return null
-        }
-
         // Extract subdocument code from filename
         const codeMatch = fn.match(/^(.+)\.md$/)
         if (codeMatch && codeMatch[1] !== ticketCode) {
@@ -389,6 +385,10 @@ export class PathWatcherService extends EventEmitter {
     }
   }
 
+  /**
+   * Build a recursive watch pattern from a project watch path.
+   * Supports arbitrary nesting depth (e.g., MDT-142/prep/architecture.md).
+   */
   private buildTwoLevelWatchPath(watchPath: string): { basePath: string, watchPattern: string } {
     if (watchPath.endsWith('.md') && !watchPath.includes('*')) {
       const lastSlash = watchPath.lastIndexOf('/')
@@ -401,7 +401,7 @@ export class PathWatcherService extends EventEmitter {
     const basePath = this.normalizeBasePath(watchPath)
     return {
       basePath,
-      watchPattern: `${basePath}{*.md,*/*.md}`,
+      watchPattern: `${basePath}**/*.md`,
     }
   }
 
