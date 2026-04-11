@@ -61,8 +61,8 @@ describe('PathWatcherService', () => {
       service.initMultiProjectWatcher(projectPaths)
 
       expect(chokidar.watch).toHaveBeenCalledTimes(2)
-      expect(chokidar.watch).toHaveBeenCalledWith('/path1/{*.md,*/*.md}', expect.any(Object))
-      expect(chokidar.watch).toHaveBeenCalledWith('/path2/{*.md,*/*.md}', expect.any(Object))
+      expect(chokidar.watch).toHaveBeenCalledWith('/path1/**/*.md', expect.any(Object))
+      expect(chokidar.watch).toHaveBeenCalledWith('/path2/**/*.md', expect.any(Object))
       expect(mockWatcher.on).toHaveBeenCalledWith('ready', expect.any(Function))
     })
 
