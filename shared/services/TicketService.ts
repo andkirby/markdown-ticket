@@ -721,15 +721,12 @@ export class TicketService {
 
     // Content
     if (data.content) {
-      // MDT-064: Auto-generate H1 from title parameter if content doesn't start with H1
-      if (!data.content.trim().startsWith('# ')) {
-        sections.push(`# ${ticket.title}`)
-        sections.push('')
-        sections.push(data.content)
-      }
-      else {
-        sections.push(data.content)
-      }
+      // MDT-064: CLI title is always the authoritative H1.
+      // Strip any leading H1 from content to prevent content from overriding the CLI title.
+      const strippedContent = data.content.replace(/^#\s+.+\n*/m, '')
+      sections.push(`# ${ticket.title}`)
+      sections.push('')
+      sections.push(strippedContent.trim())
     }
     else {
       // Use type-specific template from TemplateService
