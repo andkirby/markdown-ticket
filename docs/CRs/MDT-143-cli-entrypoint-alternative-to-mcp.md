@@ -556,3 +556,15 @@ cli/
 | Unknown project rejection | Edge-8 added (new edge case) |
 
 **Updated workflow documents**: requirements, bdd, tests, tasks, uat.md. Requirements relocked.
+
+### UAT Session 2026-04-14
+
+**Approved changes**: Fix stdin content H1 overriding CLI title.
+
+| Change | Requirement Impact |
+|--------|-------------------|
+| `formatCRAsMarkdown()` always emits `# {ticket.title}` as H1, stripping any leading H1 from stdin content | BR-6 bug fix (implementation, no spec change) |
+
+**Updated workflow documents**: None (implementation-only fix, no spec change)
+**uat.md written**: yes
+**Strict drift/lock**: not used
