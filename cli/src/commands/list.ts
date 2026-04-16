@@ -19,7 +19,7 @@ import { PRIORITY_TOKENS, STATUS_ALIASES, TYPE_TOKENS } from '../utils/aliases.j
 /**
  * List command options
  */
-export interface ListCommandOptions {
+interface ListCommandOptions {
   json?: boolean
   all?: boolean
   limit?: number

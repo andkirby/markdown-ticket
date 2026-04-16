@@ -13,7 +13,7 @@ import { parseToml } from '@mdt/shared/utils/toml.js'
 /**
  * CLI configuration interface
  */
-export interface CliConfig {
+interface CliConfig {
   ticket: {
     absolutePath: boolean
   }
@@ -46,7 +46,7 @@ let cachedConfig: CliConfig | null = null
  *
  * @returns Parsed CLI configuration
  */
-export function loadCliConfig(): CliConfig {
+function loadCliConfig(): CliConfig {
   const configPath = join(homedir(), '.config', 'mdt', 'cli.toml')
 
   // If config file doesn't exist, return defaults
