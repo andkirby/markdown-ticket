@@ -103,6 +103,20 @@
       "tags": [
         "timing:now"
       ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN a new top-level ticket file is created (e.g. MDT-150-aa.md), the file watcher shall emit an add event and the SSE system shall broadcast it to connected clients",
+      "sourceRef": "CR:MDT-142",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "File watcher unit tests must exercise real file system operations using actual chokidar watchers, not mocked handlers, to catch pattern and lifecycle bugs",
+      "sourceRef": "CR:MDT-142",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -151,6 +165,17 @@
       "given": "I have an active worktree for a ticket with subdocuments",
       "when": "a subdocument file is modified in the worktree ticket folder",
       "then": "the SSE event contains the subdocument code, file path, and source='worktree'",
+      "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "new_ticket_file_creation",
+      "title": "New top-level ticket file creation triggers SSE event",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "a project with active file watcher and SSE client connected",
+      "when": "a new ticket file is created at docs/CRs/MDT-150-aa.md via filesystem write",
+      "then": "the file watcher emits an add event and the SSE system broadcasts it to all connected clients",
       "sourceRef": "CR:MDT-142"
     }
   ],
@@ -375,6 +400,29 @@
         "BR-1.4"
       ],
       "file": "tests/e2e/filewatcher/subdocument-sse.spec.ts",
+      "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "TEST-path-watcher-file-creation",
+      "kind": "unit",
+      "title": "PathWatcherService emits add event for new top-level ticket file using real chokidar",
+      "covers": [
+        "BR-1.5",
+        "BR-1.6",
+        "C1"
+      ],
+      "file": "server/tests/PathWatcherService.file-creation.test.ts",
+      "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "TEST-e2e-file-creation-sse",
+      "kind": "e2e",
+      "title": "E2E: New ticket file creation triggers SSE event and UI update",
+      "covers": [
+        "BR-1.5",
+        "C4"
+      ],
+      "file": "tests/e2e/sse/updates.spec.ts",
       "sourceRef": "CR:MDT-142"
     }
   ],
