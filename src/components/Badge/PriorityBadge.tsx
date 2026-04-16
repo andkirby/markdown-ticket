@@ -11,18 +11,11 @@
 import type { PriorityVariantProps } from './types'
 import { cn } from '../../lib/utils'
 import { Badge } from '../ui/badge'
+import { formatDataAttr } from './utils'
 
 export interface PriorityBadgeProps extends PriorityVariantProps {
   /** Additional CSS classes */
   className?: string
-}
-
-/**
- * Converts priority string to data attribute format.
- * "High Priority" -> "high-priority" (lowercase with hyphens)
- */
-function formatDataAttr(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, '-')
 }
 
 /**

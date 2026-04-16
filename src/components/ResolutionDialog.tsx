@@ -1,6 +1,7 @@
 import type { Status } from '../types'
 import * as React from 'react'
 import { getStatusDescription, getStatusLabel } from '../config/statusConfig'
+import { formatDataAttr } from './Badge/utils'
 import { Button } from './ui/Button'
 import { Modal, ModalBody, ModalFooter, ModalHeader } from './ui/Modal'
 
@@ -69,7 +70,7 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
                     <div className="flex items-center space-x-3">
                       <div
                         className="status-dot--inline"
-                        data-status={status.toLowerCase().replace(/\s+/g, '-')}
+                        data-status={formatDataAttr(status)}
                       />
                       <span className="font-medium text-gray-900 dark:text-white">
                         {getStatusLabel(status)}

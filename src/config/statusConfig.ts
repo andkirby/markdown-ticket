@@ -197,11 +197,6 @@ function _isStatusEditable(status: CRStatus): boolean {
   return !STATUS_CONFIG[status].isTerminal
 }
 
-// Get status color for UI
-export function getStatusColor(status: CRStatus): string {
-  return STATUS_CONFIG[status].color
-}
-
 // Get status description
 export function getStatusDescription(status: CRStatus): string {
   return STATUS_CONFIG[status].description

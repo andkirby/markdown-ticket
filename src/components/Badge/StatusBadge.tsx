@@ -11,20 +11,13 @@
 import type { StatusVariantProps } from './types'
 import { cn } from '../../lib/utils'
 import { Badge } from '../ui/badge'
+import { formatDataAttr } from './utils'
 
 export interface StatusBadgeProps extends StatusVariantProps {
   /** Additional CSS classes */
   className?: string
   /** Status is invalid - applies warning styling */
   isInvalid?: boolean
-}
-
-/**
- * Converts status string to data attribute format.
- * "In Progress" -> "in-progress", "On Hold" -> "on-hold"
- */
-function formatDataAttr(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, '-')
 }
 
 /**
