@@ -1,5 +1,48 @@
 # Release Notes
 
+## v0.14.0 (2026-04-16)
+
+### New Features
+
+**CLI for Tickets and Projects (MDT-143)**
+- **Standalone CLI**: New `mdt-cli` command for managing tickets and projects from the terminal
+- **Ticket Operations**: Create, list, view, rename, update, and delete tickets without leaving the shell
+- **Project Management**: Initialize projects, list registered projects, and inspect project details
+- **Cross-Project Access**: Use `--project` to work with tickets in any registered project
+- **STDIN Support**: Pipe content directly into ticket creation (`cat file.md | mdt-cli create`)
+- **Subdocument Listing**: View related documents from the ticket detail view in the CLI
+- **Colored Output**: Human-friendly terminal output with status colors and formatting
+
+### Improvements
+
+**Compact Ticket Viewer (MDT-144)**
+- **Smaller Header**: Ticket viewer header reduced from ~180px to a compact row-based layout
+- **Thin Dividers**: Clean horizontal separators between title, badges, tabs, and content
+- **Relative Timestamps**: Shows "Updated X ago" by default, click to toggle, hover for full datetime
+- **More Content Visible**: Less chrome means more room for the actual ticket content
+
+**Real-Time Subdocument Updates (MDT-142)**
+- **Recursive File Watching**: Subdocument changes at any depth now trigger SSE events
+- **Granular Updates**: Frontend updates specific subdocuments instead of refetching entire ticket list
+- **Worktree Support**: Subdocument changes in worktrees emit events with correct source attribution
+
+**Mermaid Upgrade**
+- **Mermaid 11.14.0**: Upgraded from 10.9.5 for better diagram rendering and new features
+
+### Bug Fixes
+
+**Nested Project Resolution (MDT-147)**
+- **Correct Project Detection**: Projects in deeply nested directories now resolve to their own config instead of falling through to the parent project
+- **Auto-Registration**: Out-of-range detected projects are now automatically registered
+- **No More Wrong Codes**: Tickets created in sub-projects get the correct project code and counter
+
+**Document Tree (General)**
+- **Duplicate Folder Nodes**: Merged duplicate folder entries in the document tree API
+- **SSE Event Matching**: Fixed event matcher to use filename instead of ticket code for reliable updates
+- **Subdocument Routing**: Corrected subdocument routing and depth limits
+
+---
+
 ## v0.13.0 (2026-03-18)
 
 ### 🎉 New Features
