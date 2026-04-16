@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-147"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "When resolveCurrentProject detects a local .mdt-config.toml but the project is not in registry or auto-discovery, it must build a Project from the config, register it in the global registry, and return it (not fall through to parent)",
+      "sourceRef": "MDT-147 Section 4 AC-1,AC-2",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "Subsequent resolutions in the same directory find the project from registry without needing the fallback path",
+      "sourceRef": "MDT-147 Section 4 AC-3",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "resolveCurrentProject result context includes outOfDiscoveryRange=true for the first resolution of an out-of-range project",
+      "sourceRef": "MDT-147 Section 4 AC-4",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Existing in-range projects must continue to resolve normally (no regression)",
+      "sourceRef": "MDT-147 Section 4 AC-5",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [],
+  "obligations": [
+    {
+      "id": "OBL-out-of-range-fallback",
+      "title": "resolveCurrentProject must auto-register out-of-range detected projects instead of falling through to path-containment",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2"
+      ],
+      "artifactIds": [
+        "ART-project-service",
+        "ART-project-factory",
+        "ART-project-discovery",
+        "ART-resolve-context-types"
+      ],
+      "sourceRef": "MDT-147 Section 3: fallback logic"
+    },
+    {
+      "id": "OBL-context-flag",
+      "title": "ResolveCurrentProjectFoundContext must include outOfDiscoveryRange boolean flag",
+      "derivedFrom": [
+        "BR-1.3"
+      ],
+      "artifactIds": [
+        "ART-resolve-context-types",
+        "ART-project-service"
+      ],
+      "sourceRef": "MDT-147 Section 3: context type"
+    },
+    {
+      "id": "OBL-no-regression",
+      "title": "In-range projects must continue resolving via existing detection and registry paths",
+      "derivedFrom": [
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-project-service",
+        "ART-project-detector"
+      ],
+      "sourceRef": "MDT-147 Section 4 AC-5"
+    },
+    {
+      "id": "OBL-test-coverage",
+      "title": "Unit tests must cover out-of-range fallback, context flag, registry persistence, and regression of in-range resolution",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.3",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-resolve-test",
+        "ART-project-service"
+      ],
+      "sourceRef": "MDT-147 Section 5: Verification"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-project-service",
+      "path": "shared/services/ProjectService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-147 Section 3: resolveCurrentProject fallback"
+    },
+    {
+      "id": "ART-resolve-context-types",
+      "path": "shared/services/project/types.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-147: outOfDiscoveryRange context field"
+    },
+    {
+      "id": "ART-project-factory",
+      "path": "shared/services/project/ProjectFactory.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-147: createFromConfig() used by fallback"
+    },
+    {
+      "id": "ART-project-discovery",
+      "path": "shared/services/project/ProjectDiscoveryService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-147: registerProject() called by fallback"
+    },
+    {
+      "id": "ART-project-detector",
+      "path": "shared/utils/projectDetector.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-147: detectProjectContext() unchanged"
+    },
+    {
+      "id": "ART-resolve-test",
+      "path": "shared/services/project/__tests__/ProjectService.resolve.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-147: new test file for resolveCurrentProject out-of-range path"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-resolve-out-of-range",
+      "kind": "unit",
+      "title": "resolveCurrentProject out-of-range fallback",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "C1"
+      ],
+      "file": "shared/services/project/__tests__/ProjectService.resolve.test.ts",
+      "sourceRef": "MDT-147 architecture OBL-out-of-range-fallback,OBL-context-flag,OBL-no-regression"
+    }
+  ],
+  "tasks": []
+}

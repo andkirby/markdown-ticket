@@ -1,6 +1,6 @@
 ---
 code: MDT-147
-status: In Progress
+status: Implemented
 dateCreated: 2026-04-05T15:23:16.553Z
 type: Bug Fix
 priority: Medium
