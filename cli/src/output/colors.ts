@@ -102,23 +102,11 @@ export function shouldUseColor(): boolean {
  * @param color - ANSI color code
  * @returns Colorized text (or plain text if colors disabled)
  */
-export function colorize(text: string, color: string): string {
+function colorize(text: string, color: string): string {
   if (!shouldUseColor()) {
     return text
   }
   return `${color}${text}${ANSI.reset}`
-}
-
-/**
- * Create a badge-style label with optional coloring
- *
- * @param text - Badge text
- * @param colorFn - Optional color function to apply
- * @returns Formatted badge [text]
- */
-export function badge(text: string, colorFn?: (s: string) => string): string {
-  const colored = colorFn ? colorFn(text) : text
-  return `[${colored}]`
 }
 
 // -------------------------------------------------------------------
