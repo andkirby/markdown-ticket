@@ -160,7 +160,38 @@ Extract from file path:
 - Ticket viewer updates when subdocument edited in worktree
 - Watchers auto-configured when worktree created
 
-## 7. References
+## 7. Clarifications
+
+### UAT Session 2026-04-06
+
+**Context**: File watcher fails to detect new top-level ticket file creation. Tickets created via CLI (`mdt-cli create`), API, or manual `touch` do not trigger SSE events or UI updates. File modifications on existing tickets work correctly.
+
+**Approved Changes**:
+- BR-1.5 (new, additive_change): File watcher must emit `add` SSE event for new top-level ticket files
+- BR-1.6 (new, additive_change): Unit tests must exercise real filesystem, not just mocked chokidar handlers
+- C1 (refine_in_place): Watch pattern may need investigation
+
+**Changed Requirement IDs**: BR-1.5 (new), BR-1.6 (new), C1 (refined)
+
+**Updated Workflow Documents**: requirements.md, bdd.md, tests.md, tasks.md (pending)
+
+**uat.md Written**: Yes
+
+**Root Cause Analysis**:
+- All unit tests mock `chokidar.watch` — never test real filesystem events
+- E2E tests only test `modifyTicketFile` (change events) and subdocument creation
+- No test covers creating a new top-level ticket file (e.g., `MDT-150-aa.md`) and verifying SSE event
+- Server runs with `bun --hot` which may kill watcher state on reload
+- CLI command is `mdt-cli create` (not `mdt create`)
+- `buildTwoLevelWatchPath` generates `{*.md,*/*.md}` pattern — needs real-chokidar verification
+
+**Execution Slices**:
+1. Slice 1: Root cause diagnosis via real-filesystem unit test
+2. Slice 2: Fix + regression E2E test for file creation
+
+---
+
+## 8. References
 
 > Requirements trace projection: [requirements.trace.md](./MDT-142/requirements.trace.md)
 > Requirements notes: [requirements.md](./MDT-142/requirements.md)
