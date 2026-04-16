@@ -32,6 +32,11 @@ export default {
     // Map shared modules to mocks, but exclude test-lib (uses real implementation from TypeScript source)
     '^@mdt/shared/test-lib$': '<rootDir>/../shared/test-lib/index.ts',
     '^@mdt/shared/test-lib/(.*)$': '<rootDir>/../shared/test-lib/$1',
+    // Exclude toml and Ticket from mocks (their mock files re-export the real implementation)
+    '^@mdt/shared/utils/toml$': '<rootDir>/../shared/utils/toml.ts',
+    '^@mdt/shared/utils/toml\\.js$': '<rootDir>/../shared/utils/toml.ts',
+    '^@mdt/shared/models/Ticket$': '<rootDir>/../shared/models/Ticket.ts',
+    '^@mdt/shared/models/Ticket\\.js$': '<rootDir>/../shared/models/Ticket.ts',
     // Map shared modules to mocks, removing .js extension
     '^@mdt/shared/(.*)\\.js$': '<rootDir>/tests/mocks/shared/$1',
     '^@mdt/shared/(.*)$': '<rootDir>/tests/mocks/shared/$1',
