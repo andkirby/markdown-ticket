@@ -1,6 +1,6 @@
 ---
 code: MDT-077
-status: Approved
+status: Rejected
 dateCreated: 2025-11-13T22:10:34.006Z
 type: Feature Enhancement
 priority: High
