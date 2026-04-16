@@ -11,18 +11,11 @@
 import type { TypeVariantProps } from './types'
 import { cn } from '../../lib/utils'
 import { Badge } from '../ui/badge'
+import { formatDataAttr } from './utils'
 
 export interface TypeBadgeProps extends TypeVariantProps {
   /** Additional CSS classes */
   className?: string
-}
-
-/**
- * Converts type string to data attribute format.
- * "Feature Enhancement" -> "feature-enhancement" (lowercase with hyphens)
- */
-function formatDataAttr(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, '-')
 }
 
 /**
