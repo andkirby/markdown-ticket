@@ -13,7 +13,7 @@ import type { Project } from '@mdt/shared/models/Project.js'
 import type { AttrOperation } from '@mdt/shared/services/ticket/types.js'
 import { readdirSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { shouldUseColor, colorizeStatus, colorizePriority, colorizeType, colorizeTitle, colorizeTicketKey, colorizeProjectCode, colorizeProjectId, colorizePath, badge, visiblePadEnd, statusDisplayLabel } from './colors.js'
+import { shouldUseColor, colorizeStatus, colorizePriority, colorizeType, colorizeTitle, colorizeTicketKey, colorizeProjectCode, colorizeProjectId, colorizePath, visiblePadEnd, statusDisplayLabel } from './colors.js'
 import { getCliConfig } from '../utils/cliConfig.js'
 
 /**
@@ -347,37 +347,6 @@ export function formatTicketAttrPipe(ticketKey: string, results: AttrUpdateResul
   return lines.join('\n')
 }
 
-/**
- * Format ticket attribute update confirmation (legacy format)
- *
- * @param ticketKey - Ticket key
- * @param operations - Operations applied
- * @returns Formatted attribute update message
- */
-export function formatTicketAttr(ticketKey: string, operations: AttrOperation[]): string {
-  const lines: string[] = []
-
-  lines.push(`Updated ${ticketKey}:`)
-
-  for (const operation of operations) {
-    const cliField = REVERSE_FIELD_MAPPING[operation.field] || operation.field
-
-    if (operation.op === 'replace') {
-      const value = Array.isArray(operation.value) ? operation.value.join(', ') : operation.value
-      lines.push(`  ${cliField} → ${value}`)
-    }
-    else if (operation.op === 'add') {
-      const value = Array.isArray(operation.value) ? operation.value.join(', ') : operation.value
-      lines.push(`  ${cliField} += ${value}`)
-    }
-    else if (operation.op === 'remove') {
-      const value = Array.isArray(operation.value) ? operation.value.join(', ') : operation.value
-      lines.push(`  ${cliField} -= ${value}`)
-    }
-  }
-
-  return lines.join('\n')
-}
 
 /**
  * Format ticket rename confirmation
