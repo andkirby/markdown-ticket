@@ -1,6 +1,6 @@
 import type { Status } from '../types'
 import * as React from 'react'
-import { getStatusColor, getStatusDescription, getStatusLabel } from '../config/statusConfig'
+import { getStatusDescription, getStatusLabel } from '../config/statusConfig'
 import { Button } from './ui/Button'
 import { Modal, ModalBody, ModalFooter, ModalHeader } from './ui/Modal'
 
@@ -68,12 +68,8 @@ export const ResolutionDialog: React.FC<ResolutionDialogProps> = ({
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
                       <div
-                        className={`
-                          h-4 w-4 rounded-full
-                          ${getStatusColor(status) === 'teal' ? 'bg-teal-500' : ''}
-                          ${getStatusColor(status) === 'indigo' ? 'bg-indigo-500' : ''}
-                          ${getStatusColor(status) === 'red' ? 'bg-red-500' : ''}
-                        `}
+                        className="status-dot--inline"
+                        data-status={status.toLowerCase().replace(/\s+/g, '-')}
                       />
                       <span className="font-medium text-gray-900 dark:text-white">
                         {getStatusLabel(status)}

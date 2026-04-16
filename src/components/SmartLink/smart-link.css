@@ -1,0 +1,44 @@
+/**
+ * SmartLink semantic link styling
+ *
+ * Uses data-link-type attributes for semantic color variants.
+ * Usage: <a className="smart-link" data-link-type="external">Link</a>
+ *
+ * See STYLING.md for the data-* attribute pattern.
+ */
+
+@layer components {
+  .smart-link {
+    @apply hover:underline transition-colors;
+  }
+
+  /* Link type variants */
+  .smart-link[data-link-type="external"] {
+    @apply text-blue-600 dark:text-blue-400;
+  }
+
+  .smart-link[data-link-type="ticket"] {
+    @apply text-purple-600 dark:text-purple-400;
+  }
+
+  .smart-link[data-link-type="document"] {
+    @apply text-green-600 dark:text-green-400;
+  }
+
+  .smart-link[data-link-type="anchor"] {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+
+  .smart-link[data-link-type="file"] {
+    @apply text-orange-600 dark:text-orange-400;
+  }
+
+  .smart-link[data-link-type="cross-project"] {
+    @apply text-indigo-600 dark:text-indigo-400;
+  }
+
+  .smart-link[data-link-type="broken"],
+  .smart-link[data-link-type="unknown"] {
+    @apply text-red-400 line-through;
+  }
+}

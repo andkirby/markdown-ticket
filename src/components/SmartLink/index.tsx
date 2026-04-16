@@ -1,11 +1,11 @@
-import type { LinkContext, NormalizedLink } from '../utils/linkNormalization'
-import type { ParsedLink } from '../utils/linkProcessor'
+import type { LinkContext, NormalizedLink } from '../../utils/linkNormalization'
+import type { ParsedLink } from '../../utils/linkProcessor'
 
 import { ExternalLink, File, FileCode, FileText, Hash } from 'lucide-react'
 import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { getLinkConfig } from '../config/linkConfig'
-import { classifyAndNormalizeLink, createLinkContextFromProject, LinkType } from '../utils/linkProcessor'
+import { getLinkConfig } from '../../config/linkConfig'
+import { classifyAndNormalizeLink, createLinkContextFromProject, LinkType } from '../../utils/linkProcessor'
 
 interface SmartLinkProps {
   link: ParsedLink
@@ -17,16 +17,6 @@ interface SmartLinkProps {
   linkContext?: Partial<LinkContext>
   /** Original href before normalization */
   originalHref?: string
-}
-
-const linkStyles = {
-  external: 'text-blue-600 hover:underline external-link',
-  ticket: 'text-purple-600 hover:underline ticket-link',
-  document: 'text-green-600 hover:underline document-link',
-  anchor: 'text-gray-600 hover:underline anchor-link',
-  file: 'text-orange-600 hover:underline file-link',
-  crossProject: 'text-indigo-600 hover:underline cross-project-link',
-  broken: 'text-red-400 line-through broken-link',
 }
 
 const SmartLink: React.FC<SmartLinkProps> = ({
@@ -101,7 +91,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
   // Show error state if normalization failed
   if (normalizedLink && !normalizedLink.isValid) {
     return (
-      <span className={`${baseClassName} ${linkStyles.broken}`} title={normalizedLink.error}>
+      <span className={`${baseClassName} smart-link`} data-link-type="broken" title={normalizedLink.error}>
         {children}
       </span>
     )
@@ -114,7 +104,8 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           href={effectiveLink.href}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${baseClassName} ${linkStyles.external}`}
+          className={`${baseClassName} smart-link`}
+          data-link-type="external"
         >
           {children}
           {showIcon && <ExternalLink className="w-3 h-3" />}
@@ -125,7 +116,8 @@ const SmartLink: React.FC<SmartLinkProps> = ({
       return (
         <Link
           to={effectiveLink.href}
-          className={`${baseClassName} ${linkStyles.ticket}`}
+          className={`${baseClassName} smart-link`}
+          data-link-type="ticket"
         >
           {showIcon && <FileText className="w-3 h-3" />}
           {children}
@@ -136,7 +128,8 @@ const SmartLink: React.FC<SmartLinkProps> = ({
       return (
         <Link
           to={effectiveLink.href}
-          className={`${baseClassName} ${linkStyles.document}`}
+          className={`${baseClassName} smart-link`}
+          data-link-type="document"
         >
           {showIcon && <FileCode className="w-3 h-3" />}
           {children}
@@ -147,7 +140,8 @@ const SmartLink: React.FC<SmartLinkProps> = ({
       return (
         <a
           href={effectiveLink.href}
-          className={`${baseClassName} ${linkStyles.anchor}`}
+          className={`${baseClassName} smart-link`}
+          data-link-type="anchor"
         >
           {showIcon && <Hash className="w-3 h-3" />}
           {children}
@@ -160,7 +154,8 @@ const SmartLink: React.FC<SmartLinkProps> = ({
           href={effectiveLink.href}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${baseClassName} ${linkStyles.file}`}
+          className={`${baseClassName} smart-link`}
+          data-link-type="file"
         >
           {showIcon && <File className="w-3 h-3" />}
           {children}
@@ -171,7 +166,8 @@ const SmartLink: React.FC<SmartLinkProps> = ({
       return (
         <Link
           to={effectiveLink.href}
-          className={`${baseClassName} ${linkStyles.crossProject}`}
+          className={`${baseClassName} smart-link`}
+          data-link-type="cross-project"
         >
           {showIcon && <FileText className="w-3 h-3" />}
           {children}
@@ -184,7 +180,7 @@ const SmartLink: React.FC<SmartLinkProps> = ({
     case LinkType.UNKNOWN:
     default:
       return (
-        <span className={`${baseClassName} ${linkStyles.broken}`}>
+        <span className={`${baseClassName} smart-link`} data-link-type="broken">
           {children}
         </span>
       )

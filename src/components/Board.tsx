@@ -429,16 +429,18 @@ const BoardContent: React.FC<BoardProps> = ({
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="text-red-800 text-md font-medium mb-2">Error loading tickets</div>
-          <div className="text-red-600 mb-4">{error.message}</div>
-          <Button
-            onClick={handleRefresh}
-            variant="secondary"
-          >
-            Refresh
-          </Button>
-        </div>
+        <Alert variant="destructive">
+          <AlertTitle>Error loading tickets</AlertTitle>
+          <AlertDescription>
+            <p className="mb-4">{error.message}</p>
+            <Button
+              onClick={handleRefresh}
+              variant="secondary"
+            >
+              Refresh
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     )
   }

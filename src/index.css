@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import './components/Badge/badge.css';
+@import './components/SmartLink/smart-link.css';
 @import './styles/entities/fav-star.css';
 
 @tailwind base;
@@ -218,6 +219,39 @@
 
   .status-dot--orange {
     @apply bg-orange-500;
+  }
+
+  /* Inline status dots (non-positioned, for use in lists/dialogs) */
+  .status-dot--inline {
+    @apply inline-block h-4 w-4 rounded-full;
+  }
+
+  .status-dot--inline[data-status="proposed"] {
+    @apply bg-gray-500 dark:bg-gray-400;
+  }
+
+  .status-dot--inline[data-status="approved"] {
+    @apply bg-green-500 dark:bg-green-400;
+  }
+
+  .status-dot--inline[data-status="in-progress"] {
+    @apply bg-blue-500 dark:bg-blue-400;
+  }
+
+  .status-dot--inline[data-status="implemented"] {
+    @apply bg-teal-500 dark:bg-teal-400;
+  }
+
+  .status-dot--inline[data-status="partially-implemented"] {
+    @apply bg-indigo-500 dark:bg-indigo-400;
+  }
+
+  .status-dot--inline[data-status="on-hold"] {
+    @apply bg-orange-500 dark:bg-orange-400;
+  }
+
+  .status-dot--inline[data-status="rejected"] {
+    @apply bg-red-500 dark:bg-red-400;
   }
 
   .avatar {
