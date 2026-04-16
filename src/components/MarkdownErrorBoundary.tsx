@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import * as React from 'react'
 import { Component } from 'react'
+import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 
 interface Props {
   children: ReactNode
@@ -29,12 +30,12 @@ export class MarkdownErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="p-4 border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 rounded-lg">
-          <p className="text-red-700 dark:text-red-300 font-medium">Failed to render markdown content</p>
-          <p className="text-red-600 dark:text-red-400 text-sm mt-1">
+        <Alert variant="destructive">
+          <AlertTitle>Failed to render markdown content</AlertTitle>
+          <AlertDescription>
             {this.state.error?.message || 'Unknown error occurred'}
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       )
     }
 
