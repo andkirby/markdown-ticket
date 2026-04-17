@@ -7,6 +7,7 @@
 #   3. Block ../shared/ imports (enforce @mdt/shared alias)
 #   4. Block absolute home paths in code
 #   5. Run knip on .ts files
+#   6. Check markdown code fences (broken/unclosed blocks)
 
 set -e
 
@@ -17,6 +18,7 @@ HOOK_DIR="$(dirname "$0")"
 . "$HOOK_DIR/lib/block-shared-imports.sh"
 . "$HOOK_DIR/lib/block-home-paths-code.sh"
 . "$HOOK_DIR/lib/run-knip.sh"
+. "$HOOK_DIR/lib/check-markdown-fences.sh"
 
 # Run checks
 block_env_files
@@ -24,5 +26,6 @@ block_trace_files
 block_shared_imports
 block_home_paths_code
 run_knip
+check_markdown_fences
 
 exit 0

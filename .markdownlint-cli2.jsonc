@@ -1,0 +1,40 @@
+{
+  "config": {
+    "default": false,
+    "MD031": true,
+    "MD040": true,
+    "MD046": true,
+    "MD048": true
+  },
+  "ignores": [
+    // dependencies
+    "node_modules/**",
+    "**/node_modules/**",
+    // build outputs
+    "dist/**",
+    "**/dist/**",
+    "build/**",
+    // test outputs
+    "playwright-report/**",
+    "test-results/**",
+    "coverage/**",
+    // generated / research / scratch
+    "generated-docs/**",
+    "research/**",
+    "designs/**",
+    "prompts/**",
+    // dot dirs (IDE, tools, agents)
+    ".git/**",
+    ".idea/**",
+    ".agent/**",
+    ".agents/**",
+    ".claude/**",
+    ".playwright-cli/**",
+    ".auto-claude/**",
+    ".ralph/**",
+    ".gitWT/**",
+    // trace files
+    "**/*.trace.md",
+    "docs/CRs/.trace/**"
+  ]
+}
