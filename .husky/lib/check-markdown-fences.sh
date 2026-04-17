@@ -1,0 +1,48 @@
+#!/bin/sh
+# Block commits with broken markdown code blocks (unclosed/malformed fences)
+#
+# Two checks:
+#   1. Fence parity: odd number of fence markers = unclosed fence
+#   2. markdownlint-cli2: style rules (MD031, MD040, MD046, MD048)
+
+check_markdown_fences() {
+  STAGED_MD=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.md$' || true)
+
+  if [ -z "$STAGED_MD" ]; then
+    return 0
+  fi
+
+  violations=0
+
+  # Check 1: Fence parity (unclosed fences)
+  for file in $STAGED_MD; do
+    if [ ! -f "$file" ]; then
+      continue
+    fi
+
+    # Count lines starting with 3+ backticks or tildes (fence openers/closers)
+    fence_count=$(grep -cE '^(`{3,}|~{3,})' "$file" 2>/dev/null || echo 0)
+
+    if [ $((fence_count % 2)) -ne 0 ]; then
+      echo "❌ ERROR: Unclosed code fence in: $file"
+      echo "   Found $fence_count fence marker(s) — must be even (open + close)."
+      echo ""
+      grep -nE '^(`{3,}|~{3,})' "$file" | sed 's/^/   /'
+      echo ""
+      violations=$((violations + 1))
+    fi
+  done
+
+  # Check 2: markdownlint style rules
+  if ! ./node_modules/.bin/markdownlint-cli2 $STAGED_MD 2>&1; then
+    violations=$((violations + 1))
+  fi
+
+  if [ $violations -gt 0 ]; then
+    echo "❌ Commit blocked: Markdown code fence errors found."
+    echo "   Fix the issues above and try again."
+    return 1
+  fi
+
+  return 0
+}
