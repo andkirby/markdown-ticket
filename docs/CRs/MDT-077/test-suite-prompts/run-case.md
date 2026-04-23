@@ -234,6 +234,7 @@ echo "All invalid codes correctly rejected"
 ### Debug Mode
 
 For debugging, add these exports:
+
 ```bash
 export MDT_DEBUG_TEST=true
 export MDT_TEST_MODE=true

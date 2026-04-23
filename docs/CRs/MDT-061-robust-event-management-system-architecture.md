@@ -116,6 +116,7 @@ Custom event management system with three core services:
 ### Core Services
 
 #### EventBus (`src/services/eventBus.ts`)
+
 ```typescript
 // Singleton event bus
 class EventBus {
@@ -130,6 +131,7 @@ function useEventBus<T>(eventType: EventType, handler: EventListener<T>): void
 ```
 
 #### SSEClient (`src/services/sseClient.ts`)
+
 ```typescript
 class SSEClient {
   connect(url: string): void
@@ -142,6 +144,7 @@ class SSEClient {
 ```
 
 #### DataLayer (`src/services/dataLayer.ts`)
+
 ```typescript
 const dataLayer = {
   fetchTickets(projectId: string): Promise<Ticket[]>

@@ -47,9 +47,11 @@ Options:
 - `-p, --project <code>` — list tickets from a different project
 
 Filters — positional `key=value` args with AND across fields, comma-separated fuzzy match within a field:
+
 ```bash
 mdt-cli list status=impl priority=high,critical
 ```
+
 Filterable fields: `status`, `priority`, `type`, `assignee`, `epic`.
 
 ## Create
@@ -122,6 +124,7 @@ Bare `mdt-cli project <code>` resolves as `project get <code>`. Lowercase `ls` a
 ## Top-level Aliases
 
 `create`, `delete`, `rename`, `attr` all work without the `ticket` prefix:
+
 ```bash
 mdt-cli create feature 'New thing'
 mdt-cli delete 143 --force

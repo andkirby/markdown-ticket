@@ -21,6 +21,7 @@
 ### TDD Workflow (Refactoring Mode)
 
 1. **Baseline**: Run all tests → confirm GREEN
+
    ```bash
    cd shared/test-lib && npm test
    scripts/metrics/run.sh shared/test-lib/  # Record baseline metrics
@@ -32,6 +33,7 @@
    - Run tests → confirm still GREEN
 
 3. **Verify Metrics**: Check file sizes against limits
+
    ```bash
    wc -l shared/test-lib/core/{new-file}.ts  # Must be ≤ limit
    ```
@@ -119,6 +121,7 @@ Phase 4: Final Verification
 **To**: `event-listener-registry.ts`
 
 **Verify**:
+
 ```bash
 wc -l shared/test-lib/core/event-listener-registry.ts  # ≤ 100
 cd shared/test-lib && npm test  # Should be GREEN
@@ -160,6 +163,7 @@ cd shared/test-lib && npm test  # Should be GREEN
 - Use `RetryHelper` from `utils/retry-helper.ts` (do not duplicate)
 
 **Verify**:
+
 ```bash
 wc -l shared/test-lib/core/process-lifecycle-manager.ts  # ≤ 150
 cd shared/test-lib && npm test  # Should be GREEN
@@ -196,6 +200,7 @@ cd shared/test-lib && npm test  # Should be GREEN
 - Health check execution (ProcessLifecycleManager)
 
 **Verify**:
+
 ```bash
 wc -l shared/test-lib/core/server-config-factory.ts  # ≤ 120
 cd shared/test-lib && npm test  # Should be GREEN
@@ -237,6 +242,7 @@ cd shared/test-lib && npm test  # Should be GREEN
 - Do NOT duplicate listener tracking logic
 
 **Verify**:
+
 ```bash
 wc -l shared/test-lib/core/test-environment.ts  # ≤ 100
 cd shared/test-lib && npm test -- file-creation.test.ts  # Targeted tests
@@ -279,6 +285,7 @@ cd shared/test-lib && npm test -- file-creation.test.ts  # Targeted tests
 - Do NOT copy logic from these files
 
 **Verify**:
+
 ```bash
 wc -l shared/test-lib/core/test-server.ts  # ≤ 150
 cd shared/test-lib && npm test -- integration.test.ts  # Targeted tests
@@ -323,6 +330,7 @@ cd shared/test-lib && npm test -- integration.test.ts  # Targeted tests
 - Use `MarkdownService` from `../../services/MarkdownService.js`
 
 **Verify**:
+
 ```bash
 wc -l shared/test-lib/ticket/test-ticket-builder.ts  # ≤ 150
 cd shared/test-lib && npm test -- file-creation.test.ts
@@ -364,6 +372,7 @@ cd shared/test-lib && npm test -- file-creation.test.ts
 - Do NOT duplicate project registration logic
 
 **Verify**:
+
 ```bash
 wc -l shared/test-lib/ticket/test-project-builder.ts  # ≤ 150
 cd shared/test-lib && npm test -- file-creation.test.ts
@@ -404,6 +413,7 @@ cd shared/test-lib && npm test -- file-creation.test.ts
 - Do NOT duplicate builder logic
 
 **Verify**:
+
 ```bash
 wc -l shared/test-lib/core/project-factory.ts  # ≤ 200
 cd shared/test-lib && npm test -- file-creation.test.ts
@@ -446,6 +456,7 @@ cd shared/test-lib && npm test -- file-creation.test.ts
 - Remove `this.retryHelper.execute()` calls, use `withRetry()` function
 
 **Verify**:
+
 ```bash
 wc -l shared/test-lib/ticket/file-ticket-creator.ts  # ≤ 200
 cd shared/test-lib && npm test -- integration.test.ts
@@ -469,6 +480,7 @@ cd shared/test-lib && npm test -- integration.test.ts
 - `CR file has correct filename with title slug`
 
 **Run**:
+
 ```bash
 cd shared/test-lib && npm test -- integration.test.ts
 ```
@@ -488,6 +500,7 @@ cd shared/test-lib && npm test -- integration.test.ts
 **Verify**: All files meet YELLOW zone targets
 
 **Run metrics**:
+
 ```bash
 scripts/metrics/run.sh shared/test-lib/
 ```
@@ -518,6 +531,7 @@ scripts/metrics/run.sh shared/test-lib/
 **Verify**: All tests pass with no regressions
 
 **Run**:
+
 ```bash
 cd shared/test-lib && npm test
 ```

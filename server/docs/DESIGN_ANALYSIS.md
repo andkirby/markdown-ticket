@@ -39,6 +39,7 @@
 ## Recommended Design Patterns
 
 ### 1. **Strategy Pattern** - Tree Building Strategies
+
 ```javascript
 // Different strategies for different use cases
 class PathSelectionStrategy {
@@ -60,6 +61,7 @@ class DocumentNavigationStrategy {
 - Consistent filtering logic across all strategies
 
 ### 2. **Repository Pattern** - Configuration Access
+
 ```javascript
 class ConfigRepository {
   async getProjectConfig(projectPath) {
@@ -74,6 +76,7 @@ class ConfigRepository {
 - Consistent config parsing across services
 
 ### 3. **Facade Pattern** - Unified Tree Service
+
 ```javascript
 class TreeService {
   getPathSelectionTree(projectPath) {
@@ -92,6 +95,7 @@ class TreeService {
 - Single entry point for all tree operations
 
 ### 4. **Command Pattern** - File Operations
+
 ```javascript
 class FileMetadataCommand {
   execute(filePath) {

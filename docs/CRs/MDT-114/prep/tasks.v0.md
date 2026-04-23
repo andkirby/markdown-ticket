@@ -107,12 +107,14 @@ mcp-server/src/utils/section/    → New namespace for section utilities
 ## TDD Verification
 
 Before starting each task:
+
 ```bash
 cd mcp-server
 npm test -- sectionHandlers.test.ts  # Establish baseline (should pass)
 ```
 
 After completing each task:
+
 ```bash
 cd mcp-server
 npm test -- sectionHandlers.test.ts  # Must still pass
@@ -162,6 +164,7 @@ wc -l <file>                          # Check against size limits
 - Use single instance per operation lifecycle
 
 **Verify**:
+
 ```bash
 # Create utility file
 mkdir -p mcp-server/src/utils/section
@@ -220,6 +223,7 @@ npm test                              # All 41 tests GREEN
 - Use `MarkdownSectionService.findSection()` internally
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/utils/section/SectionResolver.ts  # ≤ 150
 
@@ -276,6 +280,7 @@ npm test                              # All 41 tests GREEN
 - Use consistent error message patterns across operations
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/utils/section/ValidationFormatter.ts  # ≤ 75
 
@@ -320,6 +325,7 @@ npm test                              # All 41 tests GREEN
   - `registerOperation(name, operation)` function
 
 **Interface Contract**:
+
 ```typescript
 interface SectionOperation {
   execute: (
@@ -340,6 +346,7 @@ interface SectionOperation {
 - All strategies will implement this interface — no duplicate contracts
 
 **Verify**:
+
 ```bash
 mkdir -p mcp-server/src/tools/handlers/operations
 wc -l mcp-server/src/tools/handlers/operations/index.ts  # ≤ 50
@@ -393,6 +400,7 @@ npm test -- sectionHandlers.test.ts  # All 23 tests GREEN
 - Register in `operations/index.ts` — do NOT duplicate registration
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/tools/handlers/operations/ListOperation.ts  # ≤ 100
 
@@ -447,6 +455,7 @@ npm test -- --testNamePattern="list operation"  # 3 tests GREEN
 - Register in `operations/index.ts` — do NOT duplicate registration
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/tools/handlers/operations/GetOperation.ts  # ≤ 75
 
@@ -502,6 +511,7 @@ npm test -- --testNamePattern="get operation"  # 4 tests GREEN
 - Use `MarkdownSectionService` for actual modifications
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/tools/handlers/operations/ModifyOperation.ts  # ≤ 150
 
@@ -561,6 +571,7 @@ npm test -- --testNamePattern="replace operation|append operation|prepend operat
 - Import utilities from `utils/section/` — do NOT duplicate
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/tools/handlers/sectionHandlers.ts  # ≤ 100
 

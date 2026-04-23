@@ -316,6 +316,7 @@ Tests verify these bugs from `issues.md` are fixed:
 ## Verification
 
 Run tests (should all pass after fixes):
+
 ```bash
 npm run test:e2e test-lib-e2e
 ```

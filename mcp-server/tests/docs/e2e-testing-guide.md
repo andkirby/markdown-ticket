@@ -628,6 +628,7 @@ it('should enforce rate limits', async () => {
 ### DO
 
 1. **Use isolated test environments**
+
    ```typescript
    beforeEach(async () => {
      testEnv = new TestEnvironment()
@@ -636,6 +637,7 @@ it('should enforce rate limits', async () => {
    ```
 
 2. **Clean up after tests**
+
    ```typescript
    afterEach(async () => {
      await mcpClient.stop()
@@ -644,6 +646,7 @@ it('should enforce rate limits', async () => {
    ```
 
 3. **Create helper functions**
+
    ```typescript
    async function callListCRs(project: string, filters?: any) {
      return await mcpClient.callTool('list_crs', { project, filters })
@@ -651,16 +654,19 @@ it('should enforce rate limits', async () => {
    ```
 
 4. **Use BDD naming**
+
    ```typescript
    it('Given valid input WHEN calling THEN returns result', async () => {})
    ```
 
 5. **Validate content, not structure**
+
    ```typescript
    expect(response.data).toContain('expected')
    ```
 
 6. **Test success AND error cases**
+
    ```typescript
    describe('valid Cases', () => { /* ... */ })
    describe('error Cases', () => { /* ... */ })
@@ -669,6 +675,7 @@ it('should enforce rate limits', async () => {
 ### DON'T
 
 1. **Don't test exact formatting**
+
    ```typescript
    // ❌ BRITTLE
    expect(response.data).toBe('✅ Created: TEST-001\n\nFile: ...')
@@ -679,6 +686,7 @@ it('should enforce rate limits', async () => {
    ```
 
 2. **Don't access object properties on string responses**
+
    ```typescript
    // ❌ WRONG - response.data is a string
    expect(response.data.key).toBe('TEST-001')
@@ -688,6 +696,7 @@ it('should enforce rate limits', async () => {
    ```
 
 3. **Don't skip cleanup**
+
    ```typescript
    // ❌ DON'T - leaves temp files
    afterEach(() => {
@@ -701,6 +710,7 @@ it('should enforce rate limits', async () => {
    ```
 
 4. **Don't use shared state between tests**
+
    ```typescript
    // ❌ WRONG - tests depend on order
    let sharedCrKey: string

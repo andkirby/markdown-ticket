@@ -368,6 +368,7 @@ And CR "SUML-123" should be returned
 ## Verification
 
 Run BDD tests:
+
 ```bash
 cd mcp-server && npm run test:e2e -- --testNamePattern="MDT-121"
 ```

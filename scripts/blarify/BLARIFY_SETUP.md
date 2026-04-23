@@ -40,6 +40,7 @@ All scripts in: `~/home/markdown-ticket/scripts/blarify/`
 ## Configuration Files
 
 ### 1. `~/.blarify/projects.json`
+
 ```json
 {
   "/Users/kirby/home/markdown-ticket": {
@@ -57,6 +58,7 @@ All scripts in: `~/home/markdown-ticket/scripts/blarify/`
 - **repo_id** value = `markdown-ticket` (matches Neo4j data)
 
 ### 2. `~/.blarify/neo4j_credentials.json`
+
 ```json
 {
   "username": "neo4j",
@@ -65,6 +67,7 @@ All scripts in: `~/home/markdown-ticket/scripts/blarify/`
 ```
 
 ### 3. `.mcp.json` (project-local)
+
 ```json
 {
   "mcpServers": {
@@ -82,6 +85,7 @@ All scripts in: `~/home/markdown-ticket/scripts/blarify/`
 ## Build Graph
 
 ### Quick build (fast, keeps stale data)
+
 ```bash
 cd ~/home/markdown-ticket
 ~/.config/blarify/bin/python scripts/blarify/build_graph.py
@@ -90,6 +94,7 @@ cd ~/home/markdown-ticket
 ```
 
 ### Clean rebuild (removes stale data)
+
 ```bash
 ~/.config/blarify/bin/python scripts/blarify/build_graph.py --rebuild
 # or
@@ -159,11 +164,13 @@ Try these to verify MCP works:
 ## Neo4j Management
 
 ### Check database size
+
 ```bash
 docker exec neo4j-blarify cypher-shell -u neo4j -p qweqwe123 "MATCH (n) RETURN count(n)"
 ```
 
 ### Check node types
+
 ```bash
 docker exec neo4j-blarify cypher-shell -u neo4j -p qweqwe123 "
 MATCH (n)
@@ -172,11 +179,13 @@ RETURN labels(n) as type, count(n) as count
 ```
 
 ### Clear database
+
 ```bash
 docker exec neo4j-blarify cypher-shell -u neo4j -p qweqwe123 'MATCH (n) DETACH DELETE n'
 ```
 
 ### Neo4j Browser
+
 ```
 http://localhost:7474
 Login: neo4j / qweqwe123
@@ -190,6 +199,7 @@ Login: neo4j / qweqwe123
 **Problem:** Searches return no data
 
 **Solution:** Check repo_id matches between config and Neo4j:
+
 ```bash
 # Check Neo4j
 docker exec neo4j-blarify cypher-shell -u neo4j -p qweqwe123 "
@@ -206,6 +216,7 @@ cat ~/.blarify/projects.json
 **Problem:** `Project not found` error
 
 **Solution:** Ensure `~/.blarify/projects.json` key is the **full path**:
+
 ```json
 {
   "/Users/kirby/home/markdown-ticket": {  ← full path
@@ -218,6 +229,7 @@ cat ~/.blarify/projects.json
 **Problem:** Build takes forever
 
 **Solution:** Database might have old data. Clear first:
+
 ```bash
 docker exec neo4j-blarify cypher-shell -u neo4j -p qweqwe123 'MATCH (n) DETACH DELETE n'
 ```
@@ -243,11 +255,13 @@ docker exec neo4j-blarify cypher-shell -u neo4j -p qweqwe123 'MATCH (n) DETACH D
    - Use same config as `.mcp.json`
 
 2. **Development:** Run watcher while coding
+
    ```bash
    ~/home/markdown-ticket/scripts/blarify/watch.sh
    ```
 
 3. **Maintenance:** Rebuild after big changes
+
    ```bash
    ~/home/markdown-ticket/scripts/blarify/rebuild.sh
    ```

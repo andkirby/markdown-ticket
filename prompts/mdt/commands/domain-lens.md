@@ -87,6 +87,7 @@ Look for:
 - Transaction boundaries
 
 **Output format**:
+
 ```
 Primary: {Context Name}
 Touches: {Other Context 1}, {Other Context 2}

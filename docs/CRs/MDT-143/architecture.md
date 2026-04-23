@@ -218,6 +218,7 @@ MDT-011 MCP HTTP transport
 Default: 10 tickets, newest-first. `--all` for all, `--limit N` to override.
 
 Filters (positional, AND across fields, comma+fuzzy within):
+
 ```text
 $ mdt-cli list status=impl priority=high type=architecture
 ```
@@ -262,6 +263,7 @@ Updated MDT-012 | status: In Progress → Implemented
 ```
 
 No-op:
+
 ```text
 $ mdt-cli ticket attr MDT-012 status=implemented
 

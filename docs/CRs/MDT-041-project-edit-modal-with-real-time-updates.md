@@ -109,6 +109,7 @@ implementationNotes: Status changed to Implemented on 9/11/2025
 | Project API routes | Enhancement | Update endpoints and validation |
 
 ### Required API Endpoints
+
 ```
 PUT /api/projects/:id - Update project configuration
 POST /api/filesystem/exists - Validate directory existence

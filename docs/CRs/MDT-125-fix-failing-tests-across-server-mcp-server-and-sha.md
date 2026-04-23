@@ -110,6 +110,7 @@ implementationDate: 2026-02-09
 - MaxListenersExceededWarning: 11 error listeners added (max 10)
 
 **Pattern:**
+
 ```typescript
 // Broken:
 beforeEach(async () => {
@@ -145,6 +146,7 @@ it('test', async () => {
 - shared/services/TicketService.ts — Added ticket.content = markdownContent synchronization
 
 ### Diagnostic Commands
+
 ```bash
 # Verify failures
 cd server && npm test
@@ -207,6 +209,7 @@ cd mcp-server && npm test -- tests/e2e/tools/list-crs.spec.ts --verbose
 ### MCP Test Fix Pattern (Detailed)
 
 **The Problem (Current Code):**
+
 ```typescript
 // mcp-server/tests/e2e/tools/list-crs.spec.ts
 beforeEach(async () => {
@@ -230,6 +233,7 @@ describe('basic Listing', () => {
 ```
 
 **The Fix:**
+
 ```typescript
 beforeEach(async () => {
   // Step 1: Create ALL projects needed by ALL tests
@@ -264,6 +268,7 @@ describe('basic Listing', () => {
 ### Server TypeScript Fixes (Detailed)
 
 **api.test.ts:289**
+
 ```typescript
 // Current (broken):
 const emptyProject = await projectFactory.createProject({
@@ -277,6 +282,7 @@ const emptyProject = await projectFactory.createProject('empty')
 ```
 
 **projects.test.ts:410**
+
 ```typescript
 // Current (broken):
 const listed = (listRes.body as ProjectListItem[]).find(p => p.id === project.key)
@@ -288,6 +294,7 @@ expect(listed?.id).toBe(configRes.body.project.id)
 ```
 
 **sse.test.ts:52, 271 (SuperAgent type conflicts)**
+
 ```typescript
 // Issue: openapi-validator has its own @types/superagent that conflicts
 // Potential fixes:
@@ -297,6 +304,7 @@ expect(listed?.id).toBe(configRes.body.project.id)
 ```
 
 **sse.test.ts:615 (MockEventStream type incompatibility)**
+
 ```typescript
 // Issue: Event handler signature mismatch (unknown vs Error)
 // Fix: Align the mock with Readable base class interface

@@ -23,6 +23,7 @@ The server-side `TicketService` discovers sub-documents by constructing file pat
 - Modify `getSubDocument()` to resolve worktree path before reading file content
 
 **Implementation Pattern:**
+
 ```typescript
 // In constructor
 this.worktreeService = new WorktreeService()

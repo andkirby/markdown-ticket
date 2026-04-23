@@ -518,6 +518,7 @@ const timer = setTimeout(() => {
 8. Emit local event via EventEmitter
 
 **Stale client detection**:
+
 ```javascript
 if (client.destroyed || client.closed) {
   staleClients.push(client);
@@ -693,6 +694,7 @@ interface StandardSSEEvent {
 ```
 
 **Implementation**:
+
 ```javascript
 // In fileWatcherService.js
 broadcastFileChange(eventType, filename, projectId) {
@@ -758,6 +760,7 @@ interface ErrorEvent {
 ```
 
 **Example**:
+
 ```javascript
 // In fileWatcherService.js error handler
 .on('error', (error) => {
@@ -821,6 +824,7 @@ interface VersionedSSEEvent {
 **Recommendation**: **Add subscription model**
 
 **Implementation**:
+
 ```javascript
 // Modified addClient to accept options
 addClient(response, options = {}) {
@@ -854,6 +858,7 @@ broadcastFileChange(eventType, filename, projectId) {
 ```
 
 **URL format**:
+
 ```
 GET /api/events?projects=markdown-ticket,debug&events=file-change,project-created
 ```
@@ -940,6 +945,7 @@ export interface FileChangeEvent extends BaseSSEEvent {
 ```
 
 **Usage in backend** (with JSDoc):
+
 ```javascript
 /**
  * @typedef {import('../shared/events').FileChangeEvent} FileChangeEvent

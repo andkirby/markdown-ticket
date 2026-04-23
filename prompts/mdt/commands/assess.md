@@ -32,6 +32,7 @@ Options:
 [A] Add tests inline (expand CR scope)
 [B] Create test CR first (CR-TEST blocks this CR)
 [C] Proceed without tests (accept risk)
+
 ```
 
 ### Step 5: Determine Recommendation
@@ -191,11 +192,13 @@ Create prerequisite CR(s) first, feature CR depends on them.
 **Scenario C: Both Needed**
 
 ```
+
 {TEST-CR-KEY} (add tests)
         ↓
 {REFACTOR-CR-KEY} (refactor with tests as safety net)
         ↓
 {CR-KEY} (original feature)
+
 ```
 
 **Pros**:
@@ -218,6 +221,7 @@ Create prerequisite CR(s) first, feature CR depends on them.
 ### Step 7: Execute Choice
 
 **If Option 1 chosen**:
+
 ```markdown
 ✓ Proceeding with original scope.
 
@@ -367,6 +371,7 @@ Outputs condensed version:
 - Option 3 → `/mdt:bdd {NEW-CR-KEY} --prep` (refactoring CR first)
 
 **Position in workflow**:
+
 ```
 /mdt:ticket-creation → /mdt:requirements → /mdt:bdd → /mdt:assess → /mdt:architecture → ...
                                                           ↓

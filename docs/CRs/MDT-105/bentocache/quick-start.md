@@ -7,6 +7,7 @@ summary: Setup Bentocache in your application
 You can install Bentocache via your favorite package manager.
 
 :::codegroup
+
 ```sh
 // title: npm
 npm i bentocache
@@ -21,6 +22,7 @@ pnpm add bentocache
 // title: yarn
 yarn add bentocache
 ```
+
 :::
 
 ## Setup

@@ -154,11 +154,13 @@ volumes:
 The wrapper script does two things:
 
 1. **Container Already Running**: Uses `docker exec` to execute the MCP server in the existing container
+
    ```bash
    docker exec -i markdown-ticket-mcp node /app/mcp-server/dist/index.js
    ```
 
 2. **No Container**: Starts a temporary container
+
    ```bash
    docker run --rm -i \
      --name markdown-ticket-mcp-$$ \
@@ -342,11 +344,13 @@ docker run --rm -i \
 If you're currently running MCP on the host:
 
 1. **Backup config**:
+
    ```bash
    cp -r ~/.config/markdown-ticket ~/.config/markdown-ticket.backup
    ```
 
 2. **Test in parallel**:
+
    ```bash
    # Old: Host-based
    claude mcp add mdt-host node ./mcp-server/dist/index.js
@@ -360,6 +364,7 @@ If you're currently running MCP on the host:
    ```
 
 3. **Switch over**:
+
    ```bash
    # Remove old
    claude mcp remove mdt-host

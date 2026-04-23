@@ -38,6 +38,7 @@ MDT-093 introduces sub-document navigation with hierarchical tabs. The implement
 - **Evidence**: The `normalizeTicket()` function ends at line 122 without processing the `subdocuments` field. Line 44 declares `subdocuments?: import('./SubDocument.js').SubDocument[]`, but lines 85-122 never normalize it.
 - **Impact**: When API responses with subdocument data are normalized through the shared `normalizeTicket()`, the `subdocuments` array is lost, breaking sub-document navigation.
 - **Suggested Fix**: Add after line 119:
+
   ```typescript
   // MDT-093: Preserve subdocuments if present
   if (Array.isArray(ticket.subdocuments)) {
@@ -79,6 +80,7 @@ MDT-093 introduces sub-document navigation with hierarchical tabs. The implement
 
 **File**: `shared/models/Ticket.ts`
 **Line**: 119
+
 ```typescript
 // TECH-DEBT: Missing Abstraction - normalizeTicket doesn't handle subdocuments
 // Impact: Subdocument metadata lost when normalizing API responses through shared layer
@@ -88,6 +90,7 @@ MDT-093 introduces sub-document navigation with hierarchical tabs. The implement
 
 **File**: `shared/models/SubDocument.ts`
 **Line**: 22
+
 ```typescript
 // TECH-DEBT: Spec Violation - DEFAULT_SUBDOCUMENT_ORDER doesn't match requirements
 // Impact: 'domain', 'poc', 'debt' subdocuments appear in wrong order
@@ -97,6 +100,7 @@ MDT-093 introduces sub-document navigation with hierarchical tabs. The implement
 
 **File**: `shared/models/Ticket.ts`
 **Line**: 44
+
 ```typescript
 // TECH-DEBT: Hidden Coupling - Dynamic import creates type incompatibility
 // Impact: Type mismatch between shared and frontend subdocuments field
@@ -106,6 +110,7 @@ MDT-093 introduces sub-document navigation with hierarchical tabs. The implement
 
 **File**: `src/services/dataLayer.ts`
 **Line**: 318
+
 ```typescript
 // TECH-DEBT: Duplication - normalizeTicket duplicated from shared/models/Ticket.ts
 // Impact: Adding ticket fields requires updating two locations

@@ -97,6 +97,7 @@ The project discovery subsystem exhibits code duplication and mixed responsibili
 ### Duplicate 1: Case-Insensitive Project ID Validation
 
 **Location 1**: `ProjectScanner.ts:72-75`
+
 ```typescript
 if (config.project.id && config.project.id.toLowerCase() !== directoryName.toLowerCase()) {
   logQuiet(this.quiet, `Skipping project at ${directoryName}: project.id "${config.project.id}" does not match directory name`)
@@ -105,6 +106,7 @@ if (config.project.id && config.project.id.toLowerCase() !== directoryName.toLow
 ```
 
 **Location 2**: `ProjectDiscoveryService.ts:65-69`
+
 ```typescript
 const directoryName = getBaseName(projectPath)
 if (registryData.project.id && registryData.project.id.toLowerCase() !== directoryName.toLowerCase()) {
@@ -114,6 +116,7 @@ if (registryData.project.id && registryData.project.id.toLowerCase() !== directo
 ```
 
 **Location 3**: `ProjectDiscoveryService.ts:115-118`
+
 ```typescript
 if (localConfig?.project?.id && localConfig.project.id.toLowerCase() !== directoryName.toLowerCase()) {
   logQuiet(this.quiet, `Skipping registered project at ${directoryName}: local config project.id "${localConfig.project.id}" does not match directory name`)
@@ -181,6 +184,7 @@ All three follow similar patterns:
 **Purpose**: Centralize all project validation logic
 
 **API**:
+
 ```typescript
 /**
  * Validates that project ID matches directory name (case-insensitive)
@@ -210,6 +214,7 @@ export function validateConfigExists(configPath: string): boolean
 **Purpose**: Centralize all Project object construction
 
 **API**:
+
 ```typescript
 /**
  * Factory for creating Project objects from various sources
@@ -354,6 +359,7 @@ The following components consume ProjectDiscoveryService and will be affected:
 - Existing consumer tests verify no regressions
 
 ### Verification Commands
+
 ```bash
 # Unit tests
 npm test -- shared/utils/project-validation-helpers

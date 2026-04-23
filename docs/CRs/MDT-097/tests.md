@@ -90,11 +90,13 @@ Since the existing tests are comprehensive, the refactoring should:
 ### Primary Validation (from AC)
 
 **Validation command specified in AC #127-129**:
+
 ```bash
 cd mcp-server && npx jest --config jest.e2e.config.mjs --testNamePattern="GIVEN valid project and data WHEN creating THEN success with proper CR key"
 ```
 
 **ProjectFactory-specific validation from AC #130**:
+
 ```bash
 cd mcp-server && npx jest tests/e2e/helpers/project-factory.spec.ts --config jest.e2e.config.mjs
 ```
@@ -104,6 +106,7 @@ These must pass:
 - **After refactoring**: All tests GREEN (success)
 
 ### Additional Test Validation
+
 ```bash
 # Run specific scenario tests
 npm run test:e2e -- --testNamePattern="GIVEN.*WHEN.*THEN"
@@ -127,18 +130,21 @@ npm run test:e2e -- --testNamePattern="MCP"
 ## Quality Gates
 
 ### Before Each Phase:
+
 ```bash
 cd mcp-server && npx jest tests/e2e/helpers/project-factory.spec.ts --config jest.e2e.config.mjs
 # Expected: All tests passing
 ```
 
 ### After Each Phase:
+
 ```bash
 cd mcp-server && npx jest tests/e2e/helpers/project-factory.spec.ts --config jest.e2e.config.mjs
 # Expected: Same tests passing (no regressions)
 ```
 
 ### Final Validation (per AC #127-130):
+
 ```bash
 cd mcp-server && npx jest --config jest.e2e.config.mjs --testNamePattern="GIVEN valid project and data WHEN creating THEN success with proper CR key"
 # Expected: Pass

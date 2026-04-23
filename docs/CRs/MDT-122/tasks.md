@@ -40,6 +40,7 @@ Task 6 (Verify ESLint + functionality)
 
 **Create**:
 - `shared/utils/server-logger.ts`:
+
   ```typescript
   const LOG_LEVELS = { debug: 0, info: 1, warn: 2, error: 3 }
   let currentLevel = LOG_LEVELS.info
@@ -67,6 +68,7 @@ Task 6 (Verify ESLint + functionality)
 - This is a NEW module specifically for server-side logging with levels
 
 **Verify**:
+
 ```bash
 cat shared/utils/server-logger.ts
 ```
@@ -89,6 +91,7 @@ cat shared/utils/server-logger.ts
 **Scope**: Compile the new logger module so it can be imported by server code.
 
 **Run**:
+
 ```bash
 npm run build:shared
 ```
@@ -98,6 +101,7 @@ npm run build:shared
 - Must run before importing logger in server files
 
 **Verify**:
+
 ```bash
 ls -la shared/dist/utils/server-logger.js
 # OR
@@ -120,6 +124,7 @@ ls -la shared/dist/utils/server-logger.d.ts
 **Scope**: Replace all `console.log` calls with appropriate logger levels.
 
 **Import at top of file**:
+
 ```typescript
 import { logger } from '../../shared/utils/server-logger'
 ```
@@ -156,6 +161,7 @@ import { logger } from '../../shared/utils/server-logger'
 - Preserve all emoji and formatting for readability
 
 **Verify**:
+
 ```bash
 npm run lint:server 2>&1 | grep "server.ts" | wc -l
 # Should show 0 errors for server.ts
@@ -179,6 +185,7 @@ npm run lint:server 2>&1 | grep "server.ts" | wc -l
 **Scope**: Replace SSE connection lifecycle logging.
 
 **Import at top of file**:
+
 ```typescript
 import { logger } from '../../shared/utils/server-logger'
 ```
@@ -192,6 +199,7 @@ import { logger } from '../../shared/utils/server-logger'
 | 72 | `console.log('SSE client aborted')` | `logger.info('SSE client aborted')` | info | Connection lifecycle |
 
 **Verify**:
+
 ```bash
 npm run lint:server 2>&1 | grep "routes/sse.ts" | wc -l
 # Should show 0 errors for sse.ts
@@ -215,6 +223,7 @@ npm run lint:server 2>&1 | grep "routes/sse.ts" | wc -l
 **Scope**: Replace devtools debugging logs.
 
 **Import at top of file**:
+
 ```typescript
 import { logger } from '../../shared/utils/server-logger'
 ```
@@ -234,6 +243,7 @@ import { logger } from '../../shared/utils/server-logger'
 - `info`: Cache operations (operational events)
 
 **Verify**:
+
 ```bash
 npm run lint:server 2>&1 | grep "routes/system.ts" | wc -l
 # Should show 0 errors for system.ts
@@ -258,16 +268,20 @@ npm run lint:server 2>&1 | grep "routes/system.ts" | wc -l
 **Scope**: Verify ESLint compliance and confirm logging behavior preserved.
 
 **ESLint verification**:
+
 ```bash
 npm run lint:server
 ```
+
 Expected: Exit code 0, 0 errors
 
 **Functional verification**:
+
 ```bash
 # Start server and check console output
 npm run dev:server
 ```
+
 Expected:
 - Server starts without errors
 - Console shows `[INFO]` and `[DEBUG]` prefixes on log messages
@@ -279,6 +293,7 @@ Expected:
 - `[INFO] 🚀 Ticket board server running on port...`
 
 **Optional level filtering test**:
+
 ```typescript
 // In server.ts, temporarily add to test level filtering:
 import { setLevel } from '../../shared/utils/server-logger'
@@ -286,6 +301,7 @@ setLevel('warn')  // Should suppress debug/info, only show warn/error
 ```
 
 **Verify log count matches**:
+
 ```bash
 # Count logger calls in each file (should equal original console.log count)
 grep -c "logger\." server/server.ts       # Expect 29

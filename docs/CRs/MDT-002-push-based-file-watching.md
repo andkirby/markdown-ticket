@@ -88,6 +88,7 @@ Real-time file change notifications using Server-Sent Events (SSE) with chokidar
 ### Backend Changes
 
 #### 1. File System Watcher
+
 ```typescript
 // Enhanced server with chokidar integration
 class FileWatcherService {
@@ -121,6 +122,7 @@ class FileWatcherService {
 ### Frontend Changes
 
 #### 1. SSE Client Implementation
+
 ```typescript
 class RealtimeFileWatcher {
   private eventSource: EventSource | null = null

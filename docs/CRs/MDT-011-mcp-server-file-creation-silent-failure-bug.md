@@ -20,6 +20,7 @@ The MCP server returns successful responses for `create_cr` operations but fails
 
 1. Agent calls `mcp__markdown-ticket__create_cr` with valid data
 2. MCP server returns success response with realistic data:
+
    ```json
    {
      "success": true,
@@ -28,6 +29,7 @@ The MCP server returns successful responses for `create_cr` operations but fails
      "crCode": "MDT-010"
    }
    ```
+
 3. Agent reports successful ticket creation to user
 4. **Reality**: No file exists in the file system
 5. User discovers missing tickets when checking directory

@@ -204,6 +204,7 @@ const TICKETS_DIR = path.join(__dirname, 'tasks');  // Tasks directory
 **Error**: `EADDRINUSE: address already in use :::3001`
 
 **Solution**: 
+
 ```bash
 # Find and kill the process using the port
 lsof -ti:3001 | xargs kill -9
@@ -217,6 +218,7 @@ PORT=3002 bun run server:dev
 **Error**: `Node version mismatch` or `Unsupported Node version`
 
 **Solution**:
+
 ```bash
 # Check Node version
 node --version
@@ -231,6 +233,7 @@ nvm use 18
 **Error**: `Cannot find module 'package-name'`
 
 **Solution**:
+
 ```bash
 # Clear node_modules and reinstall
 rm -rf node_modules package-lock.json
@@ -251,6 +254,7 @@ cd server && rm -rf node_modules package-lock.json && bun install && cd ..
 **Error**: `EACCES: permission denied` when accessing tasks directory
 
 **Solution**:
+
 ```bash
 # Fix directory permissions
 chmod 755 tasks/
@@ -278,6 +282,7 @@ curl http://localhost:3001/api/status
 ```
 
 Expected response:
+
 ```json
 {
   "status": "ok",

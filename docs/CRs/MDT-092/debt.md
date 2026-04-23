@@ -85,6 +85,7 @@ The MDT-092 implementation successfully delivers an isolated test environment fr
 
 **File**: `shared/test-lib/core/project-factory.ts`
 **Line**: 1
+
 ```typescript
 // TECH-DEBT: Size Violation - File exceeds 300-line limit (499 lines)
 // Impact: Difficult to navigate and maintain
@@ -94,6 +95,7 @@ The MDT-092 implementation successfully delivers an isolated test environment fr
 
 **File**: `shared/test-lib/ticket/file-ticket-creator.ts`
 **Line**: 25
+
 ```typescript
 // TECH-DEBT: Duplication - Retry configuration duplicated
 // Impact: Changing retry behavior requires multiple file updates
@@ -103,6 +105,7 @@ The MDT-092 implementation successfully delivers an isolated test environment fr
 
 **File**: `shared/test-lib/core/project-factory.ts`
 **Line**: 15
+
 ```typescript
 // TECH-DEBT: Missing Abstraction - Multiple similar ticket data structures
 // Impact: Type conversion and mapping scattered throughout

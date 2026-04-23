@@ -54,6 +54,7 @@ The system currently has:
 ## Proposed Frontend Log Capture
 
 ### Option 1: Console Override (Recommended)
+
 ```typescript
 // src/utils/logging.ts
 class FrontendLogger {
@@ -110,6 +111,7 @@ class FrontendLogger {
 ```
 
 ### Option 2: React Error Boundary Integration
+
 ```typescript
 // src/components/LoggingErrorBoundary.tsx
 class LoggingErrorBoundary extends React.Component {
@@ -137,6 +139,7 @@ class LoggingErrorBoundary extends React.Component {
 ## Data Flow
 
 ### 1. Session Initialization
+
 ```
 AI Assistant → MCP Server → Backend API
                 ↓
@@ -146,6 +149,7 @@ AI Assistant → MCP Server → Backend API
 ```
 
 ### 2. Log Capture
+
 ```
 Frontend Console → Log Capture → Buffer → Backend API
                                             ↓
@@ -153,6 +157,7 @@ Frontend Console → Log Capture → Buffer → Backend API
 ```
 
 ### 3. Log Retrieval
+
 ```
 AI Assistant → MCP Server → Backend API → Filtered Logs
                 ↓
@@ -181,18 +186,21 @@ AI Assistant → MCP Server → Backend API → Filtered Logs
 ## Use Cases
 
 ### Development Debugging
+
 ```
 Developer: "Check if there are any React errors in the frontend"
 AI: Uses get_frontend_logs to check for error-level messages
 ```
 
 ### Build Monitoring
+
 ```
 Developer: "Monitor the frontend while I test this feature"
 AI: Uses stream_frontend_url to watch logs in real-time
 ```
 
 ### Error Investigation
+
 ```
 Developer: "Something's wrong with the ticket creation"
 AI: Filters logs for "ticket" or "create" to find relevant errors
@@ -267,6 +275,7 @@ AI: Filters logs for "ticket" or "create" to find relevant errors
 4. **Performance impact**: Monitor buffer size and flush frequency
 
 ### Debug Commands
+
 ```bash
 # Check session status
 curl http://localhost:5173/api/frontend/logs/status

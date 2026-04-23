@@ -46,6 +46,7 @@ This document summarizes the complete file watching architecture solution develo
 ## 3. Implementation Phases and Timeline
 
 ### Phase 1: Backend Foundation (Sprint 1)
+
 ```typescript
 // Tasks
 - Install and configure chokidar@^3.5.3
@@ -56,6 +57,7 @@ This document summarizes the complete file watching architecture solution develo
 ```
 
 ### Phase 2: Frontend Integration (Sprint 1-2)
+
 ```typescript
 // Tasks  
 - Implement SSE client with EventSource API
@@ -66,6 +68,7 @@ This document summarizes the complete file watching architecture solution develo
 ```
 
 ### Phase 3: Advanced Features (Sprint 2-3)
+
 ```typescript
 // Tasks
 - Multi-client synchronization
@@ -76,6 +79,7 @@ This document summarizes the complete file watching architecture solution develo
 ```
 
 ### Phase 4: Production Deployment (Sprint 3)
+
 ```typescript
 // Tasks
 - Load testing (50+ concurrent connections)
@@ -115,6 +119,7 @@ After extensive discussion, the project adopted a sophisticated issue management
 - **Example**: MDT-001, MDT-002, MDT-003
 
 #### Document Structure
+
 ```yaml
 - **Code**: MDT-001
 - **Title/Summary**: Push-Based File Watching Architecture
@@ -132,6 +137,7 @@ After extensive discussion, the project adopted a sophisticated issue management
 
 #### Configuration System
 Project-specific configuration via `.cr-config.toml`:
+
 ```toml
 [project]
 name = "Markdown Ticket Board"
@@ -215,6 +221,7 @@ templateSource = "~/.config/dev-docs/templates/CRs_manual.md"
 
 ### Sprint 1 Priorities (Backend Foundation)
 1. **FileWatcherService Implementation**
+
    ```typescript
    class FileWatcherService {
      private watcher: chokidar.FSWatcher;
@@ -222,6 +229,7 @@ templateSource = "~/.config/dev-docs/templates/CRs_manual.md"
      private clients: Set<Response> = new Set();
    }
    ```
+
 2. **SSE Endpoint Development**: `/api/events` route
 3. **Event Debouncing**: 100ms delay with batching
 4. **Initial Testing**: Unit tests for file watching

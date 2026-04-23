@@ -201,6 +201,8 @@ npm run test:e2e:full      # Both transports
 # Development
 npm run test:e2e:watch     # Watch mode during development
 ```
+
+```bash
 # Install additional dependencies
 npm install --save-dev tmp-promise @types/tmp-promise
 
@@ -209,4 +211,5 @@ npm run test:e2e          # All tests
 npm run test:e2e:stdio    # Stdio transport only
 npm run test:e2e:http     # HTTP transport only
 npm run test:e2e:watch    # Watch mode during development
+
 ```

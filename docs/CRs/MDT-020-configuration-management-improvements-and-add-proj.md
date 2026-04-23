@@ -71,6 +71,7 @@ Currently configuration is scattered across different locations (~/.mcp-server.t
 - Prevent duplicate project codes
 
 ### 2.3 Backend API Requirements
+
 ```
 POST /api/projects/create
 - Validates project data
@@ -121,6 +122,7 @@ GET /api/system/directories
 
 ### Technical Details
 **MCP Config Path Update:**
+
 ```typescript
 // OLD path resolution
 const configPaths = [

@@ -47,6 +47,7 @@ We expect that:
 | `poc/project-auto-detection/README.md` | Run instructions |
 
 **Key Code**:
+
 ```typescript
 function detectProjectContext(): { success: boolean; projectCode?: string } {
   const cwd = process.cwd()
@@ -72,6 +73,7 @@ function detectProjectContext(): { success: boolean; projectCode?: string } {
 | `poc/key-normalization/README.md` | Run instructions |
 
 **Key Code**:
+
 ```typescript
 function normalizeTicketKey(key: string | number, projectCode: string): string {
   const keyStr = String(key)
@@ -102,6 +104,7 @@ function normalizeTicketKey(key: string | number, projectCode: string): string {
 | `poc/optional-project-param/README.md` | Run instructions |
 
 **Key Code**:
+
 ```typescript
 class ServerState {
   defaultProject: string | null = null

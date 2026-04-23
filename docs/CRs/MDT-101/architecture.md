@@ -83,6 +83,7 @@ Current ticket example:
 The domain-contracts package provides schemas that validate the structure of configuration data. The TOML configuration files (.mdt-config.toml) are parsed into JSON objects which are then validated against these schemas.
 
 **Flow**:
+
 ```
 .mdt-config.toml → Parsed JSON → Contract Schema.validate() → TypeScript Type
 ```
@@ -96,6 +97,7 @@ The domain-contracts package provides schemas that validate the structure of con
 ### 3.3 Required File Patterns
 
 **schema.ts (Entity definition)**
+
 ```typescript
 import { z } from 'zod'
 
@@ -140,6 +142,7 @@ export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>
 ```
 
 **validation.ts (Wrapper functions only)**
+
 ```typescript
 import {
   CreateProjectInputSchema,
@@ -168,6 +171,7 @@ export function validateCreateProjectInput(input: unknown): CreateProjectInput {
 ### 3.4 Path and Folder Validation
 
 **What belongs in contracts (field validation)**:
+
 ```typescript
 // In DocumentConfigSchema
 export const DocumentConfigSchema = z.object({
@@ -189,6 +193,7 @@ export const DocumentConfigSchema = z.object({
 - Validate that resolved paths stay within project boundaries
 
 Example security validation in service:
+
 ```typescript
 import { existsSync, lstatSync } from 'node:fs'
 // In shared/services/project-validation.ts
@@ -256,6 +261,7 @@ The rule that "ID must match directory name" is business logic because:
 - It's project-specific business rule, not data format validation
 
 **Implementation**:
+
 ```typescript
 // Contract validates format only
 id: z.string().min(1, 'Required'),
@@ -292,6 +298,7 @@ if (project.id !== basename(projectPath)) {
 - [x] Size limits met (all files within limits)
 
 **Test Results**:
+
 ```
 Test Suites: 6 passed, 6 total
 Tests:       90 passed, 90 total
@@ -484,6 +491,7 @@ These are implemented in `shared/services` using the contracts.
 ## 6. Testing Strategy
 
 ### 6.1 Contract Tests (domain-contracts package)
+
 ```typescript
 // Test field validation only
 describe('ProjectSchema', () => {
@@ -501,6 +509,7 @@ describe('ProjectSchema', () => {
 ```
 
 ### 6.2 Service Tests (shared package)
+
 ```typescript
 // Test business rules
 describe('projectService', () => {
@@ -512,6 +521,7 @@ describe('projectService', () => {
 ```
 
 ### 6.3 Integration Tests
+
 ```typescript
 // Test contract + service interaction
 describe('Project Creation Flow', () => {
@@ -530,6 +540,7 @@ describe('Project Creation Flow', () => {
 ## 7. Error Handling Pattern
 
 ### 7.1 Contract Errors (ZodError)
+
 ```typescript
 {
   "issues": [
@@ -544,6 +555,7 @@ describe('Project Creation Flow', () => {
 ```
 
 ### 7.2 Service Errors (Custom)
+
 ```typescript
 {
   "type": "BusinessRuleViolation",
@@ -565,6 +577,7 @@ describe('Project Creation Flow', () => {
 | Type imports | Direct from shared | From domain-contracts | TypeScript enforced |
 
 ### 8.2 Consumer Migration
+
 ```typescript
 // After
 import type { Project, validateProject } from '@mdt/domain-contracts'

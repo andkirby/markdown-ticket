@@ -119,6 +119,7 @@ Reusable components built on top of Radix UI primitives:
 #### Ticket Management Components
 
 **TicketCard.tsx**:
+
 ```typescript
 // Displays individual tickets with:
 - Ticket code and title
@@ -130,6 +131,7 @@ Reusable components built on top of Radix UI primitives:
 ```
 
 **TicketViewer.tsx**:
+
 ```typescript
 // Detailed ticket view featuring:
 - Full markdown content rendering
@@ -140,6 +142,7 @@ Reusable components built on top of Radix UI primitives:
 ```
 
 **Board.tsx & Column.tsx**:
+
 ```typescript
 // Kanban board implementation:
 - Drag-and-drop between columns
@@ -154,6 +157,7 @@ Reusable components built on top of Radix UI primitives:
 #### Custom Hooks Architecture
 
 **useTicketData.ts**:
+
 ```typescript
 // Manages ticket state including:
 - Ticket fetching and caching
@@ -164,6 +168,7 @@ Reusable components built on top of Radix UI primitives:
 ```
 
 **useMultiProjectData.ts**:
+
 ```typescript
 // Handles multi-project state:
 - Project discovery and loading
@@ -173,6 +178,7 @@ Reusable components built on top of Radix UI primitives:
 ```
 
 **useTheme.ts**:
+
 ```typescript
 // Theme management:
 - System preference detection
@@ -215,6 +221,7 @@ class FileWatcherService {
 ```
 
 #### CSS Custom Properties
+
 ```css
 /* Theme-aware CSS variables */
 :root {
@@ -262,6 +269,7 @@ bun run deploy
 ### Build Configuration
 
 **Vite Configuration** (`vite.config.ts`):
+
 ```typescript
 export default defineConfig({
   plugins: [react()],
@@ -336,6 +344,7 @@ bun run test:e2e:headed
 ### Deployment Options
 
 #### GitHub Pages
+
 ```bash
 bun run deploy
 ```
@@ -346,6 +355,7 @@ bun run deploy
 - Environment variables: Configure API endpoints
 
 #### Docker Deployment
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app

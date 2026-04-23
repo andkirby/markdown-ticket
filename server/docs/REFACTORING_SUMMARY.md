@@ -13,6 +13,7 @@ Successfully refactored the monolithic `server/server.js` file according to the 
 ## Architecture Implemented
 
 ### Layered Architecture
+
 ```
 server/
 ├── server.js (253 lines) - Application orchestration

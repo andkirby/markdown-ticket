@@ -44,6 +44,7 @@ Implement a minimal Cmd+K (Ctrl+K on Windows/Linux) keyboard shortcut that opens
 7. Escape closes modal without action
 
 ### Component Structure
+
 ```
 src/components/QuickSearch/
   QuickSearchModal.tsx    # Main modal component

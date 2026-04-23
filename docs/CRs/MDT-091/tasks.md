@@ -95,11 +95,13 @@ mcp-server/tests/e2e/
 ## TDD Verification
 
 Before starting each task:
+
 ```bash
 npm run test:e2e -- --testPathPattern="{task_file}"  # Should show failures
 ```
 
 After completing each task:
+
 ```bash
 npm run test:e2e -- --testPathPattern="{task_file}"  # Should pass
 npm run test:e2e                                       # Full suite — no regressions
@@ -150,6 +152,7 @@ npm run test:e2e                                       # Full suite — no regre
 - Follow BDD pattern from existing tool tests — do NOT invent new format
 
 **Verify**:
+
 ```bash
 wc -l tests/e2e/tools/error-handling.spec.ts  # ≤ 300 (or flag ≤ 450)
 npm run test:e2e -- --testPathPattern=error-handling  # Should fail initially
@@ -197,6 +200,7 @@ npm run build
 - Import from transport modules — do not duplicate across stdio/http
 
 **Verify**:
+
 ```bash
 npm run test:e2e -- --testPathPattern=rate-limiting  # Should pass after
 npm run build
@@ -230,6 +234,7 @@ npm run build
 - **BETA**: Default disabled (`MCP_SANITIZATION_ENABLED=false`)
 
 **Verify**:
+
 ```bash
 # Test with sanitization disabled (default)
 MCP_SANITIZATION_ENABLED=false npm run test:e2e -- --testPathPattern=output-sanitization
@@ -310,16 +315,19 @@ npm run build
 ### Task N.1: Move misplaced test files ✅ COMPLETED
 
 **Do**: Fix test file organization
+
 ```bash
 # Move misplaced test files from root to tools/ directory
 mv tests/e2e/rate-limiting.spec.ts tests/e2e/tools/
 mv tests/e2e/output-sanitization.spec.ts tests/e2e/tools/
 ```
+
 **Done when**: ✅ All tool tests in `tests/e2e/tools/` directory
 
 ### Task N.2: Update package.json scripts
 
 **Do**: Add missing npm scripts for Phase 2/3
+
 ```json
 {
   "scripts": {
@@ -329,11 +337,13 @@ mv tests/e2e/output-sanitization.spec.ts tests/e2e/tools/
   }
 }
 ```
+
 **Done when**: [ ] All E2E test scripts available
 
 ### Task N.3: Verify complete MUST requirements coverage
 
 **Do**: Run complete test suite and verify
+
 ```bash
 # Default: sanitization disabled
 npm run test:e2e
@@ -341,6 +351,7 @@ npm run test:e2e
 # With sanitization enabled (beta)
 MCP_SANITIZATION_ENABLED=true npm run test:e2e
 ```
+
 **Expected**: All 10 MUST requirements covered, 0 missing test files
 **Done when**: ✅ Tests show 90% MUST requirements coverage (1 skipped test for per-tool rate limiting)
 

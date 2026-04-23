@@ -125,6 +125,7 @@ mdt-cli attr <ticket> <attr-op><value>...                 # Attribute alias
 ### Commands
 
 #### View Ticket
+
 ```bash
 mdt-cli ticket get 12   # canonical form
 mdt-cli ticket 12       # namespace shortcut
@@ -136,6 +137,7 @@ mdt-cli ABC/QWE-12      # explicit project/ticket
 ```
 
 **Output format**:
+
 ```
 MDT-012 Add CLI access to tickets and projects
 ─────────────────────────────────────────────
@@ -151,6 +153,7 @@ MDT-012 Add CLI access to tickets and projects
 ```
 
 #### List Tickets
+
 ```bash
 mdt-cli ticket list     # canonical form
 mdt-cli list            # shortcut
@@ -158,6 +161,7 @@ mdt-cli ls              # alias
 ```
 
 **Output format** (compact):
+
 ```
 MDT-012 Add CLI access to tickets [In Progress] [Feature] [High]  Phase B
   docs/CRs/MDT-012-add-cli-access.md
@@ -169,6 +173,7 @@ MDT-011 MCP HTTP transport     [Implemented] [Feature] [Medium]
 ```
 
 #### Project Commands
+
 ```bash
 mdt-cli project current
 mdt-cli project         # shortcut for current project
@@ -182,6 +187,7 @@ mdt-cli project LS      # project code "LS", not the list subcommand
 ```
 
 **Output format**:
+
 ```
 MDT (markdown-ticket)  Markdown Ticket System
   Kanban board with markdown-based tickets and MCP integration
@@ -199,6 +205,7 @@ API (api-gateway)       API Gateway Service
 - Exact lowercase `ls` and `list` remain reserved list aliases, while other tokens such as `LS` or `LIST` resolve through project-code lookup
 
 #### Project Init
+
 ```bash
 mdt-cli project init
 mdt-cli project init MDT 'Markdown Ticket Board'
@@ -207,6 +214,7 @@ mdt-cli project init MDT 'Markdown Ticket Board'
 Creates project configuration in the current folder, similar to `bun run project:create`, including `.mdt-config.toml` and any required bootstrap metadata.
 
 #### Create Ticket
+
 ```bash
 mdt-cli ticket create bug 'Fix login timeout'
 mdt-cli create bug 'Fix login timeout'                     # alias
@@ -227,12 +235,14 @@ cat spec.md | mdt-cli create feature 'CLI tool'
 - `text-with-dashes-no-spaces` → slug (optional, converts to title if no title provided)
 
 **Output**:
+
 ```
 Created MDT-013: Fix login timeout
   docs/CRs/MDT-013-fix-login-timeout.md
 ```
 
 #### Delete Ticket
+
 ```bash
 mdt-cli ticket delete MDT-012           # Prompts on TTY: Delete MDT-012 (<title>)? [y/N]
 mdt-cli delete MDT-012 --force          # Skip confirmation
@@ -242,6 +252,7 @@ mdt-cli delete MDT-012 < /dev/null      # Non-TTY stdin = implicit --force
 Deletes the ticket `.md` file. Cleans up empty CR directories after removal. Prints `Deleted <key> <relative-path>` on success. Not-found tickets print an error and exit 1. Declining the prompt prints `Cancelled` and exits 0.
 
 #### Update Attributes
+
 ```bash
 mdt-cli ticket attr MDT-012 status=Implemented
 mdt-cli attr MDT-012 status=in_progress              # shortcut alias; snake_case accepted
@@ -274,6 +285,7 @@ mdt-cli ticket attr MDT-012 related+=ABC-003 depends-=MDT-001
 | `impl-notes` | implementationNotes | any string |
 
 **Output**:
+
 ```
 Updated MDT-012: status → Implemented
 ```
@@ -347,6 +359,7 @@ cat spec.md | mdt-cli create feature 'CLI tool'
 ```
 
 Resulting file:
+
 ```markdown
 ---
 code: MDT-015

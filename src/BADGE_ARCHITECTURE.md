@@ -10,6 +10,7 @@ Step-by-step guide for defining badge styles with theming support.
 ## Overview
 
 **End result:**
+
 ```
 src/components/Badge/
 ├── index.tsx              # Exports
@@ -23,6 +24,7 @@ src/components/Badge/
 ```
 
 **Layering:**
+
 ```
 ┌─────────────────────────────────────────────┐
 │  Component (TSX)                            │
@@ -50,6 +52,7 @@ src/components/Badge/
 Choose granularity based on theming needs:
 
 ### Option A: Per-variant tokens (maximum theming)
+
 ```css
 /* badge.css */
 
@@ -69,6 +72,7 @@ Choose granularity based on theming needs:
 ```
 
 ### Option B: Direct values in classes (simpler)
+
 ```css
 /* No tokens, just Tailwind values in classes */
 /* See Step 2 */
@@ -256,6 +260,7 @@ data-type="bug-fix"
 ## Migration: From CVA to Data Attributes
 
 **Before (current CVA - Tailwind classes in TS):**
+
 ```tsx
 // badgeVariants.ts
 const statusVariants = cva(baseBadgeClasses, {
@@ -273,10 +278,12 @@ const statusVariants = cva(baseBadgeClasses, {
 ```
 
 **After (data attrs - colors in CSS):**
+
 ```tsx
 // Component only
 <div className="badge" data-status={formatDataAttr(status)}>
 ```
+
 ```css
 /* badge.css */
 .badge[data-status="proposed"] { @apply bg-gray-100 text-gray-800...; }

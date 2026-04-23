@@ -36,6 +36,7 @@ The system uses a dual-configuration approach:
 **File**: `~/.config/markdown-ticket/projects/{project-dir}.toml`
 
 #### Standard Configuration (Minimal)
+
 ```toml
 [project]
 path = "/path/to/project"
@@ -97,6 +98,7 @@ The system supports three valid file relationship states:
 **Rule**: `config.project.id` must equal the directory basename
 
 **Implementation**:
+
 ```bash
 # Main repository - ACCEPTED
 /path/to/SuperDRuper/.mdt-config.toml
@@ -135,6 +137,7 @@ The document viewer integrates with project configuration to provide markdown fi
    - **Globs**: Supports `*.md` patterns
 
 ### Default Exclude Folders
+
 ```toml
 excludeFolders = [
     "node_modules",    # Dependencies
@@ -152,6 +155,7 @@ excludeFolders = [
 ## Configuration Examples for `.mdt-config.toml`
 
 ### Minimal Configuration
+
 ```toml
 [project]
 name = "Simple Project"
@@ -161,6 +165,7 @@ ticketsPath = "docs/tickets"
 ```
 
 ### Complete Configuration
+
 ```toml
 [project]
 name = "My Web Application"
@@ -216,6 +221,7 @@ The system implements path traversal protection at multiple levels:
 - **Symlink protection**: Checks that symlinks don't point outside the project root
 
 **Forbidden path patterns**:
+
 ```
 ❌ "../../../etc/passwd"      - Parent directory traversal
 ❌ "/etc/passwd"             - Absolute path
@@ -227,6 +233,7 @@ The system implements path traversal protection at multiple levels:
 ```
 
 **Implementation example**:
+
 ```typescript
 // Contract validation
 paths: z.array(z.string())

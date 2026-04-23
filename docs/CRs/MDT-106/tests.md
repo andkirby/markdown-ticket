@@ -60,6 +60,7 @@
 **Covers**: R1.1, R1.2, R1.3, R6.1, R6.2, R10.1
 
 #### Scenario: get_all_projects (R1.1, R1.2)
+
 ```gherkin
 Given the test environment is set up
 When GET request to /api/projects
@@ -71,6 +72,7 @@ And array contains registered projects
 **Test**: `describe('GET /api/projects') > it('should return empty array when no projects exist')`
 
 #### Scenario: create_project_success (R1.1, R1.2)
+
 ```gherkin
 Given valid project data
 When POST request to /api/projects/create
@@ -81,6 +83,7 @@ And response body contains project ID
 **Test**: `describe('POST /api/projects/create') > it('should create new project with valid data')`
 
 #### Scenario: create_project_missing_field (R6.1)
+
 ```gherkin
 Given project data missing required field
 When POST request to /api/projects/create
@@ -98,6 +101,7 @@ And response body contains error message
 **Covers**: R1.1, R1.2, R1.3, R6.1, R6.2, R6.3, R10.1
 
 #### Scenario: get_all_tasks (R1.1, R1.2)
+
 ```gherkin
 Given the test environment is set up
 When GET request to /api/tasks
@@ -108,6 +112,7 @@ And response body is an array of task filenames
 **Test**: `describe('GET /api/tasks') > it('should return empty array when no tasks exist')`
 
 #### Scenario: save_task_success (R1.1, R1.2)
+
 ```gherkin
 Given valid task data with filename and content
 When POST request to /api/tasks/save
@@ -118,6 +123,7 @@ And response body contains success: true
 **Test**: `describe('POST /api/tasks/save') > it('should create new task with valid data')`
 
 #### Scenario: save_task_missing_content (R6.1)
+
 ```gherkin
 Given task data missing content field
 When POST request to /api/tasks/save
@@ -128,6 +134,7 @@ And response body contains error message
 **Test**: `describe('POST /api/tasks/save') > it('should return 400 for missing content')`
 
 #### Scenario: task_not_found (R6.2)
+
 ```gherkin
 Given a non-existent task filename
 When GET request to /api/tasks/:filename
@@ -145,6 +152,7 @@ And response body contains error message
 **Covers**: R1.1, R1.2, R1.3, R6.1, R6.2, R10.1
 
 #### Scenario: get_documents_missing_project_id (R6.1)
+
 ```gherkin
 Given a request without projectId parameter
 When GET request to /api/documents
@@ -155,6 +163,7 @@ And response body contains error message
 **Test**: `describe('GET /api/documents') > it('should return 400 for missing projectId')`
 
 #### Scenario: get_documents_not_found (R6.2)
+
 ```gherkin
 Given a non-existent project ID
 When GET request to /api/documents with projectId
@@ -172,6 +181,7 @@ And response body contains error message
 **Covers**: R7.1, R7.2, R7.3, R10.1 |
 
 #### Scenario: sse_connection_established (R7.1)
+
 ```gherkin
 Given the test environment is set up
 When GET request to /api/events
@@ -184,6 +194,7 @@ And Connection header is "keep-alive"
 **Test**: `describe('SSE Connection') > it('should establish SSE connection with correct headers')`
 
 #### Scenario: sse_connection_event (R7.1, R7.2)
+
 ```gherkin
 Given the SSE endpoint is accessible
 When GET request to /api/events
@@ -195,6 +206,7 @@ And event contains timestamp
 **Test**: `describe('SSE Connection') > it('should send initial connection event')`
 
 #### Scenario: sse_keep_alive (R7.3)
+
 ```gherkin
 Given the SSE endpoint is accessible
 When GET request to /api/events
@@ -212,6 +224,7 @@ And cache is disabled
 **Covers**: R1.1, R1.2, R6.1, R6.2, R10.1 |
 
 #### Scenario: get_status (R1.1, R1.2)
+
 ```gherkin
 Given the test environment is set up
 When GET request to /api/status
@@ -224,6 +237,7 @@ And response body contains sseClients count
 **Test**: `describe('GET /api/status') > it('should return server status')`
 
 #### Scenario: get_directories (R1.1, R1.2)
+
 ```gherkin
 Given the test environment is set up
 When GET request to /api/directories
@@ -235,6 +249,7 @@ And response body contains directories array
 **Test**: `describe('GET /api/directories') > it('should return system directories')`
 
 #### Scenario: check_filesystem_exists_invalid (R6.1)
+
 ```gherkin
 Given a request without path parameter
 When POST request to /api/filesystem/exists
@@ -256,6 +271,7 @@ And response body contains error message
 **Covers**: R1.1, R1.2, R10.1
 
 #### Scenario: get_redoc_ui (R1.1, R1.2)
+
 ```gherkin
 Given the test environment is set up
 When GET request to /api-docs
@@ -267,6 +283,7 @@ And response body contains Redoc HTML
 **Test**: `describe('GET /api-docs') > it('should serve Redoc UI HTML page')`
 
 #### Scenario: get_openapi_spec (R1.1, R1.2)
+
 ```gherkin
 Given the test environment is set up
 When GET request to /api-docs/json
@@ -336,6 +353,7 @@ All error responses follow this format per OpenAPI spec:
 | 500 | "Internal Server Error" | Unexpected server error |
 
 **Test assertions** use the `message` field:
+
 ```typescript
 // ✅ Correct - check message field for specific error details
 assertErrorMessage(response, 'Project ID is required')
@@ -347,6 +365,7 @@ expect(response.body.error).toBe('Bad Request') // Too generic
 ## Verification
 
 Run all E2E tests (should all fail initially):
+
 ```bash
 cd server && npm test
 ```
@@ -354,11 +373,13 @@ cd server && npm test
 Expected: **Multiple failed, 0 passed** (tests are written but endpoints may not be fully implemented)
 
 Run specific test file:
+
 ```bash
 cd server && npm test -- projects.test.ts
 ```
 
 Run with coverage:
+
 ```bash
 cd server && npm run test:coverage
 ```
@@ -439,10 +460,12 @@ cd server && npm run test:coverage
 
 #### controllers/TicketController.ts
 - Fixed all error responses to match OpenAPI spec format:
+
   ```typescript
   // Before: { error: "Task not found" }
   // After:  { error: "Not Found", message: "Task not found" }
   ```
+
 - Updated methods: `getAllTasks()`, `getTask()`, `saveTask()`, `deleteTask()`, `getDuplicates()`, `previewDuplicateRename()`, `resolveDuplicateTicket()`
 - All error responses now return proper HTTP status reason phrases in `error` field and specific details in `message` field
 
@@ -462,6 +485,7 @@ cd server && npm run test:coverage
 
 #### routes/system.ts
 - Fixed `/api/filesystem/exists` endpoint 400 error:
+
   ```typescript
   // Before: { error: "Path is required and must be a string" }
   // After:  { error: "Bad Request", message: "Path is required and must be a string" }
@@ -479,10 +503,12 @@ cd server && npm run test:coverage
 
 #### controllers/DocumentController.ts
 - Fixed error response format to match OpenAPI spec:
+
   ```typescript
   // Before: { error: "Project ID is required" }
   // After:  { error: "Bad Request", message: "Project ID is required" }
   ```
+
 - Updated all error responses to use proper semantic meanings:
   - `error`: HTTP status reason phrase ("Bad Request", "Not Found", "Forbidden")
   - `message`: Specific error details

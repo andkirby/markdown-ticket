@@ -13,6 +13,7 @@ http://localhost:3001/api
 ### Project Management
 
 #### List All Projects
+
 ```http
 GET /api/projects
 ```
@@ -20,6 +21,7 @@ GET /api/projects
 **Description**: Retrieves all discovered projects with their configuration and metadata.
 
 **Response**:
+
 ```json
 {
   "projects": [
@@ -49,6 +51,7 @@ GET /api/projects
 ```
 
 #### Get Project Details
+
 ```http
 GET /api/projects/:projectId
 ```
@@ -57,6 +60,7 @@ GET /api/projects/:projectId
 - `projectId` (string): Unique project identifier
 
 **Response**:
+
 ```json
 {
   "project": {
@@ -82,11 +86,13 @@ GET /api/projects/:projectId
 ```
 
 #### Create New Project
+
 ```http
 POST /api/projects
 ```
 
 **Request Body**:
+
 ```json
 {
   "name": "New Project",
@@ -98,6 +104,7 @@ POST /api/projects
 ```
 
 **Response**:
+
 ```json
 {
   "project": {
@@ -120,11 +127,13 @@ POST /api/projects
 ```
 
 #### Update Project
+
 ```http
 PUT /api/projects/:projectId
 ```
 
 **Request Body**:
+
 ```json
 {
   "name": "Updated Project Name",
@@ -134,6 +143,7 @@ PUT /api/projects/:projectId
 ```
 
 **Response**:
+
 ```json
 {
   "project": {
@@ -148,11 +158,13 @@ PUT /api/projects/:projectId
 ```
 
 #### Delete Project
+
 ```http
 DELETE /api/projects/:projectId
 ```
 
 **Response**:
+
 ```json
 {
   "message": "Project removed from registry",
@@ -163,6 +175,7 @@ DELETE /api/projects/:projectId
 ### Ticket Management
 
 #### List Project Tickets
+
 ```http
 GET /api/projects/:projectId/tickets
 ```
@@ -176,11 +189,13 @@ GET /api/projects/:projectId/tickets
 - `order` (string, optional): Sort order (asc, desc)
 
 **Example Request**:
+
 ```http
 GET /api/projects/mdt/tickets?status=In Progress&sort=lastModified&order=desc
 ```
 
 **Response**:
+
 ```json
 {
   "tickets": [
@@ -207,6 +222,7 @@ GET /api/projects/mdt/tickets?status=In Progress&sort=lastModified&order=desc
 ```
 
 #### Get Ticket Details
+
 ```http
 GET /api/projects/:projectId/tickets/:ticketCode
 ```
@@ -216,6 +232,7 @@ GET /api/projects/:projectId/tickets/:ticketCode
 - `ticketCode` (string): Ticket code (e.g., "MDT-001")
 
 **Response**:
+
 ```json
 {
   "ticket": {
@@ -235,11 +252,13 @@ GET /api/projects/:projectId/tickets/:ticketCode
 ```
 
 #### Create New Ticket
+
 ```http
 POST /api/projects/:projectId/tickets
 ```
 
 **Request Body**:
+
 ```json
 {
   "title": "New Feature Request",
@@ -252,6 +271,7 @@ POST /api/projects/:projectId/tickets
 ```
 
 **Response**:
+
 ```json
 {
   "ticket": {
@@ -269,11 +289,13 @@ POST /api/projects/:projectId/tickets
 ```
 
 #### Update Ticket
+
 ```http
 PATCH /api/projects/:projectId/tickets/:ticketCode
 ```
 
 **Request Body** (partial update):
+
 ```json
 {
   "status": "Approved",
@@ -283,6 +305,7 @@ PATCH /api/projects/:projectId/tickets/:ticketCode
 ```
 
 **Response**:
+
 ```json
 {
   "ticket": {
@@ -297,11 +320,13 @@ PATCH /api/projects/:projectId/tickets/:ticketCode
 ```
 
 #### Delete Ticket
+
 ```http
 DELETE /api/projects/:projectId/tickets/:ticketCode
 ```
 
 **Response**:
+
 ```json
 {
   "message": "Ticket deleted successfully",
@@ -312,6 +337,7 @@ DELETE /api/projects/:projectId/tickets/:ticketCode
 ### Real-time Updates
 
 #### Server-Sent Events Stream
+
 ```http
 GET /api/events
 ```
@@ -319,6 +345,7 @@ GET /api/events
 **Description**: Establishes a Server-Sent Events connection for real-time updates.
 
 **Headers**:
+
 ```
 Accept: text/event-stream
 Cache-Control: no-cache
@@ -328,24 +355,28 @@ Connection: keep-alive
 **Event Types**:
 
 **Ticket Updated**:
+
 ```
 event: ticket-updated
 data: {"projectId": "mdt", "ticketCode": "MDT-001", "changes": {"status": "Approved"}}
 ```
 
 **Ticket Created**:
+
 ```
 event: ticket-created
 data: {"projectId": "mdt", "ticket": {"code": "MDT-025", "title": "New Feature"}}
 ```
 
 **Ticket Deleted**:
+
 ```
 event: ticket-deleted
 data: {"projectId": "mdt", "ticketCode": "MDT-001"}
 ```
 
 **Project Updated**:
+
 ```
 event: project-updated
 data: {"projectId": "mdt", "changes": {"name": "Updated Name"}}
@@ -354,11 +385,13 @@ data: {"projectId": "mdt", "changes": {"name": "Updated Name"}}
 ### Configuration Management
 
 #### Get Application Configuration
+
 ```http
 GET /api/config
 ```
 
 **Response**:
+
 ```json
 {
   "config": {
@@ -390,11 +423,13 @@ GET /api/config
 ```
 
 #### Refresh Project Discovery
+
 ```http
 POST /api/config/refresh
 ```
 
 **Response**:
+
 ```json
 {
   "message": "Project discovery refreshed",
@@ -404,11 +439,13 @@ POST /api/config/refresh
 ```
 
 #### Clear Configuration Cache
+
 ```http
 DELETE /api/config/cache
 ```
 
 **Response**:
+
 ```json
 {
   "message": "Configuration cache cleared"
@@ -418,11 +455,13 @@ DELETE /api/config/cache
 ### Health Check
 
 #### Application Health
+
 ```http
 GET /api/health
 ```
 
 **Response**:
+
 ```json
 {
   "status": "healthy",
@@ -486,6 +525,7 @@ All error responses follow a consistent format:
 ### Example Error Responses
 
 **Validation Error**:
+
 ```json
 {
   "error": "Validation failed",
@@ -499,6 +539,7 @@ All error responses follow a consistent format:
 ```
 
 **Resource Not Found**:
+
 ```json
 {
   "error": "Ticket not found",
@@ -512,6 +553,7 @@ All error responses follow a consistent format:
 ```
 
 **File System Error**:
+
 ```json
 {
   "error": "Unable to write ticket file",

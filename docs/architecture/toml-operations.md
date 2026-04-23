@@ -57,6 +57,7 @@ This architecture applies to **ALL TOML files** in the system:
 ## Data Flow
 
 ### Reading
+
 ```
 Any .toml file
     ↓
@@ -66,6 +67,7 @@ Config object
 ```
 
 ### Writing
+
 ```
 Config object
     ↓
@@ -98,6 +100,7 @@ Any .toml file
 ## Examples
 
 ### Project Config
+
 ```typescript
 const config = parseToml(readFile('.mdt-config.toml'))
 config.project.document.paths = ['docs', 'src']
@@ -105,6 +108,7 @@ writeFile('.mdt-config.toml', stringify(config))
 ```
 
 ### Global Registry
+
 ```typescript
 const registry = parseToml(readFile('projects/my-project.toml'))
 registry.project.active = true
@@ -112,6 +116,7 @@ writeFile('projects/my-project.toml', stringify(registry))
 ```
 
 ### User Preferences
+
 ```typescript
 const prefs = parseToml(readFile('user.toml'))
 prefs.theme = 'dark'

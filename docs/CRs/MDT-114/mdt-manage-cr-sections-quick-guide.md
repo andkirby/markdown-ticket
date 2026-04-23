@@ -17,6 +17,7 @@
 | `prepend` | Add to start of section | Yes | Yes | Yes |
 
 **Function Signature**:
+
 ```json
 { "project": "MDT", "key": "MDT-114", "operation": "list|get|replace|append|prepend", "section": "## Section Name", "content": "New content" }
 ```
@@ -34,6 +35,7 @@
 ```
 
 **Sample Output**:
+
 ```
     - ### Functional (543 chars)
     - ### Non-Functional (301 chars)
@@ -99,6 +101,7 @@
 ## The #1 Failure: Duplicate Subsections
 
 **Error**:
+
 ```
 Multiple sections match "### Functional". Use hierarchical path:
 - # CR Title / ## 4. Acceptance Criteria / ### Functional
@@ -106,6 +109,7 @@ Multiple sections match "### Functional". Use hierarchical path:
 ```
 
 ### Wrong Approach
+
 ```json
 {"section": "### Functional", "operation": "replace", "content": "..."}
 // ERROR: Multiple sections match
@@ -115,6 +119,7 @@ Multiple sections match "### Functional". Use hierarchical path:
 ```
 
 ### Correct Approach: Target Parent
+
 ```json
 {
   "section": "## 4. Acceptance Criteria", // Parent (unique)

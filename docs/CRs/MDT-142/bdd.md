@@ -28,6 +28,7 @@ BDD scenarios for filewatcher architecture improvements. This ticket focuses on 
 
 ### SSE Event Structure
 Tests must verify the SSE event payload contains:
+
 ```typescript
 {
   subdocument: {

@@ -36,6 +36,7 @@ Tickets are extracted from `.md` files with YAML frontmatter.
 | `title` | Extracted title only | Yes |
 
 **Tags for ticket metadata:**
+
 ```typescript
 await cache.set({
   key: 'ticket:MDT-001:meta',
@@ -45,6 +46,7 @@ await cache.set({
 ```
 
 **Tags for ticket content:**
+
 ```typescript
 await cache.set({
   key: 'ticket:MDT-001:content',
@@ -55,6 +57,7 @@ await cache.set({
 ```
 
 **Tags for tickets list:**
+
 ```typescript
 await cache.set({
   key: 'tickets:all',
@@ -73,6 +76,7 @@ Projects are extracted from `.mdt-config.toml` files.
 | `meta` | Derived metadata | Yes |
 
 **Tags for project:**
+
 ```typescript
 await cache.set({
   key: 'project:MDT:config',
@@ -82,6 +86,7 @@ await cache.set({
 ```
 
 **Tags for projects list:**
+
 ```typescript
 await cache.set({
   key: 'projects:all',
@@ -101,6 +106,7 @@ Documents are markdown files outside the CRs directory.
 | `title` | Extracted title | Yes |
 
 **Tags for document:**
+
 ```typescript
 // Use path hash or sanitized path as ID
 const docId = hashPath('/docs/guide.md')
@@ -219,6 +225,7 @@ Result: Both projects' ticket lists refreshed.
 ### Bulk Operations
 
 For bulk operations (e.g., "change status of 10 tickets"):
+
 ```typescript
 // Option 1: Invalidate each + list once
 const ticketIds = ['MDT-001', 'MDT-002', ...];
@@ -233,6 +240,7 @@ await cache.deleteByTag({ tags: ['tickets-list'] });
 ### Project Config Affects Tickets
 
 If project config change affects how tickets are displayed:
+
 ```typescript
 // Invalidate project AND all its tickets
 await cache.deleteByTag({
@@ -250,6 +258,7 @@ Per bentocache docs, avoid too many tags per entry:
 | Collection list | 1-2 | 3 |
 
 Example (ticket metadata):
+
 ```typescript
 tags: [
   'ticket-MDT-001', // 1. Entity instance

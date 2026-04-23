@@ -18,6 +18,7 @@ implementationNotes: Status changed to Implemented on 11/29/2025
 The current MCP server uses stdio transport, which creates performance bottlenecks in Docker deployments. Each MCP request requires `docker-exec` to spawn a process and establish stdio communication, adding significant latency. This overhead makes the MCP server impractical for containerized deployments where clients need fast, reliable access to project management tools.
 
 ### Current State
+
 ```mermaid
 flowchart TB
     Client["Claude Desktop/Amazon Q"]
@@ -53,6 +54,7 @@ flowchart TB
 - Slower than native localhost stdio
 
 ### Desired State
+
 ```mermaid
 flowchart TB
     Client["Claude Desktop/Amazon Q"]
@@ -181,6 +183,7 @@ flowchart LR
 - Tools: Shared by both stdio and HTTP transports
 
 **File structure:**
+
 ```
 mcp-server/
 ├── src/
@@ -241,6 +244,7 @@ flowchart TB
 ```
 
 **Directory structure:**
+
 ```
 mcp-server/
 ├── src/
@@ -291,6 +295,7 @@ mcp-server/
 #### 4.3 Server Implementation
 
 **index.ts - Main entry point:**
+
 ```typescript
 import { logger } from './logger.js'
 import { startHttpTransport } from './transports/http.js'
@@ -322,6 +327,7 @@ main().catch((err) => {
 ```
 
 **transports/stdio.ts - Existing stdio transport:**
+
 ```typescript
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -344,6 +350,7 @@ export async function startStdioTransport() {
 ```
 
 **transports/http.ts - NEW HTTP transport:**
+
 ```typescript
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import express from 'express'
@@ -508,6 +515,7 @@ logger.error({ tool: 'get_cr', error: err.message }, 'Tool failed')
 - No authentication
 
 **Phase 2 (Optional):** Enhanced security via environment variables
+
 ```typescript
 // Origin validation (disabled by default)
 if (process.env.MCP_SECURITY_ORIGIN_VALIDATION === 'true') {
@@ -559,6 +567,7 @@ flowchart TB
 ```
 
 **docker-compose.yml updates:**
+
 ```yaml
 services:
   mcp:
@@ -583,6 +592,7 @@ services:
 ```
 
 **Dockerfile updates:**
+
 ```dockerfile
 # mcp-server/Dockerfile (updated to expose HTTP port)
 FROM node:20-alpine
@@ -605,6 +615,7 @@ CMD ["node", "dist/index.js"]            # Start with both transports
 ```
 
 **Local development (stdio only):**
+
 ```bash
 # No HTTP transport
 cd mcp-server
@@ -612,6 +623,7 @@ npm run dev
 ```
 
 **Local development (with HTTP):**
+
 ```bash
 # Enable HTTP transport
 cd mcp-server
@@ -645,6 +657,7 @@ annotations: {
 - Pagination: `limit` and `offset` parameters for list operations
 
 **Pagination format:**
+
 ```json
 {
   "items": [...],
@@ -665,6 +678,7 @@ annotations: {
 ### Configuration
 
 **Environment Variables:**
+
 ```bash
 # mcp-server/.env
 
@@ -694,6 +708,7 @@ MCP_AUTH_TOKEN=                           # Auth token (if enabled)
 ```
 
 **Phase 1 (MVP) Recommended:**
+
 ```bash
 MCP_HTTP_ENABLED=true
 MCP_HTTP_PORT=3002
@@ -703,6 +718,7 @@ LOG_LEVEL=info
 ```
 
 **Phase 2 (Production) Example:**
+
 ```bash
 MCP_HTTP_ENABLED=true
 MCP_HTTP_PORT=3002

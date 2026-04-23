@@ -50,6 +50,7 @@ Implement a multi-layered detection approach:
 ### Integration Points
 
 **Project Scanner Enhancement**:
+
 ```typescript
 // In scanDirectoryForProjects method
 if (this.isGitWorktree(dirPath)) {
@@ -59,6 +60,7 @@ if (this.isGitWorktree(dirPath)) {
 ```
 
 **Non-blocking Initialization**:
+
 ```typescript
 // Use setImmediate to avoid blocking startup
 setImmediate(() => {
@@ -110,6 +112,7 @@ for (const entry of entries) {
 Git worktrees are a common workflow feature where developers need to work on multiple branches simultaneously without switching contexts. However, from a project management perspective, these worktrees represent the same logical project and should not appear as separate entities in the project selector.
 
 The current project discovery system scans directories for `.mdt-config.toml` files without considering whether they are part of a git worktree structure. This leads to a poor user experience where the project selector shows:
+
 ```
 markdown-ticket (main)
 markdown-ticket-aws-counter (worktree)
@@ -183,6 +186,7 @@ Implement a multi-layered detection approach:
 ### Integration Points
 
 **Project Scanner Enhancement**:
+
 ```typescript
 // In scanDirectoryForProjects method
 if (this.isGitWorktree(dirPath)) {
@@ -192,6 +196,7 @@ if (this.isGitWorktree(dirPath)) {
 ```
 
 **Non-blocking Initialization**:
+
 ```typescript
 // Use setImmediate to avoid blocking startup
 setImmediate(() => {

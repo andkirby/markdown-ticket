@@ -141,13 +141,16 @@ Implement TypeScript CLI tool with centralized configuration management and envi
 - ✅ 4-level fallback chain works in permission-restricted environments
 ## 7. Deployment Strategy
 ## Production (compiled JavaScript)
+
 ```
 npm run config:init
 npm run config:set key value
 npm run config:show
 npm run config:get key
 ```
+
 ## Development (TypeScript with tsx for faster iteration)
+
 ```
 npm run config:init:dev
 npm run config:set:dev key value

@@ -36,6 +36,7 @@ When dragging tickets to the Done column, the UI doesn't immediately update beca
 - UI and file system should remain synchronized
 
 ### Console Log Evidence
+
 ```
 Drag: Ticket CR-A001 is being dragged
 Column.tsx:58 Column: Drop event triggered

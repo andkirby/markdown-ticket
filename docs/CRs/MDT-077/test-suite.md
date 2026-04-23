@@ -99,6 +99,7 @@ npm run project:list -- --help
 **Given** the test environment is initialized
 **And** no project directory exists at "/tmp/mdt-cli-tests/projects/within-depth/project-global"
 **When** executing:
+
 ```bash
 npm run project:create -- \
   --name "Global Only Project" \
@@ -107,8 +108,10 @@ npm run project:create -- \
   --global-only \
   --description "Test project in global-only mode"
 ```
+
 **Then** the command should exit with code 0
 **And** global registry should contain:
+
 ```toml
 # /tmp/mdt-cli-tests/config/projects/project-global.toml
 [project]
@@ -125,6 +128,7 @@ paths = []
 excludeFolders = []
 maxDepth = 3
 ```
+
 **And** local config file should NOT exist at "/tmp/mdt-cli-tests/projects/within-depth/project-global/.mdt-config.toml"
 **And** project directory should be created with basic structure
 **And** "npm run project:list -- --format json" should show the project
@@ -133,6 +137,7 @@ maxDepth = 3
 
 **Given** the test environment is initialized
 **When** executing:
+
 ```bash
 npm run project:create -- \
   --name "Invalid Path Project" \
@@ -140,6 +145,7 @@ npm run project:create -- \
   --path "/nonexistent/directory/project" \
   --global-only
 ```
+
 **Then** the command should exit with code 2 (validation error)
 **And** error message should contain "Path does not exist"
 **And** no entry should be created in global registry
@@ -149,6 +155,7 @@ npm run project:create -- \
 **Given** the test environment is initialized
 **And** project directory exists at "/tmp/mdt-cli-tests/projects/within-depth/project-global-docs"
 **And** documentation structure exists:
+
 ```
 /tmp/mdt-cli-tests/projects/within-depth/project-global-docs/
 ├── README.md
@@ -158,7 +165,9 @@ npm run project:create -- \
 └── src/
     └── lib.md
 ```
+
 **When** executing:
+
 ```bash
 npm run project:create -- \
   --name "Global With Docs" \
@@ -168,6 +177,7 @@ npm run project:create -- \
   --document-paths '["README.md", "docs", "src"]' \
   --max-depth 4
 ```
+
 **Then** global registry should contain complete configuration with document settings
 **And** document paths should be stored in global configuration
 **And** "npm run project:get -- GLO2" should show document discovery settings
@@ -181,6 +191,7 @@ npm run project:create -- \
 **Given** the test environment is initialized
 **And** project directory exists at "/tmp/mdt-cli-tests/projects/within-depth/project-first"
 **When** executing:
+
 ```bash
 npm run project:create -- \
   --name "Project First" \
@@ -188,8 +199,10 @@ npm run project:create -- \
   --path "/tmp/mdt-cli-tests/projects/within-depth/project-first" \
   --description "Test project in project-first mode"
 ```
+
 **Then** the command should exit with code 0
 **And** local config should contain:
+
 ```toml
 # /tmp/mdt-cli-tests/projects/within-depth/project-first/.mdt-config.toml
 [project]
@@ -205,7 +218,9 @@ paths = []
 excludeFolders = []
 maxDepth = 3
 ```
+
 **And** global registry should contain minimal reference:
+
 ```toml
 # /tmp/mdt-cli-tests/config/projects/project-first.toml
 [project]
@@ -213,6 +228,7 @@ path = "/tmp/mdt-cli-tests/projects/within-depth/project-first"
 active = true
 dateRegistered = "2025-12-18"
 ```
+
 **And** "npm run project:list" should show the project
 
 #### Scenario: PF02 - Create project-first with existing local config
@@ -221,12 +237,14 @@ dateRegistered = "2025-12-18"
 **And** project directory exists at "/tmp/mdt-cli-tests/projects/within-depth/project-first-existing"
 **And** local config already exists with valid content
 **When** executing:
+
 ```bash
 npm run project:create -- \
   --name "Existing Config" \
   --code "PFE1" \
   --path "/tmp/mdt-cli-tests/projects/within-depth/project-first-existing"
 ```
+
 **Then** the command should exit with code 0
 **And** existing local config should be preserved
 **And** global registry should create minimal reference to existing project at `/tmp/mdt-cli-tests/config/projects/project-first-existing.toml`
@@ -238,6 +256,7 @@ npm run project:create -- \
 **And** project directory exists at "/tmp/mdt-cli-tests/projects/within-depth/project-first-tickets"
 **And** custom tickets directory exists at "/tmp/mdt-cli-tests/projects/within-depth/project-first-tickets/.mdt/adr"
 **When** executing:
+
 ```bash
 npm run project:create -- \
   --name "Custom Tickets" \
@@ -245,6 +264,7 @@ npm run project:create -- \
   --path "/tmp/mdt-cli-tests/projects/within-depth/project-first-tickets" \
   --tickets-path ".mdt/adr"
 ```
+
 **Then** local config should contain `ticketsPath = ".mdt/adr"`
 **And** global registry should reference the project
 **And** "npm run project:get -- PFT1" should show custom tickets path
@@ -264,6 +284,7 @@ npm run project:create -- \
 **Given** the test environment is initialized
 **And** project directory exists at "/tmp/mdt-cli-tests/projects/within-depth/project-auto"
 **When** executing:
+
 ```bash
 npm run project:create -- \
   --name "Auto Discovery" \
@@ -271,6 +292,7 @@ npm run project:create -- \
   --path "/tmp/mdt-cli-tests/projects/within-depth/project-auto" \
   --description "Test project in auto-discovery mode"
 ```
+
 **Then** the command should exit with code 0
 **And** local config should contain complete project configuration
 **And** NO entry should be created in global registry
@@ -282,12 +304,14 @@ npm run project:create -- \
 **Given** the test environment is initialized
 **And** project directory exists at "/tmp/mdt-cli-tests/projects/out-of-depth/level1/level2/project-auto-deep"
 **When** executing:
+
 ```bash
 npm run project:create -- \
   --name "Deep Auto Project" \
   --code "ADP1" \
   --path "/tmp/mdt-cli-tests/projects/out-of-depth/level1/level2/project-auto-deep"
 ```
+
 **Then** the command should exit with code 0
 **And** local config should be created
 **And** project should NOT appear in "npm run project:list -- --discovery" (outside maxDepth=2)
@@ -297,12 +321,14 @@ npm run project:create -- \
 
 **Given** project "AD01" exists in auto-discovery mode
 **And** another attempt is made to create project with same code:
+
 ```bash
 npm run project:create -- \
   --name "Conflict Project" \
   --code "AD01" \
   --path "/tmp/mdt-cli-tests/projects/within-depth/project-auto-conflict"
 ```
+
 **When** executing the command
 **Then** the command should exit with code 2 (validation error)
 **And** error message should contain "Project code AD01 already exists"
@@ -335,6 +361,7 @@ npm run project:create -- \
 
 **Given** the test environment is initialized
 **When** attempting to create project with invalid codes for each strategy:
+
 ```bash
 # Too short
 npm run project:create -- --name "Too Short" --code "A" --path "/tmp/test/a" --global-only
@@ -348,6 +375,7 @@ npm run project:create -- --name "Lowercase" --code "low" --path "/tmp/test/c" -
 # Invalid characters
 npm run project:create -- --name "Invalid" --code "INV-1" --path "/tmp/test/d" --global-only
 ```
+
 **Then** all commands should exit with code 2
 **And** error messages should explain code format requirements (2-5 uppercase letters)
 
@@ -355,6 +383,7 @@ npm run project:create -- --name "Invalid" --code "INV-1" --path "/tmp/test/d" -
 
 **Given** the test environment is initialized
 **When** attempting to create project where directory name doesn't match code:
+
 ```bash
 # Case 1: Directory exists but name doesn't match code
 mkdir -p "/tmp/mdt-cli-tests/projects/within-depth/existing-dir"
@@ -369,6 +398,7 @@ npm run project:create -- \
   --code "WR2" \
   --path "/tmp/mdt-cli-tests/projects/within-depth/wr2-project"
 ```
+
 **Then** Case 1 should exit with code 2 (validation error)
 **And** error should mention "Directory name 'existing-dir' does not match project code 'WR1'"
 **And** Case 2 should exit with code 0 (success)

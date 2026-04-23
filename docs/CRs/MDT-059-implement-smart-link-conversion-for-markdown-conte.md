@@ -79,6 +79,7 @@ Create a smart link processing system that:
 ### Core Components
 
 #### MarkdownContent Component
+
 ```typescript
 interface MarkdownContentProps {
   markdown: string
@@ -88,12 +89,14 @@ interface MarkdownContentProps {
   onRenderComplete?: () => void
 }
 ```
+
 - Processes markdown through secure pipeline
 - Protects code blocks using placeholder strategy
 - Integrates with Mermaid and syntax highlighting
 - Includes error boundary for graceful failures
 
 #### SmartLink Component
+
 ```typescript
 interface SmartLinkProps {
   link: ParsedLink
@@ -103,12 +106,14 @@ interface SmartLinkProps {
   showIcon?: boolean
 }
 ```
+
 - Renders different link types appropriately
 - Uses React Router Link for internal navigation
 - Applies security attributes for external links
 - Shows visual indicators for link types
 
 #### Link Processor
+
 ```typescript
 enum LinkType {
   EXTERNAL = 'external',
@@ -132,6 +137,7 @@ interface ParsedLink {
 ```
 
 #### Relative Path Resolver
+
 ```typescript
 interface PathResolutionResult {
   resolvedPath: string
@@ -163,6 +169,7 @@ function resolveRelativePath(
   }
 }
 ```
+
 ### Processing Pipeline
 1. **Protect existing links** - Replace `[text](url)` with placeholders
 2. **Protect code blocks** - Replace ` ```code``` ` and `` `inline` `` with placeholders
@@ -180,6 +187,7 @@ function resolveRelativePath(
 - **Path traversal protection**: Relative links validated against project boundaries using `path.resolve()` and `startsWith()` checks
 - **Malicious path detection**: Block attempts to access `../../../etc/passwd` or similar attacks
 ### Configuration
+
 ```typescript
 interface LinkConfig {
   enableAutoLinking: boolean
@@ -187,6 +195,7 @@ interface LinkConfig {
   enableDocumentLinks: boolean
 }
 ```
+
 - Stored in localStorage with defaults enabled
 - User-controllable feature toggles
 - Proper cache invalidation on config changes
@@ -220,6 +229,7 @@ interface LinkConfig {
 - [ ] No breaking changes to existing markdown content
 ## 6. Implementation Notes
 ### Dependencies
+
 ```json
 {
   "dependencies": {
@@ -233,6 +243,7 @@ interface LinkConfig {
 ```
 
 ### File Structure
+
 ```
 src/
 ├── components/

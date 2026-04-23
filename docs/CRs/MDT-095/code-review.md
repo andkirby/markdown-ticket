@@ -23,6 +23,7 @@ This is a well-structured implementation with good separation of concerns, compr
 **Initial Claim:** The `resolvePath()` method looks for ticket files in the wrong location.
 
 **Actual Implementation:** The check is correct:
+
 ```typescript
 const hasTicketFile = files.some(f =>
   f === `${ticketCode}.md` || f.startsWith(`${ticketCode}-`),
@@ -30,6 +31,7 @@ const hasTicketFile = files.some(f =>
 ```
 
 **Actual File Structure:**
+
 ```
 docs/CRs/
 ├── MDT-095-git-worktree-support.md  # Main ticket file (starts with "MDT-095-")
@@ -89,6 +91,7 @@ async createCR(project: Project, crType: string, data: TicketData): Promise<Tick
 2. Part of a "walking skeleton" - infrastructure is ready but automatic worktree watcher initialization is not implemented
 
 **Relevant Code** (fileWatcherService.ts:102):
+
 ```typescript
 private worktreeService: WorktreeService = new WorktreeService({ enabled: true })
 ```

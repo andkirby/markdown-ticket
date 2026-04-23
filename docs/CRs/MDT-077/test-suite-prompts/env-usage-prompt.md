@@ -23,6 +23,7 @@ TEST_BASE="/tmp/mdt-cli-tests-${RANDOM}"
 ```
 
 The complete structure:
+
 ```
 /tmp/mdt-cli-tests-${RANDOM}/
 ├── config/                       # Isolated global configuration
@@ -54,6 +55,7 @@ export MDT_NO_GLOBAL_CACHE="true"                 # Disable any global caching
 ### 3. Command Execution Patterns
 
 #### Isolated Command Wrapper
+
 ```bash
 # Define a wrapper for all CLI commands
 run_isolated() {
@@ -90,6 +92,7 @@ run_isolated "npm run project:create -- --name 'Test Project' --code 'TEST' --pa
 ```
 
 #### Test Function Pattern
+
 ```bash
 test_scenario() {
     local test_name="$1"
@@ -156,6 +159,7 @@ Always use unique identifiers for each test run:
 When using subagents (e.g., universal-coding-architect), provide these instructions:
 
 ### Agent Prompt Template
+
 ```
 You are working on fixing issues in a CLI project management tool.
 
@@ -172,6 +176,7 @@ All fixes must be tested in an isolated environment. Use this pattern:
    ```
 
 3. Set up isolated environment variables:
+
    ```bash
    export CONFIG_DIR="${TEST_BASE}/config"
    export HOME="${TEST_BASE}/home"
@@ -179,13 +184,15 @@ All fixes must be tested in an isolated environment. Use this pattern:
    ```
 
 4. Create test global config:
+
    ```bash
    cat > "${TEST_BASE}/config/config.toml" << EOF
 [discovery]
 autoDiscover = true
 searchPaths = ["${TEST_BASE}/projects"]
 maxDepth = 2
-EOF
+   EOF
+
    ```
 
 5. **IMPORTANT**: Use compiled commands, not dev versions:
@@ -204,6 +211,7 @@ EOF
 
 ## Test Case
 [Provide the exact test case to run, using the isolated environment pattern]
+
 ```
 
 ### Agent Task Pattern

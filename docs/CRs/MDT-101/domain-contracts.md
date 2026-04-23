@@ -111,12 +111,14 @@ export function safeValidateEntity(input: unknown) {
 ### Export Files
 
 **Entity exports (`src/{entity}/index.ts`)**:
+
 ```typescript
 export * from './schema'      // stable consumer entrypoint
 export * from './validation'
 ```
 
 **Main exports (`src/index.ts`)**:
+
 ```typescript
 export * from './entity1'
 export * from './entity2'
@@ -157,6 +159,7 @@ export function buildCreateEntityInput(
 ```
 
 **Testing exports (`src/testing/index.ts`)**:
+
 ```typescript
 export * from './entity.fixtures'
 export * from './otherEntity.fixtures'

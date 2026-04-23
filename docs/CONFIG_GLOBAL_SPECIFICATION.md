@@ -70,6 +70,7 @@ Controls automatic project discovery in specified directories.
 #### Example Configurations
 
 **Default discovery (home directory scanning):**
+
 ```toml
 [discovery]
 autoDiscover = true
@@ -80,6 +81,7 @@ searchPaths = [
 ```
 
 **Custom work locations:**
+
 ```toml
 [discovery]
 autoDiscover = true
@@ -91,6 +93,7 @@ searchPaths = [
 ```
 
 **Disabled discovery (manual registration only):**
+
 ```toml
 [discovery]
 autoDiscover = false
@@ -124,6 +127,7 @@ Controls system-wide behavior including caching and logging.
 #### Example Configurations
 
 **Default settings:**
+
 ```toml
 [system]
 cacheTimeout = 30000  # 30 seconds
@@ -131,6 +135,7 @@ logLevel = "info"
 ```
 
 **Extended cache for network storage:**
+
 ```toml
 [system]
 cacheTimeout = 120000  # 2 minutes
@@ -138,6 +143,7 @@ logLevel = "warn"
 ```
 
 **Debug mode with short cache:**
+
 ```toml
 [system]
 cacheTimeout = 5000   # 5 seconds
@@ -167,6 +173,7 @@ Controls automatic link detection and processing behavior.
 #### Example Configurations
 
 **Full feature set (default):**
+
 ```toml
 [links]
 enableAutoLinking = true
@@ -177,6 +184,7 @@ linkValidation = false
 ```
 
 **Minimal linking:**
+
 ```toml
 [links]
 enableAutoLinking = false

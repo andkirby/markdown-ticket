@@ -81,6 +81,7 @@ MCP tool documentation (MCP_TOOLS.md) is currently maintained manually, which cr
 ## 3. Implementation Specification
 
 ### File Structure
+
 ```
 scripts/
   generate-mcp-docs.ts          # Main generator script

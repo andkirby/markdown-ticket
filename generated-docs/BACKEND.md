@@ -172,6 +172,7 @@ Development utilities for MCP integration:
 ## Storage Architecture
 
 ### File System Structure
+
 ```
 ~/.config/markdown-ticket/          # Global configuration
 ├── config.toml                     # Application settings
@@ -190,6 +191,7 @@ Development utilities for MCP integration:
 ```
 
 ### Ticket File Format
+
 ```yaml
 ---
 code: MDT-001
@@ -238,6 +240,7 @@ Technical implementation details...
 - `500` - Internal Server Error
 
 ### Error Response Format
+
 ```json
 {
   "error": "Error message",

@@ -108,6 +108,7 @@ The implementation of MDT-083 successfully extracted the 1122-line ProjectServic
 
 **File**: `shared/services/project/ProjectRegistry.ts`
 **Line**: 67
+
 ```typescript
 // TECH-DEBT: Duplication - Direct file operations
 // Impact: Defeats purpose of extracted file-utils, creates duplicate error handling
@@ -117,6 +118,7 @@ The implementation of MDT-083 successfully extracted the 1122-line ProjectServic
 
 **File**: `shared/utils/constants.ts`
 **Line**: 1
+
 ```typescript
 // TECH-DEBT: Size Violation - File exceeds 110-line hard max for utilities
 // Impact: Continues pattern of large utility files
@@ -126,6 +128,7 @@ The implementation of MDT-083 successfully extracted the 1122-line ProjectServic
 
 **File**: `shared/services/project/ProjectConfigService.ts`
 **Line**: 1
+
 ```typescript
 // TECH-DEBT: Size Violation - File exceeds 200-line default for features
 // Impact: Service handling multiple concerns

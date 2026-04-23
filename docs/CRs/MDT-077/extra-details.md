@@ -25,6 +25,7 @@ This document contains implementation details, architectural patterns, and techn
 ### Service Layer Architecture
 
 #### Single Source of Truth Pattern
+
 ```
 CLI/Web UI/MCP → shared/services/ProjectService.ts ← Implementation
                ↓
@@ -47,6 +48,7 @@ CLI/Web UI/MCP → shared/services/ProjectService.ts ← Implementation
 ### CLI API Design Patterns
 
 #### Command Structure Pattern
+
 ```bash
 npm run <category>:<action> -- <flags>
 # Examples:
@@ -60,6 +62,7 @@ npm run project:list -- --format json
 - **Validation Layer**: ProjectValidator validates all inputs before processing
 
 #### Error Handling Pattern
+
 ```typescript
 // Exit codes: 0=success, 1=error, 2=validation, 3=not_found, 6=cancelled
 process.exit(CLI_ERROR_CODES[errorType])
@@ -76,6 +79,7 @@ process.exit(CLI_ERROR_CODES[errorType])
 - ✅ Ticket numbering now handled by file system scanning, not counter files
 
 ### Base CLI Commands (16 total)
+
 ```bash
 npm run project:create
 npm run project:list
@@ -98,6 +102,7 @@ npm run project:disable
 **Framework**: Jest + Node.js child_process for CLI testing
 
 **Pattern**:
+
 ```typescript
 // tests/cli/project-cli.test.ts
 describe('CLI Project Management', () => {
@@ -120,6 +125,7 @@ describe('CLI Project Management', () => {
 - Easier CI/CD integration
 
 #### Test Data Management
+
 ```typescript
 // Test fixtures pattern
 const TEST_PROJECTS = {

@@ -200,6 +200,7 @@ graph TD
 ### How to Verify Success
 
 **Automated Checks:**
+
 ```bash
 # Verify no direct fs operations in handlers
 grep -r "fs\.readFile\|fs\.writeFile" mcp-server/src/tools/handlers/

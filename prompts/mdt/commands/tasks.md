@@ -90,6 +90,7 @@ If no AGENTS.md files exist, skip this step — no `**Skills**` field is written
 - [ ] No duplicated logic
 - [ ] Smoke test passes (feature works with real execution)
 - [ ] Fallback/absence paths match requirements (if applicable)
+
 ```
 
 **Field intent (avoid overlap):**
@@ -146,6 +147,7 @@ If bdd.md is present, plan tasks around **milestones** — vertical slices that 
 ### Milestone Structure
 
 ```
+
 Milestone 0: Walking Skeleton (all layers with stubs)
   → Checkpoint: builds/compiles, stubs render
 
@@ -162,6 +164,7 @@ Milestone 2: {next behavior, builds on M1} (BR-X.Y, BR-X.Z)
 Milestone N: {most complex behavior} (BR-X.Y)
   → Tasks: remaining modules
   → Checkpoint: ALL BDD scenarios GREEN
+
 ```
 
 ### Key Principles
@@ -375,6 +378,7 @@ Before finalizing tasks.md, ask:
 ## Completion
 
 **Prep mode**:
+
 ```markdown
 ## Task Breakdown Complete
 
@@ -387,6 +391,7 @@ Before finalizing tasks.md, ask:
 ```
 
 **Feature mode**:
+
 ```markdown
 ## Task Breakdown Complete
 

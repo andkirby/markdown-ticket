@@ -144,6 +144,7 @@ server/tests/api/
 - Import `TestEnvironment`, `ProjectFactory` from `@mdt/shared/test-lib` — do NOT reimplement
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/setup.ts  # ≤ 100
 cd server && npm test -- setup.test  # Should initialize without errors
@@ -190,6 +191,7 @@ cd server && npm test -- setup.test  # Should initialize without errors
 - Import Express app from setup — do NOT recreate
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/helpers/request.ts  # ≤ 75
 grep -E "GET|POST|PATCH|PUT|DELETE" server/tests/api/helpers/request.ts | wc -l  # Should be ≥5
@@ -236,6 +238,7 @@ grep -E "GET|POST|PATCH|PUT|DELETE" server/tests/api/helpers/request.ts | wc -l 
 - Import Jest matchers — use built-in assertions
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/helpers/assertions.ts  # ≤ 125
 grep -E "assert" server/tests/api/helpers/assertions.ts | wc -l  # Should be ≥8
@@ -284,6 +287,7 @@ grep -E "assert" server/tests/api/helpers/assertions.ts | wc -l  # Should be ≥
 - Import assertion helpers from assertions.ts
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/helpers/sse.ts  # ≤ 75
 grep -E "Event|EventTarget" server/tests/api/helpers/sse.ts  # Should use built-ins
@@ -327,6 +331,7 @@ grep -E "Event|EventTarget" server/tests/api/helpers/sse.ts  # Should use built-
 - Use `ProjectFactory` from `@mdt/shared/test-lib` — do NOT duplicate
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/fixtures/projects.ts  # ≤ 50
 grep -E "export.*fixture" server/tests/api/fixtures/projects.ts | wc -l  # Should be ≥3
@@ -370,6 +375,7 @@ grep -E "export.*fixture" server/tests/api/fixtures/projects.ts | wc -l  # Shoul
 - Use `ProjectFactory.createTestCR()` from `@mdt/shared/test-lib` — do NOT duplicate
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/fixtures/tickets.ts  # ≤ 75
 grep -E "yaml|malformed" server/tests/api/fixtures/tickets.ts  # Should have malformed fixture
@@ -413,6 +419,7 @@ grep -E "yaml|malformed" server/tests/api/fixtures/tickets.ts  # Should have mal
 - Use `ProjectFactory` from `@mdt/shared/test-lib` — do NOT duplicate
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/fixtures/documents.ts  # ≤ 50
 grep -E "export.*fixture" server/tests/api/fixtures/documents.ts | wc -l  # Should be ≥2
@@ -461,6 +468,7 @@ grep -E "export.*fixture" server/tests/api/fixtures/documents.ts | wc -l  # Shou
 - Use fixtures from `fixtures/projects.ts`
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/projects.test.ts  # ≤ 300
 cd server && npm test -- projects.test.ts  # Should run 25+ tests
@@ -510,6 +518,7 @@ cd server && npm test -- projects.test.ts  # Should run 25+ tests
 - Use malformed YAML fixture from `fixtures/tickets.ts`
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/tickets.test.ts  # ≤ 350
 cd server && npm test -- tickets.test.ts  # Should run 15+ tests
@@ -557,6 +566,7 @@ cd server && npm test -- tickets.test.ts  # Should run 15+ tests
 - Use fixtures from `fixtures/documents.ts`
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/documents.test.ts  # ≤ 300
 cd server && npm test -- documents.test.ts  # Should run 10+ tests
@@ -604,6 +614,7 @@ cd server && npm test -- documents.test.ts  # Should run 10+ tests
 - Import SSE assertions from `helpers/assertions.ts`
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/sse.test.ts  # ≤ 250
 cd server && npm test -- sse.test.ts  # Should run 8+ tests
@@ -667,6 +678,7 @@ cd server && npm test -- sse.test.ts  # Should run 8+ tests
 - Import helpers from `helpers/index.ts`
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/system.test.ts  # ≤ 200
 cd server && npm test -- system.test.ts  # Should run 12+ tests
@@ -712,6 +724,7 @@ cd server && npm test -- system.test.ts  # Should run 12+ tests
 - Import helpers from `helpers/index.ts`
 
 **Verify**:
+
 ```bash
 wc -l server/tests/api/openapi-docs.test.ts  # ≤ 100
 cd server && npm test -- openapi-docs.test.ts  # Should run 8+ tests

@@ -23,6 +23,7 @@ When creating projects, the system uses three strategies based on project locati
 - Manual project management
 
 **Example**:
+
 ```bash
 # Creates outside auto-discovery paths → Project-First mode
 npm run project:create -- --path "/outside/search/path" --name "My Project" --code "MP"
@@ -43,6 +44,7 @@ npm run project:create -- --path "/outside/search/path" --name "My Project" --co
 - Temporary project setups
 
 **Example**:
+
 ```bash
 # Explicit flag → Global-Only mode
 npm run project:create -- --path "/any/path" --name "Central Project" --code "CP" --global-only
@@ -78,6 +80,7 @@ searchPaths = [
 ```
 
 **Example**:
+
 ```bash
 # Creates within auto-discovery path → Auto-Discovery mode
 npm run project:create -- --path "~/projects/my-project" --name "Auto Project" --code "AP"
@@ -173,6 +176,7 @@ searchPaths = [
 ### Configuration Examples
 
 **Basic Development Setup**:
+
 ```toml
 [discovery]
 autoDiscover = true
@@ -183,6 +187,7 @@ searchPaths = [
 ```
 
 **Multi-Environment Setup**:
+
 ```toml
 [discovery]
 autoDiscover = true
@@ -196,6 +201,7 @@ searchPaths = [
 ```
 
 **Disabled Auto-Discovery**:
+
 ```toml
 [discovery]
 autoDiscover = false
@@ -203,6 +209,7 @@ searchPaths = []
 ```
 
 **Container/CI Environment**:
+
 ```toml
 [discovery]
 autoDiscover = true

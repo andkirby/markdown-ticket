@@ -72,6 +72,7 @@
 - Verify no duplicate file event handling exists
 
 **Verify**:
+
 ```bash
 bun run --cwd server jest fileWatcherService.subdocument.test.ts
 ```
@@ -113,6 +114,7 @@ bun run --cwd server jest fileWatcherService.subdocument.test.ts
 - Verify HEAD monitoring doesn't duplicate existing worktree detection
 
 **Verify**:
+
 ```bash
 bun run --cwd server jest fileWatcherService.worktree-monitor.test.ts
 ```
@@ -151,6 +153,7 @@ bun run --cwd server jest fileWatcherService.worktree-monitor.test.ts
 - Verify no duplicate event type definitions
 
 **Verify**:
+
 ```bash
 bun run --cwd server jest sseBroadcaster.subdocument.test.ts
 ```
@@ -189,6 +192,7 @@ bun run --cwd server jest sseBroadcaster.subdocument.test.ts
 - Verify no duplicate payload type definitions
 
 **Verify**:
+
 ```bash
 bun test src/hooks/useSSEEvents.subdocument.test.ts
 ```
@@ -233,6 +237,7 @@ bun test src/hooks/useSSEEvents.subdocument.test.ts
 - Verify no duplicate event emission
 
 **Verify**:
+
 ```bash
 bun test src/hooks/useSSEEvents.subdocument.test.ts
 ```
@@ -278,6 +283,7 @@ bun test src/hooks/useSSEEvents.subdocument.test.ts
 - Verify no duplicate state updates
 
 **Verify**:
+
 ```bash
 bun test src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts
 ```
@@ -316,6 +322,7 @@ bun test src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.
 **Duplication Guard**: N/A (test file)
 
 **Verify**:
+
 ```bash
 bunx playwright test tests/e2e/filewatcher/subdocument-sse.spec.ts
 ```

@@ -27,6 +27,7 @@ Drag & Drop Event → Column.onDrop() → Board.handleDrop() → moveTicket() �
 **Component**: `DraggableTicketCard` in `Column.tsx`
 **Action**: User starts dragging a ticket
 **Implementation**:
+
 ```tsx
 const [{ isDragging }, drag] = useDrag(() => ({
   type: 'ticket',
@@ -42,6 +43,7 @@ const [{ isDragging }, drag] = useDrag(() => ({
 **Component**: `Column` in `Column.tsx`
 **Action**: User drops ticket on target column
 **Implementation**:
+
 ```tsx
 const [{ isOver }, drop] = useDrop(() => ({
   accept: 'ticket',
@@ -60,6 +62,7 @@ const [{ isOver }, drop] = useDrop(() => ({
 **Component**: `BoardContent` in `Board.tsx`
 **Action**: Process the drop and initiate backend update
 **Implementation**:
+
 ```tsx
 const handleDrop = useCallback(async (status: Status, ticket: Ticket) => {
   console.log('Board: handleDrop called with:', { status, ticketCode: ticket.code, ticketStatus: ticket.status });
@@ -77,6 +80,7 @@ const handleDrop = useCallback(async (status: Status, ticket: Ticket) => {
 **Hook**: `useTicketStatusAutomation` in `useTicketData.ts`
 **Action**: Update ticket status with automation logic
 **Implementation**:
+
 ```tsx
 const moveTicket = useCallback(async (ticketCode: string, newStatus: Status): Promise<void> => {
   console.log('useTicketStatusAutomation: moveTicket called with:', { ticketCode, newStatus });
@@ -104,6 +108,7 @@ const moveTicket = useCallback(async (ticketCode: string, newStatus: Status): Pr
 **Service**: `FileService` in `fileService.ts`
 **Action**: Save ticket to both localStorage and markdown file
 **Implementation**:
+
 ```tsx
 async updateTicket(ticketCode: string, updates: Partial<Ticket>): Promise<Ticket> {
   // ... existing code to create updated ticket
@@ -128,6 +133,7 @@ async updateTicket(ticketCode: string, updates: Partial<Ticket>): Promise<Ticket
 **Service**: `FileService.saveTicketToFile()`
 **Action**: Generate markdown content and save to file system
 **Implementation**:
+
 ```tsx
 private async saveTicketToFile(ticket: Ticket): Promise<void> {
   try {
@@ -165,6 +171,7 @@ private async saveTicketToFile(ticket: Ticket): Promise<void> {
 For the ticket move functionality to work completely, you need these API endpoints:
 
 #### 1. Save Ticket File
+
 ```http
 POST /api/tasks/save
 Content-Type: application/json
@@ -176,11 +183,13 @@ Content-Type: application/json
 ```
 
 #### 2. Load Tasks Directory
+
 ```http
 GET /api/tasks
 ```
 
 #### 3. Load Individual Task File
+
 ```http
 GET /api/tasks/{filename}
 ```
@@ -302,11 +311,13 @@ Board.tsx: Board: Ticket moved successfully
 ### Manual Testing Steps
 
 1. **Start Backend Server**
+
    ```bash
    node server.js
    ```
 
 2. **Start Frontend Application**
+
    ```bash
    npm start
    ```
@@ -318,9 +329,11 @@ Board.tsx: Board: Ticket moved successfully
    - Check backend file system for updated file
 
 4. **Verify File Content**
+
    ```bash
    cat ./tasks/CR-A001.md
    ```
+
    Should show updated status in front matter.
 
 ### Automated Testing

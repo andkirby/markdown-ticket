@@ -93,6 +93,7 @@ shared/utils/                      → Shared utilities (extract first)
 - Do not duplicate logging logic in any service file
 
 **Verify**:
+
 ```bash
 wc -l shared/utils/logger.ts  # ≤ 75 (or flag ≤ 110)
 npm run build:shared
@@ -131,6 +132,7 @@ npm run build:shared
 - Do not duplicate TOML serialization in any service file
 
 **Verify**:
+
 ```bash
 wc -l shared/utils/toml.ts  # ≤ 75 (or flag ≤ 110)
 npm run build:shared
@@ -169,6 +171,7 @@ npm run build:shared
 - Do not duplicate validation logic in any service file
 
 **Verify**:
+
 ```bash
 wc -l shared/utils/config-validator.ts  # ≤ 75 (or flag ≤ 110)
 npm run build:shared
@@ -208,6 +211,7 @@ npm run build:shared
 - Do not duplicate file operations in any service file
 
 **Verify**:
+
 ```bash
 wc -l shared/utils/file-utils.ts  # ≤ 75 (or flag ≤ 110)
 npm run build:shared
@@ -247,6 +251,7 @@ npm run build:shared
 - Do not duplicate path logic in any service file
 
 **Verify**:
+
 ```bash
 wc -l shared/utils/path-resolver.ts  # ≤ 75 (or flag ≤ 110)
 npm run build:shared
@@ -295,6 +300,7 @@ npm run build:shared
 - Do not duplicate type definitions
 
 **Verify**:
+
 ```bash
 wc -l shared/services/project/types.ts  # ≤ 100 (or flag ≤ 150)
 npm run build:shared
@@ -339,6 +345,7 @@ npm run build:shared
 - Do NOT implement these utilities in this file
 
 **Verify**:
+
 ```bash
 wc -l shared/services/project/ProjectDiscoveryService.ts  # ≤ 200 (or flag ≤ 300)
 npm run build:shared
@@ -384,6 +391,7 @@ npm run build:shared
 - Do NOT implement these utilities in this file
 
 **Verify**:
+
 ```bash
 wc -l shared/services/project/ProjectConfigService.ts  # ≤ 200 (or flag ≤ 300)
 npm run build:shared
@@ -426,6 +434,7 @@ npm run build:shared
 - Do NOT duplicate logging logic
 
 **Verify**:
+
 ```bash
 wc -l shared/services/project/ProjectCacheService.ts  # ≤ 200 (or flag ≤ 300)
 npm run build:shared
@@ -468,6 +477,7 @@ npm run build:shared
 - Do NOT duplicate any logic
 
 **Verify**:
+
 ```bash
 wc -l shared/services/ProjectService.ts  # ≤ 100 (or flag ≤ 150)
 npm run build:shared
@@ -508,6 +518,7 @@ npm run build:shared
 - Do not create duplicate import paths
 
 **Verify**:
+
 ```bash
 npm run build:shared
 cd server && npm test
@@ -541,6 +552,7 @@ cd server && npm test
 - Do not duplicate test setup
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm test
 ```
@@ -570,6 +582,7 @@ cd mcp-server && npm test
 - Do not duplicate test scenarios
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm test
 ```
@@ -586,6 +599,7 @@ cd mcp-server && npm test
 ### Task 4.1: Verify no duplication
 
 **Do**: Search for duplicated patterns
+
 ```bash
 # Check for logging duplication
 grep -r "console.error\|console.log" shared/services/ | grep -v "__tests__" | wc -l
@@ -604,6 +618,7 @@ grep -r "fs\.readFileSync\|fs\.writeFileSync" shared/services/ | grep -v "__test
 ### Task 4.2: Verify size compliance
 
 **Do**: Check all files
+
 ```bash
 # Check utility sizes
 find shared/utils -name "*.ts" -not -path "*/__tests__/*" -exec wc -l {} \; | awk '$1 > 110'

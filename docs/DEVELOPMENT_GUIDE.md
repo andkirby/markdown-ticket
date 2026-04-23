@@ -16,6 +16,7 @@ Complete guide for developing and contributing to the Markdown Ticket Board proj
 - npm or yarn
 
 ### Installation
+
 ```bash
 git clone <repository-url>
 cd markdown-ticket
@@ -88,6 +89,7 @@ import { CRType, CRTypes, type CRTypeValue } from '@mdt/domain-contracts'
 ### Backend Architecture (server/)
 
 **Layered Architecture:**
+
 ```
 server/
 ├── server.ts - Application orchestration
@@ -145,6 +147,7 @@ server/
 The project includes an MCP server for development log access and monitoring during development.
 
 ### Setup
+
 ```bash
 # Build MCP development tools
 cd server/mcp-dev-tools
@@ -172,6 +175,7 @@ npm start
 ## Code Organization
 
 ### Frontend Structure
+
 ```
 src/
 ├── components/          # React components
@@ -182,6 +186,7 @@ src/
 ```
 
 ### Backend Structure
+
 ```
 server/
 ├── routes/             # API routes
@@ -191,6 +196,7 @@ server/
 ```
 
 ### Shared Structure
+
 ```
 shared/
 ├── models/             # Type definitions (re-exports from domain-contracts)
