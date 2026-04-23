@@ -495,6 +495,7 @@
 - `prompts/install-claude.sh` (deleted)
 
 **Usage**:
+
 ```bash
 # From any directory
 /path/to/markdown-ticket/prompts/install-plugin.sh --local   # Local Node.js MCP
@@ -1165,6 +1166,7 @@ This caused a chicken-and-egg problem in multi-part CRs: BDD tests don't need ar
    - Prep file structure and workflow diagram
 
 **Prep File Structure**:
+
 ```
 {TICKETS_PATH}/{CR-KEY}/
 ├── architecture.md          # Feature design (AFTER prep)
@@ -1319,6 +1321,7 @@ This caused a chicken-and-egg problem in multi-part CRs: BDD tests don't need ar
 - **Progress Tracking**: Phase completion summaries with detailed metrics
 
 **New Folder Structure**:
+
 ```
 docs/CRs/{CR-KEY}/
 ├── architecture.md          # All phases (unchanged)

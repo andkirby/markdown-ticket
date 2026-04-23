@@ -142,78 +142,95 @@ Expected: **24 passed, 0 failed** (extraction completed)
 **Source**: `/Users/kirby/.claude/commands/advisor/mcp/server-tools.md`
 
 #### MUST-01: Tools Capability Declaration
+
 ```gherkin
 Given MCP server is started via stdio transport
 When client sends initialize request
 Then server response MUST include tools capability
 And listChanged property MUST be present
 ```
+
 **Implemented in**: `tools/list-projects.spec.ts` - "MCP protocol compliance"
 
 #### MUST-02: Unique Tool Names
+
 ```gherkin
 Given MCP server is running
 When client calls tools/list
 Then each tool MUST have a unique name
 And no duplicate names MUST exist in response
 ```
+
 **Implemented in**: `tools/list-projects.spec.ts` - "lists all available tools"
 
 #### MUST-03: Input Validation
+
 ```gherkin
 Given tool expects specific input schema
 When client provides invalid input
 Then server MUST reject with validation error
 And error MUST indicate validation failure
 ```
+
 **Implemented in**: All tool test files - "validation error" scenarios
 
 #### MUST-04: Access Controls
+
 ```gherkin
 Given user requests resource from non-existent project
 When client calls tool with invalid project key
 Then server MUST deny access
 And MUST NOT leak information about existing projects
 ```
+
 **Implemented in**: `tools/get-project-info.spec.ts` - "non-existent project"
 
 #### MUST-05: Rate Limiting
+
 ```gherkin
 Given server has rate limiting configured
 When client exceeds request threshold
 Then server MUST return rate limit error
 And error MUST include retry information
 ```
+
 **Implemented in**: `tools/rate-limiting.spec.ts` - "Rate Limiting (MUST-05)"
 
 #### MUST-06: Output Sanitization
+
 ```gherkin
 Given user submits malicious content
 When server returns tool result
 Then output MUST be sanitized
 And MUST NOT contain executable scripts
 ```
+
 **Implemented in**: `tools/output-sanitization.spec.ts` - "Output Sanitization (MUST-06)"
 
 #### MUST-07: Schema Compliance
+
 ```gherkin
 Given tool defines response structure
 When server returns result
 Then result MUST conform to declared schema
 And all required fields MUST be present
 ```
+
 **Implemented in**: All tool test files - response structure validation
 
 #### MUST-08: Required Parameters
+
 ```gherkin
 Given tool requires specific parameters
 When client omits required parameter
 Then server MUST return error
 And error MUST specify missing parameter
 ```
+
 **Implemented in**: All tool test files - "missing required parameter" scenarios
 
 #### MUST-09: Protocol Error Format (NEW)
+
 ```gherkin
 Given client calls unknown tool
 When server processes request
@@ -229,9 +246,11 @@ Given server experiences internal error
 When server processes request
 Then server MUST return JSON-RPC error with code -32000 to -32099
 ```
+
 **To be implemented in**: `tools/error-handling.spec.ts` - "Protocol Error Format (MUST-09)"
 
 #### MUST-10: Tool Execution Error Format (NEW)
+
 ```gherkin
 Given tool execution fails due to business logic
 When server processes request
@@ -248,6 +267,7 @@ When server processes request
 Then server MUST return result with isError: true
 And content MUST indicate data validation failure
 ```
+
 **To be implemented in**: `tools/error-handling.spec.ts` - "Tool Execution Error Format (MUST-10)"
 
 ### Phase 1: Stdio Transport E2E Testing ✅
@@ -366,6 +386,7 @@ And content MUST indicate data validation failure
    - `get_project_info` - returns formatted messages
 
 **Current Workaround** (implemented to pass tests):
+
 ```typescript
 // In stdio.ts and http.ts
 if (name === 'manage_cr_sections') {
@@ -427,6 +448,7 @@ This workaround was documented to ensure future developers understand the tempor
 ## Verification
 
 ### Phase 1 Verification 🟡
+
 ```bash
 # Run stdio E2E tests
 MCP_HTTP_ENABLED=false npm run test:e2e
@@ -443,6 +465,7 @@ MCP_HTTP_ENABLED=false npm run test:e2e
 ```
 
 ### Phase 2 Verification ⏳
+
 ```bash
 # Run HTTP transport tests
 MCP_HTTP_ENABLED=true npm run test:e2e
@@ -452,6 +475,7 @@ MCP_HTTP_ENABLED=true npm run test:e2e
 ```
 
 ### Performance Verification ⏳
+
 ```bash
 # Run performance tests
 npm run test:e2e:performance

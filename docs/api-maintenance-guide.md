@@ -22,6 +22,7 @@ The API documentation is automatically generated from JSDoc comments using `swag
 ### Adding New Endpoints
 
 1. **Create Route File** (`server/routes/new-endpoint.ts`):
+
 ```typescript
 /**
  * @swagger
@@ -56,6 +57,7 @@ router.post('/', async (req, res) => {
 3. **Register Route** in `server/server.ts`
 
 4. **Generate Documentation**:
+
 ```bash
 bun run --cwd server openapi:generate
 ```
@@ -77,6 +79,7 @@ bun run --cwd server openapi:generate
 ### Removing Endpoints
 
 1. **Deprecate First**:
+
 ```typescript
 /**
  * @swagger
@@ -138,6 +141,7 @@ bun run dev
    - Avoid inline schema definitions
 
 3. **Error Responses**:
+
    ```typescript
    responses:
      '400':
@@ -202,6 +206,7 @@ bun run dev
 ## Automation
 
 Consider adding to CI/CD:
+
 ```yaml
 - name: Generate and Validate API Documentation
   run: |
@@ -223,6 +228,7 @@ Consider adding to CI/CD:
 ## Quick Reference
 
 ### Commands Summary
+
 ```bash
 # All documentation generation commands (run in server/ directory)
 

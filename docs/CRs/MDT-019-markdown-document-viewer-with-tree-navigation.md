@@ -54,6 +54,7 @@ Improves user workflow by eliminating the need for external markdown viewers and
 ## 3. Implementation Specification
 
 ### Frontend Components
+
 ```
 DocumentsView/
 ├── DocumentsLayout.tsx      # Main layout with sidebar + content
@@ -87,6 +88,7 @@ DocumentsView/
 - Exclude directories listed in exclude_folders during directory scanning
 
 ### Configuration Integration
+
 ```toml
 # .mdt-config.toml
 [project]
@@ -110,6 +112,7 @@ max_depth = 3
 ```
 
 ### Navigation Tree Structure (Only .md files)
+
 ```
 📁 Project Root
 ├── 📁 docs/
@@ -122,6 +125,7 @@ max_depth = 3
 └── 📄 Markdown Ticket Board
     README.md
 ```
+
 *Note: Shows H1 titles as primary labels with filenames as footnotes*
 
 ## 4. Acceptance Criteria

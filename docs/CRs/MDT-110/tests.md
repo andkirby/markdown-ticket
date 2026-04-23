@@ -180,6 +180,7 @@ Then should work without modification in both environments
 ## Verification
 
 Run MDT-110 tests (should all fail before implementation):
+
 ```bash
 cd shared && npm test -- --testPathPattern=MDT-110
 ```
@@ -187,9 +188,11 @@ cd shared && npm test -- --testPathPattern=MDT-110
 Expected: **~28 failed, 0 passed**
 
 Verify build fails before fix:
+
 ```bash
 npm run build
 ```
+
 Expected: `[plugin vite:resolve] Module "fs" has been externalized for browser compatibility`
 
 ## Coverage Checklist

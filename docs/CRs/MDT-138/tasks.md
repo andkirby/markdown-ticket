@@ -70,6 +70,7 @@
 - Extend in place, do not create new type file
 
 **Verify**:
+
 ```bash
 bun run --cwd server jest tests/unit/namespace-parser.test.ts
 ```
@@ -119,6 +120,7 @@ bun run --cwd server jest tests/unit/namespace-parser.test.ts
 - Remove inline implementations from test file after migration
 
 **Verify**:
+
 ```bash
 # Unit tests
 bun run --cwd server jest tests/unit/namespace-parser.test.ts
@@ -171,11 +173,14 @@ bun run --cwd server jest tests/api/ticket-namespace.test.ts
 
 **Gap Analysis**:
 Current code at `useTicketDocumentNavigation.ts:149-153` keeps URL at ticket level:
+
 ```typescript
 // URL is kept at the ticket level (/prj/CODE/ticket/KEY) to avoid
 // React Router route switching...
 ```
+
 **Required fix**: In `selectPath` callback, add URL navigation with actual file path:
+
 ```typescript
 // path is like "requirements.scope" or "bdd/legacy"
 const urlPath = path + '.md'  // or use apiPathToUrlPath if it handles this
@@ -204,6 +209,7 @@ navigate(`/prj/${projectCode}/ticket/${ticketCode}/${urlPath}`, { replace: true 
 - Verify no duplicate namespace logic (backend owns parsing)
 
 **Verify**:
+
 ```bash
 # E2E tests
 bunx playwright test tests/e2e/ticket/namespace.spec.ts --project=chromium

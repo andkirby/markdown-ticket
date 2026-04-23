@@ -476,6 +476,7 @@ Track at sub-requirement level (BR-X.Y). A BR group is only ✅ when every sub-r
 ## Verification
 
 Run BDD tests:
+
 ```bash
 # All worktree E2E tests
 npm test -- tests/e2e/tools/worktree-*.spec.ts tests/e2e/api/worktree-*.spec.ts

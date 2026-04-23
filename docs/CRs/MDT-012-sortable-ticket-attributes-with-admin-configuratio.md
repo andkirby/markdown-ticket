@@ -63,6 +63,7 @@ Users need flexible sorting options to organize and find tickets efficiently. Ad
 ## 3. Implementation Specification
 
 ### Configuration Format
+
 ```toml
 # ~/.config/markdown-ticket/user.toml
 [sorting]

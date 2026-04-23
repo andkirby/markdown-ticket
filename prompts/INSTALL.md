@@ -42,6 +42,7 @@ cd ~/home/mdt-prompts
 cd ~/home/mdt-prompts
 ./install-agents-skill.sh
 ```
+
 Creates: `~/.agents/skills/mdt` → symlink to source
 
 ### Per-Project
@@ -50,6 +51,7 @@ Creates: `~/.agents/skills/mdt` → symlink to source
 cd /path/to/my-project
 bash ~/home/mdt-prompts/install-agents-skill.sh --scope local
 ```
+
 Creates: `my-project/.agents/skills/mdt` → symlink to source
 
 **Options:** `--copy` | `-y`

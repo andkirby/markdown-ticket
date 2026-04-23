@@ -121,6 +121,7 @@ This approach provides the best balance of risk management and logical progressi
 ### Phase 2: Core Types and Utilities
 
 **File System Types**
+
 ```typescript
 // Types for file operations
 interface FileOperationResult {
@@ -139,6 +140,7 @@ interface CRFile {
 ```
 
 **API Types**
+
 ```typescript
 // Express request/response extensions
 interface AuthenticatedRequest extends Request {
@@ -154,6 +156,7 @@ interface APIResponse<T = any> {
 ```
 
 **YAML Parsing Types**
+
 ```typescript
 // Frontmatter parsing types
 interface CRFrontmatter {

@@ -12,6 +12,7 @@
 - Markdown ticket projects configured in `~/.config/markdown-ticket/`
 
 ### 2. Start
+
 ```bash
 ./bin/dc up        # Start in foreground
 ./bin/dc up -d     # Start in background
@@ -25,11 +26,13 @@
 ### 4. Connect MCP to Claude
 
 **HTTP transport (recommended):**
+
 ```bash
 claude mcp add --scope user --transport http mdt-all http://localhost:3012/mcp
 ```
 
 **STDIO transport (via Docker):**
+
 ```bash
 claude mcp remove mdt-all --scope user  # delete existing if needed
 claude mcp add --scope user mdt-all docker -- exec --env MCP_HTTP_ENABLED=false -i markdown-ticket-mcp node /app/mcp-server/dist/index.js
@@ -102,6 +105,7 @@ For advanced configuration (security, rate limiting, custom volumes), see **[doc
 ## Troubleshooting
 
 **Containers won't start:**
+
 ```bash
 docker info                    # Check Docker daemon
 ./bin/dc logs                  # View errors
@@ -109,6 +113,7 @@ docker info                    # Check Docker daemon
 ```
 
 **Port conflicts:**
+
 ```bash
 lsof -i :5174   # Frontend
 lsof -i :3012   # MCP

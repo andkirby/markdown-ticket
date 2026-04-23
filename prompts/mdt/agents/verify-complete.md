@@ -83,10 +83,12 @@ behavior_owner_ledger:
 6. make plan with checklist.
 
 **IMPORTANT**: Section 4 "Modified Artifacts" tables often specify exact removals:
+
 ```
 | Artifact | Change Type | Modification |
 | file.ts  | Removed     | Hardcoded 'X' (line N) |
 ```
+
 These are NEGATIVE+LOCATION requirements. Verify the pattern is ABSENT at that location.
 
 **By mode**:
@@ -201,6 +203,7 @@ In changed_files, flag:
 | LOW | Style, minor cleanup |
 
 **Verdict**:
+
 ```
 CRITICAL exists       → fail
 HIGH exists           → partial

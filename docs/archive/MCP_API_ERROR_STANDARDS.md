@@ -5,6 +5,7 @@
 All MCP API errors should follow this standardized format:
 
 ### Pattern
+
 ```
 [Context]: [What went wrong]. [Available options/next steps]
 ```
@@ -12,6 +13,7 @@ All MCP API errors should follow this standardized format:
 ### Examples
 
 **✅ Good:**
+
 ```
 Project 'XYZ' not found. Available projects: MDT, API, WEB
 Invalid CR type 'bugfix'. Must be one of: Bug Fix, Feature Enhancement, Architecture, Technical Debt, Documentation
@@ -19,6 +21,7 @@ Template not found for type 'invalid'. Valid types: Bug Fix, Feature Enhancement
 ```
 
 **❌ Bad:**
+
 ```
 Project not found
 Unknown tool

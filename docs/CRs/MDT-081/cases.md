@@ -9,6 +9,7 @@ This document contains test cases that reveal the issue where `#` comments insid
 - Should NOT create sections from comments inside the code block
 
 ### Content
+
 ```python
 # This should be a comment, not a header
 def example_function():
@@ -24,6 +25,7 @@ def example_function():
 This tests multiple code blocks with different languages and hash comments.
 
 ### Python Block
+
 ```python
 # Python comment 1
 import os
@@ -33,6 +35,7 @@ def test():
 ```
 
 ### JavaScript Block
+
 ```javascript
 // JavaScript comment (shouldn't create section)
 /* Multi-line
@@ -42,6 +45,7 @@ const x = 1;
 ```
 
 ### Shell Script Block
+
 ```bash
 # Shell script comment 1
 echo "test"
@@ -85,6 +89,7 @@ This has no closing backticks
 ```
 
 ### Code Block with Header-Like Content
+
 ```markdown
 # This is inside a code block
 ## This is also inside a code block
@@ -116,6 +121,7 @@ class TicketService {
 ```
 
 ### Configuration
+
 ```toml
 # Configuration file
 [database]

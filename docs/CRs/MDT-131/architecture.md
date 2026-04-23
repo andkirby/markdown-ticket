@@ -35,6 +35,7 @@ The Board|List toggle MUST use the original webp image files, not icon library c
 - Separate from desktop theme toggle in main navigation
 
 **Integration:**
+
 ```typescript
 // App.tsx
 import { MobileThemeToggle } from './components/MobileThemeToggle'

@@ -70,12 +70,14 @@ server/
 ### Task 1.1: Install dependencies
 
 **Do**:
+
 ```bash
 cd server && npm install swagger-jsdoc redoc-express --save
 npm install @types/swagger-jsdoc --save-dev
 ```
 
 **Verify**:
+
 ```bash
 grep "swagger-jsdoc" server/package.json
 grep "redoc-express" server/package.json
@@ -114,6 +116,7 @@ grep "redoc-express" server/package.json
 - Never inline schema definitions in route JSDoc
 
 **Verify**:
+
 ```bash
 wc -l server/openapi/schemas.ts  # ≤ 200 (or flag ≤ 300)
 ```
@@ -154,6 +157,7 @@ wc -l server/openapi/schemas.ts  # ≤ 200 (or flag ≤ 300)
 - Do NOT define schemas inline
 
 **Verify**:
+
 ```bash
 wc -l server/openapi/config.ts  # ≤ 100 (or flag ≤ 150)
 cd server && npm run build
@@ -205,6 +209,7 @@ cd server && npm run build
 - Use `$ref: '#/components/schemas/Error400'` — NOT inline error schema
 
 **JSDoc template**:
+
 ```typescript
 /**
  * @openapi
@@ -229,6 +234,7 @@ cd server && npm run build
 ```
 
 **Verify**:
+
 ```bash
 grep -c "@openapi" server/routes/projects.ts  # Should be 12+
 ```
@@ -261,6 +267,7 @@ grep -c "@openapi" server/routes/projects.ts  # Should be 12+
 - Reuse error response schemas from schemas.ts
 
 **Verify**:
+
 ```bash
 grep -c "@openapi" server/routes/tickets.ts  # Should be 7+
 ```
@@ -288,6 +295,7 @@ grep -c "@openapi" server/routes/tickets.ts  # Should be 7+
 - Reuse projectId parameter from schemas.ts
 
 **Verify**:
+
 ```bash
 grep -c "@openapi" server/routes/documents.ts  # Should be 3
 ```
@@ -338,6 +346,7 @@ grep -c "@openapi" server/routes/documents.ts  # Should be 3
 - Use common response patterns
 
 **Verify**:
+
 ```bash
 grep -c "@openapi" server/routes/system.ts  # Should be 9
 ```
@@ -372,6 +381,7 @@ grep -c "@openapi" server/routes/system.ts  # Should be 9
 - Use common logging response patterns
 
 **Verify**:
+
 ```bash
 grep -c "@openapi" server/routes/devtools.ts  # Should be 10
 ```
@@ -413,6 +423,7 @@ grep -c "@openapi" server/routes/devtools.ts  # Should be 10
 - Use redoc-express middleware — do NOT build custom HTML
 
 **Verify**:
+
 ```bash
 wc -l server/routes/docs.ts  # ≤ 75 (or flag ≤ 110)
 ```
@@ -441,6 +452,7 @@ wc -l server/routes/docs.ts  # ≤ 75 (or flag ≤ 110)
 - Do NOT inline swagger configuration
 
 **Verify**:
+
 ```bash
 grep "api-docs" server/server.ts
 cd server && npm run build
@@ -458,6 +470,7 @@ cd server && npm run build
 **Structure**: `server/package.json`
 
 **Add scripts**:
+
 ```json
 {
   "scripts": {
@@ -480,6 +493,7 @@ cd server && npm run build
 ### Task 4.1: Verify no schema duplication
 
 **Do**: Search for inline schema definitions in route files
+
 ```bash
 grep -r "type: object" server/routes/*.ts | grep -v "node_modules"
 grep -r "properties:" server/routes/*.ts | grep -v "node_modules"
@@ -494,6 +508,7 @@ grep -r "properties:" server/routes/*.ts | grep -v "node_modules"
 ### Task 4.2: Verify size compliance
 
 **Do**: Check all new files
+
 ```bash
 wc -l server/openapi/config.ts   # ≤ 100
 wc -l server/openapi/schemas.ts  # ≤ 200
@@ -509,6 +524,7 @@ wc -l server/routes/docs.ts      # ≤ 75
 ### Task 4.3: Validate OpenAPI spec
 
 **Do**:
+
 ```bash
 cd server && npm run openapi:validate
 curl http://localhost:3001/api-docs  # Should return HTML
@@ -525,6 +541,7 @@ curl http://localhost:3001/api-docs.json  # Should return JSON spec
 ### Task 4.4: Update CR status
 
 **Do**: Mark MDT-085 as Implemented
+
 ```bash
 # Use MCP tool
 mdt-all:update_cr_status project=MDT key=MDT-085 status="Implemented"

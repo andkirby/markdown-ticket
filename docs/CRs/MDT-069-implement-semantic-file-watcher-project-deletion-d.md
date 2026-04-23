@@ -32,6 +32,7 @@ Reliable project management requires precise tracking of project lifecycle event
 
 2. **Event Emission Strategy**
    - Emit events with structured data:
+
      ```typescript
      {
        type: 'project:deleted',
@@ -51,6 +52,7 @@ Reliable project management requires precise tracking of project lifecycle event
 ## 4. Implementation
 
 ### Chokidar File Watching
+
 ```typescript
 const projectConfigWatcher = chokidar.watch('.mdt-config.toml', {
   persistent: true,

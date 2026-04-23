@@ -49,6 +49,7 @@ Update UI
 ### 2. Using Events in Components
 
 **Simple Usage with Hook**:
+
 ```typescript
 import { useEventBus } from '../services/eventBus';
 
@@ -64,6 +65,7 @@ function MyComponent() {
 ```
 
 **Manual Subscription** (if you need more control):
+
 ```typescript
 import { useEffect } from 'react';
 import { eventBus } from '../services/eventBus';
@@ -163,6 +165,7 @@ await dataLayer.deleteTicket('markdown-ticket', 'MDT-001');
 ### 1. Use the Event History Tool
 
 Add to your App.tsx (development only):
+
 ```typescript
 import { EventHistory } from './components/DevTools/EventHistory';
 
@@ -425,11 +428,13 @@ test('component updates on event', async () => {
 ### Events Not Firing?
 
 1. Check if SSE is connected:
+
    ```typescript
    console.log(sseClient.isSSEConnected()); // Should be true
    ```
 
 2. Check EventBus stats:
+
    ```typescript
    console.log(eventBus.getStats());
    // Should show listeners for your event type

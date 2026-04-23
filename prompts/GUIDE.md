@@ -187,6 +187,7 @@ When to use:
 - Internal tools
 
 Command sequence:
+
 ```bash
 /mdt:ticket-creation
 /mdt:architecture    # Skip if trivial change
@@ -214,6 +215,7 @@ When to use:
 - Breaking monoliths
 
 Command sequence:
+
 ```bash
 /mdt:ticket-creation
 /mdt:assess          # Critical for redesigns
@@ -244,6 +246,7 @@ When to use:
 - Data corruption issues
 
 Command sequence:
+
 ```bash
 /mdt:ticket-creation  # Type: Bug Fix
 /mdt:requirements     # IF...THEN format for error handling
@@ -303,6 +306,7 @@ Workflows auto-detect from:
 
 ### Custom Settings
 Add to your project's CLAUDE.md:
+
 ```markdown
 ## Project Settings
 - source_dir: src/
@@ -363,6 +367,7 @@ A: Check MCP connection first, then verify tool parameters in mcp-server/MCP_TOO
 <summary>🔧 Troubleshooting</summary>
 
 ### MCP Server Issues
+
 ```bash
 # Reconnect MCP
 /mcp

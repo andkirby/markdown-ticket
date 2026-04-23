@@ -82,6 +82,7 @@ phaseEpic: Phase B (Enhancement)
 **File:** `shared/services/MarkdownSectionService.ts`
 
 **Key Methods:**
+
 ```typescript
 findSection(content: string, sectionPath: string): SectionMatch[]
 replaceSection(content: string, section: SectionMatch, newContent: string): string

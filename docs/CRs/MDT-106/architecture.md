@@ -146,6 +146,7 @@ server/tests/api/
 ```
 
 **server/server.ts changes**:
+
 ```diff
 + // Export Express app for Supertest testing (does not call listen())
 + export { app };
@@ -255,16 +256,19 @@ Error400: {
 | `message` | Specific error details | "Project ID is required", "Project not found", "Invalid file path" |
 
 **Correct pattern** (use this):
+
 ```json
 { "error": "Bad Request", "message": "Project ID is required" }
 ```
 
 **Wrong pattern** (never duplicate):
+
 ```json
 { "error": "Project ID is required", "message": "Project ID is required" }
 ```
 
 **Controller implementation**:
+
 ```typescript
 // ✅ Correct
 res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
@@ -273,6 +277,7 @@ res.status(403).json({ error: 'Forbidden', message: 'Access denied' })
 ```
 
 **Test assertions**:
+
 ```typescript
 // helpers/assertions.ts
 export function assertErrorMessage(response: Response, message: string): void {
@@ -315,6 +320,7 @@ getProjectConfig(path: string) {
 | `/api/duplicates` | **Deprecated** | Per MDT-082, returns empty results | `tickets.test.ts` (duplicate endpoint tests) |
 
 **Devtools exclusion in test app factory**:
+
 ```typescript
 // test-app-factory.ts
 // Skip log interception for tests (devtools is OOS for E2E testing per MDT-106)
@@ -337,6 +343,7 @@ DEBUG=true npm test -- tests/api/documents.test.ts
 ```
 
 Implementation in `tests/utils/setupTests.ts`:
+
 ```typescript
 const shouldSuppressConsole = process.env.DEBUG !== 'true'
 
@@ -393,6 +400,7 @@ To add E2E tests for a new endpoint:
 5. Run `npm test -- {endpoint}.test.ts` to verify
 
 Example pattern:
+
 ```typescript
 import { assertNotFound, assertSatisfiesApiSpec, assertSuccess, createTestRequest } from './helpers/index.js'
 import { cleanupTestEnvironment, setupTestEnvironment } from './setup.js'

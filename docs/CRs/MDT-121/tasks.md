@@ -50,6 +50,7 @@
 - Import `ProjectService` from `@mdt/shared/services/ProjectService.js` — do not duplicate validation logic
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm run build && npm run test:e2e -- --testNamePattern="detect project from cwd"
 ```
@@ -91,6 +92,7 @@ cd mcp-server && npm run build && npm run test:e2e -- --testNamePattern="detect 
 - Use Node.js `path.dirname()` for directory walking — do not implement custom path logic
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm run test:e2e -- --testNamePattern="parent directory|search depth"
 ```
@@ -129,6 +131,7 @@ cd mcp-server && npm run test:e2e -- --testNamePattern="parent directory|search 
 - Use existing `validateProjectKey()` from `../../utils/validation.js` for format validation — do not duplicate regex patterns
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm run test -- --testPathPattern="keyNormalizer"
 ```
@@ -167,6 +170,7 @@ cd mcp-server && npm run test -- --testPathPattern="keyNormalizer"
 - Tool names from `TOOL_NAMES` constant — do not hardcode strings
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm run build
 # Schema validation should pass
@@ -204,6 +208,7 @@ cd mcp-server && npm run build
 - Import `normalizeKey` from `keyNormalizer.ts` — do not copy normalization logic
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm run test:e2e -- --testNamePattern="numeric key"
 ```
@@ -243,6 +248,7 @@ cd mcp-server && npm run test:e2e -- --testNamePattern="numeric key"
 - Import `ToolError` from `../../utils/toolError.js` — do not duplicate error handling
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm run test:e2e -- --testNamePattern="optional project|backward compatibility"
 ```
@@ -278,6 +284,7 @@ cd mcp-server && npm run test:e2e -- --testNamePattern="optional project|backwar
 - Use existing test patterns from `__tests__/` directories
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm run test -- --testPathPattern="projectDetector|keyNormalizer"
 ```
@@ -311,6 +318,7 @@ cd mcp-server && npm run test -- --testPathPattern="projectDetector|keyNormalize
 - Reference existing documentation patterns
 
 **Verify**:
+
 ```bash
 # Manual smoke test
 cd mcp-server && npm run build

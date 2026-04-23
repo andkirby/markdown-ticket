@@ -138,6 +138,7 @@ mcp-server/src/
 - Use ProjectService from shared services — do NOT recreate
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/tools/handlers/projectHandlers.ts  # ≤ 200 (or flag ≤ 450)
 npm test
@@ -185,6 +186,7 @@ npm run build
 - Import error formatting from Task 3.2
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/tools/handlers/crHandlers.ts  # ≤ 300 (or flag ≤ 450)
 npm test
@@ -227,6 +229,7 @@ npm run build
 - Import error formatting from Task 3.2
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/tools/handlers/sectionHandlers.ts  # ≤ 200 (or flag ≤ 450)
 npm test
@@ -275,6 +278,7 @@ npm run build
 - Consolidate all similar validation here
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/utils/validation.ts  # ≤ 75 (or flag ≤ 110)
 npm test
@@ -314,6 +318,7 @@ npm run build
 - No duplicated error formatting in handlers
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/utils/error-formatter.ts  # ≤ 75 (or flag ≤ 110)
 npm test
@@ -373,6 +378,7 @@ npm run build
 - Do NOT duplicate any logic
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/tools/index.ts  # ≤ 300 (or flag ≤ 450)
 npm test
@@ -421,6 +427,7 @@ npm run build
 - Reuse test data from backend if available
 
 **Verify**:
+
 ```bash
 npm test -- mcp-backend-consistency.test.ts
 ```
@@ -457,6 +464,7 @@ npm test -- mcp-backend-consistency.test.ts
 - Follow existing test patterns
 
 **Verify**:
+
 ```bash
 npm test -- service-delegation.test.ts
 ```
@@ -473,6 +481,7 @@ npm test -- service-delegation.test.ts
 ### Task 6.1: Verify no duplication
 
 **Do**: Search for duplicated patterns
+
 ```bash
 # Find duplicate validation logic
 grep -r "validate\|validation" mcp-server/src/ --include="*.ts" | grep -v "utils/validation" | wc -l
@@ -493,6 +502,7 @@ grep -r "parseYaml\|yaml\.parse" mcp-server/src/ --include="*.ts" | grep -v "nod
 ### Task 6.2: Verify size compliance
 
 **Do**: Check all files
+
 ```bash
 # Check main file
 wc -l mcp-server/src/tools/index.ts
@@ -513,6 +523,7 @@ find mcp-server/src/utils -name "*.ts" -exec wc -l {} \;
 ### Task 6.3: Verify 30% code reduction
 
 **Do**: Check line count reduction
+
 ```bash
 # Current line count
 grep -c "" mcp-server/src/tools/index.ts

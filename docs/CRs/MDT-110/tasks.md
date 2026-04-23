@@ -104,6 +104,7 @@ Import from these, DO NOT copy:
 
 **Changes**:
 - Add conditional export for `./tools/ProjectValidator`:
+
   ```json
   "./tools/ProjectValidator": {
     "browser": "./dist/tools/ProjectValidator.js",
@@ -111,6 +112,7 @@ Import from these, DO NOT copy:
     "default": "./dist/tools/ProjectValidator.node.js"
   }
   ```
+
 - Keep existing generic `./tools/*` export for other tools
 
 **Result**: Bundler selects correct implementation based on environment

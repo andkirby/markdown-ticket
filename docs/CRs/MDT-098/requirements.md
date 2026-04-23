@@ -41,6 +41,7 @@ None - this is a straightforward refactoring with clear technical specification.
 ## Verification
 
 After changes, verify:
+
 ```bash
 # 1. No direct toml imports remain (except `shared/utils/toml.ts`)
 grep -r "from 'toml'" server/ shared/ --include="*.ts" | grep -v "shared/utils/toml"

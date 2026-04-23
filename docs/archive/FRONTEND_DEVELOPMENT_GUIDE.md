@@ -33,6 +33,7 @@ The project uses **shadcn/ui** components with Tailwind CSS. Available component
 - Base color: slate with CSS variables
 
 **Adding New Components**:
+
 ```bash
 # Use npx shadcn-ui to add components
 npx shadcn-ui@latest add [component-name]
@@ -58,6 +59,7 @@ npx shadcn-ui@latest add dialog
 **Root Cause**: Container padding creates non-clickable areas. When a button is placed inside a container with padding, clicks on the padding area register on the parent container instead of the button itself.
 
 **Example of Problematic Code**:
+
 ```jsx
 <div className="p-6">  {/* Padding creates non-clickable area */}
   <Button onClick={handleClick}>Click Me</Button>
@@ -84,6 +86,7 @@ npx shadcn-ui@latest add dialog
 4. **Flex Layout**: Use flexbox for proper alignment within containers
 
 **Example Implementation**:
+
 ```jsx
 // Header with close button
 <div className="flex items-stretch border-b border-border">
@@ -124,6 +127,7 @@ npx shadcn-ui@latest add dialog
 4. **Test with Raw HTML**: Create simple test with inline styles to isolate framework issues
 
 **Test Modal Pattern**:
+
 ```jsx
 // Simple test modal to verify clickability
 const TestModal = ({ isOpen, onClose }) => {

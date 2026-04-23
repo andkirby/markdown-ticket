@@ -86,6 +86,7 @@ phaseEpic: Architecture Phase A
 ## 5. Acceptance Criteria
 
 **Functional** (artifact-specific, testable):
+
 ```
 - [x] `/api/config` endpoint returns JSON with `configDir`, `searchPaths`, `projectRegistry`
 - [x] `RedirectToCurrentProject` renders empty state when `projects.length === 0`
@@ -96,6 +97,7 @@ phaseEpic: Architecture Phase A
 ```
 
 **Non-Functional** (measurable):
+
 ```
 - [x] `/api/config` responds in < 200ms (current: ~50ms)
 - [x] Error handling catches TypeError (network) and HTTP 500 (server)
@@ -104,6 +106,7 @@ phaseEpic: Architecture Phase A
 ```
 
 **Testing** (specific test cases):
+
 ```
 - Manual: Start frontend without backend → Alert displays with correct commands
 - Manual: Create project via modal → Redirects to `/projects/{id}`

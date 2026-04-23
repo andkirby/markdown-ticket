@@ -16,6 +16,7 @@ This is a Markdown-based ticket board application with a React frontend and Expr
 ## Setup Instructions
 
 ### 1. Install Dependencies
+
 ```bash
 # Install frontend dependencies
 cd md-ticket-board
@@ -28,6 +29,7 @@ bun install
 
 ### 2. Create Sample Tickets (Optional)
 To populate the board with sample data, run:
+
 ```bash
 cd server
 bun run create-samples
@@ -42,13 +44,16 @@ This will create 4 sample tickets in the `docs/CRs/` directory:
 ### 3. Start the Application
 
 #### Option A: Full Development Mode (Recommended)
+
 ```bash
 cd md-ticket-board
 bun run dev:full
 ```
+
 This starts both the frontend (port 5173) and backend (port 3001) servers with automatic restart on file changes.
 
 #### Option B: Separate Servers
+
 ```bash
 # Terminal 1 - Frontend
 cd md-ticket-board
@@ -182,6 +187,7 @@ The application uses Tailwind CSS for styling. Configuration is in:
 
 ### Debug Mode
 Enable debug logging by setting the `DEBUG` environment variable:
+
 ```bash
 DEBUG=* bun run dev:full
 ```
@@ -189,6 +195,7 @@ DEBUG=* bun run dev:full
 ## Deployment
 
 ### Production Build
+
 ```bash
 # Build frontend
 cd md-ticket-board

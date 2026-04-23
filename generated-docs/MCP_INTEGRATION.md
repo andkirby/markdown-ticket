@@ -35,6 +35,7 @@ The Markdown Ticket Board project includes multiple MCP servers that enable AI a
 ### Setup Instructions
 
 #### Prerequisites
+
 ```bash
 cd mcp-server
 bun install
@@ -44,6 +45,7 @@ bun run build
 #### Amazon Q CLI Integration
 
 **Global Access** (recommended):
+
 ```bash
 q mcp add --name mdt-all \
   --command "node" \
@@ -52,6 +54,7 @@ q mcp add --name mdt-all \
 ```
 
 **Project-Specific Access**:
+
 ```bash
 # From your project directory
 q mcp add --name mdt-project \
@@ -65,11 +68,13 @@ q mcp add --name mdt-project \
 #### Claude Code Integration
 
 **Global Access**:
+
 ```bash
 claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 ```
 
 **Project-Specific Access**:
+
 ```bash
 # From your project directory
 claude mcp add mdt-project node $HOME/markdown-ticket/mcp-server/dist/index.js \
@@ -86,11 +91,13 @@ claude mcp add mdt-project node $HOME/markdown-ticket/mcp-server/dist/index.js \
 ### Usage Examples
 
 #### Creating a New CR
+
 ```
 Create a new feature enhancement CR for project MDT with title "Add user authentication" and high priority
 ```
 
 The AI assistant will use:
+
 ```json
 {
   "tool": "create_cr",
@@ -106,11 +113,13 @@ The AI assistant will use:
 ```
 
 #### Updating CR Status
+
 ```
 Move MDT-001 to In Progress status
 ```
 
 The AI assistant will use:
+
 ```json
 {
   "tool": "update_cr_status",
@@ -123,6 +132,7 @@ The AI assistant will use:
 ```
 
 #### Section-Based Updates
+
 ```
 Update the Implementation section of MDT-001 with the new technical approach
 ```
@@ -145,6 +155,7 @@ Provides real-time logging and debugging capabilities during development.
 - `stream_url` - Get backend log streaming endpoint
 
 ### Setup
+
 ```bash
 cd server/mcp-dev-tools
 bun install
@@ -152,6 +163,7 @@ bun run build
 ```
 
 ### Integration
+
 ```bash
 # Amazon Q CLI
 q mcp add --name mdt-dev-tools \
@@ -164,6 +176,7 @@ claude mcp add mdt-dev-tools node $HOME/markdown-ticket/server/mcp-dev-tools/dis
 ```
 
 ### Usage Examples
+
 ```
 Show me the latest frontend logs
 Get real-time log stream for debugging
@@ -176,6 +189,7 @@ Check if there are any errors in the backend logs
 Automated documentation generation using AWS Labs' code-doc-gen MCP server.
 
 ### Setup
+
 ```bash
 # Install uv package manager
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -193,6 +207,7 @@ claude mcp add aws-code-doc-gen uvx awslabs.code-doc-gen-mcp-server@latest \
 ```
 
 ### Usage Examples
+
 ```
 Generate documentation for this project
 Create API documentation for the backend
@@ -240,6 +255,7 @@ Efficiently updates specific sections of CR documents.
 ### Filtering and Search
 
 #### `list_crs` with Filters
+
 ```json
 {
   "project": "MDT",
@@ -288,6 +304,7 @@ Each template includes:
 ### Common Issues
 
 **MCP Server Not Found**:
+
 ```bash
 # Verify build
 bun run --cwd mcp-server build
@@ -297,6 +314,7 @@ ls -la $HOME/markdown-ticket/mcp-server/dist/index.js
 ```
 
 **Project Not Discovered**:
+
 ```bash
 # Check configuration
 cat .mdt-config.toml
@@ -306,12 +324,14 @@ ls -la ~/.config/markdown-ticket/projects/
 ```
 
 **Permission Errors**:
+
 ```bash
 # Fix permissions
 chmod +x $HOME/markdown-ticket/mcp-server/dist/index.js
 ```
 
 ### Debug Commands
+
 ```bash
 # Test MCP server directly
 node $HOME/markdown-ticket/mcp-server/dist/index.js
@@ -326,6 +346,7 @@ tail -f ~/.local/share/q/logs/mcp.log
 ```
 
 ### Environment Validation
+
 ```bash
 # Check Node.js version
 node --version  # Should be 16.0.0+
@@ -360,6 +381,7 @@ custom_path = "/path/to/custom/templates"
 ```
 
 ### Multiple Project Workflows
+
 ```bash
 # Different MCP servers for different project types
 q mcp add --name mdt-backend \

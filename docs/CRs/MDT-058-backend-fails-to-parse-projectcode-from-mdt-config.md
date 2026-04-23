@@ -31,6 +31,7 @@ The backend API returns `null` for `project.code` field for specific projects (`
 ## Evidence
 
 **Config files contain correct codes:**
+
 ```bash
 $ cat ~/home/{sentence-breakdown,goto_dir}/.mdt-config.toml | grep code
 code = "SEB"
@@ -38,6 +39,7 @@ code = "GT"
 ```
 
 **Backend API returns null:**
+
 ```bash
 $ curl -s http://localhost:3001/api/projects | jq '.[] | select(.id == "goto_dir" or .id == "sentence-breakdown") | {id, "project.code": .project.code}'
 {
@@ -59,6 +61,7 @@ $ curl -s http://localhost:3001/api/projects | jq '.[] | select(.id == "goto_dir
 ## Current Workaround
 
 Temporary hotfix in `ProjectSelector.tsx`:
+
 ```typescript
 const hotfixMap: Record<string, string> = {
   'goto_dir': 'GT',

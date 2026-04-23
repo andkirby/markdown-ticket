@@ -33,6 +33,7 @@ This is a critical data loss bug that:
 ## Solution Analysis
 
 ### Current Problematic Behavior
+
 ```javascript
 // This silently deletes all content under H1
 update_cr_section(project, key, "# Old Title", "replace", "# New Title");
@@ -41,6 +42,7 @@ update_cr_section(project, key, "# Old Title", "replace", "# New Title");
 
 ### Expected Safe Behavior
 **Option 1: Preserve Content (Recommended)**
+
 ```javascript
 // Should preserve all content under H1
 update_cr_section(project, key, "# Old Title", "replace", "# New Title");

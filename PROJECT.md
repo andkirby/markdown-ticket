@@ -28,6 +28,7 @@ A modern, responsive Kanban-style ticket board application built with React, Typ
 ## Architecture
 
 ### Frontend Structure
+
 ```
 src/
 ├── components/
@@ -47,6 +48,7 @@ src/
 ```
 
 ### Backend Structure
+
 ```
 server/
 ├── server.js              # Express server
@@ -83,6 +85,7 @@ The application uses a hardcoded path for task files located at `docs/CRs/`. To 
    - Note: Currently the application doesn't read from environment variables, so you'll need to modify the code to use them
 
 #### Current Path Structure
+
 ```
 md-ticket-board/
 ├── server/
@@ -104,6 +107,7 @@ md-ticket-board/
 ## Development Workflow
 
 ### Setup and Installation
+
 ```bash
 # Clone and install dependencies
 cd md-ticket-board

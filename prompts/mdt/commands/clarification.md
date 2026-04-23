@@ -218,6 +218,7 @@ Execution steps:
 ## Question Types and Examples
 
 ### Single-Select Example (Artifact-Focused):
+
 ```
 Question: What file should contain the authentication service logic?
 Options:
@@ -228,6 +229,7 @@ Options:
 ```
 
 ### Multi-Select Example (Artifact Selection):
+
 ```
 Question: Which files need modification for the new feature?
 Options:
@@ -239,6 +241,7 @@ Options:
 ```
 
 ### Short-Answer Example (Artifact Naming):
+
 ```
 Question: What endpoint path should be used for the new API?
 Format: Answer in 5 words or less

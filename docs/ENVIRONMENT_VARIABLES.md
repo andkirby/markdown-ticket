@@ -280,6 +280,7 @@ Complete reference of all environment variables used in the Markdown Ticket proj
 ## Environment-Specific Configurations
 
 ### Native Development
+
 ```bash
 # .env.local
 VITE_BACKEND_URL=http://localhost:3001
@@ -291,6 +292,7 @@ NODE_ENV=development
 ```
 
 ### Docker Development
+
 ```bash
 # Set in docker-compose.dev.yml
 VITE_BACKEND_URL=
@@ -301,18 +303,21 @@ CHOKIDAR_USEPOLLING=true
 ```
 
 ### Docker Production
+
 ```bash
 # Set in docker-compose.prod.yml
 NODE_ENV=production
 ```
 
 ### MCP Server - Local (stdio only)
+
 ```bash
 MCP_HTTP_ENABLED=false
 MCP_LOG_LEVEL=info
 ```
 
 ### MCP Server - Local (HTTP)
+
 ```bash
 MCP_HTTP_ENABLED=true
 MCP_HTTP_PORT=3002
@@ -321,6 +326,7 @@ MCP_LOG_LEVEL=info
 ```
 
 ### MCP Server - Docker Production
+
 ```bash
 MCP_HTTP_ENABLED=true
 MCP_HTTP_PORT=3002

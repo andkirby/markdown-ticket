@@ -60,6 +60,7 @@ Exploratory - Need to evaluate refactoring strategies for server/ technical debt
 > These must be extracted BEFORE features that use them to avoid duplicating the same patterns.
 
 ### Structure
+
 ```
 server/
   ├── controllers/

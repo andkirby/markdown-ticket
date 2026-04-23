@@ -697,6 +697,7 @@ The following constraints from requirements.md are **NOT** covered in BDD scenar
 ## Verification
 
 Run BDD tests:
+
 ```bash
 npm run test:project-cli
 ```

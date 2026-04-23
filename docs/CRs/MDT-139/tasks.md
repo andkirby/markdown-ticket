@@ -56,6 +56,7 @@ TASK-1 ──> TASK-2 ──> TASK-3 ──> TASK-4 ──> TASK-5
 - Must Not Touch: Any other files
 
 **Verify**:
+
 ```bash
 bun run build
 bun run lint
@@ -79,6 +80,7 @@ bun run lint
 - Must Not Touch: Other functions, other files
 
 **Verify**:
+
 ```bash
 bun run build
 bun run lint
@@ -103,6 +105,7 @@ bun run lint
 - Must Not Touch: Other functions, other files
 
 **Verify**:
+
 ```bash
 bun run build
 bun run lint
@@ -127,6 +130,7 @@ bun run lint
 - Must Not Touch: Other functions, other files
 
 **Verify**:
+
 ```bash
 bun run build
 bun run lint
@@ -152,6 +156,7 @@ bun run test:e2e -- --grep "mermaid"
 - Must Not Touch: Any other files
 
 **Verify**:
+
 ```bash
 bun run build
 bun run lint

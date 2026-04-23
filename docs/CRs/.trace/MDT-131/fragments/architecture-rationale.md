@@ -60,6 +60,7 @@
 | Local state in ViewModeSwitcher | ❌ Hard to test edge cases (localStorage sync) | ❌ Couples component to persistence | ⚠️ State hidden from parent |
 
 **Implementation:**
+
 ```typescript
 // App.tsx
 const [viewMode, setViewMode] = useState<ViewMode>('board')
@@ -214,6 +215,7 @@ ViewModeSwitcher → useViewModePersistence
 - Active theme highlighted with primary color
 
 **Implementation:**
+
 ```typescript
 // In HamburgerMenu.tsx
 import { ButtonGroup, ButtonGroupSeparator } from './UI/button-group'

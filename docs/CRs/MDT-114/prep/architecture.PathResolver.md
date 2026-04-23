@@ -160,6 +160,7 @@ export interface IPathValidator {
 ### Implementation Sketch
 
 **FormatValidator** - Simple format checks
+
 ```typescript
 export class FormatValidator implements IPathValidator {
   validate(path: string): ValidationResult {
@@ -171,6 +172,7 @@ export class FormatValidator implements IPathValidator {
 ```
 
 **MatchValidator** - Section matching with suggestions
+
 ```typescript
 export class MatchValidator implements IPathValidator {
   constructor(private suggestionEngine: SuggestionEngine) {}
@@ -192,6 +194,7 @@ export class MatchValidator implements IPathValidator {
 ```
 
 **SuggestionEngine** - Pure utility
+
 ```typescript
 export class SuggestionEngine {
   generateForNotFound(sections: string[], input: string): string[]

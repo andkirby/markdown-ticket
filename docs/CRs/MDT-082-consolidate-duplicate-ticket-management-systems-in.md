@@ -145,6 +145,7 @@ Consolidate ticket CRUD operations from `mcp-server/crService.ts` into `shared/s
 | 5 | Remove `server/utils/ticketNumbering.ts` | No missing dependencies | Restore from git |
 
 ### Validation Commands
+
 ```bash
 # Verify shared service exists with required methods
 ls -la shared/services/TicketService.ts

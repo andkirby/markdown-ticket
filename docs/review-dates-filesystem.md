@@ -12,12 +12,14 @@
 ### 1.1 Domain Contract
 
 `domain-contracts/src/ticket/entity.ts` (lines 13-14, 42-43):
+
 ```typescript
 interface Ticket {
   dateCreated: Date | null
   lastModified: Date | null
 }
 ```
+
 Both fields are **nullable** and part of the Zod `TicketSchema`. They are required on the `Ticket` and `TicketMetadata` types.
 
 ### 1.2 Where Frontmatter Dates Are WRITTEN
@@ -102,6 +104,7 @@ if (!ticket.lastModified) {
 ```
 
 And:
+
 ```typescript
 // MarkdownService.ts:384-385
 dateCreated: parsedYaml.dateCreated || stats.birthtime || stats.ctime,
@@ -127,6 +130,7 @@ The `scripts/sync-dates.ts` script (168 lines) exists solely to reconcile frontm
 ### 3.1 Current `sync-dates.ts` Already Solves This
 
 The project already has `scripts/sync-dates.ts` that derives dates from git history:
+
 ```typescript
 // sync-dates.ts:31-37
 const created = execSync(
@@ -165,9 +169,11 @@ This runs at **read time** in `MarkdownService.parseMarkdownFile()` and `extract
 ### 3.3 `bun scripts/sync-dates.ts --touch` Alternative
 
 For users who prefer eager correction (not lazy/runtime), repurpose `sync-dates.ts` to touch files:
+
 ```bash
 bun scripts/sync-dates.ts --touch
 ```
+
 This would use `git log` dates and `fs.utimes()` to set the actual filesystem timestamps to match git history. One command after `git clone`, and all filesystem dates are correct forever.
 
 This is **better than the current approach** because:

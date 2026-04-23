@@ -65,6 +65,7 @@ Enable flexible MCP deployment scenarios while maintaining backward compatibilit
 - `mcp-server/tsconfig.json` - Shared module imports
 
 ### Configuration Example
+
 ```toml
 [server]
 logLevel = "info"

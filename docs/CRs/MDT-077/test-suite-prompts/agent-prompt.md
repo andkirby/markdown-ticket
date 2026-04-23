@@ -12,6 +12,7 @@ You need to execute a specific test case from the CLI project management test su
 - **COMMANDS**: Use compiled versions (`npm run project:create`) not dev versions
 
 ## Isolation Pattern
+
 ```bash
 TEST_ID="CASE-$(date +%s%N | tail -c 10)"
 TEST_BASE="/tmp/mdt-cli-tests-${TEST_ID}"

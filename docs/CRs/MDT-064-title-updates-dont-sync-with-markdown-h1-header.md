@@ -52,6 +52,7 @@ Establishing H1 as authoritative source provides:
 ### Phase 1: Server-Side H1 Processing
 
 **File Processing Logic:**
+
 ```javascript
 // Extract title from H1, fallback to filename
 const extractTitle = (content, filename) => {
@@ -91,6 +92,7 @@ const normalizeH1s = (content) => {
 ### Phase 2: MCP Integration
 
 **Update create_cr:**
+
 ```javascript
 // Auto-generate H1 from title parameter
 if (data.title && data.content) {

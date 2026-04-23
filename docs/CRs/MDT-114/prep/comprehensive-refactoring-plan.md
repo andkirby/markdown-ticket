@@ -33,6 +33,7 @@ The original refactoring plan addressed SRP violations and coupling through poly
 **Problem**: File I/O is mixed with business logic, preventing unit testing without filesystem mocks.
 
 **Current**:
+
 ```typescript
 async execute(...) {
   const fileData = await this.crFileReader.readCRFile(project, key);
@@ -75,6 +76,7 @@ mcp-server/src/tools/handlers/
 **Problem**: String-typed operations with runtime cast.
 
 **Current**:
+
 ```typescript
 const operation = options?.operation as 'replace' | 'append' | 'prepend'
 ```
@@ -133,6 +135,7 @@ export class SectionModifier {
 **Problem**: Validation scattered across multiple locations.
 
 **Current**:
+
 ```typescript
 // Validation happens in multiple places:
 if (!section) throw ...;
@@ -209,6 +212,7 @@ export class ModifyRequestValidator {
 **Problem**: Returns formatted string, mixing concerns.
 
 **Current**:
+
 ```typescript
 return this.validationFormatter.formatModifyOutput(
   key, matchedSection.hierarchicalPath, operation, ...
@@ -291,6 +295,7 @@ export class ModifyResultPresenter {
 **Problem**: `console.warn()` calls during business logic.
 
 **Current**:
+
 ```typescript
 if (contentProcessingResult.warnings.length > 0) {
   console.warn(`Content processing warnings for ${key}:`, contentProcessingResult.warnings)
@@ -357,6 +362,7 @@ export class SectionModifier {
 **Problem**: Header renaming inferred from content is implicit and error-prone.
 
 **Current**:
+
 ```typescript
 // Auto-detects first header at same level as "new section header"
 const firstHeaderMatch = contentProcessingResult.content.match(firstHeaderPattern)
@@ -582,6 +588,7 @@ graph TD
 ## Migration Strategy
 
 ### Step 1: Parallel Implementation
+
 ```typescript
 // Old: ModifyOperation.ts (keep working)
 export class ModifyOperation implements SectionOperation {
@@ -599,6 +606,7 @@ export class ModifySectionUseCase {
 ```
 
 ### Step 2: Adapter Pattern
+
 ```typescript
 // Adapter to bridge old and new
 export class ModifyOperationAdapter implements SectionOperation {

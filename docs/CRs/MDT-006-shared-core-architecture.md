@@ -90,6 +90,7 @@ A shared core module that provides:
 ## 3. Implementation Specification
 
 ### Core Module Structure
+
 ```
 core/
 ├── index.js                 # Main exports
@@ -277,6 +278,7 @@ core/
 - **Compatibility**: All existing APIs and UI functionality preserved
 
 ### Technical Implementation
+
 ```
 shared/
 ├── models/

@@ -104,6 +104,7 @@ The component will:
 ### Proposed Solution
 
 The shared `MarkdownRenderer` component should accept:
+
 ```typescript
 interface MarkdownRendererProps {
   content: string

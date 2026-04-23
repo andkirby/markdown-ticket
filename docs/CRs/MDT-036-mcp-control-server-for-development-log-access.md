@@ -69,6 +69,7 @@ This implementation could serve as a prototype for a generic `@mcp/dev-monitor` 
 - **Browser logs**: Not accessible (limitation - browser devtools only)
 
 ### Backend API Endpoints
+
 ```javascript
 GET /api/logs?lines=20&filter=error    // Filtered log retrieval (polling)
 GET /api/logs/stream?filter=error      // SSE filtered log streaming (extra)
@@ -76,6 +77,7 @@ POST /api/restart                      // Internal restart trigger (Phase 2)
 ```
 
 ### Log Buffer Implementation
+
 ```javascript
 // Console interception in server.js
 const logBuffer = [];
@@ -88,6 +90,7 @@ console.log = (...args) => {
 ```
 
 ### Backend API Endpoints
+
 ```javascript
 GET /api/logs?lines=20&filter=error    // Filtered log retrieval (polling)
 GET /api/logs/stream?filter=error      // SSE filtered log streaming (extra)
@@ -95,6 +98,7 @@ POST /api/restart                      // Future: internal restart trigger
 ```
 
 ### MCP Tools
+
 ```javascript
 get_logs(lines?, filter?)              // Get recent logs with filtering
 stream_logs(filter?)                   // Get SSE endpoint URL for real-time logs

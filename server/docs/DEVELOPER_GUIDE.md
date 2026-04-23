@@ -16,6 +16,7 @@ Follow this checklist when adding new functionality:
 ### Example: Adding a "Tag" Feature
 
 #### Step 1: Add Utility (if needed)
+
 ```javascript
 // server/utils/tagUtils.js
 export function parseTagsFromContent(content) {
@@ -25,6 +26,7 @@ export function parseTagsFromContent(content) {
 ```
 
 #### Step 2: Add Service Method
+
 ```javascript
 // server/services/TicketService.js
 async getTicketsByTag(projectId, tag) {
@@ -36,6 +38,7 @@ async getTicketsByTag(projectId, tag) {
 ```
 
 #### Step 3: Add Controller Method
+
 ```javascript
 // server/controllers/TicketController.js
 async getTicketsByTag(req, res) {
@@ -54,6 +57,7 @@ async getTicketsByTag(req, res) {
 ```
 
 #### Step 4: Add Route
+
 ```javascript
 // server/routes/tickets.js
 router.get('/tags/:tag', (req, res) =>
@@ -62,6 +66,7 @@ router.get('/tags/:tag', (req, res) =>
 ```
 
 #### Step 5: Register Route (if new router)
+
 ```javascript
 // server/server.js
 app.use('/api/tickets', createTicketRouter(ticketController));
@@ -80,6 +85,7 @@ Create files here for:
 - Validation helpers
 
 **Example**:
+
 ```javascript
 // utils/dateFormatter.js
 export function formatTicketDate(date) {
@@ -96,6 +102,7 @@ Create files here for:
 - Multi-step operations
 
 **Example**:
+
 ```javascript
 // services/NotificationService.js
 export class NotificationService {
@@ -113,6 +120,7 @@ Create files here for:
 - Request validation calls
 
 **Example**:
+
 ```javascript
 // controllers/NotificationController.js
 export class NotificationController {
@@ -133,6 +141,7 @@ Create files here for:
 - Middleware application
 
 **Example**:
+
 ```javascript
 // routes/notifications.js
 export function createNotificationRouter(controller) {
@@ -151,6 +160,7 @@ Create files here for:
 - Rate limiting
 
 **Example**:
+
 ```javascript
 // middleware/authentication.js
 export function authenticate(req, res, next) {
@@ -400,6 +410,7 @@ console.log('Utility: parseProject called with:', data);
 
 #### Issue: "Module not found"
 **Solution**: Check import paths, ensure they're relative or absolute correctly
+
 ```javascript
 // Correct
 import { MyService } from '../services/MyService.js';
@@ -409,6 +420,7 @@ import { MyService } from 'services/MyService.js';
 
 #### Issue: "Cannot read property of undefined"
 **Solution**: Check dependency injection chain
+
 ```javascript
 // Ensure services are created before controllers
 const myService = new MyService(dependency); // First
@@ -417,6 +429,7 @@ const myController = new MyController(myService); // Then
 
 #### Issue: "Route not found"
 **Solution**: Check route registration in server.js
+
 ```javascript
 // Ensure router is registered
 app.use('/api/my-resource', myRouter);
@@ -454,6 +467,7 @@ app.use('/api/my-resource', myRouter);
 - **Middleware**: camelCase (e.g., `errorHandler.js`)
 
 ### File Structure
+
 ```javascript
 // 1. Imports
 import express from 'express';
@@ -473,6 +487,7 @@ export default MyClass;
 ```
 
 ### JSDoc Comments
+
 ```javascript
 /**
  * Gets all projects from the system

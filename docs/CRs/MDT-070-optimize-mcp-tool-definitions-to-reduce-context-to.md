@@ -74,6 +74,7 @@ The MCP server tools currently consume 14,000 tokens in Claude Code's context wi
 ### 4.1 Tool Consolidation Map
 
 **CR Content Access** (2 tools → 1):
+
 ```typescript
 // Before
 get_cr_full_content(project, key)
@@ -85,6 +86,7 @@ get_cr(project, key, mode?: "full" | "attributes" | "metadata")
 ```
 
 **Section Management** (3 tools → 1):
+
 ```typescript
 // Before
 list_cr_sections(project, key)
@@ -96,6 +98,7 @@ manage_cr_sections(project, key, operation: "list" | "get" | "update", section?,
 ```
 
 **Logging** (6 tools → 2):
+
 ```typescript
 // Before
 get_logs(lines, filter)
@@ -111,6 +114,7 @@ manage_log_streams(target: "backend" | "frontend", action: "get_url" | "stop", f
 ```
 
 **Template Access** (2 tools → 1):
+
 ```typescript
 // Before
 list_cr_templates()
@@ -123,11 +127,13 @@ get_cr_template(type?: string)  // Omit type to list all
 ### 4.2 Description Optimization Guidelines
 
 **Before**:
+
 ```typescript
 "description": "Comma-separated list of CR keys this blocks (e.g., \"MDT-010,MDT-015\")"
 ```
 
 **After**:
+
 ```typescript
 "description": "Blocked CR keys (comma-separated)"
 ```
@@ -189,6 +195,7 @@ get_cr_template(type?: string)  // Omit type to list all
 ## 6. Implementation Notes
 
 **Token Measurement**:
+
 ```bash
 # Before optimization
 node -e "console.log(JSON.stringify(require('./mcp-server/src/index.ts').tools).length)"
@@ -212,6 +219,7 @@ If maintaining compatibility:
 ### Measurements from the Claude Code
 
 #### Before
+
 ```
 ⛁ MCP tools: 14.0k tokens (7.0%)
 

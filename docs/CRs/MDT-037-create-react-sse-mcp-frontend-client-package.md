@@ -45,6 +45,7 @@ When users report frontend errors, LLMs need access to browser console logs to p
 - **Auto-cleanup** with timeout safety (30min inactivity)
 
 ### Architecture Flow
+
 ```
 User: "I see TicketView.js error"
 LLM: calls start_frontend_logging() → Backend activates session
@@ -64,6 +65,7 @@ LLM: calls stop_frontend_logging() → cleanup
 ## 3. Implementation Specification
 
 ### File Structure
+
 ```
 server/mcp-dev-tools/src/
 ├── tools/
@@ -84,6 +86,7 @@ src/hooks/
 ```
 
 ### MCP Tools API
+
 ```typescript
 // Manual session control
 start_frontend_logging(): { status: 'started', sessionId: string }
@@ -96,6 +99,7 @@ stream_frontend_logs(filter?: string): string // SSE endpoint URL
 ```
 
 ### React Hook API
+
 ```typescript
 function useMCPClient() {
   const [isActive, setIsActive] = useState(false)
@@ -110,6 +114,7 @@ function useMCPClient() {
 ```
 
 ### Backend Session Management
+
 ```javascript
 let frontendSessionActive = false;
 let sessionStartTime = null;
@@ -193,6 +198,7 @@ const SESSION_TIMEOUT = 30 * 60 * 1000;
 - ✅ **MCP integration works**: Tools built and ready for new chat sessions
 
 ### Usage Example
+
 ```
 User: "I see a React error in TicketView.js"
 LLM: get_frontend_logs() → Auto-starts session → Shows captured frontend errors
@@ -215,6 +221,7 @@ LLM: "I see the error: Cannot read property 'map' of undefined. Here's the fix..
 - **Session Management**: Maintains backward compatibility with manual session control while providing automatic startup when enabled
 
 **Configuration:**
+
 ```bash
 # Enable auto-start (captures all logs from page load)
 VITE_FRONTEND_LOGGING_AUTOSTART=true
@@ -232,6 +239,7 @@ VITE_FRONTEND_LOGGING_AUTOSTART=false
 - ✅ Production-safe defaults (disabled unless explicitly enabled)
 
 **Use Case Achieved:**
+
 ```
 User: "I see an error on page load"
 LLM: get_frontend_logs() → Gets complete log history including startup errors

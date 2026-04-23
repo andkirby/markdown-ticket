@@ -180,6 +180,7 @@ The implementation uses **three separate files** for flexibility:
 3. **`docker-compose.prod.yml`** - Production overrides (optimized builds, no source mounts)
 
 **Development Usage:**
+
 ```bash
 # Using bin/dc wrapper (recommended)
 ./bin/dc up
@@ -189,6 +190,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
 **Production Usage:**
+
 ```bash
 # Using bin/dc wrapper (recommended)
 MDT_DOCKER_MODE=prod ./bin/dc up
@@ -210,6 +212,7 @@ The project includes `bin/dc`, a bash script that simplifies Docker Compose comm
 - **Environment loading**: Automatically loads `.env` and `.env.local` files
 
 **Usage Examples:**
+
 ```bash
 # Development mode with hot reload
 MDT_DOCKER_MODE=dev ./bin/dc up
@@ -265,6 +268,7 @@ docker-config/                              # Docker-only configuration
 - **Flexible Mounting**: No hardcoded project registry
 
 **Docker Volume Mounts**:
+
 ```yaml
 volumes:
   # Docker-only configuration (container-specific)
@@ -289,6 +293,7 @@ volumes:
 - **Configuration**: `/root/.config/markdown-ticket` (Docker-only)
 
 **Usage Examples**:
+
 ```yaml
 # Working on MDT application itself
 volumes:
@@ -303,6 +308,7 @@ volumes:
 #### Environment Variable Configuration
 
 **Required Environment Variables**:
+
 ```yaml
 environment:
   # Vite proxy configuration
@@ -337,6 +343,7 @@ environment:
 The Docker frontend was displaying without styles because `postcss.config.js` and `tailwind.config.js` were not being copied to the container.
 
 **Solution**: Updated `Dockerfile.frontend` (lines 21, 45) to include:
+
 ```dockerfile
 COPY postcss.config.js tailwind.config.js ./
 ```
@@ -394,6 +401,7 @@ const host = args.frontend_host || FRONTEND_URL
 #### Configuration File Formats
 
 **docker-config/config.toml**:
+
 ```toml
 [dashboard]
 port = 3001

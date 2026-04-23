@@ -82,6 +82,7 @@ Current monolithic structure creates maintenance bottlenecks, makes testing diff
 ## 3. Implementation Specification
 
 ### New Directory Structure
+
 ```
 server/
 ├── server.js                 # Main entry point (minimal)
@@ -136,6 +137,7 @@ server/
 - Estimated reduction: ~200 lines from main file
 
 ### Dependencies to Add
+
 ```bash
 npm install fs-extra express-validator js-yaml helmet compression
 ```

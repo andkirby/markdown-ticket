@@ -256,6 +256,7 @@ These belong elsewhere:
 ## Examples
 
 **Good (feature - pure behavior)**:
+
 ```
 WHEN user submits form without required fields, the system shall display validation errors.
 WHILE external service is unavailable, the system shall proceed with cached data.
@@ -263,12 +264,14 @@ IF authentication fails, THEN the system shall reject the request with 401 statu
 ```
 
 **Bad (constrains architecture)**:
+
 ```
 WHEN user submits form, the FormValidator service shall validate fields.
 The RequestHandler shall call authenticate() before processing.
 ```
 
 **Good (bug fix - code refs OK)**:
+
 ```
 The concurrent access issue in shared resource shall be resolved.
 WHEN multiple operations access the same record, data integrity SHALL be preserved.

@@ -55,6 +55,7 @@ Service Extraction with Facade Pattern — Extract single responsibility service
 > These must be extracted BEFORE features that use them.
 
 ### Structure
+
 ```
 shared/services/
   ├── ProjectService.ts           → Facade/coordinator only (≤150 lines)
@@ -103,6 +104,7 @@ To add a new project-related service:
 4. Add delegation method in ProjectService facade (≤5 lines)
 
 ### Architecture Diagram
+
 ```mermaid
 graph TB
     %% Define styles

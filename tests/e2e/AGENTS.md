@@ -58,13 +58,16 @@ Read it before writing a test — never guess selectors from component names.
 
 1. Add `data-testid="my-thing"` to the component element
 2. Add `@testid` JSDoc on the component so it's visible when reading the file:
+
    ```tsx
    /**
     * @testid my-thing — description of what this element is
     */
    export function MyComponent() { ... }
    ```
+
 3. Register in `selectors.ts`:
+
    ```typescript
    export const mySelectors = {
      thing: '[data-testid="my-thing"]',

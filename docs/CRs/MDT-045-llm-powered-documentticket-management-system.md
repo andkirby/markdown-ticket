@@ -81,6 +81,7 @@ Enable users to manage tickets and documents through natural language interactio
 
 ### Technical Components
 1. **MCP Server Extensions**
+
    ```typescript
    // New MCP functions to add
    'llm-create-cr': async (params) => { /* Generate CR from prompt */ }

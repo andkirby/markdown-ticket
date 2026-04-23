@@ -84,6 +84,7 @@ For ticket ABC-123:
 3. Else:
    → Use main project path
 ```
+
 ## 4. Acceptance Criteria
 ### New Artifacts
 | File | Type | Purpose |
@@ -113,6 +114,7 @@ All MCP tools must resolve worktree paths before file operations:
 | `list_crs` | Include `inWorktree: boolean` flag per ticket |
 
 **Path Resolution Flow for MCP:**
+
 ```
 1. Receive ticket key (e.g., MDT-095)
 2. Call WorktreeService.resolvePath(projectPath, ticketKey)
@@ -120,6 +122,7 @@ All MCP tools must resolve worktree paths before file operations:
 4. Else → return main project path
 5. All file operations use resolved path
 ```
+
 ### Configuration Schema
 
 ```toml

@@ -17,6 +17,7 @@ You are an orchestrator for the CLI project management test suite. Your job is t
 - Orchestration guide: `./docs/CRs/MDT-077/test-suite-prompts/orchestration.md`
 
 ## Test Case Queue (in order)
+
 ```
 1. G01 - Global-Only Creation
 2. G02 - Global-Only Invalid Path
@@ -44,6 +45,7 @@ Start with test case G01 and execute the orchestration workflow. For each iterat
 ## Status Tracking
 
 Maintain a status document at `/tmp/test-suite-status.md` with:
+
 ```
 # Test Suite Status - [timestamp]
 

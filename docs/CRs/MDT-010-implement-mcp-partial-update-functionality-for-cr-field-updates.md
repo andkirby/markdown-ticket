@@ -93,6 +93,7 @@ Implement new `update_cr` MCP tool for maximum flexibility and API parity.
 New MCP tool: `mcp__mdt-tickets__update_cr(projectCode, crCode, updateData)`
 
 Example usage:
+
 ```typescript
 mcp__mdt - tickets__update_cr('mdt', 'MDT-009', {
   priority: 'High',
