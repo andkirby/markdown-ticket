@@ -56,6 +56,7 @@
 - When you're unsure about the CR structure
 
 **Example**:
+
 ```json
 {
   "project": "TSM",
@@ -65,6 +66,7 @@
 ```
 
 **Sample Output**:
+
 ```
 📑 **Sections in CR TSM-002** - Fix path resolution and file discovery edge cases
 
@@ -105,6 +107,7 @@ Found 19 sections:
 - When debugging why another operation failed
 
 **Example**:
+
 ```json
 {
   "project": "TSM",
@@ -115,6 +118,7 @@ Found 19 sections:
 ```
 
 **Sample Output**:
+
 ```
 📖 **Section Content from CR TSM-002**
 
@@ -154,6 +158,7 @@ Use `manage_cr_sections` with operation="replace", "append", or "prepend" to mod
 - You're fixing structural issues in a section
 
 **Example**:
+
 ```json
 {
   "project": "TSM",
@@ -186,6 +191,7 @@ Use `manage_cr_sections` with operation="replace", "append", or "prepend" to mod
 - Adding a new paragraph without changing existing content
 
 **Example**:
+
 ```json
 {
   "project": "TSM",
@@ -215,6 +221,7 @@ Use `manage_cr_sections` with operation="replace", "append", or "prepend" to mod
 - Inserting important context at the beginning
 
 **Example**:
+
 ```json
 {
   "project": "TSM",
@@ -265,12 +272,14 @@ This is the **most confusing part** of the tool. Read carefully!
 **⚠️ EXPERIMENTAL**: This format is shown in error messages but may not work in actual calls.
 
 **Example from error message**:
+
 ```
 Multiple sections match "### Functional". Use hierarchical path:
 - # Fix path resolution / ## 4. Acceptance Criteria / ### Functional
 ```
 
 **But when you try it**:
+
 ```
 ❌ "Section not found"
 ```
@@ -286,6 +295,7 @@ When a subsection has duplicates:
 2. Use `replace` on the parent with the full content including the subsection
 
 **Example**:
+
 ```json
 // Instead of trying to access "### Functional" directly
 {
@@ -322,16 +332,19 @@ When a subsection has duplicates:
 **Scenario**: You want to add a note at the end of "Acceptance Criteria" referencing another document.
 
 **Step 1**: List sections to find the correct name
+
 ```json
 { "operation": "list", "project": "TSM", "key": "TSM-002" }
 ```
 
 **Step 2**: Get current content to see where to add
+
 ```json
 { "operation": "get", "section": "## 4. Acceptance Criteria", "project": "TSM", "key": "TSM-002" }
 ```
 
 **Step 3**: Append the reference
+
 ```json
 {
   "operation": "append",
@@ -349,6 +362,7 @@ When a subsection has duplicates:
 **Scenario**: You want to update `### Functional`, but it appears in multiple places.
 
 **❌ WRONG APPROACH**:
+
 ```json
 {
   "section": "### Functional", // Multiple matches!
@@ -359,6 +373,7 @@ When a subsection has duplicates:
 ```
 
 **✅ CORRECT APPROACH**: Target the parent section
+
 ```json
 {
   "section": "## 4. Acceptance Criteria", // Parent (unique)
@@ -374,6 +389,7 @@ When a subsection has duplicates:
 **Scenario**: You want to change `### Problem` to `### Issues`.
 
 **✅ CORRECT APPROACH**:
+
 ```json
 {
   "section": "### Problem",
@@ -391,6 +407,7 @@ When a subsection has duplicates:
 ### Error 1: "Multiple sections match"
 
 **Error Message**:
+
 ```
 Multiple sections match "### Functional". Please use a hierarchical path:
 - # CR Title / ## 4. Acceptance Criteria / ### Functional
@@ -402,16 +419,19 @@ Multiple sections match "### Functional". Please use a hierarchical path:
 **Solutions** (in order of preference):
 
 1. **Target the parent section instead**:
+
    ```json
    { "section": "## 4. Acceptance Criteria", "operation": "replace", "content": "..." }
    ```
 
 2. **Use `get` with hierarchical path** (if supported):
+
    ```json
    { "section": "# CR Title / ## 4. Acceptance Criteria / ### Functional", "operation": "get" }
    ```
 
 3. **Be more specific in section name** (if possible):
+
    ```json
    {"section": "## 4. Acceptance Criteria / ### Functional", ...}
    ```
@@ -421,6 +441,7 @@ Multiple sections match "### Functional". Please use a hierarchical path:
 ### Error 2: "Section not found"
 
 **Error Message**:
+
 ```
 Section "## 4 / ### Functional" not found
 ```
@@ -432,6 +453,7 @@ Section "## 4 / ### Functional" not found
 1. **Run `list` first** to see actual section names
 2. **Copy the exact section name** from `list` output
 3. **Try without subsection**:
+
    ```json
    // ❌ {"section": "## 4 / ### Functional", ...}
    // ✅ {"section": "## 4. Acceptance Criteria", ...}
@@ -442,6 +464,7 @@ Section "## 4 / ### Functional" not found
 ### Error 3: "Section validation failed"
 
 **Error Message**:
+
 ```
 Section validation failed: Section "X" not found
 
@@ -454,6 +477,7 @@ Suggestions:
 **Debug Steps**:
 
 1. **Run `list` to see actual structure**:
+
    ```json
    { "operation": "list", "project": "TSM", "key": "TSM-002" }
    ```
@@ -492,6 +516,7 @@ Suggestions:
 **Context**: Created `requirements.md` for TSM-002, need to add reference in CR.
 
 **Attempt 1** (Failed - hierarchical path didn't work):
+
 ```json
 {
   "project": "TSM",
@@ -504,6 +529,7 @@ Suggestions:
 ```
 
 **Attempt 2** (Failed - ambiguous section):
+
 ```json
 {
   "section": "### Functional",
@@ -514,6 +540,7 @@ Suggestions:
 ```
 
 **Attempt 3** (SUCCESS - targeted parent):
+
 ```json
 {
   "section": "## 4. Acceptance Criteria",
@@ -530,11 +557,13 @@ Suggestions:
 **Context**: Want to add issue numbers (#1, #2, #3, #4) to the Problem section.
 
 **Step 1**: Get current content
+
 ```json
 { "operation": "get", "section": "### Problem", "project": "TSM", "key": "TSM-002" }
 ```
 
 **Step 2**: Replace with numbered format
+
 ```json
 {
   "operation": "replace",
@@ -552,11 +581,13 @@ Suggestions:
 **Context**: Want to reorganize Functional AC to group by issue number.
 
 **Step 1**: Get current content
+
 ```json
 { "operation": "get", "section": "## 4. Acceptance Criteria", "project": "TSM", "key": "TSM-002" }
 ```
 
 **Step 2**: Replace with reorganized content
+
 ```json
 {
   "operation": "replace",
@@ -574,6 +605,7 @@ Suggestions:
 ### ❌ Pitfall 1: Skip `list` Operation
 
 **Wrong**:
+
 ```json
 // Jump straight to replace
 { "operation": "replace", "section": "### Problem", "content": "..." }
@@ -581,6 +613,7 @@ Suggestions:
 ```
 
 **Right**:
+
 ```json
 // Always list first
 {"operation": "list", "project": "TSM", "key": "TSM-002"}
@@ -593,12 +626,14 @@ Suggestions:
 ### ❌ Pitfall 2: Assume Hierarchical Paths Work
 
 **Wrong**:
+
 ```json
 {"section": "## 4 / ### Functional", ...}
 // This format is shown in errors but may not work
 ```
 
 **Right**:
+
 ```json
 // Use parent section instead
 {"section": "## 4. Acceptance Criteria", ...}
@@ -609,6 +644,7 @@ Suggestions:
 ### ❌ Pitfall 3: Forget Newlines in Content
 
 **Wrong**:
+
 ```json
 {
   "operation": "append",
@@ -619,6 +655,7 @@ Suggestions:
 ```
 
 **Right**:
+
 ```json
 {
   "operation": "append",
@@ -633,6 +670,7 @@ Suggestions:
 ### ❌ Pitfall 4: Don't Verify with `get` First
 
 **Wrong**:
+
 ```json
 // Replace without seeing current content
 { "operation": "replace", "section": "### Problem", "content": "New content" }
@@ -640,6 +678,7 @@ Suggestions:
 ```
 
 **Right**:
+
 ```json
 // First see what's there
 {"operation": "get", "section": "### Problem", ...}
@@ -652,6 +691,7 @@ Suggestions:
 ### ❌ Pitfall 5: Replace Parent Without Including All Subsections
 
 **Wrong**:
+
 ```json
 {
   "operation": "replace",
@@ -662,6 +702,7 @@ Suggestions:
 ```
 
 **Right**:
+
 ```json
 {
   "operation": "replace",
@@ -678,6 +719,7 @@ Suggestions:
 ### ✅ Always Start with `list`
 
 Before any modification, run `list` to see the structure:
+
 ```json
 { "operation": "list", "project": "XXX", "key": "XXX-000" }
 ```
@@ -685,6 +727,7 @@ Before any modification, run `list` to see the structure:
 ### ✅ Use `get` Before `replace`
 
 See current content before replacing:
+
 ```json
 {"operation": "get", "section": "### Problem", ...}
 // Then plan your replacement
@@ -694,6 +737,7 @@ See current content before replacing:
 ### ✅ Target Parent Sections for Subsection Changes
 
 When subsection has duplicates or is hard to access:
+
 ```json
 // Target parent
 {"section": "## 4. Acceptance Criteria", ...}

@@ -5,6 +5,7 @@ Essential guide for using the MCP Server that enables any MCP-compatible LLM to 
 ## Quick Setup
 
 ### 1. Build the Server
+
 ```bash
 cd ~/markdown-ticket/mcp-server
 bun install
@@ -14,6 +15,7 @@ bun run build
 ### 2. Add to Your AI Assistant
 
 #### Claude Code (Recommended)
+
 ```bash
 # Global access (all projects)
 claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
@@ -25,6 +27,7 @@ claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js \
 ```
 
 #### Amazon Q CLI
+
 ```bash
 q mcp add --name mdt-all \
   --command "node" \
@@ -42,11 +45,13 @@ Ask your AI assistant: "List all my projects using the MCP server"
 For optimal experience with Claude Code, add this to your global memory:
 
 **Global Memory (recommended):**
+
 ```
 For tickets management use MCP mdt-all. If you don't have project code in your memory, use this command `cat .mdt-config.toml | grep 'code = '` to find it out, or projects list from this MCP.
 ```
 
 **Or add per-project:**
+
 ```
 For ticket (change request / CR) management use MCP mdt-all. Project code is "YOUR_PROJECT_CODE".
 ```
@@ -74,6 +79,7 @@ The MCP server supports **dual transports** for maximum compatibility:
 - `DELETE http://localhost:3002/mcp` - Session management
 
 #### HTTP Testing with curl
+
 ```bash
 # Test tools list
 curl -X POST http://localhost:3002/mcp \
@@ -90,6 +96,7 @@ curl http://localhost:3002/health
 ```
 
 #### HTTP Client Setup
+
 ```bash
 # Start HTTP server
 cd mcp-server
@@ -132,6 +139,7 @@ The MCP server provides **10 consolidated tools** for complete CR management:
 **Note**: All npm scripts (`build`, `start`, `dev`) have HTTP transport enabled by default.
 
 #### Custom HTTP Port
+
 ```bash
 # Use custom HTTP port
 MCP_HTTP_PORT=8080 bun run dev
@@ -142,6 +150,7 @@ bun run dev
 ```
 
 #### Manual Server Control
+
 ```bash
 # Run server directly with HTTP transport
 MCP_HTTP_ENABLED=true MCP_HTTP_PORT=3002 node dist/index.js
@@ -163,6 +172,7 @@ Each project needs:
 3. **Counter File**: `.mdt-next` for CR numbering
 
 **Sample `.mdt-config.toml`:**
+
 ```toml
 [project]
 name = "My Project"
@@ -204,6 +214,7 @@ MCP_ALLOWED_ORIGINS=http://localhost:5173,https://yourdomain.com
 ## Tool Usage Examples
 
 ### Basic Workflow
+
 ```bash
 # 1. List projects
 list_projects()
@@ -230,6 +241,7 @@ manage_cr_sections(
 ```
 
 ### HTTP Request Examples
+
 ```bash
 # Create CR via HTTP
 curl -X POST http://localhost:3002/mcp \

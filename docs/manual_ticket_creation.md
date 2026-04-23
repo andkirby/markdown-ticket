@@ -23,6 +23,7 @@ Each CR is a Markdown file in the project's CR directory (typically `docs/CRs/`)
 Every CR must include a standardized header with required and optional attributes:
 
 ### Required Core Attributes
+
 ```markdown
 - **Code**: {project.code}-### (unique identifier from project config)
 - **Title/Summary**: Brief descriptive title
@@ -168,6 +169,7 @@ After completion, add:
 
 ### Status Updates
 Update the Status field in the CR header when lifecycle changes occur:
+
 ```markdown
 - **Status**: Implemented
 - **Implementation Date**: 2025-01-15

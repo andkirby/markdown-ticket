@@ -14,13 +14,16 @@ run options
 option 1
 
 just run for the files from git diff
+
 ```bash
 changed_files=$(echo -e "$(git diff --name-only | grep '' && git ls-files --others
 --exclude-standard)" | grep -v '/$' | grep '\.ts' | xargs)
 tsg --tsconfig . --tsconfig shared --tsconfig mcp-server --tsconfig server --tsconfig
 domain-contracts --stdout metrics --include ${changed_files} | grep -v '==='
 ```
+
 option 2
+
 ```bash
  $ tsg --tsconfig . --tsconfig shared --tsconfig mcp-server --tsconfig server --tsconfig
 domain-contracts \
@@ -115,12 +118,14 @@ scripts/metrics/
 ## TDD Verification
 
 Before starting:
+
 ```bash
 ./scripts/metrics/tests/test_run.sh
 # Expected: 33 tests fail (RED status)
 ```
 
 After each task:
+
 ```bash
 ./scripts/metrics/tests/test_run.sh
 # Task-specific tests should pass, others may still fail
@@ -160,6 +165,7 @@ After each task:
 - Help text should reference `.confrc` configuration — don't embed defaults
 
 **Verify**:
+
 ```bash
 test -x scripts/metrics/run.sh      # executable
 ./scripts/metrics/run.sh --help     # shows usage
@@ -203,6 +209,7 @@ test -x scripts/metrics/run.sh      # executable
 - run.sh sources this file, does NOT embed values
 
 **Verify**:
+
 ```bash
 source scripts/metrics/.confrc.sample
 echo $MI_YELLOW_MAX  # should be 40
@@ -244,6 +251,7 @@ echo $CC_RED_MIN      # should be 21
 - Built-in defaults should match `.confrc.sample` exactly
 
 **Verify**:
+
 ```bash
 # Test with .confrc override
 echo "MI_YELLOW_MAX=50" > scripts/metrics/.confrc
@@ -286,6 +294,7 @@ echo "MI_YELLOW_MAX=50" > scripts/metrics/.confrc
 - Extract `run_tsg_metrics()` function — reused by Task 5
 
 **Verify**:
+
 ```bash
 # Make a change to a TypeScript file
 echo "// test" >> shared/test-lib/ticket/ticket-creator.ts
@@ -336,6 +345,7 @@ echo "// test" >> shared/test-lib/ticket/ticket-creator.ts
 - Do NOT repeat tsg invocation logic
 
 **Verify**:
+
 ```bash
 ./scripts/metrics/run.sh shared/test-lib/ticket | grep -q "ticket-creator.ts"
 ./scripts/metrics/run.sh invalid/path  # should exit 1
@@ -381,6 +391,7 @@ echo "// test" >> shared/test-lib/ticket/ticket-creator.ts
 - Extract `should_show_file()` function — used by Task 7, 8
 
 **Verify**:
+
 ```bash
 # Test with mixed metrics
 # (requires test data with various complexity levels)
@@ -429,6 +440,7 @@ echo "// test" >> shared/test-lib/ticket/ticket-creator.ts
 - Do NOT duplicate status determination logic
 
 **Verify**:
+
 ```bash
 ./scripts/metrics/run.sh 2>&1 | grep -q $'\033['  # ANSI codes present
 ```
@@ -470,6 +482,7 @@ echo "// test" >> shared/test-lib/ticket/ticket-creator.ts
 - Do NOT duplicate filter logic
 
 **Verify**:
+
 ```bash
 ./scripts/metrics/run.sh --json | jq .  # valid JSON
 ./scripts/metrics/run.sh --json | jq '.metrics | length'
@@ -521,6 +534,7 @@ echo "// test" >> shared/test-lib/ticket/ticket-creator.ts
 - Integrate with existing filtering logic
 
 **Verify**:
+
 ```bash
 ./scripts/metrics/run.sh ; echo $?  # should be 0, 1, or 2
 path/to/invalid ; echo $?           # should be 1
@@ -563,6 +577,7 @@ path/to/invalid ; echo $?           # should be 1
 - Do NOT duplicate threshold values
 
 **Verify**:
+
 ```bash
 test -f scripts/metrics/README.md
 wc -l scripts/metrics/README.md  # ≤ 200
@@ -602,6 +617,7 @@ wc -l scripts/metrics/README.md  # ≤ 200
 - Do NOT duplicate full documentation
 
 **Verify**:
+
 ```bash
 grep -A5 "Metrics" CLAUDE.md | grep -q "run.sh"
 ```

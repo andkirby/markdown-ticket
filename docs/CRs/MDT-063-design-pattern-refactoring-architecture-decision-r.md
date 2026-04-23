@@ -177,11 +177,13 @@ sequenceDiagram
 - **No size limits**: Noted for production consideration
 
 **Configuration Example:**
+
 ```toml
 # ~/.config/markdown-ticket/config.toml
 [cache]
 ttl = 7200 # 2 hours cache TTL
 ```
+
 ## Acceptance Criteria
 
 ### ✅ Completed

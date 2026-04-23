@@ -104,6 +104,7 @@ A Model Context Protocol (MCP) server that provides universal programmatic acces
 - Configuration validation and error handling
 
 **MCP Tools to Implement**:
+
 ```typescript
 // Project Management
 list_projects(): Project[]
@@ -145,6 +146,7 @@ No changes to existing APIs - this is a new service that provides programmatic a
 No database changes - continues using file-based storage with enhanced programmatic access.
 
 ### Configuration
+
 ```toml
 # ~/.config/mcp-cr-server/config.toml
 [server]
@@ -300,6 +302,7 @@ The MCP Server for Universal CR Management has been successfully implemented. Th
 - **Project Discovery**: Handles 100+ projects without performance degradation
 
 ### File Structure Created
+
 ```
 mcp-server/
 ├── package.json                    # Node.js project configuration

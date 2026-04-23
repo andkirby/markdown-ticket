@@ -20,6 +20,7 @@ BDD scenarios for dot-notation namespace system. Users can organize related docu
 ## Test-Facing Contract Notes
 
 ### Tab Structure Selectors
+
 ```typescript
 // Namespace tab with expansion indicator
 const namespaceTab = '[data-testid="subdoc-tab-{namespace}"]'
@@ -33,6 +34,7 @@ const folderPrefix = '[data-testid="folder-prefix"]'
 ```
 
 ### URL Path Format
+
 ```
 /prj/{code}/ticket/{ticket}/{type}.md              # root document
 /prj/{code}/ticket/{ticket}/{type}.{semantic}.md   # dot-notation sub-document
@@ -45,6 +47,7 @@ Examples:
 ```
 
 ### SSE Event Contract
+
 ```typescript
 // Event: subdocuments-updated
 // Payload: { ticketKey: string, subdocuments: Subdocument[] }

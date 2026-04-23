@@ -33,6 +33,7 @@ The following shared services are already correctly imported and used:
 **Duplicate of**: Lines 128-163 in `MarkdownService.ts`
 
 **MCP Implementation**:
+
 ```typescript
 private parseYamlFrontmatter(yamlContent: string): Record<string, any> | null {
   // Simple YAML parser implementation
@@ -41,6 +42,7 @@ private parseYamlFrontmatter(yamlContent: string): Record<string, any> | null {
 ```
 
 **Shared Implementation**:
+
 ```typescript
 private static parseYamlFrontmatter(yamlContent: string): Record<string, any> | null {
   // Nearly identical implementation with date parsing
@@ -59,6 +61,7 @@ private static parseYamlFrontmatter(yamlContent: string): Record<string, any> | 
 **Duplicate of**: `TitleExtractionService.ts`
 
 **MCP Implementation**:
+
 ```typescript
 title: ticket.title || yaml.title || 'Untitled', // Use H1-extracted title first
 ```
@@ -96,6 +99,7 @@ title: ticket.title || yaml.title || 'Untitled', // Use H1-extracted title first
 **Should use**: Shared validation utilities
 
 **MCP Implementation**:
+
 ```typescript
 const sectionValidation = SimpleSectionValidator.validateSection(section, availableSections)
 ```
@@ -110,6 +114,7 @@ const sectionValidation = SimpleSectionValidator.validateSection(section, availa
 **Should use**: Shared content processing
 
 **MCP Implementation**:
+
 ```typescript
 const contentProcessingResult = SimpleContentProcessor.processContent(content, {
   operation,
@@ -128,11 +133,13 @@ const contentProcessingResult = SimpleContentProcessor.processContent(content, {
 **Already exists in**: `PATTERNS.YAML_FRONTMATTER` in constants.ts
 
 **MCP Implementation**:
+
 ```typescript
 const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/)
 ```
 
 **Shared Implementation**:
+
 ```typescript
 export const PATTERNS = {
   YAML_FRONTMATTER: /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/

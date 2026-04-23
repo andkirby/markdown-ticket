@@ -43,6 +43,7 @@ This is a Model Context Protocol (MCP) server for managing CR (Change Request) t
 Both transports share the same tool implementations in `src/tools/index.ts`.
 
 **Request Flow:**
+
 ```
 Client → JSON-RPC Request → Transport Layer → MCPTools.handleToolCall() → Handlers → Services → File System
 ```
@@ -168,6 +169,7 @@ afterEach(async () => {
 ### Key Testing Principles
 
 1. **Validate content, not structure** - MCP returns strings, not objects
+
    ```typescript
    // ✅ DO: Simple content checks
    expect(typeof response.data).toBe('string')
@@ -179,6 +181,7 @@ afterEach(async () => {
    ```
 
 2. **Create project BEFORE starting client** - Server discovers projects at startup
+
    ```typescript
    // ✅ RIGHT: Project exists when server starts
    await projectSetup.createProjectStructure('TEST', 'Test')
@@ -190,6 +193,7 @@ afterEach(async () => {
    ```
 
 3. **Always cleanup** - Prevent temp file accumulation
+
    ```typescript
    afterEach(async () => {
      await mcpClient.stop()

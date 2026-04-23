@@ -23,16 +23,20 @@ The `list` operation displays sections using hierarchical path notation with spa
 
 1. Run `manage_cr_sections` with `operation="list"` on a CR
 2. Observe output showing hierarchical paths like:
+
    ```
    # Fix path resolution and file discovery edge cases / ## 4. Acceptance Criteria / ### Functional
    ```
+
 3. Attempt to replace using that exact path:
+
    ```json
    {
      "operation": "replace",
      "section": "# Fix path resolution and file discovery edge cases / ## 4. Acceptance Criteria / ### Functional"
    }
    ```
+
 4. Receive error: `Section "..." not found`
 
 ### Expected Behavior
@@ -42,6 +46,7 @@ If `list` shows a path in a certain format, `replace` should accept that same fo
 The `replace` operation rejects the hierarchical path format shown by `list`.
 
 ### Error Message
+
 ```
 ❌ Section validation failed
 
@@ -67,15 +72,19 @@ When multiple sections share the same name (e.g., `### Functional` appears in di
 ### Steps to Reproduce
 
 1. Attempt to `get` or `replace` a section with a non-unique name:
+
    ```json
    { "section": "### Functional" }
    ```
+
 2. Receive error:
+
    ```
    Multiple sections match "### Functional". Please use a hierarchical path:
    - # Fix path resolution and file discovery edge cases / ## 4. Acceptance Criteria / ### Functional
    - # Fix path resolution and file discovery edge cases / ## 4. Acceptance Criteria / ### Non-Functional
    ```
+
 3. Attempt to use the exact path shown in the error message
 4. Operation fails with "Section not found"
 
@@ -173,16 +182,19 @@ The `list` operation may show **display paths** while `get`/`replace` expect **s
 Make all operations accept the same path format. Choose one:
 
 **Option A**: Use hierarchical notation everywhere
+
 ```json
 { "section": "# Title / ## Section / ### Subsection" }
 ```
 
 **Option B**: Use simple section names (requires parent to be unique)
+
 ```json
 { "section": "### Subsection" } // Error if multiple, show parent options
 ```
 
 **Option C**: Use structured format
+
 ```json
 {
   "section": "### Subsection",
@@ -199,6 +211,7 @@ When suggesting sections, show:
 3. **Why** each suggestion is valid/invalid
 
 **Example improved error**:
+
 ```
 Multiple sections match "### Functional".
 
@@ -231,6 +244,7 @@ Give each section a unique ID that can be used regardless of hierarchy:
 
 ### Current Workaround #1: Use Parent Sections
 Instead of targeting a subsection:
+
 ```json
 // Instead of:
 {"section": "### Functional", "operation": "replace"}

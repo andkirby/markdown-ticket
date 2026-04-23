@@ -92,6 +92,7 @@ Call `AskUserQuestion` with inferred values as a compact list (NOT a table):
 3. **Generate content** using template structure. Apply quality rules. Mark gaps with "(Requires /mdt:clarification)"
 
 4. **Create via MCP**:
+
    ```json
    {
      "project": "{PROJECT_CODE}",
@@ -104,6 +105,7 @@ Call `AskUserQuestion` with inferred values as a compact list (NOT a table):
      }
    }
    ```
+
    If `{PROJECT_CODE}` is missing, prompt for it or load it from `.mdt-config.toml`.
 
 5. **Report & suggest next workflow**:

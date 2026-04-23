@@ -107,6 +107,7 @@ server/
 - All controllers will wrap methods with this instead of manual try-catch
 
 **Verify**:
+
 ```bash
 wc -l server/middleware/asyncHandler.ts  # ≤ 75 (or flag ≤ 110)
 cd server && npm test
@@ -148,6 +149,7 @@ npm run build:shared
 - This IS the shared error handler — all controllers will use `@handleErrors`
 
 **Verify**:
+
 ```bash
 wc -l server/middleware/errorHandler.ts  # ≤ 150 (or flag ≤ 225)
 cd server && npm test
@@ -189,6 +191,7 @@ npm run build:shared
 - If similar validation exists elsewhere, consolidate HERE
 
 **Verify**:
+
 ```bash
 wc -l server/middleware/validation.ts  # ≤ 150 (or flag ≤ 225)
 cd server && npm test
@@ -229,6 +232,7 @@ npm run build:shared
 - If response formatting exists elsewhere, consolidate HERE
 
 **Verify**:
+
 ```bash
 wc -l server/utils/response.ts  # ≤ 75 (or flag ≤ 110)
 cd server && npm test
@@ -271,6 +275,7 @@ npm run build:shared
 - This IS the base class — other controllers extend from here
 
 **Verify**:
+
 ```bash
 wc -l server/controllers/BaseController.ts  # ≤ 150 (or flag ≤ 225)
 cd server && npm test
@@ -322,6 +327,7 @@ npm run build:shared
 - Use `validateProjectId` and `validateCRId` from Task 1.3 — don't duplicate validation
 
 **Verify**:
+
 ```bash
 wc -l server/controllers/CRController.ts  # ≤ 200 (or flag ≤ 300)
 cd server && npm test
@@ -365,6 +371,7 @@ npm run build:shared
 - Use `validateProjectId` from Task 1.3 — remove manual validation
 
 **Verify**:
+
 ```bash
 wc -l server/controllers/ProjectController.ts  # ≤ 300 (or flag ≤ 450)
 cd server && npm test
@@ -407,6 +414,7 @@ npm run build:shared
 - No SSE logic should remain in FileWatcherService
 
 **Verify**:
+
 ```bash
 wc -l server/services/SSEService.ts  # ≤ 200 (or flag ≤ 300)
 cd server && npm test
@@ -445,6 +453,7 @@ npm run build:shared
 - No file should contain both file watching AND SSE management
 
 **Verify**:
+
 ```bash
 wc -l server/fileWatcherService.ts  # ≤ 300 (or flag ≤ 450)
 cd server && npm test
@@ -486,6 +495,7 @@ npm run build:shared
 - Shared utilities should be imported, not copied
 
 **Verify**:
+
 ```bash
 find server/routes/devtools -name "*.ts" -exec wc -l {} + | tail -1  # ≤ 450 total
 cd server && npm test
@@ -505,6 +515,7 @@ npm run build:shared
 ### Task 3.1: Verify no duplication
 
 **Do**: Search for duplicated patterns
+
 ```bash
 # Check for manual try-catch blocks (should be eliminated)
 grep -r "try {" server/controllers/ | wc -l
@@ -525,6 +536,7 @@ grep -r "res.status(500)" server/controllers/ | wc -l
 ### Task 3.2: Verify size compliance
 
 **Do**: Check all files against limits
+
 ```bash
 echo "=== Size Check ==="
 wc -l server/controllers/BaseController.ts       # ≤ 150
@@ -557,6 +569,7 @@ find server/routes/devtools -name "*.ts" -exec wc -l {} + | tail -1  # ≤ 450 t
 ### Task 3.4: Run full test suite
 
 **Do**: Verify everything still works
+
 ```bash
 npm run build:shared
 cd server && npm test

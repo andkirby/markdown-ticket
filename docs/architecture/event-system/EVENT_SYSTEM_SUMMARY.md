@@ -101,12 +101,14 @@ File Change → Backend SSE → SSEClient → EventBus → Your Component → UI
 ## How to Use (Quick Example)
 
 ### Before (Fragile)
+
 ```typescript
 const { tickets, updateTicket } = useMultiProjectData();
 // Complex, breaks easily
 ```
 
 ### After (Robust)
+
 ```typescript
 import { useEventBus } from '../services/eventBus';
 import { dataLayer } from '../services/dataLayer';
@@ -131,6 +133,7 @@ function MyComponent() {
 - ✅ Both systems can run in parallel
 
 ### Phase 2: Add Debugging
+
 ```typescript
 // Add to App.tsx
 import { EventHistory } from './components/DevTools/EventHistory';
@@ -164,6 +167,7 @@ function App() {
 - Type safety
 
 ### 2. Debuggability
+
 ```typescript
 // See event history
 eventBus.getRecentEvents(20)
@@ -273,6 +277,7 @@ eventBus.getStats()
 ## Next Steps (Recommended Order)
 
 ### Step 1: Explore the New System (10 minutes)
+
 ```bash
 # Read the implementation
 cat ~/home/markdown-ticket/src/services/eventBus.ts
@@ -284,6 +289,7 @@ cat ~/home/markdown-ticket/docs/QUICK_START_NEW_EVENT_SYSTEM.md
 ```
 
 ### Step 2: Add Debug Tools (5 minutes)
+
 ```typescript
 // In App.tsx
 import { EventHistory } from './components/DevTools/EventHistory';
@@ -302,6 +308,7 @@ function App() {
 ```
 
 ### Step 3: Test the EventBus (15 minutes)
+
 ```typescript
 // In browser console
 import { eventBus } from './services/eventBus';

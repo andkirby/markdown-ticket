@@ -158,6 +158,7 @@ relatedTickets: MDT-093
 - E2E: Tab navigation works for dot-notation documents
 
 ### Example Test Cases
+
 ```
 Given: docs/CRs/MDT-100/architecture.md
   AND: docs/CRs/MDT-100/architecture.approve-it.md

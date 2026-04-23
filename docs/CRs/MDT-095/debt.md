@@ -27,6 +27,7 @@ The MDT-095 worktree implementation is functionally correct but introduces struc
   - `shared/services/ProjectService.ts:36,45`
   - `shared/services/TicketService.ts:45`
 - **Evidence**: Four different modules create `new WorktreeService()` with different configurations:
+
   ```typescript
   // mcp-server/src/index.ts
   this.worktreeService = new WorktreeService()
@@ -40,6 +41,7 @@ The MDT-095 worktree implementation is functionally correct but introduces struc
   // shared/services/TicketService.ts
   this.worktreeService = new WorktreeService()
   ```
+
 - **Impact**: Adding configuration options or changing constructor signature requires editing 4+ files. Cache state is not shared between instances.
 - **Suggested Fix**: Create a singleton factory or use dependency injection container. Pass `WorktreeService` instance through constructor chain.
 
@@ -72,9 +74,11 @@ The MDT-095 worktree implementation is functionally correct but introduces struc
 
 - **Location**: `server/fileWatcherService.ts:102`
 - **Evidence**:
+
   ```typescript
   private worktreeService: WorktreeService = new WorktreeService({ enabled: true })
   ```
+
 - **Impact**: `worktree.enabled = false` in `.mdt-config.toml` has no effect on file watcher behavior. Violates BR-3.1.
 - **Suggested Fix**: Read worktree config from project config during initialization. Pass config to WorktreeService constructor.
 
@@ -84,6 +88,7 @@ The MDT-095 worktree implementation is functionally correct but introduces struc
 
 - **Location**: `docs/CRs/MDT-095/architecture.md:56`
 - **Evidence**: Architecture specifies `server/services/TicketService.ts` but actual location is `shared/services/TicketService.ts`:
+
   ```
   # architecture.md says:
   server/services/TicketService.ts
@@ -91,6 +96,7 @@ The MDT-095 worktree implementation is functionally correct but introduces struc
   # actual implementation:
   shared/services/TicketService.ts
   ```
+
 - **Impact**: Developers following documentation will look in wrong location.
 - **Suggested Fix**: Update architecture.md Structure section to reflect actual file locations.
 
@@ -98,6 +104,7 @@ The MDT-095 worktree implementation is functionally correct but introduces struc
 
 **File**: `server/fileWatcherService.ts`
 **Line**: 102
+
 ```typescript
 // TECH-DEBT: Hardcoded enabled=true - should read from project config
 // Impact: worktree.enabled=false in config has no effect on file watcher
@@ -107,6 +114,7 @@ The MDT-095 worktree implementation is functionally correct but introduces struc
 
 **File**: `shared/services/TicketService.ts`
 **Line**: 45
+
 ```typescript
 // TECH-DEBT: Creates new WorktreeService instance - should use shared instance
 // Impact: Cache not shared with ProjectService, config duplication

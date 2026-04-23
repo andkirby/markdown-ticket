@@ -155,11 +155,13 @@ All procedures have been verified with evidence.
 
 - **Action**: `bun run dev`
 - **Signal**:
+
   ```
   VITE v7.3.1  ready in 213 ms
     ➜  Local:   http://localhost:5174/
     ➜  Network: http://192.168.3.1:5174/
   ```
+
 - **Constraints**: Requires `shared/dist` to exist for `@mdt/shared` imports; auto-selects next port if 5173 is busy
 
 ### Runtime `frontend-vite` / CONTROL / VERIFIED
@@ -178,11 +180,13 @@ All procedures have been verified with evidence.
 
 - **Action**: `bun run fe:test`
 - **Signal**:
+
   ```
   Test Suites: 1 passed, 1 total
   Tests:       6 passed, 6 total
   Time:        0.65 s
   ```
+
 - **Constraints**: Requires `shared/dist` to exist; limited unit test coverage (E2E covers UI)
 
 ### Runtime `frontend-vite` / INJECT / VERIFIED
@@ -197,9 +201,11 @@ All procedures have been verified with evidence.
 
 - **Action**: `curl http://localhost:3001/api/status`
 - **Signal**:
+
   ```json
   {"status":"ok","message":"Ticket board server is running","tasksDir":"./sample-tasks","timestamp":"2026-03-01T20:28:51.762Z","sseClients":0}
   ```
+
 - **Constraints**: Logs prefixed with `[INFO]`, `[WARN]`, `[ERROR]`
 
 ### Runtime `backend-express` / CONTROL / VERIFIED
@@ -218,11 +224,13 @@ All procedures have been verified with evidence.
 
 - **Action**: `cd server && jest`
 - **Signal**:
+
   ```
   Test Suites: 9 passed, 9 total
   Tests:       8 skipped, 212 passed, 220 total
   Time:        11.601 s
   ```
+
 - **Constraints**: Worker process force exit warning (timer leak in tests)
 
 ### Runtime `backend-express` / INJECT / VERIFIED
@@ -235,6 +243,7 @@ All procedures have been verified with evidence.
 
 - **Action**: Use `shared/test-lib` TestEnvironment and ProjectFactory
 - **Signal**:
+
   ```typescript
   import { TestEnvironment, ProjectFactory } from '@mdt/shared/test-lib'
 
@@ -248,6 +257,7 @@ All procedures have been verified with evidence.
   // Run tests against seeded state...
   await testEnv.cleanup()
   ```
+
 - **Constraints**: Requires Node.js environment; see `tests/e2e/setup/e2e-context.ts` for reference implementation
 
 ---
@@ -256,6 +266,7 @@ All procedures have been verified with evidence.
 
 - **Action**: `bunx tsx mcp-server/src/index.ts`
 - **Signal**:
+
   ```
   🚀 Initializing MCP CR Server...
   📝 Loading config from: /Users/kirby/.config/markdown-ticket/config.toml
@@ -265,6 +276,7 @@ All procedures have been verified with evidence.
   🚀 Starting MCP CR Server...
   🛡️  Rate limiting enabled: 100 requests per 60s per tool
   ```
+
 - **Constraints**: Output uses emoji markers for visibility; must run from mcp-server directory
 
 ### Runtime `mcp-server` / CONTROL / VERIFIED
@@ -283,11 +295,13 @@ All procedures have been verified with evidence.
 
 - **Action**: `bun run mcp:test`
 - **Signal**:
+
   ```
   Test Suites: 31 passed, 31 total
   Tests:       11 skipped, 419 passed, 430 total
   Time:        37.477 s
   ```
+
 - **Constraints**: E2E tests use `shared/test-lib` for isolation
 
 ### Runtime `mcp-server` / INJECT / VERIFIED
@@ -308,11 +322,13 @@ All procedures have been verified with evidence.
 
 - **Action**: `bun run shared:test`
 - **Signal**:
+
   ```
   Test Suites: 29 passed, 29 total
   Tests:       459 passed, 459 total
   Time:        9.458 s
   ```
+
 - **Constraints**: Worker process force exit warning (timer leak in tests)
 
 ---
@@ -327,11 +343,13 @@ All procedures have been verified with evidence.
 
 - **Action**: `bun run domain:test`
 - **Signal**:
+
   ```
   Test Suites: 6 passed, 6 total
   Tests:       90 passed, 90 total
   Time:        0.746 s
   ```
+
 - **Constraints**: None - all tests pass
 
 ---

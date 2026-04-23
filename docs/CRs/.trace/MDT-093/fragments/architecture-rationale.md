@@ -24,6 +24,7 @@ The server-side `TicketService` in `server/services/TicketService.ts` discovers 
 - Updated `getCR()` to await the now-async `discoverSubDocuments()`
 
 **Implementation Pattern:**
+
 ```typescript
 // In constructor (line 72-76)
 constructor(projectDiscovery: ProjectDiscovery) {

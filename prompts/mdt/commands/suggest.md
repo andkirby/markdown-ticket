@@ -46,26 +46,31 @@ Use Glob to check for these files in `{TICKETS_PATH}/{CR-KEY}/`:
 Based on CR type + status + artifacts, follow the workflow chains from WORKFLOWS.md:
 
 **Feature Workflow Path:**
+
 ```
 ticket-creation → requirements → bdd → assess → poc → domain-lens → architecture → tests → tasks → implement → tech-debt → reflection
 ```
 
 **Refactoring Workflow Path:**
+
 ```
 ticket-creation → assess → domain-audit → bdd --prep → architecture --prep → tests --prep → tasks --prep → implement --prep → tech-debt → reflection
 ```
 
 **Bug Fix Workflow Path:**
+
 ```
 ticket-creation → requirements (brief) → [Feature Workflow]
 ```
 
 **Prep Workflow (when assess signals prep required):**
+
 ```
 bdd --prep → architecture --prep → tests --prep → tasks --prep → implement --prep → [resume feature workflow]
 ```
 
 **Research Workflow Path:**
+
 ```
 ticket-creation → poc → reflection → decision point
 ```

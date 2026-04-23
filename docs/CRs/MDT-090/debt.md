@@ -78,6 +78,7 @@ MDT-090 has been partially implemented with significant progress made. The main 
 
 **File**: `mcp-server/src/tools/handlers/crHandlers.ts`
 **Line**: 104
+
 ```typescript
 // TECH-DEBT: Direct File I/O - Bypassing shared MarkdownService
 // Impact: Inconsistent error handling, missing file watching integration
@@ -87,6 +88,7 @@ MDT-090 has been partially implemented with significant progress made. The main 
 
 **File**: `mcp-server/src/tools/handlers/sectionHandlers.ts`
 **Line**: 376
+
 ```typescript
 // TECH-DEBT: Direct File I/O - Bypassing shared MarkdownService
 // Impact: Potential file corruption, inconsistent error handling
@@ -96,6 +98,7 @@ MDT-090 has been partially implemented with significant progress made. The main 
 
 **File**: `mcp-server/src/tools/handlers/sectionHandlers.ts`
 **Line**: 108
+
 ```typescript
 // TECH-DEBT: YAML Pattern Duplication - Inconsistent regex usage
 // Impact: Edge case failures, inconsistent parsing

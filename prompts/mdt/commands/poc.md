@@ -201,13 +201,16 @@ Execute the experiment:
 
 1. Create `{TICKETS_PATH}/{CR-KEY}/poc/{experiment-name}/` directory
 2. Initialize minimal project (if needed):
+
    ```bash
    cd {TICKETS_PATH}/{CR-KEY}/poc/{experiment-name}
    npm init -y  # or equivalent for language
    ```
+
 3. Install spike dependencies
 4. Write experimental code
 5. Create **minimal** README with run instructions ONLY:
+
    ```markdown
    # {Experiment Name}
 
@@ -244,7 +247,9 @@ Execute the spike and document observations:
 
 **Output**:
 ```
+
 {actual output from running}
+
 ```
 
 **Observations**:
@@ -341,6 +346,7 @@ Create `{TICKETS_PATH}/{CR-KEY}/poc.md`:
 Architecture can now proceed with validated approach:
 
 `/mdt:architecture {CR-KEY}`
+
 ```
 
 ### Step 8: Handle Multiple Questions

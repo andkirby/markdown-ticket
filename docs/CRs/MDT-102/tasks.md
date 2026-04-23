@@ -85,12 +85,14 @@ mcp-server/src/tools/handlers/__tests__/
 ## TDD Verification
 
 Before starting each task:
+
 ```bash
 cd mcp-server && npm test -- src/tools/handlers/__tests__/
 # Should show 52 PASS (baseline established)
 ```
 
 After completing each task:
+
 ```bash
 cd mcp-server && npm test -- src/tools/handlers/__tests__/
 # Tests should still PASS (behavior preserved)
@@ -121,6 +123,7 @@ npm test
 - If > 45: ⛔ STOP
 
 **Create**:
+
 ```typescript
 /**
  * Read file content asynchronously
@@ -148,6 +151,7 @@ static async readFile(filePath: string): Promise<string> {
 - Do NOT copy fs.readFile logic into handlers
 
 **Verify**:
+
 ```bash
 # Check method size
 grep -A 15 "static async readFile" shared/services/MarkdownService.ts | wc -l
@@ -181,6 +185,7 @@ npm run build:shared
 - If > 45: ⛔ STOP
 
 **Create**:
+
 ```typescript
 /**
  * Write file content asynchronously
@@ -208,6 +213,7 @@ static async writeFile(filePath: string, content: string): Promise<void> {
 - Do NOT copy fs.writeFile logic into handlers
 
 **Verify**:
+
 ```bash
 # Check method size
 grep -A 15 "static async writeFile" shared/services/MarkdownService.ts | wc -l
@@ -255,6 +261,7 @@ npm run build:shared
 - Handlers will call `TicketService.getCRPath()` instead of local implementation
 
 **Verify**:
+
 ```bash
 # Verify method is public
 grep -A 5 "getCRPath" shared/services/TicketService.ts | grep "public"
@@ -297,6 +304,7 @@ npm run build:shared
 - Any unused `import('path')` helper functions
 
 **Replace**:
+
 ```typescript
 // Before:
 const filePath = await findTicketFilePath(projectKey, crKey, this.projectsPath)
@@ -314,6 +322,7 @@ const filePath = TicketService.getCRPath(project, crKey)
 - Do NOT copy path resolution logic into handlers
 
 **Verify**:
+
 ```bash
 # Verify findTicketFilePath is removed
 grep -r "findTicketFilePath" mcp-server/src/tools/handlers/
@@ -357,6 +366,7 @@ cd mcp-server && npm test -- src/tools/handlers/__tests__/
 **To**: Use `MarkdownService.readFile()` (Task 1.1)
 
 **Replace**:
+
 ```typescript
 // Before:
 const fs = await import('node:fs/promises')
@@ -383,6 +393,7 @@ const fileContent = await MarkdownService.readFile(filePath)
 - Do NOT copy file reading logic into handlers
 
 **Verify**:
+
 ```bash
 # Verify fs.readFile is replaced (but fs.writeFile may still exist)
 grep -r "fs\.readFile" mcp-server/src/tools/handlers/
@@ -418,6 +429,7 @@ cd mcp-server && npm test -- src/tools/handlers/__tests__/
 **To**: Use `MarkdownService.writeFile()` (Task 1.2)
 
 **Replace**:
+
 ```typescript
 // Before:
 const fs = await import('node:fs/promises')
@@ -435,6 +447,7 @@ await MarkdownService.writeFile(filePath, updatedContent)
 - Do NOT copy file writing logic into handlers
 
 **Verify**:
+
 ```bash
 # Verify fs.writeFile is replaced
 grep -r "fs\.writeFile" mcp-server/src/tools/handlers/
@@ -475,6 +488,7 @@ cd mcp-server && npm test -- src/tools/handlers/__tests__/
 - Verify no fs operations remain before removing imports
 
 **Verify**:
+
 ```bash
 # Verify NO fs operations remain
 grep -r "fs\.readFile\|fs\.writeFile" mcp-server/src/tools/handlers/

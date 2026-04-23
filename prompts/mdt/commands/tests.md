@@ -178,6 +178,7 @@ Write actual executable test files to project's test directory. Follow project's
 ## Completion
 
 **Prep mode**:
+
 ```markdown
 ## Test Specification Complete
 
@@ -189,6 +190,7 @@ Write actual executable test files to project's test directory. Follow project's
 ```
 
 **Feature mode**:
+
 ```markdown
 ## Test Specification Complete
 

@@ -9,6 +9,7 @@ Dot-notation namespace system extends MDT-093 sub-document navigation. Files lik
 Dot-notation files are presented as virtual folders in the existing `subdocuments` array. Frontend renders them identically to folder-based subdocuments.
 
 ## Runtime Flow
+
 ```
 File Watcher → DocumentService → parseFilename() → virtual folder
                                             ↓

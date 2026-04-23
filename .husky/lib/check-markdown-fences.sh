@@ -15,30 +15,35 @@ check_markdown_fences() {
   violations=0
 
   # Check 1: Fence parity (unclosed fences)
+  # Skip prompts/ — uses nested markdown-in-markdown which confuses parity count
   for file in $STAGED_MD; do
     if [ ! -f "$file" ]; then
       continue
     fi
+    case "$file" in
+      prompts/*) continue ;;
+    esac
 
     # Count lines starting with 3+ backticks or tildes (fence openers/closers)
-    fence_count=$(grep -cE '^(`{3,}|~{3,})' "$file" 2>/dev/null || echo 0)
+    # Use awk to avoid sh arithmetic issues with empty/multiline grep -c output
+    fence_count=$(awk '/^```|^~~~/{count++} END{print count+0}' "$file" 2>/dev/null || echo 0)
 
-    if [ $((fence_count % 2)) -ne 0 ]; then
+    if [ "$(expr "$fence_count" % 2)" -ne 0 ]; then
       echo "❌ ERROR: Unclosed code fence in: $file"
       echo "   Found $fence_count fence marker(s) — must be even (open + close)."
       echo ""
       grep -nE '^(`{3,}|~{3,})' "$file" | sed 's/^/   /'
       echo ""
-      violations=$((violations + 1))
+      violations=$(expr "$violations" + 1)
     fi
   done
 
   # Check 2: markdownlint style rules
   if ! ./node_modules/.bin/markdownlint-cli2 $STAGED_MD 2>&1; then
-    violations=$((violations + 1))
+    violations=$(expr "$violations" + 1)
   fi
 
-  if [ $violations -gt 0 ]; then
+  if [ "$violations" -gt 0 ]; then
     echo "❌ Commit blocked: Markdown code fence errors found."
     echo "   Fix the issues above and try again."
     return 1

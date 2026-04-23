@@ -522,9 +522,11 @@ MEDIUM/LOW issues:
 ## Step 9: Final Completion
 
 Before declaring completion, run the self-check:
+
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/enforce-tasks.sh <<< '{"stop_hook_active": false, "cwd": "'"$(pwd)"'", "tracker_path": "{tracker_path}"}'
 ```
+
 If it exits non-zero, tasks remain incomplete — do not proceed.
 
 After all tasks pass and completion verification succeeds:
@@ -568,6 +570,7 @@ If approved: `mcp__mdt-all__update_cr_status(project=PROJECT_CODE, key=CR-KEY, s
 If declined: leave status as "In Progress".
 
 Then clean up ephemeral state files:
+
 ```bash
 rm -f {tracker_path}
 rm -f {checkpoint_path}
@@ -598,6 +601,7 @@ These are implementation-time artifacts. Once complete, they serve no purpose. T
 ## Integration
 
 **Workflow position**:
+
 ```
 Feature:     requirements → bdd → architecture → tests → tasks → implement-agentic
 Refactoring: assess → bdd --prep → architecture --prep → tests --prep → tasks --prep → implement-agentic --prep

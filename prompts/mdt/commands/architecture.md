@@ -192,10 +192,12 @@ Use this section only when suggesting a simpler implementation that would change
 ## Structure
 
 ```
+
 {project_root}/
   ├── {runtime/bootstrap artifacts: manifest, config, entrypoints}
   └── {source_dir}/
       ├── {runtime source tree, 5-15 entries total across both levels}
+
 ```
 
 ## Module Boundaries
@@ -293,6 +295,7 @@ Before saving, verify:
 ## Completion
 
 **Prep mode**:
+
 ```markdown
 ## Prep Architecture Complete
 
@@ -303,6 +306,7 @@ Before saving, verify:
 ```
 
 **Feature mode**:
+
 ```markdown
 ## Architecture Complete
 

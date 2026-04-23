@@ -46,6 +46,7 @@ MDT-098 establishes a single-entrypoint pattern for TOML operations. **The code 
 - Check that `toml` package is not imported anywhere before removal (grep verification)
 
 **Verify**:
+
 ```bash
 # 1. Confirm toml removed from package.json
 grep "toml" server/package.json shared/package.json || echo "✅ toml removed"
@@ -86,6 +87,7 @@ bun run --cwd server jest tests/unit/toml-standardization.test.ts
 - Verify all consuming modules import from `@mdt/shared/utils/toml.ts` (no direct `toml` imports)
 
 **Verify**:
+
 ```bash
 # 1. Run unit tests
 bun run --cwd server jest tests/unit/toml-standardization.test.ts

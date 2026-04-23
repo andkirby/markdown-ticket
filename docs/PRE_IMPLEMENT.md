@@ -57,6 +57,7 @@ export const CRTypes = [
 ### Why This Works
 
 **Explicit arrays preserve literal types:**
+
 ```typescript
 // With explicit array
 type T = typeof CRTypes[number]
@@ -196,6 +197,7 @@ Passed: 3  |  Failed: 0  |  Skipped: 0
 - TypeScript-specific issues (no-redeclare, no-unsafe-assignment)
 
 **Common fixes:**
+
 ```bash
 # Auto-fix most issues
 bun run lint --fix
@@ -215,6 +217,7 @@ bunx eslint src/components/MyComponent.tsx --fix
 - Unreferenced imports
 
 **Common patterns:**
+
 ```typescript
 // ❌ Dead export
 export function unusedHelper() { ... }  // Never imported

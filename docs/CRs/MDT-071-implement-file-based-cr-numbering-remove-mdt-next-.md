@@ -86,11 +86,13 @@ implementationNotes: Status changed to Implemented on 11/24/2025
 #### Bug Fix Details
 
 **Before** (buggy):
+
 ```
 Line 268: const crFiles = await glob('*.md', { cwd: project.project.path });
 ```
 
 **After** (fixed):
+
 ```
 Line 267: const crPath = await this.getCRPath(project);
 Line 271: const crFiles = await glob('*.md', { cwd: crPath });
@@ -164,6 +166,7 @@ Line 271: const crFiles = await glob('*.md', { cwd: crPath });
 - **Impact**: Bug fixes, features, and changes require dual implementation until consolidated
 
 **Code Evidence**:
+
 ```typescript
 // Duplicate logic found in server/utils/ticketNumbering.ts:126-136
 const counterFile = path.join(projectPath, '.mdt-next')

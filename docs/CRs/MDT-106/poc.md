@@ -48,6 +48,7 @@ jest-openapi will work seamlessly with:
 - `jest-openapi`: OpenAPI contract validation for Jest
 
 **Key Code**:
+
 ```typescript
 import { join } from 'node:path'
 import jestOpenAPI from 'jest-openapi'
@@ -66,6 +67,7 @@ expect(res).toSatisfyApiSpec()
 **Command**: `npx jest tests/api/poc-jest-openapi/simple.test.ts --verbose`
 
 **Output**:
+
 ```
 console.log
     Loading OpenAPI spec from: /Users/kirby/home/markdown-ticket-MDT-106/server/openapi.yaml
@@ -94,6 +96,7 @@ Tests:       3 passed, 3 total
 2. **Jest Integration**: The `toSatisfyApiSpec()` matcher extends Jest's expect without conflicts
 
 3. **Response Validation**: Validates Supertest Response objects against the spec:
+
    ```typescript
    const res = await request(app).get('/api/status').expect(200)
    expect(res).toSatisfyApiSpec() // ✓ Works
@@ -102,6 +105,7 @@ Tests:       3 passed, 3 total
 4. **ESM + ts-jest**: Works with Jest + ts-jest in ESM mode using `.js` extension in imports
 
 5. **Error Detection**: Catches undefined properties and missing required fields:
+
    ```typescript
    (res.body as any).undefinedProperty = 'test'
    expect(res).toSatisfyApiSpec() // ✗ Throws error
@@ -118,12 +122,14 @@ Tests:       3 passed, 3 total
 ### Constraints Discovered
 
 1. **Import Path**: Must use `.js` extension for imports in ESM mode:
+
    ```typescript
    import { setupTestEnvironment } from '../setup' // ✗ Fails
    import { setupTestEnvironment } from '../setup.js' // ✓ Works
    ```
 
 2. **Spec File Path**: The OpenAPI spec path must be absolute or resolved relative to test file:
+
    ```typescript
    const openApiSpecPath = join(__dirname, '../../../openapi.yaml')
    ```
@@ -211,11 +217,13 @@ describe('jest-openapi Contract Tests', () => {
 ## Test Output Examples
 
 ### Passing Validation
+
 ```
 ✓ should validate GET /api/status response against OpenAPI spec
 ```
 
 ### Failing Validation (with undefined property)
+
 ```
 ✗ should detect when response violates OpenAPI spec
   Error: Response does not match API specification

@@ -106,6 +106,7 @@ Fixed `validateCRData()` method to:
 ## 5. Implementation Notes
 
 ### Code Changes
+
 ```typescript
 // OLD - Only checked data.type
 if (!data.type) {
@@ -148,6 +149,7 @@ if (!effectiveType) {
 - Latest ticket remains MDT-008, confirming MDT-009 creation failed
 
 **Evidence**:
+
 ```bash
 $ ll docs/CRs/
 # Shows MDT-001 through MDT-008, no MDT-009

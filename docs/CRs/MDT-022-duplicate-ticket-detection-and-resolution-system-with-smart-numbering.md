@@ -43,12 +43,14 @@ Additionally, the ticket numbering system used inconsistent logic across differe
 Replaced inconsistent counter-only logic with intelligent numbering:
 
 **Old Logic (Dumb):**
+
 ```javascript
 // Only read counter file
 const nextNumber = parseInt(counterContent) || 1;
 ```
 
 **New Logic (Smart):**
+
 ```javascript
 // Scan existing tickets + check counter, use higher value
 const maxFromTickets = findHighestTicketNumber();

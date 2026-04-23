@@ -278,6 +278,7 @@ The `domain-contracts/dist/` folder is outdated and missing the `RESEARCH` type.
 **Root Cause**: The source file `domain-contracts/src/types/schema.ts` includes `RESEARCH`, but the built `dist/types/schema.d.ts` does not.
 
 **Resolution Required**:
+
 ```bash
 cd domain-contracts && npm run build
 ```
@@ -287,16 +288,19 @@ cd domain-contracts && npm run build
 ## Verification Steps
 
 1. **Rebuild domain-contracts**
+
    ```bash
    cd domain-contracts && npm run build
    ```
 
 2. **Build shared code**
+
    ```bash
    npm run build:shared
    ```
 
 3. **Start development servers**
+
    ```bash
    npm run dev:full
    ```

@@ -63,6 +63,7 @@ Efficient content discovery is essential for productivity. Users need to quickly
 ## 3. Implementation Specification
 
 ### FilterControls Component
+
 ```typescript
 interface FilterControlsProps {
   searchQuery: string

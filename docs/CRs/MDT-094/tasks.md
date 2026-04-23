@@ -72,6 +72,7 @@
 - Verify `normalizeTicketMetadata()` reuses helpers from `normalizeTicket()` (parseDate, normalizeArray)
 
 **Verify**:
+
 ```bash
 bun run --cwd shared test tests/models/MDT-094/TicketMetadata.test.ts
 ```
@@ -117,6 +118,7 @@ bun run --cwd shared test tests/models/MDT-094/TicketMetadata.test.ts
 - Do NOT copy YAML parsing logic - extract to shared helper if needed
 
 **Verify**:
+
 ```bash
 bun run --cwd shared test tests/services/MDT-094/MarkdownService.scanTicketMetadata.test.ts
 ```
@@ -166,6 +168,7 @@ bun run --cwd shared test tests/services/MDT-094/MarkdownService.scanTicketMetad
 - Do NOT duplicate worktree resolution - extract to shared helper if needed
 
 **Verify**:
+
 ```bash
 bun run --cwd shared test tests/services/MDT-094/MarkdownService.scanTicketMetadata.test.ts
 bun run build:shared
@@ -215,6 +218,7 @@ bun run build:shared
 - Verify controller delegates to service layer, does not implement business logic
 
 **Verify**:
+
 ```bash
 bun run --cwd server test tests/integration/api.metadata.test.ts
 ```
@@ -262,6 +266,7 @@ bun run --cwd server test tests/integration/api.metadata.test.ts
 - Do NOT duplicate normalization logic
 
 **Verify**:
+
 ```bash
 bun test src/services/dataLayer.metadata.test.ts
 ```

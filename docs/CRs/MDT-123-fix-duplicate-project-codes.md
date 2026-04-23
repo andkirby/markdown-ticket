@@ -58,6 +58,7 @@ Registry File System
 When agents, tests, or MCP tools call `ProjectRegistry.registerProject()` directly, they **bypass the CLI validation** and can register projects with duplicate codes.
 
 ### Current Validation (Wrong Layer)
+
 ```typescript
 // shared/tools/ProjectManager.ts lines 86-93
 // Only enforced when using CLI command "mdt project:create"
@@ -109,6 +110,7 @@ See: `docs/CRs/MDT-123/architecture.md` for detailed design.
 ### Error Output Format
 
 When duplicate code detected:
+
 ```
 Duplicate project code "MDT" detected:
 
@@ -147,6 +149,7 @@ The duplicate code check only applied to configs **without explicit IDs**, allow
    - Improved logging to show ID status: `(has ID: xxx)` or `(no ID in config)`
 
 **Algorithm** {#algorithm}:
+
 ```
 For each directory with .mdt-config.toml:
   1. If project.id is set and doesn't match directory name

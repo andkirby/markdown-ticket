@@ -22,6 +22,7 @@ Create a report here.
 ### Test Case 1.1: Basic Project Listing
 **Objective**: Verify the tool can list all available projects
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -31,6 +32,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Returns a list containing at least 17 projects
 - DEM project should be present with code "DEM"
@@ -51,6 +53,7 @@ Create a report here.
 ### Test Case 2.1: Get DEM Project Info
 **Objective**: Retrieve detailed information about the DEM project
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -62,6 +65,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Project key: "DEM"
 - Project path: "/Users/kirby/home/markdown-ticket/demo-project"
@@ -73,6 +77,7 @@ Create a report here.
 ### Test Case 2.2: Invalid Project Key
 **Objective**: Test error handling for non-existent project
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -84,6 +89,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Error indicating project not found
 - Appropriate error message
@@ -95,6 +101,7 @@ Create a report here.
 ### Test Case 3.1: List All CRs in DEM Project
 **Objective**: Retrieve all CRs for the DEM project
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -106,6 +113,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Array of CRs (initially empty)
 - Each CR should include: key, title, status, type, priority
@@ -114,6 +122,7 @@ Create a report here.
 ### Test Case 3.2: Filter CRs by Status
 **Objective**: Test status filtering
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -128,6 +137,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Only CRs with "Proposed" status
 - Empty array if no Proposed CRs exist
@@ -135,6 +145,7 @@ Create a report here.
 ### Test Case 3.3: Filter CRs by Type
 **Objective**: Test type filtering
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -149,6 +160,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Only CRs with "Feature Enhancement" type
 - Empty array if no such CRs exist
@@ -156,6 +168,7 @@ Create a report here.
 ### Test Case 3.4: Filter CRs by Priority
 **Objective**: Test priority filtering
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -170,6 +183,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Only CRs with "High" priority
 - Empty array if no High priority CRs exist
@@ -177,6 +191,7 @@ Create a report here.
 ### Test Case 3.5: Multiple Status Filter
 **Objective**: Test multiple status filtering
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -191,6 +206,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - CRs with either "Proposed" OR "In Progress" status
 
@@ -201,6 +217,7 @@ Create a report here.
 ### Test Case 4.1: Get Non-existent CR (Pre-creation)
 **Objective**: Test retrieval before CR exists
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -214,6 +231,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Error indicating CR not found
 - Appropriate error message
@@ -221,6 +239,7 @@ Create a report here.
 ### Test Case 4.2: Get CR Attributes Mode
 **Objective**: Test attributes-only mode (after CR creation)
 **Request** (to be executed after creating DEM-001):
+
 ```json
 {
   "method": "tools/call",
@@ -234,6 +253,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - YAML attributes only (no markdown content)
 - Fields: code, title, status, type, priority, etc.
@@ -241,6 +261,7 @@ Create a report here.
 ### Test Case 4.3: Get CR Metadata Mode
 **Objective**: Test metadata-only mode
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -254,6 +275,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Minimal metadata: key, title, status, type, priority
 - No detailed attributes or content
@@ -261,6 +283,7 @@ Create a report here.
 ### Test Case 4.4: Get CR Full Mode (Default)
 **Objective**: Test full CR retrieval
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -273,6 +296,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Complete CR with attributes and markdown content
 - All required sections present
@@ -284,6 +308,7 @@ Create a report here.
 ### Test Case 5.1: Create Feature Enhancement CR
 **Objective**: Create a basic Feature Enhancement CR
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -303,6 +328,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Created CR with key "DEM-001"
 - All provided attributes set correctly
@@ -312,6 +338,7 @@ Create a report here.
 ### Test Case 5.2: Create Bug Fix CR
 **Objective**: Create a Bug Fix CR
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -329,6 +356,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Created CR with key "DEM-002"
 - Type set to "Bug Fix"
@@ -337,6 +365,7 @@ Create a report here.
 ### Test Case 5.3: Create Architecture CR
 **Objective**: Create an Architecture CR
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -356,6 +385,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Created CR with key "DEM-003"
 - Type set to "Architecture"
@@ -364,6 +394,7 @@ Create a report here.
 ### Test Case 5.4: Create CR with Related Tickets
 **Objective**: Test CR creation with relationships
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -383,6 +414,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Created CR with key "DEM-004"
 - Related tickets properly linked
@@ -391,6 +423,7 @@ Create a report here.
 ### Test Case 5.5: Create CR with Assignee
 **Objective**: Test CR creation with assignee
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -409,6 +442,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Created CR with key "DEM-005"
 - Assignee properly set
@@ -420,6 +454,7 @@ Create a report here.
 ### Test Case 6.1: Update CR Status to Approved
 **Objective**: Test status update from Proposed to Approved
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -433,6 +468,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Status successfully updated to "Approved"
 - Confirmation of the change
@@ -440,6 +476,7 @@ Create a report here.
 ### Test Case 6.2: Update CR Status to In Progress
 **Objective**: Test status update to In Progress
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -453,12 +490,14 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Status successfully updated to "In Progress"
 
 ### Test Case 6.3: Update CR Status to Implemented
 **Objective**: Test final status update
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -472,12 +511,14 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Status successfully updated to "Implemented"
 
 ### Test Case 6.4: Update Non-existent CR Status
 **Objective**: Test error handling for invalid CR
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -491,6 +532,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Error indicating CR not found
 - Appropriate error message
@@ -498,6 +540,7 @@ Create a report here.
 ### Test Case 6.5: Put CR On Hold
 **Objective**: Test On Hold status
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -511,6 +554,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Status successfully updated to "On Hold"
 
@@ -521,6 +565,7 @@ Create a report here.
 ### Test Case 7.1: Update CR Priority
 **Objective**: Test priority attribute update
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -536,6 +581,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Priority successfully updated to "High"
 - Other attributes remain unchanged
@@ -543,6 +589,7 @@ Create a report here.
 ### Test Case 7.2: Update Multiple Attributes
 **Objective**: Test multiple attribute updates
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -560,6 +607,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - All specified attributes updated
 - Unspecified attributes remain unchanged
@@ -567,6 +615,7 @@ Create a report here.
 ### Test Case 7.3: Update CR Relationships
 **Objective**: Test relationship updates
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -583,6 +632,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Dependencies updated
 - Blocking relationships updated
@@ -590,6 +640,7 @@ Create a report here.
 ### Test Case 7.4: Update Implementation Details
 **Objective**: Test implementation date and notes
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -606,6 +657,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Implementation date recorded
 - Implementation notes saved
@@ -613,6 +665,7 @@ Create a report here.
 ### Test Case 7.5: Invalid Attribute Update
 **Objective**: Test error with invalid attributes
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -628,6 +681,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Error indicating invalid attribute
 - List of valid attributes provided
@@ -639,6 +693,7 @@ Create a report here.
 ### Test Case 8.1: List All Sections
 **Objective**: List all sections of a CR
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -652,6 +707,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - List of all sections with their structure
 - Should include: Description, Rationale, Solution Analysis, Implementation Specification, Acceptance Criteria
@@ -659,6 +715,7 @@ Create a report here.
 ### Test Case 8.2: Get Specific Section
 **Objective**: Retrieve a specific section
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -673,12 +730,14 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Content of Implementation Specification section only
 
 ### Test Case 8.3: Replace Section Content
 **Objective**: Replace entire section content
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -694,6 +753,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Section successfully replaced
 - New content saved
@@ -701,6 +761,7 @@ Create a report here.
 ### Test Case 8.4: Append to Section
 **Objective**: Add content to existing section
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -716,6 +777,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Content appended to section
 - Original content preserved
@@ -723,6 +785,7 @@ Create a report here.
 ### Test Case 8.5: Prepend to Section
 **Objective**: Add content at beginning of section
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -738,6 +801,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Content prepended to section
 - Original content follows
@@ -745,6 +809,7 @@ Create a report here.
 ### Test Case 8.6: Get Non-existent Section
 **Objective**: Test error for invalid section
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -759,6 +824,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Error indicating section not found
 - List of available sections provided
@@ -771,6 +837,7 @@ Create a report here.
 **Objective**: Delete a bug fix after implementation
 **Prerequisite**: Update DEM-002 status to "Implemented"
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -783,6 +850,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - CR successfully deleted
 - Confirmation of deletion
@@ -790,6 +858,7 @@ Create a report here.
 ### Test Case 9.2: Delete Non-Implemented CR
 **Objective**: Test deletion of non-implemented CR (delete_cr works for ANY ticket)
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -802,6 +871,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - CR successfully deleted
 - Confirmation of deletion
@@ -810,6 +880,7 @@ Create a report here.
 ### Test Case 9.3: Delete Non-existent CR
 **Objective**: Test error for non-existent CR
 **Request**:
+
 ```json
 {
   "method": "tools/call",
@@ -822,6 +893,7 @@ Create a report here.
   }
 }
 ```
+
 **Expected Response**:
 - Error indicating CR not found
 - Appropriate error message

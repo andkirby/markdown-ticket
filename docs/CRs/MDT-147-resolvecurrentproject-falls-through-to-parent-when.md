@@ -16,6 +16,7 @@ priority: Medium
 - Tickets created in a sub-project with its own config get filed under the parent project's code and counter
 
 ### Current Behavior (Wrong)
+
 ```
 # Working directory: /projects/parent/docs/child-project/
 # Has .mdt-config.toml with code=CH1
@@ -24,6 +25,7 @@ Created PAR-006  # ← parent project code, wrong
 ```
 
 ### Expected Behavior
+
 ```
 $ mdt-cli ticket create bug 'test'
 Created CH1-001  # ← local project code, correct

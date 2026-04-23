@@ -95,6 +95,7 @@ volumes:
 ## 📝 Example Project Files
 
 ### mdt.toml
+
 ```toml
 [project]
 name = "Markdown Ticket Board"
@@ -105,6 +106,7 @@ description = "Main project running in Docker container"
 ```
 
 ### debug.toml
+
 ```toml
 [project]
 name = "DEBUG for markdown project"

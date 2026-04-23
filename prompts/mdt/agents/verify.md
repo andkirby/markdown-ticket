@@ -44,6 +44,7 @@ smoke_test:
 ## Output (JSON)
 
 Pre-check:
+
 ```json
 {
   "operation": "pre-check",
@@ -60,6 +61,7 @@ Pre-check:
 ```
 
 Post-check:
+
 ```json
 {
   "operation": "post-check",

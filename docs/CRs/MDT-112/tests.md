@@ -399,6 +399,7 @@ Including available flags and syntax
 ## Verification
 
 Run tests (should all fail):
+
 ```bash
 ./scripts/metrics/tests/test_run.sh
 ```
@@ -406,6 +407,7 @@ Run tests (should all fail):
 Expected: **All tests fail (RED status)**
 
 Current test output:
+
 ```
 Tests run:    33
 Tests passed: 0

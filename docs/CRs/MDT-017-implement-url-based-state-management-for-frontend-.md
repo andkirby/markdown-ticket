@@ -21,6 +21,7 @@ Add URL-based routing to enable deep linking, browser navigation, and shareable 
 ## Solution Analysis
 
 ### URL Structure
+
 ```
 /                                          - redirect to current project
 /{ticketKey}                               - direct ticket access (MDT-1)
@@ -40,11 +41,13 @@ Add URL-based routing to enable deep linking, browser navigation, and shareable 
 
 ## Implementation
 ### 1. Install React Router
+
 ```bash
 npm install react-router-dom @types/react-router-dom
 ```
 
 ### 2. Route Configuration
+
 ```typescript
 <Routes>
   <Route path="/" element={<RedirectToCurrentProject />} />
@@ -60,6 +63,7 @@ npm install react-router-dom @types/react-router-dom
 ```
 
 ### 3. Key Normalization
+
 ```typescript
 function normalizeTicketKey(key: string) {
   const match = key.match(/^([A-Z]+)-(\d+)$/)

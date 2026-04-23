@@ -41,6 +41,7 @@
 **Canonical ID**: `TASK-1`
 
 **Structure**:
+
 ```
 src/components/QuickSearch/
   index.ts
@@ -82,6 +83,7 @@ src/hooks/
 - Use existing `bg-black/50` backdrop pattern from MODALS.md
 
 **Verify**:
+
 ```bash
 bun run build
 ```
@@ -142,6 +144,7 @@ bun run build
 - Verify no duplicate keyboard listener in App.tsx
 
 **Verify**:
+
 ```bash
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.ts --project=chromium --grep "opens modal|closes modal"
 ```
@@ -196,6 +199,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 - If similar filtering exists, extract to shared utility
 
 **Verify**:
+
 ```bash
 bun run --cwd src jest hooks/useQuickSearch.test.ts
 ```
@@ -256,6 +260,7 @@ bun run --cwd src jest hooks/useQuickSearch.test.ts
 - Reuse existing badge/status styling if available
 
 **Verify**:
+
 ```bash
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.ts --project=chromium --grep "filters tickets|shows.*No results|limits results"
 ```
@@ -313,6 +318,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.
 - Verify navigation uses existing routing pattern
 
 **Verify**:
+
 ```bash
 PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/quick-search/modal.spec.ts --project=chromium --grep "navigates results|selects ticket"
 ```

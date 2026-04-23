@@ -29,6 +29,7 @@ Project is TypeScript/Node.js if any of:
 | `*.cy.ts` | `login.cy.ts` | Cypress |
 
 **Directory patterns**:
+
 ```
 src/__tests__/           # Jest default
 src/**/*.test.ts         # Co-located tests
@@ -40,6 +41,7 @@ tests/unit/              # Unit tests
 ## BDD/Gherkin Examples
 
 **Playwright (E2E)**:
+
 ```typescript
 import { test, expect } from '@playwright/test';
 
@@ -70,6 +72,7 @@ test.describe('Feature: User Login', () => {
 ```
 
 **Vitest (Unit/Integration)**:
+
 ```typescript
 import { describe, it, expect, vi } from 'vitest';
 
@@ -100,6 +103,7 @@ describe('ModuleName', () => {
 ## Selector Patterns
 
 **Preferred (stable)**:
+
 ```typescript
 page.getByTestId('submit')           // data-testid attribute
 page.getByRole('button', { name: 'Submit' })  // ARIA role
@@ -108,6 +112,7 @@ page.getByText('Welcome')            // Visible text
 ```
 
 **Avoid (brittle)**:
+
 ```typescript
 page.locator('.btn.btn-primary')     // CSS classes change
 page.locator('div > form > button')  // DOM structure changes

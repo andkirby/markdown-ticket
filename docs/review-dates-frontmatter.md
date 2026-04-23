@@ -11,6 +11,7 @@ MDT should **keep** `dateCreated` and `lastModified` in YAML frontmatter. Frontm
 ### 1.1 Creation (✅ Works)
 
 **File**: `shared/services/CRService.ts:17-20`
+
 ```ts
 static createTicket(data: TicketData, ticketCode: string, ticketType: string, filePath: string) {
     const now = new Date()
@@ -24,6 +25,7 @@ static createTicket(data: TicketData, ticketCode: string, ticketType: string, fi
 ```
 
 **File**: `shared/services/TicketService.ts:693-700` (`formatCRAsMarkdown`)
+
 ```ts
 sections.push(`dateCreated: ${ticket.dateCreated?.toISOString() || new Date().toISOString()}`)
 // ... but NO lastModified is written!
@@ -34,6 +36,7 @@ sections.push(`dateCreated: ${ticket.dateCreated?.toISOString() || new Date().to
 ### 1.2 Reading (✅ Works with fallback)
 
 **File**: `shared/services/MarkdownService.ts:27-33`
+
 ```ts
 const stats = fs.statSync(filePath)
 if (!ticket.dateCreated) {
@@ -49,6 +52,7 @@ Same fallback in `extractTicketMetadata()` at line ~384. This is good defensive 
 ### 1.3 Status Updates via Shared Service (❌ Does NOT update `lastModified`)
 
 **File**: `shared/services/TicketService.ts:347-354`
+
 ```ts
 const updatedContent = this.updateYAMLField(content, 'status', status)
 // lastModified will be automatically set from file modification time
@@ -62,6 +66,7 @@ The comment `// lastModified will be automatically set from file modification ti
 ### 1.4 Attribute Updates via Shared Service (❌ Does NOT update `lastModified`)
 
 **File**: `shared/services/TicketService.ts:410-420`
+
 ```ts
 for (const [field, value] of Object.entries(attributes)) {
   if (value !== undefined && value !== null) {
@@ -77,6 +82,7 @@ Same problem. `updateCRAttrs()` updates the requested fields but never touches `
 ### 1.5 MCP `update_cr_status` (❌ Delegates to shared service)
 
 **File**: `mcp-server/src/services/crService.ts:52`
+
 ```ts
 async updateCRStatus(project: Project, key: string, status: CRStatus): Promise<boolean> {
     return this.ticketService.updateCRStatus(project, key, status)
@@ -88,6 +94,7 @@ Delegates to the shared `TicketService.updateCRStatus()` which has Bug #3 above.
 ### 1.6 MCP `update_cr_attrs` (❌ Delegates to shared service)
 
 **File**: `mcp-server/src/services/crService.ts:45-46`
+
 ```ts
 async updateCRAttrs(project: Project, key: string, attributes: Partial<TicketData>): Promise<boolean> {
     return this.ticketService.updateCRAttrs(project, key, attributes)
@@ -99,6 +106,7 @@ Same issue — delegates to `updateCRAttrs()` which doesn't touch `lastModified`
 ### 1.7 MCP `manage_cr_sections` (✅ Does update `lastModified`)
 
 **File**: `mcp-server/src/services/SectionManagement/SectionEditor.ts:200-204`
+
 ```ts
 // Step 6: Update YAML lastModified timestamp
 const now = new Date().toISOString()
@@ -113,6 +121,7 @@ This is the **only mutation path that correctly updates `lastModified` in frontm
 ### 1.8 Frontend Optimistic Updates (⚠️ Local only)
 
 **File**: `src/hooks/useTicketOperations.ts:147`
+
 ```ts
 setTickets((prevTickets: Ticket[]) =>
   prevTickets.map((ticket: Ticket) =>
@@ -128,6 +137,7 @@ The frontend sets `lastModified: new Date()` in local React state for optimistic
 ### 1.9 SSE Event Handling (⚠️ Trusts frontmatter)
 
 **File**: `server/services/fileWatcher/index.ts:159`
+
 ```ts
 lastModified: frontmatter.lastModified || new Date().toISOString(),
 ```
@@ -135,6 +145,7 @@ lastModified: frontmatter.lastModified || new Date().toISOString(),
 When a file changes, the SSE broadcast reads frontmatter's `lastModified` and sends it to the frontend. If frontmatter is stale, the frontend gets stale data.
 
 **File**: `src/hooks/useProjectManager.ts:83`
+
 ```ts
 { ...ticket, ...ticketData, lastModified: ticketData.lastModified || new Date() }
 ```
@@ -144,6 +155,7 @@ The frontend applies SSE data directly. If `ticketData.lastModified` is the stal
 ### 1.10 Sorting (✅ Works, depends on data quality)
 
 **File**: `src/utils/sorting.ts:26-28`
+
 ```ts
 case 'lastModified':
   aValue = a.lastModified || a.dateCreated
@@ -178,6 +190,7 @@ Sorting by "Update Date" uses `lastModified` with fallback to `dateCreated`. Whe
 ### Fix 1: Write `lastModified` on ticket creation (Bug #1)
 
 **File**: `shared/services/TicketService.ts:699` — add after `dateCreated`:
+
 ```ts
 sections.push(`dateCreated: ${ticket.dateCreated?.toISOString() || new Date().toISOString()}`)
 sections.push(`lastModified: ${ticket.lastModified?.toISOString() || new Date().toISOString()}`)
@@ -188,6 +201,7 @@ This ensures every new ticket starts with both dates in frontmatter.
 ### Fix 2: Update `lastModified` in `updateCRStatus()` (Bug #3)
 
 **File**: `shared/services/TicketService.ts:350-354` — change:
+
 ```ts
 const updatedContent = this.updateYAMLField(content, 'status', status)
 // DELETE the misleading comment: "lastModified will be automatically set from file modification time"
@@ -198,6 +212,7 @@ await fs.outputFile(cr.filePath, withTimestamp, 'utf-8')
 ### Fix 3: Update `lastModified` in `updateCRAttrs()` (Bug #4)
 
 **File**: `shared/services/TicketService.ts:418-420` — add before write:
+
 ```ts
 // Always update lastModified when any attribute changes
 updatedContent = this.updateYAMLField(updatedContent, 'lastModified', new Date().toISOString())

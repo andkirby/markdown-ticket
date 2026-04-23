@@ -19,6 +19,7 @@ $ARGUMENTS
 Use `{TICKETS_PATH}` in all file path templates below (if it's not defined read ticketsPath key from .mdt-config.toml).
 
 **Supported invocations**:
+
 ```bash
 /mdt:domain-audit MDT-077                    # Audit code touched by CR
 /mdt:domain-audit --path src/shared/services # Audit directory directly
@@ -105,6 +106,7 @@ Scan code to identify:
 | Events | Classes representing domain occurrences |
 
 **Output** (internal, not in report):
+
 ```
 Entities: Project, User, Order
 Services: ProjectService (primary business logic), ProjectValidator (validation)
@@ -126,6 +128,7 @@ Parse imports/requires to build dependency relationships:
    - Layer crossings (utils → handlers, domain → infrastructure)
 
 **Output** (internal, for analysis):
+
 ```
 ModifyOperation.ts
   → CRFileReader (utils/)
@@ -148,6 +151,7 @@ ValidationFormatter.ts
 - Aggregates don't encapsulate invariants
 
 **Evidence format**:
+
 ```
 Entity: Project.ts — data-only (getters/setters, no behavior)
 Service: ProjectService.ts — most business logic and validations
@@ -161,6 +165,7 @@ Service: ProjectService.ts — most business logic and validations
 - Flag direct instantiation or modification outside aggregate
 
 **Evidence format**:
+
 ```
 Internal: ProjectConfig (should be accessed via Project)
 Leak: ConfigLoader.ts:45 — directly modifies ProjectConfig
@@ -173,6 +178,7 @@ Leak: ConfigLoader.ts:45 — directly modifies ProjectConfig
 - Signals: validation logic nearby, formatting/parsing, semantic meaning
 
 **Evidence format**:
+
 ```
 Field: code: string (in Project.ts)
 Validation: validateCode() called in 3 locations
@@ -187,6 +193,7 @@ Concept: ProjectCode (2-5 uppercase letters)
 - Count occurrences
 
 **Evidence format**:
+
 ```
 Rule: "Project code must be 2-5 uppercase letters"
 Locations: ProjectValidator.ts:23, ProjectService.ts:156, project-cli.ts:89
@@ -200,6 +207,7 @@ Count: 3 (should be 1)
 - Check for "orphan" operations on internal entities
 
 **Evidence format**:
+
 ```
 Entity: RegistryEntry (internal to Project)
 Operation: updateRegistry() modifies RegistryEntry directly
@@ -213,6 +221,7 @@ Expected: Project.updateRegistry() should be entry point
 - Check for atomic operations spanning aggregate boundaries
 
 **Evidence format**:
+
 ```
 Function: createProjectWithDocuments()
 Modifies: Project (aggregate), DocumentTree (aggregate)
@@ -226,6 +235,7 @@ Issue: Should use domain events for eventual consistency
 - Check for tight coupling where events would decouple
 
 **Evidence format**:
+
 ```
 Coupling: ProjectService.ts:234 calls DocumentDiscovery.scan() directly
 Contexts: Project Management → Document Discovery
@@ -239,6 +249,7 @@ Pattern: Should emit ProjectCreated event, DocumentDiscovery subscribes
 - Flag significant mismatches
 
 **Evidence format**:
+
 ```
 Domain term: "Three-Strategy Configuration"
 Code term: ConfigurationStrategyService, StrategyType enum
@@ -253,6 +264,7 @@ Drift: Moderate — concept exists but naming diverges
 - Service touches many entities across aggregates
 
 **Evidence format**:
+
 ```
 Service: ProjectService.ts
 Signals: orchestration + validation + persistence + cross-aggregate coordination
@@ -267,6 +279,7 @@ Entities touched: Project, Config, Registry, Cache, Validator
 - Logic that "should" live in the entity
 
 **Evidence format**:
+
 ```
 Method: ProjectService.calculateProjectStats()
 Accesses: project.name, project.code, project.config, project.registry (4 fields)
@@ -295,6 +308,7 @@ Suggestion: Move to Project.getStats()
 - Repository contains business rules
 
 **Evidence format**:
+
 ```
 File: utils/section/ValidationFormatter.ts
 Location layer: Utils/Infrastructure
@@ -318,6 +332,7 @@ Fix direction: Move to handlers/sections/SectionPresenter.ts
 - Files with same domain concept in 3+ different directories
 
 **Evidence format**:
+
 ```
 Concept: Section manipulation
 Scattered across:
@@ -344,6 +359,7 @@ Fix direction: Consolidate to handlers/sections/
 - Methods grouped by concern that don't interact
 
 **Evidence format**:
+
 ```
 File: ModifyOperation.ts
 Responsibilities detected:
@@ -364,6 +380,7 @@ Fix direction: Extract HeaderRenamer utility, keep orchestration only
   - Skip violations: lower layer reaching up
 
 **Layer order** (lower should not import higher):
+
 ```
 1. Presentation (handlers, controllers, CLI)
 2. Application (use cases, orchestration)
@@ -372,6 +389,7 @@ Fix direction: Extract HeaderRenamer utility, keep orchestration only
 ```
 
 **Evidence format**:
+
 ```
 Cycle detected:
   ServiceA.ts → ServiceB.ts → ServiceC.ts → ServiceA.ts
@@ -395,6 +413,7 @@ Severity: High (cycles), Medium (direction)
 - Utility with domain-specific naming (e.g., `CRFileReader`)
 
 **Evidence format**:
+
 ```
 Orphan: utils/section/CRFileReader.ts
 Used by: Only handlers/operations/ModifyOperation.ts (and related)
@@ -412,6 +431,7 @@ After analyzing violations and structure, synthesize:
 4. **Natural Grouping**: What should live together?
 
 **Output format**:
+
 ```markdown
 ## Domain Concept
 
@@ -420,10 +440,12 @@ After analyzing violations and structure, synthesize:
 **Current State**: Scattered (6 files, 3 directories)
 **Natural Grouping**:
 ```
+
 handlers/sections/
 ├── SectionService.ts      # Core: find, read, modify
 ├── SectionPresenter.ts    # Format tool output  
 └── models.ts              # SectionMatch, ModifyResult
+
 ```
 ```
 
@@ -490,10 +512,12 @@ handlers/sections/
 ## Dependency Analysis
 
 ```
+
 {Primary file}
   ├── {dependency} ({location})
   ├── {dependency} ({location}) ← {issue if any}
   └── {dependency} ({location})
+
 ```
 
 {Note any cycles or direction violations}
@@ -505,7 +529,9 @@ handlers/sections/
 **Current State**: {Scattered / Partially cohesive / Cohesive}
 **Natural Grouping**:
 ```
+
 {suggested structure}
+
 ```
 
 ## Recommendations
@@ -640,6 +666,7 @@ To fix violations:
 ## Dependency Analysis
 
 ```
+
 ModifyOperation.ts (handlers/operations/)
   ├── CRFileReader (utils/section/)
   ├── SectionResolver (utils/section/)
@@ -649,6 +676,7 @@ ModifyOperation.ts (handlers/operations/)
   ├── MarkdownSectionService (shared/)
   ├── MarkdownService (shared/)
   └── CRService (services/)
+
 ```
 
 No cycles detected.
@@ -661,11 +689,13 @@ Direction issue: utils/ValidationFormatter contains presentation logic.
 **Current State**: Scattered (6 files, 3 directories)
 **Natural Grouping**:
 ```
+
 handlers/sections/
 ├── SectionService.ts      # Core: find, read, modify
 ├── SectionPresenter.ts    # Format tool output (from ValidationFormatter)
 ├── SectionHandlers.ts     # MCP tool interface
 └── models.ts              # SectionMatch, ModifyResult
+
 ```
 
 ## Recommendations
@@ -873,6 +903,7 @@ Before completing, verify:
 **Output feeds**: `/mdt:architecture --prep` consumes audit findings
 
 **Workflow position**:
+
 ```
 /mdt:assess
     │

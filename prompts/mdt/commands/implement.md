@@ -303,6 +303,7 @@ Options: [Yes (Recommended)] [No, keep In Progress]
 ```
 
 If approved:
+
 ```
 mcp__mdt-all__update_cr_status(project=PROJECT_CODE, key=CR-KEY, status="Implemented")
 ```
@@ -328,6 +329,7 @@ If declined, leave status as "In Progress".
 ## Integration
 
 **Workflow position**:
+
 ```
 Feature:     requirements → bdd → architecture → tests → tasks → implement
 Refactoring: assess → bdd --prep → architecture --prep → tests --prep → tasks --prep → implement --prep
@@ -337,6 +339,7 @@ Refactoring: assess → bdd --prep → architecture --prep → tests --prep → 
 **After**: `/mdt:tech-debt` catches remaining issues
 
 **Folder Structure**:
+
 ```
 {TICKETS_PATH}/{CR-KEY}/
 ├── bdd.md

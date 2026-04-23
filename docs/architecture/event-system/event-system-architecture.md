@@ -172,6 +172,7 @@ graph TB
 **Impact**: Changes to one part break others. Hard to test. Difficult to debug.
 
 **Example**:
+
 ```typescript
 // In useMultiProjectData - doing TOO MUCH
 useEffect(() => {
@@ -230,22 +231,26 @@ useEffect(() => {
 The app uses 4 different event mechanisms:
 
 1. **Class-based EventEmitter** (RealtimeFileWatcher)
+
    ```typescript
    this.onChange = callback;
    if (this.onChange) this.onChange(data);
    ```
 
 2. **SSE EventSource** (Browser API)
+
    ```typescript
    eventSource.onmessage = (event) => { ... }
    ```
 
 3. **Window Custom Events** (for project creation)
+
    ```typescript
    window.dispatchEvent(new CustomEvent('projectCreated', { detail }));
    ```
 
 4. **React State Updates**
+
    ```typescript
    setTickets(prev => [...prev]);
    ```
@@ -1011,6 +1016,7 @@ If issues arise:
 ### Risk Mitigation
 
 1. **Feature Flags**
+
    ```typescript
    const USE_NEW_SYSTEM = import.meta.env.VITE_NEW_EVENT_SYSTEM === 'true';
    ```
@@ -1034,6 +1040,7 @@ If issues arise:
 ### Unit Tests
 
 #### EventBus Tests
+
 ```typescript
 describe('EventBus', () => {
   it('should notify subscribers when event is emitted', () => {
@@ -1063,6 +1070,7 @@ describe('EventBus', () => {
 ```
 
 #### SSEClient Tests
+
 ```typescript
 describe('SSEClient', () => {
   it('should emit EventBus events when SSE messages received', () => {

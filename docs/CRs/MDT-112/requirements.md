@@ -29,6 +29,7 @@ N/A — This is a feature enhancement.
 ### Git Diff File Discovery (Mode 1: No arguments)
 
 **Git command pattern**:
+
 ```bash
 changed_files=$(echo -e "$(git diff --name-only | grep '' && git ls-files --others --exclude-standard)" | grep -v '/$' | grep '\.ts' | xargs)
 ```
@@ -41,6 +42,7 @@ changed_files=$(echo -e "$(git diff --name-only | grep '' && git ls-files --othe
 - `xargs` — formats as space-separated list for tsg
 
 **tsg command pattern**:
+
 ```bash
 tsg --tsconfig {all_tsconfigs} --stdout metrics --include ${changed_files} | grep -v '==='
 ```
@@ -48,6 +50,7 @@ tsg --tsconfig {all_tsconfigs} --stdout metrics --include ${changed_files} | gre
 ### Path-Based Mode (Mode 2: With path argument)
 
 **tsconfig detection**:
+
 ```bash
 # Path argument: ./shared/test-lib/ticket
 # Detected tsconfig: shared
@@ -55,6 +58,7 @@ tsg --tsconfig {all_tsconfigs} --stdout metrics --include ${changed_files} | gre
 ```
 
 **tsg command pattern**:
+
 ```bash
 tsg --tsconfig {detected} {path} --exclude excludeFiles dist --exclude excludeFiles node_modules --stdout metrics | grep -v '==='
 ```
@@ -95,6 +99,7 @@ tsg --tsconfig {detected} {path} --exclude excludeFiles dist --exclude excludeFi
 | `COC_RED_MIN` | Cognitive Complexity red zone lower bound | 21 | 1+ | Microsoft standard |
 
 **Configuration file format** (`.confrc.sample`):
+
 ```bash
 # TypeScript configs (space-separated, in priority order)
 # These are passed to tsg as: --tsconfig . --tsconfig shared --tsconfig mcp-server ...
@@ -122,6 +127,7 @@ COC_RED_MIN=21
 - Script sources `.confrc` if present, otherwise uses built-in defaults
 
 **Building tsg command from TSCONFIGS**:
+
 ```bash
 # Build --tsconfig flags
 TSFLAGS=""
@@ -157,6 +163,7 @@ shared/test-lib/ticket/ticket-creator.ts             40.88    12     12    YLW
 ### Optional: JSON Format (`--json` flag)
 
 Standard `tsg` JSON output, pass-through with filtering applied:
+
 ```json
 {
   "metrics": [

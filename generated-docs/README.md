@@ -121,12 +121,14 @@ Model Context Protocol server for AI assistant integration:
 ## Installation & Setup
 
 1. **Clone the repository**:
+
    ```bash
    git clone <repository-url>
    cd markdown-ticket
    ```
 
 2. **Install dependencies**:
+
    ```bash
    bun install
    bun install --cwd server
@@ -134,6 +136,7 @@ Model Context Protocol server for AI assistant integration:
    ```
 
 3. **Start the development environment**:
+
    ```bash
    # Terminal 1: Start backend server
    cd server && npm start
@@ -150,6 +153,7 @@ Model Context Protocol server for AI assistant integration:
 ## MCP Integration Setup
 
 ### For Amazon Q CLI:
+
 ```bash
 q mcp add --name mdt-all \
   --command "node" \
@@ -158,6 +162,7 @@ q mcp add --name mdt-all \
 ```
 
 ### For Claude Code:
+
 ```bash
 claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 ```
@@ -184,12 +189,14 @@ claude mcp add mdt-all node $HOME/markdown-ticket/mcp-server/dist/index.js
 Since this application runs locally, cleanup involves:
 
 1. **Stop running services**:
+
    ```bash
    # Stop development servers (Ctrl+C in terminals)
    # Stop any background MCP servers
    ```
 
 2. **Remove generated files** (optional):
+
    ```bash
    rm -rf node_modules
    rm -rf server/node_modules
@@ -198,6 +205,7 @@ Since this application runs locally, cleanup involves:
    ```
 
 3. **Remove MCP configurations** (if no longer needed):
+
    ```bash
    q mcp remove mdt-all
    # or

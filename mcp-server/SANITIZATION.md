@@ -85,12 +85,14 @@ This script tests both transports with and without sanitization enabled.
 ## Example
 
 ### Without Sanitization (Default)
+
 ```javascript
 // Tool output containing malicious content
 "<script>alert('xss')</script><p>Safe content</p>"
 ```
 
 ### With Sanitization Enabled
+
 ```javascript
 // Sanitized output
 "Safe content"

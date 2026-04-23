@@ -109,6 +109,7 @@ A web-based dashboard that provides:
 - Backward compatibility with existing `.{project.code}-config.toml` files
 
 ### API Endpoints
+
 ```
 GET /api/projects                    # List all registered projects
 GET /api/projects/:id/crs           # List CRs for specific project
@@ -120,6 +121,7 @@ GET /api/projects/:id/config        # Get project configuration
 ```
 
 ### Configuration Schema
+
 ```toml
 # ~/.config/markdown-ticket/config.toml
 [dashboard]
@@ -193,6 +195,7 @@ The Multi-Project CR Management Dashboard has been successfully implemented, pro
 - **Registry Management**: Project registration and status tracking
 
 ##### Multi-Project API Endpoints (added to `server/server.js`)
+
 ```
 GET    /api/projects                    # List all registered projects
 GET    /api/projects/:id/config         # Get project configuration
@@ -432,6 +435,7 @@ Added support for project-specific ticket code formats, enabling different proje
 **Technical Implementation**:
 
 ##### Backend Changes (`server/server.js`)
+
 ```javascript
 // Added project-specific code generation function
 function generateProjectSpecificCode(project, config, nextNumber) {
@@ -451,15 +455,18 @@ function generateProjectSpecificCode(project, config, nextNumber) {
 ```
 
 ##### File Parsing Fix (`server/projectDiscovery.js`)
+
 ```javascript
 // Updated regex to support both standard and custom formats
 const crFiles = fs.readdirSync(fullCRPath)
   .filter(file => file.endsWith('.md') && file.match(/^[A-Z]+-([A-Z]\d{3}|\d{3})-/));
 ```
+
 **Before**: Only matched `CR-001-`, `MDT-002-` (standard 3-digit format)
 **After**: Matches both `CR-001-` and `CR-A001-`, `CR-B001-` (letter+3-digit format)
 
 ##### Frontend Enhancement (`src/hooks/useMultiProjectData.ts`)
+
 ```typescript
 // New hook with project-specific code generation
 interface UseMultiProjectDataReturn {

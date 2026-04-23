@@ -213,6 +213,7 @@ npm run build
 - Empty `types.ts` file (will populate in Task 1.2)
 
 **Verify**:
+
 ```bash
 ls -la mcp-server/src/services/SectionManagement/
 ```
@@ -254,6 +255,7 @@ ls -la mcp-server/src/services/SectionManagement/
 - Define domain-specific types here only
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/services/SectionManagement/types.ts  # ≤ 50
 npm test -- sectionHandlers.test.ts  # Should still pass (types not used yet)
@@ -300,6 +302,7 @@ npm test -- sectionHandlers.test.ts  # Should still pass (types not used yet)
 - Don't copy logic — delegate to existing code
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/services/SectionManagement/SectionService.ts  # ≤ 80
 npm test -- sectionHandlers.test.ts  # Should still pass
@@ -343,6 +346,7 @@ npm test                              # All 41 tests
 - Don't duplicate any logic
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/tools/handlers/sectionHandlers.ts  # ≤ 50
 npm test -- sectionHandlers.test.ts  # All 23 unit tests
@@ -400,6 +404,7 @@ npm test                              # All 41 tests
 - Don't copy section parsing logic
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/services/SectionManagement/SectionRepository.ts  # ≤ 150
 npm test -- --testNamePattern="list operation"  # 5 tests GREEN
@@ -449,6 +454,7 @@ npm test                                        # All 41 tests
 - Don't copy sanitization logic
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/services/SectionManagement/ContentProcessor.ts  # ≤ 125
 npm test -- --testNamePattern="replace operation"  # 6 tests GREEN
@@ -508,6 +514,7 @@ npm test                                            # All 41 tests
 - Don't copy modification logic
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/services/SectionManagement/SectionEditor.ts  # ≤ 175
 npm test -- --testNamePattern="replace operation"  # 6 tests GREEN
@@ -564,6 +571,7 @@ npm test                                            # All 41 tests
 - Don't copy section matching logic
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/services/SectionManagement/PathResolver.ts  # ≤ 200
 npm test -- --testNamePattern="get operation"           # 7 tests GREEN
@@ -618,6 +626,7 @@ npm test                                                 # All 41 tests
 - Don't copy formatting logic from handlers
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/services/SectionManagement/SectionPresenter.ts  # ≤ 100
 npm test -- --testNamePattern="error handling"  # 5 tests GREEN
@@ -668,6 +677,7 @@ npm test                                          # All 41 tests
 - Don't duplicate any logic
 
 **Verify**:
+
 ```bash
 wc -l mcp-server/src/services/SectionManagement/SectionService.ts  # ≤ 80
 npm test -- sectionHandlers.test.ts    # All 23 unit tests
@@ -702,6 +712,7 @@ npm test                               # All 41 tests
 - `mcp-server/src/tools/handlers/operations/ModifyOperation.ts` → merged into SectionEditor
 
 **Verify**:
+
 ```bash
 # Check old files don't exist
 ls mcp-server/src/utils/section/ 2>&1 | grep "No such file"
@@ -727,6 +738,7 @@ npm test
 - See "Size Thresholds (Prep Mode)" table above
 
 **Verify**:
+
 ```bash
 # Check file sizes
 find mcp-server/src/services/SectionManagement/ -name "*.ts" -exec wc -l {} \; | awk '{if($1 > 0) print}'
@@ -761,6 +773,7 @@ find mcp-server/src/services/SectionManagement/ -name "*.ts" -exec wc -l {} \; |
 - Build succeeds
 
 **Verify**:
+
 ```bash
 # All tests
 cd mcp-server
@@ -792,6 +805,7 @@ tree mcp-server/src/services/SectionManagement/ -L 1
 **Purpose**: Ensure logic exists in ONE location only
 
 **Verify**:
+
 ```bash
 # Check for duplicate section parsing
 grep -r "findSection" mcp-server/src/ --include="*.ts" | grep -v "SectionManagement" | grep -v ".test.ts"
@@ -816,6 +830,7 @@ grep -r "validateSection" mcp-server/src/ --include="*.ts" | grep -v "SectionMan
 **Purpose**: Ensure refactoring preserved all behaviors
 
 **Verify**:
+
 ```bash
 cd mcp-server
 

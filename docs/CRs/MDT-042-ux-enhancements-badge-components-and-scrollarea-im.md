@@ -42,6 +42,7 @@ Comprehensive UX improvements to enhance visual consistency and user experience 
 ## Technical Implementation
 
 ### Badge Components
+
 ```tsx
 // Status badges with semantic colors
 <Badge variant={getStatusVariant(ticket.status)}>
@@ -56,6 +57,7 @@ Comprehensive UX improvements to enhance visual consistency and user experience 
 ```
 
 ### ScrollArea Configuration
+
 ```tsx
 <ScrollArea
   type="hover"
@@ -121,6 +123,7 @@ Comprehensive UX improvements to enhance visual consistency and user experience 
 - Handle tickets in hidden backlog column gracefully
 
 **Technical Approach**:
+
 ```tsx
 // New hook for backlog visibility
 function useBacklogVisibility() {

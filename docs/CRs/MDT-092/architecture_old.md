@@ -136,6 +136,7 @@ shared/test-lib/
 ## Implementation Details
 
 ### Port Configuration
+
 ```typescript
 // config/ports.ts
 export const TEST_PORTS = {
@@ -146,6 +147,7 @@ export const TEST_PORTS = {
 ```
 
 ### Usage Example
+
 ```typescript
 // In test file
 import { TestEnvironment, TicketFactory } from '@mdt/test-lib'

@@ -184,6 +184,7 @@ To add new E2E tests: First add selector to `tests/e2e/utils/selectors.ts`, then
 ## Verification
 
 After prep implementation:
+
 ```bash
 # Verify all selectors have matching data-testid in components
 grep -r "data-testid=" src/components/ | wc -l  # Should increase significantly

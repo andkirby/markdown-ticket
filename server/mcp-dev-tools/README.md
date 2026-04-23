@@ -57,6 +57,7 @@ This MCP server integrates with the main application via API endpoints rather th
 ### MCP Integration
 
 **Claude Desktop** (`.claude/settings.local.json`):
+
 ```json
 {
   "mcpServers": {
@@ -73,6 +74,7 @@ This MCP server integrates with the main application via API endpoints rather th
 ```
 
 **Amazon Q CLI** (`.amazonq/mcp.json`):
+
 ```json
 {
   "mcpServers": {
@@ -95,6 +97,7 @@ This MCP server integrates with the main application via API endpoints rather th
 ## Development Setup
 
 ### Build the MCP Server
+
 ```bash
 cd server/mcp-dev-tools
 bun install
@@ -102,6 +105,7 @@ bun run build
 ```
 
 ### Health Check
+
 ```bash
 # Run health check via npm
 bun run health-check
@@ -116,6 +120,7 @@ The health check verifies that:
 - No critical startup errors occur
 
 ### Start Development Environment
+
 ```bash
 # Terminal 1: Start backend
 cd server
@@ -132,6 +137,7 @@ npm start
 ### Testing MCP Tools
 
 **With Claude Desktop**:
+
 ```
 Get the last 20 lines of frontend logs
 Show me any error messages in the frontend logs
@@ -139,6 +145,7 @@ Check if the frontend development server is running
 ```
 
 **With Amazon Q CLI**:
+
 ```bash
 q chat "Check the frontend development status using MCP"
 q chat "Show me recent frontend logs with any errors"

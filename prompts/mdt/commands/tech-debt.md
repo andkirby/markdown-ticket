@@ -154,6 +154,7 @@ Create `{TICKETS_PATH}/{CR-KEY}/debt.md`:
 
 ---
 *Generated: {timestamp}*
+
 ```
 
 ### Step 6: Save Report

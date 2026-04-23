@@ -588,26 +588,31 @@ describe('MCP-Backend Simplified Consistency', () => {
 ### DO
 
 1. **Mock external dependencies**
+
    ```typescript
    jest.mock('@mdt/shared/services/ProjectService')
    ```
 
 2. **Test delegation, not implementation**
+
    ```typescript
    expect(service.method).toHaveBeenCalledWith(expectedArgs)
    ```
 
 3. **Verify consistency across access methods**
+
    ```typescript
    expect(mcpResult).toEqual(apiResult)
    ```
 
 4. **Test error handling**
+
    ```typescript
    await expect(handler()).rejects.toThrow('expected error')
    ```
 
 5. **Reset mocks between tests**
+
    ```typescript
    beforeEach(() => {
      jest.clearAllMocks()
@@ -617,6 +622,7 @@ describe('MCP-Backend Simplified Consistency', () => {
 ### DON'T
 
 1. **Don't test private methods**
+
    ```typescript
    // ❌ WRONG
    expect(handler.privateMethod()).toBe(true)
@@ -626,6 +632,7 @@ describe('MCP-Backend Simplified Consistency', () => {
    ```
 
 2. **Don't duplicate implementation in tests**
+
    ```typescript
    // ❌ WRONG - re-implementing logic
    const result = handler.calculate(input)
@@ -636,6 +643,7 @@ describe('MCP-Backend Simplified Consistency', () => {
    ```
 
 3. **Don't test mocked services**
+
    ```typescript
    // ❌ WRONG - testing the mock, not the code
    expect(mockService.method).toHaveBeenCalled()
@@ -646,6 +654,7 @@ describe('MCP-Backend Simplified Consistency', () => {
    ```
 
 4. **Don't share state between tests**
+
    ```typescript
    // ❌ WRONG
    let sharedState: any

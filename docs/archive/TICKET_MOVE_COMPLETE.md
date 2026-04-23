@@ -48,6 +48,7 @@ This document provides a complete overview of the ticket move integration that h
 ### 3. Integration Flow ✅
 
 #### Complete End-to-End Process
+
 ```
 User Drag → Column Drop → Board Processing → Backend Update → File Save → UI Refresh
 ```
@@ -78,6 +79,7 @@ User Drag → Column Drop → Board Processing → Backend Update → File Save 
 ## How to Use the Ticket Move Feature
 
 ### Quick Start
+
 ```bash
 # 1. Install dependencies
 bun install
@@ -141,6 +143,7 @@ Board.tsx: Board: Ticket moved successfully
 - `GET /api/status` - Server health check
 
 #### File Structure
+
 ```
 tasks/
 ├── CR-A001.md    # Individual ticket files
@@ -150,6 +153,7 @@ tasks/
 ```
 
 #### File Format
+
 ```markdown
 ---
 code: CR-A001
@@ -289,6 +293,7 @@ Implement a comprehensive user authentication system...
 - **Check**: Disk space
 
 ### Debug Commands
+
 ```bash
 # Check server status
 curl http://localhost:3001/api/status

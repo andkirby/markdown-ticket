@@ -68,6 +68,7 @@ Real-time collaboration requires accurate file change detection:
 ### 4.1 SSE Event Structure (Interface)
 
 **FileChangeEvent:**
+
 ```
 eventType: 'add' | 'change' | 'unlink'
 projectId: string

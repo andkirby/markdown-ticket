@@ -134,6 +134,7 @@ Implement Repository Pattern to provide unified interface to project data regard
 | 4 | Removed MCP duplicate | Revert commits |
 
 ### Deployment Steps
+
 ```bash
 # Build shared code
 npm run build:shared

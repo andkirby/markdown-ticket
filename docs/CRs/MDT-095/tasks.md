@@ -44,6 +44,7 @@
 **Anti-duplication**: Import types from `@mdt/domain-contracts` where applicable
 
 **Verify**:
+
 ```bash
 npm test -- --testPathPattern="WorktreeTypes.test.ts"
 npm test -- --testPathPattern="WorktreeService.test.ts" --testNamePattern="interface|constructor"
@@ -81,6 +82,7 @@ npm test -- --testPathPattern="WorktreeService.test.ts" --testNamePattern="inter
 **Anti-duplication**: Use Node's `child_process.execFile` (not shell strings) — do NOT use `exec` with string interpolation
 
 **Verify**:
+
 ```bash
 npm test -- --testPathPattern="WorktreeService.test.ts"
 ```
@@ -117,6 +119,7 @@ npm test -- --testPathPattern="WorktreeService.test.ts"
 **Anti-duplication**: Import `WorktreeService` from `@mdt/shared/services/WorktreeService` — do NOT copy detection logic
 
 **Verify**:
+
 ```bash
 npm test -- --testPathPattern="ProjectService.worktree.test.ts"
 ```
@@ -151,6 +154,7 @@ npm test -- --testPathPattern="ProjectService.worktree.test.ts"
 **Anti-duplication**: Import `WorktreeService` from `@mdt/shared/services/WorktreeService` — do NOT re-implement detection
 
 **Verify**:
+
 ```bash
 npm test -- --testPathPattern="fileWatcherService.worktree.test.ts"
 ```
@@ -185,6 +189,7 @@ npm test -- --testPathPattern="fileWatcherService.worktree.test.ts"
 **Anti-duplication**: Import `WorktreeService` from `@mdt/shared/services/WorktreeService` — do NOT copy resolution logic
 
 **Verify**:
+
 ```bash
 npm test -- --testPathPattern="TicketService.worktree.test.ts"
 ```
@@ -218,6 +223,7 @@ npm test -- --testPathPattern="TicketService.worktree.test.ts"
 **Anti-duplication**: Get worktree info from TicketService — do NOT call WorktreeService directly from routes
 
 **Verify**:
+
 ```bash
 npm test -- --testPathPattern="crs.worktree.test.ts"
 ```
@@ -253,6 +259,7 @@ npm test -- --testPathPattern="crs.worktree.test.ts"
 **Anti-duplication**: Import `WorktreeService` from `@mdt/shared/services/WorktreeService` — do NOT copy resolution logic
 
 **Verify**:
+
 ```bash
 cd mcp-server && npm test -- --testPathPattern="crHandlers.worktree.test.ts"
 ```
@@ -287,6 +294,7 @@ cd mcp-server && npm test -- --testPathPattern="crHandlers.worktree.test.ts"
 **Anti-duplication**: Extend existing Ticket interface — do NOT create new WorktreeTicket type
 
 **Verify**:
+
 ```bash
 npm test -- --testPathPattern="ticket.worktree.test.ts"
 ```
@@ -321,6 +329,7 @@ npm test -- --testPathPattern="ticket.worktree.test.ts"
 **Anti-duplication**: Use existing Badge component from `./UI/badge` — do NOT create new badge component
 
 **Verify**:
+
 ```bash
 npm test -- --testPathPattern="TicketCard.worktree.test.tsx"
 ```
@@ -355,6 +364,7 @@ npm test -- --testPathPattern="TicketCard.worktree.test.tsx"
 **Anti-duplication**: Use existing Badge component — do NOT create new badge styles
 
 **Verify**:
+
 ```bash
 npm test -- --testPathPattern="TicketRow.worktree.test.tsx"
 ```

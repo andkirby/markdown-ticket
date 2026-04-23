@@ -117,6 +117,7 @@ And all ports should be within valid range (1024-65535)
 ## Verification
 
 Run E2E tests (should all fail):
+
 ```bash
 npm run test:e2e -- tests/e2e/MDT-092-isolation.spec.ts
 ```
@@ -124,6 +125,7 @@ npm run test:e2e -- tests/e2e/MDT-092-isolation.spec.ts
 Expected: **15 failed, 0 passed**
 
 Run unit tests (should all fail):
+
 ```bash
 npm test tests/unit/shared/test-lib/
 ```

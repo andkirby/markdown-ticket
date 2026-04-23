@@ -11,6 +11,7 @@ Backend → SSE Stream → Frontend Handler → Custom DOM Events → React Comp
 ## SSE Event Types
 
 ### 1. Connection Event
+
 ```javascript
 {
   type: "connection",
@@ -20,11 +21,13 @@ Backend → SSE Stream → Frontend Handler → Custom DOM Events → React Comp
   }
 }
 ```
+
 - **Purpose**: Confirms SSE connection establishment
 - **Sent**: When client connects to `/api/events`
 - **Frontend Action**: Logs connection confirmation
 
 ### 2. File Change Event
+
 ```javascript
 {
   type: "file-change", 
@@ -36,11 +39,13 @@ Backend → SSE Stream → Frontend Handler → Custom DOM Events → React Comp
   }
 }
 ```
+
 - **Purpose**: Real-time file system changes
 - **Triggers**: File add/modify/delete in project directories
 - **Frontend Action**: Refreshes ticket lists for affected project
 
 ### 3. Project Created Event
+
 ```javascript
 {
   type: "project-created",
@@ -51,17 +56,20 @@ Backend → SSE Stream → Frontend Handler → Custom DOM Events → React Comp
   }
 }
 ```
+
 - **Purpose**: Notifies when new project is created
 - **Triggers**: Successful project creation via `/api/projects/create`
 - **Frontend Action**: Triggers `refreshProjects()` without page reload
 
 ### 4. Heartbeat Event
+
 ```javascript
 {
   type: "heartbeat",
   data: { ... }
 }
 ```
+
 - **Purpose**: Keep-alive mechanism
 - **Frontend Action**: Silent acknowledgment
 
@@ -75,6 +83,7 @@ Backend → SSE Stream → Frontend Handler → Custom DOM Events → React Comp
 - **Client Management**: FileWatcherService handles client connections
 
 #### Event Broadcasting
+
 ```javascript
 // File changes
 fileWatcher.broadcastFileChange(eventType, filename, projectId);
@@ -98,6 +107,7 @@ fileWatcher.clients.forEach(client => {
 - **Event Queue**: Stores last 50 events for new connections
 
 #### Custom DOM Events
+
 ```javascript
 // SSE → Custom Event
 window.dispatchEvent(new CustomEvent('projectCreated', { 
@@ -145,6 +155,7 @@ useEffect(() => {
 ## Configuration
 
 ### Backend
+
 ```javascript
 // File watcher debounce
 const DEBOUNCE_DELAY = 100; // ms
@@ -154,6 +165,7 @@ const MAX_EVENTS = 50;
 ```
 
 ### Frontend
+
 ```javascript
 // SSE endpoint
 const SSE_ENDPOINT = '/api/events';
@@ -165,6 +177,7 @@ const RECONNECT_DELAY = 1000; // ms
 ## Debugging
 
 ### Backend Logs
+
 ```
 📡 Event happened: change - MDT-001.md in project markdown-ticket
 📤 Broadcasting to 1 SSE clients: {...}
@@ -172,6 +185,7 @@ const RECONNECT_DELAY = 1000; // ms
 ```
 
 ### Frontend Logs
+
 ```
 📨 Received SSE event: {"type":"file-change",...}
 Project created event received: {...}

@@ -28,6 +28,7 @@ Project is Python if any of:
 | `tests.py` | `tests.py` | Django |
 
 **Directory patterns**:
+
 ```
 tests/                   # Separate test directory
 tests/unit/              # Unit tests
@@ -40,6 +41,7 @@ features/                # BDD feature files (behave)
 ## BDD/Gherkin Examples
 
 **pytest-bdd (E2E)**:
+
 ```python
 # features/login.feature
 Feature: User Login
@@ -75,6 +77,7 @@ def verify_dashboard(browser):
 ```
 
 **behave (BDD)**:
+
 ```python
 # features/steps/login_steps.py
 from behave import given, when, then
@@ -95,6 +98,7 @@ def step_verify_dashboard(context):
 ```
 
 **pytest (Unit/Integration)**:
+
 ```python
 import pytest
 
@@ -123,6 +127,7 @@ class TestModuleName:
 ## Selector Patterns (Selenium/Playwright)
 
 **Preferred (stable)**:
+
 ```python
 # By ID
 browser.find_element_by_id('submit')
@@ -139,6 +144,7 @@ page.get_by_role('button', name='Submit')
 ```
 
 **Avoid (brittle)**:
+
 ```python
 browser.find_element_by_css_selector('.btn.btn-primary')
 browser.find_element_by_xpath('//div/form/button')

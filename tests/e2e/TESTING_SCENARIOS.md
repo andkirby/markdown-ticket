@@ -23,12 +23,14 @@ interface ScenarioResult {
 ## buildScenario vs projectFactory
 
 **Use `buildScenario`** when test just needs data to exist:
+
 ```typescript
 const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 await page.goto(`/prj/${scenario.projectCode}`)
 ```
 
 **Use `projectFactory` directly** when test depends on exact ticket details:
+
 ```typescript
 const project = await e2eContext.projectFactory.createProject('empty', {
   name: 'My Test Project'

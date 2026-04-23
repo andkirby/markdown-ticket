@@ -55,6 +55,7 @@ Centralized schema registry — all OpenAPI schemas defined in one location, ref
 > These schemas must be defined BEFORE JSDoc annotations reference them.
 
 ### Structure
+
 ```
 server/
   ├── openapi/

@@ -33,6 +33,7 @@ Force reload page with ?cache-bust={timestamp}
 ### Frontend
 
 **Hamburger Menu Component** (`src/components/HamburgerMenu.tsx:96-101`):
+
 ```tsx
 <button
   onClick={handleClearCache}
@@ -44,6 +45,7 @@ Force reload page with ?cache-bust={timestamp}
 ```
 
 **Handler** (`src/components/HamburgerMenu.tsx:50-54`):
+
 ```tsx
 function handleClearCache() {
   console.log('🔧 Cache clear button clicked')
@@ -53,6 +55,7 @@ function handleClearCache() {
 ```
 
 **Nuclear Cache Clear Function** (`src/utils/cache.ts:80-103`):
+
 ```tsx
 export async function nuclearCacheClear() {
   if (typeof window !== 'undefined') {
@@ -83,6 +86,7 @@ export async function nuclearCacheClear() {
 ### Backend
 
 **API Endpoint** (`server/routes/system.ts:287-300`):
+
 ```tsx
 router.post('/cache/clear', async (req: Request, res: Response) => {
   try {
@@ -102,6 +106,7 @@ router.post('/cache/clear', async (req: Request, res: Response) => {
 ```
 
 **File Operation Invoker** (`server/invokers/FileOperationInvoker.ts:78-86`):
+
 ```tsx
 async clearCache(): Promise<void> {
   await this._ensureInitialized();
@@ -156,6 +161,7 @@ The "Clear Cache" button is **incomplete**:
 ### Development Tools
 
 In development mode, these are exposed globally (`src/utils/cache.ts:104-108`):
+
 ```tsx
 (window as any).clearCache = clearAllCache;
 (window as any).clearProjectCache = clearProjectCache;

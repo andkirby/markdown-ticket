@@ -20,6 +20,7 @@ The MCP server uses the **shared core architecture** with unified types, service
 **Parameters**: None
 
 **Response Format**:
+
 ```json
 {
   "projects": [
@@ -49,6 +50,7 @@ The MCP server uses the **shared core architecture** with unified types, service
 - `key` (string, required): Project key (e.g., "MDT", "API")
 
 **Response Format**:
+
 ```json
 {
   "project": {
@@ -83,6 +85,7 @@ The MCP server uses the **shared core architecture** with unified types, service
   - `priority` (string|array): Filter by priority ("Low", "Medium", "High", "Critical")
 
 **Example Request**:
+
 ```json
 {
   "project": "MDT",
@@ -95,6 +98,7 @@ The MCP server uses the **shared core architecture** with unified types, service
 ```
 
 **Response Format**:
+
 ```json
 {
   "crs": [
@@ -127,6 +131,7 @@ The MCP server uses the **shared core architecture** with unified types, service
   - `"metadata"`: Basic key metadata without full YAML parsing
 
 **Example Request**:
+
 ```json
 {
   "project": "MDT",
@@ -136,6 +141,7 @@ The MCP server uses the **shared core architecture** with unified types, service
 ```
 
 **Response Format (attributes mode)**:
+
 ```json
 {
   "code": "MDT-001",
@@ -154,6 +160,7 @@ The MCP server uses the **shared core architecture** with unified types, service
 ```
 
 **Response Format (metadata mode)**:
+
 ```json
 {
   "code": "MDT-001",
@@ -169,6 +176,7 @@ The MCP server uses the **shared core architecture** with unified types, service
 ```
 
 **Response Format (full mode)**:
+
 ```
 # Description
 
@@ -196,6 +204,7 @@ Detailed markdown content...
   - `content` (string, optional): Full markdown content (overrides template if provided)
 
 **Example Request**:
+
 ```json
 {
   "project": "MDT",
@@ -211,6 +220,7 @@ Detailed markdown content...
 ```
 
 **Response Format**:
+
 ```json
 {
   "cr": {
@@ -244,6 +254,7 @@ Detailed markdown content...
   - `blocks` (string, optional): Comma-separated list of CR keys this blocks
 
 **Example Request**:
+
 ```json
 {
   "project": "MDT",
@@ -265,6 +276,7 @@ Detailed markdown content...
 - `status` (string, required): New status ("Proposed", "Approved", "In Progress", "Implemented", "Rejected", "On Hold")
 
 **Example Request**:
+
 ```json
 {
   "project": "MDT",
@@ -281,6 +293,7 @@ Detailed markdown content...
 - `key` (string, required): CR key
 
 **Response Format**:
+
 ```json
 {
   "message": "CR MDT-001 deleted successfully",
@@ -310,6 +323,7 @@ Detailed markdown content...
 - `content` (string, optional): Content to apply (required for update operation)
 
 **Example Request (list)**:
+
 ```json
 {
   "project": "MDT",
@@ -319,6 +333,7 @@ Detailed markdown content...
 ```
 
 **Response Format (list operation)**:
+
 ```
 📑 **Sections in CR MDT-001** - Multi-project CR dashboard
 
@@ -332,6 +347,7 @@ Found 3 sections:
 ```
 
 **Example Request (get)**:
+
 ```json
 {
   "project": "MDT",
@@ -342,6 +358,7 @@ Found 3 sections:
 ```
 
 **Response Format (get operation)**:
+
 ```
 📖 **Section Content from CR MDT-001**
 
@@ -358,6 +375,7 @@ Use `manage_cr_sections` with operation="update" to modify this section.
 ```
 
 **Example Request (update)**:
+
 ```json
 {
   "project": "MDT",
@@ -370,6 +388,7 @@ Use `manage_cr_sections` with operation="update" to modify this section.
 ```
 
 **Response Format (update operation)**:
+
 ```
 ✅ **Updated Section in CR MDT-001**
 
@@ -394,6 +413,7 @@ Content has been added to the end of the section.
 - `key` (string, required): CR key to analyze
 
 **Response Format**:
+
 ```json
 {
   "suggestions": [
@@ -451,6 +471,7 @@ All MCP tools return errors in a consistent format:
 ### Example Error Responses
 
 **Project Not Found**:
+
 ```json
 {
   "error": "Project not found",
@@ -463,6 +484,7 @@ All MCP tools return errors in a consistent format:
 ```
 
 **Validation Error**:
+
 ```json
 {
   "error": "Validation failed",
@@ -475,6 +497,7 @@ All MCP tools return errors in a consistent format:
 ```
 
 **Section Not Found**:
+
 ```json
 {
   "error": "Section not found in document",

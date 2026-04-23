@@ -309,6 +309,7 @@ shared/utils/
 6. **Existing tests** - Verify no regressions in `ProjectService`, `DocumentService`, `TicketService`
 
 ### Verification Commands
+
 ```bash
 # Unit tests
 npm test -- shared/utils/project-validation-helpers

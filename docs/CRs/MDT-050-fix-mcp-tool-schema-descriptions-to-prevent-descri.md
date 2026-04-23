@@ -27,6 +27,7 @@ The MCP tool schema and TypeScript interfaces have critical issues:
 - Software architect analysis found 27 attribute discrepancies between interfaces and docs
 
 **YAML Overflow Bug:**
+
 ```yaml
 ---
 code: SEB-010
@@ -37,6 +38,7 @@ description: "..." # ❌ Multi-line content breaks YAML
 ```
 
 **MCP Tool Schema (mcp-server/src/tools/index.ts lines 133-165):**
+
 ```typescript
 description: {
   type: 'string',
@@ -51,6 +53,7 @@ content: {
 ### Desired State
 
 **1. Single Ticket Interface** (use existing `shared/models/Ticket.ts`):
+
 ```typescript
 export interface Ticket {
   // Core fields
@@ -78,6 +81,7 @@ export interface Ticket {
 ```
 
 **2. YAML Frontmatter** (minimal metadata only):
+
 ```yaml
 ---
 code: MDT-050
@@ -97,6 +101,7 @@ priority: Critical
 ```
 
 **3. MCP Tool Schema** (explicit LLM guidance):
+
 ```typescript
 // ❌ REMOVE description/rationale parameters entirely from MCP tools
 content: {
@@ -174,6 +179,7 @@ content: {
 **File:** `mcp-server/src/tools/index.ts` lines 133-165
 
 **REMOVE these parameters entirely:**
+
 ```typescript
 // ❌ DELETE - no more description parameter
 description: {
@@ -189,6 +195,7 @@ rationale: {
 ```
 
 **UPDATE content parameter with explicit guidance:**
+
 ```typescript
 content: {
   type: 'string',
@@ -200,6 +207,7 @@ content: {
 **File:** `mcp-server/src/tools/index.ts` lines 210-227
 
 **REMOVE description/rationale from attributes:**
+
 ```typescript
 attributes: {
   type: 'object',
@@ -221,6 +229,7 @@ attributes: {
 **File:** `mcp-server/src/services/crService.ts` line 450
 
 **Do NOT write description/rationale to YAML:**
+
 ```typescript
 private formatCRAsMarkdown(cr: CR, data: CRData): string {
   sections.push('---');
@@ -244,6 +253,7 @@ private formatCRAsMarkdown(cr: CR, data: CRData): string {
 **File:** `docs/create_ticket.md` lines 27-44
 
 **Remove rows from attribute table:**
+
 ```markdown
 | Attribute | Required | Description | Example |
 |-----------|----------|-------------|---------|
@@ -260,6 +270,7 @@ private formatCRAsMarkdown(cr: CR, data: CRData): string {
 ```
 
 **Add note explaining structure:**
+
 ```markdown
 ## YAML Frontmatter vs Markdown Content
 
@@ -279,6 +290,7 @@ private formatCRAsMarkdown(cr: CR, data: CRData): string {
 **File:** `docs/manual_ticket_creation.md` lines 45-60
 
 **Remove from optional attributes:**
+
 ```markdown
 #### Optional Attributes (include only if they have values):
 - `phaseEpic`: Project phase/epic (e.g., "Phase A (Foundation)")
@@ -310,6 +322,7 @@ private formatCRAsMarkdown(cr: CR, data: CRData): string {
 **File:** `shared/models/Types.ts`
 
 **Add deprecation notices:**
+
 ```typescript
 /**
  * @deprecated Use Ticket interface from shared/models/Ticket.ts instead
@@ -328,6 +341,7 @@ export interface CRData { ... }
 **File:** `shared/models/Ticket.ts`
 
 **Add comprehensive JSDoc:**
+
 ```typescript
 /**
  * Ticket (formerly CR/Change Request)
@@ -436,6 +450,7 @@ export interface Ticket {
 ## 5. Testing
 
 ### Test 1: Create Ticket with Content Parameter
+
 ```typescript
 await create_cr({
   project: 'TEST',
@@ -463,6 +478,7 @@ Full rationale goes here with multiple paragraphs explaining why this is needed.
 ```
 
 ### Test 2: Create Ticket Without Content (Template Generation)
+
 ```typescript
 await create_cr({
   project: 'TEST',
@@ -478,6 +494,7 @@ await create_cr({
 ```
 
 ### Test 3: LLM Cannot Use description Parameter
+
 ```typescript
 await create_cr({
   project: 'TEST',
@@ -491,6 +508,7 @@ await create_cr({
 ```
 
 ### Test 4: Backend Ignores description in Existing Files
+
 ```yaml
 ---
 code: OLD-001
@@ -498,6 +516,7 @@ title: Old Ticket
 description: This exists in old YAML
 ---
 ```
+
 ```typescript
 const ticket = await getCR('TEST', 'OLD-001')
 // Expected: Ticket loads successfully
@@ -505,9 +524,11 @@ const ticket = await getCR('TEST', 'OLD-001')
 ```
 
 ### Test 5: Migration Script
+
 ```bash
 npm run migrate:yaml-to-content
 ```
+
 **Expected:**
 - Scans all `.md` files
 - Finds tickets with `description` and/or `rationale` in YAML
