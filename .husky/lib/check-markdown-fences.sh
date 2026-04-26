@@ -31,8 +31,9 @@ check_markdown_fences() {
     if [ "$(expr "$fence_count" % 2)" -ne 0 ]; then
       echo "❌ ERROR: Unclosed code fence in: $file"
       echo "   Found $fence_count fence marker(s) — must be even (open + close)."
+      echo "   Fix: add missing closing \`\`\` or remove stray opening \`\`\`"
       echo ""
-      grep -nE '^(`{3,}|~{3,})' "$file" | sed 's/^/   /'
+      grep -nE '^```|^~~~' "$file" | sed 's/^/   /'
       echo ""
       violations=$(expr "$violations" + 1)
     fi
@@ -40,6 +41,15 @@ check_markdown_fences() {
 
   # Check 2: markdownlint style rules
   if ! ./node_modules/.bin/markdownlint-cli2 $STAGED_MD 2>&1; then
+    echo ""
+    echo "  Fix guide:"
+    echo "    MD031  Add blank line before/after fenced code block"
+    echo "    MD040  Add language to fence: \`\`\` → \`\`\`bash / \`\`\`typescript / \`\`\`text"
+    echo "    MD046  Use consistent fence style (all backticks or all tildes)"
+    echo "    MD048  Use consistent fence character (backtick or tilde, not mixed)"
+    echo ""
+    echo "  Autofix MD031/MD046/MD048:  markdownlint-cli2 --fix \"**/*.md\""
+    echo "  Bulk-fix MD040:             find . -name '*.md' -exec sed -i '' 's/^\`\`\`$/\`\`\`text/' {} +"
     violations=$(expr "$violations" + 1)
   fi
 
