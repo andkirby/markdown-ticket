@@ -159,7 +159,6 @@ export const invalidFixtures = {
   },
   updateInput: {
     emptyUpdate: {} as UpdateProjectInput,
-    invalidCode: buildUpdateProjectInput({ code: 'invalid' }),
     shortName: buildUpdateProjectInput({ name: 'A' }),
   },
   documentConfig: {

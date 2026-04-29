@@ -4,10 +4,8 @@
  */
 
 import {
-  safeValidateCreateProjectInput,
   safeValidateProject,
   safeValidateProjectConfig,
-  validateCreateProjectInput,
   validateProject,
   validateProjectConfig,
 } from '../validation.js'
@@ -136,75 +134,6 @@ describe('safeValidateProject', () => {
     if (!result.success) {
       const projectError = result.error.issues.find(i => i.path[0] === 'project')
       expect(projectError?.message).toMatch(/Required/)
-    }
-  })
-})
-
-describe('validateCreateProjectInput', () => {
-  it('returns typed input on valid input', () => {
-    const result = validateCreateProjectInput({
-      code: 'MDT',
-      name: 'Test Project',
-      id: 'test-id',
-      ticketsPath: './docs/CRs',
-    })
-
-    expect(result.code).toBe('MDT')
-    expect(result.name).toBe('Test Project')
-    expect(typeof result).toBe('object')
-  })
-
-  it('throws on invalid input', () => {
-    expect(() => validateCreateProjectInput({
-      code: 'invalid-code',
-      name: 'Test',
-      id: 'test',
-      ticketsPath: 'path',
-    })).toThrow()
-  })
-})
-
-describe('safeValidateCreateProjectInput', () => {
-  it('returns success: true on valid input', () => {
-    const result = safeValidateCreateProjectInput({
-      code: 'MDT',
-      name: 'Test Project',
-      id: 'test-id',
-      ticketsPath: './docs/CRs',
-    })
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.code).toBe('MDT')
-    }
-  })
-
-  it('returns success: false on invalid input', () => {
-    const result = safeValidateCreateProjectInput({
-      code: 'invalid-code',
-      name: 'Test',
-      id: 'test',
-      ticketsPath: 'path',
-    })
-
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues.length).toBeGreaterThan(0)
-    }
-  })
-
-  it('provides helpful error for invalid code', () => {
-    const result = safeValidateCreateProjectInput({
-      code: 'mdt',
-      name: 'Test Project',
-      id: 'test-id',
-      ticketsPath: './docs/CRs',
-    })
-
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      const codeError = result.error.issues.find(i => i.path[0] === 'code')
-      expect(codeError?.message).toMatch(/uppercase|format/)
     }
   })
 })

@@ -3,13 +3,13 @@
  */
 
 import {
-  safeValidateCreateProjectInput,
+  CreateProjectInputSchema,
+  ProjectConfigSchema,
+  ProjectSchema,
+  UpdateProjectInputSchema,
   safeValidateProject,
-  safeValidateUpdateProjectInput,
-  validateCreateProjectInput,
   validateProject,
   validateProjectConfig,
-  validateUpdateProjectInput,
 } from '../../project/index.js'
 import {
   buildCreateProjectInput,
@@ -69,7 +69,7 @@ describe('project Fixtures', () => {
   describe('buildCreateProjectInput', () => {
     it('creates valid create input by default', () => {
       const input = buildCreateProjectInput()
-      const validated = validateCreateProjectInput(input)
+      const validated = CreateProjectInputSchema.parse(input)
       expect(validated).toBeDefined()
       expect(validated.code).toBe('WEB')
       expect(validated.name).toBe('Web Application')
@@ -79,7 +79,7 @@ describe('project Fixtures', () => {
   describe('buildUpdateProjectInput', () => {
     it('creates valid update input by default', () => {
       const input = buildUpdateProjectInput()
-      const validated = validateUpdateProjectInput(input)
+      const validated = UpdateProjectInputSchema.parse(input)
       expect(validated).toBeDefined()
       expect(validated.name).toBe('Updated Project Name')
     })
@@ -89,7 +89,7 @@ describe('project Fixtures', () => {
         active: false,
         description: 'Updated description',
       })
-      const validated = validateUpdateProjectInput(input)
+      const validated = UpdateProjectInputSchema.parse(input)
       expect(validated.active).toBe(false)
       expect(validated.description).toBe('Updated description')
     })
@@ -138,13 +138,13 @@ describe('project Fixtures', () => {
 
     it('provides invalid create input fixtures', () => {
       const invalidInput = invalidFixtures.createInput.invalidCode
-      const result = safeValidateCreateProjectInput(invalidInput)
+      const result = CreateProjectInputSchema.safeParse(invalidInput)
       expect(result.success).toBe(false)
     })
 
     it('provides invalid update input fixtures', () => {
       const emptyUpdate = invalidFixtures.updateInput.emptyUpdate
-      const result = safeValidateUpdateProjectInput(emptyUpdate)
+      const result = UpdateProjectInputSchema.safeParse(emptyUpdate)
       expect(result.success).toBe(false)
     })
   })
