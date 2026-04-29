@@ -60,15 +60,24 @@ export function buildProjectConfig(
   projectOverrides: Partial<LocalProjectConfigProject> = {},
   documentOverrides: Partial<DocumentConfig> = {},
 ): LocalProjectConfig {
-  const projectDetails = buildProjectDetails({
-    code: projectOverrides.code,
-    name: projectOverrides.name,
-    id: projectOverrides.id,
-    ticketsPath: projectOverrides.ticketsPath,
-    description: projectOverrides.description,
-    repository: projectOverrides.repository,
-    active: projectOverrides.active,
-  })
+  const defaultProjectDetails: {
+    code: string
+    name: string
+    id?: string
+    ticketsPath?: string
+    description?: string
+    repository?: string
+    active?: boolean
+  } = {
+    code: 'MDT',
+    name: 'Markdown Ticket',
+    id: 'markdown-ticket',
+    ticketsPath: 'docs/CRs',
+    description: 'AI-powered Kanban board with markdown tickets',
+    repository: 'https://github.com/example/markdown-ticket',
+    active: true,
+  }
+
   const defaultDocumentConfig: DocumentConfig = {
     paths: ['docs/**/*.md', 'README.md'],
     excludeFolders: ['node_modules', '.git', 'dist'],
@@ -76,7 +85,7 @@ export function buildProjectConfig(
   }
 
   const projectConfig: LocalProjectConfigProject = {
-    ...projectDetails,
+    ...defaultProjectDetails,
     ...projectOverrides,
     document: { ...defaultDocumentConfig, ...documentOverrides },
   }
