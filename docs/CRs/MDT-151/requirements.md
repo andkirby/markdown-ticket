@@ -32,5 +32,6 @@ Harden the path resolution layer for public deployment. The system currently tru
 |---------|-------------|---------|-------------|
 | `project.allowSymlinks` | Whether to follow symlinks inside ticketDir with containment check | `false` | Symlinks not followed |
 
+
 ---
 Use `requirements.trace.md` for canonical requirement rows and route summaries.

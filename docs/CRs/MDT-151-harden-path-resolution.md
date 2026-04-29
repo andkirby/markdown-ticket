@@ -1,6 +1,6 @@
 ---
 code: MDT-151
-status: In Progress
+status: Done
 dateCreated: 2026-04-29T07:04:24.792Z
 type: Technical Debt
 priority: Medium
@@ -47,11 +47,13 @@ priority: Medium
 
 ## 3. Open Questions
 
-| Area | Question | Constraints |
-|------|----------|-------------|
-| Config | Should `allowSymlinks` be a per-project config or global? | Per-project preferred — `.mdt-config.toml` |
-| Validation | Should path containment check use `realpathSync` even when symlinks disabled? | Performance cost vs. belt-and-suspenders safety |
-| Error handling | What HTTP status for rejected paths — 403 or 404? | 404 avoids information leakage about path structure |
+All resolved during implementation:
+
+| Area | Question | Resolution |
+|------|----------|------------|
+| Config | Should `allowSymlinks` be a per-project config or global? | **Per-project** in `.mdt-config.toml` |
+| Validation | Should path containment check use `realpathSync` even when symlinks disabled? | **Only when `allowSymlinks=true`** — avoids perf cost on default path |
+| Error handling | What HTTP status for rejected paths — 403 or 404? | **404** — avoids information leakage about path structure |
 
 ### Known Constraints
 - Node.js `path.join` does not resolve symlinks — must use `realpathSync` when symlink safety needed
@@ -66,25 +68,27 @@ priority: Medium
 ## 4. Acceptance Criteria
 
 ### Functional
-- [ ] `GET /subdocuments/..%2Fsomething` returns 404 (path traversal blocked)
-- [ ] `GET /subdocuments/../something` returns 404
-- [ ] `GET /subdocuments/architecture` still returns valid subdocument
-- [ ] Config with `ticketsPath = "../../shared"` is rejected at load time
-- [ ] Config with `ticketsPath = "docs/CRs"` is accepted
-- [ ] Config with `ticketsPath = "/var/mdt/tickets"` is accepted
-- [ ] Symlink inside ticketDir is not followed by default
-- [ ] Symlink following works when `allowSymlinks = true` with containment check
+- [x] `GET /subdocuments/..%2Fsomething` returns 404 (path traversal blocked)
+- [x] `GET /subdocuments/../something` returns 404
+- [x] `GET /subdocuments/architecture` still returns valid subdocument
+- [x] Config with `ticketsPath = "../../shared"` is rejected at load time
+- [x] Config with `ticketsPath = "docs/CRs"` is accepted
+- [x] Config with `ticketsPath = "/var/mdt/tickets"` is accepted
+- [x] Symlink inside ticketDir is not followed by default
+- [x] Symlink following works when `allowSymlinks = true` with containment check
 
 ### Non-Functional
-- [ ] Path validation adds <1ms overhead per request
-- [ ] No regression in existing subdocument test suite
+- [x] Path validation adds <1ms overhead per request
+- [x] No regression in existing subdocument test suite
 
 ### Edge Cases
-- [ ] Null byte injection (`%00`) rejected
-- [ ] Double encoding (`%252F`) rejected or rendered inert
-- [ ] Unicode slash variants (∕ ⁄ ／) rendered inert
-- [ ] Whitespace-only subDocName rejected
-- [ ] Very long subDocName (>255 chars) rejected
+- [x] Null byte injection (`%00`) rejected
+- [x] Double encoding (`%252F`) rejected
+- [x] Unicode slash variants (∕ ⁄ ／) rejected
+- [x] Whitespace-only subDocName rejected
+- [x] Very long subDocName (>255 chars) rejected
+- [x] Absolute ticketsPath matching system root (`/etc`, `/usr`, `C:\Windows`) rejected
+- [x] Absolute ticketsPath that is subdirectory of system root (`/usr/local/my-project`) accepted
 
 ## 5. Verification
 
@@ -92,3 +96,19 @@ priority: Medium
 - Automated: Security-focused unit tests for each attack vector in SubdocumentService
 - Automated: Config validation tests for ticketsPath edge cases
 - Manual: Confirm existing board functionality unchanged in dev:full mode
+
+## 8. Clarifications
+
+### UAT Session 2026-04-29
+
+**Approved changes**:
+- Added system path blocklist for absolute ticketsPath — reject exact matches against protected system root directories (Linux, macOS, Windows)
+- Subdirectories of protected roots remain allowed
+
+**Changed requirement IDs**: +BR-2.4, +Edge-7
+
+**Updated workflow documents**: requirements.trace.md, bdd.trace.md, architecture.trace.md, tests.trace.md, tasks.trace.md, uat.md
+
+**Reference doc**: `docs/CRs/MDT-151/secure-paths.md` — canonical protected roots list
+
+**New task**: TASK-4 — implement blocklist in `ProjectValidator`

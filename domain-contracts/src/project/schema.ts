@@ -187,23 +187,6 @@ export const DateOnlySchema = z.string()
 export const TicketsPathSchema = z.string()
   .trim()
   .min(1, 'Tickets path is required')
-  .refine(
-    path => !path.startsWith('/') && !WINDOWS_ABSOLUTE_PATH_PATTERN.test(path),
-    'Tickets path must be relative to project root',
-  )
-  .refine(
-    path => !TICKETS_PATH_INVALID_CHARS_PATTERN.test(path),
-    'Tickets path contains invalid path characters',
-  )
-  .refine(
-    (path) => {
-      const segments = normalizeTicketsPath(path).split(/[\\/]+/u)
-      return segments.every(segment => segment !== '..')
-    },
-    'Tickets path cannot leave the project root',
-  )
-  .refine(path => normalizeTicketsPath(path).length > 0, 'Tickets path is required')
-
 export const DocumentConfigSchema = DocumentConfigObjectSchema.refine(
   (data) => {
     const hasParentRef = data.paths.some(path => path.includes('..'))

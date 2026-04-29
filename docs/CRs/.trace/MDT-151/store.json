@@ -288,6 +288,17 @@
       "when": "a GET request is sent for the symlinked subdocument name",
       "then": "the response status is 404, the external file is not read, and the response body matches a legitimate SubDocument not found response exactly",
       "sourceRef": "CR Section 3: Symlink containment"
+    },
+    {
+      "id": "config_rejects_system_root_path",
+      "title": "Config rejects system root as ticketsPath",
+      "covers": [
+        "BR-2.4"
+      ],
+      "given": "a project directory",
+      "when": "the project config is loaded with ticketsPath set to '/etc'",
+      "then": "the configuration is rejected with error: Choose a subfolder, not a system root directory.",
+      "sourceRef": "CR:MDT-151"
     }
   ],
   "obligations": [
@@ -403,6 +414,19 @@
         "ART-config-validation-tests"
       ],
       "sourceRef": "CR Section 5: Verification"
+    },
+    {
+      "id": "OBL-system-path-blocklist",
+      "title": "System path blocklist for absolute ticketsPath",
+      "derivedFrom": [
+        "BR-2.4",
+        "Edge-7"
+      ],
+      "artifactIds": [
+        "ART-project-validator",
+        "ART-config-validation-tests"
+      ],
+      "sourceRef": "CR:MDT-151"
     }
   ],
   "artifacts": [
@@ -513,6 +537,17 @@
       ],
       "file": "shared/tools/__tests__/project-management/ticketsPath-validation.test.ts",
       "sourceRef": "tests.md#config-validation"
+    },
+    {
+      "id": "TEST-system-path-blocklist",
+      "kind": "unit",
+      "title": "System path blocklist rejects protected roots",
+      "covers": [
+        "BR-2.4",
+        "Edge-7"
+      ],
+      "file": "shared/tools/__tests__/project-management/ticketsPath-validation.test.ts",
+      "sourceRef": "CR:MDT-151"
     }
   ],
   "tasks": [
@@ -567,6 +602,19 @@
         "config_accepts_absolute_path"
       ],
       "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Add system path blocklist for absolute ticketsPath",
+      "ownsArtifactIds": [
+        "ART-project-validator",
+        "ART-config-validation-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-system-path-blocklist",
+        "config_rejects_system_root_path"
+      ],
+      "sourceRef": "CR:MDT-151"
     }
   ]
 }
