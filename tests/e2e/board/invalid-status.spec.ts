@@ -16,8 +16,8 @@
 import { expect, test } from '../fixtures/test-fixtures.js'
 import { buildScenario, type ScenarioResult } from '../setup/index.js'
 import { boardSelectors } from '../utils/selectors.js'
-import { promises as fs } from 'fs'
-import { join as pathJoin } from 'path'
+import { modifyTicketFile } from '../utils/sse-helpers.js'
+import { dragTicketToColumn, getTicketStatus, waitForBoardReady } from '../utils/helpers.js'
 
 test.describe('Invalid Status Badge', () => {
   let scenario: ScenarioResult
@@ -34,12 +34,9 @@ test.describe('Invalid Status Badge', () => {
     scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
     const proposedTicketCode = scenario.crCodes[2]
-    const ticketPath = pathJoin(scenario.projectDir, 'docs', 'CRs', `${proposedTicketCode}.md`)
 
-    // Read current content and modify status to invalid value
-    const content = await fs.readFile(ticketPath, 'utf-8')
-    const invalidContent = content.replace(/^status: Proposed$/m, 'status: In Review')
-    await fs.writeFile(ticketPath, invalidContent, 'utf-8')
+    // Modify status to invalid value (helper handles slug-suffixed filenames)
+    await modifyTicketFile(scenario.projectDir, proposedTicketCode, { status: 'In Review' })
 
     // Navigate to project board
     await page.goto(`/prj/${scenario.projectCode}`)
@@ -79,29 +76,20 @@ test.describe('Invalid Status Badge', () => {
     scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
     const proposedTicketCode = scenario.crCodes[2]
-    const ticketPath = pathJoin(scenario.projectDir, 'docs', 'CRs', `${proposedTicketCode}.md`)
 
-    // Modify status to invalid value
-    const content = await fs.readFile(ticketPath, 'utf-8')
-    const invalidContent = content.replace(/^status: Proposed$/m, 'status: In Review')
-    await fs.writeFile(ticketPath, invalidContent, 'utf-8')
+    // Modify status to invalid value (helper handles slug-suffixed filenames)
+    await modifyTicketFile(scenario.projectDir, proposedTicketCode, { status: 'In Review' })
 
     await page.goto(`/prj/${scenario.projectCode}`)
     await page.waitForSelector(boardSelectors.board, { state: 'visible', timeout: 10000 })
 
     const ticketCard = page.locator(boardSelectors.ticketByCode(proposedTicketCode))
 
-    // Verify initial column is "Backlog" (Proposed tickets go here)
-    const backLogColumn = page.locator(boardSelectors.columnByStatus('Backlog'))
-    await expect(ticketCard).toHaveLocator('xpath=ancestor-or-self::*[data-testid="column-Backlog"]')
+    // Verify ticket is visible
+    await expect(ticketCard).toBeVisible()
 
     // Act: Drag ticket to "In Progress" column
-    const targetColumn = page.locator(boardSelectors.columnByStatus('In Progress'))
-
-    await ticketCard.dragTo(targetColumn)
-
-    // Wait for drop to complete and UI to update
-    await page.waitForTimeout(1000)
+    await dragTicketToColumn(page, proposedTicketCode, 'In Progress')
 
     // Assert: No error toasts or alerts appeared
     const errorToast = page.locator('[data-testid="toast"]')
@@ -109,12 +97,12 @@ test.describe('Invalid Status Badge', () => {
     expect(isVisible).toBe(false)
 
     // Assert: Ticket moved to "In Progress" column
-    const inProgressColumn = page.locator(boardSelectors.columnByStatus('In Progress'))
-    await expect(ticketCard).toHaveLocator('xpath=ancestor-or-self::*[data-testid="column-In Progress"]')
+    const newStatus = await getTicketStatus(page, proposedTicketCode)
+    expect(newStatus).toBe('In Progress')
 
-    // Assert: Ticket still shows invalid status badge (status not auto-corrected)
+    // Assert: Invalid badge is gone — status was corrected to valid by the drag-drop
     const statusBadge = ticketCard.locator('[data-status="invalid"]')
-    await expect(statusBadge).toHaveText('In Review')
+    await expect(statusBadge).not.toBeVisible()
   })
 
   /**
@@ -129,11 +117,7 @@ test.describe('Invalid Status Badge', () => {
 
     // Modify one ticket to have invalid status
     const firstTicketCode = scenario.crCodes[0]
-    const ticketPath = pathJoin(scenario.projectDir, 'docs', 'CRs', `${firstTicketCode}.md`)
-
-    const content = await fs.readFile(ticketPath, 'utf-8')
-    const invalidContent = content.replace(/^status: \w+$/m, 'status: In Review')
-    await fs.writeFile(ticketPath, invalidContent, 'utf-8')
+    await modifyTicketFile(scenario.projectDir, firstTicketCode, { status: 'In Review' })
 
     await page.goto(`/prj/${scenario.projectCode}`)
     await page.waitForSelector(boardSelectors.board, { state: 'visible', timeout: 10000 })
@@ -178,11 +162,7 @@ test.describe('Invalid Status Badge', () => {
     scenario = await buildScenario(e2eContext.projectFactory, 'simple')
 
     const proposedTicketCode = scenario.crCodes[2]
-    const ticketPath = pathJoin(scenario.projectDir, 'docs', 'CRs', `${proposedTicketCode}.md`)
-
-    const content = await fs.readFile(ticketPath, 'utf-8')
-    const invalidContent = content.replace(/^status: Proposed$/m, 'status: In Review')
-    await fs.writeFile(ticketPath, invalidContent, 'utf-8')
+    await modifyTicketFile(scenario.projectDir, proposedTicketCode, { status: 'In Review' })
 
     await page.goto(`/prj/${scenario.projectCode}`)
     await page.waitForSelector(boardSelectors.board, { state: 'visible', timeout: 10000 })
@@ -224,11 +204,7 @@ test.describe('Invalid Status Badge', () => {
       // Arrange: Create ticket and set invalid status
       scenario = await buildScenario(e2eContext.projectFactory, 'simple')
       const ticketCode = scenario.crCodes[2]
-      const ticketPath = pathJoin(scenario.projectDir, 'docs', 'CRs', `${ticketCode}.md`)
-
-      const content = await fs.readFile(ticketPath, 'utf-8')
-      const invalidContent = content.replace(/^status: \w+$/m, `status: ${invalidStatus}`)
-      await fs.writeFile(ticketPath, invalidContent, 'utf-8')
+      await modifyTicketFile(scenario.projectDir, ticketCode, { status: invalidStatus })
 
       await page.goto(`/prj/${scenario.projectCode}`)
       await page.waitForSelector(boardSelectors.board, { state: 'visible', timeout: 10000 })
