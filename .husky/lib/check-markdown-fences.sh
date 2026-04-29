@@ -49,7 +49,6 @@ check_markdown_fences() {
     echo "    MD048  Use consistent fence character (backtick or tilde, not mixed)"
     echo ""
     echo "  Autofix MD031/MD046/MD048:  markdownlint-cli2 --fix \"**/*.md\""
-    echo "  Bulk-fix MD040:             find . -name '*.md' -exec sed -i '' 's/^\`\`\`$/\`\`\`text/' {} +"
     violations=$(expr "$violations" + 1)
   fi
 
