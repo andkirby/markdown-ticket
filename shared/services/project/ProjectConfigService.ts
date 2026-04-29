@@ -11,6 +11,7 @@ import {
   buildRegistryFilePath,
 } from '../../utils/path-resolver.js'
 import { parseToml, stringify } from '../../utils/toml.js'
+import { validateTicketsPath } from '../../tools/ProjectValidator.js'
 
 /**
  * Project Configuration Service
@@ -62,6 +63,14 @@ export class ProjectConfigService implements IProjectConfigService {
 
       if (!validateProjectConfig(config))
         return null
+
+      // MDT-151: Validate ticketsPath at config load time
+      const ticketsPath = getTicketsPath(config, DEFAULTS.TICKETS_PATH)
+      const pathValidation = validateTicketsPath(ticketsPath)
+      if (!pathValidation.valid) {
+        logQuiet(this.quiet, `Invalid ticketsPath "${ticketsPath}" in project config: ${pathValidation.error}`)
+        return null
+      }
 
       // Auto-migrate legacy configurations
       if (isLegacyConfig(config)) {

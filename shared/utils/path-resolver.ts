@@ -113,6 +113,21 @@ export function isPathWithinSearchPaths(targetPath: string, searchPaths: string[
 }
 
 /**
+ * Check if a resolved path is contained within a root directory.
+ * Uses path.relative to determine containment — if the relative path
+ * from root to resolved doesn't start with '..' and isn't absolute,
+ * the resolved path is inside the root.
+ *
+ * Extracted from ProjectService.isPathWithinProject for reuse.
+ */
+export function isContainedPath(resolved: string, root: string): boolean {
+  const normalizedResolved = normalizePath(resolved)
+  const normalizedRoot = normalizePath(root)
+  const relative = getRelativePath(normalizedRoot, normalizedResolved)
+  return relative === '' || (!relative.startsWith('..') && !isAbsolutePath(relative))
+}
+
+/**
  * Calculate the depth of a target path relative to a search path
  * Returns 0 if targetPath is the same as searchPath
  */

@@ -177,11 +177,21 @@ export class ProjectValidator {
       }
     }
 
-    // Check for absolute paths (not allowed - must be relative)
+    // Absolute paths are allowed (admin's deliberate choice for external directories)
     if (isAbsolute(trimmed)) {
+      // Still reject traversal segments in absolute paths
+      const normalized = normalize(trimmed)
+      const segments = normalized.split(/[/\\]/).filter(Boolean)
+      if (segments.includes('..')) {
+        return {
+          valid: false,
+          error: 'Tickets path cannot contain ".." segments',
+        }
+      }
+      const finalPath = normalized.endsWith('/') ? normalized.slice(0, -1) : normalized
       return {
-        valid: false,
-        error: 'Tickets path must be relative to project root (absolute paths not allowed)',
+        valid: true,
+        normalized: finalPath,
       }
     }
 
@@ -197,7 +207,16 @@ export class ProjectValidator {
     // Normalize path separators and resolve relative components
     const normalized = normalize(trimmed)
 
-    // Ensure path doesn't start with ./ or ../ (should be simple relative path)
+    // Reject any path containing '..' segments (check raw input before normalization)
+    const rawSegments = trimmed.split(/[/\\]/).filter(Boolean)
+    if (rawSegments.includes('..')) {
+      return {
+        valid: false,
+        error: 'Tickets path cannot contain ".." segments',
+      }
+    }
+
+    // Ensure normalized path doesn't start with ../ or resolve to ..
     if (normalized.startsWith('../') || normalized === '..') {
       return {
         valid: false,
@@ -224,4 +243,12 @@ export class ProjectValidator {
       normalized: finalPath,
     }
   }
+}
+
+/**
+ * Standalone export for ticketsPath validation.
+ * Delegates to ProjectValidator.validateTicketsPath().
+ */
+export function validateTicketsPath(ticketsPath: string): ValidationResult {
+  return ProjectValidator.validateTicketsPath(ticketsPath)
 }
