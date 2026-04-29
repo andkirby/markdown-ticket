@@ -46,6 +46,7 @@ describe('TicketLocationResolver', () => {
       ticketDir: '/repo/docs/CRs/MDT-138',
       ticketsPath: 'docs/CRs',
       isWorktree: false,
+      allowSymlinks: false,
     })
   })
 
@@ -74,6 +75,7 @@ describe('TicketLocationResolver', () => {
       ticketDir: '/repo/.gitWT/MDT-138/docs/CRs/MDT-138',
       ticketsPath: 'docs/CRs',
       isWorktree: true,
+      allowSymlinks: false,
     })
 
     expect(resolvePath).toHaveBeenCalledWith('/repo', 'MDT-138', 'docs/CRs', 'MDT')
