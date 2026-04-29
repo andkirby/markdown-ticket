@@ -122,24 +122,6 @@ export interface ProjectRegistryEntry {
   metadata: ProjectMetadata
 }
 
-export interface CreateProjectInput {
-  code: string
-  name: string
-  id: string
-  ticketsPath: string
-  description?: string
-  repository?: string
-}
-
-export interface UpdateProjectInput {
-  code?: string
-  name?: string
-  ticketsPath?: string
-  description?: string
-  repository?: string
-  active?: boolean
-}
-
 const DocumentConfigObjectSchema = z.object({
   paths: z.array(z.string()).default([]),
   excludeFolders: z.array(z.string()).default([]),
@@ -332,10 +314,10 @@ export const CreateProjectInputSchema = z.object({
   repository: z.string().optional(),
 }).strict()
 
+export type CreateProjectInput = z.infer<typeof CreateProjectInputSchema>
+
 export const UpdateProjectInputSchema = z.object({
-  code: ProjectCodeSchema.optional(),
   name: ProjectNameSchema.optional(),
-  ticketsPath: TicketsPathSchema.optional(),
   description: z.string().optional(),
   repository: z.string().optional(),
   active: z.boolean().optional(),
@@ -345,6 +327,8 @@ export const UpdateProjectInputSchema = z.object({
     message: 'At least one field must be provided for update',
   },
 )
+
+export type UpdateProjectInput = z.infer<typeof UpdateProjectInputSchema>
 
 export type ProjectConfigProject = LocalProjectConfigProject
 export type RegistryData = ProjectRegistryEntry

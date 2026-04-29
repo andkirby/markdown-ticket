@@ -4,13 +4,11 @@
  */
 
 import {
-  CreateProjectInputSchema,
   DocumentConfigSchema,
   LocalProjectConfigSchema,
   ProjectConfigSchema,
   ProjectRegistryEntrySchema,
   ProjectSchema,
-  UpdateProjectInputSchema,
 } from './schema'
 
 /**
@@ -75,36 +73,4 @@ export function validateProjectRegistryEntry(data: unknown) {
 
 export function safeValidateProjectRegistryEntry(data: unknown) {
   return ProjectRegistryEntrySchema.safeParse(data)
-}
-
-/**
- * Validate create project input using CreateProjectInputSchema.parse()
- * Throws ZodError on validation failure
- */
-export function validateCreateProjectInput(data: unknown) {
-  return CreateProjectInputSchema.parse(data)
-}
-
-/**
- * Safely validate create project input using CreateProjectInputSchema.safeParse()
- * Returns result object with success boolean
- */
-export function safeValidateCreateProjectInput(data: unknown) {
-  return CreateProjectInputSchema.safeParse(data)
-}
-
-/**
- * Validate update project input using UpdateProjectInputSchema.parse()
- * Throws ZodError on validation failure
- */
-export function validateUpdateProjectInput(data: unknown) {
-  return UpdateProjectInputSchema.parse(data)
-}
-
-/**
- * Safely validate update project input using UpdateProjectInputSchema.safeParse()
- * Returns result object with success boolean
- */
-export function safeValidateUpdateProjectInput(data: unknown) {
-  return UpdateProjectInputSchema.safeParse(data)
 }

@@ -14,7 +14,7 @@ import { ProjectValidator } from './ProjectValidator.node.js'
 /**
  * Project update input
  */
-type ProjectUpdateFields = Pick<ContractUpdateProjectInput, 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>
+type ProjectUpdateFields = Pick<ContractUpdateProjectInput, 'name' | 'description' | 'repository' | 'active'>
 export type ProjectUpdateInput = Partial<ProjectUpdateFields>
 
 /**
@@ -275,14 +275,6 @@ export class ProjectManager {
         throw ServiceError.validationError(repoResult.error!)
       }
       validatedUpdates.repository = repoResult.normalized!
-    }
-
-    if (updates.ticketsPath !== undefined) {
-      const ticketsPathResult = ProjectValidator.validateTicketsPath(updates.ticketsPath)
-      if (!ticketsPathResult.valid) {
-        throw ServiceError.validationError(ticketsPathResult.error!)
-      }
-      validatedUpdates.ticketsPath = ticketsPathResult.normalized!
     }
 
     if (updates.active !== undefined) {
