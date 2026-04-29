@@ -37,6 +37,7 @@ export class TicketLocationResolver {
       ticketDir: join(projectRoot, ticketsPath, ticketCode),
       ticketsPath,
       isWorktree: projectRoot !== project.project.path,
+      allowSymlinks: config?.project?.allowSymlinks === true,
     }
   }
 }
