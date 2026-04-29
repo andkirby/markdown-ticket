@@ -226,7 +226,6 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 placeholder="Enter project name"
                 error={errors.name}
                 required
-                readOnly={editMode}
                 testId="project-name-input"
               />
 
@@ -342,6 +341,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 placeholder="docs/CRs"
                 error={errors.crsPath}
                 required
+                readOnly={editMode}
                 tooltip="Relative path from project root where tickets will be stored"
               />
 
