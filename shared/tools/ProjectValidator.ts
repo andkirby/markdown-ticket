@@ -1,4 +1,13 @@
 import { isAbsolute, normalize } from '../utils/path-browser.js'
+import { sep } from 'node:path'
+
+// Node-only — gracefully handled in browser via typeof checks below
+let realpathSync: (path: string) => string
+try {
+  realpathSync = require('node:fs').realpathSync
+} catch {
+  realpathSync = undefined as unknown as typeof realpathSync
+}
 
 /**
  * Validation result interface
@@ -167,6 +176,28 @@ export class ProjectValidator {
   /**
    * Validate tickets path (relative path from project root)
    */
+  /**
+   * Check if a normalized absolute path is a system root directory.
+   * Uses realpathSync for canonical path resolution.
+   * Exact match only — subdirectories of system roots are allowed.
+   * MDT-151 BR-2.4.
+   */
+  static isSystemRoot(normalizedPath: string): boolean {
+    // Browser-safe: skip check in non-Node environments
+    if (typeof process === 'undefined' || typeof realpathSync === 'undefined') {
+      return false
+    }
+    const protectedRoots = getProtectedRoots()
+    try {
+      const canonical = realpathSync(normalizedPath)
+      return protectedRoots.some(root => canonical === root)
+    }
+    catch {
+      // Path doesn't exist — can't be a system root
+      return false
+    }
+  }
+
   static validateTicketsPath(ticketsPath: string): ValidationResult {
     const trimmed = ticketsPath.trim()
 
@@ -188,6 +219,15 @@ export class ProjectValidator {
           error: 'Tickets path cannot contain ".." segments',
         }
       }
+
+      // BR-2.4: Reject system root directories
+      if (this.isSystemRoot(normalized)) {
+        return {
+          valid: false,
+          error: 'Choose a subfolder, not a system root directory.',
+        }
+      }
+
       const finalPath = normalized.endsWith('/') ? normalized.slice(0, -1) : normalized
       return {
         valid: true,
@@ -243,6 +283,44 @@ export class ProjectValidator {
       normalized: finalPath,
     }
   }
+}
+
+/**
+ * Get platform-specific protected system root directories.
+ * Returns canonical (realpathSync-resolved) paths for the current platform.
+ * MDT-151 BR-2.4.
+ */
+function getProtectedRoots(): string[] {
+  if (typeof process === 'undefined') {
+    return []
+  }
+  const platform = process.platform
+
+  // Common POSIX roots
+  const posixRoots = [
+    '/', '/bin', '/boot', '/dev', '/etc', '/home', '/lib', '/lib64',
+    '/media', '/mnt', '/opt', '/proc', '/root', '/run', '/sbin',
+    '/srv', '/sys', '/tmp', '/usr', '/usr/local', '/var',
+  ]
+
+  if (platform === 'darwin') {
+    const macExtras = ['/Applications', '/Library', '/System', '/Users', '/Volumes', '/private', '/sbin']
+    return [...new Set([...posixRoots, ...macExtras])].map(p => {
+      try { return realpathSync(p) } catch { return p }
+    })
+  }
+
+  if (platform === 'win32') {
+    return [
+      'C:\\', 'C:\\Windows', 'C:\\Program Files', 'C:\\Program Files (x86)',
+      'C:\\ProgramData', 'C:\\Users', 'C:\\System Volume Information',
+    ]
+  }
+
+  // Linux and other POSIX
+  return posixRoots.map(p => {
+    try { return realpathSync(p) } catch { return p }
+  })
 }
 
 /**
