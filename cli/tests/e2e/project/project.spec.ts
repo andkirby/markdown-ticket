@@ -160,16 +160,33 @@ describe('Project Namespace', () => {
     expect(content).toContain('issues/tickets')
   })
 
-  test('should reject absolute tickets path on project init', async () => {
-    const tempDir = join(testEnv.getTempDirectory(), 'init-abs-path')
+  test('should reject system root as tickets path on project init', async () => {
+    const tempDir = join(testEnv.getTempDirectory(), 'init-sys-root')
     await mkdir(tempDir, { recursive: true })
 
     const result = await runCli(
-      ['project', 'init', 'ABS', 'Abs Path Project', '--tickets-path', '/absolute/path'],
+      ['project', 'init', 'ABS', 'Abs Path Project', '--tickets-path', '/etc'],
       { cwd: tempDir },
     )
 
     expect(result.exitCode).toBe(1)
-    expect(result.stderr).toMatch(/relative|absolute/i)
+    expect(result.stderr).toMatch(/system root|subfolder/i)
+  })
+
+  test('should accept absolute non-system-root tickets path on project init', async () => {
+    const tempDir = join(testEnv.getTempDirectory(), 'init-abs-ok')
+    await mkdir(tempDir, { recursive: true })
+
+    // Create the target directory so it can be resolved
+    const absPath = join(testEnv.getTempDirectory(), 'mdt-tickets')
+    await mkdir(absPath, { recursive: true })
+
+    const result = await runCli(
+      ['project', 'init', 'ABS', 'Abs Path Project', '--tickets-path', absPath],
+      { cwd: tempDir },
+    )
+
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('ABS')
   })
 })
