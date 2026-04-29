@@ -18,6 +18,13 @@ describe('validateTicket', () => {
       status: 'Proposed',
       type: 'Feature Enhancement',
       priority: 'Medium',
+      dateCreated: null,
+      lastModified: null,
+      content: '',
+      filePath: '/tmp/test.md',
+      relatedTickets: [],
+      dependsOn: [],
+      blocks: [],
     })
 
     expect(result.code).toBe('MDT-101')
@@ -72,6 +79,13 @@ describe('safeValidateTicket', () => {
       status: 'Proposed',
       type: 'Feature Enhancement',
       priority: 'Medium',
+      dateCreated: null,
+      lastModified: null,
+      content: '',
+      filePath: '/tmp/test.md',
+      relatedTickets: [],
+      dependsOn: [],
+      blocks: [],
     })
 
     expect(result.success).toBe(true)

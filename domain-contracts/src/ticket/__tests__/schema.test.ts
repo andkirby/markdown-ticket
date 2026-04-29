@@ -51,9 +51,20 @@ describe('cRSchema', () => {
     })
 
     // Invalid cases - our rule rejects these
-    it('rejects below MIN (2 letters + 3 digits)', () => {
+    // 2-char prefixes are now valid (e.g. TP0, AB)
+    it('accepts MIN boundary (2 letters + 3 digits)', () => {
       expect(() => CRSchema.parse({
         code: 'AB-123',
+        title: 'Test CR',
+        status: 'Proposed',
+        type: 'Feature Enhancement',
+        priority: 'Medium',
+      })).not.toThrow()
+    })
+
+    it('rejects single-letter prefix (below MIN)', () => {
+      expect(() => CRSchema.parse({
+        code: 'A-123',
         title: 'Test CR',
         status: 'Proposed',
         type: 'Feature Enhancement',
@@ -260,43 +271,23 @@ describe('cRSchema', () => {
 })
 
 describe('updateTicketInputSchema', () => {
-  // Testing OUR rule: code is required for identification
-  describe('code requirement', () => {
-    it('requires code for identification', () => {
-      expect(() => UpdateTicketInputSchema.parse({
-        title: 'Updated Title',
-      })).toThrow()
-    })
-
-    it('accepts valid code', () => {
-      expect(() => UpdateTicketInputSchema.parse({
-        code: 'MDT-101',
-        title: 'Test', // Adding a field to update
-      })).not.toThrow()
-    })
-  })
-
-  // Testing OUR rule: at least one field to update
+  // Testing OUR rule: at least one updatable field required
   describe('update fields requirement', () => {
     it('requires at least one field to update', () => {
-      expect(() => UpdateTicketInputSchema.parse({
-        code: 'MDT-101',
-      })).toThrow(/At least one field/)
+      expect(() => UpdateTicketInputSchema.parse({})).toThrow(/At least one field/)
     })
 
     it('accepts single field update', () => {
       expect(() => UpdateTicketInputSchema.parse({
-        code: 'MDT-101',
-        title: 'New Title',
+        priority: 'High',
       })).not.toThrow()
     })
 
     it('accepts multiple field update', () => {
       expect(() => UpdateTicketInputSchema.parse({
-        code: 'MDT-101',
-        title: 'New Title',
-        status: 'In Progress',
         priority: 'High',
+        phaseEpic: 'Phase 2',
+        assignee: 'user@example.com',
       })).not.toThrow()
     })
   })
@@ -305,12 +296,14 @@ describe('updateTicketInputSchema', () => {
   describe('optional update fields', () => {
     it('accepts any subset of fields', () => {
       const updates = [
-        { code: 'MDT-101', title: 'New Title' },
-        { code: 'MDT-101', status: 'In Progress' },
-        { code: 'MDT-101', type: 'Bug Fix' },
-        { code: 'MDT-101', priority: 'Critical' },
-        { code: 'MDT-101', assignee: 'new@example.com' },
-        { code: 'MDT-101', implementationDate: '2025-12-25' },
+        { priority: 'Critical' },
+        { phaseEpic: 'Phase 2' },
+        { relatedTickets: 'MDT-100,MDT-101' },
+        { dependsOn: 'MDT-099' },
+        { blocks: 'MDT-103' },
+        { assignee: 'new@example.com' },
+        { implementationDate: '2025-12-25' },
+        { implementationNotes: 'Done' },
       ]
 
       updates.forEach((update) => {

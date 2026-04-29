@@ -71,10 +71,7 @@ describe('validateProjectConfig', () => {
   it('throws on invalid input', () => {
     expect(() => validateProjectConfig({
       project: {
-        code: 'MDT',
-        name: 'Test Project',
-        id: 'test',
-        ticketsPath: '/absolute/path',
+        code: '', // empty code fails .min(1)
       },
     })).toThrow()
   })
@@ -160,10 +157,7 @@ describe('safeValidateProjectConfig', () => {
   it('returns success: false on invalid input', () => {
     const result = safeValidateProjectConfig({
       project: {
-        code: 'MDT',
-        name: 'Test Project',
-        id: 'test',
-        ticketsPath: '/absolute/path',
+        code: '', // empty code fails .min(1)
       },
     })
 

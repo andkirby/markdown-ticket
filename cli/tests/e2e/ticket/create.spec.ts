@@ -137,8 +137,10 @@ describe('Ticket Create', () => {
         const content = await readFile(ticketPath, 'utf-8')
 
         // Should contain frontmatter and stdin body
+        // Note: CLI strips leading H1 from stdin and uses ticket title as authoritative H1
         expect(content).toContain('---') // Frontmatter delimiter
-        expect(content).toContain('Additional Content')
+        expect(content).toContain('# Stdin test') // Title-derived H1
+        expect(content).toContain('This is additional content from stdin.') // Body preserved
       }
     }
   })

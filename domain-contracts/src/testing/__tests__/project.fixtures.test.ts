@@ -4,12 +4,12 @@
 
 import {
   CreateProjectInputSchema,
-  ProjectConfigSchema,
+  LocalProjectConfigSchema,
   ProjectSchema,
   UpdateProjectInputSchema,
   safeValidateProject,
+  validateLocalProjectConfig,
   validateProject,
-  validateProjectConfig,
 } from '../../project/index.js'
 import {
   buildCreateProjectInput,
@@ -28,31 +28,33 @@ describe('project Fixtures', () => {
       const project = buildProject()
       const validated = validateProject(project)
       expect(validated).toBeDefined()
-      expect(validated.code).toBe('MDT')
-      expect(validated.name).toBe('Markdown Ticket')
-      expect(validated.active).toBe(true)
+      expect(validated.project.code).toBe('MDT')
+      expect(validated.project.name).toBe('Markdown Ticket')
+      expect(validated.project.active).toBe(true)
     })
 
     it('accepts overrides', () => {
       const project = buildProject({
-        code: 'WEB',
-        name: 'Web App',
-        active: false,
+        project: {
+          code: 'WEB',
+          name: 'Web App',
+          active: false,
+        },
       })
       const validated = validateProject(project)
-      expect(validated.code).toBe('WEB')
-      expect(validated.name).toBe('Web App')
-      expect(validated.active).toBe(false)
+      expect(validated.project.code).toBe('WEB')
+      expect(validated.project.name).toBe('Web App')
+      expect(validated.project.active).toBe(false)
     })
   })
 
   describe('buildProjectConfig', () => {
     it('creates valid project config by default', () => {
       const config = buildProjectConfig()
-      const validated = validateProjectConfig(config)
+      const validated = validateLocalProjectConfig(config)
       expect(validated).toBeDefined()
       expect(validated.project.code).toBe('MDT')
-      expect(validated['project.document'].paths).toContain('docs/**/*.md')
+      expect(validated.project.document?.paths).toContain('docs/**/*.md')
     })
 
     it('accepts overrides for both sections', () => {
@@ -60,9 +62,9 @@ describe('project Fixtures', () => {
         { code: 'API' },
         { maxDepth: 5 },
       )
-      const validated = validateProjectConfig(config)
+      const validated = validateLocalProjectConfig(config)
       expect(validated.project.code).toBe('API')
-      expect(validated['project.document'].maxDepth).toBe(5)
+      expect(validated.project.document?.maxDepth).toBe(5)
     })
   })
 
@@ -99,17 +101,17 @@ describe('project Fixtures', () => {
     it('buildMinimalProject creates valid minimal project', () => {
       const project = buildMinimalProject()
       const validated = validateProject(project)
-      expect(validated.code).toBe('A1')
-      expect(validated.name).toBe('ABC')
+      expect(validated.project.code).toBe('A1')
+      expect(validated.project.name).toBe('ABC')
       expect(validated.id).toBe('a')
-      expect(validated.ticketsPath).toBe('t')
+      expect(validated.project.ticketsPath).toBe('t')
     })
 
     it('buildProjectWithComplexDocumentConfig creates valid config', () => {
       const config = buildProjectWithComplexDocumentConfig()
-      const validated = validateProjectConfig(config)
-      expect(validated['project.document'].paths.length).toBeGreaterThan(2)
-      expect(validated['project.document'].excludeFolders.length).toBeGreaterThan(2)
+      const validated = validateLocalProjectConfig(config)
+      expect(validated.project.document?.paths?.length).toBeGreaterThan(2)
+      expect(validated.project.document?.excludeFolders?.length).toBeGreaterThan(2)
     })
 
     it('buildProjects creates array of valid projects', () => {
@@ -118,9 +120,9 @@ describe('project Fixtures', () => {
 
       projects.forEach((project, i) => {
         const validated = validateProject(project)
-        expect(validated.code).toBe(`APP${(i + 1).toString().padStart(2, '0')}`)
+        expect(validated.project.code).toBe(`APP${(i + 1).toString().padStart(2, '0')}`)
         expect(validated.id).toBe(`app-${i + 1}`)
-        expect(validated.name).toBe(`Project ${i + 1}`)
+        expect(validated.project.name).toBe(`Project ${i + 1}`)
       })
     })
   })
