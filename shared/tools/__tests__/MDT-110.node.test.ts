@@ -151,10 +151,9 @@ describe('mDT-110: Node.js ProjectValidator Extension', () => {
       expect(result.valid).toBe(true)
     })
 
-    it('should reject absolute tickets paths', () => {
+    it('shall accept absolute tickets paths (MDT-151: admin choice for external dirs)', () => {
       const result = ProjectValidator.validateTicketsPath('/absolute/path')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('must be relative')
+      expect(result.valid).toBe(true)
     })
   })
 

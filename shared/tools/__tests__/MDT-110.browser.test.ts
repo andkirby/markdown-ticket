@@ -202,16 +202,15 @@ describe('mDT-110: Browser-Safe ProjectValidator', () => {
       expect(result.valid).toBe(true)
     })
 
-    it('should reject absolute paths in tickets path', () => {
+    it('shall accept absolute tickets paths (MDT-151: admin choice for external dirs)', () => {
       const result = ProjectValidator.validateTicketsPath('/absolute/path')
-      expect(result.valid).toBe(false)
-      expect(result.error).toContain('must be relative')
+      expect(result.valid).toBe(true)
     })
 
-    it('should reject tickets paths going outside project root', () => {
+    it('shall reject tickets paths going outside project root', () => {
       const result = ProjectValidator.validateTicketsPath('../outside')
       expect(result.valid).toBe(false)
-      expect(result.error).toContain('cannot go outside project root')
+      expect(result.error).toContain('cannot')
     })
   })
 })

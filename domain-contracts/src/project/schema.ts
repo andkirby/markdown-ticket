@@ -48,6 +48,8 @@ export interface LocalProjectConfigProject {
   startNumber?: number
   counterFile?: string
   document?: ProjectDocumentSettings
+  /** Allow symlink following in subdocument reads (default: false). MDT-151 */
+  allowSymlinks?: boolean
 }
 
 export interface LocalProjectConfig {

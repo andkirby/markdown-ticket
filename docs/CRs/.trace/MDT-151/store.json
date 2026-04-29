@@ -1,0 +1,572 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-151"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a subdocument request contains '..' or path traversal sequences in subDocName, the system shall reject the request with 404 status",
+      "sourceRef": "CR Section 4: AC item 1,2",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN a subdocument request contains a valid subDocName, the system shall return the subdocument content unchanged",
+      "sourceRef": "CR Section 4: AC item 3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN a project config specifies ticketsPath containing '..' segments, the system shall reject the configuration at load time",
+      "sourceRef": "CR Section 4: AC item 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN a project config specifies a simple relative ticketsPath like 'docs/CRs', the system shall accept it",
+      "sourceRef": "CR Section 4: AC item 5",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN a project config specifies an absolute ticketsPath like '/var/mdt/tickets', the system shall accept it",
+      "sourceRef": "CR Section 4: AC item 6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN a symlink exists inside ticketDir and allowSymlinks is false or absent, the system shall not follow the symlink",
+      "sourceRef": "CR Section 4: AC item 7",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN allowSymlinks is true and a symlink target resolves inside ticketDir, the system shall follow the symlink and serve content",
+      "sourceRef": "CR Section 4: AC item 8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN allowSymlinks is true and a symlink target resolves outside ticketDir, the system shall reject the request",
+      "sourceRef": "CR Section 3: Symlink containment check",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Path validation overhead shall be less than 1ms per request",
+      "sourceRef": "CR Section 4: Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "No regression in existing subdocument test suite",
+      "sourceRef": "CR Section 4: Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "API contract unchanged - same endpoints and same responses for valid requests",
+      "sourceRef": "CR Section 2: Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "Null byte injection via percent-encoded null (%00) in subDocName shall be rejected",
+      "sourceRef": "CR Section 4: Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "Whitespace-only subDocName shall be rejected",
+      "sourceRef": "CR Section 4: Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "SubDocName exceeding 255 characters shall be rejected",
+      "sourceRef": "CR Section 4: Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "SubDocName containing '..' segments (literal dotdot, e.g. '../etc/passwd') shall be rejected at input validation before any path resolution",
+      "sourceRef": "CR Section 4: AC 1,2 + Section 3: Express decodes %2F",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "Double encoding via %252F in subDocName shall be rejected",
+      "sourceRef": "CR Section 4: Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "Unicode slash variants in subDocName shall be rejected",
+      "sourceRef": "CR Section 4: Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "WHEN a project config specifies an absolute ticketsPath that is exactly equal to a protected system root directory (e.g. /etc, /usr, C:\\\\Windows), the system shall reject the configuration at load time with message: Choose a subfolder, not a system root directory.",
+      "sourceRef": "CR:MDT-151",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "Absolute ticketsPath that is a subdirectory of a protected root (e.g. /usr/local/my-project) shall be accepted",
+      "sourceRef": "CR:MDT-151",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "valid_subdocument_returned",
+      "title": "Valid subdocument is returned unchanged",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "a project with CR MDT-151 exists with a subdocument named 'architecture'",
+      "when": "a GET request is sent to /api/projects/{id}/crs/MDT-151/subdocuments/architecture",
+      "then": "the response status is 200 and the subdocument content is returned",
+      "sourceRef": "CR Section 4: AC 3"
+    },
+    {
+      "id": "config_rejects_traversal_path",
+      "title": "Config rejects ticketsPath with dotdot segments",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "a project directory without a configured ticketsPath",
+      "when": "the project config is loaded with ticketsPath set to '../../shared'",
+      "then": "the configuration is rejected with a validation error",
+      "sourceRef": "CR Section 4: AC 4"
+    },
+    {
+      "id": "config_accepts_simple_relative",
+      "title": "Config accepts simple relative ticketsPath",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "a project directory",
+      "when": "the project config is loaded with ticketsPath set to 'docs/CRs'",
+      "then": "the configuration is accepted and the tickets directory resolves correctly",
+      "sourceRef": "CR Section 4: AC 5"
+    },
+    {
+      "id": "config_accepts_absolute_path",
+      "title": "Config accepts absolute ticketsPath",
+      "covers": [
+        "BR-2.3"
+      ],
+      "given": "a project directory",
+      "when": "the project config is loaded with ticketsPath set to '/var/mdt/tickets'",
+      "then": "the configuration is accepted and the tickets directory resolves to the absolute path",
+      "sourceRef": "CR Section 4: AC 6"
+    },
+    {
+      "id": "symlink_allowed_within_containment",
+      "title": "Symlink followed when allowed and target is within ticketDir",
+      "covers": [
+        "BR-3.2"
+      ],
+      "given": "a project with allowSymlinks=true and a symlink inside ticketDir pointing to another file within ticketDir",
+      "when": "a GET request is sent for the symlinked subdocument name",
+      "then": "the response status is 200 and the symlink target content is returned",
+      "sourceRef": "CR Section 4: AC 8"
+    },
+    {
+      "id": "path_traversal_blocked",
+      "title": "Path traversal in subDocName is blocked",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "a project with CR MDT-151 exists with a subdocument named 'architecture'",
+      "when": "a GET request is sent to /api/projects/{id}/crs/MDT-151/subdocuments/..%2Fsomething",
+      "then": "the response status is 404, no file outside ticketDir is read, and the response body matches a legitimate SubDocument not found response exactly",
+      "sourceRef": "CR Section 4: AC 1,2"
+    },
+    {
+      "id": "literal_dotdot_traversal_blocked",
+      "title": "Literal dotdot path traversal is blocked",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "a project with CR MDT-151 exists",
+      "when": "a GET request is sent to /api/projects/{id}/crs/MDT-151/subdocuments/../something",
+      "then": "the response status is 404, no file outside ticketDir is read, and the response body matches a legitimate SubDocument not found response exactly",
+      "sourceRef": "CR Section 4: AC 2"
+    },
+    {
+      "id": "symlink_denied_by_default",
+      "title": "Symlink inside ticketDir is not followed by default",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "a project with a symlink inside the ticketDir pointing to an external file",
+      "when": "a GET request is sent for the symlinked subdocument name without allowSymlinks config",
+      "then": "the response status is 404, the symlink target is not read, and the response body matches a legitimate SubDocument not found response exactly",
+      "sourceRef": "CR Section 4: AC 7"
+    },
+    {
+      "id": "symlink_rejected_outside_containment",
+      "title": "Symlink rejected when target resolves outside ticketDir",
+      "covers": [
+        "BR-3.3"
+      ],
+      "given": "a project with allowSymlinks=true and a symlink inside ticketDir pointing to a file outside ticketDir",
+      "when": "a GET request is sent for the symlinked subdocument name",
+      "then": "the response status is 404, the external file is not read, and the response body matches a legitimate SubDocument not found response exactly",
+      "sourceRef": "CR Section 3: Symlink containment"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-config-load-validation",
+      "title": "Wire ProjectValidator.validateTicketsPath() into server-side config load path (ProjectConfigService or project initialization) to reject traversal at load time",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3"
+      ],
+      "artifactIds": [
+        "ART-project-validator",
+        "ART-project-config-service"
+      ],
+      "sourceRef": "assess.md: ticketsPath config validation gap"
+    },
+    {
+      "id": "OBL-symlink-policy",
+      "title": "Add symlink detection and containment in SubdocumentService - default deny, opt-in allow via allowSymlinks config with realpathSync containment check on resolved target",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3"
+      ],
+      "artifactIds": [
+        "ART-subdocument-service",
+        "ART-project-config-service"
+      ],
+      "sourceRef": "assess.md: Symlink containment new capability"
+    },
+    {
+      "id": "OBL-performance-budget",
+      "title": "Ensure path validation adds less than 1ms overhead - use synchronous fs ops only when needed (lstatSync for symlink check, not on every request)",
+      "derivedFrom": [
+        "C1",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-subdocument-service"
+      ],
+      "sourceRef": "CR Section 4: Non-Functional"
+    },
+    {
+      "id": "OBL-regression-safety",
+      "title": "Existing subdocument API behavior preserved - same endpoints, same response shape for valid requests; all existing tests continue to pass",
+      "derivedFrom": [
+        "C2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-subdocument-service",
+        "ART-ticket-location-resolver"
+      ],
+      "sourceRef": "CR Section 4: Non-Functional"
+    },
+    {
+      "id": "OBL-subdoc-name-validation",
+      "title": "Replace segment-count-only check in isSupportedSubdocumentPath() with whitelist validation - reject '..' segments, null bytes, double encoding, unicode slashes, whitespace-only, and length >255 at input validation before path resolution",
+      "derivedFrom": [
+        "BR-1.1",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-subdocument-service"
+      ],
+      "sourceRef": "assess.md: isSupportedSubdocumentPath only validates segment count"
+    },
+    {
+      "id": "OBL-subdoc-containment",
+      "title": "Add path containment validation to SubdocumentService.resolvePath() - reject any resolved path outside ticketDir, following the DocumentService pattern",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-subdocument-service",
+        "ART-path-resolver",
+        "ART-document-service",
+        "ART-project-service"
+      ],
+      "sourceRef": "assess.md: SubdocumentService path resolution mismatch, DocumentService proven pattern"
+    },
+    {
+      "id": "OBL-security-tests",
+      "title": "Create security-focused unit tests for SubdocumentService (path traversal, encoding, null bytes, literal dotdot, length) and integration tests for API surface, plus config validation tests",
+      "derivedFrom": [
+        "BR-1.1",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5",
+        "Edge-6",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3"
+      ],
+      "artifactIds": [
+        "ART-subdocument-security-tests",
+        "ART-subdocument-integration-tests",
+        "ART-config-validation-tests"
+      ],
+      "sourceRef": "CR Section 5: Verification"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-subdocument-service",
+      "path": "shared/services/ticket/SubdocumentService.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md: Structural Fit - single owner of subdoc path resolution"
+    },
+    {
+      "id": "ART-project-validator",
+      "path": "shared/tools/ProjectValidator.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md: ticketsPath config validation gap"
+    },
+    {
+      "id": "ART-project-config-service",
+      "path": "shared/services/project/ProjectConfigService.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md: server-side config load needs validation"
+    },
+    {
+      "id": "ART-path-resolver",
+      "path": "shared/utils/path-resolver.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md: existing path utilities, potential containment helper location"
+    },
+    {
+      "id": "ART-ticket-location-resolver",
+      "path": "shared/services/ticket/TicketLocationResolver.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md: builds ticketDir, upstream of resolution"
+    },
+    {
+      "id": "ART-project-service",
+      "path": "shared/services/ProjectService.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md: has isPathWithinProject pattern to reference"
+    },
+    {
+      "id": "ART-document-service",
+      "path": "server/services/DocumentService.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md: proven path-traversal defense pattern to follow"
+    },
+    {
+      "id": "ART-subdocument-security-tests",
+      "path": "shared/services/ticket/__tests__/SubdocumentService.security.test.ts",
+      "kind": "test",
+      "sourceRef": "CR Section 5: Security-focused unit tests"
+    },
+    {
+      "id": "ART-config-validation-tests",
+      "path": "shared/tools/__tests__/project-management/ticketsPath-validation.test.ts",
+      "kind": "test",
+      "sourceRef": "CR Section 5: Config validation tests"
+    },
+    {
+      "id": "ART-subdocument-integration-tests",
+      "path": "server/tests/api/subdocuments.security.test.ts",
+      "kind": "test",
+      "sourceRef": "CR Section 5: Integration test for API surface"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-subdoc-security-unit",
+      "kind": "unit",
+      "title": "SubdocumentService path traversal and input validation",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5",
+        "Edge-6",
+        "C1",
+        "C2"
+      ],
+      "file": "shared/services/ticket/__tests__/SubdocumentService.security.test.ts",
+      "sourceRef": "tests.md#subdoc-security-unit"
+    },
+    {
+      "id": "TEST-subdoc-security-api",
+      "kind": "integration",
+      "title": "Subdocument API security integration tests",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-3.1",
+        "C2",
+        "C3"
+      ],
+      "file": "server/tests/api/subdocuments.security.test.ts",
+      "sourceRef": "tests.md#subdoc-security-api"
+    },
+    {
+      "id": "TEST-config-validation",
+      "kind": "unit",
+      "title": "ticketsPath config validation",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "C2"
+      ],
+      "file": "shared/tools/__tests__/project-management/ticketsPath-validation.test.ts",
+      "sourceRef": "tests.md#config-validation"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Add input validation and path containment to SubdocumentService",
+      "ownsArtifactIds": [
+        "ART-subdocument-service",
+        "ART-path-resolver",
+        "ART-document-service",
+        "ART-project-service",
+        "ART-ticket-location-resolver",
+        "ART-subdocument-security-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-subdoc-security-unit",
+        "path_traversal_blocked",
+        "literal_dotdot_traversal_blocked",
+        "valid_subdocument_returned"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Add symlink containment to SubdocumentService with config support",
+      "ownsArtifactIds": [
+        "ART-subdocument-service",
+        "ART-project-config-service",
+        "ART-subdocument-integration-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-subdoc-security-unit",
+        "TEST-subdoc-security-api",
+        "symlink_denied_by_default",
+        "symlink_allowed_within_containment",
+        "symlink_rejected_outside_containment"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Wire ticketsPath validation into server-side config load",
+      "ownsArtifactIds": [
+        "ART-project-validator",
+        "ART-project-config-service",
+        "ART-config-validation-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-config-validation",
+        "config_rejects_traversal_path",
+        "config_accepts_simple_relative",
+        "config_accepts_absolute_path"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    }
+  ]
+}

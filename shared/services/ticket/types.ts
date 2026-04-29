@@ -7,6 +7,7 @@ export interface ResolvedTicketLocation {
   ticketDir: string
   ticketsPath: string
   isWorktree: boolean
+  allowSymlinks?: boolean
 }
 
 export interface SubdocumentReadResult {

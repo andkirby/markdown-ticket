@@ -118,6 +118,13 @@ export function createProjectRouter(projectController: ProjectController): Route
    */
   router.get('/:projectId/crs/:crId/subdocuments/:subDocName', (req, res) => projectController.getSubDocument(req, res))
 
+  // MDT-151: Catch path-traversal attempts that Express resolves before route matching
+  // e.g. /subdocuments/../etc/passwd → resolved to /etc/passwd, misses the subdocuments route
+  // Return same 404 body as subdocument handler to avoid information leakage
+  router.get('/:projectId/crs/:crId/*', (_req, res) => {
+    res.status(404).json({ error: 'Not Found', message: 'SubDocument not found' })
+  })
+
   /**
    * @openapi
    * /api/projects/{projectId}/crs:
