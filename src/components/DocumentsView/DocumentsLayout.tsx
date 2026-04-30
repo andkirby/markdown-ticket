@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronUp, Pencil, Search } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { Modal } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting'
@@ -25,6 +25,8 @@ interface DocumentsLayoutProps {
 
 export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const [searchParams] = useSearchParams()
+  const pathParams = useParams<{ '*': string }>()
+  const pathFromRoute = pathParams['*']
   const [files, setFiles] = useState<DocumentFile[]>([])
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -97,11 +99,12 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     setDocumentSortPreferences(projectId, { sortBy, sortDirection })
   }, [projectId, sortBy, sortDirection])
 
-  // Initialize selected file from URL parameter
+  // Initialize selected file from URL — prefer path-style route, fall back to query param
   useEffect(() => {
-    const fileParam = searchParams.get('file')
-    if (fileParam) {
-      const sanitized = sanitizePath(fileParam)
+    // MDT-150: Support both path-style (/prj/MDT/documents/docs/file.md) and query-param (?file=...)
+    const fileSource = pathFromRoute || searchParams.get('file')
+    if (fileSource) {
+      const sanitized = sanitizePath(fileSource)
       if (sanitized) {
         selectedFileTimeoutRef.current = setTimeout(() => {
           setSelectedFile(sanitized)
@@ -121,7 +124,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
         setSelectedFile(null)
       }, 0)
     }
-  }, [searchParams])
+  }, [pathFromRoute, searchParams])
 
   const loadDocuments = useCallback(async () => {
     try {

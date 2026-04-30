@@ -11,6 +11,10 @@ import { usePostRender } from './usePostRender'
 interface MarkdownContentProps {
   markdown: string
   currentProject: string
+  /** Source file path relative to ticketsPath (for link resolution) */
+  sourcePath?: string
+  /** Tickets path relative to project root (e.g., "docs/CRs") */
+  ticketsPath?: string
   className?: string
   headerLevelStart?: number
   onRenderComplete?: () => void
@@ -28,6 +32,8 @@ const DEFAULT_CLASS_NAME = 'prose prose-sm max-w-none dark:prose-invert'
 const MarkdownContent: React.FC<MarkdownContentProps> = ({
   markdown,
   currentProject,
+  sourcePath,
+  ticketsPath,
   className = DEFAULT_CLASS_NAME,
   headerLevelStart = 1,
   onRenderComplete,
@@ -41,7 +47,7 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
   }, [theme])
 
   // Process markdown through the rendering pipeline
-  const processedContent = useMarkdownProcessor(markdown, currentProject, headerLevelStart)
+  const processedContent = useMarkdownProcessor(markdown, currentProject, headerLevelStart, sourcePath, ticketsPath)
 
   // Get parser options for SmartLink replacement
   const parserOptions = getHtmlParserOptions(currentProject)

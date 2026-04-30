@@ -19,6 +19,7 @@ import { ViewModeSwitcher } from './components/ViewModeSwitcher'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
 import { useProjectManager } from './hooks/useProjectManager'
+import { getTicketsPath } from '@mdt/shared/models/Project'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
 import './utils/cache' // Import cache utilities for development
@@ -33,6 +34,7 @@ function ProjectRouteHandler() {
   const {
     projects,
     selectedProject,
+    projectConfig,
     setSelectedProject,
     tickets,
     refreshProjects,
@@ -251,6 +253,7 @@ function ProjectRouteHandler() {
         ticket={selectedTicket}
         isOpen={!!selectedTicket}
         onClose={handleTicketClose}
+        ticketsPath={getTicketsPath(projectConfig)}
       />
 
       <AddProjectModal
@@ -313,6 +316,8 @@ function App() {
         <Route path="/prj/:projectCode" element={<ProjectRouteHandler />} />
         <Route path="/prj/:projectCode/list" element={<ProjectRouteHandler />} />
         <Route path="/prj/:projectCode/documents" element={<ProjectRouteHandler />} />
+        {/* MDT-150: Path-style document routes for SmartLink resolution */}
+        <Route path="/prj/:projectCode/documents/*" element={<ProjectRouteHandler />} />
         {/* MDT-094: Unified route for tickets with optional sub-document path */}
         <Route path="/prj/:projectCode/ticket/:ticketKey/*" element={<ProjectRouteHandler />} />
         <Route path="/prj/:projectCode/ticket/:ticketKey" element={<ProjectRouteHandler />} />
