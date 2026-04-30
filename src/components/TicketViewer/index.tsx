@@ -25,9 +25,10 @@ interface TicketViewerProps {
   ticket: Ticket | null
   isOpen: boolean
   onClose: () => void
+  ticketsPath?: string
 }
 
-const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) => {
+const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ticketsPath }) => {
   const { projectCode } = useParams<{ projectCode: string }>()
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(ticket)
 
@@ -275,6 +276,8 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose }) 
                     <MarkdownContent
                       markdown={subdocContent}
                       currentProject={projectCode}
+                      sourcePath={selectedPath === 'main' ? `${currentTicket?.code}.md` : `${currentTicket?.code}/${selectedPath}.md`}
+                      ticketsPath={ticketsPath}
                       headerLevelStart={3}
                     />
                   </div>
