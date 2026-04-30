@@ -22,6 +22,8 @@ export function useMarkdownProcessor(
   markdown: string,
   currentProject: string,
   headerLevelStart: number,
+  sourcePath?: string,
+  ticketsPath?: string,
 ): string {
   // Get link configuration (outside useMemo to ensure proper caching)
   const linkConfig = getLinkConfig()
@@ -52,7 +54,7 @@ export function useMarkdownProcessor(
 
     try {
       // Step 1: Preprocess markdown with safe link conversion
-      const preprocessedMarkdown = preprocessMarkdown(markdown, currentProject, linkConfig)
+      const preprocessedMarkdown = preprocessMarkdown(markdown, currentProject, linkConfig, sourcePath, ticketsPath)
 
       // Step 2: Convert markdown to HTML
       const rawHTML = converter.makeHtml(preprocessedMarkdown)
@@ -75,7 +77,7 @@ export function useMarkdownProcessor(
       console.error('Markdown processing error:', error)
       return `<div class="text-red-600 p-4 border border-red-200 rounded">Error processing markdown: ${error instanceof Error ? error.message : 'Unknown error'}</div>`
     }
-  }, [markdown, currentProject, converter, linkConfig])
+  }, [markdown, currentProject, converter, linkConfig, sourcePath, ticketsPath])
 }
 
 /**

@@ -1,0 +1,423 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-150"
+  },
+  "requirements": [
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "Anchor fragments on .md references (file.md#section) pass through to the target URL and scroll to the correct heading",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "The documents view uses path-style routing (/prj/:code/documents/:path) and reads the file path from useParams",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Must not alter ticket reference link behavior",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Must not alter external link behavior",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Must work for relative paths, bare filenames, and sibling ticket references",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Frontend must not perform security checks or file existence validation \u2014 that is the backend's responsibility",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "A .md reference containing a ticket key pattern (e.g. MDT-151.md, MDT-150-smartlink-doc-urls.md, MDT-151) navigates to that ticket's view.",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "A bare .md filename (e.g. architecture.md) inside a ticket view navigates to the current ticket's subdocument. A relative .md path with .. (e.g. ../../README.md) navigates to the documents view with the resolved file path.",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Existing link classification and rendering must remain unchanged",
+      "sourceRef": "CR:MDT-150",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "project_doc_reference",
+      "title": "A .md reference outside the ticket folder routes to the documents view",
+      "covers": [
+        "BR-1"
+      ],
+      "given": "a ticket MDT-150 with subdoc docs/CRs/MDT-150/bdd.md containing a reference to ../../core-layout.md",
+      "when": "the user views the rendered bdd.md and clicks the ../../core-layout.md link",
+      "then": "the browser navigates to /prj/MDT/documents/docs/core-layout.md and the documents view displays that file",
+      "sourceRef": "BR-1"
+    },
+    {
+      "id": "sibling_ticket_reference",
+      "title": "A .md reference to another ticket main doc routes to that ticket view",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "a ticket MDT-150 with subdoc docs/CRs/MDT-150/bdd.md containing a reference to ../MDT-151.md",
+      "when": "the user views the rendered bdd.md and clicks the ../MDT-151.md link",
+      "then": "the ticket viewer navigates to /prj/MDT/ticket/MDT-151 and displays that ticket",
+      "sourceRef": "BR-2"
+    },
+    {
+      "id": "documents_path_style_route",
+      "title": "The documents view uses path-style routing with useParams",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "the documents view is open",
+      "when": "the user navigates directly to /prj/MDT/documents/docs/core-layout.md",
+      "then": "the documents view reads the path from useParams and displays docs/core-layout.md",
+      "sourceRef": "BR-4"
+    },
+    {
+      "id": "ticket_subdoc_reference",
+      "title": "A bare .md filename in a ticket view resolves to the current ticket's subdoc",
+      "covers": [
+        "BR-1"
+      ],
+      "given": "a ticket MDT-150 with subdoc bdd.md containing a reference to architecture.md",
+      "when": "the user views the rendered bdd.md and clicks the architecture.md link",
+      "then": "the ticket viewer navigates to /prj/MDT/ticket/MDT-150/architecture.md and displays that subdoc",
+      "sourceRef": "BR-1"
+    },
+    {
+      "id": "ticket_key_filename_resolves",
+      "title": "A ticket-key-prefixed .md filename routes to that ticket (not double-wrapped)",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "markdown containing MDT-150-smartlink-doc-urls.md is preprocessed",
+      "when": "the preprocessor processes the text",
+      "then": "the result contains a single clean ticket link [MDT-150-smartlink-doc-urls.md](/prj/MDT/ticket/MDT-150), not a double-wrapped corruption",
+      "sourceRef": "BR-2"
+    },
+    {
+      "id": "anchor_fragment_preserved",
+      "title": "Anchor fragments on .md references scroll to the correct heading",
+      "covers": [
+        "BR-3"
+      ],
+      "given": "a ticket subdoc containing architecture.md#overview",
+      "when": "the user clicks the link",
+      "then": "the target view navigates to the subdoc URL with #overview and the browser scrolls to the heading with id overview",
+      "sourceRef": "BR-3"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-docs-path-route",
+      "title": "Documents view migrates to path-style route /prj/:code/documents/* with useParams()",
+      "derivedFrom": [
+        "BR-4"
+      ],
+      "artifactIds": [
+        "ART-documents-layout",
+        "ART-app-routes"
+      ],
+      "sourceRef": "Architecture: path-style documents routing"
+    },
+    {
+      "id": "OBL-ticket-external-regression",
+      "title": "Ticket and external link rendering must remain unchanged",
+      "derivedFrom": [
+        "C1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-smart-link",
+        "ART-link-processor"
+      ],
+      "sourceRef": "Architecture: ticket and external links untouchable"
+    },
+    {
+      "id": "OBL-smartlink-no-security",
+      "title": "SmartLink must not perform security checks or file existence validation",
+      "derivedFrom": [
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-smart-link"
+      ],
+      "sourceRef": "Architecture: SmartLink only routes"
+    },
+    {
+      "id": "OBL-preprocessor-unchanged",
+      "title": "markdownPreprocessor ticket link and document link behavior unchanged (only exclusion guard added). linkProcessor remains entirely unchanged.",
+      "derivedFrom": [
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-preprocessor",
+        "ART-link-processor"
+      ],
+      "sourceRef": "Architecture: preprocessor/linkProcessor unchanged"
+    },
+    {
+      "id": "OBL-smartlink-resolve",
+      "title": "SmartLink resolves bare .md filenames as current ticket subdocs and relative .. paths as documents view, using ticket key from current route (useParams). Ticket-key pattern refs route to that ticket.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-smart-link"
+      ],
+      "sourceRef": "Architecture: simplified resolution via useParams"
+    },
+    {
+      "id": "OBL-anchor-passthrough",
+      "title": "Anchor fragments on .md refs pass through resolution unchanged to the final URL",
+      "derivedFrom": [
+        "BR-3"
+      ],
+      "artifactIds": [
+        "ART-smart-link"
+      ],
+      "sourceRef": "Architecture: anchor preservation"
+    },
+    {
+      "id": "OBL-preprocessor-resolve",
+      "title": "Preprocessor resolves bare/relative .md refs to absolute URLs using sourcePath. Bare filenames become ticket subdoc URLs. Ticket-key patterns become ticket URLs. Relative .. paths become documents URLs.",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-preprocessor"
+      ],
+      "sourceRef": "Architecture: preprocessor resolves all link types"
+    },
+    {
+      "id": "OBL-sourcepath-thread",
+      "title": "TicketViewer threads sourcePath (subdocument.filePath or ticketsPath/ticketKey.md) through MarkdownContent to useMarkdownProcessor to preprocessMarkdown",
+      "derivedFrom": [
+        "BR-1",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer",
+        "ART-markdown-content"
+      ],
+      "sourceRef": "Architecture: sourcePath plumbing"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-preprocessor",
+      "path": "src/utils/markdownPreprocessor.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: wraps .md refs as links, no routing logic, unchanged"
+    },
+    {
+      "id": "ART-link-processor",
+      "path": "src/utils/linkProcessor.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: unchanged, SmartLink handles .md resolution directly"
+    },
+    {
+      "id": "ART-smart-link",
+      "path": "src/components/SmartLink/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: sole routing authority for .md refs, path resolution + boundary checks"
+    },
+    {
+      "id": "ART-documents-layout",
+      "path": "src/components/DocumentsView/DocumentsLayout.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: migrates to useParams for path-style document routes"
+    },
+    {
+      "id": "ART-app-routes",
+      "path": "src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: route /prj/:projectCode/documents/*"
+    },
+    {
+      "id": "ART-ticket-viewer",
+      "path": "src/components/TicketViewer/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "Architecture: threads sourcePath to MarkdownContent"
+    },
+    {
+      "id": "ART-markdown-content",
+      "path": "src/components/MarkdownContent/useMarkdownProcessor.ts",
+      "kind": "runtime",
+      "sourceRef": "Architecture: passes sourcePath to preprocessMarkdown"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-preprocessor-regression",
+      "kind": "unit",
+      "title": "markdownPreprocessor unchanged (C5)",
+      "covers": [
+        "C5"
+      ],
+      "file": "src/utils/markdownPreprocessor.mdt150.test.ts",
+      "sourceRef": "tests.md#preprocessor-regression"
+    },
+    {
+      "id": "TEST-e2e-anchor-passthrough",
+      "kind": "e2e",
+      "title": "Anchor fragment passthrough E2E",
+      "covers": [
+        "BR-3"
+      ],
+      "file": "tests/e2e/ticket/smartlink-anchor.spec.ts",
+      "sourceRef": "tests.md#e2e-anchor-passthrough"
+    },
+    {
+      "id": "TEST-link-processor-regression",
+      "kind": "unit",
+      "title": "linkProcessor constraint regression (C1, C2, C5)",
+      "covers": [
+        "C1",
+        "C2"
+      ],
+      "file": "src/utils/linkProcessor.mdt150.test.ts",
+      "sourceRef": "tests.md#linkProcessor-regression"
+    },
+    {
+      "id": "TEST-link-builder-regression",
+      "kind": "unit",
+      "title": "linkBuilder constraint regression (C3, C4)",
+      "covers": [
+        "C3",
+        "C4"
+      ],
+      "file": "src/utils/linkBuilder.mdt150.test.ts",
+      "sourceRef": "tests.md#linkBuilder-regression"
+    },
+    {
+      "id": "TEST-link-normalization-resolution",
+      "kind": "unit",
+      "title": "linkNormalization path resolution (BR-1, BR-2, BR-3, C3, C4)",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "C3",
+        "C4"
+      ],
+      "file": "src/utils/linkNormalization.mdt150.test.ts",
+      "sourceRef": "tests.md#linkNormalization-resolution"
+    },
+    {
+      "id": "TEST-e2e-smartlink-doc-refs",
+      "kind": "e2e",
+      "title": "SmartLink document reference resolution E2E",
+      "covers": [
+        "BR-1",
+        "BR-2"
+      ],
+      "file": "tests/e2e/ticket/smartlink-doc-refs.spec.ts",
+      "sourceRef": "tests.md#e2e-smartlink-doc-refs"
+    },
+    {
+      "id": "TEST-e2e-documents-path-route",
+      "kind": "e2e",
+      "title": "Documents path-style routing E2E",
+      "covers": [
+        "BR-4"
+      ],
+      "file": "tests/e2e/documents/path-style-routing.spec.ts",
+      "sourceRef": "tests.md#e2e-documents-path-route"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-preprocessor-resolve",
+      "title": "Preprocessor: resolve bare/relative .md refs to absolute URLs using sourcePath",
+      "ownsArtifactIds": [
+        "ART-preprocessor"
+      ],
+      "makesGreenIds": [
+        "ticket_subdoc_reference",
+        "project_doc_reference",
+        "sibling_ticket_reference",
+        "anchor_fragment_preserved",
+        "ticket_key_filename_resolves",
+        "TEST-preprocessor-regression",
+        "TEST-link-normalization-resolution",
+        "TEST-e2e-smartlink-doc-refs",
+        "TEST-e2e-anchor-passthrough"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-sourcepath-plumb",
+      "title": "Plumb sourcePath from TicketViewer through MarkdownContent to preprocessor",
+      "ownsArtifactIds": [
+        "ART-ticket-viewer",
+        "ART-markdown-content"
+      ],
+      "makesGreenIds": [
+        "ticket_subdoc_reference",
+        "project_doc_reference",
+        "sibling_ticket_reference"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-docs-path-route",
+      "title": "Documents: path-style routing with useParams",
+      "ownsArtifactIds": [
+        "ART-documents-layout",
+        "ART-app-routes"
+      ],
+      "makesGreenIds": [
+        "documents_path_style_route",
+        "TEST-e2e-documents-path-route"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-regression-lock",
+      "title": "Constraint regression: verify all constraint tests GREEN",
+      "ownsArtifactIds": [
+        "ART-link-processor",
+        "ART-smart-link"
+      ],
+      "makesGreenIds": [
+        "TEST-link-processor-regression",
+        "TEST-link-builder-regression"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    }
+  ]
+}
