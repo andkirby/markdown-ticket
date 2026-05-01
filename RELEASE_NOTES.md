@@ -1,5 +1,30 @@
 # Release Notes
 
+## v0.15.0 (2026-05-01)
+
+### New Features
+
+**SmartLink Document URLs (MDT-150)**
+- Document references in ticket content now resolve to working navigable URLs
+- Bare filenames like `core-layout.md` open in the document viewer
+- Relative paths and sibling ticket references are handled correctly
+- Anchor fragments (`#section`) are preserved in generated links
+
+### Improvements
+
+**Flexible Path Configuration (MDT-151)**
+- `ticketsPath` in project config now accepts absolute paths, not just relative ones
+- Path traversal protection added for public deployments
+- Symlink detection with safe default-deny policy (opt-in via config)
+
+### Bug Fixes
+
+**Drag-Drop with Custom Statuses (MDT-148)**
+- Tickets with non-standard status values (e.g., "In Review", "Awaiting Approval") can now be moved between Kanban columns
+- Previously, any status not in the built-in enum would block the move with an error
+
+---
+
 ## v0.14.0 (2026-04-16)
 
 ### New Features
