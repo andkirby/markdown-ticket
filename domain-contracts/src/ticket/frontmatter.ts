@@ -7,6 +7,22 @@ import { CRPrioritySchema, CRStatusSchema, CRTypeSchema } from '../types/schema'
  */
 export const CR_CODE_PATTERN = /^[A-Z][A-Z0-9]{1,4}-\d{3,4}$/
 
+/**
+ * Parse user-supplied ticket key input.
+ * Case-insensitive, non-padded numbers, with capture groups:
+ *   [1] = project code prefix (e.g. "MDT")
+ *   [2] = ticket number (e.g. "42")
+ */
+export const TICKET_KEY_INPUT_PATTERN = /^([A-Z][A-Z0-9]{1,4})-(\d{1,5})$/i
+
+/**
+ * Parse @CODE query syntax for project-scoped search.
+ * Case-insensitive, with capture groups:
+ *   [1] = project code (e.g. "MDT")
+ *   [2] = search text after the space
+ */
+export const PROJECT_SCOPE_INPUT_PATTERN = /^@([A-Z][A-Z0-9]{1,4})\s+(.*)$/i
+
 const TrimmedTitleSchema = z.string()
   .min(1, 'Title is required')
   .max(200, 'Title must be 200 characters or less')

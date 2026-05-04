@@ -7,6 +7,7 @@
  */
 
 import type { Project } from '@mdt/shared/models/Project.js'
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { readdir, rm } from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
@@ -56,7 +57,7 @@ async function cleanupEmptyCRDir(filePath: string): Promise<void> {
   const dir = path.dirname(filePath)
   // Check if the directory name matches a CR key pattern (e.g., MDT-007)
   const dirName = path.basename(dir)
-  if (!/^[A-Z][A-Z0-9]*-\d+$/.test(dirName)) {
+  if (!TICKET_KEY_INPUT_PATTERN.test(dirName)) {
     return
   }
 
