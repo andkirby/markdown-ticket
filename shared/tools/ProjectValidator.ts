@@ -1,5 +1,6 @@
 import { isAbsolute, normalize } from '../utils/path-browser.js'
 import { sep } from 'node:path'
+import { PROJECT_CODE_PATTERN } from '@mdt/domain-contracts'
 
 // Node-only — gracefully handled in browser via typeof checks below
 let realpathSync: (path: string) => string
@@ -47,7 +48,7 @@ export class ProjectValidator {
     // Auto-uppercase for better UX
     const uppercased = code.trim().toUpperCase()
 
-    if (!/^[A-Z][A-Z0-9]{1,4}$/.test(uppercased)) {
+    if (!PROJECT_CODE_PATTERN.test(uppercased)) {
       return {
         valid: false,
         error: 'Project code must be 2-5 characters, starting with a letter followed by letters or numbers',

@@ -133,8 +133,6 @@ export const DEFAULTS = {
 
 // Validation Patterns
 export const PATTERNS = {
-  TICKET_CODE: /^[A-Z0-9]{2,5}-\d{3,}$/,
-  PROJECT_CODE: /^[A-Z0-9]{2,5}$/,
   YAML_FRONTMATTER: /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n([\s\S]*)$/,
 } as const
 

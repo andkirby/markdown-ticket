@@ -9,6 +9,7 @@ import type { TicketUpdateAttrs } from '@mdt/domain-contracts'
 import type { Project } from '@mdt/shared/models/Project.js'
 import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
+import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { groupNamespacedFiles, parseNamespace } from '@mdt/shared/services/ticket/subdocuments/namespace.js'
 import { SubdocumentService } from '@mdt/shared/services/ticket/SubdocumentService.js'
 import { normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
@@ -250,7 +251,7 @@ export class TicketService {
    */
   private async searchByTicketKey(query: string, limitTotal: number): Promise<SearchResponse> {
     // Extract project code from ticket key (e.g., "MDT-001" → "MDT")
-    const match = query.match(/^([A-Za-z][A-Za-z0-9]*)-(\d+)$/i)
+    const match = query.match(TICKET_KEY_INPUT_PATTERN)
     if (!match) {
       return { results: [], total: 0 }
     }

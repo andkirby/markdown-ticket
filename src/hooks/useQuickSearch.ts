@@ -5,6 +5,7 @@
 
 import type { Ticket } from '@/types/ticket'
 
+import { TICKET_KEY_INPUT_PATTERN, PROJECT_SCOPE_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { useCallback, useMemo, useState } from 'react'
 
 // ---------------------------------------------------------------------------
@@ -33,12 +34,12 @@ export function parseQueryMode(query: string): QueryMode {
     return 'current_project'
 
   // @CODE space text → project_scope
-  const projectMatch = trimmed.match(/^@([A-Za-z]{2,5}) (.*)$/i)
+  const projectMatch = trimmed.match(PROJECT_SCOPE_INPUT_PATTERN)
   if (projectMatch)
     return 'project_scope'
 
   // CODE-NUMBER → ticket_key
-  const ticketMatch = trimmed.match(/^([A-Za-z]{2,5})-(\d{1,5})$/i)
+  const ticketMatch = trimmed.match(TICKET_KEY_INPUT_PATTERN)
   if (ticketMatch)
     return 'ticket_key'
 
@@ -56,12 +57,12 @@ export function parseQueryParts(query: string): QueryParts {
   const trimmed = query.trim()
 
   if (mode === 'project_scope') {
-    const match = trimmed.match(/^@([A-Za-z]{2,5}) (.*)$/i)
+    const match = trimmed.match(PROJECT_SCOPE_INPUT_PATTERN)
     return { mode, projectCode: match?.[1]?.toUpperCase() ?? '', searchText: match?.[2] ?? '' }
   }
 
   if (mode === 'ticket_key') {
-    const match = trimmed.match(/^([A-Za-z]{2,5})-(\d{1,5})$/i)!
+    const match = trimmed.match(TICKET_KEY_INPUT_PATTERN)!
     return { mode, ticketCode: match[0].toUpperCase(), projectCode: match[1].toUpperCase() }
   }
 

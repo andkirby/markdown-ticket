@@ -15,7 +15,7 @@
  * This utility matches the ticket format used throughout the system.
  */
 
-import { PATTERNS } from './constants.js'
+import { PROJECT_CODE_PATTERN } from '@mdt/domain-contracts'
 
 /**
  * Error class for key normalization failures
@@ -56,7 +56,7 @@ export function normalizeKey(key: string, projectCode: string): string {
   }
 
   // Pattern 2: Full format with project prefix (e.g., "abc-12", "MDT-005", "TP0-002")
-  // Uses PATTERNS.PROJECT_CODE for validation (allows alphanumeric: A-Z, 0-9)
+  // Uses PROJECT_CODE_PATTERN from domain-contracts for validation
   // Must start with a letter, followed by alphanumeric characters
   const fullFormatPattern = /^([a-z][a-z0-9]*)-(\d+)$/i
   const match = trimmed.match(fullFormatPattern)
@@ -66,7 +66,7 @@ export function normalizeKey(key: string, projectCode: string): string {
     const uppercasedPrefix = prefix.toUpperCase()
 
     // Validate prefix matches PROJECT_CODE pattern (2-5 alphanumeric chars)
-    if (!PATTERNS.PROJECT_CODE.test(uppercasedPrefix)) {
+    if (!PROJECT_CODE_PATTERN.test(uppercasedPrefix)) {
       throw new KeyNormalizationError(
         `Invalid project code '${uppercasedPrefix}'. Project code must be 2-5 alphanumeric characters.`,
       )
