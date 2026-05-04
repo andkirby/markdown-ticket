@@ -11,6 +11,7 @@ import type { ProjectConfig } from '../project-factory-types.js'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { CRStatus as CRStatusEnum } from '../../models/Types.js'
+import { formatCrKey } from '../../utils/keyNormalizer.js'
 import { withRetry } from '../utils/retry-helper.js'
 
 /** Test CR data structure */
@@ -132,7 +133,7 @@ ${content}`
 
   /** Generate ticket code with padding */
   private generateTicketCode(projectCode: string, number: number): string {
-    return `${projectCode}-${String(number).padStart(3, '0')}`
+    return formatCrKey(projectCode, number)
   }
 
   /** Create URL-safe slug from title */

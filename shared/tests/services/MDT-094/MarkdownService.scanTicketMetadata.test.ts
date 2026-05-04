@@ -18,6 +18,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { MarkdownService } from '../../../services/MarkdownService.js'
+import { formatCrKey } from '../../../utils/keyNormalizer.js'
 
 describe('MarkdownService Metadata Methods (MDT-094)', () => {
   let tempDir: string
@@ -211,8 +212,8 @@ ${largeContent}
 
       // Create 50 ticket files
       for (let i = 1; i <= 50; i++) {
-        writeFileSync(join(batchDir, `ticket-${i.toString().padStart(3, '0')}.md`), `---
-code: MDT-${i.toString().padStart(3, '0')}
+        writeFileSync(join(batchDir, `ticket-${formatCrKey('MDT', i).slice(4)}.md`), `---
+code: MDT-${formatCrKey('MDT', i).slice(4)}
 title: Ticket ${i}
 status: Proposed
 type: Feature Enhancement

@@ -5,6 +5,7 @@
  */
 
 import type { Project } from '../models/Project.js'
+import { formatCrKey } from '../utils/keyNormalizer.js'
 import type {
   Ticket,
   TicketData,
@@ -304,7 +305,7 @@ export class TicketService {
   async createCR(project: Project, crType: string, data: TicketData): Promise<Ticket> {
     try {
       const nextNumber = await this.getNextCRNumber(project)
-      const crKey = `${project.project.code}-${String(nextNumber).padStart(3, '0')}`
+      const crKey = formatCrKey(project.project.code, nextNumber)
 
       const location = await this.ticketLocationResolver.resolve(project, crKey)
       const crPath = path.join(location.projectRoot, location.ticketsPath)

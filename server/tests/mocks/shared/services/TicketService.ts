@@ -6,6 +6,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
+import { formatCrKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { ProjectService } from './ProjectService'
 
 export interface Ticket {
@@ -178,7 +179,7 @@ export class TicketService {
       nextNum = Math.max(...nums) + 1
     }
 
-    const crId = `${project.id}-${nextNum.toString().padStart(3, '0')}`
+    const crId = formatCrKey(project.id, nextNum)
     const crDir = path.join(crPath, crId)
     fs.mkdirSync(crDir, { recursive: true })
 

@@ -5,7 +5,8 @@
 
 import type { Ticket } from '@/types/ticket'
 
-import { TICKET_KEY_INPUT_PATTERN, PROJECT_SCOPE_INPUT_PATTERN } from '@mdt/domain-contracts'
+import { PROJECT_SCOPE_INPUT_PATTERN, TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
+import { formatCrKey } from '@mdt/shared/utils/keyNormalizer'
 import { useCallback, useMemo, useState } from 'react'
 
 // ---------------------------------------------------------------------------
@@ -89,9 +90,7 @@ export interface FilterTicketsOptions {
 function normalizeTicketKeyTerm(term: string): string {
   const match = term.match(/^([a-z]+)-0*(\d+)$/i)
   if (match) {
-    const prefix = match[1]!.toUpperCase()
-    const padded = match[2]!.padStart(3, '0')
-    return `${prefix}-${padded}`.toLowerCase()
+    return formatCrKey(match[1]!.toUpperCase(), Number.parseInt(match[2]!, 10)).toLowerCase()
   }
   return term
 }

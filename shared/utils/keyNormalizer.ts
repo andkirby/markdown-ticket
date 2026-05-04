@@ -28,6 +28,19 @@ export class KeyNormalizationError extends Error {
 }
 
 /**
+ * Format a CR key with dynamic zero-padding.
+ * MDT-001 (3-digit), MDT-1000 (4-digit), MDT-10000 (5-digit)
+ *
+ * @param projectCode - The project code (e.g., 'MDT', 'API')
+ * @param number - The ticket number
+ * @returns Formatted CR key with dynamic padding
+ */
+export function formatCrKey(projectCode: string, number: number): string {
+  const padding = Math.max(3, String(number).length)
+  return `${projectCode}-${String(number).padStart(padding, '0')}`
+}
+
+/**
  * Normalize a CR key to the standard format {PROJECTCODE}-{NUMBER}
  *
  * @param key - The key to normalize (numeric shorthand or full format)
@@ -51,8 +64,7 @@ export function normalizeKey(key: string, projectCode: string): string {
   const numericPattern = /^\d+$/
   if (numericPattern.test(trimmed)) {
     // Pad to 3 digits and add project prefix
-    const number = String(Number.parseInt(trimmed, 10)).padStart(3, '0')
-    return `${projectCode}-${number}`
+    return formatCrKey(projectCode, Number.parseInt(trimmed, 10))
   }
 
   // Pattern 2: Full format with project prefix (e.g., "abc-12", "MDT-005", "TP0-002")
@@ -73,8 +85,7 @@ export function normalizeKey(key: string, projectCode: string): string {
     }
 
     // Pad to 3 digits (matching ticket storage format)
-    const number = String(Number.parseInt(numberStr, 10)).padStart(3, '0')
-    return `${uppercasedPrefix}-${number}`
+    return formatCrKey(uppercasedPrefix, Number.parseInt(numberStr, 10))
   }
 
   // Invalid format - provide helpful error message
