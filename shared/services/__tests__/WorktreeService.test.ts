@@ -6,6 +6,8 @@
  * @module shared/services/__tests__/WorktreeService.test.ts
  */
 
+import { formatCrKey } from '../../utils/keyNormalizer.js'
+
 /* eslint-disable ts/no-explicit-any -- Jest mock return values require 'as any' type assertions */
 
 import { execFile } from 'node:child_process'
@@ -416,7 +418,7 @@ branch refs/heads/feature/MDT-095
     it('should handle 10+ concurrent worktrees', async () => {
       // Generate porcelain output for 15 worktrees
       const worktrees = Array.from({ length: 15 }, (_, i) => {
-        const code = `MDT-${String(100 + i).padStart(3, '0')}`
+        const code = formatCrKey('MDT', 100 + i)
         return `worktree /test/worktrees/${code}
 HEAD ${code.toLowerCase()}
 branch refs/heads/feature/${code}

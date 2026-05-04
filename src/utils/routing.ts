@@ -1,5 +1,6 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { Ticket } from '../types'
+import { formatCrKey } from '@mdt/shared/utils/keyNormalizer'
 
 export function normalizeTicketKey(key: string): string {
   // Validate input
@@ -12,7 +13,7 @@ export function normalizeTicketKey(key: string): string {
   const match = sanitized.match(/^([A-Z]+)-(\d+)$/)
   if (!match)
     return sanitized
-  return `${match[1]}-${match[2].padStart(3, '0')}`
+  return formatCrKey(match[1], Number.parseInt(match[2], 10))
 }
 
 export function validateProjectCode(code: string): boolean {

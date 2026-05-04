@@ -6,6 +6,7 @@
  */
 
 import { readdir } from 'node:fs/promises'
+import { formatCrKey } from '../../../utils/keyNormalizer.js'
 
 export class TicketCodeHelper {
   /**
@@ -52,7 +53,7 @@ export class TicketCodeHelper {
    * @returns Formatted ticket code (e.g., "MDT-001")
    */
   static generateCode(projectCode: string, number: number): string {
-    return `${projectCode}-${String(number).padStart(3, '0')}`
+    return formatCrKey(projectCode, number)
   }
 
   /**
