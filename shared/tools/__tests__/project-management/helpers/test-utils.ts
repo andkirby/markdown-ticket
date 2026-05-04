@@ -8,6 +8,7 @@ import { existsSync, readFileSync, rmSync, statSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { parseToml } from '../../../../utils/toml.js'
+import { PROJECT_CODE_PATTERN } from '@mdt/domain-contracts'
 
 const execAsync = promisify(exec)
 
@@ -196,8 +197,7 @@ export function configHasRequiredFields(config: unknown): boolean {
 }
 
 export function configHasValidCode(code: string): boolean {
-  // Matches ProjectValidator.validateCode regex: /^[A-Z][A-Z0-9]{1,4}$/
-  return /^[A-Z][A-Z0-9]{1,4}$/.test(code)
+  return PROJECT_CODE_PATTERN.test(code)
 }
 
 // Types

@@ -153,9 +153,9 @@ export const DEFAULTS = {
 } as const
 
 // Validation Patterns
+// MDT-158: Only YAML_FRONTMATTER remains in PATTERNS. PROJECT_CODE and TICKET_CODE
+// have been removed from the canonical source and this mock.
 export const PATTERNS = {
-  TICKET_CODE: /^[A-Z0-9]{2,5}-\d{3,}$/,
-  PROJECT_CODE: /^[A-Z0-9]{2,5}$/,
   YAML_FRONTMATTER: /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/,
 } as const
 
