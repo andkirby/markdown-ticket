@@ -3,6 +3,7 @@ import type { TypedEvent } from '../../services/eventBus'
 import type { Ticket } from '../../types'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { dataLayer } from '../../services/dataLayer'
 import { useEventBus } from '../../services/eventBus'
@@ -26,9 +27,10 @@ interface TicketViewerProps {
   isOpen: boolean
   onClose: () => void
   ticketsPath?: string
+  ticketError?: string | null
 }
 
-const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ticketsPath }) => {
+const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ticketsPath, ticketError }) => {
   const { projectCode } = useParams<{ projectCode: string }>()
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(ticket)
 
@@ -211,7 +213,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
     return subdocContent ? extractTableOfContents(subdocContent, 3) : []
   }, [subdocContent])
 
-  if (!currentTicket)
+  if (!currentTicket && !ticketError)
     return null
 
   return (
@@ -239,53 +241,61 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
         </svg>
       </button>
       <ModalBody className="p-0">
-        <div className="min-w-0">
-          <CompactTicketHeader ticket={currentTicket} />
+        {ticketError && !ticket ? (
+          <div data-testid="ticket-not-found" className="flex flex-col items-center justify-center py-16 px-6">
+            <AlertTriangle className="h-10 w-10 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Ticket Not Found</h3>
+            <p className="text-muted-foreground text-center">{ticketError}</p>
+          </div>
+        ) : (
+          <div className="min-w-0">
+            <CompactTicketHeader ticket={currentTicket!} />
 
-          <TicketDocumentTabs
-            subdocuments={liveSubdocs}
-            selectedPath={selectedPath}
-            folderStack={folderStack}
-            onSelect={selectPath}
-            ticketCode={currentTicket?.code ?? ''}
-          />
+            <TicketDocumentTabs
+              subdocuments={liveSubdocs}
+              selectedPath={selectedPath}
+              folderStack={folderStack}
+              onSelect={selectPath}
+              ticketCode={currentTicket?.code ?? ''}
+            />
 
-          <div data-testid="subdoc-content" className="relative">
-            {subdocError && (
-              <div data-testid="subdoc-error" className="px-4 py-3 text-sm text-destructive" role="alert">
-                {subdocError}
-              </div>
-            )}
-            {!subdocError && isOpen && projectCode && (
-              <>
-                {(pendingPath || subdocLoading) && (
-                  <div data-testid="subdoc-loading" className="absolute inset-0 z-10 flex items-start justify-center pt-8 bg-background/50">
-                    <span className="text-muted-foreground text-sm animate-pulse">
-                      Loading…
-                    </span>
-                  </div>
-                )}
-                <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'pointer-events-none opacity-50' : ''}>
-                  <div className="relative px-4 py-4 sm:px-5">
-                    <div className="absolute right-4 top-4 z-[1] sm:right-5">
-                      <RelativeTimestamp
-                        createdAt={currentTicket.dateCreated}
-                        updatedAt={currentTicket.lastModified}
+            <div data-testid="subdoc-content" className="relative">
+              {subdocError && (
+                <div data-testid="subdoc-error" className="px-4 py-3 text-sm text-destructive" role="alert">
+                  {subdocError}
+                </div>
+              )}
+              {!subdocError && isOpen && projectCode && (
+                <>
+                  {(pendingPath || subdocLoading) && (
+                    <div data-testid="subdoc-loading" className="absolute inset-0 z-10 flex items-start justify-center pt-8 bg-background/50">
+                      <span className="text-muted-foreground text-sm animate-pulse">
+                        Loading…
+                      </span>
+                    </div>
+                  )}
+                  <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'pointer-events-none opacity-50' : ''}>
+                    <div className="relative px-4 py-4 sm:px-5">
+                      <div className="absolute right-4 top-4 z-[1] sm:right-5">
+                        <RelativeTimestamp
+                          createdAt={currentTicket!.dateCreated}
+                          updatedAt={currentTicket!.lastModified}
+                        />
+                      </div>
+                      <MarkdownContent
+                        markdown={subdocContent}
+                        currentProject={projectCode}
+                        sourcePath={selectedPath === 'main' ? `${currentTicket?.code}.md` : `${currentTicket?.code}/${selectedPath}.md`}
+                        ticketsPath={ticketsPath}
+                        headerLevelStart={3}
                       />
                     </div>
-                    <MarkdownContent
-                      markdown={subdocContent}
-                      currentProject={projectCode}
-                      sourcePath={selectedPath === 'main' ? `${currentTicket?.code}.md` : `${currentTicket?.code}/${selectedPath}.md`}
-                      ticketsPath={ticketsPath}
-                      headerLevelStart={3}
-                    />
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </ModalBody>
     </Modal>
   )

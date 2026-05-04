@@ -28,6 +28,9 @@ export function createProjectRouter(projectController: ProjectController): Route
    */
   router.get('/', (req, res) => projectController.getAllProjects(req, res))
 
+  // MDT-152: Cross-project search endpoint — registered before param routes
+  router.post('/search', (req, res) => projectController.search(req, res))
+
   /**
    * @openapi
    * /api/projects/{projectId}/config:

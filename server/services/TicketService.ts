@@ -11,11 +11,24 @@ import type { Ticket, TicketData } from '@mdt/shared/models/Ticket.js'
 import type { CRStatus } from '@mdt/shared/models/Types.js'
 import { groupNamespacedFiles, parseNamespace } from '@mdt/shared/services/ticket/subdocuments/namespace.js'
 import { SubdocumentService } from '@mdt/shared/services/ticket/SubdocumentService.js'
+import { normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { TicketLocationResolver } from '@mdt/shared/services/ticket/TicketLocationResolver.js'
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
 
 export type CRData = Pick<TicketData, 'title' | 'type' | 'priority' | 'description'> & {
   code?: string
+}
+
+/** Search result item with ticket and project context */
+export interface SearchResultItem {
+  ticket: { code: string, title: string }
+  project: { code: string, name: string }
+}
+
+/** Search response shape */
+export interface SearchResponse {
+  results: SearchResultItem[]
+  total: number
 }
 
 export interface CreateCRResult {
@@ -207,6 +220,108 @@ export class TicketService {
       updatedFields,
       projectId,
       crId,
+    }
+  }
+
+  /**
+   * Search for tickets across projects. MDT-152.
+   *
+   * ticket_key mode: resolve project from code prefix in the key, look up ticket.
+   * project_scope mode: search within a specific project by code.
+   */
+  async searchTickets(
+    mode: 'ticket_key' | 'project_scope',
+    query: string,
+    options: {
+      projectCode?: string
+      limitPerProject: number
+      limitTotal: number
+    },
+  ): Promise<SearchResponse> {
+    if (mode === 'ticket_key') {
+      return this.searchByTicketKey(query, options.limitTotal)
+    }
+    return this.searchByProjectScope(query, options.projectCode!, options.limitPerProject, options.limitTotal)
+  }
+
+  /**
+   * ticket_key mode: extract project code from ticket key prefix,
+   * resolve project, look up ticket.
+   */
+  private async searchByTicketKey(query: string, limitTotal: number): Promise<SearchResponse> {
+    // Extract project code from ticket key (e.g., "MDT-001" → "MDT")
+    const match = query.match(/^([A-Za-z][A-Za-z0-9]*)-(\d+)$/i)
+    if (!match) {
+      return { results: [], total: 0 }
+    }
+
+    const projectCode = match[1].toUpperCase()
+    const projects = await this.projectDiscovery.getAllProjects()
+    const project = projects.find(p => p.project.code === projectCode || p.id === projectCode)
+
+    if (!project) {
+      return { results: [], total: 0 }
+    }
+
+    // Normalize key to zero-padded format (MDT-1 → MDT-001)
+    let normalizedKey: string
+    try {
+      normalizedKey = normalizeKey(query, projectCode)
+    }
+    catch {
+      return { results: [], total: 0 }
+    }
+
+    const cr = await this.sharedTicketService.getCR(project, normalizedKey)
+    if (!cr) {
+      return { results: [], total: 0 }
+    }
+
+    return {
+      results: [{
+        ticket: { code: cr.code, title: cr.title },
+        project: { code: project.project.code || project.id, name: project.project.name },
+      }],
+      total: 1,
+    }
+  }
+
+  /**
+   * project_scope mode: search within a specific project.
+   * Throws 'Project not found' if projectCode is invalid.
+   */
+  private async searchByProjectScope(
+    query: string,
+    projectCode: string,
+    limitPerProject: number,
+    limitTotal: number,
+  ): Promise<SearchResponse> {
+    const projects = await this.projectDiscovery.getAllProjects()
+    const project = projects.find(p => p.project.code === projectCode || p.id === projectCode)
+
+    if (!project) {
+      throw new Error('Project not found')
+    }
+
+    const allCRs = await this.sharedTicketService.listCRs(project)
+
+    // Filter by query — case-insensitive substring match on title or code
+    const filtered = query
+      ? allCRs.filter(cr =>
+          cr.title.toLowerCase().includes(query.toLowerCase())
+          || cr.code.toLowerCase().includes(query.toLowerCase()),
+        )
+      : allCRs
+
+    const effectiveLimit = Math.min(limitPerProject, limitTotal)
+    const limited = filtered.slice(0, effectiveLimit)
+
+    return {
+      results: limited.map(cr => ({
+        ticket: { code: cr.code, title: cr.title },
+        project: { code: project.project.code || project.id, name: project.project.name },
+      })),
+      total: limited.length,
     }
   }
 

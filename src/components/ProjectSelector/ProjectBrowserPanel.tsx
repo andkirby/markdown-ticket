@@ -1,8 +1,9 @@
 /**
- * ProjectBrowserPanel Component (MDT-129)
+ * ProjectBrowserPanel Component (MDT-129, MDT-152)
  *
  * Full project list panel that opens when launcher is activated.
  * Displays all projects as cards with favorites first, then sorted by usage.
+ * Includes client-side search filtering by project code or name (MDT-152).
  *
  * Behavior Requirements:
  * - BR-4.1: Show all projects as cards with code, title, description
@@ -10,9 +11,17 @@
  * - BR-4.3: Non-favorites sorted by lastUsedAt descending
  * - BR-4.4: Cards are clickable to select project
  * - BR-4.5: Panel positioned below selector rail
+ * - BR-1.1: Search input visible when panel opens
+ * - BR-1.2: Filter by code or name, case-insensitive
+ * - BR-1.3: Current project excluded when query matches
+ * - BR-1.4: Empty state when no projects match
+ * - BR-1.5: Escape closes panel
+ * - BR-1.6: Autofocus search input on open
  *
- * @testid project-panel — Panel container
- * @testid project-panel-card — Individual project card in panel
+ * @testid project-browser-panel — Panel container
+ * @testid project-browser-search-input — Search input
+ * @testid project-browser-card-{code} — Project card in panel
+ * @testid project-browser-empty-state — Empty search state
  */
 
 import type { Project } from '@mdt/shared/models/Project'
@@ -114,6 +123,21 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
   isOpen,
   onClose,
 }) => {
+  // Search state
+  const [searchQuery, setSearchQuery] = React.useState('')
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
+
+  // Reset search and autofocus when panel opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setSearchQuery('')
+      // Slight delay to ensure DOM is ready before focusing
+      requestAnimationFrame(() => {
+        searchInputRef.current?.focus()
+      })
+    }
+  }, [isOpen])
+
   // Handle Escape key to close panel
   React.useEffect(() => {
     if (!isOpen)
@@ -147,6 +171,25 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     [projects, selectorState],
   )
 
+  // Filter projects by search query (case-insensitive code OR name match)
+  const displayProjects = React.useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+
+    if (!query) {
+      return panelProjects
+    }
+
+    return panelProjects.filter((project) => {
+      // Exclude current project when searching
+      if ((project.project.code || project.id) === activeProjectKey) {
+        return false
+      }
+      const code = (project.project.code || project.id).toLowerCase()
+      const name = (project.project.name || '').toLowerCase()
+      return code.includes(query) || name.includes(query)
+    })
+  }, [panelProjects, searchQuery, activeProjectKey])
+
   if (!isOpen)
     return null
 
@@ -167,7 +210,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     <div
       className="fixed inset-0 z-50"
       onClick={handleBackdropClick}
-      data-testid="project-panel"
+      data-testid="project-browser-panel"
     >
       {/* Backdrop - full screen with dimming effect */}
       <div className="fixed inset-0 w-screen h-[100dvh] bg-black/50 backdrop-blur-sm" />
@@ -179,18 +222,36 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
           onClick={e => e.stopPropagation()}
           className="pointer-events-auto relative w-full max-w-4xl mx-4 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Select Project
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-              aria-label="Close panel"
-            >
+          {/* Header with search input */}
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Select Project
+              </h2>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                aria-label="Close panel"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-500 dark:text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            {/* Search input (MDT-152) */}
+            <div className="relative">
               <svg
-                className="w-5 h-5 text-gray-500 dark:text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -199,23 +260,37 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
-            </button>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search projects..."
+                data-testid="project-browser-search-input"
+                className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+              />
+            </div>
           </div>
 
           {/* Project list */}
           <div className="max-h-[60vh] overflow-y-auto p-6">
-            {panelProjects.length === 0
+            {displayProjects.length === 0
               ? (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                    No projects available
+                  <div
+                    data-testid="project-browser-empty-state"
+                    className="text-center py-12 text-gray-500 dark:text-gray-400"
+                  >
+                    {searchQuery.trim()
+                      ? 'No projects match your search'
+                      : 'No projects available'}
                   </div>
                 )
               : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {panelProjects.map(project => (
+                    {displayProjects.map(project => (
                       <ProjectSelectorCard
                         key={project.project.code || project.id}
                         project={project}
@@ -225,6 +300,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
                         onSelect={handleProjectSelect}
                         showDescription={true}
                         onFavoriteToggle={onFavoriteToggle}
+                        testIdPrefix="project-browser-card"
                       />
                     ))}
                   </div>
