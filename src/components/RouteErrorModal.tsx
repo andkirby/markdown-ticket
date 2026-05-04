@@ -15,7 +15,7 @@ export function RouteErrorModal({ error, onClose }: RouteErrorModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div data-testid="route-error" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-card border rounded-lg p-6 max-w-md mx-4">
         <div className="flex items-center space-x-3 mb-4">
           <AlertTriangle className="h-6 w-6 text-destructive" />

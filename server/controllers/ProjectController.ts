@@ -1,3 +1,4 @@
+import type { SearchMode } from '@mdt/domain-contracts'
 import type { Ticket as DomainTicket } from '@mdt/domain-contracts'
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project.js'
 import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
@@ -6,6 +7,7 @@ import type { Request, Response } from 'express'
 import type { CRData, TicketService } from '../services/TicketService.js'
 import type { TreeNode } from '../types/tree.js'
 
+import { SearchRequestSchema } from '@mdt/domain-contracts'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
 
@@ -110,6 +112,49 @@ export class ProjectController {
     this.ticketController = ticketController
     this.ticketService = ticketService
     this.worktreeService = new WorktreeService() // MDT-093: Initialize WorktreeService
+  }
+
+  /**
+   * Search tickets across projects. MDT-152.
+   */
+  async search(req: Request, res: Response): Promise<void> {
+    try {
+      // Validate request body against schema
+      const parseResult = SearchRequestSchema.safeParse(req.body)
+      if (!parseResult.success) {
+        const firstIssue = parseResult.error.issues[0]
+        const message = firstIssue?.message ?? 'Validation error'
+        res.status(400).json({ error: 'Bad Request', message })
+        return
+      }
+
+      const { mode, query, limitPerProject, limitTotal } = parseResult.data
+      const projectCode = 'projectCode' in parseResult.data
+        ? (parseResult.data as { projectCode: string }).projectCode
+        : undefined
+
+      if (!this.ticketService) {
+        res.status(501).json({ error: 'Ticket service not available for search' })
+        return
+      }
+
+      const result = await this.ticketService.searchTickets(
+        mode as SearchMode,
+        query,
+        { projectCode, limitPerProject, limitTotal },
+      )
+
+      res.json(result)
+    }
+    catch (error: unknown) {
+      const err = error as Error
+      if (err.message === 'Project not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
+        return
+      }
+      console.error('Error searching tickets:', error)
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to search tickets' })
+    }
   }
 
   /**

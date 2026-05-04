@@ -209,7 +209,6 @@ function resolveDocumentRef(
   return `/prj/${projectCode}/documents?file=${encodeURIComponent(fullPath)}${anchor}`
 }
 
-
 /**
  * Converts document references to markdown links.
  * MDT-150: When sourcePath is available, resolves .md refs to absolute URLs
@@ -222,7 +221,7 @@ function convertDocumentReferences(
   projectCode?: string,
   ticketsPath?: string,
 ): string {
-  return markdown.replace(/((?:\.\.\/|\.\/)*[^\s]+\.md(?:#\S+)?)/g, (match, filename) => {
+  return markdown.replace(/(\S+\.md(?:#\S+)?)/g, (match, filename) => {
     // Match .md references that may have path prefixes like ../ ./. etc.
     // If we have sourcePath context, resolve to absolute URLs
     if (sourcePath && ticketKey && projectCode) {
@@ -235,7 +234,7 @@ function convertDocumentReferences(
 
     // Fallback: simple wrapping (bare filename → relative link)
     // Skip filenames that start with a ticket key pattern (handled by convertTicketReferences)
-    const ticketKeyPattern = /^[A-Z]+-\d+.*\.md$/
+    const ticketKeyPattern = /^[A-Z]+-\d.*\.md$/
     if (ticketKeyPattern.test(filename)) {
       return match
     }
@@ -322,7 +321,7 @@ export function preprocessMarkdown(
     // Must happen BEFORE convertTicketReferences to prevent corruption
     // Protects both bare ticket-key.md (MDT-151.md) and prefixed ones (MDT-150-smartlink-doc-urls.md)
     const ticketFilenamePlaceholders: string[] = []
-    processed = processed.replace(/\b([A-Z]+-\d+[^\s]*\.md(?:#\S+)?)\b/g, (match) => {
+    processed = processed.replace(/\b([A-Z]+-\d\S*\.md(?:#\S+)?)\b/g, (match) => {
       const placeholder = `__TICKET_FILENAME_PLACEHOLDER_${ticketFilenamePlaceholders.length}__`
       ticketFilenamePlaceholders.push(match)
       return placeholder

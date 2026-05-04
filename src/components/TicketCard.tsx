@@ -1,5 +1,5 @@
-import type { Ticket } from '../types'
 import type { CRStatus } from '@mdt/shared/models/Types'
+import type { Ticket } from '../types'
 import * as React from 'react'
 import TicketAttributeTags from './TicketAttributeTags'
 import { TicketCode } from './TicketCode'

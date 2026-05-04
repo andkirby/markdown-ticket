@@ -10,7 +10,7 @@
 
 import type { Ticket } from '../types'
 import { describe, expect, it } from 'bun:test'
-import { filterTickets, MAX_RESULTS } from './useQuickSearch'
+import { filterTickets, MAX_RESULTS, parseQueryMode, parseQueryParts } from './useQuickSearch'
 
 // Helper to create mock tickets
 function createMockTicket(overrides: Partial<Ticket> = {}): Ticket {
@@ -69,6 +69,42 @@ describe('useQuickSearch - Filter by key number (BR-3)', () => {
 
     // Should match MDT-100 and MDT-101
     expect(result.length).toBe(2)
+  })
+
+  it('matches simplified ticket key to zero-padded ticket (MDT-42 finds MDT-042)', () => {
+    const tickets: Ticket[] = [
+      createMockTicket({ code: 'MDT-042', title: 'Some Feature' }),
+      createMockTicket({ code: 'MDT-001', title: 'Other Ticket' }),
+    ]
+
+    // User types "MDT-42" — should find MDT-042
+    const result = filterTickets({ query: 'MDT-42', tickets })
+
+    expect(result.length).toBe(1)
+    expect(result[0].code).toBe('MDT-042')
+  })
+
+  it('matches lowercase simplified key (mdt-42 finds MDT-042)', () => {
+    const tickets: Ticket[] = [
+      createMockTicket({ code: 'MDT-042', title: 'Some Feature' }),
+    ]
+
+    const result = filterTickets({ query: 'mdt-42', tickets })
+
+    expect(result.length).toBe(1)
+    expect(result[0].code).toBe('MDT-042')
+  })
+
+  it('still matches exact zero-padded key (MDT-042 finds MDT-042)', () => {
+    const tickets: Ticket[] = [
+      createMockTicket({ code: 'MDT-042', title: 'Some Feature' }),
+      createMockTicket({ code: 'MDT-001', title: 'Other' }),
+    ]
+
+    const result = filterTickets({ query: 'MDT-042', tickets })
+
+    expect(result.length).toBe(1)
+    expect(result[0].code).toBe('MDT-042')
   })
 })
 
@@ -205,5 +241,121 @@ describe('useQuickSearch - Edge cases', () => {
 
     // Should not throw on special characters
     expect(() => filterTickets({ query: '[urgent]', tickets })).not.toThrow()
+  })
+})
+
+// ============================================================================
+// MDT-152: Cross-Project Search — Query Mode Detection
+// ============================================================================
+//
+// RED tests — these will fail until parseQueryMode and parseQueryParts are
+// implemented in useQuickSearch.ts as part of MDT-152.
+//
+// The functions classify raw search input into:
+//   'current_project' — plain text, no special syntax
+//   'ticket_key'      — exact CODE-NUMBER pattern (2-5 uppercase letters, 1-5 digits)
+//   'project_scope'   — @CODE followed by space and search text
+//
+// See architecture.md Flow 2-4 and requirements.trace.md BR-2.1, BR-3.1, BR-4.1.
+// ============================================================================
+
+describe('MDT-152: parseQueryMode — ticket key detection (BR-2.1)', () => {
+  it('detects ticket_key for valid CODE-NUMBER patterns', () => {
+    expect(parseQueryMode('ABC-42')).toBe('ticket_key')
+    expect(parseQueryMode('MDT-1')).toBe('ticket_key')
+    expect(parseQueryMode('XY-99999')).toBe('ticket_key')
+    expect(parseQueryMode('ABCDE-12345')).toBe('ticket_key')
+  })
+
+  it('accepts lowercase codes as ticket_key (case-insensitive)', () => {
+    expect(parseQueryMode('abc-42')).toBe('ticket_key')
+    expect(parseQueryMode('mdt-1')).toBe('ticket_key')
+  })
+
+  it('rejects codes shorter than 2 letters', () => {
+    expect(parseQueryMode('A-42')).toBe('current_project')
+  })
+
+  it('rejects codes longer than 5 letters', () => {
+    expect(parseQueryMode('ABCDEF-42')).toBe('current_project')
+  })
+
+  it('rejects numbers with more than 5 digits', () => {
+    expect(parseQueryMode('ABC-123456')).toBe('current_project')
+  })
+})
+
+describe('MDT-152: parseQueryMode — @syntax detection (BR-3.1)', () => {
+  it('detects project_scope for @CODE space text', () => {
+    expect(parseQueryMode('@ABC login')).toBe('project_scope')
+    expect(parseQueryMode('@MDT fix bug')).toBe('project_scope')
+    expect(parseQueryMode('@XY search terms here')).toBe('project_scope')
+    expect(parseQueryMode('@mdt docker')).toBe('project_scope')
+    expect(parseQueryMode('@abc login')).toBe('project_scope')
+  })
+
+  it('returns current_project for @CODE without space or text', () => {
+    // No space = not yet committed to project scope
+    expect(parseQueryMode('@ABC')).toBe('current_project')
+    // Space but no search text = not yet committed
+    expect(parseQueryMode('@ABC ')).toBe('current_project')
+  })
+})
+
+describe('MDT-152: parseQueryMode — default current_project (BR-4.1)', () => {
+  it('returns current_project for plain text', () => {
+    expect(parseQueryMode('badge fix')).toBe('current_project')
+    expect(parseQueryMode('user management')).toBe('current_project')
+  })
+
+  it('returns current_project for empty or whitespace-only input', () => {
+    expect(parseQueryMode('')).toBe('current_project')
+    expect(parseQueryMode('  ')).toBe('current_project')
+  })
+})
+
+describe('MDT-152: parseQueryMode — Edge-5 and Edge-6 exclusivity', () => {
+  it('Edge-5: own-project ticket key is still ticket_key (not excluded)', () => {
+    // Typing own project ticket key should be ticket_key mode
+    // Current-project exclusion only applies to ProjectBrowserPanel
+    expect(parseQueryMode('MDT-136')).toBe('ticket_key')
+  })
+
+  it('Edge-6: @current-project is project_scope (not excluded)', () => {
+    // Explicit @MDT should be project_scope even if MDT is current project
+    expect(parseQueryMode('@MDT login')).toBe('project_scope')
+    expect(parseQueryMode('@mdt login')).toBe('project_scope')
+  })
+})
+
+describe('MDT-152: parseQueryParts — extract structured query parts', () => {
+  it('extracts project code and search text from @syntax', () => {
+    const parts = parseQueryParts('@ABC login page')
+    expect(parts.projectCode).toBe('ABC')
+    expect(parts.searchText).toBe('login page')
+  })
+
+  it('extracts multi-word search text after @CODE', () => {
+    const parts = parseQueryParts('@MDT fix the badge rendering')
+    expect(parts.projectCode).toBe('MDT')
+    expect(parts.searchText).toBe('fix the badge rendering')
+  })
+
+  it('extracts ticket code and project code from ticket key', () => {
+    const parts = parseQueryParts('ABC-42')
+    expect(parts.ticketCode).toBe('ABC-42')
+    expect(parts.projectCode).toBe('ABC')
+  })
+
+  it('normalizes lowercase @syntax to uppercase project code', () => {
+    const parts = parseQueryParts('@mdt docker')
+    expect(parts.projectCode).toBe('MDT')
+    expect(parts.searchText).toBe('docker')
+  })
+
+  it('normalizes lowercase ticket key to uppercase', () => {
+    const parts = parseQueryParts('abc-42')
+    expect(parts.ticketCode).toBe('ABC-42')
+    expect(parts.projectCode).toBe('ABC')
   })
 })

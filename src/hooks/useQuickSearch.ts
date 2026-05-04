@@ -7,12 +7,92 @@ import type { Ticket } from '@/types/ticket'
 
 import { useCallback, useMemo, useState } from 'react'
 
+// ---------------------------------------------------------------------------
+// MDT-152: Query Mode Detection — pure functions
+// ---------------------------------------------------------------------------
+
+export type QueryMode = 'current_project' | 'ticket_key' | 'project_scope'
+
+export interface QueryParts {
+  mode: QueryMode
+  projectCode?: string
+  searchText?: string
+  ticketCode?: string
+}
+
+/**
+ * Classify a raw search query into one of three modes:
+ *   'ticket_key'      — CODE-NUMBER (2-5 uppercase letters, 1-5 digits)
+ *   'project_scope'   — @CODE followed by space and search text
+ *   'current_project' — plain text, anything else
+ */
+export function parseQueryMode(query: string): QueryMode {
+  const trimmed = query.trim()
+
+  if (!trimmed)
+    return 'current_project'
+
+  // @CODE space text → project_scope
+  const projectMatch = trimmed.match(/^@([A-Za-z]{2,5}) (.*)$/i)
+  if (projectMatch)
+    return 'project_scope'
+
+  // CODE-NUMBER → ticket_key
+  const ticketMatch = trimmed.match(/^([A-Za-z]{2,5})-(\d{1,5})$/i)
+  if (ticketMatch)
+    return 'ticket_key'
+
+  return 'current_project'
+}
+
+/**
+ * Extract structured fields from a parsed query.
+ * Returns projectCode + searchText for project_scope,
+ * ticketCode + projectCode for ticket_key,
+ * or just the mode for current_project.
+ */
+export function parseQueryParts(query: string): QueryParts {
+  const mode = parseQueryMode(query)
+  const trimmed = query.trim()
+
+  if (mode === 'project_scope') {
+    const match = trimmed.match(/^@([A-Za-z]{2,5}) (.*)$/i)
+    return { mode, projectCode: match?.[1]?.toUpperCase() ?? '', searchText: match?.[2] ?? '' }
+  }
+
+  if (mode === 'ticket_key') {
+    const match = trimmed.match(/^([A-Za-z]{2,5})-(\d{1,5})$/i)!
+    return { mode, ticketCode: match[0].toUpperCase(), projectCode: match[1].toUpperCase() }
+  }
+
+  return { mode }
+}
+
+// ---------------------------------------------------------------------------
+// MDT-136: Quick Search — filtering and hook
+// ---------------------------------------------------------------------------
+
 export const MAX_RESULTS = 10
 
 export interface FilterTicketsOptions {
   query: string
   tickets: Ticket[]
   maxResults?: number
+}
+
+/**
+ * Normalize a ticket key's number part to zero-padded format.
+ * E.g. "MDT-42" → "mdt-042", "42" → "042"
+ * Used so that simplified keys (MDT-42) match stored keys (MDT-042).
+ */
+function normalizeTicketKeyTerm(term: string): string {
+  const match = term.match(/^([a-z]+)-0*(\d+)$/i)
+  if (match) {
+    const prefix = match[1]!.toUpperCase()
+    const padded = match[2]!.padStart(3, '0')
+    return `${prefix}-${padded}`.toLowerCase()
+  }
+  return term
 }
 
 /**
@@ -34,11 +114,19 @@ export function filterTickets(options: FilterTicketsOptions): Ticket[] {
 
     // All search terms must match (AND logic)
     return searchTerms.every((term) => {
+      // Normalize simplified ticket keys (e.g., "mdt-42" → "mdt-042")
+      // so they match zero-padded stored keys
+      const normalizedTerm = normalizeTicketKeyTerm(term)
+
       // Match by key number (e.g., "136" matches "MDT-136")
       if (keyNum.includes(term)) {
         return true
       }
       // Match by full code (e.g., "mdt-136" matches "MDT-136")
+      if (code.includes(normalizedTerm)) {
+        return true
+      }
+      // Also try original term for non-key searches
       if (code.includes(term)) {
         return true
       }
