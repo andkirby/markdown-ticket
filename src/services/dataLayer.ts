@@ -8,6 +8,7 @@
  * - Provide typed interfaces for data operations
  */
 
+import type { SearchRequest, SearchResponse } from '@mdt/domain-contracts'
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project'
 import type { TicketData, TicketMetadata } from '@mdt/shared/models/Ticket'
 import type { Status, Ticket } from '../types'
@@ -311,6 +312,40 @@ class DataLayer {
       console.error(`[DataLayer] ❌ Error deleting ticket:`, error)
       throw error
     }
+  }
+
+  /**
+   * MDT-152: Cross-project search.
+   *
+   * POSTs a parsed SearchRequest to /api/projects/search and returns
+   * a validated SearchResponse. Uses the existing dedupe infrastructure
+   * to prevent duplicate in-flight requests.
+   *
+   * @param req - Parsed search request (ticket_key or project_scope mode)
+   * @returns SearchResponse with results and total count
+   */
+  async searchProjects(req: SearchRequest): Promise<SearchResponse> {
+    const cacheKey = `search-${req.mode}-${'projectCode' in req ? req.projectCode : ''}-${req.query}`
+    return this.dedupe(cacheKey, async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/projects/search`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(req),
+        })
+
+        if (!response.ok) {
+          throw new Error(`Search failed: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        return data as SearchResponse
+      }
+      catch (error) {
+        console.error('[DataLayer] ❌ Error searching projects:', error)
+        throw error
+      }
+    })
   }
 
   /**

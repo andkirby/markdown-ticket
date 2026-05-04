@@ -1,19 +1,38 @@
 /**
  * QuickSearchInput - Search input component for quick search
  * MDT-136: Cmd+K Quick Search for Tickets
+ * MDT-152: Mode indicator display (In: {CODE}, Searching: {KEY})
  *
  * @testid quick-search-input — search input field
  */
 
+import type { QueryMode, QueryParts } from '@/hooks/useQuickSearch'
 import { useEffect, useRef } from 'react'
 
 export interface QuickSearchInputProps {
   value: string
   onChange: (value: string) => void
   onKeyDown?: (e: React.KeyboardEvent) => void
+  queryMode: QueryMode
+  queryParts: QueryParts
+  /** Current project code for mode indicator */
+  currentProjectCode?: string
 }
 
-export function QuickSearchInput({ value, onChange, onKeyDown }: QuickSearchInputProps): React.ReactElement {
+function getModeLabel(queryMode: QueryMode, queryParts: QueryParts, currentProjectCode?: string): string | null {
+  if (queryMode === 'ticket_key' && queryParts.ticketCode) {
+    return `Searching: ${queryParts.ticketCode}`
+  }
+  if (queryMode === 'project_scope' && queryParts.projectCode) {
+    return `In: ${queryParts.projectCode}`
+  }
+  if (queryMode === 'current_project' && currentProjectCode && queryParts.mode === 'current_project') {
+    return `In: ${currentProjectCode}`
+  }
+  return null
+}
+
+export function QuickSearchInput({ value, onChange, onKeyDown, queryMode, queryParts, currentProjectCode }: QuickSearchInputProps): React.ReactElement {
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Auto-focus on mount
@@ -21,8 +40,10 @@ export function QuickSearchInput({ value, onChange, onKeyDown }: QuickSearchInpu
     inputRef.current?.focus()
   }, [])
 
+  const modeLabel = getModeLabel(queryMode, queryParts, currentProjectCode)
+
   return (
-    <div className="relative">
+    <div className="relative flex items-center">
       <svg
         className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
         fill="none"
@@ -46,6 +67,14 @@ export function QuickSearchInput({ value, onChange, onKeyDown }: QuickSearchInpu
         onChange={e => onChange(e.target.value)}
         onKeyDown={onKeyDown}
       />
+      {modeLabel && (
+        <span
+          data-testid="quick-search-mode-indicator"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 whitespace-nowrap"
+        >
+          {modeLabel}
+        </span>
+      )}
     </div>
   )
 }

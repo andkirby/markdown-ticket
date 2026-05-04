@@ -33,6 +33,8 @@ interface ProjectSelectorCardProps {
   onFavoriteToggle?: (projectKey: string, e: React.MouseEvent) => void
   /** Whether to apply rail width constraints (only for rail active card) */
   useRailWidthConstraints?: boolean
+  /** Override test ID prefix (default: "project-selector-card") */
+  testIdPrefix?: string
 }
 
 /**
@@ -46,6 +48,7 @@ interface ProjectSelectorCardProps {
  *
  * @testid project-selector-card — Card container
  * @testid project-selector-card-{code} — Card for specific project (e.g., project-selector-card-MDT)
+ * @testid project-browser-card-{code} — Card in browser panel when testIdPrefix="project-browser-card"
  */
 const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   project,
@@ -54,6 +57,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
   showDescription = false,
   onFavoriteToggle,
   useRailWidthConstraints = false,
+  testIdPrefix,
 }) => {
   // Active cards always show description
   const shouldShowDescription = showDescription || isActive
@@ -86,7 +90,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
     <div
       className={cardClasses}
       onClick={handleCardClick}
-      data-testid={`project-selector-card-${project.project.code || project.id}`}
+      data-testid={`${testIdPrefix ?? 'project-selector-card'}-${project.project.code || project.id}`}
       data-project-key={project.project.code || project.id}
     >
       {/* Favorite indicator - overlay star */}

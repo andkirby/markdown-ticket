@@ -37,6 +37,9 @@ export default {
     '^@mdt/shared/utils/toml\\.js$': '<rootDir>/../shared/utils/toml.ts',
     '^@mdt/shared/models/Ticket$': '<rootDir>/../shared/models/Ticket.ts',
     '^@mdt/shared/models/Ticket\\.js$': '<rootDir>/../shared/models/Ticket.ts',
+    // Use real keyNormalizer (not mock) for search normalization
+    '^@mdt/shared/utils/keyNormalizer\\.js$': '<rootDir>/../shared/utils/keyNormalizer.ts',
+    '^@mdt/shared/utils/keyNormalizer$': '<rootDir>/../shared/utils/keyNormalizer.ts',
     // Map shared modules to mocks, removing .js extension
     '^@mdt/shared/(.*)\\.js$': '<rootDir>/tests/mocks/shared/$1',
     '^@mdt/shared/(.*)$': '<rootDir>/tests/mocks/shared/$1',

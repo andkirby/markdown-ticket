@@ -1,5 +1,6 @@
 import type { SortPreferences } from './config/sorting'
 import type { Ticket } from './types'
+import { getTicketsPath } from '@mdt/shared/models/Project'
 import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AddProjectModal } from './components/AddProjectModal'
@@ -19,7 +20,6 @@ import { ViewModeSwitcher } from './components/ViewModeSwitcher'
 import { getSortPreferences, setSortPreferences } from './config/sorting'
 import { useGlobalKeyboard } from './hooks/useGlobalKeyboard'
 import { useProjectManager } from './hooks/useProjectManager'
-import { getTicketsPath } from '@mdt/shared/models/Project'
 import { getProjectCode } from './utils/projectUtils'
 import { normalizeTicketKey, setCurrentProject, validateProjectCode } from './utils/routing'
 import './utils/cache' // Import cache utilities for development
@@ -42,6 +42,7 @@ function ProjectRouteHandler() {
   } = useProjectManager({ autoSelectFirst: false, handleSSEEvents: true })
 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
+  const [ticketError, setTicketError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [eventHistoryOpen, eventHistoryForceHidden, setEventHistoryState] = useEventHistoryState()
   const [localSortPreferences, setLocalSortPreferences] = useState<SortPreferences>(getSortPreferences)
@@ -151,16 +152,17 @@ function ProjectRouteHandler() {
       const ticket = tickets.find(t => t.code === ticketKey)
       if (ticket) {
         setSelectedTicketRef.current(ticket)
-        setErrorRef.current(null) // Clear any previous error
+        setTicketError(null)
       }
       else if (!projectsLoading && selectedProject) {
-        // Only set error if projects are loaded and we have a selected project with loaded tickets
-        // This prevents false errors during initial loading
-        setErrorRef.current(`Ticket '${ticketMatch[1]}' not found`)
+        // Ticket not found — set inline error, don't block the entire page
+        setSelectedTicketRef.current(null)
+        setTicketError(`Ticket '${ticketMatch[1]}' not found`)
       }
     }
     else {
       setSelectedTicketRef.current(null)
+      setTicketError(null)
     }
   }, [location.pathname, tickets, projectsLoading, selectedProject])
 
@@ -179,9 +181,10 @@ function ProjectRouteHandler() {
     navigate(newPath)
   }
 
-  const handleTicketClick = (ticket: Ticket) => {
+  const handleTicketClick = (ticket: Ticket, targetProjectCode?: string) => {
+    const ticketProject = targetProjectCode || projectCode
     const viewParam = viewMode !== 'board' ? `?view=${viewMode}` : ''
-    navigate(`/prj/${projectCode}/ticket/${ticket.code}${viewParam}`)
+    navigate(`/prj/${ticketProject}/ticket/${ticket.code}${viewParam}`)
   }
 
   const handleTicketClose = () => {
@@ -251,7 +254,8 @@ function ProjectRouteHandler() {
 
       <TicketViewer
         ticket={selectedTicket}
-        isOpen={!!selectedTicket}
+        isOpen={!!selectedTicket || !!ticketError}
+        ticketError={ticketError}
         onClose={handleTicketClose}
         ticketsPath={getTicketsPath(projectConfig)}
       />
@@ -300,6 +304,8 @@ function ProjectRouteHandler() {
         onClose={() => setShowQuickSearch(false)}
         tickets={tickets}
         onSelectTicket={handleTicketClick}
+        currentProjectCode={projectCode}
+        projects={projects}
       />
 
       <Toaster />

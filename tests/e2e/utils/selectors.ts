@@ -158,7 +158,7 @@ export const projectSelectors = {
   /** Inactive project chip (by code) */
   projectSelectorChip: (code: string) => `[data-testid="project-selector-chip-${code}"]`,
   /** Project option in panel (by code) - alias for projectSelectorCard for panel selections */
-  projectOption: (code: string) => `[data-testid="project-panel-content"] [data-testid="project-selector-card-${code}"]`,
+  projectOption: (code: string) => `[data-testid="project-panel-content"] [data-testid="project-browser-card-${code}"]`,
   /** Project name display - currently shown in active project card */
   projectName: '[data-testid="project-selector-rail-active"] [data-testid="project-selector-card"]',
 } as const
@@ -248,9 +248,9 @@ export const selectorSelectors = {
   /** Backwards-compatible alias for older tests that still call this the launcher */
   launcher: '[data-testid="project-selector-rail-active"] [data-testid^="project-selector-card-"]',
   /** Full project browser panel */
-  projectPanel: '[data-testid="project-panel"]',
+  projectPanel: '[data-testid="project-browser-panel"]',
   /** Project card in panel (any code) */
-  projectPanelCard: '[data-testid^="project-selector-card-"]',
+  projectPanelCard: '[data-testid^="project-browser-card-"]',
   /** Project selector rail container */
   rail: '[data-testid="project-selector-rail"]',
   /** Favorite star button (uses aria-label) */
