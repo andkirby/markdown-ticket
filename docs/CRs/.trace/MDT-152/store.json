@@ -1,0 +1,1237 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-152"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the project browser panel opens, the system shall display a search input field with placeholder text 'Search projects...'",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the user types in the project browser search input, the system shall filter the project list by case-insensitive substring match on project code OR project name within 50ms",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN the search query matches the current project code or name, the system shall exclude the current project from filtered results",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN no projects match the search query, the system shall display empty state message 'No projects match your search'",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN the user presses Escape while the project browser search input is focused, the system shall close the project browser panel",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN the project browser panel opens, the system shall focus the search input automatically",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN the user types a ticket key pattern matching {CODE}-{NUMBER} where CODE is 2-5 uppercase letters and NUMBER is 1-5 digits, the system shall recognize it as a cross-project ticket search",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN a cross-project ticket search is triggered, the system shall wait 300ms after the last keystroke before initiating the backend fetch",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHILE the cross-project fetch is in progress, the system shall display a loading state with spinner and up to 3 skeleton cards",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.4",
+      "kind": "behavior",
+      "text": "WHEN the cross-project fetch completes successfully, the system shall display matching tickets with their project context (project code and name)",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.5",
+      "kind": "behavior",
+      "text": "WHEN the cross-project fetch returns no results for a query (non-ticket-key pattern), the system shall display 'No tickets found matching {query}' with suggestion to check the ticket key",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.6",
+      "kind": "behavior",
+      "text": "IF the cross-project fetch fails due to network error, the system shall display an error message with a retry option",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.7",
+      "kind": "behavior",
+      "text": "WHEN a cross-project ticket key pattern (e.g., ABC-42) is searched and returns no results, the system shall display 'Ticket {CODE}-{NUMBER} not found'",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN the user types @{CODE} followed by space and search text in QuickSearch, the system shall recognize it as a project-scoped search",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN a project-scoped search is triggered, the system shall validate that the project code exists",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "IF the project code does not exist, the system shall display 'Project {CODE} not found' and not trigger a search",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.4",
+      "kind": "behavior",
+      "text": "WHEN the project-scoped search is triggered with a valid project code, the system shall wait 300ms after the last keystroke before initiating the backend fetch",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.5",
+      "kind": "behavior",
+      "text": "WHEN the project-scoped fetch completes successfully, the system shall display matching tickets from the specified project only",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN the user types text without special syntax in QuickSearch, the system shall filter current project tickets by key number, full code, or title (preserving MDT-136 behavior)",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHILE the user is in default current project mode, the system shall display the mode indicator 'In: {CODE}' where CODE is the current project code",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHILE a cross-project ticket key search is in progress, the system shall display the mode indicator 'Searching: {CODE}-{NUMBER}'",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-5.2",
+      "kind": "behavior",
+      "text": "WHILE a project-scoped search is in progress, the system shall display the mode indicator 'In: {CODE}'",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHEN the user presses up or down arrow keys in QuickSearch, the system shall navigate through results across all sections",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.2",
+      "kind": "behavior",
+      "text": "WHEN the user presses Tab in QuickSearch with multiple result sections, the system shall cycle focus between sections",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-6.3",
+      "kind": "behavior",
+      "text": "WHEN the user presses Enter on a selected result, the system shall open the ticket or switch to the project",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Cross-project ticket searches require backend fetch; tickets cannot be preloaded for all projects",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Cross-project search debounce duration shall be 300ms maximum",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "Cross-project search results shall be limited to 5 per project, 15 total maximum",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Loading skeleton shall render within 50ms of fetch start",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "No layout shift shall occur when results load",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Must integrate with existing QuickSearch modal infrastructure (MDT-136)",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Must integrate with existing ProjectBrowserPanel (MDT-129)",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Must follow existing modal/overlay patterns per MODALS.md",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "Cross-project ticket cache shall use 5 minute TTL for recently fetched project tickets",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "Invalid project code in @syntax shows 'Project not found' message without triggering search",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "Non-existent ticket key pattern (e.g., ABC-999) shows 'Ticket ABC-999 not found' message",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "Empty search results show appropriate empty state per search mode",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "Network error during fetch shows error message with retry option",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "If current project is MDT and user types MDT-136, show the ticket in Current Project section (not excluded)",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-6",
+      "kind": "edge_case",
+      "text": "If user types @MDT while in project MDT, show all MDT tickets without exclusion (user explicitly requested current project)",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-7.1",
+      "kind": "behavior",
+      "text": "WHEN a cross-project ticket is selected from search results, the system shall navigate to the ticket's own project URL using the ticket's project code, not the current project code",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-7.2",
+      "kind": "behavior",
+      "text": "WHEN cross-project search results are displayed, the system shall exclude tickets from the current project to prevent duplicate display across current and cross-project sections",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-7",
+      "kind": "edge_case",
+      "text": "If a cross-project search API returns results for the current project, the client-side filteredCrossProjectResults memo must exclude them before rendering to avoid duplication with the current project section",
+      "sourceRef": "CR:MDT-152",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "project_browser_search_filters",
+      "title": "Project browser search filters projects and excludes current",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3"
+      ],
+      "given": "the project browser panel is open with multiple registered projects including the current project MDT",
+      "when": "the user types 'MDT' in the search input",
+      "then": "the project list filters by case-insensitive substring match and excludes the current project MDT from results",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "project_browser_search_empty",
+      "title": "Project browser search shows empty state when no matches",
+      "covers": [
+        "BR-1.2",
+        "BR-1.4"
+      ],
+      "given": "the project browser panel is open with registered projects",
+      "when": "the user types a query that matches no project code or name",
+      "then": "the system displays 'No projects match your search' empty state",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "project_browser_escape_closes",
+      "title": "Project browser Escape key closes panel",
+      "covers": [
+        "BR-1.5",
+        "BR-1.6"
+      ],
+      "given": "the project browser panel is open",
+      "when": "the user presses Escape while the search input is focused",
+      "then": "the project browser panel closes",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "cross_project_key_search_loads",
+      "title": "Cross-project ticket key search loads and displays results",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4"
+      ],
+      "given": "the QuickSearch modal is open in project MDT",
+      "when": "the user types a valid ticket key pattern 'ABC-42'",
+      "then": "after 300ms debounce the system displays loading spinner with skeletons then shows matching tickets with project context",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "cross_project_key_not_found",
+      "title": "Cross-project ticket key not found shows specific message",
+      "covers": [
+        "BR-2.7"
+      ],
+      "given": "the QuickSearch modal is open",
+      "when": "the user types a ticket key pattern 'XYZ-999' that does not exist",
+      "then": "the system displays 'Ticket XYZ-999 not found' message",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "cross_project_network_error",
+      "title": "Cross-project search network error shows retry option",
+      "covers": [
+        "BR-2.5",
+        "BR-2.6"
+      ],
+      "given": "the QuickSearch modal is open",
+      "when": "a cross-project search fails due to network error",
+      "then": "the system displays an error message with a retry option",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "project_scoped_search_valid",
+      "title": "Project-scoped search with valid project code searches that project",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.4",
+        "BR-3.5"
+      ],
+      "given": "the QuickSearch modal is open in project MDT",
+      "when": "the user types '@ABC login' where ABC is a valid project code",
+      "then": "after 300ms debounce the system displays matching tickets from project ABC only",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "project_scoped_invalid_code",
+      "title": "Project-scoped search with invalid project code shows error",
+      "covers": [
+        "BR-3.2",
+        "BR-3.3"
+      ],
+      "given": "the QuickSearch modal is open",
+      "when": "the user types '@XYZ login' where XYZ is not a valid project code",
+      "then": "the system displays 'Project XYZ not found' and does not trigger a search",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "current_project_search_preserved",
+      "title": "Current project search preserves MDT-136 behavior",
+      "covers": [
+        "BR-4.1",
+        "BR-4.2"
+      ],
+      "given": "the QuickSearch modal is open in project MDT",
+      "when": "the user types 'badge' without special syntax",
+      "then": "the system filters current project tickets by key number, full code, or title, and displays mode indicator 'In: MDT'",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "mode_indicator_changes",
+      "title": "Mode indicator reflects search context",
+      "covers": [
+        "BR-5.1",
+        "BR-5.2"
+      ],
+      "given": "the QuickSearch modal is open in project MDT",
+      "when": "the user switches between search modes (default, ticket key, project-scoped)",
+      "then": "the mode indicator updates to show 'In: MDT', 'Searching: ABC-42', or 'In: ABC' accordingly",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "keyboard_navigation_arrows",
+      "title": "Keyboard navigation with arrow keys moves through results",
+      "covers": [
+        "BR-6.1",
+        "BR-6.3"
+      ],
+      "given": "the QuickSearch modal is open with multiple results across sections",
+      "when": "the user presses up and down arrow keys then Enter on a selected result",
+      "then": "the system navigates through results across all sections and opens the selected ticket",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "keyboard_tab_sections",
+      "title": "Tab key cycles between result sections",
+      "covers": [
+        "BR-6.2"
+      ],
+      "given": "the QuickSearch modal is open with current project and cross-project results",
+      "when": "the user presses Tab",
+      "then": "focus cycles between result sections (current project to cross-project)",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "cross_project_ticket_navigates_correct_project",
+      "title": "Cross-project ticket selection navigates to correct project URL",
+      "covers": [
+        "BR-7.1"
+      ],
+      "given": "the QuickSearch modal is open in project MDT and a cross-project search for ABC-42 returns results from project ABC",
+      "when": "the user selects ticket ABC-42 from the cross-project results",
+      "then": "the system navigates to the ABC project URL with ticket ABC-42 selected, not the MDT project URL",
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "cross_project_results_exclude_current_project",
+      "title": "Cross-project search results exclude current project tickets to prevent duplication",
+      "covers": [
+        "BR-7.2"
+      ],
+      "given": "the QuickSearch modal is open in project MDT and a cross-project search returns results including MDT tickets",
+      "when": "the cross-project results are rendered",
+      "then": "tickets from project MDT are excluded from the cross-project results section and only appear in the current project section",
+      "sourceRef": "CR:MDT-152"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-backend-search-endpoint",
+      "title": "Expose a single backend search endpoint that handles ticket-key lookup and project-scoped search without all-project preloading",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.4",
+        "BR-3.2",
+        "BR-3.5",
+        "C1",
+        "C3",
+        "Edge-2",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-backend-search-route",
+        "ART-project-controller",
+        "ART-server-ticket-service",
+        "ART-ticketservice",
+        "ART-search-contract",
+        "ART-api-search-tests"
+      ],
+      "sourceRef": "architecture.md#Backend API contract"
+    },
+    {
+      "id": "OBL-search-contract",
+      "title": "Define typed search request, response, mode, result-limit, and project-code validation contracts in the shared domain boundary",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "C3",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-search-contract",
+        "ART-project-controller",
+        "ART-datalayer",
+        "ART-api-search-tests"
+      ],
+      "sourceRef": "architecture.md#Shared search contract"
+    },
+    {
+      "id": "OBL-project-scoped-search",
+      "title": "Route @CODE query syntax through project validation, 300ms debounce, backend fetch, and scoped result rendering",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.4",
+        "BR-3.5",
+        "C1",
+        "C2",
+        "C3",
+        "Edge-1",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-usequicksearch-hook",
+        "ART-crossproject-hook",
+        "ART-datalayer",
+        "ART-project-controller",
+        "ART-server-ticket-service",
+        "ART-quicksearch-results"
+      ],
+      "sourceRef": "architecture.md#Flow 3 Project-scoped search"
+    },
+    {
+      "id": "OBL-client-cache",
+      "title": "Keep cross-project search cache client-owned with 5 minute TTL and request dedupe, never as all-project preloading",
+      "derivedFrom": [
+        "C1",
+        "C9",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-datalayer",
+        "ART-crossproject-hook",
+        "ART-crossproject-hook-tests"
+      ],
+      "sourceRef": "architecture.md#Client cache boundary"
+    },
+    {
+      "id": "OBL-crossproject-debounce",
+      "title": "Apply a maximum 300ms debounce before cross-project backend fetches for ticket-key and project-scoped modes",
+      "derivedFrom": [
+        "BR-2.2",
+        "BR-3.4",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-crossproject-hook",
+        "ART-crossproject-hook-tests"
+      ],
+      "sourceRef": "architecture.md#Async timing"
+    },
+    {
+      "id": "OBL-project-browser-search",
+      "title": "Add instant client-side ProjectBrowserPanel filtering with autofocus, Escape close, current-project exclusion, and empty state",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "C7",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-project-browser-panel",
+        "ART-project-browser-spec",
+        "ART-project-browser-mockup",
+        "ART-e2e-project-browser"
+      ],
+      "sourceRef": "architecture.md#Flow 1 Project browser search"
+    },
+    {
+      "id": "OBL-current-project-exclusion",
+      "title": "Apply current-project exclusion only to ProjectBrowserPanel search, not explicit QuickSearch ticket-key or @current-project searches",
+      "derivedFrom": [
+        "BR-1.3",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-project-browser-panel",
+        "ART-usequicksearch-hook",
+        "ART-quicksearch-spec"
+      ],
+      "sourceRef": "architecture.md#Current project semantics"
+    },
+    {
+      "id": "OBL-query-mode-detector",
+      "title": "Detect QuickSearch modes in one hook: default current-project text, exact ticket-key pattern, and @CODE-space scoped search",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-3.1",
+        "BR-4.1",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-usequicksearch-hook",
+        "ART-usequicksearch-tests",
+        "ART-quicksearch-spec"
+      ],
+      "sourceRef": "architecture.md#Query mode parser"
+    },
+    {
+      "id": "OBL-quicksearch-modal-integration",
+      "title": "Integrate cross-project states into the existing QuickSearch modal while preserving MODALS.md overlay, close, and keyboard conventions",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-4.2",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "C6",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-quicksearch-modal",
+        "ART-quicksearch-input",
+        "ART-quicksearch-results",
+        "ART-quicksearch-spec",
+        "ART-quicksearch-mockup"
+      ],
+      "sourceRef": "architecture.md#Modal integration boundary"
+    },
+    {
+      "id": "OBL-loading-skeleton",
+      "title": "Render spinner and up to 3 skeleton cards within 50ms of cross-project fetch start without result layout shift",
+      "derivedFrom": [
+        "BR-2.3",
+        "C4",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-quicksearch-results",
+        "ART-quicksearch-mockup",
+        "ART-e2e-quicksearch"
+      ],
+      "sourceRef": "architecture.md#Async timing"
+    },
+    {
+      "id": "OBL-empty-states",
+      "title": "Display contextual empty, not-found, invalid-project, and retry states for each search mode",
+      "derivedFrom": [
+        "BR-1.4",
+        "BR-2.5",
+        "BR-2.6",
+        "BR-2.7",
+        "BR-3.3",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-quicksearch-results",
+        "ART-project-browser-panel",
+        "ART-quicksearch-spec",
+        "ART-project-browser-spec"
+      ],
+      "sourceRef": "architecture.md#Error philosophy"
+    },
+    {
+      "id": "OBL-mode-indicator",
+      "title": "Display mode indicators for default, ticket-key, and project-scoped QuickSearch contexts",
+      "derivedFrom": [
+        "BR-4.2",
+        "BR-5.1",
+        "BR-5.2"
+      ],
+      "artifactIds": [
+        "ART-quicksearch-input",
+        "ART-quicksearch-results",
+        "ART-quicksearch-spec",
+        "ART-quicksearch-mockup"
+      ],
+      "sourceRef": "architecture.md#Mode indicator"
+    },
+    {
+      "id": "OBL-keyboard-nav",
+      "title": "Preserve arrow, Tab section cycling, Enter selection, and close behavior across merged current-project and cross-project result sections",
+      "derivedFrom": [
+        "BR-1.5",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "C6",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-quicksearch-modal",
+        "ART-quicksearch-results",
+        "ART-project-browser-panel",
+        "ART-e2e-quicksearch",
+        "ART-e2e-project-browser"
+      ],
+      "sourceRef": "architecture.md#Keyboard ownership"
+    },
+    {
+      "id": "OBL-e2e-tests",
+      "title": "Cover project browser filtering and QuickSearch current-project, ticket-key, project-scoped, loading, empty, error, and keyboard flows in E2E tests",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-2.4",
+        "BR-2.7",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.4",
+        "BR-3.5",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "C2",
+        "C4",
+        "C5",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-e2e-quicksearch",
+        "ART-e2e-project-browser"
+      ],
+      "sourceRef": "architecture.md#Verification boundaries"
+    },
+    {
+      "id": "OBL-unit-tests",
+      "title": "Unit-test query mode detection, current-project filtering preservation, debounce/cache behavior, and project-code validation branches",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.4",
+        "BR-4.1",
+        "C2",
+        "C9",
+        "Edge-1",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "artifactIds": [
+        "ART-usequicksearch-tests",
+        "ART-crossproject-hook-tests",
+        "ART-api-search-tests"
+      ],
+      "sourceRef": "architecture.md#Verification boundaries"
+    },
+    {
+      "id": "OBL-ux-spec-alignment",
+      "title": "Keep QuickSearch and ProjectBrowserPanel specs and mockups aligned with @CODE syntax, backend search endpoint, modal patterns, and empty/loading states",
+      "derivedFrom": [
+        "C6",
+        "C7",
+        "C8",
+        "BR-2.3",
+        "BR-3.1",
+        "BR-5.1",
+        "BR-5.2"
+      ],
+      "artifactIds": [
+        "ART-quicksearch-spec",
+        "ART-project-browser-spec",
+        "ART-quicksearch-mockup",
+        "ART-project-browser-mockup"
+      ],
+      "sourceRef": "architecture.md#UX specification alignment"
+    },
+    {
+      "id": "OBL-cross-project-url-routing",
+      "title": "Route cross-project ticket selection to the ticket's own project URL by threading targetProjectCode through onSelectTicket callback from QuickSearchModal to App.tsx handleTicketClick",
+      "derivedFrom": [
+        "BR-7.1"
+      ],
+      "artifactIds": [
+        "ART-app-tsx",
+        "ART-quicksearch-modal",
+        "ART-quicksearch-results"
+      ],
+      "sourceRef": "CR:MDT-152"
+    },
+    {
+      "id": "OBL-cross-project-dedup",
+      "title": "Exclude current project tickets from cross-project search results via filteredCrossProjectResults useMemo in QuickSearchModal, preventing duplicates between current and cross-project sections",
+      "derivedFrom": [
+        "BR-7.2",
+        "Edge-7"
+      ],
+      "artifactIds": [
+        "ART-quicksearch-modal"
+      ],
+      "sourceRef": "CR:MDT-152"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-quicksearch-modal",
+      "path": "src/components/QuickSearch/QuickSearchModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/design/specs/quick-search.md"
+    },
+    {
+      "id": "ART-quicksearch-input",
+      "path": "src/components/QuickSearch/QuickSearchInput.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/design/specs/quick-search.md"
+    },
+    {
+      "id": "ART-quicksearch-results",
+      "path": "src/components/QuickSearch/QuickSearchResults.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/design/specs/quick-search.md"
+    },
+    {
+      "id": "ART-usequicksearch-hook",
+      "path": "src/hooks/useQuickSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/design/specs/quick-search.md"
+    },
+    {
+      "id": "ART-crossproject-hook",
+      "path": "src/hooks/useCrossProjectSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "BR-2.1,BR-2.2,C1"
+    },
+    {
+      "id": "ART-project-browser-panel",
+      "path": "src/components/ProjectSelector/ProjectBrowserPanel.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/design/specs/project-browser.md"
+    },
+    {
+      "id": "ART-datalayer",
+      "path": "src/services/dataLayer.ts",
+      "kind": "runtime",
+      "sourceRef": "BR-2.4,C1"
+    },
+    {
+      "id": "ART-backend-search-route",
+      "path": "server/routes/projects.ts",
+      "kind": "runtime",
+      "sourceRef": "BR-2.1,C1"
+    },
+    {
+      "id": "ART-e2e-quicksearch",
+      "path": "tests/e2e/quick-search/modal.spec.ts",
+      "kind": "test",
+      "sourceRef": "bdd.trace.md"
+    },
+    {
+      "id": "ART-e2e-project-browser",
+      "path": "tests/e2e/selector/project-browser.spec.ts",
+      "kind": "test",
+      "sourceRef": "bdd.trace.md"
+    },
+    {
+      "id": "ART-project-controller",
+      "path": "server/controllers/ProjectController.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Backend API contract"
+    },
+    {
+      "id": "ART-server-ticket-service",
+      "path": "server/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Backend search orchestration"
+    },
+    {
+      "id": "ART-search-contract",
+      "path": "domain-contracts/src/ticket/search.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Shared search contract"
+    },
+    {
+      "id": "ART-api-search-tests",
+      "path": "server/tests/api/projects.search.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification boundaries"
+    },
+    {
+      "id": "ART-crossproject-hook-tests",
+      "path": "src/hooks/useCrossProjectSearch.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification boundaries"
+    },
+    {
+      "id": "ART-quicksearch-spec",
+      "path": "docs/design/specs/quick-search.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#UX specification alignment"
+    },
+    {
+      "id": "ART-project-browser-spec",
+      "path": "docs/design/specs/project-browser.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#UX specification alignment"
+    },
+    {
+      "id": "ART-quicksearch-mockup",
+      "path": "docs/design/mockups/quick-search.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#UX specification alignment"
+    },
+    {
+      "id": "ART-project-browser-mockup",
+      "path": "docs/design/mockups/project-browser.md",
+      "kind": "doc",
+      "sourceRef": "architecture.md#UX specification alignment"
+    },
+    {
+      "id": "ART-usequicksearch-tests",
+      "path": "src/hooks/useQuickSearch.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification boundaries"
+    },
+    {
+      "id": "ART-ticketservice",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Shared ticket matching primitives"
+    },
+    {
+      "id": "ART-app-tsx",
+      "path": "src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-152"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-search-schema-validation",
+      "kind": "unit",
+      "title": "Search schema validation contracts",
+      "covers": [
+        "C3",
+        "Edge-1"
+      ],
+      "file": "domain-contracts/src/ticket/__tests__/search.test.ts",
+      "sourceRef": "tests.md:Search Schema Validation"
+    },
+    {
+      "id": "TEST-api-search-endpoint",
+      "kind": "integration",
+      "title": "POST /api/projects/search endpoint contract tests",
+      "covers": [
+        "C1",
+        "C3",
+        "Edge-1",
+        "Edge-2",
+        "BR-2.1",
+        "BR-2.4",
+        "BR-2.7",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.5"
+      ],
+      "file": "server/tests/api/projects.search.test.ts",
+      "sourceRef": "tests.md:API Search Endpoint"
+    },
+    {
+      "id": "TEST-crossproject-hook-async",
+      "kind": "unit",
+      "title": "useCrossProjectSearch debounce, cache, loading, dedupe, retry",
+      "covers": [
+        "C2",
+        "C4",
+        "C9",
+        "Edge-4"
+      ],
+      "file": "src/hooks/useCrossProjectSearch.test.ts",
+      "sourceRef": "tests.md:CrossProject Search Hook"
+    },
+    {
+      "id": "TEST-e2e-project-browser-search",
+      "kind": "e2e",
+      "title": "ProjectBrowserPanel search E2E tests",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "C1",
+        "C7"
+      ],
+      "file": "tests/e2e/selector/project-browser.spec.ts",
+      "sourceRef": "tests.md:E2E Project Browser Search"
+    },
+    {
+      "id": "TEST-e2e-quicksearch-crossproject",
+      "kind": "e2e",
+      "title": "QuickSearch cross-project search E2E tests",
+      "covers": [
+        "BR-2.1",
+        "BR-2.3",
+        "BR-2.4",
+        "BR-2.5",
+        "BR-2.6",
+        "BR-2.7",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.5",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-6.1",
+        "BR-6.2",
+        "BR-6.3",
+        "C4",
+        "C5",
+        "C6",
+        "C8",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "file": "tests/e2e/quick-search/modal.spec.ts",
+      "sourceRef": "tests.md:E2E QuickSearch Cross-Project"
+    },
+    {
+      "id": "TEST-query-mode-detection",
+      "kind": "unit",
+      "title": "useQuickSearch query mode detection and parsing",
+      "covers": [
+        "BR-2.1",
+        "BR-3.1",
+        "BR-4.1",
+        "Edge-5",
+        "Edge-6"
+      ],
+      "file": "src/hooks/useQuickSearch.test.ts",
+      "sourceRef": "tests.md:Query Mode Detection"
+    },
+    {
+      "id": "TEST-e2e-cross-project-navigation",
+      "kind": "e2e",
+      "title": "Cross-project ticket navigates to correct project URL and results are deduplicated",
+      "covers": [
+        "BR-7.1",
+        "BR-7.2",
+        "Edge-7"
+      ],
+      "sourceRef": "CR:MDT-152"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-0",
+      "title": "Create Missing Infrastructure Stubs + Verify Builds",
+      "ownsArtifactIds": [
+        "ART-search-contract",
+        "ART-crossproject-hook"
+      ],
+      "sourceRef": "tasks.md#task-0"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Search Contract Schemas",
+      "ownsArtifactIds": [
+        "ART-search-contract"
+      ],
+      "makesGreenIds": [
+        "TEST-search-schema-validation"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-7",
+      "title": "QuickSearch Project-Scoped Search",
+      "ownsArtifactIds": [
+        "ART-quicksearch-results",
+        "ART-quicksearch-modal"
+      ],
+      "makesGreenIds": [
+        "project_scoped_search_valid",
+        "project_scoped_invalid_code",
+        "TEST-e2e-quicksearch-crossproject"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    },
+    {
+      "id": "TASK-8",
+      "title": "Keyboard Navigation Across Sections",
+      "ownsArtifactIds": [
+        "ART-quicksearch-modal",
+        "ART-quicksearch-results"
+      ],
+      "makesGreenIds": [
+        "keyboard_navigation_arrows",
+        "keyboard_tab_sections",
+        "TEST-e2e-quicksearch-crossproject"
+      ],
+      "sourceRef": "tasks.md#task-8"
+    },
+    {
+      "id": "TASK-1",
+      "title": "ProjectBrowserPanel Client-Side Search",
+      "ownsArtifactIds": [
+        "ART-project-browser-panel",
+        "ART-project-browser-spec",
+        "ART-project-browser-mockup",
+        "ART-e2e-project-browser"
+      ],
+      "makesGreenIds": [
+        "TEST-e2e-project-browser-search",
+        "project_browser_search_filters",
+        "project_browser_search_empty",
+        "project_browser_escape_closes"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-3",
+      "title": "POST /api/projects/search Backend Endpoint",
+      "ownsArtifactIds": [
+        "ART-backend-search-route",
+        "ART-project-controller",
+        "ART-server-ticket-service",
+        "ART-ticketservice",
+        "ART-api-search-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-api-search-endpoint"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Query Mode Detection in useQuickSearch",
+      "ownsArtifactIds": [
+        "ART-usequicksearch-hook",
+        "ART-usequicksearch-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-query-mode-detection"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "useCrossProjectSearch Hook + DataLayer",
+      "ownsArtifactIds": [
+        "ART-crossproject-hook",
+        "ART-crossproject-hook-tests",
+        "ART-datalayer"
+      ],
+      "makesGreenIds": [
+        "TEST-crossproject-hook-async"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "QuickSearch Ticket Key + Current Project + Mode Indicators",
+      "ownsArtifactIds": [
+        "ART-quicksearch-modal",
+        "ART-quicksearch-results",
+        "ART-quicksearch-input",
+        "ART-quicksearch-spec",
+        "ART-quicksearch-mockup",
+        "ART-e2e-quicksearch"
+      ],
+      "makesGreenIds": [
+        "cross_project_key_search_loads",
+        "cross_project_key_not_found",
+        "cross_project_network_error",
+        "current_project_search_preserved",
+        "mode_indicator_changes",
+        "TEST-e2e-quicksearch-crossproject"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-9",
+      "title": "Implementation bug fixes: cross-project navigation, deduplication, and E2E test corrections",
+      "ownsArtifactIds": [
+        "ART-app-tsx",
+        "ART-quicksearch-modal",
+        "ART-quicksearch-results"
+      ],
+      "makesGreenIds": [
+        "cross_project_ticket_navigates_correct_project",
+        "cross_project_results_exclude_current_project",
+        "TEST-e2e-cross-project-navigation"
+      ],
+      "sourceRef": "CR:MDT-152"
+    }
+  ]
+}
