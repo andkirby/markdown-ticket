@@ -64,7 +64,7 @@ claude mcp add --scope user mdt-all node $PWD/mcp-server/dist/index.js
 
 AI-powered commands for the entire development lifecycle:
 
-```
+```text
 /mdt:ticket-creation → /mdt:requirements → /mdt:bdd → /mdt:architecture
     → /mdt:tests → /mdt:tasks → /mdt:implement → /mdt:tech-debt → /mdt:reflection
 ```
@@ -105,7 +105,7 @@ AI assistants can directly:
 
 ### 1. Specification First
 
-```
+```text
 Requirements (WHAT) → Architecture (HOW) → Tests (verify) → Implementation
 ```
 
@@ -115,7 +115,7 @@ Requirements (WHAT) → Architecture (HOW) → Tests (verify) → Implementation
 
 ### 2. Test-Driven Implementation
 
-```
+```text
 Tests (RED) → Write Code → Tests (GREEN) → Refactor
 ```
 
@@ -125,7 +125,7 @@ Tests (RED) → Write Code → Tests (GREEN) → Refactor
 
 ### 3. Debt Prevention Chain
 
-```
+```text
 Architecture → defines scope boundaries
     ↓
 Tasks → inherits constraints
@@ -203,7 +203,7 @@ bun run lint               # Code quality
 
 ### Architecture
 
-```
+```text
 markdown-ticket/
 ├── prompts/          # SDD workflow commands (install this!)
 ├── src/              # React frontend
@@ -226,6 +226,8 @@ markdown-ticket/
 
 ## What's New
 
+- **v0.16.0** (2026-05-05): Cross-project ticket search from QuickSearch
+- **v0.15.0** (2026-05-01): SmartLink document URLs, flexible path configuration, drag-drop custom statuses
 - **v0.13.0** (2026-03-18): Dot-notation subdocument grouping, git worktree SSE events, TOML read/write support
 - **v0.12.0** (2026-03-09): Mobile-first board, project selector redesign, subdocument tabs
 - **v0.11.0** (2026-02-22): Git worktree support, universal AI assistant support, SDD-first README
