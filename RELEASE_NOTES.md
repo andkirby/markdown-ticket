@@ -1,5 +1,24 @@
 # Release Notes
 
+## v0.16.0 (2026-05-05)
+
+### New Features
+
+**Cross-Project Quick Search (MDT-152)**
+- Search for tickets across all projects from a single entry point — no need to switch projects first
+- Type a ticket key like `ABC-42` in QuickSearch (Cmd+K) to jump directly to it, regardless of which project it belongs to
+- Scope your search to a specific project with `@` syntax (e.g., `@MDT login`)
+- Filter projects by name in the Project Browser panel
+- Simplified key support: type `MDT-42` and it finds `MDT-042` automatically
+
+### Improvements
+
+**1000+ Ticket Numbers (MDT-159)**
+- Full support for projects with 1000+ tickets — keys now format correctly as `MDT-1000`, `MDT-10000`, and beyond
+- Previously, hardcoded 3-digit padding would break at ticket #1000
+
+---
+
 ## v0.15.0 (2026-05-01)
 
 ### New Features
