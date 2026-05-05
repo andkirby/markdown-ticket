@@ -1,0 +1,354 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-159"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN a CR key is formatted for any ticket number, the system shall apply zero-padding with a minimum width of 3 digits using Math.max(3, String(num).length)",
+      "sourceRef": "CR AC",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN a CR key is formatted the system shall produce a key in format PROJECTCODE-NUMBER where NUMBER uses dynamic zero-padding",
+      "sourceRef": "CR AC",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHEN any module needs to format a CR key the system shall use the centralized formatCrKey function from shared/utils/keyNormalizer.ts",
+      "sourceRef": "CR Scope",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Existing ticket filenames on disk must not be renamed or moved",
+      "sourceRef": "CR Constraints",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "formatCrKey must be backward-compatible numbers 1-999 produce identical output to padStart(3,0)",
+      "sourceRef": "CR Constraints",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "All 10 identified padStart(3,0) call sites must be replaced with formatCrKey",
+      "sourceRef": "assess.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "Numbers at boundaries: formatCrKey MDT 1 returns MDT-001, formatCrKey MDT 999 returns MDT-999, formatCrKey MDT 1000 returns MDT-1000, formatCrKey MDT 10000 returns MDT-10000",
+      "sourceRef": "CR AC",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "formatCrKey must be a pure string operation with no measurable performance regression — function body must consist only of String(), Math.max(), and padStart() calls, no I/O, no async, no allocations beyond the return string",
+      "sourceRef": "CR Non-Functional AC",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "Frontend routing (src/utils/routing.ts, call site #8) must correctly route URLs containing 4-digit and 5-digit CR keys (e.g., /prj/MDT/ticket/MDT-1000). Quick search (src/hooks/useQuickSearch.ts, call site #9) must correctly pad partial numeric input to match 4-digit and 5-digit keys. Neither component must break layout when rendering keys longer than 3 digits.",
+      "sourceRef": "E2E baseline + assess.md call sites #8 and #9",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "cr_key_3digit_boundary",
+      "title": "CR key formatted with 3-digit padding at boundary 999",
+      "covers": [
+        "BR-1",
+        "BR-2"
+      ],
+      "given": "the project code is MDT",
+      "when": "a CR key is generated for ticket number 999",
+      "then": "the key is formatted as MDT-999",
+      "sourceRef": "CR AC: formatCrKey('MDT', 999) returns MDT-999"
+    },
+    {
+      "id": "cr_key_4digit",
+      "title": "CR key formatted with 4-digit number at 1000",
+      "covers": [
+        "BR-1",
+        "BR-2"
+      ],
+      "given": "the project code is MDT",
+      "when": "a CR key is generated for ticket number 1000",
+      "then": "the key is formatted as MDT-1000 with no truncation",
+      "sourceRef": "CR AC: formatCrKey('MDT', 1000) returns MDT-1000"
+    },
+    {
+      "id": "cr_key_5digit",
+      "title": "CR key formatted with 5-digit number at 10000",
+      "covers": [
+        "BR-1",
+        "BR-2"
+      ],
+      "given": "the project code is MDT",
+      "when": "a CR key is generated for ticket number 10000",
+      "then": "the key is formatted as MDT-10000 with no truncation",
+      "sourceRef": "CR AC: formatCrKey('MDT', 10000) returns MDT-10000"
+    },
+    {
+      "id": "cr_key_different_project",
+      "title": "CR key formatted with different project code",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "the project code is API",
+      "when": "a CR key is generated for ticket number 42",
+      "then": "the key is formatted as API-042",
+      "sourceRef": "CR AC: key format PROJECTCODE-NUMBER"
+    },
+    {
+      "id": "cr_key_3digit_padding",
+      "title": "CR key formatted with 3-digit padding for minimum boundary number 1",
+      "covers": [
+        "BR-1",
+        "BR-2"
+      ],
+      "given": "the project code is MDT",
+      "when": "a CR key is generated for ticket number 1",
+      "then": "the key is formatted as MDT-001",
+      "sourceRef": "CR AC: formatCrKey('MDT', 1) returns MDT-001"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-formatcrkey-impl",
+      "title": "Implement and export formatCrKey(projectCode, number) in keyNormalizer.ts with dynamic padding Math.max(3, String(num).length) as a pure string operation",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "C2",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-key-normalizer"
+      ],
+      "sourceRef": "architecture:Module Boundaries"
+    },
+    {
+      "id": "OBL-replace-production-sites",
+      "title": "Replace padStart(3, '0') with formatCrKey in all production call sites (TicketService, routing.ts, useQuickSearch.ts)",
+      "derivedFrom": [
+        "BR-3",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-key-normalizer",
+        "ART-ticket-service",
+        "ART-routing-utils",
+        "ART-use-quick-search"
+      ],
+      "sourceRef": "architecture:Call Site Migration"
+    },
+    {
+      "id": "OBL-replace-test-sites",
+      "title": "Replace padStart(3, '0') with formatCrKey in all test helper and mock call sites",
+      "derivedFrom": [
+        "BR-3",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-key-normalizer",
+        "ART-test-ticket-builder",
+        "ART-ticket-code-helper",
+        "ART-worktree-service-test",
+        "ART-markdown-service-test",
+        "ART-ticket-service-mock"
+      ],
+      "sourceRef": "architecture:Call Site Migration"
+    },
+    {
+      "id": "OBL-no-filename-migration",
+      "title": "No existing ticket files on disk are renamed or moved as part of this change",
+      "derivedFrom": [
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-key-normalizer",
+        "ART-ticket-service"
+      ],
+      "sourceRef": "architecture:Invariants"
+    },
+    {
+      "id": "OBL-routing-4digit-keys",
+      "title": "Frontend routing and quick search must correctly handle URLs containing 4-digit and 5-digit CR keys without layout breakage",
+      "derivedFrom": [
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-routing-utils",
+        "ART-use-quick-search"
+      ],
+      "sourceRef": "architecture:Frontend Integration"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-key-normalizer",
+      "path": "shared/utils/keyNormalizer.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md:Implementation Notes"
+    },
+    {
+      "id": "ART-ticket-service",
+      "path": "shared/services/TicketService.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md:Call site #1"
+    },
+    {
+      "id": "ART-routing-utils",
+      "path": "src/utils/routing.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md:Call site #8"
+    },
+    {
+      "id": "ART-use-quick-search",
+      "path": "src/hooks/useQuickSearch.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md:Call site #9"
+    },
+    {
+      "id": "ART-test-ticket-builder",
+      "path": "shared/test-lib/ticket/test-ticket-builder.ts",
+      "kind": "test",
+      "sourceRef": "assess.md:Call site #4"
+    },
+    {
+      "id": "ART-ticket-code-helper",
+      "path": "shared/test-lib/ticket/helpers/TicketCodeHelper.ts",
+      "kind": "test",
+      "sourceRef": "assess.md:Call site #5"
+    },
+    {
+      "id": "ART-worktree-service-test",
+      "path": "shared/services/__tests__/WorktreeService.test.ts",
+      "kind": "test",
+      "sourceRef": "assess.md:Call site #6"
+    },
+    {
+      "id": "ART-markdown-service-test",
+      "path": "shared/tests/services/MDT-094/MarkdownService.scanTicketMetadata.test.ts",
+      "kind": "test",
+      "sourceRef": "assess.md:Call site #7"
+    },
+    {
+      "id": "ART-ticket-service-mock",
+      "path": "server/tests/mocks/shared/services/TicketService.ts",
+      "kind": "test",
+      "sourceRef": "assess.md:Call site #10"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-formatcrkey-unit",
+      "kind": "unit",
+      "title": "formatCrKey unit tests: dynamic padding, format, backward compatibility, purity",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "C2",
+        "C4",
+        "Edge-1"
+      ],
+      "file": "shared/utils/__tests__/formatCrKey.test.ts",
+      "sourceRef": "tests.md:Module-to-Test Mapping"
+    },
+    {
+      "id": "TEST-routing-keys",
+      "kind": "unit",
+      "title": "routing.ts normalizeTicketKey handles 3-5 digit CR keys correctly (Edge-2 regression)",
+      "covers": [
+        "Edge-2"
+      ],
+      "file": "src/utils/__tests__/routing.normalizeTicketKey.test.ts",
+      "sourceRef": "tests.md:Module-to-Test Mapping"
+    },
+    {
+      "id": "TEST-call-site-audit",
+      "kind": "manual",
+      "title": "Verify all 10 padStart(3,'0') call sites replaced with formatCrKey (C3, BR-3 structural audit)",
+      "covers": [
+        "BR-3",
+        "C3"
+      ],
+      "file": "none",
+      "sourceRef": "tests.md:Structural Verification"
+    },
+    {
+      "id": "TEST-no-migration-audit",
+      "kind": "manual",
+      "title": "Verify no existing ticket files renamed or moved after formatCrKey migration (C1)",
+      "covers": [
+        "C1"
+      ],
+      "file": "none",
+      "sourceRef": "tests.md:Constraint Coverage"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Implement formatCrKey in keyNormalizer.ts and make unit tests GREEN",
+      "ownsArtifactIds": [
+        "ART-key-normalizer"
+      ],
+      "makesGreenIds": [
+        "TEST-formatcrkey-unit",
+        "cr_key_3digit_boundary",
+        "cr_key_3digit_padding",
+        "cr_key_4digit",
+        "cr_key_5digit",
+        "cr_key_different_project"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Replace padStart(3,'0') in production call sites (TicketService, routing.ts, useQuickSearch.ts)",
+      "ownsArtifactIds": [
+        "ART-ticket-service",
+        "ART-routing-utils",
+        "ART-use-quick-search"
+      ],
+      "makesGreenIds": [
+        "TEST-routing-keys"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Replace padStart(3,'0') in test helpers and mocks + run structural audits",
+      "ownsArtifactIds": [
+        "ART-test-ticket-builder",
+        "ART-ticket-code-helper",
+        "ART-worktree-service-test",
+        "ART-markdown-service-test",
+        "ART-ticket-service-mock"
+      ],
+      "makesGreenIds": [
+        "TEST-call-site-audit",
+        "TEST-no-migration-audit"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    }
+  ]
+}
