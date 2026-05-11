@@ -15,6 +15,7 @@ interface SSEMessageData {
   data: {
     eventType?: 'add' | 'change' | 'unlink'
     filename?: string
+    filePath?: string
     projectId?: string
     timestamp?: number
     status?: string
@@ -236,6 +237,10 @@ class SSEClient {
         this.handleFileChange(data.data)
         break
 
+      case 'document-change':
+        this.handleDocumentChange(data.data)
+        break
+
       case 'project-created':
         if (!import.meta.env.VITE_DISABLE_EVENTBUS_LOGS) {
           console.warn('[SSEClient] 📁 Project created:', data.data)
@@ -374,6 +379,28 @@ class SSEClient {
       default:
         console.warn('[SSEClient] ⚠️ Unknown file event type:', eventType)
     }
+  }
+
+  private handleDocumentChange(data: SSEMessageData['data']): void {
+    const { eventType, filePath, projectId, timestamp } = data
+
+    if (!filePath || !eventType) {
+      console.warn('[SSEClient] ⚠️ Invalid document change data:', data)
+      return
+    }
+
+    console.warn('[SSEClient] 📄 Document change detected:', {
+      eventType,
+      filePath,
+      projectId,
+    })
+
+    eventBus.emit('document:file:changed', {
+      projectId: projectId || '',
+      eventType,
+      filePath,
+      timestamp,
+    }, 'sse')
   }
 
   /**

@@ -56,4 +56,23 @@ describe('useEventBus', () => {
     expect(seenValues).toEqual(['initial', 'updated'])
     expect(eventBus.getListenerCount('ticket:subdocument:changed')).toBe(1)
   })
+
+  it('emits typed document file change events', () => {
+    const seenPaths: string[] = []
+
+    eventBus.on('document:file:changed', (event) => {
+      seenPaths.push(`${event.payload.eventType}:${event.payload.filePath}`)
+    })
+
+    act(() => {
+      eventBus.emit('document:file:changed', {
+        projectId: 'markdown-ticket',
+        eventType: 'change',
+        filePath: 'docs/guide.md',
+        timestamp: 123,
+      }, 'sse')
+    })
+
+    expect(seenPaths).toEqual(['change:docs/guide.md'])
+  })
 })

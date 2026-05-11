@@ -1,5 +1,4 @@
-import type { SearchMode } from '@mdt/domain-contracts'
-import type { Ticket as DomainTicket } from '@mdt/domain-contracts'
+import type { Ticket as DomainTicket, SearchMode } from '@mdt/domain-contracts'
 import type { Project, ProjectConfig } from '@mdt/shared/models/Project.js'
 import type { TicketMetadata } from '@mdt/shared/models/Ticket.js'
 import type { ProjectCreateInput, ProjectUpdateInput } from '@mdt/shared/tools/ProjectManager.js'
@@ -10,6 +9,7 @@ import type { TreeNode } from '../types/tree.js'
 import { SearchRequestSchema } from '@mdt/domain-contracts'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
+import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 
 export type Ticket = Pick<DomainTicket, 'code' | 'filePath'>
 
@@ -62,7 +62,7 @@ export interface TreeServiceInterface {
 }
 
 interface FileWatcher {
-  // FileWatcher interface - methods not used directly in this controller
+  reconfigureDocumentWatchers?: (projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string) => Promise<number>
 }
 
 /**
@@ -395,6 +395,7 @@ export class ProjectController {
 
     try {
       await this.projectService.configureDocuments(projectId, documentPaths)
+      await this.reconfigureDocumentWatchers(projectId, documentPaths)
       res.json({ success: true })
     }
     catch (error: unknown) {
@@ -410,6 +411,21 @@ export class ProjectController {
         res.status(500).json({ error: 'Failed to configure documents' })
       }
     }
+  }
+
+  private async reconfigureDocumentWatchers(projectId: string, documentPaths: string[]): Promise<void> {
+    if (!this.fileWatcher.reconfigureDocumentWatchers)
+      return
+
+    const projects = await this.projectService.getAllProjects(true)
+    const project = projects.find(project => project.id === projectId || project.project.code === projectId)
+    if (!project)
+      return
+
+    const config = this.projectService.getProjectConfig(project.project.path)
+    const ticketsPath = config?.project?.ticketsPath || config?.project?.path || DEFAULTS.TICKETS_PATH
+
+    await this.fileWatcher.reconfigureDocumentWatchers(project.id, project.project.path, documentPaths, ticketsPath)
   }
 
   /**

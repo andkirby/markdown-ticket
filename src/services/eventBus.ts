@@ -20,6 +20,8 @@ export type EventType
     | 'ticket:updated'
     | 'ticket:deleted'
     | 'ticket:subdocument:changed' // MDT-142: Subdocument change events
+  // Document events
+    | 'document:file:changed'
   // Project events
     | 'project:created'
     | 'project:changed'
@@ -62,6 +64,13 @@ export interface TicketSubdocumentEventPayload {
     filePath: string
   }
   source: 'main' | 'worktree'
+}
+
+export interface DocumentFileChangedEventPayload {
+  projectId: string
+  eventType: 'add' | 'change' | 'unlink'
+  filePath: string
+  timestamp?: number
 }
 
 export interface ProjectEventPayload {
@@ -107,6 +116,9 @@ export interface EventPayloadMap {
   'ticket:updated': TicketEventPayload
   'ticket:deleted': Pick<TicketEventPayload, 'ticketCode' | 'projectId'>
   'ticket:subdocument:changed': TicketSubdocumentEventPayload // MDT-142
+
+  // Document events
+  'document:file:changed': DocumentFileChangedEventPayload
 
   // Project events
   'project:created': ProjectEventPayload

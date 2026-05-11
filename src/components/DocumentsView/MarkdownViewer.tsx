@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import TableOfContents from '@/components/shared/TableOfContents'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -20,13 +20,18 @@ interface MarkdownViewerProps {
   projectId: string
   filePath: string
   fileInfo?: DocumentFile | null
+  refreshToken?: number
+  fileDeleted?: boolean
+  updateState?: 'idle' | 'updated' | 'syncing'
 }
 
-export default function MarkdownViewer({ projectId, filePath, fileInfo }: MarkdownViewerProps) {
+export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshToken = 0, fileDeleted = false, updateState = 'idle' }: MarkdownViewerProps) {
   const { projectCode } = useParams<{ projectCode: string }>()
   const [content, setContent] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const hasContentRef = useRef(false)
+  const loadedFilePathRef = useRef<string | null>(null)
 
   // Extract ToC items from content
   const tocItems = useMemo(() => {
@@ -35,12 +40,19 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
 
   const loadFile = useCallback(async () => {
     try {
-      setLoading(true)
+      if (loadedFilePathRef.current !== filePath) {
+        hasContentRef.current = false
+        setContent('')
+      }
+      if (!hasContentRef.current)
+        setLoading(true)
       setError(null)
       const response = await fetch(`/api/documents/content?projectId=${encodeURIComponent(projectId)}&filePath=${encodeURIComponent(filePath)}`)
       if (response.ok) {
         const text = await response.text()
         setContent(text)
+        hasContentRef.current = true
+        loadedFilePathRef.current = filePath
       }
       else {
         setError('Failed to load document')
@@ -56,8 +68,9 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
   }, [filePath, projectId])
 
   useEffect(() => {
-    loadFile()
-  }, [loadFile])
+    if (!fileDeleted)
+      loadFile()
+  }, [fileDeleted, loadFile, refreshToken])
 
   if (loading) {
     return (
@@ -71,6 +84,17 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-destructive">{error}</div>
+      </div>
+    )
+  }
+
+  if (fileDeleted) {
+    return (
+      <div data-testid="file-viewer" className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-destructive mb-2">File was deleted</div>
+          <div className="text-sm text-muted-foreground">Choose another document from the tree.</div>
+        </div>
       </div>
     )
   }
@@ -113,6 +137,11 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo }: Markdo
                   {' '}
                   {formatDate(fileInfo.lastModified)}
                 </span>
+                {updateState !== 'idle' && (
+                  <span className="text-primary">
+                    {updateState === 'syncing' ? 'Syncing...' : 'Updated'}
+                  </span>
+                )}
               </div>
             </div>
           )}

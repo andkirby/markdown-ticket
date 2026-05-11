@@ -7,9 +7,10 @@
 
 /// <reference types="jest" />
 
+import type { ProjectConfig } from '@mdt/domain-contracts'
 import type { ProjectFactory } from '@mdt/shared/test-lib'
 import type { Express } from 'express'
-import { mkdirSync, writeFileSync, symlinkSync } from 'node:fs'
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import supertest from 'supertest'
 import { cleanupTestEnvironment, setupTestEnvironment } from './setup'
@@ -133,7 +134,8 @@ describe('Subdocument Security API (MDT-151)', () => {
         type: 'Feature Enhancement',
         content: 'Test',
       })
-      if (!crResult.success || !crResult.crCode) throw new Error('CR creation failed')
+      if (!crResult.success || !crResult.crCode)
+        throw new Error('CR creation failed')
 
       const subdocDir = join(project.path, 'docs/CRs', crResult.crCode)
       mkdirSync(subdocDir, { recursive: true })
@@ -160,7 +162,8 @@ describe('Subdocument Security API (MDT-151)', () => {
         type: 'Feature Enhancement',
         content: 'Test',
       })
-      if (!crResult.success || !crResult.crCode) throw new Error('CR creation failed')
+      if (!crResult.success || !crResult.crCode)
+        throw new Error('CR creation failed')
 
       const subdocDir = join(project.path, 'docs/CRs', crResult.crCode)
       mkdirSync(subdocDir, { recursive: true })
@@ -176,7 +179,7 @@ describe('Subdocument Security API (MDT-151)', () => {
       // Enable allowSymlinks in project config
       const configPath = join(project.path, '.mdt-config.toml')
       const { parseToml, stringify } = await import('@mdt/shared/utils/toml.js')
-      const config = parseToml(await import('node:fs').then(fs => fs.readFileSync(configPath, 'utf-8')))
+      const config = parseToml(await import('node:fs').then(fs => fs.readFileSync(configPath, 'utf-8'))) as ProjectConfig
       config.project.allowSymlinks = true
       await import('node:fs').then(fs => fs.writeFileSync(configPath, stringify(config)))
 
@@ -195,7 +198,8 @@ describe('Subdocument Security API (MDT-151)', () => {
         type: 'Feature Enhancement',
         content: 'Test',
       })
-      if (!crResult.success || !crResult.crCode) throw new Error('CR creation failed')
+      if (!crResult.success || !crResult.crCode)
+        throw new Error('CR creation failed')
 
       const subdocDir = join(project.path, 'docs/CRs', crResult.crCode)
       mkdirSync(subdocDir, { recursive: true })
@@ -211,7 +215,7 @@ describe('Subdocument Security API (MDT-151)', () => {
       // Enable allowSymlinks in project config
       const configPath = join(project.path, '.mdt-config.toml')
       const { parseToml, stringify } = await import('@mdt/shared/utils/toml.js')
-      const config = parseToml(await import('node:fs').then(fs => fs.readFileSync(configPath, 'utf-8')))
+      const config = parseToml(await import('node:fs').then(fs => fs.readFileSync(configPath, 'utf-8'))) as ProjectConfig
       config.project.allowSymlinks = true
       await import('node:fs').then(fs => fs.writeFileSync(configPath, stringify(config)))
 
