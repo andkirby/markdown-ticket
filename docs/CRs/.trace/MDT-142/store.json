@@ -117,6 +117,13 @@
       "text": "File watcher unit tests must exercise real file system operations using actual chokidar watchers, not mocked handlers, to catch pattern and lifecycle bugs",
       "sourceRef": "CR:MDT-142",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN listing tickets for a project with active branch-matched worktrees, the system shall include tickets that exist only in those worktrees and mark them with worktree metadata.",
+      "sourceRef": "UAT 2026-05-11 worktree-only ticket discovery",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -177,6 +184,17 @@
       "when": "a new ticket file is created at docs/CRs/MDT-150-aa.md via filesystem write",
       "then": "the file watcher emits an add event and the SSE system broadcasts it to all connected clients",
       "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "worktree_only_ticket_listed",
+      "title": "Worktree-only ticket appears in ticket lists",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "a project has an active git worktree whose branch name matches ticket MDT-161 and the MDT-161 ticket file exists only in that worktree",
+      "when": "the system lists tickets through API or MCP list_crs",
+      "then": "MDT-161 appears in the ticket list with inWorktree true and the worktree path metadata",
+      "sourceRef": "UAT 2026-05-11 worktree-only ticket discovery"
     }
   ],
   "obligations": [
@@ -255,6 +273,17 @@
         "ART-use-sse-events"
       ],
       "sourceRef": "CR Section 4.6 - Frontend Event Mapping"
+    },
+    {
+      "id": "OBL-worktree-ticket-list-union",
+      "title": "Ticket list aggregation unions main tickets with branch-matched worktree-only tickets",
+      "derivedFrom": [
+        "BR-1.7"
+      ],
+      "artifactIds": [
+        "ART-project-service"
+      ],
+      "sourceRef": "UAT 2026-05-11 worktree-only ticket discovery"
     }
   ],
   "artifacts": [
@@ -287,6 +316,12 @@
       "path": "src/components/TicketViewer/index.tsx",
       "kind": "runtime",
       "sourceRef": "CR Section 4.6 - Frontend Event Mapping"
+    },
+    {
+      "id": "ART-project-service",
+      "path": "shared/services/ProjectService.ts",
+      "kind": "runtime",
+      "sourceRef": "UAT 2026-05-11 worktree-only ticket discovery"
     }
   ],
   "testPlans": [
@@ -424,6 +459,16 @@
       ],
       "file": "tests/e2e/sse/updates.spec.ts",
       "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "TEST-worktree-only-ticket-listing",
+      "kind": "integration",
+      "title": "ProjectService lists branch-matched worktree-only tickets",
+      "covers": [
+        "BR-1.7"
+      ],
+      "file": "shared/tests/services/project/ProjectService.worktree.test.ts",
+      "sourceRef": "UAT 2026-05-11 worktree-only ticket discovery"
     }
   ],
   "tasks": [
@@ -523,6 +568,38 @@
         "playwright-skill"
       ],
       "sourceRef": "CR:MDT-142"
+    },
+    {
+      "id": "TASK-8",
+      "title": "ProjectService: Include worktree-only tickets in list aggregation",
+      "ownsArtifactIds": [
+        "ART-project-service"
+      ],
+      "makesGreenIds": [
+        "TEST-worktree-only-ticket-listing",
+        "worktree_only_ticket_listed"
+      ],
+      "skills": [
+        "architecture-patterns"
+      ],
+      "sourceRef": "UAT 2026-05-11 worktree-only ticket discovery"
+    },
+    {
+      "id": "TASK-9",
+      "title": "PathWatcherService: Emit add events for new top-level ticket files",
+      "ownsArtifactIds": [
+        "ART-path-watcher-service"
+      ],
+      "makesGreenIds": [
+        "new_ticket_file_creation",
+        "TEST-path-watcher-file-creation",
+        "TEST-e2e-file-creation-sse"
+      ],
+      "skills": [
+        "architecture-patterns",
+        "playwright-skill"
+      ],
+      "sourceRef": "UAT 2026-04-06 new ticket file creation closure"
     }
   ]
 }

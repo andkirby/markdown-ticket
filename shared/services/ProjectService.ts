@@ -274,56 +274,41 @@ export class ProjectService implements IProjectService {
       const ticketsPath = config.project.ticketsPath || DEFAULTS.TICKETS_PATH
       const projectCode = config.project.code
       const fullCRPath = resolvePath(path, ticketsPath)
-      if (!directoryExists(fullCRPath))
-        return []
       const { MarkdownService } = await import('./MarkdownService.js')
-      const tickets = await MarkdownService.scanMarkdownFiles(fullCRPath, path)
+      const tickets = directoryExists(fullCRPath)
+        ? await MarkdownService.scanMarkdownFiles(fullCRPath, path)
+        : []
 
       // MDT-095: Resolve worktree paths for each ticket
       // Check if worktree support is enabled (default: true)
       const worktreeEnabled = config.worktree?.enabled !== false // C5 backward compatibility
       if (worktreeEnabled && projectCode) {
-        const resolvedTickets = await Promise.all(
-          tickets.map(async (ticket) => {
-            const resolvedWorktreePath = await this.worktree.resolvePath(
-              path,
-              ticket.code,
-              ticketsPath,
-              projectCode,
-            )
-            const isInWorktree = resolvedWorktreePath !== path
+        const worktrees = await this.worktree.detect(path, projectCode)
+        const ticketsByCode = new Map<string, Ticket>()
 
-            // If worktree path differs from main path, re-read ticket from worktree
-            if (isInWorktree) {
-              // Preserve original filename, just update directory path
-              const originalFileName = ticket.filePath?.split('/').pop() || `${ticket.code}.md`
-              const worktreeFilePath = joinPaths(resolvedWorktreePath, ticketsPath, originalFileName)
+        for (const ticket of tickets) {
+          const worktreePath = worktrees.get(ticket.code)
+          const worktreeTicket = worktreePath
+            ? await this.findWorktreeTicket(MarkdownService, worktreePath, ticketsPath, ticket.code)
+            : null
 
-              // Re-read ticket content from worktree to get correct status/content
-              const worktreeTicket = await MarkdownService.parseMarkdownFile(worktreeFilePath, resolvedWorktreePath)
-              if (worktreeTicket) {
-                return {
-                  ...worktreeTicket,
-                  filePath: worktreeFilePath,
-                  inWorktree: true,
-                  worktreePath: resolvedWorktreePath,
-                }
-              }
-              // Fallback to original ticket if worktree read fails
-              return {
-                ...ticket,
-                filePath: worktreeFilePath,
-                inWorktree: true,
-                worktreePath: resolvedWorktreePath,
-              }
-            }
-            return {
-              ...ticket,
-              inWorktree: false,
-            }
-          }),
-        )
-        return resolvedTickets
+          ticketsByCode.set(ticket.code, worktreeTicket ?? {
+            ...ticket,
+            inWorktree: false,
+          })
+        }
+
+        for (const [ticketCode, worktreePath] of worktrees) {
+          if (ticketsByCode.has(ticketCode))
+            continue
+
+          const worktreeTicket = await this.findWorktreeTicket(MarkdownService, worktreePath, ticketsPath, ticketCode)
+          if (worktreeTicket) {
+            ticketsByCode.set(ticketCode, worktreeTicket)
+          }
+        }
+
+        return Array.from(ticketsByCode.values())
       }
 
       // Worktree disabled - return tickets without worktree fields
@@ -347,52 +332,41 @@ export class ProjectService implements IProjectService {
       const ticketsPath = config.project.ticketsPath || DEFAULTS.TICKETS_PATH
       const projectCode = config.project.code
       const fullCRPath = resolvePath(path, ticketsPath)
-      if (!directoryExists(fullCRPath))
-        return []
 
       const { MarkdownService } = await import('./MarkdownService.js')
-      const metadataList = await MarkdownService.scanTicketMetadata(fullCRPath, path)
+      const metadataList = directoryExists(fullCRPath)
+        ? await MarkdownService.scanTicketMetadata(fullCRPath, path)
+        : []
 
       // MDT-095: Resolve worktree paths for each metadata entry
       const worktreeEnabled = config.worktree?.enabled !== false
       if (worktreeEnabled && projectCode) {
-        const resolvedMetadata = await Promise.all(
-          metadataList.map(async (metadata) => {
-            const resolvedWorktreePath = await this.worktree.resolvePath(
-              path,
-              metadata.code,
-              ticketsPath,
-              projectCode,
-            )
-            const isInWorktree = resolvedWorktreePath !== path
+        const worktrees = await this.worktree.detect(path, projectCode)
+        const metadataByCode = new Map<string, TicketMetadata>()
 
-            if (isInWorktree) {
-              const originalFileName = metadata.filePath?.split('/').pop() || `${metadata.code}.md`
-              const worktreeFilePath = joinPaths(resolvedWorktreePath, ticketsPath, originalFileName)
+        for (const metadata of metadataList) {
+          const worktreePath = worktrees.get(metadata.code)
+          const worktreeMetadata = worktreePath
+            ? await this.findWorktreeTicketMetadata(MarkdownService, worktreePath, ticketsPath, metadata.code)
+            : null
 
-              const worktreeMetadata = await MarkdownService.extractTicketMetadata(worktreeFilePath, resolvedWorktreePath)
-              if (worktreeMetadata) {
-                return {
-                  ...worktreeMetadata,
-                  filePath: worktreeFilePath,
-                  inWorktree: true,
-                  worktreePath: resolvedWorktreePath,
-                }
-              }
-              return {
-                ...metadata,
-                filePath: worktreeFilePath,
-                inWorktree: true,
-                worktreePath: resolvedWorktreePath,
-              }
-            }
-            return {
-              ...metadata,
-              inWorktree: false,
-            }
-          }),
-        )
-        return resolvedMetadata
+          metadataByCode.set(metadata.code, worktreeMetadata ?? {
+            ...metadata,
+            inWorktree: false,
+          })
+        }
+
+        for (const [ticketCode, worktreePath] of worktrees) {
+          if (metadataByCode.has(ticketCode))
+            continue
+
+          const worktreeMetadata = await this.findWorktreeTicketMetadata(MarkdownService, worktreePath, ticketsPath, ticketCode)
+          if (worktreeMetadata) {
+            metadataByCode.set(ticketCode, worktreeMetadata)
+          }
+        }
+
+        return Array.from(metadataByCode.values())
       }
 
       return metadataList
@@ -400,6 +374,50 @@ export class ProjectService implements IProjectService {
     catch (e) {
       logQuiet(this.quiet, `[MDT-094] Error getting CR metadata for project ${path}:`, e)
       return []
+    }
+  }
+
+  private async findWorktreeTicket(
+    markdownService: typeof import('./MarkdownService.js').MarkdownService,
+    worktreePath: string,
+    ticketsPath: string,
+    ticketCode: string,
+  ): Promise<Ticket | null> {
+    const worktreeTicketsPath = joinPaths(worktreePath, ticketsPath)
+    if (!directoryExists(worktreeTicketsPath))
+      return null
+
+    const worktreeTickets = await markdownService.scanMarkdownFiles(worktreeTicketsPath, worktreePath)
+    const ticket = worktreeTickets.find(candidate => candidate.code === ticketCode)
+    if (!ticket)
+      return null
+
+    return {
+      ...ticket,
+      inWorktree: true,
+      worktreePath,
+    }
+  }
+
+  private async findWorktreeTicketMetadata(
+    markdownService: typeof import('./MarkdownService.js').MarkdownService,
+    worktreePath: string,
+    ticketsPath: string,
+    ticketCode: string,
+  ): Promise<TicketMetadata | null> {
+    const worktreeTicketsPath = joinPaths(worktreePath, ticketsPath)
+    if (!directoryExists(worktreeTicketsPath))
+      return null
+
+    const worktreeMetadataList = await markdownService.scanTicketMetadata(worktreeTicketsPath, worktreePath)
+    const metadata = worktreeMetadataList.find(candidate => candidate.code === ticketCode)
+    if (!metadata)
+      return null
+
+    return {
+      ...metadata,
+      inWorktree: true,
+      worktreePath,
     }
   }
 

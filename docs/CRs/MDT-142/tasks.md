@@ -334,6 +334,71 @@ bunx playwright test tests/e2e/filewatcher/subdocument-sse.spec.ts
 
 ---
 
+### Task 8: ProjectService: Include worktree-only tickets in list aggregation
+
+**Skills**: architecture-patterns
+
+**Structure**: `shared/services/ProjectService.ts`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-worktree-only-ticket-listing` -> `shared/tests/services/project/ProjectService.worktree.test.ts`
+- `worktree_only_ticket_listed` -> API/MCP list behavior for branch-matched worktree-only tickets
+
+**Scope**: Ticket list aggregation for main project plus active branch-matched worktrees
+**Boundary**: Does not change file watcher event broadcasting or frontend event mapping
+
+**Modifies**:
+- `shared/services/ProjectService.ts`
+
+**Must Not Touch**:
+- `server/services/fileWatcher/PathWatcherService.ts`
+- `src/hooks/useSSEEvents.ts`
+- `src/components/TicketViewer/index.tsx`
+
+**Anti-duplication**: Reuse existing `WorktreeService` detection and path resolution behavior.
+
+**Verify**:
+
+```bash
+bun run --cwd shared jest ProjectService.worktree.test.ts
+```
+
+**Done when**:
+- [x] Worktree-only ticket files are included in project ticket lists
+- [x] Worktree rows include `inWorktree: true`
+- [x] Worktree rows include `worktreePath`
+- [x] No duplicate rows when a ticket exists in both main and worktree
+
+---
+
+### Task 9: PathWatcherService: Emit add events for new top-level ticket files
+
+**Skills**: architecture-patterns, playwright-skill
+
+**Structure**: `server/services/fileWatcher/PathWatcherService.ts`
+
+**Makes GREEN (Automated Tests)**:
+- `TEST-path-watcher-file-creation` -> `server/tests/PathWatcherService.file-creation.test.ts`
+- `TEST-e2e-file-creation-sse` -> `tests/e2e/sse/updates.spec.ts`
+- `new_ticket_file_creation` -> BDD scenario for `BR-1.5`
+
+**Scope**: Prior UAT closure for top-level ticket file creation events
+**Boundary**: Does not change worktree-only ticket list aggregation
+
+**Verify**:
+
+```bash
+bun run --cwd server jest PathWatcherService.file-creation.test.ts
+bun run test:e2e tests/e2e/sse/updates.spec.ts
+```
+
+**Done when**:
+- [x] New top-level ticket file creation emits an `add` event
+- [x] SSE broadcasts the event to connected clients
+- [x] Real chokidar filesystem tests cover the behavior
+
+---
+
 ## Post-Implementation
 
 - [ ] No duplication (grep check for duplicate logic)
