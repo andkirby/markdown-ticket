@@ -1,0 +1,460 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-160"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a configured document markdown file is added, changed, or removed, the system shall make that file update observable to connected clients with the project-relative path and event type.",
+      "sourceRef": "MDT-160 Scope + Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the currently selected document file changes on disk, the system shall refresh the preview with fresh content while preserving the selected document route.",
+      "sourceRef": "MDT-160 Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a non-selected configured document changes on disk while Documents View is open, the system shall refresh document tree metadata without changing the selected preview.",
+      "sourceRef": "MDT-160 Success Conditions",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "IF the currently selected document file is deleted, THEN the system shall show a deleted-file state instead of stale document content.",
+      "sourceRef": "MDT-160 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN the SSE connection reconnects while Documents View is open, the system shall refresh the document tree and selected document content.",
+      "sourceRef": "MDT-160 Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall watch only document paths configured for the active project.",
+      "sourceRef": "MDT-160 Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall not introduce a project-wide markdown watcher for document updates.",
+      "sourceRef": "MDT-160 Non-Functional Criteria",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall exclude ticket paths from document update events to avoid duplicate ticket/document notifications.",
+      "sourceRef": "MDT-160 Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall preserve the existing one-way SSE transport model for this update.",
+      "sourceRef": "MDT-160 Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The system shall debounce repeated file update handling for the same document path.",
+      "sourceRef": "MDT-160 Non-Functional Criteria",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a configured document path is a single markdown file, THEN the system shall observe changes to that file.",
+      "sourceRef": "MDT-160 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF a configured document path is a directory with nested markdown files, THEN the system shall observe nested markdown file changes.",
+      "sourceRef": "MDT-160 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF document file changes occur while Documents View is not mounted, THEN the next Documents View load shall fetch current tree and content state.",
+      "sourceRef": "MDT-160 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN a user saves a new document path selection, the system shall replace the active document watchers for that project before future document file updates are handled.",
+      "sourceRef": "MDT-160 follow-up: Select Document Paths",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall replace document watchers for a project without restarting ticket watchers for that project.",
+      "sourceRef": "MDT-160 follow-up: Select Document Paths",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "selected_document_refreshes",
+      "title": "Selected document refreshes after external edit",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "Documents View is open with a configured document selected",
+      "when": "the selected document file changes on disk",
+      "then": "the preview shows the fresh document content without changing the selected route",
+      "sourceRef": "requirements:BR-1.2"
+    },
+    {
+      "id": "other_document_update_preserves_preview",
+      "title": "Non-selected document update preserves active preview",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "Documents View is open with one document selected and another configured document visible in the tree",
+      "when": "the non-selected document changes on disk",
+      "then": "the document tree metadata refreshes and the selected preview remains unchanged",
+      "sourceRef": "requirements:BR-1.3"
+    },
+    {
+      "id": "selected_document_deleted_state",
+      "title": "Deleted selected document shows deleted state",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Documents View is open with a configured document selected",
+      "when": "the selected document file is deleted on disk",
+      "then": "the viewer shows a deleted-file state instead of stale content",
+      "sourceRef": "requirements:BR-1.4"
+    },
+    {
+      "id": "document_event_reaches_clients",
+      "title": "Configured document update reaches connected clients",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "a project has configured document paths and a client is connected to live updates",
+      "when": "a markdown file inside a configured document path is added, changed, or removed",
+      "then": "the client receives an update for the project-relative document path and event type",
+      "sourceRef": "requirements:BR-1.1"
+    },
+    {
+      "id": "reconnect_resyncs_documents",
+      "title": "Reconnect resyncs open documents",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "Documents View is open after the live update connection was interrupted",
+      "when": "the live update connection reconnects",
+      "then": "the document tree and selected document content are refreshed",
+      "sourceRef": "requirements:BR-1.5"
+    },
+    {
+      "id": "path_selection_reconfigures_watchers",
+      "title": "Changing selected document paths enables live updates for the new paths",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "Documents View has saved one set of selected document paths",
+      "when": "the user saves a different document path selection",
+      "then": "future file updates from the new selection are handled without requiring a server restart",
+      "sourceRef": "requirements:BR-1.6"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-bounded-document-watchers",
+      "title": "Configured document watchers are bounded to document paths and exclude ticket paths",
+      "derivedFrom": [
+        "BR-1.1",
+        "C1",
+        "C2",
+        "C3",
+        "Edge-1",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-server-bootstrap",
+        "ART-path-watcher",
+        "ART-path-watcher-tests"
+      ],
+      "sourceRef": "architecture:Backend watch scope"
+    },
+    {
+      "id": "OBL-document-cache-invalidation",
+      "title": "Document file changes invalidate cached document content before broadcasting",
+      "derivedFrom": [
+        "BR-1.1",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-file-watcher-facade",
+        "ART-file-watcher-tests"
+      ],
+      "sourceRef": "architecture:Cache invalidation flow"
+    },
+    {
+      "id": "OBL-document-sse-event-contract",
+      "title": "Document updates use a distinct document-change SSE event mapped to document:file:changed",
+      "derivedFrom": [
+        "BR-1.1",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-file-watcher-facade",
+        "ART-sse-client",
+        "ART-event-bus",
+        "ART-event-bus-tests"
+      ],
+      "sourceRef": "architecture:Event model"
+    },
+    {
+      "id": "OBL-documents-view-refresh",
+      "title": "Documents View owns mounted-route refresh behavior for selected and non-selected document updates",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.5",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-documents-layout",
+        "ART-markdown-viewer"
+      ],
+      "sourceRef": "architecture:Frontend refresh ownership"
+    },
+    {
+      "id": "OBL-deleted-selected-document-state",
+      "title": "Selected document deletion renders a viewer-level deleted state instead of stale content",
+      "derivedFrom": [
+        "BR-1.4"
+      ],
+      "artifactIds": [
+        "ART-documents-layout",
+        "ART-markdown-viewer"
+      ],
+      "sourceRef": "architecture:Deleted document state"
+    },
+    {
+      "id": "OBL-document-path-reconfiguration",
+      "title": "Saving document path configuration replaces project document watchers without restarting ticket watchers",
+      "derivedFrom": [
+        "BR-1.6",
+        "C1",
+        "C2",
+        "C3",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-project-controller",
+        "ART-file-watcher-facade",
+        "ART-path-watcher",
+        "ART-project-controller-tests",
+        "ART-path-watcher-tests"
+      ],
+      "sourceRef": "architecture:Document path reconfiguration"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-server-bootstrap",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:server bootstrap"
+    },
+    {
+      "id": "ART-path-watcher",
+      "path": "server/services/fileWatcher/PathWatcherService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:document watcher ownership"
+    },
+    {
+      "id": "ART-file-watcher-facade",
+      "path": "server/services/fileWatcher/index.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:SSE broadcast and cache invalidation"
+    },
+    {
+      "id": "ART-sse-client",
+      "path": "src/services/sseClient.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:frontend SSE mapping"
+    },
+    {
+      "id": "ART-event-bus",
+      "path": "src/services/eventBus.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:frontend event contract"
+    },
+    {
+      "id": "ART-documents-layout",
+      "path": "src/components/DocumentsView/DocumentsLayout.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:Documents View subscription owner"
+    },
+    {
+      "id": "ART-markdown-viewer",
+      "path": "src/components/DocumentsView/MarkdownViewer.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture:selected document rendering"
+    },
+    {
+      "id": "ART-path-watcher-tests",
+      "path": "server/tests/unit/PathWatcherService.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture:watcher scope verification"
+    },
+    {
+      "id": "ART-file-watcher-tests",
+      "path": "server/tests/fileWatcherService.subdocument.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture:document event broadcast verification"
+    },
+    {
+      "id": "ART-event-bus-tests",
+      "path": "src/services/eventBus.test.tsx",
+      "kind": "test",
+      "sourceRef": "architecture:event typing verification"
+    },
+    {
+      "id": "ART-project-controller",
+      "path": "server/controllers/ProjectController.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:document path configuration reaction"
+    },
+    {
+      "id": "ART-project-controller-tests",
+      "path": "server/tests/unit/ProjectController.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture:configuration rewatch verification"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-path-watcher-document-scope",
+      "kind": "unit",
+      "title": "PathWatcherService watches only configured document paths and skips tickets",
+      "covers": [
+        "C1",
+        "C2",
+        "C3",
+        "Edge-1",
+        "Edge-2"
+      ],
+      "file": "server/tests/unit/PathWatcherService.test.ts",
+      "sourceRef": "Architecture Test Strategy: document watcher scope"
+    },
+    {
+      "id": "TEST-document-change-broadcast",
+      "kind": "integration",
+      "title": "FileWatcherService invalidates document cache and broadcasts document-change",
+      "covers": [
+        "BR-1.1",
+        "C4",
+        "C5"
+      ],
+      "file": "server/tests/fileWatcherService.subdocument.test.ts",
+      "sourceRef": "Architecture Runtime Flow: document-change broadcast"
+    },
+    {
+      "id": "TEST-project-document-reconfiguration",
+      "kind": "unit",
+      "title": "ProjectController reconfigures document watchers after saved path selection",
+      "covers": [
+        "BR-1.6",
+        "C6"
+      ],
+      "file": "server/tests/unit/ProjectController.test.ts",
+      "sourceRef": "Architecture Configuration Change Flow"
+    },
+    {
+      "id": "TEST-document-event-bus-contract",
+      "kind": "unit",
+      "title": "Frontend EventBus carries typed document file change events",
+      "covers": [
+        "BR-1.1"
+      ],
+      "file": "src/services/eventBus.test.tsx",
+      "sourceRef": "Architecture Module Boundaries: EventBus"
+    },
+    {
+      "id": "TEST-documents-view-live-updates-e2e",
+      "kind": "e2e",
+      "title": "Documents View refreshes selected documents and reacts to path selection changes",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.6",
+        "Edge-3",
+        "C6"
+      ],
+      "file": "tests/e2e/documents/live-updates.spec.ts",
+      "sourceRef": "BDD scenarios: selected document refresh, deleted selected document, document path selection change"
+    }
+  ],
+  "tasks": []
+}

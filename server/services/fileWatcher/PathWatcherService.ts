@@ -32,12 +32,23 @@ export interface FileChangeEventPayload {
   source: 'main' | 'worktree'
 }
 
+/** Configured document change event. */
+export interface DocumentChangeEventPayload {
+  eventType: 'add' | 'change' | 'unlink'
+  filePath: string
+  absoluteFilePath: string
+  projectId: string
+  timestamp: number
+}
+
 const OPTS = { ignoreInitial: true, persistent: true, awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 100 } }
 
 export class PathWatcherService extends EventEmitter {
   private watchers = new Map<string, chokidar.FSWatcher>()
   private worktreeWatchers = new Map<string, WorktreeWatcherEntry>()
   private watchPaths = new Map<string, string>()
+  private projectRoots = new Map<string, string>()
+  private ticketPaths = new Map<string, string>()
   private worktreeService = new WorktreeService({ enabled: true })
   /** Active worktree ticket codes to exclude from main watcher (MDT-142 C2) */
   private activeWorktreeExclusions = new Set<string>()
@@ -50,6 +61,9 @@ export class PathWatcherService extends EventEmitter {
         continue
       const { basePath, watchPattern } = this.buildTwoLevelWatchPath(p.path)
       this.watchPaths.set(p.id, basePath)
+      if (p.projectRoot)
+        this.projectRoots.set(p.id, p.projectRoot)
+      this.ticketPaths.set(p.id, this.getRelativeTicketPath(p.path, p.projectRoot))
       this.createWatcher(p.id, watchPattern, (w) => {
         w.on('add', fp => this.handleFileEvent('add', fp, p.id, 'main'))
           .on('change', fp => this.handleFileEvent('change', fp, p.id, 'main'))
@@ -60,6 +74,64 @@ export class PathWatcherService extends EventEmitter {
       })
     }
     return this
+  }
+
+  initDocumentWatchers(projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string): number {
+    let count = 0
+    this.projectRoots.set(projectId, projectRoot)
+    if (ticketsPath)
+      this.ticketPaths.set(projectId, this.normalizeRelativePath(ticketsPath))
+
+    for (const documentPath of documentPaths) {
+      const normalizedPath = this.normalizeRelativePath(documentPath)
+      if (!normalizedPath || normalizedPath.includes('..'))
+        continue
+
+      if (this.isPathInsideTicketPath(normalizedPath, this.ticketPaths.get(projectId)))
+        continue
+
+      const absolutePath = path.resolve(projectRoot, normalizedPath)
+      if (!this.isInsideRoot(absolutePath, projectRoot))
+        continue
+
+      const watcherId = `${projectId}__document__${normalizedPath}`
+      if (this.watchers.has(watcherId))
+        continue
+
+      const watchPattern = normalizedPath.endsWith('.md')
+        ? absolutePath
+        : path.join(absolutePath, '**/*.md')
+
+      this.createWatcher(watcherId, watchPattern, (w) => {
+        w.on('add', fp => this.handleDocumentEvent('add', fp, projectId, projectRoot))
+          .on('change', fp => this.handleDocumentEvent('change', fp, projectId, projectRoot))
+          .on('unlink', fp => this.handleDocumentEvent('unlink', fp, projectId, projectRoot))
+          .on('error', e => this.emit('error', { error: e, projectId }))
+          .on('ready', () => this.emit('document-ready', { projectId, watcherId }))
+        this.watchers.set(watcherId, w)
+      })
+      count++
+    }
+
+    return count
+  }
+
+  async reconfigureDocumentWatchers(projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string): Promise<number> {
+    const prefix = `${projectId}__document__`
+    const watcherIds = Array.from(this.watchers.keys()).filter(id => id.startsWith(prefix))
+
+    await Promise.all(watcherIds.map(async (watcherId) => {
+      const watcher = this.watchers.get(watcherId)
+      this.watchers.delete(watcherId)
+      try {
+        await watcher?.close()
+      }
+      catch (error) {
+        this.emit('error', { error, projectId })
+      }
+    }))
+
+    return this.initDocumentWatchers(projectId, projectRoot, documentPaths, ticketsPath)
   }
 
   initGlobalRegistryWatcher(): void {
@@ -278,6 +350,10 @@ export class PathWatcherService extends EventEmitter {
     return path.join(process.cwd(), '..')
   }
 
+  getProjectRoot(pid: string): string | null {
+    return this.projectRoots.get(pid) ?? null
+  }
+
   private handleRegistryEvent(et: string, fp: string): void {
     const etm: Record<string, string> = { add: 'project-created', change: 'project-updated', unlink: 'project-deleted' }
     const pid = path.basename(fp, '.toml')
@@ -373,6 +449,53 @@ export class PathWatcherService extends EventEmitter {
     this.emit('file-change', payload)
   }
 
+  private handleDocumentEvent(et: string, fp: string, pid: string, projectRoot: string): void {
+    if (!fp.endsWith('.md'))
+      return
+
+    const absoluteFilePath = path.resolve(fp)
+    if (!this.isInsideRoot(absoluteFilePath, projectRoot))
+      return
+
+    const filePath = this.normalizeRelativePath(path.relative(projectRoot, absoluteFilePath))
+    if (!filePath || this.isPathInsideTicketPath(filePath, this.ticketPaths.get(pid)))
+      return
+
+    const payload: DocumentChangeEventPayload = {
+      eventType: et as 'add' | 'change' | 'unlink',
+      filePath,
+      absoluteFilePath,
+      projectId: pid,
+      timestamp: Date.now(),
+    }
+
+    this.emit('document-change', payload)
+  }
+
+  private getRelativeTicketPath(watchPath: string, projectRoot?: string): string {
+    if (!projectRoot)
+      return ''
+
+    const basePath = this.normalizeBasePath(watchPath)
+    return this.normalizeRelativePath(path.relative(projectRoot, basePath))
+  }
+
+  private normalizeRelativePath(value: string): string {
+    return value.replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '')
+  }
+
+  private isPathInsideTicketPath(filePath: string, ticketsPath?: string): boolean {
+    if (!ticketsPath)
+      return false
+
+    return filePath === ticketsPath || filePath.startsWith(`${ticketsPath}/`)
+  }
+
+  private isInsideRoot(targetPath: string, rootPath: string): boolean {
+    const relativePath = path.relative(rootPath, targetPath)
+    return relativePath === '' || (!relativePath.startsWith('..') && !path.isAbsolute(relativePath))
+  }
+
   private createWatcher(id: string, wp: string, init: (w: chokidar.FSWatcher) => void): void {
     try {
       const w = chokidar.watch(wp, OPTS)
@@ -424,6 +547,8 @@ export class PathWatcherService extends EventEmitter {
     })
     this.watchers.clear()
     this.watchPaths.clear()
+    this.projectRoots.clear()
+    this.ticketPaths.clear()
     this.worktreeWatchers.forEach((e, wid) => {
       console.warn(`Stopping worktree watcher: ${wid}`)
       e.watcher.close().catch(er => console.error(`Error closing worktree watcher ${wid}:`, er))
