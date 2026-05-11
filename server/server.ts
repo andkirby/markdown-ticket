@@ -229,6 +229,7 @@ async function initializeMultiProjectWatchers(): Promise<void> {
         const crPath: string = getTicketsPath(config, DEFAULTS.TICKETS_PATH)
         const fullCRPath: string = path.resolve(configPath, crPath)
         const watchPath: string = path.join(fullCRPath, '*.md')
+        const documentPaths = config.project.document?.paths || []
 
         // Check if directory exists
         try {
@@ -242,6 +243,13 @@ async function initializeMultiProjectWatchers(): Promise<void> {
             projectCode: config.project?.code || serverProject.id.toUpperCase(), // MDT-142: Use project code for worktree detection
           })
           logger.info(`✅ Will watch project ${serverProject.project.name} at: ${watchPath}`)
+
+          if (documentPaths.length > 0) {
+            const documentWatcherCount = fileWatcher.initDocumentWatchers(serverProject.id, configPath, documentPaths, crPath)
+            if (documentWatcherCount > 0) {
+              logger.info(`📄 Document watchers initialized for ${serverProject.project.name}: ${documentWatcherCount}`)
+            }
+          }
         }
         catch {
           logger.warn(`⚠️  CR directory not found for project ${serverProject.project.name}: ${fullCRPath}`)
