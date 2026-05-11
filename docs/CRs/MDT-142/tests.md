@@ -17,6 +17,7 @@ Test specification for subdocument SSE events in main project and worktree conte
 | `useSSEEvents` | `src/hooks/useSSEEvents.subdocument.test.ts` | Unit | 5 |
 | `TicketViewer` | `src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.ts` | Unit | 7 |
 | E2E | `tests/e2e/filewatcher/subdocument-sse.spec.ts` | E2E | 5 |
+| `ProjectService` | `shared/tests/services/project/ProjectService.worktree.test.ts` | Integration | worktree-only listing |
 
 ## Data Mechanism Tests
 
@@ -27,6 +28,7 @@ Test specification for subdocument SSE events in main project and worktree conte
 | Worktree HEAD monitoring | `PathWatcherService` | Add/remove worktree detection |
 | Subdocument path parsing | `PathWatcherService` | Folder path, slug file path |
 | SSE event structure | `SSEBroadcaster` | subdocument field, source field, eventType |
+| Worktree-only list aggregation | `ProjectService` | Branch-matched worktree tickets included when absent from main |
 
 ## External Dependency Tests
 
@@ -43,6 +45,7 @@ Test specification for subdocument SSE events in main project and worktree conte
 | C2 (Worktree exclusion) | `fileWatcherService.subdocument.test.ts` | `should exclude worktree paths` |
 | C3 (Monitor .git/worktrees) | `fileWatcherService.worktree-monitor.test.ts` | `should watch worktrees directory` |
 | C4 (Backward compatibility) | `useSSEEvents.subdocument.test.ts` | `should still emit ticket:updated` |
+| BR-1.7 (Worktree-only listing) | `ProjectService.worktree.test.ts` | `should list branch-matched worktree-only tickets` |
 
 ## Frontend 5-Case Coverage
 
@@ -68,6 +71,9 @@ bun test src/components/TicketViewer/useTicketDocumentRealtime.subdocument.test.
 
 # E2E tests
 bun run test:e2e tests/e2e/filewatcher/subdocument-sse.spec.ts
+
+# Worktree-only ticket listing
+bun run --cwd shared jest ProjectService.worktree.test.ts
 ```
 
 ---
