@@ -1,6 +1,6 @@
 ---
 code: MDT-083
-status: Approved
+status: Proposed
 dateCreated: 2025-12-04T00:51:40.415Z
 type: Technical Debt
 priority: High
@@ -56,7 +56,7 @@ Service Extraction with Facade Pattern — Extract single responsibility service
 
 ### Structure
 
-```
+```text
 shared/services/
   ├── ProjectService.ts           → Facade/coordinator only (≤150 lines)
   └── project/                    → Project-specific services
