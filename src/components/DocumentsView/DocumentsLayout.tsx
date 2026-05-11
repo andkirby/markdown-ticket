@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { Modal } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting'
+import { useEventBus } from '../../services/eventBus'
 import FileTree from './FileTree'
 import MarkdownViewer from './MarkdownViewer'
 import PathSelector from './PathSelector'
@@ -33,6 +34,9 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const [showPathSelector, setShowPathSelector] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [documentRefreshToken, setDocumentRefreshToken] = useState(0)
+  const [selectedFileDeleted, setSelectedFileDeleted] = useState(false)
+  const [viewerUpdateState, setViewerUpdateState] = useState<'idle' | 'updated' | 'syncing'>('idle')
 
   // Load sort preferences from localStorage on mount
   const savedPreferences = getDocumentSortPreferences(projectId)
@@ -44,6 +48,8 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const sortDirectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const selectedFileTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const updateStateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const selectedFileRef = useRef<string | null>(null)
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -52,8 +58,15 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       sortDirectionTimeoutRef.current && clearTimeout(sortDirectionTimeoutRef.current)
       selectedFileTimeoutRef.current && clearTimeout(selectedFileTimeoutRef.current)
       errorTimeoutRef.current && clearTimeout(errorTimeoutRef.current)
+      updateStateTimeoutRef.current && clearTimeout(updateStateTimeoutRef.current)
     }
   }, [])
+
+  useEffect(() => {
+    selectedFileRef.current = selectedFile
+    setSelectedFileDeleted(false)
+    setViewerUpdateState('idle')
+  }, [selectedFile])
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
@@ -126,9 +139,10 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     }
   }, [pathFromRoute, searchParams])
 
-  const loadDocuments = useCallback(async () => {
+  const loadDocuments = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true)
+      if (showLoading)
+        setLoading(true)
       setError(null)
       const response = await fetch(`/api/documents?projectId=${encodeURIComponent(projectId)}`)
 
@@ -151,13 +165,59 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       setError(error instanceof Error ? error.message : 'Failed to load documents')
     }
     finally {
-      setLoading(false)
+      if (showLoading)
+        setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
     loadDocuments()
   }, [loadDocuments])
+
+  const showTransientUpdateState = useCallback((state: 'updated' | 'syncing') => {
+    setViewerUpdateState(state)
+    if (updateStateTimeoutRef.current)
+      clearTimeout(updateStateTimeoutRef.current)
+    updateStateTimeoutRef.current = setTimeout(() => {
+      setViewerUpdateState('idle')
+    }, 2500)
+  }, [])
+
+  useEventBus('document:file:changed', useCallback((event) => {
+    if (event.payload.projectId !== projectId)
+      return
+
+    const currentSelectedFile = selectedFileRef.current
+    const selectedFileChanged = currentSelectedFile === event.payload.filePath
+
+    loadDocuments(false).catch((error) => {
+      console.error('Failed to refresh documents after SSE update:', error)
+    })
+
+    if (!selectedFileChanged)
+      return
+
+    if (event.payload.eventType === 'unlink') {
+      setSelectedFileDeleted(true)
+      setViewerUpdateState('idle')
+      return
+    }
+
+    setSelectedFileDeleted(false)
+    setDocumentRefreshToken(token => token + 1)
+    showTransientUpdateState('updated')
+  }, [loadDocuments, projectId, showTransientUpdateState]), [loadDocuments, projectId, showTransientUpdateState], 'DocumentsLayout')
+
+  useEventBus('sse:reconnected', useCallback(() => {
+    showTransientUpdateState('syncing')
+    loadDocuments(false).catch((error) => {
+      console.error('Failed to refresh documents after SSE reconnect:', error)
+    })
+    if (selectedFileRef.current) {
+      setSelectedFileDeleted(false)
+      setDocumentRefreshToken(token => token + 1)
+    }
+  }, [loadDocuments, showTransientUpdateState]), [loadDocuments, showTransientUpdateState], 'DocumentsLayout')
 
   // Memoized filtered and sorted files
   const filteredFiles = useMemo(() => {
@@ -418,6 +478,9 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
                 projectId={projectId}
                 filePath={selectedFile}
                 fileInfo={findFileByPath(filteredFiles, selectedFile)}
+                refreshToken={documentRefreshToken}
+                fileDeleted={selectedFileDeleted}
+                updateState={viewerUpdateState}
               />
             )
           : (

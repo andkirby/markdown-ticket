@@ -233,4 +233,44 @@ describe('FileWatcherService - Subdocument Support (MDT-142)', () => {
       }
     })
   })
+
+  describe('MDT-160: Configured document file events', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    it('should invalidate changed document content and broadcast document-change', () => {
+      const invalidateFile = jest.fn()
+      const broadcastSpy = jest.fn()
+
+      fileWatcher.setFileInvoker({ invalidateFile })
+      fileWatcher.on('broadcast', broadcastSpy)
+
+      fileWatcher.initDocumentWatchers('MDT', '/test/project', ['docs'], 'docs/CRs')
+
+      const changeHandler = mockWatcher.on.mock.calls.find(
+        call => call[0] === 'change',
+      )?.[1]
+
+      changeHandler?.('/test/project/docs/guide.md')
+
+      expect(invalidateFile).toHaveBeenCalledWith('/test/project/docs/guide.md')
+
+      jest.advanceTimersByTime(100)
+
+      expect(broadcastSpy).toHaveBeenCalledWith({
+        type: 'document-change',
+        data: {
+          eventType: 'change',
+          filePath: 'docs/guide.md',
+          projectId: 'MDT',
+          timestamp: expect.any(Number),
+        },
+      })
+    })
+  })
 })
