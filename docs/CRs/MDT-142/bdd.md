@@ -17,6 +17,7 @@ BDD scenarios for filewatcher architecture improvements. This ticket focuses on 
 | subdocument_sse_event_worktree | High | BR-1.1, BR-1.4, BR-1.2 | Worktree |
 | worktree_add_auto_detects | High | BR-1.2 | Worktree auto-discovery |
 | no_duplicate_events_worktree | High | BR-1.3 | Duplicate prevention |
+| worktree_only_ticket_listed | High | BR-1.7 | Worktree-only ticket discovery |
 
 ## E2E Framework
 
@@ -54,6 +55,11 @@ Tests must verify the SSE event payload contains:
 - File exists in both main and worktree
 - Modify file in either location
 - Verify exactly ONE SSE event received
+
+### Worktree-only Ticket Listing
+- Create or detect an active worktree whose branch name matches a ticket code, e.g. `MDT-161`
+- Ensure the ticket file exists only under the worktree `docs/CRs`
+- Verify API and MCP ticket lists include the ticket with `inWorktree: true` and `worktreePath`
 
 ## Execution Notes
 
