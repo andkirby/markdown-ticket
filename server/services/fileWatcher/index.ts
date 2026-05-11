@@ -1,4 +1,4 @@
-import type { FileChangeEventPayload, ProjectPath, WorktreeWatcherEntry } from './PathWatcherService.js'
+import type { DocumentChangeEventPayload, FileChangeEventPayload, ProjectPath, WorktreeWatcherEntry } from './PathWatcherService.js'
 import type { FileChangeEvent, ResponseLike, SSEEvent, TicketData } from './SSEBroadcaster.js'
 import { EventEmitter } from 'node:events'
 import * as fs from 'node:fs'
@@ -9,6 +9,16 @@ import { SSEBroadcaster } from './SSEBroadcaster.js'
 
 interface FileInvoker {
   invalidateFile: (filePath: string) => void
+}
+
+interface DocumentChangeEvent {
+  type: 'document-change'
+  data: {
+    eventType: 'add' | 'change' | 'unlink'
+    filePath: string
+    projectId: string
+    timestamp: number
+  }
 }
 
 /**
@@ -86,6 +96,8 @@ class FileWatcherService extends EventEmitter {
       'project-created',
       'project-updated',
       'project-deleted',
+      'document-change',
+      'document-ready',
       'worktree-ready',
       'worktree-error',
       'registry-change',
@@ -105,6 +117,10 @@ class FileWatcherService extends EventEmitter {
     // Wire up file changes to SSE broadcasting with cache invalidation
     this.pathWatcher.on('file-change', (data) => {
       this.handleFileChangeForSSE(data)
+    })
+
+    this.pathWatcher.on('document-change', (data) => {
+      this.handleDocumentChangeForSSE(data)
     })
 
     // Wire up registry events to SSE broadcasting
@@ -188,6 +204,31 @@ class FileWatcherService extends EventEmitter {
     }, 100)
   }
 
+  private handleDocumentChangeForSSE(data: DocumentChangeEventPayload): void {
+    const { eventType, filePath, absoluteFilePath, projectId, timestamp } = data
+
+    if (this.fileInvoker && (eventType === 'change' || eventType === 'add' || eventType === 'unlink')) {
+      console.warn(`Invalidating document cache for: ${absoluteFilePath}`)
+      this.fileInvoker.invalidateFile(absoluteFilePath)
+    }
+
+    const debounceKey = `document:${eventType}:${filePath}:${projectId}`
+    this.sseBroadcaster.debouncedBroadcast(debounceKey, () => {
+      const event: DocumentChangeEvent = {
+        type: 'document-change',
+        data: {
+          eventType,
+          filePath,
+          projectId,
+          timestamp,
+        },
+      }
+
+      console.warn(`Broadcasting document-change: ${eventType} - ${filePath} in project ${projectId}`)
+      this.sseBroadcaster.broadcast(event)
+    }, 100)
+  }
+
   /**
    * Set file operation invoker for cache invalidation.
    */
@@ -208,6 +249,14 @@ class FileWatcherService extends EventEmitter {
   initMultiProjectWatcher(projectPaths: ProjectPath[]): this {
     this.pathWatcher.initMultiProjectWatcher(projectPaths)
     return this
+  }
+
+  initDocumentWatchers(projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string): number {
+    return this.pathWatcher.initDocumentWatchers(projectId, projectRoot, documentPaths, ticketsPath)
+  }
+
+  async reconfigureDocumentWatchers(projectId: string, projectRoot: string, documentPaths: string[], ticketsPath?: string): Promise<number> {
+    return this.pathWatcher.reconfigureDocumentWatchers(projectId, projectRoot, documentPaths, ticketsPath)
   }
 
   /**
@@ -299,6 +348,10 @@ class FileWatcherService extends EventEmitter {
   /** Backward compatibility: get project path */
   getProjectPath(projectId: string): string {
     return this.pathWatcher.getProjectPath(projectId)
+  }
+
+  getProjectRoot(projectId: string): string | null {
+    return this.pathWatcher.getProjectRoot(projectId)
   }
 
   /** Backward compatibility: broadcast file change */

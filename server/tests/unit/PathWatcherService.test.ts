@@ -289,6 +289,85 @@ describe('PathWatcherService', () => {
     })
   })
 
+  describe('Document watcher handling (MDT-160)', () => {
+    it('should watch configured document directories and files only', () => {
+      const count = service.initDocumentWatchers(
+        'test',
+        '/project',
+        ['docs', 'README.md'],
+        'docs/CRs',
+      )
+
+      expect(count).toBe(2)
+      expect(chokidar.watch).toHaveBeenCalledWith('/project/docs/**/*.md', expect.any(Object))
+      expect(chokidar.watch).toHaveBeenCalledWith('/project/README.md', expect.any(Object))
+    })
+
+    it('should not create document watchers inside tickets path', () => {
+      const count = service.initDocumentWatchers(
+        'test',
+        '/project',
+        ['docs/CRs', 'docs/CRs/MDT-160.md'],
+        'docs/CRs',
+      )
+
+      expect(count).toBe(0)
+      expect(chokidar.watch).not.toHaveBeenCalled()
+    })
+
+    it('should emit document-change with project-relative file path', () => {
+      const changeSpy = jest.fn()
+      service.on('document-change', changeSpy)
+
+      service.initDocumentWatchers('test', '/project', ['docs'], 'docs/CRs')
+
+      const changeCallback = mockWatcher.on.mock.calls.find(
+        (call: [string, (...args: unknown[]) => void]) => call[0] === 'change',
+      )?.[1]
+
+      changeCallback?.('/project/docs/guide.md')
+
+      expect(changeSpy).toHaveBeenCalledWith({
+        eventType: 'change',
+        filePath: 'docs/guide.md',
+        absoluteFilePath: '/project/docs/guide.md',
+        projectId: 'test',
+        timestamp: expect.any(Number),
+      })
+    })
+
+    it('should ignore document events for ticket files', () => {
+      const changeSpy = jest.fn()
+      service.on('document-change', changeSpy)
+
+      service.initDocumentWatchers('test', '/project', ['docs'], 'docs/CRs')
+
+      const changeCallback = mockWatcher.on.mock.calls.find(
+        (call: [string, (...args: unknown[]) => void]) => call[0] === 'change',
+      )?.[1]
+
+      changeCallback?.('/project/docs/CRs/MDT-160.md')
+
+      expect(changeSpy).not.toHaveBeenCalled()
+    })
+
+    it('should replace existing document watchers when reconfigured', async () => {
+      service.initDocumentWatchers('test', '/project', ['docs'], 'docs/CRs')
+
+      const count = await service.reconfigureDocumentWatchers(
+        'test',
+        '/project',
+        ['guides', 'README.md'],
+        'docs/CRs',
+      )
+
+      expect(count).toBe(2)
+      expect(mockWatcher.close).toHaveBeenCalled()
+      expect(chokidar.watch).toHaveBeenCalledWith('/project/guides/**/*.md', expect.any(Object))
+      expect(chokidar.watch).toHaveBeenCalledWith('/project/README.md', expect.any(Object))
+    })
+  })
+
   describe('Project path resolution', () => {
     it('should return registered path', () => {
       service.initMultiProjectWatcher([{ id: 'test', path: '/test/path/*.md' }])
