@@ -22,6 +22,7 @@ The PathWatcherService observes file changes and routes events through an exclus
 | Module | Responsibility |
 |--------|----------------|
 | `PathWatcherService` | File watching, worktree detection, exclusion filtering |
+| `ProjectService` | Ticket list aggregation across main project and branch-matched worktrees |
 | `SSEBroadcaster` | Event broadcasting with subdocument metadata |
 | `EventBus` | Frontend event routing (ticket:updated, ticket:subdocument:changed) |
 | `useSSEEvents` | SSE-to-EventBus mapping |
@@ -66,6 +67,19 @@ flowchart TB
 2. **Source attribution**: Events always include `source: 'main' | 'worktree'`
 3. **Backward compatibility**: Main ticket file changes emit `ticket:updated` as before
 4. **Exclusion consistency**: Active worktree paths are always excluded from main watcher
+5. **List completeness**: Ticket lists include branch-matched worktree-only tickets, not only tickets first discovered in the main project.
+
+## Ticket List Aggregation
+
+`ProjectService` must treat detected active worktrees as secondary ticket discovery roots for list operations. The aggregation flow is:
+
+1. Scan main project tickets.
+2. Detect branch-matched active worktrees through the existing worktree service.
+3. Scan matching ticket files in each worktree.
+4. Union results by ticket code, preferring the worktree copy for active worktree tickets.
+5. Set `inWorktree: true` and `worktreePath` on worktree-sourced rows.
+
+This closes the UAT case where `MDT-161` exists only in a worktree branch named `MDT-161`.
 
 ## Extension Rule
 
@@ -150,7 +164,7 @@ When SSE events arrive, the frontend maps them to EventBus events:
 
 When `add` or `unlink` events arrive, the frontend refetches the full ticket. However, React's component model ensures only the tabs visually refresh:
 
-```
+```text
 TicketViewer
 ├── currentTicket (state)
 │   └── subdocuments (derived via useMemo)
