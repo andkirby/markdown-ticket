@@ -121,6 +121,37 @@ describe('projectController - CRUD Operations', () => {
     })
   })
 
+  describe('configureDocuments', () => {
+    it('should save document paths and reconfigure document watchers', async () => {
+      const { req, res } = createMockReqRes()
+      const reconfigureDocumentWatchers = jest.fn().mockResolvedValue(2)
+
+      const controller = new ProjectController(
+        mockProjectService,
+        mockTreeService,
+        { reconfigureDocumentWatchers },
+        undefined,
+        mockTicketService as unknown as TicketService,
+      )
+
+      req.body = {
+        projectId: 'test-project',
+        documentPaths: ['docs', 'README.md'],
+      }
+      ;(mockProjectService.configureDocuments as jest.Mock).mockResolvedValue(undefined)
+      ;(mockProjectService.getAllProjects as jest.Mock).mockResolvedValue([mockProject])
+      ;(mockProjectService.getProjectConfig as jest.Mock).mockReturnValue({
+        project: { ticketsPath: 'docs/CRs' },
+      })
+
+      await controller.configureDocuments(req as AuthenticatedRequest, res as Response)
+
+      expect(mockProjectService.configureDocuments).toHaveBeenCalledWith('test-project', ['docs', 'README.md'])
+      expect(reconfigureDocumentWatchers).toHaveBeenCalledWith('test-project', '/test/path', ['docs', 'README.md'], 'docs/CRs')
+      expect(res.json).toHaveBeenCalledWith({ success: true })
+    })
+  })
+
   describe('createCR', () => {
     it('should return 201 with created CR data', async () => {
       const { req, res } = createMockReqRes()
