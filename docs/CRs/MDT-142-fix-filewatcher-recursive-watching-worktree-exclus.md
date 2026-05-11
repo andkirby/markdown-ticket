@@ -69,7 +69,7 @@ Real-time collaboration requires accurate file change detection:
 
 **FileChangeEvent:**
 
-```
+```typescript
 eventType: 'add' | 'change' | 'unlink'
 projectId: string
 timestamp: number
@@ -189,6 +189,30 @@ Extract from file path:
 **Execution Slices**:
 1. Slice 1: Root cause diagnosis via real-filesystem unit test
 2. Slice 2: Fix + regression E2E test for file creation
+
+### UAT Session 2026-05-11
+
+**Context**: Ticket `MDT-161` exists only in an active Codex worktree on branch `MDT-161`. It is not present in the main project's `docs/CRs`, so project ticket listing misses it even though the branch name matches the ticket code.
+
+**Approved Changes**:
+- BR-1.7 (new, additive_change): Ticket listing must include tickets that exist only in branch-matched active worktrees and mark them with worktree metadata.
+- Add BDD coverage for `worktree_only_ticket_listed`.
+- Add ProjectService architecture ownership for unioning main tickets with worktree-only tickets.
+- Add integration test coverage for worktree-only ticket listing.
+
+**Changed Requirement IDs**: BR-1.7 (new)
+
+**Updated Workflow Documents**: requirements.md, bdd.md, architecture.md, tests.md, tasks.md, uat.md, and trace projections.
+
+**uat.md Written**: Yes
+
+**Strict Drift/Lock Used**: No
+
+**Trace Validation**: `spec-trace validate MDT-142 --stage all` passed.
+
+**Execution Slices**:
+1. Slice 1: ProjectService list aggregation must include branch-matched worktree-only ticket files.
+2. Slice 2: Prior UAT trace closure for top-level ticket file creation (`BR-1.5`) via TASK-9.
 
 ---
 

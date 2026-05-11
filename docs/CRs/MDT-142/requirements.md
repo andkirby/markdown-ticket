@@ -34,6 +34,15 @@ The changes eliminate duplicate events when files exist in both locations.
 - **Ticket code extraction**: From folder name (`MDT-095/file.md`) OR filename (`MDT-095.md`, `MDT-095-slug.md`) - both are valid sources
 - **Event routing**: Main ticket file changes → `ticket:updated`, subdocument changes → `ticket:subdocument:changed`
 - **Source attribution**: Events include `source` field to distinguish main vs worktree origin
+- **Worktree-only listing**: Ticket lists must include branch-matched active worktree tickets even when the ticket file does not exist in the main project's `docs/CRs`.
+
+## UAT Addendum 2026-05-11
+
+### BR-1.7: Worktree-only ticket listing
+
+WHEN listing tickets for a project with active branch-matched worktrees, the system shall include tickets that exist only in those worktrees and mark them with worktree metadata.
+
+**Rationale**: `MDT-161` exists only in an active worktree on branch `MDT-161`; scanning main `docs/CRs` first makes it invisible.
 
 ## Scope Summary
 
