@@ -1,4 +1,5 @@
-import { ChevronDown, ChevronUp, Pencil, Search } from 'lucide-react'
+import type { FileTreeHandle } from './FileTree'
+import { ChevronDown, ChevronUp, Crosshair, Pencil, Search } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
@@ -50,6 +51,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const updateStateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const selectedFileRef = useRef<string | null>(null)
+  const fileTreeRef = useRef<FileTreeHandle>(null)
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -353,6 +355,22 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     setShowPathSelector(false)
   }
 
+  const handleScrollToSelectedFile = () => {
+    if (!selectedFile) {
+      return
+    }
+
+    if (!findFileByPath(filteredFiles, selectedFile) && searchQuery) {
+      setSearchQuery('')
+      window.setTimeout(() => {
+        fileTreeRef.current?.scrollToSelectedFile()
+      }, 0)
+      return
+    }
+
+    fileTreeRef.current?.scrollToSelectedFile()
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -430,14 +448,27 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
                 </button>
               </div>
             </div>
-            <button
-              onClick={() => setShowPathSelector(true)}
-              className="p-1 hover:bg-muted rounded transition-colors"
-              title="Configure document paths"
-              data-testid="configure-paths-button"
-            >
-              <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleScrollToSelectedFile}
+                disabled={!selectedFile}
+                className="p-1 hover:bg-muted rounded transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                title="Scroll to active document"
+                data-testid="scroll-to-active-document-button"
+              >
+                <Crosshair className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPathSelector(true)}
+                className="p-1 hover:bg-muted rounded transition-colors"
+                title="Configure document paths"
+                data-testid="configure-paths-button"
+              >
+                <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -453,6 +484,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
         <ScrollArea className="h-[calc(100dvh-200px)]">
           <div className="p-2">
             <FileTree
+              ref={fileTreeRef}
               files={filteredFiles}
               onFileSelect={(filePath) => {
                 setSelectedFile(filePath)
