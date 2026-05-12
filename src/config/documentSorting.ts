@@ -1,3 +1,5 @@
+import { readLocalStoragePreference, writeLocalStoragePreference } from './localStoragePreferences'
+
 export interface DocumentSortPreferences {
   sortBy: 'name' | 'title' | 'created' | 'modified'
   sortDirection: 'asc' | 'desc'
@@ -14,23 +16,11 @@ function getStorageKey(projectId: string): string {
 }
 
 export function getDocumentSortPreferences(projectId: string): DocumentSortPreferences {
-  try {
-    const stored = localStorage.getItem(getStorageKey(projectId))
-    if (stored) {
-      return { ...DEFAULT_DOCUMENT_SORT_PREFERENCES, ...JSON.parse(stored) }
-    }
-  }
-  catch (error) {
-    console.warn('Failed to load document sort preferences:', error)
-  }
-  return DEFAULT_DOCUMENT_SORT_PREFERENCES
+  return readLocalStoragePreference(getStorageKey(projectId), DEFAULT_DOCUMENT_SORT_PREFERENCES, {
+    merge: (storedValue, defaultValue) => ({ ...defaultValue, ...storedValue as Partial<DocumentSortPreferences> }),
+  })
 }
 
 export function setDocumentSortPreferences(projectId: string, preferences: DocumentSortPreferences): void {
-  try {
-    localStorage.setItem(getStorageKey(projectId), JSON.stringify(preferences))
-  }
-  catch (error) {
-    console.warn('Failed to save document sort preferences:', error)
-  }
+  writeLocalStoragePreference(getStorageKey(projectId), preferences)
 }
