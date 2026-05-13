@@ -41,6 +41,9 @@ export function enableZoom(container: HTMLElement): void {
   diagram.style.transformOrigin = 'center center'
   diagram.style.transition = 'transform 0.1s ease-out'
   diagram.style.cursor = 'grab'
+  diagram.style.display = 'inline-block'
+  diagram.style.userSelect = 'none'
+  diagram.style.touchAction = 'none'
 
   // Wheel zoom handler
   const handleWheel = (e: WheelEvent) => {
@@ -195,6 +198,9 @@ export function disableZoom(container: HTMLElement): void {
   diagram.style.transformOrigin = ''
   diagram.style.transition = ''
   diagram.style.cursor = ''
+  diagram.style.display = ''
+  diagram.style.userSelect = ''
+  diagram.style.touchAction = ''
 
   // Remove event listeners
   const containerWithHandlers = container as HTMLElementWithZoomHandlers
