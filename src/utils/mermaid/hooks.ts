@@ -1,7 +1,7 @@
 import mermaid from 'mermaid'
 import { useCallback, useEffect, useRef } from 'react'
 import { initMermaid } from './core'
-import { addFullscreenButtons, updateFullscreenButtons } from './fullscreen'
+import { addFullscreenButtons } from './fullscreen'
 import { disableZoom } from './zoom'
 
 /**
@@ -49,17 +49,7 @@ export function useMermaid(): UseMermaidReturn {
   }, [])
 
   useEffect(() => {
-    // Add fullscreen change listeners
-    document.addEventListener('fullscreenchange', updateFullscreenButtons)
-    document.addEventListener('webkitfullscreenchange', updateFullscreenButtons)
-    document.addEventListener('msfullscreenchange', updateFullscreenButtons)
-
     return () => {
-      // Cleanup fullscreen listeners
-      document.removeEventListener('fullscreenchange', updateFullscreenButtons)
-      document.removeEventListener('webkitfullscreenchange', updateFullscreenButtons)
-      document.removeEventListener('msfullscreenchange', updateFullscreenButtons)
-
       // Cleanup any active zoom handlers
       const mermaidContainers = document.querySelectorAll('.mermaid-container')
       mermaidContainers.forEach((container) => {
