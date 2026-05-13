@@ -1,71 +1,56 @@
 import { ADAPTIVE_SCALE, SCALE_FACTORS } from './constants'
 import { disableZoom, enableZoom } from './zoom'
 
-// Vendor-prefixed Fullscreen API extensions
-interface HTMLElementWithFullscreen extends HTMLElement {
-  webkitRequestFullscreen?: () => Promise<void>
-  msRequestFullscreen?: () => Promise<void>
-}
-
-interface DocumentWithFullscreen extends Document {
-  webkitExitFullscreen?: () => Promise<void>
-  msExitFullscreen?: () => Promise<void>
-  webkitFullscreenElement?: Element | null
-  msFullscreenElement?: Element | null
-}
-
-/**
- * Request fullscreen for an element with vendor prefix support
- */
-export async function enterFullscreen(element: HTMLElement): Promise<void> {
-  const elementWithFullscreen = element as HTMLElementWithFullscreen
-  if (element.requestFullscreen) {
-    await element.requestFullscreen()
-  }
-  else if (elementWithFullscreen.webkitRequestFullscreen) {
-    await elementWithFullscreen.webkitRequestFullscreen()
-  }
-  else if (elementWithFullscreen.msRequestFullscreen) {
-    await elementWithFullscreen.msRequestFullscreen()
-  }
-}
-
-/**
- * Exit fullscreen with vendor prefix support
- */
-export async function exitFullscreen(): Promise<void> {
-  const doc = document as DocumentWithFullscreen
-  if (document.exitFullscreen) {
-    await document.exitFullscreen()
-  }
-  else if (doc.webkitExitFullscreen) {
-    await doc.webkitExitFullscreen()
-  }
-  else if (doc.msExitFullscreen) {
-    await doc.msExitFullscreen()
-  }
-}
+let activeOverlayContainer: HTMLElement | null = null
+let previousBodyOverflow = ''
 
 /**
  * Toggle fullscreen mode for a mermaid container
  */
-async function toggleMermaidFullscreen(container: HTMLElement): Promise<void> {
-  const isCurrentlyFullscreen = document.fullscreenElement === container
+function toggleMermaidFullscreen(container: HTMLElement): void {
+  if (container.dataset.overlayEnabled === 'true') {
+    exitMermaidOverlay(container)
 
-  try {
-    if (isCurrentlyFullscreen) {
-      await exitFullscreen()
-      disableZoom(container)
-    }
-    else {
-      await enterFullscreen(container)
-      setTimeout(() => {
-        enableZoom(container)
-      }, 100)
-    }
+    return
   }
-  catch (err) {
-    console.error('Error toggling fullscreen:', err)
+
+  enterMermaidOverlay(container)
+}
+
+function enterMermaidOverlay(container: HTMLElement): void {
+  if (activeOverlayContainer && activeOverlayContainer !== container) {
+    exitMermaidOverlay(activeOverlayContainer)
+  }
+
+  previousBodyOverflow = document.body.style.overflow
+  document.body.style.overflow = 'hidden'
+
+  applyFullscreenStyles(container)
+  enableZoom(container)
+  container.dataset.overlayEnabled = 'true'
+  activeOverlayContainer = container
+  updateFullscreenButton(container, true)
+  document.addEventListener('keydown', handleOverlayKeydown, true)
+}
+
+function exitMermaidOverlay(container: HTMLElement): void {
+  disableZoom(container)
+  clearFullscreenStyles(container)
+  container.dataset.overlayEnabled = 'false'
+  updateFullscreenButton(container, false)
+
+  if (activeOverlayContainer === container) {
+    activeOverlayContainer = null
+    document.body.style.overflow = previousBodyOverflow
+    document.removeEventListener('keydown', handleOverlayKeydown, true)
+  }
+}
+
+function handleOverlayKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && activeOverlayContainer) {
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    exitMermaidOverlay(activeOverlayContainer)
   }
 }
 
@@ -95,6 +80,7 @@ export function addFullscreenButtons(): void {
     ;(container as HTMLElement).style.position = 'relative'
     container.appendChild(button)
     container.setAttribute('data-zoom-enabled', 'false')
+    ;(container as HTMLElement).dataset.overlayEnabled = 'false'
   })
 }
 
@@ -103,36 +89,25 @@ export function addFullscreenButtons(): void {
  */
 export function updateFullscreenButtons(): void {
   const mermaidContainers = document.querySelectorAll('.mermaid-container')
-  const doc = document as DocumentWithFullscreen
-  const fullscreenElement = document.fullscreenElement
-    || doc.webkitFullscreenElement
-    || doc.msFullscreenElement
 
   mermaidContainers.forEach((container) => {
-    const button = container.querySelector('.mermaid-fullscreen-btn') as HTMLButtonElement
-    if (!button)
-      return
-
-    const isFullscreen = fullscreenElement === container
-
-    button.title = isFullscreen ? 'Exit fullscreen (Scroll to zoom)' : 'Enter fullscreen'
-    button.innerHTML = isFullscreen
-      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-         <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 0 2-2h3M3 16h3a2 2 0 0 0 2 2v3" />
-       </svg>`
-      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-       </svg>`
-
-    if (isFullscreen) {
-      applyFullscreenStyles(container as HTMLElement)
-      enableZoom(container as HTMLElement)
-    }
-    else {
-      clearFullscreenStyles(container as HTMLElement)
-      disableZoom(container as HTMLElement)
-    }
+    updateFullscreenButton(container as HTMLElement, (container as HTMLElement).dataset.overlayEnabled === 'true')
   })
+}
+
+function updateFullscreenButton(container: HTMLElement, isFullscreen: boolean): void {
+  const button = container.querySelector('.mermaid-fullscreen-btn') as HTMLButtonElement
+  if (!button)
+    return
+
+  button.title = isFullscreen ? 'Exit fullscreen (Scroll to zoom)' : 'Enter fullscreen'
+  button.innerHTML = isFullscreen
+    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+       <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 0 2-2h3M3 16h3a2 2 0 0 0 2 2v3" />
+     </svg>`
+    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+       <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+     </svg>`
 }
 
 /**
@@ -140,12 +115,16 @@ export function updateFullscreenButtons(): void {
  */
 function applyFullscreenStyles(container: HTMLElement): void {
   const isDarkMode = document.documentElement.classList.contains('dark')
+  container.style.position = 'fixed'
+  container.style.inset = '0'
+  container.style.zIndex = '9999'
+  container.style.width = '100vw'
+  container.style.height = '100vh'
   container.style.backgroundColor = isDarkMode ? '#111827' : 'white'
   container.style.padding = '2rem'
   container.style.display = 'flex'
   container.style.alignItems = 'center'
   container.style.justifyContent = 'center'
-  container.style.minHeight = '100vh'
   container.style.boxSizing = 'border-box'
   container.style.overflow = 'hidden'
 
@@ -167,12 +146,16 @@ function applyFullscreenStyles(container: HTMLElement): void {
  * Clear fullscreen container styles
  */
 function clearFullscreenStyles(container: HTMLElement): void {
+  container.style.position = 'relative'
+  container.style.inset = ''
+  container.style.zIndex = ''
+  container.style.width = ''
+  container.style.height = ''
   container.style.backgroundColor = ''
   container.style.padding = ''
   container.style.display = ''
   container.style.alignItems = ''
   container.style.justifyContent = ''
-  container.style.minHeight = ''
   container.style.boxSizing = ''
   container.style.overflow = ''
 

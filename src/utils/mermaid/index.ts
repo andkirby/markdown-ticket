@@ -5,7 +5,7 @@ export { processMermaidBlocks } from './core'
 
 // Internal exports for advanced usage
 export { initMermaid } from './core'
-export { addFullscreenButtons, enterFullscreen, exitFullscreen, updateFullscreenButtons } from './fullscreen'
+export { addFullscreenButtons, updateFullscreenButtons } from './fullscreen'
 export { useMermaid, type UseMermaidReturn } from './hooks'
 
 export { disableZoom, enableZoom, type HTMLElementWithZoomHandlers, type ZoomHandlers } from './zoom'
