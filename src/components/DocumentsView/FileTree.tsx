@@ -14,10 +14,12 @@ interface FileTreeProps {
   files: DocumentFile[]
   onFileSelect: (path: string) => void
   selectedFile: string | null
+  expandAllFolders?: boolean
 }
 
 export interface FileTreeHandle {
   scrollToSelectedFile: () => void
+  collapseAll: () => void
 }
 
 function getAllFolderPaths(fileList: DocumentFile[]): string[] {
@@ -56,16 +58,19 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
   files,
   onFileSelect,
   selectedFile,
+  expandAllFolders = false,
 }, ref) => {
   const itemMapRef = useRef<Map<string, HTMLDivElement>>(new Map())
 
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => new Set(getAllFolderPaths(files)))
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() =>
+    new Set(selectedFile ? getAncestorFolderPaths(files, selectedFile) : []))
 
   useEffect(() => {
-    setExpandedFolders(prev => new Set([...prev, ...getAllFolderPaths(files)]))
-  }, [files])
+    if (expandAllFolders) {
+      setExpandedFolders(new Set(getAllFolderPaths(files)))
+      return
+    }
 
-  useEffect(() => {
     if (!selectedFile) {
       return
     }
@@ -76,7 +81,7 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
     }
 
     setExpandedFolders(prev => new Set([...prev, ...ancestorPaths]))
-  }, [files, selectedFile])
+  }, [expandAllFolders, files, selectedFile])
 
   const scrollToSelectedFile = useCallback(() => {
     if (!selectedFile) {
@@ -94,9 +99,19 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
     })
   }, [files, selectedFile])
 
+  const collapseAll = useCallback(() => {
+    if (!selectedFile) {
+      setExpandedFolders(new Set())
+      return
+    }
+
+    setExpandedFolders(new Set(getAncestorFolderPaths(files, selectedFile)))
+  }, [files, selectedFile])
+
   useImperativeHandle(ref, () => ({
+    collapseAll,
     scrollToSelectedFile,
-  }), [scrollToSelectedFile])
+  }), [collapseAll, scrollToSelectedFile])
 
   const setItemRef = (path: string, element: HTMLDivElement | null) => {
     if (element) {

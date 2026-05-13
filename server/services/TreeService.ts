@@ -53,7 +53,7 @@ export class TreeService {
     }
     const allFiles = await builder.build(project.project.path, projectConfig, config.maxDepth) as TreeNode[]
 
-    return this._filterByDocumentPaths(allFiles, docPaths)
+    return this._filterByDocumentPaths(allFiles, docPaths, config.ticketsPath ?? 'docs/CRs')
   }
 
   /**
@@ -88,7 +88,7 @@ export class TreeService {
     return project
   }
 
-  private _filterByDocumentPaths(allFiles: TreeNode[], documentPaths: string[]): TreeNode[] {
+  private _filterByDocumentPaths(allFiles: TreeNode[], documentPaths: string[], ticketPath: string): TreeNode[] {
     const results: TreeNode[] = []
 
     for (const docPath of documentPaths) {
@@ -98,14 +98,43 @@ export class TreeService {
     }
 
     const merged = this._mergeFolders(results)
+    const filtered = this._excludePath(merged, this._normalizePath(ticketPath))
 
-    return merged.sort((a, b) => {
+    return filtered.sort((a, b) => {
       if (a.type !== b.type) {
         return a.type === 'folder' ? -1 : 1
       }
 
       return a.name.localeCompare(b.name)
     })
+  }
+
+  private _normalizePath(inputPath: string): string {
+    return inputPath.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/\/$/, '')
+  }
+
+  private _isExcludedPath(nodePath: string, excludedPath: string): boolean {
+    const normalizedNodePath = this._normalizePath(nodePath)
+    return normalizedNodePath === excludedPath || normalizedNodePath.startsWith(`${excludedPath}/`)
+  }
+
+  private _excludePath(nodes: TreeNode[], excludedPath: string): TreeNode[] {
+    return nodes.reduce((filtered: TreeNode[], node) => {
+      if (this._isExcludedPath(node.path, excludedPath)) {
+        return filtered
+      }
+
+      if (node.type === 'folder' && node.children) {
+        filtered.push({
+          ...node,
+          children: this._excludePath(node.children, excludedPath),
+        })
+        return filtered
+      }
+
+      filtered.push(node)
+      return filtered
+    }, [])
   }
 
   private _findMatches(files: TreeNode[], targetPath: string): TreeNode[] {

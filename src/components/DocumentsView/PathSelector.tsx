@@ -135,6 +135,9 @@ export default function PathSelector({ projectId, onPathsSelected, onCancel }: P
         <p className="text-sm text-gray-600">
           Choose the files and folders you want to include in the documents view.
         </p>
+        <p className="mt-2 text-xs text-muted-foreground" data-testid="document-exclusion-notice">
+          docs/CRs is excluded automatically because it is the ticket area.
+        </p>
       </div>
 
       {/* Scrollable Content Area */}

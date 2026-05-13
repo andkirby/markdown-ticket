@@ -199,12 +199,32 @@ export const listSelectors = {
 export const documentSelectors = {
   /** Document tree container */
   documentTree: '[data-testid="document-tree"]',
+  /** Document tree scroll area */
+  documentTreeScrollArea: '[data-testid="document-tree-scroll-area"]',
   /** Document item */
   documentItem: '[data-testid="document-item"]',
   /** Folder item */
   folderItem: '[data-testid="folder-item"]',
   /** File content viewer */
   fileViewer: '[data-testid="file-viewer"]',
+  /** Tree filter input */
+  filterInput: '[data-testid="document-filter-input"]',
+  /** Collapse all folders button */
+  collapseAllButton: '[data-testid="collapse-document-tree-button"]',
+  /** Scroll to active document button */
+  scrollToActiveButton: '[data-testid="scroll-to-active-document-button"]',
+  /** Pinned root shortcut, retained to assert the old unmanaged UX is absent */
+  pinnedRoot: '[data-testid="document-pinned-root"]',
+  /** Recent document shortcut */
+  recentDocument: '[data-testid="document-recent-item"]',
+  /** Recent document section toggle */
+  recentToggle: '[data-testid="document-recent-toggle"]',
+  /** Recent document shortcut list */
+  recentList: '[data-testid="document-recent-list"]',
+  /** Scoped root breadcrumb, retained to assert the old unmanaged UX is absent */
+  scopedBreadcrumb: '[data-testid="document-scope-breadcrumb"]',
+  /** Automatic exclusion notice */
+  exclusionNotice: '[data-testid="document-exclusion-notice"]',
 } as const
 
 /**

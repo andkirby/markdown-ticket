@@ -119,9 +119,9 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
   }
 
   return (
-    <div data-testid="file-viewer" className="h-full flex flex-col relative">
+    <div data-testid="file-viewer" className="h-full min-h-0 flex flex-col relative">
       <TableOfContents items={tocItems} view="document" />
-      <ScrollArea className="h-[calc(100dvh-100px)]">
+      <ScrollArea className="min-h-0 flex-1">
         <div className="p-6">
           {fileInfo && (
             <div className="sticky top-0 z-10 mb-4 pb-3 border-b border-border bg-background/95 backdrop-blur-sm">
