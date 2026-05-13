@@ -37,21 +37,21 @@ describe('documentNavigation preferences (MDT-162)', () => {
   })
 
   it('excludes docs/CRs from recent document shortcuts (C1)', () => {
-    setDocumentNavigationPreferences('MDT', {
+    setDocumentNavigationPreferences({
       recentDocuments: ['docs/guide.md', 'docs/CRs/MDT-999.md'],
     })
 
-    const preferences = getDocumentNavigationPreferences('MDT')
+    const preferences = getDocumentNavigationPreferences()
 
     expect(preferences.recentDocuments).toEqual(['docs/guide.md'])
   })
 
   it('keeps recent documents project-scoped and capped at five (BR-4.1)', () => {
     Array.from({ length: 7 }, (_, index) => `docs/doc-${index}.md`).forEach((path) => {
-      addRecentDocument('MDT', path)
+      addRecentDocument(path)
     })
 
-    const preferences = getDocumentNavigationPreferences('MDT')
+    const preferences = getDocumentNavigationPreferences()
 
     expect(preferences.recentDocuments).toHaveLength(5)
     expect(preferences.recentDocuments[0]).toBe('docs/doc-6.md')
