@@ -15,6 +15,23 @@ It does not store:
 CONFIG_DIR/user.toml
 ```
 
+## Preference Storage Decision
+
+Use the narrowest durable scope that satisfies the behavior:
+
+| Scope | Storage | Use when |
+|-------|---------|----------|
+| Browser-only UI state | `localStorage` | State only matters in the current browser profile |
+| Stable per-user preference | `CONFIG_DIR/user.toml` | Preference should follow the user across web sessions or backend clients |
+| Mutable per-user state | `CONFIG_DIR/<feature>.json` | State changes often, such as favorites, usage, or recents |
+| Project/team behavior | `.mdt-config.toml` | Setting is part of project behavior and should be shared/versioned |
+| Global system behavior | `CONFIG_DIR/config.toml` | Setting affects application-wide backend behavior |
+
+Notes:
+- Visual-only preferences do not belong in `.mdt-config.toml`, `config.toml`, `shared/`, or CLI config.
+- CLI is affected only when a preference changes shared product behavior, not web UI presentation.
+- See [preference-storage-architecture.md](./architecture/preference-storage-architecture.md) for architecture rationale and examples.
+
 ## Project Selector
 
 The project selector rail displays a compact view of available projects. Clicking the active project card opens a full project browser panel. Hovering over inactive project chips reveals additional project details.
@@ -64,6 +81,7 @@ Notes:
 
 ## Related Documentation
 
+- [preference-storage-architecture.md](./architecture/preference-storage-architecture.md)
 - [CONFIG_GLOBAL_SPECIFICATION.md](./CONFIG_GLOBAL_SPECIFICATION.md)
 - [CONFIG_SPECIFICATION.md](./CONFIG_SPECIFICATION.md)
 - [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md)

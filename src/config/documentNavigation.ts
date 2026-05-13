@@ -1,3 +1,5 @@
+import { readLocalStoragePreference, writeLocalStoragePreference } from './localStoragePreferences'
+
 export interface DocumentNavigationPreferences {
   recentDocuments: string[]
 }
@@ -9,9 +11,7 @@ const DEFAULT_DOCUMENT_NAVIGATION_PREFERENCES: DocumentNavigationPreferences = {
   recentDocuments: [],
 }
 
-function getStorageKey(projectId: string): string {
-  return `documents-navigation-${projectId}`
-}
+const STORAGE_KEY = 'markdown-ticket:documents-navigation'
 
 function normalizePath(path: string): string {
   return path.replace(/\/+/g, '/').replace(/\/$/, '')
@@ -38,49 +38,36 @@ export function sanitizeDocumentNavigationPreferences(
   return { recentDocuments }
 }
 
-export function getDocumentNavigationPreferences(projectId: string): DocumentNavigationPreferences {
-  try {
-    const stored = localStorage.getItem(getStorageKey(projectId))
-    if (stored) {
-      const parsed = JSON.parse(stored) as Partial<DocumentNavigationPreferences>
-      return {
-        recentDocuments: uniqueValidPaths(parsed.recentDocuments ?? []).slice(0, MAX_RECENT_DOCUMENTS),
-      }
-    }
+export function getDocumentNavigationPreferences(): DocumentNavigationPreferences {
+  const stored = readLocalStoragePreference<DocumentNavigationPreferences>(
+    STORAGE_KEY,
+    DEFAULT_DOCUMENT_NAVIGATION_PREFERENCES,
+  )
+  return {
+    recentDocuments: uniqueValidPaths(stored.recentDocuments).slice(0, MAX_RECENT_DOCUMENTS),
   }
-  catch (error) {
-    console.warn('Failed to load document navigation preferences:', error)
-  }
-  return DEFAULT_DOCUMENT_NAVIGATION_PREFERENCES
 }
 
 export function setDocumentNavigationPreferences(
-  projectId: string,
   preferences: DocumentNavigationPreferences,
 ): void {
-  try {
-    const sanitized = {
-      recentDocuments: uniqueValidPaths(preferences.recentDocuments).slice(0, MAX_RECENT_DOCUMENTS),
-    }
-    localStorage.setItem(getStorageKey(projectId), JSON.stringify(sanitized))
-  }
-  catch (error) {
-    console.warn('Failed to save document navigation preferences:', error)
-  }
+  writeLocalStoragePreference(STORAGE_KEY, {
+    recentDocuments: uniqueValidPaths(preferences.recentDocuments).slice(0, MAX_RECENT_DOCUMENTS),
+  })
 }
 
-export function addRecentDocument(projectId: string, documentPath: string): void {
+export function addRecentDocument(documentPath: string): void {
   if (isTicketAreaPath(documentPath))
     return
 
-  const preferences = getDocumentNavigationPreferences(projectId)
+  const preferences = getDocumentNavigationPreferences()
   const normalized = normalizePath(documentPath)
   const recentDocuments = [
     normalized,
     ...preferences.recentDocuments.filter(path => normalizePath(path) !== normalized),
   ].slice(0, MAX_RECENT_DOCUMENTS)
 
-  setDocumentNavigationPreferences(projectId, {
+  setDocumentNavigationPreferences({
     ...preferences,
     recentDocuments,
   })

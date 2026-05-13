@@ -46,7 +46,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const [selectedFileDeleted, setSelectedFileDeleted] = useState(false)
   const [viewerUpdateState, setViewerUpdateState] = useState<'idle' | 'updated' | 'syncing'>('idle')
   const [navigationPreferences, setNavigationPreferencesState] = useState(() =>
-    getDocumentNavigationPreferences(projectId))
+    getDocumentNavigationPreferences())
 
   // Load sort preferences from localStorage on mount
   const savedPreferences = getDocumentSortPreferences(projectId)
@@ -80,13 +80,13 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   }, [selectedFile])
 
   useEffect(() => {
-    setNavigationPreferencesState(getDocumentNavigationPreferences(projectId))
-  }, [projectId])
+    setNavigationPreferencesState(getDocumentNavigationPreferences())
+  }, [])
 
   const setNavigationPreferences = useCallback((preferences: typeof navigationPreferences) => {
-    setDocumentNavigationPreferences(projectId, preferences)
+    setDocumentNavigationPreferences(preferences)
     setNavigationPreferencesState(preferences)
-  }, [projectId])
+  }, [])
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
@@ -259,8 +259,8 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
 
   const selectFile = useCallback((filePath: string) => {
     setSelectedFile(filePath)
-    addRecentDocument(projectId, filePath)
-    setNavigationPreferencesState(getDocumentNavigationPreferences(projectId))
+    addRecentDocument(filePath)
+    setNavigationPreferencesState(getDocumentNavigationPreferences())
 
     const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
     const basePath = window.location.pathname.split('/documents')[0]
