@@ -1,15 +1,22 @@
 import type { FileTreeHandle } from './FileTree'
-import { ChevronDown, ChevronUp, Crosshair, Pencil, Search } from 'lucide-react'
+import { ChevronDown, ChevronUp, Crosshair, ListCollapse, Pencil, Search } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { Modal } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  addRecentDocument,
+  getDocumentNavigationPreferences,
+  sanitizeDocumentNavigationPreferences,
+  setDocumentNavigationPreferences,
+} from '../../config/documentNavigation'
 import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting'
 import { useEventBus } from '../../services/eventBus'
 import FileTree from './FileTree'
 import MarkdownViewer from './MarkdownViewer'
 import PathSelector from './PathSelector'
+import RecentDocuments from './RecentDocuments'
 
 interface DocumentFile {
   name: string
@@ -38,6 +45,8 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const [documentRefreshToken, setDocumentRefreshToken] = useState(0)
   const [selectedFileDeleted, setSelectedFileDeleted] = useState(false)
   const [viewerUpdateState, setViewerUpdateState] = useState<'idle' | 'updated' | 'syncing'>('idle')
+  const [navigationPreferences, setNavigationPreferencesState] = useState(() =>
+    getDocumentNavigationPreferences(projectId))
 
   // Load sort preferences from localStorage on mount
   const savedPreferences = getDocumentSortPreferences(projectId)
@@ -69,6 +78,15 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     setSelectedFileDeleted(false)
     setViewerUpdateState('idle')
   }, [selectedFile])
+
+  useEffect(() => {
+    setNavigationPreferencesState(getDocumentNavigationPreferences(projectId))
+  }, [projectId])
+
+  const setNavigationPreferences = useCallback((preferences: typeof navigationPreferences) => {
+    setDocumentNavigationPreferences(projectId, preferences)
+    setNavigationPreferencesState(preferences)
+  }, [projectId])
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
@@ -221,21 +239,49 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     }
   }, [loadDocuments, showTransientUpdateState]), [loadDocuments, showTransientUpdateState], 'DocumentsLayout')
 
+  const collectPaths = useCallback((fileList: DocumentFile[]): string[] => {
+    return fileList.flatMap(file => [
+      file.path,
+      ...(file.children ? collectPaths(file.children) : []),
+    ])
+  }, [])
+
+  useEffect(() => {
+    const eligiblePaths = collectPaths(files)
+    if (eligiblePaths.length === 0)
+      return
+
+    const sanitized = sanitizeDocumentNavigationPreferences(navigationPreferences, eligiblePaths)
+    if (JSON.stringify(sanitized) !== JSON.stringify(navigationPreferences)) {
+      setNavigationPreferences(sanitized)
+    }
+  }, [collectPaths, files, navigationPreferences, projectId])
+
+  const selectFile = useCallback((filePath: string) => {
+    setSelectedFile(filePath)
+    addRecentDocument(projectId, filePath)
+    setNavigationPreferencesState(getDocumentNavigationPreferences(projectId))
+
+    const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
+    const basePath = window.location.pathname.split('/documents')[0]
+    window.history.pushState({}, '', `${basePath}/documents?file=${encodedPath}`)
+  }, [projectId])
+
   // Memoized filtered and sorted files
   const filteredFiles = useMemo(() => {
     let processedFiles = files
 
     // Apply filtering
     if (searchQuery.trim()) {
+      const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/)
       const filterFiles = (fileList: DocumentFile[]): DocumentFile[] => {
         return fileList.reduce((filtered: DocumentFile[], file) => {
-          const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/)
           const fileName = file.name.toLowerCase()
           const fileTitle = file.title?.toLowerCase() || ''
+          const filePath = file.path.toLowerCase()
 
-          // Check if all search terms match either filename or title
           const matchesSearch = searchTerms.every(term =>
-            fileName.includes(term) || fileTitle.includes(term),
+            fileName.includes(term) || fileTitle.includes(term) || filePath.includes(term),
           )
 
           if (file.type === 'folder') {
@@ -257,7 +303,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
         }, [])
       }
 
-      processedFiles = filterFiles(files)
+      processedFiles = filterFiles(processedFiles)
     }
 
     // Apply sorting
@@ -323,6 +369,17 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     return null
   }
 
+  const recentDocuments = useMemo(() => {
+    return navigationPreferences.recentDocuments.map((path) => {
+      const file = findFileByPath(files, path)
+      return {
+        path,
+        name: file?.name ?? path.split('/').pop() ?? path,
+        title: file?.title,
+      }
+    })
+  }, [files, navigationPreferences.recentDocuments])
+
   const handlePathsSelected = async (paths: string[]) => {
     try {
       // Save the selected paths to configuration
@@ -371,6 +428,10 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     fileTreeRef.current?.scrollToSelectedFile()
   }
 
+  const handleCollapseTree = () => {
+    fileTreeRef.current?.collapseAll()
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -415,8 +476,8 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   }
 
   return (
-    <div className="flex h-full">
-      <div className="w-1/3 border-r border-border bg-muted/30 flex flex-col">
+    <div className="flex h-full min-h-0 overflow-hidden">
+      <div className="w-1/3 min-h-0 border-r border-border bg-muted/30 flex flex-col">
         <div className="p-4 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-3">
@@ -451,10 +512,21 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
             <div className="flex items-center gap-1">
               <button
                 type="button"
+                onClick={handleCollapseTree}
+                className="p-1 hover:bg-muted rounded transition-colors"
+                title="Collapse document tree"
+                aria-label="Collapse document tree"
+                data-testid="collapse-document-tree-button"
+              >
+                <ListCollapse className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+              <button
+                type="button"
                 onClick={handleScrollToSelectedFile}
                 disabled={!selectedFile}
                 className="p-1 hover:bg-muted rounded transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                 title="Scroll to active document"
+                aria-label="Scroll to active document"
                 data-testid="scroll-to-active-document-button"
               >
                 <Crosshair className="h-4 w-4 text-muted-foreground hover:text-foreground" />
@@ -478,32 +550,29 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              data-testid="document-filter-input"
             />
           </div>
         </div>
-        <ScrollArea className="h-[calc(100dvh-200px)]">
+        <div className="flex-shrink-0 p-2 pb-0">
+          <RecentDocuments
+            documents={recentDocuments}
+            onSelectDocument={selectFile}
+          />
+        </div>
+        <ScrollArea className="min-h-0 flex-1" data-testid="document-tree-scroll-area">
           <div className="p-2">
             <FileTree
               ref={fileTreeRef}
               files={filteredFiles}
-              onFileSelect={(filePath) => {
-                setSelectedFile(filePath)
-                if (filePath) {
-                  // Encode each path segment separately to keep slashes visible
-                  const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
-                  const newUrl = `${window.location.pathname}?file=${encodedPath}`
-                  window.history.pushState({}, '', newUrl)
-                }
-                else {
-                  window.history.pushState({}, '', window.location.pathname)
-                }
-              }}
+              onFileSelect={selectFile}
               selectedFile={selectedFile}
+              expandAllFolders={Boolean(searchQuery.trim())}
             />
           </div>
         </ScrollArea>
       </div>
-      <div className="flex-1 min-w-0 overflow-hidden">
+      <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
         {selectedFile
           ? (
               <MarkdownViewer

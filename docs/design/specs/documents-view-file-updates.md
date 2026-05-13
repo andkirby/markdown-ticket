@@ -2,6 +2,8 @@
 
 Real-time update behavior for configured documents in Documents View, including cache invalidation, current-file refresh, and date metadata.
 
+Navigation, filtering, recent documents, and ticket-area exclusions are owned by `docs/design/specs/documents-view-navigation.md`.
+
 ## Composition
 
 ```text

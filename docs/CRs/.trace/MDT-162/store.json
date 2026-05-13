@@ -1,0 +1,607 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-162"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a user opens Documents View, the system shall show configured document root folders collapsed by default.",
+      "sourceRef": "MDT-162 Section 5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN a user opens a selected document from a route or file selection, the system shall expand that document's ancestor folders and keep the document highlighted.",
+      "sourceRef": "MDT-162 Section 5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN a user activates the collapse-all control, the system shall collapse document folders while leaving selected-document ancestors expanded.",
+      "sourceRef": "MDT-162 Section 5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN a user opens documents in a project, the system shall show up to five project-scoped recent document shortcuts.",
+      "sourceRef": "MDT-162 Section 5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "WHEN a user types in the document tree filter, the system shall filter visible documents by file name, title, and project-relative path using all query terms.",
+      "sourceRef": "MDT-162 Section 5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-5.2",
+      "kind": "behavior",
+      "text": "WHEN the selected document is hidden by the active filter and the user targets the active document, the system shall clear the filter, expand ancestors, and scroll the selected row into view.",
+      "sourceRef": "MDT-162 Section 5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-6.1",
+      "kind": "behavior",
+      "text": "WHEN a broad document root includes docs/CRs, the system shall omit docs/CRs from Documents View navigation.",
+      "sourceRef": "MDT-162 Section 5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-6.2",
+      "kind": "behavior",
+      "text": "WHEN path configuration includes a broad root that overlaps docs/CRs, the system shall communicate that docs/CRs is automatically excluded.",
+      "sourceRef": "MDT-162 Section 5 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall keep Documents sidebar icon controls accessible by keyboard and labelled for assistive technology.",
+      "sourceRef": "MDT-162 Section 5 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall keep the sidebar filter as tree filtering and shall not perform full-text document content search.",
+      "sourceRef": "docs/design/specs/documents-view-navigation.md Filter Behavior",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN Documents View loads, the system shall not show unmanaged pinned or scoped shortcut lists.",
+      "sourceRef": "docs/design/specs/documents-view-navigation.md Layout",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall treat docs/CRs as ticket territory and never persist it as a recent document shortcut.",
+      "sourceRef": "docs/design/specs/documents-view-navigation.md Navigation Rules",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a recent document becomes deleted or excluded, THEN the system shall remove that shortcut without breaking Documents View.",
+      "sourceRef": "docs/design/specs/documents-view-navigation.md Recent Documents",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN recent document shortcuts are visible, the system shall let the user collapse and expand the Recent section without changing the selected document.",
+      "sourceRef": "docs/design/specs/documents-view-navigation.md Recent Documents",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.3",
+      "kind": "behavior",
+      "text": "WHEN recent document shortcuts are shown, the system shall render each shortcut with the same title and filename treatment as file rows in the tree.",
+      "sourceRef": "docs/design/specs/documents-view-navigation.md Recent Documents",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.4",
+      "kind": "behavior",
+      "text": "WHEN the document tree is long, the Recent section shall remain fixed above the independently scrollable tree block.",
+      "sourceRef": "docs/design/specs/documents-view-navigation.md Layout",
+      "routePolicy": "bdd"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "default_tree_collapsed",
+      "title": "Document roots start collapsed while active path is visible",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2"
+      ],
+      "given": "I have a project with nested configured document folders and an active document route",
+      "when": "I open Documents View",
+      "then": "I see root folders collapsed except the active document's ancestor path, and the active document row is highlighted",
+      "sourceRef": "requirements:BR-1.1,BR-1.2"
+    },
+    {
+      "id": "collapse_preserves_active_path",
+      "title": "Collapse all keeps the active document recoverable",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "I am viewing a selected document in an expanded document tree",
+      "when": "I activate the collapse-all control",
+      "then": "The tree collapses unrelated folders while the selected document's ancestor path stays expanded",
+      "sourceRef": "requirements:BR-2.1"
+    },
+    {
+      "id": "recent_documents_resume",
+      "title": "Recent documents provide project-scoped shortcuts",
+      "covers": [
+        "BR-4.1"
+      ],
+      "given": "I have opened more than five documents in one project",
+      "when": "I return to Documents View",
+      "then": "I see no more than five recent document shortcuts for that project",
+      "sourceRef": "requirements:BR-4.1"
+    },
+    {
+      "id": "filter_matches_path_title",
+      "title": "Tree filter matches title, filename, and path",
+      "covers": [
+        "BR-5.1"
+      ],
+      "given": "I am viewing configured documents with titles, filenames, and nested paths",
+      "when": "I type multiple words into the document filter",
+      "then": "The tree shows only documents whose title, filename, or project-relative path matches all query terms",
+      "sourceRef": "requirements:BR-5.1"
+    },
+    {
+      "id": "target_clears_hidden_selection_filter",
+      "title": "Target action recovers active document hidden by filter",
+      "covers": [
+        "BR-5.2"
+      ],
+      "given": "I have a selected document hidden by the active tree filter",
+      "when": "I activate the target active document control",
+      "then": "The filter clears, ancestor folders expand, and the selected document row scrolls into view",
+      "sourceRef": "requirements:BR-5.2"
+    },
+    {
+      "id": "ticket_area_exclusion_disclosed",
+      "title": "Path configuration discloses ticket-area exclusion",
+      "covers": [
+        "BR-6.1",
+        "BR-6.2"
+      ],
+      "given": "I configure docs as a document root",
+      "when": "I review document path configuration or open Documents View",
+      "then": "The interface communicates that docs/CRs is excluded and the Documents tree omits docs/CRs",
+      "sourceRef": "requirements:BR-6.1,BR-6.2"
+    },
+    {
+      "id": "no_unmanaged_shortcuts",
+      "title": "Documents navigation avoids unmanaged shortcuts",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "I am in Documents View with a large configured document tree",
+      "when": "The sidebar loads",
+      "then": "No pinned root or scoped shortcut list is shown above the tree",
+      "sourceRef": "tests/e2e/documents/navigation.spec.ts"
+    },
+    {
+      "id": "recent_documents_collapse_expand",
+      "title": "Recent documents collapse and expand",
+      "covers": [
+        "BR-4.2"
+      ],
+      "given": "Recent document shortcuts are visible in Documents View",
+      "when": "I collapse and expand the Recent section",
+      "then": "The shortcut rows hide and return without changing the document tree",
+      "sourceRef": "tests/e2e/documents/navigation.spec.ts"
+    },
+    {
+      "id": "recent_documents_match_tree_rows",
+      "title": "Recent document rows match tree file rows",
+      "covers": [
+        "BR-4.3"
+      ],
+      "given": "A recent document has title and filename metadata in the document tree",
+      "when": "The Recent section renders that shortcut",
+      "then": "The shortcut shows the title as primary text and filename as secondary text using the tree file row treatment",
+      "sourceRef": "tests/e2e/documents/navigation.spec.ts"
+    },
+    {
+      "id": "recent_fixed_tree_scrolls",
+      "title": "Recent remains fixed while tree scrolls",
+      "covers": [
+        "BR-4.4"
+      ],
+      "given": "Recent documents are visible above a long document tree",
+      "when": "I scroll the tree block",
+      "then": "Recent stays in place and only the tree content scrolls",
+      "sourceRef": "tests/e2e/documents/navigation.spec.ts"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-collapsed-tree",
+      "title": "FileTree owns collapsed root state and selected ancestor expansion",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2"
+      ],
+      "artifactIds": [
+        "ART-file-tree",
+        "ART-documents-layout",
+        "ART-file-tree-test",
+        "ART-navigation-spec"
+      ],
+      "sourceRef": "architecture.md#tree-state-ownership"
+    },
+    {
+      "id": "OBL-collapse-control",
+      "title": "DocumentsLayout owns the collapse-all control and delegates tree state changes through FileTree handle",
+      "derivedFrom": [
+        "BR-2.1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-documents-layout",
+        "ART-file-tree",
+        "ART-file-tree-test",
+        "ART-e2e-navigation"
+      ],
+      "sourceRef": "architecture.md#control-ownership"
+    },
+    {
+      "id": "OBL-filter-and-target-recovery",
+      "title": "DocumentsLayout owns tree filtering and active-document recovery behavior",
+      "derivedFrom": [
+        "BR-5.1",
+        "BR-5.2",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-documents-layout",
+        "ART-file-tree",
+        "ART-e2e-navigation",
+        "ART-navigation-spec"
+      ],
+      "sourceRef": "architecture.md#filter-boundary"
+    },
+    {
+      "id": "OBL-ticket-area-exclusion",
+      "title": "TreeService filters ticket territory from document discovery and PathSelector discloses automatic exclusion",
+      "derivedFrom": [
+        "BR-6.1",
+        "BR-6.2",
+        "C1"
+      ],
+      "artifactIds": [
+        "ART-tree-service",
+        "ART-document-service",
+        "ART-path-selector",
+        "ART-e2e-navigation",
+        "ART-navigation-spec"
+      ],
+      "sourceRef": "architecture.md#ticket-area-boundary"
+    },
+    {
+      "id": "OBL-no-unmanaged-shortcuts",
+      "title": "DocumentsLayout avoids unmanaged pinned and scoped shortcut UI",
+      "derivedFrom": [
+        "BR-3.1"
+      ],
+      "artifactIds": [
+        "ART-documents-layout",
+        "ART-e2e-navigation",
+        "ART-navigation-mockup"
+      ],
+      "sourceRef": "docs/CRs/MDT-162/architecture.md"
+    },
+    {
+      "id": "OBL-e2e-selector-contract",
+      "title": "Document navigation controls expose stable data-testid selectors for Playwright coverage",
+      "derivedFrom": [
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-selectors",
+        "ART-documents-layout",
+        "ART-recent-documents",
+        "ART-e2e-navigation"
+      ],
+      "sourceRef": "tests/e2e/utils/selectors.ts"
+    },
+    {
+      "id": "OBL-recent-documents",
+      "title": "RecentDocuments and documentNavigation config own project-scoped recent file shortcuts and section collapse",
+      "derivedFrom": [
+        "BR-4.1",
+        "BR-4.2",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-recent-documents",
+        "ART-document-navigation-config",
+        "ART-documents-layout",
+        "ART-document-navigation-test",
+        "ART-e2e-navigation"
+      ],
+      "sourceRef": "docs/CRs/MDT-162/architecture.md"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-documents-layout",
+      "path": "src/components/DocumentsView/DocumentsLayout.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-162 Section 4 Modified Artifacts"
+    },
+    {
+      "id": "ART-file-tree",
+      "path": "src/components/DocumentsView/FileTree.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-162 Section 4 Modified Artifacts"
+    },
+    {
+      "id": "ART-recent-documents",
+      "path": "src/components/DocumentsView/RecentDocuments.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-162 Section 4 New Artifacts"
+    },
+    {
+      "id": "ART-document-navigation-config",
+      "path": "src/config/documentNavigation.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-162 Section 4 New Artifacts"
+    },
+    {
+      "id": "ART-path-selector",
+      "path": "src/components/DocumentsView/PathSelector.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-162 Section 4 Modified Artifacts"
+    },
+    {
+      "id": "ART-document-service",
+      "path": "server/services/DocumentService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-162 Section 4 Modified Artifacts"
+    },
+    {
+      "id": "ART-tree-service",
+      "path": "server/services/TreeService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture:document discovery owner"
+    },
+    {
+      "id": "ART-e2e-navigation",
+      "path": "tests/e2e/documents/navigation.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-162 Section 5 Testing"
+    },
+    {
+      "id": "ART-document-navigation-test",
+      "path": "src/config/documentNavigation.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-162 Section 5 Testing"
+    },
+    {
+      "id": "ART-file-tree-test",
+      "path": "src/components/DocumentsView/FileTree.test.tsx",
+      "kind": "test",
+      "sourceRef": "MDT-162 Section 5 Testing"
+    },
+    {
+      "id": "ART-selectors",
+      "path": "tests/e2e/utils/selectors.ts",
+      "kind": "test",
+      "sourceRef": "tests/e2e/AGENTS.md data-testid convention"
+    },
+    {
+      "id": "ART-navigation-spec",
+      "path": "docs/design/specs/documents-view-navigation.md",
+      "kind": "doc",
+      "sourceRef": "MDT-162 Section 4 Affected Artifacts"
+    },
+    {
+      "id": "ART-navigation-mockup",
+      "path": "docs/design/mockups/documents-view-navigation.md",
+      "kind": "doc",
+      "sourceRef": "MDT-162 Section 4 Affected Artifacts"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-file-tree-state",
+      "kind": "unit",
+      "title": "FileTree collapsed defaults and selected ancestor expansion",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.1",
+        "OBL-collapsed-tree",
+        "OBL-collapse-control"
+      ],
+      "file": "src/components/DocumentsView/FileTree.test.tsx",
+      "sourceRef": "tests:FileTree navigation state"
+    },
+    {
+      "id": "TEST-ticket-area-exclusion",
+      "kind": "e2e",
+      "title": "Ticket area is excluded from Documents navigation",
+      "covers": [
+        "BR-6.1",
+        "BR-6.2",
+        "C1",
+        "OBL-ticket-area-exclusion"
+      ],
+      "file": "tests/e2e/documents/navigation.spec.ts",
+      "sourceRef": "tests:ticket-area exclusion scenarios"
+    },
+    {
+      "id": "TEST-document-navigation-config",
+      "kind": "unit",
+      "title": "Document navigation preferences sanitize recents",
+      "covers": [
+        "BR-4.1",
+        "C1",
+        "Edge-1",
+        "OBL-recent-documents"
+      ],
+      "file": "src/config/documentNavigation.test.ts",
+      "sourceRef": "docs/CRs/MDT-162/tests.md"
+    },
+    {
+      "id": "TEST-document-navigation-e2e",
+      "kind": "e2e",
+      "title": "Documents View navigation end-to-end behavior",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.1",
+        "BR-3.1",
+        "BR-4.1",
+        "BR-4.2",
+        "BR-4.3",
+        "BR-4.4",
+        "BR-5.1",
+        "BR-5.2",
+        "BR-6.1",
+        "BR-6.2",
+        "C2",
+        "C3",
+        "OBL-e2e-selector-contract"
+      ],
+      "file": "tests/e2e/documents/navigation.spec.ts",
+      "sourceRef": "docs/CRs/MDT-162/tests.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Implement project-scoped document navigation preferences",
+      "ownsArtifactIds": [
+        "ART-document-navigation-config",
+        "ART-document-navigation-test"
+      ],
+      "makesGreenIds": [
+        "TEST-document-navigation-config"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Exclude ticket territory from document discovery and path configuration",
+      "ownsArtifactIds": [
+        "ART-tree-service",
+        "ART-document-service",
+        "ART-path-selector"
+      ],
+      "makesGreenIds": [
+        "TEST-ticket-area-exclusion",
+        "ticket_area_exclusion_disclosed"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Update FileTree collapsed state and selected ancestor behavior",
+      "ownsArtifactIds": [
+        "ART-file-tree",
+        "ART-file-tree-test"
+      ],
+      "makesGreenIds": [
+        "TEST-file-tree-state",
+        "default_tree_collapsed",
+        "collapse_preserves_active_path"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Verify design docs and end-to-end navigation contract",
+      "ownsArtifactIds": [
+        "ART-navigation-spec",
+        "ART-navigation-mockup",
+        "ART-e2e-navigation"
+      ],
+      "makesGreenIds": [
+        "TEST-document-navigation-e2e",
+        "TEST-ticket-area-exclusion"
+      ],
+      "skills": [
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Add sidebar recents, filter, and target recovery",
+      "ownsArtifactIds": [
+        "ART-documents-layout",
+        "ART-recent-documents",
+        "ART-selectors"
+      ],
+      "makesGreenIds": [
+        "no_unmanaged_shortcuts",
+        "recent_documents_resume",
+        "recent_documents_collapse_expand",
+        "recent_documents_match_tree_rows",
+        "recent_fixed_tree_scrolls",
+        "filter_matches_path_title",
+        "target_clears_hidden_selection_filter",
+        "TEST-document-navigation-e2e"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "docs/CRs/MDT-162/tasks.md"
+    }
+  ]
+}
