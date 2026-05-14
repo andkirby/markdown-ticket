@@ -5,6 +5,7 @@ import { Button } from '@/components/ui'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { usePathResolution } from '@/hooks/usePathResolution'
+import { eventBus } from '@/services/eventBus'
 import { FormField } from './components/FormField'
 import { useProjectForm } from './hooks/useProjectForm'
 
@@ -116,6 +117,38 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
 
     setIsSubmitting(true)
     try {
+      if (editMode) {
+        const response = await fetch(`/api/projects/${encodeURIComponent(formData.code)}/update`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            description: formData.description,
+            repository: formData.repositoryUrl,
+          }),
+        })
+
+        if (response.ok) {
+          const project = await response.json()
+          setCreatedFiles([])
+          eventBus.emit('project:changed', {
+            projectId: formData.code,
+            project,
+            timestamp: Date.now(),
+          }, 'ui')
+          setShowSuccess(true)
+        }
+        else {
+          const error = await response.text()
+          // eslint-disable-next-line no-alert
+          alert(`Failed to update project: ${error}`)
+        }
+
+        return
+      }
+
       const projectData = {
         name: formData.name,
         code: formData.code,
@@ -395,7 +428,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 disabled={isSubmitting || !formData.name || !formData.code || !formData.path}
                 data-testid="project-submit-button"
               >
-                {isSubmitting ? 'Creating...' : (editMode ? 'Update Project' : 'Create Project')}
+                {isSubmitting ? (editMode ? 'Updating...' : 'Creating...') : (editMode ? 'Update Project' : 'Create Project')}
               </Button>
             </div>
           </div>
@@ -488,7 +521,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
-            <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Project Created Successfully!</h3>
+            <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+              {editMode ? 'Project Updated Successfully!' : 'Project Created Successfully!'}
+            </h3>
             {createdFiles.length > 0 && (
               <div className="mb-4 text-left">
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Created files:</p>
@@ -513,7 +548,12 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
                 data-testid="success-done-button"
                 onClick={() => {
                   setShowSuccess(false)
-                  onClose()
+                  if (editMode) {
+                    onProjectCreated()
+                  }
+                  else {
+                    onClose()
+                  }
                 }}
               >
                 Done

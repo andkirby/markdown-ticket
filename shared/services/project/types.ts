@@ -86,6 +86,11 @@ export interface IProjectConfigService {
     projectId: string,
     updates: Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>,
   ) => void
+  updateProjectByPath: (
+    projectId: string,
+    projectPath: string,
+    updates: Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>,
+  ) => void
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<void>
   configureDocumentsByPath: (projectId: string, projectPath: string, documentPaths: string[]) => Promise<void>
 }

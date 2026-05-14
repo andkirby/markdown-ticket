@@ -119,6 +119,49 @@ test.describe('Project Management', () => {
     await expect(tickets).toHaveCount(0)
   })
 
+  test('edit project form updates editable project fields', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    await page.click(projectSelectors.hamburgerMenu)
+    await page.click(projectSelectors.editProjectButton)
+
+    const modal = page.locator(projectSelectors.editProjectModal)
+    await expect(modal).toBeVisible()
+    await expect(modal).toContainText('Edit Project')
+
+    await expect(page.locator(projectSelectors.projectCodeInput)).toHaveAttribute('readonly', '')
+    await expect(page.locator(projectSelectors.projectPathInput)).toHaveAttribute('readonly', '')
+    await expect(page.getByLabel('Tickets Directory')).toHaveAttribute('readonly', '')
+    await expect(page.locator(projectSelectors.projectPathBrowseButton)).toHaveCount(0)
+
+    const updatedName = `${scenario.projectName} Edited`
+    const updatedDescription = 'Updated from project edit E2E'
+    const updatedRepository = 'https://github.com/example/markdown-ticket-e2e'
+
+    await page.locator(projectSelectors.projectNameInput).fill(updatedName)
+    await page.getByLabel('Description').fill(updatedDescription)
+    await page.getByLabel('Repository URL').fill(updatedRepository)
+
+    await expect(page.locator(projectSelectors.projectSubmitButton)).toBeEnabled()
+    await page.click(projectSelectors.projectSubmitButton)
+
+    await expect(page.locator(projectSelectors.successDialog)).toBeVisible({ timeout: 10000 })
+    await expect(page.locator(projectSelectors.successDialog)).toContainText('Project Updated Successfully!')
+    await page.click(projectSelectors.successDoneButton)
+
+    await expect(modal).toBeHidden()
+    await expect(page.locator(projectSelectors.projectSelectorCard(scenario.projectCode))).toContainText(updatedName)
+    await expect(page.locator(projectSelectors.projectSelectorCard(scenario.projectCode))).toContainText(updatedDescription)
+
+    await page.click(projectSelectors.hamburgerMenu)
+    await page.click(projectSelectors.editProjectButton)
+    await expect(page.locator(projectSelectors.editProjectModal)).toBeVisible()
+    await expect(page.getByLabel('Description')).toHaveValue(updatedDescription)
+  })
+
   test('switch projects via selector', async ({ page, e2eContext }) => {
     const firstProject = await buildScenario(e2eContext.projectFactory, 'simple')
     const secondProject = await e2eContext.projectFactory.createProject('empty', {

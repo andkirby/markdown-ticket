@@ -36,6 +36,8 @@ interface ProjectListItem {
     path: string
     code?: string
     name?: string
+    description?: string
+    repository?: string
   }
   configPath: string
 }
@@ -243,6 +245,93 @@ describe('projects API - POST /api/projects/create (Mock Limited)', () => {
     expect(res.body).toHaveProperty('error')
   })
 })
+
+describe('projects API - PUT /api/projects/:code/update', () => {
+  let tempDir: string
+  let app: Express
+  let projectFactory: ProjectFactory
+
+  beforeEach(async () => {
+    const context = await setupTestEnvironment()
+
+    tempDir = context.tempDir
+    app = context.app
+    projectFactory = context.projectFactory
+  })
+
+  afterEach(async () => {
+    await cleanupTestEnvironment(tempDir)
+  })
+
+  it('updates description without requiring name or repository changes', async () => {
+    const project = await projectFactory.createProject('empty', {
+      name: 'Description Update Test',
+      code: 'DUT',
+      description: 'Initial description',
+    })
+
+    const updatedDescription = 'Updated project description only'
+    const updateRes = await request(app)
+      .put(`/api/projects/${project.key}/update`)
+      .send({ description: updatedDescription })
+
+    assertSuccess(updateRes, 200)
+    expect(updateRes.body.project.description).toBe(updatedDescription)
+
+    const listRes = await request(app).get('/api/projects').query({ bypassCache: 'true' })
+
+    assertSuccess(listRes, 200)
+    const listed = (listRes.body as ProjectListItem[]).find(p => p.id === project.key)
+
+    expect(listed?.project.description).toBe(updatedDescription)
+  })
+
+  it('updates description when edit form sends unchanged repository as an empty string', async () => {
+    const project = await projectFactory.createProject('empty', {
+      name: 'Edit Form Payload Test',
+      code: 'EFP',
+      description: 'Initial description',
+    })
+
+    const updatedDescription = 'Updated from edit form payload'
+    const updateRes = await request(app)
+      .put(`/api/projects/${project.key}/update`)
+      .send({
+        name: 'Edit Form Payload Test',
+        description: updatedDescription,
+        repository: '',
+      })
+
+    assertSuccess(updateRes, 200)
+    expect(updateRes.body.project.description).toBe(updatedDescription)
+    expect(updateRes.body.project.repository).toBe('')
+  })
+
+  it('falls back to local config when registry file for project id is missing', async () => {
+    const project = await projectFactory.createProject('empty', {
+      name: 'Local Config Fallback Test',
+      code: 'LCF',
+      description: 'Initial description',
+    })
+
+    const projectService = app.locals?.projectService
+    const updateSpy = jest
+      .spyOn(projectService, 'updateProject')
+      .mockImplementationOnce(() => {
+        throw new Error(`Project ${project.key} not found in registry`)
+      })
+
+    const updatedDescription = 'Updated through local config fallback'
+    const updateRes = await request(app)
+      .put(`/api/projects/${project.key}/update`)
+      .send({ description: updatedDescription })
+
+    assertSuccess(updateRes, 200)
+    expect(updateRes.body.project.description).toBe(updatedDescription)
+    expect(updateSpy).toHaveBeenCalled()
+  })
+})
+
 describe('projects API - Error Cases', () => {
   let tempDir: string
   let app: Express

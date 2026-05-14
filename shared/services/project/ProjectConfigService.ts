@@ -1,6 +1,7 @@
 import type { ProjectConfig } from '../../models/Project.js'
 import type { GlobalConfig, IProjectConfigService, RegistryData } from './types.js'
 import { getTicketsPath, isLegacyConfig, migrateLegacyConfig, validateProjectConfig } from '../../models/Project.js'
+import { validateTicketsPath } from '../../tools/ProjectValidator.js'
 import { getDefaultConfig as getDefaultConfigUtil, processConfig } from '../../utils/config-validator.js'
 import { CONFIG_FILES, DEFAULTS, getDefaultPaths } from '../../utils/constants.js'
 import { createDirectory, directoryExists, fileExists, readFile, writeFile } from '../../utils/file-utils.js'
@@ -11,7 +12,19 @@ import {
   buildRegistryFilePath,
 } from '../../utils/path-resolver.js'
 import { parseToml, stringify } from '../../utils/toml.js'
-import { validateTicketsPath } from '../../tools/ProjectValidator.js'
+
+interface ProjectDocumentConfig {
+  paths?: string[]
+  excludeFolders?: string[]
+  maxDepth?: number
+}
+
+interface LocalProjectConfigWithNestedDocument extends Omit<ProjectConfig, 'project'> {
+  document?: unknown
+  project?: Partial<NonNullable<ProjectConfig['project']>> & {
+    document?: ProjectDocumentConfig
+  }
+}
 
 /**
  * Project Configuration Service
@@ -211,12 +224,12 @@ export class ProjectConfigService implements IProjectConfigService {
         throw new Error(`Project ${projectId} registry entry missing project path`)
       }
 
-      // Update registry timestamp
-      registryData.metadata.lastAccessed = new Date().toISOString().split('T')[0]
-
       // Check if this is a global-only project
       const isGlobalOnly = registryData.metadata?.globalOnly === true
         || registryData.project.name !== undefined
+
+      // Update registry timestamp
+      registryData.metadata.lastAccessed = new Date().toISOString().split('T')[0]
 
       if (isGlobalOnly) {
         // Strategy 1: Global-Only - Update project details in global registry
@@ -247,6 +260,29 @@ export class ProjectConfigService implements IProjectConfigService {
     }
   }
 
+  /** Update a project using its local config path when no registry file exists for the id */
+  updateProjectByPath(
+    projectId: string,
+    projectPath: string,
+    updates: Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>,
+  ): void {
+    try {
+      const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
+      if (!fileExists(configPath)) {
+        throw new Error(`Project ${projectId} local config not found at ${configPath}`)
+      }
+
+      const localConfig = parseToml(readFile(configPath)) as ProjectConfig
+      Object.assign(localConfig.project, updates)
+      writeFile(configPath, stringify(localConfig))
+      logQuiet(this.quiet, `Updated project ${projectId} in local config by path`)
+    }
+    catch (error) {
+      logQuiet(this.quiet, 'Error updating project by path:', error)
+      throw error
+    }
+  }
+
   /** Configure document paths for a project (by registry lookup) */
   async configureDocuments(projectId: string, documentPaths: string[]): Promise<void> {
     try {
@@ -273,8 +309,7 @@ export class ProjectConfigService implements IProjectConfigService {
     try {
       const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
       if (fileExists(configPath)) {
-        // Use 'any' because TypeScript type has document as sibling, but TOML structure nests it under project
-        const localConfig = parseToml(readFile(configPath)) as any
+        const localConfig = parseToml(readFile(configPath)) as LocalProjectConfigWithNestedDocument
 
         // Ensure project.document structure exists
         if (!localConfig.project) {
