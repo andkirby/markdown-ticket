@@ -194,13 +194,20 @@ export function useProjectManager(options: UseProjectManagerOptions = {}): UsePr
   handleProjectChangeRef.current = useCallback((project: Project | null, currentProjects: Project[]) => {
     if (project) {
       // Check if selected project still exists in the current project list
-      const projectStillExists = currentProjects.some(p => p.id === project.id)
+      const refreshedProject = currentProjects.find(p =>
+        p.id === project.id || p.project.code === project.project.code,
+      )
 
-      if (!projectStillExists) {
+      if (!refreshedProject) {
         console.warn(`Selected project ${project.id} no longer exists, clearing selection`)
         setSelectedProjectValue(null)
         setTickets([])
         setProjectConfig(null)
+        return
+      }
+
+      if (refreshedProject !== project) {
+        setSelectedProjectValue(refreshedProject)
         return
       }
 
