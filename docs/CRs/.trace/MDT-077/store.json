@@ -585,6 +585,124 @@
       "sourceRef": "MDT-077 architecture MCP regression coverage"
     }
   ],
-  "testPlans": [],
+  "testPlans": [
+    {
+      "id": "TEST-project-browser-edit-readback",
+      "kind": "e2e",
+      "title": "Project edit browser flow verifies immutable fields, editable metadata persistence, selector refresh, and reopened form readback",
+      "covers": [
+        "BR-3.2",
+        "BR-3.4",
+        "C4",
+        "OBL-web-edit-readback",
+        "OBL-regression-api-and-browser-tests"
+      ],
+      "file": "tests/e2e/project/management.spec.ts",
+      "sourceRef": "MDT-077 tests: browser project edit readback"
+    },
+    {
+      "id": "TEST-shared-project-config-modes",
+      "kind": "integration",
+      "title": "Shared project config service tests cover registry/local mode ownership and project-first registry preservation",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-3.1",
+        "C1",
+        "C5",
+        "Edge-1",
+        "Edge-2",
+        "OBL-config-mode-persistence"
+      ],
+      "file": "shared/services/project/__tests__/ProjectConfigService.test.ts",
+      "sourceRef": "MDT-077 tests: shared config mode ownership"
+    },
+    {
+      "id": "TEST-shared-project-discovery-contract",
+      "kind": "integration",
+      "title": "Shared discovery tests cover registered and auto-discovered project listing and canonical project resolution",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-2.3",
+        "C2",
+        "OBL-shared-project-contract"
+      ],
+      "file": "shared/services/project/__tests__/ProjectDiscovery.integration.test.ts",
+      "sourceRef": "MDT-077 tests: shared project discovery contract"
+    },
+    {
+      "id": "TEST-cli-project-read-contract",
+      "kind": "e2e",
+      "title": "CLI project tests verify project current, project lookup, list output, and init through shared project services",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-2.2",
+        "BR-4.1",
+        "C2",
+        "C4",
+        "OBL-cross-interface-read-consistency",
+        "OBL-regression-cli-and-mcp-tests"
+      ],
+      "file": "cli/tests/e2e/project/project.spec.ts",
+      "sourceRef": "MDT-077 tests: CLI project read consistency"
+    },
+    {
+      "id": "TEST-mcp-project-read-contract",
+      "kind": "e2e",
+      "title": "MCP project tests verify list_projects and get_project_info expose shared project state and not-found behavior",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-4.1",
+        "BR-5.2",
+        "C2",
+        "C4",
+        "OBL-cross-interface-read-consistency",
+        "OBL-regression-cli-and-mcp-tests"
+      ],
+      "file": "mcp-server/tests/e2e/tools/get-project-info.spec.ts",
+      "sourceRef": "MDT-077 tests: MCP project read consistency"
+    },
+    {
+      "id": "TEST-project-validation-boundary",
+      "kind": "integration",
+      "title": "Project validation tests cover code, name, path, tickets path, repository, and description validation before writes",
+      "covers": [
+        "BR-5.1",
+        "C3",
+        "OBL-validation-boundary"
+      ],
+      "file": "shared/tools/__tests__/project-management/configuration-validation.test.ts",
+      "sourceRef": "MDT-077 tests: shared project validation boundary"
+    },
+    {
+      "id": "TEST-project-api-read-update-contract",
+      "kind": "integration",
+      "title": "Project API read/update contract covers description updates, missing-registry fallback, validation, and readback",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-5.1",
+        "BR-5.2",
+        "C1",
+        "C3",
+        "C4",
+        "C5",
+        "Edge-2",
+        "OBL-api-update-flow",
+        "OBL-failure-preserves-config",
+        "OBL-regression-api-and-browser-tests"
+      ],
+      "file": "server/tests/api/projects.test.ts",
+      "sourceRef": "MDT-077 tests: API project update/readback contract"
+    }
+  ],
   "tasks": []
 }
