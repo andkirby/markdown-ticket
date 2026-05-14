@@ -205,9 +205,386 @@
       ]
     }
   ],
-  "scenarios": [],
-  "obligations": [],
-  "artifacts": [],
+  "scenarios": [
+    {
+      "id": "canonical_project_read",
+      "title": "Canonical project read resolves one project instance",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3"
+      ],
+      "given": "Given a project can be found by code, id, or path and has registry metadata plus local configuration",
+      "when": "When I request the project through a public project read",
+      "then": "Then I receive one project record with operational fields from local configuration",
+      "sourceRef": "MDT-077 requirements BR-1.1/BR-1.3"
+    },
+    {
+      "id": "project_list_includes_registry_and_discovery",
+      "title": "Project list includes registered and discovered projects",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "Given one project is registered globally and another project is discoverable from local configuration in a configured search path",
+      "when": "When I list projects",
+      "then": "Then I see both projects in the project list",
+      "sourceRef": "MDT-077 requirements BR-1.2"
+    },
+    {
+      "id": "global_only_project_round_trip",
+      "title": "Global-only project stores and reads from registry",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "Given I create or register a project in global-only mode",
+      "when": "When I read the project after creation",
+      "then": "Then the project is available without requiring a project-local config file",
+      "sourceRef": "MDT-077 requirements BR-2.1"
+    },
+    {
+      "id": "project_first_project_round_trip",
+      "title": "Project-first project merges registry and local config",
+      "covers": [
+        "BR-2.2",
+        "BR-1.3"
+      ],
+      "given": "Given I create or register a project-first project",
+      "when": "When I read the project after creation",
+      "then": "Then discovery metadata comes from the registry and operational fields come from the project-local config",
+      "sourceRef": "MDT-077 requirements BR-2.2/BR-1.3"
+    },
+    {
+      "id": "auto_discovered_project_round_trip",
+      "title": "Auto-discovered project works without registry entry",
+      "covers": [
+        "BR-2.3",
+        "BR-1.2"
+      ],
+      "given": "Given a project has a valid local config inside configured discovery paths and no global registry entry",
+      "when": "When I list or read projects",
+      "then": "Then the project is available from its local config",
+      "sourceRef": "MDT-077 requirements BR-2.3/BR-1.2"
+    },
+    {
+      "id": "update_editable_fields_by_mode",
+      "title": "Editable project fields update in the mode source of truth",
+      "covers": [
+        "BR-3.1"
+      ],
+      "given": "Given projects exist in global-only, project-first, and auto-discovery modes",
+      "when": "When I update project name, description, repository, or supported active state",
+      "then": "Then each project persists the changed fields in that mode's source of truth",
+      "sourceRef": "MDT-077 requirements BR-3.1"
+    },
+    {
+      "id": "description_update_reads_back",
+      "title": "Description-only update persists and refreshes visible state",
+      "covers": [
+        "BR-3.2",
+        "BR-3.4"
+      ],
+      "given": "Given I am editing a project description from the Web UI or API",
+      "when": "When I save only the description and reopen or reread the project",
+      "then": "Then the saved description is shown in the project read, selector, and edit form",
+      "sourceRef": "MDT-077 requirements BR-3.2/BR-3.4"
+    },
+    {
+      "id": "missing_registry_update_falls_back_to_local_config",
+      "title": "Visible project without registry file updates local config",
+      "covers": [
+        "BR-3.3"
+      ],
+      "given": "Given a visible project has a local config path but no registry file for its id",
+      "when": "When I update editable project fields",
+      "then": "Then the update succeeds by writing the local config instead of failing on the missing registry file",
+      "sourceRef": "MDT-077 requirements BR-3.3"
+    },
+    {
+      "id": "cross_interface_project_state_consistency",
+      "title": "Project updates are visible across public interfaces",
+      "covers": [
+        "BR-4.1"
+      ],
+      "given": "Given a project is created or updated through one public interface",
+      "when": "When I read the same project through Web UI, API, CLI, and MCP project reads",
+      "then": "Then each interface shows the same project state",
+      "sourceRef": "MDT-077 requirements BR-4.1"
+    },
+    {
+      "id": "project_update_errors_are_visible",
+      "title": "Invalid or missing project updates return clear errors",
+      "covers": [
+        "BR-5.1",
+        "BR-5.2"
+      ],
+      "given": "Given I submit invalid project data or a project identifier that cannot be resolved",
+      "when": "When I request a project mutation or read",
+      "then": "Then the operation fails without partial writes and reports the invalid field or unresolved project key",
+      "sourceRef": "MDT-077 requirements BR-5.1/BR-5.2"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-shared-project-contract",
+      "title": "ProjectService is the single shared contract for project reads, updates, cache invalidation, and current-project resolution.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-shared-project-service",
+        "ART-shared-project-types",
+        "ART-cli-project-command",
+        "ART-mcp-project-handlers",
+        "ART-server-project-adapter"
+      ],
+      "sourceRef": "MDT-077 architecture shared project contract"
+    },
+    {
+      "id": "OBL-config-mode-persistence",
+      "title": "ProjectConfigService owns registry/local write targeting for global-only, project-first, and auto-discovery modes.",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-3.1",
+        "C1",
+        "C5"
+      ],
+      "artifactIds": [
+        "ART-shared-project-config-service",
+        "ART-shared-project-types",
+        "ART-shared-project-discovery",
+        "ART-shared-project-manager"
+      ],
+      "sourceRef": "MDT-077 architecture configuration mode ownership"
+    },
+    {
+      "id": "OBL-validation-boundary",
+      "title": "Project mutations validate project fields through the shared validator before configuration files are mutated.",
+      "derivedFrom": [
+        "BR-5.1",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-shared-project-validator",
+        "ART-web-project-form",
+        "ART-server-project-controller",
+        "ART-shared-project-manager"
+      ],
+      "sourceRef": "MDT-077 architecture validation boundary"
+    },
+    {
+      "id": "OBL-api-update-flow",
+      "title": "The project update API resolves the visible project instance, validates input, writes through ProjectService, falls back to local config by path when registry update is unavailable, and rereads fresh project data.",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "BR-5.2",
+        "C1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-server-project-routes",
+        "ART-server-project-controller",
+        "ART-server-project-adapter",
+        "ART-shared-project-service",
+        "ART-shared-project-config-service"
+      ],
+      "sourceRef": "MDT-077 architecture API update flow"
+    },
+    {
+      "id": "OBL-web-edit-readback",
+      "title": "The Web edit form emits project change events after successful update and project state refresh keeps selected project data in sync for selectors and reopened forms.",
+      "derivedFrom": [
+        "BR-3.2",
+        "BR-3.4",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-web-add-project-modal",
+        "ART-web-project-manager",
+        "ART-web-sse-events",
+        "ART-web-project-form"
+      ],
+      "sourceRef": "MDT-077 architecture web readback flow"
+    },
+    {
+      "id": "OBL-cross-interface-read-consistency",
+      "title": "CLI and MCP project reads must consume the shared ProjectService read contract rather than implementing independent project merge semantics.",
+      "derivedFrom": [
+        "BR-4.1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-cli-project-command",
+        "ART-mcp-project-handlers",
+        "ART-shared-project-service"
+      ],
+      "sourceRef": "MDT-077 architecture cross-interface consistency"
+    },
+    {
+      "id": "OBL-regression-api-and-browser-tests",
+      "title": "Regression coverage must assert persisted readback for API and browser project edits, including description-only updates and missing-registry fallback.",
+      "derivedFrom": [
+        "BR-3.2",
+        "BR-3.3",
+        "BR-3.4",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-api-project-tests",
+        "ART-e2e-project-management-tests"
+      ],
+      "sourceRef": "MDT-077 architecture regression coverage"
+    },
+    {
+      "id": "OBL-regression-cli-and-mcp-tests",
+      "title": "CLI and MCP coverage must verify project reads expose the same shared project state after project configuration changes.",
+      "derivedFrom": [
+        "BR-4.1",
+        "C2",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-cli-project-tests",
+        "ART-mcp-project-tests"
+      ],
+      "sourceRef": "MDT-077 architecture CLI/MCP regression coverage"
+    },
+    {
+      "id": "OBL-failure-preserves-config",
+      "title": "Configuration write failures must be reported with the failed target and must not leave partially mutated project state.",
+      "derivedFrom": [
+        "BR-5.1",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-shared-project-config-service",
+        "ART-server-project-controller",
+        "ART-api-project-tests"
+      ],
+      "sourceRef": "MDT-077 architecture failure handling"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-shared-project-service",
+      "path": "shared/services/ProjectService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture shared service boundary"
+    },
+    {
+      "id": "ART-shared-project-config-service",
+      "path": "shared/services/project/ProjectConfigService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture persistence owner"
+    },
+    {
+      "id": "ART-shared-project-types",
+      "path": "shared/services/project/types.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture shared contract"
+    },
+    {
+      "id": "ART-shared-project-discovery",
+      "path": "shared/services/project/ProjectDiscoveryService.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture discovery owner"
+    },
+    {
+      "id": "ART-shared-project-manager",
+      "path": "shared/tools/ProjectManager.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture project creation facade"
+    },
+    {
+      "id": "ART-shared-project-validator",
+      "path": "shared/tools/ProjectValidator.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture validation owner"
+    },
+    {
+      "id": "ART-server-project-controller",
+      "path": "server/controllers/ProjectController.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture API adapter"
+    },
+    {
+      "id": "ART-server-project-routes",
+      "path": "server/routes/projects.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture API route surface"
+    },
+    {
+      "id": "ART-server-project-adapter",
+      "path": "server/server.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture server adapter"
+    },
+    {
+      "id": "ART-web-add-project-modal",
+      "path": "src/components/AddProjectModal/AddProjectModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture web edit surface"
+    },
+    {
+      "id": "ART-web-project-form",
+      "path": "src/components/AddProjectModal/hooks/useProjectForm.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture web validation adapter"
+    },
+    {
+      "id": "ART-web-project-manager",
+      "path": "src/hooks/useProjectManager.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture web project state owner"
+    },
+    {
+      "id": "ART-web-sse-events",
+      "path": "src/hooks/useSSEEvents.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture web refresh path"
+    },
+    {
+      "id": "ART-cli-project-command",
+      "path": "cli/src/commands/project.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture CLI adapter"
+    },
+    {
+      "id": "ART-mcp-project-handlers",
+      "path": "mcp-server/src/tools/handlers/projectHandlers.ts",
+      "kind": "runtime",
+      "sourceRef": "MDT-077 architecture MCP adapter"
+    },
+    {
+      "id": "ART-api-project-tests",
+      "path": "server/tests/api/projects.test.ts",
+      "kind": "test",
+      "sourceRef": "MDT-077 architecture API regression coverage"
+    },
+    {
+      "id": "ART-e2e-project-management-tests",
+      "path": "tests/e2e/project/management.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-077 architecture browser regression coverage"
+    },
+    {
+      "id": "ART-cli-project-tests",
+      "path": "cli/tests/e2e/project/project.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-077 architecture CLI regression coverage"
+    },
+    {
+      "id": "ART-mcp-project-tests",
+      "path": "mcp-server/tests/e2e/tools/get-project-info.spec.ts",
+      "kind": "test",
+      "sourceRef": "MDT-077 architecture MCP regression coverage"
+    }
+  ],
   "testPlans": [],
   "tasks": []
 }
