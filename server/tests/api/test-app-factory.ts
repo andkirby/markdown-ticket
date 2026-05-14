@@ -41,6 +41,8 @@ interface SharedProjectServiceLike {
   getProjectCRsMetadata: (path: string) => Promise<unknown[]>
   getSystemDirectories: (path?: string) => Promise<unknown>
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<unknown>
+  updateProject: (projectId: string, updates: Parameters<SharedProjectService['updateProject']>[1]) => void
+  updateProjectByPath: (projectId: string, projectPath: string, updates: Parameters<SharedProjectService['updateProject']>[1]) => void
   checkDirectoryExists: (dirPath: string) => Promise<boolean>
 }
 
@@ -82,6 +84,14 @@ class ProjectServiceAdapter {
 
   async configureDocuments(projectId: string, documentPaths: string[]) {
     return this.projectService.configureDocuments(projectId, documentPaths)
+  }
+
+  updateProject(projectId: string, updates: Parameters<SharedProjectService['updateProject']>[1]) {
+    return this.projectService.updateProject(projectId, updates)
+  }
+
+  updateProjectByPath(projectId: string, projectPath: string, updates: Parameters<SharedProjectService['updateProject']>[1]) {
+    return this.projectService.updateProjectByPath(projectId, projectPath, updates)
   }
 
   async checkDirectoryExists(dirPath: string) {
@@ -130,6 +140,7 @@ export function createTestApp(): TestAppResult {
 
   // Business logic services
   const projectServiceAdapter = new ProjectServiceAdapter(projectDiscovery as unknown as SharedProjectServiceLike)
+  app.locals.projectService = projectServiceAdapter
   const ticketService = new TicketService(projectDiscovery)
   const documentService = new DocumentService(projectDiscovery)
   const treeService = new TreeService(projectDiscovery)

@@ -90,6 +90,11 @@ export class ProjectService implements IProjectService {
     this.clearCache()
   }
 
+  updateProjectByPath(id: string, projectPath: string, u: Parameters<IProjectConfigService['updateProject']>[1]) {
+    this.config.updateProjectByPath(id, projectPath, u)
+    this.clearCache()
+  }
+
   async configureDocuments(id: string, p: string[]): Promise<void> {
     // Find project from registered or auto-discovered projects
     const allProjects = await this.getAllProjects()

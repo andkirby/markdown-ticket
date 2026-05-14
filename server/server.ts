@@ -96,6 +96,14 @@ class ProjectServiceAdapter {
     return this.projectService.configureDocuments(projectId, documentPaths)
   }
 
+  updateProject(projectId: string, updates: Parameters<SharedProjectService['updateProject']>[1]) {
+    return this.projectService.updateProject(projectId, updates)
+  }
+
+  updateProjectByPath(projectId: string, projectPath: string, updates: Parameters<SharedProjectService['updateProject']>[1]) {
+    return this.projectService.updateProjectByPath(projectId, projectPath, updates)
+  }
+
   async checkDirectoryExists(dirPath: string) {
     return this.projectService.checkDirectoryExists(dirPath)
   }

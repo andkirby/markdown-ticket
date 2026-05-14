@@ -117,6 +117,18 @@ export function useSSEEvents(
     }
   }, [refreshProjects]))
 
+  // Handle project metadata changes
+  useEventBus('project:changed', useCallback((event) => {
+    if (!import.meta.env.VITE_DISABLE_EVENTBUS_LOGS) {
+      console.warn('Project changed event received:', event.payload)
+    }
+    if (refreshProjects) {
+      refreshProjects().catch((err) => {
+        console.error('Failed to refresh projects after change:', err)
+      })
+    }
+  }, [refreshProjects]))
+
   // Handle project deletion events
   useEventBus('project:deleted', useCallback((event) => {
     if (!import.meta.env.VITE_DISABLE_EVENTBUS_LOGS) {

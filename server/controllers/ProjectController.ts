@@ -9,6 +9,7 @@ import type { TreeNode } from '../types/tree.js'
 import { SearchRequestSchema } from '@mdt/domain-contracts'
 import { WorktreeService } from '@mdt/shared/services/WorktreeService.js'
 import { ProjectManager } from '@mdt/shared/tools/ProjectManager.js'
+import { ProjectValidator } from '@mdt/shared/tools/ProjectValidator.js'
 import { DEFAULTS } from '@mdt/shared/utils/constants.js'
 
 export type Ticket = Pick<DomainTicket, 'code' | 'filePath'>
@@ -46,6 +47,8 @@ export interface ProjectServiceExtension {
   getProjectCRsMetadata: (path: string) => Promise<TicketMetadata[]>
   getSystemDirectories: (path?: string) => Promise<DirectoryListing>
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<void>
+  updateProject?: (projectId: string, updates: ProjectUpdateInput) => void
+  updateProjectByPath?: (projectId: string, projectPath: string, updates: ProjectUpdateInput) => void
   projectDiscovery: {
     getAllProjects: (bypassCache?: boolean) => Promise<Project[]>
     autoDiscoverProjects: (searchPaths: string[]) => Project[]
@@ -253,7 +256,69 @@ export class ProjectController {
       }
 
       const updates = req.body as ProjectUpdateInput
-      const result = await this.projectManager.updateProject(code, updates)
+      const validatedUpdates: ProjectUpdateInput = {}
+
+      if (updates.name !== undefined) {
+        const nameResult = ProjectValidator.validateName(updates.name)
+        if (!nameResult.valid) {
+          res.status(400).json({ error: 'Bad Request', message: nameResult.error })
+          return
+        }
+        validatedUpdates.name = nameResult.normalized!
+      }
+
+      if (updates.description !== undefined) {
+        const descResult = ProjectValidator.validateDescription(updates.description)
+        if (!descResult.valid) {
+          res.status(400).json({ error: 'Bad Request', message: descResult.error })
+          return
+        }
+        validatedUpdates.description = descResult.normalized!
+      }
+
+      if (updates.repository !== undefined) {
+        const repoResult = ProjectValidator.validateRepository(updates.repository)
+        if (!repoResult.valid) {
+          res.status(400).json({ error: 'Bad Request', message: repoResult.error })
+          return
+        }
+        validatedUpdates.repository = repoResult.normalized!
+      }
+
+      if (updates.active !== undefined) {
+        validatedUpdates.active = updates.active
+      }
+
+      if (this.projectService.updateProject) {
+        const projects = await this.projectService.getAllProjects(true)
+        const normalizedCode = code.toLowerCase()
+        const project = projects.find(project =>
+          project.id === code || project.project.code?.toLowerCase() === normalizedCode,
+        )
+
+        if (!project) {
+          res.status(404).json({ error: 'Not Found', message: 'Project not found' })
+          return
+        }
+
+        try {
+          this.projectService.updateProject(project.id, validatedUpdates)
+        }
+        catch (error) {
+          if (!this.projectService.updateProjectByPath) {
+            throw error
+          }
+
+          this.projectService.updateProjectByPath(project.id, project.project.path, validatedUpdates)
+        }
+
+        const updatedProjects = await this.projectService.getAllProjects(true)
+        const result = updatedProjects.find(updatedProject => updatedProject.id === project.id) || project
+        res.json(result)
+        return
+      }
+
+      const result = await this.projectManager.updateProject(code, validatedUpdates)
 
       res.json(result)
     }

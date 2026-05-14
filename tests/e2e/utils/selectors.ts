@@ -121,8 +121,12 @@ export const projectSelectors = {
   themeSystem: '[data-testid="theme-system"]',
   /** Add project button in navigation */
   addProjectButton: '[data-testid="add-project-button"]',
+  /** Edit project button in navigation */
+  editProjectButton: '[data-testid="edit-project-button"]',
   /** Add project modal */
   addProjectModal: '[data-testid="add-project-modal"]',
+  /** Edit project modal */
+  editProjectModal: '[data-testid="edit-project-modal"]',
   /** Project name input field */
   projectNameInput: '[data-testid="project-name-input"]',
   /** Project code input field */

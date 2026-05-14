@@ -20,6 +20,8 @@ interface ProjectRegistryEntry {
   ticketsPath: string
   path: string
   projectDir: string
+  description: string
+  repository: string
   active: boolean
   documentPaths: string[]
   excludeFolders: string[]
@@ -29,7 +31,10 @@ interface ProjectListEntry {
   id: string
   project: {
     name: string
+    code: string
     path: string
+    description: string
+    repository: string
     active: boolean
   }
   configPath: string
@@ -59,6 +64,15 @@ interface ProjectCR {
 interface ConfigureDocumentsResult {
   success: boolean
   message: string
+}
+
+interface ProjectConfigWithNestedDocument {
+  project?: Partial<ProjectRegistryEntry> & {
+    document?: {
+      paths?: string[]
+    }
+  }
+  document?: unknown
 }
 
 // Shared registry across all ProjectService instances
@@ -129,6 +143,8 @@ export class ProjectService {
       const nameMatch = content.match(/name\s*=\s*["']([^"']+)["']/)
       const codeMatch = content.match(/code\s*=\s*["']([^"']+)["']/)
       const ticketsPathMatch = content.match(/ticketsPath\s*=\s*["']([^"']+)["']/)
+      const descriptionMatch = content.match(/description\s*=\s*["']([^"']*)["']/)
+      const repositoryMatch = content.match(/repository\s*=\s*["']([^"']*)["']/)
 
       // Parse [project.document] section specifically
       const projectDocSection = content.match(/\[project\.document\]([\s\S]*?)(?=\[|$)/)
@@ -162,6 +178,8 @@ export class ProjectService {
           ticketsPath: ticketsPathMatch ? ticketsPathMatch[1] : DEFAULTS.TICKETS_PATH,
           path: path.dirname(configPath), // Full path for file operations
           projectDir: projectDirName, // Just the directory name for registry lookups
+          description: descriptionMatch ? descriptionMatch[1] : '',
+          repository: repositoryMatch ? repositoryMatch[1] : '',
           active: true,
           documentPaths,
           excludeFolders,
@@ -193,7 +211,10 @@ export class ProjectService {
       id: project.code,
       project: {
         name: project.name,
+        code: project.code,
         path: project.path, // Always use the full path
+        description: project.description,
+        repository: project.repository,
         active: project.active,
       },
       configPath: path.join(project.path, '.mdt-config.toml'),
@@ -346,10 +367,8 @@ export class ProjectService {
       throw new Error('Project configuration file not found')
     }
 
-    // Read existing config
     const content = fs.readFileSync(configPath, 'utf-8')
-    // Use 'any' because TypeScript type has document as sibling, but TOML structure nests it under project
-    const config = parseToml(content) as any
+    const config = parseToml(content) as ProjectConfigWithNestedDocument
 
     // Ensure project.document structure exists
     if (!config.project) {
@@ -372,6 +391,72 @@ export class ProjectService {
     this.loadProjectsRegistry()
 
     return { success: true, message: 'Documents configured' }
+  }
+
+  updateProject(projectId: string, updates: Partial<{
+    name: string
+    description: string
+    repository: string
+    active: boolean
+    ticketsPath: string
+  }>): void {
+    this.loadProjectsRegistry()
+
+    let project = this.projectsRegistry.get(projectId)
+    if (!project) {
+      for (const [, value] of this.projectsRegistry.entries()) {
+        if (value.code === projectId) {
+          project = value
+          break
+        }
+      }
+    }
+
+    if (!project) {
+      throw new Error('Project not found')
+    }
+
+    const configPath = path.join(project.path, '.mdt-config.toml')
+    if (!fs.existsSync(configPath)) {
+      throw new Error('Project configuration file not found')
+    }
+
+    const config = parseToml(fs.readFileSync(configPath, 'utf-8')) as {
+      project?: Partial<ProjectRegistryEntry>
+    }
+
+    if (!config.project) {
+      config.project = {}
+    }
+
+    Object.assign(config.project, updates)
+    fs.writeFileSync(configPath, stringify(config), 'utf-8')
+    this.loadProjectsRegistry()
+  }
+
+  updateProjectByPath(projectId: string, projectPath: string, updates: Partial<{
+    name: string
+    description: string
+    repository: string
+    active: boolean
+    ticketsPath: string
+  }>): void {
+    const configPath = path.join(projectPath, '.mdt-config.toml')
+    if (!fs.existsSync(configPath)) {
+      throw new Error(`Project ${projectId} local config not found`)
+    }
+
+    const config = parseToml(fs.readFileSync(configPath, 'utf-8')) as {
+      project?: Partial<ProjectRegistryEntry>
+    }
+
+    if (!config.project) {
+      config.project = {}
+    }
+
+    Object.assign(config.project, updates)
+    fs.writeFileSync(configPath, stringify(config), 'utf-8')
+    this.loadProjectsRegistry()
   }
 
   /**
