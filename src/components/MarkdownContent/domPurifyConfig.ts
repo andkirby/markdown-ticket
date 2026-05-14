@@ -35,6 +35,8 @@ export const ALLOWED_TAGS = [
   // Links and media
   'a',
   'img',
+  // Task list checkboxes
+  'input',
   // Containers
   'div',
   'span',
@@ -61,6 +63,10 @@ export const ALLOWED_ATTR = [
   'title',
   'class',
   'id',
+  // Task list checkbox attributes
+  'type',
+  'disabled',
+  'checked',
   // Mermaid SVG attributes
   'viewBox',
   'xmlns',
