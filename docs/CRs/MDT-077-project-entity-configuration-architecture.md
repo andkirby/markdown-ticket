@@ -88,6 +88,8 @@ MDT-143 gives agents and humans a simpler command-oriented interface. This ticke
 
 > Tests notes: [tests.md](./MDT-077/tests.md)
 
+> UAT architecture watchlist: [uat-architecture-watchlist.md](./MDT-077/uat-architecture-watchlist.md)
+
 > Current command interface ticket: [MDT-143](./MDT-143-cli-entrypoint-alternative-to-mcp.md)
 
 > Archived historical material: [archive](./MDT-077/archive/)
