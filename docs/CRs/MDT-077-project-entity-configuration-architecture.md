@@ -84,6 +84,10 @@ MDT-143 gives agents and humans a simpler command-oriented interface. This ticke
 
 > Architecture notes: [architecture.md](./MDT-077/architecture.md)
 
+> Tests trace projection: [tests.trace.md](./MDT-077/tests.trace.md)
+
+> Tests notes: [tests.md](./MDT-077/tests.md)
+
 > Current command interface ticket: [MDT-143](./MDT-143-cli-entrypoint-alternative-to-mcp.md)
 
 > Archived historical material: [archive](./MDT-077/archive/)
