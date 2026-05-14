@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-077"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a project is read by code, id, or path, the system shall resolve one canonical project instance before returning project data.",
+      "sourceRef": "MDT-077 Section 3: Project identity",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN listing projects, the system shall include projects from global registry entries and auto-discovered local configurations that are inside configured discovery paths.",
+      "sourceRef": "MDT-077 Section 3: Read behavior",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a project has both registry metadata and local configuration, the system shall return a merged project view using local configuration for operational fields.",
+      "sourceRef": "MDT-077 Section 3: Read behavior",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN creating or registering a global-only project, the system shall persist the complete project definition in the global registry without requiring a local config file.",
+      "sourceRef": "MDT-077 Section 3: Global-only mode",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN creating or registering a project-first project, the system shall persist discovery metadata in the global registry and operational fields in the project-local config.",
+      "sourceRef": "MDT-077 Section 3: Project-first mode",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN creating or discovering an auto-discovery project, the system shall use the project-local config as the complete project definition without requiring a global registry entry.",
+      "sourceRef": "MDT-077 Section 3: Auto-discovery mode",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN updating editable project fields, the system shall write name, description, repository, and supported active-state changes to the source of truth for the project's configuration mode.",
+      "sourceRef": "MDT-077 Section 4: Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN updating only a project description, the system shall persist the new description and return it on the next project read.",
+      "sourceRef": "MDT-077 Current Requirement Focus",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN updating a visible project that has no registry file but has a local config path, the system shall update the local config instead of failing because the registry file is missing.",
+      "sourceRef": "MDT-077 Current Requirement Focus",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.4",
+      "kind": "behavior",
+      "text": "WHEN a project update succeeds, the system shall refresh public project reads so reopened UI forms and selectors show the persisted values.",
+      "sourceRef": "MDT-077 Current Requirement Focus",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN a project is created or updated through one public interface, the system shall make the resulting project state observable through Web UI, API, CLI, and MCP project reads.",
+      "sourceRef": "MDT-077 Section 2: Desired Outcome",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-5.1",
+      "kind": "behavior",
+      "text": "IF project input validation fails, THEN the system shall reject the operation with field-specific validation details and without writing partial configuration.",
+      "sourceRef": "MDT-077 Section 4: Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-5.2",
+      "kind": "behavior",
+      "text": "IF a project cannot be found by the supplied identifier, THEN the system shall return a not-found result that identifies the unresolved project key.",
+      "sourceRef": "MDT-077 Section 4: Acceptance Criteria",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall preserve distinct write ownership rules for global-only, project-first, and auto-discovery projects.",
+      "sourceRef": "MDT-077 Constraint Carryover",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall use a shared project contract for Web UI, API, CLI, and MCP project operations.",
+      "sourceRef": "MDT-077 Constraint Carryover",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall validate project codes, names, paths, and editable fields before mutating configuration files.",
+      "sourceRef": "MDT-077 Constraint Carryover",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Project update tests shall verify persisted readback and not only successful command responses or UI success messages.",
+      "sourceRef": "MDT-077 Constraint Carryover",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Project updates shall not convert a project-first minimal registry entry into a complete registry definition unless an explicit migration operation is requested.",
+      "sourceRef": "MDT-077 Non-Ambiguity Table",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF registry metadata and local configuration disagree on operational project fields, THEN the system shall prefer local configuration for project-first reads and surface the inconsistency for diagnostics.",
+      "sourceRef": "MDT-077 Non-Ambiguity Table",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF a file-system write fails during project update, THEN the system shall preserve the previous project configuration and report the failed write target.",
+      "sourceRef": "MDT-077 Current Requirement Focus",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [],
+  "obligations": [],
+  "artifacts": [],
+  "testPlans": [],
+  "tasks": []
+}
