@@ -330,6 +330,50 @@ describe('projects API - PUT /api/projects/:code/update', () => {
     expect(updateRes.body.project.description).toBe(updatedDescription)
     expect(updateSpy).toHaveBeenCalled()
   })
+
+  it('returns 400 and does not write when description validation fails', async () => {
+    const project = await projectFactory.createProject('empty', {
+      name: 'Description Validation Test',
+      code: 'DVT',
+      description: 'Initial description',
+    })
+    const projectService = app.locals?.projectService
+    const updateSpy = jest.spyOn(projectService, 'updateProject')
+
+    const updateRes = await request(app)
+      .put(`/api/projects/${project.key}/update`)
+      .send({ description: 'x'.repeat(501) })
+
+    assertBadRequest(updateRes)
+    expect(updateRes.body.message).toContain('Description')
+    expect(updateSpy).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 and does not write when repository validation fails', async () => {
+    const project = await projectFactory.createProject('empty', {
+      name: 'Repository Validation Test',
+      code: 'RVT',
+    })
+    const projectService = app.locals?.projectService
+    const updateSpy = jest.spyOn(projectService, 'updateProject')
+
+    const updateRes = await request(app)
+      .put(`/api/projects/${project.key}/update`)
+      .send({ repository: 'not-a-url' })
+
+    assertBadRequest(updateRes)
+    expect(updateRes.body.message).toContain('Repository')
+    expect(updateSpy).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the project identifier cannot be resolved', async () => {
+    const updateRes = await request(app)
+      .put('/api/projects/MISSING/update')
+      .send({ description: 'No project exists for this key' })
+
+    assertNotFound(updateRes)
+    expect(updateRes.body.message).toContain('Project not found')
+  })
 })
 
 describe('projects API - Error Cases', () => {
