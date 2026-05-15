@@ -15,6 +15,17 @@ The core architectural rule is that a project write resolves the visible project
 
 `ProjectService` owns project reads, update entrypoints, cache invalidation, and current-project resolution. `ProjectConfigService` owns TOML persistence and mode-specific write targets. Interface layers translate user/API/tool input into shared service calls.
 
+## UAT Architecture Direction
+
+The next architecture step is to make implicit project semantics explicit:
+
+- `ProjectService` owns one mutation boundary for public project writes.
+- Identity resolution becomes a named operation that returns the canonical project, configuration mode, registry path when present, and local config path when present.
+- Configuration mode is represented as a first-class value: `global-only`, `project-first`, or `auto-discovery`.
+- Registry metadata and local operational config are separate contracts, even if they still serialize through existing TOML files.
+
+This keeps Web UI, API, CLI, and MCP adapters thin and prevents future fixes from reintroducing separate persistence paths.
+
 ## Runtime Flow
 
 ```mermaid
@@ -54,9 +65,23 @@ flowchart TD
 | Project-first | Project-local config | Keep registry minimal; write operational fields to local config |
 | Auto-discovery | Project-local config | Write by resolved project path when no registry file exists |
 
+## Write Reference Contract
+
+A resolved write target should include:
+
+| Field | Purpose |
+|-------|---------|
+| `project` | Canonical project view returned to callers after reread |
+| `mode` | Explicit configuration mode used for write routing |
+| `registryPath` | Registry file path when the mode uses registry metadata |
+| `localConfigPath` | Project-local config path when operational fields live locally |
+| `writeTargets` | Ordered list of files expected to change for the mutation |
+
 ## Invariants
 
 - A project update must resolve a canonical project instance before writing.
+- Configuration mode must be explicit before selecting a write target.
+- Public project mutations must enter through one shared project mutation boundary.
 - Project-first updates must not promote a minimal registry entry into a complete registry definition.
 - Auto-discovered projects must remain writable without a registry file.
 - Description-only update is a valid mutation.

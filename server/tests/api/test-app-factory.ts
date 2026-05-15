@@ -43,6 +43,7 @@ interface SharedProjectServiceLike {
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<unknown>
   updateProject: (projectId: string, updates: Parameters<SharedProjectService['updateProject']>[1]) => void
   updateProjectByPath: (projectId: string, projectPath: string, updates: Parameters<SharedProjectService['updateProject']>[1]) => void
+  updateVisibleProject?: SharedProjectService['updateVisibleProject']
   checkDirectoryExists: (dirPath: string) => Promise<boolean>
 }
 
@@ -92,6 +93,15 @@ class ProjectServiceAdapter {
 
   updateProjectByPath(projectId: string, projectPath: string, updates: Parameters<SharedProjectService['updateProject']>[1]) {
     return this.projectService.updateProjectByPath(projectId, projectPath, updates)
+  }
+
+  updateVisibleProject(project: Parameters<SharedProjectService['updateVisibleProject']>[0], updates: Parameters<SharedProjectService['updateProject']>[1]) {
+    try {
+      return this.updateProject(project.id, updates)
+    }
+    catch {
+      return this.updateProjectByPath(project.id, project.project.path, updates)
+    }
   }
 
   async checkDirectoryExists(dirPath: string) {

@@ -49,6 +49,7 @@ export interface ProjectServiceExtension {
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<void>
   updateProject?: (projectId: string, updates: ProjectUpdateInput) => void
   updateProjectByPath?: (projectId: string, projectPath: string, updates: ProjectUpdateInput) => void
+  updateVisibleProject?: (project: Project, updates: ProjectUpdateInput) => void
   projectDiscovery: {
     getAllProjects: (bypassCache?: boolean) => Promise<Project[]>
     autoDiscoverProjects: (searchPaths: string[]) => Project[]
@@ -301,15 +302,20 @@ export class ProjectController {
           return
         }
 
-        try {
-          this.projectService.updateProject(project.id, validatedUpdates)
+        if (this.projectService.updateVisibleProject) {
+          this.projectService.updateVisibleProject(project, validatedUpdates)
         }
-        catch (error) {
-          if (!this.projectService.updateProjectByPath) {
-            throw error
+        else {
+          try {
+            this.projectService.updateProject(project.id, validatedUpdates)
           }
+          catch (error) {
+            if (!this.projectService.updateProjectByPath) {
+              throw error
+            }
 
-          this.projectService.updateProjectByPath(project.id, project.project.path, validatedUpdates)
+            this.projectService.updateProjectByPath(project.id, project.project.path, validatedUpdates)
+          }
         }
 
         const updatedProjects = await this.projectService.getAllProjects(true)

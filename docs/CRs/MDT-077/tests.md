@@ -7,6 +7,10 @@
 
 MDT-077 test coverage is contract-first. The important assertion is persisted readback across project configuration modes, not just successful command responses or UI success messages.
 
+## UAT Test Direction
+
+The next test step is a table-driven project contract suite. It should verify the same create/register, read, update, and readback expectations for global-only, project-first, and auto-discovery modes before more interface polish is added.
+
 ## Module to Test Mapping
 
 | Area | Test File | Coverage |
@@ -28,6 +32,23 @@ MDT-077 test coverage is contract-first. The important assertion is persisted re
 | `C3` validation boundary | `TEST-project-validation-boundary`, `TEST-project-api-read-update-contract` |
 | `C4` persisted readback | `TEST-project-api-read-update-contract`, `TEST-project-browser-edit-readback`, CLI/MCP read plans |
 | `C5` project-first registry preservation | `TEST-project-api-read-update-contract`, `TEST-shared-project-config-modes` |
+| UAT explicit mode/write reference | `TEST-project-contract-mode-matrix`, `TEST-shared-project-config-modes` |
+
+## Contract Matrix
+
+| Mode | Create/Register | Read | Update | Readback |
+|------|-----------------|------|--------|----------|
+| Global-only | yes | yes | yes | yes |
+| Project-first | yes | yes | yes | yes |
+| Auto-discovery | local config | yes | yes | yes |
+
+Required edge coverage:
+
+- Missing registry fallback.
+- Description-only update.
+- Registry/local conflict.
+- Failed write target.
+- Project-first registry does not gain operational fields.
 
 ## Verification Commands
 

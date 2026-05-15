@@ -1,6 +1,6 @@
 ---
 code: MDT-077
-status: In Progress
+status: Implemented
 dateCreated: 2025-11-13T22:10:34.006Z
 lastModified: 2026-05-15T00:00:00.000Z
 type: Feature Enhancement
@@ -62,36 +62,40 @@ MDT-143 gives agents and humans a simpler command-oriented interface. This ticke
 
 ## 4. Acceptance Criteria
 
-- [ ] Requirements trace exists for project entity behavior.
-- [ ] Requirements distinguish global-only, project-first, and auto-discovery modes.
-- [ ] Requirements include description-only update and readback.
-- [ ] Requirements include missing-registry/local-config fallback behavior.
-- [ ] Requirements include cross-interface consistency for Web UI, API, CLI, and MCP reads.
-- [ ] Historical MDT-077 materials are archived under `docs/CRs/MDT-077/archive/`.
-- [ ] Current requirements avoid implementation design decisions that belong in architecture.
+- [x] Requirements trace exists for project entity behavior.
+- [x] Requirements distinguish global-only, project-first, and auto-discovery modes.
+- [x] Requirements include description-only update and readback.
+- [x] Requirements include missing-registry/local-config fallback behavior.
+- [x] Requirements include cross-interface consistency for Web UI, API, CLI, and MCP reads.
+- [x] Historical MDT-077 materials are archived under `docs/CRs/MDT-077/archive/`.
+- [x] Current requirements avoid implementation design decisions that belong in architecture.
 
 ## 5. References
 
-> Requirements trace projection: [requirements.trace.md](./MDT-077/requirements.trace.md)
-
-> Requirements notes: [requirements.md](./MDT-077/requirements.md)
-
-> BDD trace projection: [bdd.trace.md](./MDT-077/bdd.trace.md)
-
-> BDD notes: [bdd.md](./MDT-077/bdd.md)
-
-> Architecture trace projection: [architecture.trace.md](./MDT-077/architecture.trace.md)
-
-> Architecture notes: [architecture.md](./MDT-077/architecture.md)
-
-> Tests trace projection: [tests.trace.md](./MDT-077/tests.trace.md)
-
-> Tests notes: [tests.md](./MDT-077/tests.md)
-
-> UAT architecture watchlist: [uat-architecture-watchlist.md](./MDT-077/uat-architecture-watchlist.md)
-
-> Current command interface ticket: [MDT-143](./MDT-143-cli-entrypoint-alternative-to-mcp.md)
-
-> Archived historical material: [archive](./MDT-077/archive/)
-
 > Configuration specification: [CONFIG_SPECIFICATION.md](../CONFIG_SPECIFICATION.md)
+
+## 8. Clarifications
+
+### UAT Session 2026-05-15
+
+Approved changes:
+
+- Make configuration mode explicit before project persistence decisions.
+- Add a canonical identity/write-reference operation for project reads and writes.
+- Route public project mutations through one shared mutation boundary.
+- Add a table-driven project contract matrix for global-only, project-first, and auto-discovery modes.
+
+Changed requirement IDs:
+
+- Refined in place: `BR-1.1`, `C1`, `C2`, `C4`.
+- Added: `C6`, `C7`, `C8`.
+
+Updated workflow documents:
+
+- `requirements.md`
+- `architecture.md`
+- `tests.md`
+- `tasks.md`
+- `uat.md`
+
+`uat.md` was written as the current-round execution brief. Strict drift/lock was not used.

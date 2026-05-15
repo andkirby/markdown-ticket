@@ -2,6 +2,7 @@ import { fileExists, readFile, writeFile } from '../../../utils/file-utils'
 import { buildConfigFilePath, buildRegistryFilePath } from '../../../utils/path-resolver'
 import { parseToml, stringify } from '../../../utils/toml'
 import { ProjectConfigService } from '../ProjectConfigService'
+import { ProjectConfigurationMode } from '../types'
 
 jest.mock('../../../utils/file-utils')
 jest.mock('../../../utils/toml')
@@ -12,7 +13,7 @@ describe('projectConfigService', () => {
 
   beforeEach(() => {
     service = new ProjectConfigService(true)
-    jest.clearAllMocks()
+    jest.resetAllMocks()
     ;(stringify as jest.Mock).mockImplementation(value => JSON.stringify(value))
   })
 
@@ -138,6 +139,7 @@ describe('projectConfigService', () => {
         .mockReturnValueOnce('local-content')
       ;(parseToml as jest.Mock)
         .mockReturnValueOnce(registryData)
+        .mockReturnValueOnce(registryData)
         .mockReturnValueOnce(localConfig)
 
       service.updateProject('LOCL', {
@@ -191,6 +193,108 @@ describe('projectConfigService', () => {
       expect(() => service.updateProjectByPath('MISS', '/missing', { description: 'Nope' }))
         .toThrow('local config not found')
       expect(writeFile).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('project contract mode matrix', () => {
+    it.each([
+      {
+        mode: ProjectConfigurationMode.GLOBAL_ONLY,
+        projectId: 'GLOB',
+        projectPath: '/global',
+        registryPath: '/registry/GLOB.toml',
+        localConfigPath: undefined,
+        registryData: {
+          project: {
+            path: '/global',
+            name: 'Global Project',
+            code: 'GLOB',
+            description: 'Old description',
+          },
+          metadata: {
+            globalOnly: true,
+            lastAccessed: '2024-01-01',
+          },
+        },
+        expectedWriteTargets: ['/registry/GLOB.toml'],
+      },
+      {
+        mode: ProjectConfigurationMode.PROJECT_FIRST,
+        projectId: 'PRJF',
+        projectPath: '/project-first',
+        registryPath: '/registry/PRJF.toml',
+        localConfigPath: '/project-first/.mdt-config.toml',
+        registryData: {
+          project: {
+            path: '/project-first',
+            active: true,
+          },
+          metadata: {
+            lastAccessed: '2024-01-01',
+          },
+        },
+        expectedWriteTargets: ['/registry/PRJF.toml', '/project-first/.mdt-config.toml'],
+      },
+    ])('resolves $mode write reference before updating by registry', ({ mode, projectId, projectPath, registryPath, localConfigPath, registryData, expectedWriteTargets }) => {
+      const localConfig = {
+        project: {
+          name: 'Local Project',
+          code: projectId,
+          description: 'Old description',
+        },
+      }
+
+      ;(buildRegistryFilePath as jest.Mock).mockReturnValue(registryPath)
+      ;(buildConfigFilePath as jest.Mock).mockReturnValue(localConfigPath)
+      ;(fileExists as jest.Mock).mockReturnValue(true)
+      ;(readFile as jest.Mock).mockReturnValue('content')
+      ;(parseToml as jest.Mock)
+        .mockReturnValueOnce(registryData)
+        .mockReturnValueOnce(registryData)
+        .mockReturnValue(localConfig)
+
+      const writeReference = service.resolveProjectWriteReference(projectId)
+
+      expect(writeReference).toMatchObject({
+        projectId,
+        projectPath,
+        mode,
+        registryPath,
+        localConfigPath,
+        writeTargets: expectedWriteTargets,
+      })
+
+      jest.clearAllMocks()
+      ;(buildRegistryFilePath as jest.Mock).mockReturnValue(registryPath)
+      ;(buildConfigFilePath as jest.Mock).mockReturnValue(localConfigPath)
+      ;(fileExists as jest.Mock).mockReturnValue(true)
+      ;(readFile as jest.Mock).mockReturnValue('content')
+      ;(parseToml as jest.Mock)
+        .mockReturnValueOnce(registryData)
+        .mockReturnValueOnce(registryData)
+        .mockReturnValue(localConfig)
+
+      service.updateProject(projectId, { description: 'Matrix update' })
+
+      expect(writeFile).toHaveBeenCalledTimes(expectedWriteTargets.length)
+      expectedWriteTargets.forEach((target, index) => {
+        expect(writeFile).toHaveBeenNthCalledWith(index + 1, target, expect.any(String))
+      })
+    })
+
+    it('resolves auto-discovery write reference by local config path', () => {
+      ;(buildConfigFilePath as jest.Mock).mockReturnValue('/auto/.mdt-config.toml')
+      ;(fileExists as jest.Mock).mockReturnValue(true)
+
+      const writeReference = service.resolveProjectWriteReferenceByPath('AUTO', '/auto')
+
+      expect(writeReference).toEqual({
+        projectId: 'AUTO',
+        projectPath: '/auto',
+        mode: ProjectConfigurationMode.AUTO_DISCOVERY,
+        localConfigPath: '/auto/.mdt-config.toml',
+        writeTargets: ['/auto/.mdt-config.toml'],
+      })
     })
   })
 })
