@@ -46,5 +46,16 @@ MDT-143 remains the agent-oriented command interface. MDT-077 owns the storage, 
 - Lock fallback behavior when a visible/discovered project has no registry file.
 - Lock tests around persisted state, not just success messages.
 
+## UAT Refinements
+
+The 2026-05-15 UAT round approves four follow-up refinements for the same ticket:
+
+1. Configuration mode must be explicit before persistence decisions.
+2. Project identity resolution must return enough context to choose the correct write target.
+3. Project mutation must enter through one shared application boundary.
+4. Contract tests must cover create/register, read, update, and readback across all three modes.
+
+Rollback-on-failure remains deferred. The current requirement is still to preserve previous content where possible and report the failed write target.
+
 ---
 Use `requirements.trace.md` for canonical requirement rows and route summaries.

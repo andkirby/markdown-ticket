@@ -1,4 +1,5 @@
 import type { Express } from 'express'
+import type { ProjectServiceExtension } from './controllers/ProjectController.js'
 import type { ProjectPath } from './services/fileWatcher/PathWatcherService.js'
 import * as path from 'node:path'
 import process from 'node:process'
@@ -104,6 +105,10 @@ class ProjectServiceAdapter {
     return this.projectService.updateProjectByPath(projectId, projectPath, updates)
   }
 
+  updateVisibleProject(project: Parameters<SharedProjectService['updateVisibleProject']>[0], updates: Parameters<SharedProjectService['updateProject']>[1]) {
+    return this.projectService.updateVisibleProject(project, updates)
+  }
+
   async checkDirectoryExists(dirPath: string) {
     return this.projectService.checkDirectoryExists(dirPath)
   }
@@ -172,7 +177,7 @@ const ticketService = new TicketService(projectDiscovery)
  * Type cast for compatibility.
  */
 
-const documentService = new DocumentService(projectDiscovery as any)
+const documentService = new DocumentService(projectDiscovery)
 const treeService = new TreeService(projectDiscovery)
 
 // Connect file watcher to document service for cache invalidation
@@ -184,7 +189,7 @@ fileWatcher.setFileInvoker(documentService.fileInvoker as FileInvokerAdapter)
 
 const projectController = new ProjectController(
 
-  projectServiceAdapter as any, // Use the adapter which provides the expected interface
+  projectServiceAdapter as ProjectServiceExtension, // Use the adapter which provides the expected interface
   treeService,
   fileWatcher,
   undefined, // ticketController (not needed)

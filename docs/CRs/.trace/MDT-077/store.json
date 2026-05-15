@@ -5,16 +5,6 @@
   },
   "requirements": [
     {
-      "id": "BR-1.1",
-      "kind": "behavior",
-      "text": "WHEN a project is read by code, id, or path, the system shall resolve one canonical project instance before returning project data.",
-      "sourceRef": "MDT-077 Section 3: Project identity",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
       "id": "BR-1.2",
       "kind": "behavior",
       "text": "WHEN listing projects, the system shall include projects from global registry entries and auto-discovered local configurations that are inside configured discovery paths.",
@@ -135,39 +125,9 @@
       ]
     },
     {
-      "id": "C1",
-      "kind": "constraint",
-      "text": "The system shall preserve distinct write ownership rules for global-only, project-first, and auto-discovery projects.",
-      "sourceRef": "MDT-077 Constraint Carryover",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
-      "id": "C2",
-      "kind": "constraint",
-      "text": "The system shall use a shared project contract for Web UI, API, CLI, and MCP project operations.",
-      "sourceRef": "MDT-077 Constraint Carryover",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
       "id": "C3",
       "kind": "constraint",
       "text": "The system shall validate project codes, names, paths, and editable fields before mutating configuration files.",
-      "sourceRef": "MDT-077 Constraint Carryover",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:in-ticket"
-      ]
-    },
-    {
-      "id": "C4",
-      "kind": "constraint",
-      "text": "Project update tests shall verify persisted readback and not only successful command responses or UI success messages.",
       "sourceRef": "MDT-077 Constraint Carryover",
       "routePolicy": "tests",
       "tags": [
@@ -203,6 +163,55 @@
       "tags": [
         "timing:in-ticket"
       ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall preserve distinct write ownership rules for global-only, project-first, and auto-discovery projects, with configuration mode represented explicitly before write routing.",
+      "sourceRef": "docs/CRs/MDT-077/uat.md#approved-changes",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall use a shared project contract for Web UI, API, CLI, and MCP project operations, including one shared mutation boundary for public project writes.",
+      "sourceRef": "docs/CRs/MDT-077/uat.md#approved-changes",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "Project update tests shall verify persisted readback across the global-only, project-first, and auto-discovery mode matrix, not only successful command responses or UI success messages.",
+      "sourceRef": "docs/CRs/MDT-077/uat.md#approved-changes",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "Project configuration mode shall be a first-class value with supported values global-only, project-first, and auto-discovery.",
+      "sourceRef": "docs/CRs/MDT-077/uat.md#approved-changes",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Public project mutations shall enter through one shared project application boundary before mode-specific configuration persistence is selected.",
+      "sourceRef": "docs/CRs/MDT-077/uat.md#approved-changes",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a project is read or prepared for mutation by code, id, or path, the system shall resolve one canonical project instance and, for mutations, expose enough storage ownership context to route the write before returning or mutating project data.",
+      "sourceRef": "docs/CRs/MDT-077/requirements.md#current-requirement-focus",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "Project identity resolution for mutations shall expose enough storage ownership context to route writes without interface-specific configuration-mode inference.",
+      "sourceRef": "docs/CRs/MDT-077/requirements.md#uat-refinements",
+      "routePolicy": "tests"
     }
   ],
   "scenarios": [
@@ -467,6 +476,59 @@
         "ART-api-project-tests"
       ],
       "sourceRef": "MDT-077 architecture failure handling"
+    },
+    {
+      "id": "OBL-explicit-mode-write-reference",
+      "title": "Project writes resolve an explicit configuration mode and write reference before persistence",
+      "derivedFrom": [
+        "C1",
+        "C6",
+        "C7",
+        "BR-1.1"
+      ],
+      "artifactIds": [
+        "ART-shared-project-service",
+        "ART-shared-project-types",
+        "ART-shared-project-config-service"
+      ],
+      "sourceRef": "docs/CRs/MDT-077/architecture.md#write-reference-contract"
+    },
+    {
+      "id": "OBL-single-mutation-boundary",
+      "title": "Public project mutations route through one shared project mutation boundary before adapter responses are built",
+      "derivedFrom": [
+        "C2",
+        "C8",
+        "BR-3.1",
+        "BR-4.1"
+      ],
+      "artifactIds": [
+        "ART-shared-project-service",
+        "ART-server-project-controller",
+        "ART-server-project-adapter",
+        "ART-cli-project-command",
+        "ART-mcp-project-handlers"
+      ],
+      "sourceRef": "docs/CRs/MDT-077/architecture.md#uat-architecture-direction"
+    },
+    {
+      "id": "OBL-contract-mode-matrix",
+      "title": "Project contract coverage exercises create/register, read, update, and readback across all configuration modes",
+      "derivedFrom": [
+        "C1",
+        "C4",
+        "C6",
+        "C7",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-shared-project-config-service",
+        "ART-api-project-tests",
+        "ART-e2e-project-management-tests",
+        "ART-cli-project-tests",
+        "ART-mcp-project-tests"
+      ],
+      "sourceRef": "docs/CRs/MDT-077/tests.md#contract-matrix"
     }
   ],
   "artifacts": [
@@ -702,7 +764,107 @@
       ],
       "file": "server/tests/api/projects.test.ts",
       "sourceRef": "MDT-077 tests: API project update/readback contract"
+    },
+    {
+      "id": "TEST-project-contract-mode-matrix",
+      "kind": "integration",
+      "title": "Project contract matrix verifies create/register, read, update, and readback across global-only, project-first, and auto-discovery modes",
+      "covers": [
+        "C1",
+        "C4",
+        "C6",
+        "C7",
+        "C8",
+        "OBL-contract-mode-matrix",
+        "OBL-explicit-mode-write-reference"
+      ],
+      "file": "shared/services/project/__tests__/ProjectConfigService.test.ts",
+      "sourceRef": "docs/CRs/MDT-077/tests.md#contract-matrix"
     }
   ],
-  "tasks": []
+  "tasks": [
+    {
+      "id": "TASK-mode-identity-contract",
+      "title": "Introduce explicit project mode and canonical write-reference contract",
+      "ownsArtifactIds": [
+        "ART-shared-project-service",
+        "ART-shared-project-types",
+        "ART-shared-project-config-service",
+        "ART-shared-project-discovery",
+        "ART-shared-project-manager"
+      ],
+      "makesGreenIds": [
+        "canonical_project_read",
+        "project_list_includes_registry_and_discovery",
+        "global_only_project_round_trip",
+        "project_first_project_round_trip",
+        "auto_discovered_project_round_trip",
+        "update_editable_fields_by_mode",
+        "TEST-shared-project-config-modes",
+        "TEST-shared-project-discovery-contract",
+        "TEST-project-contract-mode-matrix"
+      ],
+      "skills": [
+        "typescript",
+        "jest",
+        "project-architecture"
+      ],
+      "sourceRef": "docs/CRs/MDT-077/uat.md#slice-1-mode-and-identity-contract"
+    },
+    {
+      "id": "TASK-single-mutation-boundary",
+      "title": "Route public project updates through one shared mutation boundary",
+      "ownsArtifactIds": [
+        "ART-server-project-routes",
+        "ART-server-project-controller",
+        "ART-server-project-adapter",
+        "ART-web-add-project-modal",
+        "ART-web-project-form",
+        "ART-web-project-manager",
+        "ART-web-sse-events",
+        "ART-shared-project-validator"
+      ],
+      "makesGreenIds": [
+        "description_update_reads_back",
+        "missing_registry_update_falls_back_to_local_config",
+        "project_update_errors_are_visible",
+        "cross_interface_project_state_consistency",
+        "TEST-project-api-read-update-contract",
+        "TEST-project-browser-edit-readback",
+        "TEST-project-validation-boundary"
+      ],
+      "skills": [
+        "typescript",
+        "api",
+        "react-state"
+      ],
+      "sourceRef": "docs/CRs/MDT-077/uat.md#slice-2-single-mutation-boundary"
+    },
+    {
+      "id": "TASK-contract-matrix",
+      "title": "Add table-driven project mode contract tests and read contract coverage",
+      "ownsArtifactIds": [
+        "ART-api-project-tests",
+        "ART-e2e-project-management-tests",
+        "ART-cli-project-command",
+        "ART-cli-project-tests",
+        "ART-mcp-project-handlers",
+        "ART-mcp-project-tests"
+      ],
+      "makesGreenIds": [
+        "TEST-project-contract-mode-matrix",
+        "TEST-shared-project-config-modes",
+        "TEST-project-api-read-update-contract",
+        "TEST-cli-project-read-contract",
+        "TEST-mcp-project-read-contract",
+        "cross_interface_project_state_consistency"
+      ],
+      "skills": [
+        "jest",
+        "playwright",
+        "test-design"
+      ],
+      "sourceRef": "docs/CRs/MDT-077/uat.md#slice-3-contract-matrix-tests"
+    }
+  ]
 }

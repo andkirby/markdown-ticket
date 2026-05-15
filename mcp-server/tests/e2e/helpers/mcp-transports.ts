@@ -4,6 +4,7 @@
  * Separates transport-specific logic from the main MCP client
  */
 
+import type { Buffer } from 'node:buffer'
 import type { ChildProcess } from 'node:child_process'
 import type { TestEnvironment } from './test-environment'
 
@@ -19,6 +20,7 @@ export interface MCPTransport {
 export class StdioTransport implements MCPTransport {
   private process?: ChildProcess
   private connected = false
+  private stderrListener?: (data: Buffer) => void
 
   constructor(private testEnv: TestEnvironment) {}
 
@@ -58,9 +60,10 @@ export class StdioTransport implements MCPTransport {
     })
 
     // Capture stderr for debugging
-    this.process.stderr?.on('data', (data) => {
+    this.stderrListener = (data: Buffer) => {
       console.error('[SERVER STDERR]:', data.toString())
-    })
+    }
+    this.process.stderr?.on('data', this.stderrListener)
 
     await this.waitForStart()
     this.connected = true
@@ -68,7 +71,12 @@ export class StdioTransport implements MCPTransport {
 
   async stop(): Promise<void> {
     if (this.process) {
-      this.process.kill('SIGTERM')
+      const serverProcess = this.process
+      if (this.stderrListener) {
+        serverProcess.stderr?.off('data', this.stderrListener)
+        this.stderrListener = undefined
+      }
+      serverProcess.kill('SIGTERM')
       this.process = undefined
     }
     this.connected = false
