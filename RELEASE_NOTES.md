@@ -1,5 +1,38 @@
 # Release Notes
 
+## v0.17.0 (2026-05-15)
+
+### New Features
+
+**Document Tree Navigation (MDT-162)**
+- Navigate the document tree with improved UX — expanded/collapsed state is preserved and restored across sessions
+- Tree state persists using a standardized preference storage system
+
+**Active Document Scroll Target (MDT-161)**
+- Clicking a document link scrolls to the exact position in the viewer instead of just loading the file
+- Works with internal links and table-of-contents navigation
+
+### Improvements
+
+**Live Document Updates via SSE (MDT-142)**
+- Documents now update in real-time when files change, including when editing from a git worktree
+- Previously, worktree-only changes were invisible in the UI until a full page reload
+
+### Bug Fixes
+
+**Mermaid Fullscreen Overlay (MDT-164)**
+- Mermaid diagram fullscreen mode now uses a proper overlay, fixing pan/zoom interaction issues
+
+**Task List Checkboxes**
+- Markdown task lists (`- [ ]` / `- [x]`) now render correctly in the document viewer
+- Checkboxes were previously stripped out by the HTML sanitizer
+
+**Project Edit Persistence (MDT-077)**
+- Editing a project's configuration now persists correctly across all config modes
+- Previously, some edits to project settings would not be saved when switching between configuration modes
+
+---
+
 ## v0.16.0 (2026-05-05)
 
 ### New Features
