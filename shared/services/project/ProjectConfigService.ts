@@ -1,5 +1,5 @@
 import type { ProjectConfig } from '../../models/Project.js'
-import type { GlobalConfig, IProjectConfigService, RegistryData } from './types.js'
+import type { GlobalConfig, IProjectConfigService, ProjectUpdateFields, ProjectWriteReference, RegistryData } from './types.js'
 import { getTicketsPath, isLegacyConfig, migrateLegacyConfig, validateProjectConfig } from '../../models/Project.js'
 import { validateTicketsPath } from '../../tools/ProjectValidator.js'
 import { getDefaultConfig as getDefaultConfigUtil, processConfig } from '../../utils/config-validator.js'
@@ -12,6 +12,7 @@ import {
   buildRegistryFilePath,
 } from '../../utils/path-resolver.js'
 import { parseToml, stringify } from '../../utils/toml.js'
+import { ProjectConfigurationMode } from './types.js'
 
 interface ProjectDocumentConfig {
   paths?: string[]
@@ -209,48 +210,35 @@ export class ProjectConfigService implements IProjectConfigService {
   /** Update existing project (local config + registry metadata) */
   updateProject(
     projectId: string,
-    updates: Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>,
+    updates: ProjectUpdateFields,
   ): void {
     try {
-      const projectFile = buildRegistryFilePath(this.projectsDir, projectId)
-      if (!fileExists(projectFile)) {
-        throw new Error(`Project ${projectId} not found in registry`)
-      }
-
-      const content = readFile(projectFile)
+      const writeReference = this.resolveProjectWriteReference(projectId)
+      const content = readFile(writeReference.registryPath!)
       const registryData = parseToml(content) as RegistryData
-
-      if (!registryData.project?.path) {
-        throw new Error(`Project ${projectId} registry entry missing project path`)
-      }
-
-      // Check if this is a global-only project
-      const isGlobalOnly = registryData.metadata?.globalOnly === true
-        || registryData.project.name !== undefined
 
       // Update registry timestamp
       registryData.metadata.lastAccessed = new Date().toISOString().split('T')[0]
 
-      if (isGlobalOnly) {
+      if (writeReference.mode === ProjectConfigurationMode.GLOBAL_ONLY) {
         // Strategy 1: Global-Only - Update project details in global registry
         Object.assign(registryData.project, updates)
-        writeFile(projectFile, stringify(registryData))
+        writeFile(writeReference.registryPath!, stringify(registryData))
         logQuiet(this.quiet, `Updated project ${projectId} in global registry (global-only mode)`)
       }
       else {
         // Strategy 2: Project-First - Write registry metadata and update local config
-        writeFile(projectFile, stringify(registryData))
+        writeFile(writeReference.registryPath!, stringify(registryData))
 
         // Update local config
-        const configPath = buildConfigFilePath(registryData.project.path, CONFIG_FILES.PROJECT_CONFIG)
-        if (fileExists(configPath)) {
-          const localConfig = parseToml(readFile(configPath)) as ProjectConfig
+        if (writeReference.localConfigPath && fileExists(writeReference.localConfigPath)) {
+          const localConfig = parseToml(readFile(writeReference.localConfigPath)) as ProjectConfig
           Object.assign(localConfig.project, updates)
-          writeFile(configPath, stringify(localConfig))
+          writeFile(writeReference.localConfigPath, stringify(localConfig))
           logQuiet(this.quiet, `Updated project ${projectId} in local config`)
         }
         else {
-          logQuiet(this.quiet, `Warning: Project ${projectId} local config not found at ${configPath}`)
+          logQuiet(this.quiet, `Warning: Project ${projectId} local config not found at ${writeReference.localConfigPath}`)
         }
       }
     }
@@ -264,22 +252,62 @@ export class ProjectConfigService implements IProjectConfigService {
   updateProjectByPath(
     projectId: string,
     projectPath: string,
-    updates: Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>,
+    updates: ProjectUpdateFields,
   ): void {
     try {
-      const configPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
-      if (!fileExists(configPath)) {
-        throw new Error(`Project ${projectId} local config not found at ${configPath}`)
-      }
+      const writeReference = this.resolveProjectWriteReferenceByPath(projectId, projectPath)
 
-      const localConfig = parseToml(readFile(configPath)) as ProjectConfig
+      const localConfig = parseToml(readFile(writeReference.localConfigPath!)) as ProjectConfig
       Object.assign(localConfig.project, updates)
-      writeFile(configPath, stringify(localConfig))
+      writeFile(writeReference.localConfigPath!, stringify(localConfig))
       logQuiet(this.quiet, `Updated project ${projectId} in local config by path`)
     }
     catch (error) {
       logQuiet(this.quiet, 'Error updating project by path:', error)
       throw error
+    }
+  }
+
+  resolveProjectWriteReference(projectId: string): ProjectWriteReference {
+    const registryPath = buildRegistryFilePath(this.projectsDir, projectId)
+    if (!fileExists(registryPath)) {
+      throw new Error(`Project ${projectId} not found in registry`)
+    }
+
+    const registryData = parseToml(readFile(registryPath)) as RegistryData
+    if (!registryData.project?.path) {
+      throw new Error(`Project ${projectId} registry entry missing project path`)
+    }
+
+    const mode = registryData.metadata?.globalOnly === true || registryData.project.name !== undefined
+      ? ProjectConfigurationMode.GLOBAL_ONLY
+      : ProjectConfigurationMode.PROJECT_FIRST
+    const localConfigPath = mode === ProjectConfigurationMode.PROJECT_FIRST
+      ? buildConfigFilePath(registryData.project.path, CONFIG_FILES.PROJECT_CONFIG)
+      : undefined
+
+    return {
+      projectId,
+      projectPath: registryData.project.path,
+      mode,
+      registryPath,
+      localConfigPath,
+      writeTargets: localConfigPath ? [registryPath, localConfigPath] : [registryPath],
+    }
+  }
+
+  resolveProjectWriteReferenceByPath(projectId: string, projectPath: string): ProjectWriteReference {
+    const localConfigPath = buildConfigFilePath(projectPath, CONFIG_FILES.PROJECT_CONFIG)
+    if (!fileExists(localConfigPath)) {
+      throw new Error(`Project ${projectId} local config not found at ${localConfigPath}`)
+    }
+
+    return {
+      projectId,
+      projectPath,
+      mode: ProjectConfigurationMode.AUTO_DISCOVERY,
+      localConfigPath,
+      writeTargets: [localConfigPath],
     }
   }
 

@@ -459,6 +459,21 @@ export class ProjectService {
     this.loadProjectsRegistry()
   }
 
+  updateVisibleProject(project: ProjectListEntry, updates: Partial<{
+    name: string
+    description: string
+    repository: string
+    active: boolean
+    ticketsPath: string
+  }>): void {
+    try {
+      this.updateProject(project.id, updates)
+    }
+    catch {
+      this.updateProjectByPath(project.id, project.project.path, updates)
+    }
+  }
+
   /**
    * Check if a directory exists
    */

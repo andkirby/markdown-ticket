@@ -4,6 +4,31 @@ import type { Ticket } from '../../models/Ticket.js'
 
 export type GlobalConfig = DomainGlobalConfig
 
+export const ProjectConfigurationMode = {
+  GLOBAL_ONLY: 'global-only',
+  PROJECT_FIRST: 'project-first',
+  AUTO_DISCOVERY: 'auto-discovery',
+} as const
+
+export type ProjectConfigurationModeValue = typeof ProjectConfigurationMode[keyof typeof ProjectConfigurationMode]
+
+export const ProjectConfigurationModes = [
+  ProjectConfigurationMode.GLOBAL_ONLY,
+  ProjectConfigurationMode.PROJECT_FIRST,
+  ProjectConfigurationMode.AUTO_DISCOVERY,
+] as const
+
+export type ProjectUpdateFields = Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>
+
+export interface ProjectWriteReference {
+  projectId: string
+  projectPath: string
+  mode: ProjectConfigurationModeValue
+  registryPath?: string
+  localConfigPath?: string
+  writeTargets: string[]
+}
+
 export interface ReadResult<TData, TContext = undefined> {
   data: TData
   context?: TContext
@@ -84,13 +109,15 @@ export interface IProjectConfigService {
   ) => void
   updateProject: (
     projectId: string,
-    updates: Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>,
+    updates: ProjectUpdateFields,
   ) => void
   updateProjectByPath: (
     projectId: string,
     projectPath: string,
-    updates: Partial<Pick<ProjectConfig['project'], 'name' | 'description' | 'repository' | 'active' | 'ticketsPath'>>,
+    updates: ProjectUpdateFields,
   ) => void
+  resolveProjectWriteReference?: (projectId: string) => ProjectWriteReference
+  resolveProjectWriteReferenceByPath?: (projectId: string, projectPath: string) => ProjectWriteReference
   configureDocuments: (projectId: string, documentPaths: string[]) => Promise<void>
   configureDocumentsByPath: (projectId: string, projectPath: string, documentPaths: string[]) => Promise<void>
 }
