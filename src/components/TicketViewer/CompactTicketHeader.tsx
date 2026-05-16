@@ -10,7 +10,7 @@ interface CompactTicketHeaderProps {
 export function CompactTicketHeader({ ticket, className = '' }: CompactTicketHeaderProps) {
   return (
     <div className={className}>
-      <div className="border-b border-gray-200 px-4 py-3 pr-14 dark:border-gray-700">
+      <div className="modal__section pr-14">
         <h1 className="min-w-0 text-base font-semibold leading-6 text-gray-900 dark:text-white" data-testid="ticket-title">
           <TicketCode code={ticket.code} ticket={ticket} />
           <span className="mx-1 text-gray-900 dark:text-white">•</span>
@@ -18,7 +18,7 @@ export function CompactTicketHeader({ ticket, className = '' }: CompactTicketHea
         </h1>
       </div>
 
-      <div className="border-b border-gray-200 px-4 py-2.5 dark:border-gray-700">
+      <div className="modal__section--sm">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={ticket.status} data-testid="ticket-status" />
           <PriorityBadge priority={ticket.priority} data-testid="ticket-priority" />
