@@ -12,7 +12,7 @@ padding, colors, and active indicator behavior.
 .tab--fill           — modifier: flex-1 equal-width (settings)
 .tab__list           — Tabs.List container (replaces modal__section for tabs)
 .tab__content        — Tabs.Content container
-```css
+```
 
 Both tab surfaces use the same base `.tab` class. Settings adds `tab--fill`
 for equal-width layout. Ticket tabs stay compact with `mr-3` spacing.
@@ -39,7 +39,7 @@ for equal-width layout. Ticket tabs stay compact with `mr-3` spacing.
 .tab__content {
   @apply p-4 outline-none;
 }
-```css
+```
 
 ### 2. SettingsModal
 - `Tabs.List` → `tab__list`

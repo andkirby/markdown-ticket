@@ -1244,7 +1244,7 @@ function StateInspector() {
 
 ### Code Organization
 
-```
+```text
 src/
 ├── services/
 │   ├── eventBus.ts          # Central event router

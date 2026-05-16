@@ -40,7 +40,7 @@ AI-powered Kanban board where **tickets are markdown files** with YAML frontmatt
 
 ### Project Structure
 
-```
+```text
 / (root)
 ├── src/              # Frontend (React + Vite)
 ├── server/           # Backend (Express) - layered architecture
@@ -90,7 +90,7 @@ import { CRType, CRTypes, type CRTypeValue } from '@mdt/domain-contracts'
 
 **Layered Architecture:**
 
-```
+```text
 server/
 ├── server.ts - Application orchestration
 ├── controllers/ - HTTP request handling
@@ -176,7 +176,7 @@ npm start
 
 ### Frontend Structure
 
-```
+```text
 src/
 ├── components/          # React components
 ├── hooks/              # Custom React hooks
@@ -187,7 +187,7 @@ src/
 
 ### Backend Structure
 
-```
+```text
 server/
 ├── routes/             # API routes
 ├── middleware/         # Express middleware
@@ -197,7 +197,7 @@ server/
 
 ### Shared Structure
 
-```
+```text
 shared/
 ├── models/             # Type definitions (re-exports from domain-contracts)
 ├── services/           # Business logic services

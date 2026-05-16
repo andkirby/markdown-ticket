@@ -74,7 +74,7 @@ const handleModeChange = (newMode: ViewMode) => {
 
 ## Component Composition Hierarchy
 
-```
+```text
 App.tsx (state owner)
 ├── AppHeader/
 │   ├── index.tsx (export barrel)
@@ -141,7 +141,7 @@ export const ViewModeValues = Object.values(ViewMode)
 
 ### Props Flow
 
-```
+```text
 App.tsx → ViewModeSwitcher
   Props: { currentMode: ViewMode, onModeChange: (mode) => void }
 

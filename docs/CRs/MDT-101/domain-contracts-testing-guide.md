@@ -2,7 +2,7 @@
 
 ## Test Location
 
-```
+```text
 domain-contracts/
   src/
     project/

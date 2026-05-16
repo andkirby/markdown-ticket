@@ -303,7 +303,7 @@ The MCP Server for Universal CR Management has been successfully implemented. Th
 
 ### File Structure Created
 
-```
+```text
 mcp-server/
 ├── package.json                    # Node.js project configuration
 ├── tsconfig.json                   # TypeScript configuration

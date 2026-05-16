@@ -64,7 +64,7 @@ Pay down test debt by implementing comprehensive E2E smoke tests for all critica
 ### Chosen Approach
 **Feature-Based Test Organization** — proven pattern from MDT-092 infrastructure:
 
-```
+```text
 tests/e2e/
 ├── smoke/
 │   ├── infrastructure.spec.ts    (existing)

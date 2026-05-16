@@ -82,7 +82,7 @@ MCP tool documentation (MCP_TOOLS.md) is currently maintained manually, which cr
 
 ### File Structure
 
-```
+```text
 scripts/
   generate-mcp-docs.ts          # Main generator script
 mcp-server/

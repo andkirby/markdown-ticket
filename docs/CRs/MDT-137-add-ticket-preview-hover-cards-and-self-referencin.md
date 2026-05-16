@@ -76,7 +76,7 @@ Wrap RelationshipBadge with HoverCard containing TicketPreviewCard, add prop-bas
 
 ### Data Flow
 
-```
+```text
 Hover on link (e.g., "MDT-100")
     ↓
 RelationshipLinkWithPreview.handleHover()

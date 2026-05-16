@@ -142,7 +142,7 @@ Implement TypeScript CLI tool with centralized configuration management and envi
 ## 7. Deployment Strategy
 ## Production (compiled JavaScript)
 
-```
+```text
 npm run config:init
 npm run config:set key value
 npm run config:show
@@ -151,7 +151,7 @@ npm run config:get key
 
 ## Development (TypeScript with tsx for faster iteration)
 
-```
+```text
 npm run config:init:dev
 npm run config:set:dev key value
 npm run config:show:dev

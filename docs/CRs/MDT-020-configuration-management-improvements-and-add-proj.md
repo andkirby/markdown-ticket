@@ -72,7 +72,7 @@ Currently configuration is scattered across different locations (~/.mcp-server.t
 
 ### 2.3 Backend API Requirements
 
-```
+```text
 POST /api/projects/create
 - Validates project data
 - Creates project config file in ~/.config/markdown-ticket/projects/

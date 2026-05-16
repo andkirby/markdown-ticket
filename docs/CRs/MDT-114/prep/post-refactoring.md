@@ -166,7 +166,7 @@ graph TD
 **Before**: Switch statement in execute method
 **After**: Strategy pattern with handler lookup
 
-```
+```text
 operations/
   ├── ModifyOperation.ts         (orchestrator, ~30 lines)
   ├── handlers/
@@ -188,7 +188,7 @@ operations/
 **Before**: 25 lines of regex logic in execute()
 **After**: Dedicated utility class
 
-```
+```text
 utils/section/
   └── HeaderRenamer.ts           (~40 lines)
       ├── extract(content, level) -> { newHeader, body }

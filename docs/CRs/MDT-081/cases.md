@@ -80,7 +80,7 @@ RUN apt-get update
 ### Unclosed Code Block
 This should show what happens with an unclosed code block:
 
-```
+```text
 # Comment in unclosed block
 This has no closing backticks
 # Another comment

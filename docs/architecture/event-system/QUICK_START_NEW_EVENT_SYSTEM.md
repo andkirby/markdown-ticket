@@ -18,7 +18,7 @@ This guide helps you quickly understand and use the new event management archite
 
 ## File Structure
 
-```
+```text
 src/services/
 ├── eventBus.ts        # Central event router - ALL events flow through here
 ├── sseClient.ts       # SSE connection manager - emits to EventBus
@@ -32,7 +32,7 @@ src/components/DevTools/
 
 ### 1. Event Flow
 
-```
+```text
 File System Change
     ↓
 Backend SSE

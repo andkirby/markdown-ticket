@@ -10,7 +10,7 @@ Split the monolithic 683-line FileWatcherService into focused modules following 
 
 ## Structure
 
-```
+```text
 server/services/fileWatcher/
 ├── index.ts                    # Facade (~50 lines)
 ├── PathWatcherService.ts       # Multi-watcher orchestration (~120 lines)

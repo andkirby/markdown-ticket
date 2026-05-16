@@ -4,7 +4,7 @@
 
 Integration tests that spawn real backend servers trigger:
 
-```
+```text
 Jest did not exit one second after the test run has completed.
 ```
 

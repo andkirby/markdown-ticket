@@ -46,13 +46,13 @@ For optimal experience with Claude Code, add this to your global memory:
 
 **Global Memory (recommended):**
 
-```
+```text
 For tickets management use MCP mdt-all. If you don't have project code in your memory, use this command `cat .mdt-config.toml | grep 'code = '` to find it out, or projects list from this MCP.
 ```
 
 **Or add per-project:**
 
-```
+```text
 For ticket (change request / CR) management use MCP mdt-all. Project code is "YOUR_PROJECT_CODE".
 ```
 

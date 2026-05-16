@@ -87,7 +87,7 @@ phaseEpic: Architecture Phase A
 
 **Functional** (artifact-specific, testable):
 
-```
+```text
 - [x] `/api/config` endpoint returns JSON with `configDir`, `searchPaths`, `projectRegistry`
 - [x] `RedirectToCurrentProject` renders empty state when `projects.length === 0`
 - [x] `Alert` component displays when `isBackendDown === true && projects.length === 0`
@@ -98,7 +98,7 @@ phaseEpic: Architecture Phase A
 
 **Non-Functional** (measurable):
 
-```
+```text
 - [x] `/api/config` responds in < 200ms (current: ~50ms)
 - [x] Error handling catches TypeError (network) and HTTP 500 (server)
 - [x] UI responsive across mobile/tablet/desktop viewports
@@ -107,7 +107,7 @@ phaseEpic: Architecture Phase A
 
 **Testing** (specific test cases):
 
-```
+```text
 - Manual: Start frontend without backend → Alert displays with correct commands
 - Manual: Create project via modal → Redirects to `/projects/{id}`
 - Manual: Malformed TOML file → Error message from `toml.js` parser

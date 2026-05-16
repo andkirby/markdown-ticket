@@ -138,7 +138,7 @@ mdt-cli ABC/QWE-12      # explicit project/ticket
 
 **Output format**:
 
-```
+```text
 MDT-012 Add CLI access to tickets and projects
 ─────────────────────────────────────────────
   status:    [In Progress]     # blue badge
@@ -162,7 +162,7 @@ mdt-cli ls              # alias
 
 **Output format** (compact):
 
-```
+```text
 MDT-012 Add CLI access to tickets [In Progress] [Feature] [High]  Phase B
   docs/CRs/MDT-012-add-cli-access.md
 
@@ -188,7 +188,7 @@ mdt-cli project LS      # project code "LS", not the list subcommand
 
 **Output format**:
 
-```
+```text
 MDT (markdown-ticket)  Markdown Ticket System
   Kanban board with markdown-based tickets and MCP integration
   ~/Projects/markdown-ticket
@@ -236,7 +236,7 @@ cat spec.md | mdt-cli create feature 'CLI tool'
 
 **Output**:
 
-```
+```text
 Created MDT-013: Fix login timeout
   docs/CRs/MDT-013-fix-login-timeout.md
 ```
@@ -286,7 +286,7 @@ mdt-cli ticket attr MDT-012 related+=ABC-003 depends-=MDT-001
 
 **Output**:
 
-```
+```text
 Updated MDT-012: status → Implemented
 ```
 
@@ -376,7 +376,7 @@ priority: Medium
 
 ### Package Structure
 
-```
+```text
 cli/
 ├── package.json
 ├── tsconfig.json

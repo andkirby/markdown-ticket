@@ -83,7 +83,7 @@ Current monolithic structure creates maintenance bottlenecks, makes testing diff
 
 ### New Directory Structure
 
-```
+```text
 server/
 ├── server.js                 # Main entry point (minimal)
 ├── routes/

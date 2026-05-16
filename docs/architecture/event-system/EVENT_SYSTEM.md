@@ -4,7 +4,7 @@ The Markdown Ticket project uses **Server-Sent Events (SSE)** for real-time comm
 
 ## Overview
 
-```
+```text
 Backend → SSE Stream → Frontend Handler → Custom DOM Events → React Components
 ```
 
@@ -178,7 +178,7 @@ const RECONNECT_DELAY = 1000; // ms
 
 ### Backend Logs
 
-```
+```text
 📡 Event happened: change - MDT-001.md in project markdown-ticket
 📤 Broadcasting to 1 SSE clients: {...}
 ✅ SSE pushed to client #1
@@ -186,7 +186,7 @@ const RECONNECT_DELAY = 1000; // ms
 
 ### Frontend Logs
 
-```
+```text
 📨 Received SSE event: {"type":"file-change",...}
 Project created event received: {...}
 ```

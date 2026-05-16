@@ -45,7 +45,7 @@ Project codes must be unique identifiers. The system currently allows multiple p
 ### Root Cause
 **Validation exists at CLI layer but NOT at core registry layer:**
 
-```
+```text
 CLI Layer (ProjectManager.ts)
     ↓ has validation ✅ "Project with code X already exists"
     ↓
@@ -111,7 +111,7 @@ See: `docs/CRs/MDT-123/architecture.md` for detailed design.
 
 When duplicate code detected:
 
-```
+```text
 Duplicate project code "MDT" detected:
 
   /Users/kirby/home/markdown-ticket
@@ -150,7 +150,7 @@ The duplicate code check only applied to configs **without explicit IDs**, allow
 
 **Algorithm** {#algorithm}:
 
-```
+```text
 For each directory with .mdt-config.toml:
   1. If project.id is set and doesn't match directory name
      → SKIP: ID doesn't match dir (worktree detection)

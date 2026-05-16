@@ -37,7 +37,7 @@
 
 ## Architecture Structure
 
-```
+```text
 shared/services/
   └── MarkdownService.ts           → Add readFile(), writeFile() methods
       ├── readFile(path)           → NEW: fs.readFile wrapper

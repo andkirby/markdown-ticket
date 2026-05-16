@@ -11,7 +11,7 @@ This file controls system-wide settings, including all feature configurations, w
 
 ## File Location
 
-```
+```text
 ~/.config/markdown-ticket/config.toml
 ```
 

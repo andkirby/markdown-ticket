@@ -38,7 +38,7 @@ Redesigns the project selector from a uniform horizontal list into a tiered rail
 
 ## Structure
 
-```
+```text
 src/
 ├── components/
 │   ├── UI/

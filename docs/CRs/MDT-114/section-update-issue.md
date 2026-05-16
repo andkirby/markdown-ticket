@@ -24,7 +24,7 @@ The `list` operation displays sections using hierarchical path notation with spa
 1. Run `manage_cr_sections` with `operation="list"` on a CR
 2. Observe output showing hierarchical paths like:
 
-   ```
+   ```text
    # Fix path resolution and file discovery edge cases / ## 4. Acceptance Criteria / ### Functional
    ```
 
@@ -47,7 +47,7 @@ The `replace` operation rejects the hierarchical path format shown by `list`.
 
 ### Error Message
 
-```
+```text
 ❌ Section validation failed
 
 Errors:
@@ -79,7 +79,7 @@ When multiple sections share the same name (e.g., `### Functional` appears in di
 
 2. Receive error:
 
-   ```
+   ```text
    Multiple sections match "### Functional". Please use a hierarchical path:
    - # Fix path resolution and file discovery edge cases / ## 4. Acceptance Criteria / ### Functional
    - # Fix path resolution and file discovery edge cases / ## 4. Acceptance Criteria / ### Non-Functional
@@ -140,7 +140,7 @@ When section lookup fails, the error message shows "suggestions" that include fo
 
 ### Example Error Message
 
-```
+```text
 Suggestions:
 - Did you mean one of:
   - "# Fix path resolution and file discovery edge cases"
@@ -212,7 +212,7 @@ When suggesting sections, show:
 
 **Example improved error**:
 
-```
+```text
 Multiple sections match "### Functional".
 
 For this operation, use one of these parent sections:

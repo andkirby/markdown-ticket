@@ -55,7 +55,7 @@ Improves user workflow by eliminating the need for external markdown viewers and
 
 ### Frontend Components
 
-```
+```text
 DocumentsView/
 ├── DocumentsLayout.tsx      # Main layout with sidebar + content
 ├── FileTree.tsx            # Tree navigation component
@@ -113,7 +113,7 @@ max_depth = 3
 
 ### Navigation Tree Structure (Only .md files)
 
-```
+```text
 📁 Project Root
 ├── 📁 docs/
 │   ├── 📄 TOML Configuration Specification for Ticket Board

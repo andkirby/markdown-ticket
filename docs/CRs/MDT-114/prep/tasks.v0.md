@@ -64,7 +64,7 @@
 
 ## Architecture Structure (Prep)
 
-```
+```text
 mcp-server/src/tools/handlers/
   ├── sectionHandlers.ts          → Orchestrator only (≤100 lines)
   ├── operations/                 → Strategy pattern

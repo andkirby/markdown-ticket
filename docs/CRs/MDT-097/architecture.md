@@ -80,7 +80,7 @@ graph TB
 
 ## Structure
 
-```
+```text
 mcp-server/tests/e2e/helpers/
 ├── core/
 │   ├── project-factory.ts          # Orchestration only (100 lines)

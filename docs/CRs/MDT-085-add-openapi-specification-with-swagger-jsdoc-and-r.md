@@ -56,7 +56,7 @@ Centralized schema registry — all OpenAPI schemas defined in one location, ref
 
 ### Structure
 
-```
+```text
 server/
   ├── openapi/
   │   ├── config.ts          → swagger-jsdoc configuration

@@ -67,7 +67,7 @@
 
 **Sample Output**:
 
-```
+```text
 📑 **Sections in CR TSM-002** - Fix path resolution and file discovery edge cases
 
 Found 19 sections:
@@ -119,7 +119,7 @@ Found 19 sections:
 
 **Sample Output**:
 
-```
+```text
 📖 **Section Content from CR TSM-002**
 
 **Section:** # Fix path resolution and file discovery edge cases / ## 4. Acceptance Criteria
@@ -265,7 +265,7 @@ This is the **most confusing part** of the tool. Read carefully!
 
 #### Format 2: Hierarchical Path with `/`
 
-```
+```text
 "section": "# H1 / ## H2 / ### H3"
 ```
 
@@ -273,14 +273,14 @@ This is the **most confusing part** of the tool. Read carefully!
 
 **Example from error message**:
 
-```
+```text
 Multiple sections match "### Functional". Use hierarchical path:
 - # Fix path resolution / ## 4. Acceptance Criteria / ### Functional
 ```
 
 **But when you try it**:
 
-```
+```text
 ❌ "Section not found"
 ```
 
@@ -408,7 +408,7 @@ When a subsection has duplicates:
 
 **Error Message**:
 
-```
+```text
 Multiple sections match "### Functional". Please use a hierarchical path:
 - # CR Title / ## 4. Acceptance Criteria / ### Functional
 - # CR Title / ## 3. Open Questions / ### Functional
@@ -442,7 +442,7 @@ Multiple sections match "### Functional". Please use a hierarchical path:
 
 **Error Message**:
 
-```
+```text
 Section "## 4 / ### Functional" not found
 ```
 
@@ -465,7 +465,7 @@ Section "## 4 / ### Functional" not found
 
 **Error Message**:
 
-```
+```text
 Section validation failed: Section "X" not found
 
 Suggestions:
@@ -766,7 +766,7 @@ When subsection has duplicates or is hard to access:
 
 ## Quick Decision Tree
 
-```
+```text
 Need to modify a CR section?
 │
 ├─ What do you want to do?

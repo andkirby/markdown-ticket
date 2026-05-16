@@ -14,7 +14,7 @@ Docker containers can support stdio through the `docker exec` command, allowing 
 
 ## Architecture
 
-```
+```text
 ┌─────────────────┐
 │  LLM Client     │
 │ (Claude/Q)      │

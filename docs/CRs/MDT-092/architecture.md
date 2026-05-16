@@ -72,7 +72,7 @@ graph TB
 
 ## Structure
 
-```
+```text
 shared/
 └── test-lib/
     ├── index.ts                              → Main exports

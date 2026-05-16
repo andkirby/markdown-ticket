@@ -208,7 +208,7 @@ maxEntries = 1000 # Global max entries per cache instance (default: 1000)
 
 ### Priority Order
 
-```
+```text
 1. MDT_CACHE_DISABLE=true       →  Pass-through mode (debugging override)
 2. [system.cache].enable=false  →  Pass-through mode (persistent disable)
 3. MDT_CACHE_TIMEOUT            →  Overrides config file TTL

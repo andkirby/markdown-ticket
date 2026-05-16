@@ -50,7 +50,7 @@
 
 ## Architecture Structure
 
-```
+```text
 server/tests/api/
   ├── setup.ts                    → Test environment lifecycle, Express app export
   ├── helpers/

@@ -408,7 +408,7 @@ Expected: **All tests fail (RED status)**
 
 Current test output:
 
-```
+```text
 Tests run:    33
 Tests passed: 0
 Tests failed: 33

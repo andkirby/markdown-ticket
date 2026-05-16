@@ -10,7 +10,7 @@ Dot-notation files are presented as virtual folders in the existing `subdocument
 
 ## Runtime Flow
 
-```
+```text
 File Watcher → DocumentService → parseFilename() → virtual folder
                                             ↓
                             SubDocumentTabs → render nested tabs

@@ -74,7 +74,7 @@
 
 ## Execution Order
 
-```
+```text
 Phase 1: Extract Shared Components (no consumers yet)
   Task 1: EventListenerRegistry
   Task 2: ProcessLifecycleManager

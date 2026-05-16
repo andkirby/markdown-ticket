@@ -89,7 +89,7 @@ graph TB
 
 ### Structure (Phase 1)
 
-```
+```text
 shared/test-lib/
   ├── ticket/
   │   ├── helpers/                    # NEW - Helper classes
@@ -257,7 +257,7 @@ stateDiagram-v2
 
 ### Structure (Phase 2)
 
-```
+```text
 shared/test-lib/
   ├── core/
   │   ├── process-lifecycle-manager.ts  # Refactored orchestrator (~80 LOC)

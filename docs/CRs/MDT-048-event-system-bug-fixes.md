@@ -145,7 +145,7 @@ useEffect(() => {
 
 ## Event Flow (Fixed)
 
-```
+```text
 1. User submits project form
 2. Backend creates project files successfully
 3. Backend broadcasts project-created SSE event

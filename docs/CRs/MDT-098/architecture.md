@@ -12,7 +12,7 @@ The fix is architectural: centralize all TOML operations through `@mdt/shared/ut
 
 ## Pattern: Single-Entrypoint Utilities
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │              Single Source of Truth                     │
 │  shared/utils/toml.ts (exports smol-toml functions)    │
@@ -57,7 +57,7 @@ The fix is architectural: centralize all TOML operations through `@mdt/shared/ut
 
 ### Reading Configuration
 
-```
+```text
 File (.mdt-config.toml)
     ↓
 ConfigRepository.getConfig()
@@ -71,7 +71,7 @@ Services/Controllers
 
 ### Writing Configuration
 
-```
+```text
 Service (e.g., ProjectConfigService.configureDocumentsByPath())
     ↓
 Modify config object
