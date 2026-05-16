@@ -129,6 +129,10 @@ The assess stage identified 5 mismatch points. Each has a concrete structural re
 
 New markdown rendering features should be added as markdown-it plugins via `md.use()` in `useMarkdownProcessor.ts`. The pipeline shape must not change — new transforms go between existing steps only if the pipeline invariant (C4) is explicitly revised.
 
+### Wireloom Integration (optional)
+
+`markdownItWireloomPlugin` was added as a fence renderer following this extension rule. Wireloom (`wireloom` package) is an optional dependency — when installed, ```wireloom blocks render as SVG wireframes via post-render async rendering (same pattern as Mermaid). When not installed, blocks fall back to plain `<pre><code>` display. The plugin uses placeholder divs with base64-encoded sources; `renderWireloomElements()` in `usePostRender.ts` handles async rendering and DOM replacement.
+
 ## Diagrams
 
 ```mermaid
