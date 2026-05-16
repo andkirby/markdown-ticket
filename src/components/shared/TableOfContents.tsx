@@ -76,7 +76,7 @@ export default function TableOfContents({ items, view }: TableOfContentsProps) {
   }
 
   return (
-    <div className="fixed bottom-20 right-4 z-50">
+    <div className="fixed bottom-20 right-4 z-40">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="px-3 py-2 text-sm border border-border rounded-lg bg-card/95 backdrop-blur-sm shadow-lg hover:bg-muted/50 transition-colors flex items-center gap-2"
@@ -88,7 +88,7 @@ export default function TableOfContents({ items, view }: TableOfContentsProps) {
       </button>
 
       {isExpanded && (
-        <div className="absolute bottom-full right-0 mb-1 w-80 border border-border rounded-lg bg-card/70 hover:bg-card/90 backdrop-blur-sm shadow-lg z-50 transition-colors" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+        <div className="absolute bottom-full right-0 mb-1 w-80 border border-border rounded-lg bg-card/70 hover:bg-card/90 backdrop-blur-sm shadow-lg z-40 transition-colors" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
           <div className="px-4 py-3">
             <div className="text-sm font-medium mb-2">Table of Contents</div>
             <nav ref={navRef} className="space-y-1">
