@@ -4,96 +4,135 @@ Related spec: `specs/documents-view-navigation.md`
 
 ## Default State
 
-```wireframe
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ DocumentsLayout                                                              │
-├──────────────────────────────┬───────────────────────────────────────────────┤
-│ DocumentsSidebar             │ MarkdownViewer                                │
-│ Documents [Filename ▾][↑][⇤][⌖][✎]                                          │
-│ [🔍] Filter documents...      │ # Selected document                           │
-│                              │                                               │
-│ ▾ Recent                     │ Markdown content renders here.                │
-│   Documents View Navigation  │                                               │
-│   documents-view-navigation.md                                               │
-│   ─────────────────────────  │                                               │
-│ All Documents                │                                               │
-│ ▸ docs                       │                                               │
-│ ▸ server                     │                                               │
-└──────────────────────────────┴───────────────────────────────────────────────┘
+```wireloom
+window "Documents View Navigation — Default":
+  panel:
+    row:
+      col 250:
+        row:
+          text "Documents" bold
+          combo value="Filename ▾"
+          icon name="plus"
+          icon name="check"
+          icon name="gear"
+        input placeholder="Filter documents..." type=search id="nav-search"
+        section "Recent":
+          list:
+            item "Documents View Navigation" id="recent-1"
+            item "documents-view-navigation.md" id="recent-2"
+        divider
+        text "All Documents" bold id="all-docs-label"
+        tree:
+          node "docs" collapsed id="docs-root"
+          node "server" collapsed id="server-root"
+      col fill:
+        text "# Selected document" bold id="doc-heading"
+        text "Markdown content renders here." muted
+
+annotation "Recent section shows recently opened files" target="recent-1" position=right
+annotation "All Documents: collapsible tree roots" target="docs-root" position=right
 ```
 
 ## Active Filter
 
-```wireframe state:documents-view filter-active
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ DocumentsLayout                                                              │
-├──────────────────────────────┬───────────────────────────────────────────────┤
-│ Documents [Filename ▾][↑][⇤][⌖][✎]│ MarkdownViewer                           │
-│ [🔍] navigation              │                                               │
-│                              │ # Selected document                           │
-│ ▾ Recent                     │                                               │
-│   Documents View Navigation  │                                               │
-│   documents-view-navigation.md                                               │
-│   ─────────────────────────  │                                               │
-│ Results                      │                                               │
-│ ▾ docs/design/specs          │                                               │
-│   documents-view-navigation.md ← selected                                    │
-└──────────────────────────────┴───────────────────────────────────────────────┘
+```wireloom
+window "Documents View Navigation — Filter Active":
+  panel:
+    row:
+      col 250:
+        row:
+          text "Documents" bold
+          combo value="Filename ▾"
+          icon name="plus"
+          icon name="check"
+          icon name="gear"
+        input placeholder="navigation" type=search id="active-filter"
+        section "Recent":
+          list:
+            item "Documents View Navigation" id="recent-filtered"
+            item "documents-view-navigation.md" id="recent-filtered-2"
+        divider
+        text "Results" bold id="results-label"
+        tree:
+          node "docs/design/specs":
+            node "documents-view-navigation.md" selected id="filtered-selected"
+      col fill:
+        text "# Selected document" bold
+        text "Markdown content renders here." muted
+
+annotation "Filter narrows both Recent and tree" target="active-filter" position=right
+annotation "Selected file highlighted in filtered results" target="filtered-selected" position=right
 ```
 
 ## Filter Hides Selected
 
-```wireframe state:documents-view selected-hidden-by-filter
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ DocumentsLayout                                                              │
-├──────────────────────────────┬───────────────────────────────────────────────┤
-│ Documents [Filename ▾][↑][⇤][⌖][✎]│ MarkdownViewer                           │
-│ [🔍] docker                  │                                               │
-│                              │ # Selected document                           │
-│ Results                      │                                               │
-│ ▾ docs                       │                                               │
-│   DOCKER_GUIDE.md            │                                               │
-│                              │                                               │
-│ [⌖] action clears filter, expands selected ancestors, scrolls active row     │
-└──────────────────────────────┴───────────────────────────────────────────────┘
+```wireloom
+window "Documents View Navigation — Selected Hidden by Filter":
+  panel:
+    row:
+      col 250:
+        row:
+          text "Documents" bold
+          combo value="Filename ▾"
+          icon name="plus"
+          icon name="check" id="scroll-clear"
+          icon name="gear"
+        input placeholder="docker" type=search id="hide-filter"
+        text "Results" bold
+        tree:
+          node "docs":
+            node "DOCKER_GUIDE.md" id="docker-result"
+      col fill:
+        text "# Selected document" bold
+
+annotation "Scroll-to-active clears filter, expands ancestors, scrolls to row" target="scroll-clear" position=right
 ```
 
 ## Excluded Ticket Area
 
-```wireframe state:documents-view excluded-ticket-area
-┌────────────────────────────────────────────┐
-│ Configure document paths                    │
-│                                            │
-│ Included roots                              │
-│   docs                                      │
-│                                            │
-│ Excluded automatically                      │
-│   docs/CRs      ticket area                 │
-│                                            │
-│ [Cancel]                         [Apply]    │
-└────────────────────────────────────────────┘
+```wireloom
+window "Documents View — Excluded Ticket Area":
+  panel:
+    text "Configure document paths" bold
+    divider
+    text "Included roots" bold id="inc-label"
+    text "docs" id="inc-docs"
+    divider
+    text "Excluded automatically" bold id="exc-label"
+    text "docs/CRs" id="exc-crs"
+    text "ticket area" muted id="exc-note"
+    divider
+    row justify=end:
+      button "Cancel"
+      button "Apply" primary
+
+annotation "Ticket directory automatically excluded from document browsing" target="exc-crs" position=right
 ```
 
 ## Mobile Viewport
 
-```wireframe viewport:mobile
-┌────────────────────────────────────────────┐
-│ Documents                                  │
-│ [Filename ▾][↑][⇤][⌖][✎]                  │
-│ [🔍] Filter documents...                    │
-│                                            │
-│ ▾ Recent                                   │
-│   Documents View Navigation                │
-│   documents-view-navigation.md             │
-│   ─────────────────────────                │
-│                                            │
-│ All Documents                              │
-│ ▸ docs                                     │
-│ ▸ server                                   │
-├────────────────────────────────────────────┤
-│ # Selected document                        │
-│ Markdown content renders here.             │
-└────────────────────────────────────────────┘
+```wireloom
+window "Documents View Navigation — Mobile":
+  panel:
+    text "Documents" bold
+    row:
+      combo value="Filename ▾"
+      icon name="plus"
+      icon name="check"
+      icon name="gear"
+    input placeholder="Filter documents..." type=search
+    section "Recent":
+      list:
+        item "Documents View Navigation"
+        item "documents-view-navigation.md"
+    divider
+    text "All Documents" bold
+    tree:
+      node "docs" collapsed
+      node "server" collapsed
+    divider
+    text "# Selected document" bold
+    text "Markdown content renders here." muted
 ```
 
 ## Annotations

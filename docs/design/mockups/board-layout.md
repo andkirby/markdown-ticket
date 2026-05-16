@@ -4,112 +4,153 @@ Related spec: `specs/board-layout.md`
 
 ## Desktop (≥1024px, 4 columns)
 
-```wireframe
-┌──────────────────────────────────────────────────────────────────────┐
-│ Board Grid (grid-cols-4, items-stretch, p-1)                        │
-│ ┌────────────────┬────────────────┬────────────────┬────────────────┐│
-│ │ Backlog        │ Open           │ In Progress    │ Done           ││
-│ │ (gray gradient)│ (blue gradient)│ (yellow grad.) │ (green grad.)  ││
-│ │            [3] │            [5] │ [⏸]       [2] │ [✕]       [4]  ││
-│ ├────────────────┼────────────────┼────────────────┼────────────────┤│
-│ │ ┌────────────┐ │ ┌────────────┐ │ ┌────────────┐ │ ┌────────────┐ ││
-│ │ │MDT-042 • ..│ │ │MDT-042 • ..│ │ │MDT-042 • ..│ │ │MDT-042 • ..│ ││
-│ │ │[Proposed]  │ │ │[Approved]  │ │ │[In Prog]   │ │ │[Impl]      │ ││
-│ │ │[Feature]   │ │ │[Bug]       │ │ │[Feature]   │ │ │[Feature]   │ ││
-│ │ └────────────┘ │ └────────────┘ │ └────────────┘ │ └────────────┘ ││
-│ │ ┌────────────┐ │ ┌────────────┐ │                │ ┌────────────┐ ││
-│ │ │MDT-041 • ..│ │ │MDT-039 • ..│ │                │ │MDT-040 • ..│ ││
-│ │ │[Proposed]  │ │ │[Approved]  │ │                │ │[Part.Impl] │ ││
-│ │ │[Bug]       │ │ │[Feature]   │ │                │ │[Bug]       │ ││
-│ │ └────────────┘ │ └────────────┘ │                │ └────────────┘ ││
-│ │                │                │                │                ││
-│ │  No tickets    │                │                │                ││
-│ └────────────────┴────────────────┴────────────────┴────────────────┘│
-└──────────────────────────────────────────────────────────────────────┘
+```wireloom
+window "Board — Desktop (4 columns)":
+  panel:
+    grid cols=4 rows=1:
+      cell "Backlog" id="col-backlog":
+        kv "Backlog" "3" id="backlog-count"
+      cell "Open" id="col-open":
+        kv "Open" "5" id="open-count"
+      cell "In Progress" id="col-progress":
+        kv "In Progress" "2" id="progress-count"
+      cell "Done" id="col-done":
+        kv "Done" "4" id="done-count"
+    grid cols=4 rows=1:
+      cell:
+        list:
+          slot "MDT-042 • Fix...":
+            chip "Proposed" id="backlog-1-status"
+            chip "Feature" id="backlog-1-type"
+          slot "MDT-041 • Update...":
+            chip "Proposed"
+            chip "Bug"
+          slot "No tickets" accent=warning id="backlog-empty"
+      cell:
+        list:
+          slot "MDT-042 • Fix login":
+            chip "Approved"
+            chip "Feature"
+          slot "MDT-039 • Setup API":
+            chip "Approved"
+            chip "Feature"
+      cell:
+        list:
+          slot "MDT-042 • Active work":
+            chip "In Progress"
+            chip "Feature"
+      cell:
+        list:
+          slot "MDT-040 • Complete":
+            chip "Impl"
+            chip "Feature"
+          slot "MDT-038 • Deployed":
+            chip "Part.Impl"
+            chip "Bug"
+
+annotation "Column header uses color gradient" target="col-backlog" position=top
+annotation "Count pill shows visible tickets" target="backlog-count" position=right
+annotation "Empty state: centered text" target="backlog-empty" position=right
 ```
 
 ## Mobile (<768px, single active column)
 
-```wireframe viewport:mobile
-┌──────────────────────────────┐
-│ Board Grid (grid-cols-1)     │
-│ ┌────────────────────────────┐│
-│ │ In Progress ▼          [2] ││  ← DropdownMenu for column switch
-│ ├────────────────────────────┤│
-│ │ ┌────────────────────────┐ ││
-│ │ │MDT-042 • Fix login     │ ││
-│ │ │[In Progress] [Feature] │ ││
-│ │ └────────────────────────┘ ││
-│ │ ┌────────────────────────┐ ││
-│ │ │MDT-038 • Update API    │ ││
-│ │ │[In Progress] [Bug]     │ ││
-│ │ └────────────────────────┘ ││
-│ │                            ││
-│ └────────────────────────────┘│
-└──────────────────────────────┘
+```wireloom
+window "Board — Mobile":
+  panel:
+    combo value="In Progress" id="mobile-column-picker"
+    list:
+      slot "MDT-042 • Fix login":
+        chip "In Progress"
+        chip "Feature"
+      slot "MDT-038 • Update API":
+        chip "In Progress"
+        chip "Bug"
+
+annotation "DropdownMenu for column switching" target="mobile-column-picker" position=right
 ```
 
 ## Drag Over State
 
-```wireframe state:column drag-over
-┌──────────────────────────────┐
-│ Open                     [5] ││
-├══════════════════════════════╡  ← ring-2 ring-blue-400/30
-│ ┌────────────────────────┐   │  bg-blue-50/50 dark:bg-blue-950/30
-│ │MDT-042 • Fix login     │   │
-│ │[Approved] [Feature]    │   │
-│ └────────────────────────┘   │
-│                              │
-│  ← drop target zone          │
-│                              │
-└──────────────────────────────┘
+```wireloom
+window "Board — Drag Over":
+  panel:
+    kv "Open" "5" id="drag-col-header"
+    list:
+      slot "MDT-042 • Fix login" id="drag-card":
+        chip "Approved"
+        chip "Feature"
+      slot "" id="drop-zone"
+
+annotation "ring-2 ring-blue-400/30 highlight" target="drag-col-header" position=top
+annotation "bg-blue-50/50 drop target zone" target="drop-zone" position=right
 ```
 
 ## Empty Column
 
-```wireframe state:column empty
-┌──────────────────────────────┐
-│ Open                     [0] ││
-├──────────────────────────────┤│
-│                              ││
-│                              ││
-│       No tickets             ││  ← centered, h-32
-│                              ││
-│                              ││
-└──────────────────────────────┘│
+```wireloom
+window "Board — Empty Column":
+  panel:
+    kv "Open" "0" id="empty-col-header"
+    text "No tickets" muted id="empty-text"
+
+annotation "Centered empty state, h-32" target="empty-text" position=bottom
 ```
 
 ## Loading State
 
-```wireframe state:board loading
-┌──────────────────────────────────────────────────────────────────┐
-│ ┌──────────────┬──────────────┬──────────────┬──────────────┐    │
-│ │ ▓▓▓▓▓▓▓▓▓▓▓ │ ▓▓▓▓▓▓▓▓▓▓▓ │ ▓▓▓▓▓▓▓▓▓▓▓ │ ▓▓▓▓▓▓▓▓▓▓▓ │    │
-│ │ ▓▓▓▓▓▓▓▓▓▓▓ │ ▓▓▓▓▓▓▓▓▓▓▓ │ ▓▓▓▓▓▓▓▓▓▓▓ │ ▓▓▓▓▓▓▓▓▓▓▓ │    │
-│ │ ▓▓▓▓▓▓▓▓▓▓▓ │ ▓▓▓▓▓▓▓▓▓▓▓ │ ▓▓▓▓▓▓▓▓▓▓▓ │ ▓▓▓▓▓▓▓▓▓▓▓ │    │
-│ └──────────────┴──────────────┴──────────────┴──────────────┘    │
-└──────────────────────────────────────────────────────────────────┘
-```
+```wireloom
+window "Board — Loading":
+  panel:
+    grid cols=4 rows=3:
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
+      cell:
+        spinner
 
-Note: Skeleton placeholders with gradient pulse animation.
+annotation "Skeleton placeholders with gradient pulse animation" target="empty-text" position=bottom
+```
 
 ## Column with Toggle (In Progress)
 
-```wireframe state:column toggle
-┌──────────────────────────────┐
-│ In Progress              [3] ││  ← count shows visible tickets
-│                    [⏸ Hold 2]││  ← StatusToggle pill
-├──────────────────────────────┤│
-│ ┌────────────────────────┐   ││
-│ │MDT-042 • Active work   │   ││  ← In Progress tickets
-│ │[In Progress] [Feature] │   ││
-│ └────────────────────────┘   ││
-│                              ││
-│ Toggle modes:                ││
-│  default = main status only  ││
-│  active  = On Hold only      ││
-│  merge   = both combined     ││
-└──────────────────────────────┘│
+```wireloom
+window "Board — Column Toggle":
+  panel:
+    row:
+      text "In Progress" bold
+      spacer
+      chip "⏸ Hold 2" id="toggle-pill"
+    list:
+      slot "MDT-042 • Active work":
+        chip "In Progress"
+        chip "Feature"
+    divider
+    text "Toggle modes:" muted
+    text "default = main status only" muted
+    text "active = On Hold only" muted
+    text "merge = both combined" muted
+
+annotation "StatusToggle pill: filters visible tickets" target="toggle-pill" position=right
 ```
 
 ## Annotations
