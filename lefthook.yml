@@ -1,0 +1,21 @@
+min_version: 1.13.0
+
+remotes:
+  - git_url: ../commithooks
+    # TODO: switch to GitHub URL after pushing v0.2.0
+    # git_url: https://github.com/rikby/agent-commit-hooks.git
+    # ref: v0.2.0
+    configs:
+      # Secrets & hygiene — every project
+      - configs/general/block-env-files.yml
+      - configs/general/block-credential-files.yml
+      - configs/general/block-home-paths-code.yml
+      - configs/general/block-home-paths-commit-msg.yml
+      - configs/general/block-generated-files.yml
+      - configs/general/block-co-authored-by.yml
+      # Markdown + TypeScript
+      - configs/typescript/check-markdown-fences.yml
+      - configs/typescript/run-knip.yml
+      - configs/typescript/run-eslint-staged.yml
+      # Monorepo — enforces @mdt/shared alias
+      - configs/monorepo/block-shared-imports.yml
