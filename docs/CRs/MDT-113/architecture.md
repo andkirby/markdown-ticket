@@ -153,7 +153,7 @@ stateDiagram-v2
 
 ## Structure
 
-```
+```text
 shared/test-lib/
   ├── core/
   │   ├── test-environment.ts          → Orchestration only (limit: 100 lines)

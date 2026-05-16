@@ -282,7 +282,7 @@ export class ProjectFactory {
 
 ## Directory Structure
 
-```
+```text
 shared/services/project/
 ├── ProjectFactory.ts            # NEW - Centralized Project construction
 ├── ProjectScanner.ts            # MODIFY - Pure scanning only

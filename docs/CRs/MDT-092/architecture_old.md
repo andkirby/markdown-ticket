@@ -83,7 +83,7 @@ stateDiagram-v2
 
 ## Structure
 
-```
+```text
 shared/test-lib/
 ├── index.ts                    # Main exports
 ├── config/

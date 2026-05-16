@@ -34,7 +34,7 @@ const paths = data.config?.project?.document?.paths ?? []
 
 ## Data Flow
 
-```
+```text
 .mdt-config.toml          ConfigRepository          API Response           PathSelector
 [project.document]  -->   parsed.project.    -->   config.project.  -->   data.config.project.
 paths = ["docs"]          document.paths           document.paths          document.paths

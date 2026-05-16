@@ -87,13 +87,13 @@ implementationNotes: Status changed to Implemented on 11/24/2025
 
 **Before** (buggy):
 
-```
+```text
 Line 268: const crFiles = await glob('*.md', { cwd: project.project.path });
 ```
 
 **After** (fixed):
 
-```
+```text
 Line 267: const crPath = await this.getCRPath(project);
 Line 271: const crFiles = await glob('*.md', { cwd: crPath });
 ```

@@ -52,7 +52,7 @@
 
 ## Test Architecture
 
-```
+```text
 Unit Tests (RED - will fail until implemented)
 ├── shared/
 │   ├── services/__tests__/WorktreeService.test.ts    # Core service logic

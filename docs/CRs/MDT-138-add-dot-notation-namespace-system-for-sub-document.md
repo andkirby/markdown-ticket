@@ -159,7 +159,7 @@ relatedTickets: MDT-093
 
 ### Example Test Cases
 
-```
+```text
 Given: docs/CRs/MDT-100/architecture.md
   AND: docs/CRs/MDT-100/architecture.approve-it.md
   AND: docs/CRs/MDT-100/architecture.update.v2.md

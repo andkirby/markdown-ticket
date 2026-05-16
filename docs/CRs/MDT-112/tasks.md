@@ -54,7 +54,7 @@ domain-contracts \
 
 ## Architecture Structure
 
-```
+```text
 scripts/metrics/
   ├── run.sh           → Main script: git diff, tsg invocation, JSON filtering
   ├── .confrc.sample   → Configuration template with documented defaults

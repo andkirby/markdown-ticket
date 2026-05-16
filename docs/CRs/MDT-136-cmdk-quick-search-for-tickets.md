@@ -45,7 +45,7 @@ Implement a minimal Cmd+K (Ctrl+K on Windows/Linux) keyboard shortcut that opens
 
 ### Component Structure
 
-```
+```text
 src/components/QuickSearch/
   QuickSearchModal.tsx    # Main modal component
   QuickSearchInput.tsx    # Search input with icon

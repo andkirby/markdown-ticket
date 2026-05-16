@@ -37,7 +37,7 @@
 
 ## Architecture Structure (from CR)
 
-```
+```text
 mcp-server/tests/e2e/
 ├── helpers/                       # Shared test utilities
 │   ├── test-environment.ts        # Temp dir + CONFIG_DIR management

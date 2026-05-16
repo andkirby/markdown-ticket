@@ -115,7 +115,7 @@ bun run dev
 
 ## Directory Structure
 
-```
+```text
 md-ticket-board/
 ├── server/                 # Backend server files
 │   ├── server.js          # Main server file

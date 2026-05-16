@@ -97,7 +97,7 @@ This tests the full production flow: file change → file monitor (chokidar) det
 
 ## Structure
 
-```
+```text
 src/components/
 ├── Board.tsx                  # Add: column-{status}, drop-zone, drag-handle
 ├── Column/

@@ -36,7 +36,7 @@
 
 ## Architecture Structure (from CR)
 
-```
+```text
 server/
   ├── openapi/
   │   ├── config.ts          → swagger-jsdoc configuration

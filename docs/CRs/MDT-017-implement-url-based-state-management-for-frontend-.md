@@ -22,7 +22,7 @@ Add URL-based routing to enable deep linking, browser navigation, and shareable 
 
 ### URL Structure
 
-```
+```text
 /                                          - redirect to current project
 /{ticketKey}                               - direct ticket access (MDT-1)
 /prj/{projectCode}                         - board view

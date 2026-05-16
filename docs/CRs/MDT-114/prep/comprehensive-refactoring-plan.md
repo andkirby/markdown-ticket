@@ -44,7 +44,7 @@ async execute(...) {
 
 **Solution**: Split into Use Case (orchestration) and Domain (business logic) layers.
 
-```
+```text
 mcp-server/src/tools/handlers/
   ├── use-cases/
   │   └── ModifySectionUseCase.ts      (orchestrates I/O + domain)
@@ -454,7 +454,7 @@ export class TransactionalModifyOperation {
 
 ## Complete Target Architecture
 
-```
+```text
 mcp-server/src/tools/handlers/
 │
 ├── domain/                          # Business logic (no I/O)

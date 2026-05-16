@@ -147,7 +147,7 @@ const modified = execSync(
 
 Instead of writing git-derived dates into frontmatter, **derive them at read time**:
 
-```
+```text
 Priority for dateCreated:
 1. stat.birthtime (macOS, Windows, ext4)
 2. git log --diff-filter=A --follow (if birthtime is clone time)

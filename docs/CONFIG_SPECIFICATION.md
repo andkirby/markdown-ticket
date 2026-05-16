@@ -222,7 +222,7 @@ The system implements path traversal protection at multiple levels:
 
 **Forbidden path patterns**:
 
-```
+```text
 ❌ "../../../etc/passwd"      - Parent directory traversal
 ❌ "/etc/passwd"             - Absolute path
 ❌ "../docs/secret.md"       - Combined traversal

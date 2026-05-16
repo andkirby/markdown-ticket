@@ -51,7 +51,7 @@ const subdocDir = join(resolvedPath, ticketsPath, crId)
 
 ### Data Flow
 
-```
+```text
 API Request
   → ProjectController.getCR()
     → TicketService.getCR()

@@ -35,7 +35,7 @@
 
 ## Architecture Structure (from CR)
 
-```
+```text
 server/
   ├── controllers/
   │   ├── BaseController.ts           → Abstract base with common patterns (150 lines)

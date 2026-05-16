@@ -76,7 +76,7 @@ The current implementation makes future changes difficult. Adding new validation
 
 ### Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                  ProjectDiscoveryService                    │
 │                    (Orchestrator Only)                      │
@@ -204,7 +204,7 @@ The current implementation makes future changes difficult. Adding new validation
 
 Based on MDT Technical Debt workflow path:
 
-```
+```text
 assess → bdd --prep → architecture --prep → tests --prep → tasks --prep → implement --prep → tech-debt → reflection
                                                                    ↑
                                                              (You are here)

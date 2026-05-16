@@ -36,7 +36,7 @@
 
 ### Natural Service Boundaries
 
-```
+```text
 Section Management
 ├── Find sections (by simple or hierarchical path)
 ├── Read section content
@@ -51,7 +51,7 @@ Section Management
 
 **Pattern: Service Layer with Cohesive Components**
 
-```
+```text
 SectionService (Public API)
   ├── SectionRepository (Read operations)
   ├── SectionEditor (Write operations)
@@ -146,7 +146,7 @@ graph TB
 
 ## Structure
 
-```
+```text
 mcp-server/src/services/SectionManagement/
   ├── SectionService.ts           → Public API, orchestration (≤80 lines)
   ├── SectionRepository.ts        → Read operations: list, get, find (≤150 lines)

@@ -27,7 +27,7 @@ Three changes, all in `shared/`:
 
 ## Canonical Runtime Flow
 
-```
+```text
 resolveCurrentProject(cwd)
   ├── detectProjectContext(cwd)     → found + projectRoot
   ├── getProjectConfig(projectRoot) → config

@@ -244,7 +244,7 @@ interface LinkConfig {
 
 ### File Structure
 
-```
+```text
 src/
 ├── components/
 │   ├── MarkdownContent.tsx       # Main processing component

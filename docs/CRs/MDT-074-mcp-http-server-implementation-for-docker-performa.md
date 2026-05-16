@@ -184,7 +184,7 @@ flowchart LR
 
 **File structure:**
 
-```
+```text
 mcp-server/
 ├── src/
 │   ├── index.ts              # Start both transports
@@ -245,7 +245,7 @@ flowchart TB
 
 **Directory structure:**
 
-```
+```text
 mcp-server/
 ├── src/
 │   ├── index.ts                  # Start stdio (always) + HTTP (if enabled)

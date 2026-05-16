@@ -31,7 +31,7 @@ The backend event system uses **Server-Sent Events (SSE)** to push real-time upd
 
 ### Key Components
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Express.js Server                        │
 │  (server/server.js)                                         │
@@ -80,7 +80,7 @@ The backend event system uses **Server-Sent Events (SSE)** to push real-time upd
 
 All SSE messages follow this format:
 
-```
+```text
 data: {"type":"<event-type>","data":{<event-payload>}}
 
 ```
@@ -859,7 +859,7 @@ broadcastFileChange(eventType, filename, projectId) {
 
 **URL format**:
 
-```
+```text
 GET /api/events?projects=markdown-ticket,debug&events=file-change,project-created
 ```
 

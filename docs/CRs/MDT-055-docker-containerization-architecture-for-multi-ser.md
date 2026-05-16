@@ -247,7 +247,7 @@ See `README.docker.md` for complete setup instructions and `docker-compose.dev.y
 
 **Solution**: Implement Docker-only configuration that is completely independent of host system:
 
-```
+```text
 docker-config/                              # Docker-only configuration
 └── config.toml                           # Main configuration
 ```

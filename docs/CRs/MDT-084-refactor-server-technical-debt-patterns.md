@@ -61,7 +61,7 @@ Exploratory - Need to evaluate refactoring strategies for server/ technical debt
 
 ### Structure
 
-```
+```text
 server/
   ├── controllers/
   │   ├── BaseController.ts           → Abstract base with common patterns (150 lines)

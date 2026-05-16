@@ -23,7 +23,7 @@ Introduces a lightweight structured logger (`shared/utils/server-logger.ts`) tha
 
 ## Structure
 
-```
+```text
 shared/
   └── utils/
       ├── logger.ts          # Existing: logQuiet, createQuietLogger

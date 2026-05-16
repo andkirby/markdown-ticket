@@ -17,7 +17,7 @@ priority: Medium
 
 ### Current Behavior (Wrong)
 
-```
+```text
 # Working directory: /projects/parent/docs/child-project/
 # Has .mdt-config.toml with code=CH1
 $ mdt-cli ticket create bug 'test'
@@ -26,7 +26,7 @@ Created PAR-006  # ← parent project code, wrong
 
 ### Expected Behavior
 
-```
+```text
 $ mdt-cli ticket create bug 'test'
 Created CH1-001  # ← local project code, correct
 ```

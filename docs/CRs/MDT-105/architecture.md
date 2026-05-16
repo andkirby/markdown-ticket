@@ -73,7 +73,7 @@ graph TB
 
 ## Structure
 
-```
+```text
 shared/
 ├── cache/
 │   ├── index.ts              → Public API exports
@@ -102,7 +102,7 @@ shared/
 
 ## Configuration Flow
 
-```
+```text
 Priority (highest to lowest):
 1. MDT_CACHE_DISABLE=true     → Pass-through mode
 2. [system.cache].enable=false → Pass-through mode

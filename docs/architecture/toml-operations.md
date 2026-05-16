@@ -4,7 +4,7 @@
 
 **Single Source of Truth**: All TOML parse/stringify operations flow through one entrypoint.
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │     shared/utils/toml.ts (Entrypoint)          │
 │                                                 │
@@ -58,7 +58,7 @@ This architecture applies to **ALL TOML files** in the system:
 
 ### Reading
 
-```
+```text
 Any .toml file
     ↓
 shared/utils/toml.ts → parseToml()
@@ -68,7 +68,7 @@ Config object
 
 ### Writing
 
-```
+```text
 Config object
     ↓
 shared/utils/toml.ts → stringify()

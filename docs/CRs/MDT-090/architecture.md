@@ -74,7 +74,7 @@ graph TB
 
 ## Structure
 
-```
+```text
 mcp-server/src/
   ├── tools/
   │   ├── index.ts                 → MCPTools class, tool registry, orchestration only (limit: 300 lines)

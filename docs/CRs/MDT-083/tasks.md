@@ -35,7 +35,7 @@
 
 ## Architecture Structure (from CR)
 
-```
+```text
 shared/services/
   ├── ProjectService.ts           → Facade/coordinator only (≤150 lines)
   └── project/                    → Project-specific services

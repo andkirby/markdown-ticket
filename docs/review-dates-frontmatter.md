@@ -291,7 +291,7 @@ Frontmatter wins on 5 of 6 criteria. The one weakness (accuracy for LLM edits) i
 
 ## 6. Proposed Architecture
 
-```
+```text
 ┌──────────────────────────────────────────────────────┐
 │                   Mutation Paths                      │
 ├──────────┬──────────┬──────────┬──────────┬───────────┤

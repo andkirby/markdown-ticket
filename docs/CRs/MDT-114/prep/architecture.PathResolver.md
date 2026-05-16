@@ -30,7 +30,7 @@
 
 ### Actual Usage Flow
 
-```
+```text
 MCP Tool Call (manage_cr_sections)
          │
          ▼
@@ -49,7 +49,7 @@ SectionHandlers.handleManageCRSections()
 
 **Key Insight**: PathResolver is ONLY used for validation during modify operations. The other 6 public methods were likely added "for future use" but never called.
 
-```
+```text
 Before: MI 27.72, CC 15, CoC 25 (RED)
 After:  MI 28.58, CC 13, CoC 17 (YELLOW)
 Target: MI > 40, CC < 10 (GREEN)
@@ -78,7 +78,7 @@ The `ValidationSuggestionHelper` extraction:
 
 ### 3. Complex Validation Flow
 
-```
+```text
 validate()
   └─> validateAgainstSections()
        └─> findExactMatches()
@@ -94,7 +94,7 @@ Deep call stack for what should be simple validation logic.
 
 ### Structure
 
-```
+```text
 mcp-server/src/services/SectionManagement/
   ├── PathResolver.ts          (100 lines) - orchestration only
   ├── validators/
@@ -106,7 +106,7 @@ mcp-server/src/services/SectionManagement/
 
 ### Component Diagram
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │         PathResolver                    │
 │  - resolve()                            │

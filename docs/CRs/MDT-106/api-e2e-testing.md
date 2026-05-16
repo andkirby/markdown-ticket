@@ -10,7 +10,7 @@
 
 ## Project Structure
 
-```
+```text
 src/
   app.ts          # Express app (no listen)
   server.ts       # Entry point (calls listen)

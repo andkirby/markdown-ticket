@@ -115,7 +115,7 @@ const options = CRTypes.map(type => ({ value: type, label: type }))
 
 ### Tool Hierarchy
 
-```
+```text
 Development Phase → bun run validate:ts → Build Phase → bun run build:all → Testing
                        ↓                        ↓
                   Quick TypeScript         Full compilation
@@ -161,7 +161,7 @@ bun run test:e2e
 
 ### Understanding Validation Output
 
-```
+```text
 domain-contracts (1 file)
   ✓ Validated
   ✓ src/types/schema.ts
@@ -237,7 +237,7 @@ export function unusedHelper() { ... }
 
 ### Test Hierarchy
 
-```
+```text
 E2E Tests (Playwright)
 ├── Full-stack integration tests
 ├── Tests user workflows across browsers
@@ -268,7 +268,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/my-test.spec.ts --projec
 
 ### Test Output Interpretation
 
-```
+```text
 ✓ src/components/TicketAttributes.tsx (1 file)
 ✗ shared/services/TemplateService.ts (2 errors)
 ```
@@ -282,7 +282,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/my-test.spec.ts --projec
 
 ### Project Structure
 
-```
+```text
 / (root)
 ├── src/              # Frontend (React + Vite)
 ├── server/           # Backend (Express)
@@ -304,7 +304,7 @@ PWTEST_SKIP_WEB_SERVER=1 bunx playwright test tests/e2e/my-test.spec.ts --projec
 
 ### Development Workflow
 
-```
+```text
 1. Edit files
    ↓
 2. bun run validate:ts  (quick check, changed files only)

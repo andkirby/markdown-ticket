@@ -65,7 +65,7 @@ relatedTickets: MDT-067
 - None - all major decisions resolved
 ### Worktree Detection Algorithm
 
-```
+```text
 1. Run `git worktree list --porcelain` from main repo
 2. For each worktree:
    - Extract branch name from `branch refs/heads/...`
@@ -76,7 +76,7 @@ relatedTickets: MDT-067
 
 ### Path Resolution Logic
 
-```
+```text
 For ticket ABC-123:
 1. Check cache for worktree mapping
 2. If worktree exists AND docs/CRs/ABC-123.md exists in worktree:
@@ -115,7 +115,7 @@ All MCP tools must resolve worktree paths before file operations:
 
 **Path Resolution Flow for MCP:**
 
-```
+```text
 1. Receive ticket key (e.g., MDT-095)
 2. Call WorktreeService.resolvePath(projectPath, ticketKey)
 3. If worktree exists for ticket → return worktree path

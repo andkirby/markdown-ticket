@@ -46,7 +46,7 @@ When users report frontend errors, LLMs need access to browser console logs to p
 
 ### Architecture Flow
 
-```
+```text
 User: "I see TicketView.js error"
 LLM: calls start_frontend_logging() → Backend activates session
 Frontend: detects active session → starts console interception
@@ -66,7 +66,7 @@ LLM: calls stop_frontend_logging() → cleanup
 
 ### File Structure
 
-```
+```text
 server/mcp-dev-tools/src/
 ├── tools/
 │   ├── frontend-session.ts    # start/stop_frontend_logging tools
@@ -199,7 +199,7 @@ const SESSION_TIMEOUT = 30 * 60 * 1000;
 
 ### Usage Example
 
-```
+```text
 User: "I see a React error in TicketView.js"
 LLM: get_frontend_logs() → Auto-starts session → Shows captured frontend errors
 LLM: "I see the error: Cannot read property 'map' of undefined. Here's the fix..."
@@ -240,7 +240,7 @@ VITE_FRONTEND_LOGGING_AUTOSTART=false
 
 **Use Case Achieved:**
 
-```
+```text
 User: "I see an error on page load"
 LLM: get_frontend_logs() → Gets complete log history including startup errors
 LLM: "I see the startup error in the SSE connection. Here's the fix..."

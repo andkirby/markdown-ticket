@@ -6,7 +6,7 @@ Investigation of what the "Clear Cache" button in the hamburger menu actually do
 
 ## Flow Summary
 
-```
+```text
 User clicks "Clear Cache" (HamburgerMenu.tsx:96)
         ↓
 handleClearCache() → nuclearCacheClear() (cache.ts:80)

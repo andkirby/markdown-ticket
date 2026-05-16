@@ -26,7 +26,7 @@ Add request deduplication to the `dataLayer` singleton to prevent duplicate API 
 
 ## Canonical Runtime Flow
 
-```
+```text
 useProjectManager (multiple instances)
   └─> dataLayer.fetchTickets(projectId)
         └─> dedupe("tickets-{projectId}", fetcher)
@@ -39,12 +39,12 @@ useProjectManager (multiple instances)
 
 ## Structure
 
-```
+```text
 src/services/
 └── dataLayer.ts           # Add pendingRequests Map + dedupe() helper
 ```
 
-```
+```text
 src/services/
 └── dataLayer.dedupe.test.ts  # Unit test for deduplication
 ```

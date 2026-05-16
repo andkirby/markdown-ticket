@@ -40,7 +40,7 @@ This feature adds Git worktree detection to enable isolated ticket development. 
 
 ## Structure
 
-```
+```text
 shared/
   ├── services/
   │   ├── WorktreeService.ts      # detect(), resolvePath(), invalidateCache()

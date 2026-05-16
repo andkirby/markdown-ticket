@@ -156,7 +156,7 @@ The backend and MCP containers use a shared configuration system for project dis
 
 ### Container Paths
 
-```
+```text
 /app/                    # Application code (excluded from discovery)
 /projects/               # Project mount point
 /app/config             # Docker configuration directory (persisted in volume)
@@ -222,7 +222,7 @@ Demo projects are mounted from `./demo-projects/` and provide sample tickets for
 
 ### Container Communication
 
-```
+```text
 Host (localhost:5174, :3012)
     ↓
 Frontend Container

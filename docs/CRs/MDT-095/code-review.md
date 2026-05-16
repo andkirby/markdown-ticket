@@ -32,7 +32,7 @@ const hasTicketFile = files.some(f =>
 
 **Actual File Structure:**
 
-```
+```text
 docs/CRs/
 ├── MDT-095-git-worktree-support.md  # Main ticket file (starts with "MDT-095-")
 ├── MDT-095/                          # Supporting docs subdirectory

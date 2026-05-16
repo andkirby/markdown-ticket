@@ -42,7 +42,7 @@
 
 **Structure**:
 
-```
+```text
 src/components/QuickSearch/
   index.ts
   QuickSearchModal.tsx
