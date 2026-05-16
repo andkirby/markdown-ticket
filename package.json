@@ -8,7 +8,8 @@
     "shared",
     "server",
     "mcp-server",
-    "domain-contracts"
+    "domain-contracts",
+    "cli"
   ],
   "scripts": {
     "install:all": "bun install && bun install --cwd shared && bun install --cwd server && bun install --cwd mcp-server && bun install --cwd domain-contracts",
