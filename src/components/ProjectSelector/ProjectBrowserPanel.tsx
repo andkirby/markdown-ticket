@@ -189,7 +189,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
               aria-label="Close panel"
             >
               <svg
-                className="h-6 w-6"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
