@@ -97,7 +97,8 @@ The hamburger menu is the only structured action menu. Current items in order:
 | 4 | Sort direction (mobile) | `ArrowUpDown` | mobile only, board/list view |
 | 5 | Clear Cache | `Trash2` | always |
 | 6 | Event History | `Eye`/`EyeOff` | toggled on: show "hide"; toggled off: show "show" |
-| 7 | Theme selector | `Sun`/`Moon`/`Monitor` | always, horizontal button group |
+| 7 | Settings | `Settings` | always |
+| 8 | Theme selector | `Sun`/`Moon`/`Monitor` | always (quick access, also in Settings) |
 
 The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with click-outside-to-close behavior.
 
@@ -105,5 +106,5 @@ The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with c
 
 - New header-level features MUST choose between nav-left, nav-right, or hamburger menu — no new floating elements.
 - If the hamburger menu exceeds 8 items, consider splitting into a dedicated settings surface.
-- Future settings entry point: add a ⚙ Settings item to the hamburger menu (between Event History and Theme), which opens a dedicated settings modal or drawer. This is the recommended location for a settings trigger.
+- Future settings entry point: Settings item in the hamburger menu opens the dedicated Settings modal. See `specs/settings.md`.
 - ViewModeSwitcher does not persist its own state — persistence is handled by `App.tsx` via localStorage keys `lastBoardListMode` and `lastViewMode`.
