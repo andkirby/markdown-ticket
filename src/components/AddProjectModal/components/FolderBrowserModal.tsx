@@ -199,7 +199,7 @@ export default function FolderBrowserModal({
                     </div>
                   )
                   : (
-                      <div className="border border-gray-200 dark:border-gray-600 rounded-lg">
+                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
                         <div className="p-2">
                           {/* Add ".." parent directory link */}
                           {directoryListing.parentPath && (

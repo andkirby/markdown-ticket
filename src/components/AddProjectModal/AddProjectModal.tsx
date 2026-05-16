@@ -234,7 +234,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           className="h-full"
           style={{ height: 'calc(100vh - 300px)' }}
         >
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-6">
             {/* Project Name */}
             {/**
               * @testid project-name-input — Input for project name

@@ -148,7 +148,7 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
     return (
       <div
         ref={ref}
-        className={`flex items-start justify-between p-6 border-b border-gray-200 dark:border-gray-700 ${className}`}
+        className={`flex items-start justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 ${className}`}
         {...props}
       >
         <div className="flex-1">
@@ -200,7 +200,7 @@ const ModalBody = React.forwardRef<HTMLDivElement, ModalBodyProps>(
     return (
       <div
         ref={ref}
-        className={cn('p-6', className)}
+        className={cn('p-4', className)}
         {...props}
       >
         {children}
@@ -227,7 +227,7 @@ const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
     return (
       <div
         ref={ref}
-        className={`flex items-center ${justifyClasses[justify]} p-6 border-t border-gray-200 dark:border-gray-700 ${className}`}
+        className={`flex items-center ${justifyClasses[justify]} px-4 py-3 border-t border-gray-200 dark:border-gray-700 ${className}`}
         {...props}
       >
         {children}

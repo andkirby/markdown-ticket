@@ -177,7 +177,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="project-browser-panel">
       <ModalBody className="p-0">
         {/* Header with search input */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 space-y-3">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Select Project
@@ -230,7 +230,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
         </div>
 
         {/* Project list */}
-        <div className="max-h-[60vh] overflow-y-auto p-6">
+        <div className="max-h-[60vh] overflow-y-auto p-4">
           {displayProjects.length === 0
             ? (
                 <div
