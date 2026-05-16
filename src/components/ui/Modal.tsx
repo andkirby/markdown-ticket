@@ -104,7 +104,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         <div className="flex min-h-[100dvh] items-center justify-center p-4">
           {/* Background overlay */}
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+            className="fixed inset-0 bg-black/50 transition-opacity"
             onClick={closeOnOverlayClick ? onClose : undefined}
           />
 
