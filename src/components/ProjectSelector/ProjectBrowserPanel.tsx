@@ -27,6 +27,7 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { ProjectWithSelectorState, SelectorPreferences, SelectorState } from './types'
 import * as React from 'react'
+import { Modal, ModalBody } from '@/components/ui/Modal'
 import ProjectSelectorCard from './ProjectSelectorCard'
 
 interface ProjectBrowserPanelProps {
@@ -138,32 +139,6 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     }
   }, [isOpen])
 
-  // Handle Escape key to close panel
-  React.useEffect(() => {
-    if (!isOpen)
-      return
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen, onClose])
-
-  // Prevent body scroll when panel is open
-  React.useEffect(() => {
-    if (!isOpen)
-      return
-
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isOpen])
-
   // Compute panel order (favorites first, then by lastUsedAt)
   // MUST be before early return to avoid hooks rule violation
   const panelProjects = React.useMemo(
@@ -193,65 +168,27 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
   if (!isOpen)
     return null
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    // Only close if clicking outside the panel content
-    const target = e.target as HTMLElement
-    if (!target.closest('[data-testid="project-panel-content"]')) {
-      onClose()
-    }
-  }
-
   const handleProjectSelect = (projectKey: string) => {
     onProjectSelect(projectKey)
     onClose() // Close panel after selection
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50"
-      onClick={handleBackdropClick}
-      data-testid="project-browser-panel"
-    >
-      {/* Backdrop - full screen with dimming effect */}
-      <div className="fixed inset-0 w-screen h-[100dvh] bg-black/50 backdrop-blur-sm" />
-
-      {/* Panel container - centered */}
-      <div className="relative flex items-start justify-center pt-20 pointer-events-none min-h-[100dvh]">
-        <div
-          data-testid="project-panel-content"
-          onClick={e => e.stopPropagation()}
-          className="pointer-events-auto relative w-full max-w-4xl mx-4 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden"
-        >
-          {/* Header with search input */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Select Project
-              </h2>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-                aria-label="Close panel"
-              >
-                <svg
-                  className="w-5 h-5 text-gray-500 dark:text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            {/* Search input (MDT-152) */}
-            <div className="relative">
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="project-browser-panel">
+      <ModalBody className="p-0">
+        {/* Header with search input */}
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Select Project
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Close panel"
+            >
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                className="w-5 h-5 text-gray-500 dark:text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -260,55 +197,71 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search projects..."
-                data-testid="project-browser-search-input"
-                className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
-              />
-            </div>
+            </button>
           </div>
-
-          {/* Project list */}
-          <div className="max-h-[60vh] overflow-y-auto p-6">
-            {displayProjects.length === 0
-              ? (
-                  <div
-                    data-testid="project-browser-empty-state"
-                    className="text-center py-12 text-gray-500 dark:text-gray-400"
-                  >
-                    {searchQuery.trim()
-                      ? 'No projects match your search'
-                      : 'No projects available'}
-                  </div>
-                )
-              : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {displayProjects.map(project => (
-                      <ProjectSelectorCard
-                        key={project.project.code || project.id}
-                        project={project}
-                        isActive={
-                          (project.project.code || project.id) === activeProjectKey
-                        }
-                        onSelect={handleProjectSelect}
-                        showDescription={true}
-                        onFavoriteToggle={onFavoriteToggle}
-                        testIdPrefix="project-browser-card"
-                      />
-                    ))}
-                  </div>
-                )}
+          {/* Search input (MDT-152) */}
+          <div className="relative">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search projects..."
+              data-testid="project-browser-search-input"
+              className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            />
           </div>
         </div>
-      </div>
-    </div>
+
+        {/* Project list */}
+        <div className="max-h-[60vh] overflow-y-auto p-6">
+          {displayProjects.length === 0
+            ? (
+                <div
+                  data-testid="project-browser-empty-state"
+                  className="text-center py-12 text-gray-500 dark:text-gray-400"
+                >
+                  {searchQuery.trim()
+                    ? 'No projects match your search'
+                    : 'No projects available'}
+                </div>
+              )
+            : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {displayProjects.map(project => (
+                    <ProjectSelectorCard
+                      key={project.project.code || project.id}
+                      project={project}
+                      isActive={
+                        (project.project.code || project.id) === activeProjectKey
+                      }
+                      onSelect={handleProjectSelect}
+                      showDescription={true}
+                      onFavoriteToggle={onFavoriteToggle}
+                      testIdPrefix="project-browser-card"
+                    />
+                  ))}
+                </div>
+              )}
+        </div>
+      </ModalBody>
+    </Modal>
   )
 }
 
