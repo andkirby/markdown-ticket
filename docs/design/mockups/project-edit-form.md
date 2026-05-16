@@ -4,85 +4,101 @@ Related spec: `specs/project-edit-form.md`
 
 ## Default State
 
-```wireframe
-┌──────────────────────────────────────────────────────────┐
-│ [backdrop: bg-black/50]                                  │
-│                                                          │
-│   ┌──────────────────────────────────────────────────┐   │
-│   │ Edit Project                                [✕] │   │
-│   ├──────────────────────────────────────────────────┤   │
-│   │ Project Name *                                  │   │
-│   │ [Markdown Ticket                              ] │   │
-│   │                                                  │   │
-│   │ Project Code *                                  │   │
-│   │ [MDT                         read-only        ] │   │
-│   │                                                  │   │
-│   │ Project Path *       [info]                     │   │
-│   │ [~/workspace/markdown-ticket         ✓ locked] │   │
-│   │                                                  │   │
-│   │ Tickets Directory *        [?]                  │   │
-│   │ [docs/CRs                    read-only        ] │   │
-│   │                                                  │   │
-│   │ Description                                      │   │
-│   │ [Markdown ticket dashboard                    ] │   │
-│   │                                                  │   │
-│   │ Repository URL                                   │   │
-│   │ [https://github.com/...                       ] │   │
-│   ├──────────────────────────────────────────────────┤   │
-│   │                         [Cancel] [Update Project]│   │
-│   └──────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────┘
+```wireloom
+window "Project Edit Form — Default":
+  panel:
+    row:
+      text "Edit Project" bold id="form-title"
+      spacer
+      button "×" id="close-btn"
+    divider
+    text "Project Name *" id="name-label"
+    input placeholder="Markdown Ticket" id="name-input"
+    text "Project Code *" id="code-label"
+    input placeholder="MDT" disabled id="code-input"
+    row:
+      text "Project Path *" id="path-label"
+      icon name="gear" id="path-info"
+    input placeholder="~/workspace/markdown-ticket" disabled id="path-input"
+    icon name="lock" id="path-lock"
+    row:
+      text "Tickets Directory *" id="tickets-label"
+      icon name="gear" id="tickets-help"
+    input placeholder="docs/CRs" disabled id="tickets-input"
+    text "Description"
+    input placeholder="Markdown ticket dashboard" id="desc-input"
+    text "Repository URL"
+    input placeholder="https://github.com/..." id="repo-input"
+    divider
+    row justify=end:
+      button "Cancel" id="cancel-btn"
+      button "Update Project" primary id="submit-btn"
+
+annotation "Read-only: identity and filesystem fields cannot be changed" target="code-input" position=right
+annotation "Path locked to project root" target="path-lock" position=right
 ```
 
 ## Variants
 
 ### Submitting
 
-```wireframe state:project-edit-form submitting
-┌──────────────────────────────────────────────────┐
-│ Edit Project                                [✕] │
-├──────────────────────────────────────────────────┤
-│ ... fields remain visible with current values ... │
-├──────────────────────────────────────────────────┤
-│                             [Cancel] [Updating...]│
-└──────────────────────────────────────────────────┘
+```wireloom
+window "Project Edit Form — Submitting":
+  panel:
+    row:
+      text "Edit Project" bold
+      spacer
+      button "×"
+    divider
+    text "... fields remain visible with current values ..." muted
+    divider
+    row justify=end:
+      button "Cancel"
+      button "Updating..." primary disabled id="submitting-btn"
+
+annotation "Submit button disabled during request; fields stay editable" target="submitting-btn" position=right
 ```
 
 ### Success
 
-```wireframe state:project-edit-form success
-┌────────────────────────────────────────┐
-│                  ✓                     │
-│ Project Updated Successfully!          │
-│                                        │
-│        [Create Another] [Done]         │
-└────────────────────────────────────────┘
+```wireloom
+window "Project Edit Form — Success":
+  panel:
+    icon name="check" id="success-icon"
+    text "Project Updated Successfully!" bold id="success-text"
+    row justify=end:
+      button "Create Another"
+      button "Done" primary
+
+annotation "Success confirmation replaces form" target="success-icon" position=top
 ```
 
 ### Mobile
 
-```wireframe viewport:mobile
-┌──────────────────────────────┐
-│ [backdrop: bg-black/50]      │
-│ ┌──────────────────────────┐ │
-│ │ Edit Project         [✕]│ │
-│ ├──────────────────────────┤ │
-│ │ Project Name *          │ │
-│ │ [Markdown Ticket      ] │ │
-│ │ Project Code *          │ │
-│ │ [MDT read-only        ] │ │
-│ │ Project Path *          │ │
-│ │ [/Users/... locked ✓  ] │ │
-│ │ Tickets Directory *     │ │
-│ │ [docs/CRs read-only   ] │ │
-│ │ Description             │ │
-│ │ [text area             ]│ │
-│ │ Repository URL          │ │
-│ │ [https://...           ]│ │
-│ ├──────────────────────────┤ │
-│ │ [Cancel] [Update Project]│ │
-│ └──────────────────────────┘ │
-└──────────────────────────────┘
+```wireloom
+window "Project Edit Form — Mobile":
+  panel:
+    row:
+      text "Edit Project" bold
+      spacer
+      button "×"
+    divider
+    text "Project Name *"
+    input placeholder="Markdown Ticket"
+    text "Project Code *"
+    input placeholder="MDT" disabled
+    text "Project Path *"
+    input placeholder="/Users/..." disabled
+    text "Tickets Directory *"
+    input placeholder="docs/CRs" disabled
+    text "Description"
+    input placeholder="text area"
+    text "Repository URL"
+    input placeholder="https://..."
+    divider
+    row justify=end:
+      button "Cancel"
+      button "Update Project" primary
 ```
 
 ## Annotations

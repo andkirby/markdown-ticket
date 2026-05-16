@@ -4,103 +4,79 @@ Related spec: `specs/settings.md`
 
 ## Appearance Tab (default)
 
-```wireframe
-┌──────────────────────────────────────────┐
-│ Settings                            [×]  │
-│──────────────────────────────────────────│
-│ [●Appearance] [○Board] [○Advanced]       │
-│──────────────────────────────────────────│
-│                                          │
-│ Theme                                    │
-│ Choose light, dark, or system theme      │
-│                                          │
-│ ┌──────────┬──────────┬──────────┐       │
-│ │ ☀ Light  │ 🌙 Dark  │ 💻 System│       │
-│ └──────────┴──────────┴──────────┘       │
-│                                          │
-│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
-│                                          │
-│ Default View                             │
-│ Open this view when navigating to a      │
-│ project                                  │
-│                                          │
-│ ┌──────────────────────────┐             │
-│ │ Board               ▾   │             │
-│ └──────────────────────────┘             │
-│                                          │
-└──────────────────────────────────────────┘
+```wireloom
+window "Settings":
+  tabs:
+    tab "Appearance" active
+    tab "Board"
+    tab "Advanced"
+  panel:
+    section "Theme":
+      text "Choose light, dark, or system theme" muted
+      segmented:
+        segment "☀ Light"
+        segment "🌙 Dark"
+        segment "💻 System" selected
+    divider
+    section "Default View":
+      text "Open this view when navigating to a project" muted
+      combo value="Board" options="Board,List,Documents"
 ```
 
 ## Board Tab
 
-```wireframe state:settings board-tab
-┌──────────────────────────────────────────┐
-│ Settings                            [×]  │
-│──────────────────────────────────────────│
-│ [○Appearance] [●Board] [○Advanced]       │
-│──────────────────────────────────────────│
-│                                          │
-│ Card Density                             │
-│ Compact shows more tickets per column    │
-│                                          │
-│ ┌──────────────────────────┐             │
-│ │ Comfortable          ▾  │             │
-│ └──────────────────────────┘             │
-│                                          │
-│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
-│                                          │
-│ Smart Links                    [●━━━━○]  │
-│ Auto-detect ticket keys and doc paths    │
-│                                          │
-└──────────────────────────────────────────┘
+```wireloom
+window "Settings":
+  tabs:
+    tab "Appearance"
+    tab "Board" active
+    tab "Advanced"
+  panel:
+    section "Card Density":
+      text "Compact shows more tickets per column" muted
+      combo value="Comfortable" options="Comfortable,Compact"
+    divider
+    toggle "Smart Links" on
+    text "Auto-detect ticket keys and doc paths" muted
 ```
 
 ## Advanced Tab
 
-```wireframe state:settings advanced-tab
-┌──────────────────────────────────────────┐
-│ Settings                            [×]  │
-│──────────────────────────────────────────│
-│ [○Appearance] [○Board] [●Advanced]       │
-│──────────────────────────────────────────│
-│                                          │
-│ Event History                   [●━━━━○]  │
-│ Show SSE event history panel             │
-│                                          │
-│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
-│                                          │
-│ Cache                                    │
-│ Clear all cached data and reload         │
-│                          [Clear Cache]   │
-│                                          │
-└──────────────────────────────────────────┘
+```wireloom
+window "Settings":
+  tabs:
+    tab "Appearance"
+    tab "Board"
+    tab "Advanced" active
+  panel:
+    toggle "Event History" on
+    text "Show SSE event history panel" muted
+    divider
+    section "Cache":
+      text "Clear all cached data and reload" muted
+      row justify=end:
+        button "Clear Cache"
 ```
 
 ## Mobile
 
-```wireframe viewport:mobile
-┌──────────────────────────┐
-│ Settings            [×]  │
-│──────────────────────────│
-│ [●App] [○Board] [○Adv]  │
-│──────────────────────────│
-│                          │
-│ Theme                    │
-│ Choose your theme        │
-│                          │
-│ ┌──────┬──────┬──────┐   │
-│ │ ☀    │ 🌙   │ 💻   │   │
-│ │Light │ Dark │System│   │
-│ └──────┴──────┴──────┘   │
-│                          │
-│ Default View             │
-│ Open this view first     │
-│                          │
-│ ┌────────────────────┐   │
-│ │ Board          ▾   │   │
-│ └────────────────────┘   │
-│                          │
-└──────────────────────────┘
+```wireloom
+window "Settings":
+  tabs:
+    tab "App" active
+    tab "Board"
+    tab "Adv"
+  panel:
+    section "Theme":
+      text "Choose your theme" muted
+      segmented:
+        segment "☀ Light"
+        segment "🌙 Dark"
+        segment "💻 System" selected
+    divider
+    section "Default View":
+      text "Open this view first" muted
+      combo value="Board" options="Board,List,Documents"
 ```
 
 ## Annotations

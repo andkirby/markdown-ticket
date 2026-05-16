@@ -4,71 +4,113 @@ Related spec: `specs/ticket-card.md`
 
 ## Default State
 
-```wireframe
-┌─────────────────────────────────┐
-│ MDT-042 • Fix login redirect    │  ← Title row (font-semibold, text-sm)
-│                                 │
-│ [Proposed] [Medium] [Feature]   │  ← Badges (flex-wrap, gap-2)
-│                      [✎]       │  ← Edit icon (hidden until hover)
-└─────────────────────────────────┘
+```wireloom
+window "Ticket Card — Default":
+  panel:
+    row:
+      text "MDT-042" bold id="ticket-code"
+      text "Fix login redirect" id="ticket-title"
+    row:
+      chip "Proposed" id="status-badge"
+      chip "Medium" id="priority-badge"
+      chip "Feature" id="type-badge"
+      spacer
+      icon name="gear" id="edit-icon"
+
+annotation "Title row: font-semibold, text-sm" target="ticket-title" position=top
+annotation "Edit icon hidden until hover" target="edit-icon" position=right
 ```
 
 ## Hover State
 
-```wireframe state:ticket-card hover
-┌─────────────────────────────────┐
-│ MDT-042 • Fix login redirect    │  ← shadow elevate, -translate-y-0.5
-│                                 │     scale-[1.005]
-│ [Proposed] [Medium] [Feature]   │
-│                      [✎]       │  ← Edit icon fades in (opacity 0→1)
-└─────────────────────────────────┘
+```wireloom
+window "Ticket Card — Hover":
+  panel:
+    row:
+      text "MDT-042" bold
+      text "Fix login redirect"
+    row:
+      chip "Proposed"
+      chip "Medium"
+      chip "Feature"
+      spacer
+      icon name="gear" id="edit-icon-hover"
+
+annotation "Shadow elevates, -translate-y-0.5, scale-[1.005]" target="edit-icon-hover" position=right
+annotation "Edit icon fades in (opacity 0→1)" target="edit-icon-hover" position=bottom
 ```
 
 ## Dragging State
 
-```wireframe state:ticket-card drag
-  ╲──────────────────────────────╱
-  │ MDT-042 • Fix login redirect │  ← opacity-40, scale-95, rotate-2
-  │                               │     shadow-2xl, cursor:move
-  │ [Proposed] [Medium] [Feature] │
-  └───────────────────────────────┘
+```wireloom
+window "Ticket Card — Dragging":
+  panel:
+    row:
+      text "MDT-042" bold muted id="drag-code"
+      text "Fix login redirect" muted id="drag-title"
+    row:
+      chip "Proposed" id="drag-status"
+      chip "Medium"
+      chip "Feature"
+
+annotation "opacity-40, scale-95, rotate-2, shadow-2xl" target="drag-code" position=top
 ```
 
 ## With All Badges (Full Attributes)
 
-```wireframe state:ticket-card full-badges
-┌─────────────────────────────────┐
-│ MDT-042 • Implement auth flow   │
-│                                 │
-│ [In Progress] [High] [Feature]  │
-│ [Phase:Auth] 🪾 Worktree        │
-│ [Related:3] [Dep:2] [Blocks:1] │
-│                      [✎]       │
-└─────────────────────────────────┘
-```
+```wireloom
+window "Ticket Card — Full Badges":
+  panel:
+    row:
+      text "MDT-042🪾" bold id="full-code"
+      text "Implement auth flow"
+    row:
+      chip "In Progress" id="full-status"
+      chip "High" accent=danger id="full-priority"
+      chip "Feature"
+    row:
+      chip "Phase:Auth" id="full-phase"
+      chip "🪾 Worktree" id="full-worktree"
+    row:
+      chip "Related:3" id="full-related"
+      chip "Dep:2" id="full-dep"
+      chip "Blocks:1" id="full-blocks"
 
-Note: Badges wrap to multiple lines when they overflow.
+annotation "Badges wrap to multiple lines when they overflow" target="full-related" position=right
+```
 
 ## Minimal Badges (No Optional Attributes)
 
-```wireframe state:ticket-card minimal
-┌─────────────────────────────────┐
-│ MDT-042 • Fix typo              │
-│                                 │
-│ [Proposed] [Low] [Bug]         │
-│                      [✎]       │
-└─────────────────────────────────┘
+```wireloom
+window "Ticket Card — Minimal Badges":
+  panel:
+    row:
+      text "MDT-042" bold
+      text "Fix typo"
+    row:
+      chip "Proposed"
+      chip "Low"
+      chip "Bug"
+      spacer
+      icon name="gear"
 ```
 
 ## Invalid Status
 
-```wireframe state:ticket-card invalid-status
-┌─────────────────────────────────┐
-│ MDT-042 • Fix login redirect    │  ← data-invalid="true"
-│                                 │     tooltip: 'Invalid status: "Foo"'
-│ [●Foo●] [Medium] [Feature]     │  ← StatusBadge shows invalid state
-│                      [✎]       │
-└─────────────────────────────────┘
+```wireloom
+window "Ticket Card — Invalid Status":
+  panel:
+    row:
+      text "MDT-042" bold id="invalid-title"
+      text "Fix login redirect"
+    row:
+      chip "Foo" accent=danger id="invalid-badge"
+      chip "Medium"
+      chip "Feature"
+      spacer
+      icon name="gear"
+
+annotation "data-invalid=true, tooltip: 'Invalid status: Foo'" target="invalid-badge" position=right
 ```
 
 ## Annotations
@@ -85,4 +127,4 @@ Note: Badges wrap to multiple lines when they overflow.
 | Separator | `--foreground` | `•` with `mx-1` | Between code and title |
 | Edit icon | `--muted-foreground` | `opacity-0 group-hover:opacity-100` | 4×4 pencil |
 | Badges | badge.css vars | `.badge[data-*]` | See BADGE_ARCHITECTURE.md |
-| Worktree icon | n/a | `🪾` emoji | Appended to ticket code |
+| Worktree icon | n/a | `🪾` emoji | Appended to ticket code in title row; also shown as a chip in badge bar |

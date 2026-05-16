@@ -8,170 +8,159 @@ Related spec: `specs/project-browser.md` (MDT-129 panel, MDT-152 search extensio
 
 ### Default State (Panel Open)
 
-```wireframe
-┌─────────────────────────────────────────────────────────┐
-│ [backdrop: bg-black/50 backdrop-blur-sm]                │
-│                                                         │
-│     ┌─────────────────────────────────────────────┐     │
-│     │ [🔍] Search projects...              [✕]  │     │
-│     ├─────────────────────────────────────────────┤     │
-│     │                                             │     │
-│     │  ┌────────────────┐ ┌────────────────┐     │     │
-│     │  │ ★ MDT          │ │    ABC          │     │     │
-│     │  │ Markdown Ticket│ │ Another Project│     │     │
-│     │  │ Lightweight     │ │ Example desc   │     │     │
-│     │  │ ticket mgmt     │ │ here           │     │     │
-│     │  └────────────────┘ └────────────────┘     │     │
-│     │                                             │     │
-│     │  ┌────────────────┐ ┌────────────────┐     │     │
-│     │  │    XYZ          │ │    API          │     │     │
-│     │  │ Third Project  │ │ API Gateway    │     │     │
-│     │  │ Another example│ │ Backend service│     │     │
-│     │  └────────────────┘ └────────────────┘     │     │
-│     │                                             │     │
-│     └─────────────────────────────────────────────┘     │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+```wireloom
+window "Project Browser — Default":
+  panel:
+    row:
+      input placeholder="Search projects..." type=search id="pb-search"
+      button "×" id="pb-close"
+    divider
+    grid cols=2 rows=2:
+      cell id="card-mdt":
+        row:
+          icon name="star" id="mdt-star"
+          text "MDT" bold
+        text "Markdown Ticket"
+        text "Lightweight ticket mgmt" muted
+      cell id="card-abc":
+        text "ABC" bold
+        text "Another Project"
+        text "Example desc here" muted
+      cell id="card-xyz":
+        text "XYZ" bold
+        text "Third Project"
+        text "Another example" muted
+      cell id="card-api":
+        text "API" bold
+        text "API Gateway"
+        text "Backend service" muted
+
+annotation "Active project has blue gradient bg and star" target="card-mdt" position=top
+annotation "Inactive projects use white/gray gradient" target="card-abc" position=right
 ```
 
 ### Search State (User Types "MD")
 
 Current project (MDT) is excluded when the query matches its code or name:
 
-```wireframe
-┌─────────────────────────────────────────────────────────┐
-│ [backdrop: bg-black/50 backdrop-blur-sm]                │
-│                                                         │
-│     ┌─────────────────────────────────────────────┐     │
-│     │ [🔍] MD_                              [✕]  │     │
-│     ├─────────────────────────────────────────────┤     │
-│     │                                             │     │
-│     │  ┌────────────────┐ ┌────────────────┐     │     │
-│     │  │    AMD          │ │                │     │     │
-│     │  │ A Markdown     │ │  (no other     │     │     │
-│     │  │ Project        │ │   matches)     │     │     │
-│     │  └────────────────┘ └────────────────┘     │     │
-│     │                                             │     │
-│     │  (Note: MDT excluded — it's current project) │     │
-│     │                                             │     │
-│     └─────────────────────────────────────────────┘     │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+```wireloom
+window "Project Browser — Search":
+  panel:
+    row:
+      input placeholder="MD" type=search id="pb-search-active"
+      button "×"
+    divider
+    grid cols=2 rows=1:
+      cell id="card-amd":
+        text "AMD" bold
+        text "A Markdown Project"
+      cell:
+        text "(no other matches)" muted id="no-match"
+    text "Note: MDT excluded — it's current project" muted id="excluded-note"
+
+annotation "Current project excluded from search results" target="excluded-note" position=bottom
 ```
 
 ### Search Empty State (No Matches)
 
-```wireframe
-┌─────────────────────────────────────────────────────────┐
-│ [backdrop: bg-black/50 backdrop-blur-sm]                │
-│                                                         │
-│     ┌─────────────────────────────────────────────┐     │
-│     │ [🔍] ZZZ_                             [✕]  │     │
-│     ├─────────────────────────────────────────────┤     │
-│     │                                             │     │
-│     │         No projects match your search       │     │
-│     │                                             │     │
-│     └─────────────────────────────────────────────┘     │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+```wireloom
+window "Project Browser — No Matches":
+  panel:
+    row:
+      input placeholder="ZZZ" type=search id="pb-search-empty"
+      button "×"
+    divider
+    text "No projects match your search" muted id="empty-search"
 ```
 
 ### Card Detail: Active Project
 
-```wireframe state:project-card active
-┌──────────────────────────────────┐
-│ ★ MDT                           │  ← blue gradient bg, blue border
-│ Markdown Ticket                 │  ← fav-star active, rotate-[15deg]
-│ Lightweight ticket management   │  ← description visible
-└──────────────────────────────────┘
-    ↑ border-blue-200 dark:border-blue-800
-    ↑ bg-gradient-to-br from-blue-50 to-indigo-50
-    ↑ shadow-md, rounded-xl, min-h-12
+```wireloom
+window "Project Card — Active":
+  panel:
+    row:
+      icon name="star" id="active-star"
+      text "MDT" bold id="active-code"
+    text "Markdown Ticket" id="active-name"
+    text "Lightweight ticket management" muted id="active-desc"
+
+annotation "Blue gradient bg, blue border, shadow-md, rounded-xl" target="active-code" position=top
+annotation "Fav-star active, rotate-[15deg]" target="active-star" position=right
 ```
 
 ### Card Detail: Inactive Project (No Favorite)
 
-```wireframe state:project-card inactive
-┌──────────────────────────────────┐
-│    ABC                           │  ← white/gray gradient bg
-│ Another Project                 │  ← no star
-│ Example description here        │  ← description visible
-└──────────────────────────────────┘
-    ↑ border-gray-200/50
-    ↑ bg-gradient-to-br from-white to-gray-50/80
-    ↑ shadow-sm, rounded-xl, min-h-12
+```wireloom
+window "Project Card — Inactive":
+  panel:
+    text "ABC" bold id="inactive-code"
+    text "Another Project" id="inactive-name"
+    text "Example description here" muted id="inactive-desc"
+
+annotation "White/gray gradient bg, no star, shadow-sm" target="inactive-code" position=top
 ```
 
 ### Card Detail: Inactive Project (Favorited)
 
-```wireframe state:project-card inactive-favorited
-┌──────────────────────────────────┐
-│ ★ XYZ                           │  ← fav-star active
-│ Third Project                   │  ← description visible
-│ Another example project         │
-└──────────────────────────────────┘
-    ↑ Star: absolute top-1 right-1
-    ↑ opacity-60 group-hover:opacity-100
+```wireloom
+window "Project Card — Inactive Favorited":
+  panel:
+    row:
+      text "XYZ" bold id="fav-code"
+      spacer
+      icon name="star" id="fav-star"
+    text "Third Project" id="fav-name"
+    text "Another example project" muted id="fav-desc"
+
+annotation "Star: absolute top-1 right-1, opacity-60 group-hover:opacity-100" target="fav-star" position=right
 ```
 
 ### Card Hover State
 
-```wireframe state:project-card hover
-┌──────────────────────────────────┐
-│    ABC                           │  ← shadow-lg
-│ Another Project                 │  ← -translate-y-0.5
-│ Example description here        │  ← scale-[1.02]
-└──────────────────────────────────┘
-    ↑ transition-all duration-200 ease-out
+```wireloom
+window "Project Card — Hover":
+  panel:
+    text "ABC" bold id="hover-code"
+    text "Another Project" id="hover-name"
+    text "Example description here" muted id="hover-desc"
+
+annotation "shadow-lg, -translate-y-0.5, scale-[1.02]" target="hover-code" position=top
+annotation "transition-all duration-200 ease-out" target="hover-name" position=right
 ```
 
 ### Empty State (No Projects)
 
-```wireframe state:project-panel empty
-┌─────────────────────────────────────────────────────────┐
-│ [backdrop: bg-black/50 backdrop-blur-sm]                │
-│                                                         │
-│     ┌─────────────────────────────────────────────┐     │
-│     │ [🔍] Search projects...              [✕]  │     │
-│     ├─────────────────────────────────────────────┤     │
-│     │                                             │     │
-│     │         No projects available               │     │
-│     │                                             │     │
-│     └─────────────────────────────────────────────┘     │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+```wireloom
+window "Project Browser — Empty":
+  panel:
+    row:
+      input placeholder="Search projects..." type=search
+      button "×"
+    divider
+    text "No projects available" muted id="empty-projects"
 ```
 
 ### Mobile Viewport
 
-```wireframe viewport:mobile
-┌──────────────────────────────┐
-│ [backdrop: bg-black/50]      │
-│                              │
-│ ┌──────────────────────────┐ │
-│ │ [🔍] Search projects..[✕]│ │
-│ ├──────────────────────────┤ │
-│ │                          │ │
-│ │ ┌──────────────────────┐ │ │
-│ │ │ ★ MDT                │ │ │
-│ │ │ Markdown Ticket      │ │ │
-│ │ │ Lightweight mgmt     │ │ │
-│ │ └──────────────────────┘ │ │
-│ │                          │ │
-│ │ ┌──────────────────────┐ │ │
-│ │ │    ABC                │ │ │
-│ │ │ Another Project      │ │ │
-│ │ └──────────────────────┘ │ │
-│ │                          │ │
-│ │ ┌──────────────────────┐ │ │
-│ │ │    XYZ                │ │ │
-│ │ │ Third Project        │ │ │
-│ │ └──────────────────────┘ │ │
-│ │                          │ │
-│ └──────────────────────────┘ │
-│                              │
-└──────────────────────────────┘
-    ↑ Single column on mobile
+```wireloom
+window "Project Browser — Mobile":
+  panel:
+    row:
+      input placeholder="Search projects..." type=search
+      button "×"
+    divider
+    list:
+      slot "MDT":
+        row:
+          icon name="star"
+          text "Markdown Ticket" bold
+        text "Lightweight mgmt" muted
+      slot "ABC":
+        text "Another Project"
+      slot "XYZ":
+        text "Third Project"
+
+annotation "Single column on mobile" target="empty-projects" position=bottom
 ```
 
 ---
@@ -180,98 +169,110 @@ Current project (MDT) is excluded when the query matches its code or name:
 
 ### Desktop (Active + Inactive Chips + Launcher)
 
-```wireframe
-┌───────────────────────────────────────────────────────────┐
-│                                                           │
-│  ┌─────────────────┐ ┌──────┐ ┌──────┐ ┌──────┐ [⊕]    │
-│  │ ★ MDT           │ │ ABC  │ │ XYZ  │ │ API  │         │
-│  │ Markdown Ticket │ │      │ │      │ │      │         │
-│  │ ticket mgmt     │ │      │ │      │ │      │         │
-│  └─────────────────┘ └──────┘ └──────┘ └──────┘         │
-│  ↑ active card         ↑ chips (hover reveals details)  │
-│  ↑ click opens panel   ↑ click switches project         │
-│                        ↑ launcher opens panel            │
-└───────────────────────────────────────────────────────────┘
+```wireloom
+window "Project Selector Rail — Desktop":
+  panel:
+    row:
+      panel id="active-card":
+        row:
+          icon name="star"
+          text "MDT" bold
+        text "Markdown Ticket"
+        text "ticket mgmt" muted
+      chip "ABC" id="chip-abc"
+      chip "XYZ" id="chip-xyz"
+      chip "API" id="chip-api"
+      button "⊕" id="launcher-btn"
+
+annotation "Active card: click opens panel (NOT switch)" target="active-card" position=top
+annotation "Inactive chips: click switches project" target="chip-abc" position=bottom
+annotation "Launcher button: opens project browser panel" target="launcher-btn" position=right
 ```
 
 ### Active Card Detail
 
-```wireframe state:active-card rail
-┌──────────────────────────────────┐
-│ ★ MDT                           │  ← fav-star--card
-│ Markdown Ticket                 │  ← text-[10px] sm:text-xs
-│ Lightweight ticket management   │  ← hidden sm:block for desc
-└──────────────────────────────────┘
-    ↑ useRailWidthConstraints: min-w-[100px] sm:min-w-[150px] max-w-[280px]
-    ↑ click → onLauncherClick() (opens panel, NOT switch)
+```wireloom
+window "Rail Active Card Detail":
+  panel:
+    row:
+      icon name="star" id="rail-star"
+      text "MDT" bold id="rail-active-code"
+    text "Markdown Ticket" size=small id="rail-active-name"
+    text "Lightweight ticket management" muted size=small id="rail-active-desc"
+
+annotation "min-w-[100px] sm:min-w-[150px] max-w-[280px]" target="rail-active-code" position=right
+annotation "click → onLauncherClick() (opens panel, NOT switch)" target="rail-active-code" position=bottom
 ```
 
 ### Inactive Chip Detail
 
-```wireframe state:inactive-chip default
-┌──────────┐
-│    ABC   │  ← text-sm font-medium
-└──────────┘
-    ↑ rounded-md px-2 py-1.5 h-12
-    ↑ HoverCard wrapper (100ms delay)
+```wireloom
+window "Rail Chip — Default":
+  panel:
+    text "ABC" bold id="chip-default"
+
+annotation "rounded-md px-2 py-1.5 h-12" target="chip-default" position=right
 ```
 
-```wireframe state:inactive-chip favorited
-┌──────────┐
-│    XYZ ★│  ← fav-star--chip overlay
-└──────────┘
-    ↑ Star: rotated chip variant
+```wireloom
+window "Rail Chip — Favorited":
+  panel:
+    row:
+      text "XYZ" bold id="chip-fav"
+      icon name="star" id="chip-fav-star"
+
+annotation "Fav-star rotated chip variant" target="chip-fav-star" position=right
 ```
 
 ### Inactive Chip Hover (HoverCard)
 
-```wireframe state:inactive-chip hover
-┌──────────┐
-│    ABC   │  ← chip highlighted
-└──────────┘
-     │
-     ▼
-┌──────────────────────────┐
-│ ABC  Another Project     │  ← HoverCardContent w-80
-│ Example description here │  ← whitespace-pre-wrap
-└──────────────────────────┘
-    ↑ Appears on mouse enter (100ms)
-    ↑ Disappears on mouse leave (100ms)
+```wireloom
+window "Rail Chip — Hover":
+  panel:
+    text "ABC" bold id="chip-hover-abc"
+    divider
+    row:
+      text "ABC" bold
+      text "Another Project"
+    text "Example description here" muted id="hovercard-content"
+
+annotation "HoverCard w-80, 100ms delay" target="hovercard-content" position=right
 ```
 
 ### Launcher Button
 
-```wireframe state:launcher default
-  ┌───┐
-  │ ⊕ │  ← Plus icon, lucide-react
-  └───┘
-    ↑ rounded-full w-10 h-10
-    ↑ gradient bg, shadow-sm
-    ↑ hover: shadow-md, -translate-y-0.5
+```wireloom
+window "Launcher Button — Default":
+  panel:
+    button "⊕" id="launcher-default"
+
+annotation "rounded-full w-10 h-10, gradient bg, shadow-sm" target="launcher-default" position=right
 ```
 
-```wireframe state:launcher active
-  ┌───┐
-  │ ⊕ │  ← ring-2 ring-blue-400
-  └───┘
-    ↑ Panel is open
+```wireloom
+window "Launcher Button — Active (Panel Open)":
+  panel:
+    button "⊕" id="launcher-active"
+
+annotation "ring-2 ring-blue-400 when panel open" target="launcher-active" position=right
 ```
 
 ### Mobile Rail (Active Only + Launcher)
 
-```wireframe viewport:mobile
-┌────────────────────────────────┐
-│                                │
-│  ┌─────────────────┐       [⊕] │
-│  │ ★ MDT           │           │
-│  │ Markdown Ticket │           │
-│  │ ticket mgmt     │           │
-│  └─────────────────┘           │
-│  ↑ only active card           │
-│  ↑ chips hidden on mobile     │
-│  ↑ launcher still visible     │
-│                                │
-└────────────────────────────────┘
+```wireloom
+window "Project Selector Rail — Mobile":
+  panel:
+    row:
+      panel:
+        row:
+          icon name="star"
+          text "MDT" bold
+        text "Markdown Ticket"
+        text "ticket mgmt" muted
+      spacer
+      button "⊕"
+
+annotation "Only active card shown on mobile; chips hidden" target="launcher-default" position=bottom
 ```
 
 ---
@@ -280,31 +281,44 @@ Current project (MDT) is excluded when the query matches its code or name:
 
 ### Click Active Card → Panel Opens Below
 
-```wireframe
-┌───────────────────────────────────────────────────────────┐
-│                                                           │
-│  ┌─────────────────┐ ┌──────┐ ┌──────┐ ┌──────┐ [⊕]    │
-│  │ ★ MDT           │ │ ABC  │ │ XYZ  │ │ API  │         │
-│  │ Markdown Ticket │ │      │ │      │ │      │         │
-│  │ ticket mgmt     │ │      │ │      │ │      │         │
-│  └─────────────────┘ └──────┘ └──────┘ └──────┘         │
-│                                                           │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │ [🔍] Search projects...                [✕]  │ │
-│  ├─────────────────────────────────────────────────────┤ │
-│  │ ┌────────────────┐ ┌────────────────┐              │ │
-│  │ │ ★ MDT          │ │    ABC          │              │ │
-│  │ │ Markdown Ticket│ │ Another Project│              │ │
-│  │ └────────────────┘ └────────────────┘              │ │
-│  │ ┌────────────────┐ ┌────────────────┐              │ │
-│  │ │    XYZ          │ │    API          │              │ │
-│  │ │ Third Project  │ │ API Gateway    │              │ │
-│  │ └────────────────┘ └────────────────┘              │ │
-│  └─────────────────────────────────────────────────────┘ │
-│                                                           │
-└───────────────────────────────────────────────────────────┘
-    ↑ Panel is full-screen overlay (not anchored to rail)
-    ↑ Appears centered with pt-20 offset
+```wireloom
+window "Rail — Panel Opens":
+  panel:
+    row:
+      panel:
+        row:
+          icon name="star"
+          text "MDT" bold
+        text "Markdown Ticket"
+        text "ticket mgmt" muted
+      chip "ABC"
+      chip "XYZ"
+      chip "API"
+      button "⊕"
+    divider
+    panel:
+      row:
+        input placeholder="Search projects..." type=search id="rail-panel-search"
+        button "×"
+      divider
+      grid cols=2 rows=2:
+        cell:
+          row:
+            icon name="star"
+            text "MDT" bold
+          text "Markdown Ticket"
+        cell:
+          text "ABC" bold
+          text "Another Project"
+        cell:
+          text "XYZ" bold
+          text "Third Project"
+        cell:
+          text "API" bold
+          text "API Gateway"
+
+annotation "Panel is full-screen overlay (not anchored to rail)" target="rail-panel-search" position=right
+annotation "Appears centered with pt-20 offset" target="rail-panel-search" position=top
 ```
 
 ---
