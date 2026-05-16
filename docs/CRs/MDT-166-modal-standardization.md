@@ -37,17 +37,46 @@ Border colors normalized to `border-gray-200 dark:border-gray-700`.
 Extracted repeated inline Tailwind patterns to CSS classes:
 
 - `.modal__header` / `.modal__body` / `.modal__footer` — layout
-- `.modal__close` / `.modal__close--absolute` — close button variants (SVG sizing in CSS)
+- `.modal__close--absolute` — single close button pattern (SVG sizing in CSS `.modal__close--absolute svg`)
 - `.modal__title` / `.modal__description` — header text
 - `.modal__section` / `.modal__section--sm` / `.modal__section--content` — content bars
 
 Fixed `ModalHeader`/`ModalFooter` rendering `undefined` in className by switching to `cn()`.
+
+### Phase 4 — Tab unification
+Settings and TicketViewer tabs shared Radix Tabs primitives but had completely different styling.
+Extracted shared CSS classes per STYLING.md:
+
+- `.tab` — base trigger (font, colors, active `border-b-2 border-primary`)
+- `.tab--fill` — modifier for equal-width triggers (settings)
+- `.tab__list` — `Tabs.List` container (replaces `modal__section` for tabs)
+- `.tab__content` — `Tabs.Content` container
+
+TicketViewer: inline 200-char className → `tab mr-3 last:mr-0`.
+Settings: `settings-tab-trigger` → `tab tab--fill`.
+
+### Phase 5 — Close button unification
+Eliminated `modal__close` (inline flex) in favor of single `modal__close--absolute` pattern:
+
+- `ModalHeader` renders close button as `modal__close--absolute` (like ticket viewer)
+- `modal__header` uses `modal__section pr-14` base — same height as ticket sections
+- `ProjectBrowserPanel` converted to use `ModalHeader`
+- Extracted `modal__container` for overlay flex layout
+
+### Build fix
+PostCSS `insertAfter` crash caused by malformed `.modal__title` block (missing closing brace).
+Also inlined all `@apply` custom-class chains — Tailwind 3 cannot resolve custom classes
+in `@apply` within the same `@layer components` block.
 
 ## Verification
 
 - [x] `grep -r "fixed inset-0" src/components --include="*.tsx"` returns only `ui/Modal.tsx`
 - [x] `grep -r "createPortal" src/components --include="*.tsx"` returns only `ui/Modal.tsx`
 - [x] `grep -r "p-6" src/components/{ui/Modal,RouteError,Settings,AddProject,FolderBrowser,QuickSearch,ProjectSelector}*` returns 0 results
-- [x] All modals render correctly (visual check via browser)
+- [x] All modals render correctly (visual check via Playwright)
+- [x] Settings modal tabs use `.tab` classes
+- [x] Ticket viewer tabs use `.tab` classes
+- [x] Single close button pattern (`modal__close--absolute`) across all modals
+- [x] `bun run build` passes
 - [x] No regressions in escape-to-close, click-outside-to-close, body scroll lock
 - [x] `MODALS.md` updated with canonical patterns and tight spacing standard
