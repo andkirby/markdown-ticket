@@ -1,7 +1,8 @@
 import type { SortPreferences } from '../config/sorting'
 import { ArrowUpDown, Edit, Eye, EyeOff, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
@@ -29,6 +30,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   const { themeMode, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const [eventHistoryForceHidden, setEventHistoryForceHidden] = useState(() => getEventHistoryForceHidden())
 
   // Track EventHistory state changes
@@ -41,7 +43,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)
+        && (!dropdownRef.current || !dropdownRef.current.contains(event.target as Node))) {
         setIsOpen(false)
       }
     }
@@ -109,8 +112,16 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         <Menu className="h-4 w-4" />
       </Button>
 
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-background border border-border rounded-md shadow-lg z-[60]">
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed bg-background border border-border rounded-md shadow-lg z-[60]"
+          style={{
+            top: menuRef.current ? menuRef.current.getBoundingClientRect().bottom + 4 : 0,
+            right: window.innerWidth - (menuRef.current?.getBoundingClientRect().right ?? 0),
+            width: 192,
+          }}
+        >
           <div className="py-1">
             {/**
               * @testid add-project-button — Button to open add project modal
@@ -274,7 +285,8 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               </ButtonGroup>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )
