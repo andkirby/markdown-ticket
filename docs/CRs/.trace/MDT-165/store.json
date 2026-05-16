@@ -1,0 +1,804 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-165"
+  },
+  "requirements": [
+    {
+      "id": "BR-1",
+      "kind": "behavior",
+      "text": "WHEN a fenced code block has language 'wireframe' and non-empty info string metadata, the system shall render a label div containing the escaped metadata text above the code block",
+      "sourceRef": "CR Section 5 Acceptance Criteria: wireframe state:surface empty renders labeled block",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "kind": "behavior",
+      "text": "WHEN a fenced code block has language 'wireframe' and empty or absent info string, the system shall render a normal code block without a label div",
+      "sourceRef": "CR Section 5 Acceptance Criteria: plain wireframe renders without label",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "kind": "behavior",
+      "text": "WHEN markdown content contains pipe-delimited table syntax, the system shall render valid HTML table elements (table, thead, tbody, tr, th, td)",
+      "sourceRef": "CR Section 5 Acceptance Criteria: tables render correctly",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-4",
+      "kind": "behavior",
+      "text": "WHEN markdown content contains strikethrough syntax (~~text~~), the system shall render the text wrapped in strikethrough markup (del or s tags)",
+      "sourceRef": "CR Section 5 Acceptance Criteria: strikethrough renders correctly",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-6",
+      "kind": "behavior",
+      "text": "WHEN markdown content contains a fenced code block with language 'mermaid', the system shall produce HTML output compatible with the existing processMermaidBlocks function for diagram rendering",
+      "sourceRef": "CR Section 5 Acceptance Criteria: mermaid blocks compatible with processMermaidBlocks",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-7",
+      "kind": "behavior",
+      "text": "WHEN rendered HTML contains fenced code blocks with language class attributes, the system shall apply Prism syntax highlighting to each block based on its language",
+      "sourceRef": "CR Section 5 Acceptance Criteria: Prism syntax highlighting works on fenced code blocks",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-8",
+      "kind": "behavior",
+      "text": "WHEN markdown content is submitted for rendering, the system shall preprocess ticket references and document references into links before markdown-to-HTML conversion",
+      "sourceRef": "CR Section 5 Acceptance Criteria: smart-link preprocessing continues to work",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-9",
+      "kind": "behavior",
+      "text": "WHEN markdown content contains headings (h1-h6), the system shall generate id attributes using a GitHub-compatible slug algorithm matching Showdown's ghCompatibleHeaderId output format",
+      "sourceRef": "assess.md: Heading ID Format Compatibility mismatch point",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-10",
+      "kind": "behavior",
+      "text": "WHEN rendered HTML is sanitized, the system shall allow wireframe label markup (div elements with class attributes 'code-block-label' and 'wireframe-label') through DOMPurify",
+      "sourceRef": "CR Section 5 Acceptance Criteria: DOMPurify sanitization allows new label markup",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Wireframe label text SHALL be HTML-escaped via markdown-it's built-in escapeHtml utility to prevent XSS injection",
+      "sourceRef": "CR Section 5 Non-Functional: label text is HTML-escaped via escapeHtml",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Rendering performance for non-wireframe content SHALL not regress compared to the Showdown baseline",
+      "sourceRef": "CR Section 5 Non-Functional: no change to rendering performance",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The showdown package SHALL be fully removed from package.json dependencies with no remaining imports in source or test files",
+      "sourceRef": "CR Section 5 Non-Functional: showdown removed from direct dependencies",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The markdown rendering pipeline order SHALL remain: preprocessMarkdown -> render -> processMermaidBlocks -> highlightCodeBlocks -> DOMPurify.sanitize",
+      "sourceRef": "CR Section 4: Pipeline preservation key pattern",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Heading ID slug algorithm SHALL produce identical output to Showdown's ghCompatibleHeaderId for all heading text inputs",
+      "sourceRef": "assess.md: Heading ID Format Compatibility mismatch point",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a wireframe fence contains special HTML characters (<, >, &, \", ') in info string metadata, THEN the label div shall display the escaped characters as text content, not render them as HTML",
+      "sourceRef": "Derived from C1 XSS constraint + wireframe metadata use case",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF a fenced code block has no language specified, THEN the system shall render a plain pre/code block without syntax highlighting or label div",
+      "sourceRef": "Derived from CR Section 4: custom fence renderer only activates for wireframe language",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF a wireframe fence info string contains multiple metadata tokens (e.g., 'state:surface empty mode:edit'), THEN the entire info string shall appear as the label text",
+      "sourceRef": "Derived from BR-1: label contains the full info string",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-11",
+      "kind": "behavior",
+      "text": "WHEN markdown content is submitted for table-of-contents extraction, the system shall return heading items with correct text, level (offset by headerLevelStart), and slug ID matching the heading IDs generated by the rendering pipeline",
+      "sourceRef": "assess.md: tableOfContents.ts co-migration; CR Section 5: tables/heading rendering",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF headerLevelStart is 3, THEN a ## heading (level 2) shall appear as level 4 in the TOC output",
+      "sourceRef": "Derived from BR-11: headerLevelStart offset behavior must be preserved from Showdown migration",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-5",
+      "kind": "behavior",
+      "text": "WHEN markdown content contains task list syntax (- [ ] or - [x]), the system shall render list items with disabled checkbox input elements reflecting checked state",
+      "sourceRef": "CR Section 5 Acceptance Criteria: task lists render correctly; Non-Ambiguity Table: must produce input with disabled/checked",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "IF a heading contains special characters (punctuation, Unicode, ampersands, e.g. 'C++ & Rust', 'Über Büros'), THEN the slug ID shall match Showdown's ghCompatibleHeaderId output character-for-character",
+      "sourceRef": "Derived from C5: heading ID parity constraint; critical divergence point between slug algorithms",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "wireframe_with_metadata_label",
+      "title": "Wireframe fence with metadata renders labeled code block",
+      "covers": [
+        "BR-1",
+        "BR-10"
+      ],
+      "given": "a markdown document containing a fenced code block with language 'wireframe' and info string 'state:surface empty'",
+      "when": "the document is rendered",
+      "then": "a div with class 'code-block-label wireframe-label' containing text 'state:surface empty' appears above the code block, and the code block is visible",
+      "sourceRef": "BR-1, BR-10"
+    },
+    {
+      "id": "wireframe_without_metadata",
+      "title": "Wireframe fence without metadata renders as normal code block",
+      "covers": [
+        "BR-2"
+      ],
+      "given": "a markdown document containing a fenced code block with language 'wireframe' and no info string metadata",
+      "when": "the document is rendered",
+      "then": "a standard pre/code block with class 'language-wireframe' is visible and no label div appears above it",
+      "sourceRef": "BR-2"
+    },
+    {
+      "id": "table_rendering",
+      "title": "Pipe-delimited table renders as HTML table",
+      "covers": [
+        "BR-3"
+      ],
+      "given": "a markdown document containing a pipe-delimited table with headers and two data rows",
+      "when": "the document is rendered",
+      "then": "a visible HTML table element contains thead, tbody, th, and td elements matching the source data",
+      "sourceRef": "BR-3"
+    },
+    {
+      "id": "strikethrough_rendering",
+      "title": "Strikethrough syntax renders correctly",
+      "covers": [
+        "BR-4"
+      ],
+      "given": "a markdown document containing text with strikethrough syntax (~~deleted text~~)",
+      "when": "the document is rendered",
+      "then": "the text appears with a line through it wrapped in del or s tags",
+      "sourceRef": "BR-4"
+    },
+    {
+      "id": "mermaid_block_compatibility",
+      "title": "Mermaid fence produces markup compatible with post-processing",
+      "covers": [
+        "BR-6"
+      ],
+      "given": "a markdown document containing a fenced code block with language 'mermaid' and a simple graph definition",
+      "when": "the document is rendered",
+      "then": "the mermaid block is transformed into a mermaid container with visible diagram content",
+      "sourceRef": "BR-6"
+    },
+    {
+      "id": "prism_syntax_highlighting",
+      "title": "Fenced code blocks receive Prism syntax highlighting",
+      "covers": [
+        "BR-7"
+      ],
+      "given": "a markdown document containing a fenced code block with language 'typescript' and code content",
+      "when": "the document is rendered",
+      "then": "the code block is visible with Prism-applied syntax highlighting classes on the code content",
+      "sourceRef": "BR-7"
+    },
+    {
+      "id": "smart_link_preprocessing",
+      "title": "Ticket and document references are converted to links",
+      "covers": [
+        "BR-8"
+      ],
+      "given": "a markdown document containing a bare ticket reference (MDT-001) and a document reference (README.md)",
+      "when": "the document is rendered",
+      "then": "the ticket reference appears as a clickable link to the ticket page and the document reference appears as a clickable link",
+      "sourceRef": "BR-8"
+    },
+    {
+      "id": "heading_id_generation",
+      "title": "Headings generate GitHub-compatible slug IDs",
+      "covers": [
+        "BR-9",
+        "BR-11"
+      ],
+      "given": "a markdown document containing headings at multiple levels (## Introduction, ### Sub Section)",
+      "when": "the document is rendered and the table of contents is extracted",
+      "then": "each heading has an id attribute with a GitHub-style slug (e.g., 'introduction', 'sub-section') and the TOC items reference the same slug IDs",
+      "sourceRef": "BR-9, BR-11"
+    },
+    {
+      "id": "dompurify_allows_wireframe_label",
+      "title": "DOMPurify allows wireframe label markup through sanitization",
+      "covers": [
+        "BR-10"
+      ],
+      "given": "a rendered markdown document containing a wireframe label div with class 'code-block-label wireframe-label'",
+      "when": "sanitization is applied",
+      "then": "the label div with its class attribute remains visible in the sanitized output",
+      "sourceRef": "BR-10"
+    },
+    {
+      "id": "task_list_rendering",
+      "title": "Task list renders with disabled checkboxes",
+      "covers": [
+        "BR-5"
+      ],
+      "given": "a markdown document containing a task list with one unchecked item and one checked item",
+      "when": "the document is rendered",
+      "then": "two checkbox input elements are visible, the first unchecked and the second checked, and both are disabled",
+      "sourceRef": "BR-5"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-render-pipeline-swap",
+      "title": "Replace Showdown with markdown-it as the rendering engine in useMarkdownProcessor.ts, preserving the 5-step pipeline shape",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-markdown-processor",
+        "ART-package-json"
+      ],
+      "sourceRef": "architecture: rendering pipeline swap"
+    },
+    {
+      "id": "OBL-wireframe-fence-plugin",
+      "title": "Custom markdown-it fence renderer plugin detects wireframe language + non-empty info string and emits escaped label div above code block",
+      "derivedFrom": [
+        "BR-1",
+        "BR-2",
+        "BR-10",
+        "C1",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-wireframe-plugin",
+        "ART-markdown-processor"
+      ],
+      "sourceRef": "architecture: wireframe fence plugin"
+    },
+    {
+      "id": "OBL-mermaid-regex-cleanup",
+      "title": "Remove Showdown-specific first regex (double class 'mermaid language-mermaid') from processMermaidBlocks; retain only language-mermaid pattern compatible with markdown-it output",
+      "derivedFrom": [
+        "BR-6",
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-mermaid-core"
+      ],
+      "sourceRef": "assess.md Mismatch: Mermaid HTML Structure"
+    },
+    {
+      "id": "OBL-dom-purify-label-allow",
+      "title": "DOMPurify config allows div with class attributes code-block-label and wireframe-label through sanitization",
+      "derivedFrom": [
+        "BR-10"
+      ],
+      "artifactIds": [
+        "ART-dom-purify-config"
+      ],
+      "sourceRef": "architecture: DOMPurify label allowance"
+    },
+    {
+      "id": "OBL-task-list-plugin",
+      "title": "Add markdown-it-task-lists plugin producing input[type=checkbox] with disabled and checked attributes matching DOMPurify whitelist",
+      "derivedFrom": [
+        "BR-5"
+      ],
+      "artifactIds": [
+        "ART-markdown-processor",
+        "ART-package-json"
+      ],
+      "sourceRef": "architecture: task list plugin"
+    },
+    {
+      "id": "OBL-preprocessor-pipeline-compat",
+      "title": "Smart-link preprocessing (preprocessMarkdown) continues to run before markdown-it rendering, producing markdown string input; no behavioral change",
+      "derivedFrom": [
+        "BR-8",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-preprocessor",
+        "ART-markdown-processor"
+      ],
+      "sourceRef": "architecture: preprocessing compatibility"
+    },
+    {
+      "id": "OBL-showdown-full-removal",
+      "title": "Remove showdown from package.json dependencies; update all test files importing showdown to use markdown-it for assertion rendering; no remaining showdown imports",
+      "derivedFrom": [
+        "C3"
+      ],
+      "artifactIds": [
+        "ART-package-json",
+        "ART-preprocessor-test",
+        "ART-preprocessor-mdt150-test"
+      ],
+      "sourceRef": "architecture: showdown removal"
+    },
+    {
+      "id": "OBL-processor-unit-tests",
+      "title": "Create unit tests for useMarkdownProcessor output: heading IDs, code block classes, wireframe labels, Mermaid markup patterns",
+      "derivedFrom": [
+        "BR-1",
+        "BR-9",
+        "C1",
+        "Edge-1",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-processor-test"
+      ],
+      "sourceRef": "assess.md Verification Gaps: unit tests for processor"
+    },
+    {
+      "id": "OBL-syntax-highlight-compat",
+      "title": "Prism syntax highlighting (highlightCodeBlocks) continues to work with markdown-it output structure: pre > code.language-X selector patterns unchanged",
+      "derivedFrom": [
+        "BR-7",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-syntax-highlight",
+        "ART-markdown-processor"
+      ],
+      "sourceRef": "architecture: syntax highlight compatibility"
+    },
+    {
+      "id": "OBL-performance-non-regression",
+      "title": "Rendering performance for non-wireframe content SHALL not regress compared to Showdown baseline",
+      "derivedFrom": [
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-markdown-processor",
+        "ART-processor-test"
+      ],
+      "sourceRef": "architecture: performance non-regression constraint"
+    },
+    {
+      "id": "OBL-heading-id-slug-compat",
+      "title": "Shared slugify(text) utility in src/utils/slugify.ts used by both markdown-it-anchor config and tableOfContents.ts to produce identical heading IDs matching Showdown's ghCompatibleHeaderId",
+      "derivedFrom": [
+        "BR-9",
+        "C5",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-markdown-processor",
+        "ART-table-of-contents",
+        "ART-slugify",
+        "ART-package-json"
+      ],
+      "sourceRef": "architecture: heading ID compatibility via shared slugify"
+    },
+    {
+      "id": "OBL-toc-extraction-decouple",
+      "title": "Refactor tableOfContents.ts to extract headings from raw markdown text via regex, strip inline markdown from captured text, and use shared slugify() for ID generation — removing Showdown dependency",
+      "derivedFrom": [
+        "BR-11",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-table-of-contents",
+        "ART-slugify"
+      ],
+      "sourceRef": "assess.md Mismatch: tableOfContents.ts; architecture: heading extraction decoupling"
+    },
+    {
+      "id": "OBL-heading-anchor-clickable",
+      "title": "Heading titles are wrapped in clickable anchor links with hover # and scroll offset",
+      "derivedFrom": [
+        "BR-9",
+        "BR-11"
+      ],
+      "artifactIds": [
+        "ART-markdown-processor",
+        "ART-html-parser",
+        "ART-css"
+      ],
+      "sourceRef": "CR:MDT-165"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-markdown-processor",
+      "path": "src/components/MarkdownContent/useMarkdownProcessor.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4 Modified Artifacts"
+    },
+    {
+      "id": "ART-wireframe-plugin",
+      "path": "src/utils/markdownItWireframePlugin.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4 New Artifacts"
+    },
+    {
+      "id": "ART-dom-purify-config",
+      "path": "src/components/MarkdownContent/domPurifyConfig.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4 Modified Artifacts"
+    },
+    {
+      "id": "ART-table-of-contents",
+      "path": "src/utils/tableOfContents.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md Mismatch: tableOfContents.ts"
+    },
+    {
+      "id": "ART-mermaid-core",
+      "path": "src/utils/mermaid/core.ts",
+      "kind": "runtime",
+      "sourceRef": "assess.md Mismatch: Mermaid HTML Structure"
+    },
+    {
+      "id": "ART-syntax-highlight",
+      "path": "src/utils/syntaxHighlight.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4 Modified Artifacts"
+    },
+    {
+      "id": "ART-preprocessor",
+      "path": "src/utils/markdownPreprocessor.ts",
+      "kind": "runtime",
+      "sourceRef": "CR Section 4 Affected Artifacts (unchanged behavior)"
+    },
+    {
+      "id": "ART-package-json",
+      "path": "package.json",
+      "kind": "config",
+      "sourceRef": "CR Section 4 Modified Artifacts"
+    },
+    {
+      "id": "ART-preprocessor-test",
+      "path": "src/utils/markdownPreprocessor.test.ts",
+      "kind": "test",
+      "sourceRef": "assess.md Mismatch: Test Files Using Showdown"
+    },
+    {
+      "id": "ART-preprocessor-mdt150-test",
+      "path": "src/utils/markdownPreprocessor.mdt150.test.ts",
+      "kind": "test",
+      "sourceRef": "assess.md Mismatch: Test Files Using Showdown"
+    },
+    {
+      "id": "ART-processor-test",
+      "path": "src/components/MarkdownContent/useMarkdownProcessor.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture: new unit tests for processor"
+    },
+    {
+      "id": "ART-slugify",
+      "path": "src/utils/slugify.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture: shared slug function for heading ID parity"
+    },
+    {
+      "id": "ART-html-parser",
+      "path": "src/components/MarkdownContent/useHtmlParser.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "ART-css",
+      "path": "src/index.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-165"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-markdown-it-migration-e2e",
+      "kind": "e2e",
+      "title": "E2E tests for markdown-it migration and wireframe label rendering",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-10",
+        "BR-11"
+      ],
+      "file": "tests/e2e/ticket/markdown-it-migration.spec.ts",
+      "sourceRef": "scenario:wireframe_with_metadata_label,wireframe_without_metadata,table_rendering,strikethrough_rendering,task_list_rendering,mermaid_block_compatibility,prism_syntax_highlighting,smart_link_preprocessing,heading_id_generation,dompurify_allows_wireframe_label"
+    },
+    {
+      "id": "TEST-wireframe-plugin-unit",
+      "kind": "unit",
+      "title": "markdownItWireframePlugin unit tests",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "C1",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3"
+      ],
+      "file": "src/utils/markdownItWireframePlugin.test.ts",
+      "sourceRef": "tests.md#wireframe-plugin"
+    },
+    {
+      "id": "TEST-slugify-unit",
+      "kind": "unit",
+      "title": "slugify shared utility unit tests",
+      "covers": [
+        "BR-9",
+        "C5",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "file": "src/utils/slugify.test.ts",
+      "sourceRef": "tests.md#slugify"
+    },
+    {
+      "id": "TEST-toc-extraction-unit",
+      "kind": "unit",
+      "title": "extractTableOfContents unit tests",
+      "covers": [
+        "BR-11",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "file": "src/utils/tableOfContents.test.ts",
+      "sourceRef": "tests.md#toc-extraction"
+    },
+    {
+      "id": "TEST-mermaid-core-unit",
+      "kind": "unit",
+      "title": "processMermaidBlocks unit tests",
+      "covers": [
+        "BR-6"
+      ],
+      "file": "src/utils/mermaid/core.test.ts",
+      "sourceRef": "tests.md#mermaid-core"
+    },
+    {
+      "id": "TEST-performance-non-regression",
+      "kind": "integration",
+      "title": "Rendering performance non-regression test",
+      "covers": [
+        "C2"
+      ],
+      "file": "src/components/MarkdownContent/useMarkdownProcessor.test.ts",
+      "sourceRef": "tests.md#performance"
+    },
+    {
+      "id": "TEST-showdown-removal",
+      "kind": "integration",
+      "title": "Verify showdown fully removed from dependencies and imports",
+      "covers": [
+        "C3"
+      ],
+      "file": "src/components/MarkdownContent/useMarkdownProcessor.test.ts",
+      "sourceRef": "tests.md#showdown-removal"
+    },
+    {
+      "id": "TEST-processor-pipeline-unit",
+      "kind": "unit",
+      "title": "useMarkdownProcessor rendering pipeline integration tests",
+      "covers": [
+        "BR-1",
+        "BR-2",
+        "BR-3",
+        "BR-4",
+        "BR-5",
+        "BR-6",
+        "BR-7",
+        "BR-8",
+        "BR-9",
+        "BR-10",
+        "C1",
+        "C4",
+        "C5"
+      ],
+      "file": "src/components/MarkdownContent/useMarkdownProcessor.test.ts",
+      "sourceRef": "tests.md#processor-pipeline"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-0",
+      "title": "Install Dependencies + Create Infrastructure Stubs",
+      "ownsArtifactIds": [
+        "ART-package-json",
+        "ART-slugify",
+        "ART-wireframe-plugin"
+      ],
+      "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Implement Slugify Utility + Wireframe Plugin",
+      "ownsArtifactIds": [
+        "ART-slugify",
+        "ART-wireframe-plugin"
+      ],
+      "makesGreenIds": [
+        "TEST-slugify-unit",
+        "TEST-wireframe-plugin-unit"
+      ],
+      "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Showdown Removal + Performance Verification",
+      "ownsArtifactIds": [
+        "ART-package-json"
+      ],
+      "makesGreenIds": [
+        "TEST-showdown-removal",
+        "TEST-performance-non-regression"
+      ],
+      "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Refactor TOC and Update Preprocessor Tests",
+      "ownsArtifactIds": [
+        "ART-table-of-contents",
+        "ART-preprocessor-test",
+        "ART-preprocessor-mdt150-test"
+      ],
+      "makesGreenIds": [
+        "TEST-toc-extraction-unit"
+      ],
+      "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "TASK-5",
+      "title": "E2E Integration Verification",
+      "makesGreenIds": [
+        "TEST-markdown-it-migration-e2e",
+        "wireframe_with_metadata_label",
+        "wireframe_without_metadata",
+        "table_rendering",
+        "strikethrough_rendering",
+        "task_list_rendering",
+        "mermaid_block_compatibility",
+        "prism_syntax_highlighting",
+        "smart_link_preprocessing",
+        "heading_id_generation",
+        "dompurify_allows_wireframe_label"
+      ],
+      "sourceRef": "CR:MDT-165"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Migrate Processor + DOMPurify + Mermaid Cleanup",
+      "ownsArtifactIds": [
+        "ART-css",
+        "ART-dom-purify-config",
+        "ART-html-parser",
+        "ART-markdown-processor",
+        "ART-mermaid-core",
+        "ART-preprocessor",
+        "ART-processor-test",
+        "ART-syntax-highlight"
+      ],
+      "makesGreenIds": [
+        "TEST-mermaid-core-unit",
+        "TEST-processor-pipeline-unit"
+      ],
+      "sourceRef": "CR:MDT-165"
+    }
+  ]
+}

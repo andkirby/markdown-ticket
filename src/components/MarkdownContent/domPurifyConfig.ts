@@ -15,6 +15,7 @@ export const ALLOWED_TAGS = [
   'strong',
   'em',
   'del',
+  's',
   'br',
   'hr',
   'blockquote',
