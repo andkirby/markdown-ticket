@@ -79,7 +79,7 @@ export function TicketDocumentTabs({
         >
           <Tabs.List
             data-testid="subdoc-tab-row"
-            className="flex overflow-x-auto scrollbar-hide border-b border-gray-200 px-4 dark:border-gray-700"
+            className="modal__section flex overflow-x-auto scrollbar-hide"
           >
             {row.entries.map(entry => (
               <Tabs.Trigger

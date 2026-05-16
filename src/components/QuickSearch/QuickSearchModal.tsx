@@ -190,7 +190,7 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
     <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="quick-search-modal">
       <ModalBody className="p-0">
         {/* Search input */}
-        <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="modal__section">
           <QuickSearchInput
             value={query}
             onChange={setQuery}
