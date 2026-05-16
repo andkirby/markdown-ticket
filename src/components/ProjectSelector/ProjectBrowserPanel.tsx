@@ -27,7 +27,7 @@
 import type { Project } from '@mdt/shared/models/Project'
 import type { ProjectWithSelectorState, SelectorPreferences, SelectorState } from './types'
 import * as React from 'react'
-import { Modal, ModalBody } from '@/components/ui/Modal'
+import { Modal, ModalBody, ModalHeader } from '@/components/ui/Modal'
 import ProjectSelectorCard from './ProjectSelectorCard'
 
 interface ProjectBrowserPanelProps {
@@ -177,31 +177,13 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="project-browser-panel">
       <ModalBody className="p-0">
         {/* Header with search input */}
-        <div className="modal__section space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Select Project
-            </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="modal__close"
-              aria-label="Close panel"
-            >
-              <svg
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+        <ModalHeader
+          title="Select Project"
+          onClose={onClose}
+          closeTestId="project-browser-close"
+          className="border-b-0 pb-0"
+        />
+        <div className="px-4 pb-3 pt-0">
           {/* Search input (MDT-152) */}
           <div className="relative">
             <svg
