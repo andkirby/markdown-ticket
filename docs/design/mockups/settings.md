@@ -20,7 +20,7 @@ window "Settings":
     divider
     section "Default View":
       text "Open this view when navigating to a project" muted
-      combo value="Board" options="Board,List,Documents"
+      combo value="Board" options="Board,List"
 ```
 
 ## Board Tab
@@ -76,7 +76,7 @@ window "Settings":
     divider
     section "Default View":
       text "Open this view first" muted
-      combo value="Board" options="Board,List,Documents"
+      combo value="Board" options="Board,List"
 ```
 
 ## Annotations

@@ -67,7 +67,6 @@ window "Project Edit Form — Success":
     icon name="check" id="success-icon"
     text "Project Updated Successfully!" bold id="success-text"
     row justify=end:
-      button "Create Another"
       button "Done" primary
 
 annotation "Success confirmation replaces form" target="success-icon" position=top
@@ -115,4 +114,4 @@ window "Project Edit Form — Mobile":
 
 - Submit disables only the submit button while showing `Updating...`; form fields are not disabled during the request.
 - The shared project path tooltip still includes creation-oriented global config and auto-discovery guidance in edit mode.
-- The success dialog currently includes `Create Another` even when editing.
+- Edit-mode success should offer `Done` only; creation actions belong to the add-project flow.
