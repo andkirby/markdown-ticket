@@ -1,4 +1,4 @@
-import showdown from 'showdown'
+import { slugify } from './slugify'
 
 export interface TocItem {
   id: string
@@ -6,54 +6,62 @@ export interface TocItem {
   level: number
 }
 
-export function extractTableOfContents(content: string, headerLevelStart: number = 1): TocItem[] {
-  const converter = new showdown.Converter({
-    tables: true,
-    strikethrough: true,
-    tasklists: true,
-    ghCodeBlocks: true,
-    smoothLivePreview: true,
-    simpleLineBreaks: true,
-    headerLevelStart,
-    parseImgDimensions: true,
-    simplifiedAutoLink: true,
-    excludeTrailingPunctuationFromURLs: true,
-    literalMidWordUnderscores: true,
-    ghCompatibleHeaderId: true,
-  })
-
-  const html = converter.makeHtml(content)
-  return extractTableOfContentsFromHtml(html)
+/**
+ * Strip inline markdown syntax from heading text.
+ * Removes bold, italic, code, and link markup to produce plain text.
+ */
+function stripInlineMarkdown(text: string): string {
+  return text
+    // Links: [text](url) → text
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    // Bold: **text** or __text__ → text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    // Italic: *text* or _text_ → text
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    // Inline code: `text` → text
+    .replace(/`(.+?)`/g, '$1')
+    .trim()
 }
 
-function extractTableOfContentsFromHtml(html: string): TocItem[] {
+/**
+ * Remove fenced code blocks from markdown content so heading extraction
+ * does not pick up # comments inside code blocks.
+ * Handles both backtick (```) and tilde (~~~) fences with optional info strings.
+ */
+function stripFencedCodeBlocks(content: string): string {
+  return content.replace(/(^|\n)(:{0,3})(```|~~~)([^`\n]*\n[\s\S]*?\n\2\3)[ \t]*/g, '')
+}
+
+/**
+ * Extract table of contents from raw markdown content.
+ * Parses headings directly from markdown text via regex — no rendering dependency.
+ * Uses shared slugify() for ID generation to match markdown-it-anchor output.
+ */
+export function extractTableOfContents(content: string, headerLevelStart: number = 1): TocItem[] {
+  // Strip fenced code blocks before extracting headings to avoid
+  // picking up # comments in bash/python/yaml etc.
+  const contentWithoutCode = stripFencedCodeBlocks(content)
+
   const toc: TocItem[] = []
-  const headingRegex = /<h([1-6])(?:\s+id="([^"]*)")?[^>]*>(.*?)<\/h[1-6]>/gi
+  const headingRegex = /^(#{1,6})\s+(.+)$/gm
   let match
 
-  for (;;) {
-    match = headingRegex.exec(html)
-    if (!match)
-      break
+  while ((match = headingRegex.exec(contentWithoutCode)) !== null) {
+    const level = match[1].length
+    const rawText = match[2].trim()
 
-    const level = Number.parseInt(match[1])
-    const id = match[2] || ''
-    const htmlContent = match[3]
+    // Strip inline markdown from heading text
+    const text = stripInlineMarkdown(rawText)
 
-    const text = htmlContent
-      .replace(/<[^>]*>/g, '')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, '\'')
-      .trim()
+    // Generate slug ID using shared slugify
+    const id = slugify(text)
 
-    const finalId = id || text.toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
+    // Apply headerLevelStart offset: level becomes level + headerLevelStart - 1
+    const adjustedLevel = Math.min(level + headerLevelStart - 1, 6)
 
-    toc.push({ id: finalId, text, level })
+    toc.push({ id, text, level: adjustedLevel })
   }
 
   return toc

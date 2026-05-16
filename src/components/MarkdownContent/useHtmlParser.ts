@@ -16,6 +16,11 @@ export function getHtmlParserOptions(currentProject: string): HTMLReactParserOpt
   return {
     replace: (domNode: DOMNode) => {
       if (domNode instanceof Element && domNode.name === 'a') {
+        // Skip heading anchor permalinks from markdown-it-anchor
+        if (domNode.attribs?.class?.includes('header-anchor')) {
+          return undefined
+        }
+
         const href = domNode.attribs?.href || ''
 
         const parsedLink = classifyLink(href, currentProject)

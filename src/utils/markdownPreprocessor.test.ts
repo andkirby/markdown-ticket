@@ -1,5 +1,5 @@
+import MarkdownIt from 'markdown-it'
 import { describe, expect, it } from 'bun:test'
-import showdown from 'showdown'
 import { preprocessMarkdown } from './markdownPreprocessor'
 
 describe('preprocessMarkdown', () => {
@@ -18,17 +18,12 @@ describe('preprocessMarkdown', () => {
     ].join('\n')
 
     const processed = preprocessMarkdown(markdown, 'DEM', linkConfig)
-    const converter = new showdown.Converter({
-      tables: true,
-      strikethrough: true,
-      tasklists: true,
-      ghCodeBlocks: true,
-      smoothLivePreview: true,
-      simpleLineBreaks: true,
-    })
+    const md = new MarkdownIt()
 
     expect(processed).toContain('    - inside of one')
-    expect(converter.makeHtml(processed)).toContain('<li>one<ul>')
+    // markdown-it renders nested list with newline between li and ul
+    expect(md.render(processed)).toContain('<li>one')
+    expect(md.render(processed)).toContain('<ul>')
   })
 
   it('does not change already valid four-space nested lists', () => {
