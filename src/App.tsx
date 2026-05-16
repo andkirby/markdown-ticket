@@ -14,6 +14,7 @@ import { QuickSearchModal } from './components/QuickSearch'
 import { RedirectToCurrentProject } from './components/RedirectToCurrentProject'
 import { RouteErrorModal } from './components/RouteErrorModal'
 import { SecondaryHeader } from './components/SecondaryHeader'
+import { SettingsModal } from './components/SettingsModal'
 import TicketViewer from './components/TicketViewer'
 import { Toaster } from './components/ui/sonner'
 import { ViewModeSwitcher } from './components/ViewModeSwitcher'
@@ -50,6 +51,7 @@ function ProjectRouteHandler() {
   const [showEditProjectModal, setShowEditProjectModal] = useState(false)
   const [lastBoardListMode, setLastBoardListMode] = useState<'board' | 'list'>(() => (localStorage.getItem('lastBoardListMode') as 'board' | 'list') || 'board')
   const [showQuickSearch, setShowQuickSearch] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   // Global keyboard shortcuts
   useGlobalKeyboard({
@@ -236,6 +238,7 @@ function ProjectRouteHandler() {
                 onAddProject={handleAddProject}
                 onEditProject={handleEditProject}
                 selectedProject={selectedProject}
+                onOpenSettings={() => setShowSettings(true)}
               />
             </div>
           </div>
@@ -297,6 +300,11 @@ function ProjectRouteHandler() {
         isOpen={eventHistoryOpen}
         onOpenChange={open => setEventHistoryState(open, false)}
         forceHidden={eventHistoryForceHidden}
+      />
+
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
       />
 
       <QuickSearchModal

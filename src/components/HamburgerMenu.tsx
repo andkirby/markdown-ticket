@@ -1,5 +1,5 @@
 import type { SortPreferences } from '../config/sorting'
-import { ArrowUpDown, Edit, Eye, EyeOff, Menu, Monitor, Moon, Plus, Sun, Trash2 } from 'lucide-react'
+import { ArrowUpDown, Edit, Eye, EyeOff, Menu, Monitor, Moon, Plus, Settings, Sun, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { DEFAULT_SORT_ATTRIBUTES } from '../config/sorting'
@@ -15,6 +15,7 @@ interface HamburgerMenuProps {
   hasActiveProject?: boolean
   sortPreferences?: SortPreferences
   onSortPreferencesChange?: (preferences: SortPreferences) => void
+  onOpenSettings?: () => void
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -23,6 +24,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   hasActiveProject = false,
   sortPreferences,
   onSortPreferencesChange,
+  onOpenSettings,
 }) => {
   const { themeMode, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
@@ -90,9 +92,13 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     })
   }
 
+  const handleOpenSettings = () => {
+    setIsOpen(false)
+    onOpenSettings?.()
+  }
+
   return (
     <div className="relative flex" ref={menuRef}>
-      {/* Desktop only: Mobile theme toggle handled by AppHeader/HamburgerMenu (MDT-131) */}
       <Button
         data-testid="hamburger-menu"
         variant="ghost"
@@ -202,10 +208,20 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               </button>
             )}
 
-            {/* Delimiter before theme options */}
+            {/* Settings */}
+            <button
+              data-testid="settings-button"
+              onClick={handleOpenSettings}
+              className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </button>
+
+            {/* Delimiter before theme quick-access */}
             <ButtonGroupSeparator />
 
-            {/* Theme button group at bottom */}
+            {/* Theme button group — quick access */}
             <div className="px-2 py-1">
               <ButtonGroup orientation="horizontal" className="w-full">
                 <button
