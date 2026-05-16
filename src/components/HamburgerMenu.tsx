@@ -110,7 +110,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-background border border-border rounded-md shadow-lg z-50">
+        <div className="absolute right-0 top-full mt-1 w-48 bg-background border border-border rounded-md shadow-lg z-[60]">
           <div className="py-1">
             {/**
               * @testid add-project-button — Button to open add project modal
