@@ -403,7 +403,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       {/* Confirm Close Dialog — Pattern C */}
       <Modal isOpen={showConfirmClose} onClose={() => setShowConfirmClose(false)} size="sm">
         <ModalBody>
-          <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Discard Changes?</h3>
+          <h3 className="modal__title mb-2">Discard Changes?</h3>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             You have unsaved changes. Are you sure you want to close this dialog?
           </p>
@@ -425,7 +425,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
       {/* Confirmation Dialog — Pattern C */}
       <Modal isOpen={showConfirmation} onClose={() => setShowConfirmation(false)} size="sm" data-testid="confirm-creation-dialog">
         <ModalBody>
-          <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Confirm Project Creation</h3>
+          <h3 className="modal__title mb-2">Confirm Project Creation</h3>
           <div className="mb-4 space-y-2">
             <p>
               <strong>Project Name:</strong>
@@ -475,7 +475,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({
           <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
-          <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white text-center">
+          <h3 className="modal__title mb-2 text-center">
             {editMode ? 'Project Updated Successfully!' : 'Project Created Successfully!'}
           </h3>
           {createdFiles.length > 0 && (
