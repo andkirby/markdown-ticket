@@ -1,56 +1,53 @@
 ---
 code: MDT-166
-status: Proposed
+status: Done
 type: Technical Debt
 priority: Medium
 ---
 
 # Standardize modal components to base Modal pattern
 
-## Problem
+## What was done
 
-- 5 of 9 modal surfaces hand-roll their own `fixed inset-0` overlays instead of using the existing `<Modal>` component from `ui/Modal.tsx`
-- Inconsistent gap/spacing patterns: AddProjectModal uses `p-6 border-b`, TicketViewer uses `p-0` with section-managed padding, SettingsModal uses `p-6` ModalBody, RouteErrorModal uses `p-6` raw
-- ModalHeader is only used by SettingsModal — all others either skip it or build their own header
-- Close button styles vary: ModalHeader has `h-8 w-8`, TicketViewer has `absolute right-3 top-3 z-20 h-8 w-8`, AddProjectModal uses a ghost Button
-- Backdrop inconsistency: some use `bg-black bg-opacity-50`, others use `bg-black/50`, one uses `backdrop-blur-sm`
+### Phase 1 — Migration to `<Modal>` component
+All 5 hand-rolled modals migrated to base `<Modal>` from `ui/Modal.tsx`:
 
-## Affected Areas
+| Modal | Pattern | Before |
+|-------|---------|--------|
+| RouteErrorModal | C (alert) | Hand-rolled overlay |
+| FolderBrowserModal | A (form) | Hand-rolled overlay |
+| QuickSearchModal | B (content) | Manual `createPortal` + escape/click-outside hooks |
+| ProjectBrowserPanel | B (content) | Manual escape + body scroll lock |
+| AddProjectModal | A + 3×C | 5 separate hand-rolled overlays |
 
-- `src/components/ui/Modal.tsx` — base component may need tweaks
-- `src/components/AddProjectModal/AddProjectModal.tsx` — worst offender (5 hand-built overlays)
-- `src/components/AddProjectModal/components/FolderBrowserModal.tsx`
-- `src/components/QuickSearch/QuickSearchModal.tsx`
-- `src/components/RouteErrorModal.tsx`
-- `src/components/ProjectSelector/ProjectBrowserPanel.tsx`
-- `src/MODALS.md` — updated canonical patterns
+Base Modal backdrop fixed: `bg-black bg-opacity-50` → `bg-black/50`.
 
-## Desired Outcome
+### Phase 2 — Tight spacing standard
+All modals now follow TicketViewer's compact layout (`px-4 py-3`):
 
-### Success Conditions
+| Component | Before | After |
+|-----------|--------|-------|
+| `ModalHeader` | `p-6` | `px-4 py-3` |
+| `ModalBody` | `p-6` | `p-4` |
+| `ModalFooter` | `p-6` | `px-4 py-3` |
 
-- All modal surfaces use `<Modal>` from `ui/Modal.tsx` (no hand-rolled `fixed inset-0` anywhere in components)
-- Consistent gap style matching TicketViewer's tight layout: `ModalBody p-0`, sections manage own padding with `border-b` separators
-- One close button pattern: `absolute right-3 top-3 z-20 h-8 w-8 rounded-md` for content modals, built into ModalHeader for form modals
-- Uniform backdrop: `bg-black/50` (handled by base Modal)
-- `MODALS.md` documents three canonical patterns (A: form, B: content, C: alert) with examples
+Border colors normalized to `border-gray-200 dark:border-gray-700`.
 
-### Scope
+### Phase 3 — CSS class extraction (STYLING.md BEM)
+Extracted repeated inline Tailwind patterns to CSS classes:
 
-**In scope:**
-- Migrate all 5 hand-rolled modals to use `<Modal>`
-- Standardize gap/spacing to TicketViewer's tight style
-- Unify close button styling
-- Update `MODALS.md`
+- `.modal__header` / `.modal__body` / `.modal__footer` — layout
+- `.modal__close` / `.modal__close--absolute` — close button variants (SVG sizing in CSS)
+- `.modal__title` / `.modal__description` — header text
+- `.modal__section` / `.modal__section--sm` / `.modal__section--content` — content bars
 
-**Out of scope:**
-- Redesigning any modal's content or UX flow
-- Adding new modals
-- Changing TicketViewer (it's already the reference pattern)
+Fixed `ModalHeader`/`ModalFooter` rendering `undefined` in className by switching to `cn()`.
 
 ## Verification
 
-- [ ] `grep -r "fixed inset-0" src/components --include="*.tsx"` returns only `ui/Modal.tsx`
-- [ ] All modals render correctly (visual check)
-- [ ] No regressions in escape-to-close, click-outside-to-close, body scroll lock
-- [ ] `MODALS.md` updated with canonical patterns
+- [x] `grep -r "fixed inset-0" src/components --include="*.tsx"` returns only `ui/Modal.tsx`
+- [x] `grep -r "createPortal" src/components --include="*.tsx"` returns only `ui/Modal.tsx`
+- [x] `grep -r "p-6" src/components/{ui/Modal,RouteError,Settings,AddProject,FolderBrowser,QuickSearch,ProjectSelector}*` returns 0 results
+- [x] All modals render correctly (visual check via browser)
+- [x] No regressions in escape-to-close, click-outside-to-close, body scroll lock
+- [x] `MODALS.md` updated with canonical patterns and tight spacing standard
