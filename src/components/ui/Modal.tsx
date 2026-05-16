@@ -101,7 +101,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
     const modalContent = (
       <div className={cn('modal', overlayClassName)}>
-        <div className="flex min-h-[100dvh] items-start justify-center pt-[15vh] pb-8 px-4">
+        <div className="modal__container">
           {/* Background overlay */}
           <div
             className="modal-overlay"
