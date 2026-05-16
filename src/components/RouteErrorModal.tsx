@@ -1,5 +1,7 @@
 import { AlertTriangle, Home } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { Modal, ModalBody, ModalFooter } from './ui/Modal'
+import { Button } from './ui'
 
 interface RouteErrorModalProps {
   error: string
@@ -15,8 +17,8 @@ export function RouteErrorModal({ error, onClose }: RouteErrorModalProps) {
   }
 
   return (
-    <div data-testid="route-error" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card border rounded-lg p-6 max-w-md mx-4">
+    <Modal isOpen={true} onClose={onClose ?? handleGoHome} size="sm" data-testid="route-error">
+      <ModalBody>
         <div className="flex items-center space-x-3 mb-4">
           <AlertTriangle className="h-6 w-6 text-destructive" />
           <h2 className="text-lg font-semibold">Page Not Found</h2>
@@ -24,24 +26,18 @@ export function RouteErrorModal({ error, onClose }: RouteErrorModalProps) {
 
         <p className="text-muted-foreground mb-6">{error}</p>
 
-        <div className="flex space-x-3">
-          <button
-            onClick={handleGoHome}
-            className="btn btn-primary flex items-center space-x-2"
-          >
+        <ModalFooter justify="start">
+          <Button onClick={handleGoHome} className="flex items-center space-x-2">
             <Home className="h-4 w-4" />
             <span>Go Home</span>
-          </button>
+          </Button>
           {onClose && (
-            <button
-              onClick={onClose}
-              className="btn btn-outline"
-            >
+            <Button variant="outline" onClick={onClose}>
               Close
-            </button>
+            </Button>
           )}
-        </div>
-      </div>
-    </div>
+        </ModalFooter>
+      </ModalBody>
+    </Modal>
   )
 }

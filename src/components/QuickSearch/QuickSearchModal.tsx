@@ -10,9 +10,9 @@ import type { Project } from '@mdt/shared/models/Project'
 import type { QueryMode } from '@/hooks/useQuickSearch'
 import type { Ticket } from '@/types/ticket'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { createPortal } from 'react-dom'
+import { Modal, ModalBody } from '@/components/ui/Modal'
 import { useCrossProjectSearch } from '@/hooks/useCrossProjectSearch'
 import { parseQueryMode, parseQueryParts, useQuickSearch } from '@/hooks/useQuickSearch'
 
@@ -32,7 +32,6 @@ export interface QuickSearchModalProps {
 
 export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, currentProjectCode, projects }: QuickSearchModalProps): React.ReactElement | null {
   const [query, setQuery] = useState('')
-  const modalRef = useRef<HTMLDivElement>(null)
 
   const { filteredTickets, selectedIndex, setSelectedIndex } = useQuickSearch({ tickets, query })
   const crossProject = useCrossProjectSearch()
@@ -91,42 +90,6 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
       setSelectedIndex(0)
     }
   }, [isOpen, setSelectedIndex])
-
-  // Handle Escape key
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = ''
-    }
-  }, [isOpen, onClose])
-
-  // Handle click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        onClose()
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen, onClose])
 
   // Exclude current project from cross-project results — the current project
   // section already shows those tickets via filteredTickets
@@ -223,46 +186,34 @@ export function QuickSearchModal({ isOpen, onClose, tickets, onSelectTicket, cur
     return null
   }
 
-  const modalContent = (
-    <div className="fixed inset-0 z-50" data-testid="quick-search-modal">
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-
-      {/* Modal container */}
-      <div className="flex min-h-screen items-start justify-center pt-[15vh] pointer-events-none">
-        <div
-          ref={modalRef}
-          className="pointer-events-auto relative w-full max-w-[900px] mx-4 bg-white dark:bg-slate-900 rounded-xl shadow-2xl overflow-hidden"
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Search input */}
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <QuickSearchInput
-              value={query}
-              onChange={setQuery}
-              onKeyDown={handleKeyDown}
-              queryMode={queryMode}
-              queryParts={queryParts}
-              currentProjectCode={currentProjectCode}
-            />
-          </div>
-
-          {/* Results */}
-          <QuickSearchResults
-            tickets={filteredTickets}
-            selectedIndex={selectedIndex}
-            onSelect={handleSelectTicket}
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="quick-search-modal">
+      <ModalBody className="p-0">
+        {/* Search input */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <QuickSearchInput
+            value={query}
+            onChange={setQuery}
+            onKeyDown={handleKeyDown}
             queryMode={queryMode}
-            crossProjectResults={filteredCrossProjectResults}
-            crossProjectLoading={crossProject.loading}
-            crossProjectError={crossProject.error}
-            onRetry={crossProject.retry}
-            invalidProjectCode={invalidProjectCode ? queryParts.projectCode ?? null : null}
+            queryParts={queryParts}
+            currentProjectCode={currentProjectCode}
           />
         </div>
-      </div>
-    </div>
-  )
 
-  return createPortal(modalContent, document.body)
+        {/* Results */}
+        <QuickSearchResults
+          tickets={filteredTickets}
+          selectedIndex={selectedIndex}
+          onSelect={handleSelectTicket}
+          queryMode={queryMode}
+          crossProjectResults={filteredCrossProjectResults}
+          crossProjectLoading={crossProject.loading}
+          crossProjectError={crossProject.error}
+          onRetry={crossProject.retry}
+          invalidProjectCode={invalidProjectCode ? queryParts.projectCode ?? null : null}
+        />
+      </ModalBody>
+    </Modal>
+  )
 }

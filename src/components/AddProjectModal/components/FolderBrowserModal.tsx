@@ -2,6 +2,7 @@ import { ChevronRight, Folder } from 'lucide-react'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/index'
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { usePathResolution } from '@/hooks/usePathResolution'
 
@@ -153,67 +154,50 @@ export default function FolderBrowserModal({
     }
   }
 
-  if (!isOpen)
-    return null
+  const pathDisplay = (
+    <>
+      Current:
+      {' '}
+      <code
+        data-testid="folder-browser-current-path"
+        className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs"
+      >
+        {directoryListing?.currentPath || 'Loading...'}
+      </code>
+    </>
+  )
 
   return (
-    <div
-      data-testid="folder-browser-modal"
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-              Current:
-              {' '}
-              <code
-                data-testid="folder-browser-current-path"
-                className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs"
-              >
-                {directoryListing?.currentPath || 'Loading...'}
-              </code>
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
-          >
-            ×
-          </Button>
-        </div>
+    <Modal isOpen={isOpen} onClose={onClose} size="lg" data-testid="folder-browser-modal">
+      <ModalHeader title={title} description={pathDisplay} onClose={onClose} closeTestId="folder-browser-close" />
 
-        {/* Content */}
-        <ScrollArea
-          type="hover"
-          scrollHideDelay={600}
-          className="h-full"
-          style={{ height: 'calc(80vh - 180px)' }}
-        >
-          <div className="p-4">
-            {loading
-              ? (
-                  <div className="flex items-center justify-center h-64">
-                    <div className="text-muted-foreground">Loading folders...</div>
-                  </div>
-                )
-              : !directoryListing || directoryListing.directories.length === 0
-                  ? (
-                      <div className="flex items-center justify-center h-64">
-                        <div className="text-muted-foreground">
-                          No folders found
-                          <div className="text-xs mt-2">
-                            Debug:
-                            {' '}
-                            {directoryListing ? `Found ${directoryListing.directories.length} directories` : 'No directory listing'}
-                          </div>
+      {/* Content */}
+      <ScrollArea
+        type="hover"
+        scrollHideDelay={600}
+        className="h-full"
+        style={{ height: 'calc(80vh - 180px)' }}
+      >
+        <div className="p-4">
+          {loading
+            ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-muted-foreground">Loading folders...</div>
+                </div>
+              )
+            : !directoryListing || directoryListing.directories.length === 0
+                ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="text-muted-foreground">
+                        No folders found
+                        <div className="text-xs mt-2">
+                          Debug:
+                          {' '}
+                          {directoryListing ? `Found ${directoryListing.directories.length} directories` : 'No directory listing'}
                         </div>
                       </div>
-                    )
+                    </div>
+                  )
                   : (
                       <div className="border border-gray-200 dark:border-gray-600 rounded-lg">
                         <div className="p-2">
@@ -265,38 +249,35 @@ export default function FolderBrowserModal({
                         </div>
                       </div>
                     )}
-          </div>
-        </ScrollArea>
-
-        {/* Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-6 flex-shrink-0">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              {selectedPath && (
-                <span>
-                  Selected:
-                  <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs max-w-xs truncate inline-block">{selectedPath}</code>
-                </span>
-              )}
-            </div>
-            <div className="flex space-x-3">
-              <Button
-                variant="outline"
-                onClick={onClose}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSelect}
-                disabled={!selectedPath}
-                data-testid="folder-browser-select-button"
-              >
-                Select Folder
-              </Button>
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
+      </ScrollArea>
+
+      {/* Footer */}
+      <ModalFooter justify="between">
+        <div className="text-sm text-gray-600 dark:text-gray-300">
+          {selectedPath && (
+            <span>
+              Selected:
+              <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs max-w-xs truncate inline-block">{selectedPath}</code>
+            </span>
+          )}
+        </div>
+        <div className="flex space-x-3">
+          <Button
+            variant="outline"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSelect}
+            disabled={!selectedPath}
+            data-testid="folder-browser-select-button"
+          >
+            Select Folder
+          </Button>
+        </div>
+      </ModalFooter>
+    </Modal>
   )
 }
