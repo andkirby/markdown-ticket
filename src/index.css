@@ -75,6 +75,33 @@
   overflow: auto !important;
 }
 
+/* Wireloom wireframe rendering */
+.prose .wireloom {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.prose .wireloom svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.prose .wireloom-pending {
+  background: #f8f8f8;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  padding: 1rem;
+  color: #999;
+  font-size: 0.85em;
+  text-align: center;
+}
+.prose .wireloom-error {
+  background: #fee;
+  border-left: 3px solid #c33;
+  padding: 0.5em 0.75em;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -346,6 +373,10 @@
     @apply ml-4 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-ring;
   }
 
+  .modal__close svg {
+    @apply h-5 w-5;
+  }
+
   .modal__title {
     @apply text-lg font-semibold leading-6 text-gray-900 dark:text-white;
   }
@@ -369,6 +400,10 @@
 
   .modal__close--absolute {
     @apply absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-ring dark:text-gray-500 dark:hover:bg-slate-800 dark:hover:text-gray-200;
+  }
+
+  .modal__close--absolute svg {
+    @apply h-5 w-5;
   }
 
   /* Legacy aliases (will be removed) */
