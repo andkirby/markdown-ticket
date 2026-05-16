@@ -41,13 +41,22 @@ export const ALLOWED_TAGS = [
   // Containers
   'div',
   'span',
-  // Mermaid SVG elements
+  // Mermaid + Wireloom SVG elements
   'svg',
   'g',
   'path',
   'rect',
   'circle',
   'text',
+  'tspan',
+  'line',
+  'polygon',
+  'polyline',
+  'ellipse',
+  'defs',
+  'clipPath',
+  'style',
+  'title', // SVG accessible name
 ] as const
 
 export const ALLOWED_ATTR = [
@@ -68,13 +77,16 @@ export const ALLOWED_ATTR = [
   'type',
   'disabled',
   'checked',
-  // Mermaid SVG attributes
+  // Mermaid + Wireloom SVG attributes
   'viewBox',
   'xmlns',
   'd',
   'fill',
   'stroke',
   'stroke-width',
+  'stroke-linecap',
+  'stroke-linejoin',
+  'stroke-dasharray',
   'x',
   'y',
   'rx',
@@ -83,7 +95,17 @@ export const ALLOWED_ATTR = [
   'cy',
   'r',
   'font-size',
+  'font-family',
+  'font-weight',
   'text-anchor',
   'dominant-baseline',
   'transform',
+  'points',
+  'x1',
+  'y1',
+  'x2',
+  'y2',
+  'offset',
+  // Wireloom placeholder
+  'data-source-encoded',
 ] as const

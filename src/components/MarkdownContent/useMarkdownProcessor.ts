@@ -6,6 +6,7 @@ import taskLists from 'markdown-it-task-lists'
 import { useMemo } from 'react'
 import { getLinkConfig } from '../../config/linkConfig'
 import { classifyLink } from '../../utils/linkProcessor'
+import { markdownItWireloomPlugin } from '../../utils/markdownItWireloomPlugin'
 import { markdownItWireframePlugin } from '../../utils/markdownItWireframePlugin'
 import { preprocessMarkdown } from '../../utils/markdownPreprocessor'
 import { slugify } from '../../utils/slugify'
@@ -45,6 +46,7 @@ export function useMarkdownProcessor(
     md.enable('strikethrough')
 
     // Plugins
+    md.use(markdownItWireloomPlugin)
     md.use(markdownItWireframePlugin)
     md.use(taskLists, { disabled: true })
     md.use(anchor, {

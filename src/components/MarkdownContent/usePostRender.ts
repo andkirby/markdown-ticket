@@ -2,6 +2,7 @@ import type { RefObject } from 'react'
 import { useEffect } from 'react'
 import { validateAllReferences } from '../../utils/linkValidator'
 import { useMermaid } from '../../utils/mermaid'
+import { renderWireloomElements } from '../../utils/wireloomRenderer'
 
 interface UsePostRenderOptions {
   containerRef: RefObject<HTMLDivElement | null>
@@ -21,11 +22,16 @@ export function usePostRender({
 }: UsePostRenderOptions): void {
   const { renderMermaid } = useMermaid()
 
-  // Render Mermaid diagrams and validate links after HTML is ready
+  // Render Mermaid diagrams, Wireloom wireframes, and validate links after HTML is ready
   useEffect(() => {
     if (processedContent && containerRef.current) {
       const timeoutId = setTimeout(() => {
         renderMermaid()
+
+        // Render Wireloom wireframes (optional — no-op if not installed)
+        if (containerRef.current) {
+          renderWireloomElements(containerRef.current)
+        }
 
         // Validate link conversion
         if (containerRef.current) {
