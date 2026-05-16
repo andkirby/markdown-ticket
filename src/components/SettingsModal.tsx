@@ -119,7 +119,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       <ModalHeader title="Settings" onClose={onClose} closeTestId="settings-close" />
       <ModalBody className="p-0">
         <Tabs.Root defaultValue="appearance">
-          <Tabs.List className="flex border-b border-gray-200 dark:border-gray-700">
+          <Tabs.List className="modal__section flex">
             <Tabs.Trigger
               value="appearance"
               data-testid="settings-tab-appearance"

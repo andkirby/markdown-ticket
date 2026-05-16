@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom'
 import { cn } from '../../lib/utils'
 
 const modalVariants = cva(
-  'relative w-full rounded-lg bg-white dark:bg-slate-900 shadow-xl transition-all sm:my-8',
+  'modal-content',
   {
     variants: {
       size: {
@@ -100,18 +100,18 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       return null
 
     const modalContent = (
-      <div className={`fixed inset-0 z-50 overflow-y-auto ${overlayClassName}`}>
+      <div className={cn('modal', overlayClassName)}>
         <div className="flex min-h-[100dvh] items-center justify-center p-4">
           {/* Background overlay */}
           <div
-            className="fixed inset-0 bg-black/50 transition-opacity"
+            className="modal-overlay"
             onClick={closeOnOverlayClick ? onClose : undefined}
           />
 
           {/* Modal content */}
           <div
             ref={modalRef}
-            className={`${modalVariants({ size, variant, className })} relative`}
+            className={cn(modalVariants({ size, variant }), 'relative', className)}
             {...props}
           >
             {children}
@@ -148,17 +148,17 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
     return (
       <div
         ref={ref}
-        className={`flex items-start justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 ${className}`}
+        className={cn('modal__header', className)}
         {...props}
       >
         <div className="flex-1">
           {title && (
-            <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-white">
+            <h3 className="modal__title">
               {title}
             </h3>
           )}
           {description && (
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="modal__description">
               {description}
             </p>
           )}
@@ -167,7 +167,7 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
         {showCloseButton && (
           <button
             type="button"
-            className="ml-4 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="modal__close"
             onClick={onClose}
             {...(closeTestId && { 'data-testid': closeTestId })}
           >
@@ -200,7 +200,7 @@ const ModalBody = React.forwardRef<HTMLDivElement, ModalBodyProps>(
     return (
       <div
         ref={ref}
-        className={cn('p-4', className)}
+        className={cn('modal__body', className)}
         {...props}
       >
         {children}
@@ -227,7 +227,7 @@ const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
     return (
       <div
         ref={ref}
-        className={`flex items-center ${justifyClasses[justify]} px-4 py-3 border-t border-gray-200 dark:border-gray-700 ${className}`}
+        className={cn('modal__footer', justifyClasses[justify], className)}
         {...props}
       >
         {children}

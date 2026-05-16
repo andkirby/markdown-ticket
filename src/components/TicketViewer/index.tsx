@@ -223,7 +223,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
         type="button"
         aria-label="Close ticket viewer"
         data-testid="close-detail"
-        className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-gray-500 dark:hover:bg-slate-800 dark:hover:text-gray-200"
+        className="modal__close--absolute"
         onClick={onClose}
       >
         <svg
@@ -275,7 +275,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                     </div>
                   )}
                   <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'pointer-events-none opacity-50' : ''}>
-                    <div className="relative px-4 py-4 sm:px-5">
+                    <div className="relative modal__section--content">
                       <div className="absolute right-4 top-4 z-[1] sm:right-5">
                         <RelativeTimestamp
                           createdAt={currentTicket!.dateCreated}
