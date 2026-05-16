@@ -330,15 +330,15 @@
   }
 
   .modal-header {
-    @apply bg-muted px-6 py-4 border-b;
+    @apply px-4 py-3 border-b;
   }
 
   .modal-body {
-    @apply px-6 py-4;
+    @apply p-4;
   }
 
   .modal-footer {
-    @apply bg-muted px-6 py-4 border-t;
+    @apply px-4 py-3 border-t;
   }
 
   .tooltip {
@@ -585,25 +585,25 @@
 }
 
 .settings-tab-content {
-  @apply p-6 outline-none;
+  @apply p-4 outline-none;
 }
 
 .settings-group {
   @apply flex flex-col gap-1;
 }
 .settings-group + .settings-group {
-  @apply mt-6;
+  @apply mt-4;
 }
 
 .settings-group-row {
   @apply flex items-center justify-between gap-4;
 }
 .settings-group-row + .settings-group-row {
-  @apply mt-6;
+  @apply mt-4;
 }
 .settings-group + .settings-group-row,
 .settings-group-row + .settings-group {
-  @apply mt-6;
+  @apply mt-4;
 }
 
 .settings-label {

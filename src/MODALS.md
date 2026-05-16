@@ -6,7 +6,7 @@
 
 ```tsx
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '@/components/ui/Modal'
-```tsx
+```text
 
 Do NOT hand-roll `fixed inset-0` overlays. The base Modal handles:
 - Portal rendering via `createPortal`
@@ -40,6 +40,22 @@ Do NOT hand-roll `fixed inset-0` overlays. The base Modal handles:
 | `lg` | `sm:max-w-3xl` | Project forms |
 | `xl` | `sm:max-w-5xl` | Ticket viewer, search |
 
+## Spacing Standard
+
+All modals follow the **tight layout** (ticket viewer style):
+
+| Component | Default padding | Border |
+|-----------|----------------|--------|
+| `ModalHeader` | `px-4 py-3` | `border-b border-gray-200 dark:border-gray-700` |
+| `ModalBody` | `p-4` | none |
+| `ModalFooter` | `px-4 py-3` | `border-t border-gray-200 dark:border-gray-700` |
+
+**Do NOT** use `p-6` in any modal component. The tight layout keeps modals compact and visually consistent.
+
+For content modals (Pattern B), override ModalBody to `p-0` and manage padding per-section:
+- Compact bars: `px-4 py-3`
+- Content areas: `px-4 py-4 sm:px-5`
+
 ## Layout Patterns
 
 ### Pattern A: Standard Form Modal (header + body + footer)
@@ -50,18 +66,14 @@ For: forms with actions, settings with tabs.
 <Modal isOpen={show} onClose={close} size="md">
   <ModalHeader title="Title" onClose={close} />
   <ModalBody>
-    {/* Form content */}
+    {/* Form content — padded by default p-4 */}
   </ModalBody>
   <ModalFooter>
     <Button onClick={close}>Cancel</Button>
     <Button onClick={submit}>Save</Button>
   </ModalFooter>
 </Modal>
-```tsx
-
-- ModalHeader: `p-6 border-b` with title + close button
-- ModalBody: `p-6` padding
-- ModalFooter: `p-6 border-t` with action buttons
+```text
 
 ### Pattern B: Content Modal (no header, own close button)
 
@@ -74,7 +86,7 @@ For: ticket viewer, search — content-rich modals that manage their own chrome.
     {/* Close button: absolute right-3 top-3 z-20 */}
   </ModalBody>
 </Modal>
-```tsx
+```text
 
 - ModalBody: `className="p-0"` — no padding, content manages its own
 - Close button: absolutely positioned `right-3 top-3 z-20`, 8×8 rounded button
@@ -92,16 +104,16 @@ For: error pages, confirm dialogs, one-prompt modals.
       <AlertTriangle className="h-6 w-6 text-destructive" />
       <h3 className="text-lg font-semibold">Confirm Action</h3>
     </div>
-    <p className="text-muted-foreground mb-6">{message}</p>
+    <p className="text-muted-foreground mb-4">{message}</p>
     <ModalFooter justify="end">
       <Button onClick={close}>Cancel</Button>
       <Button onClick={confirm}>Confirm</Button>
     </ModalFooter>
   </ModalBody>
 </Modal>
-```tsx
+```text
 
-- Uses ModalBody with standard `p-6` padding
+- Uses ModalBody with default `p-4` padding
 - Icon + title on one line, description below, actions at bottom
 - No ModalHeader — the icon+title pair replaces it for small modals
 
@@ -117,26 +129,30 @@ For: error pages, confirm dialogs, one-prompt modals.
 
 When using Pattern B (content modal), sections follow the ticket viewer style:
 
-```tsx
+```text
 ┌─────────────────────────────────┐
-│ Section 1 (border-b)       [×]  │  ← title/header bar
+│ Section 1 (border-b)       [×]  │  ← px-4 py-3 compact bar
 ├─────────────────────────────────┤
-│ Section 2 (border-b)            │  ← badges/metadata
+│ Section 2 (border-b)            │  ← px-4 py-2.5 secondary bar
 ├─────────────────────────────────┤
-│ Section 3                       │  ← tabs
+│ Section 3                       │  ← px-4 tab bar
 ├─────────────────────────────────┤
-│ Content area                    │  ← main content, no border-b
-│                                 │
+│ Content area                    │  ← px-4 py-4 sm:px-5
+│                                 │  ← no border-b on last section
 └─────────────────────────────────┘
-```tsx
+```text
 
 - Separators: `border-b border-gray-200 dark:border-gray-700`
-- Section padding: `px-4 py-3` for compact bars, `px-4 py-4 sm:px-5` for content
+- Compact bars: `px-4 py-3`
+- Secondary bars: `px-4 py-2.5`
+- Content areas: `px-4 py-4 sm:px-5`
 - Last section has no bottom border
 
 ## Backdrop
 
 **ALL modals MUST use `bg-black/50`** — handled by the base Modal component.
+
+For backdrop blur (QuickSearch, ProjectBrowser), pass `overlayClassName="backdrop-blur-sm"`.
 
 ## Migration Guide
 
@@ -152,17 +168,21 @@ If you find a hand-rolled modal (`fixed inset-0` in component JSX):
 
 ❌ **Hand-rolling `fixed inset-0 bg-black/50`** — use `<Modal>`
 ❌ **Different backdrop opacities** — always `bg-black/50`
+❌ **Using `p-6` padding** — always use tight `px-4 py-3` / `p-4`
 ❌ **Forgetting click-outside-to-close** — base Modal handles this
 ❌ **Manual `createPortal`** — base Modal handles this
 ❌ **Arbitrary z-index values** — base Modal uses `z-50`
 ❌ **Hardcoded `bg-white dark:bg-gray-800`** — use `bg-white dark:bg-slate-900` or just let Modal handle it
+❌ **Inconsistent border colors** — always `border-gray-200 dark:border-gray-700`
 
 ## Quick Checklist
 
 - [ ] Uses `<Modal>` from `ui/Modal.tsx` (no hand-rolled overlay)
 - [ ] Correct pattern selected (A, B, or C)
+- [ ] Tight spacing: `px-4 py-3` header/footer, `p-4` body (or `p-0` for content modals)
 - [ ] `bg-black/50` backdrop (handled by Modal)
 - [ ] Escape to close (handled by Modal)
 - [ ] Click outside to close (handled by Modal)
 - [ ] Body scroll prevention (handled by Modal)
 - [ ] `data-testid` on Modal root
+- [ ] Border color: `border-gray-200 dark:border-gray-700`
