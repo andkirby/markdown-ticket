@@ -73,7 +73,7 @@ private async discoverSubDocuments(project: Project, crId: string): Promise<SubD
 
 ### Data Flow
 
-```
+```text
 API Request
   → ProjectController.getCR()
     → TicketService.getCR()

@@ -125,7 +125,7 @@ stateDiagram-v2
 
 ## Structure
 
-```
+```text
 mcp-server/tests/e2e/
 ├── helpers/                       # ✅ Shared test utilities (implemented)
 │   ├── test-environment.ts        # Temp dir + CONFIG_DIR management
@@ -280,7 +280,7 @@ graph TB
 
 ### Target Structure
 
-```
+```text
 mcp-server/src/tools/
 ├── config/
 │   └── allTools.ts            → All 10 tool definitions (≤300 lines)

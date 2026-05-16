@@ -37,7 +37,7 @@ When dragging tickets to the Done column, the UI doesn't immediately update beca
 
 ### Console Log Evidence
 
-```
+```text
 Drag: Ticket CR-A001 is being dragged
 Column.tsx:58 Column: Drop event triggered
 Column.tsx:59 Column: Dropped ticket: {code: 'CR-A001', title: 'CR-A001-customize-hotkey.md', status: 'In Progress', priority: 'Medium', type: 'Feature Enhancement', …}

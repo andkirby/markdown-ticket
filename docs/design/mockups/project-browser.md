@@ -32,7 +32,7 @@ Related spec: `specs/project-browser.md` (MDT-129 panel, MDT-152 search extensio
 │     └─────────────────────────────────────────────┘     │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
-```text
+```
 
 ### Search State (User Types "MD")
 
@@ -74,7 +74,7 @@ Current project (MDT) is excluded when the query matches its code or name:
 │     └─────────────────────────────────────────────┘     │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
-```text
+```
 
 ### Card Detail: Active Project
 
@@ -100,7 +100,7 @@ Current project (MDT) is excluded when the query matches its code or name:
     ↑ border-gray-200/50
     ↑ bg-gradient-to-br from-white to-gray-50/80
     ↑ shadow-sm, rounded-xl, min-h-12
-```text
+```
 
 ### Card Detail: Inactive Project (Favorited)
 
@@ -123,7 +123,7 @@ Current project (MDT) is excluded when the query matches its code or name:
 │ Example description here        │  ← scale-[1.02]
 └──────────────────────────────────┘
     ↑ transition-all duration-200 ease-out
-```text
+```
 
 ### Empty State (No Projects)
 
@@ -172,7 +172,7 @@ Current project (MDT) is excluded when the query matches its code or name:
 │                              │
 └──────────────────────────────┘
     ↑ Single column on mobile
-```text
+```
 
 ---
 
@@ -204,7 +204,7 @@ Current project (MDT) is excluded when the query matches its code or name:
 └──────────────────────────────────┘
     ↑ useRailWidthConstraints: min-w-[100px] sm:min-w-[150px] max-w-[280px]
     ↑ click → onLauncherClick() (opens panel, NOT switch)
-```text
+```
 
 ### Inactive Chip Detail
 
@@ -221,7 +221,7 @@ Current project (MDT) is excluded when the query matches its code or name:
 │    XYZ ★│  ← fav-star--chip overlay
 └──────────┘
     ↑ Star: rotated chip variant
-```text
+```
 
 ### Inactive Chip Hover (HoverCard)
 
@@ -248,7 +248,7 @@ Current project (MDT) is excluded when the query matches its code or name:
     ↑ rounded-full w-10 h-10
     ↑ gradient bg, shadow-sm
     ↑ hover: shadow-md, -translate-y-0.5
-```text
+```
 
 ```wireframe state:launcher active
   ┌───┐
@@ -272,7 +272,7 @@ Current project (MDT) is excluded when the query matches its code or name:
 │  ↑ launcher still visible     │
 │                                │
 └────────────────────────────────┘
-```text
+```
 
 ---
 

@@ -10,7 +10,7 @@ Single source of truth for entity definitions across all interfaces. Provides:
 
 ## Package Structure
 
-```
+```text
 domain-contracts/
   package.json
   src/
@@ -37,7 +37,7 @@ domain-contracts/
 
 ## Dependency Direction
 
-```
+```text
 domain-contracts     ← Pure schemas, minimal dependencies
        ↑
     shared/business  ← Implementation, depends on contracts
@@ -177,7 +177,7 @@ import { buildEntity } from 'domain-contracts/testing'
 
 ## Validation Flow
 
-```
+```text
 Raw Input (unknown)
        ↓
    [Interface Boundary]

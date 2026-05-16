@@ -37,7 +37,7 @@ Auto-detect project context from `.mdt-config.toml` at server startup, making th
 
 ## Structure
 
-```
+```text
 mcp-server/src/
   ├── index.ts                           # Add detectDefaultProject() method
   ├── config/

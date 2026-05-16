@@ -36,7 +36,7 @@
 
 **Sample Output**:
 
-```
+```text
     - ### Functional (543 chars)
     - ### Non-Functional (301 chars)
   - ## 1. Description (1571 chars)
@@ -85,7 +85,7 @@
 
 ### Section Name Rules
 
-```
+```text
 # Title           → H1 (document title)
 ## N. Name        → H2 (main sections)
 ### Name          → H3 (subsections)
@@ -102,7 +102,7 @@
 
 **Error**:
 
-```
+```text
 Multiple sections match "### Functional". Use hierarchical path:
 - # CR Title / ## 4. Acceptance Criteria / ### Functional
 - # CR Title / ## 3. Open Questions / ### Functional
@@ -133,7 +133,7 @@ Multiple sections match "### Functional". Use hierarchical path:
 
 ## Quick Decision Tree
 
-```
+```text
 Need to modify CR section?
 │
 ├─ Step 1: ALWAYS run `list` first

@@ -113,7 +113,7 @@ Git worktrees are a common workflow feature where developers need to work on mul
 
 The current project discovery system scans directories for `.mdt-config.toml` files without considering whether they are part of a git worktree structure. This leads to a poor user experience where the project selector shows:
 
-```
+```text
 markdown-ticket (main)
 markdown-ticket-aws-counter (worktree)
 markdown-ticket-smart-link (worktree)

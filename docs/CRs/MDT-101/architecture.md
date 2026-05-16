@@ -53,7 +53,7 @@ graph LR
 
 ### 3.1 Package Structure
 
-```
+```text
 domain-contracts/
 ├── package.json                 → { "dependencies": { "zod": "^3.x" } }
 ├── src/
@@ -84,7 +84,7 @@ The domain-contracts package provides schemas that validate the structure of con
 
 **Flow**:
 
-```
+```text
 .mdt-config.toml → Parsed JSON → Contract Schema.validate() → TypeScript Type
 ```
 
@@ -299,7 +299,7 @@ if (project.id !== basename(projectPath)) {
 
 **Test Results**:
 
-```
+```text
 Test Suites: 6 passed, 6 total
 Tests:       90 passed, 90 total
 ```

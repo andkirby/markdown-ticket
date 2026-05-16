@@ -49,7 +49,7 @@ This document provides a complete overview of the ticket move integration that h
 
 #### Complete End-to-End Process
 
-```
+```text
 User Drag → Column Drop → Board Processing → Backend Update → File Save → UI Refresh
 ```
 
@@ -105,7 +105,7 @@ bun run dev:full
 ### Console Log Sequence
 When moving a ticket successfully, you should see:
 
-```
+```text
 Column.tsx: Dropped ticket: {code: "CR-A001", ...} on column: "In Progress"
 Board.tsx: Board: handleDrop called with: {status: "In Progress", ticketCode: "CR-A001", ticketStatus: "Proposed"}
 useTicketData.ts: useTicketStatusAutomation: moveTicket called with: {ticketCode: "CR-A001", newStatus: "In Progress"}
@@ -144,7 +144,7 @@ Board.tsx: Board: Ticket moved successfully
 
 #### File Structure
 
-```
+```text
 tasks/
 ├── CR-A001.md    # Individual ticket files
 ├── CR-A002.md

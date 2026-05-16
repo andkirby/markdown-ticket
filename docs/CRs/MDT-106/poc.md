@@ -68,7 +68,7 @@ expect(res).toSatisfyApiSpec()
 
 **Output**:
 
-```
+```text
 console.log
     Loading OpenAPI spec from: /Users/kirby/home/markdown-ticket-MDT-106/server/openapi.yaml
 
@@ -218,13 +218,13 @@ describe('jest-openapi Contract Tests', () => {
 
 ### Passing Validation
 
-```
+```text
 ✓ should validate GET /api/status response against OpenAPI spec
 ```
 
 ### Failing Validation (with undefined property)
 
-```
+```text
 ✗ should detect when response violates OpenAPI spec
   Error: Response does not match API specification
   Additional properties not allowed: undefinedProperty

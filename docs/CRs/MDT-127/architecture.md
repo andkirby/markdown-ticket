@@ -24,7 +24,7 @@ The project discovery subsystem exhibits code duplication and mixed responsibili
 
 ### Component Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                  ProjectDiscoveryService                    │
 │                    (Mixed Responsibilities)                 │
@@ -142,7 +142,7 @@ All three follow similar patterns:
 
 ### Target Component Structure
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                  ProjectDiscoveryService                    │
 │                    (Orchestrator Only)                      │

@@ -27,7 +27,7 @@ Related spec: `specs/quick-search.md`
 │                                                         │
 │                    [↑↓ navigate  ↵ select  esc close]   │
 └─────────────────────────────────────────────────────────┘
-```text
+```
 
 ## Filtering State (User Types "badge")
 
@@ -68,7 +68,7 @@ state:quick-search navigating
 │                                                         │
 │                    [↑↓ navigate  ↵ select  esc close]   │
 └─────────────────────────────────────────────────────────┘
-```text
+```
 
 ## Hover State (Mouse Over Result)
 
@@ -118,7 +118,7 @@ state:quick-search navigating
 │           └───────────────────────────────────┘         │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
-```text
+```
 
 ## Cross-Project Ticket Key Search (Results)
 
@@ -158,7 +158,7 @@ state:quick-search navigating
 │           └───────────────────────────────────┘         │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
-```text
+```
 
 ## Project-Scoped Search (Results)
 
@@ -204,7 +204,7 @@ state:quick-search navigating
 │           └───────────────────────────────────┘         │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
-```text
+```
 
 ## No Results State
 
@@ -240,7 +240,7 @@ state:quick-search navigating
 │ └──────────────────────────┘ │
 │                              │
 └──────────────────────────────┘
-```text
+```
 
 ---
 
@@ -262,7 +262,7 @@ state:quick-search navigating
 │ In: MDT             │  ← bg-gray-100 text-gray-700
 └─────────────────────┘
     ↑ text-xs px-2 py-0.5 rounded-full
-```text
+```
 
 ### Mode Indicator — Project-Scoped Search
 
@@ -278,7 +278,7 @@ state:quick-search navigating
 ┌─────────────────────────────┐
 │ Searching: ABC-42           │  ← bg-purple-100 text-purple-700
 └─────────────────────────────┘
-```text
+```
 
 ### Skeleton Card — Loading State
 
@@ -287,7 +287,7 @@ state:quick-search navigating
 │ ▬▬▬▬▬▬▬                                    │  ← bg-gray-200 dark:bg-gray-800
 │ ▬▬▬▬▬▬▬▬▬▬▬▬                                │  ← animate-pulse
 └──────────────────────────────────────────┘
-```text
+```
 
 ## Component Detail: Result Item
 
@@ -305,7 +305,7 @@ state:quick-search navigating
 │ Fix login redirect                      │
 └──────────────────────────────────────────┘
     ↑ Keyboard-selected (↑↓ arrows)
-```text
+```
 
 ---
 

@@ -21,7 +21,7 @@ Create a dedicated `Badge/` module that owns ALL ticket attribute badge renderin
 
 ## Structure
 
-```
+```text
 src/components/
 └── Badge/
     ├── index.ts              # Export all badge components
@@ -59,7 +59,7 @@ src/components/
 
 ## Runtime Flow
 
-```
+```text
 Ticket data → Specialized Badge Component → badgeVariants(attribute, value) → Badge(base classes) → Rendered output
 ```
 

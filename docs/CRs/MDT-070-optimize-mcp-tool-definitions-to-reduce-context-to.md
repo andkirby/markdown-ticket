@@ -220,7 +220,7 @@ If maintaining compatibility:
 
 #### Before
 
-```
+```text
 ⛁ MCP tools: 14.0k tokens (7.0%)
 
      MCP tools · /mcp
@@ -249,7 +249,7 @@ If maintaining compatibility:
 
 #### After
 
-```
+```text
 ⛁ MCP tools: 10.8k tokens (5.4%)
 
      MCP tools · /mcp

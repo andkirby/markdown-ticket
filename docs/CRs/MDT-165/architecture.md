@@ -34,7 +34,7 @@ preprocessMarkdown(markdown, project, linkConfig, ...)
   → processMermaidBlocks(html)        // unchanged, one regex removed
   → highlightCodeBlocks(html)         // unchanged
   → DOMPurify.sanitize(html, config)  // config updated for label classes
-```text
+```
 
 **Owner**: `useMarkdownProcessor.ts`
 
@@ -47,7 +47,7 @@ markdown-it fence renderer override:
     emit standard <pre><code class="language-wireframe">...</code></pre>
   ELSE:
     default fence rendering (no label)
-```text
+```
 
 **Owner**: `markdownItWireframePlugin.ts`
 
@@ -65,7 +65,7 @@ extractTableOfContents(markdown, headerLevelStart):
   Apply headerLevelStart offset to levels
   Generate slug IDs using shared slugify() from src/utils/slugify.ts
   Return TocItem[] with { id, text, level }
-```text
+```
 
 **Owner**: `tableOfContents.ts`
 
@@ -83,7 +83,7 @@ Custom permalink wraps heading content in clickable anchor:
   <h2 id="getting-started"><a class="header-anchor" href="#getting-started">Getting Started</a></h2>
   Entire title is clickable, # appears on hover via CSS ::after
   HTML parser (useHtmlParser.ts) skips <a class="header-anchor"> to prevent SmartLink wrapping
-```text
+```
 
 **Owner**: `slugify.ts` (shared), consumed by `useMarkdownProcessor.ts` and `tableOfContents.ts`
 
@@ -150,7 +150,7 @@ graph TD
 
     A -.->|TOC path| TOC[tableOfContents<br/>regex extraction]
     TOC -.->|shared slugify| SL
-```text
+```
 
 ---
 *Architecture notes for MDT-165. See [architecture.trace.md](./architecture.trace.md) for canonical artifact and obligation records.*

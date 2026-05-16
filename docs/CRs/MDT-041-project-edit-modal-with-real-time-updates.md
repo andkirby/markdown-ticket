@@ -110,7 +110,7 @@ implementationNotes: Status changed to Implemented on 9/11/2025
 
 ### Required API Endpoints
 
-```
+```text
 PUT /api/projects/:id - Update project configuration
 POST /api/filesystem/exists - Validate directory existence
 ```

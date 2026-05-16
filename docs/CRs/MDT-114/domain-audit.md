@@ -64,7 +64,7 @@
 
 ## Dependency Analysis
 
-```
+```text
 ModifyOperation.ts (handlers/operations/)
   ├── CRFileReader (utils/section/)
   ├── SectionResolver (utils/section/)
@@ -98,7 +98,7 @@ ListOperation.ts (handlers/operations/)
 **Current State**: Scattered (8 files, 3 directories)
 **Natural Grouping**:
 
-```
+```text
 handlers/sections/
 ├── SectionService.ts          # Core: find, read, modify orchestration
 ├── SectionPresenter.ts        # Format tool output (from ValidationFormatter)

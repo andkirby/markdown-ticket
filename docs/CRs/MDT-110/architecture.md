@@ -55,7 +55,7 @@ graph TB
 
 ## Structure
 
-```
+```text
 shared/
   ├── package.json              → Add conditional exports
   ├── tools/

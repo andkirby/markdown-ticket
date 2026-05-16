@@ -90,7 +90,7 @@ see [DOCKER_GUIDE.md](DOCKER_GUIDE.md).
 
 ### Base URL
 
-```
+```text
 http://localhost:3012/mcp
 ```
 

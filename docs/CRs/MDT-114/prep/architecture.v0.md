@@ -25,7 +25,7 @@
 
 ### Component Context
 
-```
+```text
 mcp-server/src/tools/
   ├── index.ts                 → MCPTools (router, 175 lines)
   ├── config/
@@ -38,7 +38,7 @@ mcp-server/src/tools/
 
 ### Dependencies
 
-```
+```text
 SectionHandlers depends on:
   ├─ CRService (project injection)
   ├─ MarkdownSectionService (static class, mocked in tests)
@@ -173,7 +173,7 @@ graph TB
 
 ## Structure
 
-```
+```text
 mcp-server/src/tools/handlers/
   ├── sectionHandlers.ts          → Orchestrator only (≤100 lines)
   ├── operations/                 → Strategy pattern

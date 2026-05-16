@@ -37,4 +37,4 @@ bun test src/utils/linkProcessor.mdt150.test.ts src/utils/linkBuilder.mdt150.tes
 
 # E2E tests (after implementation)
 bun run test:e2e --grep="@MDT-150"
-```text
+```

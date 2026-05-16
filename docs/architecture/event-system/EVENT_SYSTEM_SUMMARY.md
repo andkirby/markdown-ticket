@@ -41,7 +41,7 @@ useEffect(() => {
 
 ### New Architecture Flow
 
-```
+```text
 File Change → Backend SSE → SSEClient → EventBus → Your Component → UI Update
 ```
 
@@ -206,7 +206,7 @@ eventBus.getStats()
 
 ### Event Flow (New)
 
-```
+```text
 ┌─────────────┐
 │ File System │
 └─────┬───────┘
@@ -239,7 +239,7 @@ eventBus.getStats()
 
 ### Component Architecture
 
-```
+```text
 ┌──────────────────────────────────────┐
 │           EventBus                   │
 │  (Central Event Management)          │

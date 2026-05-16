@@ -85,7 +85,7 @@
 
 ## Architecture Structure (Prep Mode)
 
-```
+```text
 mcp-server/src/services/SectionManagement/
   ├── SectionService.ts           → Public API, orchestration (≤80 lines)
   ├── SectionRepository.ts        → Read operations: list, get, find (≤150 lines)

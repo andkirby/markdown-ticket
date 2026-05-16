@@ -174,7 +174,7 @@ type EventType
 
 ### Event Flow
 
-```
+```text
 File System Change
     ↓
 Backend SSE

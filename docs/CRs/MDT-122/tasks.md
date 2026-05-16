@@ -12,7 +12,7 @@
 
 ## Dependency Graph
 
-```
+```text
 Task 1 (Create logger)
   ↓
 Task 2 (Build shared)

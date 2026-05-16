@@ -110,7 +110,7 @@ A web-based dashboard that provides:
 
 ### API Endpoints
 
-```
+```text
 GET /api/projects                    # List all registered projects
 GET /api/projects/:id/crs           # List CRs for specific project
 GET /api/projects/:id/crs/:crId     # Get specific CR
@@ -196,7 +196,7 @@ The Multi-Project CR Management Dashboard has been successfully implemented, pro
 
 ##### Multi-Project API Endpoints (added to `server/server.js`)
 
-```
+```text
 GET    /api/projects                    # List all registered projects
 GET    /api/projects/:id/config         # Get project configuration
 GET    /api/projects/:id/crs           # List CRs for specific project

@@ -10,13 +10,13 @@ When a user drags and drops a ticket from one column to another, the system goes
 
 ### 1. User Interaction Flow
 
-```
+```text
 User drags ticket → Drops on new column → Visual feedback → Backend update → UI refresh
 ```
 
 ### 2. Technical Flow
 
-```
+```text
 Drag & Drop Event → Column.onDrop() → Board.handleDrop() → moveTicket() → updateTicket() → File System Update
 ```
 
@@ -274,7 +274,7 @@ app.listen(3000, () => {
 
 When a ticket is moved successfully, you should see this sequence:
 
-```
+```text
 Column.tsx: Dropped ticket: {code: "CR-A001", ...} on column: "In Progress"
 Board.tsx: Board: handleDrop called with: {status: "In Progress", ticketCode: "CR-A001", ticketStatus: "Proposed"}
 useTicketData.ts: useTicketStatusAutomation: moveTicket called with: {ticketCode: "CR-A001", newStatus: "In Progress"}

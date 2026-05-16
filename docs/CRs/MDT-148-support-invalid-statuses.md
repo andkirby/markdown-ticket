@@ -14,7 +14,7 @@ As a user, I want tickets with invalid status values (e.g., "In Review", "Under 
 
 Status validation in `TicketService.updateCRStatus()` was too strict. Any status not in the `CRStatus` enum would throw an error:
 
-```
+```text
 Invalid status transition from 'In Review' to 'Implemented'
 Valid transitions from 'In Review': [none]
 ```

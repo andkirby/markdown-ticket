@@ -35,7 +35,7 @@ const folderPrefix = '[data-testid="folder-prefix"]'
 
 ### URL Path Format
 
-```
+```text
 /prj/{code}/ticket/{ticket}/{type}.md              # root document
 /prj/{code}/ticket/{ticket}/{type}.{semantic}.md   # dot-notation sub-document
 /prj/{code}/ticket/{ticket}/{type}/{subfile}.md    # folder-based sub-document

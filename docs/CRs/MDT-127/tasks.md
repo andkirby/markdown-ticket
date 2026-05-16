@@ -203,7 +203,7 @@ This document contains 23 implementation tasks organized into 6 phases for refac
 
 ## Task Dependencies
 
-```
+```text
 Phase 1 (Tasks 1-4) must complete before:
   -> Phase 3 (Tasks 10-13) - Scanner uses validation helpers
   -> Phase 4 (Tasks 14-18) - Service uses validation helpers
@@ -308,7 +308,7 @@ grep -r "createFromRegistry\|createFromConfig" shared/services/project/
 
 After completing all 23 tasks:
 
-```
+```text
 assess → bdd --prep → architecture --prep → tests --prep → tasks --prep → implement --prep → tech-debt → reflection
                                                                   ↑
                                                             (You are here)

@@ -91,7 +91,7 @@ A shared core module that provides:
 
 ### Core Module Structure
 
-```
+```text
 core/
 ├── index.js                 # Main exports
 ├── models/
@@ -279,7 +279,7 @@ core/
 
 ### Technical Implementation
 
-```
+```text
 shared/
 ├── models/
 │   ├── Ticket.ts          # Unified ticket model + normalization

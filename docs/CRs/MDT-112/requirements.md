@@ -142,7 +142,7 @@ done
 
 ### Default: Text Table Format
 
-```
+```text
 FILE                                                    MI     CC    CoC   Status
 shared/test-lib/ticket/file-ticket-creator.ts        22.77    33     54    RED
 shared/test-lib/ticket/ticket-creator.ts             40.88    12     12    YLW

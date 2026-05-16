@@ -6,7 +6,7 @@ The MCP Frontend Logging system provides AI assistants with real-time access to 
 
 ## Architecture
 
-```
+```text
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   AI Assistant  │◄──►│   MCP Server    │◄──►│  Backend API    │
 │   (Claude/Q)    │    │  (Dev Tools)    │    │   (Node.js)     │
@@ -140,7 +140,7 @@ class LoggingErrorBoundary extends React.Component {
 
 ### 1. Session Initialization
 
-```
+```text
 AI Assistant → MCP Server → Backend API
                 ↓
         Start logging session
@@ -150,7 +150,7 @@ AI Assistant → MCP Server → Backend API
 
 ### 2. Log Capture
 
-```
+```text
 Frontend Console → Log Capture → Buffer → Backend API
                                             ↓
                                     Store in memory
@@ -158,7 +158,7 @@ Frontend Console → Log Capture → Buffer → Backend API
 
 ### 3. Log Retrieval
 
-```
+```text
 AI Assistant → MCP Server → Backend API → Filtered Logs
                 ↓
         Format and return
@@ -187,21 +187,21 @@ AI Assistant → MCP Server → Backend API → Filtered Logs
 
 ### Development Debugging
 
-```
+```text
 Developer: "Check if there are any React errors in the frontend"
 AI: Uses get_frontend_logs to check for error-level messages
 ```
 
 ### Build Monitoring
 
-```
+```text
 Developer: "Monitor the frontend while I test this feature"
 AI: Uses stream_frontend_url to watch logs in real-time
 ```
 
 ### Error Investigation
 
-```
+```text
 Developer: "Something's wrong with the ticket creation"
 AI: Filters logs for "ticket" or "create" to find relevant errors
 ```

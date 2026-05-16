@@ -16,7 +16,7 @@ Cmd+K Quick Search provides keyboard-driven ticket discovery via a modal overlay
 
 ## Structure
 
-```
+```text
 src/
 ├── components/QuickSearch/
 │   ├── index.ts                    # Exports
@@ -41,7 +41,7 @@ src/
 
 ## Runtime Flow
 
-```
+```text
 User presses Cmd/Ctrl+K
   → useGlobalKeyboard detects combo
   → Sets modalOpen=true

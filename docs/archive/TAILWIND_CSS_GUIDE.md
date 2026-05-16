@@ -16,7 +16,7 @@ The `tailwind-template.css` file provides a complete, production-ready Tailwind 
 
 ## File Structure
 
-```
+```text
 md-ticket-board/
 ├── tailwind-template.css      # Complete Tailwind CSS template
 ├── tailwind.config.js         # Tailwind configuration
