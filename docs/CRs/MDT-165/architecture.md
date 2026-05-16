@@ -133,6 +133,8 @@ New markdown rendering features should be added as markdown-it plugins via `md.u
 
 `markdownItWireloomPlugin` was added as a fence renderer following this extension rule. Wireloom (`wireloom` package) is an optional dependency — when installed, ```wireloom blocks render as SVG wireframes via post-render async rendering (same pattern as Mermaid). When not installed, blocks fall back to plain `<pre><code>` display. The plugin uses placeholder divs with base64-encoded sources; `renderWireloomElements()` in `usePostRender.ts` handles async rendering and DOM replacement.
 
+**Theme reactivity**: `useTheme` dispatches a `theme-change` custom event on theme toggle. `usePostRender` listens for this event and re-renders both Mermaid diagrams and Wireloom wireframes with the correct theme. Wireloom SVGs cache by source+theme key, so toggling back is instant.
+
 ## Diagrams
 
 ```mermaid
