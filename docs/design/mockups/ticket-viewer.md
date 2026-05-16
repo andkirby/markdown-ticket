@@ -44,7 +44,7 @@ window "Ticket Viewer — With Sub-Docs":
 
 annotation "Title bar with border-b" target="tv-title" position=top
 annotation "Badge bar wraps if needed" target="tv-status" position=right
-annotation "Document tabs hidden if no subdocs" target="tv-doc-tab" position=right
+annotation "Document tabs hidden if no subdocs" target="tv-doc-tabs" position=right
 annotation "RelativeTimestamp, absolute right-4 top-4" target="tv-timestamp" position=right
 annotation "ToC: collapsible sidebar" target="tv-toc-1" position=left
 ```
@@ -166,6 +166,12 @@ window "Ticket Viewer — Mobile":
     text "## Steps" bold
     text "1. Navigate to /login" muted
 ```
+
+Mobile behavior:
+
+- Sub-document tabs stay visible when sub-documents exist, but use horizontal scroll instead of wrapping.
+- The table of contents is hidden by default on mobile and opens from a compact content-menu control.
+- Timestamp remains above content, not absolute-positioned over the title.
 
 ## Annotations
 

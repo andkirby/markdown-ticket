@@ -267,6 +267,11 @@ annotation "bg-blue-50 dark:bg-blue-900/20, aria-selected=true" target="result-s
 
 ---
 
+## Maintenance Notes
+
+- Keep the main examples to canonical search modes: default, current-project filtering, cross-project key search, project-scoped search, empty, and mobile.
+- Small visual differences such as hover vs keyboard-selected should stay in the component-detail section or the related spec state table, not as new full-window examples.
+
 ## Annotations
 
 | Element | Token | Class | Notes |

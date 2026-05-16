@@ -103,7 +103,7 @@ annotation "Centered empty state, h-32" target="empty-text" position=bottom
 window "Board — Loading":
   panel:
     grid cols=4 rows=3:
-      cell:
+      cell id="loading-skeleton-1":
         spinner
       cell:
         spinner
@@ -128,7 +128,7 @@ window "Board — Loading":
       cell:
         spinner
 
-annotation "Skeleton placeholders with gradient pulse animation" target="empty-text" position=bottom
+annotation "Skeleton placeholders with gradient pulse animation" target="loading-skeleton-1" position=bottom
 ```
 
 ## Column with Toggle (In Progress)

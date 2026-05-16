@@ -146,7 +146,7 @@ window "Project Browser — Empty":
 window "Project Browser — Mobile":
   panel:
     row:
-      input placeholder="Search projects..." type=search
+      input placeholder="Search projects..." type=search id="pb-search-mobile"
       button "×"
     divider
     list:
@@ -160,7 +160,7 @@ window "Project Browser — Mobile":
       slot "XYZ":
         text "Third Project"
 
-annotation "Single column on mobile" target="empty-projects" position=bottom
+annotation "Single column on mobile" target="pb-search-mobile" position=bottom
 ```
 
 ---
@@ -263,7 +263,7 @@ annotation "ring-2 ring-blue-400 when panel open" target="launcher-active" posit
 window "Project Selector Rail — Mobile":
   panel:
     row:
-      panel:
+      panel id="mobile-active-card":
         row:
           icon name="star"
           text "MDT" bold
@@ -272,7 +272,7 @@ window "Project Selector Rail — Mobile":
       spacer
       button "⊕"
 
-annotation "Only active card shown on mobile; chips hidden" target="launcher-default" position=bottom
+annotation "Only active card shown on mobile; chips hidden" target="mobile-active-card" position=bottom
 ```
 
 ---
@@ -357,3 +357,8 @@ annotation "Appears centered with pt-20 offset" target="rail-panel-search" posit
 | Empty state | `--muted-foreground` | `text-center py-12 text-gray-500` | |
 | HoverCard | — | shadcn `HoverCard` / `HoverCardContent` | w-80, 100ms delay |
 | Search section label | `--muted-foreground` | `text-xs uppercase tracking-wide` | "No projects match your search" |
+
+## Maintenance Notes
+
+- Keep this file focused on canonical surface states: panel default/search/empty/mobile, rail desktop/mobile, and launcher open.
+- Avoid adding more single-control snapshots unless they introduce a new interaction contract; prefer a short row in `specs/project-browser.md` state tables.

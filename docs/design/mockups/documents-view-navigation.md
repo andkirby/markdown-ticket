@@ -8,12 +8,14 @@ Related spec: `specs/documents-view-navigation.md`
 window "Documents View Navigation — Default":
   panel:
     row:
-      col 250:
+      col 520:
         row:
           text "Documents" bold
-          combo value="Filename ▾"
-          icon name="plus"
+          combo value="Name ▾"
+          button "↑"
+          spacer
           icon name="check"
+          icon name="star"
           icon name="gear"
         input placeholder="Filter documents..." type=search id="nav-search"
         section "Recent":
@@ -39,12 +41,14 @@ annotation "All Documents: collapsible tree roots" target="docs-root" position=r
 window "Documents View Navigation — Filter Active":
   panel:
     row:
-      col 250:
+      col 520:
         row:
           text "Documents" bold
-          combo value="Filename ▾"
-          icon name="plus"
+          combo value="Name ▾"
+          button "↑"
+          spacer
           icon name="check"
+          icon name="star"
           icon name="gear"
         input placeholder="navigation" type=search id="active-filter"
         section "Recent":
@@ -70,12 +74,14 @@ annotation "Selected file highlighted in filtered results" target="filtered-sele
 window "Documents View Navigation — Selected Hidden by Filter":
   panel:
     row:
-      col 250:
+      col 520:
         row:
           text "Documents" bold
-          combo value="Filename ▾"
-          icon name="plus"
-          icon name="check" id="scroll-clear"
+          combo value="Name ▾"
+          button "↑"
+          spacer
+          icon name="check"
+          icon name="star" id="scroll-clear"
           icon name="gear"
         input placeholder="docker" type=search id="hide-filter"
         text "Results" bold
@@ -116,9 +122,11 @@ window "Documents View Navigation — Mobile":
   panel:
     text "Documents" bold
     row:
-      combo value="Filename ▾"
-      icon name="plus"
+      combo value="Name ▾"
+      button "↑"
+      spacer
       icon name="check"
+      icon name="star"
       icon name="gear"
     input placeholder="Filter documents..." type=search
     section "Recent":
@@ -135,6 +143,12 @@ window "Documents View Navigation — Mobile":
     text "Markdown content renders here." muted
 ```
 
+Mobile behavior:
+
+- Navigation and preview are separate modes, not a long permanently stacked page.
+- Selecting a document moves to preview; a back control returns to the document list.
+- Search, recent files, and tree controls remain in the navigation mode.
+
 ## Annotations
 
 | Element | Token | Class | Notes |
@@ -146,6 +160,8 @@ window "Documents View Navigation — Mobile":
 | Recent/tree divider | `--border` | `border-b border-border` | Thin separator after Recent; tree scrolls independently below it |
 | Selected row | `--primary` | `data-tree-state="selected"` proposed | Active document highlight |
 | Muted disabled row | `--muted-foreground` | `data-tree-state="disabled"` proposed | Excluded paths |
-| Collapse control | `--muted-foreground` | icon button | Collapses all except selected ancestors |
+| Sort direction | `--muted-foreground` | icon-only button | Reverses the selected sort field |
+| Collapse tree | `--muted-foreground` | icon-only button | Collapses folders except selected ancestors |
 | Scroll target | `--primary` | `data-testid="scroll-to-active-document-button"` | Clears filter only when selected row is hidden |
+| Configure document paths | `--muted-foreground` | icon-only button | Opens path configuration |
 | Excluded ticket area | `--muted-foreground` | PathSelector annotation | `docs/CRs/` is automatically excluded from document browsing |
