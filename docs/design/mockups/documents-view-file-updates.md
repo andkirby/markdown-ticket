@@ -2,34 +2,28 @@
 
 Related spec: `specs/documents-view-file-updates.md`
 
+Shared navigation shell: `documents-view-navigation.md`.
+
+Use that mockup for the full sidebar/header/tree contract. This file only repeats sidebar detail when the update state changes the tree itself.
+
 ## Default State
 
 ```wireloom
 window "Documents View — Default":
   panel:
     row:
-      col 250:
-        row:
-          text "Documents" bold id="sidebar-title"
-          combo value="Filename ▾" id="filename-combo"
-          icon name="plus" id="icon-up"
-          icon name="check" id="icon-scroll"
-          icon name="gear" id="icon-edit"
-        input placeholder="Search documents..." type=search id="doc-search"
-        tree id="file-tree":
-          node "docs" id="docs-folder":
-            node "README.md" id="readme"
-            node "ARCHITECTURE.md" selected id="arch-selected"
-          node "specs" collapsed id="specs-folder":
-            node "api.md" id="api-md"
+      col 360:
+        text "Left: Documents navigation" bold id="nav-context"
+        text "See documents-view-navigation.md" muted
       col fill:
+        text "Right: Document preview" bold
         row:
           text "Created: May 1, 2026" muted size=small id="meta-created"
           text "Updated: May 11, 2026" muted size=small id="meta-updated"
         text "# Current document" bold id="doc-heading"
         text "Markdown content renders here." muted
 
-annotation "File tree with selected item" target="arch-selected" position=right
+annotation "Sidebar composition is owned by documents-view-navigation.md" target="nav-context" position=bottom
 annotation "Metadata bar with created/updated dates" target="meta-created" position=top
 ```
 
@@ -39,30 +33,20 @@ annotation "Metadata bar with created/updated dates" target="meta-created" posit
 window "Documents View — Selected File Updated":
   panel:
     row:
-      col 250:
-        row:
-          text "Documents" bold
-          combo value="Filename ▾"
-          icon name="plus"
-          icon name="check"
-          icon name="gear"
-        input placeholder="Search documents..." type=search
-        tree:
-          node "docs":
-            node "README.md"
-            node "ARCHITECTURE.md" selected id="arch-updated"
-          node "specs" collapsed:
-            node "api.md"
+      col 360:
+        text "Left: Documents navigation" bold
+        text "Selected file remains highlighted" muted id="selected-nav-note"
       col fill:
+        text "Right: Document preview" bold
         row:
           text "Created: May 1, 2026" muted size=small
           text "Updated: just now" muted size=small
           spacer
-          status "Updated" kind=info id="update-indicator"
+          text "Updated" accent=success size=small id="update-indicator"
         text "# Current document" bold
         text "Fresh content replaces cached content." muted
 
-annotation "Updated dot marker on file" target="arch-updated" position=right
+annotation "Optional updated marker may appear on selected tree row" target="selected-nav-note" position=bottom
 annotation "Inline update indicator" target="update-indicator" position=right
 ```
 
@@ -72,12 +56,15 @@ annotation "Inline update indicator" target="update-indicator" position=right
 window "Documents View — Other File Updated":
   panel:
     row:
-      col 250:
+      col 520:
+        text "Left: Documents navigation" bold
         row:
-          text "Documents" bold
-          combo value="Modified ▾" id="combo-modified"
-          icon name="plus"
+          text "Documents"
+          combo value="Date ▾" id="combo-modified"
+          button "↑"
+          spacer
           icon name="check"
+          icon name="star"
           icon name="gear"
         input placeholder="Search documents..." type=search
         tree:
@@ -87,14 +74,16 @@ window "Documents View — Other File Updated":
           node "specs" collapsed:
             node "api.md"
       col fill:
+        text "Right: Document preview" bold
         row:
           text "Created: May 1, 2026" muted size=small
           text "Updated: May 11, 2026" muted size=small
         text "# Current document" bold
-        text "Reader stays on the selected file." muted
+        text "Markdown content renders here." muted
 
 annotation "Updated dot on non-selected file" target="readme-updated" position=right
 annotation "Combo updates to show modified file name" target="combo-modified" position=right
+annotation "Non-selected file updates do not change the selected preview" target="readme-updated" position=bottom
 ```
 
 ## Selected File Deleted
@@ -103,12 +92,15 @@ annotation "Combo updates to show modified file name" target="combo-modified" po
 window "Documents View — File Deleted":
   panel:
     row:
-      col 250:
+      col 520:
+        text "Left: Documents navigation" bold
         row:
-          text "Documents" bold
-          combo value="Filename ▾"
-          icon name="plus"
+          text "Documents"
+          combo value="Name ▾"
+          button "↑"
+          spacer
           icon name="check"
+          icon name="star"
           icon name="gear"
         input placeholder="Search documents..." type=search
         tree:
@@ -117,6 +109,7 @@ window "Documents View — File Deleted":
           node "specs" collapsed:
             node "api.md"
       col fill:
+        text "Right: Document preview" bold
         text "File was deleted" accent=danger id="deleted-msg"
         text "Choose another document from the tree." muted
         button "Select another file" id="select-another"
@@ -130,29 +123,20 @@ annotation "Empty state when selected file is deleted" target="deleted-msg" posi
 window "Documents View — Syncing":
   panel:
     row:
-      col 250:
-        row:
-          text "Documents" bold
-          combo value="Filename ▾"
-          icon name="plus"
-          icon name="check"
-          icon name="gear"
-        input placeholder="Search documents..." type=search
-        tree:
-          node "docs":
-            node "README.md"
-            node "ARCHITECTURE.md" selected
-          node "specs" collapsed:
-            node "api.md"
+      col 360:
+        text "Left: Documents navigation" bold
+        text "Tree refreshes after reconnect" muted id="reconnect-nav-note"
       col fill:
+        text "Right: Document preview" bold
         row:
           text "Created: May 1, 2026" muted size=small
           text "Updated: May 11, 2026" muted size=small
           spacer
-          status "Syncing" kind=info id="sync-indicator"
+          text "Syncing..." accent=success size=small id="sync-indicator"
         text "# Current document" bold
         text "Content remains visible during refresh." muted
 
+annotation "Navigation refreshes without changing selection" target="reconnect-nav-note" position=bottom
 annotation "Syncing indicator during reconnect refetch" target="sync-indicator" position=right
 ```
 
@@ -162,35 +146,24 @@ annotation "Syncing indicator during reconnect refetch" target="sync-indicator" 
 window "Documents View — Mobile":
   panel:
     row:
-      text "Documents" bold
-      combo value="Modified ▾"
-      icon name="plus"
-      icon name="check"
-      icon name="gear"
-    input placeholder="Search documents..." type=search
-    tree:
-      node "docs":
-        node "ARCHITECTURE.md" selected
-    divider
-    row:
       text "Created: May 1, 2026" muted size=small
       text "Updated: just now" muted size=small
-    status "Updated" kind=info
+    text "Updated" accent=success size=small
     divider
     text "# Current document" bold
     text "Fresh content replaces cached content." muted
 ```
 
+Mobile update states apply to the preview mode. Navigation mode remains owned by `documents-view-navigation.md`.
+
 ## Annotations
 
 | Element | Token | Class | Notes |
 |---------|-------|-------|-------|
-| Sidebar background | `--muted` | `bg-muted/30` | Existing Documents View panel style |
-| Sidebar divider | `--border` | `border-r border-border` | Existing split-pane divider |
+| Navigation context | `--muted-foreground` | compact placeholder | Full sidebar contract lives in `documents-view-navigation.md` |
 | Metadata bar | `--background`, `--border` | `bg-background/95 border-b border-border` | Existing sticky metadata area |
 | Metadata text | `--muted-foreground` | `text-xs text-muted-foreground` | Created and Updated labels |
-| Scroll to active document | `--muted-foreground`, `--primary` | `data-testid="scroll-to-active-document-button"` | Target icon in sidebar header; disabled until a file is selected; clears search if needed before scrolling |
-| Update indicator | `--primary` | `.document-update-indicator` proposed | Compact inline state; right-aligned on desktop |
+| Update indicator | `--primary` | `text-primary` | Plain inline metadata-row text, not a badge |
 | Updated file marker | `--primary` | `data-file-state="updated"` proposed | Small dot in file tree, no toast |
 | Deleted state | `--destructive` | `text-destructive` | Viewer-level empty state |
-| Syncing state | `--primary` | `.document-update-indicator.loading` proposed | Shown during reconnect refetch |
+| Syncing state | `--primary` | `text-primary` | Plain inline metadata-row text shown during reconnect refetch |
