@@ -343,7 +343,7 @@
   }
 
   .modal__close {
-    @apply ml-4 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500;
+    @apply ml-4 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-ring;
   }
 
   .modal__title {
@@ -368,7 +368,7 @@
   }
 
   .modal__close--absolute {
-    @apply absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-gray-500 dark:hover:bg-slate-800 dark:hover:text-gray-200;
+    @apply absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-ring dark:text-gray-500 dark:hover:bg-slate-800 dark:hover:text-gray-200;
   }
 
   /* Legacy aliases (will be removed) */
