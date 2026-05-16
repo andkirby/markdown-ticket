@@ -200,21 +200,22 @@
   }
 
   .btn-primary {
-    @apply btn bg-primary text-primary-foreground hover:bg-primary/90 h-10 py-2 px-4;
-  }
-
-  .btn-secondary {
-    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 py-2 px-4;
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 py-2 px-4;
     border: 1px solid hsl(var(--border));
   }
 
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 py-2 px-4;
+    border: 1px solid hsl(var(--border));
+  }
 
   .btn-outline {
-    @apply btn border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 py-2 px-4;
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 py-2 px-4;
   }
 
   .btn-danger {
-    @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 py-2 px-4;
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 py-2 px-4;
+    border: 1px solid hsl(var(--border));
   }
 
   .btn-sm {
@@ -349,6 +350,10 @@
     @apply fixed inset-0 z-50 overflow-y-auto;
   }
 
+  .modal__container {
+    @apply flex min-h-[100dvh] items-center justify-center p-4;
+  }
+
   .modal-overlay {
     @apply fixed inset-0 bg-black/50 transition-opacity;
   }
@@ -358,7 +363,7 @@
   }
 
   .modal__header {
-    @apply modal__section pr-14;
+    @apply px-4 py-3 pr-14 border-b border-gray-200 dark:border-gray-700;
   }
 
   .modal__body {
@@ -369,7 +374,7 @@
     @apply flex items-center justify-end px-4 py-3 border-t border-gray-200 dark:border-gray-700;
   }
 
-  /* Close button — absolute positioned, used by ModalHeader and Pattern B modals */
+  .modal__title {
     @apply text-lg font-semibold leading-6 text-gray-900 dark:text-white;
   }
 
@@ -398,19 +403,17 @@
     @apply h-5 w-5;
   }
 
-  .modal__title {
-
   /* Legacy aliases (will be removed) */
   .modal-header {
-    @apply modal__header;
+    @apply px-4 py-3 pr-14 border-b border-gray-200 dark:border-gray-700;
   }
 
   .modal-body {
-    @apply modal__body;
+    @apply p-4;
   }
 
   .modal-footer {
-    @apply modal__footer;
+    @apply flex items-center justify-end px-4 py-3 border-t border-gray-200 dark:border-gray-700;
   }
 
   .tooltip {
@@ -672,11 +675,14 @@
 
   /* Legacy aliases — remove after migration */
   .settings-tab-trigger {
-    @apply tab tab--fill;
+    @apply flex-1 px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap;
+  }
+  .settings-tab-trigger[data-state='active'] {
+    @apply border-b-2 border-primary text-foreground;
   }
 
   .settings-tab-content {
-    @apply tab__content;
+    @apply p-4 outline-none;
   }
 
 .settings-group {
