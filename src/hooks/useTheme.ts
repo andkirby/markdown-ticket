@@ -78,6 +78,9 @@ export function useTheme() {
 
     // Save to cookie
     setCookie(COOKIE_NAME, themeMode, COOKIE_EXPIRES_DAYS)
+
+    // Notify subscribers (Mermaid, Wireloom, etc.)
+    window.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: resolvedTheme } }))
   }, [resolvedTheme, themeMode])
 
   const toggleTheme = () => {

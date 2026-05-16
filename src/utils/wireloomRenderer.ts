@@ -4,27 +4,29 @@
  * If `wireloom` is not installed, all calls are no-ops and wireloom
  * code blocks render as plain `<pre><code>` blocks.
  *
- * Pattern: module-level cache persists across renders.
+ * Pattern:
  * 1. Fence plugin emits `<div class="wireloom-pending">` placeholders.
- * 2. Post-render hook calls renderWireloomBlocks() to async-render.
- * 3. Placeholder divs are replaced with rendered SVGs.
+ * 2. Post-render hook calls renderWireloomElements() to async-render.
+ * 3. On theme-change, already-rendered `.wireloom` divs are re-rendered.
  */
 
-/** Cache: source hash → rendered SVG or error HTML */
+/** Cache: source+theme → rendered SVG or error HTML */
 const cache = new Map<string, string>()
 
 /** Lazy-loaded wireloom module (null = not loaded yet) */
-let wireloomModule: typeof import('wireloom') | null | undefined = undefined
+let wireloomModule: typeof import('wireloom') | null | undefined
 
 /**
  * Try to dynamically import wireloom. Returns null if not installed.
  */
 async function loadWireloom(): Promise<typeof import('wireloom') | null> {
-  if (wireloomModule !== undefined) return wireloomModule
+  if (wireloomModule !== undefined)
+    return wireloomModule
   try {
     wireloomModule = await import('wireloom')
     return wireloomModule
-  } catch {
+  }
+  catch {
     wireloomModule = null
     return null
   }
@@ -38,65 +40,44 @@ export async function isWireloomAvailable(): Promise<boolean> {
   return mod !== null
 }
 
-/**
- * Pre-render wireloom blocks and populate cache.
- * Called before markdown-it render so the fence plugin can use cached results.
- *
- * This is a no-op if wireloom is not installed.
- */
-export async function prepareWireloomBlocks(markdown: string): Promise<void> {
-  // Quick check: any wireloom blocks at all?
-  if (!markdown.includes('```wireloom')) return
+function getCacheKey(source: string, theme: string): string {
+  return `${theme}:${source}`
+}
 
-  const mod = await loadWireloom()
-  if (!mod) return
+function isDarkMode(): boolean {
+  return typeof document !== 'undefined'
+    && document.documentElement.classList.contains('dark')
+}
 
-  const fenceRe = /```wireloom(?:\s.*?)?\n([\s\S]*?)```/g
-  const matches = [...markdown.matchAll(fenceRe)]
-
-  await Promise.all(matches.map(async (match, i) => {
-    const source = match[1]!
-    const key = source
-
-    if (cache.has(key)) return
-
-    try {
-      const { svg } = await mod.default.render(`wireloom-${i}-${Date.now()}`, source)
-      cache.set(key, svg)
-    } catch (err) {
-      const msg = err instanceof Error
-        ? err.message
-        : String(err)
-      cache.set(key, `<div class="wireloom-error">${escapeForAttribute(msg)}</div>`)
-    }
-  }))
+function decodeSource(encoded: string): string {
+  return decodeURIComponent(escape(atob(encoded)))
 }
 
 /**
- * Look up a pre-rendered wireloom SVG from cache.
- * Returns undefined if not cached (renders as plain code block).
- */
-export function getWireloomSvg(source: string): string | undefined {
-  return cache.get(source)
-}
-
-/**
- * Render all `.wireloom-pending` placeholders in a container element.
- * Called from post-render hook after the HTML is mounted to the DOM.
+ * Render Wireloom elements in a container.
  *
- * This handles the async case where wireloom wasn't cached during
- * the initial markdown-it render.
+ * Handles two cases:
+ * 1. `.wireloom-pending` — initial render of placeholders
+ * 2. `.wireloom[data-source-encoded]` — re-render on theme change
+ *
+ * Falls back to plain code blocks when wireloom is not installed.
  */
 export async function renderWireloomElements(container: HTMLElement): Promise<void> {
   const pending = container.querySelectorAll('.wireloom-pending')
-  if (pending.length === 0) return
+  const rendered = container.querySelectorAll('.wireloom[data-source-encoded]')
+  const allTargets = [...Array.from(pending), ...Array.from(rendered)]
 
+  if (allTargets.length === 0)
+    return
+
+  const theme = isDarkMode() ? 'dark' : 'default'
   const mod = await loadWireloom()
+
   if (!mod) {
-    // Wireloom not installed — replace placeholders with plain code blocks
+    // Wireloom not installed — replace pending placeholders with plain code blocks
+    // (already-rendered divs are left as-is since they show the source)
     pending.forEach((el) => {
-      const encoded = el.getAttribute('data-source-encoded') ?? ''
-      const source = decodeURIComponent(escape(atob(encoded)))
+      const source = decodeSource(el.getAttribute('data-source-encoded') ?? '')
       const pre = document.createElement('pre')
       const code = document.createElement('code')
       code.className = 'language-wireloom'
@@ -108,16 +89,32 @@ export async function renderWireloomElements(container: HTMLElement): Promise<vo
   }
 
   let i = 0
-  for (const el of pending) {
+  for (const el of allTargets) {
     const encoded = el.getAttribute('data-source-encoded') ?? ''
-    const source = decodeURIComponent(escape(atob(encoded)))
-    try {
-      const { svg } = await mod.default.render(`wireloom-pr-${i++}`, source)
+    const source = decodeSource(encoded)
+    const key = getCacheKey(source, theme)
+
+    // Use cache if available (avoids re-rendering on every theme toggle)
+    const cached = cache.get(key)
+    if (cached !== undefined) {
       const wrapper = document.createElement('div')
       wrapper.className = 'wireloom'
+      wrapper.setAttribute('data-source-encoded', encoded)
+      wrapper.innerHTML = cached
+      el.replaceWith(wrapper)
+      continue
+    }
+
+    try {
+      const { svg } = await mod.default.render(`wireloom-${i++}-${Date.now()}`, source, { theme })
+      cache.set(key, svg)
+      const wrapper = document.createElement('div')
+      wrapper.className = 'wireloom'
+      wrapper.setAttribute('data-source-encoded', encoded)
       wrapper.innerHTML = svg
       el.replaceWith(wrapper)
-    } catch (err) {
+    }
+    catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       const errorDiv = document.createElement('div')
       errorDiv.className = 'wireloom-error'
@@ -125,12 +122,4 @@ export async function renderWireloomElements(container: HTMLElement): Promise<vo
       el.replaceWith(errorDiv)
     }
   }
-}
-
-function escapeForAttribute(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
 }

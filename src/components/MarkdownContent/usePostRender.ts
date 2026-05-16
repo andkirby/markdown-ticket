@@ -13,7 +13,9 @@ interface UsePostRenderOptions {
 /**
  * Hook that handles post-render effects:
  * - Mermaid diagram rendering
+ * - Wireloom wireframe rendering
  * - Link validation
+ * - Re-renders diagrams on theme change
  */
 export function usePostRender({
   containerRef,
@@ -44,4 +46,18 @@ export function usePostRender({
       return () => clearTimeout(timeoutId)
     }
   }, [processedContent, onRenderComplete, renderMermaid, containerRef])
+
+  // Re-render Mermaid and Wireloom on theme change
+  useEffect(() => {
+    const handleThemeChange = () => {
+      if (!containerRef.current)
+        return
+
+      renderMermaid()
+      renderWireloomElements(containerRef.current)
+    }
+
+    window.addEventListener('theme-change', handleThemeChange)
+    return () => window.removeEventListener('theme-change', handleThemeChange)
+  }, [renderMermaid, containerRef])
 }
