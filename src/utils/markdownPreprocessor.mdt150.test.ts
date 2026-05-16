@@ -7,7 +7,7 @@
  * ticket references, and auto-linking features.
  */
 import { describe, expect, it } from 'bun:test'
-import showdown from 'showdown'
+import MarkdownIt from 'markdown-it'
 import { preprocessMarkdown } from './markdownPreprocessor'
 
 describe('MDT-150: markdownPreprocessor unchanged (C5)', () => {
@@ -20,8 +20,8 @@ describe('MDT-150: markdownPreprocessor unchanged (C5)', () => {
   it('wraps .md references as links in markdown output', () => {
     const markdown = 'See architecture.md for details.'
     const processed = preprocessMarkdown(markdown, 'MDT', linkConfig)
-    const converter = new showdown.Converter({ simplifiedAutoLink: true })
-    const html = converter.makeHtml(processed)
+    const md = new MarkdownIt()
+    const html = md.render(processed)
 
     // Preprocessor should wrap the .md reference so it becomes a link
     expect(html).toContain('architecture.md')
@@ -31,8 +31,8 @@ describe('MDT-150: markdownPreprocessor unchanged (C5)', () => {
   it('wraps ticket key references as links', () => {
     const markdown = 'Related to MDT-151.'
     const processed = preprocessMarkdown(markdown, 'MDT', linkConfig)
-    const converter = new showdown.Converter({ simplifiedAutoLink: true })
-    const html = converter.makeHtml(processed)
+    const md = new MarkdownIt()
+    const html = md.render(processed)
 
     expect(html).toContain('MDT-151')
     expect(processed).not.toBe(markdown)
@@ -86,8 +86,8 @@ describe('MDT-150: markdownPreprocessor unchanged (C5)', () => {
 
     // After Task 1: this should be wrapped as a ticket link
     // For now, verify no corruption
-    const converter = new showdown.Converter({ simplifiedAutoLink: true })
-    const html = converter.makeHtml(processed)
+    const md = new MarkdownIt()
+    const html = md.render(processed)
     expect(html).toContain('MDT-150-smartlink-doc-urls.md')
   })
 })
