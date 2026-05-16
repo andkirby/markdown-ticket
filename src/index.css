@@ -28,6 +28,37 @@
   overflow-x: auto;
 }
 
+/* Scroll headings below sticky tab bar when navigating to anchors */
+.prose [id] {
+  scroll-margin-top: 3rem;
+}
+
+/* Heading anchor links — # appears on hover (GitHub-style) */
+.prose h1[id] > .header-anchor,
+.prose h2[id] > .header-anchor,
+.prose h3[id] > .header-anchor,
+.prose h4[id] > .header-anchor,
+.prose h5[id] > .header-anchor,
+.prose h6[id] > .header-anchor {
+  text-decoration: none;
+  color: inherit;
+}
+.prose .header-anchor::after {
+  content: ' #';
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.prose h1:hover > .header-anchor::after,
+.prose h2:hover > .header-anchor::after,
+.prose h3:hover > .header-anchor::after,
+.prose h4:hover > .header-anchor::after,
+.prose h5:hover > .header-anchor::after,
+.prose h6:hover > .header-anchor::after {
+  visibility: visible;
+  opacity: 0.6;
+}
+
 /* Remove backticks and padding for Mermaid code blocks */
 .prose code.mermaid::before,
 .prose code.mermaid::after {
@@ -542,4 +573,62 @@
   overflow: visible;
   clip: auto;
   white-space: normal;
+}
+
+/* ── Settings Modal ───────────────────────────────────── */
+
+.settings-tab-trigger {
+  @apply flex-1 px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground;
+}
+.settings-tab-trigger[data-state='active'] {
+  @apply border-b-2 border-primary text-foreground;
+}
+
+.settings-tab-content {
+  @apply p-6 outline-none;
+}
+
+.settings-group {
+  @apply flex flex-col gap-1;
+}
+.settings-group + .settings-group {
+  @apply mt-6;
+}
+
+.settings-group-row {
+  @apply flex items-center justify-between gap-4;
+}
+.settings-group-row + .settings-group-row {
+  @apply mt-6;
+}
+.settings-group + .settings-group-row,
+.settings-group-row + .settings-group {
+  @apply mt-6;
+}
+
+.settings-label {
+  @apply text-sm font-medium text-foreground;
+}
+
+.settings-desc {
+  @apply text-sm text-muted-foreground mt-0.5;
+}
+
+.settings-select {
+  @apply w-full max-w-xs border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground;
+  @apply focus:outline-none focus:ring-2 focus:ring-ring;
+}
+
+.settings-theme-btn {
+  @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border transition-colors;
+}
+.settings-theme-btn--active {
+  @apply bg-primary text-primary-foreground border-primary;
+}
+.settings-theme-btn--inactive {
+  @apply bg-background text-foreground border-border hover:bg-muted;
+}
+
+.settings-action-btn {
+  @apply flex items-center gap-2 px-3 py-1.5 text-sm font-medium border border-border rounded-md bg-background text-foreground hover:bg-muted hover:text-destructive transition-colors;
 }

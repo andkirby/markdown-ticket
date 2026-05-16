@@ -13,6 +13,7 @@ interface SecondaryHeaderProps {
   onAddProject?: () => void
   onEditProject?: () => void
   selectedProject?: Project | null
+  onOpenSettings?: () => void
 }
 
 export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
@@ -22,6 +23,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
   onAddProject,
   onEditProject,
   selectedProject,
+  onOpenSettings,
 }) => {
   return (
     <div className="flex items-center space-x-1 sm:space-x-4">
@@ -41,6 +43,7 @@ export const SecondaryHeader: React.FC<SecondaryHeaderProps> = ({
           hasActiveProject={!!selectedProject}
           sortPreferences={sortPreferences}
           onSortPreferencesChange={onSortPreferencesChange}
+          onOpenSettings={onOpenSettings}
         />
       )}
     </div>
