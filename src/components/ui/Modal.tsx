@@ -101,7 +101,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
     const modalContent = (
       <div className={cn('modal', overlayClassName)}>
-        <div className="flex min-h-[100dvh] items-center justify-center p-4">
+        <div className="flex min-h-[100dvh] items-start justify-center pt-[15vh] pb-8 px-4">
           {/* Background overlay */}
           <div
             className="modal-overlay"
@@ -151,23 +151,22 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
         className={cn('modal__header', className)}
         {...props}
       >
-        <div className="flex-1">
-          {title && (
-            <h3 className="modal__title">
-              {title}
-            </h3>
-          )}
-          {description && (
-            <p className="modal__description">
-              {description}
-            </p>
-          )}
-          {children}
-        </div>
+        {title && (
+          <h3 className="modal__title">
+            {title}
+          </h3>
+        )}
+        {description && (
+          <p className="modal__description">
+            {description}
+          </p>
+        )}
+        {children}
         {showCloseButton && (
           <button
             type="button"
-            className="modal__close"
+            aria-label="Close"
+            className="modal__close--absolute"
             onClick={onClose}
             {...(closeTestId && { 'data-testid': closeTestId })}
           >
