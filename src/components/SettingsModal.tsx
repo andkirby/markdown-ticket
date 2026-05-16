@@ -119,32 +119,32 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       <ModalHeader title="Settings" onClose={onClose} closeTestId="settings-close" />
       <ModalBody className="p-0">
         <Tabs.Root defaultValue="appearance">
-          <Tabs.List className="modal__section flex">
+          <Tabs.List className="tab__list">
             <Tabs.Trigger
               value="appearance"
               data-testid="settings-tab-appearance"
-              className="settings-tab-trigger"
+              className="tab tab--fill"
             >
               Appearance
             </Tabs.Trigger>
             <Tabs.Trigger
               value="board"
               data-testid="settings-tab-board"
-              className="settings-tab-trigger"
+              className="tab tab--fill"
             >
               Board
             </Tabs.Trigger>
             <Tabs.Trigger
               value="advanced"
               data-testid="settings-tab-advanced"
-              className="settings-tab-trigger"
+              className="tab tab--fill"
             >
               Advanced
             </Tabs.Trigger>
           </Tabs.List>
 
           {/* ── Appearance ─────────────────────────────────────── */}
-          <Tabs.Content value="appearance" className="settings-tab-content">
+          <Tabs.Content value="appearance" className="tab__content">
             {/* Theme */}
             <div className="settings-group">
               <label className="settings-label">Theme</label>
@@ -200,7 +200,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </Tabs.Content>
 
           {/* ── Board ──────────────────────────────────────────── */}
-          <Tabs.Content value="board" className="settings-tab-content">
+          <Tabs.Content value="board" className="tab__content">
             {/* Card Density */}
             <div className="settings-group">
               <label className="settings-label">Card Density</label>
@@ -231,7 +231,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </Tabs.Content>
 
           {/* ── Advanced ───────────────────────────────────────── */}
-          <Tabs.Content value="advanced" className="settings-tab-content">
+          <Tabs.Content value="advanced" className="tab__content">
             {/* Event History */}
             <div className="settings-group-row">
               <div>

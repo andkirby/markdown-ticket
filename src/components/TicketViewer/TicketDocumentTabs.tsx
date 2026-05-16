@@ -79,7 +79,7 @@ export function TicketDocumentTabs({
         >
           <Tabs.List
             data-testid="subdoc-tab-row"
-            className="modal__section flex overflow-x-auto scrollbar-hide"
+            className="tab__list overflow-x-auto scrollbar-hide"
           >
             {row.entries.map(entry => (
               <Tabs.Trigger
@@ -87,7 +87,7 @@ export function TicketDocumentTabs({
                 value={entry.name}
                 data-testid={`subdoc-tab-${entry.name}`}
                 data-filepath={entry.filePath || undefined}
-                className="relative mr-3 whitespace-nowrap px-2 py-1.5 text-sm font-medium text-gray-700 transition-[color,transform,opacity] last:mr-0 hover:-translate-y-0.5 hover:scale-[1.01] hover:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-gray-900 data-[state=active]:hover:translate-y-0 data-[state=active]:hover:scale-100 dark:text-gray-200 dark:hover:text-white dark:data-[state=active]:text-white"
+                className="tab mr-3 last:mr-0"
               >
                 {entry.name === ROOT_DOCUMENT_PATH ? 'Main' : entry.name}
                 {entry.kind === 'folder' ? ' ▶' : ''}

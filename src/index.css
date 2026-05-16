@@ -655,16 +655,35 @@
 
 /* ── Settings Modal ───────────────────────────────────── */
 
-.settings-tab-trigger {
-  @apply flex-1 px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground;
-}
-.settings-tab-trigger[data-state='active'] {
-  @apply border-b-2 border-primary text-foreground;
-}
+  /* Tabs — shared Radix Tabs pattern */
+  .tab__list {
+    @apply flex px-4 py-0 border-b border-gray-200 dark:border-gray-700;
+  }
 
-.settings-tab-content {
-  @apply p-4 outline-none;
-}
+  .tab {
+    @apply px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap;
+  }
+
+  .tab[data-state='active'] {
+    @apply border-b-2 border-primary text-foreground;
+  }
+
+  .tab--fill {
+    @apply flex-1 px-4 py-3;
+  }
+
+  .tab__content {
+    @apply p-4 outline-none;
+  }
+
+  /* Legacy aliases — remove after migration */
+  .settings-tab-trigger {
+    @apply tab tab--fill;
+  }
+
+  .settings-tab-content {
+    @apply tab__content;
+  }
 
 .settings-group {
   @apply flex flex-col gap-1;
