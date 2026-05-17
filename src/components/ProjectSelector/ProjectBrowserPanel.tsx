@@ -104,6 +104,13 @@ function computePanelOrder(
   })
 }
 
+function getGridColumnCount(element: HTMLElement): number {
+  const columns = window.getComputedStyle(element).gridTemplateColumns
+  const columnCount = columns.split(' ').filter(Boolean).length
+
+  return Math.max(columnCount, 1)
+}
+
 /**
  * ProjectBrowserPanel component
  *
@@ -127,6 +134,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
   // Search state
   const [searchQuery, setSearchQuery] = React.useState('')
   const searchInputRef = React.useRef<HTMLInputElement>(null)
+  const projectGridRef = React.useRef<HTMLDivElement>(null)
 
   // Reset search and autofocus when panel opens
   React.useEffect(() => {
@@ -146,7 +154,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     [projects, selectorState],
   )
 
-  // Filter projects by search query (case-insensitive code OR name match)
+  // Filter projects by search query (case-insensitive code, name, or description match)
   const displayProjects = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
 
@@ -155,13 +163,14 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     }
 
     return panelProjects.filter((project) => {
-      // Exclude current project when searching
+      // Exclude current project when searching.
       if ((project.project.code || project.id) === activeProjectKey) {
         return false
       }
       const code = (project.project.code || project.id).toLowerCase()
       const name = (project.project.name || '').toLowerCase()
-      return code.includes(query) || name.includes(query)
+      const description = (project.project.description || '').toLowerCase()
+      return code.includes(query) || name.includes(query) || description.includes(query)
     })
   }, [panelProjects, searchQuery, activeProjectKey])
 
@@ -173,19 +182,63 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     onClose() // Close panel after selection
   }
 
+  const handleProjectGridKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (
+      e.key !== 'ArrowRight'
+      && e.key !== 'ArrowDown'
+      && e.key !== 'ArrowLeft'
+      && e.key !== 'ArrowUp'
+      && e.key !== 'Home'
+      && e.key !== 'End'
+    ) {
+      return
+    }
+
+    const gridElement = projectGridRef.current
+    const activeElement = document.activeElement
+
+    if (!gridElement || !(activeElement instanceof HTMLElement))
+      return
+
+    const cards = Array.from(
+      gridElement.querySelectorAll<HTMLElement>('[data-project-browser-card="true"]'),
+    )
+    const currentIndex = cards.indexOf(activeElement)
+
+    if (currentIndex === -1)
+      return
+
+    e.preventDefault()
+
+    const columnCount = getGridColumnCount(gridElement)
+    const lastIndex = cards.length - 1
+    const nextIndexByKey = {
+      ArrowRight: Math.min(currentIndex + 1, lastIndex),
+      ArrowDown: Math.min(currentIndex + columnCount, lastIndex),
+      ArrowLeft: Math.max(currentIndex - 1, 0),
+      ArrowUp: Math.max(currentIndex - columnCount, 0),
+      Home: 0,
+      End: lastIndex,
+    } as const
+
+    cards[nextIndexByKey[e.key]].focus()
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" overlayClassName="backdrop-blur-sm" data-testid="project-browser-panel">
       <ModalBody className="p-0">
-        {/* Header with search input */}
+        {/* Header with inline search input */}
         <ModalHeader
-          title="Select Project"
           onClose={onClose}
           closeTestId="project-browser-close"
-          className="border-b-0 pb-0"
-        />
-        <div className="px-4 pb-3 pt-0">
+          closeButtonTabIndex={-1}
+          className="flex items-center gap-3"
+        >
+          <h3 className="modal__title shrink-0">
+            Projects
+          </h3>
           {/* Search input (MDT-152) */}
-          <div className="relative">
+          <div className="relative min-w-0 flex-1">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
               fill="none"
@@ -209,7 +262,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
               className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
             />
           </div>
-        </div>
+        </ModalHeader>
 
         {/* Project list */}
         <div className="max-h-[60vh] overflow-y-auto p-4">
@@ -225,7 +278,11 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
                 </div>
               )
             : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  ref={projectGridRef}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  onKeyDown={handleProjectGridKeyDown}
+                >
                   {displayProjects.map(project => (
                     <ProjectSelectorCard
                       key={project.project.code || project.id}

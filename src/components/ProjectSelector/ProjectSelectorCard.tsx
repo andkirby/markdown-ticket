@@ -12,6 +12,7 @@
 
 import type { ProjectWithSelectorState } from './types'
 import * as React from 'react'
+import { cn } from '@/lib/utils'
 // eslint-disable-next-line no-restricted-imports
 import { Icon } from '../shared/Icon'
 import {
@@ -66,6 +67,14 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
     onSelect(project.project.code || project.id)
   }
 
+  const handleCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ')
+      return
+
+    e.preventDefault()
+    onSelect(project.project.code || project.id)
+  }
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card selection
     if (onFavoriteToggle) {
@@ -73,25 +82,35 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
     }
   }
 
-  const cardClasses = `
-    group relative flex items-center justify-center
-    ${isActive
-        ? 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800 shadow-md hover:shadow-lg'
-        : 'bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border-gray-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-md'
-    }
-    border rounded-xl px-2 sm:px-4 py-1.5 min-h-12
-    ${useRailWidthConstraints ? 'min-w-[100px] sm:min-w-[150px] max-w-[280px] flex-1' : ''}
-    hover:-translate-y-0.5 hover:scale-[1.02]
-    transition-all duration-200 ease-out
-    cursor-pointer
-  `
+  const handleFavoriteKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+  }
+
+  const isProjectBrowserCard = testIdPrefix === 'project-browser-card'
+
+  const cardClasses = cn(
+    'group relative flex items-center justify-center',
+    isActive
+      ? 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800 shadow-md hover:shadow-lg'
+      : 'bg-gradient-to-br from-white to-gray-50/80 dark:from-slate-800 dark:to-slate-900/80 border-gray-200/50 dark:border-slate-700/50 shadow-sm hover:shadow-md',
+    'border rounded-xl px-2 sm:px-4 py-1.5 min-h-12',
+    useRailWidthConstraints && 'min-w-[100px] sm:min-w-[150px] max-w-[280px] flex-1',
+    'hover:-translate-y-0.5 hover:scale-[1.02]',
+    'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400',
+    'transition-all duration-200 ease-out cursor-pointer',
+  )
 
   const cardContent = (
     <div
       className={cardClasses}
       onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`Select project ${project.project.name || project.project.code || project.id}`}
       data-testid={`${testIdPrefix ?? 'project-selector-card'}-${project.project.code || project.id}`}
       data-project-key={project.project.code || project.id}
+      data-project-browser-card={isProjectBrowserCard ? 'true' : undefined}
     >
       {/* Favorite indicator - overlay star */}
       {onFavoriteToggle && (
@@ -100,6 +119,7 @@ const ProjectSelectorCard: React.FC<ProjectSelectorCardProps> = ({
             project.favorite ? 'rotate-[15deg]' : ''
           }`}
           onClick={handleFavoriteClick}
+          onKeyDown={handleFavoriteKeyDown}
           title={project.favorite ? 'Click to unfavorite' : 'Click to favorite'}
           aria-label="Toggle favorite"
         >

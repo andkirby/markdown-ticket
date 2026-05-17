@@ -225,9 +225,9 @@ Future full-text search across all projects must add a new mode and architecture
 
 The human-facing UX contract lives in:
 
-- `docs/design/specs/quick-search.md`
-- `docs/design/specs/project-browser.md`
-- `docs/design/mockups/quick-search.md`
-- `docs/design/mockups/project-browser.md`
+- `docs/design/surfaces/quick-search.spec.md`
+- `docs/design/surfaces/project-browser.spec.md`
+- `docs/design/surfaces/quick-search.mockups.md`
+- `docs/design/surfaces/project-browser.mockups.md`
 
 These docs must stay aligned with the canonical rules above: `@CODE query` syntax, `POST /api/projects/search`, 300ms debounce for async modes, browser-panel-only current-project exclusion, and mode-specific empty/loading states.
