@@ -1,6 +1,6 @@
 ---
 code: MDT-065
-status: Approved
+status: Proposed
 dateCreated: 2025-10-05T21:53:52.125Z
 type: Technical Debt
 priority: Medium
