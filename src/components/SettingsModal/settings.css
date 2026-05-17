@@ -1,0 +1,81 @@
+/* Settings modal styles and shared Radix Tabs pattern */
+
+@layer components {
+  /* Tabs — shared Radix Tabs pattern */
+  .tab__list {
+    @apply flex px-4 py-0 border-b border-gray-200 dark:border-gray-700;
+  }
+
+  .tab {
+    @apply px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap;
+  }
+
+  .tab[data-state='active'] {
+    @apply border-b-2 border-primary text-foreground;
+  }
+
+  .tab--fill {
+    @apply flex-1 px-4 py-3;
+  }
+
+  .tab__content {
+    @apply p-4 outline-none;
+  }
+
+  /* Legacy aliases — remove after migration */
+  .settings-tab-trigger {
+    @apply flex-1 px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap;
+  }
+  .settings-tab-trigger[data-state='active'] {
+    @apply border-b-2 border-primary text-foreground;
+  }
+
+  .settings-tab-content {
+    @apply p-4 outline-none;
+  }
+}
+
+.settings-group {
+  @apply flex flex-col gap-1;
+}
+.settings-group + .settings-group {
+  @apply mt-4;
+}
+
+.settings-group-row {
+  @apply flex items-center justify-between gap-4;
+}
+.settings-group-row + .settings-group-row {
+  @apply mt-4;
+}
+.settings-group + .settings-group-row,
+.settings-group-row + .settings-group {
+  @apply mt-4;
+}
+
+.settings-label {
+  @apply text-sm font-medium text-foreground;
+}
+
+.settings-desc {
+  @apply text-sm text-muted-foreground mt-0.5;
+}
+
+.settings-select {
+  @apply w-full max-w-xs border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground;
+  @apply focus:outline-none focus:ring-2 focus:ring-ring;
+}
+
+.settings-theme-btn {
+  @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border transition-colors;
+}
+.settings-theme-btn--active {
+  @apply bg-primary text-primary-foreground border-primary;
+}
+.settings-theme-btn--inactive {
+  @apply bg-background text-foreground border-border hover:bg-muted;
+}
+
+.settings-action-btn {
+  @apply flex items-center gap-2 px-3 py-1.5 text-sm font-medium border border-border rounded-md bg-background text-foreground hover:bg-muted hover:text-destructive transition-colors;
+}
