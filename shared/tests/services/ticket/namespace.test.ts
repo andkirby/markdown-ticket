@@ -12,6 +12,13 @@ describe('ticket namespace helpers', () => {
         subKey: 'api.v2',
       })
     })
+
+    it('matches shared filename namespace first-dot parsing semantics', () => {
+      expect(parseNamespace('some-name.alpha.beta')).toEqual({
+        namespace: 'some-name',
+        subKey: 'alpha.beta',
+      })
+    })
   })
 
   describe('groupNamespacedFiles', () => {
@@ -33,6 +40,17 @@ describe('ticket namespace helpers', () => {
           { name: 'approve-it' },
         ],
       })
+    })
+
+    it('sorts numeric-looking namespace children predictably', () => {
+      const result = groupNamespacedFiles(
+        ['architecture.10', 'architecture.2', 'architecture.1'],
+        new Set<string>(),
+        'MDT-169',
+      )
+      const architecture = result[0]
+
+      expect(architecture.children?.map(child => child.name)).toEqual(['1', '2', '10'])
     })
   })
 })

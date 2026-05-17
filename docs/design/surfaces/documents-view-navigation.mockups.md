@@ -28,11 +28,16 @@ window "Documents View Navigation — Default":
           node "docs" collapsed id="docs-root"
           node "server" collapsed id="server-root"
       col fill:
+        tabs id="filename-tabs":
+          tab "main"
+          tab "overview" active
+          tab "details"
         text "# Selected document" bold id="doc-heading"
         text "Markdown content renders here." muted
 
 annotation "Recent section shows recently opened files" target="recent-1" position=right
 annotation "All Documents: collapsible tree roots" target="docs-root" position=right
+annotation "Grouped markdown filename tabs are owned by document-filename-tabs.mockups.md" target="filename-tabs" position=top
 ```
 
 ## Active Filter
@@ -158,10 +163,11 @@ Mobile behavior:
 | Section labels | `--muted-foreground` | `.documents-sidebar-section` proposed | Compact labels for Recent and tree areas |
 | Recent rows | `--foreground`, `--muted-foreground` | tree file row classes | Same icon, title, filename, truncation, and hover behavior as file rows |
 | Recent/tree divider | `--border` | `border-b border-border` | Thin separator after Recent; tree scrolls independently below it |
-| Selected row | `--primary` | `data-tree-state="selected"` proposed | Active document highlight |
+| Selected row | `--primary` | `data-tree-state="selected"` proposed | Active physical document highlight; filename tab selection follows the same file path |
 | Muted disabled row | `--muted-foreground` | `data-tree-state="disabled"` proposed | Excluded paths |
 | Sort direction | `--muted-foreground` | icon-only button | Reverses the selected sort field |
 | Collapse tree | `--muted-foreground` | icon-only button | Collapses folders except selected ancestors |
 | Scroll target | `--primary` | `data-testid="scroll-to-active-document-button"` | Clears filter only when selected row is hidden |
 | Configure document paths | `--muted-foreground` | icon-only button | Opens path configuration |
 | Excluded ticket area | `--muted-foreground` | PathSelector annotation | `docs/CRs/` is automatically excluded from document browsing |
+| Filename tabs | `--border`, `--primary` | `.tab__list`, `.tab` | Full grouped-tab contract lives in `document-filename-tabs.mockups.md` |

@@ -1,19 +1,20 @@
 import type { SubDocument } from '../../../models/SubDocument.js'
 import type { NamespaceParseResult } from '../types.js'
+import { parseFilenameNamespace, sortFilenameNamespaceKeys } from '../../filenameNamespace.js'
 
 /**
  * Parse a filename into namespace components.
  * Rule: First dot segment = namespace, rest = sub-key.
  */
 export function parseNamespace(filename: string): NamespaceParseResult | null {
-  const dotIndex = filename.indexOf('.')
-  if (dotIndex === -1) {
+  const parsed = parseFilenameNamespace(filename)
+  if (!parsed) {
     return null
   }
 
   return {
-    namespace: filename.slice(0, dotIndex),
-    subKey: filename.slice(dotIndex + 1),
+    namespace: parsed.baseName,
+    subKey: parsed.variantKey,
   }
 }
 
@@ -72,7 +73,7 @@ export function groupNamespacedFiles(
 
       const group = namespaceGroups.get(namespace)
       if (group) {
-        const sortedSubKeys = [...group.keys()].sort()
+        const sortedSubKeys = sortFilenameNamespaceKeys([...group.keys()])
         for (const subKey of sortedSubKeys) {
           children.push(group.get(subKey)!)
         }

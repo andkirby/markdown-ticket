@@ -24,7 +24,9 @@ describe('RelativeTimestamp', () => {
       />,
     )
 
-    expect(screen.getByRole('button')).toHaveTextContent('Updated 2 days ago')
+    const button = screen.getByRole('button')
+    expect(button).toHaveTextContent('Updated 2 days ago')
+    expect(button).toHaveClass('relative-timestamp', 'relative-timestamp--interactive')
   })
 
   it('falls back to created time when updatedAt is unavailable', () => {
@@ -34,7 +36,7 @@ describe('RelativeTimestamp', () => {
 
     const button = screen.getByRole('button')
     expect(button).toHaveTextContent('Created 3 days ago')
-    expect(button).toHaveClass('cursor-default')
+    expect(button).toHaveClass('relative-timestamp--static')
   })
 
   it('toggles between updated and created when both timestamps exist', () => {
@@ -79,7 +81,13 @@ describe('RelativeTimestamp', () => {
     fireEvent.focus(screen.getByRole('button'))
 
     await waitFor(() => {
-      expect(screen.getByRole('tooltip')).toHaveTextContent(formatFullDateTime(updatedAt))
+      const tooltipText = formatFullDateTime(updatedAt)
+      const tooltip = screen
+        .getAllByText(tooltipText)
+        .find(element => element.classList.contains('relative-timestamp__tooltip'))
+
+      expect(tooltip).toBeDefined()
+      expect(tooltip!).toHaveTextContent(tooltipText)
     })
   })
 

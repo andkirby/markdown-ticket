@@ -229,6 +229,10 @@ export const documentSelectors = {
   scopedBreadcrumb: '[data-testid="document-scope-breadcrumb"]',
   /** Automatic exclusion notice */
   exclusionNotice: '[data-testid="document-exclusion-notice"]',
+  /** Filename tab list for grouped markdown variants */
+  filenameTabList: '[data-testid="document-filename-tabs"]',
+  /** Filename tab by variant key */
+  filenameTab: (key: string) => `[data-testid="document-filename-tab-${key}"]`,
 } as const
 
 /**

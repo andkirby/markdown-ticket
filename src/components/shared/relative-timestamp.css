@@ -1,0 +1,29 @@
+@layer components {
+  .relative-timestamp {
+    @apply text-xs text-gray-500 opacity-60 transition-[color,opacity] dark:text-gray-400;
+  }
+
+  .relative-timestamp__floating {
+    @apply absolute right-4 top-4 z-[1] flex items-center gap-3 sm:right-5;
+  }
+
+  .relative-timestamp__sync-state {
+    @apply text-xs text-primary;
+  }
+
+  .relative-timestamp:hover {
+    @apply opacity-100;
+  }
+
+  .relative-timestamp--interactive {
+    @apply cursor-pointer hover:text-gray-800 dark:hover:text-gray-200;
+  }
+
+  .relative-timestamp--static {
+    @apply cursor-default;
+  }
+
+  .relative-timestamp__tooltip {
+    @apply rounded border-border/70 px-2 py-1 text-xs leading-none shadow-sm;
+  }
+}

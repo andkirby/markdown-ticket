@@ -15,7 +15,9 @@ DocumentsLayout
 │   ├── FilterInput
 │   ├── RecentDocuments
 │   └── FileTree
-└── MarkdownViewer
+└── DocumentsViewerPanel
+    ├── DocumentFilenameTabs
+    └── MarkdownViewer
 ```
 
 ## Children
@@ -27,6 +29,7 @@ DocumentsLayout
 | FilterInput | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
 | RecentDocuments | proposed | this spec | when user has opened documents |
 | FileTree | `src/components/DocumentsView/FileTree.tsx` | this spec | when documents are configured |
+| DocumentFilenameTabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` | `document-filename-tabs.spec.md` | when selected markdown file belongs to a filename group |
 | MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | when a file is selected |
 | PathSelector | `src/components/DocumentsView/PathSelector.tsx` | — | when no document paths are configured |
 
@@ -38,6 +41,7 @@ DocumentsLayout
 | Tree | `src/components/DocumentsView/FileTree.tsx` |
 | Path configuration | `src/components/DocumentsView/PathSelector.tsx` |
 | Existing update spec | `docs/design/surfaces/documents-view-file-updates.spec.md` |
+| Filename tabs spec | `docs/design/surfaces/document-filename-tabs.spec.md` |
 
 ## Navigation Rules
 
@@ -91,9 +95,15 @@ DocumentsLayout
 - Recent documents are file shortcuts, not folders.
 - Recent section header toggles the shortcut list open or closed.
 - Recent document rows render the document title as primary text when available and the filename as secondary text, matching tree file rows.
-- Selecting a recent document opens it and expands its tree ancestors.
+- Selecting a recent document opens the physical file path, expands its tree ancestors, and selects the matching filename tab when the file belongs to a grouped markdown set.
 - Recent list is project-scoped.
 - Deleted or excluded files are removed from recents on refresh.
+
+## Filename Tab Boundary
+
+- Documents navigation stays physical: all configured files remain visible in the tree.
+- Dot-notation markdown grouping is a viewer concern owned by `document-filename-tabs.spec.md`.
+- Tree selection, recent shortcuts, route query state, and filename tab selection all point to the same active physical file path.
 
 ## Responsive
 
