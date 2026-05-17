@@ -132,6 +132,7 @@ interface ModalHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 't
   onClose?: () => void
   showCloseButton?: boolean
   closeTestId?: string
+  closeButtonTabIndex?: number
 }
 
 const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
@@ -142,6 +143,7 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
     onClose,
     showCloseButton = true,
     closeTestId,
+    closeButtonTabIndex,
     children,
     ...props
   }, ref) => {
@@ -168,6 +170,7 @@ const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
             aria-label="Close"
             className="modal__close--absolute"
             onClick={onClose}
+            tabIndex={closeButtonTabIndex}
             {...(closeTestId && { 'data-testid': closeTestId })}
           >
             <svg
