@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { cn } from '../../lib/utils'
 import { formatFullDateTime, formatRelativeTime } from '../../utils/dateFormat'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 
@@ -56,7 +57,11 @@ export function RelativeTimestamp({ createdAt, updatedAt, className = '' }: Rela
           <button
             type="button"
             onClick={handleToggle}
-            className={`text-xs text-gray-500 opacity-60 transition-[color,opacity] dark:text-gray-400 ${hasAlternate ? 'cursor-pointer hover:text-gray-800 hover:opacity-100 dark:hover:text-gray-200' : 'cursor-default hover:opacity-100'} ${className}`}
+            className={cn(
+              'relative-timestamp',
+              hasAlternate ? 'relative-timestamp--interactive' : 'relative-timestamp--static',
+              className,
+            )}
             aria-label={hasAlternate ? `Toggle timestamp display. Currently showing ${activeLabel.toLowerCase()}.` : `${activeLabel} timestamp`}
           >
             {activeLabel}
@@ -64,7 +69,12 @@ export function RelativeTimestamp({ createdAt, updatedAt, className = '' }: Rela
             {formatRelativeTime(activeDate)}
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" align="end">
+        <TooltipContent
+          side="bottom"
+          align="end"
+          sideOffset={2}
+          className="relative-timestamp__tooltip"
+        >
           {formatFullDateTime(activeDate)}
         </TooltipContent>
       </Tooltip>

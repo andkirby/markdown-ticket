@@ -1,0 +1,765 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-169"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN dot-notation sibling markdown documents share the same directory and base filename, the system shall present them as one logical document view with one tab per variant.",
+      "sourceRef": "CR Scope; Acceptance Criteria Functional 1",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN a user opens a variant markdown file from the document tree, the system shall open the grouped document view with that variant tab active.",
+      "sourceRef": "CR Success Conditions; Acceptance Criteria Functional 2-3",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "The system shall keep document tree entries visible as their original separate physical files while grouped viewing is active.",
+      "sourceRef": "CR User Value; Acceptance Criteria Functional 4",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN a markdown document has no dot-notation variants, the system shall open it as a standalone document without filename tabs.",
+      "sourceRef": "CR Naming Rules; Acceptance Criteria Functional 6",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN a root markdown document and dot-notation variants coexist for the same base filename, the system shall keep the root content and every variant content reachable from the logical document view.",
+      "sourceRef": "CR Acceptance Criteria Functional 7; Edge Cases",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN a variant filename contains multiple dots after the base filename, the system shall preserve the remaining dot-delimited suffix as the tab key and keep that content reachable.",
+      "sourceRef": "CR Naming Rules; Acceptance Criteria Functional 8",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN users switch between filename tabs, the system shall render the active tab content and metadata for the selected physical markdown file.",
+      "sourceRef": "Assessment: Document content and metadata surface",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall parse dot-notation document variants using the first dot as the split between logical base and variant key, preserving all later dot segments in the variant key.",
+      "sourceRef": "CR Naming Rules; MDT-138 Namespace Rules",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall sort filename tabs alphanumerically within each logical document group.",
+      "sourceRef": "CR Constraints; Acceptance Criteria Functional 5",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall not rename, move, merge, hide, or create files on disk as part of document filename grouping.",
+      "sourceRef": "CR Constraints; Non-Goals",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall keep non-markdown file handling unchanged by document filename grouping.",
+      "sourceRef": "CR Scope Out of Scope",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The system shall align document filename namespace parsing with MDT-138 ticket subdocument parsing semantics where both use dot-notation grouping.",
+      "sourceRef": "CR Constraints; Related Ticket MDT-138; Assessment MDT-138 namespace reuse",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall constrain grouped tab content requests to resolved markdown files inside configured document paths.",
+      "sourceRef": "CR Known Constraints; Security carryover",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The system shall avoid visible delay when opening the documents view, with grouping resolution completing before or during initial document selection without blocking tree display.",
+      "sourceRef": "CR Non-Functional; Assessment Dependency and Tooling Pressure",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "The system shall render filename tabs using existing project tab UI conventions.",
+      "sourceRef": "CR Non-Functional; Assessment Target Feature Needs",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF only one dot-notation variant exists for a logical document, THEN the system shall keep that variant directly openable and render it as the active grouped variant.",
+      "sourceRef": "CR Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF files have similar prefixes but different base filenames, THEN the system shall not group them unless their computed logical base and directory match exactly.",
+      "sourceRef": "CR Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF the grouped active file is removed or disappears during refresh, THEN the system shall keep the documents view stable by selecting an available file in the same group or clearing the selection when none remain.",
+      "sourceRef": "Assessment Verification Gaps: SSE refresh/deletion behavior",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF variant labels include numeric-looking values, THEN filename tab ordering shall remain predictable for user navigation, including labels such as one, two, and 10.",
+      "sourceRef": "CR Edge Cases: Numeric labels sort naturally enough for expected user navigation",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "The system shall leave document tree discovery, ordering, and display unchanged while adding grouped document viewer tabs.",
+      "sourceRef": "CR Constraints: Must not affect document tree discovery, ordering, or display",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "The system shall keep existing document URL and query behavior stable and refer to the active physical markdown file when grouped tabs are used.",
+      "sourceRef": "Assessment Verification Gaps: document URL/query handling from MDT-150",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C11",
+      "kind": "constraint",
+      "text": "The system shall keep recent document shortcuts stable and refer to the active physical markdown file when grouped tabs are used.",
+      "sourceRef": "Assessment Verification Gaps: recent document shortcuts",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C12",
+      "kind": "constraint",
+      "text": "The system shall keep selected tree highlighting stable and refer to the active physical markdown file when grouped tabs are used.",
+      "sourceRef": "Assessment Verification Gaps: selected tree highlighting",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.8",
+      "kind": "behavior",
+      "text": "WHEN document files in a grouped filename-tab set are added, changed, or removed through native document SSE updates, the system shall refresh the filename tabs from the physical document tree while keeping the active physical markdown file stable when it still exists.",
+      "sourceRef": "CR:MDT-169",
+      "routePolicy": "bdd"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "grouped_variants_show_as_tabs",
+      "title": "Grouped variants show as filename tabs",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "a document directory contains markdown files named some-name.one.md and some-name.two.md",
+      "when": "I open either file in the Documents view",
+      "then": "I see one logical some-name document view with tabs for one and two",
+      "sourceRef": "docs/CRs/MDT-169/requirements.md#br-1.1"
+    },
+    {
+      "id": "opening_tree_variant_selects_tab",
+      "title": "Opening a tree variant selects its tab",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "the document tree lists some-name.one.md and some-name.two.md as separate files",
+      "when": "I select some-name.two.md from the document tree",
+      "then": "the grouped some-name document view opens with the two tab active",
+      "sourceRef": "docs/CRs/MDT-169/requirements.md#br-1.2"
+    },
+    {
+      "id": "document_tree_keeps_physical_files",
+      "title": "Document tree keeps physical file entries",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "dot-notation markdown variants are grouped in the document viewer",
+      "when": "I look at the document tree",
+      "then": "I still see each original physical file as its own tree entry",
+      "sourceRef": "docs/CRs/MDT-169/requirements.md#br-1.3"
+    },
+    {
+      "id": "ungrouped_document_opens_without_tabs",
+      "title": "Ungrouped document opens without filename tabs",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "a markdown document has no dot-notation sibling variants",
+      "when": "I open that document from the document tree",
+      "then": "the document opens as a standalone document without filename tabs",
+      "sourceRef": "docs/CRs/MDT-169/requirements.md#br-1.4"
+    },
+    {
+      "id": "root_and_variants_remain_reachable",
+      "title": "Root and variant content remain reachable",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "a root document some-name.md exists alongside some-name.one.md and some-name.two.md",
+      "when": "I open the logical some-name document view",
+      "then": "I can reach the root content and each variant content from the grouped view",
+      "sourceRef": "docs/CRs/MDT-169/requirements.md#br-1.5"
+    },
+    {
+      "id": "multi_dot_variant_key_is_preserved",
+      "title": "Multi-dot variant key is preserved",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "a markdown file named some-name.alpha.beta.md exists as a variant of some-name",
+      "when": "I open that file in the Documents view",
+      "then": "I see a tab keyed as alpha.beta and can read that file's content",
+      "sourceRef": "docs/CRs/MDT-169/requirements.md#br-1.6"
+    },
+    {
+      "id": "switching_tabs_updates_active_document",
+      "title": "Switching tabs updates active document content",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "a grouped document view has tabs for one and two and the one tab is active",
+      "when": "I select the two tab",
+      "then": "the viewer renders the content and document metadata for some-name.two.md",
+      "sourceRef": "docs/CRs/MDT-169/requirements.md#br-1.7"
+    },
+    {
+      "id": "document_sse_updates_filename_tabs",
+      "title": "Document SSE updates filename tabs",
+      "covers": [
+        "BR-1.8"
+      ],
+      "given": "a grouped document view is open and native document SSE is connected",
+      "when": "a sibling markdown variant is added, changed, or removed on disk and a document-change event is received",
+      "then": "the document tree remains physical, the filename tabs refresh from the updated tree, and the active physical markdown file remains selected if it still exists",
+      "sourceRef": "CR:MDT-169"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-neutral-filename-namespace",
+      "title": "Use one neutral filename namespace parser for document and ticket dot-notation grouping",
+      "derivedFrom": [
+        "C1",
+        "C2",
+        "C5",
+        "Edge-2",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-shared-filename-namespace",
+        "ART-shared-filename-namespace-test",
+        "ART-ticket-subdocument-namespace",
+        "ART-ticket-subdocument-namespace-test"
+      ],
+      "sourceRef": "architecture.md#pattern"
+    },
+    {
+      "id": "OBL-active-physical-file-selection",
+      "title": "Keep selectedFile as the active physical markdown path across tree opens, tab switches, URLs, recents, and highlighting",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.7",
+        "C10",
+        "C11",
+        "C12",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-documents-layout",
+        "ART-document-navigation",
+        "ART-markdown-viewer",
+        "ART-documents-filename-tabs-e2e"
+      ],
+      "sourceRef": "architecture.md#switching-filename-tabs"
+    },
+    {
+      "id": "OBL-tab-ui-conventions",
+      "title": "Render filename tabs with existing project tab UI conventions and sorted variant labels",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.7",
+        "C2",
+        "C8",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-document-filename-tabs-component",
+        "ART-document-filename-tabs-model",
+        "ART-documents-layout",
+        "ART-documents-filename-tabs-e2e"
+      ],
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "OBL-content-safety-performance",
+      "title": "Fetch content only for the active resolved markdown file and keep grouping local to the loaded tree",
+      "derivedFrom": [
+        "C6",
+        "C7",
+        "C3",
+        "C4"
+      ],
+      "artifactIds": [
+        "ART-document-service",
+        "ART-documents-layout",
+        "ART-markdown-viewer",
+        "ART-documents-filename-tabs-e2e"
+      ],
+      "sourceRef": "architecture.md#invariants"
+    },
+    {
+      "id": "OBL-document-group-resolver",
+      "title": "Derive grouped document filename tabs from the loaded physical tree, including main root tabs and lone variants, without mutating tree entries or files",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "C3",
+        "C4",
+        "C9",
+        "Edge-1",
+        "Edge-2"
+      ],
+      "artifactIds": [
+        "ART-document-filename-tabs-model",
+        "ART-documents-layout",
+        "ART-documents-filename-tabs-e2e"
+      ],
+      "sourceRef": "architecture.md#opening-a-physical-tree-file"
+    },
+    {
+      "id": "OBL-document-sse-tab-reconciliation",
+      "title": "Use native document SSE events to refresh the physical document tree and recompute filename tabs like ticket subdocument tab reconciliation",
+      "derivedFrom": [
+        "BR-1.8",
+        "C7",
+        "C9",
+        "C10",
+        "C12",
+        "Edge-3"
+      ],
+      "artifactIds": [
+        "ART-documents-layout",
+        "ART-document-filename-tabs-model",
+        "ART-documents-filename-tabs-e2e"
+      ],
+      "sourceRef": "architecture.md#runtime-flow-refresh-and-deletion"
+    },
+    {
+      "id": "OBL-document-metadata-presentation",
+      "title": "Reuse the shared RelativeTimestamp component and floating timestamp positioning for document metadata to match ticket view",
+      "derivedFrom": [
+        "BR-1.7",
+        "C8",
+        "C10",
+        "C12"
+      ],
+      "artifactIds": [
+        "ART-markdown-viewer",
+        "ART-documents-view-css",
+        "ART-relative-timestamp-component",
+        "ART-relative-timestamp-css"
+      ],
+      "sourceRef": "architecture.md#module-boundaries"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-shared-filename-namespace",
+      "path": "shared/services/filenameNamespace.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "ART-shared-filename-namespace-test",
+      "path": "shared/tests/services/filenameNamespace.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#runtime-vs-test-separation"
+    },
+    {
+      "id": "ART-ticket-subdocument-namespace",
+      "path": "shared/services/ticket/subdocuments/namespace.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "ART-ticket-subdocument-namespace-test",
+      "path": "shared/tests/services/ticket/namespace.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#runtime-vs-test-separation"
+    },
+    {
+      "id": "ART-document-filename-tabs-component",
+      "path": "src/components/DocumentsView/DocumentFilenameTabs.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "ART-documents-layout",
+      "path": "src/components/DocumentsView/DocumentsLayout.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#runtime-flow"
+    },
+    {
+      "id": "ART-markdown-viewer",
+      "path": "src/components/DocumentsView/MarkdownViewer.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "ART-document-navigation",
+      "path": "src/config/documentNavigation.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#runtime-flow"
+    },
+    {
+      "id": "ART-document-service",
+      "path": "server/services/DocumentService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "ART-documents-filename-tabs-e2e",
+      "path": "tests/e2e/documents/filename-tabs.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#runtime-vs-test-separation"
+    },
+    {
+      "id": "ART-document-filename-tabs-model",
+      "path": "src/components/DocumentsView/documentFilenameTabModel.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "ART-documents-view-css",
+      "path": "src/components/DocumentsView/documents-view.css",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "ART-relative-timestamp-css",
+      "path": "src/components/shared/relative-timestamp.css",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "ART-relative-timestamp-component",
+      "path": "src/components/shared/RelativeTimestamp.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#module-boundaries"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-shared-filename-namespace",
+      "kind": "unit",
+      "title": "Shared filename namespace parser preserves first-dot variant semantics and numeric-aware sorting",
+      "covers": [
+        "C1",
+        "C2",
+        "C5",
+        "Edge-2",
+        "Edge-4",
+        "OBL-neutral-filename-namespace"
+      ],
+      "file": "shared/tests/services/filenameNamespace.test.ts",
+      "sourceRef": "docs/CRs/MDT-169/tests.md#shared-filename-namespace"
+    },
+    {
+      "id": "TEST-ticket-namespace-adapter",
+      "kind": "unit",
+      "title": "Ticket subdocument namespace adapter stays aligned with shared filename parsing",
+      "covers": [
+        "C1",
+        "C2",
+        "C5",
+        "Edge-4",
+        "OBL-neutral-filename-namespace"
+      ],
+      "file": "shared/tests/services/ticket/namespace.test.ts",
+      "sourceRef": "docs/CRs/MDT-169/tests.md#ticket-namespace-adapter"
+    },
+    {
+      "id": "TEST-document-filename-tabs-model",
+      "kind": "unit",
+      "title": "Documents filename tab resolver groups markdown variants without changing physical files",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "C3",
+        "C4",
+        "C9",
+        "Edge-1",
+        "Edge-2",
+        "OBL-document-group-resolver",
+        "OBL-tab-ui-conventions"
+      ],
+      "file": "src/components/DocumentsView/documentFilenameTabs.test.ts",
+      "sourceRef": "docs/CRs/MDT-169/tests.md#document-filename-tabs-model"
+    },
+    {
+      "id": "TEST-document-content-path-safety",
+      "kind": "integration",
+      "title": "Document content endpoint rejects markdown files outside configured document paths",
+      "covers": [
+        "C6",
+        "OBL-content-safety-performance"
+      ],
+      "file": "server/tests/api/documents.test.ts",
+      "sourceRef": "docs/CRs/MDT-169/tests.md#document-content-path-safety"
+    },
+    {
+      "id": "TEST-documents-filename-tabs-e2e",
+      "kind": "e2e",
+      "title": "Documents view filename tabs preserve tree files, native document SSE tab refresh, and active physical document navigation",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "BR-1.8",
+        "C3",
+        "C4",
+        "C7",
+        "C8",
+        "C9",
+        "C10",
+        "C11",
+        "C12",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "OBL-active-physical-file-selection",
+        "OBL-content-safety-performance",
+        "OBL-document-group-resolver",
+        "OBL-document-sse-tab-reconciliation",
+        "OBL-tab-ui-conventions"
+      ],
+      "file": "tests/e2e/documents/filename-tabs.spec.ts",
+      "sourceRef": "tests.md#module-test-mapping"
+    },
+    {
+      "id": "TEST-document-filename-tabs-component",
+      "kind": "unit",
+      "title": "Document filename tab component renders project tab UI, shared metadata presentation remains consistent, and selects physical file paths",
+      "covers": [
+        "BR-1.1",
+        "BR-1.7",
+        "C2",
+        "C8",
+        "Edge-4",
+        "OBL-tab-ui-conventions",
+        "OBL-document-metadata-presentation"
+      ],
+      "file": "src/components/DocumentsView/DocumentFilenameTabs.test.tsx",
+      "sourceRef": "tests.md#module-test-mapping"
+    },
+    {
+      "id": "TEST-document-metadata-presentation",
+      "kind": "unit",
+      "title": "Document metadata timestamp uses shared floating presentation classes",
+      "covers": [
+        "BR-1.7",
+        "C8",
+        "C10",
+        "C12",
+        "OBL-document-metadata-presentation"
+      ],
+      "file": "src/components/DocumentsView/MarkdownViewer.test.tsx",
+      "sourceRef": "tests.md#module-test-mapping"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Extract neutral filename namespace parser and adapt ticket subdocuments",
+      "ownsArtifactIds": [
+        "ART-shared-filename-namespace",
+        "ART-shared-filename-namespace-test",
+        "ART-ticket-subdocument-namespace",
+        "ART-ticket-subdocument-namespace-test"
+      ],
+      "makesGreenIds": [
+        "TEST-shared-filename-namespace",
+        "TEST-ticket-namespace-adapter"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Build Documents-view filename tab resolver model",
+      "ownsArtifactIds": [
+        "ART-document-filename-tabs-model",
+        "ART-documents-layout"
+      ],
+      "makesGreenIds": [
+        "TEST-document-filename-tabs-model"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-0",
+      "title": "Create missing filename-tab module shells and verify runners",
+      "ownsArtifactIds": [
+        "ART-shared-filename-namespace",
+        "ART-document-filename-tabs-model",
+        "ART-document-filename-tabs-component"
+      ],
+      "sourceRef": "tasks.md#task-0"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Lock content safety and browser acceptance for filename tabs",
+      "ownsArtifactIds": [
+        "ART-document-service",
+        "ART-documents-filename-tabs-e2e",
+        "ART-documents-layout",
+        "ART-document-navigation",
+        "ART-markdown-viewer"
+      ],
+      "makesGreenIds": [
+        "grouped_variants_show_as_tabs",
+        "opening_tree_variant_selects_tab",
+        "document_tree_keeps_physical_files",
+        "ungrouped_document_opens_without_tabs",
+        "root_and_variants_remain_reachable",
+        "multi_dot_variant_key_is_preserved",
+        "switching_tabs_updates_active_document",
+        "document_sse_updates_filename_tabs",
+        "TEST-document-content-path-safety",
+        "TEST-documents-filename-tabs-e2e"
+      ],
+      "sourceRef": "tasks.md#task-4-lock-content-safety-and-browser-acceptance-for-filename-tabs"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Integrate filename tabs with active physical document navigation",
+      "ownsArtifactIds": [
+        "ART-document-filename-tabs-component",
+        "ART-documents-layout",
+        "ART-markdown-viewer",
+        "ART-document-navigation",
+        "ART-documents-view-css",
+        "ART-relative-timestamp-component",
+        "ART-relative-timestamp-css"
+      ],
+      "makesGreenIds": [
+        "TEST-document-filename-tabs-component",
+        "TEST-document-metadata-presentation"
+      ],
+      "sourceRef": "tasks.md#task-3-integrate-filename-tabs-with-active-physical-document-navigation"
+    }
+  ]
+}

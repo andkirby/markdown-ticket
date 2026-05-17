@@ -3,6 +3,7 @@
 Real-time update behavior for configured documents in Documents View, including cache invalidation, current-file refresh, and date metadata.
 
 Navigation, filtering, recent documents, and ticket-area exclusions are owned by `docs/design/surfaces/documents-view-navigation.spec.md`.
+Filename tab grouping and active-tab selection are owned by `docs/design/surfaces/document-filename-tabs.spec.md`.
 
 ## Composition
 
@@ -31,6 +32,7 @@ DocumentsLayout
 | DocumentsLayout | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always in documents route |
 | ScrollToActiveDocumentButton | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | disabled until a file is selected |
 | FileTree | `src/components/DocumentsView/FileTree.tsx` | — | when documents are configured |
+| DocumentFilenameTabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` | `document-filename-tabs.spec.md` | when selected markdown file belongs to a filename group |
 | MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | this spec | when a file is selected |
 | PathSelector | `src/components/DocumentsView/PathSelector.tsx` | — | when no document paths are configured |
 
@@ -47,6 +49,8 @@ DocumentsLayout
 | Document service | `server/services/DocumentService.ts` |
 | Document metadata | `server/commands/ExtractMetadataCommand.ts` |
 | Document content cache | `server/commands/ReadFileCommand.ts` |
+| Filename tabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` |
+| Filename tab resolver | `src/components/DocumentsView/documentFilenameTabModel.ts` |
 
 ## Current Findings
 
@@ -75,9 +79,9 @@ Documents View responds only while mounted. It does not need to refresh document
 |-----------|-------------|----------|---------------|-------------|
 | Main ticket | `ticketsPath` root or ticket folder | `file-change` | `ticket:created`, `ticket:updated`, `ticket:deleted` | `ticketCode` |
 | Ticket subdocument | nested under ticket folder | `file-change` | `ticket:subdocument:changed` | `subdocument.filePath` |
-| Configured document | path inside `project.document.paths` | `document-change` proposed | `document:file:changed` proposed | `filePath` |
+| Configured document | path inside `project.document.paths` | `document-change` | `document:file:changed` | `filePath` |
 
-Proposed `document:file:changed` payload:
+`document:file:changed` payload:
 
 ```ts
 {
@@ -100,7 +104,9 @@ Proposed `document:file:changed` payload:
 | selected file changed externally | `document:file:changed` for current `selectedFile` | Show compact "Updated just now" indicator, refetch content, update metadata bar |
 | non-selected visible file changed | `document:file:changed` for file in current tree | Refresh tree metadata, keep viewer stable |
 | file added under configured path | `document:file:changed` with `add` | Refresh tree, preserve current selection |
-| current selected file deleted | `document:file:changed` with `unlink` for `selectedFile` | Keep path selected, replace preview with deleted-file empty state and action to choose another file |
+| grouped sibling added | `document:file:changed` with `add` for same logical markdown base | Refresh tree and filename tabs, preserve current active tab |
+| current selected file deleted with grouped fallback | `document:file:changed` with `unlink` for `selectedFile`; root or sibling variant still exists | Select `main` when present, otherwise first sorted sibling tab; update preview to that physical file |
+| current selected file deleted without fallback | `document:file:changed` with `unlink` for `selectedFile`; no sibling remains | Keep path selected, replace preview with deleted-file empty state and action to choose another file |
 | document route not mounted | event arrives while Board/List is active | No visible UI change; next Documents View mount fetches fresh tree/content |
 | SSE reconnects | `sse:reconnected` | Refetch documents tree; if a file is selected, refetch its content |
 | refresh button or cache clear used | manual user action | Refetch tree and selected content; no route change |
@@ -132,6 +138,7 @@ Documents should not write date frontmatter automatically. For configured docume
 - In `DocumentsLayout`, subscribe to document events only while the route is mounted.
 - If the event matches `selectedFile`, trigger `MarkdownViewer` content refetch.
 - If the event is inside the current document tree but not selected, refresh tree metadata without changing scroll or selection.
+- If an unlink removes the selected file from a filename-tab group, resolve the grouped fallback before showing the deleted-file empty state.
 - On `sse:reconnected`, refetch tree and current file to close missed-event gaps.
 
 ## Layout

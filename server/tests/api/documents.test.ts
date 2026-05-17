@@ -203,7 +203,7 @@ describe('documents API Tests (MDT-106)', () => {
     })
 
     it('should return 404 for non-existent document', async () => {
-      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=nonexistent.md`)
+      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=docs/nonexistent.md`)
 
       expect([404, 500]).toContain(response.status)
     })
@@ -236,6 +236,18 @@ describe('documents API Tests (MDT-106)', () => {
 
       expect([400, 403]).toContain(response.status)
       assertErrorMessage(response, 'markdown')
+    })
+
+    it('should reject markdown content outside configured document paths', async () => {
+      await createTestDocument(projectFactory, projectCode, 'research/hidden.md', '# Hidden\n\nHidden marker')
+      await setProjectDocumentPaths(projectFactory, projectCode, ['docs'])
+
+      const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=research/hidden.md`)
+
+      expect([400, 403, 404]).toContain(response.status)
+      assertErrorMessage(response, 'document path')
+
+      await setProjectDocumentPaths(projectFactory, projectCode, ['docs', 'README.md'])
     })
 
     it('should handle special characters in document content', async () => {

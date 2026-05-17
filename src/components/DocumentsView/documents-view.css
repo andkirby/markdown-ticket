@@ -1,0 +1,57 @@
+@layer components {
+  .documents-view__filename-tabs {
+    @apply flex-shrink-0;
+  }
+
+  .documents-view__viewer-panel {
+    @apply flex h-full min-h-0 flex-col;
+  }
+
+  .documents-view__viewer-content {
+    @apply min-h-0 flex-1;
+  }
+
+  .document-viewer {
+    @apply relative flex h-full min-h-0 flex-col;
+  }
+
+  .document-viewer__scroll {
+    @apply min-h-0 flex-1;
+  }
+
+  .document-viewer__body {
+    @apply relative px-4 py-4 sm:px-5;
+  }
+
+  .document-viewer__content {
+    @apply min-w-0;
+  }
+
+  .document-viewer__center {
+    @apply flex h-full items-center justify-center;
+  }
+
+  .document-viewer__center-message {
+    @apply text-muted-foreground;
+  }
+
+  .document-viewer__center-message--error {
+    @apply text-destructive;
+  }
+
+  .document-viewer__deleted {
+    @apply h-full;
+  }
+
+  .document-viewer__deleted-content {
+    @apply text-center;
+  }
+
+  .document-viewer__deleted-title {
+    @apply mb-2 text-destructive;
+  }
+
+  .document-viewer__deleted-help {
+    @apply text-sm text-muted-foreground;
+  }
+}

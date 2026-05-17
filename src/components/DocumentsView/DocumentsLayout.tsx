@@ -13,6 +13,11 @@ import {
 } from '../../config/documentNavigation'
 import { getDocumentSortPreferences, setDocumentSortPreferences } from '../../config/documentSorting'
 import { useEventBus } from '../../services/eventBus'
+import {
+  resolveDocumentFilenameTabs,
+  resolveFilenameTabFallback,
+} from './documentFilenameTabModel'
+import DocumentFilenameTabs from './DocumentFilenameTabs'
 import FileTree from './FileTree'
 import MarkdownViewer from './MarkdownViewer'
 import PathSelector from './PathSelector'
@@ -159,7 +164,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     }
   }, [pathFromRoute, searchParams])
 
-  const loadDocuments = useCallback(async (showLoading = true) => {
+  const loadDocuments = useCallback(async (showLoading = true): Promise<DocumentFile[]> => {
     try {
       if (showLoading)
         setLoading(true)
@@ -170,11 +175,13 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
         // No documents configured, show path selector
         setShowPathSelector(true)
         setFiles([])
+        return []
       }
       else if (response.ok) {
         const data = await response.json()
         setFiles(data)
         setShowPathSelector(false)
+        return data
       }
       else {
         throw new Error(`Failed to load documents: ${response.statusText}`)
@@ -183,6 +190,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     catch (error) {
       console.error('Failed to load documents:', error)
       setError(error instanceof Error ? error.message : 'Failed to load documents')
+      return []
     }
     finally {
       if (showLoading)
@@ -203,6 +211,16 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     }, 2500)
   }, [])
 
+  const selectFile = useCallback((filePath: string) => {
+    setSelectedFile(filePath)
+    addRecentDocument(filePath)
+    setNavigationPreferencesState(getDocumentNavigationPreferences())
+
+    const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
+    const basePath = window.location.pathname.split('/documents')[0]
+    window.history.pushState({}, '', `${basePath}/documents?file=${encodedPath}`)
+  }, [projectId])
+
   useEventBus('document:file:changed', useCallback((event) => {
     if (event.payload.projectId !== projectId)
       return
@@ -210,15 +228,29 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     const currentSelectedFile = selectedFileRef.current
     const selectedFileChanged = currentSelectedFile === event.payload.filePath
 
-    loadDocuments(false).catch((error) => {
-      console.error('Failed to refresh documents after SSE update:', error)
-    })
+    loadDocuments(false)
+      .then((nextFiles) => {
+        if (!selectedFileChanged || event.payload.eventType !== 'unlink' || !currentSelectedFile) {
+          return
+        }
+
+        const fallbackFile = resolveFilenameTabFallback(nextFiles, currentSelectedFile)
+        if (fallbackFile) {
+          selectFile(fallbackFile)
+          return
+        }
+
+        setSelectedFileDeleted(true)
+        setViewerUpdateState('idle')
+      })
+      .catch((error) => {
+        console.error('Failed to refresh documents after SSE update:', error)
+      })
 
     if (!selectedFileChanged)
       return
 
     if (event.payload.eventType === 'unlink') {
-      setSelectedFileDeleted(true)
       setViewerUpdateState('idle')
       return
     }
@@ -226,7 +258,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     setSelectedFileDeleted(false)
     setDocumentRefreshToken(token => token + 1)
     showTransientUpdateState('updated')
-  }, [loadDocuments, projectId, showTransientUpdateState]), [loadDocuments, projectId, showTransientUpdateState], 'DocumentsLayout')
+  }, [loadDocuments, projectId, selectFile, showTransientUpdateState]), [loadDocuments, projectId, selectFile, showTransientUpdateState], 'DocumentsLayout')
 
   useEventBus('sse:reconnected', useCallback(() => {
     showTransientUpdateState('syncing')
@@ -256,16 +288,6 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       setNavigationPreferences(sanitized)
     }
   }, [collectPaths, files, navigationPreferences, projectId])
-
-  const selectFile = useCallback((filePath: string) => {
-    setSelectedFile(filePath)
-    addRecentDocument(filePath)
-    setNavigationPreferencesState(getDocumentNavigationPreferences())
-
-    const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
-    const basePath = window.location.pathname.split('/documents')[0]
-    window.history.pushState({}, '', `${basePath}/documents?file=${encodedPath}`)
-  }, [projectId])
 
   // Memoized filtered and sorted files
   const filteredFiles = useMemo(() => {
@@ -379,6 +401,10 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       }
     })
   }, [files, navigationPreferences.recentDocuments])
+
+  const filenameTabs = useMemo(() => {
+    return resolveDocumentFilenameTabs(files, selectedFile)
+  }, [files, selectedFile])
 
   const handlePathsSelected = async (paths: string[]) => {
     try {
@@ -575,14 +601,27 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
         {selectedFile
           ? (
-              <MarkdownViewer
-                projectId={projectId}
-                filePath={selectedFile}
-                fileInfo={findFileByPath(filteredFiles, selectedFile)}
-                refreshToken={documentRefreshToken}
-                fileDeleted={selectedFileDeleted}
-                updateState={viewerUpdateState}
-              />
+              <div className="documents-view__viewer-panel">
+                {filenameTabs && (
+                  <div className="documents-view__filename-tabs">
+                    <DocumentFilenameTabs
+                      tabs={filenameTabs.tabs}
+                      activeTabKey={filenameTabs.activeTabKey}
+                      onSelectTab={selectFile}
+                    />
+                  </div>
+                )}
+                <div className="documents-view__viewer-content">
+                  <MarkdownViewer
+                    projectId={projectId}
+                    filePath={selectedFile}
+                    fileInfo={findFileByPath(files, selectedFile)}
+                    refreshToken={documentRefreshToken}
+                    fileDeleted={selectedFileDeleted}
+                    updateState={viewerUpdateState}
+                  />
+                </div>
+              </div>
             )
           : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
