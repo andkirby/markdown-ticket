@@ -1,5 +1,45 @@
 # Release Notes
 
+## v0.18.0 (2026-05-17)
+
+### New Features
+
+**Settings Modal (MDT-167)**
+- New Settings modal accessible from the hamburger menu with three tabs: Appearance, Board, and Advanced
+- Switch between light and dark themes, set default view, adjust card density
+- Toggle smart links and event history, clear cache — all in one place
+
+**Wireloom Wireframe Rendering (MDT-165)**
+- Markdown documents can now contain live Wireloom wireframes rendered inline, just like Mermaid diagrams
+- Theme switching is reactive — wireframes and Mermaid diagrams re-render instantly when toggling light/dark mode
+- Wireloom is optional: if not installed, wireframe code blocks display as plain code
+
+**Markdown Renderer Overhaul (MDT-165)**
+- Migrated the entire markdown pipeline from Showdown to markdown-it for better extensibility and plugin support
+- Clickable heading anchors with hover permalink (#) and proper scroll offset for sticky headers
+- Unicode-aware heading slugs for correct anchor links in non-English documents
+
+### Improvements
+
+**Project Browser Keyboard Navigation (MDT-152)**
+- Search now matches project descriptions, not just names
+- Full keyboard navigation and activation for project cards — tab, arrow keys, and Enter to select
+
+**Project Configuration Write Contract (MDT-077)**
+- Explicit configuration modes with canonical write references — editing a project's settings now reliably saves to the correct config layer
+
+### Bug Fixes
+
+**Document Content Refresh (MDT-160)**
+- Rendered markdown blocks (Mermaid, Wireloom, code highlighting) now update immediately when document content changes via SSE
+- Previously, rendered blocks could become stale after a live update
+
+**Hamburger Menu Z-Index**
+- Hamburger menu dropdown now renders above the Table of Contents and all floating elements
+- Uses a portal-based approach to escape stacking context issues
+
+---
+
 ## v0.17.0 (2026-05-15)
 
 ### New Features
