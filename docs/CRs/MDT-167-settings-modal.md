@@ -69,8 +69,8 @@ Three-tab modal using Radix Tabs (already installed). All settings write immedia
 ⚙ Settings button in hamburger menu. Theme quick-access buttons remain in hamburger menu.
 
 ### Design Spec
-`docs/design/specs/settings.md`
-`docs/design/mockups/settings.md`
+`docs/design/surfaces/settings.spec.md`
+`docs/design/surfaces/settings.mockups.md`
 
 ## 4. Acceptance Criteria
 - [ ] Settings modal opens from hamburger menu via ⚙ Settings button
@@ -89,8 +89,8 @@ Three-tab modal using Radix Tabs (already installed). All settings write immedia
 *To be filled during/after implementation*
 
 ## 6. References
-- Design spec: `docs/design/specs/settings.md`
-- Wireframes: `docs/design/mockups/settings.md`
+- Design spec: `docs/design/surfaces/settings.spec.md`
+- Wireframes: `docs/design/surfaces/settings.mockups.md`
 - Modal patterns: `src/MODALS.md`
 - Theme hook: `src/hooks/useTheme.ts`
 - Link config: `src/config/linkConfig.ts`
