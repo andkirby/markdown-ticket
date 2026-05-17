@@ -27,6 +27,8 @@
 @import './components/SmartLink/smart-link.css';
 @import './components/ui/modal.css';
 @import './components/SettingsModal/settings.css';
+@import './components/DocumentsView/documents-view.css';
+@import './components/shared/relative-timestamp.css';
 @import './styles/entities/fav-star.css';
 
 @tailwind base;

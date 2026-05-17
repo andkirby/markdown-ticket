@@ -103,6 +103,11 @@ export class DocumentController {
 
           break
         }
+        case 'File is outside configured document paths': {
+          res.status(403).json({ error: 'Forbidden', message: error.message })
+
+          break
+        }
         default: {
           res.status(500).json({ error: 'Internal Server Error', message: 'Failed to read document' })
         }

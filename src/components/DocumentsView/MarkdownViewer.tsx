@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { RelativeTimestamp } from '@/components/shared/RelativeTimestamp'
 import TableOfContents from '@/components/shared/TableOfContents'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { extractTableOfContents } from '@/utils/tableOfContents'
@@ -74,84 +75,58 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-muted-foreground">Loading document...</div>
+      <div className="document-viewer__center">
+        <div className="document-viewer__center-message">Loading document...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-destructive">{error}</div>
+      <div className="document-viewer__center">
+        <div className="document-viewer__center-message--error">{error}</div>
       </div>
     )
   }
 
   if (fileDeleted) {
     return (
-      <div data-testid="file-viewer" className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-destructive mb-2">File was deleted</div>
-          <div className="text-sm text-muted-foreground">Choose another document from the tree.</div>
+      <div data-testid="file-viewer" className="document-viewer__center document-viewer__deleted">
+        <div className="document-viewer__deleted-content">
+          <div className="document-viewer__deleted-title">File was deleted</div>
+          <div className="document-viewer__deleted-help">Choose another document from the tree.</div>
         </div>
       </div>
     )
   }
 
-  // Format date helper
-  const formatDate = (date: Date | string | undefined): string => {
-    if (!date)
-      return 'Unknown'
-    try {
-      const d = new Date(date)
-      return d.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    }
-    catch {
-      return 'Unknown'
-    }
-  }
-
   return (
-    <div data-testid="file-viewer" className="h-full min-h-0 flex flex-col relative">
+    <div data-testid="file-viewer" className="document-viewer">
       <TableOfContents items={tocItems} view="document" />
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="p-6">
-          {fileInfo && (
-            <div className="sticky top-0 z-10 mb-4 pb-3 border-b border-border bg-background/95 backdrop-blur-sm">
-              <div className="text-xs text-muted-foreground space-x-4">
-                <span>
-                  <strong>Created:</strong>
-                  {' '}
-                  {formatDate(fileInfo.dateCreated)}
-                </span>
-                <span className="text-muted-foreground/60">|</span>
-                <span>
-                  <strong>Updated:</strong>
-                  {' '}
-                  {formatDate(fileInfo.lastModified)}
-                </span>
+      <ScrollArea className="document-viewer__scroll">
+        <div className="document-viewer__body">
+          <div className="document-viewer__content">
+            {fileInfo && (
+              <div className="relative-timestamp__floating">
+                <RelativeTimestamp
+                  createdAt={fileInfo.dateCreated}
+                  updatedAt={fileInfo.lastModified}
+                />
                 {updateState !== 'idle' && (
-                  <span className="text-primary">
+                  <span className="relative-timestamp__sync-state">
                     {updateState === 'syncing' ? 'Syncing...' : 'Updated'}
                   </span>
                 )}
               </div>
-            </div>
-          )}
-          {content && (
-            <MarkdownContent
-              key={`${filePath}:${refreshToken}`}
-              markdown={content}
-              currentProject={projectCode || ''}
-            />
-          )}
+            )}
+            {content && (
+              <MarkdownContent
+                key={`${filePath}:${refreshToken}`}
+                markdown={content}
+                currentProject={projectCode || ''}
+              />
+            )}
+          </div>
         </div>
       </ScrollArea>
     </div>
