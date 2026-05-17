@@ -1,6 +1,6 @@
 # Mermaid Diagram Viewer — Wireframe Schema
 
-Related spec: `specs/mermaid-diagram-viewer.md`
+Related spec: `mermaid-diagram-viewer.spec.md`
 
 ## Inline State
 

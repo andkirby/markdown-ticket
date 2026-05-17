@@ -1,6 +1,6 @@
 # Documents View File Updates — Wireframe Schema
 
-Related spec: `specs/documents-view-file-updates.md`
+Related spec: `documents-view-file-updates.spec.md`
 
 Shared navigation shell: `documents-view-navigation.md`.
 
@@ -13,10 +13,10 @@ window "Documents View — Default":
   panel:
     row:
       col 360:
-        text "Left: Documents navigation" bold id="nav-context"
+        text "Documents navigation" bold id="nav-context"
         text "See documents-view-navigation.md" muted
       col fill:
-        text "Right: Document preview" bold
+        text "Document preview" bold
         row:
           text "Created: May 1, 2026" muted size=small id="meta-created"
           text "Updated: May 11, 2026" muted size=small id="meta-updated"
@@ -34,10 +34,10 @@ window "Documents View — Selected File Updated":
   panel:
     row:
       col 360:
-        text "Left: Documents navigation" bold
+        text "Documents navigation" bold
         text "Selected file remains highlighted" muted id="selected-nav-note"
       col fill:
-        text "Right: Document preview" bold
+        text "Document preview" bold
         row:
           text "Created: May 1, 2026" muted size=small
           text "Updated: just now" muted size=small
@@ -57,10 +57,10 @@ window "Documents View — Other File Updated":
   panel:
     row:
       col 520:
-        text "Left: Documents navigation" bold
+        text "Documents navigation" bold
         row:
           text "Documents"
-          combo value="Date ▾" id="combo-modified"
+          combo value="Modified ▾" id="combo-modified"
           button "↑"
           spacer
           icon name="check"
@@ -74,7 +74,7 @@ window "Documents View — Other File Updated":
           node "specs" collapsed:
             node "api.md"
       col fill:
-        text "Right: Document preview" bold
+        text "Document preview" bold
         row:
           text "Created: May 1, 2026" muted size=small
           text "Updated: May 11, 2026" muted size=small
@@ -93,10 +93,10 @@ window "Documents View — File Deleted":
   panel:
     row:
       col 520:
-        text "Left: Documents navigation" bold
+        text "Documents navigation" bold
         row:
           text "Documents"
-          combo value="Name ▾"
+          combo value="Filename ▾"
           button "↑"
           spacer
           icon name="check"
@@ -109,7 +109,7 @@ window "Documents View — File Deleted":
           node "specs" collapsed:
             node "api.md"
       col fill:
-        text "Right: Document preview" bold
+        text "Document preview" bold
         text "File was deleted" accent=danger id="deleted-msg"
         text "Choose another document from the tree." muted
         button "Select another file" id="select-another"
@@ -124,10 +124,10 @@ window "Documents View — Syncing":
   panel:
     row:
       col 360:
-        text "Left: Documents navigation" bold
+        text "Documents navigation" bold
         text "Tree refreshes after reconnect" muted id="reconnect-nav-note"
       col fill:
-        text "Right: Document preview" bold
+        text "Document preview" bold
         row:
           text "Created: May 1, 2026" muted size=small
           text "Updated: May 11, 2026" muted size=small

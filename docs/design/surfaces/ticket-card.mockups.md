@@ -1,6 +1,6 @@
 # Ticket Card — Wireframe Schema
 
-Related spec: `specs/ticket-card.md`
+Related spec: `ticket-card.spec.md`
 
 ## Default State
 

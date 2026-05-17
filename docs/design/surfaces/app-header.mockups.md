@@ -1,6 +1,6 @@
 # App Header — Wireframe Schema
 
-Related spec: `specs/app-header.md`
+Related spec: `app-header.spec.md`
 
 ## Desktop (≥640px)
 

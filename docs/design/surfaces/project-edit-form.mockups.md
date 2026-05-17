@@ -1,6 +1,6 @@
 # Project Edit Form — Wireframe Schema
 
-Related spec: `specs/project-edit-form.md`
+Related spec: `project-edit-form.spec.md`
 
 ## Default State
 
