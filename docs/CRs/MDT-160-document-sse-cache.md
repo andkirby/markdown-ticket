@@ -68,7 +68,7 @@ brief
 | Watch scope | How should configured file paths and configured directory paths be normalized into watcher patterns? | Must remain limited to project document paths. |
 | Event model | Should document updates use a new SSE event type or extend existing file-change events? | Must not break existing ticket event consumers. |
 | Cache | Which cache instances need explicit invalidation for document content freshness? | Must avoid manual cache-clear dependency. |
-| UX | Should selected-document refresh be silent or show a compact inline indicator? | Follow `docs/design/specs/documents-view-file-updates.md`. |
+| UX | Should selected-document refresh be silent or show a compact inline indicator? | Follow `docs/design/surfaces/documents-view-file-updates.spec.md`. |
 
 ### Known Constraints
 
@@ -124,8 +124,8 @@ brief
 
 ## References
 
-- UX spec: `docs/design/specs/documents-view-file-updates.md`
-- Wireframe: `docs/design/mockups/documents-view-file-updates.md`
+- UX spec: `docs/design/surfaces/documents-view-file-updates.spec.md`
+- Wireframe: `docs/design/surfaces/documents-view-file-updates.mockups.md`
 
 > Requirements trace projection: [requirements.trace.md](./MDT-160/requirements.trace.md)
 >
