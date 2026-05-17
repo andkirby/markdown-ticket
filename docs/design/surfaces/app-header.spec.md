@@ -23,7 +23,7 @@ nav.main-nav
 |-------|-----------|------|-------------|
 | MobileLogo | `src/components/AppHeader/MobileLogo.tsx` | — | always |
 | ViewModeSwitcher | `src/components/ViewModeSwitcher/ViewModeSwitcher.tsx` | — | always |
-| ProjectSelector | `src/components/ProjectSelector/index.tsx` | `specs/project-browser.md` | always |
+| ProjectSelector | `src/components/ProjectSelector/index.tsx` | `project-browser.spec.md` | always |
 | SecondaryHeader | `src/components/SecondaryHeader.tsx` | — | always |
 | SortControls | `src/components/SortControls.tsx` | — | board or list view, desktop only |
 | HamburgerMenu | `src/components/HamburgerMenu.tsx` | — | always (via SecondaryHeader) |
@@ -106,5 +106,5 @@ The menu is a positioned dropdown: `absolute right-0 top-full mt-1 w-48`, with c
 
 - New header-level features MUST choose between nav-left, nav-right, or hamburger menu — no new floating elements.
 - If the hamburger menu exceeds 8 items, consider splitting into a dedicated settings surface.
-- Future settings entry point: Settings item in the hamburger menu opens the dedicated Settings modal. See `specs/settings.md`.
+- Future settings entry point: Settings item in the hamburger menu opens the dedicated Settings modal. See `settings.spec.md`.
 - ViewModeSwitcher does not persist its own state — persistence is handled by `App.tsx` via localStorage keys `lastBoardListMode` and `lastViewMode`.

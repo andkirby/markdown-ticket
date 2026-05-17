@@ -9,6 +9,7 @@ ProjectBrowserPanel
 ├── Backdrop (bg-black/50, backdrop-blur-sm)
 └── Panel Container (max-w-4xl, pt-20)
     ├── PanelHeader
+    │   ├── Title ("Projects")
     │   ├── SearchInput (pl-10, placeholder "Search projects...")
     │   │   └── SearchIcon (absolute left-3)
     │   └── CloseButton (p-2, rounded-lg, hover:bg-gray-100)
@@ -54,8 +55,8 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 ## Search Logic
 
 - **Scope**: Client-side filter on preloaded project list
-- **Match**: Case-insensitive substring on project `code` OR `name`
-- **Current project exclusion**: If the query matches the current project code or name, the current project does NOT appear in results
+- **Match**: Case-insensitive substring on project `code`, `name`, OR `description`
+- **Current project exclusion**: If the query matches the current project code, name, or description, the current project does NOT appear in results
 - **Debounce**: None needed (instant client-side filtering)
 - **Max results**: Show all matches (no limit)
 - **Placeholder**: `Search projects...`
@@ -69,9 +70,10 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 - Backdrop: `bg-black/50 backdrop-blur-sm`
 - Container: `pointer-events-none`, `items-start justify-center pt-20`
 - Content: `pointer-events-auto`, `max-w-4xl`, `mx-4`, `bg-white dark:bg-slate-900`, `rounded-2xl`, `shadow-2xl`, `border border-gray-200 dark:border-slate-700`, `overflow-hidden`
-- Header: `flex items-center gap-3 px-6 py-4 border-b border-gray-200 dark:border-slate-700`
-- Search input: `flex-1 pl-10 pr-4 py-2.5 rounded-lg bg-gray-100 dark:bg-slate-800 text-sm`, search icon `absolute left-9 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400`
-- Close button: `p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800`, positioned right of search input
+- Header: one row, `flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-slate-700`
+- Header title: `Projects`, `text-lg font-semibold`, `shrink-0`
+- Search input: inline between title and close button, `flex-1 min-w-0 pl-10 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-800 text-sm`, search icon `absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400`
+- Close button: `p-2 h-8 w-8 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800`, positioned at the far right of the header row
 - Project list: `max-h-[60vh] overflow-y-auto p-6`
 - Grid: `grid grid-cols-1 md:grid-cols-2 gap-4`
 - Empty state: `text-center py-12 text-gray-500`
@@ -107,8 +109,8 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 | State | Trigger | Visual Change |
 |-------|---------|---------------|
 | closed | Escape / backdrop click / project select | `display: none` |
-| open | Click active card or launcher button | Backdrop visible, panel slides in, search input focused |
-| searching | User types in search input | Filter project cards by code/name substring; current project excluded if matched |
+| open | Click active card or launcher button | Backdrop visible, panel slides in, inline search input focused |
+| searching | User types in search input | Filter project cards by code/name/description substring; current project excluded if matched |
 | no projects | 0 registered projects | Empty state: "No projects available" |
 | no search results | Query matches zero projects (excluding current) | Empty state: "No projects match your search" |
 
@@ -155,14 +157,20 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 |-----|--------|
 | `Escape` | Close panel, including while the search input is focused |
 | `Cmd+K` / `Ctrl+K` | Close panel (if open) — QuickSearch takes priority |
+| `Tab` | Move focus from search input into the visible project cards; the close button is skipped in the tab sequence |
+| `Enter` / `Space` on focused card | Select focused project and close panel |
+| `ArrowRight` / `ArrowLeft` on focused card | Move focus to next / previous visible project card |
+| `ArrowDown` / `ArrowUp` on focused card | Move focus by grid row, using the current rendered column count |
+| `Home` / `End` on focused card | Move focus to first / last visible project card |
 
-Note: Panel does not implement arrow-key navigation for cards. Selection is click/touch only.
+Focused project cards show the standard blue focus ring. Arrow navigation applies only while a project card has focus; the search input keeps native text-editing behavior. The close button remains pointer-accessible, and `Escape` remains the keyboard close path.
 
 ## Responsive
 
 | Breakpoint | Change |
 |------------|--------|
 | < 768px (mobile) | Rail: active card only, no chips. Panel: full-width, single-column grid |
+| < 480px (narrow mobile) | Header remains one row: title keeps `shrink-0`, search uses `min-w-0`, close remains 8×8 at far right |
 | ≥ 768px (md) | Rail: active card + chips. Panel: 2-column grid |
 | ≥ 768px | Panel max-w-4xl still applies; cards show description text at `sm:` breakpoint |
 
@@ -216,4 +224,4 @@ Note: Panel does not implement arrow-key navigation for cards. Selection is clic
 
 - The "Add Project" flow is handled by `AddProjectModal`, not this surface
 - HoverCard open/close delay is configurable (100ms default per MDT-129 AC)
-- Cross-project ticket search from Cmd+K is specified in `specs/quick-search.md`
+- Cross-project ticket search from Cmd+K is specified in `quick-search.spec.md`

@@ -27,7 +27,7 @@ DocumentsLayout
 | FilterInput | `src/components/DocumentsView/DocumentsLayout.tsx` | this spec | always |
 | RecentDocuments | proposed | this spec | when user has opened documents |
 | FileTree | `src/components/DocumentsView/FileTree.tsx` | this spec | when documents are configured |
-| MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | `specs/documents-view-file-updates.md` | when a file is selected |
+| MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | `documents-view-file-updates.spec.md` | when a file is selected |
 | PathSelector | `src/components/DocumentsView/PathSelector.tsx` | — | when no document paths are configured |
 
 ## Source files
@@ -37,7 +37,7 @@ DocumentsLayout
 | Layout | `src/components/DocumentsView/DocumentsLayout.tsx` |
 | Tree | `src/components/DocumentsView/FileTree.tsx` |
 | Path configuration | `src/components/DocumentsView/PathSelector.tsx` |
-| Existing update spec | `docs/design/specs/documents-view-file-updates.md` |
+| Existing update spec | `docs/design/surfaces/documents-view-file-updates.spec.md` |
 
 ## Navigation Rules
 

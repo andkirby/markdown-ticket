@@ -1,6 +1,6 @@
 # Ticket Viewer — Wireframe Schema
 
-Related spec: `specs/ticket-viewer.md`
+Related spec: `ticket-viewer.spec.md`
 
 ## Default State (Ticket with Sub-Documents)
 
