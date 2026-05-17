@@ -3,10 +3,11 @@
  *
  * Tests for the ProjectBrowserPanel search functionality:
  * 1. Search input visible when panel opens with autofocus (BR-1.1, BR-1.6)
- * 2. Client-side project filtering by code or name (BR-1.2)
+ * 2. Client-side project filtering by code, name, or description (BR-1.2)
  * 3. Current project exclusion from results (BR-1.3)
  * 4. Empty state when no matches (BR-1.4)
  * 5. Escape key closes panel (BR-1.5)
+ * 6. Keyboard navigation and activation
  *
  * RED tests — will fail until ProjectBrowserPanel search is implemented.
  */
@@ -105,6 +106,27 @@ test.describe('Project Browser Search - MDT-152', () => {
     }
   })
 
+  test('filters projects by description - case-insensitive (BR-1.2)', async ({ page, e2eContext }) => {
+    const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
+    const matchingProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Worktree Alias',
+      description: 'Git worktree aliases for MDT project',
+    })
+
+    await page.goto(`/prj/${activeProject.projectCode}`)
+    await waitForBoardReady(page)
+
+    // Open project browser
+    await page.locator(selectorSelectors.panelTrigger).click()
+    await expect(page.locator(browserSearchSelectors.panel)).toBeVisible()
+
+    // Query uses different casing than the description
+    await page.locator(browserSearchSelectors.searchInput).fill('git')
+
+    await expect(page.locator(browserSearchSelectors.projectCard(matchingProject.key))).toBeVisible()
+    await expect(page.locator(browserSearchSelectors.projectCard(matchingProject.key))).toContainText('Git worktree aliases')
+  })
+
   test('excludes current project from search results (BR-1.3)', async ({ page, e2eContext }) => {
     // Create two projects
     const project1 = await buildScenario(e2eContext.projectFactory, 'simple')
@@ -131,6 +153,29 @@ test.describe('Project Browser Search - MDT-152', () => {
       const text = await results.nth(i).textContent() || ''
       expect(text).not.toContain(project1.projectCode)
     }
+  })
+
+  test('excludes current project even when search matches its description (BR-1.3)', async ({ page, e2eContext }) => {
+    const activeProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Active Project',
+      description: 'Git active project should be excluded',
+    })
+    const matchingProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Worktree Alias',
+      description: 'Git worktree aliases for MDT project',
+    })
+
+    await page.goto(`/prj/${activeProject.key}`)
+    await waitForBoardReady(page)
+
+    // Open project browser
+    await page.locator(selectorSelectors.panelTrigger).click()
+    await expect(page.locator(browserSearchSelectors.panel)).toBeVisible()
+
+    await page.locator(browserSearchSelectors.searchInput).fill('git')
+
+    await expect(page.locator(browserSearchSelectors.projectCard(activeProject.key))).not.toBeVisible()
+    await expect(page.locator(browserSearchSelectors.projectCard(matchingProject.key))).toBeVisible()
   })
 
   test('shows empty state when no projects match (BR-1.4)', async ({ page, e2eContext }) => {
@@ -194,5 +239,104 @@ test.describe('Project Browser Search - MDT-152', () => {
 
     // No backend search requests should have been made
     expect(searchRequests).toHaveLength(0)
+  })
+
+  test('Tab moves from search input to first project card, skipping close button', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+    await e2eContext.projectFactory.createProject('empty', {
+      name: 'Secondary Project',
+    })
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    await page.locator(selectorSelectors.panelTrigger).click()
+    await expect(page.locator(browserSearchSelectors.searchInput)).toBeFocused()
+
+    await page.keyboard.press('Tab')
+
+    const focusedTestId = await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))
+    const focusedRole = await page.evaluate(() => document.activeElement?.getAttribute('role'))
+
+    expect(focusedTestId).toMatch(/^project-browser-card-/)
+    expect(focusedRole).toBe('button')
+  })
+
+  test('Enter activates the focused project card', async ({ page, e2eContext }) => {
+    const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
+    const targetProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Keyboard Target',
+    })
+
+    await page.goto(`/prj/${activeProject.projectCode}`)
+    await waitForBoardReady(page)
+
+    await page.locator(selectorSelectors.panelTrigger).click()
+    await expect(page.locator(browserSearchSelectors.panel)).toBeVisible()
+
+    await page.locator(browserSearchSelectors.projectCard(targetProject.key)).focus()
+    await page.keyboard.press('Enter')
+
+    await waitForBoardReady(page)
+    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(targetProject.key)
+  })
+
+  test('Space activates the focused project card', async ({ page, e2eContext }) => {
+    const activeProject = await buildScenario(e2eContext.projectFactory, 'simple')
+    const targetProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Space Target',
+    })
+
+    await page.goto(`/prj/${activeProject.projectCode}`)
+    await waitForBoardReady(page)
+
+    await page.locator(selectorSelectors.panelTrigger).click()
+    await expect(page.locator(browserSearchSelectors.panel)).toBeVisible()
+
+    await page.locator(browserSearchSelectors.projectCard(targetProject.key)).focus()
+    await page.keyboard.press('Space')
+
+    await waitForBoardReady(page)
+    await expect(page.locator(selectorSelectors.activeProjectCard)).toContainText(targetProject.key)
+  })
+
+  test('arrow keys move focus between visible project cards', async ({ page, e2eContext }) => {
+    const scenario = await buildScenario(e2eContext.projectFactory, 'simple')
+
+    for (let i = 0; i < 4; i++) {
+      await e2eContext.projectFactory.createProject('empty', {
+        name: `Keyboard Navigation ${i}`,
+      })
+    }
+
+    await page.goto(`/prj/${scenario.projectCode}`)
+    await waitForBoardReady(page)
+
+    await page.locator(selectorSelectors.panelTrigger).click()
+    await expect(page.locator(browserSearchSelectors.panel)).toBeVisible()
+
+    const visibleProjectKeys = await page.locator('[data-project-browser-card="true"]').evaluateAll(nodes =>
+      nodes.map(node => node.getAttribute('data-project-key')),
+    )
+
+    expect(visibleProjectKeys.length).toBeGreaterThanOrEqual(4)
+
+    await page.keyboard.press('Tab')
+    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[0]!))).toBeFocused()
+
+    await page.keyboard.press('ArrowRight')
+    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[1]!))).toBeFocused()
+
+    await page.keyboard.press('ArrowDown')
+    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[3]!))).toBeFocused()
+
+    await page.keyboard.press('ArrowLeft')
+    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[2]!))).toBeFocused()
+
+    await page.keyboard.press('Home')
+    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[0]!))).toBeFocused()
+
+    await page.keyboard.press('End')
+    await expect(page.locator(browserSearchSelectors.projectCard(visibleProjectKeys[visibleProjectKeys.length - 1]!))).toBeFocused()
   })
 })

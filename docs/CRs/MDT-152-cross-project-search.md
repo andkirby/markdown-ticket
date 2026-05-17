@@ -118,8 +118,8 @@ priority: Medium
 
 ## Design Reference
 
-See `docs/design/specs/project-browser.md` and `docs/design/specs/quick-search.md` for detailed UX specifications.
-See `docs/design/mockups/project-browser.md` and `docs/design/mockups/quick-search.md` for wireframes.
+See `docs/design/surfaces/project-browser.spec.md` and `docs/design/surfaces/quick-search.spec.md` for detailed UX specifications.
+See `docs/design/surfaces/project-browser.mockups.md` and `docs/design/surfaces/quick-search.mockups.md` for wireframes.
 
 ### Query Syntax Summary
 
