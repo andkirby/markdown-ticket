@@ -1,6 +1,6 @@
 # Board Layout — Wireframe Schema
 
-Related spec: `specs/board-layout.md`
+Related spec: `board-layout.spec.md`
 
 ## Desktop (≥1024px, 4 columns)
 

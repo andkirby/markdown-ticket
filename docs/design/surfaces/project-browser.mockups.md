@@ -1,6 +1,6 @@
 # Project Browser — Wireframe Schema
 
-Related spec: `specs/project-browser.md` (MDT-129 panel, MDT-152 search extension)
+Related spec: `project-browser.spec.md` (MDT-129 panel, MDT-152 search extension)
 
 ---
 
@@ -12,6 +12,7 @@ Related spec: `specs/project-browser.md` (MDT-129 panel, MDT-152 search extensio
 window "Project Browser — Default":
   panel:
     row:
+      text "Projects" bold id="pb-title"
       input placeholder="Search projects..." type=search id="pb-search"
       button "×" id="pb-close"
     divider
@@ -47,6 +48,7 @@ Current project (MDT) is excluded when the query matches its code or name:
 window "Project Browser — Search":
   panel:
     row:
+      text "Projects" bold
       input placeholder="MD" type=search id="pb-search-active"
       button "×"
     divider
@@ -67,6 +69,7 @@ annotation "Current project excluded from search results" target="excluded-note"
 window "Project Browser — No Matches":
   panel:
     row:
+      text "Projects" bold
       input placeholder="ZZZ" type=search id="pb-search-empty"
       button "×"
     divider
@@ -134,6 +137,7 @@ annotation "transition-all duration-200 ease-out" target="hover-name" position=r
 window "Project Browser — Empty":
   panel:
     row:
+      text "Projects" bold
       input placeholder="Search projects..." type=search
       button "×"
     divider
@@ -146,6 +150,7 @@ window "Project Browser — Empty":
 window "Project Browser — Mobile":
   panel:
     row:
+      text "Projects" bold id="pb-title-mobile"
       input placeholder="Search projects..." type=search id="pb-search-mobile"
       button "×"
     divider
@@ -361,4 +366,4 @@ annotation "Appears centered with pt-20 offset" target="rail-panel-search" posit
 ## Maintenance Notes
 
 - Keep this file focused on canonical surface states: panel default/search/empty/mobile, rail desktop/mobile, and launcher open.
-- Avoid adding more single-control snapshots unless they introduce a new interaction contract; prefer a short row in `specs/project-browser.md` state tables.
+- Avoid adding more single-control snapshots unless they introduce a new interaction contract; prefer a short row in `project-browser.spec.md` state tables.

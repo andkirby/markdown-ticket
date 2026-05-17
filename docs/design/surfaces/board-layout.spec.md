@@ -42,10 +42,10 @@ Column
 |-------|-----------|------|-------------|
 | Board | `src/components/Board.tsx` | this file | always |
 | Column | `src/components/Column/index.tsx` | this file (column section) | always (4 visible) |
-| TicketCard | `src/components/TicketCard.tsx` | `specs/ticket-card.md` | inside Column |
+| TicketCard | `src/components/TicketCard.tsx` | `ticket-card.spec.md` | inside Column |
 | FilterControls | `src/components/FilterControls.tsx` | — | `showHeader` mode only |
 | SortControls | `src/components/SortControls.tsx` | — | `showHeader` mode only |
-| HamburgerMenu | `src/components/HamburgerMenu.tsx` | `specs/app-header.md` | `showHeader` mode only |
+| HamburgerMenu | `src/components/HamburgerMenu.tsx` | `app-header.spec.md` | `showHeader` mode only |
 | StatusToggle | `src/components/Column/StatusToggle.tsx` | — | In Progress, Done columns |
 | ResolutionDialog | `src/components/ResolutionDialog.tsx` | — | Done column on drop |
 | ScrollArea | `src/components/ui/scroll-area.tsx` | — | inside each Column |

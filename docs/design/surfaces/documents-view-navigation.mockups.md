@@ -1,6 +1,6 @@
 # Documents View Navigation — Wireframe Schema
 
-Related spec: `specs/documents-view-navigation.md`
+Related spec: `documents-view-navigation.spec.md`
 
 ## Default State
 
@@ -11,7 +11,7 @@ window "Documents View Navigation — Default":
       col 520:
         row:
           text "Documents" bold
-          combo value="Name ▾"
+          combo value="Filename ▾"
           button "↑"
           spacer
           icon name="check"
@@ -44,7 +44,7 @@ window "Documents View Navigation — Filter Active":
       col 520:
         row:
           text "Documents" bold
-          combo value="Name ▾"
+          combo value="Filename ▾"
           button "↑"
           spacer
           icon name="check"
@@ -77,7 +77,7 @@ window "Documents View Navigation — Selected Hidden by Filter":
       col 520:
         row:
           text "Documents" bold
-          combo value="Name ▾"
+          combo value="Filename ▾"
           button "↑"
           spacer
           icon name="check"
@@ -122,7 +122,7 @@ window "Documents View Navigation — Mobile":
   panel:
     text "Documents" bold
     row:
-      combo value="Name ▾"
+      combo value="Filename ▾"
       button "↑"
       spacer
       icon name="check"

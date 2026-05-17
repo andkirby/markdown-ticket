@@ -1,6 +1,6 @@
 # Settings — Wireframe Schema
 
-Related spec: `specs/settings.md`
+Related spec: `settings.spec.md`
 
 ## Appearance Tab (default)
 

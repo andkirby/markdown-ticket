@@ -1,6 +1,6 @@
 # Quick Search — Wireframe Schema
 
-Related spec: `specs/quick-search.md`
+Related spec: `quick-search.spec.md`
 
 ---
 
