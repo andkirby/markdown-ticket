@@ -1,0 +1,96 @@
+/* Markdown / prose rendering — tables, code, headings, mermaid, wireloom */
+
+/* Make wide tables horizontally scrollable on small screens */
+.prose table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent inline code and long words from breaking layout */
+.prose {
+  overflow-wrap: anywhere;
+}
+
+.prose code {
+  word-break: break-all;
+}
+
+/* Prevent pre/code blocks from overflowing */
+.prose pre {
+  overflow-x: auto;
+}
+
+/* Scroll headings below sticky tab bar when navigating to anchors */
+.prose [id] {
+  scroll-margin-top: 3rem;
+}
+
+/* Heading anchor links — # appears on hover (GitHub-style) */
+.prose h1[id] > .header-anchor,
+.prose h2[id] > .header-anchor,
+.prose h3[id] > .header-anchor,
+.prose h4[id] > .header-anchor,
+.prose h5[id] > .header-anchor,
+.prose h6[id] > .header-anchor {
+  text-decoration: none;
+  color: inherit;
+}
+.prose .header-anchor::after {
+  content: ' #';
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.prose h1:hover > .header-anchor::after,
+.prose h2:hover > .header-anchor::after,
+.prose h3:hover > .header-anchor::after,
+.prose h4:hover > .header-anchor::after,
+.prose h5:hover > .header-anchor::after,
+.prose h6:hover > .header-anchor::after {
+  visibility: visible;
+  opacity: 0.6;
+}
+
+/* Remove backticks and padding for Mermaid code blocks */
+.prose code.mermaid::before,
+.prose code.mermaid::after {
+  content: none !important;
+}
+
+.prose code.mermaid {
+  padding: 0 !important;
+}
+
+/* Limit Mermaid diagram height */
+.prose svg[id^="mermaid-"] {
+  max-height: 600px !important;
+  overflow: auto !important;
+}
+
+/* Wireloom wireframe rendering */
+.prose .wireloom {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.prose .wireloom svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.prose .wireloom-pending {
+  background: #f8f8f8;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  padding: 1rem;
+  color: #999;
+  font-size: 0.85em;
+  text-align: center;
+}
+.prose .wireloom-error {
+  background: #fee;
+  border-left: 3px solid #c33;
+  padding: 0.5em 0.75em;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+}

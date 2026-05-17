@@ -1,0 +1,156 @@
+/* Utility classes — scrollbar, gradient, print, responsive, accessibility */
+
+@layer utilities {
+  .desktop-only {
+    @apply hidden;
+  }
+
+  @media (min-width: 768px) {
+    .desktop-only {
+      @apply flex;
+    }
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .gradient-border {
+    @apply bg-gradient-to-r from-blue-500 to-gray-500 p-0.5 rounded-lg;
+  }
+  
+  .gradient-border-content {
+    @apply bg-white rounded-md;
+  }
+
+  /* Project selector horizontal scrollbar - show on hover only */
+  .project-selector-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .project-selector-scroll:hover {
+    scrollbar-color: #d1d5db transparent;
+  }
+
+  .project-selector-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .project-selector-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .project-selector-scroll::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  .project-selector-scroll:hover::-webkit-scrollbar-thumb {
+    @apply bg-gray-400;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-break-before {
+    page-break-before: always;
+  }
+  
+  .print-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* Focus visible styles */
+.focus-visible\:ring-2:focus-visible {
+  @apply ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .mobile-full-width {
+    @apply w-full;
+  }
+  
+  .mobile-stack {
+    @apply flex-col space-y-2 space-x-0;
+  }
+}
+
+/* Print utilities */
+@media print {
+  .print-hidden {
+    display: none !important;
+  }
+  
+  .print-block {
+    display: block !important;
+  }
+  
+  .print-inline {
+    display: inline !important;
+  }
+  
+  .print-inline-block {
+    display: inline-block !important;
+  }
+}
+
+/* Accessibility utilities */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.not-sr-only {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
