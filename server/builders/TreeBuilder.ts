@@ -32,7 +32,7 @@ export class TreeBuilder {
    * @param maxDepth - Maximum depth to scan.
    * @returns Tree structure.
    */
-  async build(projectPath: string, config: ProjectConfig, maxDepth = 3): Promise<unknown[]> {
+  async build(projectPath: string, config: ProjectConfig, maxDepth = 5): Promise<unknown[]> {
     // Get all markdown files
     // Use cwd instead of absolute path pattern for better compatibility
     let filePaths = await glob('**/*.md', {
