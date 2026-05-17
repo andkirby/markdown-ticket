@@ -78,17 +78,28 @@ src/components/Badge/
 | CSS Type | Location |
 |----------|----------|
 | Component styles | `src/components/{Component}/{component}.css` |
+| Shared component primitives | `src/styles/components/{concern}.css` |
 | Shared entities | `src/styles/entities/{entity}.css` |
-| Global primitives and utilities | `src/index.css` |
+| Design tokens | `src/styles/design-tokens.css` |
+| Base resets & typography | `src/styles/base.css` |
+| Prose/markdown rendering | `src/styles/prose.css` |
+| Animations | `src/styles/animations.css` |
+| Utilities (scrollbar, print, a11y) | `src/styles/utilities.css` |
+| Orchestration hub (imports only) | `src/index.css` |
 
 ### Import Pattern
 
-Import extracted CSS from `src/index.css`.
+All CSS is imported through `src/index.css` as the orchestration hub.
+`@import` statements come before `@tailwind` directives so PostCSS resolves them correctly.
 
 ```css
-@import './components/Badge/badge.css';
-@import './styles/entities/fav-star.css';
+/* All @import statements first */
+@import './styles/design-tokens.css';
+@import './styles/base.css';
+@import './styles/components/buttons.css';
+/* ... more imports ... */
 
+/* Then Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -379,20 +390,23 @@ This is usually the right balance.
 
 Existing global classes in `src/index.css` and shared entity CSS include:
 
-| Class | Purpose |
-|-------|---------|
-| `.btn`, `.btn-*` | Button variants |
-| `.badge`, `.badge[*]` | Ticket attribute badges |
-| `.card`, `.card-*` | Card structure |
-| `.input`, `.input-error` | Form inputs |
-| `.label` | Form labels |
-| `.dropdown`, `.dropdown-*` | Dropdown menus |
-| `.modal`, `.modal-*` | Modal dialogs |
-| `.tooltip`, `.tooltip-*` | Tooltips |
-| `.skeleton`, `.skeleton-*` | Loading placeholders |
-| `.fav-star`, `.fav-star--*` | Favorite star indicator |
-| `.count-badge`, `.count-badge--*` | Count indicators |
-| `.status-dot`, `.status-dot--*` | Pulsing status dots |
+| Class | Purpose | File |
+|-------|---------|------|
+| `.btn`, `.btn-*` | Button variants | `styles/components/buttons.css` |
+| `.badge`, `.badge[*]` | Ticket attribute badges | `components/Badge/badge.css` |
+| `.card`, `.card-*` | Card structure | `styles/components/layout.css` |
+| `.input`, `.input-error` | Form inputs | `styles/components/forms.css` |
+| `.label` | Form labels | `styles/components/forms.css` |
+| `.dropdown`, `.dropdown-*` | Dropdown menus | `styles/components/overlays.css` |
+| `.modal`, `.modal-*` | Modal dialogs | `components/ui/modal.css` |
+| `.tooltip`, `.tooltip-*` | Tooltips | `styles/components/overlays.css` |
+| `.skeleton`, `.skeleton-*` | Loading placeholders | `styles/components/loading.css` |
+| `.fav-star`, `.fav-star--*` | Favorite star indicator | `styles/entities/fav-star.css` |
+| `.count-badge`, `.count-badge--*` | Count indicators | `styles/components/loading.css` |
+| `.status-dot`, `.status-dot--*` | Pulsing status dots | `styles/components/loading.css` |
+| `.avatar`, `.avatar-*` | Avatar sizes | `styles/components/layout.css` |
+| `.settings-*` | Settings modal | `components/SettingsModal/settings.css` |
+| `.tab`, `.tab__*`, `.tab--*` | Radix Tabs pattern | `components/SettingsModal/settings.css` |
 
 This section is a snapshot, not the source of truth for naming rules.
 
