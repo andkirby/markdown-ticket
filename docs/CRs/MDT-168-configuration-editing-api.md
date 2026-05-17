@@ -1,6 +1,6 @@
 ---
 code: MDT-168
-status: Proposed
+status: Approved
 dateCreated: 2026-05-17T12:50:41.785Z
 type: Feature Enhancement
 priority: Medium
@@ -18,6 +18,7 @@ Configuration is spread across local project files, global user/system files, re
 - Project metadata is already managed from the Project Edit form.
 - Guarded project identity/path settings are related to project editing, not a general global settings page.
 - Global config and stable user config are documented, but not consistently exposed through an editable API/UI.
+- Configuration defaults are partly encoded as literals in implementation files and documentation instead of coming from one code-owned defaults layer.
 - Browser-only preferences from MDT-167 intentionally remain local client state.
 
 ### Desired State
@@ -45,6 +46,7 @@ Users should be able to manage common configuration from the app, but not at the
 - Add API support for updating allowlisted configuration fields.
 - Extend existing UI surfaces instead of creating duplicate settings panels.
 - Preserve browser-only preferences as browser-only unless explicitly promoted.
+- Define a single code-owned layer for configuration defaults, with contract-level defaults owned by `domain-contracts`.
 - Document which settings remain file-only.
 
 ### Out of Scope
@@ -64,12 +66,14 @@ Users should be able to manage common configuration from the app, but not at the
 - Stable user preferences can be exposed through Settings when they are backend-owned.
 - Browser-only Settings controls stay client-side.
 - Every editable field has validation, clear error messages, and safe persistence behavior.
+- Defaults shown in UI/API/docs come from the same canonical defaults source used by runtime behavior.
 - The API is default-deny: unknown fields are rejected.
 
 ## 4. References
 
 - Configuration exposure matrix: `docs/CRs/MDT-168/configuration-exposure.md`
 - UI ownership requirements: `docs/CRs/MDT-168/ui-ownership.md`
+- Defaults architecture recommendation: `docs/CRs/MDT-168/configuration-defaults.md`
 - `docs/CONFIG_SPECIFICATION.md`
 - `docs/CONFIG_GLOBAL_SPECIFICATION.md`
 - `docs/CONFIG_USER_SPECIFICATION.md`
@@ -87,4 +91,6 @@ Users should be able to manage common configuration from the app, but not at the
 - [ ] Guarded project identity/path settings require a warning/confirmation flow or remain file-only.
 - [ ] Global/user config exposed in Settings follows the exposure matrix.
 - [ ] Browser-only settings remain client-only.
+- [ ] Configuration defaults are centralized instead of scattered as literals.
+- [ ] Contract-level configuration defaults live in `domain-contracts`; runtime-only filesystem defaults remain outside the contract layer.
 - [ ] Config docs and OpenAPI docs describe scopes, exposure policy, validation, and security boundaries.
