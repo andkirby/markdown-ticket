@@ -23,8 +23,8 @@ priority: Medium
 - `src/components/DocumentsView/FileTree.tsx` — default expansion and collapse behavior.
 - `src/components/DocumentsView/PathSelector.tsx` — communicate automatic ticket-area exclusion.
 - `server/services/DocumentService.ts` — enforce document path exclusions for `docs/CRs/`.
-- `docs/design/specs/documents-view-navigation.md` — canonical UX contract.
-- `docs/design/mockups/documents-view-navigation.md` — wireframe contract.
+- `docs/design/surfaces/documents-view-navigation.spec.md` — canonical UX contract.
+- `docs/design/surfaces/documents-view-navigation.mockups.md` — wireframe contract.
 
 ### Scope
 - **Changes**:
@@ -91,7 +91,7 @@ Implement focused document navigation with collapsed roots, recent files, filter
 
 - Existing icon-button control cluster: apply to collapse, active target, and configure paths in `DocumentsLayout.tsx`.
 - Local project-scoped preferences: follow `src/config/documentSorting.ts` pattern for document navigation preferences.
-- Data-state styling: use `data-tree-state` from `docs/design/specs/documents-view-navigation.md` when row states become semantic.
+- Data-state styling: use `data-tree-state` from `docs/design/surfaces/documents-view-navigation.spec.md` when row states become semantic.
 
 ## 5. Acceptance Criteria
 
