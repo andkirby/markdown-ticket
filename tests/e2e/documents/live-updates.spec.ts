@@ -167,4 +167,65 @@ test.describe('Document SSE live updates', () => {
 
     await expect(fileViewer).toContainText('Updated guide marker', { timeout: 10000 })
   })
+
+  test('refreshes rendered Wireloom block when only the fence content changes', async ({ page, e2eContext }) => {
+    const project = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Document Wireloom SSE Refresh',
+    })
+
+    const initialContent = [
+      '# Wireloom Refresh',
+      '',
+      '```wireloom',
+      'window "Documents View":',
+      '  panel:',
+      '    text "Initial wireloom marker"',
+      '```',
+    ].join('\n')
+
+    const updatedContent = [
+      '# Wireloom Refresh',
+      '',
+      '```wireloom',
+      'window "Documents View":',
+      '  panel:',
+      '    text "Updated wireloom marker"',
+      '```',
+    ].join('\n')
+
+    await writeDocument(project.path, 'docs/wireloom.md', initialContent)
+
+    await waitForDocumentWatcherReady(
+      e2eContext.fileWatcher,
+      project.key,
+      '__document__docs',
+      () => e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs'),
+    )
+
+    await page.goto(`/prj/${project.key}/documents/docs/wireloom.md`)
+
+    const fileViewer = page.locator(documentSelectors.fileViewer)
+    await expect(fileViewer).toBeVisible()
+    await expect(fileViewer).toContainText('Initial wireloom marker')
+
+    const refreshRequest = page.waitForRequest((request) => {
+      return request.method() === 'GET'
+        && request.url().includes('/api/documents/content')
+        && request.url().includes(`projectId=${project.key}`)
+        && request.url().includes('filePath=docs%2Fwireloom.md')
+    })
+
+    await Promise.all([
+      waitForSSEEvent(page, 'document-change', {
+        eventType: 'change',
+        projectId: project.key,
+        filePath: 'docs/wireloom.md',
+      }),
+      refreshRequest,
+      writeDocument(project.path, 'docs/wireloom.md', updatedContent),
+    ])
+
+    await expect(fileViewer).toContainText('Updated wireloom marker', { timeout: 10000 })
+    await expect(fileViewer).not.toContainText('Initial wireloom marker')
+  })
 })

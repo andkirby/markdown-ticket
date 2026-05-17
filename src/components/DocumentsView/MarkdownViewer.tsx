@@ -147,6 +147,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
           )}
           {content && (
             <MarkdownContent
+              key={`${filePath}:${refreshToken}`}
               markdown={content}
               currentProject={projectCode || ''}
             />

@@ -33,4 +33,4 @@ Documents View must stop serving stale document content after configured documen
 
 - BDD should cover only `BR-*` behavior requirements.
 - `C*` and `Edge-*` items belong in architecture and test planning.
-- The UX contract is documented in `docs/design/specs/documents-view-file-updates.md`.
+- The UX contract is documented in `docs/design/surfaces/documents-view-file-updates.spec.md`.
