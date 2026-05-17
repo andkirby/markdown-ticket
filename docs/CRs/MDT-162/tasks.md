@@ -252,8 +252,8 @@ bunx playwright test tests/e2e/documents/navigation.spec.ts --project=chromium -
 
 **Modifies**:
 - `tests/e2e/documents/navigation.spec.ts`
-- `docs/design/specs/documents-view-navigation.md`
-- `docs/design/mockups/documents-view-navigation.md`
+- `docs/design/surfaces/documents-view-navigation.spec.md`
+- `docs/design/surfaces/documents-view-navigation.mockups.md`
 
 **Must Not Touch**:
 - Runtime modules unless a previous task missed a documented selector contract.
