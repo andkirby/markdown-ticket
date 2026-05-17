@@ -82,4 +82,50 @@ describe('MarkdownViewer', () => {
     expect(syncState).toHaveClass('relative-timestamp__sync-state')
     expect(container.querySelector('.relative-timestamp__floating')).toContainElement(syncState)
   })
+
+  it('renders valid leading frontmatter as a collapsed raw disclosure above the markdown body', async () => {
+    mockFetch.mockImplementationOnce(async () => new Response('---\ntitle: API Documentation\nauthor: John Doe\n---\n\n# API Documentation', { status: 200 }))
+
+    const { container } = renderMarkdownViewer()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('markdown-content')).toHaveTextContent('# API Documentation')
+    })
+
+    const disclosure = container.querySelector('.document-frontmatter')
+    expect(disclosure).toBeInTheDocument()
+    expect(disclosure).not.toHaveAttribute('open')
+    expect(screen.getByText('Frontmatter')).toHaveClass('document-frontmatter__summary')
+    expect(container.querySelector('.document-frontmatter__code')).toHaveTextContent('title: API Documentation')
+    expect(container.querySelector('.document-frontmatter__code')).toHaveClass('language-yaml')
+    expect(container.querySelector('.document-frontmatter__code code')).toHaveClass('language-yaml')
+    expect(container.querySelector('.document-frontmatter .token')).toBeInTheDocument()
+    expect(screen.getByTestId('markdown-content')).not.toHaveTextContent('title: API Documentation')
+    expect(screen.getByTestId('markdown-content')).not.toHaveTextContent('---')
+  })
+
+  it('escapes frontmatter text instead of rendering it as HTML', async () => {
+    mockFetch.mockImplementationOnce(async () => new Response('---\ntitle: <img src=x onerror=alert(1)>\n---\n\n# Safe Body', { status: 200 }))
+
+    const { container } = renderMarkdownViewer()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('markdown-content')).toHaveTextContent('# Safe Body')
+    })
+
+    expect(container.querySelector('.document-frontmatter__code')).toHaveTextContent('title: <img src=x onerror=alert(1)>')
+    expect(container.querySelector('.document-frontmatter img')).not.toBeInTheDocument()
+  })
+
+  it('keeps non-leading or unterminated frontmatter markers in the markdown body', async () => {
+    mockFetch.mockImplementationOnce(async () => new Response('# Intro\n\n---\ntitle: Not frontmatter\n---', { status: 200 }))
+
+    const { container } = renderMarkdownViewer()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('markdown-content')).toHaveTextContent('title: Not frontmatter')
+    })
+
+    expect(container.querySelector('.document-frontmatter')).not.toBeInTheDocument()
+  })
 })
