@@ -27,6 +27,28 @@
     @apply min-w-0;
   }
 
+  .document-frontmatter {
+    @apply mb-4 overflow-hidden rounded-md border border-border bg-muted/50;
+  }
+
+  .document-frontmatter__summary {
+    @apply cursor-pointer select-none px-3 py-2 text-sm font-medium text-muted-foreground;
+  }
+
+  .document-frontmatter[open] .document-frontmatter__summary {
+    @apply border-b border-border;
+  }
+
+  .document-frontmatter__code {
+    @apply m-0 overflow-x-auto p-3 text-sm;
+    color: hsl(var(--code-fg));
+    background: hsl(var(--code-bg));
+  }
+
+  .document-frontmatter__code code {
+    @apply whitespace-pre bg-transparent p-0 font-mono text-inherit;
+  }
+
   .document-viewer__center {
     @apply flex h-full items-center justify-center;
   }

@@ -18,14 +18,60 @@ window "Documents View — Default":
         text "See documents-view-navigation.mockups.md" muted
       col fill:
         text "Document preview" bold
-        row:
-          text "Created: May 1, 2026" muted size=small id="meta-created"
-          text "Updated: May 11, 2026" muted size=small id="meta-updated"
+        row justify=end id="floating-timestamp":
+          text "Updated 6 days ago" muted size=small
+        row id="frontmatter-collapsed":
+          icon name="chevron-right"
+          text "Frontmatter" muted
         text "# Current document" bold id="doc-heading"
         text "Markdown content renders here." muted
 
 annotation "Sidebar composition is owned by documents-view-navigation.mockups.md" target="nav-context" position=bottom
-annotation "Metadata bar with created/updated dates" target="meta-created" position=top
+annotation "Shared floating relative timestamp, not an inline date row" target="floating-timestamp" position=top
+annotation "Valid leading frontmatter is collapsed above the rendered markdown body" target="frontmatter-collapsed" position=right
+```
+
+## Frontmatter Expanded
+
+```wireloom
+window "Documents View — Frontmatter Expanded":
+  panel:
+    row:
+      col 360:
+        text "Documents navigation" bold
+        text "See documents-view-navigation.mockups.md" muted
+      col fill:
+        text "Document preview" bold
+        row justify=end:
+          text "Updated 6 days ago" muted size=small
+        section "Frontmatter" id="frontmatter-expanded":
+          text "title: API Documentation" size=small
+          text "author: John Doe" size=small
+          text "tags: [api, rest]" size=small
+        text "# API Documentation" bold id="body-heading"
+        text "Rendered markdown starts after the metadata block." muted
+
+annotation "Raw escaped metadata; no parsed table or chips" target="frontmatter-expanded" position=right
+annotation "Leading markers are removed before markdown rendering" target="body-heading" position=top
+```
+
+## No Valid Frontmatter
+
+```wireloom
+window "Documents View — No Frontmatter":
+  panel:
+    row:
+      col 360:
+        text "Documents navigation" bold
+        text "See documents-view-navigation.mockups.md" muted
+      col fill:
+        text "Document preview" bold
+        row justify=end:
+          text "Updated 6 days ago" muted size=small
+        text "# Project Overview" bold id="no-frontmatter-heading"
+        text "Body starts normally when no valid leading metadata exists." muted
+
+annotation "No disclosure is rendered for absent, non-leading, or unterminated markers" target="no-frontmatter-heading" position=top
 ```
 
 ## Selected File Updated
@@ -39,10 +85,8 @@ window "Documents View — Selected File Updated":
         text "Selected file remains highlighted" muted id="selected-nav-note"
       col fill:
         text "Document preview" bold
-        row:
-          text "Created: May 1, 2026" muted size=small
-          text "Updated: just now" muted size=small
-          spacer
+        row justify=end:
+          text "Updated just now" muted size=small
           text "Updated" accent=success size=small id="update-indicator"
         text "# Current document" bold
         text "Fresh content replaces cached content." muted
@@ -76,9 +120,8 @@ window "Documents View — Other File Updated":
             node "api.md"
       col fill:
         text "Document preview" bold
-        row:
-          text "Created: May 1, 2026" muted size=small
-          text "Updated: May 11, 2026" muted size=small
+        row justify=end:
+          text "Updated 6 days ago" muted size=small
         text "# Current document" bold
         text "Markdown content renders here." muted
 
@@ -148,10 +191,8 @@ window "Documents View — Syncing":
         text "Tree refreshes after reconnect" muted id="reconnect-nav-note"
       col fill:
         text "Document preview" bold
-        row:
-          text "Created: May 1, 2026" muted size=small
-          text "Updated: May 11, 2026" muted size=small
-          spacer
+        row justify=end:
+          text "Updated 6 days ago" muted size=small
           text "Syncing..." accent=success size=small id="sync-indicator"
         text "# Current document" bold
         text "Content remains visible during refresh." muted
@@ -165,10 +206,9 @@ annotation "Syncing indicator during reconnect refetch" target="sync-indicator" 
 ```wireloom
 window "Documents View — Mobile":
   panel:
-    row:
-      text "Created: May 1, 2026" muted size=small
-      text "Updated: just now" muted size=small
-    text "Updated" accent=success size=small
+    row justify=end:
+      text "Updated just now" muted size=small
+      text "Updated" accent=success size=small
     divider
     text "# Current document" bold
     text "Fresh content replaces cached content." muted
@@ -181,10 +221,12 @@ Mobile update states apply to the preview mode. Navigation mode remains owned by
 | Element | Token | Class | Notes |
 |---------|-------|-------|-------|
 | Navigation context | `--muted-foreground` | compact placeholder | Full sidebar contract lives in `documents-view-navigation.mockups.md` |
-| Metadata bar | `--background`, `--border` | `bg-background/95 border-b border-border` | Existing sticky metadata area |
-| Metadata text | `--muted-foreground` | `text-xs text-muted-foreground` | Created and Updated labels |
-| Update indicator | `--primary` | `text-primary` | Plain inline metadata-row text, not a badge |
+| Floating timestamp | `--muted-foreground` | `.relative-timestamp__floating` | Existing absolute top-right timestamp cluster |
+| Timestamp control | `--muted-foreground` | `.relative-timestamp` | Shows one relative timestamp at a time; interactive when created and updated both exist |
+| Frontmatter disclosure | `--muted`, `--border`, `--muted-foreground` | `.document-frontmatter` proposed | Native collapsed disclosure above rendered body, matching mdopen behavior |
+| Frontmatter code | `--foreground` | `.document-frontmatter__code` proposed | Raw escaped source text; no parsed metadata table |
+| Update indicator | `--primary` | `.relative-timestamp__sync-state` | Plain inline status beside the timestamp, not a badge |
 | Updated file marker | `--primary` | `data-file-state="updated"` proposed | Small dot in file tree, no toast |
 | Deleted state | `--destructive` | `text-destructive` | Viewer-level empty state |
-| Syncing state | `--primary` | `text-primary` | Plain inline metadata-row text shown during reconnect refetch |
+| Syncing state | `--primary` | `.relative-timestamp__sync-state` | Plain inline status shown during reconnect refetch |
 | Filename tab fallback | `--primary`, `--border` | `.tab__list`, `.tab` | Group fallback selection is specified in `document-filename-tabs.spec.md` |

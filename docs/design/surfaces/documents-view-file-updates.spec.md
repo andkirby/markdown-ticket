@@ -19,7 +19,8 @@ DocumentsLayout
 │   ├── SearchInput
 │   └── FileTree
 └── MarkdownViewer
-    ├── FileMetadataBar
+    ├── FrontmatterDisclosure
+    ├── FloatingRelativeTimestamp
     ├── UpdateIndicator
     ├── MarkdownContent
     └── TableOfContents
@@ -51,6 +52,23 @@ DocumentsLayout
 | Document content cache | `server/commands/ReadFileCommand.ts` |
 | Filename tabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` |
 | Filename tab resolver | `src/components/DocumentsView/documentFilenameTabModel.ts` |
+| Frontmatter reference | mdopen `frontmatter-block.spec.md` |
+
+## Frontmatter Display
+
+Documents View should match the mdopen frontmatter model for rendered document preview:
+
+- Detect only valid leading frontmatter: file starts with standalone `---` and has a later standalone closing `---`.
+- Remove valid leading frontmatter from the markdown body before normal markdown rendering.
+- Render the extracted metadata above the document body as one collapsed disclosure labeled `Frontmatter`.
+- Show raw escaped metadata text when expanded, preserving line breaks and indentation.
+- Do not parse YAML/TOML into fields, badges, chips, or a table.
+- Do not render a disclosure when no valid leading frontmatter exists.
+- Treat invalid, non-leading, or unterminated markers as normal markdown content.
+- Empty extracted frontmatter does not render a disclosure.
+- Frontmatter display is preview-only. Document tree title/date metadata keeps using the existing document metadata contract.
+
+The disclosure is part of `MarkdownViewer`, above `MarkdownContent`, and below the floating timestamp/update status area.
 
 ## Current Findings
 
@@ -101,7 +119,10 @@ Documents View responds only while mounted. It does not need to refresh document
 
 | State | Trigger | Visual Change |
 |-------|---------|---------------|
-| selected file changed externally | `document:file:changed` for current `selectedFile` | Show compact "Updated just now" indicator, refetch content, update metadata bar |
+| selected file changed externally | `document:file:changed` for current `selectedFile` | Show compact `Updated just now` timestamp plus sync status, refetch content |
+| selected file has valid frontmatter | file content starts with valid leading frontmatter | Show collapsed `Frontmatter` disclosure above rendered markdown body |
+| frontmatter expanded | user opens disclosure | Raw escaped metadata appears in a code-style block; markdown body stays below it |
+| no valid frontmatter | no valid leading frontmatter markers | No disclosure; markdown body starts normally |
 | non-selected visible file changed | `document:file:changed` for file in current tree | Refresh tree metadata, keep viewer stable |
 | file added under configured path | `document:file:changed` with `add` | Refresh tree, preserve current selection |
 | grouped sibling added | `document:file:changed` with `add` for same logical markdown base | Refresh tree and filename tabs, preserve current active tab |
@@ -146,7 +167,7 @@ Documents should not write date frontmatter automatically. For configured docume
 - Documents View remains a two-pane layout.
 - The target/crosshair button sits in the sidebar header control cluster, between sort direction and path configuration.
 - The target/crosshair button scrolls the tree to the active document and expands collapsed ancestor folders.
-- Update status appears in the existing metadata bar area, right-aligned on desktop and below dates on mobile.
+- Timestamp/status appears in the existing floating timestamp area at the top-right of the viewer.
 - Deleted-file state uses the viewer empty-state area, not a modal.
 - No toast is required for selected-file refresh; the viewer itself shows the state.
 - Non-selected file updates should not interrupt reading.
@@ -155,9 +176,9 @@ Documents should not write date frontmatter automatically. For configured docume
 
 | Breakpoint | Change |
 |------------|--------|
-| < 640px | Metadata and update indicator stack in one column above content |
-| 640-1024px | Sidebar remains fixed-width if present; update indicator stays in metadata bar |
-| > 1024px | Two-pane layout; update indicator right-aligned in metadata bar |
+| < 640px | Floating timestamp remains top-right inside the preview padding; content keeps enough top spacing to avoid collision |
+| 640-1024px | Sidebar remains fixed-width if present; floating timestamp stays top-right in the viewer |
+| > 1024px | Two-pane layout; floating timestamp and sync status stay top-right in the viewer |
 
 ## Tokens used
 
@@ -165,10 +186,13 @@ Documents should not write date frontmatter automatically. For configured docume
 |---------|-------|-------|
 | page background | `--background` | Viewer surface |
 | sidebar background | `--muted` | Existing sidebar tint |
-| metadata text | `--muted-foreground` | Created/Updated labels |
-| divider | `--border` | Sidebar and metadata bar borders |
+| timestamp text | `--muted-foreground` | Relative timestamp control |
+| divider | `--border` | Sidebar and document separators |
 | scroll target icon | `--muted-foreground` / `--primary` | Sidebar header action |
 | update indicator | `--primary` | Active refresh/updated state |
+| frontmatter background | `--muted` | Subtle metadata disclosure surface |
+| frontmatter border | `--border` | Single border around disclosure |
+| frontmatter text | `--foreground`, `--muted-foreground` | Raw metadata and disclosure summary |
 | deleted state | `--destructive` | Deleted-file message |
 
 ## Classes used
@@ -176,7 +200,12 @@ Documents should not write date frontmatter automatically. For configured docume
 | Element | Class | Source |
 |---------|-------|--------|
 | layout utilities | Tailwind inline utilities | `STYLING.md` keep-inline rule |
+| floating timestamp | `.relative-timestamp__floating` | Shared timestamp placement used by ticket and document viewers |
+| timestamp control | `.relative-timestamp` | Shared created/updated relative timestamp control |
+| timestamp sync state | `.relative-timestamp__sync-state` | Shared inline sync status next to timestamp |
 | semantic update state | `.document-update-indicator` proposed | Use when indicator styling is reused |
+| frontmatter disclosure | `.document-frontmatter` proposed | Native details/summary wrapper for raw metadata |
+| frontmatter code | `.document-frontmatter__code` proposed | Transparent inner code area; no nested panel |
 | semantic file state | `data-file-state` proposed | Mirrors `data-*` semantic variant guidance |
 
 ## Extension Notes
@@ -184,3 +213,4 @@ Documents should not write date frontmatter automatically. For configured docume
 - SSE is one-way. The server cannot know the active route from the existing global `EventSource` connection.
 - If event volume becomes a problem, add a client-to-server subscription endpoint or connect Documents View to `/api/events?topics=documents:{projectId}` only while mounted.
 - The first implementation should prefer always watching configured document paths for active projects and filtering updates on the frontend; it is simpler and keeps the UX reliable.
+- Keep frontmatter rendering dependency-free unless semantic document metadata becomes a product requirement.

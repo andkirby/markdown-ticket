@@ -1,3 +1,5 @@
+import parse from 'html-react-parser'
+import Prism from 'prismjs'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
@@ -6,6 +8,7 @@ import TableOfContents from '@/components/shared/TableOfContents'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { extractTableOfContents } from '@/utils/tableOfContents'
 import MarkdownContent from '../MarkdownContent'
+import 'prismjs/components/prism-yaml'
 
 interface DocumentFile {
   name: string
@@ -26,6 +29,41 @@ interface MarkdownViewerProps {
   updateState?: 'idle' | 'updated' | 'syncing'
 }
 
+interface ParsedDocumentContent {
+  frontmatter: string | null
+  body: string
+}
+
+function extractDocumentFrontmatter(value: string): ParsedDocumentContent {
+  if (!value.startsWith('---\n') && !value.startsWith('---\r\n')) {
+    return { frontmatter: null, body: value }
+  }
+
+  const marker = value.startsWith('---\r\n') ? '---\r\n' : '---\n'
+  let searchIndex = marker.length
+
+  while (searchIndex < value.length) {
+    const nextLineIndex = value.indexOf('\n', searchIndex)
+    const lineEnd = nextLineIndex === -1 ? value.length : nextLineIndex + 1
+    const line = value.slice(searchIndex, lineEnd).replace(/\r?\n$/, '')
+
+    if (line === '---') {
+      const frontmatter = value.slice(marker.length, searchIndex).replace(/\r?\n$/, '')
+      return {
+        frontmatter: frontmatter.trim() ? frontmatter : null,
+        body: value.slice(lineEnd),
+      }
+    }
+
+    if (nextLineIndex === -1)
+      break
+
+    searchIndex = lineEnd
+  }
+
+  return { frontmatter: null, body: value }
+}
+
 export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshToken = 0, fileDeleted = false, updateState = 'idle' }: MarkdownViewerProps) {
   const { projectCode } = useParams<{ projectCode: string }>()
   const [content, setContent] = useState<string>('')
@@ -34,10 +72,21 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
   const hasContentRef = useRef(false)
   const loadedFilePathRef = useRef<string | null>(null)
 
-  // Extract ToC items from content
-  const tocItems = useMemo(() => {
-    return extractTableOfContents(content)
+  const parsedContent = useMemo(() => {
+    return extractDocumentFrontmatter(content)
   }, [content])
+
+  // Extract ToC items from the rendered body, excluding the raw frontmatter disclosure.
+  const tocItems = useMemo(() => {
+    return extractTableOfContents(parsedContent.body)
+  }, [parsedContent.body])
+
+  const highlightedFrontmatter = useMemo(() => {
+    if (!parsedContent.frontmatter)
+      return null
+
+    return Prism.highlight(parsedContent.frontmatter, Prism.languages.yaml, 'yaml')
+  }, [parsedContent.frontmatter])
 
   const loadFile = useCallback(async () => {
     try {
@@ -120,11 +169,25 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
               </div>
             )}
             {content && (
-              <MarkdownContent
-                key={`${filePath}:${refreshToken}`}
-                markdown={content}
-                currentProject={projectCode || ''}
-              />
+              <>
+                {parsedContent.frontmatter && (
+                  <details className="document-frontmatter">
+                    <summary className="document-frontmatter__summary">Frontmatter</summary>
+                    <pre className="document-frontmatter__code language-yaml">
+                      <code className="language-yaml">
+                        {parse(highlightedFrontmatter || '')}
+                      </code>
+                    </pre>
+                  </details>
+                )}
+                {parsedContent.body && (
+                  <MarkdownContent
+                    key={`${filePath}:${refreshToken}`}
+                    markdown={parsedContent.body}
+                    currentProject={projectCode || ''}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

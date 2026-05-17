@@ -21,6 +21,109 @@
   overflow-x: auto;
 }
 
+.prose code[class*="language-"],
+.prose pre:has(> code[class*="language-"]),
+.document-frontmatter__code {
+  color: hsl(var(--code-fg));
+  background: hsl(var(--code-bg));
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  direction: ltr;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  line-height: 1.5;
+  tab-size: 2;
+  hyphens: none;
+}
+
+.prose pre:has(> code[class*="language-"]),
+.document-frontmatter__code {
+  margin: 0.5em 0;
+  padding: 1em;
+  overflow: auto;
+  border-radius: 0.375rem;
+}
+
+.prose pre > code[class*="language-"],
+.document-frontmatter__code > code[class*="language-"] {
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border-radius: 0;
+}
+
+.prose :not(pre) > code[class*="language-"] {
+  padding: 0.2em 0.3em;
+  border-radius: 0.25rem;
+  white-space: normal;
+}
+
+.prose code[class*="language-"]::selection,
+.prose code[class*="language-"] *::selection,
+.prose pre:has(> code[class*="language-"]) *::selection,
+.document-frontmatter__code *::selection {
+  color: inherit;
+  background: hsl(var(--code-selection));
+}
+
+.token.comment,
+.token.prolog,
+.token.cdata {
+  color: hsl(var(--code-token-comment));
+}
+
+.token.punctuation,
+.token.doctype,
+.token.entity {
+  color: hsl(var(--code-token-punctuation));
+}
+
+.token.keyword,
+.token.atrule {
+  color: hsl(var(--code-token-keyword));
+}
+
+.token.string,
+.token.char,
+.token.attr-value,
+.token.regex,
+.token.inserted {
+  color: hsl(var(--code-token-string));
+}
+
+.token.function,
+.token.builtin,
+.token.class-name {
+  color: hsl(var(--code-token-function));
+}
+
+.token.number,
+.token.boolean,
+.token.constant {
+  color: hsl(var(--code-token-number));
+}
+
+.token.property,
+.token.tag,
+.token.attr-name,
+.token.selector,
+.token.symbol,
+.token.deleted {
+  color: hsl(var(--code-token-property));
+}
+
+.token.operator,
+.token.url,
+.token.variable {
+  color: hsl(var(--code-token-operator));
+}
+
+.token.important {
+  color: hsl(var(--code-token-important));
+  font-weight: 600;
+}
+
 /* Scroll headings below sticky tab bar when navigating to anchors */
 .prose [id] {
   scroll-margin-top: 3rem;
