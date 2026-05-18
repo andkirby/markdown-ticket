@@ -68,9 +68,9 @@ window "Ticket Viewer — No Sub-Docs":
     row:
       spacer
       text "Updated 2h ago" muted size=small id="tv-ns-timestamp"
-    text "## Problem" bold
+    text "### Problem" bold
     text "Users are redirected to..." muted
-    text "## Steps to Reproduce" bold
+    text "### Steps to Reproduce" bold
     text "1. Navigate to /login" muted
     text "2. Enter credentials" muted
 
@@ -162,9 +162,9 @@ window "Ticket Viewer — Mobile":
     row:
       spacer
       text "Updated 2h ago" muted size=small
-    text "## Problem" bold
+    text "### Problem" bold
     text "Users are redirected..." muted
-    text "## Steps" bold
+    text "### Steps" bold
     text "1. Navigate to /login" muted
 ```
 
