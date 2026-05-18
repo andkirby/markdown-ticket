@@ -1,5 +1,29 @@
 # Release Notes
 
+## v0.19.0 (2026-05-18)
+
+### New Features
+
+**Visible Ticket Card Badges (MDT-167)**
+- Choose which badges appear on board ticket cards from the Settings modal Board tab
+- Badge selection persists across sessions — check or uncheck Status, Priority, Type, Phase, Related, Depends, Blocks, and Worktree independently
+- Selected badges keep their canonical display order; ticket viewer badges are unaffected
+- Invalid or empty storage falls back to showing all badges
+
+**Document Filename Tabs (MDT-169)**
+- Related document variants (e.g., `architecture.md`, `architecture.api.md`) now open as grouped tabs in the document viewer
+- Opening a variant file lands directly on the matching tab
+
+**Document Frontmatter Rendering (MDT-170)**
+- YAML frontmatter in documents is now rendered as a collapsed, syntax-highlighted disclosure above the markdown body
+- Code blocks follow the app light/dark theme
+
+**Document Favorites (MDT-171)**
+- Star folders and documents in the Documents View sidebar for quick access
+- Favorites persist per-user and reconcile automatically with the document tree
+
+---
+
 ## v0.18.0 (2026-05-17)
 
 ### New Features
