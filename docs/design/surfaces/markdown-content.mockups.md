@@ -119,6 +119,6 @@ annotation "Long code scrolls inside the code block, not the page" target="mobil
 | Document prose | `--foreground` | `.prose.prose--document` proposed | Reading-first rhythm and measure |
 | Ticket prose | `--foreground` | `.prose.prose--ticket` proposed | Modal density, compact headings |
 | Code block | `--code-bg`, `--code-fg`, `--border` | `.prose pre` | Scrollable artifact with tokenized color |
-| Inline code | `--code-bg`, `--code-fg` | `.prose :not(pre) > code` | Subtle emphasis, no letter-by-letter breaking |
-| Table | `--border`, `--muted-foreground` | `.prose table` | Padded cells and horizontal overflow |
+| Inline code | `--code-inline-fg` | `.prose :not(pre) > code` | Slight color only, no background or border, no letter-by-letter breaking |
+| Table | `--border`, `--muted` | `.prose table` | Padded cells and horizontal overflow |
 | Blockquote | `--border`, `--muted-foreground` | `.prose blockquote` | Quiet callout treatment |
