@@ -109,6 +109,8 @@ Two horizontal bars, both with bottom border:
 - MarkdownContent uses the `ticket` typography variant from `markdown-content.spec.md`.
 - Ticket prose keeps compact rhythm: moderate section gaps, readable paragraphs, styled task lists, and scrollable artifacts.
 - Timestamp placement must not overlap the first rendered heading or first paragraph.
+- Ticket content must reserve `--ticket-content-timestamp-offset: 2.25rem` above the first rendered markdown child when `.relative-timestamp__floating` is visible.
+- If timestamp text wraps taller than one line, the reserved top inset becomes `max(2.25rem, timestamp height + 0.75rem)`.
 - Subdoc loading overlay: `absolute inset-0 z-10`, `bg-background/50`, pulsing "Loading…" text
 - Subdoc error: inline text, `text-destructive`, `role="alert"`
 
@@ -188,6 +190,7 @@ Three SSE event types handled:
 | modal | `.modal` | `MODALS.md` |
 | badge | `.badge[data-status="..."]` | `badge.css` |
 | markdown prose | `.prose.prose--ticket` proposed | `markdown-content.spec.md` |
+| timestamp offset | `--ticket-content-timestamp-offset` proposed | `2.25rem` minimum reserved top inset for floating timestamp |
 | tabs | `.ticket-document-tabs` | inline Tailwind |
 | tab trigger | Radix `data-[state=active]` | inline Tailwind |
 
