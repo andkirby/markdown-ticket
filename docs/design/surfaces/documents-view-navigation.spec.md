@@ -180,8 +180,10 @@ DocumentsLayout
 
 | Breakpoint | Change |
 |------------|--------|
-| < 640px | header controls wrap to two rows; Favs and recent documents remain above tree |
-| 640-1024px | sidebar keeps fixed width; tree rows truncate long names |
+| < 640px | Documents route uses one primary pane at a time: navigation list or document preview |
+| < 640px | persistent sidebar/tree must not remain beside the markdown preview |
+| < 640px | header controls wrap to two rows in navigation mode; Favs and recent documents remain above tree |
+| 640-1024px | sidebar keeps fixed width only when preview content still has readable measure; tree rows truncate long names |
 | > 1024px | two-pane layout; sidebar sections remain visible above scroll area |
 
 ## Tokens used
