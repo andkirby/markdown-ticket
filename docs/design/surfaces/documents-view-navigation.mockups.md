@@ -18,6 +18,10 @@ window "Documents View Navigation — Default":
           icon name="star"
           icon name="gear"
         input placeholder="Filter documents..." type=search id="nav-search"
+        section "Favs":
+          list:
+            item "docs                                      ★" id="fav-folder"
+            item "Documents View Navigation                 ★" id="fav-document"
         section "Recent":
           list:
             item "Documents View Navigation" id="recent-1"
@@ -35,7 +39,9 @@ window "Documents View Navigation — Default":
         text "# Selected document" bold id="doc-heading"
         text "Markdown content renders here." muted
 
-annotation "Recent section shows recently opened files" target="recent-1" position=right
+annotation "Favs render above Recent only when reconciled favs exist" target="fav-folder" position=right
+annotation "Active star removes the fav; row opens document or locates folder" target="fav-document" position=right
+annotation "Recent section remains below Favs and keeps existing behavior" target="recent-1" position=right
 annotation "All Documents: collapsible tree roots" target="docs-root" position=right
 annotation "Grouped markdown filename tabs are owned by document-filename-tabs.mockups.md" target="filename-tabs" position=top
 ```
@@ -56,6 +62,10 @@ window "Documents View Navigation — Filter Active":
           icon name="star"
           icon name="gear"
         input placeholder="navigation" type=search id="active-filter"
+        section "Favs":
+          list:
+            item "docs                                      ★" id="fav-filtered"
+            item "Documents View Navigation                 ★"
         section "Recent":
           list:
             item "Documents View Navigation" id="recent-filtered"
@@ -69,7 +79,8 @@ window "Documents View Navigation — Filter Active":
         text "# Selected document" bold
         text "Markdown content renders here." muted
 
-annotation "Filter narrows both Recent and tree" target="active-filter" position=right
+annotation "Filter narrows the tree only; Favs and Recent stay visible" target="active-filter" position=right
+annotation "Favs are not removed by tree filtering" target="fav-filtered" position=right
 annotation "Selected file highlighted in filtered results" target="filtered-selected" position=right
 ```
 
@@ -89,6 +100,9 @@ window "Documents View Navigation — Selected Hidden by Filter":
           icon name="star" id="scroll-clear"
           icon name="gear"
         input placeholder="docker" type=search id="hide-filter"
+        section "Favs":
+          list:
+            item "docs                                      ★" id="folder-fav-hidden-filter"
         text "Results" bold
         tree:
           node "docs":
@@ -97,6 +111,116 @@ window "Documents View Navigation — Selected Hidden by Filter":
         text "# Selected document" bold
 
 annotation "Scroll-to-active clears filter, expands ancestors, scrolls to row" target="scroll-clear" position=right
+annotation "Selecting a folder fav clears filter if needed, expands ancestors, and locates the folder row" target="folder-fav-hidden-filter" position=right
+```
+
+## Restored Collapsed Sections
+
+```wireloom
+window "Documents View Navigation — Restored Collapsed Sections":
+  panel:
+    row:
+      col 520:
+        row:
+          text "Documents" bold
+          combo value="Filename ▾"
+          button "↑"
+          spacer
+          icon name="check"
+          icon name="star"
+          icon name="gear"
+        input placeholder="Filter documents..." type=search
+        section "Favs" id="favs-collapsed":
+          text "collapsed" muted
+        section "Recent" id="recent-collapsed":
+          text "collapsed" muted
+        divider
+        text "All Documents" bold
+        tree:
+          node "docs" collapsed
+          node "server" collapsed
+      col fill:
+        text "# Selected document" bold
+        text "Markdown content renders here." muted
+
+annotation "Favs remembers collapsed/open in browser-local state per project" target="favs-collapsed" position=right
+annotation "Recent uses its own browser-local section-state value; it is independent from Favs" target="recent-collapsed" position=right
+```
+
+## Fav Show All
+
+```wireloom
+window "Documents View Navigation — Fav Show All":
+  panel:
+    row:
+      col 520:
+        row:
+          text "Documents" bold
+          combo value="Filename ▾"
+          button "↑"
+          spacer
+          icon name="check"
+          icon name="star"
+          icon name="gear"
+        input placeholder="Filter documents..." type=search
+        section "Favs                         Show all" id="fav-show-all":
+          list:
+            item "docs                                      ★"
+            item "architecture.md                           ★"
+            item "README.md                                 ★"
+            item "server                                    ★"
+            item "Documents View Navigation                 ★" id="fav-cap-last"
+        section "Recent":
+          list:
+            item "document-favs.md"
+        divider
+        text "All Documents" bold
+        tree:
+          node "docs" collapsed
+      col fill:
+        text "# Selected document" bold
+        text "Markdown content renders here." muted
+
+annotation "Initial view shows five fav rows" target="fav-cap-last" position=right
+annotation "Show all is a trailing header action; it expands every fav inline" target="fav-show-all" position=right
+```
+
+## Fav Show Less
+
+```wireloom
+window "Documents View Navigation — Fav Show Less":
+  panel:
+    row:
+      col 520:
+        row:
+          text "Documents" bold
+          combo value="Filename ▾"
+          button "↑"
+          spacer
+          icon name="check"
+          icon name="star"
+          icon name="gear"
+        input placeholder="Filter documents..." type=search
+        section "Favs                         Show less" id="fav-show-less":
+          list:
+            item "docs                                      ★"
+            item "architecture.md                           ★"
+            item "README.md                                 ★"
+            item "server                                    ★"
+            item "Documents View Navigation                 ★"
+            item "docs/design                               ★"
+        section "Recent":
+          list:
+            item "document-favs.md"
+        divider
+        text "All Documents" bold
+        tree:
+          node "docs" collapsed
+      col fill:
+        text "# Selected document" bold
+        text "Markdown content renders here." muted
+
+annotation "Show less stays in the Favs header and returns to the five-row preview" target="fav-show-less" position=right
 ```
 
 ## Excluded Ticket Area
@@ -134,6 +258,10 @@ window "Documents View Navigation — Mobile":
       icon name="star"
       icon name="gear"
     input placeholder="Filter documents..." type=search
+    section "Favs":
+      list:
+        item "docs                         ★"
+        item "Documents View Navigation    ★"
     section "Recent":
       list:
         item "Documents View Navigation"
@@ -160,10 +288,14 @@ Mobile behavior:
 |---------|-------|-------|-------|
 | Sidebar background | `--muted` | `bg-muted/30` | Existing Documents View panel style |
 | Sidebar divider | `--border` | `border-r border-border` | Existing split-pane divider |
-| Section labels | `--muted-foreground` | `.documents-sidebar-section` proposed | Compact labels for Recent and tree areas |
-| Recent rows | `--foreground`, `--muted-foreground` | tree file row classes | Same icon, title, filename, truncation, and hover behavior as file rows |
-| Recent/tree divider | `--border` | `border-b border-border` | Thin separator after Recent; tree scrolls independently below it |
+| Section labels | `--muted-foreground` | inline compact section controls | Compact labels for Favs, Recent, and tree areas |
+| Fav rows | `--foreground`, `--muted-foreground`, `--star-*` | `.fav-star.fav-star--document.active` | Active star is trailing/right-aligned; document row opens; folder row locates |
+| Recent rows | `--foreground`, `--muted-foreground` | tree file row classes | Same title, filename, truncation, and hover behavior as file rows |
+| Favs/Recent/tree divider | `--border` | `border-b border-border` | Thin separators; Favs expands inline with Show all; tree scrolls independently below shortcut sections |
 | Selected row | `--primary` | `data-tree-state="selected"` proposed | Active physical document highlight; filename tab selection follows the same file path |
+| Located folder row | `--primary` | `data-located="true"` | Folder fav target after locate action |
+| Section open state | browser localStorage | document navigation preferences | Favs and Recent collapsed/open state persists per project as separate values in the current browser |
+| Fav show-all state | browser localStorage | document navigation preferences | Show all/less state persists per project separately from section open state |
 | Muted disabled row | `--muted-foreground` | `data-tree-state="disabled"` proposed | Excluded paths |
 | Sort direction | `--muted-foreground` | icon-only button | Reverses the selected sort field |
 | Collapse tree | `--muted-foreground` | icon-only button | Collapses folders except selected ancestors |

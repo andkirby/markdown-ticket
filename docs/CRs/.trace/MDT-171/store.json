@@ -1,0 +1,1067 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-171"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the user marks an eligible folder as a fav, the system shall persist that folder as a project-scoped fav and show its active star state.",
+      "sourceRef": "CR 4 Functional; research/document-favs-proposal.md UI Behavior",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the user marks an eligible markdown document as a fav, the system shall persist that document as a project-scoped fav and show its active star state.",
+      "sourceRef": "CR 4 Functional; research/document-favs-proposal.md UI Behavior",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN at least one reconciled fav exists, the system shall display a compact Favs section above Recent.",
+      "sourceRef": "CR 4 Functional; research/document-favs-proposal.md Recommendation",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN no reconciled favs exist, the system shall hide the Favs section.",
+      "sourceRef": "CR 4 Functional; research/document-favs-proposal.md UI Behavior",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHILE an item is currently a fav, the system shall show active star state for that item in tree rows and fav rows.",
+      "sourceRef": "CR 4 Functional; research/document-favs-proposal.md Icon Decision",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN the user selects the active star for a fav, the system shall remove that fav from persisted state and from the Favs section.",
+      "sourceRef": "CR 4 Functional; research/document-favs-proposal.md UI Behavior",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN the user selects a document fav, the system shall open that markdown document and select the matching tree row.",
+      "sourceRef": "CR 4 Functional; research/document-favs-proposal.md UI Behavior",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN the user selects a folder fav, the system shall expand the folder ancestors and scroll or locate the folder row in the tree.",
+      "sourceRef": "CR 4 Functional; research/document-favs-proposal.md UI Behavior",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-2.3",
+      "kind": "behavior",
+      "text": "WHEN the Documents View reloads for the same project, the system shall restore reconciled favs from durable project-scoped state.",
+      "sourceRef": "CR 5 Verification; assessment Persistence owner",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN the document tree is loaded, the system shall expose favorite state and favorited timestamp metadata for eligible fav nodes without changing non-favorite tree behavior.",
+      "sourceRef": "research/document-favs-proposal.md Endpoint Reuse; assessment Documents API route boundary",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN fav state is written for a resolved project, the system shall save the complete ordered fav list for that project.",
+      "sourceRef": "research/document-favs-proposal.md Data Location and Endpoint Reuse",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN the user opens existing Recent or All Documents navigation, the system shall preserve existing Recent and document tree selection behavior.",
+      "sourceRef": "CR 2 Constraints; assessment Test safety",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The system shall store document fav state under CONFIG_DIR/projects/{project.id}/document-favs.json.",
+      "sourceRef": "User decision; assessment CONFIG_DIR project-state path",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The system shall not store document fav state in .mdt-config.toml.",
+      "sourceRef": "CR 2 Constraints; docs/architecture/preference-storage-architecture.md",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The system shall keep document favs project-scoped by resolving API lookup input to the canonical project.id before selecting the state file.",
+      "sourceRef": "research/document-favs-proposal.md Data Location",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The system shall persist fav records with project-relative path, type of file or folder, and favoritedAt timestamp.",
+      "sourceRef": "research/document-favs-proposal.md Data Location",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The system shall accept only folders and markdown documents that are present in the eligible document tree as fav targets.",
+      "sourceRef": "CR 2 Scope; research/document-favs-proposal.md Validation rules",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C7",
+      "kind": "constraint",
+      "text": "The system shall validate fav path input as project-relative, normalized, non-empty, non-absolute, and free of parent-directory traversal before persistence.",
+      "sourceRef": "research/document-favs-proposal.md Validation rules",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "The system shall keep Favs and Recent outside the document tree scroll area and keep tree rows compact without increasing sidebar row height.",
+      "sourceRef": "CR 4 Non-Functional; docs/design/surfaces/documents-view-navigation.spec.md Layout",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C9",
+      "kind": "constraint",
+      "text": "The system shall use only `PUT /api/documents/favs` for document fav writes and shall not write fav state through `.mdt-config.toml`, `/api/documents/configure`, `/api/documents/content`, project config routes, or `/api/config/selector`.",
+      "sourceRef": "research/document-favs-proposal.md Endpoint Reuse",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF a stored fav path no longer exists in the eligible document tree, THEN the system shall remove or ignore that fav on refresh.",
+      "sourceRef": "CR 4 Edge Cases; research/document-favs-proposal.md UI Behavior",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF a stored fav path is outside configured document roots, THEN the system shall not expose it as a usable fav.",
+      "sourceRef": "CR 4 Edge Cases; research/document-favs-proposal.md Validation rules",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF a stored fav path is under docs/CRs or the configured ticket path, THEN the system shall not expose it as a usable document fav.",
+      "sourceRef": "CR 4 Edge Cases; docs/design/surfaces/documents-view-navigation.spec.md Navigation Rules",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF stored fav state is missing, malformed, or invalid JSON, THEN the system shall fall back to an empty fav list without breaking Documents View.",
+      "sourceRef": "CR 4 Edge Cases; research/document-favs-proposal.md Tests",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "IF a fav write references an unknown project, THEN the system shall reject the write without creating document fav state for an unresolved project.",
+      "sourceRef": "research/document-favs-proposal.md Validation rules",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C6",
+      "kind": "constraint",
+      "text": "The system shall use the existing project favorite star active/inactive states, hover/focus affordance, and accessible label pattern for document fav controls, unless architecture documents a specific incompatibility.",
+      "sourceRef": "Reviewer GAP-2; research/document-favs-proposal.md Visual Pattern",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    },
+    {
+      "id": "C10",
+      "kind": "constraint",
+      "text": "The system shall show at most five fav rows in the initial Favs section unless architecture defines an explicit overflow affordance.",
+      "sourceRef": "Reviewer GAP-1; research/document-favs-proposal.md Sidebar Clarity",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:in-ticket"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "folder_fav_appears_active",
+      "title": "Folder fav appears with active stars",
+      "covers": [
+        "BR-1.1",
+        "BR-1.3",
+        "BR-1.5"
+      ],
+      "given": "Given I am viewing Documents with an eligible folder that is not yet a fav",
+      "when": "When I select the folder row star",
+      "then": "Then the folder appears in a compact Favs section above Recent and both the folder row and fav row show active star state",
+      "sourceRef": "docs/CRs/MDT-171/requirements.trace.md#br-1"
+    },
+    {
+      "id": "markdown_fav_appears_active",
+      "title": "Markdown document fav appears with active stars",
+      "covers": [
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.5"
+      ],
+      "given": "Given I am viewing Documents with an eligible markdown document that is not yet a fav",
+      "when": "When I select the document row star",
+      "then": "Then the document appears in a compact Favs section above Recent and both the document row and fav row show active star state",
+      "sourceRef": "docs/CRs/MDT-171/requirements.trace.md#br-1"
+    },
+    {
+      "id": "empty_favs_section_is_hidden",
+      "title": "Empty Favs section is hidden",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Given I am viewing Documents for a project with no reconciled favs",
+      "when": "When the document tree finishes loading",
+      "then": "Then the Favs section is not shown and Recent and All Documents remain visible",
+      "sourceRef": "docs/CRs/MDT-171/requirements.trace.md#br-1"
+    },
+    {
+      "id": "active_star_removes_fav",
+      "title": "Active star removes a fav",
+      "covers": [
+        "BR-1.6",
+        "BR-1.4"
+      ],
+      "given": "Given I am viewing Documents with a single document fav visible in Favs",
+      "when": "When I select the active star for that fav",
+      "then": "Then the fav is removed from persisted favs and the Favs section is hidden",
+      "sourceRef": "docs/CRs/MDT-171/requirements.trace.md#br-1"
+    },
+    {
+      "id": "document_fav_opens_document",
+      "title": "Document fav opens the markdown document",
+      "covers": [
+        "BR-2.1"
+      ],
+      "given": "Given I am viewing Documents with a markdown document fav visible in Favs",
+      "when": "When I select the document fav row",
+      "then": "Then that markdown document opens and the matching document tree row is selected",
+      "sourceRef": "docs/CRs/MDT-171/requirements.trace.md#br-2"
+    },
+    {
+      "id": "folder_fav_locates_folder",
+      "title": "Folder fav expands and locates the folder",
+      "covers": [
+        "BR-2.2"
+      ],
+      "given": "Given I am viewing Documents with a nested folder fav visible in Favs and its ancestors collapsed",
+      "when": "When I select the folder fav row",
+      "then": "Then the folder ancestors expand and the matching folder row is located in the tree",
+      "sourceRef": "docs/CRs/MDT-171/requirements.trace.md#br-2"
+    },
+    {
+      "id": "reload_restores_reconciled_favs",
+      "title": "Reload restores reconciled favs for the project",
+      "covers": [
+        "BR-2.3",
+        "BR-3.1"
+      ],
+      "given": "Given I have saved folder and markdown document favs for the current project",
+      "when": "When I reload Documents View for the same project",
+      "then": "Then reconciled favs are restored and eligible tree nodes expose favorite state and favorited timestamps without changing non-favorite rows",
+      "sourceRef": "docs/CRs/MDT-171/requirements.trace.md#br-2"
+    },
+    {
+      "id": "ordered_write_preserves_existing_navigation",
+      "title": "Ordered fav write preserves existing navigation behavior",
+      "covers": [
+        "BR-3.2",
+        "BR-3.3"
+      ],
+      "given": "Given Documents View has existing Recent entries and All Documents selection behavior",
+      "when": "When the fav list is saved in a new order for the resolved project",
+      "then": "Then the complete ordered fav list is saved for that project and existing Recent and All Documents navigation behavior is unchanged",
+      "sourceRef": "docs/CRs/MDT-171/requirements.trace.md#br-3"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-document-fav-state-schema",
+      "title": "Document fav state is a typed JSON object with favItems ordered by array position and records containing project-relative path, file-or-folder type, and favoritedAt.",
+      "derivedFrom": [
+        "BR-3.2",
+        "C1",
+        "C3",
+        "C4",
+        "C7",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-domain-contracts-app-config-schema",
+        "ART-domain-contracts-app-config-validation",
+        "ART-server-document-fav-state-service",
+        "ART-src-document-favs-api",
+        "ART-src-document-favs-api-test"
+      ],
+      "sourceRef": "architecture.md#State Schema"
+    },
+    {
+      "id": "OBL-document-fav-storage-owner",
+      "title": "DocumentFavStateService owns CONFIG_DIR/projects/{project.id}/document-favs.json, resolves lookup input to canonical project.id, creates no state for unknown projects, and never writes .mdt-config.toml.",
+      "derivedFrom": [
+        "BR-2.3",
+        "BR-3.2",
+        "C1",
+        "C2",
+        "C3",
+        "C9",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-server-document-fav-state-service",
+        "ART-server-document-controller",
+        "ART-server-documents-route",
+        "ART-server-document-favs-api-test"
+      ],
+      "sourceRef": "architecture.md#Persistence Owner"
+    },
+    {
+      "id": "OBL-document-tree-reconciliation",
+      "title": "Fav reads and writes reconcile stored paths against TreeService document eligibility so only eligible folders and markdown documents remain usable.",
+      "derivedFrom": [
+        "BR-2.3",
+        "BR-3.1",
+        "C5",
+        "C7",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4"
+      ],
+      "artifactIds": [
+        "ART-server-document-fav-state-service",
+        "ART-server-document-service",
+        "ART-server-tree-service",
+        "ART-server-documents-api-test",
+        "ART-server-document-favs-api-test"
+      ],
+      "sourceRef": "architecture.md#Read Reconciliation"
+    },
+    {
+      "id": "OBL-documents-read-enrichment",
+      "title": "GET /api/documents remains the tree read endpoint and may enrich eligible nodes with favorite and favoritedAt metadata without changing non-favorite tree behavior.",
+      "derivedFrom": [
+        "BR-2.3",
+        "BR-3.1",
+        "BR-3.3",
+        "C5",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-server-documents-route",
+        "ART-server-document-controller",
+        "ART-server-document-service",
+        "ART-server-tree-service",
+        "ART-src-documents-layout",
+        "ART-server-documents-api-test"
+      ],
+      "sourceRef": "architecture.md#Endpoint Ownership"
+    },
+    {
+      "id": "OBL-documents-fav-write-route",
+      "title": "PUT /api/documents/favs is the narrow documents-namespace write endpoint for complete ordered fav state and must not use /api/documents/configure, content, project config, or selector endpoints.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.6",
+        "BR-3.2",
+        "C3",
+        "C4",
+        "C5",
+        "C7",
+        "C9",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-server-documents-route",
+        "ART-server-document-controller",
+        "ART-server-document-fav-state-service",
+        "ART-src-document-favs-api",
+        "ART-server-document-favs-api-test"
+      ],
+      "sourceRef": "architecture.md#Endpoint Ownership"
+    },
+    {
+      "id": "OBL-documents-view-favs-section",
+      "title": "DocumentsLayout owns the sidebar composition, renders Favs above Recent only when reconciled favs exist, keeps Favs and Recent outside the tree scroll area, and caps initial visible fav rows at five with no overflow affordance in this CR.",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-1.4",
+        "BR-3.3",
+        "C8",
+        "C10"
+      ],
+      "artifactIds": [
+        "ART-src-documents-layout",
+        "ART-src-document-favs-component",
+        "ART-src-documents-css",
+        "ART-src-recent-documents",
+        "ART-src-document-navigation",
+        "ART-src-document-favs-test",
+        "ART-e2e-document-favs-spec"
+      ],
+      "sourceRef": "architecture.md#Documents View Composition"
+    },
+    {
+      "id": "OBL-document-star-visual-contract",
+      "title": "Document tree and fav row star controls reuse the project favorite star active, inactive, hover, focus, title, and accessible-label pattern; active stars remove favs.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.5",
+        "BR-1.6",
+        "C6"
+      ],
+      "artifactIds": [
+        "ART-src-file-tree",
+        "ART-src-document-favs-component",
+        "ART-src-fav-star-css",
+        "ART-src-shared-icon",
+        "ART-src-project-selector-card",
+        "ART-src-document-favs-test",
+        "ART-src-file-tree-test",
+        "ART-e2e-selectors"
+      ],
+      "sourceRef": "architecture.md#Star Visual Contract"
+    },
+    {
+      "id": "OBL-document-fav-navigation-flow",
+      "title": "Document fav selection opens and selects markdown documents; folder fav selection expands ancestors and locates the folder row through FileTree without turning folders into content views.",
+      "derivedFrom": [
+        "BR-2.1",
+        "BR-2.2",
+        "BR-3.3",
+        "C8"
+      ],
+      "artifactIds": [
+        "ART-src-documents-layout",
+        "ART-src-document-favs-component",
+        "ART-src-file-tree",
+        "ART-src-file-tree-test",
+        "ART-e2e-document-favs-spec",
+        "ART-e2e-selectors"
+      ],
+      "sourceRef": "architecture.md#Runtime Flow"
+    },
+    {
+      "id": "OBL-existing-navigation-preservation",
+      "title": "Recent remains browser-local and All Documents remains the complete eligible tree; document fav state is additive and must not change existing Recent, content, sort, search, or configure behavior.",
+      "derivedFrom": [
+        "BR-3.3",
+        "C8",
+        "C9"
+      ],
+      "artifactIds": [
+        "ART-src-documents-layout",
+        "ART-src-recent-documents",
+        "ART-src-document-navigation",
+        "ART-src-file-tree",
+        "ART-server-documents-route",
+        "ART-server-document-service",
+        "ART-server-documents-api-test",
+        "ART-e2e-document-favs-spec"
+      ],
+      "sourceRef": "architecture.md#Module Boundaries"
+    },
+    {
+      "id": "OBL-document-favs-verification-contract",
+      "title": "Tests must cover API persistence and reconciliation, schema fallback, endpoint separation, star states, five-row visible cap, reload persistence, document open, folder locate, and existing Recent/All Documents preservation.",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "C8",
+        "C9",
+        "C10",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-server-document-favs-api-test",
+        "ART-server-documents-api-test",
+        "ART-src-document-favs-test",
+        "ART-src-file-tree-test",
+        "ART-src-document-favs-api-test",
+        "ART-e2e-document-favs-spec",
+        "ART-e2e-selectors"
+      ],
+      "sourceRef": "architecture.md#Verification Contract"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-domain-contracts-app-config-schema",
+      "path": "domain-contracts/src/app-config/schema.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#State Schema"
+    },
+    {
+      "id": "ART-domain-contracts-app-config-validation",
+      "path": "domain-contracts/src/app-config/validation.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#State Schema"
+    },
+    {
+      "id": "ART-server-document-fav-state-service",
+      "path": "server/services/DocumentFavStateService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Persistence Owner"
+    },
+    {
+      "id": "ART-server-document-controller",
+      "path": "server/controllers/DocumentController.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Endpoint Ownership"
+    },
+    {
+      "id": "ART-server-document-service",
+      "path": "server/services/DocumentService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Read Reconciliation"
+    },
+    {
+      "id": "ART-server-tree-service",
+      "path": "server/services/TreeService.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Eligibility Source"
+    },
+    {
+      "id": "ART-server-documents-route",
+      "path": "server/routes/documents.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Endpoint Ownership"
+    },
+    {
+      "id": "ART-src-documents-layout",
+      "path": "src/components/DocumentsView/DocumentsLayout.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Documents View Composition"
+    },
+    {
+      "id": "ART-src-document-favs-api",
+      "path": "src/config/documentFavs.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Frontend State API"
+    },
+    {
+      "id": "ART-src-document-favs-component",
+      "path": "src/components/DocumentsView/FavDocuments.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Favs Section"
+    },
+    {
+      "id": "ART-src-file-tree",
+      "path": "src/components/DocumentsView/FileTree.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Tree Row Actions"
+    },
+    {
+      "id": "ART-src-recent-documents",
+      "path": "src/components/DocumentsView/RecentDocuments.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Recent Boundary"
+    },
+    {
+      "id": "ART-src-document-navigation",
+      "path": "src/config/documentNavigation.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Recent Boundary"
+    },
+    {
+      "id": "ART-src-documents-css",
+      "path": "src/components/DocumentsView/documents-view.css",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Sidebar Layout"
+    },
+    {
+      "id": "ART-src-fav-star-css",
+      "path": "src/styles/entities/fav-star.css",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Star Visual Contract"
+    },
+    {
+      "id": "ART-src-shared-icon",
+      "path": "src/components/shared/Icon.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Star Visual Contract"
+    },
+    {
+      "id": "ART-src-project-selector-card",
+      "path": "src/components/ProjectSelector/ProjectSelectorCard.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#Star Visual Contract"
+    },
+    {
+      "id": "ART-server-document-favs-api-test",
+      "path": "server/tests/api/document-favs.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification Contract"
+    },
+    {
+      "id": "ART-server-documents-api-test",
+      "path": "server/tests/api/documents.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification Contract"
+    },
+    {
+      "id": "ART-src-document-favs-test",
+      "path": "src/components/DocumentsView/FavDocuments.test.tsx",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification Contract"
+    },
+    {
+      "id": "ART-src-file-tree-test",
+      "path": "src/components/DocumentsView/FileTree.test.tsx",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification Contract"
+    },
+    {
+      "id": "ART-src-document-favs-api-test",
+      "path": "src/config/documentFavs.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification Contract"
+    },
+    {
+      "id": "ART-e2e-document-favs-spec",
+      "path": "tests/e2e/documents/favs.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification Contract"
+    },
+    {
+      "id": "ART-e2e-selectors",
+      "path": "tests/e2e/utils/selectors.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#Verification Contract"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-document-fav-state-schema",
+      "kind": "unit",
+      "title": "Document fav schema validates ordered file and folder records and falls back for invalid state",
+      "covers": [
+        "C4",
+        "C7",
+        "Edge-4",
+        "OBL-document-fav-state-schema"
+      ],
+      "file": "src/config/documentFavs.test.ts",
+      "sourceRef": "tests.md#data-mechanism-tests"
+    },
+    {
+      "id": "TEST-document-fav-storage-owner",
+      "kind": "integration",
+      "title": "DocumentFavStateService persists only CONFIG_DIR project fav state and resolves project id or code",
+      "covers": [
+        "BR-2.3",
+        "BR-3.2",
+        "C1",
+        "C2",
+        "C3",
+        "C9",
+        "Edge-5",
+        "OBL-document-fav-storage-owner"
+      ],
+      "file": "server/tests/api/document-favs.test.ts",
+      "sourceRef": "tests.md#module-test-mapping"
+    },
+    {
+      "id": "TEST-document-fav-write-route",
+      "kind": "integration",
+      "title": "PUT /api/documents/favs validates complete ordered fav writes and rejects unsafe or unknown targets",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.6",
+        "BR-3.2",
+        "C3",
+        "C4",
+        "C5",
+        "C7",
+        "C9",
+        "Edge-5",
+        "OBL-documents-fav-write-route"
+      ],
+      "file": "server/tests/api/document-favs.test.ts",
+      "sourceRef": "tests.md#endpoint-separation-tests"
+    },
+    {
+      "id": "TEST-document-tree-fav-reconciliation",
+      "kind": "integration",
+      "title": "GET /api/documents enriches eligible nodes and reconciles deleted outside-root ticket-path and malformed favs",
+      "covers": [
+        "BR-2.3",
+        "BR-3.1",
+        "BR-3.3",
+        "C5",
+        "C7",
+        "C9",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "OBL-document-tree-reconciliation",
+        "OBL-documents-read-enrichment"
+      ],
+      "file": "server/tests/api/documents.test.ts",
+      "sourceRef": "tests.md#reconciliation-tests"
+    },
+    {
+      "id": "TEST-document-favs-api-client",
+      "kind": "unit",
+      "title": "Frontend document fav API writes complete ordered lists through the narrow fav endpoint only",
+      "covers": [
+        "BR-3.2",
+        "C4",
+        "C9",
+        "OBL-document-fav-state-schema",
+        "OBL-documents-fav-write-route"
+      ],
+      "file": "src/config/documentFavs.test.ts",
+      "sourceRef": "tests.md#module-test-mapping"
+    },
+    {
+      "id": "TEST-fav-documents-component",
+      "kind": "integration",
+      "title": "FavDocuments renders compact Favs rows active star removal accessibility and a five-row visible cap",
+      "covers": [
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "C6",
+        "C8",
+        "C10",
+        "OBL-document-star-visual-contract",
+        "OBL-documents-view-favs-section"
+      ],
+      "file": "src/components/DocumentsView/FavDocuments.test.tsx",
+      "sourceRef": "tests.md#ui-contract-tests"
+    },
+    {
+      "id": "TEST-file-tree-fav-controls",
+      "kind": "integration",
+      "title": "FileTree renders reusable fav star controls isolates star clicks and locates folder favorites",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.5",
+        "BR-2.1",
+        "BR-2.2",
+        "C6",
+        "C8",
+        "OBL-document-fav-navigation-flow",
+        "OBL-document-star-visual-contract"
+      ],
+      "file": "src/components/DocumentsView/FileTree.test.tsx",
+      "sourceRef": "tests.md#ui-contract-tests"
+    },
+    {
+      "id": "TEST-documents-favs-e2e",
+      "kind": "e2e",
+      "title": "Documents favs support add remove reload document open folder locate and preserve Recent and All Documents",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-2.3",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-3.3",
+        "C6",
+        "C8",
+        "C10",
+        "OBL-document-fav-navigation-flow",
+        "OBL-document-favs-verification-contract",
+        "OBL-documents-view-favs-section",
+        "OBL-existing-navigation-preservation"
+      ],
+      "file": "tests/e2e/documents/favs.spec.ts",
+      "sourceRef": "tests.md#e2e-tests"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-0",
+      "title": "Create missing document fav stubs and test shells",
+      "ownsArtifactIds": [
+        "ART-server-document-fav-state-service",
+        "ART-src-document-favs-api",
+        "ART-src-document-favs-component",
+        "ART-server-document-favs-api-test",
+        "ART-src-document-favs-api-test",
+        "ART-src-document-favs-test",
+        "ART-e2e-document-favs-spec"
+      ],
+      "sourceRef": "tasks.md#task-0"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Add typed document fav state contracts and client API",
+      "ownsArtifactIds": [
+        "ART-domain-contracts-app-config-schema",
+        "ART-domain-contracts-app-config-validation",
+        "ART-src-document-favs-api",
+        "ART-src-document-favs-api-test"
+      ],
+      "makesGreenIds": [
+        "TEST-document-fav-state-schema",
+        "TEST-document-favs-api-client"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Implement backend fav state owner and write endpoint",
+      "ownsArtifactIds": [
+        "ART-server-document-fav-state-service",
+        "ART-server-document-controller",
+        "ART-server-documents-route",
+        "ART-server-document-favs-api-test"
+      ],
+      "makesGreenIds": [
+        "TEST-document-fav-storage-owner",
+        "TEST-document-fav-write-route"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Enrich document reads with reconciled fav metadata",
+      "ownsArtifactIds": [
+        "ART-server-document-fav-state-service",
+        "ART-server-document-service",
+        "ART-server-tree-service",
+        "ART-server-document-controller",
+        "ART-server-documents-route",
+        "ART-server-documents-api-test"
+      ],
+      "makesGreenIds": [
+        "TEST-document-tree-fav-reconciliation"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Add tree row fav controls and folder locate behavior",
+      "ownsArtifactIds": [
+        "ART-src-file-tree",
+        "ART-src-file-tree-test",
+        "ART-src-fav-star-css",
+        "ART-src-shared-icon",
+        "ART-src-project-selector-card",
+        "ART-e2e-selectors"
+      ],
+      "makesGreenIds": [
+        "TEST-file-tree-fav-controls"
+      ],
+      "skills": [
+        "frontend-react-component",
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Render compact Favs section above Recent",
+      "ownsArtifactIds": [
+        "ART-src-document-favs-component",
+        "ART-src-document-favs-test",
+        "ART-src-documents-layout",
+        "ART-src-documents-css",
+        "ART-src-recent-documents",
+        "ART-src-document-navigation",
+        "ART-src-fav-star-css"
+      ],
+      "makesGreenIds": [
+        "TEST-fav-documents-component"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Wire end-to-end document fav workflows",
+      "ownsArtifactIds": [
+        "ART-src-documents-layout",
+        "ART-src-file-tree",
+        "ART-src-document-favs-component",
+        "ART-src-document-favs-api",
+        "ART-src-recent-documents",
+        "ART-src-document-navigation",
+        "ART-e2e-document-favs-spec",
+        "ART-e2e-selectors"
+      ],
+      "makesGreenIds": [
+        "TEST-documents-favs-e2e",
+        "folder_fav_appears_active",
+        "markdown_fav_appears_active",
+        "empty_favs_section_is_hidden",
+        "active_star_removes_fav",
+        "document_fav_opens_document",
+        "folder_fav_locates_folder",
+        "reload_restores_reconciled_favs",
+        "ordered_write_preserves_existing_navigation"
+      ],
+      "skills": [
+        "frontend-react-component",
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-7",
+      "title": "Run full verification and guard against ownership drift",
+      "ownsArtifactIds": [
+        "ART-server-document-favs-api-test",
+        "ART-server-documents-api-test",
+        "ART-src-document-favs-api-test",
+        "ART-src-document-favs-test",
+        "ART-src-file-tree-test",
+        "ART-e2e-document-favs-spec",
+        "ART-e2e-selectors"
+      ],
+      "makesGreenIds": [
+        "TEST-document-fav-state-schema",
+        "TEST-document-fav-storage-owner",
+        "TEST-document-fav-write-route",
+        "TEST-document-favs-api-client",
+        "TEST-document-tree-fav-reconciliation",
+        "TEST-fav-documents-component",
+        "TEST-file-tree-fav-controls",
+        "TEST-documents-favs-e2e"
+      ],
+      "skills": [
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-7"
+    }
+  ]
+}

@@ -225,6 +225,24 @@ export const documentSelectors = {
   recentToggle: '[data-testid="document-recent-toggle"]',
   /** Recent document shortcut list */
   recentList: '[data-testid="document-recent-list"]',
+  /** Favs section toggle */
+  favsToggle: '[data-testid="document-favs-toggle"]',
+  /** Favs shortcut list */
+  favsList: '[data-testid="document-favs-list"]',
+  /** Favs show all/show less action */
+  favsShowAll: '[data-testid="document-favs-show-all"]',
+  /** Fav shortcut row */
+  favItem: '[data-testid="document-fav-item"]',
+  /** Fav shortcut row by document path */
+  favItemByPath: (path: string) => `[data-testid="document-fav-item"][data-document-path="${path}"]`,
+  /** Active fav row star */
+  favStar: '[data-testid="document-fav-star"]',
+  /** Tree row fav star */
+  treeFavStar: '[data-testid="document-tree-fav-star"]',
+  /** Tree row fav star by document path */
+  treeFavStarByPath: (path: string) => `[data-testid="document-tree-fav-star"][data-document-path="${path}"]`,
+  /** Located folder row by document path */
+  locatedFolderByPath: (path: string) => `[data-testid="folder-item"][data-document-path="${path}"][data-located="true"]`,
   /** Scoped root breadcrumb, retained to assert the old unmanaged UX is absent */
   scopedBreadcrumb: '[data-testid="document-scope-breadcrumb"]',
   /** Automatic exclusion notice */

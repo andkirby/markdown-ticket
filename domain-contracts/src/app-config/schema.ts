@@ -43,6 +43,10 @@ export const SELECTOR_STATE_ENTRY_DEFAULTS = {
   count: 0,
 } as const
 
+export const DOCUMENT_FAV_STATE_DEFAULTS = {
+  favItems: [] as DocumentFavItem[],
+} as const
+
 export const USER_CONFIG_DEFAULTS = {
   ui: {
     projectSelector: { ...PROJECT_SELECTOR_PREFERENCES_DEFAULTS },
@@ -126,6 +130,27 @@ export const SelectorStateEntrySchema = z.object({
 
 export const SelectorStateSchema = z.record(SelectorStateEntrySchema).catch({}).default({})
 
+const ProjectRelativeDocumentPathSchema = z.string()
+  .min(1)
+  .refine(path => !path.startsWith('/') && !/^[A-Za-z]:[\\/]/u.test(path), 'Path must be project-relative')
+  .refine(path => !path.includes('\\'), 'Path must use forward slashes')
+  .refine(path => !path.includes('\0'), 'Path cannot contain null bytes')
+  .refine((path) => {
+    const normalized = path.replace(/\/+/gu, '/').replace(/^\.\/+/u, '').replace(/\/$/u, '')
+    return normalized === path
+  }, 'Path must be normalized')
+  .refine(path => path.split('/').every(part => part !== '..' && part !== '.' && part !== ''), 'Path cannot contain traversal segments')
+
+export const DocumentFavItemSchema = z.object({
+  path: ProjectRelativeDocumentPathSchema,
+  type: z.enum(['file', 'folder']),
+  favoritedAt: z.string().datetime({ offset: true }),
+}).strict()
+
+export const DocumentFavStateSchema = z.object({
+  favItems: z.array(DocumentFavItemSchema),
+}).strict()
+
 export type GlobalConfig = z.output<typeof GlobalConfigSchema>
 export type GlobalConfigInput = z.input<typeof GlobalConfigSchema>
 export type UserConfig = z.output<typeof UserConfigSchema>
@@ -133,3 +158,5 @@ export type UserConfigInput = z.input<typeof UserConfigSchema>
 export type SelectorPreferences = z.output<typeof SelectorPreferencesSchema>
 export type SelectorStateEntry = z.output<typeof SelectorStateEntrySchema>
 export type SelectorState = z.output<typeof SelectorStateSchema>
+export type DocumentFavItem = z.output<typeof DocumentFavItemSchema>
+export type DocumentFavState = z.output<typeof DocumentFavStateSchema>

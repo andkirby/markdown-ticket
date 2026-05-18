@@ -3,6 +3,7 @@ import type { TreeNode } from '../types/tree.js'
 import * as path from 'node:path'
 import { FileOperationInvoker } from '../invokers/FileOperationInvoker.js'
 import { ConfigRepository } from '../repositories/ConfigRepository.js'
+import { DocumentFavStateService } from './DocumentFavStateService.js'
 import { TreeService } from './TreeService.js'
 
 interface ProjectDiscovery {
@@ -19,12 +20,14 @@ interface FileInvoker {
 export class DocumentService {
   private projectDiscovery: ProjectDiscovery
   private treeService: TreeService
+  private documentFavStateService: DocumentFavStateService
   private configRepository: ConfigRepository
   private _fileInvoker: FileInvoker
 
   constructor(projectDiscovery: ProjectDiscovery) {
     this.projectDiscovery = projectDiscovery
     this.treeService = new TreeService(projectDiscovery)
+    this.documentFavStateService = new DocumentFavStateService(projectDiscovery, this.treeService)
     this.configRepository = new ConfigRepository()
     this._fileInvoker = new FileOperationInvoker()
   }
@@ -33,7 +36,14 @@ export class DocumentService {
    * Discover documents for a project.
    */
   async discoverDocuments(projectId: string): Promise<TreeNode[]> {
-    return await this.treeService.getDocumentTree(projectId)
+    const tree = await this.treeService.getDocumentTree(projectId)
+    const favState = await this.documentFavStateService.readReconciledState(projectId, tree)
+
+    return this.documentFavStateService.enrichTree(tree, favState)
+  }
+
+  async updateDocumentFavs(projectId: string, favState: unknown) {
+    return await this.documentFavStateService.writeState(projectId, favState)
   }
 
   /**

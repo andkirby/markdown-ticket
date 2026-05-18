@@ -64,6 +64,12 @@
   flex-shrink: 0;
 }
 
+.fav-star--document {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
 /* CSS Variables - Light Mode (default) */
 :root {
   --star-inactive-fill: transparent;

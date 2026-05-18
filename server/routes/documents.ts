@@ -67,6 +67,38 @@ export function createDocumentRouter(
 
   /**
    * @openapi
+   * /api/documents/favs:
+   *   put:
+   *     summary: Persist document fav state
+   *     tags: [Documents]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [projectId, favItems]
+   *             properties:
+   *               projectId: { type: string }
+   *               favItems:
+   *                 type: array
+   *                 items:
+   *                   type: object
+   *                   required: [path, type, favoritedAt]
+   *                   properties:
+   *                     path: { type: string }
+   *                     type: { type: string, enum: [file, folder] }
+   *                     favoritedAt: { type: string, format: date-time }
+   *     responses:
+   *       200:
+   *         description: Fav state persisted
+   *       400: { $ref: '#/components/responses/BadRequest' }
+   *       404: { $ref: '#/components/responses/NotFound' }
+   */
+  router.put('/favs', (req, res) => documentController.putDocumentFavs(req, res))
+
+  /**
+   * @openapi
    * /api/documents/configure:
    *   post:
    *     summary: Configure document paths for a project

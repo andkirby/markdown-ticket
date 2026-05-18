@@ -101,6 +101,11 @@ test.describe('Documents View navigation (MDT-162)', () => {
     await expect(page.locator(documentSelectors.recentToggle)).toHaveAttribute('aria-expanded', 'false')
     await expect(page.locator(documentSelectors.recentList)).toHaveCount(0)
 
+    await page.reload()
+    await page.waitForLoadState('load')
+    await expect(page.locator(documentSelectors.recentToggle)).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.locator(documentSelectors.recentList)).toHaveCount(0)
+
     await page.locator(documentSelectors.recentToggle).click()
     await expect(page.locator(documentSelectors.recentToggle)).toHaveAttribute('aria-expanded', 'true')
     await expect(page.locator(documentSelectors.recentDocument)).toHaveCount(1)
