@@ -35,6 +35,7 @@ DocumentsLayout
 | FileTree | `src/components/DocumentsView/FileTree.tsx` | — | when documents are configured |
 | DocumentFilenameTabs | `src/components/DocumentsView/DocumentFilenameTabs.tsx` | `document-filename-tabs.spec.md` | when selected markdown file belongs to a filename group |
 | MarkdownViewer | `src/components/DocumentsView/MarkdownViewer.tsx` | this spec | when a file is selected |
+| MarkdownContent | `src/components/MarkdownContent/index.tsx` | `markdown-content.spec.md` | when markdown body renders |
 | PathSelector | `src/components/DocumentsView/PathSelector.tsx` | — | when no document paths are configured |
 
 ## Source files
@@ -168,6 +169,8 @@ Documents should not write date frontmatter automatically. For configured docume
 - The target/crosshair button sits in the sidebar header control cluster, between sort direction and path configuration.
 - The target/crosshair button scrolls the tree to the active document and expands collapsed ancestor folders.
 - Timestamp/status appears in the existing floating timestamp area at the top-right of the viewer.
+- Markdown body uses the `document` typography variant from `markdown-content.spec.md`.
+- The document prose column should keep a readable measure around `72ch`; wide artifacts scroll inside the viewer.
 - Deleted-file state uses the viewer empty-state area, not a modal.
 - No toast is required for selected-file refresh; the viewer itself shows the state.
 - Non-selected file updates should not interrupt reading.
@@ -176,8 +179,10 @@ Documents should not write date frontmatter automatically. For configured docume
 
 | Breakpoint | Change |
 |------------|--------|
+| < 640px | Preview mode is single-pane; persistent sidebar/tree is hidden or replaced by a navigation control |
 | < 640px | Floating timestamp remains top-right inside the preview padding; content keeps enough top spacing to avoid collision |
-| 640-1024px | Sidebar remains fixed-width if present; floating timestamp stays top-right in the viewer |
+| < 640px | ToC opens from a compact control and must not cover the active reading position by default |
+| 640-1024px | Sidebar remains fixed-width only if the prose column keeps at least 48ch; otherwise use single-pane preview |
 | > 1024px | Two-pane layout; floating timestamp and sync status stay top-right in the viewer |
 
 ## Tokens used
@@ -194,6 +199,7 @@ Documents should not write date frontmatter automatically. For configured docume
 | frontmatter border | `--border` | Single border around disclosure |
 | frontmatter text | `--foreground`, `--muted-foreground` | Raw metadata and disclosure summary |
 | deleted state | `--destructive` | Deleted-file message |
+| markdown prose | `--foreground`, `--muted-foreground`, `--primary`, `--border`, `--code-*` | document body typography, links, tables, code |
 
 ## Classes used
 
@@ -206,6 +212,7 @@ Documents should not write date frontmatter automatically. For configured docume
 | semantic update state | `.document-update-indicator` proposed | Use when indicator styling is reused |
 | frontmatter disclosure | `.document-frontmatter` proposed | Native details/summary wrapper for raw metadata |
 | frontmatter code | `.document-frontmatter__code` proposed | Transparent inner code area; no nested panel |
+| markdown prose | `.prose.prose--document` proposed | `markdown-content.spec.md` reading variant |
 | semantic file state | `data-file-state` proposed | Mirrors `data-*` semantic variant guidance |
 
 ## Extension Notes
