@@ -4,6 +4,7 @@ Related spec: `documents-view-file-updates.spec.md`
 
 Shared navigation shell: `documents-view-navigation.mockups.md`.
 Filename tab states: `document-filename-tabs.mockups.md`.
+Markdown typography states: `markdown-content.mockups.md`.
 
 Use that mockup for the full sidebar/header/tree contract. This file only repeats sidebar detail when the update state changes the tree itself.
 
@@ -29,6 +30,7 @@ window "Documents View — Default":
 annotation "Sidebar composition is owned by documents-view-navigation.mockups.md" target="nav-context" position=bottom
 annotation "Shared floating relative timestamp, not an inline date row" target="floating-timestamp" position=top
 annotation "Valid leading frontmatter is collapsed above the rendered markdown body" target="frontmatter-collapsed" position=right
+annotation "Markdown body uses markdown-content.spec.md document variant" target="doc-heading" position=right
 ```
 
 ## Frontmatter Expanded
