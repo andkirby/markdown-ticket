@@ -5,6 +5,12 @@ import { AlertTriangle } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import {
+  getMarkdownDensity,
+  getMarkdownDensityClass,
+  MARKDOWN_DENSITY_CHANGE_EVENT,
+  MARKDOWN_DENSITY_KEY,
+} from '../../config/settingsPreferences'
 import { dataLayer } from '../../services/dataLayer'
 import { useEventBus } from '../../services/eventBus'
 import { filePathToApiPath } from '../../utils/subdocPathValidation'
@@ -33,6 +39,7 @@ interface TicketViewerProps {
 const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ticketsPath, ticketError }) => {
   const { projectCode } = useParams<{ projectCode: string }>()
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(ticket)
+  const [markdownDensity, setMarkdownDensity] = useState(getMarkdownDensity)
 
   // MDT-094: Update internal state when prop changes.
   // When a ticket is selected, fetch full ticket content if not already present.
@@ -66,6 +73,22 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
         .catch((err: Error) => console.error('Failed to fetch ticket content:', err))
     }
   }, [ticket, isOpen, projectCode])
+
+  useEffect(() => {
+    const syncMarkdownDensity = () => setMarkdownDensity(getMarkdownDensity())
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === MARKDOWN_DENSITY_KEY)
+        syncMarkdownDensity()
+    }
+
+    window.addEventListener(MARKDOWN_DENSITY_CHANGE_EVENT, syncMarkdownDensity)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener(MARKDOWN_DENSITY_CHANGE_EVENT, syncMarkdownDensity)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
 
   // Listen for real-time updates to this specific ticket
   useEventBus('ticket:updated', useCallback((event: TypedEvent<'ticket:updated'>) => {
@@ -277,7 +300,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                       )}
                       <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'pointer-events-none opacity-50' : ''}>
                         <div className="relative modal__section--content">
-                          <div className="relative-timestamp__floating">
+                          <div className="relative-timestamp__floating static mb-2 justify-end sm:absolute sm:mb-0">
                             <RelativeTimestamp
                               createdAt={currentTicket!.dateCreated}
                               updatedAt={currentTicket!.lastModified}
@@ -289,6 +312,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                             sourcePath={selectedPath === 'main' ? `${currentTicket?.code}.md` : `${currentTicket?.code}/${selectedPath}.md`}
                             ticketsPath={ticketsPath}
                             headerLevelStart={3}
+                            className={`prose prose--ticket ${getMarkdownDensityClass(markdownDensity)} max-w-none dark:prose-invert`}
                           />
                         </div>
                       </div>

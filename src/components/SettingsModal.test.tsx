@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { MARKDOWN_DENSITY_KEY } from '../config/settingsPreferences'
 import { TICKET_CARD_BADGE_STORAGE_KEY } from '../config/ticketCardBadges'
 import { SettingsModal } from './SettingsModal'
 
@@ -45,6 +46,7 @@ describe('SettingsModal', () => {
     expect(screen.getByTestId('settings-tab-board')).toHaveTextContent('Board')
     expect(screen.getByTestId('settings-tab-advanced')).toHaveTextContent('Advanced')
     expect(screen.getByTestId('settings-default-view')).toBeInTheDocument()
+    expect(screen.getByTestId('settings-markdown-density')).toBeInTheDocument()
     expect(screen.queryByTestId('settings-card-density')).not.toBeInTheDocument()
     expect(screen.queryByTestId('settings-event-history')).not.toBeInTheDocument()
   })
@@ -64,8 +66,12 @@ describe('SettingsModal', () => {
     fireEvent.change(screen.getByTestId('settings-default-view'), {
       target: { value: 'list' },
     })
+    fireEvent.change(screen.getByTestId('settings-markdown-density'), {
+      target: { value: 'comfortable' },
+    })
 
     expect(localStorage.getItem('mdt-settings-default-view')).toBe('list')
+    expect(localStorage.getItem(MARKDOWN_DENSITY_KEY)).toBe('comfortable')
   })
 
   it('persists board preferences without backend requests', () => {
