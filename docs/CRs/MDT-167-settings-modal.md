@@ -54,6 +54,7 @@ Three-tab modal using Radix Tabs (already installed). All settings write immedia
 |---------|---------|---------|---------|
 | Card Density | localStorage `mdt-settings-card-density` | Select (Comfortable/Compact) | `comfortable` |
 | Smart Links | localStorage `markdown-ticket-link-config.enableAutoLinking` | Switch toggle | `true` |
+| Visible Card Badges | localStorage `markdown-ticket:board:ticket-card-badges` | Checkbox list | Status, Priority, Type, Phase, Related, Depends, Blocks, Worktree |
 
 **Advanced**
 | Setting | Storage | Control | Default |
@@ -79,6 +80,9 @@ Three-tab modal using Radix Tabs (already installed). All settings write immedia
 - [ ] Default View select persists to localStorage
 - [ ] Card Density select persists to localStorage
 - [ ] Smart Links toggle reads/writes existing `markdown-ticket-link-config`
+- [ ] Visible Card Badges control persists selected badge IDs to localStorage
+- [ ] Board ticket cards render only selected badges while preserving standard badge order
+- [ ] Invalid or empty badge visibility storage falls back to default badges
 - [ ] Event History toggle shows/hides SSE panel
 - [ ] Clear Cache button calls `nuclearCacheClear()`
 - [ ] Theme quick-access remains in hamburger menu
@@ -95,3 +99,13 @@ Three-tab modal using Radix Tabs (already installed). All settings write immedia
 - Theme hook: `src/hooks/useTheme.ts`
 - Link config: `src/config/linkConfig.ts`
 - Related: MDT-166 (modal standardization)
+
+## 8. Clarifications
+
+### UAT Session 2026-05-17
+
+- Approved changes: add Board-tab configuration for visible ticket card badges; persist selected badge IDs to browser localStorage; apply only to board ticket cards; preserve existing badge order; fall back to defaults for invalid, empty, or unavailable storage.
+- Changed requirement IDs: `BR-3.3`, `BR-3.4`, `C3`, `C4`, `C5`, `Edge-1`.
+- Updated workflow documents: `docs/CRs/MDT-167/requirements.md`, `bdd.md`, `architecture.md`, `tests.md`, `tasks.md`, `uat.md`.
+- `uat.md` written: yes.
+- Strict drift/lock used: no; this ticket had no prior spec-trace store, so canonical trace was initialized for this round.

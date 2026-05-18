@@ -36,8 +36,45 @@ window "Settings":
       text "Compact shows more tickets per column" muted
       combo value="Comfortable" options="Comfortable,Compact"
     divider
-    toggle "Smart Links" on
-    text "Auto-detect ticket keys and doc paths" muted
+    section "Smart Links":
+      text "Auto-detect ticket keys and doc paths" muted
+      toggle "Smart Links" on
+    divider
+    section "Visible Card Badges":
+      text "Choose which badges appear on board ticket cards" muted
+      checkbox "Status" id="badge-status" checked label-right
+      checkbox "Priority" checked label-right
+      checkbox "Type" checked label-right
+      checkbox "Phase" checked label-right
+      checkbox "Related" checked label-right
+      checkbox "Depends" checked label-right
+      checkbox "Blocks" checked label-right
+      checkbox "Worktree" checked label-right
+
+annotation "Writes immediately to markdown-ticket:board:ticket-card-badges" target="badge-status" position=right
+```
+
+## Board Tab (customized badges)
+
+```wireloom
+window "Settings":
+  tabs:
+    tab "Appearance"
+    tab "Board" active
+    tab "Advanced"
+  panel:
+    section "Visible Card Badges":
+      text "Choose which badges appear on board ticket cards" muted
+      checkbox "Status" checked label-right
+      checkbox "Priority" id="badge-priority-off" label-right
+      checkbox "Type" checked label-right
+      checkbox "Phase" label-right
+      checkbox "Related" label-right
+      checkbox "Depends" label-right
+      checkbox "Blocks" label-right
+      checkbox "Worktree" checked label-right
+
+annotation "Unchecked badges are hidden from board cards only" target="badge-priority-off" position=right
 ```
 
 ## Advanced Tab
@@ -61,22 +98,23 @@ window "Settings":
 ## Mobile
 
 ```wireloom
-window "Settings":
+window "Settings — Mobile Board":
   tabs:
-    tab "App" active
-    tab "Board"
+    tab "App"
+    tab "Board" active
     tab "Adv"
   panel:
-    section "Theme":
-      text "Choose your theme" muted
-      segmented:
-        segment "☀ Light"
-        segment "🌙 Dark"
-        segment "💻 System" selected
+    section "Card Density":
+      text "Compact shows more tickets per column" muted
+      combo value="Comfortable" options="Comfortable,Compact"
     divider
-    section "Default View":
-      text "Open this view first" muted
-      combo value="Board" options="Board,List"
+    section "Visible Card Badges":
+      text "Board cards only" muted
+      checkbox "Status" checked label-right
+      checkbox "Priority" checked label-right
+      checkbox "Type" checked label-right
+      checkbox "Phase" checked label-right
+      checkbox "More relationship badges" checked label-right
 ```
 
 ## Annotations
@@ -94,5 +132,7 @@ window "Settings":
 | Select | `--background` | `border rounded-md px-3 py-2` | |
 | Switch on | `--primary` | bg-primary, knob right | |
 | Switch off | `--muted` | bg-muted, knob left | |
+| Checkbox checked | `--primary` | native checkbox or app checkbox checked state | Immediate persistence |
+| Checkbox label | `--foreground` | `text-sm` | Never disabled when unchecked |
 | Clear cache button | `--border` | `variant="outline"` | |
 | Setting divider | `--border` | dashed or `space-y-6` gap | Between groups |

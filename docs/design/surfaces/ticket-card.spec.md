@@ -104,6 +104,8 @@ Badges appear left-to-right in this fixed order:
 
 If a badge value is empty or array is empty, the badge is not rendered.
 
+The board Settings tab can hide individual card badge types via `markdown-ticket:board:ticket-card-badges`. The configured list filters this order; it must not reorder badges or affect ticket viewer badges.
+
 ## TicketCode
 
 The code segment renders with worktree indicator:
@@ -137,6 +139,7 @@ The code segment renders with worktree indicator:
 ## Extension notes
 
 - Badge order is defined by `TicketAttributeTags.tsx` — add new badges at the end of the render list, before the worktree badge.
+- Visible badge configuration is browser-local board UI state. Validate stored badge IDs and fall back to default badges when storage is invalid or empty.
 - New badge types must follow the `BADGE_ARCHITECTURE.md` data-attribute pattern.
 - Invalid status detection: `isValidStatus()` checks against hardcoded CR status list. If statuses become configurable, this check must update.
 - The drag wrapper (`DraggableTicketCard`) lives in `Column/index.tsx`, not in TicketCard. Card does not own its own drag behavior.

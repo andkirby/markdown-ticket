@@ -27,9 +27,12 @@ Modal[size="md"]
             │   ├── div.setting-group["Card Density"]
             │   │   ├── label + description
             │   │   └── Select[Comfortable / Compact]
-            │   └── div.setting-group["Smart Links"]
+            │   ├── div.setting-group["Smart Links"]
             │       ├── label + description
             │       └── Switch[toggle]
+            │   └── div.setting-group["Visible Card Badges"]
+            │       ├── label + description
+            │       └── CheckboxList[Status / Priority / Type / Phase / Related / Depends / Blocks / Worktree]
             └── Advanced panel
                 ├── div.setting-group["Event History"]
                 │   ├── label + description
@@ -48,6 +51,7 @@ Modal[size="md"]
 | ButtonGroup | `src/components/ui/button-group.tsx` | — | theme selector |
 | Button | `src/components/ui/Button.tsx` | — | clear cache action |
 | Switch | `src/components/ui/switch.tsx` | — | toggle preferences |
+| Checkbox list | native checkbox controls | — | visible card badges |
 
 ## Source files
 
@@ -91,6 +95,7 @@ Modal[size="md"]
 | Select | label + description above, select below (`flex-col gap-2`) |
 | Switch | label/description left, switch right (`flex items-center justify-between`) |
 | Button action | label/description left, button right (`flex items-center justify-between`) |
+| Checkbox list | label + description above, checkbox rows below (`flex-col gap-2`) |
 
 ## Tabs
 
@@ -107,6 +112,7 @@ Modal[size="md"]
 |---------|---------|---------|---------|
 | Card Density | localStorage `mdt-settings-card-density` | Select (Comfortable / Compact) | `comfortable` |
 | Smart Links | localStorage `markdown-ticket-link-config.enableAutoLinking` | Switch toggle | `true` |
+| Visible Card Badges | localStorage `markdown-ticket:board:ticket-card-badges` | Checkbox list | Status, Priority, Type, Phase, Related, Depends, Blocks, Worktree |
 
 ### Advanced
 
@@ -123,7 +129,35 @@ Modal[size="md"]
 | theme active | current theme mode | matching button highlighted `bg-primary` |
 | toggle on | switch enabled | switch primary color, knob right |
 | toggle off | switch disabled | switch muted color, knob left |
+| badge selected | visible card badge enabled | checkbox checked; label stays normal foreground |
+| badge unselected | visible card badge hidden | checkbox unchecked; label remains readable, no disabled styling |
+| invalid badge storage | stored list is empty, malformed, or unsupported | UI falls back to default checked badges |
 | clearing cache | Clear Cache clicked | toast confirmation |
+
+## Visible Card Badges
+
+The Board tab includes a checkbox list for board ticket card badges. The list controls visibility only; it does not change badge order, labels, semantic color, or ticket viewer badges.
+
+### Badge Options
+
+| Option | Card badge | Default | Notes |
+|--------|------------|---------|-------|
+| Status | `StatusBadge` | checked | Always available when defaulted. |
+| Priority | `PriorityBadge` | checked | Uses existing badge color mapping. |
+| Type | `TypeBadge` | checked | Uses existing badge color mapping. |
+| Phase | `ContextBadge[phase]` | checked | Hidden automatically when ticket has no phase. |
+| Related | `RelationshipBadge[related]` | checked | Hidden automatically when empty. |
+| Depends | `RelationshipBadge[depends]` | checked | Hidden automatically when empty. |
+| Blocks | `RelationshipBadge[blocks]` | checked | Hidden automatically when empty. |
+| Worktree | `ContextBadge[worktree]` | checked | Hidden automatically when ticket is not in a worktree. |
+
+### Interaction Rules
+
+- Each checkbox writes immediately to `markdown-ticket:board:ticket-card-badges`.
+- At least one valid badge must remain visible. If the user attempts to clear the final selected badge, keep that checkbox selected.
+- Stored unsupported badge IDs are ignored.
+- Empty or invalid stored lists fall back to the default full set.
+- Ticket cards render selected badge types in the existing `TicketAttributeTags.tsx` order.
 
 ## Entry Point
 
@@ -147,3 +181,4 @@ Settings opens from the **hamburger menu** via ⚙ Settings item. Theme quick-ac
 - The `_setLinkConfig` function in `linkConfig.ts` is currently unused (prefixed `_`). Settings should use it or write directly.
 - Card density: consumers should read from `mdt-settings-card-density` and apply CSS class changes to TicketCard and column spacing.
 - Default view: consumers should read from `mdt-settings-default-view` on initial load when URL has no view suffix.
+- Visible card badges: consumers should read from `markdown-ticket:board:ticket-card-badges`, validate badge IDs against the supported board-card badge set, preserve the standard display order, and fall back to default badges when storage is invalid or empty.
