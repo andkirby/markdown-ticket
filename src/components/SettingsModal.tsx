@@ -1,37 +1,25 @@
+import type { CardDensity, DefaultView } from '../config/settingsPreferences'
+import type { TicketCardBadgeId } from '../config/ticketCardBadges'
 import * as Tabs from '@radix-ui/react-tabs'
 import { Monitor, Moon, Sun, Trash2 } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
+import {
+  getCardDensity,
+  getDefaultView,
+  setCardDensityPreference,
+  setDefaultViewPreference,
+} from '../config/settingsPreferences'
+import {
+  getVisibleTicketCardBadges,
+  setVisibleTicketCardBadges,
+  TicketCardBadgeOptions,
+} from '../config/ticketCardBadges'
 import { useTheme } from '../hooks/useTheme'
 import { nuclearCacheClear } from '../utils/cache'
+import { getEventHistoryForceHidden, toggleEventHistory } from './DevTools/useEventHistoryState'
 import { ButtonGroup } from './ui/button-group'
 import { Modal, ModalBody, ModalHeader } from './ui/Modal'
 import { Switch } from './ui/switch'
-
-// Storage keys
-const DEFAULT_VIEW_KEY = 'mdt-settings-default-view'
-const CARD_DENSITY_KEY = 'mdt-settings-card-density'
-
-type DefaultView = 'board' | 'list'
-type CardDensity = 'comfortable' | 'compact'
-
-function readStorageString(key: string, fallback: string): string {
-  try {
-    return localStorage.getItem(key) ?? fallback
-  }
-  catch {
-    return fallback
-  }
-}
-
-function writeStorageString(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value)
-  }
-  catch {
-    console.warn(`Failed to save setting: ${key}`)
-  }
-}
 
 function readAutoLinking(): boolean {
   try {
@@ -60,19 +48,23 @@ interface SettingsModalProps {
   onClose: () => void
 }
 
+type SettingsTab = 'appearance' | 'board' | 'advanced'
+
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { themeMode, setTheme } = useTheme()
+  const [activeTab, setActiveTab] = useState<SettingsTab>('appearance')
 
   // Appearance
   const [defaultView, setDefaultView] = useState<DefaultView>(
-    () => readStorageString(DEFAULT_VIEW_KEY, 'board') as DefaultView,
+    getDefaultView,
   )
 
   // Board
   const [cardDensity, setCardDensity] = useState<CardDensity>(
-    () => readStorageString(CARD_DENSITY_KEY, 'comfortable') as CardDensity,
+    getCardDensity,
   )
   const [autoLinking, setAutoLinking] = useState(readAutoLinking)
+  const [visibleBadgeIds, setVisibleBadgeIds] = useState(getVisibleTicketCardBadges)
 
   // Advanced
   const [eventHistoryVisible, setEventHistoryVisible] = useState(() => !getEventHistoryForceHidden())
@@ -84,18 +76,31 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const handleDefaultViewChange = useCallback((view: DefaultView) => {
     setDefaultView(view)
-    writeStorageString(DEFAULT_VIEW_KEY, view)
+    setDefaultViewPreference(view)
   }, [])
 
   // Board handlers
   const handleCardDensityChange = useCallback((density: CardDensity) => {
     setCardDensity(density)
-    writeStorageString(CARD_DENSITY_KEY, density)
+    setCardDensityPreference(density)
   }, [])
 
   const handleAutoLinkingChange = useCallback((checked: boolean) => {
     setAutoLinking(checked)
     writeAutoLinking(checked)
+  }, [])
+
+  const handleVisibleBadgeChange = useCallback((badgeId: TicketCardBadgeId, checked: boolean) => {
+    setVisibleBadgeIds((currentBadgeIds) => {
+      if (!checked && currentBadgeIds.length === 1 && currentBadgeIds.includes(badgeId))
+        return currentBadgeIds
+
+      const nextBadgeIds = checked
+        ? [...currentBadgeIds, badgeId]
+        : currentBadgeIds.filter(currentBadgeId => currentBadgeId !== badgeId)
+
+      return setVisibleTicketCardBadges(nextBadgeIds)
+    })
   }, [])
 
   // Advanced handlers
@@ -118,12 +123,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     <Modal isOpen={isOpen} onClose={onClose} size="md" data-testid="settings-modal">
       <ModalHeader title="Settings" onClose={onClose} closeTestId="settings-close" />
       <ModalBody className="p-0">
-        <Tabs.Root defaultValue="appearance">
-          <Tabs.List className="tab__list">
+        <Tabs.Root value={activeTab} onValueChange={value => setActiveTab(value as SettingsTab)}>
+          <Tabs.List className="tab__list settings-tab-list">
             <Tabs.Trigger
               value="appearance"
               data-testid="settings-tab-appearance"
               className="tab tab--fill"
+              onClick={() => setActiveTab('appearance')}
             >
               Appearance
             </Tabs.Trigger>
@@ -131,6 +137,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               value="board"
               data-testid="settings-tab-board"
               className="tab tab--fill"
+              onClick={() => setActiveTab('board')}
             >
               Board
             </Tabs.Trigger>
@@ -138,14 +145,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               value="advanced"
               data-testid="settings-tab-advanced"
               className="tab tab--fill"
+              onClick={() => setActiveTab('advanced')}
             >
               Advanced
             </Tabs.Trigger>
           </Tabs.List>
 
-          {/* ── Appearance ─────────────────────────────────────── */}
           <Tabs.Content value="appearance" className="tab__content">
-            {/* Theme */}
             <div className="settings-group">
               <label className="settings-label">Theme</label>
               <p className="settings-desc">Choose light, dark, or system theme</p>
@@ -199,9 +205,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           </Tabs.Content>
 
-          {/* ── Board ──────────────────────────────────────────── */}
           <Tabs.Content value="board" className="tab__content">
-            {/* Card Density */}
             <div className="settings-group">
               <label className="settings-label">Card Density</label>
               <p className="settings-desc">Compact shows more tickets per column</p>
@@ -228,11 +232,28 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 data-testid="settings-auto-linking"
               />
             </div>
+
+            <div className="settings-group">
+              <label className="settings-label">Visible Card Badges</label>
+              <p className="settings-desc">Choose which badges appear on board ticket cards</p>
+              <div className="settings-checkbox-list" data-testid="settings-visible-card-badges">
+                {TicketCardBadgeOptions.map(option => (
+                  <label key={option.id} className="settings-checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={visibleBadgeIds.includes(option.id)}
+                      onChange={e => handleVisibleBadgeChange(option.id, e.target.checked)}
+                      data-testid={`settings-visible-badge-${option.id}`}
+                      className="settings-checkbox"
+                    />
+                    <span>{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </Tabs.Content>
 
-          {/* ── Advanced ───────────────────────────────────────── */}
           <Tabs.Content value="advanced" className="tab__content">
-            {/* Event History */}
             <div className="settings-group-row">
               <div>
                 <label className="settings-label">Event History</label>
@@ -265,20 +286,4 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       </ModalBody>
     </Modal>
   )
-}
-
-/**
- * Read the stored default view setting.
- * Used by App.tsx on initial load to decide board vs list.
- */
-export function getDefaultView(): DefaultView {
-  return readStorageString(DEFAULT_VIEW_KEY, 'board') as DefaultView
-}
-
-/**
- * Read the stored card density setting.
- * Used by TicketCard to adjust padding/spacing.
- */
-export function getCardDensity(): CardDensity {
-  return readStorageString(CARD_DENSITY_KEY, 'comfortable') as CardDensity
 }

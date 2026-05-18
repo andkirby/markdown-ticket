@@ -1,0 +1,404 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-167"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN the user opens Settings from the hamburger menu, the system shall display a dedicated Settings modal.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN the Settings modal opens, the system shall display Appearance, Board, and Advanced tabs.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN the user changes a setting, the system shall apply the change immediately without a Save button.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.1",
+      "kind": "behavior",
+      "text": "WHEN the user changes Theme in Settings, the system shall persist the selected mode to the existing theme cookie and apply it immediately.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-2.2",
+      "kind": "behavior",
+      "text": "WHEN the user changes Default View in Settings, the system shall persist the preference to browser localStorage.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.1",
+      "kind": "behavior",
+      "text": "WHEN the user changes Card Density in Settings, the system shall persist the preference to browser localStorage.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.2",
+      "kind": "behavior",
+      "text": "WHEN the user changes Smart Links in Settings, the system shall read and write the existing auto-linking localStorage preference.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.3",
+      "kind": "behavior",
+      "text": "WHEN the user configures visible ticket card badges in Settings, the system shall persist the selected badge list to browser localStorage.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-3.4",
+      "kind": "behavior",
+      "text": "WHEN the board renders ticket cards, the system shall show only the configured visible ticket card badges while preserving the standard badge order.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.1",
+      "kind": "behavior",
+      "text": "WHEN the user changes Event History in Settings, the system shall show or hide the SSE event history panel using the existing localStorage preference.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-4.2",
+      "kind": "behavior",
+      "text": "WHEN the user clicks Clear Cache in Settings, the system shall run the existing cache clear action.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "Settings remain client-side only; no backend API, shared config, CLI, or MCP behavior is introduced.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Browser-only settings use the preference tier defined in docs/architecture/preference-storage-architecture.md.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "New localStorage keys follow markdown-ticket:<scope>:<feature>[:<projectId>].",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The visible ticket card badges setting controls board ticket cards only and does not change ticket viewer badges.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "Invalid, missing, or unavailable localStorage values fall back to defaults.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "WHEN the stored badge list is empty, malformed, or contains unsupported badge IDs, the system shall fall back to the default badge list.",
+      "sourceRef": "CR:MDT-167",
+      "routePolicy": "tests"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "settings_modal_opens",
+      "title": "Settings modal opens",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2"
+      ],
+      "given": "Given the user is on the app board",
+      "when": "When the user opens Settings from the hamburger menu",
+      "then": "Then the Settings modal appears with Appearance, Board, and Advanced tabs",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "settings_apply_immediately",
+      "title": "Settings apply immediately",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "Given the Settings modal is open",
+      "when": "When the user changes a setting",
+      "then": "Then the setting is applied immediately without requiring a Save action",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "appearance_preferences_persist",
+      "title": "Appearance preferences persist",
+      "covers": [
+        "BR-2.1",
+        "BR-2.2"
+      ],
+      "given": "Given the Appearance tab is open",
+      "when": "When the user changes Theme or Default View",
+      "then": "Then the selected preference is persisted in the existing client-side storage",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "board_preferences_persist",
+      "title": "Board preferences persist",
+      "covers": [
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "given": "Given the Board tab is open",
+      "when": "When the user changes Card Density or Smart Links",
+      "then": "Then the selected preference is persisted in browser localStorage",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "visible_card_badges_configured",
+      "title": "Visible card badges configured",
+      "covers": [
+        "BR-3.3",
+        "BR-3.4"
+      ],
+      "given": "Given the Board tab is open",
+      "when": "When the user selects the ticket card badges that should be visible",
+      "then": "Then the board persists the selected list and ticket cards render only those badges in the standard order",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "advanced_preferences_work",
+      "title": "Advanced preferences work",
+      "covers": [
+        "BR-4.1",
+        "BR-4.2"
+      ],
+      "given": "Given the Advanced tab is open",
+      "when": "When the user toggles Event History or clears cache",
+      "then": "Then the existing event history preference or cache clear action is used",
+      "sourceRef": "CR:MDT-167"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-board-preferences",
+      "title": "Board preference controls",
+      "derivedFrom": [
+        "BR-3.1",
+        "BR-3.2"
+      ],
+      "artifactIds": [
+        "ART-settings-modal",
+        "ART-ticket-card"
+      ],
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "OBL-visible-ticket-card-badges",
+      "title": "Visible ticket card badges preference",
+      "derivedFrom": [
+        "BR-3.3",
+        "BR-3.4",
+        "C3",
+        "C4",
+        "C5",
+        "Edge-1"
+      ],
+      "artifactIds": [
+        "ART-settings-modal",
+        "ART-ticket-card-badge-config",
+        "ART-ticket-attribute-tags",
+        "ART-ticket-card-badge-tests"
+      ],
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "OBL-client-side-settings",
+      "title": "Client-side Settings modal preferences",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "C1",
+        "C2"
+      ],
+      "artifactIds": [
+        "ART-settings-modal",
+        "ART-settings-css",
+        "ART-local-storage-preferences",
+        "ART-settings-tests"
+      ],
+      "sourceRef": "CR:MDT-167"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-settings-modal",
+      "path": "src/components/SettingsModal.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "ART-settings-css",
+      "path": "src/components/SettingsModal/settings.css",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "ART-local-storage-preferences",
+      "path": "src/config/localStoragePreferences.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "ART-ticket-card-badge-config",
+      "path": "src/config/ticketCardBadges.ts",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "ART-ticket-attribute-tags",
+      "path": "src/components/TicketAttributeTags.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "ART-ticket-card",
+      "path": "src/components/TicketCard.tsx",
+      "kind": "runtime",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "ART-settings-tests",
+      "path": "src/components/SettingsModal.test.tsx",
+      "kind": "test",
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "ART-ticket-card-badge-tests",
+      "path": "src/config/ticketCardBadges.test.ts",
+      "kind": "test",
+      "sourceRef": "CR:MDT-167"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-visible-ticket-card-badges-config",
+      "kind": "unit",
+      "title": "Visible ticket card badges preference config",
+      "covers": [
+        "BR-3.3",
+        "C3",
+        "C5",
+        "Edge-1"
+      ],
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "TEST-settings-modal-controls",
+      "kind": "integration",
+      "title": "Settings modal controls",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-2.1",
+        "BR-2.2",
+        "BR-3.1",
+        "BR-3.2",
+        "BR-4.1",
+        "BR-4.2",
+        "C1",
+        "C2"
+      ],
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "TEST-ticket-card-badge-rendering",
+      "kind": "integration",
+      "title": "Ticket card badge rendering follows visible preference",
+      "covers": [
+        "BR-3.4",
+        "C4"
+      ],
+      "sourceRef": "CR:MDT-167"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-3",
+      "title": "Wire board preference consumers",
+      "ownsArtifactIds": [
+        "ART-ticket-card",
+        "ART-ticket-attribute-tags"
+      ],
+      "makesGreenIds": [
+        "board_preferences_persist",
+        "visible_card_badges_configured",
+        "TEST-ticket-card-badge-rendering"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Finalize Settings modal preference plumbing",
+      "ownsArtifactIds": [
+        "ART-settings-modal",
+        "ART-settings-css",
+        "ART-local-storage-preferences",
+        "ART-settings-tests"
+      ],
+      "makesGreenIds": [
+        "settings_modal_opens",
+        "settings_apply_immediately",
+        "appearance_preferences_persist",
+        "advanced_preferences_work",
+        "TEST-settings-modal-controls"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-167"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Add visible ticket card badges preference",
+      "ownsArtifactIds": [
+        "ART-ticket-card-badge-config",
+        "ART-ticket-card-badge-tests",
+        "ART-settings-modal",
+        "ART-ticket-attribute-tags"
+      ],
+      "makesGreenIds": [
+        "visible_card_badges_configured",
+        "TEST-visible-ticket-card-badges-config",
+        "TEST-ticket-card-badge-rendering"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "CR:MDT-167"
+    }
+  ]
+}
