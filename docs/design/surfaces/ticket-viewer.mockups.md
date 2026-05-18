@@ -36,9 +36,9 @@ window "Ticket Viewer — With Sub-Docs":
         row:
           spacer
           text "Updated 2h ago" muted size=small id="tv-timestamp"
-        text "## Overview" bold id="tv-h2"
+        text "### Overview" bold id="tv-h2"
         text "This ticket covers..." muted
-        text "## Acceptance Criteria" bold
+        text "### Acceptance Criteria" bold
         text "- [ ] Users can log in" muted
         text "- [ ] Sessions persist" muted
 
@@ -47,6 +47,7 @@ annotation "Badge bar wraps if needed" target="tv-status" position=right
 annotation "Document tabs hidden if no subdocs" target="tv-doc-tabs" position=right
 annotation "RelativeTimestamp, absolute right-4 top-4" target="tv-timestamp" position=right
 annotation "ToC: collapsible sidebar" target="tv-toc-1" position=left
+annotation "Markdown body uses markdown-content.spec.md ticket variant" target="tv-h2" position=right
 ```
 
 ## No Sub-Documents (Main Content Only)
