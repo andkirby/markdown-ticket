@@ -8,10 +8,13 @@ describe('RecentDocuments', () => {
   })
 
   it('collapses and expands recent document shortcuts', () => {
-    render(
+    const onExpandedChange = mock()
+    const { rerender } = render(
       <RecentDocuments
         documents={[{ path: 'docs/design/navigation.md', name: 'navigation.md', title: 'Navigation Spec' }]}
+        isExpanded={true}
         onSelectDocument={mock()}
+        onExpandedChange={onExpandedChange}
       />,
     )
 
@@ -24,10 +27,36 @@ describe('RecentDocuments', () => {
 
     fireEvent.click(toggle)
 
+    expect(onExpandedChange).toHaveBeenCalledWith(false)
+
+    rerender(
+      <RecentDocuments
+        documents={[{ path: 'docs/design/navigation.md', name: 'navigation.md', title: 'Navigation Spec' }]}
+        isExpanded={false}
+        onSelectDocument={mock()}
+        onExpandedChange={onExpandedChange}
+      />,
+    )
+
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('document-recent-item')).not.toBeInTheDocument()
 
     fireEvent.click(toggle)
+
+    expect(onExpandedChange).toHaveBeenLastCalledWith(true)
+  })
+
+  it('renders expanded again when controlled state is restored', () => {
+    render(
+      <RecentDocuments
+        documents={[{ path: 'docs/design/navigation.md', name: 'navigation.md', title: 'Navigation Spec' }]}
+        isExpanded={true}
+        onSelectDocument={mock()}
+        onExpandedChange={mock()}
+      />,
+    )
+
+    const toggle = screen.getByTestId('document-recent-toggle')
 
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByTestId('document-recent-item')).toBeInTheDocument()

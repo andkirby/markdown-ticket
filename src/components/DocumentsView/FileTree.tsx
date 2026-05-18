@@ -1,13 +1,19 @@
 import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+// eslint-disable-next-line no-restricted-imports
+import { Icon } from '../shared/Icon'
 
-interface DocumentFile {
+export interface DocumentFile {
   name: string
   path: string
   type: 'file' | 'folder'
   title?: string
   children?: DocumentFile[]
+  dateCreated?: Date | string
+  lastModified?: Date | string
+  favorite?: boolean
+  favoritedAt?: string
 }
 
 interface FileTreeProps {
@@ -15,10 +21,12 @@ interface FileTreeProps {
   onFileSelect: (path: string) => void
   selectedFile: string | null
   expandAllFolders?: boolean
+  onToggleFavorite?: (file: DocumentFile) => void
 }
 
 export interface FileTreeHandle {
   scrollToSelectedFile: () => void
+  locatePath: (path: string) => void
   collapseAll: () => void
 }
 
@@ -54,13 +62,34 @@ function getAncestorFolderPaths(fileList: DocumentFile[], targetPath: string): s
   return findPath(fileList, []) ?? []
 }
 
+function getLocateExpansionPaths(fileList: DocumentFile[], targetPath: string): string[] {
+  const findPath = (files: DocumentFile[], ancestors: string[]): string[] | null => {
+    for (const file of files) {
+      if (file.path === targetPath) {
+        return file.type === 'folder' ? [...ancestors, file.path] : ancestors
+      }
+      if (file.type === 'folder' && file.children) {
+        const found = findPath(file.children, [...ancestors, file.path])
+        if (found) {
+          return found
+        }
+      }
+    }
+    return null
+  }
+
+  return findPath(fileList, []) ?? []
+}
+
 const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
   files,
   onFileSelect,
   selectedFile,
   expandAllFolders = false,
+  onToggleFavorite,
 }, ref) => {
   const itemMapRef = useRef<Map<string, HTMLDivElement>>(new Map())
+  const [locatedPath, setLocatedPath] = useState<string | null>(null)
 
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() =>
     new Set(selectedFile ? getAncestorFolderPaths(files, selectedFile) : []))
@@ -99,6 +128,19 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
     })
   }, [files, selectedFile])
 
+  const locatePath = useCallback((targetPath: string) => {
+    const expansionPaths = getLocateExpansionPaths(files, targetPath)
+    setExpandedFolders(prev => new Set([...prev, ...expansionPaths]))
+    setLocatedPath(targetPath)
+
+    window.requestAnimationFrame(() => {
+      itemMapRef.current.get(targetPath)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    })
+  }, [files])
+
   const collapseAll = useCallback(() => {
     if (!selectedFile) {
       setExpandedFolders(new Set())
@@ -110,8 +152,9 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
 
   useImperativeHandle(ref, () => ({
     collapseAll,
+    locatePath,
     scrollToSelectedFile,
-  }), [collapseAll, scrollToSelectedFile])
+  }), [collapseAll, locatePath, scrollToSelectedFile])
 
   const setItemRef = (path: string, element: HTMLDivElement | null) => {
     if (element) {
@@ -123,6 +166,7 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
   }
 
   const handleFileClick = (file: DocumentFile) => {
+    setLocatedPath(null)
     if (file.type === 'file') {
       onFileSelect(file.path)
     }
@@ -140,6 +184,11 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
     }
   }
 
+  const handleFavoriteClick = (event: React.MouseEvent, file: DocumentFile) => {
+    event.stopPropagation()
+    onToggleFavorite?.(file)
+  }
+
   const renderFiles = (fileList: DocumentFile[], level = 0): React.ReactNode => {
     return fileList.map(file => (
       <div key={file.path}>
@@ -147,11 +196,12 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
           ref={element => setItemRef(file.path, element)}
           className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-muted transition-colors ${
             selectedFile === file.path ? 'bg-primary/10 text-primary' : 'text-foreground'
-          }`}
+          } ${locatedPath === file.path ? 'ring-1 ring-primary/40' : ''}`}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
           onClick={() => handleFileClick(file)}
           data-testid={file.type === 'folder' ? 'folder-item' : 'document-item'}
           data-document-path={file.path}
+          data-located={locatedPath === file.path ? 'true' : undefined}
         >
           {file.type === 'folder'
             ? (
@@ -179,6 +229,22 @@ const FileTree = React.forwardRef<FileTreeHandle, FileTreeProps>(({
               </div>
             )}
           </div>
+          {onToggleFavorite && file.path !== './' && (
+            <button
+              type="button"
+              className="document-fav-star-button opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              onClick={event => handleFavoriteClick(event, file)}
+              title={file.favorite ? 'Click to unfavorite' : 'Click to favorite'}
+              aria-label="Toggle favorite"
+              data-testid="document-tree-fav-star"
+              data-document-path={file.path}
+            >
+              <Icon
+                name="fav-star"
+                className={`fav-star fav-star--document ${file.favorite ? 'active' : ''}`}
+              />
+            </button>
+          )}
         </div>
         {file.children && file.children.length > 0 && expandedFolders.has(file.path) && (
           renderFiles(file.children, level + 1)

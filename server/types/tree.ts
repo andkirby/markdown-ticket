@@ -5,4 +5,6 @@ export interface TreeNode {
   path: string
   type: TreeNodeType
   children?: TreeNode[]
+  favorite?: boolean
+  favoritedAt?: string
 }

@@ -1,4 +1,7 @@
 import {
+  DOCUMENT_FAV_STATE_DEFAULTS,
+  DocumentFavItemSchema,
+  DocumentFavStateSchema,
   GlobalConfigSchema,
   SelectorPreferencesSchema,
   SelectorStateEntrySchema,
@@ -44,4 +47,30 @@ export function validateSelectorState(data: unknown) {
 
 export function safeValidateSelectorState(data: unknown) {
   return SelectorStateSchema.safeParse(data)
+}
+
+export function validateDocumentFavItem(data: unknown) {
+  return DocumentFavItemSchema.parse(data)
+}
+
+export function safeValidateDocumentFavItem(data: unknown) {
+  return DocumentFavItemSchema.safeParse(data)
+}
+
+export function validateDocumentFavState(data: unknown) {
+  return DocumentFavStateSchema.parse(data)
+}
+
+export function safeValidateDocumentFavState(data: unknown) {
+  return DocumentFavStateSchema.safeParse(data)
+}
+
+export function parseDocumentFavStateOrDefault(data: unknown) {
+  const result = safeValidateDocumentFavState(data)
+
+  if (!result.success) {
+    return { favItems: [...DOCUMENT_FAV_STATE_DEFAULTS.favItems] }
+  }
+
+  return result.data
 }

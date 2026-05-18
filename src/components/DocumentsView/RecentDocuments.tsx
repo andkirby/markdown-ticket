@@ -1,5 +1,4 @@
 import { ChevronDown, ChevronRight, File } from 'lucide-react'
-import { useState } from 'react'
 
 interface RecentDocument {
   path: string
@@ -9,16 +8,21 @@ interface RecentDocument {
 
 interface RecentDocumentsProps {
   documents: RecentDocument[]
+  isExpanded: boolean
   onSelectDocument: (path: string) => void
+  onExpandedChange: (expanded: boolean) => void
 }
 
 function getLabel(path: string): string {
   return path.split('/').pop() ?? path
 }
 
-export default function RecentDocuments({ documents, onSelectDocument }: RecentDocumentsProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
-
+export default function RecentDocuments({
+  documents,
+  isExpanded,
+  onSelectDocument,
+  onExpandedChange,
+}: RecentDocumentsProps) {
   if (documents.length === 0)
     return null
 
@@ -26,7 +30,7 @@ export default function RecentDocuments({ documents, onSelectDocument }: RecentD
     <section className="space-y-1 border-b border-border pb-2" aria-label="Recent documents">
       <button
         type="button"
-        onClick={() => setIsExpanded(expanded => !expanded)}
+        onClick={() => onExpandedChange(!isExpanded)}
         className="flex w-full items-center gap-1 rounded px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         aria-expanded={isExpanded}
         aria-controls="document-recent-list"

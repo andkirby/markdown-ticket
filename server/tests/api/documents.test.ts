@@ -13,6 +13,8 @@
 
 /// <reference types="jest" />
 
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import request from 'supertest'
 import { createTestDocument, createTestDocumentSet, documentFixtures, documentPaths } from './fixtures/documents'
 import { assertBadRequest, assertErrorMessage, assertIsArray, assertNotFound, assertSuccess } from './helpers'
@@ -353,6 +355,65 @@ describe('documents API Tests (MDT-106)', () => {
       // No CR ticket files (MDT-XXX-*.md pattern) should appear
       const crFiles = allPaths.filter(p => p && /MDT-\d{3}-.*\.md$/.test(p))
       expect(crFiles).toHaveLength(0)
+    })
+  })
+
+  describe('document fav read enrichment (MDT-171)', () => {
+    it('enriches eligible nodes and ignores deleted outside-root ticket-path and malformed favs', async () => {
+      const favProject = await projectFactory.createProject('empty', {
+        name: 'Document Fav Read Project',
+        code: 'DFRD',
+        documentPaths: ['docs'],
+      })
+
+      await createTestDocument(projectFactory, favProject.key, 'docs/guide.md', documentFixtures.withFrontmatter)
+      await createTestDocument(projectFactory, favProject.key, 'docs/notes.txt', 'Not markdown')
+      await createTestDocument(projectFactory, favProject.key, 'docs/CRs/MDT-999.md', '# Ticket Area')
+
+      const projects = await app.locals.projectService.getAllProjects()
+      const project = projects.find((candidate: { project: { code: string } }) => candidate.project.code === favProject.key)
+
+      if (!project) {
+        throw new Error('Test project not found')
+      }
+
+      const stateDir = join(process.env.CONFIG_DIR!, 'projects', project.id)
+      await mkdir(stateDir, { recursive: true })
+      await writeFile(join(stateDir, 'document-favs.json'), JSON.stringify({
+        favItems: [
+          { path: 'docs', type: 'folder', favoritedAt: '2026-05-18T10:00:00.000Z' },
+          { path: 'docs/guide.md', type: 'file', favoritedAt: '2026-05-18T10:01:00.000Z' },
+          { path: 'docs/missing.md', type: 'file', favoritedAt: '2026-05-18T10:02:00.000Z' },
+          { path: 'docs/CRs/MDT-999.md', type: 'file', favoritedAt: '2026-05-18T10:03:00.000Z' },
+        ],
+      }), 'utf8')
+
+      const response = await request(app).get(`/api/documents?projectId=${favProject.key}`)
+
+      assertSuccess(response, 200)
+
+      const walk = (nodes: Array<Record<string, unknown>>): Array<Record<string, unknown>> =>
+        nodes.flatMap(node => [node, ...(Array.isArray(node.children) ? walk(node.children as Array<Record<string, unknown>>) : [])])
+      const nodes = walk(response.body as Array<Record<string, unknown>>)
+
+      expect(nodes.find(node => node.path === 'docs')).toMatchObject({
+        favorite: true,
+        favoritedAt: '2026-05-18T10:00:00.000Z',
+      })
+      expect(nodes.find(node => node.path === 'docs/guide.md')).toMatchObject({
+        favorite: true,
+        favoritedAt: '2026-05-18T10:01:00.000Z',
+      })
+      expect(nodes.some(node => node.path === 'docs/missing.md')).toBe(false)
+      expect(nodes.some(node => String(node.path).startsWith('docs/CRs'))).toBe(false)
+
+      await writeFile(join(stateDir, 'document-favs.json'), 'invalid json {{{', 'utf8')
+
+      const malformedResponse = await request(app).get(`/api/documents?projectId=${favProject.key}`)
+      const malformedNodes = walk(malformedResponse.body as Array<Record<string, unknown>>)
+
+      assertSuccess(malformedResponse, 200)
+      expect(malformedNodes.some(node => node.favorite === true)).toBe(false)
     })
   })
 

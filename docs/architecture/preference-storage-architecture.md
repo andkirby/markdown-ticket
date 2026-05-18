@@ -12,13 +12,14 @@ Preference storage guidance exists, but it is split across several files:
 
 ## Current Architecture
 
-There are five preference storage tiers:
+There are six preference storage tiers:
 
 | Scope | Storage | Owner | Use when |
 | --- | --- | --- | --- |
 | Browser-local UI state | `localStorage` | frontend | State only matters in this browser. |
 | Per-user durable preference | `CONFIG_DIR/user.toml` | backend + domain contracts | Preference should follow the user across browser sessions/clients. |
 | Mutable per-user state | `CONFIG_DIR/<feature>.json` | backend + domain contracts | State changes often, e.g. favorites, usage, recents. |
+| Mutable per-project feature state | `CONFIG_DIR/projects/{project.id}/{feature}.json` | backend feature service + domain contracts | State changes often and belongs to one resolved project, but is user state rather than shared project behavior. |
 | Project/team behavior | `.mdt-config.toml` | shared/backend/CLI | Setting is part of project behavior and should be shared/versioned. |
 | Global system behavior | `CONFIG_DIR/config.toml` | shared/backend/CLI | Setting affects application-wide backend behavior. |
 
@@ -51,6 +52,45 @@ Current examples:
 - `src/config/documentSorting.ts` stores per-project document sort preferences.
 - `src/components/ViewModeSwitcher/useViewModePersistence.ts` stores last board/list mode.
 
+## Per-Project Feature State Architecture
+
+Use `CONFIG_DIR/projects/{project.id}/{feature}.json` when state is:
+
+- durable backend-owned user state
+- scoped to exactly one resolved project
+- mutated often enough that TOML is the wrong fit
+- not shared project behavior and therefore must not be stored in `.mdt-config.toml`
+
+The backend must resolve any request input such as project id, code, or path to the canonical `project.id` before selecting the state file. Unknown projects must fail without creating `CONFIG_DIR/projects/{unresolved}/...` paths.
+
+Each feature owns its JSON file through a small feature service. Do not add a generic per-project state endpoint until at least a second feature needs the same backend abstraction.
+
+State shape rules:
+
+1. Define the JSON shape as Zod schemas and exported types in `domain-contracts/src/app-config/schema.ts`.
+2. Put parse/default/fallback helpers in `domain-contracts/src/app-config/validation.ts`.
+3. Store an object at the top level, not a bare array, so the shape can evolve.
+4. Reject unsafe paths before persistence when the state contains project-relative paths.
+5. Treat missing, malformed, or invalid JSON as the feature's empty/default state unless the feature explicitly requires a hard failure.
+
+Example:
+
+```json
+{
+  "favItems": [
+    {
+      "path": "docs/guide.md",
+      "type": "file",
+      "favoritedAt": "2026-05-18T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+Current planned example:
+
+- document favs: `CONFIG_DIR/projects/{project.id}/document-favs.json`
+
 ## Collapsible List Recommendation
 
 For a simple collapsible list, store state in frontend `localStorage`.
@@ -62,7 +102,7 @@ If backend durability is needed:
 1. Add schema/defaults in `domain-contracts/src/app-config/schema.ts`.
 2. Add read/write endpoint in `server/routes/system.ts` or a dedicated config route.
 3. Store stable preferences in `user.toml`.
-4. Store high-churn UI state in JSON.
+4. Store high-churn UI state in JSON. Use top-level `CONFIG_DIR/<feature>.json` for user-wide state and `CONFIG_DIR/projects/{project.id}/{feature}.json` for project-scoped feature state.
 5. Keep frontend optimistic with debounced writes.
 
 ## Shared And CLI Impact
