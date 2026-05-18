@@ -24,6 +24,7 @@ Use the narrowest durable scope that satisfies the behavior:
 | Browser-only UI state | `localStorage` | State only matters in the current browser profile |
 | Stable per-user preference | `CONFIG_DIR/user.toml` | Preference should follow the user across web sessions or backend clients |
 | Mutable per-user state | `CONFIG_DIR/<feature>.json` | State changes often, such as favorites, usage, or recents |
+| Mutable per-project user state | `CONFIG_DIR/projects/{project.id}/{feature}.json` | State changes often and belongs to one resolved project, but is not shared project behavior |
 | Project/team behavior | `.mdt-config.toml` | Setting is part of project behavior and should be shared/versioned |
 | Global system behavior | `CONFIG_DIR/config.toml` | Setting affects application-wide backend behavior |
 

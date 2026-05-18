@@ -1,0 +1,39 @@
+cr_key: "MDT-171"
+total: 8
+tasks:
+  - id: 0
+    title: "Create missing document fav stubs and test shells"
+    status: completed
+  - id: 1
+    title: "Add typed document fav state contracts and client API"
+    status: completed
+    skills:
+      - frontend-react-component
+  - id: 2
+    title: "Implement backend fav state owner and write endpoint"
+    status: completed
+  - id: 3
+    title: "Enrich document reads with reconciled fav metadata"
+    status: completed
+  - id: 4
+    title: "Add tree row fav controls and folder locate behavior"
+    status: completed
+    skills:
+      - frontend-react-component
+      - playwright-skill
+  - id: 5
+    title: "Render compact Favs section above Recent"
+    status: completed
+    skills:
+      - frontend-react-component
+  - id: 6
+    title: "Wire end-to-end document fav workflows"
+    status: completed
+    skills:
+      - frontend-react-component
+      - playwright-skill
+  - id: 7
+    title: "Run full verification and guard against ownership drift"
+    status: completed
+    skills:
+      - playwright-skill

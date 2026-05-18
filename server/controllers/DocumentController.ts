@@ -5,12 +5,20 @@ import type { TreeNode } from '../types/tree.js'
 interface DocumentService {
   discoverDocuments: (projectId: string) => Promise<TreeNode[]>
   getDocumentContent: (projectId: string, filePath: string) => Promise<string>
+  updateDocumentFavs: (projectId: string, favState: unknown) => Promise<unknown>
 }
 
 interface AuthenticatedRequest extends Request {
   query: {
     projectId?: string
     filePath?: string
+  }
+}
+
+interface DocumentFavsRequest extends Request {
+  body: {
+    projectId?: unknown
+    favItems?: unknown
   }
 }
 
@@ -110,6 +118,45 @@ export class DocumentController {
         }
         default: {
           res.status(500).json({ error: 'Internal Server Error', message: 'Failed to read document' })
+        }
+      }
+    }
+  }
+
+  async putDocumentFavs(req: DocumentFavsRequest, res: Response): Promise<void> {
+    try {
+      const { projectId, favItems } = req.body
+
+      if (typeof projectId !== 'string') {
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID is required' })
+
+        return
+      }
+
+      const state = await this.documentService.updateDocumentFavs(projectId, { favItems })
+
+      res.json(state)
+    }
+    catch (error: unknown) {
+      console.error('Error writing document favs:', error)
+
+      if (!(error instanceof Error)) {
+        res.status(500).json({ error: 'Internal Server Error', message: 'Failed to write document favs' })
+
+        return
+      }
+
+      switch (error.message) {
+        case 'Project not found': {
+          res.status(404).json({ error: 'Not Found', message: error.message })
+          break
+        }
+        case 'Invalid document fav target': {
+          res.status(400).json({ error: 'Bad Request', message: error.message })
+          break
+        }
+        default: {
+          res.status(400).json({ error: 'Bad Request', message: 'Invalid document fav state' })
         }
       }
     }

@@ -1,10 +1,11 @@
-import type { FileTreeHandle } from './FileTree'
+import type { DocumentFile, FileTreeHandle } from './FileTree'
 import { ChevronDown, ChevronUp, Crosshair, ListCollapse, Pencil, Search } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { Modal } from '@/components/ui/Modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { saveDocumentFavs } from '../../config/documentFavs'
 import {
   addRecentDocument,
   getDocumentNavigationPreferences,
@@ -18,20 +19,11 @@ import {
   resolveFilenameTabFallback,
 } from './documentFilenameTabModel'
 import DocumentFilenameTabs from './DocumentFilenameTabs'
+import FavDocuments from './FavDocuments'
 import FileTree from './FileTree'
 import MarkdownViewer from './MarkdownViewer'
 import PathSelector from './PathSelector'
 import RecentDocuments from './RecentDocuments'
-
-interface DocumentFile {
-  name: string
-  path: string
-  type: 'file' | 'folder'
-  title?: string
-  children?: DocumentFile[]
-  dateCreated?: Date | string
-  lastModified?: Date | string
-}
 
 interface DocumentsLayoutProps {
   projectId: string
@@ -51,7 +43,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const [selectedFileDeleted, setSelectedFileDeleted] = useState(false)
   const [viewerUpdateState, setViewerUpdateState] = useState<'idle' | 'updated' | 'syncing'>('idle')
   const [navigationPreferences, setNavigationPreferencesState] = useState(() =>
-    getDocumentNavigationPreferences())
+    getDocumentNavigationPreferences(projectId))
 
   // Load sort preferences from localStorage on mount
   const savedPreferences = getDocumentSortPreferences(projectId)
@@ -85,13 +77,13 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   }, [selectedFile])
 
   useEffect(() => {
-    setNavigationPreferencesState(getDocumentNavigationPreferences())
-  }, [])
+    setNavigationPreferencesState(getDocumentNavigationPreferences(projectId))
+  }, [projectId])
 
   const setNavigationPreferences = useCallback((preferences: typeof navigationPreferences) => {
-    setDocumentNavigationPreferences(preferences)
+    setDocumentNavigationPreferences(projectId, preferences)
     setNavigationPreferencesState(preferences)
-  }, [])
+  }, [projectId])
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
@@ -213,8 +205,8 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
 
   const selectFile = useCallback((filePath: string) => {
     setSelectedFile(filePath)
-    addRecentDocument(filePath)
-    setNavigationPreferencesState(getDocumentNavigationPreferences())
+    addRecentDocument(projectId, filePath)
+    setNavigationPreferencesState(getDocumentNavigationPreferences(projectId))
 
     const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
     const basePath = window.location.pathname.split('/documents')[0]
@@ -275,6 +267,13 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     return fileList.flatMap(file => [
       file.path,
       ...(file.children ? collectPaths(file.children) : []),
+    ])
+  }, [])
+
+  const collectFiles = useCallback((fileList: DocumentFile[]): DocumentFile[] => {
+    return fileList.flatMap(file => [
+      file,
+      ...(file.children ? collectFiles(file.children) : []),
     ])
   }, [])
 
@@ -391,6 +390,76 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     return null
   }
 
+  const applyFavItemsToFiles = useCallback((fileList: DocumentFile[], favItems: Array<Pick<DocumentFile, 'path' | 'type' | 'favoritedAt'>>): DocumentFile[] => {
+    const favs = new Map(favItems.map(item => [item.path, item]))
+
+    return fileList.map((file) => {
+      const fav = favs.get(file.path)
+      return {
+        ...file,
+        favorite: Boolean(fav),
+        favoritedAt: fav?.favoritedAt,
+        ...(file.children ? { children: applyFavItemsToFiles(file.children, favItems) } : {}),
+      }
+    })
+  }, [])
+
+  const favoriteDocuments = useMemo(() => {
+    return collectFiles(files)
+      .filter(file => file.favorite && file.favoritedAt)
+      .sort((a, b) => new Date(b.favoritedAt!).getTime() - new Date(a.favoritedAt!).getTime())
+  }, [collectFiles, files])
+
+  const handleToggleFavorite = useCallback(async (file: DocumentFile) => {
+    const nextFavItems = file.favorite
+      ? favoriteDocuments
+          .filter(document => document.path !== file.path)
+          .map(document => ({
+            path: document.path,
+            type: document.type,
+            favoritedAt: document.favoritedAt!,
+          }))
+      : [
+          {
+            path: file.path,
+            type: file.type,
+            favoritedAt: new Date().toISOString(),
+          },
+          ...favoriteDocuments.map(document => ({
+            path: document.path,
+            type: document.type,
+            favoritedAt: document.favoritedAt!,
+          })),
+        ]
+
+    const previousFiles = files
+    setFiles(applyFavItemsToFiles(files, nextFavItems))
+
+    try {
+      const savedState = await saveDocumentFavs({ projectId, favItems: nextFavItems })
+      setFiles(currentFiles => applyFavItemsToFiles(currentFiles, savedState.favItems))
+    }
+    catch (error) {
+      setFiles(previousFiles)
+      setError(error instanceof Error ? error.message : 'Failed to save document favs')
+    }
+  }, [applyFavItemsToFiles, favoriteDocuments, files, projectId])
+
+  const handleSelectFavorite = useCallback((file: DocumentFile) => {
+    if (file.type === 'file') {
+      selectFile(file.path)
+      return
+    }
+
+    if (searchQuery) {
+      setSearchQuery('')
+      window.setTimeout(() => fileTreeRef.current?.locatePath(file.path), 0)
+      return
+    }
+
+    fileTreeRef.current?.locatePath(file.path)
+  }, [searchQuery, selectFile])
+
   const recentDocuments = useMemo(() => {
     return navigationPreferences.recentDocuments.map((path) => {
       const file = findFileByPath(files, path)
@@ -401,6 +470,27 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
       }
     })
   }, [files, navigationPreferences.recentDocuments])
+
+  const handleFavsExpandedChange = useCallback((favsExpanded: boolean) => {
+    setNavigationPreferences({
+      ...navigationPreferences,
+      favsExpanded,
+    })
+  }, [navigationPreferences, setNavigationPreferences])
+
+  const handleFavsShowAllChange = useCallback((favsShowAll: boolean) => {
+    setNavigationPreferences({
+      ...navigationPreferences,
+      favsShowAll,
+    })
+  }, [navigationPreferences, setNavigationPreferences])
+
+  const handleRecentExpandedChange = useCallback((recentExpanded: boolean) => {
+    setNavigationPreferences({
+      ...navigationPreferences,
+      recentExpanded,
+    })
+  }, [navigationPreferences, setNavigationPreferences])
 
   const filenameTabs = useMemo(() => {
     return resolveDocumentFilenameTabs(files, selectedFile)
@@ -581,9 +671,20 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
           </div>
         </div>
         <div className="flex-shrink-0 p-2 pb-0">
+          <FavDocuments
+            documents={favoriteDocuments}
+            isExpanded={navigationPreferences.favsExpanded}
+            showAll={navigationPreferences.favsShowAll}
+            onSelectDocument={handleSelectFavorite}
+            onToggleFavorite={handleToggleFavorite}
+            onExpandedChange={handleFavsExpandedChange}
+            onShowAllChange={handleFavsShowAllChange}
+          />
           <RecentDocuments
             documents={recentDocuments}
+            isExpanded={navigationPreferences.recentExpanded}
             onSelectDocument={selectFile}
+            onExpandedChange={handleRecentExpandedChange}
           />
         </div>
         <ScrollArea className="min-h-0 flex-1" data-testid="document-tree-scroll-area">
@@ -594,6 +695,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
               onFileSelect={selectFile}
               selectedFile={selectedFile}
               expandAllFolders={Boolean(searchQuery.trim())}
+              onToggleFavorite={handleToggleFavorite}
             />
           </div>
         </ScrollArea>
