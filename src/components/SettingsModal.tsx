@@ -1,4 +1,4 @@
-import type { CardDensity, DefaultView } from '../config/settingsPreferences'
+import type { CardDensity, DefaultView, MarkdownDensity } from '../config/settingsPreferences'
 import type { TicketCardBadgeId } from '../config/ticketCardBadges'
 import * as Tabs from '@radix-ui/react-tabs'
 import { Monitor, Moon, Sun, Trash2 } from 'lucide-react'
@@ -6,8 +6,10 @@ import { useCallback, useState } from 'react'
 import {
   getCardDensity,
   getDefaultView,
+  getMarkdownDensity,
   setCardDensityPreference,
   setDefaultViewPreference,
+  setMarkdownDensityPreference,
 } from '../config/settingsPreferences'
 import {
   getVisibleTicketCardBadges,
@@ -58,6 +60,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [defaultView, setDefaultView] = useState<DefaultView>(
     getDefaultView,
   )
+  const [markdownDensity, setMarkdownDensity] = useState<MarkdownDensity>(
+    getMarkdownDensity,
+  )
 
   // Board
   const [cardDensity, setCardDensity] = useState<CardDensity>(
@@ -77,6 +82,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const handleDefaultViewChange = useCallback((view: DefaultView) => {
     setDefaultView(view)
     setDefaultViewPreference(view)
+  }, [])
+
+  const handleMarkdownDensityChange = useCallback((density: MarkdownDensity) => {
+    setMarkdownDensity(density)
+    setMarkdownDensityPreference(density)
   }, [])
 
   // Board handlers
@@ -201,6 +211,21 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               >
                 <option value="board">Board</option>
                 <option value="list">List</option>
+              </select>
+            </div>
+
+            <div className="settings-group">
+              <label className="settings-label">Markdown Density</label>
+              <p className="settings-desc">Adjust rendered ticket and document text size</p>
+              <select
+                data-testid="settings-markdown-density"
+                value={markdownDensity}
+                onChange={e => handleMarkdownDensityChange(e.target.value as MarkdownDensity)}
+                className="settings-select mt-2"
+              >
+                <option value="compact">Compact</option>
+                <option value="default">Default</option>
+                <option value="comfortable">Comfortable</option>
               </select>
             </div>
           </Tabs.Content>

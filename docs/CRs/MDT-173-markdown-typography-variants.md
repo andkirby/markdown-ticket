@@ -1,6 +1,6 @@
 ---
 code: MDT-173
-status: In Progress
+status: Implemented
 dateCreated: 2026-05-18T14:33:40.639Z
 type: Feature Enhancement
 priority: High
@@ -22,6 +22,8 @@ priority: High
 ### Affected Artifacts
 - `src/components/MarkdownContent/index.tsx` - prose variant class contract and default behavior.
 - `src/styles/prose.css` - markdown typography, rich content styling, and prose variants.
+- `src/config/settingsPreferences.ts` - browser-local Markdown Density preference with Compact default.
+- `src/components/SettingsModal.tsx` - Settings control for Markdown Density.
 - `src/components/DocumentsView/MarkdownViewer.tsx` - document prose variant usage and viewer content measure.
 - `src/components/DocumentsView/documents-view.css` - document viewer layout and responsive reading behavior.
 - `src/components/TicketViewer/index.tsx` - ticket prose variant usage and timestamp/content spacing.
@@ -33,6 +35,7 @@ priority: High
 
 ### Scope
 - Changes: implement the markdown typography variants defined by `docs/design/surfaces/markdown-content.spec.md`.
+- Changes: add Markdown Density as a browser-local visual preference with `Compact` as the default.
 - Changes: apply the document variant in Documents View and the ticket variant in Ticket Viewer.
 - Changes: improve markdown styling for headings, paragraphs, lists, task lists, links, inline code, code blocks, tables, blockquotes, rules, images, Mermaid fallback, and Wireloom fallback.
 - Changes: make Documents View mobile reading single-pane or otherwise prevent the persistent tree from squeezing the markdown preview.
@@ -41,12 +44,14 @@ priority: High
 ## 2. Decision
 
 ### Chosen Approach
-Add scoped `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers in `src/styles/prose.css` and apply them from existing viewer components.
+Add scoped prose surface modifiers and a browser-local Markdown Density preference that defaults to Compact.
 
 ### Rationale
 - `src/STYLING.md` already assigns prose and markdown rendering to `src/styles/prose.css`, so variant classes fit the existing CSS architecture.
 - `MarkdownContent` remains the shared rendering component while viewers choose density through `className` composition.
 - `DocumentsView` and `TicketViewer` need different reading density, so a single global `.prose` rhythm would regress one surface.
+- User preference belongs in browser-local settings because markdown density changes only visual presentation in the current browser.
+- Compact default keeps MDT as a work tool; larger reading modes remain opt-in.
 - Tokenized CSS keeps dark mode and code-theme behavior aligned with `src/styles/design-tokens.css`.
 - Viewer-owned layout remains separate from prose internals, matching the `STYLING.md` component boundary.
 
@@ -56,6 +61,8 @@ Add scoped `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers
 |----------|----------------|--------------|
 | **Chosen Approach** | Add scoped prose modifier classes and apply them from viewers | **ACCEPTED** - Reuses `prose.css` and keeps viewer layout separate |
 | Global `.prose` rewrite only | One rhythm for every markdown consumer | Rejected because documents and ticket modals need different density |
+| Hard-code larger markdown fonts | No user setting; fixed larger type | Rejected because dense ticket work should stay compact by default |
+| Backend-persist Markdown Density | Store preference in `CONFIG_DIR/user.toml` | Rejected because density is browser-local presentation only today |
 | Inline Tailwind overrides in each viewer | Viewer components own markdown descendant styling | Rejected because markdown internals become duplicated and hard to keep tokenized |
 | Add a new markdown renderer component per surface | Split renderer by consumer | Rejected because parsing, SmartLink, Mermaid, and Wireloom behavior should stay shared |
 | Defer mobile layout | Only improve desktop typography | Rejected because live review showed Documents View mobile reading is currently squeezed and overlapping |
@@ -66,20 +73,23 @@ Add scoped `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers
 
 | Artifact | Type | Purpose |
 |----------|------|---------|
-| None | n/a | Reuse existing renderer, CSS, viewer, and test files |
+| None | n/a | Reuse existing settings, renderer, CSS, viewer, and test files |
 
 ### Modified Artifacts
 
 | Artifact | Change Type | Modification |
 |----------|-------------|--------------|
 | `src/styles/prose.css` | CSS expanded | Add `.prose--document`, `.prose--ticket`, `.prose--compact`, and tokenized descendant styles |
+| `src/config/settingsPreferences.ts` | Preference added | Add `MarkdownDensity` type, `getMarkdownDensity()`, `setMarkdownDensityPreference()`, and storage key `markdown-ticket:settings:markdown-density` |
+| `src/components/SettingsModal.tsx` | Control added | Add Markdown Density select with Compact, Default, Comfortable options |
 | `src/components/MarkdownContent/index.tsx` | Class contract updated | Preserve default rendering while allowing stable variant classes from consumers |
-| `src/components/DocumentsView/MarkdownViewer.tsx` | Variant applied | Render document markdown with `.prose--document` |
+| `src/components/DocumentsView/MarkdownViewer.tsx` | Variant applied | Render document markdown with `.prose--document` and active markdown density class |
 | `src/components/DocumentsView/documents-view.css` | Layout updated | Add readable measure and responsive single-pane preview behavior |
-| `src/components/TicketViewer/index.tsx` | Variant applied | Render ticket markdown with `.prose--ticket` and avoid timestamp overlap |
+| `src/components/TicketViewer/index.tsx` | Variant applied | Render ticket markdown with `.prose--ticket` and active markdown density class; avoid timestamp overlap |
 | `src/components/MarkdownContent/useHtmlParser.ts` | Link focus compatibility checked | Preserve SmartLink replacement and heading-anchor behavior |
 | `src/components/MarkdownContent/useMarkdownProcessor.ts` | Pipeline compatibility checked | Preserve markdown-it plugin behavior |
 | `src/components/MarkdownContent/useMarkdownProcessor.test.ts` | Tests updated | Verify markdown output remains compatible with new prose classes |
+| `src/config/settingsPreferences` tests | Tests updated | Verify Markdown Density defaults to Compact and rejects invalid stored values |
 | `src/components/DocumentsView/MarkdownViewer.test.tsx` | Tests updated | Verify document prose variant is applied |
 | `src/components/TicketViewer` tests | Tests updated | Verify ticket prose variant is applied |
 | `tests/e2e` relevant document/ticket specs | E2E updated | Cover desktop and mobile markdown reading surfaces if existing tests fit |
@@ -90,6 +100,8 @@ Add scoped `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers
 |------|----|-----------|
 | `MarkdownViewer` | `MarkdownContent` | `className` includes `.prose--document` |
 | `TicketViewer` | `MarkdownContent` | `className` includes `.prose--ticket` |
+| `SettingsModal` | `settingsPreferences` | Markdown Density reads/writes browser-local preference |
+| `settingsPreferences` | `localStorage` | `markdown-ticket:settings:markdown-density` with Compact default |
 | `MarkdownContent` | `useMarkdownProcessor` | Existing markdown string to sanitized/rendered HTML pipeline |
 | `MarkdownContent` | `SmartLink` | Existing anchor replacement through `getHtmlParserOptions()` |
 | `prose.css` | `design-tokens.css` | `--foreground`, `--muted-foreground`, `--primary`, `--border`, `--code-*`, `--ring` |
@@ -101,15 +113,26 @@ Add scoped `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers
 - Viewer boundary pattern: pane padding, scrolling, and mobile layout stay in viewer CSS; markdown descendants stay in `prose.css`.
 - Shared renderer pattern: `MarkdownContent` keeps one parsing/rendering pipeline for tickets and documents.
 - Reading measure pattern: document prose targets about `72ch`; tablet two-pane layout is allowed only when the prose column remains at least `48ch`.
+- Browser-local preference pattern: Markdown Density follows `docs/architecture/preference-storage-architecture.md` and stays frontend-only.
 - Word wrapping pattern: long links, file paths, and identifiers may wrap, but normal words must not break letter-by-letter.
+- Inline code pattern: use the same mono font as syntax-highlighted code, proposed `--code-inline-fg` for text, transparent background, no visible backticks, and no border.
 
 ## 5. Acceptance Criteria
 
 ### Functional
 - [ ] `src/styles/prose.css` defines `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers.
-- [ ] Document prose body text reads at 15-16px with line-height near 1.65.
-- [ ] Ticket prose body text reads at 14-15px with line-height near 1.55-1.65.
+- [ ] `src/styles/design-tokens.css` defines `--code-inline-fg` as `217 70% 38%` in light mode and `213 94% 78%` in dark mode.
+- [ ] `src/config/settingsPreferences.ts` defines Markdown Density values: `compact`, `default`, `comfortable`.
+- [ ] Markdown Density defaults to `compact` when storage is missing, invalid, or unavailable.
+- [ ] Settings exposes Markdown Density with labels Compact, Default, Comfortable.
+- [ ] Document and ticket prose apply the active Markdown Density.
+- [ ] Compact density keeps body text at 14px target.
+- [ ] Default density keeps body text at 15px target.
+- [ ] Comfortable density keeps body text at 16px target.
 - [ ] `src/styles/prose.css` defines explicit markdown rhythm for headings, paragraphs, lists, task lists, blockquotes, horizontal rules, links, inline code, code blocks, tables, and images.
+- [ ] Inline code uses `--code-inline-fg` text and transparent background by default.
+- [ ] Inline code suppresses typography-generated backtick pseudo-content.
+- [ ] Inline code has no border, no background fill, and does not render as a pill/card.
 - [ ] Task-list checkboxes align with the first text baseline and do not add extra left jitter.
 - [ ] Long links, file paths, and identifiers wrap without forcing normal words to break letter-by-letter.
 - [ ] `src/styles/prose.css` uses theme tokens for prose text, links, borders, code, selection, fallback Wireloom states, and focus treatment.
@@ -125,12 +148,15 @@ Add scoped `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers
 ### Non-Functional
 - [ ] Styling follows `src/STYLING.md` class taxonomy and CSS location rules.
 - [ ] No markdown typography rules are added to `src/styles/base.css` except existing global heading defaults.
+- [ ] Markdown Density remains browser-local and does not add backend, domain-contracts, shared, MCP, or CLI changes.
 - [ ] No backend, ticket model, document discovery, or markdown parsing behavior changes are introduced.
 - [ ] Dark mode keeps readable contrast for prose, links, code blocks, tables, blockquotes, Mermaid fallback, and Wireloom fallback.
 - [ ] Layout changes do not create page-level horizontal scrolling on desktop or mobile.
 
 ### Testing
 - Unit: `MarkdownContent` or consumer tests verify document and ticket variant class application.
+- Unit: settings preference tests verify Markdown Density default, valid values, and invalid stored fallback.
+- Unit: SettingsModal tests verify Markdown Density can be changed.
 - Unit: markdown rendering tests verify headings, links, task lists, code blocks, tables, images, Mermaid, and Wireloom output remain present.
 - Unit: Documents View tests verify selected markdown uses document prose and frontmatter still renders above body.
 - Unit: Ticket Viewer tests verify selected ticket content uses ticket prose and loading/error states still render.
@@ -142,6 +168,7 @@ Add scoped `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers
 
 ### By CR Type
 - Feature: `src/styles/prose.css` contains the three prose variants, density targets, reading-measure rules, and tokenized markdown descendant styles.
+- Feature: Markdown Density defaults to Compact and can be changed from Settings.
 - Feature: Documents View and Ticket Viewer call `MarkdownContent` with the expected prose variant class names.
 - Feature: unit tests covering viewer class contracts pass.
 - Feature: Playwright visual checks for desktop document, mobile document, and ticket viewer pass without overlap or page-level horizontal scroll.
@@ -159,42 +186,64 @@ Add scoped `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers
 
 ## 8. Implementation Plan
 
-### Phase 1: Prose CSS Foundation
+### Phase 1: Preference Contract
+- Modify `src/config/settingsPreferences.ts`.
+- Add `MarkdownDensity = 'compact' | 'default' | 'comfortable'`.
+- Add `getMarkdownDensity()` and `setMarkdownDensityPreference()`.
+- Store under `markdown-ticket:settings:markdown-density`.
+- Default to `compact` for missing, malformed, unsupported, or unavailable storage.
+- Add focused preference tests.
+
+### Phase 2: Prose CSS Foundation
 - Modify `src/styles/prose.css`.
+- Modify `src/styles/design-tokens.css`.
+- Add `--code-inline-fg: 217 70% 38%` to light tokens.
+- Add `--code-inline-fg: 213 94% 78%` to dark tokens.
 - Add `.prose--document`, `.prose--ticket`, and `.prose--compact`.
+- Add density classes or data selectors for Compact, Default, and Comfortable.
 - Move markdown rhythm into `.prose` descendants, not `src/styles/base.css`.
 - Define paragraph, heading, list, task-list, blockquote, horizontal-rule, table, image, link, inline-code, and code-block styles.
+- Inline code uses the syntax-highlight mono font, `--code-inline-fg`, transparent background, no border, and no visible backtick pseudo-content.
 - Replace hard-coded Wireloom pending/error fallback colors with existing theme tokens.
 - Keep Mermaid and Wireloom artifact behavior scrollable inside the prose container.
 
-### Phase 2: Viewer Integration
+### Phase 3: Settings Integration
+- Modify `src/components/SettingsModal.tsx`.
+- Add Markdown Density to the Appearance tab unless implementation discovers a better existing tab fit.
+- Render a select with Compact, Default, Comfortable.
+- Persist changes immediately through `settingsPreferences`.
+- Add or update SettingsModal tests.
+
+### Phase 4: Viewer Integration
 - Modify `src/components/DocumentsView/MarkdownViewer.tsx`.
-- Pass `className="prose prose--document max-w-none dark:prose-invert"` or equivalent class composition to `MarkdownContent`.
+- Pass `className="prose prose--document prose--density-{value} max-w-none dark:prose-invert"` or equivalent class composition to `MarkdownContent`.
 - Modify `src/components/TicketViewer/index.tsx`.
-- Pass `className="prose prose--ticket max-w-none dark:prose-invert"` or equivalent class composition to `MarkdownContent`.
+- Pass `className="prose prose--ticket prose--density-{value} max-w-none dark:prose-invert"` or equivalent class composition to `MarkdownContent`.
 - Keep `headerLevelStart={3}` behavior in Ticket Viewer unchanged.
 - Preserve existing frontmatter disclosure placement above document markdown.
 
-### Phase 3: Documents View Layout
+### Phase 5: Documents View Layout
 - Modify `src/components/DocumentsView/documents-view.css`.
 - Add a readable document content measure around `72ch` without blocking wide artifacts from scrolling.
 - Ensure tablet two-pane layout is used only when the prose column remains at least `48ch`.
 - Change mobile Documents View so preview mode is not squeezed beside a persistent navigation tree.
 - Ensure timestamp, toolbar controls, and ToC do not overlap the first heading or first paragraph.
 
-### Phase 4: Ticket Viewer Layout
+### Phase 6: Ticket Viewer Layout
 - Keep Ticket Viewer content compact inside the modal.
 - Ensure the floating timestamp does not cover the first rendered heading or paragraph.
 - Preserve subdocument loading and error states.
 - Preserve document tab behavior and ToC behavior.
 
-### Phase 5: Unit Tests
+### Phase 7: Unit Tests
+- Update `src/config/settingsPreferences` tests for Markdown Density.
+- Update SettingsModal tests for the Markdown Density control.
 - Update `src/components/DocumentsView/MarkdownViewer.test.tsx` to assert document prose variant class usage.
 - Add or update Ticket Viewer tests to assert ticket prose variant class usage.
 - Update markdown rendering tests to confirm headings, task lists, links, code blocks, tables, images, Mermaid, and Wireloom output still render.
 - Keep existing SmartLink replacement tests passing.
 
-### Phase 6: Visual Verification
+### Phase 8: Visual Verification
 - Run frontend validation for changed TypeScript files.
 - Run focused unit tests for MarkdownContent, Documents View, and Ticket Viewer.
 - Run Playwright checks for:
@@ -203,8 +252,9 @@ Add scoped `.prose--document`, `.prose--ticket`, and `.prose--compact` modifiers
   - Ticket Viewer timestamp and compact prose layout.
 - Capture screenshots for the three visual checks when manually reviewing.
 
-### Phase 7: Implementation Guardrails
+### Phase 9: Implementation Guardrails
 - Do not change markdown-it plugins, preprocessing, SmartLink classification, Mermaid rendering logic, or Wireloom rendering logic.
 - Do not add markdown typography rules to `src/styles/base.css`.
 - Do not introduce backend changes.
+- Do not store Markdown Density in backend config, `.mdt-config.toml`, `shared/`, MCP, or CLI.
 - Do not solve unrelated Documents View navigation behavior beyond the mobile reading requirement in this CR.

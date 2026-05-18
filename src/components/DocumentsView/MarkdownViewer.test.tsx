@@ -4,8 +4,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import MarkdownViewer from './MarkdownViewer'
 
 mock.module('../MarkdownContent', () => ({
-  default: ({ markdown }: { markdown: string }) => (
-    <article data-testid="markdown-content">{markdown}</article>
+  default: ({ markdown, className }: { markdown: string, className?: string }) => (
+    <article data-testid="markdown-content" className={className}>{markdown}</article>
   ),
 }))
 
@@ -46,6 +46,7 @@ describe('MarkdownViewer', () => {
   const mockFetch = mock(async () => new Response('# Document', { status: 200 }))
 
   beforeEach(() => {
+    localStorage.clear()
     setSystemTime(FIXED_NOW)
     globalThis.fetch = mockFetch as unknown as typeof fetch
     mockFetch.mockClear()
@@ -53,6 +54,7 @@ describe('MarkdownViewer', () => {
 
   afterEach(() => {
     cleanup()
+    localStorage.clear()
     setSystemTime(REAL_NOW)
     mock.restore()
   })
@@ -69,6 +71,28 @@ describe('MarkdownViewer', () => {
     expect(container.querySelector('.relative-timestamp__floating')).toBeInTheDocument()
     expect(screen.getByRole('button')).toHaveClass('relative-timestamp', 'relative-timestamp--interactive')
     expect(screen.getByRole('button')).toHaveTextContent('Updated 1 hour ago')
+  })
+
+  it('renders markdown with the document prose variant', async () => {
+    renderMarkdownViewer()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('markdown-content')).toHaveTextContent('# Document')
+    })
+
+    expect(screen.getByTestId('markdown-content')).toHaveClass('prose', 'prose--document', 'prose--density-compact', 'dark:prose-invert')
+  })
+
+  it('renders markdown with the stored document density class', async () => {
+    localStorage.setItem('markdown-ticket:settings:markdown-density', 'comfortable')
+
+    renderMarkdownViewer()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('markdown-content')).toHaveTextContent('# Document')
+    })
+
+    expect(screen.getByTestId('markdown-content')).toHaveClass('prose--density-comfortable')
   })
 
   it('renders document sync state with the extracted timestamp sync class', async () => {

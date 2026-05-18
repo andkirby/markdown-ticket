@@ -25,6 +25,12 @@
 
   .document-viewer__content {
     @apply min-w-0;
+    width: min(100%, 72ch);
+    max-width: 72ch;
+  }
+
+  .document-viewer__content:has(> .relative-timestamp__floating) {
+    padding-top: 2.25rem;
   }
 
   .document-frontmatter {
@@ -75,5 +81,25 @@
 
   .document-viewer__deleted-help {
     @apply text-sm text-muted-foreground;
+  }
+
+  @media (max-width: 639px) {
+    .flex.h-full.min-h-0.overflow-hidden:has(.documents-view__viewer-panel) > div:first-child {
+      display: none;
+    }
+
+    .flex.h-full.min-h-0.overflow-hidden:has(.documents-view__viewer-panel) > div:last-child {
+      width: 100%;
+      flex: 1 1 100%;
+    }
+
+    .document-viewer__body {
+      @apply px-3 py-3;
+    }
+
+    .document-viewer__content {
+      width: 100%;
+      max-width: none;
+    }
   }
 }
