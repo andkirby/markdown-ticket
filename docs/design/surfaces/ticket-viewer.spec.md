@@ -48,7 +48,7 @@ Modal[size="xl"]
 | TableOfContents | `src/components/shared/TableOfContents.tsx` | — | always (extracts from content) |
 | CompactTicketHeader | `src/components/TicketViewer/CompactTicketHeader.tsx` | — | when ticket exists |
 | TicketDocumentTabs | `src/components/TicketViewer/TicketDocumentTabs.tsx` | — | when `subdocuments.length > 0` |
-| MarkdownContent | `src/components/MarkdownContent.tsx` | — | always (renders main or subdoc content) |
+| MarkdownContent | `src/components/MarkdownContent/index.tsx` | `markdown-content.spec.md` | always (renders main or subdoc content) |
 | RelativeTimestamp | `src/components/shared/RelativeTimestamp.tsx` | — | in content area |
 | StatusBadge | `src/components/Badge/StatusBadge.tsx` | — | always in header |
 | PriorityBadge | `src/components/Badge/PriorityBadge.tsx` | — | always in header |
@@ -106,6 +106,11 @@ Two horizontal bars, both with bottom border:
 - Padding: `px-4 py-4 sm:px-5`
 - RelativeTimestamp: `absolute right-4 top-4 z-[1] sm:right-5`
 - MarkdownContent: receives `headerLevelStart={3}` (renders H1 as H3)
+- MarkdownContent uses the `ticket` typography variant from `markdown-content.spec.md`.
+- Ticket prose keeps compact rhythm: moderate section gaps, readable paragraphs, styled task lists, and scrollable artifacts.
+- Timestamp placement must not overlap the first rendered heading or first paragraph.
+- Ticket content must reserve `--ticket-content-timestamp-offset: 2.25rem` above the first rendered markdown child when `.relative-timestamp__floating` is visible.
+- If timestamp text wraps taller than one line, the reserved top inset becomes `max(2.25rem, timestamp height + 0.75rem)`.
 - Subdoc loading overlay: `absolute inset-0 z-10`, `bg-background/50`, pulsing "Loading…" text
 - Subdoc error: inline text, `text-destructive`, `role="alert"`
 
@@ -176,6 +181,7 @@ Three SSE event types handled:
 | muted-foreground | `--muted-foreground` | close button, timestamps, loading text |
 | destructive | `--destructive` | subdoc error text |
 | badge colors | `badge.css` data attributes | all badge variants |
+| markdown prose | `--foreground`, `--muted-foreground`, `--primary`, `--border`, `--code-*` | ticket body typography, links, tables, code |
 
 ## Classes used
 
@@ -183,6 +189,8 @@ Three SSE event types handled:
 |---------|-------|--------|
 | modal | `.modal` | `MODALS.md` |
 | badge | `.badge[data-status="..."]` | `badge.css` |
+| markdown prose | `.prose.prose--ticket` proposed | `markdown-content.spec.md` |
+| timestamp offset | `--ticket-content-timestamp-offset` proposed | `2.25rem` minimum reserved top inset for floating timestamp |
 | tabs | `.ticket-document-tabs` | inline Tailwind |
 | tab trigger | Radix `data-[state=active]` | inline Tailwind |
 
