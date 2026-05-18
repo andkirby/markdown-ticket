@@ -95,6 +95,23 @@ window "Ticket Card — Minimal Badges":
       icon name="gear"
 ```
 
+## Configured Badge Visibility
+
+```wireloom
+window "Ticket Card — Configured Badges":
+  panel:
+    row:
+      text "MDT-167" bold id="configured-code"
+      text "Add Settings modal"
+    row:
+      chip "Implemented" id="configured-status"
+      chip "Feature" id="configured-type"
+      chip "🪾 Worktree" id="configured-worktree"
+
+annotation "Priority, phase, and relationship badges are hidden by board preference" target="configured-type" position=right
+annotation "Visible badges keep TicketAttributeTags order" target="configured-status" position=top
+```
+
 ## Invalid Status
 
 ```wireloom
@@ -128,3 +145,4 @@ annotation "data-invalid=true, tooltip: 'Invalid status: Foo'" target="invalid-b
 | Edit icon | `--muted-foreground` | `opacity-0 group-hover:opacity-100` | 4×4 pencil |
 | Badges | badge.css vars | `.badge[data-*]` | See BADGE_ARCHITECTURE.md |
 | Worktree icon | n/a | `🪾` emoji | Appended to ticket code in title row; also shown as a chip in badge bar |
+| Hidden badge preference | localStorage | `markdown-ticket:board:ticket-card-badges` | Filters board card badges only; no visual placeholder |

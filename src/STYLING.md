@@ -406,9 +406,28 @@ Existing global classes in `src/index.css` and shared entity CSS include:
 | `.status-dot`, `.status-dot--*` | Pulsing status dots | `styles/components/loading.css` |
 | `.avatar`, `.avatar-*` | Avatar sizes | `styles/components/layout.css` |
 | `.settings-*` | Settings modal | `components/SettingsModal/settings.css` |
-| `.tab`, `.tab__*`, `.tab--*` | Radix Tabs pattern | `components/SettingsModal/settings.css` |
+| `.tab`, `.tab__*`, `.tab--*` | Shared Radix Tabs pattern | `components/SettingsModal/settings.css` |
 
 This section is a snapshot, not the source of truth for naming rules.
+
+### Shared Tabs
+
+Use the Ticket Viewer tab rows as the canonical spacing pattern:
+
+```tsx
+<Tabs.List className="tab__list overflow-x-auto scrollbar-hide">
+  <Tabs.Trigger className="tab mr-3 last:mr-0">Main</Tabs.Trigger>
+  <Tabs.Trigger className="tab mr-3 last:mr-0">architecture.md</Tabs.Trigger>
+</Tabs.List>
+```
+
+Rules:
+
+- `.tab__list` owns row structure, bottom border, and overflow behavior.
+- `.tab` owns trigger typography, padding, and active state.
+- Horizontal spacing between tab triggers belongs on the trigger (`mr-3 last:mr-0`), not as `gap-*` on `.tab__list`.
+- Use `.tab--fill` only for equal-width modal-style tabs. It must not redefine padding or gaps.
+- Add surface-specific tab row styling with a second class, for example `settings-tab-list`.
 
 ---
 

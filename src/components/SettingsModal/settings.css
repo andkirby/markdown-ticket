@@ -15,7 +15,11 @@
   }
 
   .tab--fill {
-    @apply flex-1 px-4 py-3;
+    @apply flex-1;
+  }
+
+  .settings-tab-list {
+    @apply bg-background;
   }
 
   .tab__content {
@@ -78,4 +82,16 @@
 
 .settings-action-btn {
   @apply flex items-center gap-2 px-3 py-1.5 text-sm font-medium border border-border rounded-md bg-background text-foreground hover:bg-muted hover:text-destructive transition-colors;
+}
+
+.settings-checkbox-list {
+  @apply mt-2 grid grid-cols-2 gap-2;
+}
+
+.settings-checkbox-row {
+  @apply flex items-center gap-2 text-sm text-foreground;
+}
+
+.settings-checkbox {
+  @apply h-4 w-4 rounded border-border text-primary focus:ring-ring;
 }
