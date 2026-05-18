@@ -1,31 +1,315 @@
-/* Markdown / prose rendering — tables, code, headings, mermaid, wireloom */
+/* Markdown / prose rendering - typography, tables, code, mermaid, wireloom */
 
-/* Make wide tables horizontally scrollable on small screens */
-.prose table {
-  display: block;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+.prose {
+  max-width: none;
+  color: hsl(var(--foreground));
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
-/* Prevent inline code and long words from breaking layout */
-.prose {
+.prose--document {
+  max-width: 72ch;
+}
+
+.prose--ticket {
+  line-height: 1.6;
+}
+
+.prose--compact {
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.prose.prose--density-compact {
+  font-size: 0.875rem;
+  line-height: 1.56;
+}
+
+.prose.prose--density-default {
+  font-size: 0.9375rem;
+  line-height: 1.62;
+}
+
+.prose.prose--density-comfortable {
+  font-size: 1rem;
+  line-height: 1.68;
+}
+
+.prose > :first-child,
+.prose > .header-anchor:first-child + * {
+  margin-top: 0;
+}
+
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  margin: 1.65em 0 0.55em;
+  color: hsl(var(--foreground));
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: 0;
+  scroll-margin-top: 3rem;
+}
+
+.prose h1 {
+  font-size: 1.875em;
+}
+
+.prose h2 {
+  font-size: 1.5em;
+}
+
+.prose h3 {
+  font-size: 1.25em;
+}
+
+.prose h4 {
+  font-size: 1.125em;
+}
+
+.prose h5,
+.prose h6 {
+  font-size: 1em;
+}
+
+.prose--ticket h1,
+.prose--ticket h2,
+.prose--ticket h3,
+.prose--ticket h4,
+.prose--ticket h5,
+.prose--ticket h6,
+.prose--compact h1,
+.prose--compact h2,
+.prose--compact h3,
+.prose--compact h4,
+.prose--compact h5,
+.prose--compact h6 {
+  margin-top: 1.35em;
+  margin-bottom: 0.45em;
+}
+
+.prose--ticket > :first-child {
+  margin-right: 11rem;
+}
+
+.prose--compact h1,
+.prose--compact h2,
+.prose--compact h3 {
+  font-size: 1.125em;
+}
+
+.prose--density-compact h1,
+.prose--density-compact h2,
+.prose--density-compact h3,
+.prose--density-compact h4,
+.prose--density-compact h5,
+.prose--density-compact h6 {
+  margin-top: 1.25em;
+  margin-bottom: 0.42em;
+}
+
+.prose--density-comfortable h1,
+.prose--density-comfortable h2,
+.prose--density-comfortable h3,
+.prose--density-comfortable h4,
+.prose--density-comfortable h5,
+.prose--density-comfortable h6 {
+  margin-top: 1.8em;
+  margin-bottom: 0.6em;
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose blockquote,
+.prose pre,
+.prose table,
+.prose .mermaid-container,
+.prose .wireloom,
+.prose .wireloom-pending,
+.prose .wireloom-error {
+  margin: 0 0 1em;
+}
+
+.prose--ticket p,
+.prose--ticket ul,
+.prose--ticket ol,
+.prose--ticket blockquote,
+.prose--ticket pre,
+.prose--ticket table,
+.prose--ticket .mermaid-container,
+.prose--ticket .wireloom,
+.prose--ticket .wireloom-pending,
+.prose--ticket .wireloom-error,
+.prose--compact p,
+.prose--compact ul,
+.prose--compact ol,
+.prose--compact blockquote,
+.prose--compact pre,
+.prose--compact table,
+.prose--compact .mermaid-container,
+.prose--compact .wireloom,
+.prose--compact .wireloom-pending,
+.prose--compact .wireloom-error {
+  margin-bottom: 0.8em;
+}
+
+.prose--density-compact p,
+.prose--density-compact ul,
+.prose--density-compact ol,
+.prose--density-compact blockquote,
+.prose--density-compact pre,
+.prose--density-compact table,
+.prose--density-compact .mermaid-container,
+.prose--density-compact .wireloom,
+.prose--density-compact .wireloom-pending,
+.prose--density-compact .wireloom-error {
+  margin-bottom: 0.72em;
+}
+
+.prose--density-comfortable p,
+.prose--density-comfortable ul,
+.prose--density-comfortable ol,
+.prose--density-comfortable blockquote,
+.prose--density-comfortable pre,
+.prose--density-comfortable table,
+.prose--density-comfortable .mermaid-container,
+.prose--density-comfortable .wireloom,
+.prose--density-comfortable .wireloom-pending,
+.prose--density-comfortable .wireloom-error {
+  margin-bottom: 1.12em;
+}
+
+.prose a {
+  color: hsl(var(--primary));
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
   overflow-wrap: anywhere;
 }
 
-.prose code {
-  word-break: break-all;
+.prose a:hover {
+  text-decoration-line: underline;
 }
 
-/* Prevent pre/code blocks from overflowing */
-.prose pre {
-  overflow-x: auto;
+.prose a:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: 0.1875rem;
+  text-decoration-line: underline;
 }
 
-.prose code[class*="language-"],
-.prose pre:has(> code[class*="language-"]),
+.prose ul,
+.prose ol {
+  padding-left: 1.45em;
+}
+
+.prose li {
+  margin: 0.25em 0;
+  padding-left: 0.15em;
+}
+
+.prose li > ul,
+.prose li > ol {
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+
+.prose li > p {
+  margin: 0.35em 0;
+}
+
+.prose .contains-task-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.prose .task-list-item {
+  position: relative;
+  padding-left: 1.55em;
+}
+
+.prose .task-list-item input[type="checkbox"] {
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  accent-color: hsl(var(--primary));
+}
+
+.prose blockquote {
+  padding: 0.1em 0 0.1em 1em;
+  border-left: 3px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+}
+
+.prose blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.prose hr {
+  height: 1px;
+  margin: 1.75em 0;
+  border: 0;
+  background: hsl(var(--border));
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+}
+
+.prose :not(pre) > code {
+  display: inline;
+  padding: 0 0.14em;
+  border: 0;
+  border-radius: 0.25rem;
+  color: hsl(var(--code-inline-fg));
+  background: transparent;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.89em;
+  line-height: inherit;
+  vertical-align: baseline;
+  overflow-wrap: break-word;
+  word-break: normal;
+  white-space: normal;
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
+}
+
+.prose pre,
 .document-frontmatter__code {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
   color: hsl(var(--code-fg));
   background: hsl(var(--code-bg));
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose pre {
+  padding: 1em;
+}
+
+.prose pre code,
+.prose code[class*="language-"],
+.document-frontmatter__code {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   direction: ltr;
   text-align: left;
@@ -37,34 +321,53 @@
   hyphens: none;
 }
 
-.prose pre:has(> code[class*="language-"]),
-.document-frontmatter__code {
-  margin: 0.5em 0;
-  padding: 1em;
-  overflow: auto;
-  border-radius: 0.375rem;
-}
-
-.prose pre > code[class*="language-"],
+.prose pre > code,
 .document-frontmatter__code > code[class*="language-"] {
   padding: 0;
   color: inherit;
   background: transparent;
+  border: 0;
   border-radius: 0;
+  font-size: 0.9em;
 }
 
 .prose :not(pre) > code[class*="language-"] {
-  padding: 0.2em 0.3em;
-  border-radius: 0.25rem;
   white-space: normal;
 }
 
 .prose code[class*="language-"]::selection,
 .prose code[class*="language-"] *::selection,
-.prose pre:has(> code[class*="language-"]) *::selection,
+.prose pre *::selection,
 .document-frontmatter__code *::selection {
   color: inherit;
   background: hsl(var(--code-selection));
+}
+
+.prose table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose th,
+.prose td {
+  padding: 0.55em 0.75em;
+  border: 1px solid hsl(var(--border));
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose th {
+  background: hsl(var(--muted) / 0.65);
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+.prose tr:nth-child(even) td {
+  background: hsl(var(--muted) / 0.28);
 }
 
 .token.comment,
@@ -124,38 +427,67 @@
   font-weight: 600;
 }
 
-/* Scroll headings below sticky tab bar when navigating to anchors */
 .prose [id] {
   scroll-margin-top: 3rem;
 }
 
-/* Heading anchor links — # appears on hover (GitHub-style) */
 .prose h1[id] > .header-anchor,
 .prose h2[id] > .header-anchor,
 .prose h3[id] > .header-anchor,
 .prose h4[id] > .header-anchor,
 .prose h5[id] > .header-anchor,
 .prose h6[id] > .header-anchor {
-  text-decoration: none;
   color: inherit;
+  text-decoration: none;
 }
+
 .prose .header-anchor::after {
   content: ' #';
   visibility: hidden;
   opacity: 0;
+  color: hsl(var(--primary));
   transition: opacity 0.2s;
 }
+
 .prose h1:hover > .header-anchor::after,
 .prose h2:hover > .header-anchor::after,
 .prose h3:hover > .header-anchor::after,
 .prose h4:hover > .header-anchor::after,
 .prose h5:hover > .header-anchor::after,
-.prose h6:hover > .header-anchor::after {
+.prose h6:hover > .header-anchor::after,
+.prose h1:focus-within > .header-anchor::after,
+.prose h2:focus-within > .header-anchor::after,
+.prose h3:focus-within > .header-anchor::after,
+.prose h4:focus-within > .header-anchor::after,
+.prose h5:focus-within > .header-anchor::after,
+.prose h6:focus-within > .header-anchor::after {
   visibility: visible;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
-/* Remove backticks and padding for Mermaid code blocks */
+.prose .code-block-label {
+  display: inline-flex;
+  margin-bottom: -0.35rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid hsl(var(--border));
+  border-bottom: 0;
+  border-radius: 0.375rem 0.375rem 0 0;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted) / 0.55);
+  font-size: 0.75em;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.prose .mermaid-container {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.75rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  background: hsl(var(--muted) / 0.28);
+  -webkit-overflow-scrolling: touch;
+}
+
 .prose code.mermaid::before,
 .prose code.mermaid::after {
   content: none !important;
@@ -163,37 +495,65 @@
 
 .prose code.mermaid {
   padding: 0 !important;
+  border: 0;
+  background: transparent;
 }
 
-/* Limit Mermaid diagram height */
 .prose svg[id^="mermaid-"] {
   max-height: 600px !important;
   overflow: auto !important;
 }
 
-/* Wireloom wireframe rendering */
 .prose .wireloom {
   max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
+
 .prose .wireloom svg {
   display: block;
   max-width: 100%;
   height: auto;
 }
+
 .prose .wireloom-pending {
-  background: #f8f8f8;
-  border: 1px dashed #ccc;
-  border-radius: 4px;
   padding: 1rem;
-  color: #999;
+  border: 1px dashed hsl(var(--border));
+  border-radius: 0.375rem;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted) / 0.45);
   font-size: 0.85em;
   text-align: center;
 }
+
 .prose .wireloom-error {
-  background: #fee;
-  border-left: 3px solid #c33;
   padding: 0.5em 0.75em;
-  font-family: ui-monospace, monospace;
+  border-left: 3px solid hsl(var(--destructive));
+  color: hsl(var(--foreground));
+  background: hsl(var(--destructive) / 0.08);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.85em;
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .prose--document {
+    max-width: 100%;
+  }
+
+  .prose--ticket > :first-child {
+    margin-right: 0;
+  }
+
+  .prose h1 {
+    font-size: 1.55em;
+  }
+
+  .prose h2 {
+    font-size: 1.3em;
+  }
+
+  .prose h3 {
+    font-size: 1.15em;
+  }
 }

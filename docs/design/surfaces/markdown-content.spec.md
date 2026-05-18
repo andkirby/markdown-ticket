@@ -57,11 +57,26 @@ MarkdownContent
 
 Default `MarkdownContent` may keep the current base `prose` class, but every primary reading surface should opt into one of these variants.
 
+## Density Preference
+
+Markdown density is a browser-local visual preference. See `docs/architecture/preference-storage-architecture.md`.
+
+| Density | Class Contract | Body Size | Use |
+|---------|----------------|-----------|-----|
+| compact | `.prose--density-compact` | 14px target | default for work surfaces |
+| default | `.prose--density-default` | 15px target | balanced reading |
+| comfortable | `.prose--density-comfortable` | 16px target | opt-in larger reading |
+
+- Default value: `compact`.
+- Storage key: `markdown-ticket:settings:markdown-density`.
+- Density classes tune typography scale and rhythm only; surface variants still own document/ticket layout behavior.
+- The setting must not affect markdown parsing, link classification, Mermaid, Wireloom, or backend content.
+
 ## Typography Rules
 
 - Body text uses Inter, `--foreground`, and a comfortable line height.
-- Document variant body text should read at 15-16px with line-height near 1.65.
-- Ticket variant body text should stay compact at 14-15px with line-height near 1.55-1.65.
+- Document variant body text should follow the active density, with compact as the default.
+- Ticket variant body text should follow the active density, with compact as the default.
 - Document reading width should be constrained around `72ch` while preserving full-width overflow handling for tables, diagrams, and code blocks.
 - Ticket content may use `max-w-none` because the modal width is already constrained.
 - Headings use the existing base weight family but own their markdown spacing inside `.prose`.
@@ -78,7 +93,7 @@ Default `MarkdownContent` may keep the current base `prose` class, but every pri
 | Element | Rule |
 |---------|------|
 | Links | Use primary color, underline on hover/focus, and preserve SmartLink affordances |
-| Inline code | Subtle muted background, small border radius, no forced full-word breaking unless it would overflow |
+| Inline code | Use the same mono font as highlighted code, `--code-inline-fg` text, transparent background, no border, no visible backtick pseudo-content, no pill/card chrome, no forced full-word breaking unless it would overflow |
 | Code blocks | Token-aware background, border, 8px radius or less, horizontal scroll, clear vertical rhythm |
 | Tables | Horizontal scroll wrapper behavior, visible cell padding, header tint, row dividers, no cramped default table layout |
 | Mermaid | Preserve existing diagram renderer; diagram surface should not inherit inline-code chrome |
@@ -124,8 +139,9 @@ Default `MarkdownContent` may keep the current base `prose` class, but every pri
 | secondary text | `--muted-foreground` | captions, blockquotes, helper text |
 | links | `--primary` | markdown links and heading anchors |
 | borders | `--border` | tables, blockquotes, code blocks, rules |
-| code background | `--code-bg` | inline and block code |
+| code background | `--code-bg` | block code only |
 | code text | `--code-fg` | inline and block code |
+| inline code text | `--code-inline-fg` proposed | default inline code literal color; light `217 70% 38%`, dark `213 94% 78%` |
 | selection | `--code-selection` | code selection background |
 | focus | `--ring` | keyboard focus treatment |
 

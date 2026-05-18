@@ -25,6 +25,7 @@
     --radius: 0.75rem;
     --code-bg: 210 40% 98%;
     --code-fg: 222.2 84% 4.9%;
+    --code-inline-fg: 217 70% 38%;
     --code-selection: 214.3 31.8% 91.4%;
     --code-token-comment: 215.4 16.3% 46.9%;
     --code-token-punctuation: 222.2 84% 4.9%;
@@ -59,6 +60,7 @@
     --ring: 224.3 76.3% 94.1%;
     --code-bg: 222.2 47.4% 11.2%;
     --code-fg: 210 40% 98%;
+    --code-inline-fg: 213 94% 78%;
     --code-selection: 217.2 32.6% 17.5%;
     --code-token-comment: 215 20.2% 65.1%;
     --code-token-punctuation: 210 40% 98%;

@@ -51,6 +51,33 @@ Current examples:
 - `src/config/sorting.ts` stores ticket sort preferences.
 - `src/config/documentSorting.ts` stores per-project document sort preferences.
 - `src/components/ViewModeSwitcher/useViewModePersistence.ts` stores last board/list mode.
+- `src/config/settingsPreferences.ts` stores visual Settings preferences such as card density and default view.
+
+## Markdown Density Recommendation
+
+Markdown density is a browser-local visual preference.
+
+Use browser-local storage because markdown density:
+
+- changes only how rendered text appears in the current browser
+- does not change ticket data, document data, project behavior, backend behavior, MCP behavior, or CLI behavior
+- should update immediately in the UI without a backend write
+- can safely fall back to a default when storage is missing or invalid
+
+Recommended contract:
+
+| Setting | Storage key | Values | Default | Owner |
+| --- | --- | --- | --- | --- |
+| Markdown density | `markdown-ticket:settings:markdown-density` | `compact`, `default`, `comfortable` | `compact` | `src/config/settingsPreferences.ts` |
+
+Behavior:
+
+- `compact` is the default because tickets and documents are work surfaces, not article pages.
+- `default` increases body size and rhythm modestly for longer reading.
+- `comfortable` is the largest option and should remain opt-in.
+- Density should be represented as a class or data attribute on the markdown prose container, not as inline descendant overrides.
+- Density changes should not alter the markdown parser, SmartLink behavior, Mermaid rendering, Wireloom rendering, or backend content.
+- If a durable cross-browser user profile is added later, this setting can move to `CONFIG_DIR/user.toml`; until then, keep it frontend-only.
 
 ## Per-Project Feature State Architecture
 

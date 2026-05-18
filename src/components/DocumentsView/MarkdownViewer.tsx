@@ -6,6 +6,12 @@ import { useParams } from 'react-router-dom'
 import { RelativeTimestamp } from '@/components/shared/RelativeTimestamp'
 import TableOfContents from '@/components/shared/TableOfContents'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  getMarkdownDensity,
+  getMarkdownDensityClass,
+  MARKDOWN_DENSITY_CHANGE_EVENT,
+  MARKDOWN_DENSITY_KEY,
+} from '@/config/settingsPreferences'
 import { extractTableOfContents } from '@/utils/tableOfContents'
 import MarkdownContent from '../MarkdownContent'
 import 'prismjs/components/prism-yaml'
@@ -69,6 +75,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
   const [content, setContent] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [markdownDensity, setMarkdownDensity] = useState(getMarkdownDensity)
   const hasContentRef = useRef(false)
   const loadedFilePathRef = useRef<string | null>(null)
 
@@ -121,6 +128,22 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
     if (!fileDeleted)
       loadFile()
   }, [fileDeleted, loadFile, refreshToken])
+
+  useEffect(() => {
+    const syncMarkdownDensity = () => setMarkdownDensity(getMarkdownDensity())
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === MARKDOWN_DENSITY_KEY)
+        syncMarkdownDensity()
+    }
+
+    window.addEventListener(MARKDOWN_DENSITY_CHANGE_EVENT, syncMarkdownDensity)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener(MARKDOWN_DENSITY_CHANGE_EVENT, syncMarkdownDensity)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
 
   if (loading) {
     return (
@@ -185,6 +208,7 @@ export default function MarkdownViewer({ projectId, filePath, fileInfo, refreshT
                     key={`${filePath}:${refreshToken}`}
                     markdown={parsedContent.body}
                     currentProject={projectCode || ''}
+                    className={`prose prose--document ${getMarkdownDensityClass(markdownDensity)} dark:prose-invert`}
                   />
                 )}
               </>
