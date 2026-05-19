@@ -55,8 +55,8 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 ## Search Logic
 
 - **Scope**: Client-side filter on preloaded project list
-- **Match**: Case-insensitive substring on project `code`, `name`, OR `description`
-- **Current project exclusion**: If the query matches the current project code, name, or description, the current project does NOT appear in results
+- **Match**: Case-insensitive substring on project `code`, title (`name` in the data model), OR `description`
+- **Current project exclusion**: If the query matches the current project code, title/name, or description, the current project does NOT appear in results
 - **Debounce**: None needed (instant client-side filtering)
 - **Max results**: Show all matches (no limit)
 - **Placeholder**: `Search projects...`
@@ -110,7 +110,7 @@ LauncherButton (+ icon, rounded-full w-10 h-10)
 |-------|---------|---------------|
 | closed | Escape / backdrop click / project select | `display: none` |
 | open | Click active card or launcher button | Backdrop visible, panel slides in, inline search input focused |
-| searching | User types in search input | Filter project cards by code/name/description substring; current project excluded if matched |
+| searching | User types in search input | Filter project cards by code/title/description substring; current project excluded if matched |
 | no projects | 0 registered projects | Empty state: "No projects available" |
 | no search results | Query matches zero projects (excluding current) | Empty state: "No projects match your search" |
 
