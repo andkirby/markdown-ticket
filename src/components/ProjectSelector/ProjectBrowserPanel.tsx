@@ -3,7 +3,7 @@
  *
  * Full project list panel that opens when launcher is activated.
  * Displays all projects as cards with favorites first, then sorted by usage.
- * Includes client-side search filtering by project code or name (MDT-152).
+ * Includes client-side search filtering by project code, title, or description (MDT-152).
  *
  * Behavior Requirements:
  * - BR-4.1: Show all projects as cards with code, title, description
@@ -12,7 +12,7 @@
  * - BR-4.4: Cards are clickable to select project
  * - BR-4.5: Panel positioned below selector rail
  * - BR-1.1: Search input visible when panel opens
- * - BR-1.2: Filter by code or name, case-insensitive
+ * - BR-1.2: Filter by code, title, or description, case-insensitive
  * - BR-1.3: Current project excluded when query matches
  * - BR-1.4: Empty state when no projects match
  * - BR-1.5: Escape closes panel
@@ -154,7 +154,7 @@ const ProjectBrowserPanel: React.FC<ProjectBrowserPanelProps> = ({
     [projects, selectorState],
   )
 
-  // Filter projects by search query (case-insensitive code, name, or description match)
+  // Filter projects by search query (case-insensitive code, title/name, or description match)
   const displayProjects = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
 
