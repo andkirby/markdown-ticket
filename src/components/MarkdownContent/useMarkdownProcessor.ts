@@ -38,6 +38,7 @@ export function useMarkdownProcessor(
   const converter = useMemo(() => {
     const md = new MarkdownIt({
       html: true,
+      breaks: true,
       linkify: true,
       typographer: true,
     })
