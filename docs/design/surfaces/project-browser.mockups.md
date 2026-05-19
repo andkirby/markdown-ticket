@@ -42,7 +42,7 @@ annotation "Inactive projects use white/gray gradient" target="card-abc" positio
 
 ### Search State (User Types "MD")
 
-Current project (MDT) is excluded when the query matches its code or name:
+Current project (MDT) is excluded when the query matches its code, title, or description:
 
 ```wireloom
 window "Project Browser — Search":
