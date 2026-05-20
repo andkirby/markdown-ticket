@@ -233,7 +233,7 @@ test.describe('Project Selector - Panel', () => {
 
     // Verify all projects are shown as cards (initial + 3 new ones)
     // Use descendant selector to get only cards within the panel
-    const projectCards = panel.locator('[data-testid^="project-selector-card-"]')
+    const projectCards = panel.locator(selectorSelectors.projectPanelCard)
     await expect(projectCards).toHaveCount(initialCount + 3)
 
     // Verify cards contain code, title, and description
@@ -279,7 +279,7 @@ test.describe('Project Selector - Project Switching', () => {
     await expect(panel).toBeVisible()
 
     // Click project in panel (use descendant selector to get cards within panel)
-    const secondProjectCard = panel.locator(`[data-testid^="project-selector-card-"]:has-text("${secondProject.key}")`)
+    const secondProjectCard = panel.locator(`[data-testid="project-browser-card-${secondProject.key}"]`)
     await secondProjectCard.click()
 
     // Wait for switch
