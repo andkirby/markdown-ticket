@@ -167,7 +167,7 @@ export async function selectProjectViaPanel(page: Page, projectCode: string): Pr
   const panel = page.locator(selectorSelectors.projectPanel)
   await expect(panel).toBeVisible()
 
-  const projectCard = panel.locator(`[data-testid="project-selector-card-${projectCode}"]`)
+  const projectCard = panel.locator(`[data-testid="project-browser-card-${projectCode}"]`)
   await projectCard.click()
 
   // Wait for board to reload
@@ -182,7 +182,7 @@ export async function selectProject(page: Page, projectName: string): Promise<vo
   await page.click(selectorSelectors.panelTrigger)
 
   // Wait for panel and click project card
-  await page.click(`[data-testid="project-selector-card-${projectName}"]`)
+  await page.click(`[data-testid="project-browser-card-${projectName}"]`)
 
   // Wait for board to reload
   await waitForBoardReady(page)
