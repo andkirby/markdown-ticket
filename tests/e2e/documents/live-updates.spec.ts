@@ -115,18 +115,31 @@ test.describe('Document SSE live updates', () => {
       () => e2eContext.fileWatcher.initDocumentWatchers(project.key, project.path, ['docs'], 'docs/CRs'),
     )
 
-    await page.goto(`/prj/${project.key}/documents`)
-
-    const configureButton = page.locator(pathSelectorSelectors.configureButton)
-    await expect(configureButton).toBeVisible({ timeout: 10000 })
-    await configureButton.click()
+    await page.goto(`/prj/${project.key}/documents/docs/current.md`)
+    await expect(page.locator(documentSelectors.fileViewer)).toContainText('Current path marker')
 
     const pathSelector = page.locator(pathSelectorSelectors.pathSelector)
-    await expect(pathSelector).toBeVisible()
+    const configureButton = page.getByRole('button', { name: 'Configure document paths' })
+    await expect(configureButton).toBeVisible({ timeout: 10000 })
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await configureButton.click()
+      try {
+        await expect(pathSelector).toBeVisible({ timeout: 2000 })
+        break
+      }
+      catch (error) {
+        if (attempt === 2)
+          throw error
+      }
+    }
+
+    await expect(page.locator(pathSelectorSelectors.count)).toContainText('1 item selected')
 
     const guidesCheckbox = page.locator(pathSelectorSelectors.pathCheckbox('guides'))
     await expect(guidesCheckbox).toBeVisible({ timeout: 10000 })
+    await expect(guidesCheckbox).not.toBeChecked()
     await guidesCheckbox.check()
+    await expect(guidesCheckbox).toBeChecked()
 
     const saveButton = page.locator(pathSelectorSelectors.saveButton)
     await expect(saveButton).toBeEnabled()
