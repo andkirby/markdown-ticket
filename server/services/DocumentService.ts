@@ -83,7 +83,9 @@ export class DocumentService {
   }
 
   private normalizeRelativePath(filePath: string): string {
-    return filePath.replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+/g, '/')
+    const normalizedPath = path.posix.normalize(filePath.replace(/\\/g, '/').replace(/^\/+/, '')).replace(/\/+$/, '')
+
+    return normalizedPath === '.' ? '' : normalizedPath.replace(/^\/+/, '')
   }
 
   private isInsideProjectPath(projectPath: string, resolvedPath: string): boolean {
