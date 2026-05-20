@@ -755,6 +755,69 @@ export class ProjectController {
     }
   }
 
+  async getTraceStoreMetadata(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { projectId, crId } = req.params
+
+      if (!projectId || !crId) {
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
+        return
+      }
+
+      if (!this.ticketService) {
+        res.status(501).json({ error: 'Ticket service not available' })
+        return
+      }
+
+      const metadata = await this.ticketService.getTraceStoreMetadata(projectId, crId)
+      res.setHeader('Cache-Control', 'no-store')
+      res.json(metadata)
+    }
+    catch (error: unknown) {
+      const err = error as Error
+      if (err.message === 'Project not found' || err.message === 'CR not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
+        return
+      }
+
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get trace store metadata' })
+    }
+  }
+
+  async getTraceStore(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { projectId, crId } = req.params
+
+      if (!projectId || !crId) {
+        res.status(400).json({ error: 'Bad Request', message: 'Project ID and CR ID are required' })
+        return
+      }
+
+      if (!this.ticketService) {
+        res.status(501).json({ error: 'Ticket service not available' })
+        return
+      }
+
+      const result = await this.ticketService.getTraceStore(projectId, crId)
+      res.setHeader('Cache-Control', 'no-store')
+      res.json(result.store)
+    }
+    catch (error: unknown) {
+      const err = error as Error
+      if (err.message === 'Project not found' || err.message === 'CR not found' || err.message === 'TraceStore not found') {
+        res.status(404).json({ error: 'Not Found', message: err.message })
+        return
+      }
+
+      if (err.message === 'TraceStore invalid') {
+        res.status(422).json({ error: 'Unprocessable Entity', message: 'TraceStore invalid' })
+        return
+      }
+
+      res.status(500).json({ error: 'Internal Server Error', message: 'Failed to get trace store' })
+    }
+  }
+
   async deleteCR(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { projectId, crId } = req.params

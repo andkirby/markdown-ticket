@@ -1,0 +1,59 @@
+/* Ticket Viewer extensions */
+
+@layer components {
+  .modal--viewport {
+    @apply overflow-hidden;
+  }
+
+  .modal--viewport .modal__container {
+    @apply h-[100dvh] w-[100dvw] items-stretch justify-stretch p-0;
+  }
+
+  .modal--viewport .modal-content {
+    @apply h-[100dvh] w-[100dvw] max-w-none rounded-none shadow-none sm:my-0;
+  }
+
+  .trace-graph-shell__modal {
+    @apply h-[100dvh] max-h-[100dvh] w-[100dvw] max-w-none rounded-none sm:my-0;
+  }
+
+  .modal__body.trace-graph-shell {
+    @apply relative h-[100dvh] w-[100dvw] overflow-hidden p-0;
+  }
+
+  .trace-graph-shell__back {
+    @apply absolute left-4 top-4 z-20 inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-border/70 bg-background/60 px-3 text-sm font-medium text-foreground/80 transition-colors hover:bg-background/80 hover:text-foreground focus:text-foreground focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+
+  .trace-graph-shell__back svg {
+    @apply h-4 w-4;
+  }
+
+  .trace-graph-shell__content {
+    @apply h-full min-h-0 min-w-0 bg-background;
+  }
+
+  .trace-graph-shell__frame {
+    @apply block h-full w-full border-0;
+  }
+
+  .trace-graph-shell__error {
+    @apply flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground;
+  }
+
+  .trace-graph-shell__error svg {
+    @apply h-10 w-10 text-destructive;
+  }
+
+  .trace-graph-shell__error h2 {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  .trace-graph-action {
+    @apply inline-flex h-8 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+
+  .trace-graph-action svg {
+    @apply h-4 w-4;
+  }
+}

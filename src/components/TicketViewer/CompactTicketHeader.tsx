@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Ticket } from '../../types'
 import { ContextBadge, PriorityBadge, RelationshipBadge, StatusBadge, TypeBadge } from '../Badge'
 import { TicketCode } from '../TicketCode'
@@ -5,9 +6,10 @@ import { TicketCode } from '../TicketCode'
 interface CompactTicketHeaderProps {
   ticket: Ticket
   className?: string
+  action?: ReactNode
 }
 
-export function CompactTicketHeader({ ticket, className = '' }: CompactTicketHeaderProps) {
+export function CompactTicketHeader({ ticket, className = '', action }: CompactTicketHeaderProps) {
   return (
     <div className={className}>
       <div className="modal__section pr-14">
@@ -40,6 +42,12 @@ export function CompactTicketHeader({ ticket, className = '' }: CompactTicketHea
           )}
           {(ticket.blocks?.length || 0) > 0 && (
             <RelationshipBadge variant="blocks" links={ticket.blocks} />
+          )}
+          {action && (
+            <>
+              <span className="hidden flex-1 sm:block" />
+              {action}
+            </>
           )}
         </div>
       </div>
