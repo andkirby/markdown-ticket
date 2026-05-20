@@ -1,0 +1,1805 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MDT-169 Trace Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --paper: #fffdf7;
+      --ink: #171717;
+      --muted: #68645d;
+      --line: #d8d1c2;
+      --line-strong: #a99d8b;
+      --blue: #2457a6;
+      --cyan: #147d83;
+      --green: #4f7f35;
+      --orange: #b76325;
+      --red: #b03a2e;
+      --yellow: #c89522;
+      --shadow: 0 18px 48px rgba(24, 21, 16, 0.12);
+      --radius: 8px;
+      --mono: "SFMono-Regular", "Cascadia Mono", "IBM Plex Mono", Consolas, monospace;
+      --body: "Aptos", "Avenir Next", "Segoe UI", sans-serif;
+      --display: "DIN Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, rgba(23, 23, 23, 0.035) 1px, transparent 1px) 0 0 / 32px 32px,
+        linear-gradient(0deg, rgba(23, 23, 23, 0.03) 1px, transparent 1px) 0 0 / 32px 32px,
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--body);
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) minmax(170px, max-content);
+      gap: 16px;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 253, 247, 0.82);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar > * {
+      min-width: 0;
+    }
+
+    .kicker {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(30px, 3.8vw, 46px);
+      font-stretch: condensed;
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: 0.92;
+      text-transform: uppercase;
+    }
+
+    .source-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      max-width: min(280px, 100%);
+      padding: 9px 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--paper);
+      box-shadow: 0 8px 20px rgba(24, 21, 16, 0.08);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      justify-self: end;
+      display: grid;
+      gap: 8px;
+      justify-items: end;
+      min-width: 0;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .source-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--yellow);
+      flex: 0 0 auto;
+    }
+
+    .source-pill[data-state="ready"] .source-dot {
+      background: var(--green);
+    }
+
+    .source-pill[data-state="error"] .source-dot {
+      background: var(--red);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) 190px auto;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(244, 241, 234, 0.92);
+    }
+
+    .search,
+    .select {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--paper);
+      color: var(--ink);
+      outline: none;
+    }
+
+    .search {
+      padding: 0 12px;
+    }
+
+    .select {
+      padding: 0 10px;
+    }
+
+    .ghost-button {
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .ghost-button:hover {
+      background: var(--paper);
+    }
+
+    .icon-button {
+      display: inline-grid;
+      place-items: center;
+      width: 38px;
+      min-width: 38px;
+      padding: 0;
+    }
+
+    .icon-button svg,
+    .card-detail-toggle svg,
+    .aside-edge-toggle svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(64px, 1fr));
+      gap: 1px;
+      width: 100%;
+      min-width: 0;
+      padding: 0;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .metric {
+      min-width: 0;
+      min-height: 54px;
+      padding: 8px;
+      background: rgba(255, 253, 247, 0.86);
+    }
+
+    .metric-value {
+      display: block;
+      font-family: var(--display);
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .metric-label {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .main {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      min-height: 0;
+      overflow: hidden;
+      transition: grid-template-columns 180ms ease;
+    }
+
+    .app.aside-collapsed .main {
+      grid-template-columns: minmax(0, 1fr) 0;
+    }
+
+    .graph-panel {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      border-right: 1px solid var(--line);
+      background: rgba(255, 253, 247, 0.42);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.72);
+    }
+
+    .legend-line {
+      width: 18px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--line-strong);
+    }
+
+    .legend-line.covers {
+      background: var(--blue);
+    }
+
+    .legend-line.derives {
+      background: var(--orange);
+    }
+
+    .legend-line.maps {
+      background: var(--cyan);
+    }
+
+    .legend-line.verifies {
+      background: var(--green);
+    }
+
+    .legend-line.owns {
+      background: var(--red);
+    }
+
+    .graph-viewport {
+      position: relative;
+      overflow-x: auto;
+      overflow-y: hidden;
+      min-height: 0;
+      overscroll-behavior: contain;
+    }
+
+    .stage-canvas {
+      position: relative;
+      min-width: 1640px;
+      height: 100%;
+      min-height: 0;
+      padding: 18px;
+    }
+
+    .links {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 0;
+    }
+
+    .links path {
+      fill: none;
+      stroke-width: 2;
+      opacity: 0.28;
+    }
+
+    .links path.is-active {
+      stroke-width: 3;
+      opacity: 0.92;
+    }
+
+    .links path.is-muted {
+      opacity: 0.05;
+    }
+
+    .columns {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(6, 260px);
+      gap: 16px;
+      align-items: stretch;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 0;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255, 253, 247, 0.55), rgba(255, 253, 247, 0.43));
+      box-shadow: 0 10px 28px rgba(24, 21, 16, 0.06);
+    }
+
+    .active-hidden {
+      position: absolute;
+      left: 50%;
+      z-index: 8;
+      display: none;
+      transform: translateX(-50%);
+      padding: 3px 8px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.9);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 10px;
+      box-shadow: 0 8px 18px rgba(24, 21, 16, 0.08);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .active-hidden.is-visible {
+      display: inline-flex;
+    }
+
+    .active-hidden-top {
+      top: 52px;
+    }
+
+    .active-hidden-bottom {
+      bottom: 8px;
+    }
+
+    .stage-header {
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      min-height: 46px;
+      padding: 10px 11px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper);
+    }
+
+    .stage-name {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .stage-count {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .stage-count strong {
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .node-list {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      padding: 10px;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+
+    .node-list:hover,
+    .node-list:focus,
+    .node-list:focus-within,
+    .node-list.is-scrolling {
+      scrollbar-color: rgba(216, 209, 194, 0.72) transparent;
+    }
+
+    .node-list::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .node-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .node-list::-webkit-scrollbar-thumb {
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      background-clip: content-box;
+    }
+
+    .node-list:hover::-webkit-scrollbar-thumb,
+    .node-list:focus::-webkit-scrollbar-thumb,
+    .node-list:focus-within::-webkit-scrollbar-thumb,
+    .node-list.is-scrolling::-webkit-scrollbar-thumb {
+      background-color: rgba(216, 209, 194, 0.72);
+    }
+
+    .node-list:hover::-webkit-scrollbar-thumb:hover,
+    .node-list:focus::-webkit-scrollbar-thumb:hover,
+    .node-list.is-scrolling::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(169, 157, 139, 0.86);
+    }
+
+    .node {
+      position: relative;
+      display: grid;
+      align-content: start;
+      gap: 7px;
+      width: 100%;
+      height: 112px;
+      max-height: 112px;
+      padding: 10px 10px 38px;
+      border: 1px solid var(--line);
+      border-left-width: 5px;
+      border-radius: var(--radius);
+      background: rgba(255, 253, 247, 0.96);
+      color: var(--ink);
+      overflow: hidden;
+      text-align: left;
+      box-shadow: 0 8px 18px rgba(24, 21, 16, 0.04);
+      transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease, max-height 180ms ease;
+    }
+
+    .node::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      bottom: 30px;
+      left: 5px;
+      height: 34px;
+      border-radius: 0 0 var(--radius) var(--radius);
+      background: linear-gradient(180deg, rgba(255, 253, 247, 0), rgba(255, 253, 247, 0.97) 72%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .node:hover,
+    .node:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 22px rgba(24, 21, 16, 0.1);
+      outline: none;
+    }
+
+    .node.is-active,
+    .app.full-cards .node {
+      height: auto;
+      max-height: none;
+      overflow: visible;
+      z-index: 5;
+    }
+
+    .node.is-active::after,
+    .app.full-cards .node::after {
+      display: none;
+    }
+
+    .node.is-selected {
+      border-color: var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    .node.is-selected .node-tags {
+      right: 38px;
+    }
+
+    .card-detail-toggle {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      z-index: 3;
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1;
+      box-shadow: 0 4px 10px rgba(24, 21, 16, 0.08);
+    }
+
+    .card-detail-toggle:hover,
+    .card-detail-toggle:focus-visible {
+      color: var(--ink);
+      border-color: var(--ink);
+      outline: none;
+    }
+
+    .node.is-muted {
+      opacity: 0.26;
+    }
+
+    .node[data-stage="requirements"] {
+      border-left-color: var(--blue);
+    }
+
+    .node[data-stage="bdd"] {
+      border-left-color: var(--green);
+    }
+
+    .node[data-stage="obligations"] {
+      border-left-color: var(--orange);
+    }
+
+    .node[data-stage="artifacts"] {
+      border-left-color: var(--cyan);
+    }
+
+    .node[data-stage="tests"] {
+      border-left-color: var(--yellow);
+    }
+
+    .node[data-stage="tasks"] {
+      border-left-color: var(--red);
+    }
+
+    .node-id {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      max-height: 28px;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+    }
+
+    .node-title {
+      font-size: 13px;
+      line-height: 1.27;
+      max-height: 50px;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+    }
+
+    .node.is-active .node-id,
+    .node.is-active .node-title,
+    .app.full-cards .node-id,
+    .app.full-cards .node-title {
+      max-height: none;
+      overflow: visible;
+    }
+
+    .path-line {
+      display: block;
+    }
+
+    .path-line + .path-line {
+      padding-left: 12px;
+    }
+
+    .node-tags {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      left: 10px;
+      z-index: 2;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-height: 20px;
+      max-height: 22px;
+      overflow: hidden;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      min-height: 20px;
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .detail {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      background: var(--paper);
+      border-left: 1px solid var(--line);
+      overflow: hidden;
+      transition: opacity 160ms ease;
+    }
+
+    .aside-edge-toggle {
+      position: absolute;
+      right: 378px;
+      top: 12px;
+      z-index: 20;
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1;
+      box-shadow: 0 6px 14px rgba(24, 21, 16, 0.12);
+    }
+
+    .aside-edge-toggle:hover,
+    .aside-edge-toggle:focus-visible {
+      color: var(--ink);
+      border-color: var(--ink);
+      outline: none;
+    }
+
+    .app.aside-collapsed .aside-edge-toggle {
+      right: 8px;
+    }
+
+    .app.aside-collapsed .detail {
+      border-left: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .detail-head {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .detail-kicker {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .detail-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.22;
+      font-weight: 650;
+    }
+
+    .detail-id {
+      margin-top: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-body {
+      overflow: auto;
+      padding: 16px 18px 24px;
+    }
+
+    .section {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section:first-child {
+      padding-top: 0;
+    }
+
+    .section-title {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .detail-text {
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .kv {
+      display: grid;
+      gap: 7px;
+    }
+
+    .kv-row {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr);
+      gap: 10px;
+      align-items: baseline;
+      font-size: 13px;
+    }
+
+    .kv-key {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .link-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .entity-link {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      width: 100%;
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(244, 241, 234, 0.5);
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .entity-link:hover {
+      border-color: var(--line-strong);
+      background: rgba(244, 241, 234, 0.86);
+    }
+
+    .entity-link-id {
+      font-family: var(--mono);
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
+    .entity-link-type {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .empty,
+    .error {
+      padding: 18px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .file-loader {
+      display: inline-grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .file-loader input {
+      max-width: 100%;
+    }
+
+    @media (max-width: 1100px) {
+      .topbar {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .header-actions {
+        justify-self: stretch;
+        justify-items: stretch;
+      }
+
+      .main {
+        grid-template-columns: 1fr;
+      }
+
+      .app.aside-collapsed .main {
+        grid-template-columns: 1fr;
+      }
+
+      .detail {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        width: min(390px, calc(100vw - 16px));
+        border-top: 0;
+        box-shadow: -18px 0 36px rgba(24, 21, 16, 0.14);
+      }
+
+      .app.aside-collapsed .detail {
+        display: none;
+      }
+
+      .aside-edge-toggle,
+      .app.aside-collapsed .aside-edge-toggle {
+        right: 8px;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(3, minmax(120px, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar,
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .source-pill {
+        justify-self: start;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
+
+      .stage-canvas {
+        min-width: 1500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <p class="kicker" id="dashboardKicker">Spec Trace</p>
+        <h1>Feature Trace Graph</h1>
+      </div>
+      <section class="metrics" id="metrics" aria-label="Trace metrics"></section>
+      <div class="header-actions">
+        <div class="source-pill" id="sourcePill" data-state="loading">
+          <span class="source-dot"></span>
+          <span id="sourceText">Loading trace store</span>
+        </div>
+        <div class="header-buttons">
+          <button class="ghost-button icon-button" id="asideToggle" type="button" aria-expanded="true" title="Hide details" aria-label="Hide details"></button>
+          <button class="ghost-button" id="cardsToggle" type="button" aria-pressed="false">Full Cards</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="controls">
+      <input class="search" id="searchInput" type="search" placeholder="Filter ids, files, tasks, requirements">
+      <select class="select" id="stageSelect" aria-label="Stage filter">
+        <option value="all">All stages</option>
+        <option value="requirements">Requirements</option>
+        <option value="bdd">BDD</option>
+        <option value="obligations">Obligations</option>
+        <option value="artifacts">Artifacts</option>
+        <option value="tests">Tests</option>
+        <option value="tasks">Tasks</option>
+      </select>
+      <button class="ghost-button" id="clearButton" type="button">Clear Focus</button>
+    </section>
+
+    <main class="main">
+      <section class="graph-panel">
+        <div class="legend">
+          <span class="legend-item"><span class="legend-line covers"></span>Covers</span>
+          <span class="legend-item"><span class="legend-line derives"></span>Derives</span>
+          <span class="legend-item"><span class="legend-line maps"></span>Maps</span>
+          <span class="legend-item"><span class="legend-line verifies"></span>Verifies</span>
+          <span class="legend-item"><span class="legend-line owns"></span>Owns</span>
+        </div>
+        <div class="graph-viewport" id="graphViewport">
+          <div class="stage-canvas" id="stageCanvas">
+            <svg class="links" id="links" aria-hidden="true"></svg>
+            <div class="columns" id="columns"></div>
+          </div>
+        </div>
+      </section>
+
+      <button class="aside-edge-toggle" id="asideEdgeToggle" type="button" aria-expanded="true" title="Hide details" aria-label="Hide details"></button>
+      <aside class="detail" id="detail"></aside>
+    </main>
+  </div>
+
+  <script>
+    const dashboardParams = new URLSearchParams(window.location.search);
+    const ACCESS_TOKEN = dashboardParams.get('token') || '';
+    const PROJECT_CODE = dashboardParams.get('project') || '';
+    const TICKET_CODE = dashboardParams.get('ticket') || '';
+    const DEFAULT_STORE_URL = PROJECT_CODE && TICKET_CODE
+      ? `/api/projects/${encodeURIComponent(PROJECT_CODE)}/crs/${encodeURIComponent(TICKET_CODE)}/trace-store`
+      : './store.json';
+    const DATA_URL = withAccessToken(dashboardParams.get('store') || DEFAULT_STORE_URL);
+    const DATA_LABEL = dashboardParams.get('storeLabel') || (TICKET_CODE ? `${TICKET_CODE}/store.json` : DATA_URL);
+
+    const STAGES = [
+      { key: 'requirements', label: 'Requirements' },
+      { key: 'bdd', label: 'BDD Scenarios' },
+      { key: 'obligations', label: 'Obligations' },
+      { key: 'artifacts', label: 'Artifacts' },
+      { key: 'tests', label: 'Test Plans' },
+      { key: 'tasks', label: 'Tasks' },
+    ];
+
+    const EDGE_COLORS = {
+      covers: '#2457a6',
+      derives: '#b76325',
+      maps: '#147d83',
+      verifies: '#4f7f35',
+      owns: '#b03a2e',
+    };
+
+    const STORAGE_KEYS = {
+      asideCollapsed: 'specTrace.traceDashboard.asideCollapsed',
+      fullCards: 'specTrace.traceDashboard.fullCards',
+    };
+
+    const state = {
+      store: null,
+      graph: null,
+      selectedId: null,
+      query: '',
+      stage: 'all',
+      asideCollapsed: readStoredBoolean(STORAGE_KEYS.asideCollapsed, true),
+      fullCards: readStoredBoolean(STORAGE_KEYS.fullCards, true),
+      scrollTimers: new WeakMap(),
+      columnScroll: new Map(),
+      scrollSelectedIntoView: false,
+    };
+
+    const elements = {
+      app: document.querySelector('.app'),
+      sourcePill: document.getElementById('sourcePill'),
+      sourceText: document.getElementById('sourceText'),
+      metrics: document.getElementById('metrics'),
+      columns: document.getElementById('columns'),
+      detail: document.getElementById('detail'),
+      links: document.getElementById('links'),
+      stageCanvas: document.getElementById('stageCanvas'),
+      graphViewport: document.getElementById('graphViewport'),
+      searchInput: document.getElementById('searchInput'),
+      stageSelect: document.getElementById('stageSelect'),
+      clearButton: document.getElementById('clearButton'),
+      cardsToggle: document.getElementById('cardsToggle'),
+      asideToggle: document.getElementById('asideToggle'),
+      asideEdgeToggle: document.getElementById('asideEdgeToggle'),
+      dashboardKicker: document.getElementById('dashboardKicker'),
+    };
+
+    if (TICKET_CODE) {
+      document.title = `${TICKET_CODE} Trace Dashboard`;
+      elements.dashboardKicker.textContent = `${TICKET_CODE} / Spec Trace`;
+    }
+
+    elements.searchInput.addEventListener('input', (event) => {
+      state.query = event.target.value.trim().toLowerCase();
+      render();
+    });
+
+    elements.stageSelect.addEventListener('change', (event) => {
+      state.stage = event.target.value;
+      render();
+    });
+
+    elements.clearButton.addEventListener('click', () => {
+      state.selectedId = null;
+      state.query = '';
+      state.stage = 'all';
+      elements.searchInput.value = '';
+      elements.stageSelect.value = 'all';
+      render();
+    });
+
+    elements.cardsToggle.addEventListener('click', () => {
+      state.fullCards = !state.fullCards;
+      writeStoredBoolean(STORAGE_KEYS.fullCards, state.fullCards);
+      renderCardsState();
+      requestAnimationFrame(drawEdges);
+    });
+
+    elements.asideToggle.addEventListener('click', toggleAside);
+    elements.asideEdgeToggle.addEventListener('click', toggleAside);
+
+    window.addEventListener('resize', () => {
+      if (state.graph) {
+        requestAnimationFrame(drawEdges);
+      }
+    });
+
+    elements.graphViewport.addEventListener('scroll', () => {
+      if (state.graph) {
+        requestAnimationFrame(drawEdges);
+      }
+    });
+
+    elements.graphViewport.addEventListener('wheel', handleGraphWheel, { passive: false });
+
+    window.addEventListener('load', () => {
+      requestAnimationFrame(updateAllHiddenActiveIndicators);
+    });
+
+    boot();
+
+    function withAccessToken(url) {
+      if (!ACCESS_TOKEN) {
+        return url;
+      }
+
+      const resolved = new URL(url, window.location.href);
+      if (resolved.origin === window.location.origin) {
+        resolved.searchParams.set('token', ACCESS_TOKEN);
+      }
+      return resolved.href;
+    }
+
+    async function boot() {
+      try {
+        const response = await fetch(DATA_URL, { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+        useStore(await response.json(), DATA_LABEL);
+      } catch (error) {
+        elements.sourcePill.dataset.state = 'error';
+        elements.sourceText.textContent = 'Could not fetch ' + DATA_LABEL;
+        renderLoadError(error);
+      }
+    }
+
+    function useStore(store, sourceLabel) {
+      state.store = store;
+      state.graph = buildGraph(store);
+      state.selectedId = null;
+      elements.sourcePill.dataset.state = 'ready';
+      elements.sourceText.textContent = sourceLabel;
+      render();
+    }
+
+    function renderLoadError(error) {
+      elements.metrics.innerHTML = '';
+      elements.columns.innerHTML = '<div class="error">JSON fetch failed: ' + escapeHtml(error.message) + '<label class="file-loader">Load store.json directly<input id="jsonFile" type="file" accept="application/json"></label></div>';
+      elements.detail.innerHTML = '';
+      elements.links.innerHTML = '';
+      const input = document.getElementById('jsonFile');
+      input.addEventListener('change', async () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        useStore(JSON.parse(await file.text()), file.name);
+      });
+    }
+
+    function buildGraph(store) {
+      const nodes = [];
+      const edges = [];
+
+      for (const requirement of store.requirements || []) {
+        nodes.push({
+          id: requirement.id,
+          stage: 'requirements',
+          type: requirement.kind || 'requirement',
+          title: requirement.text || requirement.id,
+          summary: requirement.text || '',
+          routePolicy: requirement.routePolicy || '',
+          sourceRef: requirement.sourceRef || '',
+          tags: [requirement.kind, requirement.routePolicy].filter(Boolean),
+          raw: requirement,
+        });
+      }
+
+      for (const scenario of store.scenarios || []) {
+        nodes.push({
+          id: scenario.id,
+          stage: 'bdd',
+          type: 'scenario',
+          title: scenario.title || scenario.id,
+          summary: scenario.then || scenario.title || '',
+          sourceRef: scenario.sourceRef || '',
+          tags: ['bdd', ...(scenario.covers || [])],
+          raw: scenario,
+        });
+        for (const requirementId of scenario.covers || []) {
+          edges.push(edge(requirementId, scenario.id, 'covers'));
+        }
+      }
+
+      for (const obligation of store.obligations || []) {
+        nodes.push({
+          id: obligation.id,
+          stage: 'obligations',
+          type: 'obligation',
+          title: obligation.title || obligation.id,
+          summary: obligation.title || '',
+          sourceRef: obligation.sourceRef || '',
+          tags: ['architecture'],
+          raw: obligation,
+        });
+        for (const requirementId of obligation.derivedFrom || []) {
+          edges.push(edge(requirementId, obligation.id, 'derives'));
+        }
+        for (const artifactId of obligation.artifactIds || []) {
+          edges.push(edge(obligation.id, artifactId, 'maps'));
+        }
+      }
+
+      for (const artifact of store.artifacts || []) {
+        nodes.push({
+          id: artifact.id,
+          stage: 'artifacts',
+          type: artifact.kind || 'artifact',
+          title: artifact.path || artifact.id,
+          summary: artifact.path || '',
+          sourceRef: artifact.sourceRef || '',
+          tags: [artifact.kind || 'artifact'],
+          raw: artifact,
+        });
+      }
+
+      for (const testPlan of store.testPlans || []) {
+        nodes.push({
+          id: testPlan.id,
+          stage: 'tests',
+          type: testPlan.kind || 'test',
+          title: testPlan.title || testPlan.id,
+          summary: testPlan.file || testPlan.title || '',
+          sourceRef: testPlan.sourceRef || '',
+          tags: [testPlan.kind || 'test'],
+          raw: testPlan,
+        });
+        for (const coveredId of testPlan.covers || []) {
+          edges.push(edge(coveredId, testPlan.id, 'verifies'));
+        }
+      }
+
+      for (const task of store.tasks || []) {
+        nodes.push({
+          id: task.id,
+          stage: 'tasks',
+          type: 'task',
+          title: task.title || task.id,
+          summary: task.title || '',
+          sourceRef: task.sourceRef || '',
+          tags: task.skills || [],
+          raw: task,
+        });
+        for (const artifactId of task.ownsArtifactIds || []) {
+          edges.push(edge(artifactId, task.id, 'owns'));
+        }
+        for (const targetId of task.makesGreenIds || []) {
+          edges.push(edge(targetId, task.id, 'verifies'));
+        }
+      }
+
+      const nodeById = new Map(nodes.map((node) => [node.id, node]));
+      const validEdges = edges.filter((item) => nodeById.has(item.from) && nodeById.has(item.to));
+      const related = new Map(nodes.map((node) => [node.id, new Set()]));
+      for (const item of validEdges) {
+        related.get(item.from).add(item.to);
+        related.get(item.to).add(item.from);
+      }
+
+      return { nodes, edges: validEdges, nodeById, related };
+    }
+
+    function edge(from, to, kind) {
+      return { from, to, kind };
+    }
+
+    function render() {
+      if (!state.graph) return;
+      renderMetrics();
+      renderColumns();
+      renderDetail();
+      renderAsideState();
+      renderCardsState();
+      requestAnimationFrame(drawEdges);
+    }
+
+    function renderAsideState() {
+      elements.app.classList.toggle('aside-collapsed', state.asideCollapsed);
+      const label = state.asideCollapsed ? 'Show details' : 'Hide details';
+      const expanded = String(!state.asideCollapsed);
+      const icon = asideToggleIcon(state.asideCollapsed);
+      for (const control of [elements.asideToggle, elements.asideEdgeToggle]) {
+        control.innerHTML = icon;
+        control.title = label;
+        control.setAttribute('aria-label', label);
+        control.setAttribute('aria-expanded', expanded);
+      }
+    }
+
+    function renderCardsState() {
+      elements.app.classList.toggle('full-cards', state.fullCards);
+      elements.cardsToggle.textContent = state.fullCards ? 'Fixed Cards' : 'Full Cards';
+      elements.cardsToggle.setAttribute('aria-pressed', String(state.fullCards));
+    }
+
+    function renderMetrics() {
+      const store = state.store;
+      const requirements = store.requirements || [];
+      const bddRequirements = requirements.filter((item) => item.routePolicy === 'bdd').length;
+      const testRequirements = requirements.filter((item) => item.routePolicy === 'tests').length;
+      const values = [
+        ['Requirements', requirements.length],
+        ['BDD Routed', bddRequirements],
+        ['Tests Routed', testRequirements],
+        ['Obligations', (store.obligations || []).length],
+        ['Artifacts', (store.artifacts || []).length],
+        ['Tasks', (store.tasks || []).length],
+      ];
+
+      elements.metrics.innerHTML = values.map(([label, value]) => (
+        '<div class="metric"><span class="metric-value">' + value + '</span><span class="metric-label">' + escapeHtml(label) + '</span></div>'
+      )).join('');
+    }
+
+    function renderColumns() {
+      captureColumnScroll();
+      const visible = visibleNodeIds();
+      const selected = state.selectedId;
+      const activeSet = activeNeighborhood();
+      const selectedNode = selected ? state.graph.nodeById.get(selected) : null;
+
+      elements.columns.innerHTML = STAGES.map((stage) => {
+        const stageNodes = state.graph.nodes
+          .filter((node) => node.stage === stage.key)
+          .filter((node) => visible.has(node.id));
+        const nodes = orderStageNodes(stageNodes, stage.key, selectedNode, activeSet);
+        const activeCount = nodes.filter((node) => activeSet.has(node.id)).length;
+
+        return '<section class="stage" data-stage="' + stage.key + '">' +
+          '<div class="stage-header"><h2 class="stage-name">' + escapeHtml(stage.label) + '</h2><span class="stage-count"><strong>' + activeCount + '</strong> / ' + nodes.length + '</span></div>' +
+          '<div class="active-hidden active-hidden-top" data-position="top"></div>' +
+          '<div class="node-list">' + nodes.map((node) => renderNode(node, selected, activeSet)).join('') + '</div>' +
+          '<div class="active-hidden active-hidden-bottom" data-position="bottom"></div>' +
+        '</section>';
+      }).join('');
+
+      for (const node of elements.columns.querySelectorAll('.node')) {
+        node.addEventListener('click', (event) => {
+          if (event.target.closest('.card-detail-toggle')) {
+            return;
+          }
+          activateOrClearNode(node.dataset.id);
+        });
+        node.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+          }
+          event.preventDefault();
+          activateOrClearNode(node.dataset.id);
+        });
+      }
+
+      for (const toggle of elements.columns.querySelectorAll('.card-detail-toggle')) {
+        toggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          toggleAside();
+        });
+      }
+
+      for (const list of elements.columns.querySelectorAll('.node-list')) {
+        list.addEventListener('scroll', () => {
+          const stage = list.closest('.stage')?.dataset.stage;
+          if (stage) {
+            state.columnScroll.set(stage, list.scrollTop);
+          }
+          markColumnScrolling(list);
+          updateHiddenActiveIndicators(list);
+          requestAnimationFrame(drawEdges);
+        }, { passive: true });
+      }
+
+      restoreColumnScroll();
+      requestAnimationFrame(() => {
+        focusActiveColumns();
+        updateAllHiddenActiveIndicators();
+        drawEdges();
+      });
+    }
+
+    function captureColumnScroll() {
+      for (const list of elements.columns.querySelectorAll('.node-list')) {
+        const stage = list.closest('.stage')?.dataset.stage;
+        if (stage) {
+          state.columnScroll.set(stage, list.scrollTop);
+        }
+      }
+    }
+
+    function restoreColumnScroll() {
+      for (const list of elements.columns.querySelectorAll('.node-list')) {
+        const stage = list.closest('.stage')?.dataset.stage;
+        if (!stage) continue;
+
+        list.scrollTop = state.columnScroll.get(stage) ?? 0;
+      }
+    }
+
+    function orderStageNodes(nodes, stageKey, selectedNode, activeSet) {
+      if (!selectedNode || selectedNode.stage === stageKey) {
+        return nodes;
+      }
+
+      const activeNodes = nodes.filter((node) => activeSet.has(node.id));
+      const inactiveNodes = nodes.filter((node) => !activeSet.has(node.id));
+      return [...activeNodes, ...inactiveNodes];
+    }
+
+    function activateOrClearNode(id) {
+      if (!id) return;
+
+      if (id === state.selectedId) {
+        state.selectedId = null;
+      } else {
+        state.selectedId = id;
+        state.scrollSelectedIntoView = true;
+      }
+
+      render();
+    }
+
+    function focusActiveColumns() {
+      if (!state.scrollSelectedIntoView || !state.selectedId) return;
+
+      state.scrollSelectedIntoView = false;
+      const selected = elements.columns.querySelector('.node.is-selected');
+      if (!selected) return;
+
+      for (const list of elements.columns.querySelectorAll('.node-list')) {
+        const target = list.contains(selected) ? selected : list.querySelector('.node.is-active');
+        if (!target) continue;
+
+        scrollNodeInList(target, list, target === selected ? 'center' : 'start');
+      }
+
+      window.setTimeout(() => {
+        for (const list of elements.columns.querySelectorAll('.node-list')) {
+          const stage = list.closest('.stage')?.dataset.stage;
+          if (stage) {
+            state.columnScroll.set(stage, list.scrollTop);
+          }
+          updateHiddenActiveIndicators(list);
+        }
+        drawEdges();
+      }, 220);
+    }
+
+    function scrollNodeInList(node, list, block) {
+      const nodeRect = node.getBoundingClientRect();
+      const listRect = list.getBoundingClientRect();
+      const padding = 12;
+      const delta = block === 'center'
+        ? (nodeRect.top + nodeRect.height / 2) - (listRect.top + listRect.height / 2)
+        : nodeRect.top - listRect.top - padding;
+      list.scrollTo({ top: Math.max(0, list.scrollTop + delta), behavior: 'smooth' });
+    }
+
+    function toggleAside() {
+      state.asideCollapsed = !state.asideCollapsed;
+      writeStoredBoolean(STORAGE_KEYS.asideCollapsed, state.asideCollapsed);
+      render();
+    }
+
+    function markColumnScrolling(list) {
+      list.classList.add('is-scrolling');
+      const previousTimer = state.scrollTimers.get(list);
+      if (previousTimer) {
+        window.clearTimeout(previousTimer);
+      }
+      state.scrollTimers.set(list, window.setTimeout(() => {
+        list.classList.remove('is-scrolling');
+        state.scrollTimers.delete(list);
+      }, 600));
+    }
+
+    function updateAllHiddenActiveIndicators() {
+      for (const list of elements.columns.querySelectorAll('.node-list')) {
+        updateHiddenActiveIndicators(list);
+      }
+    }
+
+    function updateHiddenActiveIndicators(list) {
+      const stage = list.closest('.stage');
+      if (!stage) return;
+
+      const topIndicator = stage.querySelector('.active-hidden-top');
+      const bottomIndicator = stage.querySelector('.active-hidden-bottom');
+      const listRect = list.getBoundingClientRect();
+      let above = 0;
+      let below = 0;
+
+      for (const node of list.querySelectorAll('.node.is-active')) {
+        const rect = node.getBoundingClientRect();
+        if (rect.bottom <= listRect.top + 2) {
+          above += 1;
+        } else if (rect.top >= listRect.bottom - 2) {
+          below += 1;
+        }
+      }
+
+      setHiddenActiveIndicator(topIndicator, above, 'up');
+      setHiddenActiveIndicator(bottomIndicator, below, 'down');
+    }
+
+    function setHiddenActiveIndicator(indicator, count, direction) {
+      if (!indicator) return;
+
+      if (count > 0) {
+        indicator.textContent = (direction === 'up' ? '↑ ' : '↓ ') + count + ' active hidden';
+        indicator.classList.add('is-visible');
+      } else {
+        indicator.textContent = '';
+        indicator.classList.remove('is-visible');
+      }
+    }
+
+    function renderNode(node, selected, activeSet) {
+      const isSelected = node.id === selected;
+      const active = activeSet.has(node.id);
+      const muted = selected && activeSet.size > 0 && !active;
+      const title = formatNodeTitle(node);
+      const tags = (node.tags || []).slice(0, 3).map((tag) => '<span class="tag">' + escapeHtml(tag) + '</span>').join('');
+      const detailToggle = isSelected
+        ? '<button class="card-detail-toggle" type="button" title="' + (state.asideCollapsed ? 'Show details' : 'Hide details') + '" aria-label="' + (state.asideCollapsed ? 'Show details' : 'Hide details') + '" aria-expanded="' + String(!state.asideCollapsed) + '">' + asideToggleIcon(state.asideCollapsed) + '</button>'
+        : '';
+      return '<div class="node' + (isSelected ? ' is-selected' : '') + (active ? ' is-active' : '') + (muted ? ' is-muted' : '') + '" data-stage="' + node.stage + '" data-id="' + escapeHtml(node.id) + '" role="button" tabindex="0">' +
+        '<span class="node-id">' + escapeHtml(node.id) + '</span>' +
+        '<span class="node-title">' + title + '</span>' +
+        '<span class="node-tags">' + tags + '</span>' +
+        detailToggle +
+      '</div>';
+    }
+
+    function renderDetail() {
+      const selected = state.graph.nodeById.get(state.selectedId);
+      if (!selected) {
+        elements.detail.innerHTML = '<div class="empty">Select a trace item.</div>';
+        return;
+      }
+
+      const incoming = state.graph.edges.filter((item) => item.to === selected.id);
+      const outgoing = state.graph.edges.filter((item) => item.from === selected.id);
+      const raw = selected.raw || {};
+
+      elements.detail.innerHTML =
+        '<div class="detail-head">' +
+          '<p class="detail-kicker">' + escapeHtml(selected.stage) + ' / ' + escapeHtml(selected.type) + '</p>' +
+          '<h2 class="detail-title">' + formatDetailTitle(selected) + '</h2>' +
+          '<div class="detail-id">' + escapeHtml(selected.id) + '</div>' +
+        '</div>' +
+        '<div class="detail-body">' +
+          detailSummary(selected) +
+          detailFields(raw) +
+          relationSection('Inbound', incoming, 'from') +
+          relationSection('Outbound', outgoing, 'to') +
+        '</div>';
+
+      for (const link of elements.detail.querySelectorAll('.entity-link')) {
+        link.addEventListener('click', () => {
+          state.selectedId = link.dataset.id;
+          state.scrollSelectedIntoView = true;
+          render();
+        });
+      }
+    }
+
+    function detailSummary(node) {
+      const text = node.summary || node.title || '';
+      if (!text) return '';
+      if (isDuplicateSummary(node, text)) return '';
+      return '<section class="section"><h3 class="section-title">Focus</h3><p class="detail-text">' + escapeHtml(text) + '</p></section>';
+    }
+
+    function isDuplicateSummary(node, text) {
+      const normalizedText = normalizeDetailText(text);
+      return normalizedText === normalizeDetailText(node.title)
+        || normalizedText === normalizeDetailText(node.id)
+        || normalizedText === normalizeDetailText(node.raw?.path);
+    }
+
+    function normalizeDetailText(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function detailFields(raw) {
+      const rows = [];
+      addRow(rows, 'Route', raw.routePolicy);
+      addRow(rows, 'Kind', raw.kind);
+      addRow(rows, 'Path', raw.path);
+      addRow(rows, 'File', raw.file);
+      addRow(rows, 'Given', raw.given);
+      addRow(rows, 'When', raw.when);
+      addRow(rows, 'Then', raw.then);
+      addRow(rows, 'Source', raw.sourceRef);
+      if (!rows.length) return '';
+      return '<section class="section"><h3 class="section-title">Fields</h3><div class="kv">' + rows.join('') + '</div></section>';
+    }
+
+    function addRow(rows, key, value) {
+      if (!value) return;
+      rows.push('<div class="kv-row"><span class="kv-key">' + escapeHtml(key) + '</span><span>' + formatDetailValue(key, String(value)) + '</span></div>');
+    }
+
+    function relationSection(title, edges, side) {
+      if (!edges.length) {
+        return '<section class="section"><h3 class="section-title">' + title + '</h3><p class="detail-text">None.</p></section>';
+      }
+      return '<section class="section"><h3 class="section-title">' + title + '</h3><div class="link-list">' +
+        edges.map((item) => relationLink(item, side)).join('') +
+      '</div></section>';
+    }
+
+    function relationLink(edgeItem, side) {
+      const id = edgeItem[side];
+      const node = state.graph.nodeById.get(id);
+      const type = edgeItem.kind + ' / ' + (node ? node.stage : 'missing');
+      return '<button class="entity-link" type="button" data-id="' + escapeHtml(id) + '">' +
+        '<span class="entity-link-id">' + escapeHtml(id) + '</span>' +
+        '<span class="entity-link-type">' + escapeHtml(type) + '</span>' +
+      '</button>';
+    }
+
+    function visibleNodeIds() {
+      const all = new Set(state.graph.nodes.map((node) => node.id));
+      let ids = all;
+
+      if (state.query) {
+        const matched = state.graph.nodes
+          .filter((node) => haystack(node).includes(state.query))
+          .map((node) => node.id);
+        ids = new Set(matched);
+        for (const id of matched) {
+          for (const relatedId of state.graph.related.get(id) || []) {
+            ids.add(relatedId);
+          }
+        }
+      }
+
+      if (state.stage !== 'all') {
+        ids = new Set([...ids].filter((id) => state.graph.nodeById.get(id)?.stage === state.stage));
+      }
+
+      return ids;
+    }
+
+    function activeNeighborhood() {
+      if (!state.selectedId) return new Set();
+      return new Set([state.selectedId, ...(state.graph.related.get(state.selectedId) || [])]);
+    }
+
+    function handleGraphWheel(event) {
+      const columnList = event.target.closest ? event.target.closest('.node-list') : null;
+      const horizontalIntent = event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
+
+      if (horizontalIntent) {
+        const delta = event.deltaX || event.deltaY;
+        if (delta) {
+          elements.graphViewport.scrollLeft += delta;
+          event.preventDefault();
+          requestAnimationFrame(drawEdges);
+        }
+        return;
+      }
+
+      if (columnList) {
+        const before = columnList.scrollTop;
+        columnList.scrollTop += event.deltaY;
+        if (columnList.scrollTop !== before) {
+          event.preventDefault();
+          requestAnimationFrame(drawEdges);
+        }
+        return;
+      }
+
+      if (event.deltaY) {
+        elements.graphViewport.scrollLeft += event.deltaY;
+        event.preventDefault();
+        requestAnimationFrame(drawEdges);
+      }
+    }
+
+    function drawEdges() {
+      const graph = state.graph;
+      if (!graph) return;
+
+      const visible = visibleNodeIds();
+      const activeSet = activeNeighborhood();
+      const selected = state.selectedId;
+      const canvas = elements.stageCanvas;
+      const canvasRect = canvas.getBoundingClientRect();
+      const width = Math.max(canvas.scrollWidth, canvas.clientWidth);
+      const height = Math.max(canvas.scrollHeight, canvas.clientHeight);
+
+      elements.links.setAttribute('width', String(width));
+      elements.links.setAttribute('height', String(height));
+      elements.links.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+
+      const nodeElements = new Map(
+        [...elements.columns.querySelectorAll('.node')].map((element) => [element.dataset.id, element])
+      );
+
+      const paths = [];
+      for (const item of graph.edges) {
+        if (!visible.has(item.from) || !visible.has(item.to)) continue;
+        const from = nodeElements.get(item.from);
+        const to = nodeElements.get(item.to);
+        if (!from || !to) continue;
+        if (!isNodeVisibleInColumn(from) || !isNodeVisibleInColumn(to)) continue;
+
+        const fromRect = from.getBoundingClientRect();
+        const toRect = to.getBoundingClientRect();
+        const x1 = fromRect.right - canvasRect.left;
+        const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
+        const x2 = toRect.left - canvasRect.left;
+        const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
+        const bend = Math.max(42, Math.min(120, Math.abs(x2 - x1) / 2));
+        const d = 'M ' + x1 + ' ' + y1 + ' C ' + (x1 + bend) + ' ' + y1 + ', ' + (x2 - bend) + ' ' + y2 + ', ' + x2 + ' ' + y2;
+        const active = selected && activeSet.has(item.from) && activeSet.has(item.to) && (item.from === selected || item.to === selected);
+        const muted = selected && !active;
+        paths.push('<path class="' + (active ? 'is-active' : '') + (muted ? ' is-muted' : '') + '" d="' + d + '" stroke="' + (EDGE_COLORS[item.kind] || '#a99d8b') + '"></path>');
+      }
+
+      elements.links.innerHTML = paths.join('');
+    }
+
+    function isNodeVisibleInColumn(element) {
+      const list = element.closest('.node-list');
+      if (!list) return true;
+      const nodeRect = element.getBoundingClientRect();
+      const listRect = list.getBoundingClientRect();
+      return nodeRect.bottom > listRect.top + 2 && nodeRect.top < listRect.bottom - 2;
+    }
+
+    function haystack(node) {
+      return [
+        node.id,
+        node.title,
+        node.summary,
+        node.stage,
+        node.type,
+        node.sourceRef,
+        JSON.stringify(node.raw || {}),
+      ].join(' ').toLowerCase();
+    }
+
+    function formatNodeTitle(node) {
+      if (node.stage === 'artifacts' && node.title.includes('/')) {
+        return formatPathLines(node.title);
+      }
+      return escapeHtml(compact(node.title, 160));
+    }
+
+    function formatDetailTitle(node) {
+      if (node.stage === 'artifacts' && node.title.includes('/')) {
+        return formatPathLines(node.title);
+      }
+      return escapeHtml(node.title);
+    }
+
+    function formatDetailValue(key, value) {
+      if ((key === 'Path' || key === 'File') && value.includes('/')) {
+        return formatPathLines(value);
+      }
+      return escapeHtml(value);
+    }
+
+    function formatPathLines(path) {
+      return wrapPathForCard(path)
+        .map((line) => '<span class="path-line">' + escapeHtml(line) + '</span>')
+        .join('');
+    }
+
+    function wrapPathForCard(path) {
+      const parts = path.split('/');
+      const lines = [];
+      let current = '';
+
+      for (const [index, part] of parts.entries()) {
+        const suffix = index < parts.length - 1 ? '/' : '';
+        const next = part + suffix;
+        if (current && (current + next).length > 28) {
+          lines.push(current);
+          current = next;
+        } else {
+          current += next;
+        }
+      }
+
+      if (current) {
+        lines.push(current);
+      }
+      return lines;
+    }
+
+    function compact(value, max) {
+      if (!value || value.length <= max) return value || '';
+      return value.slice(0, max - 1) + '...';
+    }
+
+    function asideToggleIcon(isCollapsed) {
+      const chevron = isCollapsed ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6';
+      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5v14"></path><path d="' + chevron + '"></path></svg>';
+    }
+
+    function readStoredBoolean(key, fallback) {
+      try {
+        const value = localStorage.getItem(key);
+        return value === null ? fallback : value === 'true';
+      } catch {
+        return fallback;
+      }
+    }
+
+    function writeStoredBoolean(key, value) {
+      try {
+        localStorage.setItem(key, String(value));
+      } catch {
+        // Ignore storage failures; the in-memory state still applies for this page load.
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+  </script>
+</body>
+</html>

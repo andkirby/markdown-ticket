@@ -1,7 +1,7 @@
 import type { SubDocument } from '@mdt/shared/models/SubDocument'
 import type { TypedEvent } from '../../services/eventBus'
 import type { Ticket } from '../../types'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Network } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
@@ -24,9 +24,11 @@ import TableOfContents from '../shared/TableOfContents'
 import { Modal, ModalBody } from '../ui/Modal'
 import { CompactTicketHeader } from './CompactTicketHeader'
 import { TicketDocumentTabs } from './TicketDocumentTabs'
+import { TraceGraphShell } from './TraceGraphShell'
 import { useTicketDocumentContent } from './useTicketDocumentContent'
 import { useTicketDocumentNavigation } from './useTicketDocumentNavigation'
 import { useTicketDocumentRealtime } from './useTicketDocumentRealtime'
+import { useTraceStoreAvailability } from './useTraceStoreAvailability'
 
 interface TicketViewerProps {
   ticket: Ticket | null
@@ -40,6 +42,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
   const { projectCode } = useParams<{ projectCode: string }>()
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(ticket)
   const [markdownDensity, setMarkdownDensity] = useState(getMarkdownDensity)
+  const [isTraceGraphOpen, setIsTraceGraphOpen] = useState(false)
 
   // MDT-094: Update internal state when prop changes.
   // When a ticket is selected, fetch full ticket content if not already present.
@@ -159,6 +162,21 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
     onActiveRemoved: () => selectPath('main'),
   })
 
+  const traceStoreAvailability = useTraceStoreAvailability({
+    projectCode: projectCode ?? '',
+    ticketCode: currentTicket?.code ?? '',
+    isEnabled: isOpen && !!currentTicket,
+  })
+
+  useEffect(() => {
+    if (!isOpen)
+      setIsTraceGraphOpen(false)
+  }, [isOpen])
+
+  useEffect(() => {
+    setIsTraceGraphOpen(false)
+  }, [currentTicket?.code])
+
   const { content: subdocContent, loading: subdocLoading, error: subdocError, invalidateCache, invalidateAndRefetch } = useTicketDocumentContent({
     projectId: projectCode ?? '',
     ticketCode: currentTicket?.code ?? '',
@@ -239,90 +257,121 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
   if (!currentTicket && !ticketError)
     return null
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl" data-testid="ticket-detail">
-      <TableOfContents items={tocItems} view="ticket" />
-      <button
-        type="button"
-        aria-label="Close ticket viewer"
-        data-testid="close-detail"
-        className="modal__close--absolute"
-        onClick={onClose}
-      >
-        <svg
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+  const traceGraphAction = traceStoreAvailability.hasTraceStore
+    ? (
+        <button
+          type="button"
+          className="trace-graph-action"
+          onClick={() => setIsTraceGraphOpen(true)}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-      <ModalBody className="p-0">
-        {ticketError && !ticket
-          ? (
-              <div data-testid="ticket-not-found" className="flex flex-col items-center justify-center py-16 px-6">
-                <AlertTriangle className="h-10 w-10 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Ticket Not Found</h3>
-                <p className="text-muted-foreground text-center">{ticketError}</p>
-              </div>
-            )
-          : (
-              <div className="min-w-0">
-                <CompactTicketHeader ticket={currentTicket!} />
+          <Network aria-hidden="true" />
+          <span>Trace Graph</span>
+        </button>
+      )
+    : null
 
-                <TicketDocumentTabs
-                  subdocuments={liveSubdocs}
-                  selectedPath={selectedPath}
-                  folderStack={folderStack}
-                  onSelect={selectPath}
-                  ticketCode={currentTicket?.code ?? ''}
-                />
+  return (
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="xl"
+        closeOnEscape={!isTraceGraphOpen}
+        closeOnOverlayClick={!isTraceGraphOpen}
+        data-testid="ticket-detail"
+      >
+        <TableOfContents items={tocItems} view="ticket" />
+        <button
+          type="button"
+          aria-label="Close ticket viewer"
+          data-testid="close-detail"
+          className="modal__close--absolute"
+          onClick={onClose}
+        >
+          <svg
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+        <ModalBody className="p-0">
+          {ticketError && !ticket
+            ? (
+                <div data-testid="ticket-not-found" className="flex flex-col items-center justify-center py-16 px-6">
+                  <AlertTriangle className="h-10 w-10 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Ticket Not Found</h3>
+                  <p className="text-muted-foreground text-center">{ticketError}</p>
+                </div>
+              )
+            : (
+                <div className="min-w-0">
+                  <CompactTicketHeader ticket={currentTicket!} action={traceGraphAction} />
 
-                <div data-testid="subdoc-content" className="relative">
-                  {subdocError && (
-                    <div data-testid="subdoc-error" className="px-4 py-3 text-sm text-destructive" role="alert">
-                      {subdocError}
-                    </div>
-                  )}
-                  {!subdocError && isOpen && projectCode && (
-                    <>
-                      {(pendingPath || subdocLoading) && (
-                        <div data-testid="subdoc-loading" className="absolute inset-0 z-10 flex items-start justify-center pt-8 bg-background/50">
-                          <span className="text-muted-foreground text-sm animate-pulse">
-                            Loading…
-                          </span>
-                        </div>
-                      )}
-                      <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'pointer-events-none opacity-50' : ''}>
-                        <div className="relative modal__section--content">
-                          <div className="relative-timestamp__floating static mb-2 justify-end sm:absolute sm:mb-0">
-                            <RelativeTimestamp
-                              createdAt={currentTicket!.dateCreated}
-                              updatedAt={currentTicket!.lastModified}
+                  <TicketDocumentTabs
+                    subdocuments={liveSubdocs}
+                    selectedPath={selectedPath}
+                    folderStack={folderStack}
+                    onSelect={selectPath}
+                    ticketCode={currentTicket?.code ?? ''}
+                  />
+
+                  <div data-testid="subdoc-content" className="relative">
+                    {subdocError && (
+                      <div data-testid="subdoc-error" className="px-4 py-3 text-sm text-destructive" role="alert">
+                        {subdocError}
+                      </div>
+                    )}
+                    {!subdocError && isOpen && projectCode && (
+                      <>
+                        {(pendingPath || subdocLoading) && (
+                          <div data-testid="subdoc-loading" className="absolute inset-0 z-10 flex items-start justify-center pt-8 bg-background/50">
+                            <span className="text-muted-foreground text-sm animate-pulse">
+                              Loading…
+                            </span>
+                          </div>
+                        )}
+                        <div data-testid="ticket-content" className={pendingPath || subdocLoading ? 'pointer-events-none opacity-50' : ''}>
+                          <div className="relative modal__section--content">
+                            <div className="relative-timestamp__floating static mb-2 justify-end sm:absolute sm:mb-0">
+                              <RelativeTimestamp
+                                createdAt={currentTicket!.dateCreated}
+                                updatedAt={currentTicket!.lastModified}
+                              />
+                            </div>
+                            <MarkdownContent
+                              markdown={subdocContent}
+                              currentProject={projectCode}
+                              sourcePath={selectedPath === 'main' ? `${currentTicket?.code}.md` : `${currentTicket?.code}/${selectedPath}.md`}
+                              ticketsPath={ticketsPath}
+                              headerLevelStart={3}
+                              className={`prose prose--ticket ${getMarkdownDensityClass(markdownDensity)} max-w-none dark:prose-invert`}
                             />
                           </div>
-                          <MarkdownContent
-                            markdown={subdocContent}
-                            currentProject={projectCode}
-                            sourcePath={selectedPath === 'main' ? `${currentTicket?.code}.md` : `${currentTicket?.code}/${selectedPath}.md`}
-                            ticketsPath={ticketsPath}
-                            headerLevelStart={3}
-                            className={`prose prose--ticket ${getMarkdownDensityClass(markdownDensity)} max-w-none dark:prose-invert`}
-                          />
                         </div>
-                      </div>
-                    </>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-      </ModalBody>
-    </Modal>
+              )}
+        </ModalBody>
+      </Modal>
+
+      {currentTicket && (
+        <TraceGraphShell
+          isOpen={isTraceGraphOpen}
+          projectCode={projectCode ?? ''}
+          ticketCode={currentTicket.code}
+          onClose={() => setIsTraceGraphOpen(false)}
+        />
+      )}
+    </>
   )
 }
 

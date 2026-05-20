@@ -21,6 +21,12 @@ type CreateTicketData = TicketData & {
   status?: Status
 }
 
+export interface TraceStoreMetadata {
+  exists: boolean
+  ticketCode: string
+  label: string
+}
+
 type ApiTicketItem = Partial<Omit<Ticket, 'dateCreated' | 'lastModified' | 'implementationDate'>> & {
   key?: string
   path?: string
@@ -218,6 +224,38 @@ class DataLayer {
 
     if (!response.ok) {
       throw new Error(`Failed to fetch sub-document ${subDocName}: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+
+  async fetchTraceStoreMetadata(projectId: string, ticketCode: string): Promise<TraceStoreMetadata> {
+    const response = await fetch(
+      `${this.baseUrl}/projects/${projectId}/crs/${ticketCode}/trace-store/meta`,
+    )
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return {
+          exists: false,
+          ticketCode,
+          label: `${ticketCode}/store.json`,
+        }
+      }
+
+      throw new Error(`Failed to fetch trace store metadata: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+
+  async fetchTraceStore(projectId: string, ticketCode: string): Promise<unknown> {
+    const response = await fetch(
+      `${this.baseUrl}/projects/${projectId}/crs/${ticketCode}/trace-store`,
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace store: ${response.statusText}`)
     }
 
     return response.json()

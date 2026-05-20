@@ -12,9 +12,10 @@ import type { CRStatus } from '@mdt/shared/models/Types.js'
 import { TICKET_KEY_INPUT_PATTERN } from '@mdt/domain-contracts'
 import { groupNamespacedFiles, parseNamespace } from '@mdt/shared/services/ticket/subdocuments/namespace.js'
 import { SubdocumentService } from '@mdt/shared/services/ticket/SubdocumentService.js'
-import { normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { TicketLocationResolver } from '@mdt/shared/services/ticket/TicketLocationResolver.js'
 import { TicketService as SharedTicketService } from '@mdt/shared/services/TicketService.js'
+import { normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
+import { TraceStoreService } from './TraceStoreService.js'
 
 export type CRData = Pick<TicketData, 'title' | 'type' | 'priority' | 'description'> & {
   code?: string
@@ -74,12 +75,14 @@ export class TicketService {
   private readonly sharedTicketService: SharedTicketService
   private readonly ticketLocationResolver: TicketLocationResolver
   private readonly subdocumentService: SubdocumentService
+  private readonly traceStoreService: TraceStoreService
 
   constructor(projectDiscovery: ProjectDiscovery) {
     this.projectDiscovery = projectDiscovery
     this.sharedTicketService = new SharedTicketService(false)
     this.ticketLocationResolver = new TicketLocationResolver()
     this.subdocumentService = new SubdocumentService()
+    this.traceStoreService = new TraceStoreService()
   }
 
   /**
@@ -135,6 +138,36 @@ export class TicketService {
     const project = await this.getProject(projectId)
     const location = await this.ticketLocationResolver.resolve(project, crId)
     return this.subdocumentService.read(location, subDocName)
+  }
+
+  async getTraceStoreMetadata(
+    projectId: string,
+    crId: string,
+  ): Promise<{ exists: boolean, ticketCode: string, label: string }> {
+    const project = await this.getProject(projectId)
+    const cr = await this.sharedTicketService.getCR(project, crId)
+
+    if (!cr) {
+      throw new Error('CR not found')
+    }
+
+    const location = await this.ticketLocationResolver.resolve(project, crId)
+    return this.traceStoreService.getMetadata(location, crId)
+  }
+
+  async getTraceStore(
+    projectId: string,
+    crId: string,
+  ): Promise<{ metadata: { exists: boolean, ticketCode: string, label: string }, store: unknown }> {
+    const project = await this.getProject(projectId)
+    const cr = await this.sharedTicketService.getCR(project, crId)
+
+    if (!cr) {
+      throw new Error('CR not found')
+    }
+
+    const location = await this.ticketLocationResolver.resolve(project, crId)
+    return this.traceStoreService.read(location, crId)
   }
 
   /**
@@ -250,6 +283,10 @@ export class TicketService {
    * resolve project, look up ticket.
    */
   private async searchByTicketKey(query: string, limitTotal: number): Promise<SearchResponse> {
+    if (limitTotal < 1) {
+      return { results: [], total: 0 }
+    }
+
     // Extract project code from ticket key (e.g., "MDT-001" → "MDT")
     const match = query.match(TICKET_KEY_INPUT_PATTERN)
     if (!match) {
