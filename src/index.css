@@ -25,6 +25,7 @@
 /* Component-local CSS (follows STYLING.md component-folder pattern) */
 @import './components/Badge/badge.css';
 @import './components/SmartLink/smart-link.css';
+@import './components/TicketViewer/ticket-viewer.css';
 @import './components/ui/modal.css';
 @import './components/SettingsModal/settings.css';
 @import './components/DocumentsView/documents-view.css';

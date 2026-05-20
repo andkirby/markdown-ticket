@@ -21,6 +21,8 @@ window "Ticket Viewer — With Sub-Docs":
       chip "Assignee:Bob" id="tv-assignee"
       chip "🪾 Worktree" id="tv-worktree"
       chip "Related:3" id="tv-related"
+      spacer
+      button "Trace Graph" icon="tech" id="tv-trace-action"
     divider
     tabs id="tv-doc-tabs":
       tab "Main" active id="tv-tab-main"
@@ -44,6 +46,7 @@ window "Ticket Viewer — With Sub-Docs":
 
 annotation "Title bar with border-b" target="tv-title" position=top
 annotation "Badge bar wraps if needed" target="tv-status" position=right
+annotation "Trace Graph appears only when the standard trace store exists" target="tv-trace-action" position=right
 annotation "Document tabs hidden if no subdocs" target="tv-doc-tabs" position=right
 annotation "RelativeTimestamp, absolute right-4 top-4" target="tv-timestamp" position=right
 annotation "ToC: collapsible sidebar" target="tv-toc-1" position=left
@@ -75,6 +78,66 @@ window "Ticket Viewer — No Sub-Docs":
     text "2. Enter credentials" muted
 
 annotation "No tab row, no ContextBadge/Relationship badges" target="tv-ns-title" position=right
+```
+
+## Trace Store Present
+
+```wireloom
+window "Ticket Viewer — Trace Store Present":
+  panel:
+    row:
+      text "MDT-169 • Document view filename tabs" bold id="tv-trace-title"
+      spacer
+      button "×"
+    divider
+    row:
+      chip "In Progress"
+      chip "High" accent=danger
+      chip "Feature"
+      spacer
+      button "Trace Graph" icon="tech" id="tv-trace-button"
+    divider
+    tabs:
+      tab "Main" active
+      tab "Requirements"
+      tab "Tasks"
+    divider
+    text "## Summary" bold
+    text "Ticket content remains the default view." muted
+
+annotation "Action is rendered, not disabled, only after trace metadata confirms store presence" target="tv-trace-button" position=right
+```
+
+## Trace Graph Shell
+
+```wireloom
+window "Ticket Viewer — Trace Graph Shell":
+  panel id="trace-shell":
+    panel id="trace-iframe":
+      row id="trace-floating-layer":
+        backbutton "Back" id="trace-back"
+      text "Trace dashboard iframe" muted
+      text "Dashboard styles and controls are isolated inside the iframe." muted
+
+annotation "Back floats above the iframe with a translucent non-blurred background; it is not part of the dashboard HTML" target="trace-back" position=bottom
+annotation "Viewport shell has no modal padding, margin, rounded card, or shadow" target="trace-shell" position=left
+annotation "Iframe is a black box; this mockup does not specify graph-board internals" target="trace-iframe" position=right
+```
+
+## Trace Graph Unavailable After Open
+
+```wireloom
+window "Ticket Viewer — Trace Graph Unavailable":
+  panel:
+    row id="trace-error-floating-layer":
+      backbutton "Back" id="trace-error-back"
+    panel:
+      icon name="warning" id="trace-error-icon"
+      text "Trace store unavailable" bold id="trace-error-title"
+      text "The trace data for this ticket could not be loaded." muted
+
+annotation "Back remains available even when the iframe/store fails" target="trace-error-back" position=bottom
+annotation "Error belongs to the shell because the store failed before dashboard use" target="trace-error-title" position=right
 ```
 
 ## Sub-Document Loading
@@ -158,6 +221,8 @@ window "Ticket Viewer — Mobile":
       chip "Proposed"
       chip "Medium"
       chip "Bug"
+    row:
+      button "Trace Graph" icon="tech" id="tv-m-trace"
     divider
     row:
       spacer
@@ -173,6 +238,7 @@ Mobile behavior:
 - Sub-document tabs stay visible when sub-documents exist, but use horizontal scroll instead of wrapping.
 - The table of contents is hidden by default on mobile and opens from a compact content-menu control.
 - Timestamp remains above content, not absolute-positioned over the title.
+- Trace Graph wraps onto its own row when badges leave no stable inline space.
 
 ## Annotations
 
@@ -184,6 +250,9 @@ Mobile behavior:
 | Title bar | `--foreground` | `text-base font-semibold` | `border-b`, `px-4 py-3` |
 | Badge bar | badge.css | `flex flex-wrap gap-2` | `border-b`, `px-4 py-2.5` |
 | Document tabs | `--primary` | `sticky top-0 z-10` | Active: `border-b-2 border-primary` |
+| Trace action | `--primary`, `--border` | small secondary button or inline Tailwind | Ticket-scoped action, hidden when no trace store |
+| Trace back control | `--background`, `--border` | `.trace-graph-shell__back` | Floating translucent Back over iframe |
+| Trace iframe | n/a | iframe inside `.trace-graph-shell` | Dashboard styles remain isolated; graph internals are out of scope |
 | Content area | `--background` | `px-4 py-4 sm:px-5` | |
 | RelativeTimestamp | `--muted-foreground` | `absolute right-4 top-4` | z-[1] |
 | Loading overlay | `--background` | `bg-background/50` | `animate-pulse` |

@@ -121,6 +121,9 @@ export function createProjectRouter(projectController: ProjectController): Route
    */
   router.get('/:projectId/crs/:crId/subdocuments/:subDocName', (req, res) => projectController.getSubDocument(req, res))
 
+  router.get('/:projectId/crs/:crId/trace-store/meta', (req, res) => projectController.getTraceStoreMetadata(req, res))
+  router.get('/:projectId/crs/:crId/trace-store', (req, res) => projectController.getTraceStore(req, res))
+
   // MDT-151: Catch path-traversal attempts that Express resolves before route matching
   // e.g. /subdocuments/../etc/passwd → resolved to /etc/passwd, misses the subdocuments route
   // Return same 404 body as subdocument handler to avoid information leakage
