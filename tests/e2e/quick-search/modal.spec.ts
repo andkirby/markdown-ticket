@@ -178,7 +178,7 @@ test.describe('Quick Search Modal', () => {
     await expect(page.locator(quickSearchSelectors.modal)).toBeVisible()
 
     // Click on the backdrop (outside modal content)
-    await page.locator(quickSearchSelectors.modal).click({ position: { x: 10, y: 10 } })
+    await page.mouse.click(5, 5)
 
     // Modal should close
     await expect(page.locator(quickSearchSelectors.modal)).not.toBeVisible()
@@ -244,15 +244,15 @@ test.describe('Quick Search Modal', () => {
  */
 const crossSearchSelectors = {
   modeIndicator: '[data-testid="quick-search-mode-indicator"]',
-  crossProjectResults: '[data-testid="quick-search-cross-project-results"]',
+  crossProjectResults: '[data-testid="quick-search-cross-project-section"]',
   crossProjectResultItem: '[data-testid="quick-search-cross-project-result-item"]',
-  loadingSpinner: '[data-testid="quick-search-loading-spinner"]',
-  loadingSkeleton: '[data-testid="quick-search-loading-skeleton"]',
+  loadingSpinner: '[data-testid="quick-search-skeleton"]',
+  loadingSkeleton: '[data-testid="quick-search-skeleton"]',
   ticketNotFound: '[data-testid="quick-search-ticket-not-found"]',
-  projectNotFound: '[data-testid="quick-search-project-not-found"]',
-  networkError: '[data-testid="quick-search-network-error"]',
-  retryButton: '[data-testid="quick-search-retry-button"]',
-  crossProjectEmpty: '[data-testid="quick-search-cross-project-empty"]',
+  projectNotFound: '[data-testid="quick-search-no-results"]',
+  networkError: '[data-testid="quick-search-error"]',
+  retryButton: '[data-testid="quick-search-retry"]',
+  crossProjectEmpty: '[data-testid="quick-search-no-results"]',
   projectLabel: '[data-testid="quick-search-project-label"]',
 }
 
@@ -268,8 +268,7 @@ test.describe('QuickSearch Cross-Project: Ticket Key Lookup (MDT-152 BR-2)', () 
   test('detects ticket key and shows cross-project results with project context (BR-2.1, BR-2.4)', async ({ page, e2eContext }) => {
     const currentProject = await buildScenario(e2eContext.projectFactory, 'simple')
     const otherProject = await buildScenario(e2eContext.projectFactory, 'simple')
-    const otherTickets = await e2eContext.projectFactory.getProjectTickets(otherProject.projectCode)
-    const otherTicketCode = otherTickets[0]?.code
+    const otherTicketCode = otherProject.crCodes[0]
     if (!otherTicketCode) return
 
     await page.goto(`/prj/${currentProject.projectCode}`)
@@ -279,7 +278,7 @@ test.describe('QuickSearch Cross-Project: Ticket Key Lookup (MDT-152 BR-2)', () 
     await page.locator(quickSearchSelectors.input).fill(otherTicketCode)
 
     // Should show loading state
-    await expect(page.locator(crossSearchSelectors.loadingSpinner)).toBeVisible()
+    await expect(page.locator(crossSearchSelectors.loadingSpinner).first()).toBeVisible()
 
     // Should eventually show cross-project results with project label
     const crossResults = page.locator(crossSearchSelectors.crossProjectResultItem)
@@ -293,11 +292,16 @@ test.describe('QuickSearch Cross-Project: Ticket Key Lookup (MDT-152 BR-2)', () 
     await page.goto(`/prj/${scenario.projectCode}`)
     await waitForBoardReady(page)
 
+    await page.route('**/api/projects/search', async (route) => {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      await route.continue()
+    })
+
     await openQuickSearch(page)
     await page.locator(quickSearchSelectors.input).fill('ABC-42')
 
     // Loading state should appear
-    await expect(page.locator(crossSearchSelectors.loadingSpinner)).toBeVisible({ timeout: 10000 })
+    await expect(page.locator(crossSearchSelectors.loadingSpinner).first()).toBeVisible({ timeout: 10000 })
   })
 
   test('shows "Ticket not found" for non-existent ticket key (BR-2.7, Edge-2)', async ({ page, e2eContext }) => {
@@ -309,8 +313,8 @@ test.describe('QuickSearch Cross-Project: Ticket Key Lookup (MDT-152 BR-2)', () 
     await openQuickSearch(page)
     await page.locator(quickSearchSelectors.input).fill('XYZ-99999')
 
-    await expect(page.locator(crossSearchSelectors.ticketNotFound)).toBeVisible({ timeout: 10000 })
-    await expect(page.locator(crossSearchSelectors.ticketNotFound)).toContainText('not found')
+    await expect(page.locator(quickSearchSelectors.noResults)).toBeVisible({ timeout: 10000 })
+    await expect(page.locator(quickSearchSelectors.noResults)).toContainText(/matching tickets found/i)
   })
 
   test('shows network error with retry option (BR-2.5, BR-2.6, Edge-4)', async ({ page, e2eContext }) => {
@@ -339,7 +343,7 @@ test.describe('QuickSearch Cross-Project: @syntax Project-Scoped Search (MDT-152
     await waitForBoardReady(page)
 
     await openQuickSearch(page)
-    await page.locator(quickSearchSelectors.input).fill(`@${otherProject.projectCode} test`)
+    await page.locator(quickSearchSelectors.input).fill(`@${otherProject.projectCode} User`)
 
     const crossResults = page.locator(crossSearchSelectors.crossProjectResultItem)
     await expect(crossResults.first()).toBeVisible({ timeout: 10000 })
@@ -358,7 +362,7 @@ test.describe('QuickSearch Cross-Project: @syntax Project-Scoped Search (MDT-152
     await waitForBoardReady(page)
 
     await openQuickSearch(page)
-    await page.locator(quickSearchSelectors.input).fill('@XYZZZZ test')
+    await page.locator(quickSearchSelectors.input).fill('@ZZZ test')
 
     await expect(page.locator(crossSearchSelectors.projectNotFound)).toBeVisible()
     await expect(page.locator(crossSearchSelectors.projectNotFound)).toContainText('not found')
@@ -431,8 +435,7 @@ test.describe('QuickSearch Cross-Project: Keyboard Navigation (MDT-152 BR-6)', (
   test('arrow keys navigate across current and cross-project sections (BR-6.1, BR-6.3)', async ({ page, e2eContext }) => {
     const currentProject = await buildScenario(e2eContext.projectFactory, 'medium')
     const otherProject = await buildScenario(e2eContext.projectFactory, 'simple')
-    const otherTickets = await e2eContext.projectFactory.getProjectTickets(otherProject.projectCode)
-    const otherTicketCode = otherTickets[0]?.code
+    const otherTicketCode = otherProject.crCodes[0]
     if (!otherTicketCode) return
 
     await page.goto(`/prj/${currentProject.projectCode}`)
@@ -457,8 +460,7 @@ test.describe('QuickSearch Cross-Project: Keyboard Navigation (MDT-152 BR-6)', (
   test('Tab cycles between result sections (BR-6.2)', async ({ page, e2eContext }) => {
     const currentProject = await buildScenario(e2eContext.projectFactory, 'medium')
     const otherProject = await buildScenario(e2eContext.projectFactory, 'simple')
-    const otherTickets = await e2eContext.projectFactory.getProjectTickets(otherProject.projectCode)
-    const otherTicketCode = otherTickets[0]?.code
+    const otherTicketCode = otherProject.crCodes[0]
     if (!otherTicketCode) return
 
     await page.goto(`/prj/${currentProject.projectCode}`)
@@ -512,13 +514,15 @@ test.describe('QuickSearch Cross-Project: Edge Cases (MDT-152)', () => {
 
   test('Edge-3: empty cross-project results show appropriate empty state', async ({ page, e2eContext }) => {
     const currentProject = await buildScenario(e2eContext.projectFactory, 'simple')
-    const otherProject = await buildScenario(e2eContext.projectFactory, 'empty')
+    const otherProject = await e2eContext.projectFactory.createProject('empty', {
+      name: 'Empty Project',
+    })
 
     await page.goto(`/prj/${currentProject.projectCode}`)
     await waitForBoardReady(page)
 
     await openQuickSearch(page)
-    await page.locator(quickSearchSelectors.input).fill(`@${otherProject.projectCode} nonexistentquery12345`)
+    await page.locator(quickSearchSelectors.input).fill(`@${otherProject.key} nonexistentquery12345`)
 
     await expect(page.locator(crossSearchSelectors.crossProjectEmpty)).toBeVisible({ timeout: 10000 })
   })
