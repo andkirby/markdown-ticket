@@ -466,15 +466,13 @@ test.describe('Sub-Document Navigation', () => {
 
     // Use direct ticket access URL with sub-document path
     await page.goto(`/ticket/${ticketCode}/architecture.md`)
-    await waitForBoardReady(page)
+    await expect(page.getByText('System architecture details')).toBeVisible({ timeout: 10000 })
 
     // Should redirect to project path and load the sub-document
     // Check that the URL contains the expected path (not exact match due to protocol/domain)
     const url = page.url()
     expect(url).toContain(`/prj/${scenario.projectCode}/ticket/${ticketCode}/architecture.md`)
 
-    const detailPanel = page.locator(ticketSelectors.detailPanel)
-    await expect(detailPanel.locator(subdocSelectors.tabTrigger('architecture'))).toHaveAttribute('aria-selected', 'true')
-    await expect(detailPanel.locator(subdocSelectors.content)).toContainText('System architecture details')
+    await expect(page.getByRole('tab', { name: 'architecture', selected: true })).toBeVisible()
   })
 })
