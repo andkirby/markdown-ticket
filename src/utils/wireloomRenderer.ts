@@ -12,18 +12,25 @@
 
 /** Cache: source+theme → rendered SVG or error HTML */
 const cache = new Map<string, string>()
+const WIRELOOM_PACKAGE = 'wireloom'
+
+interface WireloomModule {
+  default: {
+    render: (id: string, source: string, options: { theme: string }) => Promise<{ svg: string }>
+  }
+}
 
 /** Lazy-loaded wireloom module (null = not loaded yet) */
-let wireloomModule: typeof import('wireloom') | null | undefined
+let wireloomModule: WireloomModule | null | undefined
 
 /**
  * Try to dynamically import wireloom. Returns null if not installed.
  */
-async function loadWireloom(): Promise<typeof import('wireloom') | null> {
+async function loadWireloom(): Promise<WireloomModule | null> {
   if (wireloomModule !== undefined)
     return wireloomModule
   try {
-    wireloomModule = await import('wireloom')
+    wireloomModule = await import(/* @vite-ignore */ WIRELOOM_PACKAGE) as WireloomModule
     return wireloomModule
   }
   catch {
