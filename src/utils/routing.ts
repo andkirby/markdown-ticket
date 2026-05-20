@@ -26,23 +26,37 @@ export function validateProjectCode(code: string): boolean {
 export async function findProjectByTicketKey(ticketKey: string): Promise<string | null> {
   try {
     const response = await fetch('/api/projects')
+    if (!response.ok)
+      return null
+
     const projects: Project[] = await response.json()
-
-    // Fetch all project tickets in parallel
-    const ticketPromises = projects.map(async (project) => {
-      const ticketsResponse = await fetch(`/api/projects/${project.id}/crs`)
-      const tickets: Ticket[] = await ticketsResponse.json()
-      return { project, tickets }
-    })
-
-    const projectTickets = await Promise.all(ticketPromises)
+    if (!Array.isArray(projects))
+      return null
 
     const normalizedKey = normalizeTicketKey(ticketKey)
+    const projectCode = normalizedKey.match(/^([A-Z0-9-]+)-\d+$/)?.[1]
+    const orderedProjects = projectCode
+      ? [
+          ...projects.filter(project => project.project.code === projectCode || project.id === projectCode),
+          ...projects.filter(project => project.project.code !== projectCode && project.id !== projectCode),
+        ]
+      : projects
 
-    // Find project containing the ticket
-    for (const { project, tickets } of projectTickets) {
-      if (tickets.some((ticket: Ticket) => ticket.code === normalizedKey)) {
-        return project.project.code || project.id
+    // Fetch project tickets in order. Ticket keys are normally prefixed with
+    // their project code, so direct routes should resolve without scanning every
+    // accumulated E2E project first.
+    for (const project of orderedProjects) {
+      try {
+        const ticketsResponse = await fetch(`/api/projects/${project.id}/crs`)
+        if (!ticketsResponse.ok)
+          continue
+
+        const tickets: Ticket[] = await ticketsResponse.json()
+        if (Array.isArray(tickets) && tickets.some((ticket: Ticket) => ticket.code === normalizedKey))
+          return project.project.code || project.id
+      }
+      catch (error) {
+        console.warn(`Skipping project '${project.id}' during ticket lookup:`, error)
       }
     }
 
