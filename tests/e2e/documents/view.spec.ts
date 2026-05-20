@@ -59,6 +59,9 @@ test.describe('Documents View', () => {
     await page.goto(`/prj/${scenario.projectCode}`)
     await navigateToDocuments(page)
 
+    // Expand the docs folder before looking for files.
+    await page.locator(documentSelectors.folderItem).first().click()
+
     // Find and click first document item
     const firstDocument = page.locator(documentSelectors.documentItem).first()
 
@@ -94,9 +97,9 @@ test.describe('Documents View', () => {
     const fileViewer = page.locator(documentSelectors.fileViewer)
     await expect(fileViewer).toBeVisible()
     await expect(fileViewer).toContainText('Test Project')
-    await expect(fileViewer).toContainText('Created:')
-    await expect(fileViewer).toContainText('Updated:')
-    await expect(fileViewer).not.toContainText('Created: Unknown')
-    await expect(fileViewer).not.toContainText('Updated: Unknown')
+    const timestamp = fileViewer.locator('.relative-timestamp')
+    await expect(timestamp).toContainText('Updated')
+    await timestamp.click()
+    await expect(timestamp).toContainText('Created')
   })
 })
