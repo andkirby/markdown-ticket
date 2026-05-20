@@ -218,6 +218,21 @@ describe('documents API Tests (MDT-106)', () => {
       expect(response.text.length).toBeGreaterThan(0)
     })
 
+    it('should return root document content when ./ is configured as a document path', async () => {
+      await createTestDocument(projectFactory, projectCode, 'AGENTS.md', '# Agent Instructions\n\nRoot file marker')
+      await setProjectDocumentPaths(projectFactory, projectCode, ['docs', './'])
+
+      try {
+        const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=AGENTS.md`)
+
+        assertSuccess(response, 200)
+        expect(response.text).toContain('Root file marker')
+      }
+      finally {
+        await setProjectDocumentPaths(projectFactory, projectCode, ['docs', 'README.md'])
+      }
+    })
+
     it('should return markdown content with frontmatter', async () => {
       const response = await request(app).get(`/api/documents/content?projectId=${projectCode}&filePath=${documentPaths.api}`)
 
