@@ -67,13 +67,10 @@ describe('markdownItWireloomPlugin', () => {
 })
 
 describe('wireloomRenderer graceful fallback', () => {
-  it('isWireloomAvailable returns false when not installed', async () => {
-    // In test environment, wireloom is not installed as optional dep
+  it('isWireloomAvailable resolves to a boolean', async () => {
     const { isWireloomAvailable } = await import('./wireloomRenderer')
-    // This will attempt dynamic import and fail gracefully
     const available = await isWireloomAvailable()
-    // If wireloom happens to be installed, this is true; if not, false
-    // Either way it should not throw
+
     expect(typeof available).toBe('boolean')
   })
 })
