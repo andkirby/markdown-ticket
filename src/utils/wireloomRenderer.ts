@@ -12,8 +12,6 @@
 
 /** Cache: source+theme → rendered SVG or error HTML */
 const cache = new Map<string, string>()
-const WIRELOOM_PACKAGE = 'wireloom'
-
 interface WireloomModule {
   default: {
     render: (id: string, source: string, options: { theme: string }) => Promise<{ svg: string }>
@@ -30,7 +28,7 @@ async function loadWireloom(): Promise<WireloomModule | null> {
   if (wireloomModule !== undefined)
     return wireloomModule
   try {
-    wireloomModule = await import(/* @vite-ignore */ WIRELOOM_PACKAGE) as WireloomModule
+    wireloomModule = await import('wireloom') as WireloomModule
     return wireloomModule
   }
   catch {
