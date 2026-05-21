@@ -1,5 +1,32 @@
 # Release Notes
 
+## v0.20.0 (2026-05-21)
+
+### New Features
+
+**Markdown Typography Density (MDT-173)**
+- New typography density setting controls how compact or spacious rendered markdown appears
+- Choose from density presets in the Settings modal — applies to both document viewer and ticket viewer
+- Prose styles overhauled with full typographic scale for headings, body text, lists, and code blocks
+- Preference persists across sessions
+
+### Bug Fixes
+
+**Wireloom Rendering Restored (MDT-165)**
+- Wireloom wireframe blocks render correctly again after an earlier regression
+- Wireloom import is now optional — missing dependency no longer crashes the page
+
+**Root Document Content Loading (MDT-106)**
+- Opening a document that has no subdocuments now correctly loads its content instead of showing a blank page
+
+**Deterministic Ticket Lookup (MDT-094)**
+- Direct URL navigation to a specific ticket now resolves reliably, even when multiple ticket keys share similar patterns
+
+**Markdown Line Breaks**
+- Single newlines in markdown now convert to `<br>` tags, matching standard GitHub-flavored markdown behavior
+
+---
+
 ## v0.19.0 (2026-05-18)
 
 ### New Features
