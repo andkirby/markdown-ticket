@@ -5,11 +5,12 @@ Layered architecture for the Express API server.
 ## Layers
 
 ```
-HTTP Clients → server.js → Middleware → Routes → Controllers → Services → Data Storage
+HTTP Clients → server.ts → Generic Middleware → API Auth Gate → Routes → Controllers → Services → Data Storage
 ```
 
 | Layer | Responsibility |
 |-------|---------------|
+| **API Auth Gate** | Protect `/api/*` routes, exempt only public health/status |
 | **Routes** | Define endpoints, map to controllers |
 | **Controllers** | HTTP handling, request/response formatting |
 | **Services** | Business logic, coordinate operations |
@@ -20,6 +21,7 @@ HTTP Clients → server.js → Middleware → Routes → Controllers → Service
 ```
 GET /api/projects/markdown-ticket/crs
   → Middleware (validation, security)
+  → API auth middleware
   → Route handler (projects.js)
   → ProjectController.getProjectCRs()
   → TicketService.getProjectCRs()
@@ -48,6 +50,19 @@ const projectController = new ProjectController(
 const projectRouter = createProjectRouter(projectController)
 app.use('/api/projects', projectRouter)
 ```
+
+## API Authentication Boundary
+
+`server/security/apiAuth.ts` owns backend API auth configuration, credential extraction, route exemption classification, and token comparison. `server/server.ts` mounts `createApiAuthMiddleware()` once at `/api` before protected routers.
+
+New backend API endpoints should be mounted under `/api` after that middleware. They require a token by default. The only public backend API exemptions are:
+
+- `GET /api/status`
+- `GET /api/health`
+
+Supported credentials for protected backend APIs are `Authorization: Bearer <token>` and `X-API-Key: <token>`. Controllers should not implement their own token checks.
+
+Vite middleware endpoints, such as `/api/frontend/logs*`, are not backend Express routes and do not pass through this auth gate. They need a separate boundary.
 
 ## Module Responsibilities
 
