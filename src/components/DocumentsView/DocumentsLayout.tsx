@@ -1,9 +1,11 @@
+import type { PanelImperativeHandle, PanelSize } from 'react-resizable-panels'
 import type { DocumentFile, FileTreeHandle } from './FileTree'
-import { ChevronDown, ChevronUp, Crosshair, ListCollapse, Pencil, Search } from 'lucide-react'
+import { ChevronDown, ChevronUp, Crosshair, ListCollapse, PanelLeftClose, PanelLeftOpen, Pencil, Search } from 'lucide-react'
 import * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { Modal } from '@/components/ui/Modal'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { saveDocumentFavs } from '../../config/documentFavs'
 import {
@@ -29,6 +31,10 @@ import RecentDocuments from './RecentDocuments'
 interface DocumentsLayoutProps {
   projectId: string
 }
+
+const DOCUMENT_NAVIGATION_PANEL_MIN_SIZE = 18
+const DOCUMENT_NAVIGATION_PANEL_MAX_SIZE = 45
+const DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE = 0
 
 export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const { projectCode } = useParams<{ projectCode: string }>()
@@ -58,6 +64,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   const selectedFileTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const updateStateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const navigationPanelRef = useRef<PanelImperativeHandle | null>(null)
   const selectedFileRef = useRef<string | null>(null)
   const fileTreeRef = useRef<FileTreeHandle>(null)
 
@@ -86,6 +93,36 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
     setDocumentNavigationPreferences(projectId, preferences)
     setNavigationPreferencesState(preferences)
   }, [projectId])
+
+  const handleNavigationPanelResize = useCallback((panelSize: PanelSize, _id: string | number | undefined, previousPanelSize: PanelSize | undefined) => {
+    if (!previousPanelSize)
+      return
+
+    const isCollapsed = panelSize.asPercentage <= DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE + 1
+    setNavigationPreferences({
+      ...navigationPreferences,
+      navigationPanelCollapsed: isCollapsed,
+      navigationPanelSize: isCollapsed
+        ? navigationPreferences.navigationPanelSize
+        : panelSize.asPercentage,
+    })
+  }, [navigationPreferences, setNavigationPreferences])
+
+  const handleToggleNavigationPanel = useCallback(() => {
+    const nextCollapsed = !navigationPreferences.navigationPanelCollapsed
+
+    if (nextCollapsed) {
+      navigationPanelRef.current?.collapse()
+    }
+    else {
+      navigationPanelRef.current?.expand()
+    }
+
+    setNavigationPreferences({
+      ...navigationPreferences,
+      navigationPanelCollapsed: nextCollapsed,
+    })
+  }, [navigationPreferences, setNavigationPreferences])
 
   // Helper to sanitize and validate relative path (blocks .. traversal)
   const sanitizePath = (relativePath: string): string | null => {
@@ -610,115 +647,152 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 overflow-hidden">
-      <div className="w-1/3 min-h-0 border-r border-border bg-muted/30 flex flex-col">
-        <div className="p-4 border-b border-border flex-shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-3">
-              <h3 className="font-semibold text-foreground">Documents</h3>
-              <div className="flex items-center space-x-1">
-                <select
-                  value={sortBy}
-                  onChange={e => setSortBy(e.target.value as 'name' | 'title' | 'created' | 'modified')}
-                  className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-28"
-                  title="Sort by"
-                >
-                  <option value="name">Filename</option>
-                  <option value="title">Title</option>
-                  <option value="created">Created Date</option>
-                  <option value="modified">Update Date</option>
-                </select>
+    <ResizablePanelGroup direction="horizontal" className="documents-view__layout">
+      <ResizablePanel
+        id="documents-navigation"
+        panelRef={navigationPanelRef}
+        defaultSize={navigationPreferences.navigationPanelCollapsed
+          ? `${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`
+          : `${navigationPreferences.navigationPanelSize}%`}
+        minSize={`${DOCUMENT_NAVIGATION_PANEL_MIN_SIZE}%`}
+        maxSize={`${DOCUMENT_NAVIGATION_PANEL_MAX_SIZE}%`}
+        collapsedSize={`${DOCUMENT_NAVIGATION_PANEL_COLLAPSED_SIZE}%`}
+        collapsible
+        onResize={handleNavigationPanelResize}
+        className="documents-view__navigation-panel"
+      >
+        <div className="documents-view__navigation-inner">
+          <div className="p-4 border-b border-border flex-shrink-0">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-3">
+                <h3 className="font-semibold text-foreground">Documents</h3>
+                <div className="flex items-center space-x-1">
+                  <select
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value as 'name' | 'title' | 'created' | 'modified')}
+                    className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-28"
+                    title="Sort by"
+                  >
+                    <option value="name">Filename</option>
+                    <option value="title">Title</option>
+                    <option value="created">Created Date</option>
+                    <option value="modified">Update Date</option>
+                  </select>
+                  <button
+                    onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                    className="p-1 border border-border rounded bg-background hover:bg-muted transition-colors"
+                    title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
+                  >
+                    {sortDirection === 'asc'
+                      ? (
+                          <ChevronUp className="h-3 w-3" />
+                        )
+                      : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                  className="p-1 border border-border rounded bg-background hover:bg-muted transition-colors"
-                  title={`Sort ${sortDirection === 'asc' ? 'ascending' : 'descending'}`}
+                  type="button"
+                  onClick={handleToggleNavigationPanel}
+                  className="p-1 hover:bg-muted rounded transition-colors"
+                  title="Hide document navigation"
+                  aria-label="Hide document navigation"
+                  data-testid="toggle-document-navigation-button"
                 >
-                  {sortDirection === 'asc'
-                    ? (
-                        <ChevronUp className="h-3 w-3" />
-                      )
-                    : (
-                        <ChevronDown className="h-3 w-3" />
-                      )}
+                  <PanelLeftClose className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCollapseTree}
+                  className="p-1 hover:bg-muted rounded transition-colors"
+                  title="Collapse document tree"
+                  aria-label="Collapse document tree"
+                  data-testid="collapse-document-tree-button"
+                >
+                  <ListCollapse className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleScrollToSelectedFile}
+                  disabled={!selectedFile}
+                  className="p-1 hover:bg-muted rounded transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                  title="Scroll to active document"
+                  aria-label="Scroll to active document"
+                  data-testid="scroll-to-active-document-button"
+                >
+                  <Crosshair className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPathSelector(true)}
+                  className="p-1 hover:bg-muted rounded transition-colors"
+                  title="Configure document paths"
+                  data-testid="configure-paths-button"
+                >
+                  <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                 </button>
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={handleCollapseTree}
-                className="p-1 hover:bg-muted rounded transition-colors"
-                title="Collapse document tree"
-                aria-label="Collapse document tree"
-                data-testid="collapse-document-tree-button"
-              >
-                <ListCollapse className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-              </button>
-              <button
-                type="button"
-                onClick={handleScrollToSelectedFile}
-                disabled={!selectedFile}
-                className="p-1 hover:bg-muted rounded transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-                title="Scroll to active document"
-                aria-label="Scroll to active document"
-                data-testid="scroll-to-active-document-button"
-              >
-                <Crosshair className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowPathSelector(true)}
-                className="p-1 hover:bg-muted rounded transition-colors"
-                title="Configure document paths"
-                data-testid="configure-paths-button"
-              >
-                <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-              </button>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search documents..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                data-testid="document-filter-input"
+              />
             </div>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search documents..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              data-testid="document-filter-input"
-            />
-          </div>
-        </div>
-        <div className="flex-shrink-0 p-2 pb-0">
-          <FavDocuments
-            documents={favoriteDocuments}
-            isExpanded={navigationPreferences.favsExpanded}
-            showAll={navigationPreferences.favsShowAll}
-            onSelectDocument={handleSelectFavorite}
-            onToggleFavorite={handleToggleFavorite}
-            onExpandedChange={handleFavsExpandedChange}
-            onShowAllChange={handleFavsShowAllChange}
-          />
-          <RecentDocuments
-            documents={recentDocuments}
-            isExpanded={navigationPreferences.recentExpanded}
-            onSelectDocument={selectFile}
-            onExpandedChange={handleRecentExpandedChange}
-          />
-        </div>
-        <ScrollArea className="min-h-0 flex-1" data-testid="document-tree-scroll-area">
-          <div className="p-2">
-            <FileTree
-              ref={fileTreeRef}
-              files={filteredFiles}
-              onFileSelect={selectFile}
-              selectedFile={selectedFile}
-              expandAllFolders={Boolean(searchQuery.trim())}
+          <div className="flex-shrink-0 p-2 pb-0">
+            <FavDocuments
+              documents={favoriteDocuments}
+              isExpanded={navigationPreferences.favsExpanded}
+              showAll={navigationPreferences.favsShowAll}
+              onSelectDocument={handleSelectFavorite}
               onToggleFavorite={handleToggleFavorite}
+              onExpandedChange={handleFavsExpandedChange}
+              onShowAllChange={handleFavsShowAllChange}
+            />
+            <RecentDocuments
+              documents={recentDocuments}
+              isExpanded={navigationPreferences.recentExpanded}
+              onSelectDocument={selectFile}
+              onExpandedChange={handleRecentExpandedChange}
             />
           </div>
-        </ScrollArea>
-      </div>
-      <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
+          <ScrollArea className="min-h-0 flex-1" data-testid="document-tree-scroll-area">
+            <div className="p-2">
+              <FileTree
+                ref={fileTreeRef}
+                files={filteredFiles}
+                onFileSelect={selectFile}
+                selectedFile={selectedFile}
+                expandAllFolders={Boolean(searchQuery.trim())}
+                onToggleFavorite={handleToggleFavorite}
+              />
+            </div>
+          </ScrollArea>
+        </div>
+      </ResizablePanel>
+      <ResizableHandle withHandle className="documents-view__resize-handle" />
+      <ResizablePanel id="documents-preview" minSize={40} className="documents-view__preview-panel">
+        {navigationPreferences.navigationPanelCollapsed && (
+          <button
+            type="button"
+            onClick={handleToggleNavigationPanel}
+            className="documents-view__navigation-expand"
+            title="Show document navigation"
+            aria-label="Show document navigation"
+            data-testid="show-document-navigation-button"
+          >
+            <PanelLeftOpen className="h-4 w-4" />
+          </button>
+        )}
         {selectedFile
           ? (
               <div className="documents-view__viewer-panel">
@@ -748,7 +822,7 @@ export default function DocumentsLayout({ projectId }: DocumentsLayoutProps) {
                 Select a document to view
               </div>
             )}
-      </div>
-    </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   )
 }

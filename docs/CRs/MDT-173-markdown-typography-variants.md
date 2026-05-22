@@ -258,3 +258,29 @@ Add scoped prose surface modifiers and a browser-local Markdown Density preferen
 - Do not introduce backend changes.
 - Do not store Markdown Density in backend config, `.mdt-config.toml`, `shared/`, MCP, or CLI.
 - Do not solve unrelated Documents View navigation behavior beyond the mobile reading requirement in this CR.
+
+## 9. UAT
+
+### UAT Session 2026-05-22
+
+Approved changes:
+- Wide rendered document artifacts may use the available Documents View pane instead of being constrained to the readable prose column.
+- Normal document prose remains constrained to a readable measure.
+- Wireloom blocks render at native width inline, scroll horizontally only when wider than the available pane, and expose a zoomable fullscreen inspection control.
+- Documents View navigation becomes resizable and collapsible.
+- Document navigation width and collapsed state persist per project.
+
+Changed requirement IDs:
+- `BR-10.1` — additive change for wide document artifacts with readable prose retained.
+- `BR-10.2` — additive change for resizable/collapsible document navigation.
+- `C10` — additive constraint that paragraph/list/heading prose width stays readable while artifacts widen.
+
+Updated workflow documents:
+- `docs/CRs/MDT-173/uat.md`
+- Canonical `spec-trace` store for `MDT-173`
+
+Trace and validation:
+- `spec-trace` store initialized for `MDT-173`.
+- Requirements, BDD, architecture, tests, and tasks stages were updated and revalidated.
+- Strict drift/lock was not used.
+- Current-round UAT brief was written to `docs/CRs/MDT-173/uat.md`.

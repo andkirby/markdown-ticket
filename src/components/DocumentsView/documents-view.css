@@ -3,6 +3,30 @@
     @apply flex-shrink-0;
   }
 
+  .documents-view__layout {
+    @apply h-full min-h-0 overflow-hidden;
+  }
+
+  .documents-view__navigation-panel {
+    @apply min-h-0;
+  }
+
+  .documents-view__navigation-inner {
+    @apply flex h-full min-h-0 flex-col border-r border-border bg-muted/30;
+  }
+
+  .documents-view__resize-handle {
+    @apply bg-border/70 transition-colors hover:bg-border;
+  }
+
+  .documents-view__preview-panel {
+    @apply relative min-h-0 min-w-0 overflow-hidden;
+  }
+
+  .documents-view__navigation-expand {
+    @apply absolute left-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground;
+  }
+
   .documents-view__viewer-panel {
     @apply flex h-full min-h-0 flex-col;
   }
@@ -25,7 +49,12 @@
 
   .document-viewer__content {
     @apply min-w-0;
-    width: min(100%, 72ch);
+    width: 100%;
+    max-width: none;
+  }
+
+  .document-viewer__content > :not(.prose),
+  .document-frontmatter {
     max-width: 72ch;
   }
 
@@ -84,11 +113,12 @@
   }
 
   @media (max-width: 639px) {
-    .flex.h-full.min-h-0.overflow-hidden:has(.documents-view__viewer-panel) > div:first-child {
+    .documents-view__navigation-panel,
+    .documents-view__resize-handle {
       display: none;
     }
 
-    .flex.h-full.min-h-0.overflow-hidden:has(.documents-view__viewer-panel) > div:last-child {
+    .documents-view__preview-panel {
       width: 100%;
       flex: 1 1 100%;
     }
@@ -97,8 +127,8 @@
       @apply px-3 py-3;
     }
 
-    .document-viewer__content {
-      width: 100%;
+    .document-viewer__content > :not(.prose),
+    .document-frontmatter {
       max-width: none;
     }
   }

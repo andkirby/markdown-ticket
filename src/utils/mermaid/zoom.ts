@@ -21,14 +21,24 @@ export interface HTMLElementWithZoomHandlers extends HTMLElement {
   _zoomHandlers?: ZoomHandlers
 }
 
+export interface ZoomOptions {
+  diagramSelector?: string
+}
+
+const DEFAULT_DIAGRAM_SELECTOR = '.mermaid'
+
+function getZoomDiagram(container: HTMLElement, options?: ZoomOptions): HTMLElement | null {
+  return container.querySelector(options?.diagramSelector ?? DEFAULT_DIAGRAM_SELECTOR) as HTMLElement | null
+}
+
 /**
  * Enable zoom and pan interactions on a mermaid container
  */
-export function enableZoom(container: HTMLElement): void {
+export function enableZoom(container: HTMLElement, options?: ZoomOptions): void {
   if (container.getAttribute('data-zoom-enabled') === 'true')
     return
 
-  const diagram = container.querySelector('.mermaid') as HTMLElement
+  const diagram = getZoomDiagram(container, options)
   if (!diagram)
     return
 
@@ -185,11 +195,11 @@ export function enableZoom(container: HTMLElement): void {
 /**
  * Disable zoom and pan interactions on a mermaid container
  */
-export function disableZoom(container: HTMLElement): void {
+export function disableZoom(container: HTMLElement, options?: ZoomOptions): void {
   if (container.getAttribute('data-zoom-enabled') === 'false')
     return
 
-  const diagram = container.querySelector('.mermaid') as HTMLElement
+  const diagram = getZoomDiagram(container, options)
   if (!diagram)
     return
 

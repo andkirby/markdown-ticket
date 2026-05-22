@@ -42,6 +42,8 @@ describe('documentNavigation preferences (MDT-162)', () => {
       favsExpanded: true,
       favsShowAll: false,
       recentExpanded: true,
+      navigationPanelSize: 33,
+      navigationPanelCollapsed: false,
     })
 
     const preferences = getDocumentNavigationPreferences('MDT')
@@ -68,6 +70,8 @@ describe('documentNavigation preferences (MDT-162)', () => {
       favsExpanded: false,
       favsShowAll: true,
       recentExpanded: false,
+      navigationPanelSize: 33,
+      navigationPanelCollapsed: false,
     }, ['docs/design', 'docs/design/spec.md'])
 
     expect(preferences.recentDocuments).toEqual(['docs/design/spec.md'])
@@ -82,6 +86,8 @@ describe('documentNavigation preferences (MDT-162)', () => {
       favsExpanded: false,
       favsShowAll: true,
       recentExpanded: false,
+      navigationPanelSize: 33,
+      navigationPanelCollapsed: false,
     })
 
     expect(getDocumentNavigationPreferences('MDT')).toEqual({
@@ -89,12 +95,16 @@ describe('documentNavigation preferences (MDT-162)', () => {
       favsExpanded: false,
       favsShowAll: true,
       recentExpanded: false,
+      navigationPanelSize: 33,
+      navigationPanelCollapsed: false,
     })
     expect(getDocumentNavigationPreferences('OTHER')).toEqual({
       recentDocuments: [],
       favsExpanded: true,
       favsShowAll: false,
       recentExpanded: true,
+      navigationPanelSize: 33,
+      navigationPanelCollapsed: false,
     })
   })
 
@@ -111,6 +121,24 @@ describe('documentNavigation preferences (MDT-162)', () => {
       favsExpanded: true,
       favsShowAll: false,
       recentExpanded: true,
+      navigationPanelSize: 33,
+      navigationPanelCollapsed: false,
+    })
+  })
+
+  it('persists and clamps document navigation panel layout', () => {
+    setDocumentNavigationPreferences('MDT', {
+      recentDocuments: [],
+      favsExpanded: true,
+      favsShowAll: false,
+      recentExpanded: true,
+      navigationPanelSize: 60,
+      navigationPanelCollapsed: true,
+    })
+
+    expect(getDocumentNavigationPreferences('MDT')).toMatchObject({
+      navigationPanelSize: 45,
+      navigationPanelCollapsed: true,
     })
   })
 })
