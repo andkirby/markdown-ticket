@@ -122,3 +122,13 @@ Architecture reference: [Authentication and Sharing Architecture](../architectur
 - Manual: `curl -H "Authorization: Bearer <token>" ...` returns 200
 - Automated: unit tests for auth middleware accept/reject logic
 - Automated: `crypto.timingSafeEqual` usage confirmed via code review
+
+## 8. Clarifications
+
+### UAT Session 2026-05-22
+
+- Approved change: Vite dev-server frontend logging endpoints at `/api/frontend/logs*` must be locked to localhost/loopback because they bypass backend API auth and are only for local debugging.
+- Changed requirement IDs: added `C10`.
+- Updated workflow documents: `requirements.md`, `architecture.md`, `tests.md`, `tasks.md`.
+- Wrote current-round brief: `MDT-157/uat.md`.
+- Strict drift lock was not used; affected stages should be revalidated and rendered after canonical trace sync.
