@@ -601,3 +601,5 @@ Resolved by the MDT-143 UAT implementation. The canonical command grammar and te
 **New task**: TASK-cli-structured-output
 **New artifact**: ART-cli-structured-output
 **New test plan**: TEST-cli-structured-output
+
+**Lesson learned**: adding a new YAML package can affect Markdown rendering outside the CLI path. During structured-output work, a YAML dependency change broke Mermaid rendering, so future CLI serialization dependency changes should verify rendered Markdown diagrams before release.
