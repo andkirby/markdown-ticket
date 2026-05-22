@@ -1,4 +1,3 @@
-import type { Project } from '@mdt/shared/models/Project.js'
 /**
  * CLI Ticket Create Command (MDT-143)
  *
@@ -7,11 +6,14 @@ import type { Project } from '@mdt/shared/models/Project.js'
  * Reads content from stdin when piped.
  */
 
+import type { Project } from '@mdt/shared/models/Project.js'
 import type { TicketData } from '@mdt/shared/models/Ticket.js'
+import type { StructuredOutputOptions } from '../output/structured.js'
 import process from 'node:process'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { formatTicketCreate } from '../output/formatter.js'
+import { CliCommandError, formatTicketForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
 import { DEFAULT_PRIORITY, DEFAULT_TYPE, PRIORITY_TOKENS, TYPE_TOKENS } from '../utils/aliases.js'
 import { readStdin } from '../utils/stdin.js'
 
@@ -23,6 +25,11 @@ interface ParsedTokens {
   priority: string
   title: string
   slug: string | null
+}
+
+interface CreateCommandOptions extends StructuredOutputOptions {
+  stdin?: boolean
+  project?: string
 }
 
 /**
@@ -136,23 +143,6 @@ export function parseCreateTokens(tokens: string[]): ParsedTokens {
 }
 
 /**
- * Resolve current project context
- *
- * @returns Current project
- * @throws Error if no project context found
- */
-async function resolveCurrentProject(): Promise<Project> {
-  const projectService = new ProjectService(true) // quiet=true
-  const result = await projectService.resolveCurrentProject()
-
-  if (!result.data) {
-    throw new Error('No project context found. Run from a project directory.')
-  }
-
-  return result.data
-}
-
-/**
  * Ticket create action handler
  *
  * @param tokens - Array of positional tokens (type, priority, title, slug)
@@ -161,7 +151,7 @@ async function resolveCurrentProject(): Promise<Project> {
  */
 export async function ticketCreateAction(
   tokens: string[],
-  options: { stdin?: boolean; project?: string },
+  options: CreateCommandOptions,
 ): Promise<void> {
   // Parse tokens to extract type, priority, title, slug
   const { type, priority, title, slug } = parseCreateTokens(tokens)
@@ -181,8 +171,7 @@ export async function ticketCreateAction(
   if (options.project) {
     const resolved = await projectService.getProjectByCodeOrId(options.project)
     if (!resolved) {
-      console.error(`Error: Project '${options.project}' not found`)
-      process.exit(1)
+      throw new CliCommandError('PROJECT_NOT_FOUND', `Project ${options.project} not found`, { projectCode: options.project })
     }
     project = resolved
   }
@@ -206,6 +195,23 @@ export async function ticketCreateAction(
   // Create the ticket via TicketService
   const ticketService = new TicketService(true)
   const ticket = await ticketService.createCR(project, type, ticketData)
+
+  const outputFormat = getOutputFormat(options)
+  if (outputFormat !== 'human') {
+    writeStructuredSuccess(
+      outputFormat,
+      'ticket.create',
+      {
+        ticket: formatTicketForStructured(ticket, project.project.path),
+        created: true,
+      },
+      {
+        projectCode: project.project.code,
+        projectId: project.id,
+      },
+    )
+    return
+  }
 
   // Print success message
   const projectPath = project.project.path

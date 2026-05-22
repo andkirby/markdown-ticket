@@ -8,7 +8,13 @@ import process from 'node:process'
 
 import { Command } from 'commander'
 import { generateGuide } from './output/guide.js'
+import { assertSingleOutputFormat, getRequestedOutputFormat, writeStructuredError } from './output/structured.js'
 import { normalizeShortcuts } from './utils/args.js'
+
+interface CliActionOptions extends Record<string, unknown> {
+  json?: boolean
+  yaml?: boolean
+}
 
 /**
  * Main CLI entry point
@@ -49,6 +55,8 @@ export function main(): void {
     .name('mdt-cli')
     .description('CLI tool for Markdown Ticket management')
     .version('1.0.0')
+    .option('--json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
 
   registerCommands(program)
 
@@ -72,15 +80,11 @@ function registerCommands(program: Command): void {
     .command('get')
     .description('Get ticket details')
     .argument('<key>', 'Ticket key (e.g., 5, ABC-12, PROJ/MDT-12)')
-    .action(async (key) => {
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
+    .action(async (key, options) => {
       const { ticketViewAction } = await import('./commands/view.js')
-      try {
-        await ticketViewAction(key)
-      }
-      catch (error) {
-        console.error(error)
-        process.exit(1)
-      }
+      await runCliAction(program, 'ticket.get', options, mergedOptions => ticketViewAction(key, mergedOptions))
     })
 
   // ticket list
@@ -90,6 +94,7 @@ function registerCommands(program: Command): void {
     .description('List tickets')
     .argument('[filters...]', 'Filter arguments (e.g., status=impl priority=high)')
     .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
     .option('-a, --all', 'Show all tickets (no limit)')
     .option('-l, --limit <n>', 'Limit number of results', Number.parseInt)
     .option('-o, --offset <n>', 'Skip first N results', Number.parseInt)
@@ -98,13 +103,7 @@ function registerCommands(program: Command): void {
     .option('-p, --project <code>', 'Target project code')
     .action(async (filters, options) => {
       const { ticketListAction } = await import('./commands/list.js')
-      try {
-        await ticketListAction(filters, options)
-      }
-      catch (error) {
-        console.error(error)
-        process.exit(1)
-      }
+      await runCliAction(program, 'ticket.list', options, mergedOptions => ticketListAction(filters, mergedOptions))
     })
 
   // ticket create
@@ -114,15 +113,11 @@ function registerCommands(program: Command): void {
     .argument('[tokens...]', 'Type[/priority], title, and optional slug')
     .option('--stdin', 'Read ticket content from stdin')
     .option('-p, --project <code>', 'Target project code')
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
     .action(async (tokens, options) => {
       const { ticketCreateAction } = await import('./commands/create.js')
-      try {
-        await ticketCreateAction(tokens, options)
-      }
-      catch (error) {
-        console.error(`Error: ${(error as Error).message}`)
-        process.exit(1)
-      }
+      await runCliAction(program, 'ticket.create', options, mergedOptions => ticketCreateAction(tokens, mergedOptions))
     })
 
   // ticket attr
@@ -131,15 +126,11 @@ function registerCommands(program: Command): void {
     .description('Update ticket attributes')
     .argument('<key>', 'Ticket key')
     .argument('<attrs...>', 'Attributes to update (e.g., status=Implemented)')
-    .action(async (key, attrs) => {
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
+    .action(async (key, attrs, options) => {
       const { ticketAttrAction } = await import('./commands/attr.js')
-      try {
-        await ticketAttrAction(key, attrs)
-      }
-      catch (error) {
-        console.error(error)
-        process.exit(1)
-      }
+      await runCliAction(program, 'ticket.attr', options, mergedOptions => ticketAttrAction(key, attrs, mergedOptions))
     })
 
   // ticket delete
@@ -148,15 +139,11 @@ function registerCommands(program: Command): void {
     .description('Delete a ticket')
     .argument('<key>', 'Ticket key')
     .option('--force', 'Skip confirmation prompt')
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
     .action(async (key, options) => {
       const { ticketDeleteAction } = await import('./commands/delete.js')
-      try {
-        await ticketDeleteAction(key, options)
-      }
-      catch (error) {
-        console.error(`Error: ${(error as Error).message}`)
-        process.exit(1)
-      }
+      await runCliAction(program, 'ticket.delete', options, mergedOptions => ticketDeleteAction(key, mergedOptions))
     })
 
   // ticket rename
@@ -188,15 +175,11 @@ function registerCommands(program: Command): void {
   projectCmd
     .command('current')
     .description('Show current project')
-    .action(async () => {
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
+    .action(async (options) => {
       const { projectCurrentAction } = await import('./commands/project.js')
-      try {
-        await projectCurrentAction()
-      }
-      catch (error) {
-        console.error(error)
-        process.exit(1)
-      }
+      await runCliAction(program, 'project.current', options, mergedOptions => projectCurrentAction(mergedOptions))
     })
 
   // project get
@@ -204,15 +187,11 @@ function registerCommands(program: Command): void {
     .command('get')
     .description('Get project details')
     .argument('<code>', 'Project code')
-    .action(async (code) => {
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
+    .action(async (code, options) => {
       const { projectGetAction } = await import('./commands/project.js')
-      try {
-        await projectGetAction(code)
-      }
-      catch (error) {
-        console.error(error)
-        process.exit(1)
-      }
+      await runCliAction(program, 'project.get', options, mergedOptions => projectGetAction(code, mergedOptions))
     })
 
   // project info (alias for get)
@@ -220,15 +199,11 @@ function registerCommands(program: Command): void {
     .command('info')
     .description('Show project information (alias for get)')
     .argument('<code>', 'Project code')
-    .action(async (code) => {
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
+    .action(async (code, options) => {
       const { projectGetAction } = await import('./commands/project.js')
-      try {
-        await projectGetAction(code)
-      }
-      catch (error) {
-        console.error(error)
-        process.exit(1)
-      }
+      await runCliAction(program, 'project.get', options, mergedOptions => projectGetAction(code, mergedOptions))
     })
 
   // project ls / list
@@ -237,15 +212,10 @@ function registerCommands(program: Command): void {
     .alias('list')
     .description('List all projects')
     .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
     .action(async (options) => {
       const { projectListAction } = await import('./commands/project.js')
-      try {
-        await projectListAction(options)
-      }
-      catch (error) {
-        console.error(error)
-        process.exit(1)
-      }
+      await runCliAction(program, 'project.list', options, mergedOptions => projectListAction(mergedOptions))
     })
 
   // project init
@@ -256,20 +226,46 @@ function registerCommands(program: Command): void {
     .argument('<name>', 'Project name')
     .option('-d, --dir <path>', 'Project directory')
     .option('-t, --tickets-path <path>', 'Tickets directory (relative to project root)')
+    .option('-j, --json', 'Output as JSON')
+    .option('--yaml', 'Output as YAML')
     .action(async (code, name, options) => {
       const { projectInitAction } = await import('./commands/project.js')
-      try {
-        await projectInitAction(code, name, options)
-      }
-      catch (error) {
-        console.error(error)
-        process.exit(1)
-      }
+      await runCliAction(program, 'project.init', options, mergedOptions => projectInitAction(code, name, mergedOptions))
     })
 
   // ====================================================================
   // End of command registration
   // ====================================================================
+}
+
+async function runCliAction(
+  program: Command,
+  commandName: string,
+  options: Record<string, unknown>,
+  action: (options: CliActionOptions) => Promise<void>,
+): Promise<void> {
+  const mergedOptions = { ...program.opts(), ...options } as CliActionOptions
+  const requestedFormat = getRequestedOutputFormat(mergedOptions)
+
+  try {
+    assertSingleOutputFormat(mergedOptions)
+    await action(mergedOptions)
+  }
+  catch (error) {
+    if (requestedFormat) {
+      writeStructuredError(requestedFormat, commandName, error)
+    }
+    else {
+      console.error(formatHumanError(error))
+    }
+    process.exit(1)
+  }
+}
+
+function formatHumanError(error: unknown): string {
+  if (error instanceof Error)
+    return `Error: ${error.message}`
+  return String(error)
 }
 
 // Run main when executed directly

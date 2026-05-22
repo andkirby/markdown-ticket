@@ -6,13 +6,12 @@ import type { Project } from '@mdt/shared/models/Project.js'
  * Resolves project context, normalizes keys, and displays ticket details.
  */
 
-import type { Ticket } from '@mdt/shared/models/Ticket.js'
-import process from 'node:process'
+import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
-import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
 import { KeyNormalizationError, normalizeKey } from '@mdt/shared/utils/keyNormalizer.js'
 import { formatTicketView } from '../output/formatter.js'
+import { CliCommandError, formatTicketForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
 
 /**
  * Parse ticket key to extract project code and ticket key
@@ -58,7 +57,7 @@ function parseTicketKey(key: string): ParsedKey | null {
  * @param key - Ticket key (numeric shorthand, full format, or cross-project)
  * @throws Process.exit(1) on error
  */
-export async function ticketViewAction(key: string): Promise<void> {
+export async function ticketViewAction(key: string, options: StructuredOutputOptions = {}): Promise<void> {
   const projectService = new ProjectService(true) // quiet=true
   const ticketService = new TicketService(true)
 
@@ -85,8 +84,10 @@ export async function ticketViewAction(key: string): Promise<void> {
     const projectResult = await projectService.resolveCurrentProject()
 
     if (!projectResult.data) {
-      console.error('Error: No project context. Run from a project directory or use an explicit key like MDT-143.')
-      process.exit(1)
+      throw new CliCommandError(
+        'NO_PROJECT_CONTEXT',
+        'No project context. Run from a project directory or use an explicit key like MDT-143.',
+      )
     }
 
     projectCode = projectResult.data.project.code
@@ -98,8 +99,10 @@ export async function ticketViewAction(key: string): Promise<void> {
     }
     catch (error) {
       if (error instanceof KeyNormalizationError) {
-        console.error(`Error: Invalid key format '${key}'. Expected: numeric shorthand, full format ABC-012, or cross-project ABC/DEF-012`)
-        process.exit(1)
+        throw new CliCommandError(
+          'INVALID_TICKET_KEY',
+          `Invalid key format '${key}'. Expected: numeric shorthand, full format ABC-012, or cross-project ABC/DEF-012`,
+        )
       }
       throw error
     }
@@ -112,28 +115,36 @@ export async function ticketViewAction(key: string): Promise<void> {
     }
     catch (error) {
       if (error instanceof KeyNormalizationError) {
-        console.error(`Error: Invalid key format '${key}'. Expected: numeric shorthand, full format ABC-012, or cross-project ABC/DEF-012`)
-        process.exit(1)
+        throw new CliCommandError(
+          'INVALID_TICKET_KEY',
+          `Invalid key format '${key}'. Expected: numeric shorthand, full format ABC-012, or cross-project ABC/DEF-012`,
+        )
       }
       throw error
     }
   }
 
-  // Get the ticket
-  try {
-    const result = await ticketService.getTicket({
-      projectRef: projectCode,
-      ticketKey,
-    })
+  const result = await ticketService.getTicket({
+    projectRef: projectCode,
+    ticketKey,
+  })
 
-    const projectPath = project?.project.path
-    console.log(formatTicketView(result.data, projectPath))
+  const projectPath = project?.project.path
+  const outputFormat = getOutputFormat(options)
+  if (outputFormat !== 'human') {
+    writeStructuredSuccess(
+      outputFormat,
+      'ticket.get',
+      {
+        ticket: formatTicketForStructured(result.data, projectPath),
+      },
+      {
+        projectCode,
+        projectId: project?.id ?? null,
+      },
+    )
+    return
   }
-  catch (error) {
-    if (error instanceof ServiceError && error.code === 'TICKET_NOT_FOUND') {
-      console.error(`Error: Ticket ${ticketKey} not found`)
-      process.exit(1)
-    }
-    throw error
-  }
+
+  console.log(formatTicketView(result.data, projectPath))
 }
