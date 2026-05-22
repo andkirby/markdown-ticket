@@ -28,6 +28,7 @@ import { createDocumentRouter } from './routes/documents.js'
 import { createProjectRouter } from './routes/projects.js'
 import { createSSERouter } from './routes/sse.js'
 import { createSystemRouter } from './routes/system.js'
+import { createCorsOptions, createDefaultOriginPolicy, securityHeaders } from './security/originPolicy.js'
 import { DocumentService } from './services/DocumentService.js'
 import FileWatcherService from './services/fileWatcher/index.js'
 import { TicketService } from './services/TicketService.js'
@@ -129,34 +130,14 @@ const PORT: number = Number(process.env.PORT) || 3001
 // Middleware
 // =============================================================================
 
-// CORS configuration - allow additional origins via environment variable
-// ALLOWED_DOMAINS is shared with Vite (uses hostnames only, we generate full URLs)
-const additionalDomains = process.env.ALLOWED_DOMAINS?.split(',').map(d => d.trim()).filter(Boolean) || []
-const allowedOrigins = [
-  'http://localhost:5173', // Vite dev server
-  'http://localhost:3001', // Backend server (for same-origin requests)
-  'http://localhost:4173', // Vite preview server
-  ...additionalDomains.flatMap(d => [`https://${d}`, `http://${d}`]),
-]
-if (additionalDomains.length > 0) {
-  logger.info(`🌐 CORS allowed origins: ${additionalDomains.join(', ')}`)
+const originPolicy = createDefaultOriginPolicy()
+
+if (process.env.ALLOWED_DOMAINS) {
+  logger.info(`🌐 CORS allowed origins: ${process.env.ALLOWED_DOMAINS}`)
 }
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin)
-      return callback(null, true)
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true)
-    }
-    else {
-      logger.warn(`CORS blocked origin: ${origin}`)
-      callback(null, false) // Reject without throwing error
-    }
-  },
-  credentials: true,
-}))
+app.use(securityHeaders)
+app.use(cors(createCorsOptions(originPolicy, logger)))
 app.use(express.json())
 
 // Setup log interception for dev tools
@@ -318,7 +299,7 @@ app.use('/api/projects', createProjectRouter(projectController))
 app.use('/api/documents', createDocumentRouter(documentController, projectController))
 
 // SSE routes
-app.use('/api/events', createSSERouter(fileWatcher))
+app.use('/api/events', createSSERouter(fileWatcher, originPolicy))
 
 // System routes (status, directories, filesystem, config)
 app.use('/api', createSystemRouter(fileWatcher, projectController, projectDiscovery, documentService.fileInvoker as FileInvokerAdapter))
