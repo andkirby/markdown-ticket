@@ -12,6 +12,7 @@
 import type { SubDocument } from '@mdt/shared/models/SubDocument'
 import type { TicketDocumentTabRow } from './subdocumentPath'
 import * as Tabs from '@radix-ui/react-tabs'
+import { useEffect, useRef } from 'react'
 import {
   buildTicketDocumentTabRows,
   resolveTicketDocumentSelectionPath,
@@ -24,6 +25,7 @@ interface TicketDocumentTabsProps {
   folderStack: string[]
   onSelect: (path: string) => void
   ticketCode: string
+  onHeightChange?: (height: number) => void
 }
 
 function handleRowValueChange(
@@ -52,7 +54,32 @@ export function TicketDocumentTabs({
   folderStack,
   onSelect,
   ticketCode,
+  onHeightChange,
 }: TicketDocumentTabsProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!onHeightChange || !containerRef.current) {
+      return
+    }
+
+    const container = containerRef.current
+    const publishHeight = () => {
+      onHeightChange(Math.ceil(container.getBoundingClientRect().height))
+    }
+
+    publishHeight()
+
+    if (typeof ResizeObserver === 'undefined') {
+      return
+    }
+
+    const observer = new ResizeObserver(publishHeight)
+    observer.observe(container)
+
+    return () => observer.disconnect()
+  }, [onHeightChange, folderStack.length, selectedPath, subdocuments])
+
   if (subdocuments.length === 0) {
     return null
   }
@@ -66,6 +93,7 @@ export function TicketDocumentTabs({
 
   return (
     <div
+      ref={containerRef}
       data-testid="subdoc-tabs"
       className="ticket-document-tabs sticky top-0 z-10 bg-background/50 backdrop-blur-sm"
     >

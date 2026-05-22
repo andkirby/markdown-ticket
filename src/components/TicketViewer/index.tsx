@@ -1,4 +1,5 @@
 import type { SubDocument } from '@mdt/shared/models/SubDocument'
+import type { CSSProperties } from 'react'
 import type { TypedEvent } from '../../services/eventBus'
 import type { Ticket } from '../../types'
 import { AlertTriangle, Network } from 'lucide-react'
@@ -43,6 +44,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(ticket)
   const [markdownDensity, setMarkdownDensity] = useState(getMarkdownDensity)
   const [isTraceGraphOpen, setIsTraceGraphOpen] = useState(false)
+  const [tabNavigationHeight, setTabNavigationHeight] = useState<number | null>(null)
 
   // MDT-094: Update internal state when prop changes.
   // When a ticket is selected, fetch full ticket content if not already present.
@@ -162,6 +164,16 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
     onActiveRemoved: () => selectPath('main'),
   })
 
+  useEffect(() => {
+    if (liveSubdocs.length === 0) {
+      setTabNavigationHeight(null)
+    }
+  }, [liveSubdocs.length])
+
+  const handleTabNavigationHeightChange = useCallback((height: number) => {
+    setTabNavigationHeight(currentHeight => currentHeight === height ? currentHeight : height)
+  }, [])
+
   const traceStoreAvailability = useTraceStoreAvailability({
     projectCode: projectCode ?? '',
     ticketCode: currentTicket?.code ?? '',
@@ -270,6 +282,10 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
       )
     : null
 
+  const ticketContentStyle = {
+    '--prose-anchor-offset': liveSubdocs.length === 0 ? '0px' : `${tabNavigationHeight ?? 36}px`,
+  } as CSSProperties
+
   return (
     <>
       <Modal
@@ -311,7 +327,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                 </div>
               )
             : (
-                <div className="min-w-0">
+                <div className="min-w-0 ticket-viewer-content" style={ticketContentStyle}>
                   <CompactTicketHeader ticket={currentTicket!} action={traceGraphAction} />
 
                   <TicketDocumentTabs
@@ -320,6 +336,7 @@ const TicketViewer: React.FC<TicketViewerProps> = ({ ticket, isOpen, onClose, ti
                     folderStack={folderStack}
                     onSelect={selectPath}
                     ticketCode={currentTicket?.code ?? ''}
+                    onHeightChange={handleTabNavigationHeightChange}
                   />
 
                   <div data-testid="subdoc-content" className="relative">
