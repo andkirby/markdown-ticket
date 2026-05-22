@@ -1,0 +1,653 @@
+{
+  "version": 1,
+  "ticket": {
+    "key": "MDT-175"
+  },
+  "requirements": [
+    {
+      "id": "BR-1.4",
+      "kind": "behavior",
+      "text": "WHEN a user closes a ticket or document context, the system shall restore the browser title to the truthful parent view context.",
+      "sourceRef": "MDT-175#4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.5",
+      "kind": "behavior",
+      "text": "WHEN modal-only contexts such as settings open and close, the system shall avoid leaving the browser title in a misleading stale content context.",
+      "sourceRef": "MDT-175#4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.6",
+      "kind": "behavior",
+      "text": "WHEN the active project changes, the system shall update the browser title to the new project context.",
+      "sourceRef": "MDT-175#4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "The page-title system shall run entirely in the frontend without backend persistence, schema changes, MCP changes, or CLI changes.",
+      "sourceRef": "MDT-175#2 Constraints",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C4",
+      "kind": "constraint",
+      "text": "The page-title system shall not change existing navigation, ticket selection, or document selection behavior.",
+      "sourceRef": "MDT-175#4 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-1",
+      "kind": "edge_case",
+      "text": "IF an active ticket is deleted, missing, or unavailable, THEN the system shall not leave the deleted ticket title active.",
+      "sourceRef": "MDT-175#4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-2",
+      "kind": "edge_case",
+      "text": "IF an active document is deleted, missing, or unavailable, THEN the system shall not leave the deleted document title active.",
+      "sourceRef": "MDT-175#4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-3",
+      "kind": "edge_case",
+      "text": "IF navigation changes rapidly between page contexts, THEN the final active context shall be the value in document.title.",
+      "sourceRef": "MDT-175#4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-4",
+      "kind": "edge_case",
+      "text": "IF a title source is empty or malformed, THEN the system shall fall back to a stable app-level title.",
+      "sourceRef": "MDT-175#4 Edge Cases",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "constraint",
+      "text": "The page-title system shall not add visible UI elements, layout changes, or on-screen title clutter.",
+      "sourceRef": "MDT-175#4 Non-Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "IF active context data is loading or fails before content resolves, THEN document.title shall fall back to the nearest truthful parent or app-level title and shall not retain prior content.",
+      "sourceRef": "MDT-175#4 Functional",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.1",
+      "kind": "behavior",
+      "text": "WHEN a user views a project board, listing, or documents root with no content opened, the system shall set document.title to the project code followed by the area label: Board, Listing, or Documents.",
+      "sourceRef": "MDT-175#4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.2",
+      "kind": "behavior",
+      "text": "WHEN a user opens the main ticket document, the system shall set document.title to the ticket code followed by the ticket H1 or title.",
+      "sourceRef": "MDT-175#4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.3",
+      "kind": "behavior",
+      "text": "WHEN a user opens a project document, the system shall set document.title to the project code followed by the document H1, title, name, or useful path segment.",
+      "sourceRef": "MDT-175#4 Functional",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN a user opens a ticket subdocument or special ticket subtab, the system shall append the active subdocument or subtab label to the main ticket title.",
+      "sourceRef": "MDT-175 discussion 2026-05-22",
+      "routePolicy": "bdd",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "The page-title system shall use deterministic title formats with project code for project/document areas and ticket code for ticket areas; no user-configurable title format setting is introduced in this CR.",
+      "sourceRef": "MDT-175 discussion 2026-05-22",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    },
+    {
+      "id": "C3",
+      "kind": "constraint",
+      "text": "The page-title system shall normalize whitespace, omit empty title parts, and use dash-separated title parts without adding a trailing app suffix for root view, ticket, or document titles.",
+      "sourceRef": "MDT-175 discussion 2026-05-22",
+      "routePolicy": "tests",
+      "tags": [
+        "timing:now"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "closing_content_restores_parent_title",
+      "title": "Closing content restores parent title",
+      "covers": [
+        "BR-1.4"
+      ],
+      "given": "Given a ticket or document context has changed document.title",
+      "when": "When the user closes that context or returns to its parent view",
+      "then": "Then document.title reflects the parent project view instead of the closed content",
+      "sourceRef": "bdd.md#restore-title"
+    },
+    {
+      "id": "modal_context_avoids_stale_title",
+      "title": "Modal-only contexts avoid stale titles",
+      "covers": [
+        "BR-1.5"
+      ],
+      "given": "Given a user opens a modal-only context such as settings",
+      "when": "When the modal opens and closes",
+      "then": "Then document.title does not remain stuck on an unrelated ticket or document",
+      "sourceRef": "bdd.md#modal-title"
+    },
+    {
+      "id": "project_switch_updates_title",
+      "title": "Project switch updates browser title",
+      "covers": [
+        "BR-1.6"
+      ],
+      "given": "Given a user is viewing one project",
+      "when": "When the active project changes to another project",
+      "then": "Then document.title identifies the new active project context",
+      "sourceRef": "bdd.md#project-switch-title"
+    },
+    {
+      "id": "project_view_title_reflects_context",
+      "title": "Root project views use project code and area label",
+      "covers": [
+        "BR-1.1"
+      ],
+      "given": "Given a user is viewing a project board listing or documents root with no content opened",
+      "when": "When the page context becomes active",
+      "then": "Then document.title is the project code followed by Board Listing or Documents",
+      "sourceRef": "bdd.md#project-view-title"
+    },
+    {
+      "id": "ticket_title_reflects_active_ticket",
+      "title": "Main ticket title uses ticket code and ticket H1",
+      "covers": [
+        "BR-1.2"
+      ],
+      "given": "Given a user is viewing a project",
+      "when": "When the user opens the main ticket document",
+      "then": "Then document.title is the ticket code followed by the ticket H1 or title",
+      "sourceRef": "bdd.md#ticket-title"
+    },
+    {
+      "id": "document_title_reflects_active_document",
+      "title": "Project document title uses project code and document title",
+      "covers": [
+        "BR-1.3"
+      ],
+      "given": "Given a user is viewing project documents",
+      "when": "When the user opens a markdown document",
+      "then": "Then document.title is the project code followed by the document H1 title name or useful path segment",
+      "sourceRef": "bdd.md#document-title"
+    },
+    {
+      "id": "ticket_subcontext_title_reflects_active_subdocument",
+      "title": "Ticket subcontext title appends active subdocument or subtab label",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "Given a user has a ticket open",
+      "when": "When the user opens a ticket subdocument or special ticket subtab",
+      "then": "Then document.title appends the active subdocument or subtab label after the main ticket title",
+      "sourceRef": "bdd.md#ticket-subcontext-title"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "OBL-page-title-owner",
+      "title": "Centralize deterministic browser title formatting and document.title writes in a frontend title owner",
+      "derivedFrom": [
+        "C1",
+        "C2",
+        "C3",
+        "C5",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-src-page-title",
+        "ART-src-page-title-test",
+        "ART-index-html"
+      ],
+      "sourceRef": "architecture.md#module-boundaries"
+    },
+    {
+      "id": "OBL-project-view-title-context",
+      "title": "Route-level project and view context drives project-code Board Listing and Documents root titles",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-src-app",
+        "ART-src-project-view",
+        "ART-src-app-page-title-test",
+        "ART-src-page-title",
+        "ART-e2e-page-title-spec"
+      ],
+      "sourceRef": "architecture.md#runtime-flows"
+    },
+    {
+      "id": "OBL-ticket-title-context",
+      "title": "Open ticket and ticket subcontext state drives ticket-code title and optional subdocument or subtab suffix",
+      "derivedFrom": [
+        "BR-1.2",
+        "BR-1.4",
+        "BR-1.7",
+        "Edge-1",
+        "Edge-3",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-src-app",
+        "ART-src-ticket-viewer",
+        "ART-src-ticket-viewer-test",
+        "ART-src-page-title",
+        "ART-e2e-page-title-spec"
+      ],
+      "sourceRef": "architecture.md#runtime-flows"
+    },
+    {
+      "id": "OBL-document-title-context",
+      "title": "Selected project document state drives project-code document title and clears on unselect missing deleted loading or failed document context",
+      "derivedFrom": [
+        "BR-1.3",
+        "BR-1.4",
+        "Edge-2",
+        "Edge-3",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-src-documents-layout",
+        "ART-src-documents-layout-test",
+        "ART-src-page-title",
+        "ART-e2e-page-title-spec"
+      ],
+      "sourceRef": "architecture.md#runtime-flows"
+    },
+    {
+      "id": "OBL-page-title-verification",
+      "title": "Tests verify deterministic formatting routing integration fallback stale title prevention loading fallback no-visible-UI behavior and browser history usefulness",
+      "derivedFrom": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5"
+      ],
+      "artifactIds": [
+        "ART-src-page-title-test",
+        "ART-src-app-page-title-test",
+        "ART-src-ticket-viewer-test",
+        "ART-src-documents-layout-test",
+        "ART-e2e-page-title-spec"
+      ],
+      "sourceRef": "architecture.md#verification-contract"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-src-page-title",
+      "path": "src/hooks/usePageTitle.ts",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-src-page-title-test",
+      "path": "src/hooks/usePageTitle.test.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-src-app",
+      "path": "src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-src-project-view",
+      "path": "src/components/ProjectView.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-src-ticket-viewer",
+      "path": "src/components/TicketViewer/index.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-src-ticket-viewer-test",
+      "path": "src/components/TicketViewer/TicketViewer.test.tsx",
+      "kind": "test",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-src-documents-layout",
+      "path": "src/components/DocumentsView/DocumentsLayout.tsx",
+      "kind": "runtime",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-src-documents-layout-test",
+      "path": "src/components/DocumentsView/DocumentsLayout.test.tsx",
+      "kind": "test",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-index-html",
+      "path": "index.html",
+      "kind": "config",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-e2e-page-title-spec",
+      "path": "tests/e2e/navigation/page-title.spec.ts",
+      "kind": "test",
+      "sourceRef": "architecture.md#structure"
+    },
+    {
+      "id": "ART-src-app-page-title-test",
+      "path": "src/App.pageTitle.test.tsx",
+      "kind": "test",
+      "sourceRef": "architecture.md#structure"
+    }
+  ],
+  "testPlans": [
+    {
+      "id": "TEST-page-title-formatting",
+      "kind": "unit",
+      "title": "Page title formatter produces deterministic project root ticket subcontext and document titles",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.7",
+        "C2",
+        "C3",
+        "C5",
+        "Edge-4",
+        "Edge-5",
+        "OBL-page-title-owner"
+      ],
+      "file": "src/hooks/usePageTitle.test.ts",
+      "sourceRef": "tests.md#page-title-formatting"
+    },
+    {
+      "id": "TEST-project-view-title-context",
+      "kind": "integration",
+      "title": "Project route title updates for Board Listing Documents modal project switching and loading fallback",
+      "covers": [
+        "BR-1.1",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "Edge-3",
+        "Edge-5",
+        "OBL-project-view-title-context"
+      ],
+      "file": "src/App.pageTitle.test.tsx",
+      "sourceRef": "tests.md#project-view-title-context"
+    },
+    {
+      "id": "TEST-ticket-title-context",
+      "kind": "integration",
+      "title": "Ticket viewer title uses ticket code title subdocument subtab and clears for close missing loading failed and unavailable tickets",
+      "covers": [
+        "BR-1.2",
+        "BR-1.4",
+        "BR-1.7",
+        "Edge-1",
+        "Edge-3",
+        "Edge-5",
+        "OBL-ticket-title-context"
+      ],
+      "file": "src/components/TicketViewer/TicketViewer.test.tsx",
+      "sourceRef": "tests.md#ticket-title-context"
+    },
+    {
+      "id": "TEST-document-title-context",
+      "kind": "integration",
+      "title": "Documents view title uses project code and selected document title and clears for missing deleted loading failed or unselected documents",
+      "covers": [
+        "BR-1.3",
+        "BR-1.4",
+        "Edge-2",
+        "Edge-3",
+        "Edge-5",
+        "OBL-document-title-context"
+      ],
+      "file": "src/components/DocumentsView/DocumentsLayout.test.tsx",
+      "sourceRef": "tests.md#document-title-context"
+    },
+    {
+      "id": "TEST-page-title-e2e",
+      "kind": "e2e",
+      "title": "Browser title changes through board listing documents ticket subdocument document settings project switch loading and fallback flows",
+      "covers": [
+        "BR-1.1",
+        "BR-1.2",
+        "BR-1.3",
+        "BR-1.4",
+        "BR-1.5",
+        "BR-1.6",
+        "BR-1.7",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "Edge-1",
+        "Edge-2",
+        "Edge-3",
+        "Edge-4",
+        "Edge-5",
+        "OBL-page-title-verification"
+      ],
+      "file": "tests/e2e/navigation/page-title.spec.ts",
+      "sourceRef": "tests.md#page-title-e2e"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-6",
+      "title": "Run validation and guard navigation preservation",
+      "ownsArtifactIds": [
+        "ART-src-page-title-test",
+        "ART-src-app-page-title-test",
+        "ART-src-ticket-viewer-test",
+        "ART-src-documents-layout-test",
+        "ART-e2e-page-title-spec"
+      ],
+      "makesGreenIds": [
+        "TEST-page-title-formatting",
+        "TEST-project-view-title-context",
+        "TEST-ticket-title-context",
+        "TEST-document-title-context",
+        "TEST-page-title-e2e"
+      ],
+      "skills": [
+        "frontend-react-component",
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-6"
+    },
+    {
+      "id": "TASK-1",
+      "title": "Add shared page title owner",
+      "ownsArtifactIds": [
+        "ART-src-page-title",
+        "ART-src-page-title-test",
+        "ART-index-html"
+      ],
+      "makesGreenIds": [
+        "TEST-page-title-formatting"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-1"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Wire project route title context",
+      "ownsArtifactIds": [
+        "ART-src-app",
+        "ART-src-project-view",
+        "ART-src-app-page-title-test"
+      ],
+      "makesGreenIds": [
+        "project_view_title_reflects_context",
+        "project_switch_updates_title",
+        "modal_context_avoids_stale_title",
+        "TEST-project-view-title-context"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-2"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Wire ticket title context",
+      "ownsArtifactIds": [
+        "ART-src-ticket-viewer",
+        "ART-src-ticket-viewer-test"
+      ],
+      "makesGreenIds": [
+        "ticket_title_reflects_active_ticket",
+        "ticket_subcontext_title_reflects_active_subdocument",
+        "closing_content_restores_parent_title",
+        "TEST-ticket-title-context"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-3"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Wire document title context",
+      "ownsArtifactIds": [
+        "ART-src-documents-layout",
+        "ART-src-documents-layout-test"
+      ],
+      "makesGreenIds": [
+        "document_title_reflects_active_document",
+        "closing_content_restores_parent_title",
+        "TEST-document-title-context"
+      ],
+      "skills": [
+        "frontend-react-component"
+      ],
+      "sourceRef": "tasks.md#task-4"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Add browser title E2E coverage",
+      "ownsArtifactIds": [
+        "ART-e2e-page-title-spec"
+      ],
+      "makesGreenIds": [
+        "project_view_title_reflects_context",
+        "ticket_title_reflects_active_ticket",
+        "ticket_subcontext_title_reflects_active_subdocument",
+        "document_title_reflects_active_document",
+        "closing_content_restores_parent_title",
+        "modal_context_avoids_stale_title",
+        "project_switch_updates_title",
+        "TEST-page-title-e2e"
+      ],
+      "skills": [
+        "playwright-skill"
+      ],
+      "sourceRef": "tasks.md#task-5"
+    }
+  ]
+}
