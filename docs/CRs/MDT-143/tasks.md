@@ -345,9 +345,9 @@
 ## Post-Implementation
 
 - [x] `mdt-cli` exposes the canonical `entity action` command tree plus approved shortcuts
-- [ ] Project reads go through `ProjectService`; project init goes through `ProjectManager`
-- [ ] Ticket reads and attr writes go through `TicketService`
-- [ ] CLI output stays formatter-owned and TTY-aware
+- [x] Project reads go through `ProjectService`; project init goes through `ProjectManager`
+- [x] Ticket reads and attr writes go through `TicketService`
+- [x] CLI output stays formatter-owned and TTY-aware
 - [x] CLI structured output stays schema-owned and agent-safe
 - [x] CLI E2E coverage is GREEN
 

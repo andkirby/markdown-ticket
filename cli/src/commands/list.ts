@@ -6,15 +6,13 @@
  * Filtering, sorting, and pagination are shared concerns — CLI only parses argv.
  */
 
-import type { Ticket } from '@mdt/shared/models/Ticket.js'
 import type { ListTicketsSort } from '@mdt/shared/services/ticket/types.js'
 import type { StructuredOutputOptions } from '../output/structured.js'
 import { ProjectService } from '@mdt/shared/services/ProjectService.js'
 import { ServiceError } from '@mdt/shared/services/ServiceError.js'
 import { DEFAULT_LIST_LIMIT } from '@mdt/shared/services/ticket/types.js'
 import { TicketService } from '@mdt/shared/services/TicketService.js'
-import { colorizePriority, colorizeStatus, colorizeTicketKey, colorizeTitle, colorizeType, shouldUseColor, statusDisplayLabel, visiblePadEnd } from '../output/colors.js'
-import { formatTicketList as formatTicketListFormatter } from '../output/formatter.js'
+import { formatTicketListFiles, formatTicketList as formatTicketListFormatter, formatTicketListInfo } from '../output/formatter.js'
 import { CliCommandError, formatProjectForStructured, formatTicketForStructured, getOutputFormat, writeStructuredSuccess } from '../output/structured.js'
 import { PRIORITY_TOKENS, STATUS_ALIASES, TYPE_TOKENS } from '../utils/aliases.js'
 
@@ -99,64 +97,6 @@ function parseFilters(filterArgs: string[]): Record<string, string | string[]> {
   }
 
   return filters
-}
-
-/**
- * Format ticket list as files only (paths only, one per line)
- */
-function formatTicketListFiles(tickets: Ticket[], projectPath?: string): string {
-  return tickets
-    .map(t => t.filePath ? formatRelativePath(t.filePath, projectPath) : '')
-    .filter(Boolean)
-    .join('\n')
-}
-
-/**
- * Format ticket list as info (no path lines)
- */
-function formatTicketListInfo(tickets: Ticket[], projectCode: string, _projectPath?: string): string {
-  const lines: string[] = []
-
-  for (const ticket of tickets) {
-    const useColor = shouldUseColor()
-    const code = useColor ? colorizeTicketKey(ticket.code) : ticket.code
-    const title = useColor ? colorizeTitle(ticket.title) : ticket.title
-    lines.push(`${code} ${title}`)
-
-    // Pipe-separated metadata line with fixed-width columns
-    const STATUS_W = 11
-    const TYPE_W = 13
-    const PRIORITY_W = 8
-
-    const statusPart = visiblePadEnd(useColor ? colorizeStatus(statusDisplayLabel(ticket.status)) : statusDisplayLabel(ticket.status), STATUS_W)
-    const typeFirstWord = ticket.type.split(' ')[0] ?? ticket.type
-    const typePart = visiblePadEnd(useColor ? colorizeType(typeFirstWord) : typeFirstWord, TYPE_W)
-    const metaParts = [statusPart, typePart]
-    if (ticket.priority) {
-      const priorityPart = visiblePadEnd(useColor ? colorizePriority(ticket.priority) : ticket.priority, PRIORITY_W)
-      metaParts.push(priorityPart)
-    }
-    if (ticket.phaseEpic) {
-      metaParts.push(ticket.phaseEpic)
-    }
-    lines.push(`  ${metaParts.join(' | ')}`)
-  }
-
-  lines.push(`${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} in ${projectCode} project`)
-  return lines.join('\n')
-}
-
-/**
- * Make a file path relative to project root
- */
-function formatRelativePath(filePath: string, projectPath?: string): string {
-  if (!projectPath)
-    return filePath
-  if (filePath.startsWith(projectPath)) {
-    const relative = filePath.slice(projectPath.length)
-    return relative.startsWith('/') ? relative.slice(1) : relative
-  }
-  return filePath
 }
 
 /**
@@ -266,7 +206,7 @@ export async function ticketListAction(filterArgs: string[] = [], options: ListC
     console.log(formatTicketListFiles(tickets, projectPath))
   }
   else if (options.info) {
-    console.log(formatTicketListInfo(tickets, projectCode, projectPath))
+    console.log(formatTicketListInfo(tickets, projectCode))
   }
   else {
     console.log(formatTicketListFormatter(tickets, projectCode, projectPath))
